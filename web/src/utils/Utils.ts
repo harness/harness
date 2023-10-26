@@ -201,6 +201,32 @@ export function formatNumber(num: number | bigint): string {
   return num ? new Intl.NumberFormat(LOCALE).format(num) : ''
 }
 
+export const rulesFormInitialPayload = {
+  name: '',
+  desc: '',
+  enable: true,
+  target: '',
+  targetDefault: true,
+  targetList: [] as string[][],
+  allProjectOwners: false,
+  projectOwners: [] as string[],
+  requireMinReviewers: false,
+  minReviewers: '',
+  requireCodeOwner: false,
+  requireNewChanges: false,
+  requireCommentResolution: false,
+  requireStatusChecks: false,
+  statusChecks: [] as string[],
+  limitMergeStrategies: false,
+  mergeCommit: false,
+  squashMerge: false,
+  rebaseMerge: false,
+  autoDelete: false,
+  blockBranchCreation: false,
+  blockBranchDeletion: false,
+  blockMergeWithoutPr: false
+}
+
 /**
  * Make any HTML element as a clickable button with keyboard accessibility
  * support (hit Enter/Space will trigger click event)

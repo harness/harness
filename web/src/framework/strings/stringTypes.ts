@@ -3,6 +3,7 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
+  Enable: string
   accessControl: string
   accountEmail: string
   accountSetting: string
@@ -43,6 +44,52 @@ export interface StringsMap {
   branchDoesNotHaveFile: string
   branchName: string
   branchNotFound: string
+  'branchProtection.allProjectOwners': string
+  'branchProtection.autoDeleteText': string
+  'branchProtection.autoDeleteTitle': string
+  'branchProtection.blockBranchCreation': string
+  'branchProtection.blockBranchCreationText': string
+  'branchProtection.blockBranchDeletion': string
+  'branchProtection.blockBranchDeletionText': string
+  'branchProtection.blockMergeWithoutPr': string
+  'branchProtection.blockMergeWithoutPrText': string
+  'branchProtection.bypassList': string
+  'branchProtection.create': string
+  'branchProtection.createRule': string
+  'branchProtection.defaultBranch': string
+  'branchProtection.deleteProtectionRule': string
+  'branchProtection.deleteRule': string
+  'branchProtection.deleteText': string
+  'branchProtection.descPlaceholder': string
+  'branchProtection.disableTheRule': string
+  'branchProtection.edit': string
+  'branchProtection.editRule': string
+  'branchProtection.enableTheRule': string
+  'branchProtection.limitMergeStrategies': string
+  'branchProtection.limitMergeStrategiesText': string
+  'branchProtection.minNumber': string
+  'branchProtection.minNumberPlaceholder': string
+  'branchProtection.namePlaceholder': string
+  'branchProtection.newBranchProtectionRule': string
+  'branchProtection.protectionSelectAll': string
+  'branchProtection.reqCommentResolutionText': string
+  'branchProtection.reqCommentResolutionTitle': string
+  'branchProtection.reqNewChangesText': string
+  'branchProtection.reqNewChangesTitle': string
+  'branchProtection.reqReviewFromCodeOwnerText': string
+  'branchProtection.reqReviewFromCodeOwnerTitle': string
+  'branchProtection.reqStatusChecksText': string
+  'branchProtection.reqStatusChecksTitle': string
+  'branchProtection.requireMinReviewersContent': string
+  'branchProtection.requireMinReviewersTitle': string
+  'branchProtection.ruleCreated': string
+  'branchProtection.ruleDeleted': string
+  'branchProtection.ruleEmpty': string
+  'branchProtection.ruleUpdated': string
+  'branchProtection.statusCheck': string
+  'branchProtection.targetBranches': string
+  'branchProtection.targetPlaceholder': string
+  'branchProtection.title': string
   branchProtectionRules: string
   branchSource: string
   branchSourceDesc: string
@@ -316,6 +363,7 @@ export interface StringsMap {
   manageApiToken: string
   manageCredText: string
   matchPassword: string
+  mergeCommit: string
   merged: string
   minPassLimit: string
   missingPerms: string
@@ -562,6 +610,7 @@ export interface StringsMap {
   reactivate: string
   readMe: string
   reader: string
+  rebaseMerge: string
   refresh: string
   reject: string
   rejected: string
@@ -639,6 +688,7 @@ export interface StringsMap {
   selectSpaceText: string
   selectToViewMore: string
   setAsAdmin: string
+  setting: string
   settings: string
   showCommitHistory: string
   showEverything: string
@@ -665,6 +715,7 @@ export interface StringsMap {
   'spaceSetting.settings': string
   spaceUpdate: string
   spaces: string
+  squashMerge: string
   sslVerificationLabel: string
   startSearching: string
   status: string

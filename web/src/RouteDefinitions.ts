@@ -31,6 +31,9 @@ export interface CODEProps {
   execution?: string
   commitSHA?: string
   secret?: string
+  settingSection?: string
+  ruleId?: string
+  settingSectionMode?: string
 }
 
 export interface CODEQueryProps {
@@ -50,7 +53,10 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   pipeline: ':pipeline',
   execution: ':execution',
   commitSHA: ':commitSHA',
-  secret: ':secret'
+  secret: ':secret',
+  settingSection: ':settingSection',
+  ruleId: ':ruleId',
+  settingSectionMode: ':settingSectionMode'
 }
 
 export interface CODERoutes {
@@ -89,7 +95,9 @@ export interface CODERoutes {
   toCODEWebhooks: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookNew: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
-  toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODESettings: (
+    args: RequiredField<Pick<CODEProps, 'repoPath' | 'settingSection' | 'ruleId' | 'settingSectionMode'>, 'repoPath'>
+  ) => string
   toCODESearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEExecutions: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
   toCODEExecution: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline' | 'execution'>>) => string
@@ -143,7 +151,10 @@ export const routes: CODERoutes = {
   toCODECompare: ({ repoPath, diffRefs }) => `/${repoPath}/pulls/compare/${diffRefs}`,
   toCODEBranches: ({ repoPath }) => `/${repoPath}/branches`,
   toCODETags: ({ repoPath }) => `/${repoPath}/tags`,
-  toCODESettings: ({ repoPath }) => `/${repoPath}/settings`,
+  toCODESettings: ({ repoPath, settingSection, ruleId, settingSectionMode }) =>
+    `/${repoPath}/settings${settingSection ? '/' + settingSection : ''}${ruleId ? '/' + ruleId : ''}${
+      settingSectionMode ? '/' + settingSectionMode : ''
+    }`,
   toCODESearch: ({ repoPath }) => `/${repoPath}/search`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,

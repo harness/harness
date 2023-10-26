@@ -843,3 +843,55 @@ changeRepoVis: Change repository visibility
 changeRepoVisContent: Are you sure you want to make this repository {repoVis}? {repoText}
 repoVisibility: Repository Visibility
 key: Key
+setting: Setting
+mergeCommit: Merge commit
+squashMerge: Squash and merge
+rebaseMerge: Rebase and merge
+Enable: Enable
+branchProtection:
+  namePlaceholder: Enter the rule name here
+  descPlaceholder: Enter the description here
+  title: Protection Rules
+  edit: Edit Branch Protection
+  create: Create Branch Protection
+  targetBranches: Target Patterns
+  targetPlaceholder: Enter the target patterns
+  defaultBranch: Default branch
+  bypassList: Bypass List
+  newBranchProtectionRule: New Branch Protection Rule
+  allProjectOwners: All project owners
+  protectionSelectAll: 'Protections: Select all that apply'
+  requireMinReviewersTitle: Require a minimum number of reviewers
+  requireMinReviewersContent: Require approval on pull requests from a minimum number of reviewers
+  minNumber: Minimum number
+  minNumberPlaceholder: Enter the minimum number
+  reqReviewFromCodeOwnerTitle: Require review from code owners
+  reqReviewFromCodeOwnerText: Require approval on pull requests from one reviewer for each Code Owner rule
+  reqNewChangesTitle: Require approval of new changes
+  reqNewChangesText: Require re-approval when there are new changes in the pull request
+  reqCommentResolutionTitle: Require comment resolution
+  reqCommentResolutionText: All comments on a pull request must be resolved before it can be merged
+  reqStatusChecksTitle: Require status checks to pass
+  reqStatusChecksText: Selected status checks must pass before a pull request can be merged
+  statusCheck: Status checks
+  limitMergeStrategies: Limit merge strategies
+  limitMergeStrategiesText: Limit which merge strategies are available to merge a pull request
+  autoDeleteTitle: Auto delete branch on merge
+  autoDeleteText: Automatically delete the source branch of a pull request after it is merged
+  blockBranchCreation: Block branch creation
+  blockBranchCreationText: Only allow users with bypass permission to create matching branches
+  blockBranchDeletion: Block branch deletion
+  blockBranchDeletionText: Only allow users with bypass permission to delete matching branches
+  editRule: Edit Rule
+  deleteRule: Delete Rule
+  ruleDeleted: Rule Deleted
+  ruleEmpty: There are no rules in your repo. Click the button below to create a rule.
+  createRule: Create rule
+  deleteProtectionRule: Delete protection rule
+  deleteText: "Are you sure to delete the rule, '{{rule}}'?"
+  disableTheRule: Disable the Rule
+  ruleUpdated: Rule Updated
+  enableTheRule: Enable the Rule
+  ruleCreated: Rule Created
+  blockMergeWithoutPr: Block merge without pull request
+  blockMergeWithoutPrText: Do not allow directly merging to the branch without a pull request

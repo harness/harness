@@ -16,26 +16,28 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const btn: string
 export declare const buttonContainer: string
-export declare const content: string
-export declare const contentContainer: string
-export declare const deleteContainer: string
-export declare const descText: string
-export declare const dialogContainer: string
+export declare const bypassContainer: string
+export declare const checkboxLabel: string
+export declare const checkboxText: string
+export declare const checkContainer: string
 export declare const dividerContainer: string
-export declare const editContainer: string
 export declare const generalContainer: string
-export declare const headerContainer: string
-export declare const iconContainer: string
+export declare const greyButton: string
+export declare const greyContainer: string
+export declare const headingSize: string
 export declare const label: string
 export declare const main: string
-export declare const radioContainer: string
-export declare const saveBtn: string
-export declare const tabsContainer: string
-export declare const tabTitle: string
-export declare const text: string
-export declare const textContainer: string
-export declare const textSize: string
-export declare const webhookHeader: string
-export declare const webhooksContent: string
+export declare const menuItem: string
+export declare const minText: string
+export declare const noData: string
+export declare const paddingTop: string
+export declare const popover: string
+export declare const row: string
+export declare const statusWidthContainer: string
+export declare const table: string
+export declare const targetBox: string
+export declare const targetContainer: string
+export declare const targetSpacingContainer: string
+export declare const title: string
+export declare const widthContainer: string

@@ -1147,6 +1147,13 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - description: The substring which is used to filter the status checks by their
+            UID.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
         - in: path
           name: repo_ref
           required: true
@@ -1227,6 +1234,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TypesCheck'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - status_checks
+  /repos/{repo_ref}/checks/recent:
+    get:
+      operationId: listStatusCheckRecent
+      parameters:
+        - description: The substring which is used to filter the status checks by their
+            UID.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The timestamp (in Unix time millis) since the status checks have
+            been run.
+          in: query
+          name: since
+          required: false
+          schema:
+            type: integer
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
           description: OK
         '400':
           content:
@@ -1374,7 +1439,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RepoCommitFilesResponse'
+                $ref: '#/components/schemas/TypesCommitFilesResponse'
           description: OK
         '400':
           content:
@@ -3950,6 +4015,307 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/rules:
+    get:
+      operationId: ruleList
+      parameters:
+        - description: The substring by which the repository protection rules are filtered.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The order of the output.
+          in: query
+          name: order
+          required: false
+          schema:
+            default: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: The field by which the protection rules are sorted.
+          in: query
+          name: sort
+          required: false
+          schema:
+            default: created_at
+            enum:
+              - created_at
+              - uid
+              - updated_at
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OpenapiRule'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+    post:
+      operationId: ruleAdd
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                definition:
+                  $ref: '#/components/schemas/OpenapiRuleDefinition'
+                description:
+                  type: string
+                pattern:
+                  $ref: '#/components/schemas/ProtectionPattern'
+                state:
+                  $ref: '#/components/schemas/EnumRuleState'
+                type:
+                  $ref: '#/components/schemas/OpenapiRuleType'
+                uid:
+                  type: string
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiRule'
+          description: Created
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/rules/{rule_uid}:
+    delete:
+      operationId: ruleDelete
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: rule_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+    get:
+      operationId: ruleGet
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: rule_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OpenapiRule'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+    patch:
+      operationId: ruleUpdate
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: rule_uid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                definition:
+                  $ref: '#/components/schemas/OpenapiRuleDefinition'
+                description:
+                  nullable: true
+                  type: string
+                pattern:
+                  $ref: '#/components/schemas/ProtectionPattern'
+                state:
+                  $ref: '#/components/schemas/EnumRuleState'
+                type:
+                  $ref: '#/components/schemas/OpenapiRuleType'
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiRule'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/service-accounts:
     get:
       operationId: listRepositoryServiceAccounts
@@ -4190,6 +4556,103 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/uploads:
+    post:
+      operationId: upload
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResult'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - upload
+  /repos/{repo_ref}/uploads/{name_ref}:
+    get:
+      operationId: download
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: name_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '307':
+          description: Temporary Redirect
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - upload
   /repos/{repo_ref}/webhooks:
     get:
       operationId: listWebhooks
@@ -6348,6 +6811,13 @@ components:
         - merged
         - open
       type: string
+    EnumRuleState:
+      enum:
+        - active
+        - disabled
+        - monitor
+      nullable: true
+      type: string
     EnumTokenType:
       type: string
     EnumTriggerAction:
@@ -6380,8 +6850,8 @@ components:
         - branch_updated
         - pullreq_branch_updated
         - pullreq_closed
-        - pullreq_created
         - pullreq_comment_created
+        - pullreq_created
         - pullreq_reopened
         - tag_created
         - tag_deleted
@@ -6491,6 +6961,8 @@ components:
       enum:
         - github
         - gitlab
+        - bitbucket
+        - stash
       type: string
     LivelogLine:
       properties:
@@ -6864,6 +7336,35 @@ components:
         reviewer_id:
           type: integer
       type: object
+    OpenapiRule:
+      properties:
+        created:
+          type: integer
+        created_by:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        definition:
+          $ref: '#/components/schemas/OpenapiRuleDefinition'
+        description:
+          type: string
+        pattern:
+          $ref: '#/components/schemas/ProtectionPattern'
+        state:
+          $ref: '#/components/schemas/EnumRuleState'
+        type:
+          $ref: '#/components/schemas/OpenapiRuleType'
+        uid:
+          type: string
+        updated:
+          type: integer
+      type: object
+    OpenapiRuleDefinition:
+      oneOf:
+        - $ref: '#/components/schemas/ProtectionBranch'
+      type: object
+    OpenapiRuleType:
+      enum:
+        - branch
+      type: string
     OpenapiStatePullReqRequest:
       properties:
         is_draft:
@@ -7036,6 +7537,88 @@ components:
         version:
           type: integer
       type: object
+    ProtectionBranch:
+      properties:
+        bypass:
+          $ref: '#/components/schemas/ProtectionDefBypass'
+        lifecycle:
+          $ref: '#/components/schemas/ProtectionDefLifecycle'
+        pullreq:
+          $ref: '#/components/schemas/ProtectionDefPullReq'
+      type: object
+    ProtectionDefApprovals:
+      properties:
+        require_code_owners:
+          type: boolean
+        require_latest_commit:
+          type: boolean
+        require_minimum_count:
+          type: integer
+      type: object
+    ProtectionDefBypass:
+      properties:
+        space_owners:
+          type: boolean
+        user_ids:
+          items:
+            type: integer
+          type: array
+      type: object
+    ProtectionDefComments:
+      properties:
+        require_resolve_all:
+          type: boolean
+      type: object
+    ProtectionDefLifecycle:
+      properties:
+        create_forbidden:
+          type: boolean
+        delete_forbidden:
+          type: boolean
+        update_forbidden:
+          type: boolean
+      type: object
+    ProtectionDefMerge:
+      properties:
+        delete_branch:
+          type: boolean
+        strategies_allowed:
+          items:
+            $ref: '#/components/schemas/EnumMergeMethod'
+          type: array
+      type: object
+    ProtectionDefPullReq:
+      properties:
+        approvals:
+          $ref: '#/components/schemas/ProtectionDefApprovals'
+        comments:
+          $ref: '#/components/schemas/ProtectionDefComments'
+        merge:
+          $ref: '#/components/schemas/ProtectionDefMerge'
+        status_checks:
+          $ref: '#/components/schemas/ProtectionDefStatusChecks'
+      type: object
+    ProtectionDefStatusChecks:
+      properties:
+        require_uids:
+          items:
+            type: string
+          type: array
+      type: object
+    ProtectionPattern:
+      nullable: true
+      properties:
+        default:
+          type: boolean
+        exclude:
+          items:
+            type: string
+          type: array
+        include:
+          items:
+            type: string
+          type: array
+      type: object
     RepoBranch:
       properties:
         commit:
@@ -7070,11 +7653,6 @@ components:
         payload:
           type: string
         sha:
-          type: string
-      type: object
-    RepoCommitFilesResponse:
-      properties:
-        commit_id:
           type: string
       type: object
     RepoCommitTag:
@@ -7229,6 +7807,15 @@ components:
           type: string
         title:
           type: string
+      type: object
+    TypesCommitFilesResponse:
+      properties:
+        commit_id:
+          type: string
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
+          type: array
       type: object
     TypesConnector:
       properties:
@@ -7394,9 +7981,15 @@ components:
       type: object
     TypesMergeResponse:
       properties:
+        branch_deleted:
+          type: boolean
         conflict_files:
           items:
             type: string
+          type: array
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
           type: array
         sha:
           type: string
@@ -7646,6 +8239,31 @@ components:
         updated:
           type: integer
       type: object
+    TypesRuleInfo:
+      properties:
+        repo_path:
+          type: string
+        space_path:
+          type: string
+        state:
+          $ref: '#/components/schemas/EnumRuleState'
+        type:
+          $ref: '#/components/schemas/TypesRuleType'
+        uid:
+          type: string
+      type: object
+    TypesRuleType:
+      type: string
+    TypesRuleViolations:
+      properties:
+        rule:
+          $ref: '#/components/schemas/TypesRuleInfo'
+        violations:
+          items:
+            $ref: '#/components/schemas/TypesViolation'
+          nullable: true
+          type: array
+      type: object
     TypesSecret:
       properties:
         created:
@@ -7884,6 +8502,13 @@ components:
         updated:
           type: integer
       type: object
+    TypesViolation:
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      type: object
     TypesWebhookExecution:
       properties:
         created:
@@ -7929,6 +8554,11 @@ components:
           type: string
         status_code:
           type: integer
+      type: object
+    UploadResult:
+      properties:
+        file_path:
+          type: string
       type: object
     UserUpdateInput:
       properties:

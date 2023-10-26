@@ -169,7 +169,24 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </LayoutWithSideNav>
         </Route>
 
-        <Route path={routes.toCODESettings({ repoPath })} exact>
+        <Route
+          path={[
+            routes.toCODESettings({
+              repoPath,
+              settingSection: pathProps.settingSection,
+              settingSectionMode: pathProps.settingSectionMode,
+              ruleId: pathProps.ruleId
+            }),
+            routes.toCODESettings({
+              repoPath,
+              settingSection: pathProps.settingSection,
+              settingSectionMode: pathProps.settingSectionMode
+            }),
+
+            routes.toCODESettings({ repoPath, settingSection: pathProps.settingSection }),
+            routes.toCODESettings({ repoPath })
+          ]}
+          exact>
           <LayoutWithSideNav title={getString('pageTitle.repositorySettings')}>
             <RepositorySettings />
           </LayoutWithSideNav>

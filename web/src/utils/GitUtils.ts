@@ -101,6 +101,11 @@ export enum GitContentType {
   SYMLINK = 'symlink',
   SUBMODULE = 'submodule'
 }
+export enum SettingsTab {
+  webhooks = 'webhook',
+  general = '/',
+  branchProtection = 'rules'
+}
 
 export enum GitBranchType {
   ACTIVE = 'active',
@@ -118,6 +123,32 @@ export enum PrincipalUserType {
   USER = 'user',
   SERVICE = 'service'
 }
+
+export enum SettingTypeMode {
+  EDIT = 'edit',
+  NEW = 'new'
+}
+
+export enum BranchTargetType {
+  INCLUDE = 'include',
+  EXCLUDE = 'exclude'
+}
+
+export interface BranchTargetOption {
+  type: BranchTargetType
+  title: string
+}
+
+export const branchTargetOptions: BranchTargetOption[] = [
+  {
+    type: BranchTargetType.INCLUDE,
+    title: 'Include'
+  },
+  {
+    type: BranchTargetType.EXCLUDE,
+    title: 'Exclude'
+  }
+]
 
 export enum GitCommitAction {
   DELETE = 'DELETE',
