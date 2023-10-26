@@ -181,7 +181,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         parent_ref: space,
         uid: formData.name,
         provider,
-        provider_repo: `${formData.org}/${formData.name}`.replace(/\.git$/, '')
+        provider_repo: `${formData.org}/${formData.repo}`.replace(/\.git$/, '')
       }
       importRepo(importPayload)
         .then(response => {
