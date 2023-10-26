@@ -23,7 +23,7 @@ import cx from 'classnames'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Container, PageBody, Layout, ButtonVariation, Text, useToaster, SplitButton, Button } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse, RepoFileContent, TypesPipeline } from 'services/code'
+import type { OpenapiCommitFilesRequest, TypesListCommitResponse, RepoFileContent, TypesPipeline } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
@@ -125,7 +125,7 @@ const AddUpdatePipeline = (): JSX.Element => {
 
   const [selectedOption, setSelectedOption] = useState<PipelineSaveAndRunOption>()
 
-  const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
+  const { mutate, loading } = useMutate<TypesListCommitResponse>({
     verb: 'POST',
     path: `/api/v1/repos/${repoPath}/+/commits`
   })

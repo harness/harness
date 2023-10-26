@@ -21,7 +21,6 @@ import { noop } from 'lodash-es'
 import { Text } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { useConfirmationDialog } from './useConfirmationDialog'
-import classNames from 'classnames'
 
 export interface UseConfirmActionDialogProps {
   message: React.ReactElement
