@@ -23,9 +23,9 @@ type RuleState string
 
 // RuleState enumeration.
 const (
-	RuleStateActive   = "active"
-	RuleStateMonitor  = "monitor"
-	RuleStateDisabled = "disabled"
+	RuleStateActive   RuleState = "active"
+	RuleStateMonitor  RuleState = "monitor"
+	RuleStateDisabled RuleState = "disabled"
 )
 
 var ruleStates = sortEnum([]RuleState{
@@ -46,9 +46,9 @@ func GetAllRuleStates() ([]RuleState, RuleState) {
 type RuleSort string
 
 const (
-	RuleSortUID     = uid
-	RuleSortCreated = createdAt
-	RuleSortUpdated = updatedAt
+	RuleSortUID     RuleSort = uid
+	RuleSortCreated RuleSort = createdAt
+	RuleSortUpdated RuleSort = updatedAt
 )
 
 var ruleSorts = sortEnum([]RuleSort{
