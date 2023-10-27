@@ -25,19 +25,20 @@ import (
 
 type UploadRequest struct {
 	repoRequest
-	//nolint:lll //Note: Below line won't produce the file upload interface in Swagger UI, ref: https://swagger.io/docs/specification/2-0/file-upload/
+	// Note: Below line won't produce the file upload interface in Swagger UI,
+	// ref: https://swagger.io/docs/specification/2-0/file-upload/
 	Content string `json:"-" format:"binary" description:"Binary file to upload"`
 }
 
 type DownloadRequest struct {
 	repoRequest
-	NameRef string `path:"name_ref"`
+	FilePathRef string `path:"file_ref"`
 }
 
 func uploadOperations(reflector *openapi3.Reflector) {
 	opUpload := openapi3.Operation{}
 	opUpload.WithTags("upload")
-	opUpload.WithMapOfAnything(map[string]interface{}{"operationId": "upload"})
+	opUpload.WithMapOfAnything(map[string]interface{}{"operationId": "repoArtifactUpload"})
 	_ = reflector.SetRequest(&opUpload, new(UploadRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opUpload, new(upload.Result), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opUpload, new(usererror.Error), http.StatusBadRequest)
@@ -50,7 +51,7 @@ func uploadOperations(reflector *openapi3.Reflector) {
 
 	downloadOp := openapi3.Operation{}
 	downloadOp.WithTags("upload")
-	downloadOp.WithMapOfAnything(map[string]interface{}{"operationId": "download"})
+	downloadOp.WithMapOfAnything(map[string]interface{}{"operationId": "repoArtifactDownload"})
 	_ = reflector.SetRequest(&downloadOp, new(DownloadRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&downloadOp, nil, http.StatusTemporaryRedirect)
 	_ = reflector.SetJSONResponse(&downloadOp, new(usererror.Error), http.StatusNotFound)
@@ -59,5 +60,5 @@ func uploadOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&downloadOp, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&downloadOp, new(usererror.Error), http.StatusForbidden)
 
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/uploads/{name_ref}", downloadOp)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/uploads/{file_ref}", downloadOp)
 }
