@@ -53,9 +53,13 @@ func (p *Pattern) Validate() error {
 }
 
 func (p *Pattern) Matches(branchName, defaultName string) bool {
-	for _, exclude := range p.Exclude {
-		if patternMatches(exclude, branchName) {
-			return false
+	if len(p.Exclude) > 0 {
+		match := true
+		for _, exclude := range p.Exclude {
+			match = match && !patternMatches(exclude, branchName)
+		}
+		if match {
+			return true
 		}
 	}
 
@@ -78,7 +82,7 @@ func patternValidate(pattern string) error {
 	}
 	_, err := doublestar.Match(pattern, "test")
 	if err != nil {
-		return fmt.Errorf("name pattern is invalid: %s", pattern)
+		return ErrInvalidGlobstarPattern
 	}
 	return nil
 }

@@ -178,9 +178,10 @@ func (v *Branch) CanModifyRef(_ context.Context, in CanModifyRefInput) ([]types.
 }
 
 func (v *Branch) isBypassed(actor *types.Principal, isSpaceOwner bool) bool {
-	return actor.Admin ||
-		v.Bypass.SpaceOwners && isSpaceOwner ||
-		slices.Contains(v.Bypass.UserIDs, actor.ID)
+	return actor != nil &&
+		(actor.Admin ||
+			v.Bypass.SpaceOwners && isSpaceOwner ||
+			slices.Contains(v.Bypass.UserIDs, actor.ID))
 }
 
 func (v *Branch) Sanitize() error {

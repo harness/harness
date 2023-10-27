@@ -82,10 +82,11 @@ const (
 )
 
 var (
-	ErrUnrecognizedType    = errors.New("unrecognized protection type")
-	ErrAlreadyRegistered   = errors.New("protection type already registered")
-	ErrPatternEmpty        = errors.New("pattern doesn't match anything")
-	ErrPatternEmptyPattern = errors.New("name pattern can't be empty")
+	ErrUnrecognizedType       = errors.New("unrecognized protection type")
+	ErrAlreadyRegistered      = errors.New("protection type already registered")
+	ErrPatternEmpty           = errors.New("pattern doesn't match anything")
+	ErrPatternEmptyPattern    = errors.New("name pattern can't be empty")
+	ErrInvalidGlobstarPattern = errors.New("invalid globstar pattern")
 )
 
 func IsCritical(violations []types.RuleViolations) bool {
