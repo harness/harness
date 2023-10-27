@@ -170,7 +170,8 @@ export enum GitProviders {
   GITLAB_SELF_HOSTED = 'GitLab Self-Hosted',
   BITBUCKET = 'Bitbucket',
   BITBUCKET_SERVER = 'Bitbucket Server',
-  GITEA = 'Gitea'
+  GITEA = 'Gitea',
+  GOGS = 'Gogs'
 }
 
 export const PullRequestFilterOption = {
