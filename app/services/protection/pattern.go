@@ -53,27 +53,27 @@ func (p *Pattern) Validate() error {
 }
 
 func (p *Pattern) Matches(branchName, defaultName string) bool {
-	if len(p.Exclude) > 0 {
-		match := true
-		for _, exclude := range p.Exclude {
-			match = match && !patternMatches(exclude, branchName)
-		}
-		if match {
-			return true
-		}
-	}
+	// Initially match everything, unless the default is set or the include patterns are defined.
+	matches := !p.Default && len(p.Include) == 0
 
-	if p.Default && branchName == defaultName {
-		return true
-	}
+	// Apply the default branch.
+	matches = matches || p.Default && branchName == defaultName
 
-	for _, include := range p.Include {
-		if patternMatches(include, branchName) {
-			return true
+	// Apply the include patterns.
+	if !matches {
+		for _, include := range p.Include {
+			if matches = patternMatches(include, branchName); matches {
+				break
+			}
 		}
 	}
 
-	return false
+	// Apply the exclude patterns.
+	for _, exclude := range p.Exclude {
+		matches = matches && !patternMatches(exclude, branchName)
+	}
+
+	return matches
 }
 
 func patternValidate(pattern string) error {

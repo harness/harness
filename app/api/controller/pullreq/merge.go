@@ -157,7 +157,7 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to get code owners with approval: %w", err)
 	}
 
-	ruleOut, violations, err := protectionRules.CanMerge(ctx, protection.CanMergeInput{
+	ruleOut, violations, err := protectionRules.MergeVerify(ctx, protection.MergeVerifyInput{
 		Actor:        &session.Principal,
 		IsSpaceOwner: isSpaceOwner,
 		TargetRepo:   targetRepo,

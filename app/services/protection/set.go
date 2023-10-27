@@ -28,8 +28,11 @@ type ruleSet struct {
 
 var _ Protection = ruleSet{} // ensure that ruleSet implements the Protection interface.
 
-func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput, []types.RuleViolations, error) {
-	var out CanMergeOutput
+func (s ruleSet) MergeVerify(
+	ctx context.Context,
+	in MergeVerifyInput,
+) (MergeVerifyOutput, []types.RuleViolations, error) {
+	var out MergeVerifyOutput
 	var violations []types.RuleViolations
 
 	for _, r := range s.rules {
@@ -47,7 +50,7 @@ func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput
 				fmt.Errorf("failed to parse protection definition ID=%d Type=%s: %w", r.ID, r.Type, err)
 		}
 
-		rOut, rVs, err := protection.CanMerge(ctx, in)
+		rOut, rVs, err := protection.MergeVerify(ctx, in)
 		if err != nil {
 			return out, nil, err
 		}
@@ -59,7 +62,7 @@ func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput
 	return out, violations, nil
 }
 
-func (s ruleSet) CanModifyRef(ctx context.Context, in CanModifyRefInput) ([]types.RuleViolations, error) {
+func (s ruleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) ([]types.RuleViolations, error) {
 	var violations []types.RuleViolations
 
 	for _, r := range s.rules {
@@ -80,7 +83,7 @@ func (s ruleSet) CanModifyRef(ctx context.Context, in CanModifyRefInput) ([]type
 		ruleIn := in
 		ruleIn.RefNames = matched
 
-		rVs, err := protection.CanModifyRef(ctx, ruleIn)
+		rVs, err := protection.RefChangeVerify(ctx, ruleIn)
 		if err != nil {
 			return nil, err
 		}

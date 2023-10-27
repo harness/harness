@@ -101,7 +101,7 @@ func (c *Controller) checkProtectionRules(
 			return
 		}
 
-		violations, err := protectionRules.CanModifyRef(ctx, protection.CanModifyRefInput{
+		violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 			Actor:        &session.Principal,
 			IsSpaceOwner: isSpaceOwner,
 			Repo:         repo,

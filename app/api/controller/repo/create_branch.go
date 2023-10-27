@@ -56,7 +56,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		return nil, nil, err
 	}
 
-	violations, err := rules.CanModifyRef(ctx, protection.CanModifyRefInput{
+	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:        &session.Principal,
 		IsSpaceOwner: isSpaceOwner,
 		Repo:         repo,

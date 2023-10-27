@@ -28,10 +28,10 @@ func TestPattern_Matches(t *testing.T) {
 		want    bool
 	}{
 		{
-			name:    "empty-matches-nothing",
+			name:    "empty-matches-all",
 			pattern: Pattern{Default: false, Include: nil, Exclude: nil},
 			input:   "blah",
-			want:    false,
+			want:    true,
 		},
 		{
 			name:    "default-matches-default",
@@ -68,6 +68,30 @@ func TestPattern_Matches(t *testing.T) {
 			pattern: Pattern{Default: false, Include: nil, Exclude: []string{"dev*", "pr*"}},
 			input:   "pr_69",
 			want:    false,
+		},
+		{
+			name: "complex:not-excluded",
+			pattern: Pattern{
+				Include: []string{"test/**/*"},
+				Exclude: []string{"test/release/*"}},
+			input: "test/dev/1",
+			want:  true,
+		},
+		{
+			name: "complex:excluded",
+			pattern: Pattern{
+				Include: []string{"test/**/*"},
+				Exclude: []string{"test/release/*"}},
+			input: "test/release/1",
+			want:  false,
+		},
+		{
+			name: "complex:default-excluded",
+			pattern: Pattern{
+				Default: true,
+				Exclude: []string{defBranch}},
+			input: defBranch,
+			want:  false,
 		},
 	}
 

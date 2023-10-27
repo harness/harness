@@ -42,7 +42,7 @@ func (c *Controller) DeleteTag(ctx context.Context,
 		return nil, err
 	}
 
-	violations, err := rules.CanModifyRef(ctx, protection.CanModifyRefInput{
+	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:        &session.Principal,
 		IsSpaceOwner: isSpaceOwner,
 		Repo:         repo,
