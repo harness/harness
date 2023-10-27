@@ -348,7 +348,7 @@ func (s RepositoryService) SyncRepository(
 	}
 
 	// sync repo content
-	err = s.adapter.Sync(ctx, repoPath, request.GetSource())
+	err = s.adapter.Sync(ctx, repoPath, request.GetSource(), request.GetRefSpecs())
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to sync git repo")
 	}

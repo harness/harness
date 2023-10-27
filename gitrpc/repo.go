@@ -70,6 +70,10 @@ type SyncRepositoryParams struct {
 	WriteParams
 	Source            string
 	CreateIfNotExists bool
+
+	// RefSpecs [OPTIONAL] allows to override the refspecs that are being synced from the remote repository.
+	// By default all references present on the remote repository will be fetched (including scm internal ones).
+	RefSpecs []string
 }
 
 type SyncRepositoryOutput struct {
@@ -179,6 +183,7 @@ func (c *Client) SyncRepository(ctx context.Context, params *SyncRepositoryParam
 		Base:              mapToRPCWriteRequest(params.WriteParams),
 		Source:            params.Source,
 		CreateIfNotExists: params.CreateIfNotExists,
+		RefSpecs:          params.RefSpecs,
 	})
 	if err != nil {
 		return nil, processRPCErrorf(err, "failed to sync repository on server to match provided source")

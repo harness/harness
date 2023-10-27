@@ -299,7 +299,6 @@ type FileUpload struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Data:
-	//
 	//	*FileUpload_Header
 	//	*FileUpload_Chunk
 	Data isFileUpload_Data `protobuf_oneof:"data"`

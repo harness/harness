@@ -126,7 +126,10 @@ func (g Adapter) Clone(ctx context.Context, from, to string, opts types.CloneRep
 
 // Sync synchronizes the repository to match the provided source.
 // NOTE: This is a read operation and doesn't trigger any server side hooks.
-func (g Adapter) Sync(ctx context.Context, repoPath string, remoteURL string) error {
+func (g Adapter) Sync(ctx context.Context, repoPath string, source string, refSpecs []string) error {
+	if len(refSpecs) == 0 {
+		refSpecs = []string{"+refs/*:refs/*"}
+	}
 	args := []string{
 		"-c", "advice.fetchShowForcedUpdates=false",
 		"-c", "credential.helper=",
@@ -137,9 +140,9 @@ func (g Adapter) Sync(ctx context.Context, repoPath string, remoteURL string) er
 		"--force",
 		"--no-write-fetch-head",
 		"--no-show-forced-updates",
-		remoteURL,
-		"+refs/*:refs/*",
+		source,
 	}
+	args = append(args, refSpecs...)
 
 	cmd := gitea.NewCommand(ctx, args...)
 	_, _, err := cmd.RunStdString(&gitea.RunOpts{

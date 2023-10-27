@@ -63,7 +63,7 @@ type GitAdapter interface {
 		tmpBasePath string, mergeMsg string, env []string, identity *types.Identity) error
 	GetMergeBase(ctx context.Context, repoPath, remote, base, head string) (string, string, error)
 	Blame(ctx context.Context, repoPath, rev, file string, lineFrom, lineTo int) types.BlameReader
-	Sync(ctx context.Context, repoPath string, source string) error
+	Sync(ctx context.Context, repoPath string, source string, refSpecs []string) error
 
 	//
 	// Diff operations
