@@ -153,7 +153,6 @@ func serviceRPC(ctx context.Context, stdin io.Reader, stdout io.Writer,
 	if protocol != "" && safeGitProtocolHeader.MatchString(protocol) {
 		environ = append(environ, "GIT_PROTOCOL="+protocol)
 	}
-
 	var (
 		stderr bytes.Buffer
 	)
@@ -170,6 +169,7 @@ func serviceRPC(ctx context.Context, stdin io.Reader, stdout io.Writer,
 	if err != nil && err.Error() != "signal: killed" {
 		log.Ctx(ctx).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v - %s", service, dir, err, stderr.String())
 	}
+
 	return err
 }
 

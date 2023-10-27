@@ -109,13 +109,13 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 	// This can be an issue in case someone created a branch already in the repo (just default branch is missing).
 	// In that case the user can accidentally create separate git histories (which most likely is unintended).
 	// If the user wants to actually build a disconnected commit graph they can use the cli.
-	isEmpty, err := repoHasBranches(ctx, repo)
+	hasBranches, err := repoHasBranches(ctx, repoPath)
 	if err != nil {
 		return ErrInternalf("failed to determine if repository is empty", err)
 	}
 
 	// ensure input data is valid
-	if err = s.validateAndPrepareHeader(repo, isEmpty, header); err != nil {
+	if err = s.validateAndPrepareHeader(repo, !hasBranches, header); err != nil {
 		return err
 	}
 
@@ -126,7 +126,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 	}
 
 	// create a new shared repo
-	shared, err := NewSharedRepo(s.reposTempDir, base.GetRepoUid(), repo)
+	shared, err := NewSharedRepo(s.reposTempDir, base.GetRepoUid(), repoPath)
 	if err != nil {
 		return processGitErrorf(err, "failed to create shared repository")
 	}
@@ -134,7 +134,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 
 	// handle empty repo separately (as branch doesn't exist, no commit exists, ...)
 	var parentCommitSHA string
-	if isEmpty {
+	if !hasBranches {
 		err = s.prepareTreeEmptyRepo(ctx, shared, actions)
 		if err != nil {
 			return err
@@ -528,11 +528,22 @@ func checkPathAvailability(commit *git.Commit, filePath string, isNewFile bool) 
 // repoHasBranches returns true iff there's at least one branch in the repo (any branch)
 // NOTE: This is different from repo.Empty(),
 // as it doesn't care whether the existing branch is the default branch or not.
-func repoHasBranches(ctx context.Context, repo *git.Repository) (bool, error) {
+func repoHasBranches(ctx context.Context, repoPath string) (bool, error) {
 	// repo has branches IFF there's at least one commit that is reachable via a branch
 	// (every existing branch points to a commit)
 	stdout, _, runErr := git.NewCommand(ctx, "rev-list", "--max-count", "1", "--branches").
-		RunStdBytes(&git.RunOpts{Dir: repo.Path})
+		RunStdBytes(&git.RunOpts{Dir: repoPath})
+	if runErr != nil {
+		return false, processGitErrorf(runErr, "failed to trigger rev-list command")
+	}
+
+	return strings.TrimSpace(string(stdout)) != "", nil
+}
+
+func repoIsEmpty(ctx context.Context, repoPath string) (bool, error) {
+	// repoIsEmpty IFF there's no commit
+	stdout, _, runErr := git.NewCommand(ctx, "rev-list", "--max-count", "1", "--all").
+		RunStdBytes(&git.RunOpts{Dir: repoPath})
 	if runErr != nil {
 		return false, processGitErrorf(runErr, "failed to trigger rev-list command")
 	}

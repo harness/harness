@@ -231,12 +231,7 @@ func (s ReferenceService) CreateCommitTag(
 
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	repo, err := git.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, processGitErrorf(err, "failed to open repo")
-	}
-
-	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repoPath)
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to create new shared repo")
 	}
@@ -337,12 +332,7 @@ func (s ReferenceService) DeleteTag(
 
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	repo, err := git.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, processGitErrorf(err, "failed to open repo")
-	}
-
-	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repoPath)
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to create new shared repo")
 	}

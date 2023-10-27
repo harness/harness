@@ -79,7 +79,7 @@ func (g Adapter) WalkReferences(ctx context.Context,
 			sortArg,
 			"--count",
 			fmt.Sprint(opts.MaxWalkDistance),
-			"--ignore-case",
+			// "--ignore-case" // slows down performance drastically
 		}
 		args = append(args, opts.Patterns...)
 		err := gitea.NewCommand(ctx, args...).Run(rc)

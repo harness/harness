@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "buildFlags": "-tags=gogit",
+            "buildFlags": "",
             "program": "cmd/gitness",
             "args": ["server", "../../.local.env"]
         }

@@ -37,22 +37,22 @@ import (
 
 // SharedRepo is a type to wrap our upload repositories as a shallow clone.
 type SharedRepo struct {
-	repoUID    string
-	repo       *git.Repository
-	remoteRepo *git.Repository
-	tmpPath    string
+	repoUID        string
+	repo           *git.Repository
+	remoteRepoPath string
+	tmpPath        string
 }
 
 // NewSharedRepo creates a new temporary upload repository.
-func NewSharedRepo(baseTmpDir, repoUID string, remoteRepo *git.Repository) (*SharedRepo, error) {
+func NewSharedRepo(baseTmpDir, repoUID string, remoteRepoPath string) (*SharedRepo, error) {
 	tmpPath, err := tempdir.CreateTemporaryPath(baseTmpDir, repoUID)
 	if err != nil {
 		return nil, err
 	}
 	t := &SharedRepo{
-		repoUID:    repoUID,
-		remoteRepo: remoteRepo,
-		tmpPath:    tmpPath,
+		repoUID:        repoUID,
+		remoteRepoPath: remoteRepoPath,
+		tmpPath:        tmpPath,
 	}
 	return t, nil
 }
@@ -71,7 +71,7 @@ func (r *SharedRepo) Clone(ctx context.Context, branchName string) error {
 	if branchName != "" {
 		args = append(args, "-b", strings.TrimPrefix(branchName, gitReferenceNamePrefixBranch))
 	}
-	args = append(args, r.remoteRepo.Path, r.tmpPath)
+	args = append(args, r.remoteRepoPath, r.tmpPath)
 
 	if _, _, err := git.NewCommand(ctx, args...).RunStdString(nil); err != nil {
 		stderr := err.Error()
@@ -338,7 +338,7 @@ func (r *SharedRepo) push(ctx context.Context, writeRequest *rpc.WriteRequest,
 	// Because calls hooks we need to pass in the environment
 	env := CreateEnvironmentForPush(ctx, writeRequest)
 	if err := gitea.Push(ctx, r.tmpPath, types.PushOptions{
-		Remote: r.remoteRepo.Path,
+		Remote: r.remoteRepoPath,
 		Branch: sourceRef + ":" + destinationRef,
 		Env:    env,
 	}); err != nil {

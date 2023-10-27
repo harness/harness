@@ -58,7 +58,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     LDFLAGS="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.major=${GITNESS_VERSION_MAJOR} -X github.com/harness/gitness/version.minor=${GITNESS_VERSION_MINOR} -X github.com/harness/gitness/version.patch=${GITNESS_VERSION_PATCH} -extldflags '-static'" && \
     CGO_ENABLED=1 \
     GOOS=$TARGETOS GOARCH=$TARGETARCH \
-    CC=$CC go build -tags=gogit -ldflags="$LDFLAGS" -o ./gitness ./cmd/gitness
+    CC=$CC go build -ldflags="$LDFLAGS" -o ./gitness ./cmd/gitness
 
 ### Pull CA Certs
 FROM --platform=$BUILDPLATFORM alpine:latest as cert-image
