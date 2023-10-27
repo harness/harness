@@ -324,7 +324,7 @@ func setupRepos(r chi.Router,
 
 			setupUploads(r, uploadCtrl)
 
-			setupRules(r, repoCtrl)
+			SetupRules(r, repoCtrl)
 		})
 	})
 }
@@ -537,7 +537,7 @@ func SetupChecks(r chi.Router, checkCtrl *check.Controller) {
 	})
 }
 
-func setupRules(r chi.Router, repoCtrl *repo.Controller) {
+func SetupRules(r chi.Router, repoCtrl *repo.Controller) {
 	r.Route("/rules", func(r chi.Router) {
 		r.Post("/", handlerrepo.HandleRuleCreate(repoCtrl))
 		r.Get("/", handlerrepo.HandleRuleList(repoCtrl))
