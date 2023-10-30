@@ -152,7 +152,9 @@ const BranchProtectionForm = (props: {
       const excludeArr = excludeList?.map((arr: string) => ['exclude', arr])
       const finalArray = [...includeArr, ...excludeArr]
       const idsArray = (rule?.definition as ProtectionBranch)?.bypass?.user_ids
-      const bypassList = users?.filter(user => idsArray?.includes(user.id as number))?.map(user => `${user.id} ${user.display_name}`)
+      const bypassList = users
+        ?.filter(user => idsArray?.includes(user.id as number))
+        ?.map(user => `${user.id} ${user.display_name}`)
       return {
         name: rule?.uid,
         desc: rule.description,
@@ -401,7 +403,7 @@ const BranchProtectionForm = (props: {
                   onChange={item => {
                     const id = item.value?.toString().split(' ')[0]
                     const displayName = item.label
-                    const bypassEntry = `${id} ${displayName}` 
+                    const bypassEntry = `${id} ${displayName}`
 
                     bypassList?.push(bypassEntry)
                     const uniqueArr = Array.from(new Set(bypassList))
@@ -410,7 +412,7 @@ const BranchProtectionForm = (props: {
                   name={'bypassList'}></FormInput.Select>
                 <Container className={cx(css.widthContainer, css.bypassContainer)}>
                   {bypassList?.map((owner, idx) => {
-                    const nameIdx = owner.indexOf(" ") + 1                 
+                    const nameIdx = owner.indexOf(' ') + 1
                     const name = owner.substring(nameIdx)
 
                     return (
