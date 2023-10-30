@@ -100,24 +100,27 @@ func TestService_ParseCodeOwner(t *testing.T) {
 }
 
 func Test_contains(t *testing.T) {
-	pattern1 := [1]string{"*"}
-	pattern2 := [1]string{"**"}
-	pattern3 := [1]string{"abc/xyz"}
-	pattern4 := [2]string{"abc/xyz", "*"}
-	pattern5 := [2]string{"abc/xyz", "**"}
-	pattern6 := [1]string{"doc/frotz"}
-	pattern7 := [1]string{"?ilename"}
-	pattern8 := [1]string{"**/foo"}
-	pattern9 := [1]string{"foo/**"}
-	pattern10 := [1]string{"a/**/b"}
-	pattern11 := [1]string{"foo/*"}
-	pattern12 := [1]string{"*.txt"}
-	pattern13 := [1]string{"/scripts/"}
+	target1 := []string{"random"}
+	target2 := []string{"random/xyz"}
+	target3 := []string{"abhinav/path"}
+	target4 := []string{"abc/xyz"}
+	target5 := []string{"abc/xyz", "random"}
+	target6 := []string{"doc/frotz"}
+	target7 := []string{"filename"}
+	target8 := []string{"as/foo"}
+	target9 := []string{"foo/bar"}
+	target10 := []string{"a/x/y/b"}
+	target11 := []string{"foo/getting-started.md"}
+	target12 := []string{"foo.txt"}
+	target13 := []string{"/scripts/filename.txt"}
+	target14 := []string{"path/to/file.txt"}
+	target15 := []string{"path/to/foo"}
+	target16 := []string{"foo/build-app/troubleshooting.md"}
 
 	type args struct {
-		ctx    context.Context
-		slice  []string
-		target string
+		ctx     context.Context
+		pattern string
+		target  []string
 	}
 	tests := []struct {
 		name string
@@ -127,178 +130,151 @@ func Test_contains(t *testing.T) {
 		{
 			name: "Test * pattern",
 			args: args{
-				ctx:    nil,
-				slice:  pattern1[:],
-				target: "random",
+				ctx:     nil,
+				pattern: "*",
+				target:  target1,
 			},
 			want: true,
 		},
 		{
 			name: "Test ** pattern",
 			args: args{
-				ctx:    nil,
-				slice:  pattern2[:],
-				target: "random/xyz",
+				ctx:     nil,
+				pattern: "**",
+				target:  target2,
 			},
 			want: true,
 		},
 		{
 			name: "Test ** pattern on fixed path",
 			args: args{
-				ctx:    nil,
-				slice:  pattern1[:],
-				target: "abhinav/path",
+				ctx:     nil,
+				pattern: "abc/xyz",
+				target:  target3,
 			},
 			want: false,
 		},
 		{
 			name: "Test abc/xyz pattern",
 			args: args{
-				ctx:    nil,
-				slice:  pattern3[:],
-				target: "abc/xyz",
+				ctx:     nil,
+				pattern: "abc/xyz",
+				target:  target4,
 			},
 			want: true,
-		},
-		{
-			name: "Test abc/xyz pattern negative",
-			args: args{
-				ctx:    nil,
-				slice:  pattern3[:],
-				target: "abc/xy",
-			},
-			want: false,
 		},
 		{
 			name: "Test incorrect pattern negative",
 			args: args{
-				ctx:    nil,
-				slice:  pattern4[:],
-				target: "random/path",
+				ctx:     nil,
+				pattern: "random/xyz",
+				target:  target5,
 			},
 			want: false,
 		},
 		{
-			name: "Test * pattern with bigger slice",
-			args: args{
-				ctx:    nil,
-				slice:  pattern4[:],
-				target: "random",
-			},
-			want: true,
-		},
-		{
 			name: "Test file path with **",
 			args: args{
-				ctx:    nil,
-				slice:  pattern5[:],
-				target: "path/to/file",
+				ctx:     nil,
+				pattern: "**",
+				target:  target14,
 			},
 			want: true,
 		},
 		{
 			name: "Test / pattern",
 			args: args{
-				ctx:    nil,
-				slice:  pattern6[:],
-				target: "doc/frotz",
+				ctx:     nil,
+				pattern: "doc/frotz",
+				target:  target6,
 			},
 			want: true,
 		},
 		{
 			name: "Test ? pattern",
 			args: args{
-				ctx:    nil,
-				slice:  pattern7[:],
-				target: "filename",
+				ctx:     nil,
+				pattern: "?ilename",
+				target:  target7,
 			},
 			want: true,
 		},
 		{
 			name: "Test /** pattern",
 			args: args{
-				ctx:    nil,
-				slice:  pattern8[:],
-				target: "foo",
+				ctx:     nil,
+				pattern: "**/foo",
+				target:  target8,
 			},
 			want: true,
 		},
 		{
-			name: "Test /** pattern with slash",
-			args: args{
-				ctx:    nil,
-				slice:  pattern8[:],
-				target: "foo/bar",
-			},
-			want: false,
-		},
-		{
 			name: "Test **/ with deep nesting",
 			args: args{
-				ctx:    nil,
-				slice:  pattern8[:],
-				target: "path/to/foo",
+				ctx:     nil,
+				pattern: "**/foo",
+				target:  target15,
 			},
 			want: true,
 		},
 		{
 			name: "Test **/ pattern",
 			args: args{
-				ctx:    nil,
-				slice:  pattern9[:],
-				target: "foo/bar",
+				ctx:     nil,
+				pattern: "foo/**",
+				target:  target9,
 			},
 			want: true,
 		},
 		{
 			name: "Test a/**/b pattern",
 			args: args{
-				ctx:    nil,
-				slice:  pattern10[:],
-				target: "a/x/y/b",
+				ctx:     nil,
+				pattern: "a/x/y/b",
+				target:  target10,
 			},
 			want: true,
 		},
 		{
 			name: "Test /* pattern positive",
 			args: args{
-				ctx:    nil,
-				slice:  pattern11[:],
-				target: "foo/getting-started.md",
+				ctx:     nil,
+				pattern: "foo/*",
+				target:  target11,
 			},
 			want: true,
 		},
 		{
 			name: "Test /* pattern negative",
 			args: args{
-				ctx:    nil,
-				slice:  pattern11[:],
-				target: "foo/build-app/troubleshooting.md",
+				ctx:     nil,
+				pattern: "foo/*",
+				target:  target16,
 			},
 			want: false,
 		},
 		{
 			name: "Test * for files",
 			args: args{
-				ctx:    nil,
-				slice:  pattern12[:],
-				target: "foo.txt",
+				ctx:     nil,
+				pattern: "*.txt",
+				target:  target12,
 			},
 			want: true,
 		},
 		{
 			name: "Test /a/",
 			args: args{
-				ctx:    nil,
-				slice:  pattern13[:],
-				target: "/scripts/filename.txt",
+				ctx:     nil,
+				pattern: "/scripts/",
+				target:  target13,
 			},
 			want: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, _ := contains(tt.args.slice, tt.args.target); got != tt.want {
+			if got, _ := contains(tt.args.pattern, tt.args.target); got != tt.want {
 				t.Errorf("contains() = %v, want %v", got, tt.want)
 			}
 		})

@@ -314,6 +314,8 @@ func setupRepos(r chi.Router,
 				r.Post("/*", handlerrepo.HandleMergeCheck(repoCtrl))
 			})
 
+			r.Get("/codeowners/validate", handlerrepo.HandleCodeOwnersValidate(repoCtrl))
+
 			SetupPullReq(r, pullreqCtrl)
 
 			SetupWebhook(r, webhookCtrl)

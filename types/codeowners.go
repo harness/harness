@@ -14,7 +14,11 @@
 
 package types
 
-import "github.com/harness/gitness/types/enum"
+import (
+	"fmt"
+
+	"github.com/harness/gitness/types/enum"
+)
 
 type CodeOwnerEvaluation struct {
 	EvaluationEntries []CodeOwnerEvaluationEntry `json:"evaluation_entries"`
@@ -28,6 +32,32 @@ type CodeOwnerEvaluationEntry struct {
 
 type OwnerEvaluation struct {
 	Owner          PrincipalInfo              `json:"owner"`
-	ReviewDecision enum.PullReqReviewDecision `json:"review_decision,omitempty"`
-	ReviewSHA      string                     `json:"review_sha,omitempty"`
+	ReviewDecision enum.PullReqReviewDecision `json:"review_decision"`
+	ReviewSHA      string                     `json:"review_sha"`
+}
+
+type CodeOwnersValidation struct {
+	Violations []CodeOwnersViolation `json:"violations"`
+}
+
+type CodeOwnersViolation struct {
+	Code    enum.CodeOwnerViolationCode `json:"code"`
+	Message string                      `json:"message"`
+	Params  []any                       `json:"params"`
+}
+
+func (violations *CodeOwnersValidation) Add(code enum.CodeOwnerViolationCode, message string) {
+	violations.Violations = append(violations.Violations, CodeOwnersViolation{
+		Code:    code,
+		Message: message,
+		Params:  nil,
+	})
+}
+
+func (violations *CodeOwnersValidation) Addf(code enum.CodeOwnerViolationCode, format string, params ...any) {
+	violations.Violations = append(violations.Violations, CodeOwnersViolation{
+		Code:    code,
+		Message: fmt.Sprintf(format, params...),
+		Params:  params,
+	})
 }

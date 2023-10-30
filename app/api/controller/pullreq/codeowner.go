@@ -41,30 +41,18 @@ func (c *Controller) CodeOwners(
 		return types.CodeOwnerEvaluation{}, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
-	filteredCodeOwners, err := c.codeOwners.GetApplicableCodeOwnersForPR(ctx, repo, pr)
+	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
+	if err != nil {
+		return types.CodeOwnerEvaluation{}, fmt.Errorf("failed to get reviewers by pr: %w", err)
+	}
+
+	ownerEvaluation, err := c.codeOwners.Evaluate(ctx, repo, pr, reviewers)
 	if errors.Is(codeowners.ErrNotFound, err) {
 		return types.CodeOwnerEvaluation{}, usererror.ErrNotFound
 	}
 	if codeowners.IsTooLargeError(err) {
 		return types.CodeOwnerEvaluation{}, usererror.UnprocessableEntityf(err.Error())
 	}
-	if err != nil {
-		return types.CodeOwnerEvaluation{}, fmt.Errorf("failed to get codeOwners: %w", err)
-	}
-
-	if len(filteredCodeOwners.Entries) == 0 {
-		return types.CodeOwnerEvaluation{
-			EvaluationEntries: nil,
-			FileSha:           filteredCodeOwners.FileSHA,
-		}, nil
-	}
-
-	reviewers, err := c.reviewerStore.List(ctx, pullreqNum)
-	if err != nil {
-		return types.CodeOwnerEvaluation{}, fmt.Errorf("failed to get reviewers by pr: %w", err)
-	}
-
-	ownerEvaluation, err := c.codeOwners.Evaluate(ctx, filteredCodeOwners, reviewers)
 	if err != nil {
 		return types.CodeOwnerEvaluation{}, err
 	}

@@ -231,7 +231,7 @@ func (s *Service) getCodeOwnerFile(
 	}, nil
 }
 
-func (s *Service) GetApplicableCodeOwnersForPR(
+func (s *Service) getApplicableCodeOwnersForPR(
 	ctx context.Context,
 	repo *types.Repository,
 	pr *types.PullReq,
@@ -252,7 +252,7 @@ func (s *Service) GetApplicableCodeOwnersForPR(
 	}
 
 	for _, entry := range codeOwners.Entries {
-		ok, err := contains(diffFileStats.Files, entry.Pattern)
+		ok, err := contains(entry.Pattern, diffFileStats.Files)
 		if err != nil {
 			return nil, err
 		}
@@ -268,24 +268,31 @@ func (s *Service) GetApplicableCodeOwnersForPR(
 
 func (s *Service) Evaluate(
 	ctx context.Context,
-	owners *CodeOwners,
+	repo *types.Repository,
+	pr *types.PullReq,
 	reviewer []*types.PullReqReviewer,
 ) (*Evaluation, error) {
-	if owners == nil {
+	owners, err := s.getApplicableCodeOwnersForPR(ctx, repo, pr)
+	if err != nil {
+		return &Evaluation{}, fmt.Errorf("failed to get codeOwners: %w", err)
+	}
+
+	if owners == nil || len(owners.Entries) == 0 {
 		return &Evaluation{}, nil
 	}
+
 	flattenedReviewers := flattenReviewers(reviewer)
 	evaluationEntries := make([]EvaluationEntry, len(owners.Entries))
 
 	for i, entry := range owners.Entries {
-		ownerEvaluations := make([]OwnerEvaluation, len(entry.Owners))
-		for j, owner := range entry.Owners {
+		ownerEvaluations := make([]OwnerEvaluation, 0, len(owners.Entries))
+		for _, owner := range entry.Owners {
 			if pullreqReviewer, ok := flattenedReviewers[owner]; ok {
-				ownerEvaluations[j] = OwnerEvaluation{
+				ownerEvaluations = append(ownerEvaluations, OwnerEvaluation{
 					Owner:          pullreqReviewer.Reviewer,
 					ReviewDecision: pullreqReviewer.ReviewDecision,
 					ReviewSHA:      pullreqReviewer.SHA,
-				}
+				})
 				continue
 			}
 			principal, err := s.principalStore.FindByEmail(ctx, owner)
@@ -297,9 +304,9 @@ func (s *Service) Evaluate(
 			if err != nil {
 				return &Evaluation{}, fmt.Errorf("error finding user by email: %w", err)
 			}
-			ownerEvaluations[j] = OwnerEvaluation{
+			ownerEvaluations = append(ownerEvaluations, OwnerEvaluation{
 				Owner: *principal.ToPrincipalInfo(),
-			}
+			})
 		}
 		evaluationEntries[i] = EvaluationEntry{
 			Pattern:          entry.Pattern,
@@ -311,6 +318,49 @@ func (s *Service) Evaluate(
 		EvaluationEntries: evaluationEntries,
 		FileSha:           owners.FileSHA,
 	}, nil
+}
+
+func (s *Service) Validate(
+	ctx context.Context,
+	repo *types.Repository,
+	branch string,
+) (*types.CodeOwnersValidation, error) {
+	var codeOwnerValidation types.CodeOwnersValidation
+	// check file parsing, existence and size
+	codeowners, err := s.get(ctx, repo, branch)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range codeowners.Entries {
+		// check for users in file
+		for _, owner := range entry.Owners {
+			_, err := s.principalStore.FindByEmail(ctx, owner)
+			if errors.Is(err, gitness_store.ErrResourceNotFound) {
+				codeOwnerValidation.Addf(enum.CodeOwnerViolationCodeUserNotFound,
+					"user %q not found", owner)
+				continue
+			}
+			if err != nil {
+				return nil, fmt.Errorf("error encountered fetching user %q by email: %w", owner, err)
+			}
+		}
+
+		// check for pattern
+		if entry.Pattern == "" {
+			codeOwnerValidation.Add(enum.CodeOwnerViolationCodePatternEmpty,
+				"empty pattern")
+			continue
+		}
+
+		ok := doublestar.ValidatePathPattern(entry.Pattern)
+		if !ok {
+			codeOwnerValidation.Addf(enum.CodeOwnerViolationCodePatternInvalid, "pattern %q is invalid",
+				entry.Pattern)
+		}
+	}
+
+	return &codeOwnerValidation, nil
 }
 
 func flattenReviewers(reviewers []*types.PullReqReviewer) map[string]*types.PullReqReviewer {
@@ -326,8 +376,8 @@ func flattenReviewers(reviewers []*types.PullReqReviewer) map[string]*types.Pull
 // A path foo/bar will match against pattern ** or foo/*
 // Also, for a directory ending with / we have to return true for all files in that directory,
 // hence we append ** for it.
-func contains(patterns []string, target string) (bool, error) {
-	for _, pattern := range patterns {
+func contains(pattern string, targets []string) (bool, error) {
+	for _, target := range targets {
 		// in case of / ending rule, owner owns the whole directory hence append **
 		if strings.HasSuffix(pattern, "/") {
 			pattern += "**"

@@ -157,6 +157,10 @@ type getRawDiffRequest struct {
 	Range string `path:"range" example:"main..dev"`
 }
 
+type codeOwnersValidate struct {
+	repoRequest
+}
+
 // ruleType is a plugin for types.RuleType to allow using oneof.
 type ruleType string
 
@@ -819,4 +823,17 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules/{rule_uid}", opRuleGet)
+
+	opCodeOwnerValidate := openapi3.Operation{}
+	opCodeOwnerValidate.WithTags("repository")
+	opCodeOwnerValidate.WithMapOfAnything(map[string]interface{}{"operationId": "codeOwnersValidate"})
+	opCodeOwnerValidate.WithParameters(queryParameterGitRef)
+	_ = reflector.SetRequest(&opCodeOwnerValidate, new(codeOwnersValidate), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, nil, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusUnprocessableEntity)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/codeowners/validate", opCodeOwnerValidate)
 }

@@ -144,17 +144,10 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
-	ownersForPR, err := c.codeOwners.GetApplicableCodeOwnersForPR(ctx, sourceRepo, pr)
-	if codeowners.IsTooLargeError(err) {
-		return nil, nil, usererror.UnprocessableEntityf(err.Error())
-	}
+	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, sourceRepo, pr, reviewers)
+	// check for error and ignore if it is codeowners file not found else throw error
 	if err != nil && !errors.Is(err, codeowners.ErrNotFound) {
-		return nil, nil, fmt.Errorf("failed to find codeOwners for PR: %w", err)
-	}
-
-	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, ownersForPR, reviewers)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get code owners with approval: %w", err)
+		return nil, nil, fmt.Errorf("CODEOWNERS evaluation failed: %w", err)
 	}
 
 	ruleOut, violations, err := protectionRules.MergeVerify(ctx, protection.MergeVerifyInput{

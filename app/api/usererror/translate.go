@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/gitrpc"
@@ -30,10 +31,11 @@ import (
 
 func Translate(err error) *Error {
 	var (
-		rError      *Error
-		checkError  *check.ValidationError
-		gitrpcError *gitrpc.Error
-		maxBytesErr *http.MaxBytesError
+		rError                  *Error
+		checkError              *check.ValidationError
+		gitrpcError             *gitrpc.Error
+		maxBytesErr             *http.MaxBytesError
+		codeOwnersTooLargeError *codeowners.TooLargeError
 	)
 
 	// TODO: Improve performance of checking multiple errors with errors.Is
@@ -86,6 +88,12 @@ func Translate(err error) *Error {
 	// webhook errors
 	case errors.Is(err, webhook.ErrWebhookNotRetriggerable):
 		return ErrWebhookNotRetriggerable
+
+		// codeowners errors
+	case errors.Is(err, codeowners.ErrNotFound):
+		return ErrCodeOwnersNotFound
+	case errors.As(err, &codeOwnersTooLargeError):
+		return UnprocessableEntityf(codeOwnersTooLargeError.Error())
 
 	// unknown error
 	default:

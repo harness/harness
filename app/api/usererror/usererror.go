@@ -76,6 +76,9 @@ var (
 	// ErrWebhookNotRetriggerable is returned if the webhook can't be retriggered.
 	ErrWebhookNotRetriggerable = New(http.StatusMethodNotAllowed,
 		"The webhook execution is incomplete and can't be retriggered")
+
+	// ErrCodeOwnersNotFound is returned when codeowners file is not found.
+	ErrCodeOwnersNotFound = New(http.StatusNotFound, "CODEOWNERS file not found")
 )
 
 // Error represents a json-encoded API error.
