@@ -7557,7 +7557,7 @@ components:
       type: object
     ProtectionDefBypass:
       properties:
-        space_owners:
+        repo_owners:
           type: boolean
         user_ids:
           items:

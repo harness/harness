@@ -130,9 +130,9 @@ func (c *Controller) fetchRules(
 	session *auth.Session,
 	repo *types.Repository,
 ) (protection.Protection, bool, error) {
-	isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, repo)
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to determine space ownership: %w", err)
+		return nil, false, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}
 
 	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
@@ -140,5 +140,5 @@ func (c *Controller) fetchRules(
 		return nil, false, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
-	return protectionRules, isSpaceOwner, nil
+	return protectionRules, isRepoOwner, nil
 }

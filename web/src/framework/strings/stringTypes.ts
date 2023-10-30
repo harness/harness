@@ -44,7 +44,7 @@ export interface StringsMap {
   branchDoesNotHaveFile: string
   branchName: string
   branchNotFound: string
-  'branchProtection.allProjectOwners': string
+  'branchProtection.allRepoOwners': string
   'branchProtection.autoDeleteText': string
   'branchProtection.autoDeleteTitle': string
   'branchProtection.blockBranchCreation': string
@@ -86,6 +86,7 @@ export interface StringsMap {
   'branchProtection.ruleDeleted': string
   'branchProtection.ruleEmpty': string
   'branchProtection.ruleUpdated': string
+  'branchProtection.saveRule': string
   'branchProtection.statusCheck': string
   'branchProtection.targetBranches': string
   'branchProtection.targetPlaceholder': string

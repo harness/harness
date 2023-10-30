@@ -470,7 +470,7 @@ export interface ProtectionDefApprovals {
 }
 
 export interface ProtectionDefBypass {
-  space_owners?: boolean
+  repo_owners?: boolean
   user_ids?: number[]
 }
 

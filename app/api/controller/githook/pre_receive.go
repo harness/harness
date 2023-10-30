@@ -98,9 +98,9 @@ func (c *Controller) checkProtectionRules(
 	refUpdates changedRefs,
 	output *githook.Output,
 ) error {
-	isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, repo)
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}
 
 	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
@@ -117,12 +117,12 @@ func (c *Controller) checkProtectionRules(
 		}
 
 		violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-			Actor:        &session.Principal,
-			IsSpaceOwner: isSpaceOwner,
-			Repo:         repo,
-			RefAction:    refAction,
-			RefType:      refType,
-			RefNames:     names,
+			Actor:       &session.Principal,
+			IsRepoOwner: isRepoOwner,
+			Repo:        repo,
+			RefAction:   refAction,
+			RefType:     refType,
+			RefNames:    names,
 		})
 		if err != nil {
 			errCheckAction = fmt.Errorf("failed to verify protection rules for git push: %w", err)

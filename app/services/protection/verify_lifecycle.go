@@ -26,12 +26,12 @@ type (
 	}
 
 	RefChangeVerifyInput struct {
-		Actor        *types.Principal
-		IsSpaceOwner bool
-		Repo         *types.Repository
-		RefAction    RefAction
-		RefType      RefType
-		RefNames     []string
+		Actor       *types.Principal
+		IsRepoOwner bool
+		Repo        *types.Repository
+		RefAction   RefAction
+		RefType     RefType
+		RefNames    []string
 	}
 
 	RefType int

@@ -129,9 +129,9 @@ func (c *Controller) Merge(
 		}
 	}
 
-	isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, targetRepo)
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, targetRepo)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to determine if the user is space admin: %w", err)
+		return nil, nil, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}
 
 	checkResults, err := c.checkStore.ListResults(ctx, targetRepo.ID, pr.SourceSHA)
@@ -152,7 +152,7 @@ func (c *Controller) Merge(
 
 	ruleOut, violations, err := protectionRules.MergeVerify(ctx, protection.MergeVerifyInput{
 		Actor:        &session.Principal,
-		IsSpaceOwner: isSpaceOwner,
+		IsRepoOwner:  isRepoOwner,
 		TargetRepo:   targetRepo,
 		SourceRepo:   sourceRepo,
 		PullReq:      pr,

@@ -859,7 +859,7 @@ branchProtection:
   defaultBranch: Default branch
   bypassList: Bypass List
   newBranchProtectionRule: New Branch Protection Rule
-  allProjectOwners: All project owners
+  allRepoOwners: Allow users with edit permission on the repository to bypass
   protectionSelectAll: 'Protections: Select all that apply'
   requireMinReviewersTitle: Require a minimum number of reviewers
   requireMinReviewersContent: Require approval on pull requests from a minimum number of reviewers
@@ -883,6 +883,7 @@ branchProtection:
   blockBranchDeletion: Block branch deletion
   blockBranchDeletionText: Only allow users with bypass permission to delete matching branches
   editRule: Edit Rule
+  saveRule: Save Rule
   deleteRule: Delete Rule
   ruleDeleted: Rule Deleted
   ruleEmpty: There are no rules in your repo. Click the button below to create a rule.

@@ -19,8 +19,8 @@ import (
 )
 
 type DefBypass struct {
-	UserIDs     []int64 `json:"user_ids,omitempty"`
-	SpaceOwners bool    `json:"space_owners,omitempty"`
+	UserIDs    []int64 `json:"user_ids,omitempty"`
+	RepoOwners bool    `json:"repo_owners,omitempty"`
 }
 
 func (v DefBypass) Sanitize() error {

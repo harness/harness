@@ -42,7 +42,7 @@ func (v *Branch) MergeVerify(
 	ctx context.Context,
 	in MergeVerifyInput,
 ) (MergeVerifyOutput, []types.RuleViolations, error) {
-	if v.isBypassed(in.Actor, in.IsSpaceOwner) {
+	if v.isBypassed(in.Actor, in.IsRepoOwner) {
 		return MergeVerifyOutput{}, nil, nil
 	}
 
@@ -53,7 +53,7 @@ func (v *Branch) RefChangeVerify(
 	ctx context.Context,
 	in RefChangeVerifyInput,
 ) ([]types.RuleViolations, error) {
-	if v.isBypassed(in.Actor, in.IsSpaceOwner) || in.RefType != RefTypeBranch || len(in.RefNames) == 0 {
+	if v.isBypassed(in.Actor, in.IsRepoOwner) || in.RefType != RefTypeBranch || len(in.RefNames) == 0 {
 		return nil, nil
 	}
 
@@ -76,9 +76,9 @@ func (v *Branch) Sanitize() error {
 	return nil
 }
 
-func (v *Branch) isBypassed(actor *types.Principal, isSpaceOwner bool) bool {
+func (v *Branch) isBypassed(actor *types.Principal, isRepoOwner bool) bool {
 	return actor != nil &&
 		(actor.Admin ||
-			v.Bypass.SpaceOwners && isSpaceOwner ||
+			v.Bypass.RepoOwners && isRepoOwner ||
 			slices.Contains(v.Bypass.UserIDs, actor.ID))
 }

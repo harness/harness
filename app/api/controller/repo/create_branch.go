@@ -51,18 +51,18 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		in.Target = repo.DefaultBranch
 	}
 
-	rules, isSpaceOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:        &session.Principal,
-		IsSpaceOwner: isSpaceOwner,
-		Repo:         repo,
-		RefAction:    protection.RefActionCreate,
-		RefType:      protection.RefTypeBranch,
-		RefNames:     []string{in.Name},
+		Actor:       &session.Principal,
+		IsRepoOwner: isRepoOwner,
+		Repo:        repo,
+		RefAction:   protection.RefActionCreate,
+		RefType:     protection.RefTypeBranch,
+		RefNames:    []string{in.Name},
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)

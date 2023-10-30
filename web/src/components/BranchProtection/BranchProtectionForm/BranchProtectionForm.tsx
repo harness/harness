@@ -152,8 +152,7 @@ const BranchProtectionForm = (props: {
       const excludeArr = excludeList?.map((arr: string) => ['exclude', arr])
       const finalArray = [...includeArr, ...excludeArr]
       const idsArray = (rule?.definition as ProtectionBranch)?.bypass?.user_ids
-      const filteredArray = users?.filter(user => idsArray?.includes(user.id as number))
-      const resultArray = filteredArray?.map(user => `${user.id} ${user.display_name}`)
+      const bypassList = users?.filter(user => idsArray?.includes(user.id as number))?.map(user => `${user.id} ${user.display_name}`)
       return {
         name: rule?.uid,
         desc: rule.description,
@@ -161,8 +160,8 @@ const BranchProtectionForm = (props: {
         target: '',
         targetDefault: (rule?.pattern as ProtectionPattern)?.default,
         targetList: finalArray,
-        allProjectOwners: (rule.definition as ProtectionBranch)?.bypass?.space_owners,
-        projectOwners: resultArray,
+        allRepoOwners: (rule.definition as ProtectionBranch)?.bypass?.repo_owners,
+        bypassList: bypassList,
         requireMinReviewers: minReviewerCheck,
         minReviewers: minReviewerCheck
           ? (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count
@@ -202,7 +201,7 @@ const BranchProtectionForm = (props: {
         const excludeArray =
           formData?.targetList?.filter(([type]) => type === 'exclude').map(([, value]) => value) ?? []
 
-        const intArray = formData?.projectOwners?.map(item => parseInt(item.split(' ')[0]))
+        const bypassList = formData?.bypassList?.map(item => parseInt(item.split(' ')[0]))
         const payload: OpenapiRule = {
           uid: formData.name,
           type: 'branch',
@@ -215,8 +214,8 @@ const BranchProtectionForm = (props: {
           },
           definition: {
             bypass: {
-              user_ids: intArray,
-              space_owners: formData.allProjectOwners
+              user_ids: bypassList,
+              repo_owners: formData.allRepoOwners
             },
             pullreq: {
               approvals: {
@@ -253,7 +252,7 @@ const BranchProtectionForm = (props: {
       }}>
       {formik => {
         const targetList = formik.values.targetList
-        const bypassList = formik.values.projectOwners
+        const bypassList = formik.values.bypassList
         const minReviewers = formik.values.requireMinReviewers
         const statusChecks = formik.values.statusChecks
         const limitMergeStrats = formik.values.limitMergeStrategies
@@ -394,22 +393,26 @@ const BranchProtectionForm = (props: {
                 <Text className={css.headingSize} padding={{ bottom: 'medium' }} font={{ variation: FontVariation.H4 }}>
                   {getString('branchProtection.bypassList')}
                 </Text>
-                <FormInput.CheckBox label={getString('branchProtection.allProjectOwners')} name={'allProjectOwners'} />
+                <FormInput.CheckBox label={getString('branchProtection.allRepoOwners')} name={'allRepoOwners'} />
                 <FormInput.Select
                   items={userOptions}
                   onQueryChange={setSearchTerm}
                   className={css.widthContainer}
                   onChange={item => {
-                    bypassList?.push(item.value as string)
-                    const uniqueArr = Array.from(new Set(bypassList))
-                    formik.setFieldValue('projectOwners', uniqueArr)
+                    const id = item.value?.toString().split(' ')[0]
+                    const displayName = item.label
+                    const bypassEntry = `${id} ${displayName}` 
 
-                    // formik.values.projectOwners.push(item.value as number)
+                    bypassList?.push(bypassEntry)
+                    const uniqueArr = Array.from(new Set(bypassList))
+                    formik.setFieldValue('bypassList', uniqueArr)
                   }}
-                  name={'projectOwners'}></FormInput.Select>
+                  name={'bypassList'}></FormInput.Select>
                 <Container className={cx(css.widthContainer, css.bypassContainer)}>
                   {bypassList?.map((owner, idx) => {
-                    const name = owner.split(' ')[1]
+                    const nameIdx = owner.indexOf(" ") + 1                 
+                    const name = owner.substring(nameIdx)
+
                     return (
                       <Layout.Horizontal key={`${name}-${idx}`} flex={{ align: 'center-center' }} padding={'small'}>
                         <Avatar hoverCard={false} size="small" name={name.toString()} />
@@ -423,7 +426,7 @@ const BranchProtectionForm = (props: {
                             const filteredData = bypassList.filter(
                               item => !(item[0] === owner[0] && item[1] === owner[1])
                             )
-                            formik.setFieldValue('projectOwners', filteredData)
+                            formik.setFieldValue('bypassList', filteredData)
                           }}
                         />
                       </Layout.Horizontal>
@@ -444,7 +447,7 @@ const BranchProtectionForm = (props: {
                 <Layout.Horizontal spacing="small">
                   <Button
                     type="submit"
-                    text={editMode ? getString('branchProtection.editRule') : getString('branchProtection.createRule')}
+                    text={editMode ? getString('branchProtection.saveRule') : getString('branchProtection.createRule')}
                     variation={ButtonVariation.PRIMARY}
                     disabled={false}
                   />

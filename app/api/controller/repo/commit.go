@@ -62,7 +62,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		return types.CommitFilesResponse{}, nil, err
 	}
 
-	rules, isSpaceOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, err
 	}
@@ -78,12 +78,12 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:        &session.Principal,
-		IsSpaceOwner: isSpaceOwner,
-		Repo:         repo,
-		RefAction:    refAction,
-		RefType:      protection.RefTypeBranch,
-		RefNames:     []string{branchName},
+		Actor:       &session.Principal,
+		IsRepoOwner: isRepoOwner,
+		Repo:        repo,
+		RefAction:   refAction,
+		RefType:     protection.RefTypeBranch,
+		RefNames:    []string{branchName},
 	})
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)

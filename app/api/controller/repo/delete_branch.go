@@ -46,18 +46,18 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return nil, usererror.ErrDefaultBranchCantBeDeleted
 	}
 
-	rules, isSpaceOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
 		return nil, err
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:        &session.Principal,
-		IsSpaceOwner: isSpaceOwner,
-		Repo:         repo,
-		RefAction:    protection.RefActionDelete,
-		RefType:      protection.RefTypeBranch,
-		RefNames:     []string{branchName},
+		Actor:       &session.Principal,
+		IsRepoOwner: isRepoOwner,
+		Repo:        repo,
+		RefAction:   protection.RefActionDelete,
+		RefType:     protection.RefTypeBranch,
+		RefNames:    []string{branchName},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify protection rules: %w", err)

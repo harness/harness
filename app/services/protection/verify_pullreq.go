@@ -33,7 +33,7 @@ type (
 
 	MergeVerifyInput struct {
 		Actor        *types.Principal
-		IsSpaceOwner bool
+		IsRepoOwner  bool
 		Membership   *types.Membership
 		TargetRepo   *types.Repository
 		SourceRepo   *types.Repository
