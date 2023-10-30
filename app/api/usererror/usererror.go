@@ -67,6 +67,9 @@ var (
 	// ErrDefaultBranchCantBeDeleted is returned if the user tries to delete the default branch of a repository.
 	ErrDefaultBranchCantBeDeleted = New(http.StatusBadRequest, "The default branch of a repository can't be deleted")
 
+	// ErrPullReqRefsCantBeModified is returned if a user tries to tinker with a pull request git ref.
+	ErrPullReqRefsCantBeModified = New(http.StatusBadRequest, "The pull request git refs can't be modified")
+
 	// ErrRequestTooLarge is returned if the request it too large.
 	ErrRequestTooLarge = New(http.StatusRequestEntityTooLarge, "The request is too large")
 

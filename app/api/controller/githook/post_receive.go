@@ -34,6 +34,9 @@ const (
 
 	// gitReferenceNamePrefixTag is the prefix of references of type tag.
 	gitReferenceNamePrefixTag = "refs/tags/"
+
+	// gitReferenceNamePrefixTag is the prefix of pull req references.
+	gitReferenceNamePullReq = "refs/pullreq/"
 )
 
 // PostReceive executes the post-receive hook for a git repository.

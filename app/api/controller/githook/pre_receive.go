@@ -62,6 +62,11 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
+	if c.blockPullReqRefUpdate(refUpdates) {
+		output.Error = ptr.String(usererror.ErrPullReqRefsCantBeModified.Error())
+		return output, nil
+	}
+
 	// TODO: Remove the dummy session and use the real session, once that has been done and the session has a value.
 	dummySession := &auth.Session{
 		Principal: types.Principal{ID: principalID, Admin: false}, // TODO: In the dummySession "Admin" is always false
@@ -74,6 +79,16 @@ func (c *Controller) PreReceive(
 	}
 
 	return output, nil
+}
+
+func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs) bool {
+	fn := func(ref string) bool {
+		return strings.HasPrefix(ref, gitReferenceNamePullReq)
+	}
+
+	return slices.ContainsFunc(refUpdates.other.created, fn) ||
+		slices.ContainsFunc(refUpdates.other.deleted, fn) ||
+		slices.ContainsFunc(refUpdates.other.updated, fn)
 }
 
 func (c *Controller) checkProtectionRules(
