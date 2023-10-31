@@ -1,3 +1,4 @@
+<div id="top"></div>
 # Gitness
 Gitness is an open source development platform packed with the power of code hosting and automated DevOps pipelines.
 
@@ -132,3 +133,4 @@ For a full list of supported operations, please see
 ```bash
 $ ./gitness --help
 ```
+<p align="right">(<a href="#top">🔼 Back to top</a>)</p>
