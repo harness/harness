@@ -114,7 +114,7 @@ func TestPattern_Validate(t *testing.T) {
 		{
 			name:    "empty",
 			pattern: Pattern{Default: false, Include: nil, Exclude: nil},
-			expect:  ErrPatternEmpty,
+			expect:  nil,
 		},
 		{
 			name:    "default",

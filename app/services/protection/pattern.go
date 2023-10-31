@@ -45,10 +45,6 @@ func (p *Pattern) Validate() error {
 		}
 	}
 
-	if !p.Default && len(p.Include) == 0 && len(p.Exclude) == 0 {
-		return ErrPatternEmpty
-	}
-
 	return nil
 }
 
