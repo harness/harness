@@ -67,9 +67,14 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
-	// TODO: Remove the dummy session and use the real session, once that has been done and the session has a value.
+	// TODO: use store.PrincipalInfoCache once we abstracted principals.
+	principal, err := c.principalStore.Find(ctx, principalID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find inner principal with id %d: %w", principalID, err)
+	}
+
 	dummySession := &auth.Session{
-		Principal: types.Principal{ID: principalID, Admin: false}, // TODO: In the dummySession "Admin" is always false
+		Principal: *principal,
 		Metadata:  nil,
 	}
 
