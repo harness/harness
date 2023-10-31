@@ -23,8 +23,6 @@ import (
 	"github.com/harness/gitness/app/pipeline/triggerer"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/drone/go-scm/scm"
 )
 
 func (s *Service) handleEventPullReqCreated(ctx context.Context,
@@ -108,6 +106,6 @@ func (s *Service) augmentPullReqInfo(
 	hook.Target = pullreq.TargetBranch
 	hook.Source = pullreq.SourceBranch
 	// expand the branch to a git reference.
-	hook.Ref = scm.ExpandRef(pullreq.SourceBranch, "refs/heads")
+	hook.Ref = fmt.Sprintf("refs/pullreq/%d/head", pullreq.Number)
 	return nil
 }
