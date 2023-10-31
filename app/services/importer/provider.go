@@ -127,6 +127,9 @@ func authHeaderTransport(token string) http.RoundTripper {
 }
 
 func basicAuthTransport(username, password string) http.RoundTripper {
+	if username == "" && password == "" {
+		return nil
+	}
 	return &transport.BasicAuth{
 		Username: username,
 		Password: password,
