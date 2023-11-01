@@ -30,6 +30,17 @@
         outline: none;
       }
 
+      .attachDiv {
+        padding-top: var(--spacing-xsmall);
+        padding-bottom: var(--spacing-xsmall);
+        padding-left: var(--spacing-medium);
+        color: var(--grey-400);
+        outline: none;
+        font-size: 13px;
+        font-weight: 400;
+        border-top: 1px dashed var(--grey-200);
+      }
+
       .cm-scroller {
         overflow: auto;
         padding: var(--spacing-small);
@@ -40,6 +51,17 @@
             @include markdown-font;
           }
         }
+      }
+    }
+  }
+}
+
+.editorTest {
+  :global {
+    .cm-editor {
+      &.cm-focused {
+        border-color: var(--primary-7);
+        outline: none;
       }
     }
   }

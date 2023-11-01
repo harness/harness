@@ -177,6 +177,36 @@ export function formatTime(timestamp: number | string, timeStyle = 'short'): str
     : ''
 }
 
+type FileDropCallback = (file: File) => void
+//handle file drop in image upload
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const handleFileDrop = (event: any, callback: FileDropCallback): void => {
+  event.preventDefault()
+
+  const file = event?.dataTransfer?.files[0]
+  if (file) {
+    callback(file)
+  }
+}
+
+type PasteCallback = (file: File) => void
+
+// handle file paste in image upload
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const handlePaste = (event: { preventDefault: () => void; clipboardData: any }, callback: PasteCallback) => {
+  event.preventDefault()
+  const clipboardData = event.clipboardData
+  const items = clipboardData.items
+
+  if (items.length > 0) {
+    const firstItem = items[0]
+    if (firstItem.type.startsWith('image/')) {
+      const blob = firstItem.getAsFile()
+      callback(blob)
+    }
+  }
+}
+
 /**
  * Format a timestamp to medium format date (i.e: Jan 1, 2021)
  * @param timestamp Timestamp

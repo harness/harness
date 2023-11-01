@@ -17,3 +17,4 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const editor: string
+export declare const editorTest: string

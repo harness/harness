@@ -28,6 +28,7 @@ import type {
   TypesPullReq,
   TypesRepository
 } from 'services/code'
+import { getErrorMessage } from './Utils'
 
 export interface GitInfoProps {
   repoMetadata: TypesRepository
@@ -240,6 +241,50 @@ export function formatTriggers(triggers: EnumWebhookTrigger[]) {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')
   })
+}
+
+export const handleUpload = (
+  blob: File,
+  setMarkdownContent: (data: string) => void,
+  repoMetadata: TypesRepository | undefined,
+  showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void
+) => {
+  const reader = new FileReader()
+  // Set up a function to be called when the load event is triggered
+  reader.onload = async function () {
+    const markdown = await uploadImage(reader.result, showError, repoMetadata)
+    setMarkdownContent(markdown) // Set the markdown content
+  }
+  reader.readAsArrayBuffer(blob) // This will trigger the onload function when the reading is complete
+}
+
+export const uploadImage = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fileBlob: any,
+  showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void,
+  repoMetadata: TypesRepository | undefined
+) => {
+  try {
+    const response = await fetch(`${window.location.origin}/api/v1/repos/${repoMetadata?.path}/+/uploads/`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'content-type': 'application/octet-stream'
+      },
+      body: fileBlob,
+      redirect: 'follow'
+    })
+    const result = await response.json()
+    if (!response.ok && result) {
+      showError(getErrorMessage(result))
+      return ''
+    }
+    const filePath = result.file_path
+    return window.location.origin + '/' + 'api/v1/repos/' + repoMetadata?.path + '/+/uploads/' + filePath
+  } catch (exception) {
+    showError(getErrorMessage(exception))
+    return ''
+  }
 }
 
 // eslint-disable-next-line no-control-regex

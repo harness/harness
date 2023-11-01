@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useRef } from 'react'
-import { Container } from '@harnessio/uicore'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Container, useToaster } from '@harnessio/uicore'
 import { LanguageDescription } from '@codemirror/language'
 import { indentWithTab } from '@codemirror/commands'
 import cx from 'classnames'
@@ -28,6 +28,10 @@ import { Compartment, EditorState, Extension } from '@codemirror/state'
 import { color } from '@uiw/codemirror-extensions-color'
 import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
 import { githubLight, githubDark } from '@uiw/codemirror-themes-all'
+import { useStrings } from 'framework/strings'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { handleUpload } from 'utils/GitUtils'
+import { handleFileDrop, handlePaste } from 'utils/Utils'
 import css from './Editor.module.scss'
 
 export interface EditorProps {
@@ -63,9 +67,14 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   onViewUpdate,
   darkTheme
 }: EditorProps) {
+  const { showError } = useToaster()
+  const { getString } = useStrings()
   const view = useRef<EditorView>()
   const ref = useRef<HTMLDivElement>()
+  const { repoMetadata } = useGetRepositoryMetadata()
+
   const languageConfig = useMemo(() => new Compartment(), [])
+  const [markdownContent, setMarkdownContent] = useState('')
   const markdownLanguageSupport = useMemo(() => markdown({ codeLanguages: languages }), [])
   const style = useMemo(() => {
     if (maxHeight) {
@@ -78,7 +87,22 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
 
   useEffect(() => {
     onChangeRef.current = onChange
-  }, [onChange])
+  }, [onChange, markdownContent])
+
+  useEffect(() => {
+    appendMarkdownContent()
+  }, [markdownContent]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const appendMarkdownContent = () => {
+    if (view.current && markdownContent) {
+      const currentContent = view.current.state.doc.toString()
+      const updatedContent = currentContent + `![image](${markdownContent})`
+      view.current.setState(EditorState.create({ doc: updatedContent }))
+      setUploading(false)
+    }
+  }
+
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     const editorView = new EditorView({
@@ -129,8 +153,13 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
     if (autoFocus) {
       editorView.focus()
     }
-
+    // Create a new DOM element for the message
+    const messageElement = document.createElement('div')
+    messageElement.className = 'attachDiv'
+    messageElement.textContent = uploading ? 'Uploading your files ...' : getString('attachText')
+    editorView.dom.appendChild(messageElement)
     return () => {
+      messageElement.remove()
       editorView.destroy()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -153,6 +182,28 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
         })
     }
   }, [filename, forMarkdown, view, languageConfig, markdownLanguageSupport])
+  const handleUploadCallback = (file: File) => {
+    handleUpload(file, setMarkdownContent, repoMetadata, showError)
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleDropForUpload = async (event: any) => {
+    handleFileDrop(event, handleUploadCallback)
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handlePasteForUpload = (event: { preventDefault: () => void; clipboardData: any }) => {
+    handlePaste(event, handleUploadCallback)
+  }
 
-  return <Container ref={ref} className={cx(css.editor, className)} style={style} />
+  return (
+    <Container
+      onDragOver={event => {
+        event.preventDefault()
+      }}
+      onDrop={handleDropForUpload}
+      onPaste={handlePasteForUpload}
+      ref={ref}
+      className={cx(css.editor, className, css.editorTest)}
+      style={style}
+    />
+  )
 })

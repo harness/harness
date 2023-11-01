@@ -262,3 +262,11 @@
     display: none;
   }
 }
+.dialog {
+  width: 610px !important;
+  .uploadContainer {
+    border-radius: 4px;
+    border: 1px dashed var(--grey-200);
+    background: var(--grey-50);
+  }
+}

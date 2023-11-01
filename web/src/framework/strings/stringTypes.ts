@@ -30,6 +30,7 @@ export interface StringsMap {
   approve: string
   ascending: string
   assignPeople: string
+  attachText: string
   basedOn: string
   blame: string
   blameCommitLine: string
@@ -304,6 +305,10 @@ export interface StringsMap {
   'homepage.selectSpaceContent': string
   'homepage.selectSpaceTitle': string
   'homepage.welcomeText': string
+  'imageUpload.readyToUpload': string
+  'imageUpload.text': string
+  'imageUpload.title': string
+  'imageUpload.upload': string
   importGitRepo: string
   importProgress: string
   'importRepo.failedToImportRepo': string
