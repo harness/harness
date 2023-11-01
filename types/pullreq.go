@@ -54,7 +54,7 @@ type PullReq struct {
 	MergeTargetSHA   *string               `json:"merge_target_sha"`
 	MergeBaseSHA     string                `json:"merge_base_sha"`
 	MergeSHA         *string               `json:"merge_sha"`
-	MergeConflicts   *string               `json:"merge_conflicts,omitempty"`
+	MergeConflicts   []string              `json:"merge_conflicts,omitempty"`
 
 	Author PrincipalInfo  `json:"author"`
 	Merger *PrincipalInfo `json:"merger"`
@@ -139,8 +139,9 @@ type PullReqFileView struct {
 }
 
 type MergeResponse struct {
+	DryRun         bool             `json:"dry_run,omitempty"`
 	SHA            string           `json:"sha,omitempty"`
-	BranchDeleted  bool             `json:"branch_deleted"`
+	BranchDeleted  bool             `json:"branch_deleted,omitempty"`
 	ConflictFiles  []string         `json:"conflict_files,omitempty"`
 	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
 }

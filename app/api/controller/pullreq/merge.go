@@ -39,11 +39,12 @@ import (
 type MergeInput struct {
 	Method    enum.MergeMethod `json:"method"`
 	SourceSHA string           `json:"source_sha"`
+	DryRun    bool             `json:"dry_run"`
 }
 
 // Merge merges the pull request.
 //
-//nolint:gocognit
+//nolint:gocognit,gocyclo,cyclop
 func (c *Controller) Merge(
 	ctx context.Context,
 	session *auth.Session,
@@ -54,7 +55,7 @@ func (c *Controller) Merge(
 	method, ok := in.Method.Sanitize()
 	if !ok {
 		return nil, nil, usererror.BadRequest(
-			fmt.Sprintf("wrong merge method type: %s", in.Method))
+			fmt.Sprintf("unsupported merge method: %s", in.Method))
 	}
 	in.Method = method
 
@@ -166,6 +167,39 @@ func (c *Controller) Merge(
 	}
 	if protection.IsCritical(violations) {
 		return nil, &types.MergeViolations{RuleViolations: violations}, nil
+	}
+
+	if in.DryRun {
+		conflictFiles := pr.MergeConflicts
+
+		// TODO: This is a temporary solution. The changes needed for the proper implementation:
+		// 1) GitRPC: Change the merge method to return SHAs (source/target/merge base) even in case of conflicts.
+		// 2) Event handler: Update target and merge base SHA in the event handler even in case of merge conflicts.
+		// 3) Here: Update the pull request target and merge base SHA in the DB if merge check status is unchecked.
+		// 4) Remove the recheck API.
+
+		if pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked {
+			_, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
+				WriteParams:     targetWriteParams,
+				BaseBranch:      pr.TargetBranch,
+				HeadRepoUID:     sourceRepo.GitUID,
+				HeadBranch:      pr.SourceBranch,
+				HeadExpectedSHA: in.SourceSHA,
+			})
+			if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
+				conflictFiles = gitrpc.AsConflictFilesError(err)
+			} else if err != nil {
+				return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
+			}
+		}
+
+		return &types.MergeResponse{
+			DryRun:         true,
+			SHA:            "",
+			BranchDeleted:  ruleOut.DeleteSourceBranch,
+			ConflictFiles:  conflictFiles,
+			RuleViolations: violations,
+		}, nil, nil
 	}
 
 	// TODO: for forking merge title might be different?
