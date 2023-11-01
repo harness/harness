@@ -70,7 +70,7 @@ export interface StringsMap {
   'branchProtection.minNumber': string
   'branchProtection.minNumberPlaceholder': string
   'branchProtection.namePlaceholder': string
-  'branchProtection.newBranchProtectionRule': string
+  'branchProtection.newRule': string
   'branchProtection.protectionSelectAll': string
   'branchProtection.reqCommentResolutionText': string
   'branchProtection.reqCommentResolutionTitle': string

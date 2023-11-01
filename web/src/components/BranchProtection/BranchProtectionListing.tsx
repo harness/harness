@@ -326,7 +326,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                         )
                       }
                       id="protectionApplied"
-                      summary={`${nonEmptyRules.length} Protections applied`}
+                      summary={`${nonEmptyRules.length} Rules applied`}
                     />
                   </Accordion>
                 </Container>
@@ -388,7 +388,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
             showWhen={() => rules?.length === 0}
             forSearch={!!searchTerm}
             message={getString('branchProtection.ruleEmpty')}
-            buttonText={getString('branchProtection.newBranchProtectionRule')}
+            buttonText={getString('branchProtection.newRule')}
             onButtonClick={() => {
               history.push(
                 routes.toCODESettings({

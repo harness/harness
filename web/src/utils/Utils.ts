@@ -206,7 +206,7 @@ export const rulesFormInitialPayload = {
   desc: '',
   enable: true,
   target: '',
-  targetDefault: true,
+  targetDefault: false,
   targetList: [] as string[][],
   allRepoOwners: false,
   bypassList: [] as string[],

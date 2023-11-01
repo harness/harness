@@ -36,7 +36,7 @@ const BranchProtectionHeader = ({
       <Layout.Horizontal spacing="medium">
         <Button
           variation={ButtonVariation.PRIMARY}
-          text={getString('branchProtection.newBranchProtectionRule')}
+          text={getString('branchProtection.newRule')}
           icon={CodeIcon.Add}
           onClick={() =>
             history.push(

@@ -851,16 +851,16 @@ Enable: Enable
 branchProtection:
   namePlaceholder: Enter the rule name here
   descPlaceholder: Enter the description here
-  title: Protection Rules
-  edit: Edit Branch Protection
-  create: Create Branch Protection
+  title: Rules
+  edit: Edit Rule
+  create: Create Rule
   targetBranches: Target Patterns
   targetPlaceholder: Enter the target patterns
   defaultBranch: Default branch
   bypassList: Bypass List
-  newBranchProtectionRule: New Branch Protection Rule
+  newRule: New branch rule
   allRepoOwners: Allow users with edit permission on the repository to bypass
-  protectionSelectAll: 'Protections: Select all that apply'
+  protectionSelectAll: 'Rules: Select all that apply'
   requireMinReviewersTitle: Require a minimum number of reviewers
   requireMinReviewersContent: Require approval on pull requests from a minimum number of reviewers
   minNumber: Minimum number

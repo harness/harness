@@ -65,7 +65,6 @@ const BranchProtectionForm = (props: {
   const { showError, showSuccess } = useToaster()
   const { editMode = false, repoMetadata, ruleUid, refetchRules } = props
   const { getString } = useStrings()
-
   const { data: rule } = useGet<OpenapiRule>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/rules/${ruleId}`,
     lazy: !repoMetadata && !ruleId
@@ -212,8 +211,8 @@ const BranchProtectionForm = (props: {
           state: formData.enable === true ? 'active' : 'disabled',
           pattern: {
             default: formData.targetDefault,
-            exclude: includeArray,
-            include: excludeArray
+            exclude: excludeArray,
+            include: includeArray
           },
           definition: {
             bypass: {
