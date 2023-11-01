@@ -26,7 +26,11 @@ import (
 
 // Migrator is a utility used to migrate code comments after update of the pull request's source branch.
 type Migrator struct {
-	gitRPCClient gitrpc.Interface
+	hunkHeaderFetcher hunkHeaderFetcher
+}
+
+type hunkHeaderFetcher interface {
+	GetDiffHunkHeaders(context.Context, gitrpc.GetDiffHunkHeadersParams) (gitrpc.GetDiffHunkHeadersOutput, error)
 }
 
 // MigrateNew updates the "+" (the added lines) part of code comments
@@ -105,7 +109,7 @@ func (migrator *Migrator) migrate(
 
 	for commentSHA, fileMap := range commitMap {
 		// get all hunk headers for the diff between the SHA that's stored in the comment and the new SHA.
-		diffSummary, errDiff := migrator.gitRPCClient.GetDiffHunkHeaders(ctx, gitrpc.GetDiffHunkHeadersParams{
+		diffSummary, errDiff := migrator.hunkHeaderFetcher.GetDiffHunkHeaders(ctx, gitrpc.GetDiffHunkHeadersParams{
 			ReadParams: gitrpc.ReadParams{
 				RepoUID: repoGitUID,
 			},
@@ -162,7 +166,9 @@ func (migrator *Migrator) migrate(
 				continue
 			}
 
-			for _, hunk := range file.HunkHeaders {
+			for hunkIdx := len(file.HunkHeaders) - 1; hunkIdx >= 0; hunkIdx-- {
+				hunk := file.HunkHeaders[hunkIdx]
+
 				for _, cc := range codeComments {
 					if cc.Outdated {
 						continue

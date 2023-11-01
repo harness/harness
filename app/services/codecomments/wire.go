@@ -28,6 +28,6 @@ func ProvideMigrator(
 	gitRPCClient gitrpc.Interface,
 ) *Migrator {
 	return &Migrator{
-		gitRPCClient: gitRPCClient,
+		hunkHeaderFetcher: gitRPCClient,
 	}
 }
