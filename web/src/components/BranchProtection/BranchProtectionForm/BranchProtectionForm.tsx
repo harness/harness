@@ -16,7 +16,6 @@
 import React, { useMemo, useState } from 'react'
 import cx from 'classnames'
 import {
-  Avatar,
   Button,
   ButtonVariation,
   Container,
@@ -51,6 +50,7 @@ import { useAppContext } from 'AppContext'
 import ProtectionRulesForm from './ProtectionRulesForm/ProtectionRulesForm'
 import Include from '../../../icons/Include.svg'
 import Exclude from '../../../icons/Exclude.svg'
+import BypassList from './BypassList'
 import css from './BranchProtectionForm.module.scss'
 
 const BranchProtectionForm = (props: {
@@ -130,6 +130,7 @@ const BranchProtectionForm = (props: {
       showError(getErrorMessage(exception))
     }
   }
+  const history = useHistory()
 
   const initialValues = useMemo(() => {
     if (editMode && rule) {
@@ -186,7 +187,6 @@ const BranchProtectionForm = (props: {
 
     return rulesFormInitialPayload // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editMode, rule, ruleUid])
-  const history = useHistory()
   return (
     <Formik
       formName="branchProtectionRulesNewEditForm"
@@ -254,11 +254,15 @@ const BranchProtectionForm = (props: {
       }}>
       {formik => {
         const targetList = formik.values.targetList
-        const bypassList = formik.values.bypassList
+        const bypassList = formik.values.bypassList || []
         const minReviewers = formik.values.requireMinReviewers
         const statusChecks = formik.values.statusChecks
         const limitMergeStrats = formik.values.limitMergeStrategies
         const requireStatusChecks = formik.values.requireStatusChecks
+
+        const filteredUserOptions = userOptions.filter(
+          (item: SelectOption) => !bypassList.includes(item.value as string)
+        )
         return (
           <FormikForm>
             <Container className={css.main} padding="xlarge">
@@ -397,7 +401,7 @@ const BranchProtectionForm = (props: {
                 </Text>
                 <FormInput.CheckBox label={getString('branchProtection.allRepoOwners')} name={'allRepoOwners'} />
                 <FormInput.Select
-                  items={userOptions}
+                  items={filteredUserOptions}
                   onQueryChange={setSearchTerm}
                   className={css.widthContainer}
                   onChange={item => {
@@ -409,32 +413,8 @@ const BranchProtectionForm = (props: {
                     const uniqueArr = Array.from(new Set(bypassList))
                     formik.setFieldValue('bypassList', uniqueArr)
                   }}
-                  name={'bypassList'}></FormInput.Select>
-                <Container className={cx(css.widthContainer, css.bypassContainer)}>
-                  {bypassList?.map((owner, idx) => {
-                    const nameIdx = owner.indexOf(' ') + 1
-                    const name = owner.substring(nameIdx)
-
-                    return (
-                      <Layout.Horizontal key={`${name}-${idx}`} flex={{ align: 'center-center' }} padding={'small'}>
-                        <Avatar hoverCard={false} size="small" name={name.toString()} />
-                        <Text padding={{ top: 'tiny' }} lineClamp={1}>
-                          {name}
-                        </Text>
-                        <FlexExpander />
-                        <Icon
-                          name="code-close"
-                          onClick={() => {
-                            const filteredData = bypassList.filter(
-                              item => !(item[0] === owner[0] && item[1] === owner[1])
-                            )
-                            formik.setFieldValue('bypassList', filteredData)
-                          }}
-                        />
-                      </Layout.Horizontal>
-                    )
-                  })}
-                </Container>
+                  name={'bypassSelect'}></FormInput.Select>
+                <BypassList bypassList={bypassList} setFieldValue={formik.setFieldValue} />
               </Container>
               <ProtectionRulesForm
                 setFieldValue={formik.setFieldValue}

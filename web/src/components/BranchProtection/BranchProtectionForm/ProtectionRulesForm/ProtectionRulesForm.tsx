@@ -41,6 +41,9 @@ const ProtectionRulesForm = (props: {
     limitMergeStrats
   } = props
   const { getString } = useStrings()
+  const filteredStatusOptions = statusOptions.filter(
+    (item: SelectOption) => !statusChecks.includes(item.value as string)
+  )
   return (
     <Container margin={{ top: 'medium' }} className={css.generalContainer}>
       <Text className={css.headingSize} padding={{ bottom: 'medium' }} font={{ variation: FontVariation.H4 }}>
@@ -107,7 +110,7 @@ const ProtectionRulesForm = (props: {
         <Container padding={{ left: 'xlarge', top: 'large' }} className={css.widthContainer}>
           <FormInput.Select
             onQueryChange={setSearchStatusTerm}
-            items={statusOptions}
+            items={filteredStatusOptions}
             onChange={item => {
               statusChecks?.push(item.value as string)
               const uniqueArr = Array.from(new Set(statusChecks))
