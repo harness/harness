@@ -59,7 +59,7 @@ const BranchProtectionForm = (props: {
   repoMetadata?: TypesRepository | undefined
   refetchRules: () => void
 }) => {
-  const { routes } = useAppContext()
+  const { routes, routingId } = useAppContext()
 
   const { ruleId } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
@@ -87,6 +87,7 @@ const BranchProtectionForm = (props: {
     queryParams: {
       query: searchTerm,
       type: 'user',
+      accountIdentifier: routingId,
       debounce: 500
     }
   })
