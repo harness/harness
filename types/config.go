@@ -285,4 +285,13 @@ type Config struct {
 	CodeOwners struct {
 		FilePath string `envconfig:"GITNESS_CODEOWNERS_FILEPATH" default:".harness/CODEOWNERS"`
 	}
+
+	SMTP struct {
+		Host               string `envconfig:"GITNESS_SMTP_HOST"`
+		Port               int    `envconfig:"GITNESS_SMTP_PORT"`
+		Username           string `envconfig:"GITNESS_SMTP_USERNAME"`
+		Password           string `envconfig:"GITNESS_SMTP_PASSWORD"`
+		FromMail           string `envconfig:"GITNESS_SMTP_FROM_MAIL"`
+		InsecureSkipVerify bool   `envconfig:"GITNESS_SMTP_INSECURE_SKIP_VERIFY"`
+	}
 }
