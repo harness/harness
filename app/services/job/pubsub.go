@@ -32,6 +32,7 @@ const (
 func encodeStateChange(job *types.Job) ([]byte, error) {
 	stateChange := &types.JobStateChange{
 		UID:      job.UID,
+		Type:     job.Type,
 		State:    job.State,
 		Progress: job.RunProgress,
 		Result:   job.Result,

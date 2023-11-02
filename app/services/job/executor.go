@@ -126,6 +126,7 @@ func (e *Executor) exec(
 
 		jobDummy := &types.Job{
 			UID:         jobUID,
+			Type:        jobType,
 			Updated:     time.Now().UnixMilli(),
 			Result:      result,
 			State:       enum.JobStateRunning,
