@@ -290,16 +290,18 @@ func LoadRepositoriesFromProviderSpace(
 	for {
 		if listv2 {
 			scmRepos, scmResp, err = scmClient.Repositories.ListV2(ctx, optsv2)
+			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
+				return nil, err
+			}
 			optsv2.Page = scmResp.Page.Next
 			optsv2.URL = scmResp.Page.NextURL
 		} else {
 			scmRepos, scmResp, err = scmClient.Repositories.List(ctx, opts)
+			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
+				return nil, err
+			}
 			opts.Page = scmResp.Page.Next
 			opts.URL = scmResp.Page.NextURL
-		}
-
-		if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
-			return nil, err
 		}
 
 		if len(scmRepos) == 0 {
