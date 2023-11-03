@@ -46,7 +46,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	remoteRepository, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
+	remoteRepository, provider, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			return fmt.Errorf("failed to create repository in storage: %w", err)
 		}
 
-		err = c.importer.Run(ctx, in.Provider, repo, remoteRepository.CloneURL, in.Pipelines)
+		err = c.importer.Run(ctx, provider, repo, remoteRepository.CloneURL, in.Pipelines)
 		if err != nil {
 			return fmt.Errorf("failed to start import repository job: %w", err)
 		}

@@ -227,19 +227,32 @@ func getScmClientWithTransport(provider Provider, authReq bool) (*scm.Client, er
 	return c, nil
 }
 
-func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug string) (RepositoryInfo, error) {
+func LoadRepositoryFromProvider(
+	ctx context.Context,
+	provider Provider,
+	repoSlug string,
+) (RepositoryInfo, Provider, error) {
 	scmClient, err := getScmClientWithTransport(provider, false)
 	if err != nil {
-		return RepositoryInfo{}, usererror.BadRequestf("could not create client: %s", err)
+		return RepositoryInfo{}, provider, usererror.BadRequestf("could not create client: %s", err)
 	}
 
 	if repoSlug == "" {
-		return RepositoryInfo{}, usererror.BadRequest("provider repository identifier is missing")
+		return RepositoryInfo{}, provider, usererror.BadRequest("provider repository identifier is missing")
+	}
+
+	// Augment user information if it's not provided for certain vendors.
+	if provider.Password != "" && provider.Username == "" {
+		user, _, err := scmClient.Users.Find(ctx)
+		if err != nil {
+			return RepositoryInfo{}, provider, usererror.BadRequestf("could not find user: %s", err)
+		}
+		provider.Username = user.Login
 	}
 
 	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, repoSlug)
 	if err = convertSCMError(provider, repoSlug, scmResp, err); err != nil {
-		return RepositoryInfo{}, err
+		return RepositoryInfo{}, provider, err
 	}
 
 	return RepositoryInfo{
@@ -248,7 +261,7 @@ func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug
 		CloneURL:      scmRepo.Clone,
 		IsPublic:      !scmRepo.Private,
 		DefaultBranch: scmRepo.Branch,
-	}, nil
+	}, provider, nil
 }
 
 //nolint:gocognit
@@ -256,19 +269,28 @@ func LoadRepositoriesFromProviderSpace(
 	ctx context.Context,
 	provider Provider,
 	spaceSlug string,
-) ([]RepositoryInfo, error) {
+) ([]RepositoryInfo, Provider, error) {
 	var err error
-	scmClient, err := getScmClientWithTransport(provider, true)
+	scmClient, err := getScmClientWithTransport(provider, false)
 	if err != nil {
-		return nil, usererror.BadRequestf("could not create client: %s", err)
+		return nil, provider, usererror.BadRequestf("could not create client: %s", err)
 	}
 
 	if spaceSlug == "" {
-		return nil, usererror.BadRequest("provider space identifier is missing")
+		return nil, provider, usererror.BadRequest("provider space identifier is missing")
 	}
 
 	opts := scm.ListOptions{
 		Size: 100,
+	}
+
+	// Augment user information if it's not provided for certain vendors.
+	if provider.Password != "" && provider.Username == "" {
+		user, _, err := scmClient.Users.Find(ctx)
+		if err != nil {
+			return nil, provider, usererror.BadRequestf("could not find user: %s", err)
+		}
+		provider.Username = user.Login
 	}
 
 	var optsv2 scm.RepoListOptions
@@ -291,14 +313,14 @@ func LoadRepositoriesFromProviderSpace(
 		if listv2 {
 			scmRepos, scmResp, err = scmClient.Repositories.ListV2(ctx, optsv2)
 			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
-				return nil, err
+				return nil, provider, err
 			}
 			optsv2.Page = scmResp.Page.Next
 			optsv2.URL = scmResp.Page.NextURL
 		} else {
 			scmRepos, scmResp, err = scmClient.Repositories.List(ctx, opts)
 			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
-				return nil, err
+				return nil, provider, err
 			}
 			opts.Page = scmResp.Page.Next
 			opts.URL = scmResp.Page.NextURL
@@ -334,7 +356,7 @@ func LoadRepositoriesFromProviderSpace(
 		}
 	}
 
-	return repos, nil
+	return repos, provider, nil
 }
 
 func convertSCMError(provider Provider, slug string, r *scm.Response, err error) error {
