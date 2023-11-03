@@ -19,8 +19,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/types"
-
-	"golang.org/x/exp/slices"
 )
 
 var TypeBranch types.RuleType = "branch"
@@ -37,27 +35,39 @@ var (
 	_ Definition = (*Branch)(nil)
 )
 
-//nolint:gocognit // well aware of this
 func (v *Branch) MergeVerify(
 	ctx context.Context,
 	in MergeVerifyInput,
-) (MergeVerifyOutput, []types.RuleViolations, error) {
-	if v.isBypassed(in.Actor, in.IsRepoOwner) {
-		return MergeVerifyOutput{}, nil, nil
+) (out MergeVerifyOutput, violations []types.RuleViolations, err error) {
+	out, violations, err = v.PullReq.MergeVerify(ctx, in)
+	if err != nil {
+		return
 	}
 
-	return v.PullReq.MergeVerify(ctx, in)
+	bypassed := in.AllowBypass && v.Bypass.matches(in.Actor, in.IsRepoOwner)
+	for i := range violations {
+		violations[i].Bypassed = bypassed
+	}
+
+	return
 }
 
 func (v *Branch) RefChangeVerify(
 	ctx context.Context,
 	in RefChangeVerifyInput,
-) ([]types.RuleViolations, error) {
-	if v.isBypassed(in.Actor, in.IsRepoOwner) || in.RefType != RefTypeBranch || len(in.RefNames) == 0 {
-		return nil, nil
+) (violations []types.RuleViolations, err error) {
+	if in.RefType != RefTypeBranch || len(in.RefNames) == 0 {
+		return []types.RuleViolations{}, nil
 	}
 
-	return v.Lifecycle.RefChangeVerify(ctx, in)
+	violations, err = v.Lifecycle.RefChangeVerify(ctx, in)
+
+	bypassed := in.AllowBypass && v.Bypass.matches(in.Actor, in.IsRepoOwner)
+	for i := range violations {
+		violations[i].Bypassed = bypassed
+	}
+
+	return
 }
 
 func (v *Branch) Sanitize() error {
@@ -74,11 +84,4 @@ func (v *Branch) Sanitize() error {
 	}
 
 	return nil
-}
-
-func (v *Branch) isBypassed(actor *types.Principal, isRepoOwner bool) bool {
-	return actor != nil &&
-		(actor.Admin ||
-			v.Bypass.RepoOwners && isRepoOwner ||
-			slices.Contains(v.Bypass.UserIDs, actor.ID))
 }

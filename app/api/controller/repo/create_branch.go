@@ -58,6 +58,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:       &session.Principal,
+		AllowBypass: true,
 		IsRepoOwner: isRepoOwner,
 		Repo:        repo,
 		RefAction:   protection.RefActionCreate,

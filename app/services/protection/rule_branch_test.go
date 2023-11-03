@@ -15,73 +15,239 @@
 package protection
 
 import (
+	"context"
 	"testing"
 
 	"github.com/harness/gitness/types"
 )
 
-func TestBranch_isBypass(t *testing.T) {
+// nolint:gocognit // it's a unit test
+func TestBranch_MergeVerify(t *testing.T) {
 	user := &types.Principal{ID: 42}
 	admin := &types.Principal{ID: 66, Admin: true}
 
 	tests := []struct {
 		name   string
-		bypass DefBypass
-		actor  *types.Principal
-		owner  bool
-		exp    bool
+		branch Branch
+		in     MergeVerifyInput
+		expOut MergeVerifyOutput
+		expVs  []types.RuleViolations
 	}{
 		{
 			name:   "empty",
-			bypass: DefBypass{UserIDs: nil, RepoOwners: false},
-			actor:  user,
-			exp:    false,
+			branch: Branch{},
+			in:     MergeVerifyInput{Actor: user},
+			expOut: MergeVerifyOutput{},
+			expVs:  []types.RuleViolations{},
 		},
 		{
-			name:   "admin",
-			bypass: DefBypass{UserIDs: nil, RepoOwners: false},
-			actor:  admin,
-			exp:    true,
+			name: "admin-no-bypass",
+			branch: Branch{
+				Bypass: DefBypass{},
+				PullReq: DefPullReq{
+					StatusChecks: DefStatusChecks{RequireUIDs: []string{"abc"}},
+					Comments:     DefComments{RequireResolveAll: true},
+					Merge:        DefMerge{DeleteBranch: true},
+				},
+			},
+			in: MergeVerifyInput{
+				Actor:       admin,
+				AllowBypass: false,
+				PullReq:     &types.PullReq{UnresolvedCount: 1},
+			},
+			expOut: MergeVerifyOutput{
+				DeleteSourceBranch: true,
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassed: false,
+					Violations: []types.Violation{
+						{Code: codePullReqCommentsReqResolveAll},
+						{Code: codePullReqStatusChecksReqUIDs},
+					},
+				},
+			},
 		},
 		{
-			name:   "repo-owners-false",
-			bypass: DefBypass{UserIDs: nil, RepoOwners: false},
-			actor:  user,
-			owner:  true,
-			exp:    false,
-		},
-		{
-			name:   "repo-owners-true",
-			bypass: DefBypass{UserIDs: nil, RepoOwners: true},
-			actor:  user,
-			owner:  true,
-			exp:    true,
-		},
-		{
-			name:   "selected-false",
-			bypass: DefBypass{UserIDs: []int64{1, 66}, RepoOwners: false},
-			actor:  user,
-			exp:    false,
-		},
-		{
-			name:   "selected-true",
-			bypass: DefBypass{UserIDs: []int64{1, 42, 66}, RepoOwners: false},
-			actor:  user,
-			exp:    true,
+			name: "user-bypass",
+			branch: Branch{
+				Bypass: DefBypass{UserIDs: []int64{user.ID}},
+				PullReq: DefPullReq{
+					StatusChecks: DefStatusChecks{RequireUIDs: []string{"abc"}},
+					Comments:     DefComments{RequireResolveAll: true},
+					Merge:        DefMerge{DeleteBranch: true},
+				},
+			},
+			in: MergeVerifyInput{
+				Actor:       user,
+				AllowBypass: true,
+				PullReq:     &types.PullReq{UnresolvedCount: 1},
+			},
+			expOut: MergeVerifyOutput{
+				DeleteSourceBranch: true,
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassed: true,
+					Violations: []types.Violation{
+						{Code: codePullReqCommentsReqResolveAll},
+						{Code: codePullReqStatusChecksReqUIDs},
+					},
+				},
+			},
 		},
 	}
 
+	ctx := context.Background()
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			branch := Branch{Bypass: test.bypass}
-
-			if err := branch.Sanitize(); err != nil {
+			if err := test.branch.Sanitize(); err != nil {
 				t.Errorf("invalid: %s", err.Error())
 				return
 			}
 
-			if want, got := test.exp, branch.isBypassed(test.actor, test.owner); want != got {
-				t.Errorf("want=%t got=%t", want, got)
+			out, results, err := test.branch.MergeVerify(ctx, test.in)
+			if err != nil {
+				t.Errorf("error: %s", err.Error())
+				return
+			}
+
+			if want, got := test.expOut, out; want != got {
+				t.Errorf("output: want=%+v got=%+v", want, got)
+			}
+
+			if want, got := len(test.expVs), len(results); want != got {
+				t.Errorf("number of violations mismatch: want=%d got=%d", want, got)
+				return
+			}
+
+			for i := range results {
+				if want, got := test.expVs[i].Bypassed, results[i].Bypassed; want != got {
+					t.Errorf("rule result %d, bypassed mismatch: want=%t got=%t", i, want, got)
+					return
+				}
+
+				if want, got := len(test.expVs[i].Violations), len(results[i].Violations); want != got {
+					t.Errorf("rule result %d, violations count mismatch: want=%d got=%d", i, want, got)
+					return
+				}
+
+				for j := range results[i].Violations {
+					if want, got := test.expVs[i].Violations[j].Code, results[i].Violations[j].Code; want != got {
+						t.Errorf("rule result %d, violation %d, code mismatch: want=%s got=%s", i, j, want, got)
+					}
+				}
+			}
+		})
+	}
+}
+
+// nolint:gocognit // it's a unit test
+func TestBranch_RefChangeVerify(t *testing.T) {
+	user := &types.Principal{ID: 42}
+	admin := &types.Principal{ID: 66, Admin: true}
+
+	tests := []struct {
+		name   string
+		branch Branch
+		in     RefChangeVerifyInput
+		expVs  []types.RuleViolations
+	}{
+		{
+			name: "empty",
+			branch: Branch{
+				Bypass:    DefBypass{},
+				Lifecycle: DefLifecycle{},
+			},
+			in: RefChangeVerifyInput{
+				Actor: user,
+			},
+			expVs: []types.RuleViolations{},
+		},
+		{
+			name: "admin-no-bypass",
+			branch: Branch{
+				Bypass:    DefBypass{},
+				Lifecycle: DefLifecycle{DeleteForbidden: true},
+			},
+			in: RefChangeVerifyInput{
+				Actor:       admin,
+				AllowBypass: false,
+				RefAction:   RefActionDelete,
+				RefType:     RefTypeBranch,
+				RefNames:    []string{"abc"},
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassed: false,
+					Violations: []types.Violation{
+						{Code: codeLifecycleDelete},
+					},
+				},
+			},
+		},
+		{
+			name: "owner-bypass",
+			branch: Branch{
+				Bypass:    DefBypass{RepoOwners: true},
+				Lifecycle: DefLifecycle{DeleteForbidden: true},
+			},
+			in: RefChangeVerifyInput{
+				Actor:       admin,
+				AllowBypass: true,
+				IsRepoOwner: true,
+				RefAction:   RefActionDelete,
+				RefType:     RefTypeBranch,
+				RefNames:    []string{"abc"},
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassed: true,
+					Violations: []types.Violation{
+						{Code: codeLifecycleDelete},
+					},
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if err := test.branch.Sanitize(); err != nil {
+				t.Errorf("invalid: %s", err.Error())
+				return
+			}
+
+			results, err := test.branch.RefChangeVerify(ctx, test.in)
+			if err != nil {
+				t.Errorf("error: %s", err.Error())
+				return
+			}
+
+			if want, got := len(test.expVs), len(results); want != got {
+				t.Errorf("number of violations mismatch: want=%d got=%d", want, got)
+				return
+			}
+
+			for i := range results {
+				if want, got := test.expVs[i].Bypassed, results[i].Bypassed; want != got {
+					t.Errorf("rule result %d, bypassed mismatch: want=%t got=%t", i, want, got)
+					return
+				}
+
+				if want, got := len(test.expVs[i].Violations), len(results[i].Violations); want != got {
+					t.Errorf("rule result %d, violations count mismatch: want=%d got=%d", i, want, got)
+					return
+				}
+
+				for j := range results[i].Violations {
+					if want, got := test.expVs[i].Violations[j].Code, results[i].Violations[j].Code; want != got {
+						t.Errorf("rule result %d, violation %d, code mismatch: want=%s got=%s", i, j, want, got)
+					}
+				}
 			}
 		})
 	}

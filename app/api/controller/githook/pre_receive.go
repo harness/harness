@@ -123,6 +123,7 @@ func (c *Controller) checkProtectionRules(
 
 		violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 			Actor:       &session.Principal,
+			AllowBypass: true,
 			IsRepoOwner: isRepoOwner,
 			Repo:        repo,
 			RefAction:   refAction,

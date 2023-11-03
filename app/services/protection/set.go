@@ -95,16 +95,8 @@ func (s ruleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) (
 }
 
 func backFillRule(vs []types.RuleViolations, rule types.RuleInfo) []types.RuleViolations {
-	violations := make([]types.RuleViolations, 0, len(vs))
-
 	for i := range vs {
-		if len(vs[i].Violations) == 0 {
-			continue
-		}
-
 		vs[i].Rule = rule
-		violations = append(violations, vs[i])
 	}
-
-	return violations
+	return vs
 }

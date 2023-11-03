@@ -16,11 +16,22 @@ package protection
 
 import (
 	"fmt"
+
+	"github.com/harness/gitness/types"
+
+	"golang.org/x/exp/slices"
 )
 
 type DefBypass struct {
 	UserIDs    []int64 `json:"user_ids,omitempty"`
 	RepoOwners bool    `json:"repo_owners,omitempty"`
+}
+
+func (v DefBypass) matches(actor *types.Principal, isRepoOwner bool) bool {
+	return actor != nil &&
+		(actor.Admin ||
+			v.RepoOwners && isRepoOwner ||
+			slices.Contains(v.UserIDs, actor.ID))
 }
 
 func (v DefBypass) Sanitize() error {

@@ -74,7 +74,7 @@ func (p *Pattern) Matches(branchName, defaultName string) bool {
 
 func patternValidate(pattern string) error {
 	if pattern == "" {
-		return ErrPatternEmptyPattern
+		return ErrPatternEmpty
 	}
 	_, err := doublestar.Match(pattern, "test")
 	if err != nil {

@@ -124,12 +124,12 @@ func TestPattern_Validate(t *testing.T) {
 		{
 			name:    "empty-include-globstar",
 			pattern: Pattern{Default: false, Include: []string{""}, Exclude: nil},
-			expect:  ErrPatternEmptyPattern,
+			expect:  ErrPatternEmpty,
 		},
 		{
 			name:    "empty-exclude-globstar",
 			pattern: Pattern{Default: false, Include: nil, Exclude: []string{""}},
-			expect:  ErrPatternEmptyPattern,
+			expect:  ErrPatternEmpty,
 		},
 		{
 			name:    "bad-include-pattern",

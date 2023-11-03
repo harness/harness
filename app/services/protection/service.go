@@ -54,7 +54,7 @@ type (
 var (
 	ErrUnrecognizedType       = errors.New("unrecognized protection type")
 	ErrAlreadyRegistered      = errors.New("protection type already registered")
-	ErrPatternEmptyPattern    = errors.New("name pattern can't be empty")
+	ErrPatternEmpty           = errors.New("name pattern can't be empty")
 	ErrInvalidGlobstarPattern = errors.New("invalid globstar pattern")
 )
 
@@ -122,18 +122,6 @@ func (m *Manager) SanitizeJSON(ruleType types.RuleType, message json.RawMessage)
 }
 
 func (m *Manager) ForRepository(ctx context.Context, repoID int64) (Protection, error) {
-	ruleInfos, err := m.ruleStore.ListAllRepoRules(ctx, repoID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list rules for repository: %w", err)
-	}
-
-	return ruleSet{
-		rules:   ruleInfos,
-		manager: m,
-	}, nil
-}
-
-func (m *Manager) MergeVerifierForRepository(ctx context.Context, repoID int64) (MergeVerifier, error) {
 	ruleInfos, err := m.ruleStore.ListAllRepoRules(ctx, repoID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list rules for repository: %w", err)

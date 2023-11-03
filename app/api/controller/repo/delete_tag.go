@@ -44,6 +44,7 @@ func (c *Controller) DeleteTag(ctx context.Context,
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:       &session.Principal,
+		AllowBypass: true,
 		IsRepoOwner: isRepoOwner,
 		Repo:        repo,
 		RefAction:   protection.RefActionDelete,

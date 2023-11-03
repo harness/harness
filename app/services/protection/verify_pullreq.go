@@ -33,6 +33,7 @@ type (
 
 	MergeVerifyInput struct {
 		Actor        *types.Principal
+		AllowBypass  bool
 		IsRepoOwner  bool
 		Membership   *types.Membership
 		TargetRepo   *types.Repository
@@ -163,7 +164,11 @@ func (v *DefPullReq) MergeVerify(
 		}
 	}
 
-	return out, []types.RuleViolations{violations}, nil
+	if len(violations.Violations) > 0 {
+		return out, []types.RuleViolations{violations}, nil
+	}
+
+	return out, nil, nil
 }
 
 type DefApprovals struct {

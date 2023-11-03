@@ -37,9 +37,10 @@ import (
 )
 
 type MergeInput struct {
-	Method    enum.MergeMethod `json:"method"`
-	SourceSHA string           `json:"source_sha"`
-	DryRun    bool             `json:"dry_run"`
+	Method      enum.MergeMethod `json:"method"`
+	SourceSHA   string           `json:"source_sha"`
+	BypassRules bool             `json:"bypass_rules"`
+	DryRun      bool             `json:"dry_run"`
 }
 
 // Merge merges the pull request.
@@ -93,6 +94,7 @@ func (c *Controller) Merge(
 		return nil, nil, usererror.BadRequest("Pull request must be open")
 	}
 
+	// TODO: Uncomment when the front-end side starts sending SourceSHA.
 	/*
 		if pr.SourceSHA != in.SourceSHA {
 			return nil, nil,
@@ -153,6 +155,7 @@ func (c *Controller) Merge(
 
 	ruleOut, violations, err := protectionRules.MergeVerify(ctx, protection.MergeVerifyInput{
 		Actor:        &session.Principal,
+		AllowBypass:  in.BypassRules,
 		IsRepoOwner:  isRepoOwner,
 		TargetRepo:   targetRepo,
 		SourceRepo:   sourceRepo,
