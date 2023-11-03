@@ -234,6 +234,8 @@ export const normalizeGitRef = (gitRef: string | undefined) => {
 export const REFS_TAGS_PREFIX = 'refs/tags/'
 export const REFS_BRANCH_PREFIX = 'refs/heads/'
 
+export const FILE_VIEWED_OBSOLETE_SHA = 'ffffffffffffffffffffffffffffffffffffffff'
+
 export function formatTriggers(triggers: EnumWebhookTrigger[]) {
   return triggers.map(trigger => {
     return trigger

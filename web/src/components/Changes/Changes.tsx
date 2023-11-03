@@ -32,7 +32,7 @@ import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { isEqual, noop } from 'lodash-es'
 import { useStrings } from 'framework/strings'
-import { normalizeGitRef, type GitInfoProps } from 'utils/GitUtils'
+import { normalizeGitRef, type GitInfoProps, FILE_VIEWED_OBSOLETE_SHA } from 'utils/GitUtils'
 import { PullRequestSection, formatNumber, getErrorMessage, voidFn } from 'utils/Utils'
 import { DiffViewer } from 'components/DiffViewer/DiffViewer'
 import { useEventListener } from 'hooks/useEventListener'
@@ -176,7 +176,7 @@ export const Changes: React.FC<ChangesProps> = ({
     rawFileViews
       ?.filter(({ path, sha }) => path && sha) // every entry is expected to have a path and sha - otherwise skip ...
       .forEach(({ path, sha, obsolete }) => {
-        out.set(path || '', obsolete ? 'ffffffffffffffffffffffffffffffffffffffff' : sha || '')
+        out.set(path || '', obsolete ? FILE_VIEWED_OBSOLETE_SHA : sha || '')
       })
     return out
   }, [rawFileViews])
