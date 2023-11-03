@@ -311,13 +311,15 @@ export interface StringsMap {
   'imageUpload.upload': string
   importGitRepo: string
   importProgress: string
+  'importRepo.appPassword': string
+  'importRepo.appPasswordPlaceholder': string
   'importRepo.failedToImportRepo': string
   'importRepo.group': string
   'importRepo.groupPlaceholder': string
   'importRepo.org': string
   'importRepo.orgPlaceholder': string
   'importRepo.passToken': string
-  'importRepo.passwordPlaceholder': string
+  'importRepo.passTokenPlaceholder': string
   'importRepo.passwordReq': string
   'importRepo.project': string
   'importRepo.projectPlaceholder': string

@@ -764,8 +764,10 @@ importRepo:
   groupPlaceholder: Enter the Group name
   reqAuth: Requires Authorization
   userPlaceholder: Enter Username
-  passwordPlaceholder: Enter Password
-  passToken: Password/Token
+  passToken: Token
+  passTokenPlaceholder: Enter Token
+  appPassword: App Password
+  appPasswordPlaceholder: Enter App Password
   failedToImportRepo: Failed to import repository. Please try again.
   validation: Invalid GitHub or GitLab URL
   required: Repository URL is required

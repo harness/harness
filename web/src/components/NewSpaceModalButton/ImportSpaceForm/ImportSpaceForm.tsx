@@ -164,14 +164,16 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                         <hr className={css.dividerContainer} />
                       </Container>
                     </Layout.Horizontal>
-                    <FormInput.Text
-                      name="username"
-                      label={getString('userName')}
-                      placeholder={getString('importRepo.userPlaceholder')}
-                      tooltipProps={{
-                        dataTooltipId: 'spaceUserTextField'
-                      }}
-                    />
+                    {formik.values.gitProvider === GitProviders.BITBUCKET && (
+                      <FormInput.Text
+                        name="username"
+                        label={getString('userName')}
+                        placeholder={getString('importRepo.userPlaceholder')}
+                        tooltipProps={{
+                          dataTooltipId: 'spaceUserTextField'
+                        }}
+                      />
+                    )}
                     {formik.errors.username ? (
                       <Text
                         margin={{ top: 'small', bottom: 'small' }}
@@ -183,8 +185,16 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                     ) : null}
                     <FormInput.Text
                       name="password"
-                      label={getString('importRepo.passToken')}
-                      placeholder={getString('importRepo.passwordPlaceholder')}
+                      label={
+                        formik.values.gitProvider === GitProviders.BITBUCKET
+                          ? getString('importRepo.appPassword')
+                          : getString('importRepo.passToken')
+                      }
+                      placeholder={
+                        formik.values.gitProvider === GitProviders.BITBUCKET
+                          ? getString('importRepo.appPasswordPlaceholder')
+                          : getString('importRepo.passTokenPlaceholder')
+                      }
                       tooltipProps={{
                         dataTooltipId: 'spacePasswordTextField'
                       }}

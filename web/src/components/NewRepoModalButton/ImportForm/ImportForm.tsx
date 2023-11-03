@@ -184,19 +184,29 @@ const ImportForm = (props: ImportFormProps) => {
 
             {auth ? (
               <>
-                <FormInput.Text
-                  name="username"
-                  label={getString('userName')}
-                  placeholder={getString('importRepo.userPlaceholder')}
-                  tooltipProps={{
-                    dataTooltipId: 'repositoryUserTextField'
-                  }}
-                />
+                {formik.values.gitProvider === GitProviders.BITBUCKET && (
+                  <FormInput.Text
+                    name="username"
+                    label={getString('userName')}
+                    placeholder={getString('importRepo.userPlaceholder')}
+                    tooltipProps={{
+                      dataTooltipId: 'repositoryUserTextField'
+                    }}
+                  />
+                )}
                 <FormInput.Text
                   inputGroup={{ type: 'password' }}
                   name="password"
-                  label={getString('importRepo.passToken')}
-                  placeholder={getString('importRepo.passwordPlaceholder')}
+                  label={
+                    formik.values.gitProvider === GitProviders.BITBUCKET
+                      ? getString('importRepo.appPassword')
+                      : getString('importRepo.passToken')
+                  }
+                  placeholder={
+                    formik.values.gitProvider === GitProviders.BITBUCKET
+                      ? getString('importRepo.appPasswordPlaceholder')
+                      : getString('importRepo.passTokenPlaceholder')
+                  }
                   tooltipProps={{
                     dataTooltipId: 'repositoryPasswordTextField'
                   }}
