@@ -170,14 +170,20 @@ func (c *Controller) Merge(
 	}
 
 	if in.DryRun {
-		conflictFiles := pr.MergeConflicts
+		// With in.DryRun=true this function never returns types.MergeViolations
+		out := &types.MergeResponse{
+			DryRun:         true,
+			SHA:            "",
+			BranchDeleted:  ruleOut.DeleteSourceBranch,
+			ConflictFiles:  pr.MergeConflicts,
+			RuleViolations: violations,
+		}
 
 		// TODO: This is a temporary solution. The changes needed for the proper implementation:
 		// 1) GitRPC: Change the merge method to return SHAs (source/target/merge base) even in case of conflicts.
 		// 2) Event handler: Update target and merge base SHA in the event handler even in case of merge conflicts.
 		// 3) Here: Update the pull request target and merge base SHA in the DB if merge check status is unchecked.
 		// 4) Remove the recheck API.
-
 		if pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked {
 			_, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
 				WriteParams:     targetWriteParams,
@@ -187,19 +193,13 @@ func (c *Controller) Merge(
 				HeadExpectedSHA: in.SourceSHA,
 			})
 			if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
-				conflictFiles = gitrpc.AsConflictFilesError(err)
+				out.ConflictFiles = gitrpc.AsConflictFilesError(err)
 			} else if err != nil {
 				return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
 			}
 		}
 
-		return &types.MergeResponse{
-			DryRun:         true,
-			SHA:            "",
-			BranchDeleted:  ruleOut.DeleteSourceBranch,
-			ConflictFiles:  conflictFiles,
-			RuleViolations: violations,
-		}, nil, nil
+		return out, nil, nil
 	}
 
 	// TODO: for forking merge title might be different?
@@ -230,20 +230,10 @@ func (c *Controller) Merge(
 	})
 	if err != nil {
 		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
-			return &types.MergeResponse{
-				SHA:            "",
-				BranchDeleted:  false,
+			return nil, &types.MergeViolations{
 				ConflictFiles:  gitrpc.AsConflictFilesError(err),
 				RuleViolations: violations,
-			}, nil, nil
-			// TODO: This should be the response in case of a merge conflict.
-			// TODO: Remove the ConflictFiles field from types.MergeResponse.
-			/*
-				return nil, &types.MergeViolations{
-					ConflictFiles:  gitrpc.AsConflictFilesError(err),
-					RuleViolations: violations,
-				}, nil
-			*/
+			}, nil
 		}
 		return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
 	}
@@ -304,8 +294,10 @@ func (c *Controller) Merge(
 	}
 
 	return &types.MergeResponse{
+		DryRun:         false,
 		SHA:            mergeOutput.MergeSHA,
 		BranchDeleted:  branchDeleted,
+		ConflictFiles:  nil,
 		RuleViolations: violations,
 	}, nil, nil
 }
