@@ -51,6 +51,7 @@ const (
 	PullReqSortCreated = "created"
 	PullReqSortEdited  = "edited"
 	PullReqSortMerged  = "merged"
+	PullReqSortUpdated = "updated"
 )
 
 var pullReqSorts = sortEnum([]PullReqSort{
@@ -58,6 +59,7 @@ var pullReqSorts = sortEnum([]PullReqSort{
 	PullReqSortCreated,
 	PullReqSortEdited,
 	PullReqSortMerged,
+	PullReqSortUpdated,
 })
 
 // PullReqActivityType defines pull request activity message type.
