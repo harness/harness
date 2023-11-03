@@ -314,7 +314,10 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                             {...permissionProps(permPushResult, standalone)}
                             onClick={async () => {
                               if (mergeOption.method !== 'close') {
-                                const payload: OpenapiMergePullReq = { method: mergeOption.method }
+                                const payload: OpenapiMergePullReq = {
+                                  method: mergeOption.method,
+                                  source_sha: pullRequestMetadata?.source_sha
+                                }
                                 mergePR(payload)
                                   .then(onPRStateChanged)
                                   .catch(exception => showError(getErrorMessage(exception)))
