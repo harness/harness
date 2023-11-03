@@ -36,7 +36,7 @@ import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
 import { formatBytes, handleFileDrop, handlePaste } from 'utils/Utils'
 import { handleUpload } from 'utils/GitUtils'
-import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import type { TypesRepository } from 'services/code'
 import css from './MarkdownEditorWithPreview.module.scss'
 
 enum MarkdownEditorTab {
@@ -94,6 +94,7 @@ interface MarkdownEditorWithPreviewProps {
   // When set to true, the editor will be scrolled to center of screen
   // and cursor is set to the end of the document
   autoFocusAndPosition?: boolean
+  repoMetadata: TypesRepository | undefined
 }
 
 export function MarkdownEditorWithPreview({
@@ -110,11 +111,12 @@ export function MarkdownEditorWithPreview({
   noBorder,
   viewRef: viewRefProp,
   autoFocusAndPosition,
-  secondarySaveButton: SecondarySaveButton
+  secondarySaveButton: SecondarySaveButton,
+  repoMetadata
 }: MarkdownEditorWithPreviewProps) {
   const { getString } = useStrings()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { repoMetadata } = useGetRepositoryMetadata()
+
   const [selectedTab, setSelectedTab] = useState(MarkdownEditorTab.WRITE)
   const viewRef = useRef<EditorView>()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -416,6 +418,7 @@ export function MarkdownEditorWithPreview({
       </Container>
       <Container className={css.tabContent}>
         <Editor
+          repoMetadata={repoMetadata}
           forMarkdown
           content={value || ''}
           placeholder={i18n.placeHolder}

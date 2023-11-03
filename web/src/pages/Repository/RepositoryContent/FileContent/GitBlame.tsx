@@ -191,6 +191,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
 
         <Render when={Object.values(blameBlocks).length}>
           <GitBlameRenderer
+            repoMetadata={repoMetadata}
             source={data?.map(({ lines }) => (lines as string[]).join('\n')).join('\n') || ''}
             filename={resourcePath}
             onViewUpdate={onViewUpdate}
@@ -223,6 +224,7 @@ interface GitBlameRendererProps {
   source: string
   onViewUpdate?: (update: ViewUpdate) => void
   blameBlocks: BlameBlockRecord
+  repoMetadata: TypesRepository | undefined
 }
 
 interface EditorLinePaddingWidgetSpec extends LineWidgetSpec {
@@ -233,7 +235,8 @@ const GitBlameRenderer = React.memo(function GitBlameSourceViewer({
   source,
   filename,
   onViewUpdate = noop,
-  blameBlocks
+  blameBlocks,
+  repoMetadata
 }: GitBlameRendererProps) {
   const extensions = useMemo(() => new Compartment(), [])
   const viewRef = useRef<EditorView>()
@@ -276,6 +279,8 @@ const GitBlameRenderer = React.memo(function GitBlameSourceViewer({
 
   return (
     <Editor
+      inGitBlame={true}
+      repoMetadata={repoMetadata}
       viewRef={viewRef}
       filename={filename}
       content={source}

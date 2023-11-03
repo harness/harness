@@ -28,8 +28,8 @@ import { Compartment, EditorState, Extension } from '@codemirror/state'
 import { color } from '@uiw/codemirror-extensions-color'
 import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
 import { githubLight, githubDark } from '@uiw/codemirror-themes-all'
+import type { TypesRepository } from 'services/code'
 import { useStrings } from 'framework/strings'
-import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { handleUpload } from 'utils/GitUtils'
 import { handleFileDrop, handlePaste } from 'utils/Utils'
 import css from './Editor.module.scss'
@@ -49,6 +49,8 @@ export interface EditorProps {
   onChange?: (doc: Text, viewUpdate: ViewUpdate, isDirty: boolean) => void
   onViewUpdate?: (viewUpdate: ViewUpdate) => void
   darkTheme?: boolean
+  repoMetadata: TypesRepository | undefined
+  inGitBlame?: boolean
 }
 
 export const Editor = React.memo(function CodeMirrorReactEditor({
@@ -65,13 +67,15 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   setDirty,
   onChange,
   onViewUpdate,
-  darkTheme
+  darkTheme,
+  repoMetadata,
+  inGitBlame = false
 }: EditorProps) {
   const { showError } = useToaster()
   const { getString } = useStrings()
   const view = useRef<EditorView>()
   const ref = useRef<HTMLDivElement>()
-  const { repoMetadata } = useGetRepositoryMetadata()
+  // const { repoMetadata } = useGetRepositoryMetadata()
 
   const languageConfig = useMemo(() => new Compartment(), [])
   const [markdownContent, setMarkdownContent] = useState('')
@@ -90,15 +94,24 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   }, [onChange, markdownContent])
 
   useEffect(() => {
-    appendMarkdownContent()
+    updateContentWithoutStateChange()
   }, [markdownContent]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const appendMarkdownContent = () => {
+  const updateContentWithoutStateChange = () => {
+    setUploading(true)
     if (view.current && markdownContent) {
       const currentContent = view.current.state.doc.toString()
-      const updatedContent = currentContent + `![image](${markdownContent})`
-      view.current.setState(EditorState.create({ doc: updatedContent }))
-      setUploading(false)
+      const markdownInsert = `![image](${markdownContent})`
+      // Create a transaction to update the document content
+      const transaction = view.current.state.update({
+        changes: {
+          from: currentContent.length,
+          to: currentContent.length,
+          insert: markdownInsert
+        }
+      })
+      // Apply the transaction to update the view's state
+      view.current.dispatch(transaction)
     }
   }
 
@@ -153,13 +166,16 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
     if (autoFocus) {
       editorView.focus()
     }
-    // Create a new DOM element for the message
     const messageElement = document.createElement('div')
-    messageElement.className = 'attachDiv'
-    messageElement.textContent = uploading ? 'Uploading your files ...' : getString('attachText')
-    editorView.dom.appendChild(messageElement)
+    if (!inGitBlame) {
+      // Create a new DOM element for the message
+      messageElement.className = 'attachDiv'
+      messageElement.textContent = uploading ? 'Uploading your files ...' : getString('attachText')
+      editorView.dom.appendChild(messageElement)
+    }
     return () => {
       messageElement.remove()
+
       editorView.destroy()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps

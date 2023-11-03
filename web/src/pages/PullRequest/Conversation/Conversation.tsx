@@ -175,6 +175,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   const newCommentBox = useMemo(() => {
     return (
       <CommentBox
+        repoMetadata={repoMetadata}
         fluid
         boxClassName={css.commentBox}
         editorClassName={css.commentEditor}
@@ -205,7 +206,7 @@ export const Conversation: React.FC<ConversationProps> = ({
           return [result, updatedItem]
         }}
       />
-    )
+    ) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, onCommentUpdate, saveComment, showError])
 
   const renderedActivityBlocks = useMemo(
@@ -240,6 +241,7 @@ export const Conversation: React.FC<ConversationProps> = ({
             }
             title={
               <CommentBox
+                repoMetadata={repoMetadata}
                 key={threadId}
                 fluid
                 boxClassName={css.threadbox}
