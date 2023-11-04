@@ -356,16 +356,17 @@ const MONACO_SUPPORTED_LANGUAGES = [
 // due to their similarity. We'll still need to get native support for them at
 // some point.
 const EXTENSION_TO_LANG: Record<string, string> = {
-  tsx: 'typescript',
-  jsx: 'typescript',
-  cc: 'cpp',
-  env: 'shell',
-  makefile: 'shell',
-  gitignore: 'shell',
-  toml: 'ini',
+  alpine: 'dockerfile',
   bazel: 'python',
-  workspace: 'python',
-  alpine: 'dockerfile'
+  cc: 'cpp',
+  cs: 'csharp',
+  env: 'shell',
+  gitignore: 'shell',
+  jsx: 'typescript',
+  makefile: 'shell',
+  toml: 'ini',
+  tsx: 'typescript',
+  workspace: 'python'
 }
 
 export const PLAIN_TEXT = 'plaintext'
