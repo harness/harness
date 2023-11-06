@@ -94,13 +94,10 @@ func (c *Controller) Merge(
 		return nil, nil, usererror.BadRequest("Pull request must be open")
 	}
 
-	// TODO: Uncomment when the front-end side starts sending SourceSHA.
-	/*
-		if pr.SourceSHA != in.SourceSHA {
-			return nil, nil,
-				usererror.BadRequest("A newer commit is available. Only the latest commit can be merged.")
-		}
-	*/
+	if pr.SourceSHA != in.SourceSHA {
+		return nil, nil,
+			usererror.BadRequest("A newer commit is available. Only the latest commit can be merged.")
+	}
 
 	if pr.IsDraft {
 		return nil, nil, usererror.BadRequest(
