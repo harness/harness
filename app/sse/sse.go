@@ -96,11 +96,11 @@ func (e *pubsubStreamer) Stream(
 	namespaceOption := pubsub.WithChannelNamespace(e.namespace)
 	topic := getSpaceTopic(spaceID)
 	consumer := e.pubsub.Subscribe(ctx, topic, g, namespaceOption)
-	unsubscribeFN := func(ctx context.Context) error {
-		return consumer.Unsubscribe(ctx, topic)
+	cleanupFN := func(ctx context.Context) error {
+		return consumer.Close()
 	}
 
-	return chEvent, chErr, unsubscribeFN
+	return chEvent, chErr, cleanupFN
 }
 
 // getSpaceTopic creates the namespace name which will be `spaces:<id>`.
