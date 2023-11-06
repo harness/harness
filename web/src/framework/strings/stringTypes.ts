@@ -68,10 +68,14 @@ export interface StringsMap {
   'branchProtection.enableTheRule': string
   'branchProtection.limitMergeStrategies': string
   'branchProtection.limitMergeStrategiesText': string
+  'branchProtection.mergeCheckboxAlert': string
+  'branchProtection.mergePrAlertText': string
+  'branchProtection.mergePrAlertTitle': string
   'branchProtection.minNumber': string
   'branchProtection.minNumberPlaceholder': string
   'branchProtection.namePlaceholder': string
   'branchProtection.newRule': string
+  'branchProtection.prFailedText': string
   'branchProtection.protectionSelectAll': string
   'branchProtection.reqCommentResolutionText': string
   'branchProtection.reqCommentResolutionTitle': string

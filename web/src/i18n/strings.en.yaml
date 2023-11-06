@@ -904,3 +904,7 @@ branchProtection:
   ruleCreated: Rule Created
   blockMergeWithoutPr: Block merge without pull request
   blockMergeWithoutPrText: Do not allow directly merging to the branch without a pull request
+  prFailedText: 'This branch has no conflicts with the base branch. {{ruleCount}} branch rules failed'
+  mergePrAlertTitle: Merge pull request alert
+  mergePrAlertText: 'Merge cannot be completed. {{ruleCount}} branch rules failed: '
+  mergeCheckboxAlert: Bypass branch rules and merge

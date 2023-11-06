@@ -1029,6 +1029,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Forbidden
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRulesViolations'
+          description: Unprocessable Entity
         '500':
           content:
             application/json:
@@ -1072,6 +1078,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRulesViolations'
+          description: Unprocessable Entity
         '500':
           content:
             application/json:
@@ -1319,6 +1331,59 @@ paths:
           description: Internal Server Error
       tags:
         - status_checks
+  /repos/{repo_ref}/codeowners/validate:
+    get:
+      operationId: codeOwnersValidate
+      parameters:
+        - description: The git reference (branch / tag / commitID) that will be used
+            to retrieve the data. If no value is provided the default branch of the
+            repository is used.
+          in: query
+          name: git_ref
+          required: false
+          schema:
+            default: '{Repository Default Branch}'
+            type: string
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unprocessable Entity
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/commits:
     get:
       operationId: listCommits
@@ -1465,6 +1530,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRulesViolations'
+          description: Unprocessable Entity
         '500':
           content:
             application/json:
@@ -2866,6 +2937,7 @@ paths:
               - edited
               - merged
               - number
+              - updated
             type: string
         - description: The page to return.
           in: query
@@ -3163,6 +3235,65 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/codeowners:
+    get:
+      operationId: codeownersPullReq
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesCodeOwnerEvaluation'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unprocessable Entity
         '500':
           content:
             application/json:
@@ -3664,7 +3795,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UsererrorError'
+                $ref: '#/components/schemas/TypesMergeViolations'
           description: Unprocessable Entity
       tags:
         - pullreq
@@ -4499,6 +4630,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Conflict
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRulesViolations'
+          description: Unprocessable Entity
         '500':
           content:
             application/json:
@@ -4548,6 +4685,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Conflict
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRulesViolations'
+          description: Unprocessable Entity
         '500':
           content:
             application/json:
@@ -4558,7 +4701,7 @@ paths:
         - repository
   /repos/{repo_ref}/uploads:
     post:
-      operationId: upload
+      operationId: repoArtifactUpload
       parameters:
         - in: path
           name: repo_ref
@@ -4604,9 +4747,9 @@ paths:
           description: Internal Server Error
       tags:
         - upload
-  /repos/{repo_ref}/uploads/{name_ref}:
+  /repos/{repo_ref}/uploads/{file_ref}:
     get:
-      operationId: download
+      operationId: repoArtifactDownload
       parameters:
         - in: path
           name: repo_ref
@@ -4614,7 +4757,7 @@ paths:
           schema:
             type: string
         - in: path
-          name: name_ref
+          name: file_ref
           required: true
           schema:
             type: string
@@ -6963,6 +7106,8 @@ components:
         - gitlab
         - bitbucket
         - stash
+        - gitea
+        - gogs
       type: string
     LivelogLine:
       properties:
@@ -7286,6 +7431,10 @@ components:
       type: object
     OpenapiMergePullReq:
       properties:
+        bypass_rules:
+          type: boolean
+        dry_run:
+          type: boolean
         method:
           $ref: '#/components/schemas/EnumMergeMethod'
         source_sha:
@@ -7795,6 +7944,26 @@ components:
         span_old:
           type: integer
       type: object
+    TypesCodeOwnerEvaluation:
+      properties:
+        evaluation_entries:
+          items:
+            $ref: '#/components/schemas/TypesCodeOwnerEvaluationEntry'
+          nullable: true
+          type: array
+        file_sha:
+          type: string
+      type: object
+    TypesCodeOwnerEvaluationEntry:
+      properties:
+        owner_evaluations:
+          items:
+            $ref: '#/components/schemas/TypesOwnerEvaluation'
+          nullable: true
+          type: array
+        pattern:
+          type: string
+      type: object
     TypesCommit:
       properties:
         author:
@@ -7812,10 +7981,6 @@ components:
       properties:
         commit_id:
           type: string
-        rule_violations:
-          items:
-            $ref: '#/components/schemas/TypesRuleViolations'
-          type: array
       type: object
     TypesConnector:
       properties:
@@ -7987,11 +8152,33 @@ components:
           items:
             type: string
           type: array
+        dry_run:
+          type: boolean
         rule_violations:
           items:
             $ref: '#/components/schemas/TypesRuleViolations'
           type: array
         sha:
+          type: string
+      type: object
+    TypesMergeViolations:
+      properties:
+        conflict_files:
+          items:
+            type: string
+          type: array
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
+          type: array
+      type: object
+    TypesOwnerEvaluation:
+      properties:
+        owner:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        review_decision:
+          $ref: '#/components/schemas/EnumPullReqReviewDecision'
+        review_sha:
           type: string
       type: object
     TypesPipeline:
@@ -8070,8 +8257,9 @@ components:
         merge_check_status:
           $ref: '#/components/schemas/EnumMergeCheckStatus'
         merge_conflicts:
-          nullable: true
-          type: string
+          items:
+            type: string
+          type: array
         merge_method:
           $ref: '#/components/schemas/EnumMergeMethod'
         merge_sha:
@@ -8256,11 +8444,21 @@ components:
       type: string
     TypesRuleViolations:
       properties:
+        bypassed:
+          type: boolean
         rule:
           $ref: '#/components/schemas/TypesRuleInfo'
         violations:
           items:
             $ref: '#/components/schemas/TypesViolation'
+          nullable: true
+          type: array
+      type: object
+    TypesRulesViolations:
+      properties:
+        violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
           nullable: true
           type: array
       type: object
@@ -8508,6 +8706,10 @@ components:
           type: string
         message:
           type: string
+        params:
+          items: {}
+          nullable: true
+          type: array
       type: object
     TypesWebhookExecution:
       properties:

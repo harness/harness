@@ -31,6 +31,9 @@
   &.error {
     background-color: var(--red-50) !important;
   }
+  &.ruleViolation {
+    background-color: var(--red-50) !important;
+  }
 
   &.closed {
     background-color: var(--grey-100) !important;
@@ -91,6 +94,9 @@
     &.unchecked {
       color: #c05809 !important; // Note: No UICore color variable for this text
     }
+    &.ruleViolate {
+      color: var(--red-500) !important;
+    }
   }
 }
 
@@ -129,6 +135,16 @@
 }
 
 .btnWrapper {
+  &.hasRuleViolated button {
+    --background-color: var(--grey-50) !important;
+    --background-color-hover: var(--white) !important;
+    --background-color-active: var(--grey-100) !important;
+  }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
   &.hasError button {
     --background-color: var(--grey-50) !important;
     --background-color-hover: var(--white) !important;
@@ -152,4 +168,13 @@
   border-radius: 4px;
   background: #e8e8ff !important;
   padding: 2px 5px !important;
+}
+
+.viewDetailsBtn {
+  margin-bottom: 3px !important;
+}
+
+.checkbox {
+  padding-top: 8px !important;
+  padding-right: var(--spacing-medium) !important;
 }

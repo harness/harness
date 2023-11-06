@@ -1,0 +1,20 @@
+.dialog {
+  max-width: 500px;
+}
+
+.warningIcon {
+  padding-right: var(--spacing-medium) !important;
+}
+
+.ruleText {
+  color: var(--red-700) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.ruleContainer {
+  border-radius: 4px !important;
+  background: var(--primary-bg) !important;
+  width: 380px !important;
+  height: 36px !important;
+}

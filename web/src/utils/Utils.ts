@@ -18,6 +18,8 @@ import { Intent, IToaster, IToastProps, Position, Toaster } from '@blueprintjs/c
 import { get } from 'lodash-es'
 import moment from 'moment'
 import langMap from 'lang-map'
+import type { EnumMergeMethod, TypesRuleViolations, TypesViolation } from 'services/code'
+import type { GitInfoProps } from './GitUtils'
 
 export enum ACCESS_MODES {
   VIEW,
@@ -74,6 +76,25 @@ export interface PageBrowserProps {
   page: string
 }
 
+export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[], fieldsToCheck: FieldCheck) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tempArray: any[] = ruleViolationArr?.flatMap(
+    (item: { violations?: TypesViolation[] | null }) => item?.violations?.map(violation => violation.code) ?? []
+  )
+  const uniqueViolations = new Set(tempArray)
+  const violationArr = [...uniqueViolations]
+    .filter(violation => violation in fieldsToCheck)
+    .map(violation => ({ violation: fieldsToCheck[violation] }))
+
+  const checkIfBypassAllowed = ruleViolationArr.some(ruleViolation => ruleViolation.bypassed === false)
+
+  return {
+    uniqueViolations,
+    checkIfBypassAllowed,
+    violationArr
+  }
+}
+
 export interface RenameDetails {
   commit_sha_after: string
   commit_sha_before: string
@@ -106,6 +127,28 @@ export interface SourceCodeEditorProps {
   schema?: Record<string, unknown>
 }
 
+export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+  onPRStateChanged: () => void
+  refetchReviewers: () => void
+}
+
+export interface PRMergeOption {
+  method: EnumMergeMethod | 'close'
+  title: string
+  desc: string
+  disabled?: boolean
+}
+
+export type FieldCheck = {
+  [key: string]: string
+}
+
+export interface PRDraftOption {
+  method: 'close' | 'open'
+  title: string
+  desc: string
+  disabled?: boolean
+}
 export const displayDateTime = (value: number): string | null => {
   return value ? moment.unix(value / 1000).format(DEFAULT_DATE_FORMAT) : null
 }
@@ -229,6 +272,9 @@ export function formatDate(timestamp: number | string, dateStyle = 'medium'): st
  */
 export function formatNumber(num: number | bigint): string {
   return num ? new Intl.NumberFormat(LOCALE).format(num) : ''
+}
+export interface Violation {
+  violation: string
 }
 
 export const rulesFormInitialPayload = {

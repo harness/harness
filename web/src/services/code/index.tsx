@@ -132,7 +132,7 @@ export interface ImporterProvider {
   username?: string
 }
 
-export type ImporterProviderType = 'github' | 'gitlab' | 'bitbucket' | 'stash'
+export type ImporterProviderType = 'github' | 'gitlab' | 'bitbucket' | 'stash' | 'gitea' | 'gogs'
 
 export interface LivelogLine {
   out?: string
@@ -322,6 +322,8 @@ export interface OpenapiLoginRequest {
 }
 
 export interface OpenapiMergePullReq {
+  bypass_rules?: boolean
+  dry_run?: boolean
   method?: EnumMergeMethod
   source_sha?: string
 }
@@ -619,6 +621,16 @@ export interface TypesCodeCommentFields {
   span_old?: number
 }
 
+export interface TypesCodeOwnerEvaluation {
+  evaluation_entries?: TypesCodeOwnerEvaluationEntry[] | null
+  file_sha?: string
+}
+
+export interface TypesCodeOwnerEvaluationEntry {
+  owner_evaluations?: TypesOwnerEvaluation[] | null
+  pattern?: string
+}
+
 export interface TypesCommit {
   author?: TypesSignature
   committer?: TypesSignature
@@ -629,7 +641,6 @@ export interface TypesCommit {
 
 export interface TypesCommitFilesResponse {
   commit_id?: string
-  rule_violations?: TypesRuleViolations[]
 }
 
 export interface TypesConnector {
@@ -725,8 +736,20 @@ export interface TypesMembershipUser {
 export interface TypesMergeResponse {
   branch_deleted?: boolean
   conflict_files?: string[]
+  dry_run?: boolean
   rule_violations?: TypesRuleViolations[]
   sha?: string
+}
+
+export interface TypesMergeViolations {
+  conflict_files?: string[]
+  rule_violations?: TypesRuleViolations[]
+}
+
+export interface TypesOwnerEvaluation {
+  owner?: TypesPrincipalInfo
+  review_decision?: EnumPullReqReviewDecision
+  review_sha?: string
 }
 
 export interface TypesPipeline {
@@ -771,7 +794,7 @@ export interface TypesPullReq {
   is_draft?: boolean
   merge_base_sha?: string
   merge_check_status?: EnumMergeCheckStatus
-  merge_conflicts?: string | null
+  merge_conflicts?: string[]
   merge_method?: EnumMergeMethod
   merge_sha?: string | null
   merge_target_sha?: string | null
@@ -873,8 +896,13 @@ export interface TypesRuleInfo {
 export type TypesRuleType = string
 
 export interface TypesRuleViolations {
+  bypassed?: boolean
   rule?: TypesRuleInfo
   violations?: TypesViolation[] | null
+}
+
+export interface TypesRulesViolations {
+  violations?: TypesRuleViolations[] | null
 }
 
 export interface TypesSecret {
@@ -1011,6 +1039,7 @@ export interface TypesUser {
 export interface TypesViolation {
   code?: string
   message?: string
+  params?: {}[] | null
 }
 
 export interface TypesWebhookExecution {
@@ -1694,13 +1723,19 @@ export interface CreateBranchPathParams {
 }
 
 export type CreateBranchProps = Omit<
-  MutateProps<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>,
+  MutateProps<
+    RepoBranch,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCreateBranchRequest,
+    CreateBranchPathParams
+  >,
   'path' | 'verb'
 > &
   CreateBranchPathParams
 
 export const CreateBranch = ({ repo_ref, ...props }: CreateBranchProps) => (
-  <Mutate<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>
+  <Mutate<RepoBranch, UsererrorError | TypesRulesViolations, void, OpenapiCreateBranchRequest, CreateBranchPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/branches`}
     base={getConfig('code/api/v1')}
@@ -1709,30 +1744,42 @@ export const CreateBranch = ({ repo_ref, ...props }: CreateBranchProps) => (
 )
 
 export type UseCreateBranchProps = Omit<
-  UseMutateProps<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>,
+  UseMutateProps<
+    RepoBranch,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCreateBranchRequest,
+    CreateBranchPathParams
+  >,
   'path' | 'verb'
 > &
   CreateBranchPathParams
 
 export const useCreateBranch = ({ repo_ref, ...props }: UseCreateBranchProps) =>
-  useMutate<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>(
-    'POST',
-    (paramsInPath: CreateBranchPathParams) => `/repos/${paramsInPath.repo_ref}/branches`,
-    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
-  )
+  useMutate<
+    RepoBranch,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCreateBranchRequest,
+    CreateBranchPathParams
+  >('POST', (paramsInPath: CreateBranchPathParams) => `/repos/${paramsInPath.repo_ref}/branches`, {
+    base: getConfig('code/api/v1'),
+    pathParams: { repo_ref },
+    ...props
+  })
 
 export interface DeleteBranchPathParams {
   repo_ref: string
 }
 
 export type DeleteBranchProps = Omit<
-  MutateProps<void, UsererrorError, void, string, DeleteBranchPathParams>,
+  MutateProps<void, UsererrorError | TypesRulesViolations, void, string, DeleteBranchPathParams>,
   'path' | 'verb'
 > &
   DeleteBranchPathParams
 
 export const DeleteBranch = ({ repo_ref, ...props }: DeleteBranchProps) => (
-  <Mutate<void, UsererrorError, void, string, DeleteBranchPathParams>
+  <Mutate<void, UsererrorError | TypesRulesViolations, void, string, DeleteBranchPathParams>
     verb="DELETE"
     path={`/repos/${repo_ref}/branches`}
     base={getConfig('code/api/v1')}
@@ -1741,13 +1788,13 @@ export const DeleteBranch = ({ repo_ref, ...props }: DeleteBranchProps) => (
 )
 
 export type UseDeleteBranchProps = Omit<
-  UseMutateProps<void, UsererrorError, void, string, DeleteBranchPathParams>,
+  UseMutateProps<void, UsererrorError | TypesRulesViolations, void, string, DeleteBranchPathParams>,
   'path' | 'verb'
 > &
   DeleteBranchPathParams
 
 export const useDeleteBranch = ({ repo_ref, ...props }: UseDeleteBranchProps) =>
-  useMutate<void, UsererrorError, void, string, DeleteBranchPathParams>(
+  useMutate<void, UsererrorError | TypesRulesViolations, void, string, DeleteBranchPathParams>(
     'DELETE',
     (paramsInPath: DeleteBranchPathParams) => `/repos/${paramsInPath.repo_ref}/branches`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
@@ -1920,6 +1967,43 @@ export const useListStatusCheckRecent = ({ repo_ref, ...props }: UseListStatusCh
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
   )
 
+export interface CodeOwnersValidateQueryParams {
+  /**
+   * The git reference (branch / tag / commitID) that will be used to retrieve the data. If no value is provided the default branch of the repository is used.
+   */
+  git_ref?: string
+}
+
+export interface CodeOwnersValidatePathParams {
+  repo_ref: string
+}
+
+export type CodeOwnersValidateProps = Omit<
+  GetProps<void, UsererrorError, CodeOwnersValidateQueryParams, CodeOwnersValidatePathParams>,
+  'path'
+> &
+  CodeOwnersValidatePathParams
+
+export const CodeOwnersValidate = ({ repo_ref, ...props }: CodeOwnersValidateProps) => (
+  <Get<void, UsererrorError, CodeOwnersValidateQueryParams, CodeOwnersValidatePathParams>
+    path={`/repos/${repo_ref}/codeowners/validate`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCodeOwnersValidateProps = Omit<
+  UseGetProps<void, UsererrorError, CodeOwnersValidateQueryParams, CodeOwnersValidatePathParams>,
+  'path'
+> &
+  CodeOwnersValidatePathParams
+
+export const useCodeOwnersValidate = ({ repo_ref, ...props }: UseCodeOwnersValidateProps) =>
+  useGet<void, UsererrorError, CodeOwnersValidateQueryParams, CodeOwnersValidatePathParams>(
+    (paramsInPath: CodeOwnersValidatePathParams) => `/repos/${paramsInPath.repo_ref}/codeowners/validate`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
+  )
+
 export interface ListCommitsQueryParams {
   /**
    * The git reference (branch / tag / commitID) that will be used to retrieve the data. If no value is provided the default branch of the repository is used.
@@ -1990,13 +2074,25 @@ export interface CommitFilesPathParams {
 }
 
 export type CommitFilesProps = Omit<
-  MutateProps<TypesCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>,
+  MutateProps<
+    TypesCommitFilesResponse,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCommitFilesRequest,
+    CommitFilesPathParams
+  >,
   'path' | 'verb'
 > &
   CommitFilesPathParams
 
 export const CommitFiles = ({ repo_ref, ...props }: CommitFilesProps) => (
-  <Mutate<TypesCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>
+  <Mutate<
+    TypesCommitFilesResponse,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCommitFilesRequest,
+    CommitFilesPathParams
+  >
     verb="POST"
     path={`/repos/${repo_ref}/commits`}
     base={getConfig('code/api/v1')}
@@ -2005,17 +2101,29 @@ export const CommitFiles = ({ repo_ref, ...props }: CommitFilesProps) => (
 )
 
 export type UseCommitFilesProps = Omit<
-  UseMutateProps<TypesCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>,
+  UseMutateProps<
+    TypesCommitFilesResponse,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCommitFilesRequest,
+    CommitFilesPathParams
+  >,
   'path' | 'verb'
 > &
   CommitFilesPathParams
 
 export const useCommitFiles = ({ repo_ref, ...props }: UseCommitFilesProps) =>
-  useMutate<TypesCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>(
-    'POST',
-    (paramsInPath: CommitFilesPathParams) => `/repos/${paramsInPath.repo_ref}/commits`,
-    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
-  )
+  useMutate<
+    TypesCommitFilesResponse,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCommitFilesRequest,
+    CommitFilesPathParams
+  >('POST', (paramsInPath: CommitFilesPathParams) => `/repos/${paramsInPath.repo_ref}/commits`, {
+    base: getConfig('code/api/v1'),
+    pathParams: { repo_ref },
+    ...props
+  })
 
 export interface GetCommitPathParams {
   repo_ref: string
@@ -2959,7 +3067,7 @@ export interface ListPullReqQueryParams {
   /**
    * The data by which the pull requests are sorted.
    */
-  sort?: 'created' | 'edited' | 'merged' | 'number'
+  sort?: 'created' | 'edited' | 'merged' | 'number' | 'updated'
   /**
    * The page to return.
    */
@@ -3156,6 +3264,38 @@ export const useListPullReqActivities = ({ repo_ref, pullreq_number, ...props }:
   useGet<TypesPullReqActivity[], UsererrorError, ListPullReqActivitiesQueryParams, ListPullReqActivitiesPathParams>(
     (paramsInPath: ListPullReqActivitiesPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/activities`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface CodeownersPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type CodeownersPullReqProps = Omit<
+  GetProps<TypesCodeOwnerEvaluation, UsererrorError, void, CodeownersPullReqPathParams>,
+  'path'
+> &
+  CodeownersPullReqPathParams
+
+export const CodeownersPullReq = ({ repo_ref, pullreq_number, ...props }: CodeownersPullReqProps) => (
+  <Get<TypesCodeOwnerEvaluation, UsererrorError, void, CodeownersPullReqPathParams>
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/codeowners`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCodeownersPullReqProps = Omit<
+  UseGetProps<TypesCodeOwnerEvaluation, UsererrorError, void, CodeownersPullReqPathParams>,
+  'path'
+> &
+  CodeownersPullReqPathParams
+
+export const useCodeownersPullReq = ({ repo_ref, pullreq_number, ...props }: UseCodeownersPullReqProps) =>
+  useGet<TypesCodeOwnerEvaluation, UsererrorError, void, CodeownersPullReqPathParams>(
+    (paramsInPath: CodeownersPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/codeowners`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
@@ -3550,13 +3690,25 @@ export interface MergePullReqOpPathParams {
 }
 
 export type MergePullReqOpProps = Omit<
-  MutateProps<TypesMergeResponse, UsererrorError, void, OpenapiMergePullReq, MergePullReqOpPathParams>,
+  MutateProps<
+    TypesMergeResponse,
+    UsererrorError | TypesMergeViolations,
+    void,
+    OpenapiMergePullReq,
+    MergePullReqOpPathParams
+  >,
   'path' | 'verb'
 > &
   MergePullReqOpPathParams
 
 export const MergePullReqOp = ({ repo_ref, pullreq_number, ...props }: MergePullReqOpProps) => (
-  <Mutate<TypesMergeResponse, UsererrorError, void, OpenapiMergePullReq, MergePullReqOpPathParams>
+  <Mutate<
+    TypesMergeResponse,
+    UsererrorError | TypesMergeViolations,
+    void,
+    OpenapiMergePullReq,
+    MergePullReqOpPathParams
+  >
     verb="POST"
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}/merge`}
     base={getConfig('code/api/v1')}
@@ -3565,13 +3717,25 @@ export const MergePullReqOp = ({ repo_ref, pullreq_number, ...props }: MergePull
 )
 
 export type UseMergePullReqOpProps = Omit<
-  UseMutateProps<TypesMergeResponse, UsererrorError, void, OpenapiMergePullReq, MergePullReqOpPathParams>,
+  UseMutateProps<
+    TypesMergeResponse,
+    UsererrorError | TypesMergeViolations,
+    void,
+    OpenapiMergePullReq,
+    MergePullReqOpPathParams
+  >,
   'path' | 'verb'
 > &
   MergePullReqOpPathParams
 
 export const useMergePullReqOp = ({ repo_ref, pullreq_number, ...props }: UseMergePullReqOpProps) =>
-  useMutate<TypesMergeResponse, UsererrorError, void, OpenapiMergePullReq, MergePullReqOpPathParams>(
+  useMutate<
+    TypesMergeResponse,
+    UsererrorError | TypesMergeViolations,
+    void,
+    OpenapiMergePullReq,
+    MergePullReqOpPathParams
+  >(
     'POST',
     (paramsInPath: MergePullReqOpPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/merge`,
@@ -4106,13 +4270,13 @@ export interface CreateTagPathParams {
 }
 
 export type CreateTagProps = Omit<
-  MutateProps<RepoCommitTag, UsererrorError, void, OpenapiCreateTagRequest, CreateTagPathParams>,
+  MutateProps<RepoCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>,
   'path' | 'verb'
 > &
   CreateTagPathParams
 
 export const CreateTag = ({ repo_ref, ...props }: CreateTagProps) => (
-  <Mutate<RepoCommitTag, UsererrorError, void, OpenapiCreateTagRequest, CreateTagPathParams>
+  <Mutate<RepoCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/tags`}
     base={getConfig('code/api/v1')}
@@ -4121,13 +4285,19 @@ export const CreateTag = ({ repo_ref, ...props }: CreateTagProps) => (
 )
 
 export type UseCreateTagProps = Omit<
-  UseMutateProps<RepoCommitTag, UsererrorError, void, OpenapiCreateTagRequest, CreateTagPathParams>,
+  UseMutateProps<
+    RepoCommitTag,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCreateTagRequest,
+    CreateTagPathParams
+  >,
   'path' | 'verb'
 > &
   CreateTagPathParams
 
 export const useCreateTag = ({ repo_ref, ...props }: UseCreateTagProps) =>
-  useMutate<RepoCommitTag, UsererrorError, void, OpenapiCreateTagRequest, CreateTagPathParams>(
+  useMutate<RepoCommitTag, UsererrorError | TypesRulesViolations, void, OpenapiCreateTagRequest, CreateTagPathParams>(
     'POST',
     (paramsInPath: CreateTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
@@ -4138,13 +4308,13 @@ export interface DeleteTagPathParams {
 }
 
 export type DeleteTagProps = Omit<
-  MutateProps<void, UsererrorError, void, string, DeleteTagPathParams>,
+  MutateProps<void, UsererrorError | TypesRulesViolations, void, string, DeleteTagPathParams>,
   'path' | 'verb'
 > &
   DeleteTagPathParams
 
 export const DeleteTag = ({ repo_ref, ...props }: DeleteTagProps) => (
-  <Mutate<void, UsererrorError, void, string, DeleteTagPathParams>
+  <Mutate<void, UsererrorError | TypesRulesViolations, void, string, DeleteTagPathParams>
     verb="DELETE"
     path={`/repos/${repo_ref}/tags`}
     base={getConfig('code/api/v1')}
@@ -4153,30 +4323,30 @@ export const DeleteTag = ({ repo_ref, ...props }: DeleteTagProps) => (
 )
 
 export type UseDeleteTagProps = Omit<
-  UseMutateProps<void, UsererrorError, void, string, DeleteTagPathParams>,
+  UseMutateProps<void, UsererrorError | TypesRulesViolations, void, string, DeleteTagPathParams>,
   'path' | 'verb'
 > &
   DeleteTagPathParams
 
 export const useDeleteTag = ({ repo_ref, ...props }: UseDeleteTagProps) =>
-  useMutate<void, UsererrorError, void, string, DeleteTagPathParams>(
+  useMutate<void, UsererrorError | TypesRulesViolations, void, string, DeleteTagPathParams>(
     'DELETE',
     (paramsInPath: DeleteTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
   )
 
-export interface UploadPathParams {
+export interface RepoArtifactUploadPathParams {
   repo_ref: string
 }
 
-export type UploadProps = Omit<
-  MutateProps<UploadResult, UsererrorError, void, void, UploadPathParams>,
+export type RepoArtifactUploadProps = Omit<
+  MutateProps<UploadResult, UsererrorError, void, void, RepoArtifactUploadPathParams>,
   'path' | 'verb'
 > &
-  UploadPathParams
+  RepoArtifactUploadPathParams
 
-export const Upload = ({ repo_ref, ...props }: UploadProps) => (
-  <Mutate<UploadResult, UsererrorError, void, void, UploadPathParams>
+export const RepoArtifactUpload = ({ repo_ref, ...props }: RepoArtifactUploadProps) => (
+  <Mutate<UploadResult, UsererrorError, void, void, RepoArtifactUploadPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/uploads`}
     base={getConfig('code/api/v1')}
@@ -4184,41 +4354,49 @@ export const Upload = ({ repo_ref, ...props }: UploadProps) => (
   />
 )
 
-export type UseUploadProps = Omit<
-  UseMutateProps<UploadResult, UsererrorError, void, void, UploadPathParams>,
+export type UseRepoArtifactUploadProps = Omit<
+  UseMutateProps<UploadResult, UsererrorError, void, void, RepoArtifactUploadPathParams>,
   'path' | 'verb'
 > &
-  UploadPathParams
+  RepoArtifactUploadPathParams
 
-export const useUpload = ({ repo_ref, ...props }: UseUploadProps) =>
-  useMutate<UploadResult, UsererrorError, void, void, UploadPathParams>(
+export const useRepoArtifactUpload = ({ repo_ref, ...props }: UseRepoArtifactUploadProps) =>
+  useMutate<UploadResult, UsererrorError, void, void, RepoArtifactUploadPathParams>(
     'POST',
-    (paramsInPath: UploadPathParams) => `/repos/${paramsInPath.repo_ref}/uploads`,
+    (paramsInPath: RepoArtifactUploadPathParams) => `/repos/${paramsInPath.repo_ref}/uploads`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
   )
 
-export interface DownloadPathParams {
+export interface RepoArtifactDownloadPathParams {
   repo_ref: string
-  name_ref: string
+  file_ref: string
 }
 
-export type DownloadProps = Omit<GetProps<void, UsererrorError, void, DownloadPathParams>, 'path'> & DownloadPathParams
+export type RepoArtifactDownloadProps = Omit<
+  GetProps<void, UsererrorError, void, RepoArtifactDownloadPathParams>,
+  'path'
+> &
+  RepoArtifactDownloadPathParams
 
-export const Download = ({ repo_ref, name_ref, ...props }: DownloadProps) => (
-  <Get<void, UsererrorError, void, DownloadPathParams>
-    path={`/repos/${repo_ref}/uploads/${name_ref}`}
+export const RepoArtifactDownload = ({ repo_ref, file_ref, ...props }: RepoArtifactDownloadProps) => (
+  <Get<void, UsererrorError, void, RepoArtifactDownloadPathParams>
+    path={`/repos/${repo_ref}/uploads/${file_ref}`}
     base={getConfig('code/api/v1')}
     {...props}
   />
 )
 
-export type UseDownloadProps = Omit<UseGetProps<void, UsererrorError, void, DownloadPathParams>, 'path'> &
-  DownloadPathParams
+export type UseRepoArtifactDownloadProps = Omit<
+  UseGetProps<void, UsererrorError, void, RepoArtifactDownloadPathParams>,
+  'path'
+> &
+  RepoArtifactDownloadPathParams
 
-export const useDownload = ({ repo_ref, name_ref, ...props }: UseDownloadProps) =>
-  useGet<void, UsererrorError, void, DownloadPathParams>(
-    (paramsInPath: DownloadPathParams) => `/repos/${paramsInPath.repo_ref}/uploads/${paramsInPath.name_ref}`,
-    { base: getConfig('code/api/v1'), pathParams: { repo_ref, name_ref }, ...props }
+export const useRepoArtifactDownload = ({ repo_ref, file_ref, ...props }: UseRepoArtifactDownloadProps) =>
+  useGet<void, UsererrorError, void, RepoArtifactDownloadPathParams>(
+    (paramsInPath: RepoArtifactDownloadPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/uploads/${paramsInPath.file_ref}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, file_ref }, ...props }
   )
 
 export interface ListWebhooksQueryParams {
