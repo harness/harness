@@ -153,7 +153,7 @@ func (s MergeService) Merge(
 		committer = request.GetCommitter()
 	}
 	committerDate := time.Now().UTC()
-	if request.GetAuthorDate() != 0 {
+	if request.GetCommitterDate() != 0 {
 		committerDate = time.Unix(request.GetCommitterDate(), 0)
 	}
 
