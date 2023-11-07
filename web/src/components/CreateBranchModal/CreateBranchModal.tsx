@@ -88,7 +88,7 @@ export function useCreateBranchModal({
       try {
         createBranch({
           name,
-          target: normalizeGitRef(sourceBranch)
+          target: normalizeGitRef(refIsATag ? `refs/tags/${sourceBranch}` : sourceBranch)
         })
           .then(response => {
             hideModal()
