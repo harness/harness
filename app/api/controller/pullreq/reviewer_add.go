@@ -23,6 +23,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -112,7 +113,20 @@ func (c *Controller) ReviewerAdd(
 		return nil, fmt.Errorf("failed to create pull request reviewer: %w", err)
 	}
 
+	c.reportReviewerAddition(ctx, session, pr, reviewer)
 	return reviewer, err
+}
+
+func (c *Controller) reportReviewerAddition(
+	ctx context.Context,
+	session *auth.Session,
+	pr *types.PullReq,
+	reviewer *types.PullReqReviewer,
+) {
+	c.eventReporter.ReviewerAdded(ctx, &events.ReviewerAddedPayload{
+		Base:       eventBase(pr, &session.Principal),
+		ReviewerID: reviewer.PrincipalID,
+	})
 }
 
 // newPullReqReviewer creates new pull request reviewer object.

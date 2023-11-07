@@ -287,11 +287,11 @@ type Config struct {
 	}
 
 	SMTP struct {
-		Host               string `envconfig:"GITNESS_SMTP_HOST"`
-		Port               int    `envconfig:"GITNESS_SMTP_PORT"`
-		Username           string `envconfig:"GITNESS_SMTP_USERNAME"`
-		Password           string `envconfig:"GITNESS_SMTP_PASSWORD"`
-		FromMail           string `envconfig:"GITNESS_SMTP_FROM_MAIL"`
-		InsecureSkipVerify bool   `envconfig:"GITNESS_SMTP_INSECURE_SKIP_VERIFY"`
+		Host     string `envconfig:"GITNESS_SMTP_HOST"`
+		Port     int    `envconfig:"GITNESS_SMTP_PORT"`
+		Username string `envconfig:"GITNESS_SMTP_USERNAME"`
+		Password string `envconfig:"GITNESS_SMTP_PASSWORD"`
+		FromMail string `envconfig:"GITNESS_SMTP_FROM_MAIL"`
+		Insecure bool   `envconfig:"GITNESS_SMTP_INSECURE"`
 	}
 }

@@ -31,7 +31,7 @@ func ProvideMailService(config *types.Config) *Service {
 		config.SMTP.Username,
 		config.SMTP.FromMail,
 		config.SMTP.Password,
-		config.SMTP.InsecureSkipVerify, // #nosec G402 (insecure skipVerify configuration)
+		config.SMTP.Insecure, // #nosec G402 (insecure skipVerify configuration)
 	)
 	return mailSvc
 }

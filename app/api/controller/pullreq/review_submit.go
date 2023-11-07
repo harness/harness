@@ -172,6 +172,7 @@ func (c *Controller) updateReviewer(ctx context.Context, session *auth.Session,
 			AddedBy:        types.PrincipalInfo{},
 		}
 		err = c.reviewerStore.Create(ctx, reviewer)
+		c.reportReviewerAddition(ctx, session, pr, reviewer)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create/update reviewer")

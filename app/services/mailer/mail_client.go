@@ -31,10 +31,10 @@ func NewMailClient(
 	username string,
 	fromMail string,
 	password string,
-	insecureSkipVerify bool,
+	insecure bool,
 ) *Service {
 	d := gomail.NewDialer(host, port, username, password)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify} // #nosec G402 (insecure TLS configuration)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: insecure} // #nosec G402 (insecure TLS configuration)
 
 	return &Service{
 		dialer:   d,
