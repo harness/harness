@@ -28,6 +28,7 @@ export interface StringsMap {
   and: string
   applyChanges: string
   approve: string
+  approved: string
   ascending: string
   assignPeople: string
   attachText: string
@@ -124,6 +125,10 @@ export interface StringsMap {
   cloneText: string
   close: string
   closed: string
+  'codeOwner.approvalCompleted': string
+  'codeOwner.changesRequested': string
+  'codeOwner.title': string
+  'codeOwner.waitToApprove': string
   codeSearch: string
   codeSearchModal: string
   comment: string
@@ -812,6 +817,7 @@ export interface StringsMap {
   viewRaw: string
   viewRepo: string
   viewed: string
+  waitForApproval: string
   webhook: string
   webhookAllEventsSelected: string
   webhookBranchCreated: string

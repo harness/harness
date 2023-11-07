@@ -18,7 +18,7 @@ import { Intent, IToaster, IToastProps, Position, Toaster } from '@blueprintjs/c
 import { get } from 'lodash-es'
 import moment from 'moment'
 import langMap from 'lang-map'
-import type { EnumMergeMethod, TypesRuleViolations, TypesViolation } from 'services/code'
+import type { EnumMergeMethod, TypesRuleViolations, TypesViolation, TypesCodeOwnerEvaluationEntry } from 'services/code'
 import type { GitInfoProps } from './GitUtils'
 
 export enum ACCESS_MODES {
@@ -247,6 +247,47 @@ export const handlePaste = (event: { preventDefault: () => void; clipboardData: 
       const blob = firstItem.getAsFile()
       callback(blob)
     }
+  }
+}
+
+// find code owner request decision from given entries
+export const findChangeReqDecisions = (
+  entries: TypesCodeOwnerEvaluationEntry[] | null | undefined,
+  decision: string
+) => {
+  if (entries === null || entries === undefined) {
+    return []
+  } else {
+    return entries
+      .map((entry: TypesCodeOwnerEvaluationEntry) => {
+        // Filter the owner_evaluations for 'changereq' decisions
+        const changeReqEvaluations = entry?.owner_evaluations?.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (evaluation: any) => evaluation?.review_decision === decision
+        )
+
+        // If there are any 'changereq' decisions, return the entry along with them
+        if (changeReqEvaluations && changeReqEvaluations?.length > 0) {
+          return { ...entry, owner_evaluations: changeReqEvaluations }
+        }
+      }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((entry: any) => entry !== null && entry !== undefined) // Filter out the null entries
+  }
+}
+
+export const findWaitingDecisions = (entries: TypesCodeOwnerEvaluationEntry[] | null | undefined) => {
+  if (entries === null || entries === undefined) {
+    return []
+  } else {
+    return entries.filter((entry: TypesCodeOwnerEvaluationEntry) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const hasEmptyDecision = entry?.owner_evaluations?.some((evaluation: any) => evaluation?.review_decision === '')
+      const hasNoApprovedDecision = !entry?.owner_evaluations?.some(
+        evaluation => evaluation.review_decision === 'approved'
+      )
+
+      return hasEmptyDecision && hasNoApprovedDecision
+    })
   }
 }
 

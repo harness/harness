@@ -908,3 +908,10 @@ branchProtection:
   mergePrAlertTitle: Merge pull request alert
   mergePrAlertText: 'Merge cannot be completed. {{ruleCount}} branch rules failed: '
   mergeCheckboxAlert: Bypass branch rules and merge
+codeOwner:
+  title: Code Owner
+  changesRequested: '{count} {count|1:change,changes} requested'
+  waitToApprove: '{count} pending {count|1:approval,approvals} '
+  approvalCompleted: '{count}/{total} approvals completed'
+approved: Approved
+waitForApproval: Wait for Approval
