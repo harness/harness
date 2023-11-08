@@ -18,6 +18,8 @@ import { Intent, IToaster, IToastProps, Position, Toaster } from '@blueprintjs/c
 import { get } from 'lodash-es'
 import moment from 'moment'
 import langMap from 'lang-map'
+import type { EnumMergeMethod, TypesRuleViolations, TypesViolation, TypesCodeOwnerEvaluationEntry } from 'services/code'
+import type { GitInfoProps } from './GitUtils'
 
 export enum ACCESS_MODES {
   VIEW,
@@ -74,6 +76,25 @@ export interface PageBrowserProps {
   page: string
 }
 
+export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[], fieldsToCheck: FieldCheck) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tempArray: any[] = ruleViolationArr?.flatMap(
+    (item: { violations?: TypesViolation[] | null }) => item?.violations?.map(violation => violation.code) ?? []
+  )
+  const uniqueViolations = new Set(tempArray)
+  const violationArr = [...uniqueViolations]
+    .filter(violation => violation in fieldsToCheck)
+    .map(violation => ({ violation: fieldsToCheck[violation] }))
+
+  const checkIfBypassAllowed = ruleViolationArr.some(ruleViolation => ruleViolation.bypassed === false)
+
+  return {
+    uniqueViolations,
+    checkIfBypassAllowed,
+    violationArr
+  }
+}
+
 export interface RenameDetails {
   commit_sha_after: string
   commit_sha_before: string
@@ -106,6 +127,28 @@ export interface SourceCodeEditorProps {
   schema?: Record<string, unknown>
 }
 
+export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+  onPRStateChanged: () => void
+  refetchReviewers: () => void
+}
+
+export interface PRMergeOption {
+  method: EnumMergeMethod | 'close'
+  title: string
+  desc: string
+  disabled?: boolean
+}
+
+export type FieldCheck = {
+  [key: string]: string
+}
+
+export interface PRDraftOption {
+  method: 'close' | 'open'
+  title: string
+  desc: string
+  disabled?: boolean
+}
 export const displayDateTime = (value: number): string | null => {
   return value ? moment.unix(value / 1000).format(DEFAULT_DATE_FORMAT) : null
 }
@@ -177,6 +220,77 @@ export function formatTime(timestamp: number | string, timeStyle = 'short'): str
     : ''
 }
 
+type FileDropCallback = (file: File) => void
+//handle file drop in image upload
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const handleFileDrop = (event: any, callback: FileDropCallback): void => {
+  event.preventDefault()
+
+  const file = event?.dataTransfer?.files[0]
+  if (file) {
+    callback(file)
+  }
+}
+
+type PasteCallback = (file: File) => void
+
+// handle file paste in image upload
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const handlePaste = (event: { preventDefault: () => void; clipboardData: any }, callback: PasteCallback) => {
+  event.preventDefault()
+  const clipboardData = event.clipboardData
+  const items = clipboardData.items
+
+  if (items.length > 0) {
+    const firstItem = items[0]
+    if (firstItem.type.startsWith('image/')) {
+      const blob = firstItem.getAsFile()
+      callback(blob)
+    }
+  }
+}
+
+// find code owner request decision from given entries
+export const findChangeReqDecisions = (
+  entries: TypesCodeOwnerEvaluationEntry[] | null | undefined,
+  decision: string
+) => {
+  if (entries === null || entries === undefined) {
+    return []
+  } else {
+    return entries
+      .map((entry: TypesCodeOwnerEvaluationEntry) => {
+        // Filter the owner_evaluations for 'changereq' decisions
+        const changeReqEvaluations = entry?.owner_evaluations?.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (evaluation: any) => evaluation?.review_decision === decision
+        )
+
+        // If there are any 'changereq' decisions, return the entry along with them
+        if (changeReqEvaluations && changeReqEvaluations?.length > 0) {
+          return { ...entry, owner_evaluations: changeReqEvaluations }
+        }
+      }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((entry: any) => entry !== null && entry !== undefined) // Filter out the null entries
+  }
+}
+
+export const findWaitingDecisions = (entries: TypesCodeOwnerEvaluationEntry[] | null | undefined) => {
+  if (entries === null || entries === undefined) {
+    return []
+  } else {
+    return entries.filter((entry: TypesCodeOwnerEvaluationEntry) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const hasEmptyDecision = entry?.owner_evaluations?.some((evaluation: any) => evaluation?.review_decision === '')
+      const hasNoApprovedDecision = !entry?.owner_evaluations?.some(
+        evaluation => evaluation.review_decision === 'approved'
+      )
+
+      return hasEmptyDecision && hasNoApprovedDecision
+    })
+  }
+}
+
 /**
  * Format a timestamp to medium format date (i.e: Jan 1, 2021)
  * @param timestamp Timestamp
@@ -199,6 +313,35 @@ export function formatDate(timestamp: number | string, dateStyle = 'medium'): st
  */
 export function formatNumber(num: number | bigint): string {
   return num ? new Intl.NumberFormat(LOCALE).format(num) : ''
+}
+export interface Violation {
+  violation: string
+}
+
+export const rulesFormInitialPayload = {
+  name: '',
+  desc: '',
+  enable: true,
+  target: '',
+  targetDefault: false,
+  targetList: [] as string[][],
+  allRepoOwners: false,
+  bypassList: [] as string[],
+  requireMinReviewers: false,
+  minReviewers: '',
+  requireCodeOwner: false,
+  requireNewChanges: false,
+  requireCommentResolution: false,
+  requireStatusChecks: false,
+  statusChecks: [] as string[],
+  limitMergeStrategies: false,
+  mergeCommit: false,
+  squashMerge: false,
+  rebaseMerge: false,
+  autoDelete: false,
+  blockBranchCreation: false,
+  blockBranchDeletion: false,
+  blockMergeWithoutPr: false
 }
 
 /**
@@ -300,16 +443,17 @@ const MONACO_SUPPORTED_LANGUAGES = [
 // due to their similarity. We'll still need to get native support for them at
 // some point.
 const EXTENSION_TO_LANG: Record<string, string> = {
-  tsx: 'typescript',
-  jsx: 'typescript',
-  cc: 'cpp',
-  env: 'shell',
-  makefile: 'shell',
-  gitignore: 'shell',
-  toml: 'ini',
+  alpine: 'dockerfile',
   bazel: 'python',
-  workspace: 'python',
-  alpine: 'dockerfile'
+  cc: 'cpp',
+  cs: 'csharp',
+  env: 'shell',
+  gitignore: 'shell',
+  jsx: 'typescript',
+  makefile: 'shell',
+  toml: 'ini',
+  tsx: 'typescript',
+  workspace: 'python'
 }
 
 export const PLAIN_TEXT = 'plaintext'

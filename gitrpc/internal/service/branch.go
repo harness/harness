@@ -47,17 +47,11 @@ func (s ReferenceService) CreateBranch(
 
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	// TODO: why are we using gitea operations here?!
-	repo, err := git.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, processGitErrorf(err, "failed to open repo")
-	}
-
-	if ok, err := repo.IsEmpty(); ok {
+	if ok, err := repoIsEmpty(ctx, repoPath); ok {
 		return nil, ErrInvalidArgumentf("branch cannot be created on empty repository", err)
 	}
 
-	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repoPath)
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to create new shared repo")
 	}
@@ -145,13 +139,7 @@ func (s ReferenceService) DeleteBranch(ctx context.Context,
 
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	// TODO: why are we using gitea operations here?!
-	repo, err := git.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, processGitErrorf(err, "failed to open repo")
-	}
-
-	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repoPath)
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to create new shared repo")
 	}

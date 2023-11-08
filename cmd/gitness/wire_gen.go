@@ -153,10 +153,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	codeownersConfig := server.ProvideCodeOwnerConfig(config)
-	codeownersService, err := codeowners.ProvideCodeOwners(gitrpcInterface, repoStore, codeownersConfig)
-	if err != nil {
-		return nil, err
-	}
+	codeownersService := codeowners.ProvideCodeOwners(gitrpcInterface, repoStore, codeownersConfig, principalStore)
 	repoController := repo.ProvideController(config, transactor, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, protectionManager, gitrpcInterface, repository, codeownersService)
 	executionStore := database.ProvideExecutionStore(db)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
@@ -219,7 +216,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, pullReqFileViewStore, membershipStore, checkStore, gitrpcInterface, reporter, mutexManager, migrator, pullreqService, protectionManager, streamer)
+	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, pullReqFileViewStore, membershipStore, checkStore, gitrpcInterface, reporter, mutexManager, migrator, pullreqService, protectionManager, streamer, codeownersService)
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
@@ -247,7 +244,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	uploadController := upload.ProvideController(authorizer, repoStore, blobStore)
 	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController, uploadController)
-	gitHandler := router.ProvideGitHandler(provider, repoStore, authenticator, authorizer, gitrpcInterface, repoController)
+	gitHandler := router.ProvideGitHandler(provider, authenticator, repoController)
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler, provider)
 	serverServer := server2.ProvideServer(config, routerRouter)

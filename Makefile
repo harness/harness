@@ -40,7 +40,7 @@ tools: $(tools) ## Install tools required for the build
 
 build: generate ## Build the all-in-one gitness binary
 	@echo "Building Gitness Server"
-	go build -tags=gogit -o ./gitness ./cmd/gitness
+	go build -o ./gitness ./cmd/gitness
 
 test: generate  ## Run the go tests
 	@echo "Running tests"

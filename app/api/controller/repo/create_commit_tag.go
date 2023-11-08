@@ -21,7 +21,9 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -42,10 +44,10 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *CreateCommitTagInput,
-) (*CommitTag, error) {
+) (*CommitTag, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// set target to default branch in case no branch or commit was provided
@@ -53,11 +55,30 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		in.Target = repo.DefaultBranch
 	}
 
-	// TODO: Verify protection rules
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
+		Actor:       &session.Principal,
+		AllowBypass: true,
+		IsRepoOwner: isRepoOwner,
+		Repo:        repo,
+		RefAction:   protection.RefActionCreate,
+		RefType:     protection.RefTypeTag,
+		RefNames:    []string{in.Name},
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
+	if protection.IsCritical(violations) {
+		return nil, violations, nil
+	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
+		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	now := time.Now()
@@ -69,14 +90,14 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		Tagger:      rpcIdentityFromPrincipal(session.Principal),
 		TaggerDate:  &now,
 	})
-
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
 	commitTag, err := mapCommitTag(rpcOut.CommitTag)
-
 	if err != nil {
-		return nil, fmt.Errorf("failed to map tag received from service output: %w", err)
+		return nil, nil, fmt.Errorf("failed to map tag received from service output: %w", err)
 	}
-	return &commitTag, nil
+
+	return &commitTag, nil, nil
 }

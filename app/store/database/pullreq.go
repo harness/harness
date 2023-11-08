@@ -508,6 +508,11 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 }
 
 func mapPullReq(pr *pullReq) *types.PullReq {
+	var mergeConflicts []string
+	if pr.MergeConflicts.Valid {
+		mergeConflicts = strings.Split(pr.MergeConflicts.String, "\n")
+	}
+
 	return &types.PullReq{
 		ID:               pr.ID,
 		Version:          pr.Version,
@@ -535,7 +540,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		MergeTargetSHA:   pr.MergeTargetSHA.Ptr(),
 		MergeBaseSHA:     pr.MergeBaseSHA,
 		MergeSHA:         pr.MergeSHA.Ptr(),
-		MergeConflicts:   pr.MergeConflicts.Ptr(),
+		MergeConflicts:   mergeConflicts,
 		Author:           types.PrincipalInfo{},
 		Merger:           nil,
 		Stats: types.PullReqStats{
@@ -550,6 +555,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 }
 
 func mapInternalPullReq(pr *types.PullReq) *pullReq {
+	mergeConflicts := strings.Join(pr.MergeConflicts, "\n")
 	m := &pullReq{
 		ID:               pr.ID,
 		Version:          pr.Version,
@@ -577,7 +583,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		MergeTargetSHA:   null.StringFromPtr(pr.MergeTargetSHA),
 		MergeBaseSHA:     pr.MergeBaseSHA,
 		MergeSHA:         null.StringFromPtr(pr.MergeSHA),
-		MergeConflicts:   null.StringFromPtr(pr.MergeConflicts),
+		MergeConflicts:   null.NewString(mergeConflicts, mergeConflicts != ""),
 	}
 
 	return m

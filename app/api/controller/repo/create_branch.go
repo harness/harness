@@ -20,7 +20,9 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -38,10 +40,10 @@ func (c *Controller) CreateBranch(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *CreateBranchInput,
-) (*Branch, error) {
+) (*Branch, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// set target to default branch in case no target was provided
@@ -49,11 +51,30 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		in.Target = repo.DefaultBranch
 	}
 
-	// TODO: Verify protection rules
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
+		Actor:       &session.Principal,
+		AllowBypass: true,
+		IsRepoOwner: isRepoOwner,
+		Repo:        repo,
+		RefAction:   protection.RefActionCreate,
+		RefType:     protection.RefTypeBranch,
+		RefNames:    []string{in.Name},
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
+	if protection.IsCritical(violations) {
+		return nil, violations, nil
+	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
+		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	rpcOut, err := c.gitRPCClient.CreateBranch(ctx, &gitrpc.CreateBranchParams{
@@ -62,13 +83,13 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		Target:      in.Target,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	branch, err := mapBranch(rpcOut.Branch)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map branch: %w", err)
+		return nil, nil, fmt.Errorf("failed to map branch: %w", err)
 	}
 
-	return &branch, nil
+	return &branch, nil, nil
 }

@@ -63,7 +63,7 @@ type GitAdapter interface {
 		tmpBasePath string, mergeMsg string, env []string, identity *types.Identity) error
 	GetMergeBase(ctx context.Context, repoPath, remote, base, head string) (string, string, error)
 	Blame(ctx context.Context, repoPath, rev, file string, lineFrom, lineTo int) types.BlameReader
-	Sync(ctx context.Context, repoPath string, source string) error
+	Sync(ctx context.Context, repoPath string, source string, refSpecs []string) error
 
 	//
 	// Diff operations
@@ -111,9 +111,9 @@ type GitAdapter interface {
 		regExpDef string,
 		maxSize int) ([]types.FileContent, error)
 
-	DiffFileStat(
-		ctx context.Context,
+	DiffFileName(ctx context.Context,
 		repoPath string,
 		baseRef string,
-		headRef string) ([]string, error)
+		headRef string,
+		mergeBase bool) ([]string, error)
 }

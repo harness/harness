@@ -38,7 +38,7 @@ import { get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
-import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse } from 'services/code'
+import type { OpenapiCommitFilesRequest, TypesListCommitResponse } from 'services/code'
 import { GitCommitAction, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
 import css from './CommitModalButton.module.scss'
 
@@ -63,7 +63,7 @@ interface CommitModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
   oldResourcePath?: string
   payload?: string
   sha?: string
-  onSuccess: (data: RepoCommitFilesResponse, newBranch?: string) => void
+  onSuccess: (data: TypesListCommitResponse, newBranch?: string) => void
 }
 
 export function useCommitModal({
@@ -82,7 +82,7 @@ export function useCommitModal({
     const { getString } = useStrings()
     const [targetBranchOption, setTargetBranchOption] = useState(CommitToGitRefOption.DIRECTLY)
     const { showError, showSuccess } = useToaster()
-    const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
+    const { mutate, loading } = useMutate<TypesListCommitResponse>({
       verb: 'POST',
       path: `/api/v1/repos/${repoMetadata.path}/+/commits`
     })
@@ -249,7 +249,7 @@ interface CommitModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit
   oldResourcePath?: string
   payload?: string
   sha?: string
-  onSuccess: (data: RepoCommitFilesResponse, newBranch?: string) => void
+  onSuccess: (data: TypesListCommitResponse, newBranch?: string) => void
 }
 
 export const CommitModalButton: React.FC<CommitModalButtonProps> = ({

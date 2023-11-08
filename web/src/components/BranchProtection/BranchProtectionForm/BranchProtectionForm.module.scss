@@ -1,0 +1,170 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.main {
+  max-height: calc(var(--page-height) - 132px);
+  overflow: scroll !important;
+  overflow-x: hidden !important;
+  background-color: var(--primary-bg) !important;
+
+  .table {
+    .row {
+      height: 80px;
+      display: flex;
+      justify-content: center;
+
+      .title {
+        font-weight: 600;
+      }
+    }
+  }
+
+  .noData > div {
+    height: calc(100vh - var(--page-header-height, 64px) - 120px) !important;
+  }
+}
+
+.generalContainer {
+  width: 100%;
+  background: var(--grey-0) !important;
+  box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+  border-radius: 4px;
+  padding: var(--spacing-xlarge) var(--spacing-medium) !important;
+}
+
+.widthContainer {
+  width: 30%;
+}
+
+.greyContainer {
+  background: var(--grey-50) !important;
+  border-radius: 4px !important;
+}
+
+.label {
+  color: var(--grey-700) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.dividerContainer {
+  opacity: 0.2;
+  height: 1px;
+  color: var(--grey-100);
+  margin: 20px 0;
+}
+
+.checkContainer {
+  width: 100% !important;
+}
+
+.targetContainer {
+  :global(.bp3-form-group) {
+    margin-bottom: unset !important;
+  }
+}
+
+.popover {
+  transform: translateY(5px) !important;
+
+  .menuItem {
+    min-width: 60px !important;
+
+    &:hover p {
+      color: var(--white) !important;
+    }
+  }
+  :global {
+    .bp3-menu {
+      min-width: 140px;
+    }
+  }
+}
+.paddingTop {
+  margin-top: 3px !important;
+}
+
+.targetSpacingContainer {
+  :global(.bp3-input-group) {
+    margin-top: 5px !important;
+  }
+}
+
+.buttonContainer {
+  padding-top: var(--spacing-xsmall);
+  padding-left: var(--spacing-small);
+}
+
+.greyButton {
+  border-radius: 4px;
+  border: 1px solid var(--grey-200);
+  background: var(--grey-100) !important;
+  display: flex;
+  width: fit-content;
+  padding: 1px 6px !important;
+  max-width: 200px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.headingSize {
+  font-size: 16px !important;
+}
+
+.checkboxLabel {
+  :global(.Tooltip--acenter) {
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 20px;
+    vertical-align: middle;
+  }
+}
+
+.checkboxText {
+  color: var(--grey-400) !important;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.minText {
+  :global(.bp3-label) {
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+  }
+}
+
+.statusWidthContainer {
+  width: 29% !important;
+}
+
+.bypassContainer {
+  max-height: 144px !important;
+  overflow: auto !important;
+  border-radius: 4px !important;
+  background: var(--grey-50) !important;
+  padding: var(--spacing-small);
+}
+
+.targetBox {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: calc(100% - 100px) !important;
+}

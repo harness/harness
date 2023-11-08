@@ -204,6 +204,7 @@ func (c *Controller) CommentCreate(
 				Number:       pr.Number,
 			},
 			ActivityID: act.ID,
+			SourceSHA:  pr.SourceSHA,
 		})
 	}
 	return act, nil

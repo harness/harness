@@ -57,11 +57,13 @@ type RuleFilter struct {
 type Violation struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	Params  []any  `json:"params"`
 }
 
 // RuleViolations holds several violations of a rule.
 type RuleViolations struct {
 	Rule       RuleInfo    `json:"rule"`
+	Bypassed   bool        `json:"bypassed"`
 	Violations []Violation `json:"violations"`
 }
 
@@ -69,6 +71,7 @@ func (violations *RuleViolations) Add(code, message string) {
 	violations.Violations = append(violations.Violations, Violation{
 		Code:    code,
 		Message: message,
+		Params:  nil,
 	})
 }
 
@@ -76,11 +79,12 @@ func (violations *RuleViolations) Addf(code, format string, params ...any) {
 	violations.Violations = append(violations.Violations, Violation{
 		Code:    code,
 		Message: fmt.Sprintf(format, params...),
+		Params:  params,
 	})
 }
 
 func (violations *RuleViolations) IsCritical() bool {
-	return violations.Rule.State == enum.RuleStateActive
+	return violations.Rule.State == enum.RuleStateActive && !violations.Bypassed && len(violations.Violations) > 0
 }
 
 // RuleInfo holds basic info about a rule that is used to describe the rule in RuleViolations.
@@ -98,4 +102,8 @@ type RuleInfoInternal struct {
 	RuleInfo
 	Pattern    json.RawMessage
 	Definition json.RawMessage
+}
+
+type RulesViolations struct {
+	Violations []RuleViolations `json:"violations"`
 }

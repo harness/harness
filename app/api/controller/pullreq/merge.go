@@ -16,6 +16,7 @@ package pullreq
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
@@ -35,35 +37,32 @@ import (
 )
 
 type MergeInput struct {
-	Method    enum.MergeMethod `json:"method"`
-	SourceSHA string           `json:"source_sha"`
+	Method      enum.MergeMethod `json:"method"`
+	SourceSHA   string           `json:"source_sha"`
+	BypassRules bool             `json:"bypass_rules"`
+	DryRun      bool             `json:"dry_run"`
 }
 
 // Merge merges the pull request.
 //
-//nolint:gocognit
+//nolint:gocognit,gocyclo,cyclop
 func (c *Controller) Merge(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	pullreqNum int64,
 	in *MergeInput,
-) (types.MergeResponse, error) {
-	var (
-		sha string
-		pr  *types.PullReq
-	)
-
+) (*types.MergeResponse, *types.MergeViolations, error) {
 	method, ok := in.Method.Sanitize()
 	if !ok {
-		return types.MergeResponse{}, usererror.BadRequest(
-			fmt.Sprintf("wrong merge method type: %s", in.Method))
+		return nil, nil, usererror.BadRequest(
+			fmt.Sprintf("unsupported merge method: %s", in.Method))
 	}
 	in.Method = method
 
-	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to acquire access to target repo: %w", err)
+		return nil, nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
 	// if two requests for merging comes at the same time then mutex will lock
@@ -72,50 +71,48 @@ func (c *Controller) Merge(
 	// pr is already merged.
 	mutex, err := c.newMutexForPR(targetRepo.GitUID, 0) // 0 means locks all PRs for this repo
 	if err != nil {
-		return types.MergeResponse{}, err
+		return nil, nil, err
 	}
 	err = mutex.Lock(ctx)
 	if err != nil {
-		return types.MergeResponse{}, err
+		return nil, nil, err
 	}
 	defer func() {
 		_ = mutex.Unlock(ctx)
 	}()
 
-	pr, err = c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
+	pr, err := c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
 	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to get pull request by number: %w", err)
+		return nil, nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
 	if pr.Merged != nil {
-		return types.MergeResponse{}, usererror.BadRequest("Pull request already merged")
+		return nil, nil, usererror.BadRequest("Pull request already merged")
 	}
 
 	if pr.State != enum.PullReqStateOpen {
-		return types.MergeResponse{}, usererror.BadRequest("Pull request must be open")
+		return nil, nil, usererror.BadRequest("Pull request must be open")
 	}
 
-	/*
-		if pr.SourceSHA != in.SourceSHA {
-			return types.MergeResponse{},
-				usererror.BadRequest("A newer commit is available. Only the latest commit can be merged.")
-		}
-	*/
+	if pr.SourceSHA != in.SourceSHA {
+		return nil, nil,
+			usererror.BadRequest("A newer commit is available. Only the latest commit can be merged.")
+	}
 
 	if pr.IsDraft {
-		return types.MergeResponse{}, usererror.BadRequest(
+		return nil, nil, usererror.BadRequest(
 			"Draft pull requests can't be merged. Clear the draft flag first.",
 		)
 	}
 
 	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
 	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to load list of reviwers: %w", err)
+		return nil, nil, fmt.Errorf("failed to load list of reviwers: %w", err)
 	}
 
 	targetWriteParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, targetRepo)
 	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	sourceRepo := targetRepo
@@ -123,45 +120,86 @@ func (c *Controller) Merge(
 	if pr.SourceRepoID != pr.TargetRepoID {
 		sourceWriteParams, err = controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, sourceRepo)
 		if err != nil {
-			return types.MergeResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+			return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 		}
 
 		sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
 		if err != nil {
-			return types.MergeResponse{}, fmt.Errorf("failed to get source repository: %w", err)
+			return nil, nil, fmt.Errorf("failed to get source repository: %w", err)
 		}
 	}
 
-	isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, targetRepo)
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, targetRepo)
 	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to determine if the user is space admin: %w", err)
+		return nil, nil, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}
 
 	checkResults, err := c.checkStore.ListResults(ctx, targetRepo.ID, pr.SourceSHA)
 	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to list status checks: %w", err)
+		return nil, nil, fmt.Errorf("failed to list status checks: %w", err)
 	}
 
 	protectionRules, err := c.protectionManager.ForRepository(ctx, targetRepo.ID)
 	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
+		return nil, nil, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
-	ruleOut, violations, err := protectionRules.CanMerge(ctx, protection.CanMergeInput{
+	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, sourceRepo, pr, reviewers)
+	// check for error and ignore if it is codeowners file not found else throw error
+	if err != nil && !errors.Is(err, codeowners.ErrNotFound) {
+		return nil, nil, fmt.Errorf("CODEOWNERS evaluation failed: %w", err)
+	}
+
+	ruleOut, violations, err := protectionRules.MergeVerify(ctx, protection.MergeVerifyInput{
 		Actor:        &session.Principal,
-		IsSpaceOwner: isSpaceOwner,
+		AllowBypass:  in.BypassRules,
+		IsRepoOwner:  isRepoOwner,
 		TargetRepo:   targetRepo,
 		SourceRepo:   sourceRepo,
 		PullReq:      pr,
 		Reviewers:    reviewers,
 		Method:       in.Method,
 		CheckResults: checkResults,
+		CodeOwners:   codeOwnerWithApproval,
 	})
 	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to verify protection rules: %w", err)
+		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 	if protection.IsCritical(violations) {
-		return types.MergeResponse{RuleViolations: violations}, nil
+		return nil, &types.MergeViolations{RuleViolations: violations}, nil
+	}
+
+	if in.DryRun {
+		// With in.DryRun=true this function never returns types.MergeViolations
+		out := &types.MergeResponse{
+			DryRun:         true,
+			SHA:            "",
+			BranchDeleted:  ruleOut.DeleteSourceBranch,
+			ConflictFiles:  pr.MergeConflicts,
+			RuleViolations: violations,
+		}
+
+		// TODO: This is a temporary solution. The changes needed for the proper implementation:
+		// 1) GitRPC: Change the merge method to return SHAs (source/target/merge base) even in case of conflicts.
+		// 2) Event handler: Update target and merge base SHA in the event handler even in case of merge conflicts.
+		// 3) Here: Update the pull request target and merge base SHA in the DB if merge check status is unchecked.
+		// 4) Remove the recheck API.
+		if pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked {
+			_, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
+				WriteParams:     targetWriteParams,
+				BaseBranch:      pr.TargetBranch,
+				HeadRepoUID:     sourceRepo.GitUID,
+				HeadBranch:      pr.SourceBranch,
+				HeadExpectedSHA: in.SourceSHA,
+			})
+			if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
+				out.ConflictFiles = gitrpc.AsConflictFilesError(err)
+			} else if err != nil {
+				return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
+			}
+		}
+
+		return out, nil, nil
 	}
 
 	// TODO: for forking merge title might be different?
@@ -192,12 +230,12 @@ func (c *Controller) Merge(
 	})
 	if err != nil {
 		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
-			return types.MergeResponse{
+			return nil, &types.MergeViolations{
 				ConflictFiles:  gitrpc.AsConflictFilesError(err),
 				RuleViolations: violations,
 			}, nil
 		}
-		return types.MergeResponse{}, fmt.Errorf("merge check execution failed: %w", err)
+		return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
 	}
 
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
@@ -219,7 +257,7 @@ func (c *Controller) Merge(
 		return nil
 	})
 	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to update pull request: %w", err)
+		return nil, nil, fmt.Errorf("failed to update pull request: %w", err)
 	}
 
 	activityPayload := &types.PullRequestActivityPayloadMerge{
@@ -255,9 +293,11 @@ func (c *Controller) Merge(
 		}
 	}
 
-	return types.MergeResponse{
-		SHA:            sha,
+	return &types.MergeResponse{
+		DryRun:         false,
+		SHA:            mergeOutput.MergeSHA,
 		BranchDeleted:  branchDeleted,
+		ConflictFiles:  nil,
 		RuleViolations: violations,
-	}, nil
+	}, nil, nil
 }

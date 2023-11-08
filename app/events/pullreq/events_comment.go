@@ -26,7 +26,8 @@ const CommentCreatedEvent events.EventType = "comment-created"
 
 type CommentCreatedPayload struct {
 	Base
-	ActivityID int64 `json:"activity_id"`
+	ActivityID int64  `json:"activity_id"`
+	SourceSHA  string `json:"source_sha"`
 }
 
 func (r *Reporter) CommentCreated(

@@ -243,6 +243,7 @@ export default function Compare() {
                           <Layout.Vertical spacing="small">
                             <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('description')}</Text>
                             <MarkdownEditorWithPreview
+                              repoMetadata={repoMetadata}
                               value={description}
                               onChange={setDescription}
                               hideButtons

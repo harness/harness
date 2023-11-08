@@ -51,7 +51,7 @@ func (s *Service) handleEventBranchCreated(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerBranchCreated,
 					Repo:      repoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				ReferenceSegment: ReferenceSegment{
 					Ref: ReferenceInfo{
@@ -88,7 +88,7 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerBranchUpdated,
 					Repo:      repoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				ReferenceSegment: ReferenceSegment{
 					Ref: ReferenceInfo{
@@ -121,7 +121,7 @@ func (s *Service) handleEventBranchDeleted(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerBranchDeleted,
 					Repo:      repoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				ReferenceSegment: ReferenceSegment{
 					Ref: ReferenceInfo{

@@ -92,7 +92,8 @@ func getGiteaCommits(giteaRepo *gitea.Repository, commitIDs []string) ([]*gitea.
 }
 
 func (g Adapter) listCommitSHAs(
-	giteaRepo *gitea.Repository,
+	ctx context.Context,
+	repoPath string,
 	ref string,
 	page int,
 	limit int,
@@ -136,7 +137,7 @@ func (g Adapter) listCommitSHAs(
 		args = append(args, "--committer", filter.Committer)
 	}
 
-	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
+	stdout, _, runErr := gitea.NewCommand(ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: repoPath})
 	if runErr != nil {
 		// TODO: handle error in case they don't have a common merge base!
 		return nil, processGiteaErrorf(runErr, "failed to trigger rev-list command")
@@ -156,13 +157,7 @@ func (g Adapter) ListCommitSHAs(
 	limit int,
 	filter types.CommitFilter,
 ) ([]string, error) {
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to open repository")
-	}
-	defer giteaRepo.Close()
-
-	return g.listCommitSHAs(giteaRepo, ref, page, limit, filter)
+	return g.listCommitSHAs(ctx, repoPath, ref, page, limit, filter)
 }
 
 // ListCommits lists the commits reachable from ref.
@@ -179,7 +174,7 @@ func (g Adapter) ListCommits(ctx context.Context,
 	}
 	defer giteaRepo.Close()
 
-	commitSHAs, err := g.listCommitSHAs(giteaRepo, ref, page, limit, filter)
+	commitSHAs, err := g.listCommitSHAs(ctx, repoPath, ref, page, limit, filter)
 	if err != nil {
 		return nil, nil, err
 	}

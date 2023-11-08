@@ -234,17 +234,11 @@ func (s ReferenceService) UpdateRef(ctx context.Context,
 		return nil, err
 	}
 
-	// TODO: why are we using gitea operations here?!
-	repo, err := git.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, processGitErrorf(err, "failed to open repo")
+	if ok, err := repoIsEmpty(ctx, repoPath); ok {
+		return nil, ErrInvalidArgumentf("reference cannot be updated on empty repository", err)
 	}
 
-	if ok, err := repo.IsEmpty(); ok {
-		return nil, ErrInvalidArgumentf("branch cannot be created on empty repository", err)
-	}
-
-	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repoPath)
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to create new shared repo")
 	}
@@ -257,7 +251,7 @@ func (s ReferenceService) UpdateRef(ctx context.Context,
 	}
 
 	pushOpts := types.PushOptions{
-		Remote: sharedRepo.remoteRepo.Path,
+		Remote: repoPath,
 		Env:    CreateEnvironmentForPush(ctx, base),
 	}
 
@@ -274,6 +268,7 @@ func (s ReferenceService) UpdateRef(ctx context.Context,
 		pushOpts.ForceWithLease = reference + ":" + request.GetOldValue()
 	}
 
+	// TODO: why are we using gitea operations here?
 	// TODO: our shared repo has so much duplication, that should be changed IMHO.
 	err = gitea.Push(ctx, sharedRepo.tmpPath, pushOpts)
 	if err != nil {

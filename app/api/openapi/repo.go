@@ -157,6 +157,10 @@ type getRawDiffRequest struct {
 	Range string `path:"range" example:"main..dev"`
 }
 
+type codeOwnersValidate struct {
+	repoRequest
+}
+
 // ruleType is a plugin for types.RuleType to allow using oneof.
 type ruleType string
 
@@ -603,6 +607,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCreateBranch, new(types.RulesViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/branches", opCreateBranch)
 
 	opGetBranch := openapi3.Operation{}
@@ -625,6 +630,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opDeleteBranch, new(types.RulesViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/branches/{branch_name}", opDeleteBranch)
 
 	opListBranches := openapi3.Operation{}
@@ -665,6 +671,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusConflict)
+	_ = reflector.SetJSONResponse(&opCreateTag, new(types.RulesViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/tags", opCreateTag)
 
 	opDeleteTag := openapi3.Operation{}
@@ -677,6 +684,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusConflict)
+	_ = reflector.SetJSONResponse(&opDeleteTag, new(types.RulesViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/tags/{tag_name}", opDeleteTag)
 
 	opCommitFiles := openapi3.Operation{}
@@ -689,6 +697,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opCommitFiles, new(types.RulesViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/commits", opCommitFiles)
 
 	opDiff := openapi3.Operation{}
@@ -814,4 +823,17 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules/{rule_uid}", opRuleGet)
+
+	opCodeOwnerValidate := openapi3.Operation{}
+	opCodeOwnerValidate.WithTags("repository")
+	opCodeOwnerValidate.WithMapOfAnything(map[string]interface{}{"operationId": "codeOwnersValidate"})
+	opCodeOwnerValidate.WithParameters(queryParameterGitRef)
+	_ = reflector.SetRequest(&opCodeOwnerValidate, new(codeOwnersValidate), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, nil, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusUnprocessableEntity)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/codeowners/validate", opCodeOwnerValidate)
 }

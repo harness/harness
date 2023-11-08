@@ -42,6 +42,7 @@ type Job struct {
 
 type JobStateChange struct {
 	UID      string        `json:"uid"`
+	Type     string        `json:"type"`
 	State    enum.JobState `json:"state"`
 	Progress int           `json:"progress"`
 	Result   string        `json:"result"`

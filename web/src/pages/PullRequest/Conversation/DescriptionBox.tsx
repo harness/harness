@@ -44,6 +44,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
   const [content, setContent] = useState(originalContent)
   const { getString } = useStrings()
   const { showError } = useToaster()
+
   const { mutate } = useMutate({
     verb: 'PATCH',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}`
@@ -62,6 +63,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
       <Container padding={!edit ? { left: 'small', bottom: 'small' } : undefined}>
         {(edit && (
           <MarkdownEditorWithPreview
+            repoMetadata={repoMetadata}
             value={content}
             onSave={value => {
               const payload: OpenapiUpdatePullReqRequest = {

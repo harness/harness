@@ -32,7 +32,9 @@ export function useGetRepositoryMetadata() {
     pullRequestId = '',
     webhookId = '',
     commitSHA = '',
+    ruleId = '',
     diffRefs,
+    settingSectionMode = '',
     ...otherPathParams
   } = useParams<CODEProps>()
   const {
@@ -62,6 +64,8 @@ export function useGetRepositoryMetadata() {
     pullRequestId,
     webhookId,
     commitSHA,
+    ruleId,
+    settingSectionMode,
     ...otherPathParams
   }
 }

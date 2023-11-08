@@ -28,6 +28,7 @@ import type {
   TypesPullReq,
   TypesRepository
 } from 'services/code'
+import { getErrorMessage } from './Utils'
 
 export interface GitInfoProps {
   repoMetadata: TypesRepository
@@ -48,7 +49,10 @@ export interface RepoFormData {
   isPublic: RepoVisibility
 }
 export interface ImportFormData {
-  repoUrl: string
+  gitProvider: GitProviders
+  hostUrl: string
+  org: string
+  repo: string
   username: string
   password: string
   name: string
@@ -68,7 +72,7 @@ export interface ExportFormDataExtended extends ExportFormData {
 }
 
 export interface ImportSpaceFormData {
-  gitProvider: string
+  gitProvider: GitProviders
   username: string
   password: string
   name: string
@@ -98,6 +102,11 @@ export enum GitContentType {
   SYMLINK = 'symlink',
   SUBMODULE = 'submodule'
 }
+export enum SettingsTab {
+  webhooks = 'webhook',
+  general = '/',
+  branchProtection = 'rules'
+}
 
 export enum GitBranchType {
   ACTIVE = 'active',
@@ -116,6 +125,32 @@ export enum PrincipalUserType {
   SERVICE = 'service'
 }
 
+export enum SettingTypeMode {
+  EDIT = 'edit',
+  NEW = 'new'
+}
+
+export enum BranchTargetType {
+  INCLUDE = 'include',
+  EXCLUDE = 'exclude'
+}
+
+export interface BranchTargetOption {
+  type: BranchTargetType
+  title: string
+}
+
+export const branchTargetOptions: BranchTargetOption[] = [
+  {
+    type: BranchTargetType.INCLUDE,
+    title: 'Include'
+  },
+  {
+    type: BranchTargetType.EXCLUDE,
+    title: 'Exclude'
+  }
+]
+
 export enum GitCommitAction {
   DELETE = 'DELETE',
   CREATE = 'CREATE',
@@ -127,6 +162,17 @@ export enum PullRequestState {
   OPEN = 'open',
   MERGED = 'merged',
   CLOSED = 'closed'
+}
+
+export enum GitProviders {
+  GITHUB = 'GitHub',
+  GITHUB_ENTERPRISE = 'GitHub Enterprise',
+  GITLAB = 'GitLab',
+  GITLAB_SELF_HOSTED = 'GitLab Self-Hosted',
+  BITBUCKET = 'Bitbucket',
+  BITBUCKET_SERVER = 'Bitbucket Server',
+  GITEA = 'Gitea',
+  GOGS = 'Gogs'
 }
 
 export const PullRequestFilterOption = {
@@ -171,11 +217,6 @@ export const CodeIcon = {
   ChecksSuccess: 'success-tick' as IconName
 }
 
-export enum Organization {
-  GITHUB = 'Github',
-  GITLAB = 'Gitlab'
-}
-
 export const normalizeGitRef = (gitRef: string | undefined) => {
   if (isRefATag(gitRef)) {
     return gitRef
@@ -193,6 +234,8 @@ export const normalizeGitRef = (gitRef: string | undefined) => {
 export const REFS_TAGS_PREFIX = 'refs/tags/'
 export const REFS_BRANCH_PREFIX = 'refs/heads/'
 
+export const FILE_VIEWED_OBSOLETE_SHA = 'ffffffffffffffffffffffffffffffffffffffff'
+
 export function formatTriggers(triggers: EnumWebhookTrigger[]) {
   return triggers.map(trigger => {
     return trigger
@@ -200,6 +243,50 @@ export function formatTriggers(triggers: EnumWebhookTrigger[]) {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')
   })
+}
+
+export const handleUpload = (
+  blob: File,
+  setMarkdownContent: (data: string) => void,
+  repoMetadata: TypesRepository | undefined,
+  showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void
+) => {
+  const reader = new FileReader()
+  // Set up a function to be called when the load event is triggered
+  reader.onload = async function () {
+    const markdown = await uploadImage(reader.result, showError, repoMetadata)
+    setMarkdownContent(markdown) // Set the markdown content
+  }
+  reader.readAsArrayBuffer(blob) // This will trigger the onload function when the reading is complete
+}
+
+export const uploadImage = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fileBlob: any,
+  showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void,
+  repoMetadata: TypesRepository | undefined
+) => {
+  try {
+    const response = await fetch(`${window.location.origin}/api/v1/repos/${repoMetadata?.path}/+/uploads/`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'content-type': 'application/octet-stream'
+      },
+      body: fileBlob,
+      redirect: 'follow'
+    })
+    const result = await response.json()
+    if (!response.ok && result) {
+      showError(getErrorMessage(result))
+      return ''
+    }
+    const filePath = result.file_path
+    return window.location.origin + '/' + 'api/v1/repos/' + repoMetadata?.path + '/+/uploads/' + filePath
+  } catch (exception) {
+    showError(getErrorMessage(exception))
+    return ''
+  }
 }
 
 // eslint-disable-next-line no-control-regex
@@ -269,19 +356,51 @@ export const decodeGitContent = (content = '') => {
   return ''
 }
 
-export const parseUrl = (url: string) => {
-  const pattern = /^(https?:\/\/(?:www\.)?(github|gitlab)\.com\/([^/]+\/[^/]+))/
-  const match = url.match(pattern)
+// Check if gitRef is a git commit hash (https://github.com/diegohaz/is-git-rev, MIT © Diego Haz)
+export const isGitRev = (gitRef = ''): boolean => /^[0-9a-f]{7,40}$/i.test(gitRef)
 
-  if (match) {
-    const provider = match[2]
-    const fullRepo = match[3]
-    const repoName = match[3].split('/')[1].replace('.git', '')
-    return { provider, fullRepo, repoName }
-  } else {
-    return null
+export const getProviderTypeMapping = (provider: GitProviders): string => {
+  switch (provider) {
+    case GitProviders.BITBUCKET_SERVER:
+      return 'stash'
+    case GitProviders.GITHUB_ENTERPRISE:
+      return 'github'
+    case GitProviders.GITLAB_SELF_HOSTED:
+      return 'gitlab'
+    default:
+      return provider.toLowerCase()
   }
 }
 
-// Check if gitRef is a git commit hash (https://github.com/diegohaz/is-git-rev, MIT © Diego Haz)
-export const isGitRev = (gitRef = ''): boolean => /^[0-9a-f]{7,40}$/i.test(gitRef)
+export const getOrgLabel = (gitProvider: string) => {
+  switch (gitProvider) {
+    case GitProviders.BITBUCKET:
+      return 'importRepo.workspace'
+    case GitProviders.BITBUCKET_SERVER:
+      return 'importRepo.project'
+    case GitProviders.GITLAB:
+    case GitProviders.GITLAB_SELF_HOSTED:
+      return 'importRepo.group'
+    default:
+      return 'importRepo.org'
+  }
+}
+
+export const getOrgPlaceholder = (gitProvider: string) => {
+  switch (gitProvider) {
+    case GitProviders.BITBUCKET:
+      return 'importRepo.workspacePlaceholder'
+    case GitProviders.BITBUCKET_SERVER:
+      return 'importRepo.projectPlaceholder'
+    case GitProviders.GITLAB:
+    case GitProviders.GITLAB_SELF_HOSTED:
+      return 'importRepo.groupPlaceholder'
+    default:
+      return 'importRepo.orgPlaceholder'
+  }
+}
+
+export const getProviders = () =>
+  Object.values(GitProviders).map(value => {
+    return { value, label: value }
+  })

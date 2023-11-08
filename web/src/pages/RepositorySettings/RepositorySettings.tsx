@@ -15,24 +15,33 @@
  */
 
 import React from 'react'
+import cx from 'classnames'
 
-import { PageBody, Container } from '@harnessio/uicore'
+import { PageBody, Container, Tabs } from '@harnessio/uicore'
+import { useHistory } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { getErrorMessage, voidFn } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+// import Webhooks from 'pages/Webhooks/Webhooks'
+import { useAppContext } from 'AppContext'
+import BranchProtectionListing from 'components/BranchProtection/BranchProtectionListing'
+import { SettingsTab } from 'utils/GitUtils'
 import GeneralSettingsContent from './GeneralSettingsContent/GeneralSettingsContent'
 import css from './RepositorySettings.module.scss'
 
 export default function RepositorySettings() {
-  const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
-
+  const { repoMetadata, error, loading, refetch, settingSection } = useGetRepositoryMetadata()
+  const history = useHistory()
+  const { routes } = useAppContext()
+  const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.general)
   const { getString } = useStrings()
   return (
     <Container className={css.main}>
       <RepositoryPageHeader
+        className={css.headerContainer}
         repoMetadata={repoMetadata}
         title={getString('settings')}
         dataTooltipId="repositorySettings"
@@ -40,8 +49,47 @@ export default function RepositorySettings() {
       <PageBody error={getErrorMessage(error)} retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={loading} />
         {repoMetadata && (
-          <Container className={css.main} padding={'large'}>
-            <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} />
+          <Container className={cx(css.main, css.tabsContainer)}>
+            <Tabs
+              id="SettingsTabs"
+              large={false}
+              defaultSelectedTabId={activeTab}
+              animate={false}
+              onChange={(id: string) => {
+                setActiveTab(id)
+                history.replace(
+                  routes.toCODESettings({
+                    repoPath: repoMetadata?.path as string,
+
+                    settingSection: id !== SettingsTab.general ? (id as string) : ''
+                  })
+                )
+              }}
+              tabList={[
+                {
+                  id: SettingsTab.general,
+                  title: getString('settings'),
+                  panel: (
+                    <Container padding={'large'}>
+                      <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} />
+                    </Container>
+                  )
+                },
+                {
+                  id: SettingsTab.branchProtection,
+                  title: getString('branchProtection.title'),
+                  panel: <BranchProtectionListing activeTab={activeTab} />
+                }
+                // {
+                //   id: SettingsTab.webhooks,
+                //   title: getString('webhooks'),
+                //   panel: (
+                //     <Container padding={'large'}>
+                //       <Webhooks />
+                //     </Container>
+                //   )
+                // }
+              ]}></Tabs>
           </Container>
         )}
       </PageBody>

@@ -40,9 +40,13 @@ func HandleCreateCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		tag, err := repoCtrl.CreateCommitTag(ctx, session, repoRef, in)
+		tag, violations, err := repoCtrl.CreateCommitTag(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
+		}
+		if violations != nil {
+			render.Violations(w, violations)
 			return
 		}
 

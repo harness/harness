@@ -45,40 +45,40 @@ func (p *Pattern) Validate() error {
 		}
 	}
 
-	if !p.Default && len(p.Include) == 0 && len(p.Exclude) == 0 {
-		return ErrPatternEmpty
-	}
-
 	return nil
 }
 
 func (p *Pattern) Matches(branchName, defaultName string) bool {
+	// Initially match everything, unless the default is set or the include patterns are defined.
+	matches := !p.Default && len(p.Include) == 0
+
+	// Apply the default branch.
+	matches = matches || p.Default && branchName == defaultName
+
+	// Apply the include patterns.
+	if !matches {
+		for _, include := range p.Include {
+			if matches = patternMatches(include, branchName); matches {
+				break
+			}
+		}
+	}
+
+	// Apply the exclude patterns.
 	for _, exclude := range p.Exclude {
-		if patternMatches(exclude, branchName) {
-			return false
-		}
+		matches = matches && !patternMatches(exclude, branchName)
 	}
 
-	if p.Default && branchName == defaultName {
-		return true
-	}
-
-	for _, include := range p.Include {
-		if patternMatches(include, branchName) {
-			return true
-		}
-	}
-
-	return false
+	return matches
 }
 
 func patternValidate(pattern string) error {
 	if pattern == "" {
-		return ErrPatternEmptyPattern
+		return ErrPatternEmpty
 	}
 	_, err := doublestar.Match(pattern, "test")
 	if err != nil {
-		return fmt.Errorf("name pattern is invalid: %s", pattern)
+		return ErrInvalidGlobstarPattern
 	}
 	return nil
 }

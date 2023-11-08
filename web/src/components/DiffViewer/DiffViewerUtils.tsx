@@ -19,6 +19,7 @@ import HoganJsUtils from 'diff2html/lib/hoganjs-utils'
 import { get } from 'lodash-es'
 import type { CommentItem, SingleConsumerEventStream } from 'components/CommentBox/CommentBox'
 import type { TypesPullReqActivity } from 'services/code'
+import { FILE_VIEWED_OBSOLETE_SHA } from 'utils/GitUtils'
 
 export enum ViewStyle {
   SIDE_BY_SIDE = 'side-by-side',
@@ -256,4 +257,29 @@ export function activitiesToDiffCommentItems(
         }
       }) || []
   )
+}
+
+export enum FileViewedState {
+  NOT_VIEWED,
+  VIEWED,
+  CHANGED
+}
+
+export function getFileViewedState(
+  filePath: string,
+  fileSha: string | undefined,
+  views: Map<string, string> | undefined
+): FileViewedState {
+  if (!views || !views.has(filePath)) {
+    return FileViewedState.NOT_VIEWED
+  }
+
+  const viewedSHA = views.get(filePath)
+
+  // this case is only expected in case of pure rename - but we'll also use it as fallback.
+  if (fileSha === undefined || fileSha === '') {
+    return viewedSHA === FILE_VIEWED_OBSOLETE_SHA ? FileViewedState.CHANGED : FileViewedState.VIEWED
+  }
+
+  return viewedSHA === fileSha ? FileViewedState.VIEWED : FileViewedState.CHANGED
 }

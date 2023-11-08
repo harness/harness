@@ -15,14 +15,28 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Container, ButtonVariation, Layout, ButtonSize } from '@harnessio/uicore'
+import {
+  Text,
+  Button,
+  Container,
+  ButtonVariation,
+  Layout,
+  ButtonSize,
+  Dialog,
+  FlexExpander,
+  useToaster
+} from '@harnessio/uicore'
 import type { IconName } from '@harnessio/icons'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { EditorView } from '@codemirror/view'
 import { EditorSelection } from '@codemirror/state'
 import { Editor } from 'components/Editor/Editor'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
+import { useStrings } from 'framework/strings'
+import { formatBytes, handleFileDrop, handlePaste } from 'utils/Utils'
+import { handleUpload } from 'utils/GitUtils'
+import type { TypesRepository } from 'services/code'
 import css from './MarkdownEditorWithPreview.module.scss'
 
 enum MarkdownEditorTab {
@@ -34,6 +48,7 @@ enum ToolbarAction {
   HEADER = 'HEADER',
   BOLD = 'BOLD',
   ITALIC = 'ITALIC',
+  UPLOAD = 'UPLOAD',
   UNORDER_LIST = 'UNORDER_LIST',
   CHECK_LIST = 'CHECK_LIST',
   CODE_BLOCK = 'CODE_BLOCK'
@@ -48,6 +63,8 @@ const toolbar: ToolbarItem[] = [
   { icon: 'header', action: ToolbarAction.HEADER },
   { icon: 'bold', action: ToolbarAction.BOLD },
   { icon: 'italic', action: ToolbarAction.ITALIC },
+  { icon: 'paperclip', action: ToolbarAction.UPLOAD },
+
   { icon: 'properties', action: ToolbarAction.UNORDER_LIST },
   { icon: 'form', action: ToolbarAction.CHECK_LIST },
   { icon: 'main-code-yaml', action: ToolbarAction.CODE_BLOCK }
@@ -77,6 +94,7 @@ interface MarkdownEditorWithPreviewProps {
   // When set to true, the editor will be scrolled to center of screen
   // and cursor is set to the end of the document
   autoFocusAndPosition?: boolean
+  repoMetadata: TypesRepository | undefined
 }
 
 export function MarkdownEditorWithPreview({
@@ -93,12 +111,20 @@ export function MarkdownEditorWithPreview({
   noBorder,
   viewRef: viewRefProp,
   autoFocusAndPosition,
-  secondarySaveButton: SecondarySaveButton
+  secondarySaveButton: SecondarySaveButton,
+  repoMetadata
 }: MarkdownEditorWithPreviewProps) {
+  const { getString } = useStrings()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [selectedTab, setSelectedTab] = useState(MarkdownEditorTab.WRITE)
   const viewRef = useRef<EditorView>()
   const containerRef = useRef<HTMLDivElement>(null)
   const [dirty, setDirty] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [file, setFile] = useState<File>()
+  const { showError } = useToaster()
+  const [markdownContent, setMarkdownContent] = useState('')
   const onToolbarAction = useCallback((action: ToolbarAction) => {
     const view = viewRef.current
 
@@ -133,6 +159,12 @@ export function MarkdownEditorWithPreview({
           // selection: EditorSelection.range(lineInfo.from + mark.length, lineInfo.to),
           selection: { anchor: lineInfo.from + mark.length + 1 }
         })
+        break
+      }
+
+      case ToolbarAction.UPLOAD: {
+        setOpen(true)
+
         break
       }
 
@@ -233,11 +265,121 @@ export function MarkdownEditorWithPreview({
   useEffect(() => {
     if (autoFocusAndPosition && !dirty) {
       scrollToAndSetCursorToEnd(containerRef, viewRef, true)
-    }
+    } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoFocusAndPosition, viewRef, containerRef, scrollToAndSetCursorToEnd, dirty])
+
+  const setFileCallback = (newFile: File) => {
+    setFile(newFile)
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handlePasteForSetFile = (event: { preventDefault: () => void; clipboardData: any }) => {
+    handlePaste(event, setFileCallback)
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleDropForSetFile = async (event: any) => {
+    handleFileDrop(event, setFileCallback)
+  }
+
+  useEffect(() => {
+    const view = viewRef.current
+    if (markdownContent && view) {
+      const insertText = `![image](${markdownContent})`
+      view.dispatch(
+        view.state.changeByRange(range => ({
+          changes: [{ from: range.from, insert: insertText }],
+          range: EditorSelection.range(range.from + insertText.length, range.from + insertText.length)
+        }))
+      )
+    }
+  }, [markdownContent])
+
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleFileChange = (event: any) => {
+    setFile(event?.target?.files[0])
+  }
 
   return (
     <Container ref={containerRef} className={cx(css.container, { [css.noBorder]: noBorder }, className)}>
+      <Dialog
+        onClose={() => {
+          setFile(undefined)
+          setOpen(false)
+        }}
+        className={css.dialog}
+        isOpen={open}>
+        <Text font={{ variation: FontVariation.H4 }}>{getString('imageUpload.title')}</Text>
+
+        <Container
+          margin={{ top: 'small' }}
+          onDragOver={event => {
+            event.preventDefault()
+          }}
+          onDrop={handleDropForSetFile}
+          onPaste={handlePasteForSetFile}
+          flex={{ alignItems: 'center' }}
+          className={css.uploadContainer}
+          width={500}
+          height={81}>
+          {file ? (
+            <Layout.Horizontal
+              width={`100%`}
+              padding={{ left: 'medium', right: 'medium' }}
+              flex={{ justifyContent: 'space-between' }}>
+              <Layout.Horizontal spacing="small">
+                <Text lineClamp={1} width={200}>
+                  {file.name}
+                </Text>
+                <Text>{formatBytes(file.size)}</Text>
+              </Layout.Horizontal>
+              <FlexExpander />
+              <Text icon={'tick'} iconProps={{ color: Color.GREEN_800 }} color={Color.GREEN_800}>
+                {getString('imageUpload.readyToUpload')}
+              </Text>
+            </Layout.Horizontal>
+          ) : (
+            <Text padding={{ left: 'medium' }} color={Color.GREY_400}>
+              {getString('imageUpload.text')}
+              <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+              <Button
+                margin={{ left: 'small' }}
+                text={getString('browse')}
+                onClick={handleButtonClick}
+                variation={ButtonVariation.SECONDARY}
+              />
+            </Text>
+          )}
+        </Container>
+        <Container padding={{ top: 'large' }}>
+          <Layout.Horizontal spacing="small">
+            <Button
+              type="submit"
+              text={getString('imageUpload.upload')}
+              variation={ButtonVariation.PRIMARY}
+              disabled={false}
+              onClick={() => {
+                handleUpload(file as File, setMarkdownContent, repoMetadata, showError)
+                setOpen(false)
+                setFile(undefined)
+              }}
+            />
+            <Button
+              text={getString('cancel')}
+              variation={ButtonVariation.TERTIARY}
+              onClick={() => {
+                setOpen(false)
+                setFile(undefined)
+              }}
+            />
+          </Layout.Horizontal>
+        </Container>
+      </Dialog>
       <ul className={css.tabs}>
         <li>
           <a
@@ -276,6 +418,7 @@ export function MarkdownEditorWithPreview({
       </Container>
       <Container className={css.tabContent}>
         <Editor
+          repoMetadata={repoMetadata}
           forMarkdown
           content={value || ''}
           placeholder={i18n.placeHolder}

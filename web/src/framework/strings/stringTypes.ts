@@ -3,6 +3,7 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
+  Enable: string
   accessControl: string
   accountEmail: string
   accountSetting: string
@@ -27,8 +28,10 @@ export interface StringsMap {
   and: string
   applyChanges: string
   approve: string
+  approved: string
   ascending: string
   assignPeople: string
+  attachText: string
   basedOn: string
   blame: string
   blameCommitLine: string
@@ -43,6 +46,57 @@ export interface StringsMap {
   branchDoesNotHaveFile: string
   branchName: string
   branchNotFound: string
+  'branchProtection.allRepoOwners': string
+  'branchProtection.autoDeleteText': string
+  'branchProtection.autoDeleteTitle': string
+  'branchProtection.blockBranchCreation': string
+  'branchProtection.blockBranchCreationText': string
+  'branchProtection.blockBranchDeletion': string
+  'branchProtection.blockBranchDeletionText': string
+  'branchProtection.blockMergeWithoutPr': string
+  'branchProtection.blockMergeWithoutPrText': string
+  'branchProtection.bypassList': string
+  'branchProtection.create': string
+  'branchProtection.createRule': string
+  'branchProtection.defaultBranch': string
+  'branchProtection.deleteProtectionRule': string
+  'branchProtection.deleteRule': string
+  'branchProtection.deleteText': string
+  'branchProtection.descPlaceholder': string
+  'branchProtection.disableTheRule': string
+  'branchProtection.edit': string
+  'branchProtection.editRule': string
+  'branchProtection.enableTheRule': string
+  'branchProtection.limitMergeStrategies': string
+  'branchProtection.limitMergeStrategiesText': string
+  'branchProtection.mergeCheckboxAlert': string
+  'branchProtection.mergePrAlertText': string
+  'branchProtection.mergePrAlertTitle': string
+  'branchProtection.minNumber': string
+  'branchProtection.minNumberPlaceholder': string
+  'branchProtection.namePlaceholder': string
+  'branchProtection.newRule': string
+  'branchProtection.prFailedText': string
+  'branchProtection.protectionSelectAll': string
+  'branchProtection.reqCommentResolutionText': string
+  'branchProtection.reqCommentResolutionTitle': string
+  'branchProtection.reqNewChangesText': string
+  'branchProtection.reqNewChangesTitle': string
+  'branchProtection.reqReviewFromCodeOwnerText': string
+  'branchProtection.reqReviewFromCodeOwnerTitle': string
+  'branchProtection.reqStatusChecksText': string
+  'branchProtection.reqStatusChecksTitle': string
+  'branchProtection.requireMinReviewersContent': string
+  'branchProtection.requireMinReviewersTitle': string
+  'branchProtection.ruleCreated': string
+  'branchProtection.ruleDeleted': string
+  'branchProtection.ruleEmpty': string
+  'branchProtection.ruleUpdated': string
+  'branchProtection.saveRule': string
+  'branchProtection.statusCheck': string
+  'branchProtection.targetBranches': string
+  'branchProtection.targetPlaceholder': string
+  'branchProtection.title': string
   branchProtectionRules: string
   branchSource: string
   branchSourceDesc: string
@@ -71,6 +125,10 @@ export interface StringsMap {
   cloneText: string
   close: string
   closed: string
+  'codeOwner.approvalCompleted': string
+  'codeOwner.changesRequested': string
+  'codeOwner.title': string
+  'codeOwner.waitToApprove': string
   codeSearch: string
   codeSearchModal: string
   comment: string
@@ -170,6 +228,7 @@ export interface StringsMap {
   enableWebhookTitle: string
   enabled: string
   enterAddress: string
+  enterBitbucketPlaceholder: string
   enterBranchPlaceholder: string
   enterDescription: string
   enterGithubPlaceholder: string
@@ -255,12 +314,26 @@ export interface StringsMap {
   'homepage.selectSpaceContent': string
   'homepage.selectSpaceTitle': string
   'homepage.welcomeText': string
+  'imageUpload.readyToUpload': string
+  'imageUpload.text': string
+  'imageUpload.title': string
+  'imageUpload.upload': string
   importGitRepo: string
   importProgress: string
+  'importRepo.appPassword': string
+  'importRepo.appPasswordPlaceholder': string
   'importRepo.failedToImportRepo': string
+  'importRepo.group': string
+  'importRepo.groupPlaceholder': string
+  'importRepo.org': string
+  'importRepo.orgPlaceholder': string
   'importRepo.passToken': string
-  'importRepo.passwordPlaceholder': string
+  'importRepo.passTokenPlaceholder': string
   'importRepo.passwordReq': string
+  'importRepo.project': string
+  'importRepo.projectPlaceholder': string
+  'importRepo.repo': string
+  'importRepo.repoPlaceholder': string
   'importRepo.reqAuth': string
   'importRepo.required': string
   'importRepo.spaceNameReq': string
@@ -270,6 +343,8 @@ export interface StringsMap {
   'importRepo.userPlaceholder': string
   'importRepo.usernameReq': string
   'importRepo.validation': string
+  'importRepo.workspace': string
+  'importRepo.workspacePlaceholder': string
   'importSpace.authorization': string
   'importSpace.content': string
   'importSpace.createASpace': string
@@ -305,6 +380,7 @@ export interface StringsMap {
   manageApiToken: string
   manageCredText: string
   matchPassword: string
+  mergeCommit: string
   merged: string
   minPassLimit: string
   missingPerms: string
@@ -551,6 +627,7 @@ export interface StringsMap {
   reactivate: string
   readMe: string
   reader: string
+  rebaseMerge: string
   refresh: string
   reject: string
   rejected: string
@@ -628,6 +705,7 @@ export interface StringsMap {
   selectSpaceText: string
   selectToViewMore: string
   setAsAdmin: string
+  setting: string
   settings: string
   showCommitHistory: string
   showEverything: string
@@ -654,6 +732,7 @@ export interface StringsMap {
   'spaceSetting.settings': string
   spaceUpdate: string
   spaces: string
+  squashMerge: string
   sslVerificationLabel: string
   startSearching: string
   status: string
@@ -738,6 +817,7 @@ export interface StringsMap {
   viewRaw: string
   viewRepo: string
   viewed: string
+  waitForApproval: string
   webhook: string
   webhookAllEventsSelected: string
   webhookBranchCreated: string

@@ -47,7 +47,8 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	remoteRepositories, err := importer.LoadRepositoriesFromProviderSpace(ctx, in.Provider, in.ProviderSpace)
+	remoteRepositories, provider, err :=
+		importer.LoadRepositoriesFromProviderSpace(ctx, in.Provider, in.ProviderSpace)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +81,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		}
 
 		jobGroupID := fmt.Sprintf("space-import-%d", space.ID)
-		err = c.importer.RunMany(ctx, jobGroupID, in.Provider, repoIDs, cloneURLs, in.Pipelines)
+		err = c.importer.RunMany(ctx, jobGroupID, provider, repoIDs, cloneURLs, in.Pipelines)
 		if err != nil {
 			return fmt.Errorf("failed to start import repository jobs: %w", err)
 		}

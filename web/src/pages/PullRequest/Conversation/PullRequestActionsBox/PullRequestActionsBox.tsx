@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Button,
   ButtonVariation,
+  Checkbox,
   Container,
   FlexExpander,
   Layout,
@@ -34,47 +35,41 @@ import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
 import type {
-  EnumMergeMethod,
   EnumPullReqState,
   OpenapiMergePullReq,
   OpenapiStatePullReqRequest,
-  TypesPullReq
+  TypesPullReq,
+  TypesRuleViolations
 } from 'services/code'
 import { useStrings } from 'framework/strings'
-import { CodeIcon, GitInfoProps, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
+import { CodeIcon, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import { Images } from 'images'
-import { getErrorMessage, MergeCheckStatus, permissionProps } from 'utils/Utils'
+import {
+  extractInfoFromRuleViolationArr,
+  FieldCheck,
+  getErrorMessage,
+  MergeCheckStatus,
+  permissionProps,
+  PRDraftOption,
+  PRMergeOption,
+  PullRequestActionsBoxProps,
+  Violation
+} from 'utils/Utils'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import ReviewSplitButton from 'components/Changes/ReviewSplitButton/ReviewSplitButton'
+import RuleViolationAlertModal from 'components/RuleViolationAlertModal/RuleViolationAlertModal'
 import css from './PullRequestActionsBox.module.scss'
 
-interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
-  onPRStateChanged: () => void
-  refetchReviewers: () => void
-}
-
-interface PRMergeOption {
-  method: EnumMergeMethod | 'close'
-  title: string
-  desc: string
-  disabled?: boolean
-}
-
-interface PRDraftOption {
-  method: 'close' | 'open'
-  title: string
-  desc: string
-  disabled?: boolean
-}
-
+const POLLING_INTERVAL = 20000
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
   pullRequestMetadata,
   onPRStateChanged,
   refetchReviewers
 }) => {
+  const [isActionBoxOpen, setActionBoxOpen] = useState(false)
   const { getString } = useStrings()
   const { showError } = useToaster()
   const { currentUser } = useAppContext()
@@ -84,6 +79,12 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/merge`
   })
+  const [ruleViolation, setRuleViolation] = useState(false)
+  const [ruleViolationArr, setRuleViolationArr] = useState<{ data: { rule_violations: TypesRuleViolations[] } }>()
+  const [length, setLength] = useState(0)
+  const [notBypassable, setNotBypassable] = useState(false)
+  const [finalRulesArr, setFinalRulesArr] = useState<Violation[]>()
+  const [bypass, setBypass] = useState(false)
   const { mutate: updatePRState, loading: loadingState } = useMutate({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/state`
@@ -99,6 +100,45 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     () => pullRequestMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
     [pullRequestMetadata, isClosed]
   )
+  useEffect(() => {
+    if (ruleViolationArr && !isDraft && ruleViolationArr.data.rule_violations) {
+      const { checkIfBypassAllowed, violationArr, uniqueViolations } = extractInfoFromRuleViolationArr(
+        ruleViolationArr.data.rule_violations,
+        fieldsToCheck
+      )
+      setNotBypassable(checkIfBypassAllowed)
+      setFinalRulesArr(violationArr)
+      setLength(uniqueViolations.size)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ruleViolationArr])
+  useEffect(() => {
+    const dryMerge = () => {
+      if (!isClosed) {
+        mergePR({ bypass_rules: true, dry_run: true, method: 'merge', source_sha: pullRequestMetadata?.source_sha })
+          .then(res => {
+            if (res?.rule_violations?.length > 0) {
+              setRuleViolation(true)
+              setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
+            } else {
+              setRuleViolation(false)
+            }
+          })
+          .catch(err => {
+            setRuleViolation(true)
+            setRuleViolationArr(err)
+          })
+      }
+    }
+    dryMerge()
+    const intervalId = setInterval(async () => {
+      dryMerge()
+    }, POLLING_INTERVAL) // Poll every 20 seconds
+    // Cleanup interval on component unmount
+    return () => {
+      clearInterval(intervalId)
+    } // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onPRStateChanged])
   const isDraft = pullRequestMetadata.is_draft
   const mergeOptions: PRMergeOption[] = [
     {
@@ -138,6 +178,20 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     }
   ]
 
+  const fieldsToCheck: FieldCheck = {
+    'pullreq.approvals.require_minimum_count': getString('branchProtection.requireMinReviewersTitle'),
+    'pullreq.approvals.require_code_owners': getString('branchProtection.reqReviewFromCodeOwnerTitle'),
+    'pullreq.approvals.require_latest_commit': getString('branchProtection.reqNewChangesTitle'),
+    'pullreq.comments.require_resolve_all': getString('branchProtection.reqCommentResolutionTitle'),
+    'pullreq.status_checks.all_must_succeed': getString('branchProtection.reqStatusChecksTitle'),
+    'pullreq.status_checks.require_uids': getString('branchProtection.reqStatusChecksTitle'),
+    'pullreq.merge.strategies_allowed': getString('branchProtection.limitMergeStrategies'),
+    'pullreq.merge.delete_branch': getString('branchProtection.autoDeleteTitle'),
+    'lifecycle.create_forbidden': getString('branchProtection.blockBranchCreation'),
+    'lifecycle.delete_forbidden': getString('branchProtection.blockBranchDeletion'),
+    'lifecycle.update_forbidden': getString('branchProtection.blockMergeWithoutPr')
+  }
+
   const [mergeOption, setMergeOption, resetMergeOption] = useUserPreference<PRMergeOption>(
     UserPreference.PULL_REQUEST_MERGE_STRATEGY,
     mergeOptions[0],
@@ -169,7 +223,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
         [css.error]: mergeable === false && !unchecked && !isClosed && !isDraft,
         [css.unchecked]: unchecked,
         [css.closed]: isClosed,
-        [css.draft]: isDraft
+        [css.draft]: isDraft,
+        [css.ruleViolation]: ruleViolation
       })}>
       <Layout.Vertical spacing="xlarge">
         <Container>
@@ -177,7 +232,15 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
             {(unchecked && <img src={Images.PrUnchecked} width={20} height={20} />) || (
               <Icon
                 name={
-                  isDraft ? CodeIcon.Draft : isClosed ? 'issue' : mergeable === false ? 'warning-sign' : 'tick-circle'
+                  isDraft
+                    ? CodeIcon.Draft
+                    : isClosed
+                    ? 'issue'
+                    : mergeable === false
+                    ? 'warning-sign'
+                    : ruleViolation
+                    ? 'warning-sign'
+                    : 'tick-circle'
                 }
                 size={20}
                 color={
@@ -186,6 +249,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                     : isClosed
                     ? Color.GREY_500
                     : mergeable === false
+                    ? Color.RED_500
+                    : ruleViolation
                     ? Color.RED_500
                     : Color.GREEN_700
                 }
@@ -196,7 +261,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                 [css.unchecked]: unchecked,
                 [css.draft]: isDraft,
                 [css.closed]: isClosed,
-                [css.unmergeable]: mergeable === false && isOpen
+                [css.unmergeable]: mergeable === false && isOpen,
+                [css.ruleViolate]: ruleViolation && !isClosed
               })}>
               {getString(
                 isDraft
@@ -207,10 +273,30 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                   ? 'pr.checkingToMerge'
                   : mergeable === false && isOpen
                   ? 'pr.cantBeMerged'
-                  : 'pr.branchHasNoConflicts'
+                  : ruleViolation
+                  ? 'branchProtection.prFailedText'
+                  : 'pr.branchHasNoConflicts',
+                ruleViolation ? { ruleCount: length } : {}
               )}
+              {ruleViolation && mergeable && !isDraft ? (
+                <Button
+                  className={css.viewDetailsBtn}
+                  rightIcon={'chevron-right'}
+                  variation={ButtonVariation.LINK}
+                  text={getString('prChecks.viewExternal')}
+                  onClick={() => {
+                    setActionBoxOpen(true)
+                  }}
+                />
+              ) : null}
+              <RuleViolationAlertModal
+                setOpen={setActionBoxOpen}
+                open={isActionBoxOpen}
+                title={getString('branchProtection.mergePrAlertTitle')}
+                text={getString('branchProtection.mergePrAlertText', { ruleCount: length })}
+                rules={finalRulesArr}
+              />
             </Text>
-
             <FlexExpander />
             <Render when={loading || loadingState}>
               <Icon name={CodeIcon.InputSpinner} size={16} margin={{ right: 'xsmall' }} />
@@ -278,6 +364,16 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                     </Case>
                     <Case val={PullRequestState.OPEN}>
                       <Layout.Horizontal>
+                        {!notBypassable && mergeable && !isDraft && ruleViolation ? (
+                          <Checkbox
+                            className={css.checkbox}
+                            checked={bypass}
+                            label={getString('branchProtection.mergeCheckboxAlert')}
+                            onChange={event => {
+                              setBypass(event.currentTarget.checked)
+                            }}
+                          />
+                        ) : null}
                         <ReviewSplitButton
                           shouldHide={(pullRequestMetadata?.state as EnumPullReqState) === 'merged'}
                           repoMetadata={repoMetadata}
@@ -291,16 +387,22 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           padding={{ left: 'medium' }}
                           className={cx({
                             [css.btnWrapper]: mergeOption.method !== 'close',
-                            [css.hasError]: mergeable === false
+                            [css.hasError]: mergeable === false,
+                            [css.hasRuleViolated]: ruleViolation
                           })}>
                           <SplitButton
                             text={mergeOption.title}
-                            disabled={loading || unchecked || (isConflict && mergeOption.method !== 'close')}
+                            disabled={
+                              loading ||
+                              unchecked ||
+                              (isConflict && mergeOption.method !== 'close') ||
+                              (ruleViolation && !bypass && mergeOption.method !== 'close')
+                            }
                             className={cx({
                               [css.secondaryButton]: mergeOption.method === 'close' || mergeable === false
                             })}
                             variation={
-                              mergeOption.method === 'close' || mergeable === false
+                              mergeOption.method === 'close' || mergeable === false || ruleViolation
                                 ? ButtonVariation.TERTIARY
                                 : ButtonVariation.PRIMARY
                             }
@@ -314,15 +416,24 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                             {...permissionProps(permPushResult, standalone)}
                             onClick={async () => {
                               if (mergeOption.method !== 'close') {
-                                const payload: OpenapiMergePullReq = { method: mergeOption.method }
+                                const payload: OpenapiMergePullReq = {
+                                  method: mergeOption.method,
+                                  source_sha: pullRequestMetadata?.source_sha,
+                                  bypass_rules: bypass,
+                                  dry_run: false
+                                }
                                 mergePR(payload)
-                                  .then(onPRStateChanged)
+                                  .then(() => {
+                                    onPRStateChanged()
+                                    setRuleViolationArr(undefined)
+                                  })
                                   .catch(exception => showError(getErrorMessage(exception)))
                               } else {
                                 updatePRState({ state: 'closed' })
                                   .then(() => {
                                     resetMergeOption()
                                     onPRStateChanged()
+                                    setRuleViolationArr(undefined)
                                   })
                                   .catch(exception => showError(getErrorMessage(exception)))
                               }

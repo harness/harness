@@ -392,6 +392,7 @@ func (r *Repository) syncGitRepository(ctx context.Context,
 		WriteParams:       writeParams,
 		Source:            sourceCloneURL,
 		CreateIfNotExists: false,
+		RefSpecs:          []string{"refs/heads/*:refs/heads/*", "refs/tags/*:refs/tags/*"},
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to sync repository: %w", err)

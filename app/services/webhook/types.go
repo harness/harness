@@ -101,6 +101,7 @@ type PullReqInfo struct {
 	TargetRepoID  int64             `json:"target_repo_id"`
 	TargetBranch  string            `json:"target_branch"`
 	MergeStrategy *enum.MergeMethod `json:"merge_strategy"`
+	Author        PrincipalInfo     `json:"author"`
 }
 
 // pullReqInfoFrom gets the PullReqInfo from a types.PullReq.
@@ -115,6 +116,7 @@ func pullReqInfoFrom(pr *types.PullReq) PullReqInfo {
 		TargetRepoID:  pr.TargetRepoID,
 		TargetBranch:  pr.TargetBranch,
 		MergeStrategy: pr.MergeMethod,
+		Author:        principalInfoFrom(&pr.Author),
 	}
 }
 
@@ -131,7 +133,7 @@ type PrincipalInfo struct {
 }
 
 // principalInfoFrom gets the PrincipalInfo from a types.Principal.
-func principalInfoFrom(principal *types.Principal) PrincipalInfo {
+func principalInfoFrom(principal *types.PrincipalInfo) PrincipalInfo {
 	return PrincipalInfo{
 		ID:          principal.ID,
 		UID:         principal.UID,
@@ -201,4 +203,5 @@ type ReferenceInfo struct {
 
 type CommentInfo struct {
 	Text string `json:"text"`
+	ID   int64  `json:"id"`
 }

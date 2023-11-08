@@ -50,9 +50,13 @@ func HandleMerge(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		pr, err := pullreqCtrl.Merge(ctx, session, repoRef, pullreqNumber, in)
+		pr, violation, err := pullreqCtrl.Merge(ctx, session, repoRef, pullreqNumber, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
+		}
+		if violation != nil {
+			render.Unprocessable(w, violation)
 			return
 		}
 

@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
@@ -36,7 +35,12 @@ type CommitFileAction struct {
 	Path     string                   `json:"path"`
 	Payload  string                   `json:"payload"`
 	Encoding enum.ContentEncodingType `json:"encoding"`
-	SHA      string                   `json:"sha"`
+
+	// SHA can be used for optimistic locking of an update action (Optional).
+	// The provided value is compared against the latest sha of the file that's being updated.
+	// If the SHA doesn't match, the update fails.
+	// WARNING: If no SHA is provided, the update action will blindly overwrite the file's content.
+	SHA string `json:"sha"`
 }
 
 // CommitFilesOptions holds the data for file operations.
@@ -52,37 +56,42 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *CommitFilesOptions,
-) (types.CommitFilesResponse, error) {
+) (types.CommitFilesResponse, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return types.CommitFilesResponse{}, err
+		return types.CommitFilesResponse{}, nil, err
 	}
 
-	if in.NewBranch == "" {
-		isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, repo)
-		if err != nil {
-			return types.CommitFilesResponse{}, err
-		}
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	if err != nil {
+		return types.CommitFilesResponse{}, nil, err
+	}
 
-		protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
-		if err != nil {
-			return types.CommitFilesResponse{},
-				fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
-		}
+	var refAction protection.RefAction
+	var branchName string
+	if in.NewBranch != "" {
+		refAction = protection.RefActionCreate
+		branchName = in.NewBranch
+	} else {
+		refAction = protection.RefActionUpdate
+		branchName = in.Branch
+	}
 
-		_, violations, err := protectionRules.CanPush(ctx, protection.CanPushInput{
-			Actor:        &session.Principal,
-			IsSpaceOwner: isSpaceOwner,
-			Repo:         repo,
-			BranchNames:  []string{in.Branch},
-		})
-		if err != nil {
-			return types.CommitFilesResponse{}, fmt.Errorf("failed to verify protection rules for git push: %w", err)
-		}
+	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
+		Actor:       &session.Principal,
+		AllowBypass: true,
+		IsRepoOwner: isRepoOwner,
+		Repo:        repo,
+		RefAction:   refAction,
+		RefType:     protection.RefTypeBranch,
+		RefNames:    []string{branchName},
+	})
+	if err != nil {
+		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
 
-		if protection.IsCritical(violations) {
-			return types.CommitFilesResponse{RuleViolations: violations}, nil
-		}
+	if protection.IsCritical(violations) {
+		return types.CommitFilesResponse{}, violations, nil
 	}
 
 	actions := make([]gitrpc.CommitFileAction, len(in.Actions))
@@ -92,7 +101,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		case enum.ContentEncodingTypeBase64:
 			rawPayload, err = base64.StdEncoding.DecodeString(action.Payload)
 			if err != nil {
-				return types.CommitFilesResponse{}, fmt.Errorf("failed to decode base64 payload: %w", err)
+				return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to decode base64 payload: %w", err)
 			}
 		case enum.ContentEncodingTypeUTF8:
 			fallthrough
@@ -112,7 +121,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	// Create internal write params. Note: This will skip the pre-commit protection rules check.
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return types.CommitFilesResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	now := time.Now()
@@ -129,9 +138,10 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		AuthorDate:    &now,
 	})
 	if err != nil {
-		return types.CommitFilesResponse{}, err
+		return types.CommitFilesResponse{}, nil, err
 	}
+
 	return types.CommitFilesResponse{
 		CommitID: commit.CommitID,
-	}, nil
+	}, nil, nil
 }

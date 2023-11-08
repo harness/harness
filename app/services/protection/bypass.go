@@ -12,11 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package request
+package protection
 
-const (
-	// TODO: have shared constants across all services?
-	HeaderRequestID     = "X-Request-Id"
-	HeaderUserAgent     = "User-Agent"
-	HeaderAuthorization = "Authorization"
+import (
+	"fmt"
+
+	"github.com/harness/gitness/types"
+
+	"golang.org/x/exp/slices"
 )
+
+type DefBypass struct {
+	UserIDs    []int64 `json:"user_ids,omitempty"`
+	RepoOwners bool    `json:"repo_owners,omitempty"`
+}
+
+func (v DefBypass) matches(actor *types.Principal, isRepoOwner bool) bool {
+	return actor != nil &&
+		(actor.Admin ||
+			v.RepoOwners && isRepoOwner ||
+			slices.Contains(v.UserIDs, actor.ID))
+}
+
+func (v DefBypass) Sanitize() error {
+	if err := validateIDSlice(v.UserIDs); err != nil {
+		return fmt.Errorf("user IDs error: %w", err)
+	}
+
+	return nil
+}

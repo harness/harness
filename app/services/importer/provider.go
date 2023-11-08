@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
@@ -28,9 +29,12 @@ import (
 
 	"github.com/drone/go-scm/scm"
 	"github.com/drone/go-scm/scm/driver/bitbucket"
+	"github.com/drone/go-scm/scm/driver/gitea"
 	"github.com/drone/go-scm/scm/driver/github"
 	"github.com/drone/go-scm/scm/driver/gitlab"
+	"github.com/drone/go-scm/scm/driver/gogs"
 	"github.com/drone/go-scm/scm/driver/stash"
+	"github.com/drone/go-scm/scm/transport"
 	"github.com/drone/go-scm/scm/transport/oauth2"
 )
 
@@ -41,6 +45,8 @@ const (
 	ProviderTypeGitLab    ProviderType = "gitlab"
 	ProviderTypeBitbucket ProviderType = "bitbucket"
 	ProviderTypeStash     ProviderType = "stash"
+	ProviderTypeGitea     ProviderType = "gitea"
+	ProviderTypeGogs      ProviderType = "gogs"
 )
 
 func (p ProviderType) Enum() []any {
@@ -49,6 +55,8 @@ func (p ProviderType) Enum() []any {
 		ProviderTypeGitLab,
 		ProviderTypeBitbucket,
 		ProviderTypeStash,
+		ProviderTypeGitea,
+		ProviderTypeGogs,
 	}
 }
 
@@ -98,30 +106,47 @@ func hash(s string) string {
 	return base32.StdEncoding.EncodeToString(h.Sum(nil)[:10])
 }
 
-func getScmClientWithTransport(provider Provider, authReq bool) (*scm.Client, error) {
+func oauthTransport(token string, scheme string) http.RoundTripper {
+	if token == "" {
+		return nil
+	}
+	return &oauth2.Transport{
+		Scheme: scheme,
+		Source: oauth2.StaticTokenSource(&scm.Token{Token: token}),
+	}
+}
+
+func authHeaderTransport(token string) http.RoundTripper {
+	if token == "" {
+		return nil
+	}
+	return &transport.Authorization{
+		Scheme:      "token",
+		Credentials: token,
+	}
+}
+
+func basicAuthTransport(username, password string) http.RoundTripper {
+	if username == "" && password == "" {
+		return nil
+	}
+	return &transport.BasicAuth{
+		Username: username,
+		Password: password,
+	}
+}
+
+// getScmClientWithTransport creates an SCM client along with the necessary transport
+// layer depending on the provider. For example, for bitbucket we support app passwords
+// so the auth transport is BasicAuth whereas it's Oauth for other providers.
+// It validates that auth credentials are provided if authReq is true.
+func getScmClientWithTransport(provider Provider, authReq bool) (*scm.Client, error) { //nolint:gocognit
 	if authReq && (provider.Username == "" || provider.Password == "") {
 		return nil, usererror.BadRequest("scm provider authentication credentials missing")
 	}
-
-	c, err := getScmClient(provider)
-	if err != nil {
-		return nil, usererror.BadRequestf("could not create scm client: %s", err)
-	}
-
-	if provider.Password != "" {
-		c.Client = &http.Client{
-			Transport: &oauth2.Transport{
-				Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
-			},
-		}
-	}
-
-	return c, nil
-}
-
-func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
 	var c *scm.Client
 	var err error
+	var transport http.RoundTripper
 	switch provider.Type {
 	case "":
 		return nil, errors.New("scm provider can not be empty")
@@ -135,6 +160,7 @@ func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
 		} else {
 			c = github.NewDefault()
 		}
+		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
 
 	case ProviderTypeGitLab:
 		if provider.Host != "" {
@@ -145,6 +171,7 @@ func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
 		} else {
 			c = gitlab.NewDefault()
 		}
+		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
 
 	case ProviderTypeBitbucket:
 		if provider.Host != "" {
@@ -155,6 +182,7 @@ func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
 		} else {
 			c = bitbucket.NewDefault()
 		}
+		transport = basicAuthTransport(provider.Username, provider.Password)
 
 	case ProviderTypeStash:
 		if provider.Host != "" {
@@ -165,27 +193,66 @@ func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
 		} else {
 			c = stash.NewDefault()
 		}
+		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
+
+	case ProviderTypeGitea:
+		if provider.Host == "" {
+			return nil, errors.New("scm provider Host missing")
+		}
+		c, err = gitea.New(provider.Host)
+		if err != nil {
+			return nil, fmt.Errorf("scm provider Host invalid: %w", err)
+		}
+		transport = authHeaderTransport(provider.Password)
+
+	case ProviderTypeGogs:
+		if provider.Host == "" {
+			return nil, errors.New("scm provider Host missing")
+		}
+		c, err = gogs.New(provider.Host)
+		if err != nil {
+			return nil, fmt.Errorf("scm provider Host invalid: %w", err)
+		}
+		transport = oauthTransport(provider.Password, oauth2.SchemeToken)
 
 	default:
 		return nil, fmt.Errorf("unsupported scm provider: %s", provider)
 	}
 
+	// override default transport if available
+	if transport != nil {
+		c.Client = &http.Client{Transport: transport}
+	}
+
 	return c, nil
 }
 
-func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug string) (RepositoryInfo, error) {
+func LoadRepositoryFromProvider(
+	ctx context.Context,
+	provider Provider,
+	repoSlug string,
+) (RepositoryInfo, Provider, error) {
 	scmClient, err := getScmClientWithTransport(provider, false)
 	if err != nil {
-		return RepositoryInfo{}, err
+		return RepositoryInfo{}, provider, usererror.BadRequestf("could not create client: %s", err)
 	}
 
 	if repoSlug == "" {
-		return RepositoryInfo{}, usererror.BadRequest("provider repository identifier is missing")
+		return RepositoryInfo{}, provider, usererror.BadRequest("provider repository identifier is missing")
+	}
+
+	// Augment user information if it's not provided for certain vendors.
+	if provider.Password != "" && provider.Username == "" {
+		user, _, err := scmClient.Users.Find(ctx)
+		if err != nil {
+			return RepositoryInfo{}, provider, usererror.BadRequestf("could not find user: %s", err)
+		}
+		provider.Username = user.Login
 	}
 
 	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, repoSlug)
 	if err = convertSCMError(provider, repoSlug, scmResp, err); err != nil {
-		return RepositoryInfo{}, err
+		return RepositoryInfo{}, provider, err
 	}
 
 	return RepositoryInfo{
@@ -194,41 +261,69 @@ func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug
 		CloneURL:      scmRepo.Clone,
 		IsPublic:      !scmRepo.Private,
 		DefaultBranch: scmRepo.Branch,
-	}, nil
+	}, provider, nil
 }
 
+//nolint:gocognit
 func LoadRepositoriesFromProviderSpace(
 	ctx context.Context,
 	provider Provider,
 	spaceSlug string,
-) ([]RepositoryInfo, error) {
-	scmClient, err := getScmClientWithTransport(provider, true)
+) ([]RepositoryInfo, Provider, error) {
+	var err error
+	scmClient, err := getScmClientWithTransport(provider, false)
 	if err != nil {
-		return nil, err
+		return nil, provider, usererror.BadRequestf("could not create client: %s", err)
 	}
 
 	if spaceSlug == "" {
-		return nil, usererror.BadRequest("provider space identifier is missing")
+		return nil, provider, usererror.BadRequest("provider space identifier is missing")
 	}
 
-	const pageSize = 100
-	opts := scm.RepoListOptions{
-		ListOptions: scm.ListOptions{
-			Page: 0,
-			Size: pageSize,
-		},
-		RepoSearchTerm: scm.RepoSearchTerm{
-			User: spaceSlug,
-		},
+	opts := scm.ListOptions{
+		Size: 100,
+	}
+
+	// Augment user information if it's not provided for certain vendors.
+	if provider.Password != "" && provider.Username == "" {
+		user, _, err := scmClient.Users.Find(ctx)
+		if err != nil {
+			return nil, provider, usererror.BadRequestf("could not find user: %s", err)
+		}
+		provider.Username = user.Login
+	}
+
+	var optsv2 scm.RepoListOptions
+	listv2 := false
+	if provider.Type == ProviderTypeGitHub {
+		listv2 = true
+		optsv2 = scm.RepoListOptions{
+			ListOptions: opts,
+			RepoSearchTerm: scm.RepoSearchTerm{
+				User: spaceSlug,
+			},
+		}
 	}
 
 	repos := make([]RepositoryInfo, 0)
-	for {
-		opts.Page++
+	var scmRepos []*scm.Repository
+	var scmResp *scm.Response
 
-		scmRepos, scmResp, err := scmClient.Repositories.ListV2(ctx, opts)
-		if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
-			return nil, err
+	for {
+		if listv2 {
+			scmRepos, scmResp, err = scmClient.Repositories.ListV2(ctx, optsv2)
+			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
+				return nil, provider, err
+			}
+			optsv2.Page = scmResp.Page.Next
+			optsv2.URL = scmResp.Page.NextURL
+		} else {
+			scmRepos, scmResp, err = scmClient.Repositories.List(ctx, opts)
+			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
+				return nil, provider, err
+			}
+			opts.Page = scmResp.Page.Next
+			opts.URL = scmResp.Page.NextURL
 		}
 
 		if len(scmRepos) == 0 {
@@ -237,7 +332,7 @@ func LoadRepositoriesFromProviderSpace(
 
 		for _, scmRepo := range scmRepos {
 			// in some cases the namespace filter isn't working (e.g. Gitlab)
-			if scmRepo.Namespace != spaceSlug {
+			if !strings.EqualFold(scmRepo.Namespace, spaceSlug) {
 				continue
 			}
 
@@ -249,9 +344,19 @@ func LoadRepositoriesFromProviderSpace(
 				DefaultBranch: scmRepo.Branch,
 			})
 		}
+
+		if listv2 {
+			if optsv2.Page == 0 && optsv2.URL == "" {
+				break
+			}
+		} else {
+			if opts.Page == 0 && opts.URL == "" {
+				break
+			}
+		}
 	}
 
-	return repos, nil
+	return repos, provider, nil
 }
 
 func convertSCMError(provider Provider, slug string, r *scm.Response, err error) error {

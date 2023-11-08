@@ -127,26 +127,26 @@ func (c *Client) DiffShortStat(ctx context.Context, params *DiffParams) (DiffSho
 	}, nil
 }
 
-type DiffFileStatOutput struct {
+type DiffFileNamesOutput struct {
 	Files []string
 }
 
-func (c *Client) DiffFileStat(ctx context.Context, params *DiffParams) (DiffFileStatOutput, error) {
+func (c *Client) DiffFileNames(ctx context.Context, params *DiffParams) (DiffFileNamesOutput, error) {
 	if err := params.Validate(); err != nil {
-		return DiffFileStatOutput{}, err
+		return DiffFileNamesOutput{}, err
 	}
-	fileStat, err := c.diffService.DiffFileStat(ctx, &rpc.DiffRequest{
+	fileNames, err := c.diffService.DiffFileNames(ctx, &rpc.DiffRequest{
 		Base:      mapToRPCReadRequest(params.ReadParams),
 		BaseRef:   params.BaseRef,
 		HeadRef:   params.HeadRef,
 		MergeBase: params.MergeBase,
 	})
 	if err != nil {
-		return DiffFileStatOutput{}, processRPCErrorf(err, "failed to get diff file data between '%s' and '%s'",
+		return DiffFileNamesOutput{}, processRPCErrorf(err, "failed to get diff file data between '%s' and '%s'",
 			params.BaseRef, params.HeadRef)
 	}
-	return DiffFileStatOutput{
-		Files: fileStat.GetFiles(),
+	return DiffFileNamesOutput{
+		Files: fileNames.GetFiles(),
 	}, nil
 }
 

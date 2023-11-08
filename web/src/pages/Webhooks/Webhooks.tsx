@@ -65,7 +65,6 @@ export default function Webhooks() {
   const [searchTerm, setSearchTerm] = useState('')
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
-
   const {
     data: webhooks,
     loading: webhooksLoading,

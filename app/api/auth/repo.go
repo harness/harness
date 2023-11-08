@@ -57,15 +57,16 @@ func CheckRepo(
 	return Check(ctx, authorizer, session, scope, resource, permission)
 }
 
-func IsSpaceAdmin(
+func IsRepoOwner(
 	ctx context.Context,
 	authorizer authz.Authorizer,
 	session *auth.Session,
 	repo *types.Repository,
 ) (bool, error) {
-	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionSpaceCreate, false)
+	// for now we use repoedit as permission to verify if someone is a SpaceOwner and hence a RepoOwner.
+	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit, false)
 	if err != nil && !errors.Is(err, ErrNotAuthorized) {
-		return false, fmt.Errorf("failed to check access to find if the user is space admin: %w", err)
+		return false, fmt.Errorf("failed to check access user access: %w", err)
 	}
 
 	return err == nil, nil

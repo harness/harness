@@ -18,11 +18,54 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 )
+
+type (
+	Sanitizer interface {
+		// Sanitize validates if the definition is valid and automatically corrects minor issues.
+		Sanitize() error
+	}
+
+	Protection interface {
+		MergeVerifier
+		RefChangeVerifier
+	}
+
+	Definition interface {
+		Sanitizer
+		Protection
+	}
+
+	// DefinitionGenerator is the function that creates blank rules.
+	DefinitionGenerator func() Definition
+
+	// Manager is used to enforce protection rules.
+	Manager struct {
+		defGenMap map[types.RuleType]DefinitionGenerator
+		ruleStore store.RuleStore
+	}
+)
+
+var (
+	ErrUnrecognizedType       = errors.New("unrecognized protection type")
+	ErrAlreadyRegistered      = errors.New("protection type already registered")
+	ErrPatternEmpty           = errors.New("name pattern can't be empty")
+	ErrInvalidGlobstarPattern = errors.New("invalid globstar pattern")
+)
+
+func IsCritical(violations []types.RuleViolations) bool {
+	for i := range violations {
+		if violations[i].IsCritical() {
+			return true
+		}
+	}
+	return false
+}
 
 // NewManager creates new protection Manager.
 func NewManager(ruleStore store.RuleStore) *Manager {
@@ -30,15 +73,6 @@ func NewManager(ruleStore store.RuleStore) *Manager {
 		defGenMap: make(map[types.RuleType]DefinitionGenerator),
 		ruleStore: ruleStore,
 	}
-}
-
-// DefinitionGenerator is the function that creates blank rules.
-type DefinitionGenerator func() Definition
-
-// Manager is used to enforce protection rules.
-type Manager struct {
-	defGenMap map[types.RuleType]DefinitionGenerator
-	ruleStore store.RuleStore
 }
 
 // Register registers new types.RuleType.

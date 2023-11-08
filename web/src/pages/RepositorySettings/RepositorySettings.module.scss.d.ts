@@ -26,11 +26,14 @@ export declare const dialogContainer: string
 export declare const dividerContainer: string
 export declare const editContainer: string
 export declare const generalContainer: string
+export declare const headerContainer: string
 export declare const iconContainer: string
 export declare const label: string
 export declare const main: string
 export declare const radioContainer: string
 export declare const saveBtn: string
+export declare const tabsContainer: string
+export declare const tabTitle: string
 export declare const text: string
 export declare const textContainer: string
 export declare const textSize: string

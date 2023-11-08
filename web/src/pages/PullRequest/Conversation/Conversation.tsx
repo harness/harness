@@ -21,7 +21,7 @@ import { orderBy } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { TypesPullReqActivity, TypesPullReq, TypesPullReqStats } from 'services/code'
+import type { TypesPullReqActivity, TypesPullReq, TypesPullReqStats, TypesCodeOwnerEvaluation } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage, orderSortDate, ButtonRoleProps } from 'utils/Utils'
@@ -41,6 +41,7 @@ import { isCodeComment, isComment, isSystemComment } from '../PullRequestUtils'
 import { ChecksOverview } from '../Checks/ChecksOverview'
 import { CodeCommentHeader } from './CodeCommentHeader'
 import { SystemComment } from './SystemComment'
+import CodeOwnersOverview from '../CodeOwners/CodeOwnersOverview'
 import css from './Conversation.module.scss'
 
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
@@ -75,6 +76,12 @@ export const Conversation: React.FC<ConversationProps> = ({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`,
     debounce: 500
   })
+
+  const { data: codeOwners, refetch: refetchCodeOwners } = useGet<TypesCodeOwnerEvaluation>({
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/codeowners`,
+    debounce: 500
+  })
+
   const { showError } = useToaster()
   const [dateOrderSort, setDateOrderSort] = useUserPreference<orderSortDate.ASC | orderSortDate.DESC>(
     UserPreference.PULL_REQUEST_ACTIVITY_ORDER,
@@ -152,7 +159,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   const onPRStateChanged = useCallback(() => {
     onCommentUpdate()
     refetchActivities()
-  }, [onCommentUpdate, refetchActivities])
+    refetchCodeOwners()
+  }, [onCommentUpdate, refetchActivities, refetchCodeOwners])
   const hasDescription = useMemo(
     () => !!pullRequestMetadata?.description?.length,
     [pullRequestMetadata?.description?.length]
@@ -161,6 +169,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   useEffect(() => {
     if (prStats) {
       refetchActivities()
+      refetchCodeOwners()
     }
   }, [
     prStats,
@@ -169,12 +178,14 @@ export const Conversation: React.FC<ConversationProps> = ({
     pullRequestMetadata?.title,
     pullRequestMetadata?.state,
     pullRequestMetadata?.source_sha,
-    refetchActivities
+    refetchActivities,
+    refetchCodeOwners
   ])
 
   const newCommentBox = useMemo(() => {
     return (
       <CommentBox
+        repoMetadata={repoMetadata}
         fluid
         boxClassName={css.commentBox}
         editorClassName={css.commentEditor}
@@ -205,7 +216,7 @@ export const Conversation: React.FC<ConversationProps> = ({
           return [result, updatedItem]
         }}
       />
-    )
+    ) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, onCommentUpdate, saveComment, showError])
 
   const renderedActivityBlocks = useMemo(
@@ -240,6 +251,7 @@ export const Conversation: React.FC<ConversationProps> = ({
             }
             title={
               <CommentBox
+                repoMetadata={repoMetadata}
                 key={threadId}
                 fluid
                 boxClassName={css.threadbox}
@@ -360,6 +372,14 @@ export const Conversation: React.FC<ConversationProps> = ({
                 <Layout.Vertical spacing="xlarge">
                   {prChecksDecisionResult && (
                     <ChecksOverview
+                      repoMetadata={repoMetadata}
+                      pullRequestMetadata={pullRequestMetadata}
+                      prChecksDecisionResult={prChecksDecisionResult}
+                    />
+                  )}
+                  {codeOwners && prChecksDecisionResult && (
+                    <CodeOwnersOverview
+                      codeOwners={codeOwners}
                       repoMetadata={repoMetadata}
                       pullRequestMetadata={pullRequestMetadata}
                       prChecksDecisionResult={prChecksDecisionResult}

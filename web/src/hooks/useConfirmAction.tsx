@@ -69,6 +69,7 @@ interface ConfirmActArgs {
   confirmText?: string
   cancelText?: string
   action: () => Promise<void> | void
+  className?: string
 }
 
 export const useConfirmAct = () => {
@@ -76,6 +77,7 @@ export const useConfirmAct = () => {
   const [_args, setArgs] = useState<ConfirmActArgs>({ message: '', action: noop })
   const resolve = useRef<() => void>(noop)
   const { openDialog } = useConfirmationDialog({
+    className: _args.className,
     titleText: _args.title || getString('confirmation'),
     contentText: toParagraph(_args.message),
     intent: _args.intent,

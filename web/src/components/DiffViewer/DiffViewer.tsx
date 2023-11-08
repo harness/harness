@@ -61,7 +61,9 @@ import {
   getCommentLineInfo,
   createCommentOppositePlaceHolder,
   ViewStyle,
-  contentDOMHasData
+  contentDOMHasData,
+  getFileViewedState,
+  FileViewedState
 } from './DiffViewerUtils'
 import {
   CommentAction,
@@ -114,13 +116,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
   // file viewed feature is only enabled if no commit range is provided (otherwise component is hidden, too)
   const [viewed, setViewed] = useState(
-    commitRange?.length === 0 && diff.fileViews?.get(diff.filePath) === diff.checksumAfter
+    commitRange?.length === 0 &&
+      getFileViewedState(diff.filePath, diff.checksumAfter, diff.fileViews) === FileViewedState.VIEWED
   )
   useEffect(() => {
     if (commitRange?.length === 0) {
-      setViewed(diff.fileViews?.get(diff.filePath) === diff.checksumAfter)
+      setViewed(getFileViewedState(diff.filePath, diff.checksumAfter, diff.fileViews) === FileViewedState.VIEWED)
     }
-  }, [diff.fileViews, diff.filePath, diff.checksumAfter, commitRange])
+  }, [setViewed, diff.fileViews, diff.filePath, diff.checksumAfter, commitRange])
 
   const [collapsed, setCollapsed] = useState(viewed)
   useEffect(() => {
@@ -225,6 +228,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       ReactDOM.render(
         <AppWrapper>
           <CommentBox
+            repoMetadata={repoMetadata}
             commentItems={comment.commentItems}
             eventStream={comment.eventStream}
             initialContent={''}
@@ -711,8 +715,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               when={
                 !readOnly &&
                 commitRange?.length === 0 &&
-                diff.fileViews?.get(diff.filePath) !== undefined &&
-                diff.fileViews?.get(diff.filePath) !== diff.checksumAfter
+                getFileViewedState(diff.filePath, diff.checksumAfter, diff.fileViews) === FileViewedState.CHANGED
               }>
               <Container>
                 <Text className={css.fileChanged}>{getString('changedSinceLastView')}</Text>

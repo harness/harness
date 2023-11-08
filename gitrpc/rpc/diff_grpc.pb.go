@@ -29,7 +29,7 @@ type DiffServiceClient interface {
 	DiffShortStat(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffShortStatResponse, error)
 	GetDiffHunkHeaders(ctx context.Context, in *GetDiffHunkHeadersRequest, opts ...grpc.CallOption) (*GetDiffHunkHeadersResponse, error)
 	DiffCut(ctx context.Context, in *DiffCutRequest, opts ...grpc.CallOption) (*DiffCutResponse, error)
-	DiffFileStat(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffFileStatResponse, error)
+	DiffFileNames(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffFileNameResponse, error)
 }
 
 type diffServiceClient struct {
@@ -163,9 +163,9 @@ func (c *diffServiceClient) DiffCut(ctx context.Context, in *DiffCutRequest, opt
 	return out, nil
 }
 
-func (c *diffServiceClient) DiffFileStat(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffFileStatResponse, error) {
-	out := new(DiffFileStatResponse)
-	err := c.cc.Invoke(ctx, "/rpc.DiffService/DiffFileStat", in, out, opts...)
+func (c *diffServiceClient) DiffFileNames(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffFileNameResponse, error) {
+	out := new(DiffFileNameResponse)
+	err := c.cc.Invoke(ctx, "/rpc.DiffService/DiffFileNames", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ type DiffServiceServer interface {
 	DiffShortStat(context.Context, *DiffRequest) (*DiffShortStatResponse, error)
 	GetDiffHunkHeaders(context.Context, *GetDiffHunkHeadersRequest) (*GetDiffHunkHeadersResponse, error)
 	DiffCut(context.Context, *DiffCutRequest) (*DiffCutResponse, error)
-	DiffFileStat(context.Context, *DiffRequest) (*DiffFileStatResponse, error)
+	DiffFileNames(context.Context, *DiffRequest) (*DiffFileNameResponse, error)
 	mustEmbedUnimplementedDiffServiceServer()
 }
 
@@ -208,8 +208,8 @@ func (UnimplementedDiffServiceServer) GetDiffHunkHeaders(context.Context, *GetDi
 func (UnimplementedDiffServiceServer) DiffCut(context.Context, *DiffCutRequest) (*DiffCutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DiffCut not implemented")
 }
-func (UnimplementedDiffServiceServer) DiffFileStat(context.Context, *DiffRequest) (*DiffFileStatResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DiffFileStat not implemented")
+func (UnimplementedDiffServiceServer) DiffFileNames(context.Context, *DiffRequest) (*DiffFileNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DiffFileNames not implemented")
 }
 func (UnimplementedDiffServiceServer) mustEmbedUnimplementedDiffServiceServer() {}
 
@@ -341,20 +341,20 @@ func _DiffService_DiffCut_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DiffService_DiffFileStat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DiffService_DiffFileNames_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DiffRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DiffServiceServer).DiffFileStat(ctx, in)
+		return srv.(DiffServiceServer).DiffFileNames(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/rpc.DiffService/DiffFileStat",
+		FullMethod: "/rpc.DiffService/DiffFileNames",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DiffServiceServer).DiffFileStat(ctx, req.(*DiffRequest))
+		return srv.(DiffServiceServer).DiffFileNames(ctx, req.(*DiffRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -379,8 +379,8 @@ var DiffService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DiffService_DiffCut_Handler,
 		},
 		{
-			MethodName: "DiffFileStat",
-			Handler:    _DiffService_DiffFileStat_Handler,
+			MethodName: "DiffFileNames",
+			Handler:    _DiffService_DiffFileNames_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -38,9 +38,13 @@ func HandleDeleteCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = repoCtrl.DeleteTag(ctx, session, repoRef, tagName)
+		violations, err := repoCtrl.DeleteTag(ctx, session, repoRef, tagName)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
+		}
+		if violations != nil {
+			render.Violations(w, violations)
 			return
 		}
 

@@ -188,14 +188,19 @@ func (g Adapter) DiffCut(
 	return diffCutHeader, linesHunk, nil
 }
 
-func (g Adapter) DiffFileStat(
-	ctx context.Context,
+func (g Adapter) DiffFileName(ctx context.Context,
 	repoPath string,
 	baseRef string,
 	headRef string,
+	mergeBase bool,
 ) ([]string, error) {
-	cmd := git.NewCommand(ctx,
-		"diff", "--name-only", headRef, baseRef)
+	args := make([]string, 0, 8)
+	args = append(args, "diff", "--name-only")
+	if mergeBase {
+		args = append(args, "--merge-base")
+	}
+	args = append(args, baseRef, headRef)
+	cmd := git.NewCommand(ctx, args...)
 	stdout, _, runErr := cmd.RunStdBytes(&git.RunOpts{Dir: repoPath})
 	if runErr != nil {
 		return nil, processGiteaErrorf(runErr, "failed to trigger diff command")

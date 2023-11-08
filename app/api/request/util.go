@@ -21,31 +21,8 @@ import (
 	"strconv"
 
 	"github.com/harness/gitness/app/api/usererror"
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/go-chi/chi"
-)
-
-const (
-	PathParamRemainder = "*"
-
-	QueryParamCreatedBy = "created_by"
-	QueryParamSort      = "sort"
-	QueryParamOrder     = "order"
-	QueryParamQuery     = "query"
-
-	QueryParamState = "state"
-	QueryParamKind  = "kind"
-	QueryParamType  = "type"
-
-	QueryParamAfter  = "after"
-	QueryParamBefore = "before"
-
-	QueryParamPage  = "page"
-	QueryParamLimit = "limit"
-	PerPageDefault  = 30
-	PerPageMax      = 100
 )
 
 // GetCookie tries to retrieve the cookie from the request or returns false if it doesn't exist.
@@ -59,6 +36,29 @@ func GetCookie(r *http.Request, cookieName string) (string, bool) {
 	}
 
 	return cookie.Value, true
+}
+
+// GetHeaderOrDefault returns the value of the first non-empty header occurrence.
+// If no value is found, the default value is returned.
+func GetHeaderOrDefault(r *http.Request, headerName string, dflt string) string {
+	val, ok := GetHeader(r, headerName)
+	if !ok {
+		return dflt
+	}
+
+	return val
+}
+
+// GetHeader returns the value of the first non-empty header occurrence.
+// If no value is found, `false` is returned.
+func GetHeader(r *http.Request, headerName string) (string, bool) {
+	for _, val := range r.Header.Values(headerName) {
+		if val != "" {
+			return val, true
+		}
+	}
+
+	return "", false
 }
 
 // PathParamOrError tries to retrieve the parameter from the request and
@@ -194,69 +194,4 @@ func QueryParamAsBoolOrDefault(r *http.Request, paramName string, deflt bool) (b
 	}
 
 	return boolValue, nil
-}
-
-// GetOptionalRemainderFromPath returns the remainder ("*") from the path or an empty string if it doesn't exist.
-func GetOptionalRemainderFromPath(r *http.Request) string {
-	return PathParamOrEmpty(r, PathParamRemainder)
-}
-
-// GetRemainderFromPath returns the remainder ("*") from the path or an an error if it doesn't exist.
-func GetRemainderFromPath(r *http.Request) (string, error) {
-	return PathParamOrError(r, PathParamRemainder)
-}
-
-// ParseQuery extracts the query parameter from the url.
-func ParseQuery(r *http.Request) string {
-	return r.URL.Query().Get(QueryParamQuery)
-}
-
-// ParsePage extracts the page parameter from the url.
-func ParsePage(r *http.Request) int {
-	s := r.URL.Query().Get(QueryParamPage)
-	i, _ := strconv.Atoi(s)
-	if i <= 0 {
-		i = 1
-	}
-	return i
-}
-
-// ParseLimit extracts the limit parameter from the url.
-func ParseLimit(r *http.Request) int {
-	s := r.URL.Query().Get(QueryParamLimit)
-	i, _ := strconv.Atoi(s)
-	if i <= 0 {
-		i = PerPageDefault
-	} else if i > PerPageMax {
-		i = PerPageMax
-	}
-	return i
-}
-
-// ParseOrder extracts the order parameter from the url.
-func ParseOrder(r *http.Request) enum.Order {
-	return enum.ParseOrder(
-		r.URL.Query().Get(QueryParamOrder),
-	)
-}
-
-// ParseSort extracts the sort parameter from the url.
-func ParseSort(r *http.Request) string {
-	return r.URL.Query().Get(QueryParamSort)
-}
-
-// ParsePaginationFromRequest parses pagination related info from the url.
-func ParsePaginationFromRequest(r *http.Request) types.Pagination {
-	return types.Pagination{
-		Page: ParsePage(r),
-		Size: ParseLimit(r),
-	}
-}
-
-// ParseListQueryFilterFromRequest parses pagination and query related info from the url.
-func ParseListQueryFilterFromRequest(r *http.Request) types.ListQueryFilter {
-	return types.ListQueryFilter{
-		Query:      ParseQuery(r),
-		Pagination: ParsePaginationFromRequest(r),
-	}
 }

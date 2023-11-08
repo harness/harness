@@ -38,7 +38,7 @@ type ReaderFactory[R Reader] struct {
 }
 
 // Launch launches a new reader for the provided group and client name.
-// The setup method should be used to register the differents events the reader will act on.
+// The setup method should be used to register the different events the reader will act on.
 // To stop the reader and cleanup its resources the returned ReaderCanceler can be used.
 // The reader also cancels automatically when the provided context is canceled.
 // NOTE: Do not setup the reader outside of the setup method!

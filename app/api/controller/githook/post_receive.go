@@ -34,6 +34,9 @@ const (
 
 	// gitReferenceNamePrefixTag is the prefix of references of type tag.
 	gitReferenceNamePrefixTag = "refs/tags/"
+
+	// gitReferenceNamePrefixTag is the prefix of pull req references.
+	gitReferenceNamePullReq = "refs/pullreq/"
 )
 
 // PostReceive executes the post-receive hook for a git repository.
@@ -44,7 +47,7 @@ func (c *Controller) PostReceive(
 	principalID int64,
 	in githook.PostReceiveInput,
 ) (*githook.Output, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, err
 	}

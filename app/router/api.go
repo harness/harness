@@ -314,22 +314,24 @@ func setupRepos(r chi.Router,
 				r.Post("/*", handlerrepo.HandleMergeCheck(repoCtrl))
 			})
 
+			r.Get("/codeowners/validate", handlerrepo.HandleCodeOwnersValidate(repoCtrl))
+
 			SetupPullReq(r, pullreqCtrl)
 
-			setupWebhook(r, webhookCtrl)
+			SetupWebhook(r, webhookCtrl)
 
 			setupPipelines(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl)
 
 			SetupChecks(r, checkCtrl)
 
-			setupUploads(r, uploadCtrl)
+			SetupUploads(r, uploadCtrl)
 
-			setupRules(r, repoCtrl)
+			SetupRules(r, repoCtrl)
 		})
 	})
 }
 
-func setupUploads(r chi.Router, uploadCtrl *upload.Controller) {
+func SetupUploads(r chi.Router, uploadCtrl *upload.Controller) {
 	r.Route("/uploads", func(r chi.Router) {
 		r.Post("/", handlerupload.HandleUpload(uploadCtrl))
 		r.Get("/*", handlerupload.HandleDownoad(uploadCtrl))
@@ -500,11 +502,12 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 				r.Get("/", handlerpullreq.HandleFileViewList(pullreqCtrl))
 				r.Delete("/*", handlerpullreq.HandleFileViewDelete(pullreqCtrl))
 			})
+			r.Get("/codeowners", handlerpullreq.HandleCodeOwner(pullreqCtrl))
 		})
 	})
 }
 
-func setupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
+func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 	r.Route("/webhooks", func(r chi.Router) {
 		r.Post("/", handlerwebhook.HandleCreate(webhookCtrl))
 		r.Get("/", handlerwebhook.HandleList(webhookCtrl))
@@ -536,7 +539,7 @@ func SetupChecks(r chi.Router, checkCtrl *check.Controller) {
 	})
 }
 
-func setupRules(r chi.Router, repoCtrl *repo.Controller) {
+func SetupRules(r chi.Router, repoCtrl *repo.Controller) {
 	r.Route("/rules", func(r chi.Router) {
 		r.Post("/", handlerrepo.HandleRuleCreate(repoCtrl))
 		r.Get("/", handlerrepo.HandleRuleList(repoCtrl))

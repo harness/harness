@@ -15,13 +15,13 @@
  */
 
 .main {
-  min-height: var(--page-height);
+  max-height: calc(var(--page-height) - 160px);
   background-color: var(--primary-bg) !important;
   width: 100%;
   margin: var(--spacing-small);
   :global {
     .bp3-tab {
-      width: 184px !important;
+      width: fit-content !important;
       height: 34px;
     }
 
@@ -32,12 +32,16 @@
 
     .bp3-tab {
       margin-top: 20px;
+      margin-bottom: unset !important;
     }
 
-    .bp3-tabs.bp3-vertical > .bp3-tab-list .bp3-tab[aria-selected='true'] {
-      background-color: var(--primary-2);
+    .bp3-tab-list .bp3-tab[aria-selected='true'] {
+      background-color: var(--grey-0);
       -webkit-box-shadow: none;
       box-shadow: none;
+      border-bottom: 2px solid var(--primary-7);
+      border-bottom-left-radius: 0px !important;
+      border-bottom-right-radius: 0px !important;
     }
 
     // .bp3-tab-indicator-wrapper {
@@ -148,4 +152,60 @@
 
 .textSize {
   font-size: 13px !important;
+}
+
+.tabsContainer {
+  flex-grow: 1;
+  display: flex;
+  background-color: var(--primary-bg) !important;
+
+  > div {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  > div > div[role='tablist'] {
+    background-color: var(--white) !important;
+    padding-left: var(--spacing-large) !important;
+    padding-right: var(--spacing-xlarge) !important;
+    border-bottom: 1px solid var(--grey-200) !important;
+  }
+
+  > div > div[role='tabpanel'] {
+    margin-top: 0;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  [aria-selected='true'] {
+    .tabTitle,
+    .tabTitle:hover {
+      color: var(--grey-900) !important;
+      font-weight: 600 !important;
+    }
+  }
+
+  .tabTitle {
+    font-weight: 500;
+    color: var(--grey-700);
+    display: flex;
+    align-items: center;
+    height: 24px;
+    margin-top: var(--spacing-8);
+
+    > svg {
+      display: inline-block;
+      margin-right: 5px;
+    }
+  }
+
+  .tabTitle:not:first-child {
+    margin-left: var(--spacing-8) !important;
+  }
+}
+
+.headerContainer {
+  border-bottom: unset !important;
 }

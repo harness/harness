@@ -27,6 +27,7 @@ import { useStrings } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { useAppContext } from 'AppContext'
+import type { TypesRepository } from 'services/code'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
@@ -105,6 +106,7 @@ interface CommentBoxProps<T> {
   outlets?: Partial<Record<CommentBoxOutletPosition, React.ReactNode>>
   autoFocusAndPosition?: boolean
   enableReplyPlaceHolder?: boolean
+  repoMetadata: TypesRepository | undefined
 }
 
 export const CommentBox = <T = unknown,>({
@@ -125,7 +127,8 @@ export const CommentBox = <T = unknown,>({
   setDirty: setDirtyProp,
   outlets = {},
   autoFocusAndPosition,
-  enableReplyPlaceHolder
+  enableReplyPlaceHolder,
+  repoMetadata
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
@@ -202,6 +205,7 @@ export const CommentBox = <T = unknown,>({
 
         <Layout.Vertical>
           <CommentsThread<T>
+            repoMetadata={repoMetadata}
             commentItems={comments}
             onQuote={onQuote}
             handleAction={async (action, content, atCommentItem) => {
@@ -240,6 +244,7 @@ export const CommentBox = <T = unknown,>({
             <Falsy>
               <Container className={cx(css.newCommentContainer, { [css.hasThread]: !!comments.length })}>
                 <MarkdownEditorWithPreview
+                  repoMetadata={repoMetadata}
                   className={editorClassName}
                   viewRef={viewRef}
                   noBorder
@@ -304,6 +309,7 @@ export const CommentBox = <T = unknown,>({
 interface CommentsThreadProps<T> extends Pick<CommentBoxProps<T>, 'commentItems' | 'handleAction' | 'outlets'> {
   onQuote: (content: string) => void
   setDirty: (index: number, dirty: boolean) => void
+  repoMetadata: TypesRepository | undefined
 }
 
 const CommentsThread = <T = unknown,>({
@@ -311,7 +317,8 @@ const CommentsThread = <T = unknown,>({
   commentItems = [],
   handleAction,
   setDirty,
-  outlets = {}
+  outlets = {},
+  repoMetadata
 }: CommentsThreadProps<T>) => {
   const { getString } = useStrings()
   const { standalone } = useAppContext()
@@ -419,6 +426,7 @@ const CommentsThread = <T = unknown,>({
                   <Truthy>
                     <Container className={css.editCommentContainer}>
                       <MarkdownEditorWithPreview
+                        repoMetadata={repoMetadata}
                         value={commentItem?.content}
                         onSave={async value => {
                           if (await handleAction(CommentAction.UPDATE, value, commentItem)) {

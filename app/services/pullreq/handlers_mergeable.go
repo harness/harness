@@ -238,6 +238,8 @@ func (s *Service) updateMergeDataInner(
 			pr.SourceBranch, newSHA)
 	}
 
+	conflicts := gitrpc.AsConflictFilesError(err)
+
 	isNotMergeableError := gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable
 	if err != nil && !isNotMergeableError {
 		return fmt.Errorf("merge check failed for %d:%s and %d:%s with err: %w",
@@ -255,9 +257,9 @@ func (s *Service) updateMergeDataInner(
 		if isNotMergeableError {
 			// TODO: gitrpc should return sha's either way, and also conflicting files!
 			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
-			pr.MergeTargetSHA = &output.BaseSHA
+			// pr.MergeTargetSHA = &output.BaseSHA  // TODO: Merge API doesn't return this when there are conflicts
 			pr.MergeSHA = nil
-			pr.MergeConflicts = nil
+			pr.MergeConflicts = conflicts
 		} else {
 			pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
 			pr.MergeTargetSHA = &output.BaseSHA

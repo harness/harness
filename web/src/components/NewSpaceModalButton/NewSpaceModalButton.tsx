@@ -42,7 +42,7 @@ import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps, REGEX_VALID_REPO_NAME } from 'utils/Utils'
 import type { TypesSpace, OpenapiCreateSpaceRequest } from 'services/code'
 import { useAppContext } from 'AppContext'
-import { ImportSpaceFormData, SpaceCreationType } from 'utils/GitUtils'
+import { ImportSpaceFormData, SpaceCreationType, GitProviders, getProviderTypeMapping } from 'utils/GitUtils'
 import ImportSpaceForm from './ImportSpaceForm/ImportSpaceForm'
 import css from './NewSpaceModalButton.module.scss'
 
@@ -112,7 +112,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
 
     const loading = submitLoading || submitImportLoading
 
-    const handleSubmit = (formData: SpaceFormData) => {
+    const handleSubmit = async (formData: SpaceFormData) => {
       try {
         const payload: OpenapiCreateSpaceRequestExtended = {
           description: get(formData, 'description', '').trim(),
@@ -120,42 +120,40 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
           uid: get(formData, 'name', '').trim(),
           parent_id: standalone ? Number(space) : 0 // TODO: Backend needs to fix parentID: accept string or number
         }
-        createSpace(payload)
-          .then(() => {
-            hideModal()
-            handleNavigation?.(formData.name.trim())
-            onRefetch()
-          })
-          .catch(_error => {
-            showError(getErrorMessage(_error), 0, getString('failedToCreateSpace'))
-          })
+        await createSpace(payload)
+        hideModal()
+        handleNavigation?.(formData.name.trim())
+        onRefetch()
       } catch (exception) {
         showError(getErrorMessage(exception), 0, getString('failedToCreateSpace'))
       }
     }
 
     const handleImportSubmit = async (formData: ImportSpaceFormData) => {
+      const type = getProviderTypeMapping(formData.gitProvider)
+
+      const provider = {
+        type,
+        username: formData.username,
+        password: formData.password,
+        host: ''
+      }
+
+      if (![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(formData.gitProvider)) {
+        provider.host = formData.host
+      }
+
       try {
         const importPayload = {
           description: (formData.description || '').trim(),
           uid: formData.name.trim(),
-          provider: {
-            type: formData.gitProvider.toLowerCase(),
-            username: formData.username,
-            password: formData.password,
-            host: formData.host
-          },
+          provider,
           provider_space: formData.organization
         }
-        await importSpace(importPayload)
-          .then(response => {
-            hideModal()
-            onSubmit(response)
-            onRefetch()
-          })
-          .catch(_error => {
-            showError(getErrorMessage(_error), 0, getString('failedToImportSpace'))
-          })
+        const response = await importSpace(importPayload)
+        hideModal()
+        onSubmit(response)
+        onRefetch()
       } catch (exception) {
         showError(getErrorMessage(exception), 0, getString('failedToImportSpace'))
       }
