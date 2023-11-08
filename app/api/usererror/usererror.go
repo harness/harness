@@ -79,6 +79,9 @@ var (
 
 	// ErrCodeOwnersNotFound is returned when codeowners file is not found.
 	ErrCodeOwnersNotFound = New(http.StatusNotFound, "CODEOWNERS file not found")
+
+	// ErrResponseNotFlushable is returned if the response writer doesn't implement http.Flusher.
+	ErrResponseNotFlushable = New(http.StatusInternalServerError, "Response not streamable")
 )
 
 // Error represents a json-encoded API error.

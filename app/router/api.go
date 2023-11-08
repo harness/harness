@@ -15,6 +15,7 @@
 package router
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -89,6 +90,7 @@ var (
 
 // NewAPIHandler returns a new APIHandler.
 func NewAPIHandler(
+	appCtx context.Context,
 	config *types.Config,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
@@ -132,7 +134,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, config, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
+		setupRoutesV1(r, appCtx, config, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
 			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 			webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl)
 	})
@@ -154,7 +156,9 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 	).Handler
 }
 
+// nolint: revive // it's the app context, it shouldn't be the first argument
 func setupRoutesV1(r chi.Router,
+	appCtx context.Context,
 	config *types.Config,
 	repoCtrl *repo.Controller,
 	executionCtrl *execution.Controller,
@@ -176,7 +180,7 @@ func setupRoutesV1(r chi.Router,
 	sysCtrl *system.Controller,
 	uploadCtrl *upload.Controller,
 ) {
-	setupSpaces(r, spaceCtrl)
+	setupSpaces(r, appCtx, spaceCtrl)
 	setupRepos(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl, pullreqCtrl, webhookCtrl, checkCtrl,
 		uploadCtrl)
 	setupConnectors(r, connectorCtrl)
@@ -193,7 +197,8 @@ func setupRoutesV1(r chi.Router,
 	setupPlugins(r, pluginCtrl)
 }
 
-func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
+// nolint: revive // it's the app context, it shouldn't be the first argument
+func setupSpaces(r chi.Router, appCtx context.Context, spaceCtrl *space.Controller) {
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerspace.HandleCreate(spaceCtrl))
@@ -205,7 +210,7 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Patch("/", handlerspace.HandleUpdate(spaceCtrl))
 			r.Delete("/", handlerspace.HandleDelete(spaceCtrl))
 
-			r.Get("/events", handlerspace.HandleEvents(spaceCtrl))
+			r.Get("/events", handlerspace.HandleEvents(appCtx, spaceCtrl))
 
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))

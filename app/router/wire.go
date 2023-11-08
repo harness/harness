@@ -15,6 +15,7 @@
 package router
 
 import (
+	"context"
 	"strings"
 
 	"github.com/harness/gitness/app/api/controller/check"
@@ -84,6 +85,7 @@ func ProvideGitHandler(
 }
 
 func ProvideAPIHandler(
+	appCtx context.Context,
 	config *types.Config,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
@@ -106,7 +108,8 @@ func ProvideAPIHandler(
 	sysCtrl *system.Controller,
 	blobCtrl *upload.Controller,
 ) APIHandler {
-	return NewAPIHandler(config, authenticator, repoCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
+	return NewAPIHandler(appCtx, config,
+		authenticator, repoCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
 		githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, blobCtrl)
 }

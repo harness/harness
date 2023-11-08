@@ -34,7 +34,7 @@ type Streamer interface {
 	// Publish publishes an event to a given space ID.
 	Publish(ctx context.Context, spaceID int64, eventType enum.SSEType, data any) error
 
-	// Streams streams the events on a space ID.
+	// Stream streams the events on a space ID.
 	Stream(ctx context.Context, spaceID int64) (<-chan *Event, <-chan error, func(context.Context) error)
 }
 

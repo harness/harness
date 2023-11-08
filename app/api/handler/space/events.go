@@ -15,19 +15,18 @@
 package space
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/io"
 
 	"github.com/rs/zerolog/log"
 )
 
-// HandleEvents returns an http.HandlerFunc that watches for
-// events on a space.
-func HandleEvents(spaceCtrl *space.Controller) http.HandlerFunc {
+// HandleEvents returns a http.HandlerFunc that watches for events on a space.
+func HandleEvents(appCtx context.Context, spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -38,26 +37,17 @@ func HandleEvents(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		h := w.Header()
-		h.Set("Content-Type", "text/event-stream")
-		h.Set("Cache-Control", "no-cache")
-		h.Set("Connection", "keep-alive")
-		h.Set("X-Accel-Buffering", "no")
-		h.Set("Access-Control-Allow-Origin", "*")
-
-		f, ok := w.(http.Flusher)
-		if !ok {
-			log.Error().Msg("http writer type assertion failed")
-			render.InternalError(w)
-			return
-		}
-
-		writer := io.NewWriterFlusher(w, f)
-
-		err = spaceCtrl.Events(ctx, session, spaceRef, writer)
+		chEvents, chErr, sseCancel, err := spaceCtrl.Events(ctx, session, spaceRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
+		defer func() {
+			if err := sseCancel(ctx); err != nil {
+				log.Ctx(ctx).Err(err).Msgf("failed to cancel sse stream for space '%s'", spaceRef)
+			}
+		}()
+
+		render.StreamSSE(ctx, w, appCtx.Done(), chEvents, chErr)
 	}
 }

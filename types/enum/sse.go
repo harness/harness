@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Enums for event types delivered to the event stream for the UI
 package enum
 
 // SSEType defines the kind of server sent event.
 type SSEType string
 
+// Enums for event types delivered to the event stream for the UI.
 const (
-	SSETypeExecutionUpdated   = "execution_updated"
-	SSETypeExecutionRunning   = "execution_running"
-	SSETypeExecutionCompleted = "execution_completed"
-	SSETypeExecutionCanceled  = "execution_canceled"
+	SSETypeExecutionUpdated   SSEType = "execution_updated"
+	SSETypeExecutionRunning   SSEType = "execution_running"
+	SSETypeExecutionCompleted SSEType = "execution_completed"
+	SSETypeExecutionCanceled  SSEType = "execution_canceled"
 
-	SSETypeRepositoryImportCompleted = "repository_import_completed"
-	SSETypeRepositoryExportCompleted = "repository_export_completed"
+	SSETypeRepositoryImportCompleted SSEType = "repository_import_completed"
+	SSETypeRepositoryExportCompleted SSEType = "repository_export_completed"
 
-	SSETypePullrequesUpdated = "pullreq_updated"
+	SSETypePullrequesUpdated SSEType = "pullreq_updated"
 )
