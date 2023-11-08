@@ -83,7 +83,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 		committer = header.GetCommitter()
 	}
 	committerDate := time.Now().UTC()
-	if header.GetAuthorDate() != 0 {
+	if header.GetCommitterDate() != 0 {
 		committerDate = time.Unix(header.GetCommitterDate(), 0)
 	}
 
