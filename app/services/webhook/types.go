@@ -100,7 +100,7 @@ type PullReqInfo struct {
 	SourceBranch  string            `json:"source_branch"`
 	TargetRepoID  int64             `json:"target_repo_id"`
 	TargetBranch  string            `json:"target_branch"`
-	MergeStrategy *enum.MergeMethod `json:"merge_strategy"`
+	MergeStrategy *enum.MergeMethod `json:"merge_strategy,omitempty"`
 	Author        PrincipalInfo     `json:"author"`
 }
 
@@ -202,6 +202,6 @@ type ReferenceInfo struct {
 }
 
 type CommentInfo struct {
-	Text string `json:"text"`
 	ID   int64  `json:"id"`
+	Text string `json:"text"`
 }
