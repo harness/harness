@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/app/services/codeowners"
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -36,7 +35,22 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 		expOut    MergeVerifyOutput
 	}{
 		{
-			name: "empty",
+			name: "empty-with-merge-method",
+			in: MergeVerifyInput{
+				Method: enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				DeleteSourceBranch: false,
+				AllowedMethods:     nil,
+			},
+		},
+		{
+			name: "empty-no-merge-method-specified",
+			in:   MergeVerifyInput{},
+			expOut: MergeVerifyOutput{
+				DeleteSourceBranch: false,
+				AllowedMethods:     enum.MergeMethods,
+			},
 		},
 		{
 			name: codePullReqApprovalReqMinCount + "-fail",
@@ -46,9 +60,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				Reviewers: []*types.PullReqReviewer{
 					{ReviewDecision: enum.PullReqReviewDecisionChangeReq, SHA: "abc"},
 				},
+				Method: enum.MergeMethodMerge,
 			},
 			expCodes:  []string{codePullReqApprovalReqMinCount},
 			expParams: [][]any{{0, 1}},
+			expOut:    MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqApprovalReqMinCount + "-success",
@@ -59,7 +75,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc"},
 					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc"},
 				},
+				Method: enum.MergeMethodMerge,
 			},
+			expOut: MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqApprovalReqLatestCommit + "-fail",
@@ -70,9 +88,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc"},
 					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abd"},
 				},
+				Method: enum.MergeMethodMerge,
 			},
 			expCodes:  []string{codePullReqApprovalReqMinCount},
 			expParams: [][]any{{1, 2}},
+			expOut:    MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqApprovalReqLatestCommit + "-success",
@@ -84,7 +104,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc"},
 					{ReviewDecision: enum.PullReqReviewDecisionApproved, SHA: "abc"},
 				},
+				Method: enum.MergeMethodMerge,
 			},
+			expOut: MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoApproval + "-fail",
@@ -112,12 +134,14 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					},
 					FileSha: "xyz",
 				},
+				Method: enum.MergeMethodMerge,
 			},
 			expCodes: []string{
 				codePullReqApprovalReqCodeOwnersNoApproval,
 				codePullReqApprovalReqCodeOwnersNoApproval,
 			},
 			expParams: [][]any{{"app"}, {"data"}},
+			expOut:    MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoApproval + "-success",
@@ -141,7 +165,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					},
 					FileSha: "xyz",
 				},
+				Method: enum.MergeMethodMerge,
 			},
+			expOut: MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersChangeRequested + "-fail",
@@ -167,9 +193,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					},
 					FileSha: "xyz",
 				},
+				Method: enum.MergeMethodMerge,
 			},
 			expCodes:  []string{codePullReqApprovalReqCodeOwnersChangeRequested},
 			expParams: [][]any{{"app"}},
+			expOut:    MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoLatestApproval + "-fail",
@@ -194,25 +222,31 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					},
 					FileSha: "xyz",
 				},
+				Method: enum.MergeMethodMerge,
 			},
 			expCodes:  []string{codePullReqApprovalReqCodeOwnersNoLatestApproval},
 			expParams: [][]any{{"data"}},
+			expOut:    MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqCommentsReqResolveAll + "-fail",
 			def:  DefPullReq{Comments: DefComments{RequireResolveAll: true}},
 			in: MergeVerifyInput{
 				PullReq: &types.PullReq{UnresolvedCount: 6},
+				Method:  enum.MergeMethodMerge,
 			},
 			expCodes:  []string{"pullreq.comments.require_resolve_all"},
 			expParams: [][]any{{6}},
+			expOut:    MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqCommentsReqResolveAll + "-success",
 			def:  DefPullReq{Comments: DefComments{RequireResolveAll: true}},
 			in: MergeVerifyInput{
 				PullReq: &types.PullReq{UnresolvedCount: 0},
+				Method:  enum.MergeMethodMerge,
 			},
+			expOut: MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqStatusChecksReqUIDs + "-fail",
@@ -222,9 +256,11 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					{UID: "check1", Status: enum.CheckStatusFailure},
 					{UID: "check2", Status: enum.CheckStatusSuccess},
 				},
+				Method: enum.MergeMethodMerge,
 			},
 			expCodes:  []string{codePullReqStatusChecksReqUIDs},
 			expParams: [][]any{nil},
+			expOut:    MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqStatusChecksReqUIDs + "-success",
@@ -234,41 +270,50 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					{UID: "check1", Status: enum.CheckStatusSuccess},
 					{UID: "check2", Status: enum.CheckStatusFailure},
 				},
+				Method: enum.MergeMethodMerge,
 			},
+			expOut: MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqMergeStrategiesAllowed + "-fail",
 			def: DefPullReq{Merge: DefMerge{StrategiesAllowed: []enum.MergeMethod{
-				enum.MergeMethod(gitrpcenum.MergeMethodRebase),
-				enum.MergeMethod(gitrpcenum.MergeMethodSquash),
+				enum.MergeMethodRebase,
+				enum.MergeMethodSquash,
 			}}},
 			in: MergeVerifyInput{
-				Method: enum.MergeMethod(gitrpcenum.MergeMethodMerge),
+				Method: enum.MergeMethodMerge,
 			},
 			expCodes: []string{codePullReqMergeStrategiesAllowed},
 			expParams: [][]any{{
-				enum.MergeMethod(gitrpcenum.MergeMethodMerge),
+				enum.MergeMethodMerge,
 				[]enum.MergeMethod{
-					enum.MergeMethod(gitrpcenum.MergeMethodRebase),
-					enum.MergeMethod(gitrpcenum.MergeMethodSquash),
+					enum.MergeMethodRebase,
+					enum.MergeMethodSquash,
 				}},
 			},
+			expOut: MergeVerifyOutput{},
 		},
 		{
 			name: codePullReqMergeStrategiesAllowed + "-success",
 			def: DefPullReq{Merge: DefMerge{StrategiesAllowed: []enum.MergeMethod{
-				enum.MergeMethod(gitrpcenum.MergeMethodRebase),
-				enum.MergeMethod(gitrpcenum.MergeMethodSquash),
+				enum.MergeMethodRebase,
+				enum.MergeMethodSquash,
 			}}},
 			in: MergeVerifyInput{
-				Method: enum.MergeMethod(gitrpcenum.MergeMethodSquash),
+				Method: enum.MergeMethodSquash,
 			},
+			expOut: MergeVerifyOutput{},
 		},
 		{
-			name:   codePullReqMergeDeleteBranch,
-			def:    DefPullReq{Merge: DefMerge{DeleteBranch: true}},
-			in:     MergeVerifyInput{},
-			expOut: MergeVerifyOutput{DeleteSourceBranch: true},
+			name: codePullReqMergeDeleteBranch,
+			def:  DefPullReq{Merge: DefMerge{DeleteBranch: true}},
+			in: MergeVerifyInput{
+				Method: enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{
+				DeleteSourceBranch: true,
+				AllowedMethods:     nil,
+			},
 		},
 	}
 

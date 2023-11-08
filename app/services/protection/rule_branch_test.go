@@ -16,9 +16,11 @@ package protection
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // nolint:gocognit // it's a unit test
@@ -37,8 +39,11 @@ func TestBranch_MergeVerify(t *testing.T) {
 			name:   "empty",
 			branch: Branch{},
 			in:     MergeVerifyInput{Actor: user},
-			expOut: MergeVerifyOutput{},
-			expVs:  []types.RuleViolations{},
+			expOut: MergeVerifyOutput{
+				DeleteSourceBranch: false,
+				AllowedMethods:     enum.MergeMethods,
+			},
+			expVs: []types.RuleViolations{},
 		},
 		{
 			name: "admin-no-bypass",
@@ -57,6 +62,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 			},
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch: true,
+				AllowedMethods:     enum.MergeMethods,
 			},
 			expVs: []types.RuleViolations{
 				{
@@ -85,6 +91,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 			},
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch: true,
+				AllowedMethods:     enum.MergeMethods,
 			},
 			expVs: []types.RuleViolations{
 				{
@@ -95,6 +102,28 @@ func TestBranch_MergeVerify(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "merge-methods",
+			branch: Branch{
+				Bypass: DefBypass{},
+				PullReq: DefPullReq{
+					StatusChecks: DefStatusChecks{},
+					Comments:     DefComments{},
+					Merge: DefMerge{
+						StrategiesAllowed: []enum.MergeMethod{enum.MergeMethodRebase, enum.MergeMethodSquash},
+						DeleteBranch:      false,
+					},
+				},
+			},
+			in: MergeVerifyInput{
+				Actor: user,
+			},
+			expOut: MergeVerifyOutput{
+				DeleteSourceBranch: false,
+				AllowedMethods:     []enum.MergeMethod{enum.MergeMethodRebase, enum.MergeMethodSquash},
+			},
+			expVs: []types.RuleViolations{},
 		},
 	}
 
@@ -113,7 +142,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 				return
 			}
 
-			if want, got := test.expOut, out; want != got {
+			if want, got := test.expOut, out; !reflect.DeepEqual(want, got) {
 				t.Errorf("output: want=%+v got=%+v", want, got)
 			}
 

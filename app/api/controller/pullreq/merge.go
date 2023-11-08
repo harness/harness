@@ -43,7 +43,36 @@ type MergeInput struct {
 	DryRun      bool             `json:"dry_run"`
 }
 
-// Merge merges the pull request.
+func (in *MergeInput) sanitize() error {
+	if in.Method == "" && !in.DryRun {
+		return usererror.BadRequest("merge method must be provided if dry run is false")
+	}
+
+	if in.SourceSHA == "" {
+		return usererror.BadRequest("source SHA must be provided")
+	}
+
+	if in.Method != "" {
+		method, ok := in.Method.Sanitize()
+		if !ok {
+			return usererror.BadRequestf("unsupported merge method: %s", in.Method)
+		}
+
+		in.Method = method
+	}
+
+	return nil
+}
+
+// Merge merges a pull request.
+//
+// It supports dry running by providing the DryRun=true. Dry running can be used to find any rule violations that
+// might block the merging. Dry running typically should be used with BypassRules=true.
+//
+// MergeMethod doesn't need to be provided for dry running. If no MergeMethod has been provided the function will
+// return allowed merge methods. Rules can limit allowed merge methods.
+//
+// If the pull request has been successfully merged the function will return the SHA of the merge commit.
 //
 //nolint:gocognit,gocyclo,cyclop
 func (c *Controller) Merge(
@@ -53,12 +82,9 @@ func (c *Controller) Merge(
 	pullreqNum int64,
 	in *MergeInput,
 ) (*types.MergeResponse, *types.MergeViolations, error) {
-	method, ok := in.Method.Sanitize()
-	if !ok {
-		return nil, nil, usererror.BadRequest(
-			fmt.Sprintf("unsupported merge method: %s", in.Method))
+	if err := in.sanitize(); err != nil {
+		return nil, nil, err
 	}
-	in.Method = method
 
 	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
@@ -165,16 +191,13 @@ func (c *Controller) Merge(
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
-	if protection.IsCritical(violations) {
-		return nil, &types.MergeViolations{RuleViolations: violations}, nil
-	}
 
 	if in.DryRun {
 		// With in.DryRun=true this function never returns types.MergeViolations
 		out := &types.MergeResponse{
 			DryRun:         true,
-			SHA:            "",
 			BranchDeleted:  ruleOut.DeleteSourceBranch,
+			AllowedMethods: ruleOut.AllowedMethods,
 			ConflictFiles:  pr.MergeConflicts,
 			RuleViolations: violations,
 		}
@@ -200,6 +223,10 @@ func (c *Controller) Merge(
 		}
 
 		return out, nil, nil
+	}
+
+	if protection.IsCritical(violations) {
+		return nil, &types.MergeViolations{RuleViolations: violations}, nil
 	}
 
 	// TODO: for forking merge title might be different?
@@ -294,10 +321,8 @@ func (c *Controller) Merge(
 	}
 
 	return &types.MergeResponse{
-		DryRun:         false,
 		SHA:            mergeOutput.MergeSHA,
 		BranchDeleted:  branchDeleted,
-		ConflictFiles:  nil,
 		RuleViolations: violations,
 	}, nil, nil
 }

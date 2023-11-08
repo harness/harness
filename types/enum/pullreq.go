@@ -209,7 +209,20 @@ var pullReqReviewerTypes = sortEnum([]PullReqReviewerType{
 
 type MergeMethod gitrpcenum.MergeMethod
 
-func (MergeMethod) Enum() []interface{} { return toInterfaceSlice(gitrpcenum.MergeMethods) }
+// MergeMethod enumeration.
+const (
+	MergeMethodMerge  = MergeMethod(gitrpcenum.MergeMethodMerge)
+	MergeMethodSquash = MergeMethod(gitrpcenum.MergeMethodSquash)
+	MergeMethodRebase = MergeMethod(gitrpcenum.MergeMethodRebase)
+)
+
+var MergeMethods = sortEnum([]MergeMethod{
+	MergeMethodMerge,
+	MergeMethodSquash,
+	MergeMethodRebase,
+})
+
+func (MergeMethod) Enum() []interface{} { return toInterfaceSlice(MergeMethods) }
 func (m MergeMethod) Sanitize() (MergeMethod, bool) {
 	s, ok := gitrpcenum.MergeMethod(m).Sanitize()
 	return MergeMethod(s), ok

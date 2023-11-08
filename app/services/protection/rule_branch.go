@@ -21,7 +21,7 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-var TypeBranch types.RuleType = "branch"
+const TypeBranch types.RuleType = "branch"
 
 // Branch implements protection rules for the rule type TypeBranch.
 type Branch struct {

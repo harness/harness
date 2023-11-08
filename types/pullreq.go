@@ -139,11 +139,12 @@ type PullReqFileView struct {
 }
 
 type MergeResponse struct {
-	DryRun         bool             `json:"dry_run,omitempty"`
-	SHA            string           `json:"sha,omitempty"`
-	BranchDeleted  bool             `json:"branch_deleted,omitempty"`
-	ConflictFiles  []string         `json:"conflict_files,omitempty"`
-	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
+	DryRun         bool               `json:"dry_run,omitempty"`
+	SHA            string             `json:"sha,omitempty"`
+	BranchDeleted  bool               `json:"branch_deleted,omitempty"`
+	AllowedMethods []enum.MergeMethod `json:"allowed_methods,omitempty"`
+	ConflictFiles  []string           `json:"conflict_files,omitempty"`
+	RuleViolations []RuleViolations   `json:"rule_violations,omitempty"`
 }
 
 type MergeViolations struct {
