@@ -172,6 +172,17 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/import", opImport)
 
+	opImportRepositories := openapi3.Operation{}
+	opImportRepositories.WithTags("space")
+	opImportRepositories.WithMapOfAnything(map[string]interface{}{"operationId": "importSpaceRepositories"})
+	_ = reflector.SetRequest(&opImportRepositories, &struct{ space.ImportRepositoriesInput }{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opImportRepositories, new(space.ImportRepositoriesOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opImportRepositories, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opImportRepositories, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opImportRepositories, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opImportRepositories, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{space_ref}/import", opImportRepositories)
+
 	opExport := openapi3.Operation{}
 	opExport.WithTags("space")
 	opExport.WithMapOfAnything(map[string]interface{}{"operationId": "exportSpace"})

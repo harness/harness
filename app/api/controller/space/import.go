@@ -24,11 +24,15 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-type ImportInput struct {
-	CreateInput
+type ProviderInput struct {
 	Provider      importer.Provider       `json:"provider"`
 	ProviderSpace string                  `json:"provider_space"`
 	Pipelines     importer.PipelineOption `json:"pipelines"`
+}
+
+type ImportInput struct {
+	CreateInput
+	ProviderInput
 }
 
 // Import creates new space and starts import of all repositories from the remote provider's space into it.

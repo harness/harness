@@ -212,6 +212,7 @@ func setupSpaces(r chi.Router, appCtx context.Context, spaceCtrl *space.Controll
 
 			r.Get("/events", handlerspace.HandleEvents(appCtx, spaceCtrl))
 
+			r.Post("/import", handlerspace.HandleImportRepositories(spaceCtrl))
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
