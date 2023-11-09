@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
@@ -34,7 +33,6 @@ import (
 type ReviewSubmitInput struct {
 	CommitSHA string                     `json:"commit_sha"`
 	Decision  enum.PullReqReviewDecision `json:"decision"`
-	Message   string                     `json:"message"`
 }
 
 func (in *ReviewSubmitInput) Validate() error {
@@ -50,11 +48,7 @@ func (in *ReviewSubmitInput) Validate() error {
 			enum.PullReqReviewDecisionReviewed)
 		return usererror.BadRequest(msg)
 	}
-
 	in.Decision = decision
-	in.Message = strings.TrimSpace(in.Message)
-
-	// TODO: Check the length of the message string
 
 	return nil
 }
@@ -128,7 +122,6 @@ func (c *Controller) ReviewSubmit(
 
 		payload := &types.PullRequestActivityPayloadReviewSubmit{
 			CommitSHA: commitSHA,
-			Message:   in.Message,
 			Decision:  in.Decision,
 		}
 		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload)

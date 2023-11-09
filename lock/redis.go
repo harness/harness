@@ -102,14 +102,14 @@ func (l *RedisMutex) Unlock(ctx context.Context) error {
 }
 
 func translateRedisErr(err error, key string) error {
-	var kind KindError
+	var kind ErrorKind
 	switch {
 	case errors.Is(err, redsync.ErrFailed):
-		kind = CannotLock
+		kind = ErrorKindCannotLock
 	case errors.Is(err, redsync.ErrExtendFailed), errors.Is(err, &redsync.RedisError{}):
-		kind = ProviderError
+		kind = ErrorKindProviderError
 	case errors.Is(err, &redsync.ErrTaken{}), errors.Is(err, &redsync.ErrNodeTaken{}):
-		kind = LockHeld
+		kind = ErrorKindLockHeld
 	}
 	return NewError(kind, key, err)
 }

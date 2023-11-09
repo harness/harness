@@ -225,10 +225,10 @@ type Config struct {
 		// Provider is a name of distributed lock service like redis, memory, file etc...
 		Provider      lock.Provider `envconfig:"GITNESS_LOCK_PROVIDER"          default:"inmemory"`
 		Expiry        time.Duration `envconfig:"GITNESS_LOCK_EXPIRE"            default:"8s"`
-		Tries         int           `envconfig:"GITNESS_LOCK_TRIES"             default:"32"`
+		Tries         int           `envconfig:"GITNESS_LOCK_TRIES"             default:"8"`
 		RetryDelay    time.Duration `envconfig:"GITNESS_LOCK_RETRY_DELAY"       default:"250ms"`
 		DriftFactor   float64       `envconfig:"GITNESS_LOCK_DRIFT_FACTOR"      default:"0.01"`
-		TimeoutFactor float64       `envconfig:"GITNESS_LOCK_TIMEOUT_FACTOR"    default:"0.05"`
+		TimeoutFactor float64       `envconfig:"GITNESS_LOCK_TIMEOUT_FACTOR"    default:"0.25"`
 		// AppNamespace is just service app prefix to avoid conflicts on key definition
 		AppNamespace string `envconfig:"GITNESS_LOCK_APP_NAMESPACE"     default:"gitness"`
 		// DefaultNamespace is when mutex doesn't specify custom namespace for their keys

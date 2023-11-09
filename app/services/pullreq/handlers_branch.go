@@ -16,6 +16,7 @@ package pullreq
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -30,8 +31,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var (
+	errPRNotOpen = errors.New("PR is not open")
+)
+
 // triggerPREventOnBranchUpdate handles branch update events. For every open pull request
 // it writes an activity entry and triggers the pull request Branch Updated event.
+//
+//nolint:gocognit // refactor if needed
 func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 	event *events.Event[*gitevents.BranchUpdatedPayload],
 ) error {
@@ -75,8 +82,12 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 		newMergeBase := mergeBaseInfo.MergeBaseSHA
 
 		// Update the database with the latest source commit SHA and the merge base SHA.
-
 		pr, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+			// to avoid racing conditions
+			if pr.State != enum.PullReqStateOpen {
+				return errPRNotOpen
+			}
+
 			pr.ActivitySeq++
 			if pr.SourceSHA != event.Payload.OldSHA {
 				return fmt.Errorf(
@@ -94,6 +105,9 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			pr.MergeConflicts = nil
 			return nil
 		})
+		if errors.Is(err, errPRNotOpen) {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
@@ -144,8 +158,17 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 			return fmt.Errorf("failed to get repo info: %w", err)
 		}
 
+		var activitySeqBranchDeleted, activitySeqPRClosed int64
 		pr, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
-			pr.ActivitySeq++ // because we need to write the activity
+			// to avoid racing conditions
+			if pr.State != enum.PullReqStateOpen {
+				return errPRNotOpen
+			}
+
+			// get sequence numbers for both activities (branch deletion should be first)
+			pr.ActivitySeq += 2
+			activitySeqBranchDeleted = pr.ActivitySeq - 1
+			activitySeqPRClosed = pr.ActivitySeq
 
 			pr.State = enum.PullReqStateClosed
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
@@ -154,15 +177,36 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 
 			return nil
 		})
+		if errors.Is(err, errPRNotOpen) {
+			return nil
+		}
 		if err != nil {
 			return fmt.Errorf("failed to close pull request after branch delete: %w", err)
 		}
 
-		_, errAct := s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID,
-			&types.PullRequestActivityPayloadBranchDelete{SHA: event.Payload.SHA})
-		if errAct != nil {
+		// NOTE: We use the latest PR source sha for the branch deleted activity.
+		// There is a chance the PR is behind, but we can't guarantee any missing commit exists after branch deletion.
+		// Whatever is the source sha of the PR is most likely to be pointed at by the PR head ref.
+		pr.ActivitySeq = activitySeqBranchDeleted
+		_, err = s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID,
+			&types.PullRequestActivityPayloadBranchDelete{SHA: pr.SourceSHA})
+		if err != nil {
 			// non-critical error
-			log.Ctx(ctx).Err(errAct).Msgf("failed to write pull request activity after branch delete")
+			log.Ctx(ctx).Err(err).Msg("failed to write pull request activity for branch deletion")
+		}
+
+		pr.ActivitySeq = activitySeqPRClosed
+		payload := &types.PullRequestActivityPayloadStateChange{
+			Old:      enum.PullReqStateOpen,
+			New:      enum.PullReqStateClosed,
+			OldDraft: pr.IsDraft,
+			NewDraft: pr.IsDraft,
+		}
+		if _, err := s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID, payload); err != nil {
+			// non-critical error
+			log.Ctx(ctx).Err(err).Msg(
+				"failed to write pull request activity for pullrequest closure after branch deletion",
+			)
 		}
 
 		s.pullreqEvReporter.Closed(ctx, &pullreqevents.ClosedPayload{

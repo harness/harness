@@ -93,7 +93,7 @@ func Test_inMemMutex_MaxTries(t *testing.T) {
 			t.Errorf("expected error lock.Error, got: %v", err)
 			return
 		}
-		if errLock.Kind != MaxRetriesExceeded {
+		if errLock.Kind != ErrorKindMaxRetriesExceeded {
 			t.Errorf("expected lock.MaxRetriesExceeded, got: %v", err)
 			return
 		}

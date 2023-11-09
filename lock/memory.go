@@ -74,7 +74,7 @@ func (m *InMemory) NewMutex(key string, options ...Option) (Mutex, error) {
 		token, err = randstr(32)
 	}
 	if err != nil {
-		return nil, NewError(GenerateTokenFailed, key, nil)
+		return nil, NewError(ErrorKindGenerateTokenFailed, key, nil)
 	}
 
 	// waitTime logic is similar to redis implementation:
@@ -159,7 +159,7 @@ func (m *inMemMutex) Lock(ctx context.Context) error {
 	defer m.mutex.Unlock()
 
 	if m.isHeld {
-		return NewError(LockHeld, m.key, nil)
+		return NewError(ErrorKindLockHeld, m.key, nil)
 	}
 
 	if m.provider.acquire(m.key, m.token, m.expiry) {
@@ -183,7 +183,7 @@ func (m *inMemMutex) retry(ctx context.Context, attempt int, timeout *time.Timer
 		return nil
 	}
 	if attempt == m.tries {
-		return NewError(MaxRetriesExceeded, m.key, nil)
+		return NewError(ErrorKindMaxRetriesExceeded, m.key, nil)
 	}
 
 	delay := time.NewTimer(m.delayFunc(attempt))
@@ -191,9 +191,9 @@ func (m *inMemMutex) retry(ctx context.Context, attempt int, timeout *time.Timer
 
 	select {
 	case <-ctx.Done():
-		return NewError(Context, m.key, ctx.Err())
+		return NewError(ErrorKindContext, m.key, ctx.Err())
 	case <-timeout.C:
-		return NewError(CannotLock, m.key, nil)
+		return NewError(ErrorKindCannotLock, m.key, nil)
 	case <-delay.C: // just wait
 	}
 
@@ -209,7 +209,7 @@ func (m *inMemMutex) Unlock(_ context.Context) error {
 	defer m.mutex.Unlock()
 
 	if !m.isHeld || !m.provider.release(m.key, m.token) {
-		return NewError(LockNotHeld, m.key, nil)
+		return NewError(ErrorKindLockNotHeld, m.key, nil)
 	}
 
 	m.isHeld = false

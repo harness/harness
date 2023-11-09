@@ -17,7 +17,6 @@ package pullreq
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -34,7 +33,6 @@ import (
 type StateInput struct {
 	State   enum.PullReqState `json:"state"`
 	IsDraft bool              `json:"is_draft"`
-	Message string            `json:"message"`
 }
 
 func (in *StateInput) Check() error {
@@ -45,13 +43,10 @@ func (in *StateInput) Check() error {
 	}
 
 	in.State = state
-	in.Message = strings.TrimSpace(in.Message)
 
 	if in.State == enum.PullReqStateMerged {
 		return usererror.BadRequest("Pull requests can't be merged with this API")
 	}
-
-	// TODO: Need to check the length of the message string
 
 	return nil
 }
@@ -171,7 +166,6 @@ func (c *Controller) State(ctx context.Context,
 		New:      pr.State,
 		OldDraft: oldDraft,
 		NewDraft: pr.IsDraft,
-		Message:  in.Message,
 	}
 	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload); errAct != nil {
 		// non-critical error

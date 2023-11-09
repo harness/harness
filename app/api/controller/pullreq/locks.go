@@ -16,6 +16,7 @@ package pullreq
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/harness/gitness/lock"
 )
@@ -25,5 +26,11 @@ func (c *Controller) newMutexForPR(repoUID string, pr int64, options ...lock.Opt
 	if pr != 0 {
 		key += "/" + strconv.FormatInt(pr, 10)
 	}
-	return c.mtxManager.NewMutex(key, append(options, lock.WithNamespace("repo"))...)
+	return c.mtxManager.NewMutex(
+		key,
+		append(options,
+			lock.WithNamespace("repo"),
+			lock.WithExpiry(16*time.Second),
+			lock.WithTimeoutFactor(0.25), // 4s
+		)...)
 }

@@ -235,7 +235,6 @@ type PullRequestActivityPayloadStateChange struct {
 	New      enum.PullReqState `json:"new"`
 	OldDraft bool              `json:"old_draft"`
 	NewDraft bool              `json:"new_draft"`
-	Message  string            `json:"message,omitempty"`
 }
 
 func (a *PullRequestActivityPayloadStateChange) ActivityType() enum.PullReqActivityType {
@@ -253,7 +252,6 @@ func (a *PullRequestActivityPayloadTitleChange) ActivityType() enum.PullReqActiv
 
 type PullRequestActivityPayloadReviewSubmit struct {
 	CommitSHA string                     `json:"commit_sha"`
-	Message   string                     `json:"message,omitempty"`
 	Decision  enum.PullReqReviewDecision `json:"decision"`
 }
 

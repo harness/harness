@@ -82,6 +82,12 @@ var (
 
 	// ErrResponseNotFlushable is returned if the response writer doesn't implement http.Flusher.
 	ErrResponseNotFlushable = New(http.StatusInternalServerError, "Response not streamable")
+
+	// ErrResourceLocked is returned if the resource is locked.
+	ErrResourceLocked = New(
+		http.StatusLocked,
+		"The requested resource is temporarily locked, please retry the operation.",
+	)
 )
 
 // Error represents a json-encoded API error.

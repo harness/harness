@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/check"
 
@@ -36,6 +37,7 @@ func Translate(err error) *Error {
 		gitrpcError             *gitrpc.Error
 		maxBytesErr             *http.MaxBytesError
 		codeOwnersTooLargeError *codeowners.TooLargeError
+		lockError               *lock.Error
 	)
 
 	// TODO: Improve performance of checking multiple errors with errors.Is
@@ -89,17 +91,33 @@ func Translate(err error) *Error {
 	case errors.Is(err, webhook.ErrWebhookNotRetriggerable):
 		return ErrWebhookNotRetriggerable
 
-		// codeowners errors
+	// codeowners errors
 	case errors.Is(err, codeowners.ErrNotFound):
 		return ErrCodeOwnersNotFound
 	case errors.As(err, &codeOwnersTooLargeError):
 		return UnprocessableEntityf(codeOwnersTooLargeError.Error())
+
+	// lock errors
+	case errors.As(err, &lockError):
+		return errorFromLockError(lockError)
 
 	// unknown error
 	default:
 		log.Warn().Msgf("Unable to translate error: %s", err)
 		return ErrInternal
 	}
+}
+
+// errorFromLockError returns the associated error for a given lock error.
+func errorFromLockError(err *lock.Error) *Error {
+	log.Warn().Err(err).Msg("encountered lock error")
+	if err.Kind == lock.ErrorKindCannotLock ||
+		err.Kind == lock.ErrorKindLockHeld ||
+		err.Kind == lock.ErrorKindMaxRetriesExceeded {
+		return ErrResourceLocked
+	}
+
+	return ErrInternal
 }
 
 // lookup of gitrpc error codes to HTTP status codes.
