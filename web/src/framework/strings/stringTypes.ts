@@ -131,6 +131,7 @@ export interface StringsMap {
   'codeOwner.waitToApprove': string
   codeSearch: string
   codeSearchModal: string
+  comingSoon: string
   comment: string
   commentDeleted: string
   commit: string

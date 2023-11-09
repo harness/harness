@@ -17,7 +17,7 @@
 @import 'src/utils/utils';
 
 .main {
-  --header-height: 128px;
+  // --header-height: 128px;
   --border-color: var(--grey-100);
 
   min-height: var(--page-height);
@@ -241,5 +241,11 @@
         background-color: var(--ai-purple-100);
       }
     }
+  }
+}
+
+.noResultContainer {
+  :global(.NoDataCard--message) {
+    display: none !important;
   }
 }

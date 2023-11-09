@@ -200,7 +200,7 @@ export function ContentHeader({
           </>
         )}
       </Layout.Horizontal>
-      {!standalone && (
+      {!standalone && false && (
         <Container
           className={css.searchBox}
           {...ButtonRoleProps}

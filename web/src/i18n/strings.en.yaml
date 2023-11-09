@@ -915,3 +915,4 @@ codeOwner:
   approvalCompleted: '{count}/{total} approvals completed'
 approved: Approved
 waitForApproval: Wait for Approval
+comingSoon: Coming soon...

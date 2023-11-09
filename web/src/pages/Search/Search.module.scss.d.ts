@@ -24,6 +24,7 @@ export declare const highlightLineNumber: string
 export declare const layout: string
 export declare const main: string
 export declare const noResult: string
+export declare const noResultContainer: string
 export declare const pageHeader: string
 export declare const path: string
 export declare const pathText: string

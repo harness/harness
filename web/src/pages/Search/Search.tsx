@@ -170,7 +170,7 @@ export default function Search() {
   }, [fileContent])
 
   useShowRequestError(resourceError)
-
+  const hideContent = false
   return (
     <Container className={css.main}>
       <RepositoryPageHeader
@@ -178,21 +178,23 @@ export default function Search() {
         title={getString('search')}
         dataTooltipId="semanticSearch"
         content={
-          <Container className={css.searchBox}>
-            <SearchInputWithSpinner
-              spinnerPosition="right"
-              query={searchTerm}
-              setQuery={setSearchTerm}
-              onSearch={performSearch}
-            />
-            <Button
-              variation={ButtonVariation.PRIMARY}
-              text={getString('search')}
-              disabled={!searchTerm.trim()}
-              onClick={performSearch}
-              loading={loadingSearch}
-            />
-          </Container>
+          hideContent ? (
+            <Container className={css.searchBox}>
+              <SearchInputWithSpinner
+                spinnerPosition="right"
+                query={searchTerm}
+                setQuery={setSearchTerm}
+                onSearch={performSearch}
+              />
+              <Button
+                variation={ButtonVariation.PRIMARY}
+                text={getString('search')}
+                disabled={!searchTerm.trim()}
+                onClick={performSearch}
+                loading={loadingSearch}
+              />
+            </Container>
+          ) : null
         }
         className={css.pageHeader}
       />
@@ -265,12 +267,14 @@ export default function Search() {
             </Split>
           </Truthy>
           <Falsy>
-            <NoResultCard
-              showWhen={() => true}
-              forSearch={true}
-              title={getString('startSearching')}
-              emptySearchMessage={getString('poweredByAI')}
-            />
+            <Container className={css.noResultContainer}>
+              <NoResultCard
+                showWhen={() => true}
+                forSearch={true}
+                title={getString('comingSoon')}
+                emptySearchMessage={getString('poweredByAI')}
+              />
+            </Container>
           </Falsy>
         </Match>
       </PageBody>
