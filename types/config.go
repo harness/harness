@@ -283,7 +283,7 @@ type Config struct {
 	}
 
 	CodeOwners struct {
-		FilePath string `envconfig:"GITNESS_CODEOWNERS_FILEPATH" default:".harness/CODEOWNERS"`
+		FilePaths []string `envconfig:"GITNESS_CODEOWNERS_FILEPATH" default:"CODEOWNERS,.harness/CODEOWNERS"`
 	}
 
 	SMTP struct {
