@@ -26,6 +26,7 @@ export declare const generalContainer: string
 export declare const greyButton: string
 export declare const greyContainer: string
 export declare const headingSize: string
+export declare const hintText: string
 export declare const label: string
 export declare const main: string
 export declare const menuItem: string

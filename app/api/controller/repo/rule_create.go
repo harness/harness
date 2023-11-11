@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -38,8 +39,8 @@ type RuleCreateInput struct {
 
 // sanitize validates and sanitizes the create rule input data.
 func (in *RuleCreateInput) sanitize() error {
-	if in.UID == "" {
-		return usererror.BadRequest("rule uid is missing")
+	if err := check.UID(in.UID); err != nil {
+		return err
 	}
 
 	if err := in.Pattern.Validate(); err != nil {

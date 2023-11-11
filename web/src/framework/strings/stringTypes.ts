@@ -53,8 +53,6 @@ export interface StringsMap {
   'branchProtection.blockBranchCreationText': string
   'branchProtection.blockBranchDeletion': string
   'branchProtection.blockBranchDeletionText': string
-  'branchProtection.blockMergeWithoutPr': string
-  'branchProtection.blockMergeWithoutPrText': string
   'branchProtection.bypassList': string
   'branchProtection.create': string
   'branchProtection.createRule': string
@@ -88,6 +86,8 @@ export interface StringsMap {
   'branchProtection.reqStatusChecksTitle': string
   'branchProtection.requireMinReviewersContent': string
   'branchProtection.requireMinReviewersTitle': string
+  'branchProtection.requirePr': string
+  'branchProtection.requirePrText': string
   'branchProtection.ruleCreated': string
   'branchProtection.ruleDeleted': string
   'branchProtection.ruleEmpty': string
@@ -95,6 +95,7 @@ export interface StringsMap {
   'branchProtection.saveRule': string
   'branchProtection.statusCheck': string
   'branchProtection.targetBranches': string
+  'branchProtection.targetPatternHint': string
   'branchProtection.targetPlaceholder': string
   'branchProtection.title': string
   branchProtectionRules: string

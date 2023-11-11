@@ -189,7 +189,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     'pullreq.merge.delete_branch': getString('branchProtection.autoDeleteTitle'),
     'lifecycle.create_forbidden': getString('branchProtection.blockBranchCreation'),
     'lifecycle.delete_forbidden': getString('branchProtection.blockBranchDeletion'),
-    'lifecycle.update_forbidden': getString('branchProtection.blockMergeWithoutPr')
+    'lifecycle.update_forbidden': getString('branchProtection.requirePr')
   }
 
   const [mergeOption, setMergeOption, resetMergeOption] = useUserPreference<PRMergeOption>(

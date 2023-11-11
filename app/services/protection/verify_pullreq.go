@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/types"
@@ -138,9 +139,9 @@ func (v *DefPullReq) MergeVerify(
 
 	// pullreq.status_checks
 
+	var violatingStatusCheckUIDs []string
 	for _, requiredUID := range v.StatusChecks.RequireUIDs {
 		var succeeded bool
-
 		for i := range in.CheckResults {
 			if in.CheckResults[i].UID == requiredUID {
 				succeeded = in.CheckResults[i].Status == enum.CheckStatusSuccess
@@ -149,9 +150,16 @@ func (v *DefPullReq) MergeVerify(
 		}
 
 		if !succeeded {
-			violations.Add(codePullReqStatusChecksReqUIDs,
-				"At least one required status check hasn't completed successfully.")
+			violatingStatusCheckUIDs = append(violatingStatusCheckUIDs, requiredUID)
 		}
+	}
+
+	if len(violatingStatusCheckUIDs) > 0 {
+		violations.Addf(
+			codePullReqStatusChecksReqUIDs,
+			"The following status checks are required to complete successfully: %s",
+			strings.Join(violatingStatusCheckUIDs, ", "),
+		)
 	}
 
 	// pullreq.merge

@@ -259,7 +259,20 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				Method: enum.MergeMethodMerge,
 			},
 			expCodes:  []string{codePullReqStatusChecksReqUIDs},
-			expParams: [][]any{nil},
+			expParams: [][]any{{"check1"}},
+			expOut:    MergeVerifyOutput{},
+		},
+		{
+			name: codePullReqStatusChecksReqUIDs + "-missing",
+			def:  DefPullReq{StatusChecks: DefStatusChecks{RequireUIDs: []string{"check1"}}},
+			in: MergeVerifyInput{
+				CheckResults: []types.CheckResult{
+					{UID: "check2", Status: enum.CheckStatusSuccess},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqStatusChecksReqUIDs},
+			expParams: [][]any{{"check1"}},
 			expOut:    MergeVerifyOutput{},
 		},
 		{

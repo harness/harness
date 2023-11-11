@@ -181,7 +181,7 @@ const BranchProtectionForm = (props: {
         autoDelete: (rule.definition as ProtectionBranch)?.pullreq?.merge?.delete_branch,
         blockBranchCreation: (rule.definition as ProtectionBranch)?.lifecycle?.create_forbidden,
         blockBranchDeletion: (rule.definition as ProtectionBranch)?.lifecycle?.delete_forbidden,
-        blockMergeWithoutPr: (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden
+        requirePr: (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden
       }
     }
 
@@ -239,7 +239,7 @@ const BranchProtectionForm = (props: {
             lifecycle: {
               create_forbidden: formData.blockBranchCreation,
               delete_forbidden: formData.blockBranchDeletion,
-              update_forbidden: formData.blockMergeWithoutPr
+              update_forbidden: formData.requirePr
             }
           }
         }
@@ -288,6 +288,7 @@ const BranchProtectionForm = (props: {
                   tooltipProps={{
                     dataTooltipId: 'branchProtectionName'
                   }}
+                  disabled={editMode}
                   className={cx(css.widthContainer, css.label)}
                 />
                 <FormInput.Text
@@ -371,6 +372,9 @@ const BranchProtectionForm = (props: {
                     </SplitButton>
                   </Container>
                 </Layout.Horizontal>
+                <Text className={css.hintText} margin={{ bottom: 'medium' }}>
+                  {getString('branchProtection.targetPatternHint')}
+                </Text>
                 <Layout.Horizontal spacing={'small'} className={css.targetBox}>
                   {targetList.map((target, idx) => {
                     return (

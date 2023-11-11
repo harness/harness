@@ -151,7 +151,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
             'pullreq.merge.delete_branch': getString('branchProtection.autoDeleteTitle'),
             'lifecycle.create_forbidden': getString('branchProtection.blockBranchCreation'),
             'lifecycle.delete_forbidden': getString('branchProtection.blockBranchDeletion'),
-            'lifecycle.update_forbidden': getString('branchProtection.blockMergeWithoutPr')
+            'lifecycle.update_forbidden': getString('branchProtection.requirePr')
           }
 
           type NonEmptyRule = {

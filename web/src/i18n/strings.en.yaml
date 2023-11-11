@@ -864,6 +864,7 @@ branchProtection:
   create: Create Rule
   targetBranches: Target Patterns
   targetPlaceholder: Enter the target patterns
+  targetPatternHint: Match branches using globstar patterns (e.g. "golden", "feature-*", "releases/**")
   defaultBranch: Default branch
   bypassList: Bypass List
   newRule: New branch rule
@@ -902,8 +903,8 @@ branchProtection:
   ruleUpdated: Rule Updated
   enableTheRule: Enable the Rule
   ruleCreated: Rule Created
-  blockMergeWithoutPr: Block merge without pull request
-  blockMergeWithoutPrText: Do not allow directly merging to the branch without a pull request
+  requirePr: Require pull request
+  requirePrText: Do not allow any changes to matching branches without a pull request
   prFailedText: 'This branch has no conflicts with the base branch. {{ruleCount}} branch rules failed'
   mergePrAlertTitle: Merge pull request alert
   mergePrAlertText: 'Merge cannot be completed. {{ruleCount}} branch rules failed: '
