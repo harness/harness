@@ -760,4 +760,9 @@ type (
 		// Find returns a plugin given a name and a version.
 		Find(ctx context.Context, name, version string) (*types.Plugin, error)
 	}
+
+	UserGroupStore interface {
+		// Find returns a types.UserGroup given a space ID and uid.
+		Find(ctx context.Context, spaceID int64, uid string) (*types.UserGroup, error)
+	}
 )
