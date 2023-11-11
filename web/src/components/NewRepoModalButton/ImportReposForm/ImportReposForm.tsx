@@ -70,8 +70,7 @@ const ImportReposForm = (props: ImportReposProps) => {
   })
 
   const validationSchemaStepTwo = yup.object().shape({
-    organization: yup.string().trim().required(getString('importSpace.orgRequired')),
-    name: yup.string().trim().required(getString('importSpace.spaceNameRequired'))
+    organization: yup.string().trim().required(getString('importSpace.orgRequired'))
   })
 
   return (
@@ -281,26 +280,6 @@ const ImportReposForm = (props: ImportReposProps) => {
                           />
                         </Container>
                       </Layout.Horizontal>
-                    </Container>
-                    <Container>
-                      <hr className={css.dividerContainer} />
-                      <FormInput.Text
-                        name="name"
-                        label={getString('importSpace.spaceName')}
-                        placeholder={getString('enterName')}
-                        tooltipProps={{
-                          dataTooltipId: 'importSpaceName'
-                        }}
-                      />
-                      {formik.errors.name ? (
-                        <Text
-                          margin={{ bottom: 'small' }}
-                          color={Color.RED_500}
-                          icon="circle-cross"
-                          iconProps={{ color: Color.RED_500 }}>
-                          {formik.errors.name}
-                        </Text>
-                      ) : null}
                     </Container>
                   </Container>
                 </>
