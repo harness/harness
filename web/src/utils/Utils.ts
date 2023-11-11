@@ -76,15 +76,13 @@ export interface PageBrowserProps {
   page: string
 }
 
-export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[], fieldsToCheck: FieldCheck) => {
+export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[]) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tempArray: any[] = ruleViolationArr?.flatMap(
-    (item: { violations?: TypesViolation[] | null }) => item?.violations?.map(violation => violation.code) ?? []
+    (item: { violations?: TypesViolation[] | null }) => item?.violations?.map(violation => violation.message) ?? []
   )
   const uniqueViolations = new Set(tempArray)
-  const violationArr = [...uniqueViolations]
-    .filter(violation => violation in fieldsToCheck)
-    .map(violation => ({ violation: fieldsToCheck[violation] }))
+  const violationArr = [...uniqueViolations].map(violation => ({ violation: violation }))
 
   const checkIfBypassAllowed = ruleViolationArr.some(ruleViolation => ruleViolation.bypassed === false)
 

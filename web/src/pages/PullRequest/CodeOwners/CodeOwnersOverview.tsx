@@ -101,7 +101,7 @@ export function CodeOwnersOverview({
   return codeOwners?.evaluation_entries?.length ? (
     <Container
       className={css.main}
-      margin={{ bottom: pullRequestMetadata.description ? undefined : 'large' }}
+      margin={{ top: 'medium', bottom: pullRequestMetadata.description ? undefined : 'large' }}
       style={{ '--border-color': Utils.getRealCSSColor(borderColor) } as React.CSSProperties}>
       <Match expr={isExpanded}>
         <Truthy>
@@ -269,7 +269,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
             return (
               <Text flex className={cx(css.approvalText, css.waitingContainer)} color={Color.ORANGE_700}>
                 <Container className={css.circle}></Container>
-                {getString('waitForApproval')}
+                {getString('pending')}
               </Text>
             )
           }

@@ -27,6 +27,7 @@ const BypassList = (props: {
                   const filteredData = bypassList.filter(item => !(item[0] === owner[0] && item[1] === owner[1]))
                   setFieldValue('bypassList', filteredData)
                 }}
+                className={css.codeClose}
               />
             </Layout.Horizontal>
           )

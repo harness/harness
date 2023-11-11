@@ -368,7 +368,7 @@ webhookPRCommentCreated: PR comment created
 nameYourWebhook: Name your webhook
 submitReview: Submit Review
 approve: Approve
-requestChanges: Request changes
+requestChanges: Changes Requested
 repoEmptyMarkdown: |
   ## This repository is empty
 
@@ -439,8 +439,8 @@ reviewers: Reviewers
 refresh: Refresh
 enableWebhookTitle: Enable the Webhook
 disableWebhookTitle: Disable the Webhook
-enableWebhookContent: Please confirm that you wanted to turn on
-disableWebhookContent: Please confirm that you wanted to turn off
+enableWebhookContent: Please confirm that you wanted to turn on {name}
+disableWebhookContent: Please confirm that you wanted to turn off {name}
 ascending: Ascending
 descending: Descending
 active: Active
@@ -919,5 +919,7 @@ codeOwner:
   waitToApprove: '{count} pending {count|1:approval,approvals} '
   approvalCompleted: '{count}/{total} approvals completed'
 approved: Approved
-waitForApproval: Wait for Approval
 comingSoon: Coming soon...
+enterANumber: Enter a number
+selectUsers: Select Users
+selectStatuses: Select Statuses

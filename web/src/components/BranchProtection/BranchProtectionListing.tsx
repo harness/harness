@@ -26,7 +26,8 @@ import {
   ButtonVariation,
   Toggle,
   useToaster,
-  FlexExpander
+  FlexExpander,
+  StringSubstitute
 } from '@harnessio/uicore'
 import cx from 'classnames'
 
@@ -196,15 +197,19 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                         <Text
                           padding={{ top: 'medium', bottom: 'medium' }}
                           font={{ variation: FontVariation.BODY2_SEMI }}>
-                          {checked ? getString('disableWebhookContent') : getString('enableWebhookContent')}
-                          <strong>{row.original?.uid}</strong>
+                          <StringSubstitute
+                            str={checked ? getString('disableWebhookContent') : getString('enableWebhookContent')}
+                            vars={{
+                              name: <strong>{row.original?.uid}</strong>
+                            }}
+                          />
                         </Text>
                         <Layout.Horizontal>
                           <Button
                             variation={ButtonVariation.PRIMARY}
                             text={getString('confirm')}
                             onClick={() => {
-                              const data = { enabled: !checked }
+                              const data = { state: checked ? 'disabled' : 'active' }
                               mutate(data)
                                 .then(() => {
                                   showSuccess(getString('branchProtection.ruleUpdated'))

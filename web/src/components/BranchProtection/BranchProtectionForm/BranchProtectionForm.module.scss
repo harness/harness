@@ -71,6 +71,16 @@
   width: 100% !important;
 }
 
+.codeClose {
+  cursor: pointer !important;
+  padding: 2px !important;
+  &:hover {
+    background: var(--grey-100) !important;
+    box-shadow: var(--elevation-2) !important;
+    padding: 2px !important;
+  }
+}
+
 .targetContainer {
   :global(.bp3-form-group) {
     margin-bottom: unset !important;

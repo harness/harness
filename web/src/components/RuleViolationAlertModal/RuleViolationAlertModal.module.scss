@@ -1,5 +1,5 @@
 .dialog {
-  max-width: 500px;
+  max-width: 700px;
 }
 
 .warningIcon {
@@ -15,6 +15,6 @@
 .ruleContainer {
   border-radius: 4px !important;
   background: var(--primary-bg) !important;
-  width: 380px !important;
+  width: fit-content !important;
   height: 36px !important;
 }

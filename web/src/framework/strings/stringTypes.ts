@@ -229,6 +229,7 @@ export interface StringsMap {
   enableWebhookContent: string
   enableWebhookTitle: string
   enabled: string
+  enterANumber: string
   enterAddress: string
   enterBitbucketPlaceholder: string
   enterBranchPlaceholder: string
@@ -708,7 +709,9 @@ export interface StringsMap {
   selectRange: string
   selectSpace: string
   selectSpaceText: string
+  selectStatuses: string
   selectToViewMore: string
+  selectUsers: string
   setAsAdmin: string
   setting: string
   settings: string
@@ -822,7 +825,6 @@ export interface StringsMap {
   viewRaw: string
   viewRepo: string
   viewed: string
-  waitForApproval: string
   webhook: string
   webhookAllEventsSelected: string
   webhookBranchCreated: string

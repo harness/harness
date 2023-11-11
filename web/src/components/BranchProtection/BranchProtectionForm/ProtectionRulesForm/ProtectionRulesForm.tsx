@@ -83,6 +83,11 @@ const ProtectionRulesForm = (props: {
         className={css.checkboxLabel}
         label={getString('branchProtection.requireMinReviewersTitle')}
         name={'requireMinReviewers'}
+        onChange={e => {
+          if ((e.target as HTMLInputElement).checked) {
+            setFieldValue('minReviewers', 1)
+          }
+        }}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
         {getString('branchProtection.requireMinReviewersContent')}
@@ -141,6 +146,8 @@ const ProtectionRulesForm = (props: {
           <FormInput.Select
             onQueryChange={setSearchStatusTerm}
             items={filteredStatusOptions}
+            value={{ label: '', value: '' }}
+            placeholder={getString('selectStatuses')}
             onChange={item => {
               statusChecks?.push(item.value as string)
               const uniqueArr = Array.from(new Set(statusChecks))
@@ -162,6 +169,7 @@ const ProtectionRulesForm = (props: {
                   </Text>
                   <FlexExpander />
                   <Icon
+                    className={css.codeClose}
                     name="code-close"
                     onClick={() => {
                       const filteredData = statusChecks.filter(item => !(item === status))

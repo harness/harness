@@ -48,7 +48,6 @@ import { useAppContext } from 'AppContext'
 import { Images } from 'images'
 import {
   extractInfoFromRuleViolationArr,
-  FieldCheck,
   getErrorMessage,
   MergeCheckStatus,
   permissionProps,
@@ -62,7 +61,7 @@ import ReviewSplitButton from 'components/Changes/ReviewSplitButton/ReviewSplitB
 import RuleViolationAlertModal from 'components/RuleViolationAlertModal/RuleViolationAlertModal'
 import css from './PullRequestActionsBox.module.scss'
 
-const POLLING_INTERVAL = 20000
+const POLLING_INTERVAL = 60000
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
   pullRequestMetadata,
@@ -100,11 +99,11 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     () => pullRequestMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
     [pullRequestMetadata, isClosed]
   )
+
   useEffect(() => {
     if (ruleViolationArr && !isDraft && ruleViolationArr.data.rule_violations) {
       const { checkIfBypassAllowed, violationArr, uniqueViolations } = extractInfoFromRuleViolationArr(
-        ruleViolationArr.data.rule_violations,
-        fieldsToCheck
+        ruleViolationArr.data.rule_violations
       )
       setNotBypassable(checkIfBypassAllowed)
       setFinalRulesArr(violationArr)
@@ -112,25 +111,35 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleViolationArr])
-  useEffect(() => {
-    const dryMerge = () => {
-      if (!isClosed) {
-        mergePR({ bypass_rules: true, dry_run: true, method: 'merge', source_sha: pullRequestMetadata?.source_sha })
-          .then(res => {
-            if (res?.rule_violations?.length > 0) {
-              setRuleViolation(true)
-              setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
-            } else {
-              setRuleViolation(false)
-            }
-          })
-          .catch(err => {
+  const dryMerge = () => {
+    if (!isClosed && pullRequestMetadata.state !== PullRequestState.MERGED) {
+      mergePR({ bypass_rules: true, dry_run: true, source_sha: pullRequestMetadata?.source_sha })
+        .then(res => {
+          if (res?.rule_violations?.length > 0) {
+            setRuleViolation(true)
+            setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
+            setAllowedStrats(res.allowed_methods)
+          } else {
+            setRuleViolation(false)
+            setAllowedStrats(res.allowed_methods)
+          }
+        })
+        .catch(err => {
+          if (err.status === 422) {
             setRuleViolation(true)
             setRuleViolationArr(err)
-          })
-      }
+            setAllowedStrats(err.allowed_methods)
+          } else {
+            showError(getErrorMessage(err))
+          }
+        })
     }
-    dryMerge()
+  }
+  useEffect(() => {
+    dryMerge() // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useEffect(() => {
+    // dryMerge()
     const intervalId = setInterval(async () => {
       dryMerge()
     }, POLLING_INTERVAL) // Poll every 20 seconds
@@ -165,6 +174,12 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       desc: getString('pr.mergeOptions.closeDesc')
     }
   ]
+  const [allowedStrats, setAllowedStrats] = useState<string[]>([
+    mergeOptions[0].method,
+    mergeOptions[1].method,
+    mergeOptions[2].method,
+    mergeOptions[3].method
+  ])
   const draftOptions: PRDraftOption[] = [
     {
       method: 'open',
@@ -178,25 +193,21 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     }
   ]
 
-  const fieldsToCheck: FieldCheck = {
-    'pullreq.approvals.require_minimum_count': getString('branchProtection.requireMinReviewersTitle'),
-    'pullreq.approvals.require_code_owners': getString('branchProtection.reqReviewFromCodeOwnerTitle'),
-    'pullreq.approvals.require_latest_commit': getString('branchProtection.reqNewChangesTitle'),
-    'pullreq.comments.require_resolve_all': getString('branchProtection.reqCommentResolutionTitle'),
-    'pullreq.status_checks.all_must_succeed': getString('branchProtection.reqStatusChecksTitle'),
-    'pullreq.status_checks.require_uids': getString('branchProtection.reqStatusChecksTitle'),
-    'pullreq.merge.strategies_allowed': getString('branchProtection.limitMergeStrategies'),
-    'pullreq.merge.delete_branch': getString('branchProtection.autoDeleteTitle'),
-    'lifecycle.create_forbidden': getString('branchProtection.blockBranchCreation'),
-    'lifecycle.delete_forbidden': getString('branchProtection.blockBranchDeletion'),
-    'lifecycle.update_forbidden': getString('branchProtection.requirePr')
-  }
-
   const [mergeOption, setMergeOption, resetMergeOption] = useUserPreference<PRMergeOption>(
     UserPreference.PULL_REQUEST_MERGE_STRATEGY,
     mergeOptions[0],
     option => option.method !== 'close'
   )
+  useEffect(() => {
+    if (allowedStrats) {
+      const matchingMethods = mergeOptions.filter(option => allowedStrats.includes(option.method))
+      if (matchingMethods.length > 0) {
+        setMergeOption(matchingMethods[0])
+      }
+    } else {
+      setMergeOption(mergeOptions[3])
+    } // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allowedStrats])
   const [draftOption, setDraftOption] = useState<PRDraftOption>(draftOptions[0])
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
@@ -216,7 +227,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
   }
-
   return (
     <Container
       className={cx(css.main, {
@@ -276,7 +286,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                   : ruleViolation
                   ? 'branchProtection.prFailedText'
                   : 'pr.branchHasNoConflicts',
-                ruleViolation ? { ruleCount: length } : {}
+                ruleViolation ? { ruleCount: length } : { ruleCount: 0 }
               )}
               {ruleViolation && mergeable && !isDraft ? (
                 <Button
@@ -439,11 +449,12 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                               }
                             }}>
                             {mergeOptions.map(option => {
+                              const mergeCheck = allowedStrats !== undefined && allowedStrats.includes(option.method)
                               return (
                                 <Menu.Item
                                   key={option.method}
                                   className={css.menuItem}
-                                  disabled={option.disabled}
+                                  disabled={option.method !== 'close' ? !mergeCheck : option.disabled}
                                   text={
                                     <>
                                       <BIcon icon={mergeOption.method === option.method ? 'tick' : 'blank'} />

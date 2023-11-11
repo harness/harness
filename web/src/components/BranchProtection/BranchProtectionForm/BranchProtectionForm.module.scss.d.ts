@@ -21,6 +21,7 @@ export declare const bypassContainer: string
 export declare const checkboxLabel: string
 export declare const checkboxText: string
 export declare const checkContainer: string
+export declare const codeClose: string
 export declare const dividerContainer: string
 export declare const generalContainer: string
 export declare const greyButton: string
