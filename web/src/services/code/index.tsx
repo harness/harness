@@ -585,6 +585,11 @@ export interface SpaceExportProgressOutput {
   repos?: TypesJobProgress[] | null
 }
 
+export interface SpaceImportRepositoriesOutput {
+  duplicate_repos?: TypesRepository[] | null
+  importing_repos?: TypesRepository[] | null
+}
+
 export interface SystemConfigOutput {
   user_signup_allowed?: boolean
 }

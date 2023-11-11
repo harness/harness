@@ -106,7 +106,7 @@ repos:
   activities: Monthly Activities
   updated: Updated Date
   lastChange: Last Change
-  noDataMessage: There are no repositories in this project.  Create a new repository, or import an existing Git repository by clicking below
+  noDataMessage: There are no repositories in this project.  Create a new repository, or import an existing Git repository by clicking below.
   enterBranchName: Enter a branch name
 createRepoModal:
   branchLabel: 'Your repository will be initialized with a '
@@ -748,6 +748,7 @@ pluginsPanel:
     ifNotExists: If not exists
 createNewRepo: Create New repository
 importGitRepo: Import Repository
+importGitRepos: Import Repositories
 importRepo:
   title: Import Repository
   url: Host URL
@@ -774,6 +775,9 @@ importRepo:
   spaceNameReq: Enter a name for the new project
   usernameReq: Username is required
   passwordReq: Password is required
+importRepos:
+  title: Import Repositories
+  content: Import multiple repositories from GitLab Group, GitHub Org or Bitbucket Project to this project in Gitness.
 importSpace:
   title: Import Project
   createASpace: Create a project

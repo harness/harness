@@ -59,15 +59,17 @@ import {
 import {
   GitProviders,
   ImportFormData,
+  ImportSpaceFormData,
   RepoCreationType,
   RepoFormData,
   RepoVisibility,
   isGitBranchNameValid,
   getProviderTypeMapping
 } from 'utils/GitUtils'
-import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/code'
+import type { TypesSpace, TypesRepository, OpenapiCreateRepositoryRequest } from 'services/code'
 import { useAppContext } from 'AppContext'
 import ImportForm from './ImportForm/ImportForm'
+import ImportReposForm from './ImportReposForm/ImportReposForm'
 import Private from '../../icons/private.svg'
 import css from './NewRepoModalButton.module.scss'
 
@@ -120,6 +122,10 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
             space_path: space
           }
     })
+    const { mutate: importMultipleRepositories, loading: submitImportLoading } = useMutate<TypesSpace>({
+      verb: 'POST',
+      path: `/api/v1/spaces/${space}/+/import`
+    })
     const {
       data: gitignores,
       loading: gitIgnoreLoading,
@@ -130,7 +136,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       loading: licenseLoading,
       error: licenseError
     } = useGet({ path: '/api/v1/resources/license' })
-    const loading = submitLoading || gitIgnoreLoading || licenseLoading || importRepoLoading
+    const loading = submitLoading || gitIgnoreLoading || licenseLoading || importRepoLoading || submitImportLoading
 
     useEffect(() => {
       if (gitIgnoreError || licenseError) {
@@ -192,6 +198,36 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           showError(getErrorMessage(_error), 0, getString('importRepo.failedToImportRepo'))
         })
     }
+
+    const handleMultiRepoImportSubmit = async (formData: ImportSpaceFormData) => {
+      const type = getProviderTypeMapping(formData.gitProvider)
+
+      const provider = {
+        type,
+        username: formData.username,
+        password: formData.password,
+        host: ''
+      }
+
+      if (![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(formData.gitProvider)) {
+        provider.host = formData.host
+      }
+
+      try {
+        const importPayload = {
+          description: (formData.description || '').trim(),
+          parent_ref: space,
+          uid: formData.name.trim(),
+          provider,
+          provider_space: formData.organization
+        }
+        const response = await importMultipleRepositories(importPayload)
+        hideModal()
+        onSubmit(response)
+      } catch (exception) {
+        showError(getErrorMessage(exception), 0, getString('failedToImportSpace'))
+      }
+    }
     return (
       <Dialog
         isOpen
@@ -204,12 +240,23 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           style={{ height: '100%' }}
           data-testid="add-target-to-flag-modal">
           <Heading level={3} font={{ variation: FontVariation.H3 }} margin={{ bottom: 'xlarge' }}>
-            {repoOption.type === RepoCreationType.IMPORT ? getString('importRepo.title') : modalTitle}
+            {repoOption.type === RepoCreationType.IMPORT
+              ? getString('importRepo.title')
+              : repoOption.type === RepoCreationType.IMPORT_MULTIPLE
+              ? getString('importRepos.title')
+              : modalTitle}
           </Heading>
 
           <Container margin={{ right: 'xxlarge' }}>
             {repoOption.type === RepoCreationType.IMPORT ? (
               <ImportForm hideModal={hideModal} handleSubmit={handleImportSubmit} loading={false} />
+            ) : repoOption.type === RepoCreationType.IMPORT_MULTIPLE ? (
+              <ImportReposForm
+                hideModal={hideModal}
+                handleSubmit={handleMultiRepoImportSubmit}
+                loading={false}
+                spaceRef={space}
+              />
             ) : (
               <Formik
                 initialValues={formInitialValues}
@@ -361,6 +408,11 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       type: RepoCreationType.IMPORT,
       title: getString('importGitRepo'),
       desc: getString('importGitRepo')
+    },
+    {
+      type: RepoCreationType.IMPORT_MULTIPLE,
+      title: getString('importGitRepos'),
+      desc: getString('importGitRepos')
     }
   ]
   const [repoOption, setRepoOption] = useState<RepoCreationOption>(repoCreateOptions[0])
@@ -399,14 +451,14 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         setRepoOption(repoCreateOptions[0])
         setTimeout(() => openModal(), 0)
       }}>
-      {[repoCreateOptions[1]].map(option => {
+      {[repoCreateOptions[1], repoCreateOptions[2]].map(option => {
         return (
           <Menu.Item
             className={css.menuItem}
             key={option.type}
             text={<Text font={{ variation: FontVariation.BODY2 }}>{option.desc}</Text>}
             onClick={() => {
-              setRepoOption(repoCreateOptions[1])
+              setRepoOption(option)
               setTimeout(() => openModal(), 0)
             }}
           />

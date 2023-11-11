@@ -321,6 +321,7 @@ export interface StringsMap {
   'imageUpload.title': string
   'imageUpload.upload': string
   importGitRepo: string
+  importGitRepos: string
   importProgress: string
   'importRepo.appPassword': string
   'importRepo.appPasswordPlaceholder': string
@@ -347,6 +348,8 @@ export interface StringsMap {
   'importRepo.validation': string
   'importRepo.workspace': string
   'importRepo.workspacePlaceholder': string
+  'importRepos.content': string
+  'importRepos.title': string
   'importSpace.authorization': string
   'importSpace.content': string
   'importSpace.createASpace': string

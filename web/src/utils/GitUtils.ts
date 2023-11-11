@@ -88,7 +88,8 @@ export enum RepoVisibility {
 
 export enum RepoCreationType {
   IMPORT = 'import',
-  CREATE = 'create'
+  CREATE = 'create',
+  IMPORT_MULTIPLE = 'import_multiple'
 }
 
 export enum SpaceCreationType {

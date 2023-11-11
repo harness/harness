@@ -35,7 +35,7 @@ import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
-import type { TypesRepository } from 'services/code'
+import type { TypesRepository, SpaceImportRepositoriesOutput } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
@@ -176,8 +176,14 @@ export default function RepositoriesListing() {
       onSubmit={repoInfo => {
         if (repoInfo.importing) {
           refetch()
+        } else if (repoInfo) {
+          const multipleImportRepoInfo = repoInfo as SpaceImportRepositoriesOutput
+          if (multipleImportRepoInfo.importing_repos) {
+            history.push(routes.toCODERepositories({ space: space as string }))
+            refetch()
+          }
         } else {
-          history.push(routes.toCODERepository({ repoPath: repoInfo.path as string }))
+          history.push(routes.toCODERepository({ repoPath: (repoInfo as TypesRepository).path as string }))
         }
       }}
     />

@@ -7887,6 +7887,19 @@ components:
           nullable: true
           type: array
       type: object
+    SpaceImportRepositoriesOutput:
+      properties:
+        duplicate_repos:
+          items:
+            $ref: '#/components/schemas/TypesRepository'
+          nullable: true
+          type: array
+        importing_repos:
+          items:
+            $ref: '#/components/schemas/TypesRepository'
+          nullable: true
+          type: array
+      type: object
     SystemConfigOutput:
       properties:
         user_signup_allowed:
