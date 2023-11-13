@@ -240,6 +240,7 @@ export default function PullRequest() {
                     ),
                     panel: (
                       <Conversation
+                        standalone={standalone}
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}
                         prChecksDecisionResult={prChecksDecisionResult}

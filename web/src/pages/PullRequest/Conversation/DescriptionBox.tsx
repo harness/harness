@@ -36,7 +36,8 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
   repoMetadata,
   pullRequestMetadata,
   onCommentUpdate: refreshPullRequestMetadata,
-  onCancelEditDescription
+  onCancelEditDescription,
+  standalone
 }) => {
   const [edit, setEdit] = useState(false)
   const [dirty, setDirty] = useState(false)
@@ -63,6 +64,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
       <Container padding={!edit ? { left: 'small', bottom: 'small' } : undefined}>
         {(edit && (
           <MarkdownEditorWithPreview
+            standalone={standalone}
             repoMetadata={repoMetadata}
             value={content}
             onSave={value => {

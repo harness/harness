@@ -228,6 +228,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       ReactDOM.render(
         <AppWrapper>
           <CommentBox
+            standalone={standalone}
             repoMetadata={repoMetadata}
             commentItems={comment.commentItems}
             eventStream={comment.eventStream}

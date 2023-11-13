@@ -50,6 +50,7 @@ export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | '
   showEditDescription?: boolean
   onCancelEditDescription: () => void
   prChecksDecisionResult?: PRChecksDecisionResult
+  standalone: boolean
 }
 
 export const Conversation: React.FC<ConversationProps> = ({
@@ -59,7 +60,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   prStats,
   showEditDescription,
   onCancelEditDescription,
-  prChecksDecisionResult
+  prChecksDecisionResult,
+  standalone
 }) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
@@ -185,6 +187,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   const newCommentBox = useMemo(() => {
     return (
       <CommentBox
+        standalone={standalone}
         repoMetadata={repoMetadata}
         fluid
         boxClassName={css.commentBox}
@@ -251,6 +254,7 @@ export const Conversation: React.FC<ConversationProps> = ({
             }
             title={
               <CommentBox
+                standalone={standalone}
                 repoMetadata={repoMetadata}
                 key={threadId}
                 fluid
@@ -388,6 +392,7 @@ export const Conversation: React.FC<ConversationProps> = ({
 
                   {(hasDescription || showEditDescription) && (
                     <DescriptionBox
+                      standalone={standalone}
                       repoMetadata={repoMetadata}
                       pullRequestMetadata={pullRequestMetadata}
                       onCommentUpdate={onCommentUpdate}

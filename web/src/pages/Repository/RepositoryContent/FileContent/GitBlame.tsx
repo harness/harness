@@ -52,11 +52,9 @@ type BlameBlockRecord = Record<number, BlameBlock>
 
 const INITIAL_TOP_POSITION = -1
 
-export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePath' | 'gitRef'>> = ({
-  repoMetadata,
-  resourcePath,
-  gitRef
-}) => {
+export const GitBlame: React.FC<
+  Pick<GitInfoProps & { standalone: boolean }, 'repoMetadata' | 'resourcePath' | 'gitRef' | 'standalone'>
+> = ({ repoMetadata, resourcePath, gitRef, standalone }) => {
   const { getString } = useStrings()
   const [blameBlocks, setBlameBlocks] = useState<BlameBlockRecord>({})
   const path = useMemo(
@@ -191,6 +189,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
 
         <Render when={Object.values(blameBlocks).length}>
           <GitBlameRenderer
+            standalone={standalone}
             repoMetadata={repoMetadata}
             source={data?.map(({ lines }) => (lines as string[]).join('\n')).join('\n') || ''}
             filename={resourcePath}
@@ -225,6 +224,7 @@ interface GitBlameRendererProps {
   onViewUpdate?: (update: ViewUpdate) => void
   blameBlocks: BlameBlockRecord
   repoMetadata: TypesRepository | undefined
+  standalone: boolean
 }
 
 interface EditorLinePaddingWidgetSpec extends LineWidgetSpec {
@@ -236,7 +236,8 @@ const GitBlameRenderer = React.memo(function GitBlameSourceViewer({
   filename,
   onViewUpdate = noop,
   blameBlocks,
-  repoMetadata
+  repoMetadata,
+  standalone
 }: GitBlameRendererProps) {
   const extensions = useMemo(() => new Compartment(), [])
   const viewRef = useRef<EditorView>()
@@ -279,6 +280,7 @@ const GitBlameRenderer = React.memo(function GitBlameSourceViewer({
 
   return (
     <Editor
+      standalone={standalone}
       inGitBlame={true}
       repoMetadata={repoMetadata}
       viewRef={viewRef}

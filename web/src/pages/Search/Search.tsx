@@ -71,7 +71,7 @@ export default function Search() {
   }, [highlightlLineNumbersExtension])
   const viewRef = useRef<EditorView>()
   const { getString } = useStrings()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const { q } = useQueryParams<{ q: string }>()
   const [searchTerm, setSearchTerm] = useState(q || '')
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
@@ -204,7 +204,12 @@ export default function Search() {
         <Match expr={q}>
           <Truthy>
             <Split split="vertical" className={css.split} size={450} minSize={300} maxSize={700} primary="first">
-              <SearchResults repoMetadata={repoMetadata} onSelect={onSelectResult} data={searchResult} />
+              <SearchResults
+                standalone={standalone}
+                repoMetadata={repoMetadata}
+                onSelect={onSelectResult}
+                data={searchResult}
+              />
 
               <Layout.Vertical className={cx(css.preview, { [css.noResult]: !searchResult?.length })}>
                 <Container className={css.filePath}>
@@ -253,6 +258,7 @@ export default function Search() {
                 </Container>
                 <Container className={css.fileContent}>
                   <Editor
+                    standalone={standalone}
                     repoMetadata={repoMetadata}
                     viewRef={viewRef}
                     filename={filename}
@@ -286,9 +292,10 @@ interface SearchResultsProps {
   data: SearchResultType[]
   onSelect: (fileName: string, filePath: string, content: string, highlightedLines: number[]) => void
   repoMetadata: TypesRepository | undefined
+  standalone: boolean
 }
 
-const SearchResults: React.FC<SearchResultsProps> = ({ data, onSelect, repoMetadata }) => {
+const SearchResults: React.FC<SearchResultsProps> = ({ data, onSelect, repoMetadata, standalone }) => {
   const { getString } = useStrings()
   const [selected, setSelected] = useState(data?.[0]?.file_path || '')
   const count = useMemo(() => data?.length || 0, [data])
@@ -344,6 +351,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ data, onSelect, repoMetad
                 </Layout.Horizontal>
               </Container>
               <Editor
+                standalone={standalone}
                 repoMetadata={repoMetadata}
                 filename={item.file_name}
                 content={(item.lines || []).join('\n').replace(/^\n/g, '').trim()}

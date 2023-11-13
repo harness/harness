@@ -95,6 +95,7 @@ interface MarkdownEditorWithPreviewProps {
   // and cursor is set to the end of the document
   autoFocusAndPosition?: boolean
   repoMetadata: TypesRepository | undefined
+  standalone: boolean
 }
 
 export function MarkdownEditorWithPreview({
@@ -112,7 +113,8 @@ export function MarkdownEditorWithPreview({
   viewRef: viewRefProp,
   autoFocusAndPosition,
   secondarySaveButton: SecondarySaveButton,
-  repoMetadata
+  repoMetadata,
+  standalone
 }: MarkdownEditorWithPreviewProps) {
   const { getString } = useStrings()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -364,7 +366,7 @@ export function MarkdownEditorWithPreview({
               variation={ButtonVariation.PRIMARY}
               disabled={false}
               onClick={() => {
-                handleUpload(file as File, setMarkdownContent, repoMetadata, showError)
+                handleUpload(file as File, setMarkdownContent, repoMetadata, showError, standalone)
                 setOpen(false)
                 setFile(undefined)
               }}
@@ -418,6 +420,7 @@ export function MarkdownEditorWithPreview({
       </Container>
       <Container className={css.tabContent}>
         <Editor
+          standalone={standalone}
           repoMetadata={repoMetadata}
           forMarkdown
           content={value || ''}
