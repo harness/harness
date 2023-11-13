@@ -21,6 +21,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -63,6 +64,12 @@ func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, re
 		return fmt.Errorf("failed to delete repo from db: %w", err)
 	}
 
+	c.eventReporter.Deleted(
+		ctx,
+		&repoevents.DeletedPayload{
+			RepoID: repo.ID,
+		},
+	)
 	return nil
 }
 

@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/protection"
@@ -51,6 +52,7 @@ type Controller struct {
 	gitRPCClient      gitrpc.Interface
 	importer          *importer.Repository
 	codeOwners        *codeowners.Service
+	eventReporter     *repoevents.Reporter
 }
 
 func NewController(
@@ -68,6 +70,7 @@ func NewController(
 	gitRPCClient gitrpc.Interface,
 	importer *importer.Repository,
 	codeOwners *codeowners.Service,
+	eventReporter *repoevents.Reporter,
 ) *Controller {
 	return &Controller{
 		defaultBranch:     defaultBranch,
@@ -84,6 +87,7 @@ func NewController(
 		gitRPCClient:      gitRPCClient,
 		importer:          importer,
 		codeOwners:        codeOwners,
+		eventReporter:     eventReporter,
 	}
 }
 

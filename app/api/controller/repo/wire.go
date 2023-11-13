@@ -16,6 +16,7 @@ package repo
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/protection"
@@ -34,15 +35,26 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
-	uidCheck check.PathUID, authorizer authz.Authorizer, repoStore store.RepoStore,
-	spaceStore store.SpaceStore, pipelineStore store.PipelineStore,
-	principalStore store.PrincipalStore, ruleStore store.RuleStore, protectionManager *protection.Manager,
-	rpcClient gitrpc.Interface, importer *importer.Repository, codeOwners *codeowners.Service,
+func ProvideController(
+	config *types.Config,
+	tx dbtx.Transactor,
+	urlProvider url.Provider,
+	uidCheck check.PathUID,
+	authorizer authz.Authorizer,
+	repoStore store.RepoStore,
+	spaceStore store.SpaceStore,
+	pipelineStore store.PipelineStore,
+	principalStore store.PrincipalStore,
+	ruleStore store.RuleStore,
+	protectionManager *protection.Manager,
+	rpcClient gitrpc.Interface,
+	importer *importer.Repository,
+	codeOwners *codeowners.Service,
+	reporeporter *repoevents.Reporter,
 ) *Controller {
 	return NewController(config.Git.DefaultBranch, tx, urlProvider,
 		uidCheck, authorizer, repoStore,
 		spaceStore, pipelineStore,
 		principalStore, ruleStore, protectionManager,
-		rpcClient, importer, codeOwners)
+		rpcClient, importer, codeOwners, reporeporter)
 }

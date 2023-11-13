@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/app/bootstrap"
 	gitevents "github.com/harness/gitness/app/events/git"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/file"
@@ -110,6 +111,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		authz.WireSet,
 		gitevents.WireSet,
 		pullreqevents.WireSet,
+		repoevents.WireSet,
 		cliserver.ProvideGitRPCServerConfig,
 		gitrpcserver.WireSet,
 		cliserver.ProvideGitRPCClientConfig,
