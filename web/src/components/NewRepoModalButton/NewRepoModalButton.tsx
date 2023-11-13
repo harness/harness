@@ -66,7 +66,12 @@ import {
   isGitBranchNameValid,
   getProviderTypeMapping
 } from 'utils/GitUtils'
-import type { TypesSpace, TypesRepository, OpenapiCreateRepositoryRequest } from 'services/code'
+import type {
+  TypesSpace,
+  TypesRepository,
+  SpaceImportRepositoriesOutput,
+  OpenapiCreateRepositoryRequest
+} from 'services/code'
 import { useAppContext } from 'AppContext'
 import ImportForm from './ImportForm/ImportForm'
 import ImportReposForm from './ImportReposForm/ImportReposForm'
@@ -88,7 +93,7 @@ export interface NewRepoModalButtonProps extends Omit<ButtonProps, 'onClick' | '
   modalTitle: string
   submitButtonTitle?: string
   cancelButtonTitle?: string
-  onSubmit: (data: TypesRepository) => void
+  onSubmit: (data: TypesRepository & SpaceImportRepositoriesOutput) => void
 }
 
 export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
