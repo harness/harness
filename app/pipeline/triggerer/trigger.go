@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/pipeline/triggerer/dag"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -82,6 +83,7 @@ type triggerer struct {
 	tx             dbtx.Transactor
 	pipelineStore  store.PipelineStore
 	fileService    file.Service
+	urlProvider    url.Provider
 	scheduler      scheduler.Scheduler
 	repoStore      store.RepoStore
 }
@@ -93,6 +95,7 @@ func New(
 	pipelineStore store.PipelineStore,
 	tx dbtx.Transactor,
 	repoStore store.RepoStore,
+	urlProvider url.Provider,
 	scheduler scheduler.Scheduler,
 	fileService file.Service,
 ) Triggerer {
@@ -101,6 +104,7 @@ func New(
 		checkStore:     checkStore,
 		stageStore:     stageStore,
 		scheduler:      scheduler,
+		urlProvider:    urlProvider,
 		tx:             tx,
 		pipelineStore:  pipelineStore,
 		fileService:    fileService,
@@ -316,6 +320,7 @@ func (t *triggerer) Trigger(
 	// TODO: this can be made better. We are setting this later since otherwise any parsing failure
 	// would lead to an incremented pipeline sequence number.
 	execution.Number = pipeline.Seq
+	execution.Params = combine(execution.Params, Envs(repo, pipeline, t.urlProvider))
 
 	err = t.createExecutionWithStages(ctx, execution, stages)
 	if err != nil {

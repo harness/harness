@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -28,16 +29,22 @@ import (
 )
 
 type embedded struct {
-	config  *types.Config
-	manager ExecutionManager
+	config      *types.Config
+	urlProvider url.Provider
+	manager     ExecutionManager
 }
 
 var _ client.Client = (*embedded)(nil)
 
-func NewEmbeddedClient(manager ExecutionManager, config *types.Config) client.Client {
+func NewEmbeddedClient(
+	manager ExecutionManager,
+	urlProvider url.Provider,
+	config *types.Config,
+) client.Client {
 	return &embedded{
-		config:  config,
-		manager: manager,
+		config:      config,
+		urlProvider: urlProvider,
+		manager:     manager,
 	}
 }
 
@@ -102,8 +109,8 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 		Config:  ConvertToDroneFile(details.Config),
 		Netrc:   ConvertToDroneNetrc(details.Netrc),
 		System: &drone.System{
-			Proto: e.config.Server.HTTP.Proto,
-			Host:  "host.docker.internal",
+			Proto: e.urlProvider.GetAPIProto(),
+			Host:  e.urlProvider.GetAPIHostname(),
 		},
 	}, nil
 }

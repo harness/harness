@@ -209,18 +209,19 @@ func ConvertToDroneBuild(execution *types.Execution) *drone.Build {
 
 func ConvertToDroneRepo(repo *types.Repository) *drone.Repo {
 	return &drone.Repo{
-		ID:      repo.ID,
-		Trusted: true, // as builds are running on user machines, the repo is marked trusted.
-		UID:     repo.UID,
-		UserID:  repo.CreatedBy,
-		Name:    repo.UID,
-		HTTPURL: repo.GitURL,
-		Link:    repo.GitURL,
-		Private: !repo.IsPublic,
-		Created: repo.Created,
-		Updated: repo.Updated,
-		Version: repo.Version,
-		Branch:  repo.DefaultBranch,
+		ID:        repo.ID,
+		Trusted:   true, // as builds are running on user machines, the repo is marked trusted.
+		UID:       repo.UID,
+		UserID:    repo.CreatedBy,
+		Namespace: repo.Path,
+		Name:      repo.UID,
+		HTTPURL:   repo.GitURL,
+		Link:      repo.GitURL,
+		Private:   !repo.IsPublic,
+		Created:   repo.Created,
+		Updated:   repo.Updated,
+		Version:   repo.Version,
+		Branch:    repo.DefaultBranch,
 		// TODO: We can get this from configuration once we start populating it.
 		// If this is not set drone runner cancels the build.
 		Timeout: int64((10 * time.Hour).Seconds()),

@@ -56,6 +56,10 @@ func ProvideExecutionManager(
 
 // ProvideExecutionClient provides a client implementation to interact with the execution manager.
 // We use an embedded client here.
-func ProvideExecutionClient(manager ExecutionManager, config *types.Config) client.Client {
-	return NewEmbeddedClient(manager, config)
+func ProvideExecutionClient(
+	manager ExecutionManager,
+	urlProvider url.Provider,
+	config *types.Config,
+) client.Client {
+	return NewEmbeddedClient(manager, urlProvider, config)
 }

@@ -166,7 +166,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	cancelerCanceler := canceler.ProvideCanceler(executionStore, streamer, repoStore, schedulerScheduler, stageStore, stepStore)
 	commitService := commit.ProvideService(gitrpcInterface)
 	fileService := file.ProvideService(gitrpcInterface)
-	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, transactor, pipelineStore, fileService, schedulerScheduler, repoStore)
+	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, transactor, pipelineStore, fileService, schedulerScheduler, repoStore, provider)
 	executionController := execution.ProvideController(transactor, authorizer, executionStore, checkStore, cancelerCanceler, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream()
@@ -249,7 +249,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler, provider)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
-	client := manager.ProvideExecutionClient(executionManager, config)
+	client := manager.ProvideExecutionClient(executionManager, provider, config)
 	pluginManager := plugin2.ProvidePluginManager(config, pluginStore)
 	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, pluginManager)
 	if err != nil {

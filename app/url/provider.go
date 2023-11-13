@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -59,8 +60,14 @@ type Provider interface {
 	// GetAPIHostname returns the host for the api endpoint.
 	GetAPIHostname() string
 
+	// GenerateUIBuildURL returns the endpoint to use for viewing build executions.
+	GenerateUIBuildURL(repoPath, pipelineUID string, seqNumber int64) string
+
 	// GetGITHostname returns the host for the git endpoint.
 	GetGITHostname() string
+
+	// GetAPIProto returns the proto for the API hostname
+	GetAPIProto() string
 }
 
 // Provider provides the URLs of the gitness system.
@@ -154,6 +161,11 @@ func (p *provider) GenerateGITCloneURL(repoPath string) string {
 	return p.gitURL.JoinPath(repoPath).String()
 }
 
+func (p *provider) GenerateUIBuildURL(repoPath, pipelineUID string, seqNumber int64) string {
+	return p.uiURL.JoinPath(repoPath, "pipelines",
+		pipelineUID, "execution", strconv.Itoa(int(seqNumber))).String()
+}
+
 func (p *provider) GenerateUIRepoURL(repoPath string) string {
 	return p.uiURL.JoinPath(repoPath).String()
 }
@@ -172,4 +184,8 @@ func (p *provider) GetAPIHostname() string {
 
 func (p *provider) GetGITHostname() string {
 	return p.gitURL.Hostname()
+}
+
+func (p *provider) GetAPIProto() string {
+	return p.apiURL.Scheme
 }

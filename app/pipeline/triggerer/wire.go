@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
@@ -38,7 +39,8 @@ func ProvideTriggerer(
 	fileService file.Service,
 	scheduler scheduler.Scheduler,
 	repoStore store.RepoStore,
+	urlProvider url.Provider,
 ) Triggerer {
 	return New(executionStore, checkStore, stageStore, pipelineStore,
-		tx, repoStore, scheduler, fileService)
+		tx, repoStore, urlProvider, scheduler, fileService)
 }
