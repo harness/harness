@@ -19,6 +19,7 @@
 export declare const approvalText: string
 export declare const checks: string
 export declare const circle: string
+export declare const codeOwner: string
 export declare const codeOwnerTable: string
 export declare const desc: string
 export declare const layout: string

@@ -105,7 +105,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   commitRange,
   scrollElement
 }) => {
-  const { routes } = useAppContext()
+  const { routes, routingId } = useAppContext()
   const { getString } = useStrings()
   const viewedPath = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/file-views`,
@@ -228,6 +228,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       ReactDOM.render(
         <AppWrapper>
           <CommentBox
+            routingId={routingId}
             standalone={standalone}
             repoMetadata={repoMetadata}
             commentItems={comment.commentItems}

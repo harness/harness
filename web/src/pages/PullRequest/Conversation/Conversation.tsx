@@ -51,6 +51,7 @@ export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | '
   onCancelEditDescription: () => void
   prChecksDecisionResult?: PRChecksDecisionResult
   standalone: boolean
+  routingId: string
 }
 
 export const Conversation: React.FC<ConversationProps> = ({
@@ -61,7 +62,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   showEditDescription,
   onCancelEditDescription,
   prChecksDecisionResult,
-  standalone
+  standalone,
+  routingId
 }) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
@@ -187,6 +189,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   const newCommentBox = useMemo(() => {
     return (
       <CommentBox
+        routingId={routingId}
         standalone={standalone}
         repoMetadata={repoMetadata}
         fluid
@@ -254,6 +257,7 @@ export const Conversation: React.FC<ConversationProps> = ({
             }
             title={
               <CommentBox
+                routingId={routingId}
                 standalone={standalone}
                 repoMetadata={repoMetadata}
                 key={threadId}
@@ -383,6 +387,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                   )}
                   {codeOwners && prChecksDecisionResult && (
                     <CodeOwnersOverview
+                      standalone={standalone}
                       codeOwners={codeOwners}
                       repoMetadata={repoMetadata}
                       pullRequestMetadata={pullRequestMetadata}
@@ -392,6 +397,7 @@ export const Conversation: React.FC<ConversationProps> = ({
 
                   {(hasDescription || showEditDescription) && (
                     <DescriptionBox
+                      routingId={routingId}
                       standalone={standalone}
                       repoMetadata={repoMetadata}
                       pullRequestMetadata={pullRequestMetadata}

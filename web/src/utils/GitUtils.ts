@@ -28,6 +28,7 @@ import type {
   TypesPullReq,
   TypesRepository
 } from 'services/code'
+import { getConfig } from 'services/config'
 import { getErrorMessage } from './Utils'
 
 export interface GitInfoProps {
@@ -251,12 +252,13 @@ export const handleUpload = (
   setMarkdownContent: (data: string) => void,
   repoMetadata: TypesRepository | undefined,
   showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void,
-  standalone: boolean
+  standalone: boolean,
+  routingId?: string
 ) => {
   const reader = new FileReader()
   // Set up a function to be called when the load event is triggered
   reader.onload = async function () {
-    const markdown = await uploadImage(reader.result, showError, repoMetadata, standalone)
+    const markdown = await uploadImage(reader.result, showError, repoMetadata, standalone, routingId)
     setMarkdownContent(markdown) // Set the markdown content
   }
   reader.readAsArrayBuffer(blob) // This will trigger the onload function when the reading is complete
@@ -267,11 +269,14 @@ export const uploadImage = async (
   fileBlob: any,
   showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void,
   repoMetadata: TypesRepository | undefined,
-  standalone: boolean
+  standalone: boolean,
+  routingId?: string
 ) => {
   try {
     const response = await fetch(
-      `${window.location.origin}/${standalone ? '' : 'code/'}api/v1/repos/${repoMetadata?.path}/+/uploads/`,
+      `${window.location.origin}${getConfig(
+        `code/api/v1/repos/${repoMetadata?.path}/+/uploads${standalone || !routingId ? `` : `?routingId=${routingId}`}`
+      )}`,
       {
         method: 'POST',
         headers: {

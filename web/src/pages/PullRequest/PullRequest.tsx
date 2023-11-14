@@ -47,7 +47,7 @@ const SSE_EVENTS = ['pullreq_updated']
 export default function PullRequest() {
   const history = useHistory()
   const { getString } = useStrings()
-  const { routes, standalone } = useAppContext()
+  const { routes, standalone, routingId } = useAppContext()
   const space = useGetSpaceParam()
   const {
     repoMetadata,
@@ -240,6 +240,7 @@ export default function PullRequest() {
                     ),
                     panel: (
                       <Conversation
+                        routingId={routingId}
                         standalone={standalone}
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}

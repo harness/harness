@@ -44,6 +44,7 @@ import css from './CodeOwnersOverview.module.scss'
 interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   prChecksDecisionResult: PRChecksDecisionResult
   codeOwners?: TypesCodeOwnerEvaluation
+  standalone: boolean
 }
 
 enum CodeOwnerReqDecision {
@@ -56,7 +57,8 @@ export function CodeOwnersOverview({
   codeOwners,
   repoMetadata,
   pullRequestMetadata,
-  prChecksDecisionResult
+  prChecksDecisionResult,
+  standalone
 }: ChecksOverviewProps) {
   const { getString } = useStrings()
   const [isExpanded, toggleExpanded] = useToggle(false)
@@ -100,7 +102,7 @@ export function CodeOwnersOverview({
   const { borderColor, message, overallStatus } = checkEntries(changeReqEntries, waitingEntries, approvalEntries)
   return codeOwners?.evaluation_entries?.length ? (
     <Container
-      className={css.main}
+      className={cx(css.main, { [css.codeOwner]: !standalone })}
       margin={{ top: 'medium', bottom: pullRequestMetadata.description ? undefined : 'large' }}
       style={{ '--border-color': Utils.getRealCSSColor(borderColor) } as React.CSSProperties}>
       <Match expr={isExpanded}>

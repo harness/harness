@@ -58,7 +58,7 @@ import css from './Compare.module.scss'
 export default function Compare() {
   const { getString } = useStrings()
   const history = useHistory()
-  const { routes, standalone } = useAppContext()
+  const { routes, standalone, routingId } = useAppContext()
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
@@ -243,6 +243,7 @@ export default function Compare() {
                           <Layout.Vertical spacing="small">
                             <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('description')}</Text>
                             <MarkdownEditorWithPreview
+                              routingId={routingId}
                               standalone={standalone}
                               repoMetadata={repoMetadata}
                               value={description}

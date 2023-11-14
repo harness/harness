@@ -66,7 +66,7 @@ const ProtectionRulesForm = (props: {
         name={'blockBranchDeletion'}
       />
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
-        {getString('branchProtection.blockBranchCreationText')}
+        {getString('branchProtection.blockBranchDeletionText')}
       </Text>
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
