@@ -23,10 +23,12 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 type RuleUpdateInput struct {
+	UID         string              `json:"uid"`
 	State       *enum.RuleState     `json:"state"`
 	Description *string             `json:"description"`
 	Pattern     *protection.Pattern `json:"pattern"`
@@ -35,6 +37,12 @@ type RuleUpdateInput struct {
 
 // sanitize validates and sanitizes the update rule input data.
 func (in *RuleUpdateInput) sanitize() error {
+	if in.UID != "" {
+		if err := check.UID(in.UID); err != nil {
+			return err
+		}
+	}
+
 	if in.State != nil {
 		state, ok := in.State.Sanitize()
 		if !ok {
@@ -58,7 +66,7 @@ func (in *RuleUpdateInput) sanitize() error {
 }
 
 func (in *RuleUpdateInput) isEmpty() bool {
-	return in.State == nil && in.Description == nil && in.Pattern == nil && in.Definition == nil
+	return in.UID == "" && in.State == nil && in.Description == nil && in.Pattern == nil && in.Definition == nil
 }
 
 // RuleUpdate updates an existing protection rule for a repository.
@@ -87,6 +95,9 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 		return r, nil
 	}
 
+	if in.UID != "" {
+		r.UID = in.UID
+	}
 	if in.State != nil {
 		r.State = *in.State
 	}
