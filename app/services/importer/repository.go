@@ -292,7 +292,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	if err != nil {
 		log.Error().Err(err).Msg("failed repository import - cleanup git repository")
 
-		if errDel := r.deleteGitRepository(ctx, &systemPrincipal, repo); errDel != nil {
+		if errDel := r.deleteGitRepository(context.Background(), &systemPrincipal, repo); errDel != nil {
 			log.Warn().Err(errDel).
 				Msg("failed to delete git repository after failed import")
 		}
