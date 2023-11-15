@@ -20,7 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -29,7 +29,7 @@ func (c *Controller) Blame(ctx context.Context,
 	session *auth.Session,
 	repoRef, gitRef, path string,
 	lineFrom, lineTo int,
-) (types.Stream[*gitrpc.BlamePart], error) {
+) (types.Stream[*git.BlamePart], error) {
 	path = strings.TrimSpace(path)
 	if path == "" {
 		return nil, usererror.BadRequest("File path needs to specified.")
@@ -48,9 +48,9 @@ func (c *Controller) Blame(ctx context.Context,
 		gitRef = repo.DefaultBranch
 	}
 
-	reader := gitrpc.NewStreamReader(
-		c.gitRPCClient.Blame(ctx, &gitrpc.BlameParams{
-			ReadParams: gitrpc.CreateRPCReadParams(repo),
+	reader := git.NewStreamReader(
+		c.git.Blame(ctx, &git.BlameParams{
+			ReadParams: git.CreateReadParams(repo),
 			GitRef:     gitRef,
 			Path:       path,
 			LineFrom:   lineFrom,

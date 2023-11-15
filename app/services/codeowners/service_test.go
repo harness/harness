@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 )
 
 func TestService_ParseCodeOwner(t *testing.T) {
@@ -31,7 +31,7 @@ func TestService_ParseCodeOwner(t *testing.T) {
 		"#\n/scripts/api mankrit.singh@harness.io ashish.sanodia@harness.io"
 	type fields struct {
 		repoStore store.RepoStore
-		git       gitrpc.Interface
+		git       git.Interface
 		Config    Config
 	}
 	type args struct {

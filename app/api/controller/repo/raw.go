@@ -21,7 +21,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -44,9 +44,8 @@ func (c *Controller) Raw(ctx context.Context,
 	}
 
 	// create read params once
-	readParams := gitrpc.CreateRPCReadParams(repo)
-
-	treeNodeOutput, err := c.gitRPCClient.GetTreeNode(ctx, &gitrpc.GetTreeNodeParams{
+	readParams := git.CreateReadParams(repo)
+	treeNodeOutput, err := c.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
 		ReadParams:          readParams,
 		GitREF:              gitRef,
 		Path:                repoPath,
@@ -57,19 +56,19 @@ func (c *Controller) Raw(ctx context.Context,
 	}
 
 	// viewing Raw content is only supported for blob content
-	if treeNodeOutput.Node.Type != gitrpc.TreeNodeTypeBlob {
+	if treeNodeOutput.Node.Type != git.TreeNodeTypeBlob {
 		return nil, 0, usererror.BadRequestf(
 			"Object in '%s' at '/%s' is of type '%s'. Only objects of type %s support raw viewing.",
-			gitRef, repoPath, treeNodeOutput.Node.Type, gitrpc.TreeNodeTypeBlob)
+			gitRef, repoPath, treeNodeOutput.Node.Type, git.TreeNodeTypeBlob)
 	}
 
-	blobReader, err := c.gitRPCClient.GetBlob(ctx, &gitrpc.GetBlobParams{
+	blobReader, err := c.git.GetBlob(ctx, &git.GetBlobParams{
 		ReadParams: readParams,
 		SHA:        treeNodeOutput.Node.SHA,
 		SizeLimit:  0, // no size limit, we stream whatever data there is
 	})
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to read blob from gitrpc: %w", err)
+		return nil, 0, fmt.Errorf("failed to read blob: %w", err)
 	}
 
 	return blobReader.Content, blobReader.ContentSize, nil

@@ -21,9 +21,11 @@ import (
 	"time"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
+	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
+	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -104,11 +106,11 @@ func (s *Service) deleteMergeRef(ctx context.Context, repoID int64, prNum int64)
 	}
 
 	// TODO: This doesn't work for forked repos
-	err = s.gitRPCClient.UpdateRef(ctx, gitrpc.UpdateRefParams{
+	err = s.git.UpdateRef(ctx, git.UpdateRefParams{
 		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(prNum)),
-		Type:        gitrpcenum.RefTypePullReqMerge,
-		NewValue:    "", // when NewValue is empty gitrpc will delete the ref.
+		Type:        gitenum.RefTypePullReqMerge,
+		NewValue:    "", // when NewValue is empty will delete the ref.
 		OldValue:    "", // we don't care about the old value
 	})
 	if err != nil {
@@ -219,13 +221,13 @@ func (s *Service) updateMergeDataInner(
 
 	// call merge and store output in pr merge reference.
 	now := time.Now()
-	var output gitrpc.MergeOutput
-	output, err = s.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
+	var output git.MergeOutput
+	output, err = s.git.Merge(ctx, &git.MergeParams{
 		WriteParams:     writeParams,
 		BaseBranch:      pr.TargetBranch,
 		HeadRepoUID:     sourceRepo.GitUID,
 		HeadBranch:      pr.SourceBranch,
-		RefType:         gitrpcenum.RefTypePullReqMerge,
+		RefType:         gitenum.RefTypePullReqMerge,
 		RefName:         strconv.Itoa(int(pr.Number)),
 		HeadExpectedSHA: newSHA,
 		Force:           true,
@@ -233,14 +235,14 @@ func (s *Service) updateMergeDataInner(
 		// set committer date to ensure repeatability of merge commit across replicas
 		CommitterDate: &now,
 	})
-	if gitrpc.ErrorStatus(err) == gitrpc.StatusPreconditionFailed {
+	if errors.AsStatus(err) == errors.StatusPreconditionFailed {
 		return events.NewDiscardEventErrorf("Source branch '%s' is not on SHA '%s' anymore.",
 			pr.SourceBranch, newSHA)
 	}
 
-	conflicts := gitrpc.AsConflictFilesError(err)
+	var cferr *gittypes.MergeConflictsError
 
-	isNotMergeableError := gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable
+	isNotMergeableError := errors.As(err, &cferr)
 	if err != nil && !isNotMergeableError {
 		return fmt.Errorf("merge check failed for %d:%s and %d:%s with err: %w",
 			targetRepo.ID, pr.TargetBranch,
@@ -255,11 +257,11 @@ func (s *Service) updateMergeDataInner(
 		}
 
 		if isNotMergeableError {
-			// TODO: gitrpc should return sha's either way, and also conflicting files!
+			// TODO: should return sha's either way, and also conflicting files!
 			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
 			// pr.MergeTargetSHA = &output.BaseSHA  // TODO: Merge API doesn't return this when there are conflicts
 			pr.MergeSHA = nil
-			pr.MergeConflicts = conflicts
+			pr.MergeConflicts = cferr.Files
 		} else {
 			pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
 			pr.MergeTargetSHA = &output.BaseSHA

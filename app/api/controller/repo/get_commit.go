@@ -20,7 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -36,12 +36,12 @@ func (c *Controller) GetCommit(ctx context.Context,
 		return nil, err
 	}
 
-	rpcOut, err := c.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	rpcOut, err := c.git.GetCommit(ctx, &git.GetCommitParams{
+		ReadParams: git.CreateReadParams(repo),
 		SHA:        sha,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get commit from gitrpc: %w", err)
+		return nil, fmt.Errorf("failed to get commit: %w", err)
 	}
 
 	rpcCommit := rpcOut.Commit

@@ -19,16 +19,16 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 )
 
 type service struct {
-	gitRPCClient gitrpc.Interface
+	git git.Interface
 }
 
-func newService(gitRPCClient gitrpc.Interface) Service {
-	return &service{gitRPCClient: gitRPCClient}
+func newService(git git.Interface) Service {
+	return &service{git: git}
 }
 
 func (f *service) Get(
@@ -37,10 +37,10 @@ func (f *service) Get(
 	path string,
 	ref string,
 ) (*File, error) {
-	readParams := gitrpc.ReadParams{
+	readParams := git.ReadParams{
 		RepoUID: repo.GitUID,
 	}
-	treeNodeOutput, err := f.gitRPCClient.GetTreeNode(ctx, &gitrpc.GetTreeNodeParams{
+	treeNodeOutput, err := f.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
 		ReadParams:          readParams,
 		GitREF:              ref,
 		Path:                path,
@@ -50,17 +50,17 @@ func (f *service) Get(
 		return nil, fmt.Errorf("failed to read tree node: %w", err)
 	}
 	// viewing Raw content is only supported for blob content
-	if treeNodeOutput.Node.Type != gitrpc.TreeNodeTypeBlob {
+	if treeNodeOutput.Node.Type != git.TreeNodeTypeBlob {
 		return nil, fmt.Errorf("path content is not of blob type: %s", treeNodeOutput.Node.Type)
 	}
 
-	blobReader, err := f.gitRPCClient.GetBlob(ctx, &gitrpc.GetBlobParams{
+	blobReader, err := f.git.GetBlob(ctx, &git.GetBlobParams{
 		ReadParams: readParams,
 		SHA:        treeNodeOutput.Node.SHA,
 		SizeLimit:  0, // no size limit, we stream whatever data there is
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to read blob from gitrpc: %w", err)
+		return nil, fmt.Errorf("failed to read blob: %w", err)
 	}
 
 	buf, err := io.ReadAll(blobReader.Content)

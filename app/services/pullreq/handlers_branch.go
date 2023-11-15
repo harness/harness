@@ -24,7 +24,7 @@ import (
 	gitevents "github.com/harness/gitness/app/events/git"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -68,8 +68,8 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			return fmt.Errorf("failed to get repo git info: %w", err)
 		}
 
-		mergeBaseInfo, err := s.gitRPCClient.MergeBase(ctx, gitrpc.MergeBaseParams{
-			ReadParams: gitrpc.ReadParams{RepoUID: targetRepo.GitUID},
+		mergeBaseInfo, err := s.git.MergeBase(ctx, git.MergeBaseParams{
+			ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},
 			Ref1:       event.Payload.NewSHA,
 			Ref2:       pr.TargetBranch,
 		})

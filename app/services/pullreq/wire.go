@@ -24,7 +24,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 
@@ -40,7 +40,7 @@ func ProvideService(ctx context.Context,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
 	pullReqEvReporter *pullreqevents.Reporter,
-	gitRPCClient gitrpc.Interface,
+	git git.Interface,
 	repoGitInfoCache store.RepoGitInfoCache,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
@@ -52,7 +52,7 @@ func ProvideService(ctx context.Context,
 	urlProvider url.Provider,
 	sseStreamer sse.Streamer,
 ) (*Service, error) {
-	return New(ctx, config, gitReaderFactory, pullReqEvFactory, pullReqEvReporter, gitRPCClient,
+	return New(ctx, config, gitReaderFactory, pullReqEvFactory, pullReqEvReporter, git,
 		repoGitInfoCache, repoStore, pullreqStore, activityStore,
 		codeCommentView, codeCommentMigrator, fileViewStore, pubsub, urlProvider, sseStreamer)
 }

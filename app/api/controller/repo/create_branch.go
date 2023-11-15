@@ -21,7 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -77,7 +77,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
-	rpcOut, err := c.gitRPCClient.CreateBranch(ctx, &gitrpc.CreateBranchParams{
+	rpcOut, err := c.git.CreateBranch(ctx, &git.CreateBranchParams{
 		WriteParams: writeParams,
 		BranchName:  in.Name,
 		Target:      in.Target,

@@ -16,7 +16,6 @@ package pullreq
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -26,10 +25,11 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
-	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/gitrpc"
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
+	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -172,7 +172,7 @@ func (c *Controller) Merge(
 
 	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, sourceRepo, pr, reviewers)
 	// check for error and ignore if it is codeowners file not found else throw error
-	if err != nil && !errors.Is(err, codeowners.ErrNotFound) {
+	if err != nil && errors.AsStatus(err) != errors.StatusNotFound {
 		return nil, nil, fmt.Errorf("CODEOWNERS evaluation failed: %w", err)
 	}
 
@@ -203,20 +203,20 @@ func (c *Controller) Merge(
 		}
 
 		// TODO: This is a temporary solution. The changes needed for the proper implementation:
-		// 1) GitRPC: Change the merge method to return SHAs (source/target/merge base) even in case of conflicts.
+		// 1) Git: Change the merge method to return SHAs (source/target/merge base) even in case of conflicts.
 		// 2) Event handler: Update target and merge base SHA in the event handler even in case of merge conflicts.
 		// 3) Here: Update the pull request target and merge base SHA in the DB if merge check status is unchecked.
 		// 4) Remove the recheck API.
 		if pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked {
-			_, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
+			_, err = c.git.Merge(ctx, &git.MergeParams{
 				WriteParams:     targetWriteParams,
 				BaseBranch:      pr.TargetBranch,
 				HeadRepoUID:     sourceRepo.GitUID,
 				HeadBranch:      pr.SourceBranch,
 				HeadExpectedSHA: in.SourceSHA,
 			})
-			if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
-				out.ConflictFiles = gitrpc.AsConflictFilesError(err)
+			if cferr := gittypes.AsMergeConflictsError(err); cferr != nil {
+				out.ConflictFiles = cferr.Files
 			} else if err != nil {
 				return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
 			}
@@ -231,34 +231,34 @@ func (c *Controller) Merge(
 
 	// TODO: for forking merge title might be different?
 	var mergeTitle string
-	if in.Method == enum.MergeMethod(gitrpcenum.MergeMethodSquash) {
+	if in.Method == enum.MergeMethod(gitenum.MergeMethodSquash) {
 		mergeTitle = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
 	} else {
 		mergeTitle = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
 	}
 
 	now := time.Now()
-	var mergeOutput gitrpc.MergeOutput
-	mergeOutput, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
+	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams:     targetWriteParams,
 		BaseBranch:      pr.TargetBranch,
 		HeadRepoUID:     sourceRepo.GitUID,
 		HeadBranch:      pr.SourceBranch,
 		Title:           mergeTitle,
 		Message:         "",
-		Committer:       rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
+		Committer:       identityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
 		CommitterDate:   &now,
-		Author:          rpcIdentityFromPrincipal(session.Principal),
+		Author:          identityFromPrincipal(session.Principal),
 		AuthorDate:      &now,
-		RefType:         gitrpcenum.RefTypeBranch,
+		RefType:         gitenum.RefTypeBranch,
 		RefName:         pr.TargetBranch,
 		HeadExpectedSHA: in.SourceSHA,
-		Method:          gitrpcenum.MergeMethod(in.Method),
+		Method:          gitenum.MergeMethod(in.Method),
 	})
 	if err != nil {
-		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
+		if cf := gittypes.AsMergeConflictsError(err); cf != nil {
+			//nolint: nilerr
 			return nil, &types.MergeViolations{
-				ConflictFiles:  gitrpc.AsConflictFilesError(err),
+				ConflictFiles:  cf.Files,
 				RuleViolations: violations,
 			}, nil
 		}
@@ -318,7 +318,7 @@ func (c *Controller) Merge(
 
 	var branchDeleted bool
 	if ruleOut.DeleteSourceBranch {
-		errDelete := c.gitRPCClient.DeleteBranch(ctx, &gitrpc.DeleteBranchParams{
+		errDelete := c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
 			WriteParams: sourceWriteParams,
 			BranchName:  pr.SourceBranch,
 		})

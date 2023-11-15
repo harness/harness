@@ -24,7 +24,7 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -43,7 +43,7 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 	repoStore store.RepoStore, principalStore store.PrincipalStore,
 	fileViewStore store.PullReqFileViewStore, membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
-	rpcClient gitrpc.Interface, eventReporter *pullreqevents.Reporter,
+	rpcClient git.Interface, eventReporter *pullreqevents.Reporter,
 	mtxManager lock.MutexManager, codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service, ruleManager *protection.Manager, sseStreamer sse.Streamer,
 	codeOwners *codeowners.Service,

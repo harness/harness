@@ -22,7 +22,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -44,8 +44,8 @@ func (c *Controller) RawDiff(
 		return err
 	}
 
-	return c.gitRPCClient.RawDiff(ctx, &gitrpc.DiffParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	return c.git.RawDiff(ctx, &git.DiffParams{
+		ReadParams: git.CreateReadParams(repo),
 		BaseRef:    info.BaseRef,
 		HeadRef:    info.HeadRef,
 		MergeBase:  info.MergeBase,
@@ -64,8 +64,8 @@ func (c *Controller) CommitDiff(
 		return err
 	}
 
-	return c.gitRPCClient.CommitDiff(ctx, &gitrpc.GetCommitParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	return c.git.CommitDiff(ctx, &git.GetCommitParams{
+		ReadParams: git.CreateReadParams(repo),
 		SHA:        sha,
 	}, w)
 }
@@ -111,8 +111,8 @@ func (c *Controller) DiffStats(
 		return types.DiffStats{}, err
 	}
 
-	output, err := c.gitRPCClient.DiffStats(ctx, &gitrpc.DiffParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	output, err := c.git.DiffStats(ctx, &git.DiffParams{
+		ReadParams: git.CreateReadParams(repo),
 		BaseRef:    info.BaseRef,
 		HeadRef:    info.HeadRef,
 		MergeBase:  info.MergeBase,
@@ -133,7 +133,7 @@ func (c *Controller) Diff(
 	repoRef string,
 	path string,
 	includePatch bool,
-) (types.Stream[*gitrpc.FileDiff], error) {
+) (types.Stream[*git.FileDiff], error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
@@ -148,8 +148,8 @@ func (c *Controller) Diff(
 		return nil, err
 	}
 
-	reader := gitrpc.NewStreamReader(c.gitRPCClient.Diff(ctx, &gitrpc.DiffParams{
-		ReadParams:   gitrpc.CreateRPCReadParams(repo),
+	reader := git.NewStreamReader(c.git.Diff(ctx, &git.DiffParams{
+		ReadParams:   git.CreateReadParams(repo),
 		BaseRef:      info.BaseRef,
 		HeadRef:      info.HeadRef,
 		MergeBase:    info.MergeBase,

@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -154,8 +154,8 @@ type CommitInfo struct {
 	Committer SignatureInfo `json:"committer"`
 }
 
-// commitInfoFrom gets the CommitInfo from a gitrpc.Commit.
-func commitInfoFrom(commit gitrpc.Commit) CommitInfo {
+// commitInfoFrom gets the CommitInfo from a git.Commit.
+func commitInfoFrom(commit git.Commit) CommitInfo {
 	return CommitInfo{
 		SHA:       commit.SHA,
 		Message:   commit.Message,
@@ -171,8 +171,8 @@ type SignatureInfo struct {
 	When     time.Time    `json:"when"`
 }
 
-// signatureInfoFrom gets the SignatureInfo from a gitrpc.Signature.
-func signatureInfoFrom(signature gitrpc.Signature) SignatureInfo {
+// signatureInfoFrom gets the SignatureInfo from a git.Signature.
+func signatureInfoFrom(signature git.Signature) SignatureInfo {
 	return SignatureInfo{
 		Identity: identityInfoFrom(signature.Identity),
 		When:     signature.When,
@@ -186,8 +186,8 @@ type IdentityInfo struct {
 	Email string `json:"email"`
 }
 
-// identityInfoFrom gets the IdentityInfo from a gitrpc.Identity.
-func identityInfoFrom(identity gitrpc.Identity) IdentityInfo {
+// identityInfoFrom gets the IdentityInfo from a git.Identity.
+func identityInfoFrom(identity git.Identity) IdentityInfo {
 	return IdentityInfo{
 		Name:  identity.Name,
 		Email: identity.Email,

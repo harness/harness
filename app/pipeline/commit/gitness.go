@@ -18,16 +18,16 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/api/controller"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 )
 
 type service struct {
-	gitRPCClient gitrpc.Interface
+	git git.Interface
 }
 
-func newService(gitRPCClient gitrpc.Interface) Service {
-	return &service{gitRPCClient: gitRPCClient}
+func newService(git git.Interface) Service {
+	return &service{git: git}
 }
 
 // FindRef finds information about a commit in gitness for the git ref.
@@ -38,10 +38,10 @@ func (f *service) FindRef(
 	repo *types.Repository,
 	branch string,
 ) (*types.Commit, error) {
-	readParams := gitrpc.ReadParams{
+	readParams := git.ReadParams{
 		RepoUID: repo.GitUID,
 	}
-	branchOutput, err := f.gitRPCClient.GetBranch(ctx, &gitrpc.GetBranchParams{
+	branchOutput, err := f.git.GetBranch(ctx, &git.GetBranchParams{
 		ReadParams: readParams,
 		BranchName: branch,
 	})
@@ -59,10 +59,10 @@ func (f *service) FindCommit(
 	repo *types.Repository,
 	sha string,
 ) (*types.Commit, error) {
-	readParams := gitrpc.ReadParams{
+	readParams := git.ReadParams{
 		RepoUID: repo.GitUID,
 	}
-	commitOutput, err := f.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
+	commitOutput, err := f.git.GetCommit(ctx, &git.GetCommitParams{
 		ReadParams: readParams,
 		SHA:        sha,
 	})

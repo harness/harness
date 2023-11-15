@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -47,7 +47,7 @@ func ProvideController(
 	principalStore store.PrincipalStore,
 	ruleStore store.RuleStore,
 	protectionManager *protection.Manager,
-	rpcClient gitrpc.Interface,
+	rpcClient git.Interface,
 	importer *importer.Repository,
 	codeOwners *codeowners.Service,
 	reporeporter *repoevents.Reporter,

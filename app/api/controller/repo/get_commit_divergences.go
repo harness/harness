@@ -20,7 +20,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -70,10 +70,10 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 	}
 
 	// map to rpc params
-	options := &gitrpc.GetCommitDivergencesParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	options := &git.GetCommitDivergencesParams{
+		ReadParams: git.CreateReadParams(repo),
 		MaxCount:   in.MaxCount,
-		Requests:   make([]gitrpc.CommitDivergenceRequest, len(in.Requests)),
+		Requests:   make([]git.CommitDivergenceRequest, len(in.Requests)),
 	}
 	for i := range in.Requests {
 		options.Requests[i].From = in.Requests[i].From
@@ -85,7 +85,7 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 	}
 
 	// TODO: We should cache the responses as times can reach multiple seconds
-	rpcOutput, err := c.gitRPCClient.GetCommitDivergences(ctx, options)
+	rpcOutput, err := c.git.GetCommitDivergences(ctx, options)
 	if err != nil {
 		return nil, err
 	}

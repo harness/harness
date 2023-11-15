@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 
 	"github.com/rs/xid"
 	"github.com/rs/zerolog"
@@ -46,9 +46,9 @@ func HLogRequestIDHandler() func(http.Handler) http.Handler {
 				reqID = xid.New().String()
 			}
 
-			// add requestID to context for internal usage + gitrpc client!
+			// add requestID to context for internal usage client!
 			ctx = request.WithRequestID(ctx, reqID)
-			ctx = gitrpc.WithRequestID(ctx, reqID)
+			ctx = git.WithRequestID(ctx, reqID)
 
 			// update logging context with request ID
 			log := zerolog.Ctx(ctx)

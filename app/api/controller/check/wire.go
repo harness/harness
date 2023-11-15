@@ -17,7 +17,7 @@ package check
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
@@ -33,7 +33,7 @@ func ProvideController(
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	checkStore store.CheckStore,
-	rpcClient gitrpc.Interface,
+	rpcClient git.Interface,
 ) *Controller {
 	return NewController(
 		tx,

@@ -30,8 +30,9 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/gitrpc"
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -52,7 +53,7 @@ type Controller struct {
 	fileViewStore       store.PullReqFileViewStore
 	membershipStore     store.MembershipStore
 	checkStore          store.CheckStore
-	gitRPCClient        gitrpc.Interface
+	git                 git.Interface
 	eventReporter       *pullreqevents.Reporter
 	mtxManager          lock.MutexManager
 	codeCommentMigrator *codecomments.Migrator
@@ -76,7 +77,7 @@ func NewController(
 	fileViewStore store.PullReqFileViewStore,
 	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
-	gitRPCClient gitrpc.Interface,
+	git git.Interface,
 	eventReporter *pullreqevents.Reporter,
 	mtxManager lock.MutexManager,
 	codeCommentMigrator *codecomments.Migrator,
@@ -99,7 +100,7 @@ func NewController(
 		fileViewStore:       fileViewStore,
 		membershipStore:     membershipStore,
 		checkStore:          checkStore,
-		gitRPCClient:        gitRPCClient,
+		git:                 git,
 		codeCommentMigrator: codeCommentMigrator,
 		eventReporter:       eventReporter,
 		mtxManager:          mtxManager,
@@ -117,13 +118,13 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 		return "", usererror.BadRequest("branch name can't be empty")
 	}
 
-	ref, err := c.gitRPCClient.GetRef(ctx,
-		gitrpc.GetRefParams{
-			ReadParams: gitrpc.ReadParams{RepoUID: repo.GitUID},
+	ref, err := c.git.GetRef(ctx,
+		git.GetRefParams{
+			ReadParams: git.ReadParams{RepoUID: repo.GitUID},
 			Name:       branch,
-			Type:       gitrpcenum.RefTypeBranch,
+			Type:       gitenum.RefTypeBranch,
 		})
-	if gitrpc.ErrorStatus(err) == gitrpc.StatusNotFound {
+	if errors.AsStatus(err) == errors.StatusNotFound {
 		return "", usererror.BadRequest(
 			fmt.Sprintf("branch %s does not exist in the repository %s", branch, repo.UID))
 	}

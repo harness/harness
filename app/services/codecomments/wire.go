@@ -15,7 +15,7 @@
 package codecomments
 
 import (
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 
 	"github.com/google/wire"
 )
@@ -25,9 +25,9 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideMigrator(
-	gitRPCClient gitrpc.Interface,
+	git git.Interface,
 ) *Migrator {
 	return &Migrator{
-		hunkHeaderFetcher: gitRPCClient,
+		hunkHeaderFetcher: git,
 	}
 }

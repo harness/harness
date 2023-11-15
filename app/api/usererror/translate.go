@@ -15,14 +15,13 @@
 package usererror
 
 import (
-	"errors"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/check"
@@ -34,7 +33,7 @@ func Translate(err error) *Error {
 	var (
 		rError                  *Error
 		checkError              *check.ValidationError
-		gitrpcError             *gitrpc.Error
+		appError                *errors.Error
 		maxBytesErr             *http.MaxBytesError
 		codeOwnersTooLargeError *codeowners.TooLargeError
 		lockError               *lock.Error
@@ -79,12 +78,12 @@ func Translate(err error) *Error {
 	case errors.As(err, &maxBytesErr):
 		return RequestTooLargef("The request is too large. maximum allowed size is %d bytes", maxBytesErr.Limit)
 
-	// gitrpc errors
-	case errors.As(err, &gitrpcError):
+	// git errors
+	case errors.As(err, &appError):
 		return NewWithPayload(httpStatusCode(
-			gitrpcError.Status),
-			gitrpcError.Message,
-			gitrpcError.Details,
+			appError.Status),
+			appError.Message,
+			appError.Details,
 		)
 
 	// webhook errors
@@ -120,21 +119,20 @@ func errorFromLockError(err *lock.Error) *Error {
 	return ErrInternal
 }
 
-// lookup of gitrpc error codes to HTTP status codes.
-var codes = map[gitrpc.Status]int{
-	gitrpc.StatusConflict:           http.StatusConflict,
-	gitrpc.StatusInvalidArgument:    http.StatusBadRequest,
-	gitrpc.StatusNotFound:           http.StatusNotFound,
-	gitrpc.StatusPathNotFound:       http.StatusNotFound,
-	gitrpc.StatusNotImplemented:     http.StatusNotImplemented,
-	gitrpc.StatusPreconditionFailed: http.StatusPreconditionFailed,
-	gitrpc.StatusUnauthorized:       http.StatusUnauthorized,
-	gitrpc.StatusInternal:           http.StatusInternalServerError,
-	gitrpc.StatusNotMergeable:       http.StatusPreconditionFailed,
+// lookup of git error codes to HTTP status codes.
+var codes = map[errors.Status]int{
+	errors.StatusConflict:           http.StatusConflict,
+	errors.StatusInvalidArgument:    http.StatusBadRequest,
+	errors.StatusNotFound:           http.StatusNotFound,
+	errors.StatusPathNotFound:       http.StatusNotFound,
+	errors.StatusNotImplemented:     http.StatusNotImplemented,
+	errors.StatusPreconditionFailed: http.StatusPreconditionFailed,
+	errors.StatusUnauthorized:       http.StatusUnauthorized,
+	errors.StatusInternal:           http.StatusInternalServerError,
 }
 
-// httpStatusCode returns the associated HTTP status code for a gitrpc error code.
-func httpStatusCode(code gitrpc.Status) int {
+// httpStatusCode returns the associated HTTP status code for a git error code.
+func httpStatusCode(code errors.Status) int {
 	if v, ok := codes[code]; ok {
 		return v
 	}

@@ -16,7 +16,7 @@ package codeowners
 
 import (
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 
 	"github.com/google/wire"
 )
@@ -26,10 +26,10 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideCodeOwners(
-	gitRPCClient gitrpc.Interface,
+	git git.Interface,
 	repoStore store.RepoStore,
 	config Config,
 	principalStore store.PrincipalStore,
 ) *Service {
-	return New(repoStore, gitRPCClient, config, principalStore)
+	return New(repoStore, git, config, principalStore)
 }

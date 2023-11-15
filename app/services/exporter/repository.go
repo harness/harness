@@ -30,7 +30,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -49,7 +49,7 @@ var (
 
 type Repository struct {
 	urlProvider gitnessurl.Provider
-	git         gitrpc.Interface
+	git         git.Interface
 	repoStore   store.RepoStore
 	scheduler   *job.Scheduler
 	encrypter   encrypt.Encrypter
@@ -203,8 +203,8 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", err
 	}
 
-	err = r.git.PushRemote(ctx, &gitrpc.PushRemoteParams{
-		ReadParams: gitrpc.ReadParams{RepoUID: repository.GitUID},
+	err = r.git.PushRemote(ctx, &git.PushRemoteParams{
+		ReadParams: git.ReadParams{RepoUID: repository.GitUID},
 		RemoteURL:  urlWithToken,
 	})
 	if err != nil && !strings.Contains(err.Error(), "empty") {

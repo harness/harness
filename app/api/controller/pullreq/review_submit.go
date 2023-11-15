@@ -22,7 +22,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -79,8 +79,8 @@ func (c *Controller) ReviewSubmit(
 		return nil, usererror.BadRequest("Can't submit review to own pull requests.")
 	}
 
-	commit, err := c.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
-		ReadParams: gitrpc.ReadParams{RepoUID: repo.GitUID},
+	commit, err := c.git.GetCommit(ctx, &git.GetCommitParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
 		SHA:        in.CommitSHA,
 	})
 	if err != nil {

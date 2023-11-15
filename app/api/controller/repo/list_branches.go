@@ -20,7 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -43,8 +43,8 @@ func (c *Controller) ListBranches(ctx context.Context,
 		return nil, err
 	}
 
-	rpcOut, err := c.gitRPCClient.ListBranches(ctx, &gitrpc.ListBranchesParams{
-		ReadParams:    gitrpc.CreateRPCReadParams(repo),
+	rpcOut, err := c.git.ListBranches(ctx, &git.ListBranchesParams{
+		ReadParams:    git.CreateReadParams(repo),
 		IncludeCommit: includeCommit,
 		Query:         filter.Query,
 		Sort:          mapToRPCBranchSortOption(filter.Sort),
@@ -67,35 +67,35 @@ func (c *Controller) ListBranches(ctx context.Context,
 	return branches, nil
 }
 
-func mapToRPCBranchSortOption(o enum.BranchSortOption) gitrpc.BranchSortOption {
+func mapToRPCBranchSortOption(o enum.BranchSortOption) git.BranchSortOption {
 	switch o {
 	case enum.BranchSortOptionDate:
-		return gitrpc.BranchSortOptionDate
+		return git.BranchSortOptionDate
 	case enum.BranchSortOptionName:
-		return gitrpc.BranchSortOptionName
+		return git.BranchSortOptionName
 	case enum.BranchSortOptionDefault:
-		return gitrpc.BranchSortOptionDefault
+		return git.BranchSortOptionDefault
 	default:
 		// no need to error out - just use default for sorting
-		return gitrpc.BranchSortOptionDefault
+		return git.BranchSortOptionDefault
 	}
 }
 
-func mapToRPCSortOrder(o enum.Order) gitrpc.SortOrder {
+func mapToRPCSortOrder(o enum.Order) git.SortOrder {
 	switch o {
 	case enum.OrderAsc:
-		return gitrpc.SortOrderAsc
+		return git.SortOrderAsc
 	case enum.OrderDesc:
-		return gitrpc.SortOrderDesc
+		return git.SortOrderDesc
 	case enum.OrderDefault:
-		return gitrpc.SortOrderDefault
+		return git.SortOrderDefault
 	default:
 		// no need to error out - just use default for sorting
-		return gitrpc.SortOrderDefault
+		return git.SortOrderDefault
 	}
 }
 
-func mapBranch(b gitrpc.Branch) (Branch, error) {
+func mapBranch(b git.Branch) (Branch, error) {
 	var commit *types.Commit
 	if b.Commit != nil {
 		var err error

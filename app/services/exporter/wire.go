@@ -20,7 +20,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 
 	"github.com/google/wire"
 )
@@ -31,7 +31,7 @@ var WireSet = wire.NewSet(
 
 func ProvideSpaceExporter(
 	urlProvider url.Provider,
-	git gitrpc.Interface,
+	git git.Interface,
 	repoStore store.RepoStore,
 	scheduler *job.Scheduler,
 	executor *job.Executor,

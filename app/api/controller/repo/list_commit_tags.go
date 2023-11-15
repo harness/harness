@@ -20,7 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -47,8 +47,8 @@ func (c *Controller) ListCommitTags(ctx context.Context,
 		return nil, err
 	}
 
-	rpcOut, err := c.gitRPCClient.ListCommitTags(ctx, &gitrpc.ListCommitTagsParams{
-		ReadParams:    gitrpc.CreateRPCReadParams(repo),
+	rpcOut, err := c.git.ListCommitTags(ctx, &git.ListCommitTagsParams{
+		ReadParams:    git.CreateReadParams(repo),
 		IncludeCommit: includeCommit,
 		Query:         filter.Query,
 		Sort:          mapToRPCTagSortOption(filter.Sort),
@@ -71,21 +71,21 @@ func (c *Controller) ListCommitTags(ctx context.Context,
 	return tags, nil
 }
 
-func mapToRPCTagSortOption(o enum.TagSortOption) gitrpc.TagSortOption {
+func mapToRPCTagSortOption(o enum.TagSortOption) git.TagSortOption {
 	switch o {
 	case enum.TagSortOptionDate:
-		return gitrpc.TagSortOptionDate
+		return git.TagSortOptionDate
 	case enum.TagSortOptionName:
-		return gitrpc.TagSortOptionName
+		return git.TagSortOptionName
 	case enum.TagSortOptionDefault:
-		return gitrpc.TagSortOptionDefault
+		return git.TagSortOptionDefault
 	default:
 		// no need to error out - just use default for sorting
-		return gitrpc.TagSortOptionDefault
+		return git.TagSortOptionDefault
 	}
 }
 
-func mapCommitTag(t gitrpc.CommitTag) (CommitTag, error) {
+func mapCommitTag(t git.CommitTag) (CommitTag, error) {
 	var commit *types.Commit
 	if t.Commit != nil {
 		var err error

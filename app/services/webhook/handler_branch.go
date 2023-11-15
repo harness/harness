@@ -19,8 +19,9 @@ import (
 	"fmt"
 
 	gitevents "github.com/harness/gitness/app/events/git"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -142,14 +143,14 @@ func (s *Service) handleEventBranchDeleted(ctx context.Context,
 }
 
 func (s *Service) fetchCommitInfoForEvent(ctx context.Context, repoUID string, sha string) (CommitInfo, error) {
-	out, err := s.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
-		ReadParams: gitrpc.ReadParams{
+	out, err := s.git.GetCommit(ctx, &git.GetCommitParams{
+		ReadParams: git.ReadParams{
 			RepoUID: repoUID,
 		},
 		SHA: sha,
 	})
 
-	if gitrpc.ErrorStatus(err) == gitrpc.StatusNotFound {
+	if errors.AsStatus(err) == errors.StatusNotFound {
 		// this could happen if the commit has been deleted and garbage collected by now
 		// or if the sha doesn't point to an event - either way discard the event.
 		return CommitInfo{}, events.NewDiscardEventErrorf("commit with sha '%s' doesn't exist", sha)

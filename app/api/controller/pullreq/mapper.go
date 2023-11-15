@@ -15,12 +15,12 @@
 package pullreq
 
 import (
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 )
 
-func rpcIdentityFromPrincipal(p types.Principal) *gitrpc.Identity {
-	return &gitrpc.Identity{
+func identityFromPrincipal(p types.Principal) *git.Identity {
+	return &git.Identity{
 		Name:  p.DisplayName,
 		Email: p.Email,
 	}

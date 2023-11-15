@@ -22,7 +22,7 @@ import (
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 )
 
 // handleFileViewedOnBranchUpdate handles pull request Branch Updated events.
@@ -37,8 +37,8 @@ func (s *Service) handleFileViewedOnBranchUpdate(ctx context.Context,
 	if err != nil {
 		return fmt.Errorf("failed to get repo git info: %w", err)
 	}
-	reader := gitrpc.NewStreamReader(s.gitRPCClient.Diff(ctx, &gitrpc.DiffParams{
-		ReadParams: gitrpc.ReadParams{
+	reader := git.NewStreamReader(s.git.Diff(ctx, &git.DiffParams{
+		ReadParams: git.ReadParams{
 			RepoUID: repoGit.GitUID,
 		},
 		BaseRef:      event.Payload.OldSHA,
@@ -63,15 +63,15 @@ func (s *Service) handleFileViewedOnBranchUpdate(ctx context.Context,
 		// UPDATED: mark as obsolete - in case pr is closed file SHA is handling it
 		// This strategy leads to a behavior very similar to what github is doing
 		switch fileDiff.Status {
-		case gitrpc.FileDiffStatusAdded:
+		case git.FileDiffStatusAdded:
 			obsoletePaths = append(obsoletePaths, fileDiff.Path)
-		case gitrpc.FileDiffStatusDeleted:
+		case git.FileDiffStatusDeleted:
 			obsoletePaths = append(obsoletePaths, fileDiff.OldPath)
-		case gitrpc.FileDiffStatusRenamed:
+		case git.FileDiffStatusRenamed:
 			obsoletePaths = append(obsoletePaths, fileDiff.OldPath, fileDiff.Path)
-		case gitrpc.FileDiffStatusModified:
+		case git.FileDiffStatusModified:
 			obsoletePaths = append(obsoletePaths, fileDiff.Path)
-		case gitrpc.FileDiffStatusUndefined:
+		case git.FileDiffStatusUndefined:
 			// other cases we don't care
 		}
 	}

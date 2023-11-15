@@ -20,7 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -46,8 +46,8 @@ func (c *Controller) Commits(
 	gitRef := pr.SourceSHA
 	afterRef := pr.MergeBaseSHA
 
-	rpcOut, err := c.gitRPCClient.ListCommits(ctx, &gitrpc.ListCommitsParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	output, err := c.git.ListCommits(ctx, &git.ListCommitsParams{
+		ReadParams: git.CreateReadParams(repo),
 		GitREF:     gitRef,
 		After:      afterRef,
 		Page:       int32(filter.Page),
@@ -57,10 +57,10 @@ func (c *Controller) Commits(
 		return nil, err
 	}
 
-	commits := make([]types.Commit, len(rpcOut.Commits))
-	for i := range rpcOut.Commits {
+	commits := make([]types.Commit, len(output.Commits))
+	for i := range output.Commits {
 		var commit *types.Commit
-		commit, err = controller.MapCommit(&rpcOut.Commits[i])
+		commit, err = controller.MapCommit(&output.Commits[i])
 		if err != nil {
 			return nil, fmt.Errorf("failed to map commit: %w", err)
 		}

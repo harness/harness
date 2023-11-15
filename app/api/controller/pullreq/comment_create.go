@@ -16,14 +16,14 @@ package pullreq
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/pullreq"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -108,10 +108,8 @@ func (c *Controller) CommentCreate(
 
 	switch {
 	case in.IsCodeComment():
-		var cut gitrpc.DiffCutOutput
-
-		cut, err = c.gitRPCClient.DiffCut(ctx, &gitrpc.DiffCutParams{
-			ReadParams:      gitrpc.ReadParams{RepoUID: repo.GitUID},
+		cut, err := c.git.DiffCut(ctx, &git.DiffCutParams{
+			ReadParams:      git.ReadParams{RepoUID: repo.GitUID},
 			SourceCommitSHA: in.SourceCommitSHA,
 			SourceBranch:    pr.SourceBranch,
 			TargetCommitSHA: in.TargetCommitSHA,
@@ -122,8 +120,8 @@ func (c *Controller) CommentCreate(
 			LineEnd:         in.LineEnd,
 			LineEndNew:      in.LineEndNew,
 		})
-		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotFound || gitrpc.ErrorStatus(err) == gitrpc.StatusPathNotFound {
-			return nil, usererror.BadRequest(gitrpc.ErrorMessage(err))
+		if errors.AsStatus(err) == errors.StatusNotFound || errors.AsStatus(err) == errors.StatusPathNotFound {
+			return nil, usererror.BadRequest(errors.Message(err))
 		}
 		if err != nil {
 			return nil, err
@@ -306,7 +304,7 @@ func getCommentActivity(session *auth.Session, pr *types.PullReq, in *CommentCre
 	return act
 }
 
-func setAsCodeComment(a *types.PullReqActivity, cut gitrpc.DiffCutOutput, path, sourceCommitSHA string) {
+func setAsCodeComment(a *types.PullReqActivity, cut git.DiffCutOutput, path, sourceCommitSHA string) {
 	var falseBool bool
 	a.Type = enum.PullReqActivityTypeCodeComment
 	a.Kind = enum.PullReqActivityKindChangeComment

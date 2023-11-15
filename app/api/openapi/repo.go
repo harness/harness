@@ -21,7 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -555,7 +555,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opGetBlame.WithParameters(queryParameterGitRef,
 		queryParameterLineFrom, queryParameterLineTo)
 	_ = reflector.SetRequest(&opGetBlame, new(getBlameRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opGetBlame, []gitrpc.BlamePart{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opGetBlame, []git.BlamePart{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusForbidden)
@@ -705,7 +705,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDiff.WithMapOfAnything(map[string]interface{}{"operationId": "rawDiff"})
 	_ = reflector.SetRequest(&opDiff, new(getRawDiffRequest), http.MethodGet)
 	_ = reflector.SetStringResponse(&opDiff, http.StatusOK, "text/plain")
-	_ = reflector.SetJSONResponse(&opDiff, []gitrpc.FileDiff{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opDiff, []git.FileDiff{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusForbidden)

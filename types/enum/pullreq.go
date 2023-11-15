@@ -15,7 +15,7 @@
 package enum
 
 import (
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
+	gitenum "github.com/harness/gitness/git/enum"
 )
 
 // PullReqState defines pull request state.
@@ -207,13 +207,13 @@ var pullReqReviewerTypes = sortEnum([]PullReqReviewerType{
 	PullReqReviewerTypeSelfAssigned,
 })
 
-type MergeMethod gitrpcenum.MergeMethod
+type MergeMethod gitenum.MergeMethod
 
 // MergeMethod enumeration.
 const (
-	MergeMethodMerge  = MergeMethod(gitrpcenum.MergeMethodMerge)
-	MergeMethodSquash = MergeMethod(gitrpcenum.MergeMethodSquash)
-	MergeMethodRebase = MergeMethod(gitrpcenum.MergeMethodRebase)
+	MergeMethodMerge  = MergeMethod(gitenum.MergeMethodMerge)
+	MergeMethodSquash = MergeMethod(gitenum.MergeMethodSquash)
+	MergeMethodRebase = MergeMethod(gitenum.MergeMethodRebase)
 )
 
 var MergeMethods = sortEnum([]MergeMethod{
@@ -224,7 +224,7 @@ var MergeMethods = sortEnum([]MergeMethod{
 
 func (MergeMethod) Enum() []interface{} { return toInterfaceSlice(MergeMethods) }
 func (m MergeMethod) Sanitize() (MergeMethod, bool) {
-	s, ok := gitrpcenum.MergeMethod(m).Sanitize()
+	s, ok := gitenum.MergeMethod(m).Sanitize()
 	return MergeMethod(s), ok
 }
 

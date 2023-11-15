@@ -30,7 +30,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -49,7 +49,7 @@ type Controller struct {
 	principalStore    store.PrincipalStore
 	ruleStore         store.RuleStore
 	protectionManager *protection.Manager
-	gitRPCClient      gitrpc.Interface
+	git               git.Interface
 	importer          *importer.Repository
 	codeOwners        *codeowners.Service
 	eventReporter     *repoevents.Reporter
@@ -67,7 +67,7 @@ func NewController(
 	principalStore store.PrincipalStore,
 	ruleStore store.RuleStore,
 	protectionManager *protection.Manager,
-	gitRPCClient gitrpc.Interface,
+	git git.Interface,
 	importer *importer.Repository,
 	codeOwners *codeowners.Service,
 	eventReporter *repoevents.Reporter,
@@ -84,7 +84,7 @@ func NewController(
 		principalStore:    principalStore,
 		ruleStore:         ruleStore,
 		protectionManager: protectionManager,
-		gitRPCClient:      gitRPCClient,
+		git:               git,
 		importer:          importer,
 		codeOwners:        codeOwners,
 		eventReporter:     eventReporter,

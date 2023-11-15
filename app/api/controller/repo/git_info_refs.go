@@ -20,7 +20,7 @@ import (
 	"io"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -38,14 +38,14 @@ func (c *Controller) GitInfoRefs(
 		return fmt.Errorf("failed to verify repo access: %w", err)
 	}
 
-	if err = c.gitRPCClient.GetInfoRefs(ctx, w, &gitrpc.InfoRefsParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
-		// TODO: gitrpc shouldn't take a random string here, but instead have accepted enum values.
+	if err = c.git.GetInfoRefs(ctx, w, &git.InfoRefsParams{
+		ReadParams: git.CreateReadParams(repo),
+		// TODO: git shouldn't take a random string here, but instead have accepted enum values.
 		Service:     string(service),
 		Options:     nil,
 		GitProtocol: gitProtocol,
 	}); err != nil {
-		return fmt.Errorf("failed GetInfoRefs on gitrpc: %w", err)
+		return fmt.Errorf("failed GetInfoRefs on git: %w", err)
 	}
 
 	return nil

@@ -29,7 +29,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
@@ -37,7 +37,7 @@ import (
 
 type Service struct {
 	pullreqEvReporter   *pullreqevents.Reporter
-	gitRPCClient        gitrpc.Interface
+	git                 git.Interface
 	repoGitInfoCache    store.RepoGitInfoCache
 	repoStore           store.RepoStore
 	pullreqStore        store.PullReqStore
@@ -60,7 +60,7 @@ func New(ctx context.Context,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	pullreqEvReporter *pullreqevents.Reporter,
-	gitRPCClient gitrpc.Interface,
+	git git.Interface,
 	repoGitInfoCache store.RepoGitInfoCache,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
@@ -74,7 +74,7 @@ func New(ctx context.Context,
 ) (*Service, error) {
 	service := &Service{
 		pullreqEvReporter:   pullreqEvReporter,
-		gitRPCClient:        gitRPCClient,
+		git:                 git,
 		repoGitInfoCache:    repoGitInfoCache,
 		repoStore:           repoStore,
 		pullreqStore:        pullreqStore,
@@ -247,13 +247,13 @@ func New(ctx context.Context,
 	return service, nil
 }
 
-// createSystemRPCWriteParams creates base write parameters for gitrpc write operations.
+// createSystemRPCWriteParams creates base write parameters for write operations.
 func createSystemRPCWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	repoID int64,
 	repoGITUID string,
-) (gitrpc.WriteParams, error) {
+) (git.WriteParams, error) {
 	principal := bootstrap.NewSystemServiceSession().Principal
 
 	// generate envars (add everything githook CLI needs for execution)
@@ -266,11 +266,11 @@ func createSystemRPCWriteParams(
 		true,
 	)
 	if err != nil {
-		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
+		return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}
 
-	return gitrpc.WriteParams{
-		Actor: gitrpc.Identity{
+	return git.WriteParams{
+		Actor: git.Identity{
 			Name:  principal.DisplayName,
 			Email: principal.Email,
 		},

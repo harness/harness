@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 
 	"github.com/google/wire"
 )
@@ -44,10 +44,10 @@ func ProvideService(ctx context.Context,
 	activityStore store.PullReqActivityStore,
 	urlProvider url.Provider,
 	principalStore store.PrincipalStore,
-	gitRPCClient gitrpc.Interface,
+	git git.Interface,
 	encrypter encrypt.Encrypter,
 ) (*Service, error) {
 	return NewService(ctx, config, gitReaderFactory, prReaderFactory,
 		webhookStore, webhookExecutionStore, repoStore, pullreqStore, activityStore,
-		urlProvider, principalStore, gitRPCClient, encrypter)
+		urlProvider, principalStore, git, encrypter)
 }

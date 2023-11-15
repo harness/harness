@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -84,8 +84,8 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	mergeBaseResult, err := c.gitRPCClient.MergeBase(ctx, gitrpc.MergeBaseParams{
-		ReadParams: gitrpc.ReadParams{RepoUID: sourceRepo.GitUID},
+	mergeBaseResult, err := c.git.MergeBase(ctx, git.MergeBaseParams{
+		ReadParams: git.ReadParams{RepoUID: sourceRepo.GitUID},
 		Ref1:       in.SourceBranch,
 		Ref2:       in.TargetBranch,
 	})

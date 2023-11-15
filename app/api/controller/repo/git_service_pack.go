@@ -21,7 +21,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -48,8 +48,8 @@ func (c *Controller) GitServicePack(
 		return fmt.Errorf("failed to verify repo access: %w", err)
 	}
 
-	params := &gitrpc.ServicePackParams{
-		// TODO: gitrpc shouldn't take a random string here, but instead have accepted enum values.
+	params := &git.ServicePackParams{
+		// TODO: git shouldn't take a random string here, but instead have accepted enum values.
 		Service:     string(service),
 		Data:        r,
 		Options:     nil,
@@ -58,19 +58,19 @@ func (c *Controller) GitServicePack(
 
 	// setup read/writeparams depending on whether it's a write operation
 	if isWriteOperation {
-		var writeParams gitrpc.WriteParams
+		var writeParams git.WriteParams
 		writeParams, err = controller.CreateRPCExternalWriteParams(ctx, c.urlProvider, session, repo)
 		if err != nil {
 			return fmt.Errorf("failed to create RPC write params: %w", err)
 		}
 		params.WriteParams = &writeParams
 	} else {
-		readParams := gitrpc.CreateRPCReadParams(repo)
+		readParams := git.CreateReadParams(repo)
 		params.ReadParams = &readParams
 	}
 
-	if err = c.gitRPCClient.ServicePack(ctx, w, params); err != nil {
-		return fmt.Errorf("failed service pack operation %q  on gitrpc: %w", service, err)
+	if err = c.git.ServicePack(ctx, w, params); err != nil {
+		return fmt.Errorf("failed service pack operation %q  on git: %w", service, err)
 	}
 
 	return nil

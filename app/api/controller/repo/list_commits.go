@@ -20,7 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -42,8 +42,8 @@ func (c *Controller) ListCommits(ctx context.Context,
 		gitRef = repo.DefaultBranch
 	}
 
-	rpcOut, err := c.gitRPCClient.ListCommits(ctx, &gitrpc.ListCommitsParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	rpcOut, err := c.git.ListCommits(ctx, &git.ListCommitsParams{
+		ReadParams: git.CreateReadParams(repo),
 		GitREF:     gitRef,
 		After:      filter.After,
 		Page:       int32(filter.Page),

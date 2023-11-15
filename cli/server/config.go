@@ -28,8 +28,6 @@ import (
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
-	"github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/store/database"
@@ -65,6 +63,31 @@ func LoadConfig() (*types.Config, error) {
 	err = backfillURLs(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to backfil urls: %w", err)
+	}
+
+	if config.Git.HookPath == "" {
+		executablePath, err := os.Executable()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get path of current executable: %w", err)
+		}
+
+		config.Git.HookPath = executablePath
+	}
+	if config.Git.Root == "" {
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+
+		newPath := filepath.Join(homedir, gitnessHomeDir)
+		config.Git.Root = newPath
+
+		oldPath := filepath.Join(homedir, ".gitrpc")
+		if _, err := os.Stat(oldPath); err == nil {
+			if err := os.Rename(oldPath, newPath); err != nil {
+				config.Git.Root = oldPath
+			}
+		}
 	}
 
 	return config, nil
@@ -228,47 +251,6 @@ func ProvideBlobStoreConfig(config *types.Config) (blob.Config, error) {
 		Bucket:   config.BlobStore.Bucket,
 		KeyPath:  config.BlobStore.KeyPath,
 	}, nil
-}
-
-// ProvideGitRPCServerConfig loads the gitrpc server config from the environment.
-// It backfills certain config elements to work with cmdone.
-func ProvideGitRPCServerConfig() (server.Config, error) {
-	config := server.Config{}
-	err := envconfig.Process("", &config)
-	if err != nil {
-		return server.Config{}, fmt.Errorf("failed to load gitrpc server config: %w", err)
-	}
-	if config.GitHookPath == "" {
-		var executablePath string
-		executablePath, err = os.Executable()
-		if err != nil {
-			return server.Config{}, fmt.Errorf("failed to get path of current executable: %w", err)
-		}
-
-		config.GitHookPath = executablePath
-	}
-	if config.GitRoot == "" {
-		var homedir string
-		homedir, err = os.UserHomeDir()
-		if err != nil {
-			return server.Config{}, err
-		}
-
-		config.GitRoot = filepath.Join(homedir, ".gitrpc")
-	}
-
-	return config, nil
-}
-
-// ProvideGitRPCClientConfig loads the gitrpc client config from the environment.
-func ProvideGitRPCClientConfig() (gitrpc.Config, error) {
-	config := gitrpc.Config{}
-	err := envconfig.Process("", &config)
-	if err != nil {
-		return gitrpc.Config{}, fmt.Errorf("failed to load gitrpc client config: %w", err)
-	}
-
-	return config, nil
 }
 
 // ProvideEventsConfig loads the events config from the main config.

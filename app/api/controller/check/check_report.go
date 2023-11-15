@@ -24,7 +24,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -140,12 +140,12 @@ func (c *Controller) Report(
 		return nil, errValidate
 	}
 
-	if !gitrpc.ValidateCommitSHA(commitSHA) {
+	if !git.ValidateCommitSHA(commitSHA) {
 		return nil, usererror.BadRequest("invalid commit SHA provided")
 	}
 
-	_, err = c.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
-		ReadParams: gitrpc.ReadParams{RepoUID: repo.GitUID},
+	_, err = c.git.GetCommit(ctx, &git.GetCommitParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
 		SHA:        commitSHA,
 	})
 	if err != nil {

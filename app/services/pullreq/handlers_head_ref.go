@@ -21,8 +21,8 @@ import (
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
+	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
 )
 
 // createHeadRefOnCreated handles pull request Created events.
@@ -42,10 +42,10 @@ func (s *Service) createHeadRefOnCreated(ctx context.Context,
 
 	// TODO: This doesn't work for forked repos (only works when sourceRepo==targetRepo).
 	// This is because commits from the source repository must be first pulled into the target repository.
-	err = s.gitRPCClient.UpdateRef(ctx, gitrpc.UpdateRefParams{
+	err = s.git.UpdateRef(ctx, git.UpdateRefParams{
 		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
-		Type:        gitrpcenum.RefTypePullReqHead,
+		Type:        gitenum.RefTypePullReqHead,
 		NewValue:    event.Payload.SourceSHA,
 		OldValue:    "", // this is a new pull request, so we expect that the ref doesn't exist
 	})
@@ -73,10 +73,10 @@ func (s *Service) updateHeadRefOnBranchUpdate(ctx context.Context,
 
 	// TODO: This doesn't work for forked repos (only works when sourceRepo==targetRepo)
 	// This is because commits from the source repository must be first pulled into the target repository.
-	err = s.gitRPCClient.UpdateRef(ctx, gitrpc.UpdateRefParams{
+	err = s.git.UpdateRef(ctx, git.UpdateRefParams{
 		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
-		Type:        gitrpcenum.RefTypePullReqHead,
+		Type:        gitenum.RefTypePullReqHead,
 		NewValue:    event.Payload.NewSHA,
 		OldValue:    event.Payload.OldSHA,
 	})
@@ -104,10 +104,10 @@ func (s *Service) updateHeadRefOnReopen(ctx context.Context,
 
 	// TODO: This doesn't work for forked repos (only works when sourceRepo==targetRepo)
 	// This is because commits from the source repository must be first pulled into the target repository.
-	err = s.gitRPCClient.UpdateRef(ctx, gitrpc.UpdateRefParams{
+	err = s.git.UpdateRef(ctx, git.UpdateRefParams{
 		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
-		Type:        gitrpcenum.RefTypePullReqHead,
+		Type:        gitenum.RefTypePullReqHead,
 		NewValue:    event.Payload.SourceSHA,
 		OldValue:    "", // the request is re-opened, so anything can be the old value
 	})

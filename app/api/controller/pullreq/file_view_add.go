@@ -21,7 +21,8 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -35,7 +36,7 @@ func (f *FileViewAddInput) Validate() error {
 	if f.Path == "" {
 		return usererror.BadRequest("path can't be empty")
 	}
-	if !gitrpc.ValidateCommitSHA(f.CommitSHA) {
+	if !git.ValidateCommitSHA(f.CommitSHA) {
 		return usererror.BadRequest("commit_sha is invalid")
 	}
 
@@ -72,17 +73,16 @@ func (c *Controller) FileViewAdd(
 	}
 
 	// retrieve file from both provided SHA and mergeBaseSHA to validate user input
-	// TODO: Add GITRPC call to get multiple tree nodes at once
 
-	inNode, err := c.gitRPCClient.GetTreeNode(ctx, &gitrpc.GetTreeNodeParams{
-		ReadParams:          gitrpc.CreateRPCReadParams(repo),
+	inNode, err := c.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
+		ReadParams:          git.CreateReadParams(repo),
 		GitREF:              in.CommitSHA,
 		Path:                in.Path,
 		IncludeLatestCommit: false,
 	})
-	if err != nil && gitrpc.ErrorStatus(err) != gitrpc.StatusPathNotFound {
+	if err != nil && errors.AsStatus(err) != errors.StatusPathNotFound {
 		return nil, fmt.Errorf(
-			"failed to get tree node '%s' for provided sha '%s' from gitrpc: %w",
+			"failed to get tree node '%s' for provided sha '%s': %w",
 			in.Path,
 			in.CommitSHA,
 			err,
@@ -91,20 +91,20 @@ func (c *Controller) FileViewAdd(
 
 	// ensure provided path actually points to a blob or commit (submodule)
 	if inNode != nil &&
-		inNode.Node.Type != gitrpc.TreeNodeTypeBlob &&
-		inNode.Node.Type != gitrpc.TreeNodeTypeCommit {
+		inNode.Node.Type != git.TreeNodeTypeBlob &&
+		inNode.Node.Type != git.TreeNodeTypeCommit {
 		return nil, usererror.BadRequestf("Provided path '%s' doesn't point to a file.", in.Path)
 	}
 
-	mergeBaseNode, err := c.gitRPCClient.GetTreeNode(ctx, &gitrpc.GetTreeNodeParams{
-		ReadParams:          gitrpc.CreateRPCReadParams(repo),
+	mergeBaseNode, err := c.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
+		ReadParams:          git.CreateReadParams(repo),
 		GitREF:              pr.MergeBaseSHA,
 		Path:                in.Path,
 		IncludeLatestCommit: false,
 	})
-	if err != nil && gitrpc.ErrorStatus(err) != gitrpc.StatusPathNotFound {
+	if err != nil && errors.AsStatus(err) != errors.StatusPathNotFound {
 		return nil, fmt.Errorf(
-			"failed to get tree node '%s' for MergeBaseSHA '%s' from gitrpc: %w",
+			"failed to get tree node '%s' for MergeBaseSHA '%s': %w",
 			in.Path,
 			pr.MergeBaseSHA,
 			err,

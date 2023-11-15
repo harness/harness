@@ -20,7 +20,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
@@ -34,7 +34,7 @@ var WireSet = wire.NewSet(
 func ProvideRepoImporter(
 	config *types.Config,
 	urlProvider url.Provider,
-	git gitrpc.Interface,
+	git git.Interface,
 	tx dbtx.Transactor,
 	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,

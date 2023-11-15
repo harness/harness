@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 )
 
@@ -41,7 +41,7 @@ func TestMigrator(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		headers   []gitrpc.HunkHeader
+		headers   []git.HunkHeader
 		rebase    bool
 		positions []position
 		expected  []position
@@ -60,7 +60,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "source:lines-added-before-two-comments",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 0, OldSpan: 0, NewLine: 10, NewSpan: 10},
 			},
 			positions: []position{
@@ -74,7 +74,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "source:lines-added-between-two-comments",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 40, OldSpan: 0, NewLine: 40, NewSpan: 40},
 			},
 			positions: []position{
@@ -88,7 +88,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "source:lines-added-after-two-comments",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 60, OldSpan: 0, NewLine: 60, NewSpan: 200},
 			},
 			positions: []position{
@@ -102,7 +102,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "source:modified-second-comment",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 50, OldSpan: 1, NewLine: 50, NewSpan: 1},
 			},
 			positions: []position{
@@ -119,7 +119,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "source:modified-second-comment;also-removed-10-lines-at-1",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 1, OldSpan: 10, NewLine: 0, NewSpan: 0},
 				{OldLine: 50, OldSpan: 1, NewLine: 40, NewSpan: 1},
 			},
@@ -137,7 +137,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "source:modified-second-comment;also-added-10-lines-at-1",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 0, OldSpan: 0, NewLine: 1, NewSpan: 10},
 				{OldLine: 50, OldSpan: 1, NewLine: 60, NewSpan: 1},
 			},
@@ -168,7 +168,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "merge-base:lines-added-before-two-comments",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 0, OldSpan: 0, NewLine: 10, NewSpan: 10},
 			},
 			rebase: true,
@@ -183,7 +183,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "merge-base:lines-added-between-two-comments",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 40, OldSpan: 0, NewLine: 40, NewSpan: 40},
 			},
 			rebase: true,
@@ -198,7 +198,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "merge-base:lines-added-after-two-comments",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 60, OldSpan: 0, NewLine: 60, NewSpan: 200},
 			},
 			rebase: true,
@@ -213,7 +213,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "merge-base:modified-second-comment",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 50, OldSpan: 1, NewLine: 50, NewSpan: 1},
 			},
 			rebase: true,
@@ -231,7 +231,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "merge-base:modified-second-comment;also-removed-10-lines-at-1",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 1, OldSpan: 10, NewLine: 0, NewSpan: 0},
 				{OldLine: 50, OldSpan: 1, NewLine: 40, NewSpan: 1},
 			},
@@ -250,7 +250,7 @@ func TestMigrator(t *testing.T) {
 		},
 		{
 			name: "merge-base:modified-second-comment;also-added-10-lines-at-1",
-			headers: []gitrpc.HunkHeader{
+			headers: []git.HunkHeader{
 				{OldLine: 0, OldSpan: 0, NewLine: 1, NewSpan: 10},
 				{OldLine: 50, OldSpan: 1, NewLine: 60, NewSpan: 1},
 			},
@@ -334,17 +334,17 @@ func TestMigrator(t *testing.T) {
 
 type testHunkHeaderFetcher struct {
 	fileName string
-	headers  []gitrpc.HunkHeader
+	headers  []git.HunkHeader
 }
 
 func (f testHunkHeaderFetcher) GetDiffHunkHeaders(
 	_ context.Context,
-	_ gitrpc.GetDiffHunkHeadersParams,
-) (gitrpc.GetDiffHunkHeadersOutput, error) {
-	return gitrpc.GetDiffHunkHeadersOutput{
-		Files: []gitrpc.DiffFileHunkHeaders{
+	_ git.GetDiffHunkHeadersParams,
+) (git.GetDiffHunkHeadersOutput, error) {
+	return git.GetDiffHunkHeadersOutput{
+		Files: []git.DiffFileHunkHeaders{
 			{
-				FileHeader: gitrpc.DiffFileHeader{
+				FileHeader: git.DiffFileHeader{
 					OldName:    f.fileName,
 					NewName:    f.fileName,
 					Extensions: nil,
@@ -361,132 +361,132 @@ func TestProcessCodeComment(t *testing.T) {
 	const ccEnd = 24
 	tests := []struct {
 		name         string
-		hunk         gitrpc.HunkHeader
+		hunk         git.HunkHeader
 		expOutdated  bool
 		expMoveDelta int
 	}{
 		// only added lines
 		{
 			name:        "three-lines-added-before-far",
-			hunk:        gitrpc.HunkHeader{OldLine: 10, OldSpan: 0, NewLine: 11, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 10, OldSpan: 0, NewLine: 11, NewSpan: 3},
 			expOutdated: false, expMoveDelta: 3,
 		},
 		{
 			name:        "three-lines-added-before-but-touching",
-			hunk:        gitrpc.HunkHeader{OldLine: 19, OldSpan: 0, NewLine: 20, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 19, OldSpan: 0, NewLine: 20, NewSpan: 3},
 			expOutdated: false, expMoveDelta: 3,
 		},
 		{
 			name:        "three-lines-added-overlap-at-start",
-			hunk:        gitrpc.HunkHeader{OldLine: 20, OldSpan: 0, NewLine: 21, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 20, OldSpan: 0, NewLine: 21, NewSpan: 3},
 			expOutdated: true, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-added-inside",
-			hunk:        gitrpc.HunkHeader{OldLine: 21, OldSpan: 0, NewLine: 22, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 21, OldSpan: 0, NewLine: 22, NewSpan: 3},
 			expOutdated: true, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-added-overlap-at-end",
-			hunk:        gitrpc.HunkHeader{OldLine: 23, OldSpan: 0, NewLine: 24, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 23, OldSpan: 0, NewLine: 24, NewSpan: 3},
 			expOutdated: true, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-added-after-but-touching",
-			hunk:        gitrpc.HunkHeader{OldLine: 24, OldSpan: 0, NewLine: 25, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 24, OldSpan: 0, NewLine: 25, NewSpan: 3},
 			expOutdated: false, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-added-after-far",
-			hunk:        gitrpc.HunkHeader{OldLine: 30, OldSpan: 0, NewLine: 31, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 30, OldSpan: 0, NewLine: 31, NewSpan: 3},
 			expOutdated: false, expMoveDelta: 0,
 		},
 		// only removed lines
 		{
 			name:        "three-lines-removed-before-far",
-			hunk:        gitrpc.HunkHeader{OldLine: 10, OldSpan: 3, NewLine: 9, NewSpan: 0},
+			hunk:        git.HunkHeader{OldLine: 10, OldSpan: 3, NewLine: 9, NewSpan: 0},
 			expOutdated: false, expMoveDelta: -3,
 		},
 		{
 			name:        "three-lines-removed-before-but-touching",
-			hunk:        gitrpc.HunkHeader{OldLine: 17, OldSpan: 3, NewLine: 16, NewSpan: 0},
+			hunk:        git.HunkHeader{OldLine: 17, OldSpan: 3, NewLine: 16, NewSpan: 0},
 			expOutdated: false, expMoveDelta: -3,
 		},
 		{
 			name:        "three-lines-removed-overlap-at-start",
-			hunk:        gitrpc.HunkHeader{OldLine: 18, OldSpan: 3, NewLine: 17, NewSpan: 0},
+			hunk:        git.HunkHeader{OldLine: 18, OldSpan: 3, NewLine: 17, NewSpan: 0},
 			expOutdated: true, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-removed-inside",
-			hunk:        gitrpc.HunkHeader{OldLine: 21, OldSpan: 3, NewLine: 20, NewSpan: 0},
+			hunk:        git.HunkHeader{OldLine: 21, OldSpan: 3, NewLine: 20, NewSpan: 0},
 			expOutdated: true, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-removed-overlap-at-end",
-			hunk:        gitrpc.HunkHeader{OldLine: 24, OldSpan: 3, NewLine: 23, NewSpan: 0},
+			hunk:        git.HunkHeader{OldLine: 24, OldSpan: 3, NewLine: 23, NewSpan: 0},
 			expOutdated: true, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-removed-after-but-touching",
-			hunk:        gitrpc.HunkHeader{OldLine: 25, OldSpan: 3, NewLine: 24, NewSpan: 0},
+			hunk:        git.HunkHeader{OldLine: 25, OldSpan: 3, NewLine: 24, NewSpan: 0},
 			expOutdated: false, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-removed-after-far",
-			hunk:        gitrpc.HunkHeader{OldLine: 30, OldSpan: 3, NewLine: 29, NewSpan: 0},
+			hunk:        git.HunkHeader{OldLine: 30, OldSpan: 3, NewLine: 29, NewSpan: 0},
 			expOutdated: false, expMoveDelta: 0,
 		},
 		// only changed lines
 		{
 			name:        "three-lines-changed-before-far",
-			hunk:        gitrpc.HunkHeader{OldLine: 10, OldSpan: 3, NewLine: 10, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 10, OldSpan: 3, NewLine: 10, NewSpan: 3},
 			expOutdated: false, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-changed-before-but-touching",
-			hunk:        gitrpc.HunkHeader{OldLine: 17, OldSpan: 3, NewLine: 17, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 17, OldSpan: 3, NewLine: 17, NewSpan: 3},
 			expOutdated: false, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-changed-overlap-at-start",
-			hunk:        gitrpc.HunkHeader{OldLine: 18, OldSpan: 3, NewLine: 18, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 18, OldSpan: 3, NewLine: 18, NewSpan: 3},
 			expOutdated: true, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-changed-inside",
-			hunk:        gitrpc.HunkHeader{OldLine: 21, OldSpan: 3, NewLine: 21, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 21, OldSpan: 3, NewLine: 21, NewSpan: 3},
 			expOutdated: true, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-changed-overlap-at-end",
-			hunk:        gitrpc.HunkHeader{OldLine: 24, OldSpan: 3, NewLine: 24, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 24, OldSpan: 3, NewLine: 24, NewSpan: 3},
 			expOutdated: true, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-changed-after-but-touching",
-			hunk:        gitrpc.HunkHeader{OldLine: 25, OldSpan: 3, NewLine: 25, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 25, OldSpan: 3, NewLine: 25, NewSpan: 3},
 			expOutdated: false, expMoveDelta: 0,
 		},
 		{
 			name:        "three-lines-changed-after-far",
-			hunk:        gitrpc.HunkHeader{OldLine: 30, OldSpan: 3, NewLine: 30, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 30, OldSpan: 3, NewLine: 30, NewSpan: 3},
 			expOutdated: false, expMoveDelta: 0,
 		},
 		// mixed tests
 		{
 			name:        "two-lines-added-one-changed-just-before",
-			hunk:        gitrpc.HunkHeader{OldLine: 19, OldSpan: 1, NewLine: 19, NewSpan: 3},
+			hunk:        git.HunkHeader{OldLine: 19, OldSpan: 1, NewLine: 19, NewSpan: 3},
 			expOutdated: false, expMoveDelta: 2,
 		},
 		{
 			name:        "two-lines-removed-one-added-just-after",
-			hunk:        gitrpc.HunkHeader{OldLine: 25, OldSpan: 2, NewLine: 25, NewSpan: 1},
+			hunk:        git.HunkHeader{OldLine: 25, OldSpan: 2, NewLine: 25, NewSpan: 1},
 			expOutdated: false, expMoveDelta: 0,
 		},
 		{
 			name:        "twenty-lines-added-at-line-15",
-			hunk:        gitrpc.HunkHeader{OldLine: 14, OldSpan: 0, NewLine: 15, NewSpan: 20},
+			hunk:        git.HunkHeader{OldLine: 14, OldSpan: 0, NewLine: 15, NewSpan: 20},
 			expOutdated: false, expMoveDelta: 20,
 		},
 	}

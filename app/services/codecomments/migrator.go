@@ -17,8 +17,9 @@ package codecomments
 import (
 	"context"
 
-	"github.com/harness/gitness/gitrpc"
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
@@ -30,7 +31,7 @@ type Migrator struct {
 }
 
 type hunkHeaderFetcher interface {
-	GetDiffHunkHeaders(context.Context, gitrpc.GetDiffHunkHeadersParams) (gitrpc.GetDiffHunkHeadersOutput, error)
+	GetDiffHunkHeaders(context.Context, git.GetDiffHunkHeadersParams) (git.GetDiffHunkHeadersOutput, error)
 }
 
 // MigrateNew updates the "+" (the added lines) part of code comments
@@ -109,14 +110,14 @@ func (migrator *Migrator) migrate(
 
 	for commentSHA, fileMap := range commitMap {
 		// get all hunk headers for the diff between the SHA that's stored in the comment and the new SHA.
-		diffSummary, errDiff := migrator.hunkHeaderFetcher.GetDiffHunkHeaders(ctx, gitrpc.GetDiffHunkHeadersParams{
-			ReadParams: gitrpc.ReadParams{
+		diffSummary, errDiff := migrator.hunkHeaderFetcher.GetDiffHunkHeaders(ctx, git.GetDiffHunkHeadersParams{
+			ReadParams: git.ReadParams{
 				RepoUID: repoGitUID,
 			},
 			SourceCommitSHA: commentSHA,
 			TargetCommitSHA: newSHA,
 		})
-		if gitrpc.ErrorStatus(errDiff) == gitrpc.StatusNotFound {
+		if errors.AsStatus(errDiff) == errors.StatusNotFound {
 			// Handle the commit SHA not found error and mark all code comments as outdated.
 			for _, codeComments := range fileMap {
 				for _, codeComment := range codeComments {
@@ -151,7 +152,7 @@ func (migrator *Migrator) migrate(
 			}
 
 			// Handle file delete
-			if _, isDeleted := file.FileHeader.Extensions[gitrpcenum.DiffExtHeaderDeletedFileMode]; isDeleted {
+			if _, isDeleted := file.FileHeader.Extensions[gitenum.DiffExtHeaderDeletedFileMode]; isDeleted {
 				for _, codeComment := range codeComments {
 					codeComment.Outdated = true
 				}
@@ -159,7 +160,7 @@ func (migrator *Migrator) migrate(
 			}
 
 			// Handle new files - shouldn't happen because no code comments should exist for a non-existing file.
-			if _, isAdded := file.FileHeader.Extensions[gitrpcenum.DiffExtHeaderNewFileMode]; isAdded {
+			if _, isAdded := file.FileHeader.Extensions[gitenum.DiffExtHeaderNewFileMode]; isAdded {
 				for _, codeComment := range codeComments {
 					codeComment.Outdated = true
 				}
@@ -227,7 +228,7 @@ func mapCodeComments(
 	return commitMap, originalComments
 }
 
-func processCodeComment(ccStart, ccEnd int, h gitrpc.HunkHeader) (outdated bool, moveDelta int) {
+func processCodeComment(ccStart, ccEnd int, h git.HunkHeader) (outdated bool, moveDelta int) {
 	// A code comment is marked as outdated if:
 	// * The code lines covered by the code comment are changed
 	//   (the range given by the OldLine/OldSpan overlaps the code comment's code range)

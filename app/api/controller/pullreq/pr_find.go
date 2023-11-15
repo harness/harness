@@ -20,7 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -49,8 +49,8 @@ func (c *Controller) Find(
 	headRef := pr.SourceSHA
 	baseRef := pr.MergeBaseSHA
 
-	output, err := c.gitRPCClient.DiffStats(ctx, &gitrpc.DiffParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	output, err := c.git.DiffStats(ctx, &git.DiffParams{
+		ReadParams: git.CreateReadParams(repo),
 		BaseRef:    baseRef,
 		HeadRef:    headRef,
 	})

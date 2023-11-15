@@ -24,14 +24,15 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 // CommitFileAction holds file operation data.
 type CommitFileAction struct {
-	Action   gitrpc.FileAction        `json:"action"`
+	Action   git.FileAction           `json:"action"`
 	Path     string                   `json:"path"`
 	Payload  string                   `json:"payload"`
 	Encoding enum.ContentEncodingType `json:"encoding"`
@@ -94,14 +95,14 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		return types.CommitFilesResponse{}, violations, nil
 	}
 
-	actions := make([]gitrpc.CommitFileAction, len(in.Actions))
+	actions := make([]git.CommitFileAction, len(in.Actions))
 	for i, action := range in.Actions {
 		var rawPayload []byte
 		switch action.Encoding {
 		case enum.ContentEncodingTypeBase64:
 			rawPayload, err = base64.StdEncoding.DecodeString(action.Payload)
 			if err != nil {
-				return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to decode base64 payload: %w", err)
+				return types.CommitFilesResponse{}, nil, errors.InvalidArgument("failed to decode base64 payload", err)
 			}
 		case enum.ContentEncodingTypeUTF8:
 			fallthrough
@@ -110,7 +111,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 			rawPayload = []byte(action.Payload)
 		}
 
-		actions[i] = gitrpc.CommitFileAction{
+		actions[i] = git.CommitFileAction{
 			Action:  action.Action,
 			Path:    action.Path,
 			Payload: rawPayload,
@@ -125,16 +126,16 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	}
 
 	now := time.Now()
-	commit, err := c.gitRPCClient.CommitFiles(ctx, &gitrpc.CommitFilesParams{
+	commit, err := c.git.CommitFiles(ctx, &git.CommitFilesParams{
 		WriteParams:   writeParams,
 		Title:         in.Title,
 		Message:       in.Message,
 		Branch:        in.Branch,
 		NewBranch:     in.NewBranch,
 		Actions:       actions,
-		Committer:     rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
+		Committer:     identityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
 		CommitterDate: &now,
-		Author:        rpcIdentityFromPrincipal(session.Principal),
+		Author:        identityFromPrincipal(session.Principal),
 		AuthorDate:    &now,
 	})
 	if err != nil {

@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -34,8 +34,8 @@ func (c *Controller) PipelineGenerate(
 		return nil, err
 	}
 
-	result, err := c.gitRPCClient.GeneratePipeline(ctx, &gitrpc.GeneratePipelineParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	result, err := c.git.GeneratePipeline(ctx, &git.GeneratePipelineParams{
+		ReadParams: git.CreateReadParams(repo),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate pipeline: %w", err)

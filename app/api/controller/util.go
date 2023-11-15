@@ -21,19 +21,19 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 )
 
-// createRPCWriteParams creates base write parameters for gitrpc write operations.
-// TODO: this function should be in gitrpc package and should accept params as interface (contract)
+// createRPCWriteParams creates base write parameters for git write operations.
+// TODO: this function should be in git package and should accept params as interface (contract)
 func createRPCWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
 	repo *types.Repository,
 	isInternal bool,
-) (gitrpc.WriteParams, error) {
+) (git.WriteParams, error) {
 	// generate envars (add everything githook CLI needs for execution)
 	envVars, err := githook.GenerateEnvironmentVariables(
 		ctx,
@@ -44,11 +44,11 @@ func createRPCWriteParams(
 		isInternal,
 	)
 	if err != nil {
-		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
+		return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}
 
-	return gitrpc.WriteParams{
-		Actor: gitrpc.Identity{
+	return git.WriteParams{
+		Actor: git.Identity{
 			Name:  session.Principal.DisplayName,
 			Email: session.Principal.Email,
 		},
@@ -57,29 +57,29 @@ func createRPCWriteParams(
 	}, nil
 }
 
-// CreateRPCExternalWriteParams creates base write parameters for gitrpc external write operations.
+// CreateRPCExternalWriteParams creates base write parameters for git external write operations.
 // External write operations are direct git pushes.
 func CreateRPCExternalWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
 	repo *types.Repository,
-) (gitrpc.WriteParams, error) {
+) (git.WriteParams, error) {
 	return createRPCWriteParams(ctx, urlProvider, session, repo, false)
 }
 
-// CreateRPCInternalWriteParams creates base write parameters for gitrpc internal write operations.
+// CreateRPCInternalWriteParams creates base write parameters for git internal write operations.
 // Internal write operations are git pushes that originate from the Gitness server.
 func CreateRPCInternalWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	session *auth.Session,
 	repo *types.Repository,
-) (gitrpc.WriteParams, error) {
+) (git.WriteParams, error) {
 	return createRPCWriteParams(ctx, urlProvider, session, repo, true)
 }
 
-func MapCommit(c *gitrpc.Commit) (*types.Commit, error) {
+func MapCommit(c *git.Commit) (*types.Commit, error) {
 	if c == nil {
 		return nil, fmt.Errorf("commit is nil")
 	}
@@ -103,7 +103,7 @@ func MapCommit(c *gitrpc.Commit) (*types.Commit, error) {
 	}, nil
 }
 
-func MapRenameDetails(c *gitrpc.RenameDetails) *types.RenameDetails {
+func MapRenameDetails(c *git.RenameDetails) *types.RenameDetails {
 	if c == nil {
 		return nil
 	}
@@ -115,7 +115,7 @@ func MapRenameDetails(c *gitrpc.RenameDetails) *types.RenameDetails {
 	}
 }
 
-func MapSignature(s *gitrpc.Signature) (*types.Signature, error) {
+func MapSignature(s *git.Signature) (*types.Signature, error) {
 	if s == nil {
 		return nil, fmt.Errorf("signature is nil")
 	}

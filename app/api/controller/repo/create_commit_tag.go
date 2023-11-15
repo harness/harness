@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -82,12 +82,12 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 	}
 
 	now := time.Now()
-	rpcOut, err := c.gitRPCClient.CreateCommitTag(ctx, &gitrpc.CreateCommitTagParams{
+	rpcOut, err := c.git.CreateCommitTag(ctx, &git.CreateCommitTagParams{
 		WriteParams: writeParams,
 		Name:        in.Name,
 		Target:      in.Target,
 		Message:     in.Message,
-		Tagger:      rpcIdentityFromPrincipal(session.Principal),
+		Tagger:      identityFromPrincipal(session.Principal),
 		TaggerDate:  &now,
 	})
 	if err != nil {

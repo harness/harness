@@ -22,7 +22,8 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -109,9 +110,9 @@ func (c *Controller) GetContent(ctx context.Context,
 	}
 
 	// create read params once
-	readParams := gitrpc.CreateRPCReadParams(repo)
+	readParams := git.CreateReadParams(repo)
 
-	treeNodeOutput, err := c.gitRPCClient.GetTreeNode(ctx, &gitrpc.GetTreeNodeParams{
+	treeNodeOutput, err := c.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
 		ReadParams:          readParams,
 		GitREF:              gitRef,
 		Path:                repoPath,
@@ -151,19 +152,18 @@ func (c *Controller) GetContent(ctx context.Context,
 }
 
 func (c *Controller) getSubmoduleContent(ctx context.Context,
-	readParams gitrpc.ReadParams,
+	readParams git.ReadParams,
 	gitRef string,
 	repoPath string,
 	commitSHA string,
 ) (*SubmoduleContent, error) {
-	output, err := c.gitRPCClient.GetSubmodule(ctx, &gitrpc.GetSubmoduleParams{
+	output, err := c.git.GetSubmodule(ctx, &git.GetSubmoduleParams{
 		ReadParams: readParams,
 		GitREF:     gitRef,
 		Path:       repoPath,
 	})
 	if err != nil {
 		// TODO: handle not found error
-		// This requires gitrpc to also return notfound though!
 		return nil, fmt.Errorf("failed to get submodule: %w", err)
 	}
 
@@ -174,10 +174,10 @@ func (c *Controller) getSubmoduleContent(ctx context.Context,
 }
 
 func (c *Controller) getFileContent(ctx context.Context,
-	readParams gitrpc.ReadParams,
+	readParams git.ReadParams,
 	blobSHA string,
 ) (*FileContent, error) {
-	output, err := c.gitRPCClient.GetBlob(ctx, &gitrpc.GetBlobParams{
+	output, err := c.git.GetBlob(ctx, &git.GetBlobParams{
 		ReadParams: readParams,
 		SHA:        blobSHA,
 		SizeLimit:  maxGetContentFileSize,
@@ -200,17 +200,16 @@ func (c *Controller) getFileContent(ctx context.Context,
 }
 
 func (c *Controller) getSymlinkContent(ctx context.Context,
-	readParams gitrpc.ReadParams,
+	readParams git.ReadParams,
 	blobSHA string,
 ) (*SymlinkContent, error) {
-	output, err := c.gitRPCClient.GetBlob(ctx, &gitrpc.GetBlobParams{
+	output, err := c.git.GetBlob(ctx, &git.GetBlobParams{
 		ReadParams: readParams,
 		SHA:        blobSHA,
 		SizeLimit:  maxGetContentFileSize, // TODO: do we need to guard against too big symlinks?
 	})
 	if err != nil {
 		// TODO: handle not found error
-		// This requires gitrpc to also return notfound though!
 		return nil, fmt.Errorf("failed to get symlink: %w", err)
 	}
 
@@ -226,12 +225,12 @@ func (c *Controller) getSymlinkContent(ctx context.Context,
 }
 
 func (c *Controller) getDirContent(ctx context.Context,
-	readParams gitrpc.ReadParams,
+	readParams git.ReadParams,
 	gitRef string,
 	repoPath string,
 	includeLatestCommit bool,
 ) (*DirContent, error) {
-	output, err := c.gitRPCClient.ListTreeNodes(ctx, &gitrpc.ListTreeNodeParams{
+	output, err := c.git.ListTreeNodes(ctx, &git.ListTreeNodeParams{
 		ReadParams:          readParams,
 		GitREF:              gitRef,
 		Path:                repoPath,
@@ -239,7 +238,6 @@ func (c *Controller) getDirContent(ctx context.Context,
 	})
 	if err != nil {
 		// TODO: handle not found error
-		// This requires gitrpc to also return notfound though!
 		return nil, fmt.Errorf("failed to get content of dir: %w", err)
 	}
 
@@ -256,7 +254,7 @@ func (c *Controller) getDirContent(ctx context.Context,
 	}, nil
 }
 
-func mapToContentInfo(node gitrpc.TreeNode, commit *gitrpc.Commit, includeLatestCommit bool) (ContentInfo, error) {
+func mapToContentInfo(node git.TreeNode, commit *git.Commit, includeLatestCommit bool) (ContentInfo, error) {
 	typ, err := mapNodeModeToContentType(node.Mode)
 	if err != nil {
 		return ContentInfo{}, err
@@ -280,17 +278,17 @@ func mapToContentInfo(node gitrpc.TreeNode, commit *gitrpc.Commit, includeLatest
 	return res, nil
 }
 
-func mapNodeModeToContentType(m gitrpc.TreeNodeMode) (ContentType, error) {
+func mapNodeModeToContentType(m git.TreeNodeMode) (ContentType, error) {
 	switch m {
-	case gitrpc.TreeNodeModeFile, gitrpc.TreeNodeModeExec:
+	case git.TreeNodeModeFile, git.TreeNodeModeExec:
 		return ContentTypeFile, nil
-	case gitrpc.TreeNodeModeSymlink:
+	case git.TreeNodeModeSymlink:
 		return ContentTypeSymlink, nil
-	case gitrpc.TreeNodeModeCommit:
+	case git.TreeNodeModeCommit:
 		return ContentTypeSubmodule, nil
-	case gitrpc.TreeNodeModeTree:
+	case git.TreeNodeModeTree:
 		return ContentTypeDir, nil
 	default:
-		return ContentTypeFile, fmt.Errorf("unsupported tree node mode '%s'", m)
+		return ContentTypeFile, errors.Internal("unsupported tree node mode '%s'", m)
 	}
 }

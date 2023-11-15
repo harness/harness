@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -72,7 +72,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
-	err = c.gitRPCClient.DeleteBranch(ctx, &gitrpc.DeleteBranchParams{
+	err = c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
 		WriteParams: writeParams,
 		BranchName:  branchName,
 	})

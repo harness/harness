@@ -36,10 +36,9 @@ import (
 )
 
 type command struct {
-	envfile      string
-	enableGitRPC bool
-	enableCI     bool
-	initializer  func(context.Context, *types.Config) (*System, error)
+	envfile     string
+	enableCI    bool
+	initializer func(context.Context, *types.Config) (*System, error)
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
@@ -131,18 +130,6 @@ func (c *command) run(*kingpin.ParseContext) error {
 		Stringer("version", version.Version).
 		Msg("server started")
 
-	if c.enableGitRPC {
-		// start grpc server
-		g.Go(system.gitRPCServer.Start)
-		log.Info().Msg("gitrpc server started")
-
-		// run the gitrpc cron jobs
-		g.Go(func() error {
-			return system.gitRPCCronMngr.Run(ctx)
-		})
-		log.Info().Msg("gitrpc cron manager subroutine started")
-	}
-
 	// wait until the error group context is done
 	<-gCtx.Done()
 
@@ -156,12 +143,6 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	if sErr := shutdownHTTP(shutdownCtx); sErr != nil {
 		log.Err(sErr).Msg("failed to shutdown http server gracefully")
-	}
-
-	if c.enableGitRPC {
-		if rpcErr := system.gitRPCServer.Stop(); rpcErr != nil {
-			log.Err(rpcErr).Msg("failed to shutdown grpc server gracefully")
-		}
 	}
 
 	system.services.JobScheduler.WaitJobsDone(shutdownCtx)
@@ -222,11 +203,6 @@ func Register(app *kingpin.Application, initializer func(context.Context, *types
 	cmd.Arg("envfile", "load the environment variable file").
 		Default("").
 		StringVar(&c.envfile)
-
-	cmd.Flag("enable-gitrpc", "start the gitrpc server").
-		Default("true").
-		Envar("ENABLE_GITRPC").
-		BoolVar(&c.enableGitRPC)
 
 	cmd.Flag("enable-ci", "start ci runners for build executions").
 		Default("true").

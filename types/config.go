@@ -23,6 +23,29 @@ import (
 	"github.com/harness/gitness/pubsub"
 )
 
+// LastCommitCache holds configuration options for the last commit cache.
+type LastCommitCache struct {
+	// Mode determines where the cache will be. Valid values are "inmemory" (default), "redis" or "none".
+	Mode string `envconfig:"GITNESS_GIT_LAST_COMMIT_CACHE_MODE" default:"inmemory"`
+
+	// DurationSeconds defines cache duration in seconds of last commit, default=12h.
+	DurationSeconds int `envconfig:"GITNESS_GIT_LAST_COMMIT_CACHE_SECONDS" default:"43200"`
+}
+
+// Git defines the git configuration parameters.
+type Git struct {
+	DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
+	// GitRoot specifies the directory containing git related data (e.g. repos, ...)
+	Root string `envconfig:"GITNESS_GIT_ROOT"`
+	// TmpDir (optional) specifies the directory for temporary data (e.g. repo clones, ...)
+	TmpDir string `envconfig:"GITNESS_GIT_TMP_DIR"`
+	// GitHookPath points to the binary used as git server hook.
+	HookPath string `envconfig:"GITNESS_GIT_HOOK_PATH"`
+
+	// LastCommitCache holds configuration options for the last commit cache.
+	LastCommitCache LastCommitCache
+}
+
 // Config stores the system configuration.
 type Config struct {
 	// InstanceID specifis the ID of the gitness instance.
@@ -82,9 +105,7 @@ type Config struct {
 	}
 
 	// Git defines the git configuration parameters
-	Git struct {
-		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
-	}
+	Git Git
 
 	// Encrypter defines the parameters for the encrypter
 	Encrypter struct {

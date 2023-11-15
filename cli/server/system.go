@@ -19,34 +19,27 @@ import (
 	"github.com/harness/gitness/app/pipeline/plugin"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
-	gitrpcserver "github.com/harness/gitness/gitrpc/server"
-	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
 
 	"github.com/drone/runner-go/poller"
 )
 
 // System stores high level System sub-routines.
 type System struct {
-	bootstrap      bootstrap.Bootstrap
-	server         *server.Server
-	gitRPCServer   *gitrpcserver.GRPCServer
-	pluginManager  *plugin.Manager
-	poller         *poller.Poller
-	services       services.Services
-	gitRPCCronMngr *gitrpccron.Manager
+	bootstrap     bootstrap.Bootstrap
+	server        *server.Server
+	pluginManager *plugin.Manager
+	poller        *poller.Poller
+	services      services.Services
 }
 
 // NewSystem returns a new system structure.
 func NewSystem(bootstrap bootstrap.Bootstrap, server *server.Server, poller *poller.Poller,
-	gitRPCServer *gitrpcserver.GRPCServer, pluginManager *plugin.Manager,
-	gitrpccron *gitrpccron.Manager, services services.Services) *System {
+	pluginManager *plugin.Manager, services services.Services) *System {
 	return &System{
-		bootstrap:      bootstrap,
-		server:         server,
-		poller:         poller,
-		gitRPCServer:   gitRPCServer,
-		pluginManager:  pluginManager,
-		services:       services,
-		gitRPCCronMngr: gitrpccron,
+		bootstrap:     bootstrap,
+		server:        server,
+		poller:        poller,
+		pluginManager: pluginManager,
+		services:      services,
 	}
 }

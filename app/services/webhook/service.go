@@ -27,7 +27,7 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/stream"
 )
 
@@ -82,7 +82,7 @@ type Service struct {
 	repoStore             store.RepoStore
 	pullreqStore          store.PullReqStore
 	principalStore        store.PrincipalStore
-	gitRPCClient          gitrpc.Interface
+	git                   git.Interface
 	activityStore         store.PullReqActivityStore
 	encrypter             encrypt.Encrypter
 
@@ -107,7 +107,7 @@ func NewService(
 	activityStore store.PullReqActivityStore,
 	urlProvider url.Provider,
 	principalStore store.PrincipalStore,
-	gitRPCClient gitrpc.Interface,
+	git git.Interface,
 	encrypter encrypt.Encrypter,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
@@ -121,7 +121,7 @@ func NewService(
 		activityStore:         activityStore,
 		urlProvider:           urlProvider,
 		principalStore:        principalStore,
-		gitRPCClient:          gitRPCClient,
+		git:                   git,
 		encrypter:             encrypter,
 
 		secureHTTPClient:   newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),

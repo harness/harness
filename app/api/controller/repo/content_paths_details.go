@@ -19,7 +19,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -28,7 +28,7 @@ type PathsDetailsInput struct {
 }
 
 type PathsDetailsOutput struct {
-	Details []gitrpc.PathDetails `json:"details"`
+	Details []git.PathDetails `json:"details"`
 }
 
 // PathsDetails finds the additional info about the provided paths of the repo.
@@ -59,8 +59,8 @@ func (c *Controller) PathsDetails(ctx context.Context,
 		gitRef = repo.DefaultBranch
 	}
 
-	result, err := c.gitRPCClient.PathsDetails(ctx, gitrpc.PathsDetailsParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	result, err := c.git.PathsDetails(ctx, git.PathsDetailsParams{
+		ReadParams: git.CreateReadParams(repo),
 		GitREF:     gitRef,
 		Paths:      input.Paths,
 	})

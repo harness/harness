@@ -23,18 +23,18 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type Controller struct {
-	tx           dbtx.Transactor
-	authorizer   authz.Authorizer
-	repoStore    store.RepoStore
-	checkStore   store.CheckStore
-	gitRPCClient gitrpc.Interface
+	tx         dbtx.Transactor
+	authorizer authz.Authorizer
+	repoStore  store.RepoStore
+	checkStore store.CheckStore
+	git        git.Interface
 }
 
 func NewController(
@@ -42,14 +42,14 @@ func NewController(
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	checkStore store.CheckStore,
-	gitRPCClient gitrpc.Interface,
+	git git.Interface,
 ) *Controller {
 	return &Controller{
-		tx:           tx,
-		authorizer:   authorizer,
-		repoStore:    repoStore,
-		checkStore:   checkStore,
-		gitRPCClient: gitRPCClient,
+		tx:         tx,
+		authorizer: authorizer,
+		repoStore:  repoStore,
+		checkStore: checkStore,
+		git:        git,
 	}
 }
 

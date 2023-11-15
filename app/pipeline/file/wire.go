@@ -15,7 +15,7 @@
 package file
 
 import (
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 
 	"github.com/google/wire"
 )
@@ -27,6 +27,6 @@ var WireSet = wire.NewSet(
 
 // ProvideService provides a service which can read file contents
 // from a repository.
-func ProvideService(gitRPCClient gitrpc.Interface) Service {
-	return newService(gitRPCClient)
+func ProvideService(git git.Interface) Service {
+	return newService(git)
 }

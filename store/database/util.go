@@ -47,7 +47,7 @@ func Offset(page, size int) uint64 {
 	return uint64(page * size)
 }
 
-// Logs the error and message, returns either the provided message or a gitrpc equivalent if possible.
+// Logs the error and message, returns either the provided message.
 // Always logs the full message with error as warning.
 //
 //nolint:unparam // revisit error processing

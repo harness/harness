@@ -26,7 +26,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/githook"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/resources"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -64,9 +64,9 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	gitRPCResp, err := c.createGitRPCRepository(ctx, session, in)
+	gitResp, err := c.createGitRepository(ctx, session, in)
 	if err != nil {
-		return nil, fmt.Errorf("error creating repository on GitRPC: %w", err)
+		return nil, fmt.Errorf("error creating repository on git: %w", err)
 	}
 
 	now := time.Now().UnixMilli()
@@ -74,7 +74,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		Version:       0,
 		ParentID:      parentSpace.ID,
 		UID:           in.UID,
-		GitUID:        gitRPCResp.UID,
+		GitUID:        gitResp.UID,
 		Description:   in.Description,
 		IsPublic:      in.IsPublic,
 		CreatedBy:     session.Principal.ID,
@@ -85,8 +85,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 	err = c.repoStore.Create(ctx, repo)
 	if err != nil {
-		if dErr := c.deleteGitRPCRepository(ctx, session, repo); dErr != nil {
-			log.Ctx(ctx).Warn().Err(dErr).Msg("gitrpc failed to delete repo for cleanup")
+		if dErr := c.deleteGitRepository(ctx, session, repo); dErr != nil {
+			log.Ctx(ctx).Warn().Err(dErr).Msg("failed to delete repo for cleanup")
 		}
 		return nil, fmt.Errorf("failed to create repository in storage: %w", err)
 	}
@@ -143,16 +143,16 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	return nil
 }
 
-func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.Session,
-	in *CreateInput) (*gitrpc.CreateRepositoryOutput, error) {
+func (c *Controller) createGitRepository(ctx context.Context, session *auth.Session,
+	in *CreateInput) (*git.CreateRepositoryOutput, error) {
 	var (
 		err     error
 		content []byte
 	)
-	files := make([]gitrpc.File, 0, 3) // readme, gitignore, licence
+	files := make([]git.File, 0, 3) // readme, gitignore, licence
 	if in.Readme {
 		content = createReadme(in.UID, in.Description)
-		files = append(files, gitrpc.File{
+		files = append(files, git.File{
 			Path:    "README.md",
 			Content: content,
 		})
@@ -162,7 +162,7 @@ func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.S
 		if err != nil {
 			return nil, fmt.Errorf("failed to read license '%s': %w", in.License, err)
 		}
-		files = append(files, gitrpc.File{
+		files = append(files, git.File{
 			Path:    "LICENSE",
 			Content: content,
 		})
@@ -172,7 +172,7 @@ func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.S
 		if err != nil {
 			return nil, fmt.Errorf("failed to read git ignore '%s': %w", in.GitIgnore, err)
 		}
-		files = append(files, gitrpc.File{
+		files = append(files, git.File{
 			Path:    ".gitignore",
 			Content: content,
 		})
@@ -191,10 +191,10 @@ func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.S
 		return nil, fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}
 
-	actor := rpcIdentityFromPrincipal(session.Principal)
-	committer := rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal)
+	actor := identityFromPrincipal(session.Principal)
+	committer := identityFromPrincipal(bootstrap.NewSystemServiceSession().Principal)
 	now := time.Now()
-	resp, err := c.gitRPCClient.CreateRepository(ctx, &gitrpc.CreateRepositoryParams{
+	resp, err := c.git.CreateRepository(ctx, &git.CreateRepositoryParams{
 		Actor:         *actor,
 		EnvVars:       envVars,
 		DefaultBranch: in.DefaultBranch,
@@ -205,7 +205,7 @@ func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.S
 		CommitterDate: &now,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create repo on gitrpc: %w", err)
+		return nil, fmt.Errorf("failed to create repo on: %w", err)
 	}
 
 	return resp, nil
@@ -220,8 +220,8 @@ func createReadme(name, description string) []byte {
 	return content.Bytes()
 }
 
-func rpcIdentityFromPrincipal(p types.Principal) *gitrpc.Identity {
-	return &gitrpc.Identity{
+func identityFromPrincipal(p types.Principal) *git.Identity {
+	return &git.Identity{
 		Name:  p.DisplayName,
 		Email: p.Email,
 	}

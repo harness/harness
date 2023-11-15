@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -34,12 +34,12 @@ func (c *Controller) GetBranch(ctx context.Context,
 		return nil, err
 	}
 
-	rpcOut, err := c.gitRPCClient.GetBranch(ctx, &gitrpc.GetBranchParams{
-		ReadParams: gitrpc.CreateRPCReadParams(repo),
+	rpcOut, err := c.git.GetBranch(ctx, &git.GetBranchParams{
+		ReadParams: git.CreateReadParams(repo),
 		BranchName: branchName,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get branch from gitrpc: %w", err)
+		return nil, fmt.Errorf("failed to get branch: %w", err)
 	}
 
 	branch, err := mapBranch(rpcOut.Branch)

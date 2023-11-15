@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -56,10 +56,10 @@ func (r *Repository) processPipelines(ctx context.Context,
 		return nil
 	}
 
-	actions := make([]gitrpc.CommitFileAction, len(pipelineFiles))
+	actions := make([]git.CommitFileAction, len(pipelineFiles))
 	for i, file := range pipelineFiles {
-		actions[i] = gitrpc.CommitFileAction{
-			Action:  gitrpc.CreateAction,
+		actions[i] = git.CommitFileAction{
+			Action:  git.CreateAction,
 			Path:    file.ConvertedPath,
 			Payload: file.Content,
 			SHA:     "",
@@ -67,12 +67,12 @@ func (r *Repository) processPipelines(ctx context.Context,
 	}
 
 	now := time.Now()
-	identity := &gitrpc.Identity{
+	identity := &git.Identity{
 		Name:  principal.DisplayName,
 		Email: principal.Email,
 	}
 
-	_, err = r.git.CommitFiles(ctx, &gitrpc.CommitFilesParams{
+	_, err = r.git.CommitFiles(ctx, &git.CommitFilesParams{
 		WriteParams:   writeParams,
 		Title:         commitMessage,
 		Message:       "",
