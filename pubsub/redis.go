@@ -142,7 +142,11 @@ func (s *redisSubscriber) start(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case msg := <-ch:
+		case msg, ok := <-ch:
+			if !ok {
+				log.Ctx(ctx).Debug().Msg("redis channel was closed")
+				return
+			}
 			if err := s.handler([]byte(msg.Payload)); err != nil {
 				log.Ctx(ctx).Err(err).Msg("received an error from handler function")
 			}
