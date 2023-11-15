@@ -37,7 +37,7 @@ import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import { BranchTargetType, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
-import { REGEX_VALID_REPO_NAME, getErrorMessage, rulesFormInitialPayload } from 'utils/Utils'
+import { REGEX_VALID_REPO_NAME, getErrorMessage, permissionProps, rulesFormInitialPayload } from 'utils/Utils'
 import type {
   TypesRepository,
   OpenapiRule,
@@ -48,6 +48,7 @@ import type {
 } from 'services/code'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import ProtectionRulesForm from './ProtectionRulesForm/ProtectionRulesForm'
 import Include from '../../../icons/Include.svg'
 import Exclude from '../../../icons/Exclude.svg'
@@ -60,7 +61,7 @@ const BranchProtectionForm = (props: {
   repoMetadata?: TypesRepository | undefined
   refetchRules: () => void
 }) => {
-  const { routes, routingId } = useAppContext()
+  const { routes, routingId, standalone, hooks } = useAppContext()
 
   const { ruleId } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
@@ -188,6 +189,16 @@ const BranchProtectionForm = (props: {
 
     return rulesFormInitialPayload // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editMode, rule, ruleUid])
+  const space = useGetSpaceParam()
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPOSITORY'
+      },
+      permissions: ['code_repo_edit']
+    },
+    [space]
+  )
   return (
     <Formik
       formName="branchProtectionRulesNewEditForm"
@@ -450,6 +461,7 @@ const BranchProtectionForm = (props: {
                     text={editMode ? getString('branchProtection.saveRule') : getString('branchProtection.createRule')}
                     variation={ButtonVariation.PRIMARY}
                     disabled={false}
+                    {...permissionProps(permPushResult, standalone)}
                   />
                   <Button
                     text={getString('cancel')}

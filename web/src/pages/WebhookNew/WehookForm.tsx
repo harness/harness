@@ -33,10 +33,11 @@ import { useHistory } from 'react-router-dom'
 import * as yup from 'yup'
 import React from 'react'
 import type { OpenapiUpdateWebhookRequest, EnumWebhookTrigger, OpenapiWebhookType } from 'services/code'
-import { getErrorMessage } from 'utils/Utils'
+import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import css from './WehookForm.module.scss'
 
 enum WebhookEventType {
@@ -96,7 +97,17 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
     verb: isEdit ? 'PATCH' : 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/webhooks${isEdit ? `/${webhook?.id}` : ''}`
   })
-
+  const { hooks, standalone } = useAppContext()
+  const space = useGetSpaceParam()
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPOSITORY'
+      },
+      permissions: ['code_repo_edit']
+    },
+    [space]
+  )
   return (
     <Container padding="xxlarge">
       <Layout.Vertical className={css.form}>
@@ -341,6 +352,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                     text={getString(isEdit ? 'updateWebhook' : 'createWebhook')}
                     variation={ButtonVariation.PRIMARY}
                     disabled={loading}
+                    {...permissionProps(permPushResult, standalone)}
                   />
 
                   <Button

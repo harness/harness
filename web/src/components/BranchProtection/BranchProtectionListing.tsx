@@ -39,7 +39,7 @@ import { useHistory } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
-import { getErrorMessage, LIST_FETCHING_LIMIT, type PageBrowserProps } from 'utils/Utils'
+import { getErrorMessage, LIST_FETCHING_LIMIT, permissionProps, type PageBrowserProps } from 'utils/Utils'
 import { SettingTypeMode } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
@@ -49,6 +49,7 @@ import { useConfirmAct } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import type { OpenapiRule, ProtectionPattern } from 'services/code'
 import { useAppContext } from 'AppContext'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import Include from '../../icons/Include.svg'
 import Exclude from '../../icons/Exclude.svg'
 import BranchProtectionForm from './BranchProtectionForm/BranchProtectionForm'
@@ -177,12 +178,24 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
           }
 
           const nonEmptyRules = checkFieldsNotEmpty(row.original.definition as Rule, fieldsToCheck)
+          const { hooks, standalone } = useAppContext()
 
+          const space = useGetSpaceParam()
+
+          const permPushResult = hooks?.usePermissionTranslate?.(
+            {
+              resource: {
+                resourceType: 'CODE_REPOSITORY'
+              },
+              permissions: ['code_repo_edit']
+            },
+            [space]
+          )
           return (
             <Layout.Horizontal spacing="medium" padding={{ left: 'medium' }}>
               <Container onClick={Utils.stopEvent}>
                 <Popover
-                  isOpen={popoverDialogOpen}
+                  isOpen={popoverDialogOpen && !permPushResult}
                   onInteraction={nextOpenState => {
                     setPopoverDialogOpen(nextOpenState)
                   }}
@@ -234,6 +247,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                   position={Position.RIGHT}
                   interactionKind="click">
                   <Toggle
+                    {...permissionProps(permPushResult, standalone)}
                     padding={{ top: 'xsmall' }}
                     key={`${row.original.uid}-toggle`}
                     // className={cx(css.toggle, checked ? css.toggleEnable : css.toggleDisable)}
@@ -256,6 +270,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                     <OptionsMenuButton
                       width="100px"
                       isDark
+                      {...permissionProps(permPushResult, standalone)}
                       items={[
                         {
                           hasIcon: true,
@@ -343,6 +358,19 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
     ], // eslint-disable-next-line react-hooks/exhaustive-deps
     [history, getString, repoMetadata?.path, setPage, showError, showSuccess]
   )
+  const { hooks, standalone } = useAppContext()
+
+  const space = useGetSpaceParam()
+
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPOSITORY'
+      },
+      permissions: ['code_repo_edit']
+    },
+    [space]
+  )
   return (
     <Container>
       {repoMetadata && !newRule && !editRule && (
@@ -403,6 +431,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                 })
               )
             }}
+            permissionProp={permissionProps(permPushResult, standalone)}
           />
         </Container>
       )}

@@ -21,6 +21,8 @@ import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { permissionProps } from 'utils/Utils'
 import css from './WebhooksHeader.module.scss'
 
 interface WebhooksHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -33,7 +35,19 @@ export function WebhooksHeader({ repoMetadata, loading, onSearchTermChanged }: W
   const [searchTerm, setSearchTerm] = useState('')
   const { routes } = useAppContext()
   const { getString } = useStrings()
+  const { hooks, standalone } = useAppContext()
 
+  const space = useGetSpaceParam()
+
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPOSITORY'
+      },
+      permissions: ['code_repo_edit']
+    },
+    [space]
+  )
   return (
     <Container className={css.main} padding="xlarge">
       <Layout.Horizontal spacing="medium">
@@ -52,6 +66,7 @@ export function WebhooksHeader({ repoMetadata, loading, onSearchTermChanged }: W
           text={getString('newWebhook')}
           icon={CodeIcon.Add}
           onClick={() => history.push(routes.toCODEWebhookNew({ repoPath: repoMetadata?.path as string }))}
+          {...permissionProps(permPushResult, standalone)}
         />
       </Layout.Horizontal>
     </Container>
