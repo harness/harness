@@ -31,6 +31,7 @@ func (c *Controller) DeleteTag(ctx context.Context,
 	session *auth.Session,
 	repoRef,
 	tagName string,
+	bypassRules bool,
 ) ([]types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
@@ -44,7 +45,7 @@ func (c *Controller) DeleteTag(ctx context.Context,
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:       &session.Principal,
-		AllowBypass: true,
+		AllowBypass: bypassRules,
 		IsRepoOwner: isRepoOwner,
 		Repo:        repo,
 		RefAction:   protection.RefActionDelete,

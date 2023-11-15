@@ -63,6 +63,7 @@ type Violation struct {
 // RuleViolations holds several violations of a rule.
 type RuleViolations struct {
 	Rule       RuleInfo    `json:"rule"`
+	Bypassable bool        `json:"bypassable"`
 	Bypassed   bool        `json:"bypassed"`
 	Violations []Violation `json:"violations"`
 }

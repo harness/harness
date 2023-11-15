@@ -430,6 +430,21 @@ var queryParameterSortRuleList = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterBypassRules = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamBypassRules,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Bypass rule violations if possible."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func repoOperations(reflector *openapi3.Reflector) {
 	createRepository := openapi3.Operation{}
@@ -624,6 +639,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDeleteBranch := openapi3.Operation{}
 	opDeleteBranch.WithTags("repository")
 	opDeleteBranch.WithMapOfAnything(map[string]interface{}{"operationId": "deleteBranch"})
+	opDeleteBranch.WithParameters(queryParameterBypassRules)
 	_ = reflector.SetRequest(&opDeleteBranch, new(deleteBranchRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusInternalServerError)
@@ -677,6 +693,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDeleteTag := openapi3.Operation{}
 	opDeleteTag.WithTags("repository")
 	opDeleteTag.WithMapOfAnything(map[string]interface{}{"operationId": "deleteTag"})
+	opDeleteTag.WithParameters(queryParameterBypassRules)
 	_ = reflector.SetRequest(&opDeleteTag, new(deleteTagRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDeleteTag, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusInternalServerError)

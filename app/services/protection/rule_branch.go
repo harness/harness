@@ -44,8 +44,10 @@ func (v *Branch) MergeVerify(
 		return
 	}
 
-	bypassed := in.AllowBypass && v.Bypass.matches(in.Actor, in.IsRepoOwner)
+	bypassable := v.Bypass.matches(in.Actor, in.IsRepoOwner)
+	bypassed := in.AllowBypass && bypassable
 	for i := range violations {
+		violations[i].Bypassable = bypassable
 		violations[i].Bypassed = bypassed
 	}
 
@@ -62,8 +64,10 @@ func (v *Branch) RefChangeVerify(
 
 	violations, err = v.Lifecycle.RefChangeVerify(ctx, in)
 
-	bypassed := in.AllowBypass && v.Bypass.matches(in.Actor, in.IsRepoOwner)
+	bypassable := v.Bypass.matches(in.Actor, in.IsRepoOwner)
+	bypassed := in.AllowBypass && bypassable
 	for i := range violations {
+		violations[i].Bypassable = bypassable
 		violations[i].Bypassed = bypassed
 	}
 

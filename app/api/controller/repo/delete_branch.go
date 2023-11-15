@@ -32,6 +32,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	branchName string,
+	bypassRules bool,
 ) ([]types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
@@ -53,7 +54,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:       &session.Principal,
-		AllowBypass: true,
+		AllowBypass: bypassRules,
 		IsRepoOwner: isRepoOwner,
 		Repo:        repo,
 		RefAction:   protection.RefActionDelete,

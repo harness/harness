@@ -27,18 +27,26 @@ func HandleDeleteBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
+
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
+
 		branchName, err := request.GetRemainderFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		violations, err := repoCtrl.DeleteBranch(ctx, session, repoRef, branchName)
+		bypassRules, err := request.ParseBypassRulesFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		violations, err := repoCtrl.DeleteBranch(ctx, session, repoRef, branchName, bypassRules)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 		}

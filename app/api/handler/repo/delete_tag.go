@@ -26,19 +26,26 @@ func HandleDeleteCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		repoRef, err := request.GetRepoRefFromPath(r)
 
+		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
+
 		tagName, err := request.GetRemainderFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		violations, err := repoCtrl.DeleteTag(ctx, session, repoRef, tagName)
+		bypassRules, err := request.ParseBypassRulesFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		violations, err := repoCtrl.DeleteTag(ctx, session, repoRef, tagName, bypassRules)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

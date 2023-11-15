@@ -23,6 +23,8 @@ import (
 
 const (
 	PathParamRuleUID = "rule_uid"
+
+	QueryParamBypassRules = "bypass_rules"
 )
 
 // ParseRuleFilter extracts the protection rule query parameters from the url.
@@ -63,4 +65,9 @@ func parseRuleSort(r *http.Request) enum.RuleSort {
 	return enum.ParseRuleSortAttr(
 		r.URL.Query().Get(QueryParamSort),
 	)
+}
+
+// ParseBypassRulesFromQuery extracts the bypass rules parameter from the URL query.
+func ParseBypassRulesFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamBypassRules, false)
 }

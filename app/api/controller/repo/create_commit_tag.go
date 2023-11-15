@@ -37,6 +37,8 @@ type CreateCommitTagInput struct {
 	// Message is the optional message the tag will be created with - if the message is empty
 	// the tag will be lightweight, otherwise it'll be annotated.
 	Message string `json:"message"`
+
+	BypassRules bool `json:"bypass_rules"`
 }
 
 // CreateCommitTag creates a new tag for a repo.
@@ -62,7 +64,7 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:       &session.Principal,
-		AllowBypass: true,
+		AllowBypass: in.BypassRules,
 		IsRepoOwner: isRepoOwner,
 		Repo:        repo,
 		RefAction:   protection.RefActionCreate,

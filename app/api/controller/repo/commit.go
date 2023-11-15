@@ -51,6 +51,8 @@ type CommitFilesOptions struct {
 	Branch    string             `json:"branch"`
 	NewBranch string             `json:"new_branch"`
 	Actions   []CommitFileAction `json:"actions"`
+
+	BypassRules bool `json:"bypass_rules"`
 }
 
 func (c *Controller) CommitFiles(ctx context.Context,
@@ -80,7 +82,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:       &session.Principal,
-		AllowBypass: true,
+		AllowBypass: in.BypassRules,
 		IsRepoOwner: isRepoOwner,
 		Repo:        repo,
 		RefAction:   refAction,

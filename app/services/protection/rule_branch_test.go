@@ -66,7 +66,8 @@ func TestBranch_MergeVerify(t *testing.T) {
 			},
 			expVs: []types.RuleViolations{
 				{
-					Bypassed: false,
+					Bypassable: true,
+					Bypassed:   false,
 					Violations: []types.Violation{
 						{Code: codePullReqCommentsReqResolveAll},
 						{Code: codePullReqStatusChecksReqUIDs},
@@ -95,7 +96,37 @@ func TestBranch_MergeVerify(t *testing.T) {
 			},
 			expVs: []types.RuleViolations{
 				{
-					Bypassed: true,
+					Bypassable: true,
+					Bypassed:   true,
+					Violations: []types.Violation{
+						{Code: codePullReqCommentsReqResolveAll},
+						{Code: codePullReqStatusChecksReqUIDs},
+					},
+				},
+			},
+		},
+		{
+			name: "user-no-bypass",
+			branch: Branch{
+				PullReq: DefPullReq{
+					StatusChecks: DefStatusChecks{RequireUIDs: []string{"abc"}},
+					Comments:     DefComments{RequireResolveAll: true},
+					Merge:        DefMerge{DeleteBranch: true},
+				},
+			},
+			in: MergeVerifyInput{
+				Actor:       user,
+				AllowBypass: true,
+				PullReq:     &types.PullReq{UnresolvedCount: 1},
+			},
+			expOut: MergeVerifyOutput{
+				DeleteSourceBranch: true,
+				AllowedMethods:     enum.MergeMethods,
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassable: false,
+					Bypassed:   false,
 					Violations: []types.Violation{
 						{Code: codePullReqCommentsReqResolveAll},
 						{Code: codePullReqStatusChecksReqUIDs},
@@ -152,6 +183,11 @@ func TestBranch_MergeVerify(t *testing.T) {
 			}
 
 			for i := range results {
+				if want, got := test.expVs[i].Bypassable, results[i].Bypassable; want != got {
+					t.Errorf("rule result %d, bypassable mismatch: want=%t got=%t", i, want, got)
+					return
+				}
+
 				if want, got := test.expVs[i].Bypassed, results[i].Bypassed; want != got {
 					t.Errorf("rule result %d, bypassed mismatch: want=%t got=%t", i, want, got)
 					return
@@ -209,7 +245,8 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 			},
 			expVs: []types.RuleViolations{
 				{
-					Bypassed: false,
+					Bypassable: true,
+					Bypassed:   false,
 					Violations: []types.Violation{
 						{Code: codeLifecycleDelete},
 					},
@@ -223,7 +260,7 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 				Lifecycle: DefLifecycle{DeleteForbidden: true},
 			},
 			in: RefChangeVerifyInput{
-				Actor:       admin,
+				Actor:       user,
 				AllowBypass: true,
 				IsRepoOwner: true,
 				RefAction:   RefActionDelete,
@@ -232,7 +269,32 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 			},
 			expVs: []types.RuleViolations{
 				{
-					Bypassed: true,
+					Bypassable: true,
+					Bypassed:   true,
+					Violations: []types.Violation{
+						{Code: codeLifecycleDelete},
+					},
+				},
+			},
+		},
+		{
+			name: "user-no-bypass",
+			branch: Branch{
+				Bypass:    DefBypass{RepoOwners: true},
+				Lifecycle: DefLifecycle{DeleteForbidden: true},
+			},
+			in: RefChangeVerifyInput{
+				Actor:       user,
+				AllowBypass: true,
+				IsRepoOwner: false,
+				RefAction:   RefActionDelete,
+				RefType:     RefTypeBranch,
+				RefNames:    []string{"abc"},
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassable: false,
+					Bypassed:   false,
 					Violations: []types.Violation{
 						{Code: codeLifecycleDelete},
 					},
@@ -262,6 +324,11 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 			}
 
 			for i := range results {
+				if want, got := test.expVs[i].Bypassable, results[i].Bypassable; want != got {
+					t.Errorf("rule result %d, bypassable mismatch: want=%t got=%t", i, want, got)
+					return
+				}
+
 				if want, got := test.expVs[i].Bypassed, results[i].Bypassed; want != got {
 					t.Errorf("rule result %d, bypassed mismatch: want=%t got=%t", i, want, got)
 					return
