@@ -547,9 +547,9 @@ func (a Adapter) GetMergeBase(
 		}
 	}
 
-	stdout, _, err := git.NewCommand(ctx, "merge-base", "--", base, head).RunStdString(&git.RunOpts{Dir: repoPath})
+	stdout, stderr, err := git.NewCommand(ctx, "merge-base", "--", base, head).RunStdString(&git.RunOpts{Dir: repoPath})
 	if err != nil {
-		return "", "", processGiteaErrorf(err, "failed to get merge-base")
+		return "", "", processGiteaErrorf(err, "failed to get merge-base: %v", stderr)
 	}
 
 	return strings.TrimSpace(stdout), base, nil

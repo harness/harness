@@ -39,6 +39,17 @@ func (a Adapter) RawDiff(
 	if repoPath == "" {
 		return ErrRepositoryPathEmpty
 	}
+
+	baseTag, err := a.GetAnnotatedTag(ctx, repoPath, baseRef)
+	if err == nil {
+		baseRef = baseTag.TargetSha
+	}
+
+	headTag, err := a.GetAnnotatedTag(ctx, repoPath, headRef)
+	if err == nil {
+		headRef = headTag.TargetSha
+	}
+
 	args := make([]string, 0, 8)
 	args = append(args, "diff", "-M", "--full-index")
 	if mergeBase {
@@ -57,7 +68,7 @@ func (a Adapter) RawDiff(
 		if errbuf.Len() > 0 {
 			err = &runStdError{err: err, stderr: errbuf.String()}
 		}
-		return processGiteaErrorf(err, "git diff failed between '%s' and '%s' with err: %v", baseRef, headRef, err)
+		return processGiteaErrorf(err, "git diff failed between '%s' and '%s'", baseRef, headRef)
 	}
 	return nil
 }
