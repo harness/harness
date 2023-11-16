@@ -49,11 +49,7 @@ func (p DiffParams) Validate() error {
 }
 
 func (s *Service) RawDiff(ctx context.Context, params *DiffParams, out io.Writer) error {
-	if err := s.rawDiff(ctx, params, out); err != nil {
-		return err
-	}
-
-	return nil
+	return s.rawDiff(ctx, params, out)
 }
 
 func (s *Service) rawDiff(ctx context.Context, params *DiffParams, w io.Writer) error {

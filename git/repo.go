@@ -83,10 +83,7 @@ type CreateRepositoryParams struct {
 }
 
 func (p *CreateRepositoryParams) Validate() error {
-	if err := p.Actor.Validate(); err != nil {
-		return err
-	}
-	return nil
+	return p.Actor.Validate()
 }
 
 type CreateRepositoryOutput struct {
@@ -118,10 +115,7 @@ type HashRepositoryParams struct {
 }
 
 func (p *HashRepositoryParams) Validate() error {
-	if err := p.ReadParams.Validate(); err != nil {
-		return err
-	}
-	return nil
+	return p.ReadParams.Validate()
 }
 
 type HashRepositoryOutput struct {
@@ -204,11 +198,7 @@ func (s *Service) DeleteRepository(ctx context.Context, params *DeleteRepository
 		return fmt.Errorf("failed to check the status of the repository %v: %w", repoPath, err)
 	}
 
-	if err := s.DeleteRepositoryBestEffort(ctx, params.RepoUID); err != nil {
-		return err
-	}
-
-	return nil
+	return s.DeleteRepositoryBestEffort(ctx, params.RepoUID)
 }
 
 func (s *Service) DeleteRepositoryBestEffort(ctx context.Context, repoUID string) error {

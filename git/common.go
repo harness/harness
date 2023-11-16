@@ -42,8 +42,5 @@ func (p *WriteParams) Validate() error {
 		return errors.InvalidArgument("RepoUID is mandatory field")
 	}
 
-	if err := p.Actor.Validate(); err != nil {
-		return err
-	}
-	return nil
+	return p.Actor.Validate()
 }

@@ -83,11 +83,7 @@ type CommitFilesParams struct {
 }
 
 func (p *CommitFilesParams) Validate() error {
-	if err := p.WriteParams.Validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return p.WriteParams.Validate()
 }
 
 type CommitFilesResponse struct {

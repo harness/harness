@@ -21,7 +21,7 @@ import (
 
 const (
 	EnvActorName  = "GITNESS_HOOK_ACTOR_NAME"
-	EnvActorEmail = "GITNESS_HOOK_ACTOR_EMAIL"
+	EnvActorEmail = "GITNESS_HOOK_ACTOR_EMAIL" //#nosec
 	EnvRepoUID    = "GITNESS_HOOK_REPO_UID"
 	EnvRequestID  = "GITNESS_HOOK_REQUEST_ID"
 )
