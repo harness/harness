@@ -293,7 +293,11 @@ export const uploadImage = async (
       return ''
     }
     const filePath = result.file_path
-    return window.location.origin + '/' + 'api/v1/repos/' + repoMetadata?.path + '/+/uploads/' + filePath
+    return `${window.location.origin}${getConfig(
+      `code/api/v1/repos/${repoMetadata?.path}/+/uploads/${filePath}${
+        standalone || !routingId ? `` : `?routingId=${routingId}`
+      }`
+    )}`
   } catch (exception) {
     showError(getErrorMessage(exception))
     return ''
