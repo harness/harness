@@ -23,8 +23,12 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/api/impersonate"
 	"google.golang.org/api/option"
 )
+
+// scopes best practice: https://cloud.google.com/compute/docs/access/service-accounts#scopes_best_practice
+const defaultScope = "https://www.googleapis.com/auth/cloud-platform"
 
 type GCSStore struct {
 	// Bucket is the name of the GCS bucket to use.
@@ -45,11 +49,20 @@ func NewGCSStore(cfg Config) (Store, error) {
 		}, nil
 	}
 
-	// Use workload identity default credentials (GKE environment)
-	client, err := storage.NewClient(context.Background())
+	// Use workload identity impersonation default credentials (GKE environment)
+	ts, err := impersonate.CredentialsTokenSource(context.Background(), impersonate.CredentialsConfig{
+		TargetPrincipal: cfg.TargetPrincipal,
+		Scopes:          []string{defaultScope}, // Required field
+		Lifetime:        time.Duration(cfg.ImpersonationLifetime) * time.Hour,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create GCS client with workload identity or default credentials: %w", err)
+		return nil, fmt.Errorf("failed to impersonate the client service account %s : %w", cfg.TargetPrincipal, err)
 	}
+	client, err := storage.NewClient(context.Background(), option.WithTokenSource(ts))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create GCS client with workload identity impersonation: %w", err)
+	}
+
 	return &GCSStore{
 		bucket: cfg.Bucket,
 		client: client,

@@ -22,7 +22,9 @@ const (
 )
 
 type Config struct {
-	Provider Provider
-	Bucket   string
-	KeyPath  string
+	Provider              Provider
+	Bucket                string
+	KeyPath               string
+	TargetPrincipal       string
+	ImpersonationLifetime int
 }

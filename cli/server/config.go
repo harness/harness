@@ -247,9 +247,11 @@ func ProvideBlobStoreConfig(config *types.Config) (blob.Config, error) {
 		config.BlobStore.Bucket = filepath.Join(homedir, gitnessHomeDir, blobDir)
 	}
 	return blob.Config{
-		Provider: config.BlobStore.Provider,
-		Bucket:   config.BlobStore.Bucket,
-		KeyPath:  config.BlobStore.KeyPath,
+		Provider:              config.BlobStore.Provider,
+		Bucket:                config.BlobStore.Bucket,
+		KeyPath:               config.BlobStore.KeyPath,
+		TargetPrincipal:       config.BlobStore.TargetPrincipal,
+		ImpersonationLifetime: config.BlobStore.ImpersonationLifetime,
 	}, nil
 }
 

@@ -155,6 +155,11 @@ type Config struct {
 
 		// In case of GCS provider, this is expected to be the path to the service account key file.
 		KeyPath string `envconfig:"GITNESS_BLOBSTORE_KEY_PATH" default:""`
+
+		// Email ID of the google service account that needs to be impersonated
+		TargetPrincipal string `envconfig:"GITNESS_BLOBSTORE_TARGET_PRINCIPAL" default:""`
+
+		ImpersonationLifetime int `envconfig:"GITNESS_BLOBSTORE_IMPERSONATION_LIFETIME" default:"12"`
 	}
 
 	// Token defines token configuration parameters.
