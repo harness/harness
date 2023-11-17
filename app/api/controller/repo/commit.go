@@ -52,6 +52,7 @@ type CommitFilesOptions struct {
 	NewBranch string             `json:"new_branch"`
 	Actions   []CommitFileAction `json:"actions"`
 
+	DryRunRules bool `json:"dry_run_rules"`
 	BypassRules bool `json:"bypass_rules"`
 }
 
@@ -91,6 +92,13 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	})
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
+
+	if in.DryRunRules {
+		return types.CommitFilesResponse{
+			DryRunRules:    true,
+			RuleViolations: violations,
+		}, nil, nil
 	}
 
 	if protection.IsCritical(violations) {
@@ -145,6 +153,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	}
 
 	return types.CommitFilesResponse{
-		CommitID: commit.CommitID,
+		CommitID:       commit.CommitID,
+		RuleViolations: violations,
 	}, nil, nil
 }
