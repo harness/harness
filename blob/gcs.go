@@ -53,7 +53,7 @@ func NewGCSStore(cfg Config) (Store, error) {
 	ts, err := impersonate.CredentialsTokenSource(context.Background(), impersonate.CredentialsConfig{
 		TargetPrincipal: cfg.TargetPrincipal,
 		Scopes:          []string{defaultScope}, // Required field
-		Lifetime:        time.Duration(cfg.ImpersonationLifetime) * time.Hour,
+		Lifetime:        cfg.ImpersonationLifetime,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to impersonate the client service account %s : %w", cfg.TargetPrincipal, err)

@@ -46,7 +46,7 @@ func ProvideLastCommitCache(
 	redisClient redis.UniversalClient,
 	repoProvider *GoGitRepoProvider,
 ) cache.Cache[CommitEntryKey, *types.Commit] {
-	cacheDuration := time.Duration(config.Git.LastCommitCache.DurationSeconds) * time.Second
+	cacheDuration := config.Git.LastCommitCache.Duration
 
 	if config.Git.LastCommitCache.Mode == ModeNone || cacheDuration < time.Second {
 		return NoLastCommitCache(repoProvider)

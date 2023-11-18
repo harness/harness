@@ -28,8 +28,8 @@ type LastCommitCache struct {
 	// Mode determines where the cache will be. Valid values are "inmemory" (default), "redis" or "none".
 	Mode string `envconfig:"GITNESS_GIT_LAST_COMMIT_CACHE_MODE" default:"inmemory"`
 
-	// DurationSeconds defines cache duration in seconds of last commit, default=12h.
-	DurationSeconds int `envconfig:"GITNESS_GIT_LAST_COMMIT_CACHE_SECONDS" default:"43200"`
+	// Duration defines cache duration of last commit.
+	Duration time.Duration `envconfig:"GITNESS_GIT_LAST_COMMIT_CACHE_DURATION" default:"12h"`
 }
 
 // Git defines the git configuration parameters.
@@ -159,7 +159,7 @@ type Config struct {
 		// Email ID of the google service account that needs to be impersonated
 		TargetPrincipal string `envconfig:"GITNESS_BLOBSTORE_TARGET_PRINCIPAL" default:""`
 
-		ImpersonationLifetime int `envconfig:"GITNESS_BLOBSTORE_IMPERSONATION_LIFETIME" default:"12"`
+		ImpersonationLifetime time.Duration `envconfig:"GITNESS_BLOBSTORE_IMPERSONATION_LIFETIME" default:"12h"`
 	}
 
 	// Token defines token configuration parameters.

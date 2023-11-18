@@ -14,6 +14,8 @@
 
 package blob
 
+import "time"
+
 type Provider string
 
 const (
@@ -26,5 +28,5 @@ type Config struct {
 	Bucket                string
 	KeyPath               string
 	TargetPrincipal       string
-	ImpersonationLifetime int
+	ImpersonationLifetime time.Duration
 }
