@@ -245,7 +245,16 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	log.Info().Msgf("successfully created git repository with git_uid '%s'", gitUID)
 
 	err = func() error {
-		repo.GitUID = gitUID
+		repo, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
+			if !repo.Importing {
+				return errors.New("repository has already finished importing")
+			}
+			repo.GitUID = gitUID
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update repository prior to the import: %w", err)
+		}
 
 		log.Info().Msg("sync repository")
 
@@ -291,6 +300,8 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	}()
 	if err != nil {
 		log.Error().Err(err).Msg("failed repository import - cleanup git repository")
+
+		repo.GitUID = gitUID // make sure to delete the correct directory
 
 		if errDel := r.deleteGitRepository(context.Background(), &systemPrincipal, repo); errDel != nil {
 			log.Warn().Err(errDel).

@@ -42,6 +42,11 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 		return err
 	}
 
+	log.Ctx(ctx).Info().
+		Int64("repo.id", repo.ID).
+		Str("repo.path", repo.Path).
+		Msgf("deleting repository")
+
 	if repo.Importing {
 		err = c.importer.Cancel(ctx, repo)
 		if err != nil {
@@ -50,8 +55,6 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 
 		return c.DeleteNoAuth(ctx, session, repo)
 	}
-
-	log.Ctx(ctx).Info().Msgf("Delete request received for repo %s , id: %d", repo.Path, repo.ID)
 
 	return c.DeleteNoAuth(ctx, session, repo)
 }
@@ -79,6 +82,12 @@ func (c *Controller) deleteGitRepository(
 	session *auth.Session,
 	repo *types.Repository,
 ) error {
+	if repo.Importing {
+		log.Ctx(ctx).Debug().Str("repo.git_uid", repo.GitUID).
+			Msg("skipping removal of git directory for repository being imported")
+		return nil
+	}
+
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return fmt.Errorf("failed to create RPC write params: %w", err)
@@ -89,11 +98,12 @@ func (c *Controller) deleteGitRepository(
 	})
 
 	// deletion should not fail if dir does not exist in repos dir
-	if errors.AsStatus(err) == errors.StatusNotFound {
-		log.Ctx(ctx).Warn().Msgf("repo %s does not exist", repo.GitUID)
+	if errors.IsNotFound(err) {
+		log.Ctx(ctx).Warn().Str("repo.git_uid", repo.GitUID).
+			Msg("git repository directory does not exist")
 	} else if err != nil {
 		// deletion has failed before removing(rename) the repo dir
-		return fmt.Errorf("failed to delete repo %s: %w", repo.GitUID, err)
+		return fmt.Errorf("failed to delete git repository directory %s: %w", repo.GitUID, err)
 	}
 	return nil
 }
