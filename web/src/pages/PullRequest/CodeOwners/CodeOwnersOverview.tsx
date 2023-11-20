@@ -93,7 +93,7 @@ export function CodeOwnersOverview({
     return {
       borderColor: 'green800',
       message: stringSubstitute(getString('codeOwner.approvalCompleted'), {
-        count: approvalEntriesArr.length || 0,
+        count: approvalEntriesArr.length || '0',
         total: codeOwners?.evaluation_entries?.length
       }) as string,
       overallStatus: ExecutionState.SUCCESS

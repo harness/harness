@@ -188,7 +188,7 @@ const BranchProtectionForm = (props: {
     }
 
     return rulesFormInitialPayload // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editMode, rule, ruleUid])
+  }, [editMode, rule, ruleUid, users])
   const space = useGetSpaceParam()
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
