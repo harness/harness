@@ -176,8 +176,9 @@ func (s *Service) GetBranch(ctx context.Context, params *GetBranchParams) (*GetB
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	sanitizedBranchName := strings.TrimPrefix(params.BranchName, gitReferenceNamePrefixBranch)
 
-	gitBranch, err := s.adapter.GetBranch(ctx, repoPath, params.BranchName)
+	gitBranch, err := s.adapter.GetBranch(ctx, repoPath, sanitizedBranchName)
 	if err != nil {
 		return nil, err
 	}
