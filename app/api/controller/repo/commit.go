@@ -61,7 +61,12 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	repoRef string,
 	in *CommitFilesOptions,
 ) (types.CommitFilesResponse, []types.RuleViolations, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
+	requiredPermission := enum.PermissionRepoPush
+	if in.DryRunRules {
+		requiredPermission = enum.PermissionRepoView
+	}
+
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, requiredPermission, false)
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, err
 	}

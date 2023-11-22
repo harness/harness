@@ -86,7 +86,12 @@ func (c *Controller) Merge(
 		return nil, nil, err
 	}
 
-	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
+	requiredPermission := enum.PermissionRepoPush
+	if in.DryRun {
+		requiredPermission = enum.PermissionRepoView
+	}
+
+	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, requiredPermission)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
