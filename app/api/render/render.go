@@ -136,12 +136,13 @@ func JSONArrayDynamic[T comparable](ctx context.Context, w http.ResponseWriter, 
 
 			// Array data has been already streamed, it's too late for the output - so just log and quit.
 			log.Ctx(ctx).Warn().Msgf("Failed to write JSON array response body: %v", err)
+			// close array
+			_, _ = w.Write([]byte{']'})
 			return
 		}
 
 		if count == 0 {
 			setCommonHeaders(w)
-			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte{'['})
 		} else {
 			_, _ = w.Write([]byte{','})
@@ -153,6 +154,7 @@ func JSONArrayDynamic[T comparable](ctx context.Context, w http.ResponseWriter, 
 	}
 
 	if count == 0 {
+		setCommonHeaders(w)
 		_, _ = w.Write([]byte{'['})
 	}
 

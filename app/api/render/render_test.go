@@ -15,12 +15,15 @@
 package render
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/git"
 )
 
 func TestWriteErrorf(t *testing.T) {
@@ -158,5 +161,116 @@ func TestWriteJSON(t *testing.T) {
 		if got, want := w.Body.String(), "{\n  \"hello\": \"world\"\n}\n"; got != want {
 			t.Errorf("Want JSON body %q, got %q", want, got)
 		}
+	}
+}
+
+func TestJSONArrayDynamic(t *testing.T) {
+	noctx := context.Background()
+	type mock struct {
+		ID int `json:"id"`
+	}
+	type args[T comparable] struct {
+		ctx context.Context
+		f   func(ch chan<- *mock, cherr chan<- error)
+	}
+	type testCase[T comparable] struct {
+		name    string
+		args    args[T]
+		len     int
+		wantErr bool
+	}
+
+	tests := []testCase[*mock]{
+		{
+			name: "happy path",
+			args: args[*mock]{
+				ctx: noctx,
+				f: func(ch chan<- *mock, cherr chan<- error) {
+					defer close(ch)
+					ch <- &mock{ID: 1}
+				},
+			},
+			len:     1,
+			wantErr: false,
+		},
+		{
+			name: "empty array response",
+			args: args[*mock]{
+				ctx: noctx,
+				f: func(ch chan<- *mock, cherr chan<- error) {
+					close(ch)
+				},
+			},
+			len:     0,
+			wantErr: false,
+		},
+		{
+			name: "error at beginning of the stream",
+			args: args[*mock]{
+				ctx: noctx,
+				f: func(ch chan<- *mock, cherr chan<- error) {
+					defer close(ch)
+					defer close(cherr)
+					cherr <- errors.New("error writing to the response writer")
+				},
+			},
+			len:     0,
+			wantErr: true,
+		},
+		{
+			name: "error while streaming",
+			args: args[*mock]{
+				ctx: noctx,
+				f: func(ch chan<- *mock, cherr chan<- error) {
+					defer close(ch)
+					defer close(cherr)
+					ch <- &mock{ID: 1}
+					ch <- &mock{ID: 2}
+					cherr <- errors.New("error writing to the response writer")
+				},
+			},
+			len:     2,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ch := make(chan *mock)
+			cherr := make(chan error, 1)
+
+			stream := git.NewStreamReader(ch, cherr)
+			go func() {
+				tt.args.f(ch, cherr)
+			}()
+
+			w := httptest.NewRecorder()
+
+			JSONArrayDynamic[*mock](tt.args.ctx, w, stream)
+
+			ct := w.Header().Get("Content-Type")
+			if ct != "application/json; charset=utf-8" {
+				t.Errorf("Content type should be application/json, got: %v", ct)
+				return
+			}
+
+			if tt.wantErr {
+				if w.Code != 500 {
+					t.Errorf("stream error code should be 500, got: %v", w.Code)
+				}
+				return
+			}
+
+			var m []mock
+			err := json.NewDecoder(w.Body).Decode(&m)
+			if err != nil {
+				t.Errorf("error should be nil, got: %v", err)
+				return
+			}
+
+			if len(m) != tt.len {
+				t.Errorf("json array length should be %d, got: %v", tt.len, len(m))
+				return
+			}
+		})
 	}
 }
