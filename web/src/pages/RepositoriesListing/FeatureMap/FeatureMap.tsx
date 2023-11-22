@@ -17,12 +17,14 @@
 import React from 'react'
 import cx from 'classnames'
 import { Icon } from '@harnessio/icons'
-import { Container, Layout, Text } from '@harnessio/uicore'
+import { Container, Layout, Text, Link } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { FeatureType, type FeatureData } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import features from './featureRoadmap.json'
+import Launch from '../../../icons/Launch.svg'
+
 import css from '../RepositoriesListing.module.scss'
 
 const FeatureMap = () => {
@@ -55,7 +57,14 @@ const FeatureMap = () => {
             {
               <Container>
                 <Layout.Vertical>
-                  <Text className={css.featureTitle}>{feature.title}</Text>
+                  <Text className={css.featureTitle}>
+                    {feature.title}
+                    <Link noStyling href={feature.link}>
+                      <Container padding={{ top: 'tiny', left: 'small' }}>
+                        <img className={css.launchIcon} src={Launch} width={12} height={12}></img>
+                      </Container>
+                    </Link>
+                  </Text>
                   <Text className={css.featureContent}>{feature.content}</Text>
                 </Layout.Vertical>
               </Container>

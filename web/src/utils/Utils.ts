@@ -122,6 +122,7 @@ export interface FeatureData {
   type: string
   title: string
   content: string
+  link: string
 }
 
 export interface SourceCodeEditorProps {

@@ -1,20 +1,42 @@
 [
   {
+    "type": "comingSoon",
+    "typeText": "coming soon",
+    "color": "purple",
+    "title": "Notifications",
+    "content": "Email notifications for pull request changes",
+    "link": "https://ideas.harness.io/admin/roadmap/gitness-roadmap/p/email-notifications"
+  },
+  {
+    "type": "comingSoon",
+    "typeText": "coming soon",
+    "color": "purple",
+    "title": "Code search",
+    "content": "Keyword search of source code across repositories",
+    "link": "https://ideas.harness.io/admin/roadmap/gitness-roadmap/p/search-across-repositories"
+  },
+  {
+    "type": "comingSoon",
+    "typeText": "coming soon",
+    "color": "purple",
+    "title": "Image support in Pull Requests",
+    "content": "Support to upload images in pull request descriptions",
+    "link": "https://ideas.harness.io/admin/roadmap/gitness-roadmap/p/image-support-in-pr-description"
+  },
+  {
     "type": "released",
     "typeText": "released",
-    "title": "Semantic Search",
-    "content": "Semantic search feature is released."
+    "color": "green",
+    "title": "Code Owners",
+    "content": "Configure codeowners files to assign ownership to areas of the codebase, and automatically add as reviewers for pull requests with changes to those files",
+    "link": "https://ideas.harness.io/admin/roadmap/gitness-roadmap/p/code-owners"
   },
   {
-    "type": "comingSoon",
-    "typeText": "coming soon",
-    "title": "Code search",
-    "content": "Code search feature is coming soon in December."
-  },
-  {
-    "type": "comingSoon",
-    "typeText": "coming soon",
-    "title": "Linked repositories",
-    "content": "Linked repositories feature is coming soon in December."
+    "type": "released",
+    "typeText": "released",
+    "color": "green",
+    "title": "Branch Rules",
+    "content": "Define branch rules to enforce process and prevent unwanted changes on protected branches",
+    "link": "https://ideas.harness.io/admin/roadmap/gitness-roadmap/p/branch-rules-merge-checks"
   }
 ]

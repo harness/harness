@@ -151,9 +151,10 @@
     padding-left: 2px !important;
   }
   .featureTitle {
-    font-size: 14px !important;
+    font-size: 13px !important;
     font-weight: 600 !important;
     padding-bottom: var(--spacing-small) !important;
+    display: flex !important;
   }
   .featureContent {
     font-size: 10px !important;
@@ -191,4 +192,11 @@
       }
     }
   }
+}
+.repoListingContainer {
+  width: calc(100% - 285px) !important;
+}
+
+.launchIcon {
+  padding-bottom: 1px !important;
 }

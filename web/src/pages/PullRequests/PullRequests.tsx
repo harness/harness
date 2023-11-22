@@ -167,7 +167,9 @@ export default function PullRequests() {
                                 />
                               </strong>
                             ),
-                            user: <strong>{row.original.author?.display_name}</strong>
+                            user: (
+                              <strong>{row.original.author?.display_name || row.original.author?.email || ''}</strong>
+                            )
                           }}
                         />
                       </Text>

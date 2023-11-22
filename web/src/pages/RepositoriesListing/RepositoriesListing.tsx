@@ -211,7 +211,7 @@ export default function RepositoriesListing() {
         <LoadingSpinner visible={loading && searchTerm === undefined} />
 
         <Layout.Horizontal>
-          <Container height={`100vh`} width={'80%'} margin={{ top: 'medium' }}>
+          <Container height={`100vh`} className={css.repoListingContainer} margin={{ top: 'medium' }}>
             <Container padding="xlarge">
               <Layout.Horizontal spacing="large" className={css.layout}>
                 {NewRepoButton}

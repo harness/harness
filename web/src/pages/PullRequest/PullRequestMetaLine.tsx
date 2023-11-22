@@ -40,7 +40,7 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const vars = {
-    user: <strong>{author?.display_name}</strong>,
+    user: <strong>{author?.display_name || author?.email || ''}</strong>,
     commits: <strong>{stats?.commits}</strong>,
     commitsCount: stats?.commits,
     target: (

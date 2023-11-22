@@ -24,6 +24,7 @@ export declare const featureText: string
 export declare const featureTitle: string
 export declare const iconContainer: string
 export declare const input: string
+export declare const launchIcon: string
 export declare const layout: string
 export declare const main: string
 export declare const name: string
@@ -32,6 +33,7 @@ export declare const noDesc: string
 export declare const pinned: string
 export declare const progressBar: string
 export declare const releasedContainer: string
+export declare const repoListingContainer: string
 export declare const repoName: string
 export declare const repoScope: string
 export declare const row: string

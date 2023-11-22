@@ -71,7 +71,7 @@ export default function Home() {
             <Layout.Vertical className={css.spaceContainer} spacing="small">
               <Text flex={{ justifyContent: 'center', align: 'center-center' }} font={{ variation: FontVariation.H2 }}>
                 {getString('homepage.welcomeText', {
-                  currentUser: currentUser?.display_name
+                  currentUser: currentUser?.display_name || currentUser?.email || ''
                 })}
               </Text>
               <Text
