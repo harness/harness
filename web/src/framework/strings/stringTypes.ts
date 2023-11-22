@@ -292,6 +292,7 @@ export interface StringsMap {
   failedToFetchFileContent: string
   failedToImportSpace: string
   failedToSavePipeline: string
+  featureRoadmap: string
   fileDeleted: string
   fileTooLarge: string
   files: string

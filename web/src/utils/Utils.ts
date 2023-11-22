@@ -33,6 +33,11 @@ export enum PullRequestSection {
   CHECKS = 'checks'
 }
 
+export enum FeatureType {
+  COMINGSOON = 'comingSoon',
+  RELEASED = 'released'
+}
+
 export const LIST_FETCHING_LIMIT = 20
 export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY hh:mm a'
 export const DEFAULT_BRANCH_NAME = 'main'
@@ -110,6 +115,13 @@ export interface RegisterForm {
   password: string
   confirmPassword: string
   email: string
+}
+
+export interface FeatureData {
+  typeText: string
+  type: string
+  title: string
+  content: string
 }
 
 export interface SourceCodeEditorProps {

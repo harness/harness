@@ -1,0 +1,20 @@
+[
+  {
+    "type": "released",
+    "typeText": "released",
+    "title": "Semantic Search",
+    "content": "Semantic search feature is released."
+  },
+  {
+    "type": "comingSoon",
+    "typeText": "coming soon",
+    "title": "Code search",
+    "content": "Code search feature is coming soon in December."
+  },
+  {
+    "type": "comingSoon",
+    "typeText": "coming soon",
+    "title": "Linked repositories",
+    "content": "Linked repositories feature is coming soon in December."
+  }
+]
