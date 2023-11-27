@@ -125,7 +125,13 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
                   // Test if the link is relative to the current page.
                   // If true, rewrite it to point to the correct location
                   if (new URL(window.location.href + '/' + href).origin === window.location.origin) {
-                    properties.href = (refRootHref + '/~/' + href).replace(/^\/ng\//, '/')
+                    const currentPath = window.location.href.split('~/')[1]
+                    properties.href = (
+                      refRootHref +
+                      '/~/' +
+                      (currentPath && !currentPath.includes(href) ? currentPath.replace('/README.md', '') + '/' : '') +
+                      href
+                    ).replace(/^\/ng\//, '/')
                   }
                 } catch (_exception) {
                   // eslint-disable-line no-empty
