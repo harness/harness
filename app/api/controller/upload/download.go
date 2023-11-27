@@ -38,7 +38,7 @@ func (c *Controller) Download(
 
 	fileBucketPath := getFileBucketPath(repo.ID, filePath)
 
-	signedURL, err := c.blobStore.GetSignedURL(fileBucketPath)
+	signedURL, err := c.blobStore.GetSignedURL(ctx, fileBucketPath)
 	if err != nil && !errors.Is(err, blob.ErrNotSupported) {
 		return "", nil, fmt.Errorf("failed to get signed URL: %w", err)
 	}

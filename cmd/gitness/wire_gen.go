@@ -246,7 +246,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	blobStore, err := blob.ProvideStore(blobConfig)
+	blobStore, err := blob.ProvideStore(ctx, blobConfig)
 	if err != nil {
 		return nil, err
 	}

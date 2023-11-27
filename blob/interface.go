@@ -30,7 +30,7 @@ type Store interface {
 	Upload(ctx context.Context, file io.Reader, filePath string) error
 
 	// GetSignedURL returns the URL for a file in the blob store.
-	GetSignedURL(filePath string) (string, error)
+	GetSignedURL(ctx context.Context, filePath string) (string, error)
 
 	// Download returns a reader for a file in the blob store.
 	Download(ctx context.Context, filePath string) (io.ReadCloser, error)

@@ -15,6 +15,7 @@
 package blob
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/wire"
@@ -24,12 +25,12 @@ var WireSet = wire.NewSet(
 	ProvideStore,
 )
 
-func ProvideStore(config Config) (Store, error) {
+func ProvideStore(ctx context.Context, config Config) (Store, error) {
 	switch config.Provider {
 	case ProviderFileSystem:
 		return NewFileSystemStore(config)
 	case ProviderGCS:
-		return NewGCSStore(config)
+		return NewGCSStore(ctx, config)
 	default:
 		return nil, fmt.Errorf("invalid blob store provider: %s", config.Provider)
 	}
