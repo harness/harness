@@ -63,7 +63,7 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
               event.preventDefault()
 
               if (href.startsWith('#')) {
-                document.getElementById(href.slice(1))?.scrollIntoView()
+                document.getElementById(href.slice(1).toLowerCase())?.scrollIntoView()
               } else {
                 history.push(url.pathname)
               }
