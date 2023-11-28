@@ -640,7 +640,7 @@ skipped: Skipped
 killed: Killed
 repoDelete:
   title: Delete Repository
-  deleteConfirm1: This will permanently delete the "{{repo}}" repository, wiki, issues, comments, packages, secrets, workflow runs, and remove all collaborator associations.
+  deleteConfirm1: This will permanently delete the "{{repo}}" repository.
   deleteConfirmButton1: I want to delete this repository
   deleteConfirm2: To confirm, type "{{repo}}" in the box below
   deleteToastSuccess: Repository deleted successfully
