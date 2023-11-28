@@ -62,6 +62,7 @@ var (
 type CreateRepositoryParams struct {
 	// Create operation is different from all (from user side), as UID doesn't exist yet.
 	// Only take actor and envars as input and create WriteParams manually
+	RepoUID string
 	Actor   Identity
 	EnvVars map[string]string
 
@@ -132,15 +133,18 @@ func (s *Service) CreateRepository(
 
 	log := log.Ctx(ctx)
 
-	uid, err := newRepositoryUID()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create new uid: %w", err)
+	if params.RepoUID == "" {
+		uid, err := NewRepositoryUID()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new uid: %w", err)
+		}
+		params.RepoUID = uid
 	}
 	log.Info().
-		Msgf("Create new git repository with uid '%s' and default branch '%s'", uid, params.DefaultBranch)
+		Msgf("Create new git repository with uid '%s' and default branch '%s'", params.RepoUID, params.DefaultBranch)
 
 	writeParams := WriteParams{
-		RepoUID: uid,
+		RepoUID: params.RepoUID,
 		Actor:   params.Actor,
 		EnvVars: params.EnvVars,
 	}
@@ -163,7 +167,7 @@ func (s *Service) CreateRepository(
 		authorDate = *params.AuthorDate
 	}
 
-	err = s.createRepositoryInternal(
+	err := s.createRepositoryInternal(
 		ctx,
 		&writeParams,
 		params.DefaultBranch,
@@ -178,11 +182,11 @@ func (s *Service) CreateRepository(
 	}
 
 	return &CreateRepositoryOutput{
-		UID: uid,
+		UID: params.RepoUID,
 	}, nil
 }
 
-func newRepositoryUID() (string, error) {
+func NewRepositoryUID() (string, error) {
 	return gonanoid.Generate(repoGitUIDAlphabet, repoGitUIDLength)
 }
 
