@@ -16,10 +16,8 @@ package pullreq
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types/enum"
 )
 
 // Recheck re-checks all system PR checks (mergeability check, ...).
@@ -29,15 +27,22 @@ func (c *Controller) Recheck(
 	repoRef string,
 	prNum int64,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
-	if err != nil {
-		return fmt.Errorf("failed to acquire access to repo: %w", err)
-	}
+	// TODO: Remove the API.
+	_ = ctx
+	_ = session
+	_ = repoRef
+	_ = prNum
+	/*
+		repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
+		if err != nil {
+			return fmt.Errorf("failed to acquire access to repo: %w", err)
+		}
 
-	err = c.pullreqService.UpdateMergeDataIfRequired(ctx, repo.ID, prNum)
-	if err != nil {
-		return fmt.Errorf("failed to refresh merge data: %w", err)
-	}
+		err = c.pullreqService.UpdateMergeDataIfRequired(ctx, repo.ID, prNum)
+		if err != nil {
+			return fmt.Errorf("failed to refresh merge data: %w", err)
+		}
+	*/
 
 	return nil
 }

@@ -57,48 +57,6 @@ func (e *ValidationError) Error() string {
 	return e.Msg
 }
 
-// MergeConflictsError represents an error if merging fails with a conflict.
-type MergeConflictsError struct {
-	Method    enum.MergeMethod
-	CommitSHA string
-	StdOut    string
-	StdErr    string
-	Err       error
-	Files     []string
-}
-
-func IsMergeConflictsError(err error) bool {
-	return errors.Is(err, &MergeConflictsError{})
-}
-
-func (e *MergeConflictsError) Error() string {
-	return fmt.Sprintf("Merge Conflict Error: %v: %s\n%s", e.Err, e.StdErr, e.StdOut)
-}
-
-func (e *MergeConflictsError) Unwrap() error {
-	return e.Err
-}
-
-func (e *MergeConflictsError) Status() errors.Status {
-	return StatusNotMergeable
-}
-
-func AsMergeConflictsError(err error) (e *MergeConflictsError) {
-	if err == nil {
-		return nil
-	}
-	if errors.As(err, &e) {
-		return
-	}
-	return
-}
-
-//nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
-func (e *MergeConflictsError) Is(target error) bool {
-	_, ok := target.(*MergeConflictsError)
-	return ok
-}
-
 // MergeUnrelatedHistoriesError represents an error if merging fails due to unrelated histories.
 type MergeUnrelatedHistoriesError struct {
 	Method enum.MergeMethod

@@ -365,3 +365,7 @@ type FileContent struct {
 	Path    string
 	Content []byte
 }
+
+type MergeResult struct {
+	ConflictFiles []string
+}

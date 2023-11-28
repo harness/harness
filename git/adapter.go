@@ -72,7 +72,7 @@ type Adapter interface {
 	CreateTemporaryRepoForPR(ctx context.Context, reposTempPath string, pr *types.PullRequest,
 		baseBranch, trackingBranch string) (types.TempRepository, error)
 	Merge(ctx context.Context, pr *types.PullRequest, mergeMethod enum.MergeMethod, baseBranch, trackingBranch string,
-		tmpBasePath string, mergeMsg string, identity *types.Identity, env ...string) error
+		tmpBasePath string, mergeMsg string, identity *types.Identity, env ...string) (types.MergeResult, error)
 	GetMergeBase(ctx context.Context, repoPath, remote, base, head string) (string, string, error)
 	Blame(ctx context.Context, repoPath, rev, file string, lineFrom, lineTo int) types.BlameReader
 	Sync(ctx context.Context, repoPath string, source string, refSpecs []string) error

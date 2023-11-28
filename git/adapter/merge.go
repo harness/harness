@@ -30,7 +30,6 @@ import (
 	"github.com/harness/gitness/git/types"
 
 	"code.gitea.io/gitea/modules/git"
-	"github.com/rs/zerolog/log"
 )
 
 // CreateTemporaryRepo creates a temporary repo with "base" for pr.BaseBranch and "tracking" for  pr.HeadBranch
@@ -197,6 +196,10 @@ func (a Adapter) CreateTemporaryRepoForPR(
 	}, nil
 }
 
+type runMergeResult struct {
+	conflictFiles []string
+}
+
 func runMergeCommand(
 	ctx context.Context,
 	pr *types.PullRequest,
@@ -204,7 +207,7 @@ func runMergeCommand(
 	cmd *git.Command,
 	tmpBasePath string,
 	env []string,
-) error {
+) (runMergeResult, error) {
 	var outbuf, errbuf strings.Builder
 	if err := cmd.Run(&git.RunOpts{
 		Dir:    tmpBasePath,
@@ -212,34 +215,33 @@ func runMergeCommand(
 		Stderr: &errbuf,
 		Env:    env,
 	}); err != nil {
-		// Merge will leave a MERGE_HEAD file in the .git folder if there is a conflict
-		if _, statErr := os.Stat(filepath.Join(tmpBasePath, ".git", "MERGE_HEAD")); statErr == nil {
-			// We have a merge conflict error
-			files, cferr := conflictFiles(ctx, pr, env, tmpBasePath)
-			if cferr != nil {
-				return cferr
-			}
-			return &types.MergeConflictsError{
-				Method: mergeMethod,
-				StdOut: outbuf.String(),
-				StdErr: errbuf.String(),
-				Err:    err,
-				Files:  files,
-			}
-		} else if strings.Contains(errbuf.String(), "refusing to merge unrelated histories") {
-			return &types.MergeUnrelatedHistoriesError{
+		if strings.Contains(errbuf.String(), "refusing to merge unrelated histories") {
+			return runMergeResult{}, &types.MergeUnrelatedHistoriesError{
 				Method: mergeMethod,
 				StdOut: outbuf.String(),
 				StdErr: errbuf.String(),
 				Err:    err,
 			}
 		}
+
+		// Merge will leave a MERGE_HEAD file in the .git folder if there is a conflict
+		if _, statErr := os.Stat(filepath.Join(tmpBasePath, ".git", "MERGE_HEAD")); statErr == nil {
+			// We have a merge conflict error
+			files, cferr := conflictFiles(ctx, pr, env, tmpBasePath)
+			if cferr != nil {
+				return runMergeResult{}, cferr
+			}
+			return runMergeResult{
+				conflictFiles: files,
+			}, nil
+		}
+
 		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
-		return processGiteaErrorf(giteaErr, "git merge [%s -> %s]\n%s\n%s",
+		return runMergeResult{}, processGiteaErrorf(giteaErr, "git merge [%s -> %s]\n%s\n%s",
 			pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
 	}
 
-	return nil
+	return runMergeResult{}, nil
 }
 
 func commitAndSignNoAuthor(
@@ -290,7 +292,7 @@ func (a Adapter) Merge(
 	mergeMsg string,
 	identity *types.Identity,
 	env ...string,
-) error {
+) (types.MergeResult, error) {
 	var (
 		outbuf, errbuf strings.Builder
 	)
@@ -306,18 +308,26 @@ func (a Adapter) Merge(
 	switch mergeMethod {
 	case enum.MergeMethodMerge:
 		cmd := git.NewCommand(ctx, "merge", "--no-ff", "--no-commit", trackingBranch)
-		if err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env); err != nil {
-			return fmt.Errorf("unable to merge tracking into base: %w", err)
+		result, err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env)
+		if err != nil {
+			return types.MergeResult{}, fmt.Errorf("unable to merge tracking into base: %w", err)
+		}
+		if len(result.conflictFiles) > 0 {
+			return types.MergeResult{ConflictFiles: result.conflictFiles}, nil
 		}
 
 		if err := commitAndSignNoAuthor(ctx, pr, mergeMsg, signArg, tmpBasePath, env); err != nil {
-			return fmt.Errorf("unable to make final commit: %w", err)
+			return types.MergeResult{}, fmt.Errorf("unable to make final commit: %w", err)
 		}
 	case enum.MergeMethodSquash:
 		// Merge with squash
 		cmd := git.NewCommand(ctx, "merge", "--squash", trackingBranch)
-		if err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env); err != nil {
-			return fmt.Errorf("unable to merge --squash tracking into base: %w", err)
+		result, err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env)
+		if err != nil {
+			return types.MergeResult{}, fmt.Errorf("unable to merge --squash tracking into base: %w", err)
+		}
+		if len(result.conflictFiles) > 0 {
+			return types.MergeResult{ConflictFiles: result.conflictFiles}, nil
 		}
 
 		if signArg == "" {
@@ -328,7 +338,7 @@ func (a Adapter) Merge(
 					Stdout: &outbuf,
 					Stderr: &errbuf,
 				}); err != nil {
-				return processGiteaErrorf(err, "git commit [%s -> %s]\n%s\n%s",
+				return types.MergeResult{}, processGiteaErrorf(err, "git commit [%s -> %s]\n%s\n%s",
 					pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
 			}
 		} else {
@@ -339,25 +349,27 @@ func (a Adapter) Merge(
 					Stdout: &outbuf,
 					Stderr: &errbuf,
 				}); err != nil {
-				return processGiteaErrorf(err, "git commit [%s -> %s]\n%s\n%s",
+				return types.MergeResult{}, processGiteaErrorf(err, "git commit [%s -> %s]\n%s\n%s",
 					pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
 			}
 		}
 	case enum.MergeMethodRebase:
-		// Checkout head branch
+		// Create staging branch
 		if err := git.NewCommand(ctx, "checkout", "-b", stagingBranch, trackingBranch).
 			Run(&git.RunOpts{
 				Dir:    tmpBasePath,
 				Stdout: &outbuf,
 				Stderr: &errbuf,
 			}); err != nil {
-			return fmt.Errorf(
+			return types.MergeResult{}, fmt.Errorf(
 				"git checkout base prior to merge post staging rebase  [%s -> %s]: %w\n%s\n%s",
 				pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String(),
 			)
 		}
 		outbuf.Reset()
 		errbuf.Reset()
+
+		var conflicts bool
 
 		// Rebase before merging
 		if err := git.NewCommand(ctx, "rebase", baseBranch).
@@ -368,51 +380,66 @@ func (a Adapter) Merge(
 			}); err != nil {
 			// Rebase will leave a REBASE_HEAD file in .git if there is a conflict
 			if _, statErr := os.Stat(filepath.Join(tmpBasePath, ".git", "REBASE_HEAD")); statErr == nil {
-				var commitSha string
-
-				// TBD git version we will support
-				// failingCommitPath := filepath.Join(tmpBasePath, ".git", "rebase-apply", "original-commit") // Git < 2.26
-				// if _, cpErr := os.Stat(failingCommitPath); statErr != nil {
-				// 	return fmt.Errorf("git rebase staging on to base [%s -> %s]: %v\n%s\n%s",
-				// 	pr.HeadBranch, pr.BaseBranch, cpErr, outbuf.String(), errbuf.String())
-				// }
-
-				failingCommitPath := filepath.Join(tmpBasePath, ".git", "rebase-merge", "stopped-sha") // Git >= 2.26
-				if _, cpErr := os.Stat(failingCommitPath); cpErr != nil {
-					return fmt.Errorf(
-						"git rebase staging on to base [%s -> %s]: %w\n%s\n%s",
-						pr.HeadBranch, pr.BaseBranch, cpErr, outbuf.String(), errbuf.String(),
-					)
-				}
-
-				commitShaBytes, readErr := os.ReadFile(failingCommitPath)
-				if readErr != nil {
-					// Abandon this attempt to handle the error
-					return fmt.Errorf(
-						"git rebase staging on to base [%s -> %s]: %w\n%s\n%s",
-						pr.HeadBranch, pr.BaseBranch, readErr, outbuf.String(), errbuf.String(),
-					)
-				}
-				commitSha = strings.TrimSpace(string(commitShaBytes))
-
-				log.Debug().Msgf("RebaseConflict at %s [%s -> %s]: %v\n%s\n%s",
-					commitSha, pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String(),
+				// Rebase works by processing commit by commit. To get the full list of conflict files
+				// all commits would have to be applied. It's simpler to revert the rebase and
+				// get the list conflict using git merge.
+				conflicts = true
+			} else {
+				return types.MergeResult{}, fmt.Errorf(
+					"git rebase staging on to base [%s -> %s]: %w\n%s\n%s",
+					pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String(),
 				)
-				return &types.MergeConflictsError{
-					Method:    mergeMethod,
-					CommitSHA: commitSha,
-					StdOut:    outbuf.String(),
-					StdErr:    errbuf.String(),
-					Err:       err,
-				}
 			}
-			return fmt.Errorf(
-				"git rebase staging on to base [%s -> %s]: %w\n%s\n%s",
-				pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String(),
-			)
 		}
 		outbuf.Reset()
 		errbuf.Reset()
+
+		if conflicts {
+			// Rebase failed because there are conflicts. Abort the rebase.
+			if err := git.NewCommand(ctx, "rebase", "--abort").
+				Run(&git.RunOpts{
+					Dir:    tmpBasePath,
+					Stdout: &outbuf,
+					Stderr: &errbuf,
+				}); err != nil {
+				return types.MergeResult{}, fmt.Errorf(
+					"git abort rebase [%s -> %s]: %w\n%s\n%s",
+					pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String(),
+				)
+			}
+			outbuf.Reset()
+			errbuf.Reset()
+
+			// Go back to the base branch.
+			if err := git.NewCommand(ctx, "checkout", baseBranch).
+				Run(&git.RunOpts{
+					Dir:    tmpBasePath,
+					Stdout: &outbuf,
+					Stderr: &errbuf,
+				}); err != nil {
+				return types.MergeResult{}, fmt.Errorf(
+					"return to the base branch [%s -> %s]: %w\n%s\n%s",
+					pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String(),
+				)
+			}
+			outbuf.Reset()
+			errbuf.Reset()
+
+			// Run the ordinary merge to get the list of conflict files.
+			cmd := git.NewCommand(ctx, "merge", "--no-ff", "--no-commit", trackingBranch)
+			result, err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env)
+			if err != nil {
+				return types.MergeResult{}, fmt.Errorf(
+					"git abort rebase [%s -> %s]: %w\n%s\n%s",
+					pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String(),
+				)
+			}
+			if len(result.conflictFiles) > 0 {
+				return types.MergeResult{ConflictFiles: result.conflictFiles}, nil
+			}
+
+			return types.MergeResult{}, errors.New("rebase reported conflicts, but merge gave no conflict files")
+		}
 
 		// Checkout base branch again
 		if err := git.NewCommand(ctx, "checkout", baseBranch).
@@ -421,7 +448,7 @@ func (a Adapter) Merge(
 				Stdout: &outbuf,
 				Stderr: &errbuf,
 			}); err != nil {
-			return fmt.Errorf(
+			return types.MergeResult{}, fmt.Errorf(
 				"git checkout base prior to merge post staging rebase  [%s -> %s]: %w\n%s\n%s",
 				pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String(),
 			)
@@ -429,17 +456,20 @@ func (a Adapter) Merge(
 		outbuf.Reset()
 		errbuf.Reset()
 
-		cmd := git.NewCommand(ctx, "merge", "--ff-only", stagingBranch)
-
 		// Prepare merge with commit
-		if err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env); err != nil {
-			return err
+		cmd := git.NewCommand(ctx, "merge", "--ff-only", stagingBranch)
+		result, err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env)
+		if err != nil {
+			return types.MergeResult{}, fmt.Errorf("unable to ff-olny merge tracking into base: %w", err)
+		}
+		if len(result.conflictFiles) > 0 {
+			return types.MergeResult{ConflictFiles: result.conflictFiles}, nil
 		}
 	default:
-		return fmt.Errorf("wrong merge method provided: %s", mergeMethod)
+		return types.MergeResult{}, fmt.Errorf("wrong merge method provided: %s", mergeMethod)
 	}
 
-	return nil
+	return types.MergeResult{}, nil
 }
 
 func conflictFiles(

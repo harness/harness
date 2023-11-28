@@ -98,6 +98,10 @@ type MergeOutput struct {
 	MergeBaseSHA string
 	// MergeSHA is the sha of the commit after merging HeadSHA with BaseSHA.
 	MergeSHA string
+
+	CommitCount      int
+	ChangedFileCount int
+	ConflictFiles    []string
 }
 
 // Merge method executes git merge operation. Refs can be sha, branch or tag.
@@ -114,7 +118,7 @@ type MergeOutput struct {
 // params.HeadExpectedSHA which will be compared with the latest sha from head branch
 // if they are not the same error will be returned.
 //
-//nolint:gocognit
+//nolint:gocognit,gocyclo,cyclop
 func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, error) {
 	if err := params.Validate(); err != nil {
 		return MergeOutput{}, fmt.Errorf("Merge: params not valid: %w", err)
@@ -178,6 +182,19 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		return MergeOutput{},
 			fmt.Errorf("unable to write .git/info/sparse-checkout file in tmpRepo.Path: %w", err)
 	}
+
+	shortStat, err := s.adapter.DiffShortStat(ctx, tmpRepo.Path, tmpRepo.BaseSHA, tmpRepo.HeadSHA, true)
+	if err != nil {
+		return MergeOutput{}, fmt.Errorf("execution of DiffShortStat failed: %w", err)
+	}
+	changedFileCount := shortStat.Files
+
+	divergences, err := s.adapter.GetCommitDivergences(ctx, tmpRepo.Path,
+		[]types.CommitDivergenceRequest{{From: tmpRepo.HeadSHA, To: tmpRepo.BaseSHA}}, 0)
+	if err != nil {
+		return MergeOutput{}, fmt.Errorf("execution of GetCommitDivergences failed: %w", err)
+	}
+	commitCount := int(divergences[0].Ahead)
 
 	// Switch off LFS process (set required, clean and smudge here also)
 	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.process", ""); err != nil {
@@ -245,7 +262,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		params.Method = enum.MergeMethodMerge
 	}
 
-	if err = s.adapter.Merge(
+	result, err := s.adapter.Merge(
 		ctx,
 		pr,
 		params.Method,
@@ -257,8 +274,21 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 			Name:  author.Name,
 			Email: author.Email,
 		},
-		env...); err != nil {
+		env...)
+	if err != nil {
 		return MergeOutput{}, fmt.Errorf("merge failed: %w", err)
+	}
+
+	if len(result.ConflictFiles) > 0 {
+		return MergeOutput{
+			BaseSHA:          tmpRepo.BaseSHA,
+			HeadSHA:          tmpRepo.HeadSHA,
+			MergeBaseSHA:     mergeBaseCommitSHA,
+			MergeSHA:         "",
+			CommitCount:      commitCount,
+			ChangedFileCount: changedFileCount,
+			ConflictFiles:    result.ConflictFiles,
+		}, nil
 	}
 
 	mergeCommitSHA, err := s.adapter.GetFullCommitID(ctx, tmpRepo.Path, baseBranch)
@@ -268,10 +298,13 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	if params.RefType == enum.RefTypeUndefined {
 		return MergeOutput{
-			BaseSHA:      tmpRepo.BaseSHA,
-			HeadSHA:      tmpRepo.HeadSHA,
-			MergeBaseSHA: mergeBaseCommitSHA,
-			MergeSHA:     mergeCommitSHA,
+			BaseSHA:          tmpRepo.BaseSHA,
+			HeadSHA:          tmpRepo.HeadSHA,
+			MergeBaseSHA:     mergeBaseCommitSHA,
+			MergeSHA:         mergeCommitSHA,
+			CommitCount:      commitCount,
+			ChangedFileCount: changedFileCount,
+			ConflictFiles:    nil,
 		}, nil
 	}
 
@@ -293,10 +326,13 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	}
 
 	return MergeOutput{
-		BaseSHA:      tmpRepo.BaseSHA,
-		HeadSHA:      tmpRepo.HeadSHA,
-		MergeBaseSHA: mergeBaseCommitSHA,
-		MergeSHA:     mergeCommitSHA,
+		BaseSHA:          tmpRepo.BaseSHA,
+		HeadSHA:          tmpRepo.HeadSHA,
+		MergeBaseSHA:     mergeBaseCommitSHA,
+		MergeSHA:         mergeCommitSHA,
+		CommitCount:      commitCount,
+		ChangedFileCount: changedFileCount,
+		ConflictFiles:    nil,
 	}, nil
 }
 

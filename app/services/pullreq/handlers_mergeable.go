@@ -25,7 +25,6 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
-	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -221,8 +220,7 @@ func (s *Service) updateMergeDataInner(
 
 	// call merge and store output in pr merge reference.
 	now := time.Now()
-	var output git.MergeOutput
-	output, err = s.git.Merge(ctx, &git.MergeParams{
+	mergeOutput, err := s.git.Merge(ctx, &git.MergeParams{
 		WriteParams:     writeParams,
 		BaseBranch:      pr.TargetBranch,
 		HeadRepoUID:     sourceRepo.GitUID,
@@ -240,35 +238,26 @@ func (s *Service) updateMergeDataInner(
 			pr.SourceBranch, newSHA)
 	}
 
-	var cferr *gittypes.MergeConflictsError
-
-	isNotMergeableError := errors.As(err, &cferr)
-	if err != nil && !isNotMergeableError {
-		return fmt.Errorf("merge check failed for %d:%s and %d:%s with err: %w",
-			targetRepo.ID, pr.TargetBranch,
-			sourceRepo.ID, pr.SourceBranch,
-			err)
-	}
-
 	// Update DB in both cases (failure or success)
 	_, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		if pr.SourceSHA != newSHA {
 			return events.NewDiscardEventErrorf("PR SHA %s is newer than %s", pr.SourceSHA, newSHA)
 		}
 
-		if isNotMergeableError {
-			// TODO: should return sha's either way, and also conflicting files!
+		if mergeOutput.MergeSHA == "" || len(mergeOutput.ConflictFiles) > 0 {
 			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
-			// pr.MergeTargetSHA = &output.BaseSHA  // TODO: Merge API doesn't return this when there are conflicts
+			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
+			pr.MergeTargetSHA = &mergeOutput.BaseSHA
 			pr.MergeSHA = nil
-			pr.MergeConflicts = cferr.Files
+			pr.MergeConflicts = mergeOutput.ConflictFiles
 		} else {
 			pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
-			pr.MergeTargetSHA = &output.BaseSHA
-			pr.MergeBaseSHA = output.MergeBaseSHA // TODO: Merge check should not update the merge base.
-			pr.MergeSHA = &output.MergeSHA
+			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
+			pr.MergeTargetSHA = &mergeOutput.BaseSHA
+			pr.MergeSHA = &mergeOutput.MergeSHA
 			pr.MergeConflicts = nil
 		}
+
 		return nil
 	})
 	if err != nil {

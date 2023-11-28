@@ -29,7 +29,6 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
-	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -197,7 +196,49 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
+	//nolint:nestif
 	if in.DryRun {
+		// As the merge API is always executed under a global lock, we use the opportunity of dry-running the merge
+		// to check the PR's mergeability status if it's currently "unchecked". This can happen if the target branch
+		// has advanced. It's possible that the merge base commit is different too.
+		// So, the next time the API gets called for the same PR the mergeability status will not be unchecked.
+		// Without dry-run the execution would proceed below and would either merge the PR or set the conflict status.
+		if pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked {
+			mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
+				WriteParams:     targetWriteParams,
+				BaseBranch:      pr.TargetBranch,
+				HeadRepoUID:     sourceRepo.GitUID,
+				HeadBranch:      pr.SourceBranch,
+				HeadExpectedSHA: in.SourceSHA,
+			})
+			if err != nil {
+				return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
+			}
+
+			pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+				if pr.SourceSHA != mergeOutput.HeadSHA {
+					return errors.New("source SHA has changed")
+				}
+				if mergeOutput.MergeSHA == "" || len(mergeOutput.ConflictFiles) > 0 {
+					pr.MergeCheckStatus = enum.MergeCheckStatusConflict
+					pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
+					pr.MergeTargetSHA = &mergeOutput.BaseSHA
+					pr.MergeSHA = nil
+					pr.MergeConflicts = mergeOutput.ConflictFiles
+				} else {
+					pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
+					pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
+					pr.MergeTargetSHA = &mergeOutput.BaseSHA
+					pr.MergeSHA = &mergeOutput.MergeSHA
+					pr.MergeConflicts = nil
+				}
+				return nil
+			})
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to update unchecked pull request: %w", err)
+			}
+		}
+
 		// With in.DryRun=true this function never returns types.MergeViolations
 		out := &types.MergeResponse{
 			DryRun:         true,
@@ -205,26 +246,6 @@ func (c *Controller) Merge(
 			AllowedMethods: ruleOut.AllowedMethods,
 			ConflictFiles:  pr.MergeConflicts,
 			RuleViolations: violations,
-		}
-
-		// TODO: This is a temporary solution. The changes needed for the proper implementation:
-		// 1) Git: Change the merge method to return SHAs (source/target/merge base) even in case of conflicts.
-		// 2) Event handler: Update target and merge base SHA in the event handler even in case of merge conflicts.
-		// 3) Here: Update the pull request target and merge base SHA in the DB if merge check status is unchecked.
-		// 4) Remove the recheck API.
-		if pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked {
-			_, err = c.git.Merge(ctx, &git.MergeParams{
-				WriteParams:     targetWriteParams,
-				BaseBranch:      pr.TargetBranch,
-				HeadRepoUID:     sourceRepo.GitUID,
-				HeadBranch:      pr.SourceBranch,
-				HeadExpectedSHA: in.SourceSHA,
-			})
-			if cferr := gittypes.AsMergeConflictsError(err); cferr != nil {
-				out.ConflictFiles = cferr.Files
-			} else if err != nil {
-				return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
-			}
 		}
 
 		return out, nil, nil
@@ -260,14 +281,26 @@ func (c *Controller) Merge(
 		Method:          gitenum.MergeMethod(in.Method),
 	})
 	if err != nil {
-		if cf := gittypes.AsMergeConflictsError(err); cf != nil {
-			//nolint: nilerr
-			return nil, &types.MergeViolations{
-				ConflictFiles:  cf.Files,
-				RuleViolations: violations,
-			}, nil
-		}
 		return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
+	}
+	if mergeOutput.MergeSHA == "" || len(mergeOutput.ConflictFiles) > 0 {
+		_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+			// update all Merge specific information
+			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
+			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
+			pr.MergeTargetSHA = &mergeOutput.BaseSHA
+			pr.MergeSHA = nil
+			pr.MergeConflicts = mergeOutput.ConflictFiles
+			return nil
+		})
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to update pull request with conflict files: %w", err)
+		}
+
+		return nil, &types.MergeViolations{
+			ConflictFiles:  mergeOutput.ConflictFiles,
+			RuleViolations: violations,
+		}, nil
 	}
 
 	var activitySeqMerge, activitySeqBranchDeleted int64

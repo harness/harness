@@ -16,13 +16,11 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
-	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -52,21 +50,20 @@ func (c *Controller) MergeCheck(
 		return MergeCheck{}, fmt.Errorf("failed to create rpc write params: %w", err)
 	}
 
-	_, err = c.git.Merge(ctx, &git.MergeParams{
+	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams: writeParams,
 		BaseBranch:  info.BaseRef,
 		HeadRepoUID: writeParams.RepoUID, // forks are not supported for now
 		HeadBranch:  info.HeadRef,
 	})
 	if err != nil {
-		var cferr *gittypes.MergeConflictsError
-		if errors.As(err, &cferr) {
-			return MergeCheck{
-				Mergeable:     false,
-				ConflictFiles: cferr.Files,
-			}, nil
-		}
 		return MergeCheck{}, fmt.Errorf("merge check execution failed: %w", err)
+	}
+	if len(mergeOutput.ConflictFiles) > 0 {
+		return MergeCheck{
+			Mergeable:     false,
+			ConflictFiles: mergeOutput.ConflictFiles,
+		}, nil
 	}
 
 	return MergeCheck{
