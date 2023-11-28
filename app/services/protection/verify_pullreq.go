@@ -59,6 +59,7 @@ var (
 
 const (
 	codePullReqApprovalReqMinCount                   = "pullreq.approvals.require_minimum_count"
+	codePullReqApprovalReqMinCountLatest             = "pullreq.approvals.require_minimum_count:latest_commit"
 	codePullReqApprovalReqLatestCommit               = "pullreq.approvals.require_latest_commit"
 	codePullReqApprovalReqCodeOwnersNoApproval       = "pullreq.approvals.require_code_owners:no_approval"
 	codePullReqApprovalReqCodeOwnersChangeRequested  = "pullreq.approvals.require_code_owners:change_requested"
@@ -94,9 +95,15 @@ func (v *DefPullReq) MergeVerify(
 	}
 
 	if len(approvedBy) < v.Approvals.RequireMinimumCount {
-		violations.Addf(codePullReqApprovalReqMinCount,
-			"Insufficient number of approvals. Have %d but need at least %d.",
-			len(approvedBy), v.Approvals.RequireMinimumCount)
+		if v.Approvals.RequireLatestCommit {
+			violations.Addf(codePullReqApprovalReqMinCountLatest,
+				"Insufficient number of approvals of the latest commit. Have %d but need at least %d.",
+				len(approvedBy), v.Approvals.RequireMinimumCount)
+		} else {
+			violations.Addf(codePullReqApprovalReqMinCount,
+				"Insufficient number of approvals. Have %d but need at least %d.",
+				len(approvedBy), v.Approvals.RequireMinimumCount)
+		}
 	}
 
 	if v.Approvals.RequireCodeOwners {
@@ -157,7 +164,7 @@ func (v *DefPullReq) MergeVerify(
 	if len(violatingStatusCheckUIDs) > 0 {
 		violations.Addf(
 			codePullReqStatusChecksReqUIDs,
-			"The following status checks are required to complete successfully: %s",
+			"The following status checks are required to be completed successfully: %s",
 			strings.Join(violatingStatusCheckUIDs, ", "),
 		)
 	}

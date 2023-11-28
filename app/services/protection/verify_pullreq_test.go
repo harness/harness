@@ -90,7 +90,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expCodes:  []string{codePullReqApprovalReqMinCount},
+			expCodes:  []string{codePullReqApprovalReqMinCountLatest},
 			expParams: [][]any{{1, 2}},
 			expOut:    MergeVerifyOutput{},
 		},
