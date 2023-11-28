@@ -867,7 +867,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/GitrpcBlamePart'
+                  $ref: '#/components/schemas/GitBlamePart'
                 type: array
           description: OK
         '401':
@@ -1047,6 +1047,13 @@ paths:
     delete:
       operationId: deleteBranch
       parameters:
+        - description: Bypass rule violations if possible.
+          in: query
+          name: bypass_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -1814,7 +1821,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/GitrpcFileDiff'
+                  $ref: '#/components/schemas/GitFileDiff'
                 type: array
             text/plain:
               schema:
@@ -4413,6 +4420,8 @@ paths:
                   $ref: '#/components/schemas/EnumRuleState'
                 type:
                   $ref: '#/components/schemas/OpenapiRuleType'
+                uid:
+                  type: string
               type: object
       responses:
         '200':
@@ -4648,6 +4657,13 @@ paths:
     delete:
       operationId: deleteTag
       parameters:
+        - description: Bypass rule violations if possible.
+          in: query
+          name: bypass_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -6899,8 +6915,8 @@ components:
     EnumMergeMethod:
       enum:
         - merge
-        - squash
         - rebase
+        - squash
       type: string
     EnumParentResourceType:
       enum:
@@ -7000,22 +7016,22 @@ components:
         - tag_deleted
         - tag_updated
       type: string
-    GitrpcBlamePart:
+    GitBlamePart:
       properties:
         commit:
-          $ref: '#/components/schemas/GitrpcCommit'
+          $ref: '#/components/schemas/GitCommit'
         lines:
           items:
             type: string
           nullable: true
           type: array
       type: object
-    GitrpcCommit:
+    GitCommit:
       properties:
         author:
-          $ref: '#/components/schemas/GitrpcSignature'
+          $ref: '#/components/schemas/GitSignature'
         committer:
-          $ref: '#/components/schemas/GitrpcSignature'
+          $ref: '#/components/schemas/GitSignature'
         message:
           type: string
         sha:
@@ -7023,14 +7039,14 @@ components:
         title:
           type: string
       type: object
-    GitrpcFileAction:
+    GitFileAction:
       enum:
         - CREATE
         - UPDATE
         - DELETE
         - MOVE
       type: string
-    GitrpcFileDiff:
+    GitFileDiff:
       properties:
         additions:
           type: integer
@@ -7056,30 +7072,30 @@ components:
         sha:
           type: string
         status:
-          $ref: '#/components/schemas/GitrpcFileDiffStatus'
+          $ref: '#/components/schemas/GitFileDiffStatus'
       type: object
-    GitrpcFileDiffStatus:
+    GitFileDiffStatus:
       type: string
-    GitrpcIdentity:
+    GitIdentity:
       properties:
         email:
           type: string
         name:
           type: string
       type: object
-    GitrpcPathDetails:
+    GitPathDetails:
       properties:
         last_commit:
-          $ref: '#/components/schemas/GitrpcCommit'
+          $ref: '#/components/schemas/GitCommit'
         path:
           type: string
         size:
           type: integer
       type: object
-    GitrpcSignature:
+    GitSignature:
       properties:
         identity:
-          $ref: '#/components/schemas/GitrpcIdentity'
+          $ref: '#/components/schemas/GitIdentity'
         when:
           format: date-time
           type: string
@@ -7191,6 +7207,10 @@ components:
           type: array
         branch:
           type: string
+        bypass_rules:
+          type: boolean
+        dry_run_rules:
+          type: boolean
         message:
           type: string
         new_branch:
@@ -7227,6 +7247,8 @@ components:
       type: string
     OpenapiCreateBranchRequest:
       properties:
+        bypass_rules:
+          type: boolean
         name:
           type: string
         target:
@@ -7318,6 +7340,8 @@ components:
       type: object
     OpenapiCreateTagRequest:
       properties:
+        bypass_rules:
+          type: boolean
         message:
           type: string
         name:
@@ -7477,8 +7501,6 @@ components:
           type: string
         decision:
           $ref: '#/components/schemas/EnumPullReqReviewDecision'
-        message:
-          type: string
       type: object
     OpenapiReviewerAddPullReqRequest:
       properties:
@@ -7518,8 +7540,6 @@ components:
       properties:
         is_draft:
           type: boolean
-        message:
-          type: string
         state:
           $ref: '#/components/schemas/EnumPullReqState'
       type: object
@@ -7794,7 +7814,7 @@ components:
     RepoCommitFileAction:
       properties:
         action:
-          $ref: '#/components/schemas/GitrpcFileAction'
+          $ref: '#/components/schemas/GitFileAction'
         encoding:
           $ref: '#/components/schemas/EnumContentEncodingType'
         path:
@@ -7861,7 +7881,7 @@ components:
       properties:
         details:
           items:
-            $ref: '#/components/schemas/GitrpcPathDetails'
+            $ref: '#/components/schemas/GitPathDetails'
           nullable: true
           type: array
       type: object
@@ -7994,6 +8014,12 @@ components:
       properties:
         commit_id:
           type: string
+        dry_run_rules:
+          type: boolean
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
+          type: array
       type: object
     TypesConnector:
       properties:
@@ -8159,6 +8185,10 @@ components:
       type: object
     TypesMergeResponse:
       properties:
+        allowed_methods:
+          items:
+            $ref: '#/components/schemas/EnumMergeMethod'
+          type: array
         branch_deleted:
           type: boolean
         conflict_files:
@@ -8457,6 +8487,8 @@ components:
       type: string
     TypesRuleViolations:
       properties:
+        bypassable:
+          type: boolean
         bypassed:
           type: boolean
         rule:

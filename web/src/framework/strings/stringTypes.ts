@@ -54,9 +54,19 @@ export interface StringsMap {
   'branchProtection.blockBranchDeletion': string
   'branchProtection.blockBranchDeletionText': string
   'branchProtection.bypassList': string
+  'branchProtection.commitDirectlyBlockText': string
+  'branchProtection.commitNewBranchAlertBtn': string
+  'branchProtection.commitNewBranchAlertText': string
+  'branchProtection.commitNewBranchBlockText': string
   'branchProtection.create': string
+  'branchProtection.createBranchAlertBtn': string
+  'branchProtection.createBranchAlertText': string
+  'branchProtection.createBranchBlockText': string
   'branchProtection.createRule': string
   'branchProtection.defaultBranch': string
+  'branchProtection.deleteBranchAlertBtn': string
+  'branchProtection.deleteBranchAlertText': string
+  'branchProtection.deleteBranchBlockText': string
   'branchProtection.deleteProtectionRule': string
   'branchProtection.deleteRule': string
   'branchProtection.deleteText': string

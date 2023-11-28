@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Dialog, Intent } from '@blueprintjs/core'
 import * as yup from 'yup'
 import {
@@ -22,6 +22,7 @@ import {
   ButtonProps,
   Container,
   Layout,
+  Text,
   FlexExpander,
   Formik,
   FormikForm,
@@ -32,10 +33,12 @@ import {
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import cx from 'classnames'
-import { FontVariation } from '@harnessio/design-system'
+import { FontVariation, Color } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
+import { Render } from 'react-jsx-match'
 import { useModalHook } from 'hooks/useModalHook'
+import { useRuleViolationCheck } from 'hooks/useRuleViolationCheck'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
 import type { OpenapiCommitFilesRequest, TypesListCommitResponse } from 'services/code'
@@ -82,10 +85,20 @@ export function useCommitModal({
     const { getString } = useStrings()
     const [targetBranchOption, setTargetBranchOption] = useState(CommitToGitRefOption.DIRECTLY)
     const { showError, showSuccess } = useToaster()
+    const { violation, bypassable, bypassed, setAllStates, resetViolation } = useRuleViolationCheck()
+    const [disableCTA, setDisableCTA] = useState(false)
     const { mutate, loading } = useMutate<TypesListCommitResponse>({
       verb: 'POST',
       path: `/api/v1/repos/${repoMetadata.path}/+/commits`
     })
+    const { mutate: dryRunCall } = useMutate({
+      verb: 'POST',
+      path: `/api/v1/repos/${repoMetadata.path}/+/commits`
+    })
+
+    useEffect(() => {
+      dryRun(CommitToGitRefOption.DIRECTLY)
+    }, [])
 
     const handleSubmit = (formData: FormData) => {
       try {
@@ -101,25 +114,70 @@ export function useCommitModal({
             }
           ],
           branch: gitRef,
-          new_branch: formData.newBranch,
+          new_branch: targetBranchOption === CommitToGitRefOption.NEW_BRANCH ? formData.newBranch : '',
           title: formData.title || commitTitlePlaceHolder,
-          message: formData.message
+          message: formData.message,
+          bypass_rules: bypassed
         }
 
         mutate(data)
           .then(response => {
             hideModal()
-            onSuccess(response, formData.newBranch)
+            onSuccess(response, targetBranchOption === CommitToGitRefOption.NEW_BRANCH ? formData.newBranch : '')
 
             if (commitAction === GitCommitAction.DELETE) {
               showSuccess(getString('fileDeleted').replace('__path__', resourcePath))
             }
           })
           .catch(_error => {
-            showError(getErrorMessage(_error), 0, getString('failedToCreateRepo'))
+            if (_error.status === 422) {
+              setAllStates({
+                violation: true,
+                bypassed: true,
+                bypassable: _error?.data?.violations[0]?.bypassable
+              })
+            } else showError(getErrorMessage(_error), 0, getString('failedToCreateRepo'))
           })
       } catch (exception) {
         showError(getErrorMessage(exception), 0, getString('failedToCreateRepo'))
+      }
+    }
+
+    const dryRun = async (targetBranch: CommitToGitRefOption) => {
+      resetViolation()
+      setDisableCTA(false)
+      if (targetBranch === CommitToGitRefOption.DIRECTLY) {
+        try {
+          const data: OpenapiCommitFilesRequest = {
+            actions: [
+              {
+                action: commitAction,
+                path: oldResourcePath || resourcePath,
+                payload: `${oldResourcePath ? `file://${resourcePath}\n` : ''}${payload}`,
+                sha
+              }
+            ],
+            branch: gitRef,
+            new_branch: '',
+            title: '',
+            message: '',
+            bypass_rules: false,
+            dry_run_rules: true
+          }
+
+          const response = await dryRunCall(data)
+
+          if (response?.rule_violations?.length) {
+            setAllStates({
+              violation: true,
+              bypassed: false,
+              bypassable: response?.rule_violations[0]?.bypassable
+            })
+            setDisableCTA(!response?.rule_violations[0]?.bypassable)
+          }
+        } catch (exception) {
+          showError(getErrorMessage(exception), 0, getString('failedToCreateRepo'))
+        }
       }
     }
 
@@ -186,14 +244,43 @@ export function useCommitModal({
                     label=""
                     onChange={e => {
                       setTargetBranchOption(get(e.target, 'defaultValue') as unknown as CommitToGitRefOption)
+                      dryRun(get(e.target, 'defaultValue') as unknown as CommitToGitRefOption)
                     }}
                     items={[
                       {
-                        label: <String stringID="commitDirectlyTo" vars={{ gitRef }} useRichText />,
+                        label: (
+                          <Layout.Horizontal className={css.warningMessageLayout}>
+                            <String stringID="commitDirectlyTo" vars={{ gitRef }} useRichText />
+                            <Render when={violation && targetBranchOption === CommitToGitRefOption.DIRECTLY}>
+                              <Layout.Horizontal className={css.warningMessage}>
+                                <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
+                                <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
+                                  {bypassable
+                                    ? getString('branchProtection.commitDirectlyBlockText')
+                                    : getString('branchProtection.commitNewBranchBlockText')}
+                                </Text>
+                              </Layout.Horizontal>
+                            </Render>
+                          </Layout.Horizontal>
+                        ),
                         value: CommitToGitRefOption.DIRECTLY
                       },
                       {
-                        label: <String stringID="commitToNewBranch" useRichText />,
+                        label: (
+                          <Layout.Horizontal className={css.warningMessageLayout}>
+                            <String stringID="commitToNewBranch" useRichText />
+                            <Render when={violation && targetBranchOption === CommitToGitRefOption.NEW_BRANCH}>
+                              <Layout.Horizontal className={css.warningMessage}>
+                                <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
+                                <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
+                                  {bypassable
+                                    ? getString('branchProtection.commitNewBranchAlertText')
+                                    : getString('branchProtection.commitNewBranchBlockText')}
+                                </Text>
+                              </Layout.Horizontal>
+                            </Render>
+                          </Layout.Horizontal>
+                        ),
                         value: CommitToGitRefOption.NEW_BRANCH
                       }
                     ]}
@@ -209,6 +296,9 @@ export function useCommitModal({
                             dataTooltipId: 'enterNewBranchName'
                           }}
                           inputGroup={{ autoFocus: true }}
+                          onChange={() => {
+                            setAllStates({ violation: false, bypassable: false, bypassed: false })
+                          }}
                         />
                       </Layout.Horizontal>
                     </Container>
@@ -216,12 +306,22 @@ export function useCommitModal({
                 </Container>
 
                 <Layout.Horizontal spacing="small" padding={{ right: 'xxlarge', top: 'xxlarge', bottom: 'large' }}>
-                  <Button
-                    type="submit"
-                    variation={ButtonVariation.PRIMARY}
-                    text={getString('commit')}
-                    disabled={loading}
-                  />
+                  {!bypassable ? (
+                    <Button
+                      type="submit"
+                      variation={ButtonVariation.PRIMARY}
+                      text={getString('commit')}
+                      disabled={loading || disableCTA}
+                    />
+                  ) : (
+                    <Button
+                      intent={Intent.DANGER}
+                      disabled={loading}
+                      type="submit"
+                      variation={ButtonVariation.SECONDARY}
+                      text={getString('branchProtection.commitNewBranchAlertBtn')}
+                    />
+                  )}
                   <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
                   <FlexExpander />
 

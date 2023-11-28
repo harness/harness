@@ -22,3 +22,5 @@ export declare const main: string
 export declare const newBranch: string
 export declare const newBranchContainer: string
 export declare const radioGroup: string
+export declare const warningMessage: string
+export declare const warningMessageLayout: string

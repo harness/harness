@@ -80,6 +80,14 @@
   }
 }
 
+.warningMessage {
+  order: 3;
+  display: flex !important;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem !important;
+}
+
 .popover {
   :global {
     .bp3-popover-content {

@@ -30,6 +30,12 @@
     margin-right: var(--spacing-10) !important;
   }
 
+  .warningMessage {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
   // .branchSourceDesc {
   //   color: var(--grey-400) !important;
   //   font-size: var(--form-input-font-size) !important;

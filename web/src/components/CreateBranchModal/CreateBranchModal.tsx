@@ -29,13 +29,15 @@ import {
   useToaster,
   FormInput,
   Label,
+  Text,
   ButtonVariation,
   StringSubstitute
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { FontVariation } from '@harnessio/design-system'
+import { FontVariation, Color } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
+import { Render } from 'react-jsx-match'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
@@ -43,6 +45,7 @@ import { GitInfoProps, normalizeGitRef, isGitBranchNameValid } from 'utils/GitUt
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import type { RepoBranch } from 'services/code'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useRuleViolationCheck } from 'hooks/useRuleViolationCheck'
 import { useAppContext } from 'AppContext'
 import css from './CreateBranchModal.module.scss'
 
@@ -79,6 +82,7 @@ export function useCreateBranchModal({
     const { getString } = useStrings()
     const [sourceBranch, setSourceBranch] = useState(suggestedSourceBranch || (repoMetadata.default_branch as string))
     const { showError, showSuccess } = useToaster()
+    const { violation, bypassable, bypassed, setAllStates } = useRuleViolationCheck()
     const { mutate: createBranch, loading } = useMutate<RepoBranch>({
       verb: 'POST',
       path: `/api/v1/repos/${repoMetadata.path}/+/branches`
@@ -88,7 +92,8 @@ export function useCreateBranchModal({
       try {
         createBranch({
           name,
-          target: normalizeGitRef(refIsATag ? `refs/tags/${sourceBranch}` : sourceBranch)
+          target: normalizeGitRef(refIsATag ? `refs/tags/${sourceBranch}` : sourceBranch),
+          bypass_rules: bypassed
         })
           .then(response => {
             hideModal()
@@ -106,7 +111,13 @@ export function useCreateBranchModal({
             }
           })
           .catch(_error => {
-            showError(getErrorMessage(_error), 0, 'failedToCreateBranch')
+            if (_error.status === 422) {
+              setAllStates({
+                violation: true,
+                bypassed: true,
+                bypassable: _error?.data?.violations[0]?.bypassable
+              })
+            } else showError(getErrorMessage(_error), 0, 'failedToCreateBranch')
           })
       } catch (exception) {
         showError(getErrorMessage(exception), 0, 'failedToCreateBranch')
@@ -154,6 +165,9 @@ export function useCreateBranchModal({
                     dataTooltipId: 'repositoryBranchTextField'
                   }}
                   inputGroup={{ autoFocus: true }}
+                  onChange={() => {
+                    setAllStates({ violation: false, bypassable: false, bypassed: false })
+                  }}
                 />
                 <Container margin={{ top: 'medium' }}>
                   <Label className={css.label}>{getString('basedOn')}</Label>
@@ -176,17 +190,37 @@ export function useCreateBranchModal({
                   spacing="small"
                   padding={{ right: 'xxlarge', top: 'xxlarge', bottom: 'large' }}
                   style={{ alignItems: 'center' }}>
-                  <Button
-                    type="submit"
-                    text={getString('createBranch')}
-                    variation={ButtonVariation.PRIMARY}
-                    disabled={loading}
-                  />
+                  {!bypassable ? (
+                    <Button
+                      type="submit"
+                      text={getString('createBranch')}
+                      variation={ButtonVariation.PRIMARY}
+                      disabled={loading}
+                    />
+                  ) : (
+                    <Button
+                      intent={Intent.DANGER}
+                      disabled={loading}
+                      type="submit"
+                      variation={ButtonVariation.SECONDARY}
+                      text={getString('branchProtection.createBranchAlertBtn')}
+                    />
+                  )}
                   <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
                   <FlexExpander />
 
                   {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                 </Layout.Horizontal>
+                <Render when={violation}>
+                  <Layout.Horizontal className={css.warningMessage}>
+                    <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
+                    <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
+                      {bypassable
+                        ? getString('branchProtection.createBranchAlertText')
+                        : getString('branchProtection.createBranchBlockText')}
+                    </Text>
+                  </Layout.Horizontal>
+                </Render>
               </FormikForm>
             </Formik>
           </Container>

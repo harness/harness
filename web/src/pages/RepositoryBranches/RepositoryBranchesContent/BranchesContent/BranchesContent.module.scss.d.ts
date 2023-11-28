@@ -25,3 +25,4 @@ export declare const row: string
 export declare const rowText: string
 export declare const spacer: string
 export declare const table: string
+export declare const warningMessage: string

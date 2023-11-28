@@ -33,6 +33,7 @@ export interface UseConfirmationDialogProps {
   canEscapeKeyClose?: boolean
   children?: JSX.Element
   className?: string
+  persistDialog?: boolean
 }
 
 export interface UseConfirmationDialogReturn {
@@ -54,7 +55,8 @@ export const useConfirmationDialog = (props: UseConfirmationDialogProps): UseCon
     canOutsideClickClose,
     canEscapeKeyClose,
     children,
-    className
+    className,
+    persistDialog
   } = props
 
   const [showModal, hideModal] = useModalHook(() => {
@@ -81,9 +83,10 @@ export const useConfirmationDialog = (props: UseConfirmationDialogProps): UseCon
   const onClose = React.useCallback(
     (isConfirmed: boolean): void => {
       onCloseDialog?.(isConfirmed)
-      hideModal()
+      if (!isConfirmed) hideModal()
+      else if (persistDialog) showModal()
     },
-    [hideModal, onCloseDialog]
+    [hideModal, onCloseDialog, persistDialog]
   )
 
   return {

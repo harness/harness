@@ -56,6 +56,18 @@
         font-size: var(--form-input-font-size);
         font-weight: 500;
       }
+
+      .warningMessageLayout {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .warningMessage {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
     }
 
     .newBranchContainer {

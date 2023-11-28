@@ -184,6 +184,8 @@ export interface OpenapiCommitFilesRequest {
   message?: string
   new_branch?: string
   title?: string
+  bypass_rules?: boolean
+  dry_run_rules?: boolean
 }
 
 export type OpenapiContent = RepoFileContent | OpenapiDirContent | RepoSymlinkContent | RepoSubmoduleContent

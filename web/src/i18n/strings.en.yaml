@@ -913,6 +913,16 @@ branchProtection:
   mergePrAlertTitle: Merge pull request alert
   mergePrAlertText: 'Merge cannot be completed. {{ruleCount}} branch rules failed: '
   mergeCheckboxAlert: Bypass branch rules and merge
+  createBranchAlertBtn: Bypass rules and create branch
+  createBranchAlertText: Some rules will be bypassed by creating branch
+  createBranchBlockText: Some rules don't allow you to create branch
+  deleteBranchAlertBtn: Bypass rule and confirm delete
+  deleteBranchAlertText: Some rules will be bypassed while deleting branch
+  deleteBranchBlockText: Some rules don't allow you to delete branch
+  commitNewBranchAlertBtn: Bypass rules and commit via new branch
+  commitNewBranchAlertText: Some rules will be bypassed to commit by creating branch
+  commitNewBranchBlockText: Some rules don't allow you to create new branch for commit
+  commitDirectlyBlockText: Some rules don't allow you to commit directly
 codeOwner:
   title: Code Owner
   changesRequested: '{count} {count|1:change,changes} requested'

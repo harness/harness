@@ -24,3 +24,4 @@ export declare const maxContainer: string
 export declare const popoverContainer: string
 export declare const selectContainer: string
 export declare const title: string
+export declare const warningMessage: string

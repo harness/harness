@@ -18,6 +18,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   Container,
   TableV2 as Table,
+  Layout,
   Text,
   Avatar,
   Tag,
@@ -25,8 +26,10 @@ import {
   StringSubstitute,
   useIsMounted
 } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
 import { noop } from 'lodash-es'
-import { Color, Intent } from '@harnessio/design-system'
+import { Color, Intent, FontVariation } from '@harnessio/design-system'
+import { Render } from 'react-jsx-match'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
 import cx from 'classnames'
@@ -43,6 +46,7 @@ import type {
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { formatDate, getErrorMessage } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
+import { useRuleViolationCheck } from 'hooks/useRuleViolationCheck'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { CommitDivergence } from 'components/CommitDivergence/CommitDivergence'
 import { makeDiffRefs } from 'utils/GitUtils'
@@ -167,19 +171,23 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         id: 'action',
         width: '30px',
         Cell: ({ row }: CellProps<RepoBranch>) => {
+          const { violation, bypassable, bypassed, setAllStates } = useRuleViolationCheck()
+          const [persistModal, setPersistModal] = useState(true)
           const { mutate: deleteBranch } = useMutate({
             verb: 'DELETE',
-            path: `/api/v1/repos/${repoMetadata.path}/+/branches/${row.original.name}`
+            path: `/api/v1/repos/${repoMetadata.path}/+/branches/${row.original.name}?bypass_rules=${bypassed}`
           })
           const { showSuccess, showError } = useToaster()
           const confirmDeleteBranch = useConfirmAction({
             title: getString('deleteBranch'),
-            confirmText: getString('delete'),
+            confirmText: !bypassable ? getString('delete') : getString('branchProtection.deleteBranchAlertBtn'),
             intent: Intent.DANGER,
             message: <String useRichText stringID="deleteBranchConfirm" vars={{ name: row.original.name }} />,
+            persistDialog: persistModal,
             action: async () => {
               deleteBranch({})
                 .then(() => {
+                  setPersistModal(false)
                   showSuccess(
                     <StringSubstitute
                       str={getString('branchDeleted')}
@@ -192,9 +200,27 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                   onDeleteSuccess()
                 })
                 .catch(error => {
-                  showError(getErrorMessage(error), 0, 'failedToDeleteBranch')
+                  if (error.status === 422) {
+                    setAllStates({
+                      violation: true,
+                      bypassed: true,
+                      bypassable: error?.data?.violations[0]?.bypassable
+                    })
+                  } else showError(getErrorMessage(error), 0, 'failedToDeleteBranch')
                 })
-            }
+            },
+            childtag: (
+              <Render when={violation}>
+                <Layout.Horizontal className={css.warningMessage}>
+                  <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
+                  <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
+                    {bypassable
+                      ? getString('branchProtection.deleteBranchAlertText')
+                      : getString('branchProtection.deleteBranchBlockText')}
+                  </Text>
+                </Layout.Horizontal>
+              </Render>
+            )
           })
 
           return (

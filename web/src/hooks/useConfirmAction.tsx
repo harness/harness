@@ -24,22 +24,25 @@ import { useConfirmationDialog } from './useConfirmationDialog'
 
 export interface UseConfirmActionDialogProps {
   message: React.ReactElement
+  childtag?: React.ReactElement
   intent?: Intent
   title?: string
   confirmText?: string
   cancelText?: string
   action: (params?: Unknown) => void
+  persistDialog?: boolean
 }
 
 /**
  * @deprecated Use useConfirmAct() hook instead
  */
 export const useConfirmAction = (props: UseConfirmActionDialogProps) => {
-  const { title, message, confirmText, cancelText, intent, action } = props
+  const { title, message, confirmText, cancelText, intent, childtag, action, persistDialog } = props
   const { getString } = useStrings()
   const [params, setParams] = useState<Unknown>()
   const { openDialog } = useConfirmationDialog({
     intent,
+    persistDialog: persistDialog,
     titleText: title || getString('confirmation'),
     contentText: message,
     confirmButtonText: confirmText || getString('confirm'),
@@ -49,7 +52,8 @@ export const useConfirmAction = (props: UseConfirmActionDialogProps) => {
       if (isConfirmed) {
         action(params)
       }
-    }
+    },
+    children: childtag || <></>
   })
   const confirm = useCallback(
     (_params?: Unknown) => {
