@@ -320,4 +320,9 @@ type Config struct {
 		FromMail string `envconfig:"GITNESS_SMTP_FROM_MAIL"`
 		Insecure bool   `envconfig:"GITNESS_SMTP_INSECURE"`
 	}
+
+	KeywordSearch struct {
+		Concurrency int `envconfig:"GITNESS_KEYWORD_SEARCH_CONCURRENCY" default:"4"`
+		MaxRetries  int `envconfig:"GITNESS_KEYWORD_SEARCH_MAX_RETRIES" default:"3"`
+	}
 }

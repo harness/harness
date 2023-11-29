@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
 	controllergithook "github.com/harness/gitness/app/api/controller/githook"
+	"github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/logs"
 	"github.com/harness/gitness/app/api/controller/pipeline"
 	"github.com/harness/gitness/app/api/controller/plugin"
@@ -43,6 +44,7 @@ import (
 	handlerconnector "github.com/harness/gitness/app/api/handler/connector"
 	handlerexecution "github.com/harness/gitness/app/api/handler/execution"
 	handlergithook "github.com/harness/gitness/app/api/handler/githook"
+	handlerkeywordsearch "github.com/harness/gitness/app/api/handler/keywordsearch"
 	handlerlogs "github.com/harness/gitness/app/api/handler/logs"
 	handlerpipeline "github.com/harness/gitness/app/api/handler/pipeline"
 	handlerplugin "github.com/harness/gitness/app/api/handler/plugin"
@@ -112,6 +114,7 @@ func NewAPIHandler(
 	checkCtrl *check.Controller,
 	sysCtrl *system.Controller,
 	uploadCtrl *upload.Controller,
+	searchCtrl *keywordsearch.Controller,
 ) APIHandler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
@@ -136,7 +139,8 @@ func NewAPIHandler(
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, appCtx, config, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
 			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
-			webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl)
+			webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl,
+			searchCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -179,6 +183,7 @@ func setupRoutesV1(r chi.Router,
 	checkCtrl *check.Controller,
 	sysCtrl *system.Controller,
 	uploadCtrl *upload.Controller,
+	searchCtrl *keywordsearch.Controller,
 ) {
 	setupSpaces(r, appCtx, spaceCtrl)
 	setupRepos(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl, pullreqCtrl, webhookCtrl, checkCtrl,
@@ -195,6 +200,7 @@ func setupRoutesV1(r chi.Router,
 	setupSystem(r, sysCtrl)
 	setupResources(r)
 	setupPlugins(r, pluginCtrl)
+	setupKeywordSearch(r, searchCtrl)
 }
 
 // nolint: revive // it's the app context, it shouldn't be the first argument
@@ -630,6 +636,10 @@ func setupPrincipals(r chi.Router, principalCtrl principal.Controller) {
 	r.Route("/principals", func(r chi.Router) {
 		r.Get("/", handlerprincipal.HandleList(principalCtrl))
 	})
+}
+
+func setupKeywordSearch(r chi.Router, searchCtrl *keywordsearch.Controller) {
+	r.Post("/search", handlerkeywordsearch.HandleSearch(searchCtrl))
 }
 
 func setupAdmin(r chi.Router, userCtrl *user.Controller) {

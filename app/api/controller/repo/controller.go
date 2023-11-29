@@ -27,6 +27,7 @@ import (
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -53,6 +54,7 @@ type Controller struct {
 	importer          *importer.Repository
 	codeOwners        *codeowners.Service
 	eventReporter     *repoevents.Reporter
+	indexer           keywordsearch.Indexer
 }
 
 func NewController(
@@ -71,6 +73,7 @@ func NewController(
 	importer *importer.Repository,
 	codeOwners *codeowners.Service,
 	eventReporter *repoevents.Reporter,
+	indexer keywordsearch.Indexer,
 ) *Controller {
 	return &Controller{
 		defaultBranch:     defaultBranch,
@@ -88,6 +91,7 @@ func NewController(
 		importer:          importer,
 		codeOwners:        codeOwners,
 		eventReporter:     eventReporter,
+		indexer:           indexer,
 	}
 }
 

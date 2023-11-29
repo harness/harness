@@ -24,6 +24,7 @@ import (
 
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
@@ -324,5 +325,14 @@ func ProvideCleanupConfig(config *types.Config) cleanup.Config {
 func ProvideCodeOwnerConfig(config *types.Config) codeowners.Config {
 	return codeowners.Config{
 		FilePaths: config.CodeOwners.FilePaths,
+	}
+}
+
+// ProvideKeywordSearchConfig loads the keyword search service config from the main config.
+func ProvideKeywordSearchConfig(config *types.Config) keywordsearch.Config {
+	return keywordsearch.Config{
+		EventReaderName: config.InstanceID,
+		Concurrency:     config.KeywordSearch.Concurrency,
+		MaxRetries:      config.KeywordSearch.MaxRetries,
 	}
 }

@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/services/job"
+	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
@@ -61,6 +62,7 @@ type Repository struct {
 	encrypter     encrypt.Encrypter
 	scheduler     *job.Scheduler
 	sseStreamer   sse.Streamer
+	indexer       keywordsearch.Indexer
 }
 
 var _ job.Handler = (*Repository)(nil)
@@ -314,6 +316,11 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	err = r.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeRepositoryImportCompleted, repo)
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to publish import completion SSE")
+	}
+
+	err = r.indexer.Index(ctx, repo)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to index repository")
 	}
 
 	log.Info().Msg("completed repository import")
