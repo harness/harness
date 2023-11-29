@@ -27,6 +27,7 @@ func (c *Controller) Delete(
 	session *auth.Session,
 	repoRef string,
 	webhookID int64,
+	allowDeletingInternal bool,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
@@ -38,7 +39,9 @@ func (c *Controller) Delete(
 	if err != nil {
 		return err
 	}
-
+	if webhook.Internal && !allowDeletingInternal {
+		return ErrInternalWebhookOperationNotAllowed
+	}
 	// delete webhook
 	return c.webhookStore.Delete(ctx, webhook.ID)
 }

@@ -314,6 +314,10 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 		stmt = stmt.Where("LOWER(webhook_display_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
+	if opts.SkipInternal {
+		stmt = stmt.Where("webhook_internal != ?", true)
+	}
+
 	stmt = stmt.Limit(database.Limit(opts.Size))
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 

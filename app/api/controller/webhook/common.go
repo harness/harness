@@ -18,6 +18,7 @@ import (
 	"net"
 	"net/url"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
@@ -28,6 +29,8 @@ const (
 	// webhookMaxSecretLength defines the max allowed length of a webhook secret.
 	webhookMaxSecretLength = 4096
 )
+
+var ErrInternalWebhookOperationNotAllowed = usererror.Forbidden("changes to internal webhooks are not allowed")
 
 // checkURL validates the url of a webhook.
 func checkURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool) error {

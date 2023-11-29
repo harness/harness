@@ -40,7 +40,7 @@ func HandleDelete(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = webhookCtrl.Delete(ctx, session, repoRef, webhookID)
+		err = webhookCtrl.Delete(ctx, session, repoRef, webhookID, false)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

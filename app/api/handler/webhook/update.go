@@ -48,7 +48,7 @@ func HandleUpdate(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		hook, err := webhookCtrl.Update(ctx, session, repoRef, webhookID, in)
+		hook, err := webhookCtrl.Update(ctx, session, repoRef, webhookID, in, false)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

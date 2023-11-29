@@ -41,6 +41,7 @@ func (c *Controller) Update(
 	repoRef string,
 	webhookID int64,
 	in *UpdateInput,
+	allowModifyingInternal bool,
 ) (*types.Webhook, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
@@ -53,6 +54,9 @@ func (c *Controller) Update(
 		return nil, err
 	}
 
+	if !allowModifyingInternal && hook.Internal {
+		return nil, ErrInternalWebhookOperationNotAllowed
+	}
 	// validate input
 	if err = checkUpdateInput(in, c.allowLoopback, c.allowPrivateNetwork); err != nil {
 		return nil, err

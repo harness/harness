@@ -40,6 +40,9 @@ func HandleList(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			filter.Order = enum.OrderAsc
 		}
 
+		// always skip internal for requests from handler
+		filter.SkipInternal = true
+
 		webhooks, totalCount, err := webhookCtrl.List(ctx, session, repoRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)

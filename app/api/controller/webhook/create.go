@@ -16,10 +16,13 @@ package webhook
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -84,6 +87,11 @@ func (c *Controller) Create(
 	}
 
 	err = c.webhookStore.Create(ctx, hook)
+
+	if errors.Is(err, store.ErrDuplicate) && hook.Internal {
+		return nil, usererror.Conflict("the provided uid is reserved for internal purposes")
+	}
+
 	if err != nil {
 		return nil, err
 	}

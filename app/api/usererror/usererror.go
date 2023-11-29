@@ -165,3 +165,8 @@ func NotFound(message string) *Error {
 func ConflictWithPayload(message string, values ...map[string]any) *Error {
 	return NewWithPayload(http.StatusConflict, message, values...)
 }
+
+// Conflict returns a new user facing conflict error.
+func Conflict(message string) *Error {
+	return NewWithPayload(http.StatusConflict, message)
+}
