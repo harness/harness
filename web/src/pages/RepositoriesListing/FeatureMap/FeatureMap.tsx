@@ -59,7 +59,7 @@ const FeatureMap = () => {
                 <Layout.Vertical>
                   <Text className={css.featureTitle}>
                     {feature.title}
-                    <Link noStyling href={feature.link}>
+                    <Link target={'_blank'} rel={'noopener noreferrer'} noStyling href={feature.link}>
                       <Container padding={{ top: 'tiny', left: 'small' }}>
                         <img className={css.launchIcon} src={Launch} width={12} height={12}></img>
                       </Container>

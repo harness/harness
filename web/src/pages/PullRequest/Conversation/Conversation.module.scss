@@ -25,6 +25,7 @@
 
     .mdWrapper {
       position: relative;
+      padding-right: var(--spacing-large) !important;
 
       .menuWrapper {
         position: absolute;
