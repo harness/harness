@@ -44,11 +44,13 @@ func (c *Controller) Search(
 		return types.SearchResult{}, fmt.Errorf("failed to search repos by path: %w", err)
 	}
 
-	if len(repoIDToPathMap) == 0 {
-		repoIDToPathMap, err = c.getReposBySpacePaths(ctx, session, in.SpacePaths)
-		if err != nil {
-			return types.SearchResult{}, fmt.Errorf("failed to search repos by space path: %w", err)
-		}
+	spaceRepoIDToPathMap, err := c.getReposBySpacePaths(ctx, session, in.SpacePaths)
+	if err != nil {
+		return types.SearchResult{}, fmt.Errorf("failed to search repos by space path: %w", err)
+	}
+
+	for repoID, repoPath := range spaceRepoIDToPathMap {
+		repoIDToPathMap[repoID] = repoPath
 	}
 
 	if len(repoIDToPathMap) == 0 {

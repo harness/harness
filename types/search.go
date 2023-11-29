@@ -19,7 +19,6 @@ type (
 		Query string `json:"query"`
 
 		// RepoPaths contains the paths of repositories to search in
-		// If both space path and repo path are provided, the repo path will be used
 		RepoPaths []string `json:"repo_paths"`
 
 		// SpacePaths contains the paths of spaces to search in
