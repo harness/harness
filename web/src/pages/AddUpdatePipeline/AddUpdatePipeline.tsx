@@ -18,7 +18,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useGet, useMutate } from 'restful-react'
 import { useParams } from 'react-router-dom'
 import { get, isEmpty, isObject, isUndefined } from 'lodash-es'
-import { stringify, parseDocument, YAMLMap, YAMLSeq } from 'yaml'
+import * as yamlNS from 'yaml'
+import { stringify, parseDocument, YAMLMap, YAMLSeq, Scalar } from 'yaml'
 import cx from 'classnames'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Container, PageBody, Layout, ButtonVariation, Text, useToaster, SplitButton, Button } from '@harnessio/uicore'
@@ -273,17 +274,31 @@ const AddUpdatePipeline = (): JSX.Element => {
           const iterablePathWithSpec = [...iterableJSONPath, 'spec']
 
           uiKeySet.forEach((field: string) => {
+            const iterablePathForField = [...iterablePathWithSpec]
+            /* Fields inside nested object would have a period "." in their full field name with prefix. */
+            if (field.includes('.')) {
+              iterablePathForField.push(...(field.split('.') || []))
+            } else {
+              iterablePathForField.push(field)
+            }
+            /* Set node in YAML at specified YAML path */
+
             /* Avoid setting objects directly as it causes comments to be dropped */
             if (!isObject(get(nodeSpecFromFormData, field))) {
-              const iterablePathForField = [...iterablePathWithSpec]
-              /* Fields inside nested object would have a period "." in their full field name with prefix. */
-              if (field.includes('.')) {
-                iterablePathForField.push(...(field.split('.') || []))
-              } else {
-                iterablePathForField.push(field)
-              }
-              /* Set node in YAML at specified YAML path */
               yamlDocument.setIn(iterablePathForField, get(nodeSpecFromFormData, field, ''))
+              return
+            }
+
+            /* This is a corner case where
+            the type of the field in UI (Object/Map) and in YAML(Scalar) are different.
+            This handling is necessary to allow setting of keys from UI object to YAML 
+            by changing the existing type of node in YAML to be a Map instead.
+            */
+
+            const existingFieldInYAML = yamlDocument.getIn(iterablePathForField, true) as Scalar
+            if (existingFieldInYAML.type === yamlNS.Scalar.PLAIN) {
+              const fieldAsYAMLMap = new yamlNS.YAMLMap()
+              yamlDocument.setIn(iterablePathForField, fieldAsYAMLMap)
             }
           })
         } else {
