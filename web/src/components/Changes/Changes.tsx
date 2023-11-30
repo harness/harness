@@ -289,7 +289,6 @@ export const Changes: React.FC<ChangesProps> = ({
   )
 
   useShowRequestError(errorActivities || errorFileViews)
-
   return (
     <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
       <LoadingSpinner visible={loading || showSpinner} withBorder={true} />
@@ -395,6 +394,7 @@ export const Changes: React.FC<ChangesProps> = ({
                   sourceRef={_sourceRef}
                   commitRange={commitRange}
                   scrollElement={scrollElement}
+                  commitSHA={commitSHA}
                 />
               ))}
             </Layout.Vertical>

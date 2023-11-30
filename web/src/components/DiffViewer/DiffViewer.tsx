@@ -85,6 +85,7 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   sourceRef?: string
   commitRange?: string[]
   scrollElement: HTMLElement
+  commitSHA?: string
 }
 
 //
@@ -103,7 +104,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   targetRef,
   sourceRef,
   commitRange,
-  scrollElement
+  scrollElement,
+  commitSHA
 }) => {
   const { routes, routingId } = useAppContext()
   const { getString } = useStrings()
@@ -690,7 +692,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               <Link
                 to={routes.toCODERepository({
                   repoPath: repoMetadata.path as string,
-                  gitRef: pullRequestMetadata?.source_branch,
+                  gitRef: pullRequestMetadata?.source_branch || commitSHA || '',
                   resourcePath: diff.isRename ? diff.newName : diff.filePath
                 })}>
                 {diff.isRename ? `${diff.oldName} -> ${diff.newName}` : diff.filePath}
