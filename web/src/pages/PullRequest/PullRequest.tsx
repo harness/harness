@@ -17,7 +17,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Container, Layout, PageBody, Tabs, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
-import { useGet, useMutate } from 'restful-react'
+import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { compact, isEqual } from 'lodash-es'
@@ -25,7 +25,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, PullRequestSection, MergeCheckStatus } from 'utils/Utils'
+import { voidFn, getErrorMessage, PullRequestSection } from 'utils/Utils'
 import { CodeIcon } from 'utils/GitUtils'
 import type { TypesPullReq, TypesPullReqStats, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -120,14 +120,6 @@ export default function PullRequest() {
       })
     )
   }, [history, routes, repoMetadata?.path, pullRequestId])
-  const recheckPath = useMemo(
-    () => `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}/recheck`,
-    [repoMetadata?.path, pullRequestId]
-  )
-  const { mutate: recheckPR, loading: loadingRecheckPR } = useMutate({
-    verb: 'POST',
-    path: recheckPath
-  })
 
   // prData holds the latest good PR data to make sure page is not broken
   // when polling fails
@@ -137,32 +129,9 @@ export default function PullRequest() {
         return
       }
 
-      // recheck pr (merge-check, ...) in case it's unavailable
-      // Approximation of identifying target branch update:
-      //   1. branch got updated before page was loaded (status is unchecked and prData is empty)
-      //      NOTE: This doesn't guarantee the status is UNCHECKED due to target branch update and can cause duplicate
-      //      PR merge checks being run on PR creation or source branch update.
-      //   2. branch got updated while we are on the page (same source_sha but status changed to UNCHECKED)
-      //      NOTE: This doesn't cover the case in which the status changed back to UNCHECKED before the PR is refetched.
-      //      In that case, the user will have to re-open the PR - better than us spamming the backend with rechecks.
-      // This is a TEMPORARY SOLUTION and will most likely change in the future (more so on backend side)
-      if (
-        pullRequestData.state == 'open' &&
-        pullRequestData.merge_check_status == MergeCheckStatus.UNCHECKED &&
-        // case 1:
-        (!prData ||
-          // case 2:
-          (prData?.merge_check_status != MergeCheckStatus.UNCHECKED &&
-            prData?.source_sha == pullRequestData.source_sha)) &&
-        !loadingRecheckPR
-      ) {
-        // best effort attempt to recheck PR - fail silently
-        recheckPR({})
-      }
-
       setPrData(pullRequestData)
     },
-    [pullRequestData, loadingRecheckPR, recheckPR, setPrData] // eslint-disable-line react-hooks/exhaustive-deps
+    [pullRequestData, setPrData] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   useEffect(() => {
