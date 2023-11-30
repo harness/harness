@@ -119,28 +119,6 @@ func (s *Service) deleteMergeRef(ctx context.Context, repoID int64, prNum int64)
 	return nil
 }
 
-// UpdateMergeDataIfRequired rechecks the merge data of a PR.
-// TODO: This is a temporary solution - doesn't fix changed merge-base or other things.
-func (s *Service) UpdateMergeDataIfRequired(
-	ctx context.Context,
-	repoID int64,
-	prNum int64,
-) error {
-	pr, err := s.pullreqStore.FindByNumber(ctx, repoID, prNum)
-	if err != nil {
-		return fmt.Errorf("failed to get pull request number %d: %w", prNum, err)
-	}
-
-	// nothing to-do if check was already performed
-	if pr.MergeCheckStatus != enum.MergeCheckStatusUnchecked {
-		return nil
-	}
-
-	// WARNING: This CAN lead to two (or more) merge-checks on the same SHA
-	// running on different machines at the same time.
-	return s.updateMergeDataInner(ctx, pr, "", pr.SourceSHA)
-}
-
 //nolint:funlen // refactor if required.
 func (s *Service) updateMergeData(
 	ctx context.Context,
