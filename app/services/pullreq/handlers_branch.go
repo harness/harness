@@ -103,6 +103,9 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
 			pr.MergeSHA = nil
 			pr.MergeConflicts = nil
+			pr.Stats.DiffStats.Commits = nil
+			pr.Stats.DiffStats.FilesChanged = nil
+
 			return nil
 		})
 		if errors.Is(err, errPRNotOpen) {

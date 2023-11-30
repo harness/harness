@@ -63,8 +63,17 @@ type PullReq struct {
 
 // DiffStats shows total number of commits and modified files.
 type DiffStats struct {
-	Commits      int `json:"commits,omitempty"`
-	FilesChanged int `json:"files_changed,omitempty"`
+	Commits      *int64 `json:"commits,omitempty"`
+	FilesChanged *int64 `json:"files_changed,omitempty"`
+}
+
+func NewDiffStats(commitCount int, fileCount int) DiffStats {
+	cc := int64(commitCount)
+	fc := int64(fileCount)
+	return DiffStats{
+		Commits:      &cc,
+		FilesChanged: &fc,
+	}
 }
 
 // PullReqStats shows Diff statistics and number of conversations.

@@ -121,10 +121,7 @@ func (c *Controller) DiffStats(
 		return types.DiffStats{}, err
 	}
 
-	return types.DiffStats{
-		Commits:      output.Commits,
-		FilesChanged: output.FilesChanged,
-	}, nil
+	return types.NewDiffStats(output.Commits, output.FilesChanged), nil
 }
 
 func (c *Controller) Diff(

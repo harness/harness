@@ -232,6 +232,7 @@ func (c *Controller) Merge(
 					pr.MergeSHA = &mergeOutput.MergeSHA
 					pr.MergeConflicts = nil
 				}
+				pr.Stats.DiffStats = types.NewDiffStats(mergeOutput.CommitCount, mergeOutput.ChangedFileCount)
 				return nil
 			})
 			if err != nil {
@@ -291,6 +292,7 @@ func (c *Controller) Merge(
 			pr.MergeTargetSHA = &mergeOutput.BaseSHA
 			pr.MergeSHA = nil
 			pr.MergeConflicts = mergeOutput.ConflictFiles
+			pr.Stats.DiffStats = types.NewDiffStats(mergeOutput.CommitCount, mergeOutput.ChangedFileCount)
 			return nil
 		})
 		if err != nil {
@@ -318,6 +320,7 @@ func (c *Controller) Merge(
 		pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
 		pr.MergeSHA = &mergeOutput.MergeSHA
 		pr.MergeConflicts = nil
+		pr.Stats.DiffStats = types.NewDiffStats(mergeOutput.CommitCount, mergeOutput.ChangedFileCount)
 
 		// update sequence for PR activities
 		pr.ActivitySeq++

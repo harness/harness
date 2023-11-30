@@ -89,6 +89,9 @@ type pullReq struct {
 	MergeBaseSHA     string                `db:"pullreq_merge_base_sha"`
 	MergeSHA         null.String           `db:"pullreq_merge_sha"`
 	MergeConflicts   null.String           `db:"pullreq_merge_conflicts"`
+
+	CommitCount null.Int `db:"pullreq_commit_count"`
+	FileCount   null.Int `db:"pullreq_file_count"`
 }
 
 const (
@@ -119,7 +122,9 @@ const (
 		,pullreq_merge_target_sha
 		,pullreq_merge_base_sha
 		,pullreq_merge_sha
-		,pullreq_merge_conflicts`
+		,pullreq_merge_conflicts
+		,pullreq_commit_count
+		,pullreq_file_count`
 
 	pullReqSelectBase = `
 	SELECT` + pullReqColumns + `
@@ -209,6 +214,8 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_merge_base_sha
 		,pullreq_merge_sha
 		,pullreq_merge_conflicts
+		,pullreq_commit_count
+		,pullreq_file_count
 	) values (
 		 :pullreq_version
 		,:pullreq_number
@@ -236,6 +243,8 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_merge_base_sha
 		,:pullreq_merge_sha
 		,:pullreq_merge_conflicts
+		,:pullreq_commit_count
+		,:pullreq_file_count
 	) RETURNING pullreq_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -276,6 +285,8 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_merge_base_sha = :pullreq_merge_base_sha
 		,pullreq_merge_sha = :pullreq_merge_sha
 		,pullreq_merge_conflicts = :pullreq_merge_conflicts
+		,pullreq_commit_count = :pullreq_commit_count 
+		,pullreq_file_count = :pullreq_file_count
 	WHERE pullreq_id = :pullreq_id AND pullreq_version = :pullreq_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -359,9 +370,11 @@ func (s *PullReqStore) UpdateMergeCheckStatus(
 		 pullreq_updated = $1
 		,pullreq_merge_check_status = $2
 		,pullreq_version = pullreq_version + 1
+		,pullreq_commit_count = NULL
+		,pullreq_file_count = NULL
 	WHERE pullreq_target_repo_id = $3 AND
-		  pullreq_target_branch = $4 AND
-		  pullreq_state not in ($5, $6)`
+		pullreq_target_branch = $4 AND
+		pullreq_state not in ($5, $6)`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -547,8 +560,8 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 			Conversations:   pr.CommentCount,
 			UnresolvedCount: pr.UnresolvedCount,
 			DiffStats: types.DiffStats{
-				Commits:      0,
-				FilesChanged: 0,
+				Commits:      pr.CommitCount.Ptr(),
+				FilesChanged: pr.FileCount.Ptr(),
 			},
 		},
 	}
@@ -584,6 +597,8 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		MergeBaseSHA:     pr.MergeBaseSHA,
 		MergeSHA:         null.StringFromPtr(pr.MergeSHA),
 		MergeConflicts:   null.NewString(mergeConflicts, mergeConflicts != ""),
+		CommitCount:      null.IntFromPtr(pr.Stats.Commits),
+		FileCount:        null.IntFromPtr(pr.Stats.FilesChanged),
 	}
 
 	return m
