@@ -59,7 +59,9 @@ export default function MonacoSourceCodeEditor({
   autoHeight,
   wordWrap = true,
   onChange = noop,
-  schema
+  schema,
+  editorDidMount,
+  editorOptions
 }: SourceCodeEditorProps) {
   const [editor, setEditor] = useState<monacoEditor.editor.IStandaloneCodeEditor>()
   const scrollbar = autoHeight ? 'hidden' : 'auto'
@@ -101,6 +103,7 @@ export default function MonacoSourceCodeEditor({
       height={height}
       options={{
         ...MonacoEditorOptions,
+        ...editorOptions,
         readOnly,
         wordWrap: toOnOff(wordWrap),
         lineNumbers: toOnOff(lineNumbers),
@@ -111,6 +114,7 @@ export default function MonacoSourceCodeEditor({
         }
       }}
       editorDidMount={_editor => {
+        editorDidMount?.(_editor, monaco)
         if (autoHeight) {
           // autoAdjustEditorHeight(_editor)
         }

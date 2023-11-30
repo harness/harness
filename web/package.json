@@ -88,7 +88,7 @@
     "rehype-video": "^1.2.2",
     "restful-react": "15.6.0",
     "webpack-retry-chunk-load-plugin": "^3.1.0",
-    "yaml": "^1.10.0",
+    "yaml": "^2.3.3",
     "yup": "^0.29.1"
   },
   "devDependencies": {

@@ -16,17 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const arrow: string
-export declare const configForm: string
 export declare const cursor: string
+export declare const entityCard: string
+export declare const entityIcon: string
 export declare const fontWeight600: string
-export declare const form: string
-export declare const formFields: string
-export declare const pluginCategoryCard: string
-export declare const pluginDesc: string
-export declare const pluginDetailsPanel: string
-export declare const pluginIcon: string
-export declare const pluginInfo: string
-export declare const plugins: string
-export declare const search: string
-export declare const toggle: string

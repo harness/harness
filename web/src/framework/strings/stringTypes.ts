@@ -495,6 +495,7 @@ export interface StringsMap {
   pending: string
   permissions: string
   permissionsFor: string
+  'pipelineConfig.label': string
   'pipelines.createNewPipeline': string
   'pipelines.created': string
   'pipelines.deletePipelineButton': string
@@ -756,6 +757,7 @@ export interface StringsMap {
   startSearching: string
   status: string
   'step.select': string
+  'stepCategory.select': string
   submitReview: string
   success: string
   switchBranchesTags: string
@@ -790,6 +792,7 @@ export interface StringsMap {
   'unsavedChanges.stay': string
   'unsavedChanges.title': string
   updateFile: string
+  updateLabel: string
   updateUser: string
   updateWebhook: string
   updated: string

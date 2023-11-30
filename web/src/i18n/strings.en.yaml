@@ -505,6 +505,7 @@ noReviewers: No Reviewers
 assignPeople: Assign people
 add: Add +
 addLabel: Add
+updateLabel: Update
 users: Users
 findAUser: Find a user
 reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
@@ -815,6 +816,8 @@ triggers:
   deleteTriggerError: Failed to delete Trigger. Please try again.
 step:
   select: Select a step
+stepCategory:
+  select: Select step category
 exportSpace:
   accIdRequired: Account ID is required
   accesstokenReq: Access token is required
@@ -934,3 +937,5 @@ enterANumber: Enter a number
 selectUsers: Select Users
 selectStatuses: Select Statuses
 featureRoadmap: Feature Roadmap
+pipelineConfig:
+  label: Pipeline Configuration

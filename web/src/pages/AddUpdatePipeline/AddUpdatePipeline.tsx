@@ -17,8 +17,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useGet, useMutate } from 'restful-react'
 import { useParams } from 'react-router-dom'
-import { get, isEmpty, isUndefined, set } from 'lodash-es'
-import { parse, stringify } from 'yaml'
+import { get, isEmpty, isObject, isUndefined } from 'lodash-es'
+import { stringify, parseDocument, YAMLMap, YAMLSeq } from 'yaml'
 import cx from 'classnames'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Container, PageBody, Layout, ButtonVariation, Text, useToaster, SplitButton, Button } from '@harnessio/uicore'
@@ -27,15 +27,17 @@ import type { OpenapiCommitFilesRequest, TypesListCommitResponse, RepoFileConten
 import { useStrings } from 'framework/strings'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
-import MonacoSourceCodeEditor from 'components/SourceCodeEditor/MonacoSourceCodeEditor'
-import { PluginForm, PluginsPanel } from 'components/PluginsPanel/PluginsPanel'
+import { AdvancedSourceCodeEditor } from 'components/SourceCodeEditor/AdvancedSourceCodeEditor'
+import PipelineConfigPanel from 'components/PipelineConfigPanel/PipelineConfigPanel'
+import type { EntityAddUpdateInterface } from 'components/PluginsPanel/PluginsPanel'
 import useRunPipelineModal from 'components/RunPipelineModal/RunPipelineModal'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
 import type { CODEProps } from 'RouteDefinitions'
-import { getErrorMessage } from 'utils/Utils'
+import { getAllKeysWithPrefix, getErrorMessage } from 'utils/Utils'
 import { normalizeGitRef, decodeGitContent } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { generateDefaultStepInsertionPath } from 'components/SourceCodeEditor/EditorUtils'
 import pipelineSchemaV1 from './schema/pipeline-schema-v1.json'
 import pipelineSchemaV0 from './schema/pipeline-schema-v0.json'
 import { DRONE_CONFIG_YAML_FILE_SUFFIXES, YamlVersion } from './Constants'
@@ -91,6 +93,12 @@ interface PipelineSaveAndRunOption {
   action: PipelineSaveAndRunAction
 }
 
+const defaultPluginOpnData: EntityAddUpdateInterface = {
+  isUpdate: false,
+  pathToField: [],
+  formData: {}
+}
+
 const AddUpdatePipeline = (): JSX.Element => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
@@ -105,6 +113,7 @@ const AddUpdatePipeline = (): JSX.Element => {
   const [isDirty, setIsDirty] = useState<boolean>(false)
   const [generatingPipeline, setGeneratingPipeline] = useState<boolean>(false)
   const editorYAMLRef = useRef<string>('')
+  const [pluginDataFromYAML, setPluginDataFromYAML] = useState<EntityAddUpdateInterface>(defaultPluginOpnData)
 
   const pipelineSaveOption: PipelineSaveAndRunOption = {
     title: getString('save'),
@@ -230,48 +239,77 @@ const AddUpdatePipeline = (): JSX.Element => {
     }
   }
 
-  const updatePipelineWithPluginData = (
-    existingPipeline: Record<string, unknown>,
-    payload: Record<string, unknown>
-  ): Record<string, unknown> => {
-    const pipelineAsObjClone = { ...existingPipeline }
-    if (Object.keys(pipelineAsObjClone).length > 0) {
-      const stepInsertPath = 'spec.stages.0.spec.steps'
-      let existingSteps = (get(pipelineAsObjClone, stepInsertPath) as unknown[]) || []
-      if (existingSteps.length > 0) {
-        existingSteps.push(payload)
-      } else {
-        existingSteps = [payload]
-      }
-      set(pipelineAsObjClone, stepInsertPath, existingSteps)
-      return pipelineAsObjClone
-    }
-    return existingPipeline
-  }
+  const getFieldKeySetFromUI = useCallback((spec: Record<string, any>): Set<string> => {
+    /**
+     * @TODO Currently, only handles top level keys, need to handle nested keys
+     */
+    return new Set(getAllKeysWithPrefix(spec, ''))
+  }, [])
 
-  const handlePluginAddUpdateToPipeline = useCallback(
-    ({
-      pluginFormData,
-      existingYAML
-    }: {
-      isUpdate: boolean
-      pluginFormData: PluginForm
-      existingYAML: string
-    }): void => {
+  /**
+   * @param {string} jsonPath - JSON path of entity as a node in tree.
+   * @param {boolean} isUpdate
+   * @param {object} formData - Form data for the entity from formik
+   */
+  /**
+   * @todo - figure out what happens when pathToField changes mid-way during Form UI to YAML update
+   */
+  const visitAndUpdateYAMLNode = useCallback(
+    ({ pathToField, isUpdate, formData }: EntityAddUpdateInterface): void => {
       try {
-        const pipelineAsObj = parse(existingYAML)
-        const updatedPipelineAsObj = updatePipelineWithPluginData(pipelineAsObj, pluginFormData)
-        if (Object.keys(updatedPipelineAsObj).length > 0) {
-          // avoid setting to empty pipeline in case pipeline update with plugin data fails
-          const updatedPipelineAsYAML = stringify(updatedPipelineAsObj)
-          setPipelineYAML(updatedPipelineAsYAML)
-          editorYAMLRef.current = updatedPipelineAsYAML
+        const yamlDocument = parseDocument(editorYAMLRef.current)
+        const iterableJSONPath = isUpdate ? pathToField : generateDefaultStepInsertionPath().split('.')
+        if (isUpdate) {
+          /* Currently, handle updates only "spec" of a step */
+          const nodeSpecFromFormData = get(formData, 'spec', {})
+          if (isEmpty(nodeSpecFromFormData)) {
+            return
+          }
+          /*
+           * Copy all fields from UI to it's YAML node
+           * UI values will override YAML values
+           */
+          const uiKeySet = getFieldKeySetFromUI(nodeSpecFromFormData as Record<string, any>)
+          const iterablePathWithSpec = [...iterableJSONPath, 'spec']
+
+          uiKeySet.forEach((field: string) => {
+            /* Avoid setting objects directly as it causes comments to be dropped */
+            if (!isObject(get(nodeSpecFromFormData, field))) {
+              const iterablePathForField = [...iterablePathWithSpec]
+              /* Fields inside nested object would have a period "." in their full field name with prefix. */
+              if (field.includes('.')) {
+                iterablePathForField.push(...(field.split('.') || []))
+              } else {
+                iterablePathForField.push(field)
+              }
+              /* Set node in YAML at specified YAML path */
+              yamlDocument.setIn(iterablePathForField, get(nodeSpecFromFormData, field, ''))
+            }
+          })
+        } else {
+          const existingSteps = (yamlDocument.getIn(iterableJSONPath) as YAMLSeq).items as [YAMLMap]
+          if (existingSteps.length > 0) {
+            yamlDocument.setIn([...iterableJSONPath, existingSteps.length], formData)
+          }
         }
-      } catch (ex) {
-        // ignore exception
+        setPipelineYAML(yamlDocument.toString()) // Convert from YAML doc to string
+      } catch (e) {
+        // ignore error
+        // console.log(e)
       }
     },
-    []
+    [editorYAMLRef.current]
+  )
+
+  const handlePluginAddUpdateToUI = useCallback((values: EntityAddUpdateInterface): void => {
+    setPluginDataFromYAML(values)
+  }, [])
+
+  const handlePluginAddUpdateToYAML = useCallback(
+    (values: EntityAddUpdateInterface): void => {
+      visitAndUpdateYAMLNode(values)
+    },
+    [editorYAMLRef.current]
   )
 
   const handleGeneratePipeline = useCallback(async (): Promise<void> => {
@@ -421,23 +459,20 @@ const AddUpdatePipeline = (): JSX.Element => {
                 className={cx(css.editorContainer, {
                   [css.extendedHeight]: isExistingPipeline || yamlVersion === YamlVersion.V0
                 })}>
-                <MonacoSourceCodeEditor
+                <AdvancedSourceCodeEditor
                   language={'yaml'}
                   schema={yamlVersion === YamlVersion.V1 ? pipelineSchemaV1 : pipelineSchemaV0}
                   source={pipelineYAML}
                   onChange={(value: string) => setPipelineYAML(value)}
+                  enableCodeLens
+                  onEntityAddUpdate={handlePluginAddUpdateToUI}
                 />
               </Container>
               {yamlVersion === YamlVersion.V1 && (
                 <Container className={cx(css.pluginsContainer, { [css.extendedHeight]: isExistingPipeline })}>
-                  <PluginsPanel
-                    onPluginAddUpdate={(isUpdate: boolean, pluginFormData: PluginForm) =>
-                      handlePluginAddUpdateToPipeline({
-                        isUpdate,
-                        pluginFormData,
-                        existingYAML: editorYAMLRef.current || pipelineYAML
-                      })
-                    }
+                  <PipelineConfigPanel
+                    entityDataFromYAML={pluginDataFromYAML}
+                    onEntityAddUpdate={handlePluginAddUpdateToYAML}
                   />
                 </Container>
               )}

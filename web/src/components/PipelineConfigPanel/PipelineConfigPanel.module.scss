@@ -1,0 +1,20 @@
+.fontWeight600 {
+  font-weight: 600 !important;
+}
+
+.entityIcon {
+  padding: var(--spacing-small) var(--spacing-3) var(--spacing-small) var(--spacing-3) !important;
+  background: var(--grey-100) !important;
+  border-radius: 5px;
+}
+
+.cursor {
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.entityCard {
+  margin: var(--spacing-medium) 0;
+  padding: var(--spacing-medium) !important;
+}
