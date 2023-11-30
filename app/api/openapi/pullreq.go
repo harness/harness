@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/pullreq"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -555,4 +556,15 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&codeOwners, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/codeowners", codeOwners)
+
+	opDiff := openapi3.Operation{}
+	opDiff.WithTags("pullreq")
+	opDiff.WithMapOfAnything(map[string]interface{}{"operationId": "diffPullReq"})
+	_ = reflector.SetStringResponse(&opDiff, http.StatusOK, "text/plain")
+	_ = reflector.SetJSONResponse(&opDiff, new([]git.FileDiff), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/diff", opDiff)
 }

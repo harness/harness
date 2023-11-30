@@ -515,6 +515,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 				r.Delete("/*", handlerpullreq.HandleFileViewDelete(pullreqCtrl))
 			})
 			r.Get("/codeowners", handlerpullreq.HandleCodeOwner(pullreqCtrl))
+			r.Get("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
 		})
 	})
 }
