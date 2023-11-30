@@ -12,26 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package codeowners
+package usergroup
 
 import (
-	"github.com/harness/gitness/app/services/usergroup"
-	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/git"
-
 	"github.com/google/wire"
 )
 
+// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideCodeOwners,
+	ProvideUserGroupResolver,
 )
 
-func ProvideCodeOwners(
-	git git.Interface,
-	repoStore store.RepoStore,
-	config Config,
-	principalStore store.PrincipalStore,
-	userGroupResolver usergroup.Resolver,
-) *Service {
-	return New(repoStore, git, config, principalStore, userGroupResolver)
+func ProvideUserGroupResolver() Resolver {
+	return NewGitnessResolver()
 }

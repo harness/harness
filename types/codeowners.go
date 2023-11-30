@@ -26,8 +26,15 @@ type CodeOwnerEvaluation struct {
 }
 
 type CodeOwnerEvaluationEntry struct {
-	Pattern          string            `json:"pattern"`
-	OwnerEvaluations []OwnerEvaluation `json:"owner_evaluations"`
+	Pattern                   string                     `json:"pattern"`
+	OwnerEvaluations          []OwnerEvaluation          `json:"owner_evaluations"`
+	UserGroupOwnerEvaluations []UserGroupOwnerEvaluation `json:"user_group_owner_evaluations"`
+}
+
+type UserGroupOwnerEvaluation struct {
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Evaluations []OwnerEvaluation `json:"evaluations"`
 }
 
 type OwnerEvaluation struct {

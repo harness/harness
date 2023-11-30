@@ -17,14 +17,19 @@ package usergroup
 import (
 	"context"
 
-	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 )
 
-type Service struct {
+var _ Resolver = (*GitnessResolver)(nil)
+
+type GitnessResolver struct {
 }
 
-func (s *Service) Resolve(context.Context, string) (*types.UserGroup, error) {
+func NewGitnessResolver() *GitnessResolver {
+	return &GitnessResolver{}
+}
+
+func (s *GitnessResolver) Resolve(context.Context, string) (*types.UserGroup, error) {
 	// todo: implement once usergroup is supported
-	return nil, store.ErrResourceNotFound
+	return nil, ErrNotFound
 }

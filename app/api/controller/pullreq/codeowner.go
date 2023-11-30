@@ -67,17 +67,34 @@ func mapCodeOwnerEvaluation(ownerEvaluation *codeowners.Evaluation) []types.Code
 	codeOwnerEvaluationEntries := make([]types.CodeOwnerEvaluationEntry, len(ownerEvaluation.EvaluationEntries))
 	for i, entry := range ownerEvaluation.EvaluationEntries {
 		ownerEvaluations := make([]types.OwnerEvaluation, len(entry.OwnerEvaluations))
+		userGroupOwnerEvaluations := make([]types.UserGroupOwnerEvaluation, len(entry.UserGroupOwnerEvaluations))
 		for j, owner := range entry.OwnerEvaluations {
-			ownerEvaluations[j] = types.OwnerEvaluation{
-				Owner:          owner.Owner,
-				ReviewDecision: owner.ReviewDecision,
-				ReviewSHA:      owner.ReviewSHA,
+			ownerEvaluations[j] = mapOwner(owner)
+		}
+		for j, userGroupOwnerEvaluation := range entry.UserGroupOwnerEvaluations {
+			userGroupEvaluations := make([]types.OwnerEvaluation, len(userGroupOwnerEvaluation.Evaluations))
+			for k, userGroupOwner := range userGroupOwnerEvaluation.Evaluations {
+				userGroupEvaluations[k] = mapOwner(userGroupOwner)
+			}
+			userGroupOwnerEvaluations[j] = types.UserGroupOwnerEvaluation{
+				ID:          userGroupOwnerEvaluation.ID,
+				Name:        userGroupOwnerEvaluation.Name,
+				Evaluations: userGroupEvaluations,
 			}
 		}
 		codeOwnerEvaluationEntries[i] = types.CodeOwnerEvaluationEntry{
-			Pattern:          entry.Pattern,
-			OwnerEvaluations: ownerEvaluations,
+			Pattern:                   entry.Pattern,
+			OwnerEvaluations:          ownerEvaluations,
+			UserGroupOwnerEvaluations: userGroupOwnerEvaluations,
 		}
 	}
 	return codeOwnerEvaluationEntries
+}
+
+func mapOwner(owner codeowners.OwnerEvaluation) types.OwnerEvaluation {
+	return types.OwnerEvaluation{
+		Owner:          owner.Owner,
+		ReviewDecision: owner.ReviewDecision,
+		ReviewSHA:      owner.ReviewSHA,
+	}
 }

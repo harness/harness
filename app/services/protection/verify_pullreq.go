@@ -108,7 +108,7 @@ func (v *DefPullReq) MergeVerify(
 
 	if v.Approvals.RequireCodeOwners {
 		for _, entry := range in.CodeOwners.EvaluationEntries {
-			reviewDecision, approvers := getCodeOwnerApprovalStatus(entry.OwnerEvaluations)
+			reviewDecision, approvers := getCodeOwnerApprovalStatus(entry)
 
 			if reviewDecision == enum.PullReqReviewDecisionPending {
 				violations.Addf(codePullReqApprovalReqCodeOwnersNoApproval,
@@ -295,10 +295,12 @@ func (v *DefPullReq) Sanitize() error {
 }
 
 func getCodeOwnerApprovalStatus(
-	ownerStatus []codeowners.OwnerEvaluation,
+	entry codeowners.EvaluationEntry,
 ) (enum.PullReqReviewDecision, []codeowners.OwnerEvaluation) {
 	approvers := make([]codeowners.OwnerEvaluation, 0)
-	for _, o := range ownerStatus {
+
+	// users
+	for _, o := range entry.OwnerEvaluations {
 		if o.ReviewDecision == enum.PullReqReviewDecisionChangeReq {
 			return enum.PullReqReviewDecisionChangeReq, nil
 		}
@@ -306,6 +308,19 @@ func getCodeOwnerApprovalStatus(
 			approvers = append(approvers, o)
 		}
 	}
+
+	// usergroups
+	for _, u := range entry.UserGroupOwnerEvaluations {
+		for _, o := range u.Evaluations {
+			if o.ReviewDecision == enum.PullReqReviewDecisionChangeReq {
+				return enum.PullReqReviewDecisionChangeReq, nil
+			}
+			if o.ReviewDecision == enum.PullReqReviewDecisionApproved {
+				approvers = append(approvers, o)
+			}
+		}
+	}
+
 	if len(approvers) > 0 {
 		return enum.PullReqReviewDecisionApproved, approvers
 	}

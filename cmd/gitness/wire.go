@@ -59,6 +59,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/trigger"
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -164,6 +165,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideKeywordSearchConfig,
 		keywordsearch.WireSet,
 		controllerkeywordsearch.WireSet,
+		usergroup.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

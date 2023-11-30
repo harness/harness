@@ -21,6 +21,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
@@ -37,6 +38,8 @@ const (
 	// maxGetContentFileSize specifies the maximum number of bytes a file content response contains.
 	// If a file is any larger, the content is truncated.
 	maxGetContentFileSize = oneMegabyte * 4 // 4 MB
+	// userGroupPrefixMarker is a prefix which will be used to identify if a given codeowner is usergroup.
+	userGroupPrefixMarker = "@"
 )
 
 var (
@@ -71,10 +74,11 @@ type Config struct {
 }
 
 type Service struct {
-	repoStore      store.RepoStore
-	git            git.Interface
-	principalStore store.PrincipalStore
-	config         Config
+	repoStore         store.RepoStore
+	git               git.Interface
+	principalStore    store.PrincipalStore
+	config            Config
+	userGroupResolver usergroup.Resolver
 }
 
 type File struct {
@@ -99,8 +103,15 @@ type Evaluation struct {
 }
 
 type EvaluationEntry struct {
-	Pattern          string
-	OwnerEvaluations []OwnerEvaluation
+	Pattern                   string
+	OwnerEvaluations          []OwnerEvaluation
+	UserGroupOwnerEvaluations []UserGroupOwnerEvaluation
+}
+
+type UserGroupOwnerEvaluation struct {
+	ID          string
+	Name        string
+	Evaluations []OwnerEvaluation
 }
 
 type OwnerEvaluation struct {
@@ -114,12 +125,14 @@ func New(
 	git git.Interface,
 	config Config,
 	principalStore store.PrincipalStore,
+	userGroupResolver usergroup.Resolver,
 ) *Service {
 	service := &Service{
-		repoStore:      repoStore,
-		git:            git,
-		config:         config,
-		principalStore: principalStore,
+		repoStore:         repoStore,
+		git:               git,
+		config:            config,
+		principalStore:    principalStore,
+		userGroupResolver: userGroupResolver,
 	}
 	return service
 }
@@ -284,11 +297,12 @@ func (s *Service) getApplicableCodeOwnersForPR(
 	}, err
 }
 
+//nolint:gocognit
 func (s *Service) Evaluate(
 	ctx context.Context,
 	repo *types.Repository,
 	pr *types.PullReq,
-	reviewer []*types.PullReqReviewer,
+	reviewers []*types.PullReqReviewer,
 ) (*Evaluation, error) {
 	owners, err := s.getApplicableCodeOwnersForPR(ctx, repo, pr)
 	if err != nil {
@@ -299,42 +313,103 @@ func (s *Service) Evaluate(
 		return &Evaluation{}, nil
 	}
 
-	flattenedReviewers := flattenReviewers(reviewer)
 	evaluationEntries := make([]EvaluationEntry, len(owners.Entries))
 
 	for i, entry := range owners.Entries {
 		ownerEvaluations := make([]OwnerEvaluation, 0, len(owners.Entries))
+		userGroupOwnerEvaluations := make([]UserGroupOwnerEvaluation, 0, len(owners.Entries))
 		for _, owner := range entry.Owners {
-			if pullreqReviewer, ok := flattenedReviewers[owner]; ok {
-				ownerEvaluations = append(ownerEvaluations, OwnerEvaluation{
-					Owner:          pullreqReviewer.Reviewer,
-					ReviewDecision: pullreqReviewer.ReviewDecision,
-					ReviewSHA:      pullreqReviewer.SHA,
-				})
+			// check for usrgrp
+			if strings.HasPrefix(owner, userGroupPrefixMarker) {
+				userGroupCodeOwner, err := s.resolveUserGroupCodeOwner(ctx, owner[1:], reviewers)
+				if errors.Is(err, usergroup.ErrNotFound) {
+					log.Ctx(ctx).Debug().Msgf("usergroup %q not found hence skipping for code owner", owner)
+					continue
+				}
+				if err != nil {
+					return nil, fmt.Errorf("error resolving usergroup :%w", err)
+				}
+				userGroupOwnerEvaluations = append(userGroupOwnerEvaluations, *userGroupCodeOwner)
 				continue
 			}
-			principal, err := s.principalStore.FindByEmail(ctx, owner)
+			// user email based codeowner
+			userCodeOwner, err := s.resolveUserCodeOwnerByEmail(ctx, owner, reviewers)
 			if errors.Is(err, gitness_store.ErrResourceNotFound) {
-				log.Ctx(ctx).Info().Msgf("user %s not found in database hence skipping for code owner: %v",
-					owner, err)
+				log.Ctx(ctx).Debug().Msgf("user %q not found in database hence skipping for code owner", owner)
 				continue
 			}
 			if err != nil {
-				return &Evaluation{}, fmt.Errorf("error finding user by email: %w", err)
+				return nil, fmt.Errorf("error resolving user by email : %w", err)
 			}
-			ownerEvaluations = append(ownerEvaluations, OwnerEvaluation{
-				Owner: *principal.ToPrincipalInfo(),
-			})
+			ownerEvaluations = append(ownerEvaluations, *userCodeOwner)
 		}
+
 		evaluationEntries[i] = EvaluationEntry{
-			Pattern:          entry.Pattern,
-			OwnerEvaluations: ownerEvaluations,
+			Pattern:                   entry.Pattern,
+			OwnerEvaluations:          ownerEvaluations,
+			UserGroupOwnerEvaluations: userGroupOwnerEvaluations,
 		}
 	}
 
 	return &Evaluation{
 		EvaluationEntries: evaluationEntries,
 		FileSha:           owners.FileSHA,
+	}, nil
+}
+
+func (s *Service) resolveUserGroupCodeOwner(
+	ctx context.Context,
+	owner string,
+	reviewers []*types.PullReqReviewer,
+) (*UserGroupOwnerEvaluation, error) {
+	usrgrp, err := s.userGroupResolver.Resolve(ctx, owner)
+	if err != nil {
+		return nil, fmt.Errorf("not able to resolve usergroup : %w", err)
+	}
+	userGroupEvaluation := &UserGroupOwnerEvaluation{
+		ID:   usrgrp.ID,
+		Name: usrgrp.Name,
+	}
+	ownersEvaluations := make([]OwnerEvaluation, 0, len(usrgrp.Users))
+	for _, uid := range usrgrp.Users {
+		pullreqReviewer := findReviewerInList("", uid, reviewers)
+		// we don't append all the user of the user group in the owner evaluations and
+		// append it only if it is reviewed by a user.
+		if pullreqReviewer != nil {
+			ownersEvaluations = append(ownersEvaluations,
+				OwnerEvaluation{
+					Owner:          pullreqReviewer.Reviewer,
+					ReviewDecision: pullreqReviewer.ReviewDecision,
+					ReviewSHA:      pullreqReviewer.SHA,
+				},
+			)
+			continue
+		}
+	}
+	userGroupEvaluation.Evaluations = ownersEvaluations
+
+	return userGroupEvaluation, nil
+}
+
+func (s *Service) resolveUserCodeOwnerByEmail(
+	ctx context.Context,
+	owner string,
+	reviewers []*types.PullReqReviewer,
+) (*OwnerEvaluation, error) {
+	pullreqReviewer := findReviewerInList(owner, "", reviewers)
+	if pullreqReviewer != nil {
+		return &OwnerEvaluation{
+			Owner:          pullreqReviewer.Reviewer,
+			ReviewDecision: pullreqReviewer.ReviewDecision,
+			ReviewSHA:      pullreqReviewer.SHA,
+		}, nil
+	}
+	principal, err := s.principalStore.FindByEmail(ctx, owner)
+	if err != nil {
+		return nil, fmt.Errorf("error finding user by email: %w", err)
+	}
+	return &OwnerEvaluation{
+		Owner: *principal.ToPrincipalInfo(),
 	}, nil
 }
 
@@ -353,6 +428,10 @@ func (s *Service) Validate(
 	for _, entry := range codeowners.Entries {
 		// check for users in file
 		for _, owner := range entry.Owners {
+			// todo: handle usergroup better
+			if strings.HasPrefix(owner, userGroupPrefixMarker) {
+				continue
+			}
 			_, err := s.principalStore.FindByEmail(ctx, owner)
 			if errors.Is(err, gitness_store.ErrResourceNotFound) {
 				codeOwnerValidation.Addf(enum.CodeOwnerViolationCodeUserNotFound,
@@ -381,12 +460,14 @@ func (s *Service) Validate(
 	return &codeOwnerValidation, nil
 }
 
-func flattenReviewers(reviewers []*types.PullReqReviewer) map[string]*types.PullReqReviewer {
-	r := make(map[string]*types.PullReqReviewer)
+func findReviewerInList(email string, uid string, reviewers []*types.PullReqReviewer) *types.PullReqReviewer {
 	for _, reviewer := range reviewers {
-		r[reviewer.Reviewer.Email] = reviewer
+		if uid == reviewer.Reviewer.UID || email == reviewer.Reviewer.Email {
+			return reviewer
+		}
 	}
-	return r
+
+	return nil
 }
 
 // We match a pattern list against a target

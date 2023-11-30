@@ -58,6 +58,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -161,7 +162,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	codeownersConfig := server.ProvideCodeOwnerConfig(config)
-	codeownersService := codeowners.ProvideCodeOwners(gitInterface, repoStore, codeownersConfig, principalStore)
+	resolver := usergroup.ProvideUserGroupResolver()
+	codeownersService := codeowners.ProvideCodeOwners(gitInterface, repoStore, codeownersConfig, principalStore, resolver)
 	eventsConfig := server.ProvideEventsConfig(config)
 	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {

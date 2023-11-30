@@ -16,9 +16,12 @@ package usergroup
 
 import (
 	"context"
+	"errors"
 
 	"github.com/harness/gitness/types"
 )
+
+var ErrNotFound = errors.New("usergroup not found")
 
 type Resolver interface {
 	Resolve(ctx context.Context, scopedID string) (*types.UserGroup, error)
