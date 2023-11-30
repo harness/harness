@@ -53,7 +53,7 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return space, nil
 	}
 
-	if err = sanitizeUpdateInput(in); err != nil {
+	if err = c.sanitizeUpdateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
@@ -75,7 +75,13 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	return space, nil
 }
 
-func sanitizeUpdateInput(in *UpdateInput) error {
+func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
+	if in.IsPublic != nil {
+		if *in.IsPublic && !c.publicResourceCreationEnabled {
+			return errPublicSpaceCreationDisabled
+		}
+	}
+
 	if in.Description != nil {
 		*in.Description = strings.TrimSpace(*in.Description)
 		if err := check.Description(*in.Description); err != nil {

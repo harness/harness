@@ -54,7 +54,7 @@ func ProvideController(
 	reporeporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
 ) *Controller {
-	return NewController(config.Git.DefaultBranch, tx, urlProvider,
+	return NewController(config, tx, urlProvider,
 		uidCheck, authorizer, repoStore,
 		spaceStore, pipelineStore,
 		principalStore, ruleStore, protectionManager,

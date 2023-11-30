@@ -131,6 +131,10 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	if in.IsPublic && !c.publicResourceCreationEnabled {
+		return errPublicRepoCreationDisabled
+	}
+
 	if err := c.validateParentRef(in.ParentRef); err != nil {
 		return err
 	}

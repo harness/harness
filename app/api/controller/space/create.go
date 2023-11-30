@@ -186,6 +186,10 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 		return errNestedSpacesNotSupported
 	}
 
+	if in.IsPublic && !c.publicResourceCreationEnabled {
+		return errPublicSpaceCreationDisabled
+	}
+
 	parentRefAsID, err := strconv.ParseInt(in.ParentRef, 10, 64)
 	if err == nil && parentRefAsID < 0 {
 		return errParentIDNegative

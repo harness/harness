@@ -73,7 +73,12 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 		for i, remoteRepository := range remoteRepositories {
 			repo := remoteRepository.ToRepo(
-				space.ID, remoteRepository.UID, "", &session.Principal)
+				space.ID,
+				remoteRepository.UID,
+				"",
+				&session.Principal,
+				c.publicResourceCreationEnabled,
+			)
 
 			err = c.repoStore.Create(ctx, repo)
 			if err != nil {

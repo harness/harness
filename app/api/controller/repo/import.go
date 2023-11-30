@@ -53,7 +53,13 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 	var repo *types.Repository
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		repo = remoteRepository.ToRepo(parentSpace.ID, in.UID, in.Description, &session.Principal)
+		repo = remoteRepository.ToRepo(
+			parentSpace.ID,
+			in.UID,
+			in.Description,
+			&session.Principal,
+			c.publicResourceCreationEnabled,
+		)
 
 		err = c.repoStore.Create(ctx, repo)
 		if err != nil {

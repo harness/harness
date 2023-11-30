@@ -19,15 +19,17 @@ import (
 
 	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/render"
+	"github.com/harness/gitness/types"
 )
 
 type ConfigOutput struct {
-	UserSignupAllowed bool `json:"user_signup_allowed"`
+	UserSignupAllowed             bool `json:"user_signup_allowed"`
+	PublicResourceCreationEnabled bool `json:"public_resource_creation_enabled"`
 }
 
 // HandleGetConfig returns an http.HandlerFunc that processes an http.Request
 // and returns a struct containing all system configs exposed to the users.
-func HandleGetConfig(sysCtrl *system.Controller) http.HandlerFunc {
+func HandleGetConfig(config *types.Config, sysCtrl *system.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -36,8 +38,10 @@ func HandleGetConfig(sysCtrl *system.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
+
 		render.JSON(w, http.StatusOK, ConfigOutput{
-			UserSignupAllowed: userSignupAllowed,
+			UserSignupAllowed:             userSignupAllowed,
+			PublicResourceCreationEnabled: config.PublicResourceCreationEnabled,
 		})
 	}
 }

@@ -593,6 +593,7 @@ export interface SpaceImportRepositoriesOutput {
 }
 
 export interface SystemConfigOutput {
+  public_resource_creation_enabled?: boolean
   user_signup_allowed?: boolean
 }
 

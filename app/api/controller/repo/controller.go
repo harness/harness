@@ -38,8 +38,14 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+var (
+	errPublicRepoCreationDisabled = usererror.BadRequestf("Public repository creation is disabled.")
+)
+
 type Controller struct {
-	defaultBranch     string
+	defaultBranch                 string
+	publicResourceCreationEnabled bool
+
 	tx                dbtx.Transactor
 	urlProvider       url.Provider
 	uidCheck          check.PathUID
@@ -58,7 +64,7 @@ type Controller struct {
 }
 
 func NewController(
-	defaultBranch string,
+	config *types.Config,
 	tx dbtx.Transactor,
 	urlProvider url.Provider,
 	uidCheck check.PathUID,
@@ -76,22 +82,23 @@ func NewController(
 	indexer keywordsearch.Indexer,
 ) *Controller {
 	return &Controller{
-		defaultBranch:     defaultBranch,
-		tx:                tx,
-		urlProvider:       urlProvider,
-		uidCheck:          uidCheck,
-		authorizer:        authorizer,
-		repoStore:         repoStore,
-		spaceStore:        spaceStore,
-		pipelineStore:     pipelineStore,
-		principalStore:    principalStore,
-		ruleStore:         ruleStore,
-		protectionManager: protectionManager,
-		git:               git,
-		importer:          importer,
-		codeOwners:        codeOwners,
-		eventReporter:     eventReporter,
-		indexer:           indexer,
+		defaultBranch:                 config.Git.DefaultBranch,
+		publicResourceCreationEnabled: config.PublicResourceCreationEnabled,
+		tx:                            tx,
+		urlProvider:                   urlProvider,
+		uidCheck:                      uidCheck,
+		authorizer:                    authorizer,
+		repoStore:                     repoStore,
+		spaceStore:                    spaceStore,
+		pipelineStore:                 pipelineStore,
+		principalStore:                principalStore,
+		ruleStore:                     ruleStore,
+		protectionManager:             protectionManager,
+		git:                           git,
+		importer:                      importer,
+		codeOwners:                    codeOwners,
+		eventReporter:                 eventReporter,
+		indexer:                       indexer,
 	}
 }
 

@@ -30,11 +30,13 @@ import (
 
 var (
 	// TODO (Nested Spaces): Remove once full support is added
-	errNestedSpacesNotSupported = usererror.BadRequestf("Nested spaces are not supported.")
+	errNestedSpacesNotSupported    = usererror.BadRequestf("Nested spaces are not supported.")
+	errPublicSpaceCreationDisabled = usererror.BadRequestf("Public space creation is disabled.")
 )
 
 type Controller struct {
-	nestedSpacesEnabled bool
+	nestedSpacesEnabled           bool
+	publicResourceCreationEnabled bool
 
 	tx              dbtx.Transactor
 	urlProvider     url.Provider
@@ -63,23 +65,24 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
 ) *Controller {
 	return &Controller{
-		nestedSpacesEnabled: config.NestedSpacesEnabled,
-		tx:                  tx,
-		urlProvider:         urlProvider,
-		sseStreamer:         sseStreamer,
-		uidCheck:            uidCheck,
-		authorizer:          authorizer,
-		spacePathStore:      spacePathStore,
-		pipelineStore:       pipelineStore,
-		secretStore:         secretStore,
-		connectorStore:      connectorStore,
-		templateStore:       templateStore,
-		spaceStore:          spaceStore,
-		repoStore:           repoStore,
-		principalStore:      principalStore,
-		repoCtrl:            repoCtrl,
-		membershipStore:     membershipStore,
-		importer:            importer,
-		exporter:            exporter,
+		nestedSpacesEnabled:           config.NestedSpacesEnabled,
+		publicResourceCreationEnabled: config.PublicResourceCreationEnabled,
+		tx:                            tx,
+		urlProvider:                   urlProvider,
+		sseStreamer:                   sseStreamer,
+		uidCheck:                      uidCheck,
+		authorizer:                    authorizer,
+		spacePathStore:                spacePathStore,
+		pipelineStore:                 pipelineStore,
+		secretStore:                   secretStore,
+		connectorStore:                connectorStore,
+		templateStore:                 templateStore,
+		spaceStore:                    spaceStore,
+		repoStore:                     repoStore,
+		principalStore:                principalStore,
+		repoCtrl:                      repoCtrl,
+		membershipStore:               membershipStore,
+		importer:                      importer,
+		exporter:                      exporter,
 	}
 }

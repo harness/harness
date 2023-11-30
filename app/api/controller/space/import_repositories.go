@@ -97,7 +97,12 @@ func (c *Controller) ImportRepositories(
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		for _, remoteRepository := range remoteRepositories {
 			repo := remoteRepository.ToRepo(
-				space.ID, remoteRepository.UID, "", &session.Principal)
+				space.ID,
+				remoteRepository.UID,
+				"",
+				&session.Principal,
+				c.publicResourceCreationEnabled,
+			)
 
 			err = c.repoStore.Create(ctx, repo)
 			if errors.Is(err, store.ErrDuplicate) {

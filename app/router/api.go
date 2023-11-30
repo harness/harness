@@ -197,7 +197,7 @@ func setupRoutesV1(r chi.Router,
 	setupInternal(r, githookCtrl)
 	setupAdmin(r, userCtrl)
 	setupAccount(r, userCtrl, sysCtrl, config)
-	setupSystem(r, sysCtrl)
+	setupSystem(r, config, sysCtrl)
 	setupResources(r)
 	setupPlugins(r, pluginCtrl)
 	setupKeywordSearch(r, searchCtrl)
@@ -617,11 +617,11 @@ func setupServiceAccounts(r chi.Router, saCtrl *serviceaccount.Controller) {
 	})
 }
 
-func setupSystem(r chi.Router, sysCtrl *system.Controller) {
+func setupSystem(r chi.Router, config *types.Config, sysCtrl *system.Controller) {
 	r.Route("/system", func(r chi.Router) {
 		r.Get("/health", handlersystem.HandleHealth)
 		r.Get("/version", handlersystem.HandleVersion)
-		r.Get("/config", handlersystem.HandleGetConfig(sysCtrl))
+		r.Get("/config", handlersystem.HandleGetConfig(config, sysCtrl))
 	})
 }
 

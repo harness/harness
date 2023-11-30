@@ -81,6 +81,7 @@ func (r *RepositoryInfo) ToRepo(
 	uid string,
 	description string,
 	principal *types.Principal,
+	publicResourceCreationEnabled bool,
 ) *types.Repository {
 	now := time.Now().UnixMilli()
 	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(fmt.Sprintf("%d:%s", spaceID, uid)), now)
@@ -90,7 +91,7 @@ func (r *RepositoryInfo) ToRepo(
 		UID:           uid,
 		GitUID:        gitTempUID, // the correct git UID will be set by the job handler
 		Description:   description,
-		IsPublic:      r.IsPublic,
+		IsPublic:      publicResourceCreationEnabled && r.IsPublic,
 		CreatedBy:     principal.ID,
 		Created:       now,
 		Updated:       now,
