@@ -236,7 +236,8 @@ func (c *Controller) Merge(
 				return nil
 			})
 			if err != nil {
-				return nil, nil, fmt.Errorf("failed to update unchecked pull request: %w", err)
+				// non-critical error
+				log.Ctx(ctx).Warn().Err(err).Msg("failed to update unchecked pull request")
 			}
 		}
 
@@ -375,7 +376,8 @@ func (c *Controller) Merge(
 			if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID,
 				&types.PullRequestActivityPayloadBranchDelete{SHA: in.SourceSHA}); errAct != nil {
 				// non-critical error
-				log.Ctx(ctx).Err(errAct).Msgf("failed to write pull request activity for successful automatic branch delete")
+				log.Ctx(ctx).Err(errAct).
+					Msgf("failed to write pull request activity for successful automatic branch delete")
 			}
 		}
 	}
