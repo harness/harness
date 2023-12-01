@@ -238,6 +238,10 @@ func (c *Controller) Merge(
 			if err != nil {
 				// non-critical error
 				log.Ctx(ctx).Warn().Err(err).Msg("failed to update unchecked pull request")
+			} else {
+				if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
+					log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
+				}
 			}
 		}
 
@@ -285,8 +289,13 @@ func (c *Controller) Merge(
 	if err != nil {
 		return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
 	}
+	//nolint:nestif
 	if mergeOutput.MergeSHA == "" || len(mergeOutput.ConflictFiles) > 0 {
 		_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+			if pr.SourceSHA != mergeOutput.HeadSHA {
+				return errors.New("source SHA has changed")
+			}
+
 			// update all Merge specific information
 			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
 			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
@@ -297,7 +306,12 @@ func (c *Controller) Merge(
 			return nil
 		})
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to update pull request with conflict files: %w", err)
+			// non-critical error
+			log.Ctx(ctx).Warn().Err(err).Msg("failed to update pull request with conflict files")
+		} else {
+			if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
+				log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
+			}
 		}
 
 		return nil, &types.MergeViolations{
@@ -316,7 +330,9 @@ func (c *Controller) Merge(
 		pr.MergeMethod = &in.Method
 
 		// update all Merge specific information (might be empty if previous merge check failed)
+		// since this is the final operation on the PR, we update any sha that might've changed by now.
 		pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
+		pr.SourceSHA = mergeOutput.HeadSHA
 		pr.MergeTargetSHA = &mergeOutput.BaseSHA
 		pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
 		pr.MergeSHA = &mergeOutput.MergeSHA
@@ -382,8 +398,8 @@ func (c *Controller) Merge(
 		}
 	}
 
-	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
+	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
 
 	return &types.MergeResponse{

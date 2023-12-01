@@ -188,8 +188,8 @@ func (c *Controller) CommentCreate(
 		log.Ctx(ctx).Err(err).Msgf("failed to increment pull request comment counters")
 	}
 
-	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
+	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
 	// if it's a regular comment publish a comment create event
 	if !act.IsReply() && act.Type == enum.PullReqActivityTypeComment && act.Kind == enum.PullReqActivityKindComment {

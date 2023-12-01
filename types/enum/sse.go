@@ -27,5 +27,5 @@ const (
 	SSETypeRepositoryImportCompleted SSEType = "repository_import_completed"
 	SSETypeRepositoryExportCompleted SSEType = "repository_export_completed"
 
-	SSETypePullrequesUpdated SSEType = "pullreq_updated"
+	SSETypePullRequestUpdated SSEType = "pullreq_updated"
 )

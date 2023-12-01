@@ -243,8 +243,8 @@ func (s *Service) updateMergeDataInner(
 		return fmt.Errorf("failed to update PR merge ref in db with error: %w", err)
 	}
 
-	if err = s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
+	if err = s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
 
 	return nil

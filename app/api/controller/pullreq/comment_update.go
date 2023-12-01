@@ -81,8 +81,8 @@ func (c *Controller) CommentUpdate(
 		return nil, fmt.Errorf("failed to update comment: %w", err)
 	}
 
-	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
+	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
 
 	return act, nil
