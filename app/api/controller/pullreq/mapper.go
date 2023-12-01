@@ -19,7 +19,7 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-func identityFromPrincipal(p types.Principal) *git.Identity {
+func identityFromPrincipalInfo(p types.PrincipalInfo) *git.Identity {
 	return &git.Identity{
 		Name:  p.DisplayName,
 		Email: p.Email,

@@ -263,7 +263,10 @@ func (c *Controller) Merge(
 
 	// TODO: for forking merge title might be different?
 	var mergeTitle string
-	if in.Method == enum.MergeMethod(gitenum.MergeMethodSquash) {
+	author := *session.Principal.ToPrincipalInfo()
+	if in.Method == enum.MergeMethodSquash {
+		// squash commit should show as authored by PR author
+		author = pr.Author
 		mergeTitle = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
 	} else {
 		mergeTitle = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
@@ -277,9 +280,9 @@ func (c *Controller) Merge(
 		HeadBranch:      pr.SourceBranch,
 		Title:           mergeTitle,
 		Message:         "",
-		Committer:       identityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
+		Committer:       identityFromPrincipalInfo(*bootstrap.NewSystemServiceSession().Principal.ToPrincipalInfo()),
 		CommitterDate:   &now,
-		Author:          identityFromPrincipal(session.Principal),
+		Author:          identityFromPrincipalInfo(author),
 		AuthorDate:      &now,
 		RefType:         gitenum.RefTypeBranch,
 		RefName:         pr.TargetBranch,
