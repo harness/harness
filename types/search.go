@@ -39,11 +39,12 @@ type (
 	}
 
 	FileMatch struct {
-		FileName string  `json:"file_name"`
-		RepoID   int64   `json:"-"`
-		RepoPath string  `json:"repo_path"`
-		Language string  `json:"language"`
-		Matches  []Match `json:"matches"`
+		FileName   string  `json:"file_name"`
+		RepoID     int64   `json:"-"`
+		RepoPath   string  `json:"repo_path"`
+		RepoBranch string  `json:"repo_branch"`
+		Language   string  `json:"language"`
+		Matches    []Match `json:"matches"`
 	}
 
 	// Match holds the per line data.
