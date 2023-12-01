@@ -129,7 +129,7 @@ func (c *Controller) Merge(
 			usererror.BadRequest("A newer commit is available. Only the latest commit can be merged.")
 	}
 
-	if pr.IsDraft {
+	if pr.IsDraft && !in.DryRun {
 		return nil, nil, usererror.BadRequest(
 			"Draft pull requests can't be merged. Clear the draft flag first.",
 		)
