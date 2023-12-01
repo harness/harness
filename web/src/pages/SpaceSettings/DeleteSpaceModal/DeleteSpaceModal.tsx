@@ -25,6 +25,7 @@ import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useDeleteSpace } from 'services/code'
+import { getErrorMessage } from 'utils/Utils'
 
 const useDeleteSpaceModal = () => {
   const space = useGetSpaceParam()
@@ -32,7 +33,7 @@ const useDeleteSpaceModal = () => {
   const { routes } = useAppContext()
 
   // this isn't implemented in the backend yet
-  const { mutate: deleteSpace, loading, error: deleteError } = useDeleteSpace({})
+  const { mutate: deleteSpace, loading } = useDeleteSpace({})
   const { showSuccess, showError } = useToaster()
   const history = useHistory()
 
@@ -116,7 +117,7 @@ const useDeleteSpaceModal = () => {
                   history.push(routes.toCODEHome())
                   showSuccess(getString('spaceSetting.deleteToastSuccess'))
                 } catch (e) {
-                  showError(deleteError?.message)
+                  showError(getErrorMessage(e))
                 }
               }}
               width="100%"

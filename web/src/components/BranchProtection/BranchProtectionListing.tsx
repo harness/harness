@@ -227,8 +227,8 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                                 .then(() => {
                                   showSuccess(getString('branchProtection.ruleUpdated'))
                                 })
-                                .catch(e => {
-                                  showError(e)
+                                .catch(err => {
+                                  showError(getErrorMessage(err))
                                 })
                               setChecked(!checked)
                               setPopoverDialogOpen(false)

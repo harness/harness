@@ -348,11 +348,11 @@ export default function SpaceSettings() {
                                     .then(() => {
                                       showSuccess(getString('spaceUpdate'))
                                       history.push(routes.toCODESpaceSettings({ space: formik.values?.name as string }))
+                                      setEditName(ACCESS_MODES.VIEW)
                                     })
                                     .catch(err => {
-                                      showError(err)
+                                      showError(getErrorMessage(err))
                                     })
-                                  setEditName(ACCESS_MODES.VIEW)
                                 }}
                               />
                               <Button
@@ -360,6 +360,7 @@ export default function SpaceSettings() {
                                 variation={ButtonVariation.TERTIARY}
                                 size={ButtonSize.SMALL}
                                 onClick={() => {
+                                  formik.setFieldValue('name', data?.uid)
                                   setEditName(ACCESS_MODES.VIEW)
                                 }}
                               />
@@ -411,12 +412,12 @@ export default function SpaceSettings() {
                                   patchSpace({ description: formik.values?.desc })
                                     .then(() => {
                                       showSuccess(getString('spaceUpdate'))
+                                      setEditDesc(ACCESS_MODES.VIEW)
+                                      refetch()
                                     })
                                     .catch(err => {
-                                      showError(err)
+                                      showError(getErrorMessage(err))
                                     })
-                                  setEditDesc(ACCESS_MODES.VIEW)
-                                  refetch()
                                 }}
                               />
                               <Button
@@ -424,6 +425,7 @@ export default function SpaceSettings() {
                                 variation={ButtonVariation.TERTIARY}
                                 size={ButtonSize.SMALL}
                                 onClick={() => {
+                                  formik.setFieldValue('desc', data?.description)
                                   setEditDesc(ACCESS_MODES.VIEW)
                                 }}
                               />

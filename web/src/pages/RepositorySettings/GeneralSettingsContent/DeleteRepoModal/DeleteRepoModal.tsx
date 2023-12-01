@@ -26,6 +26,7 @@ import { useDeleteRepository } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { getErrorMessage } from 'utils/Utils'
 
 const useDeleteRepoModal = () => {
   const { repoMetadata } = useGetRepositoryMetadata()
@@ -34,7 +35,7 @@ const useDeleteRepoModal = () => {
   const { getString } = useStrings()
   const { routes } = useAppContext()
 
-  const { mutate: deleteRepo, loading, error: deleteError } = useDeleteRepository({})
+  const { mutate: deleteRepo, loading } = useDeleteRepository({})
   const { showSuccess, showError } = useToaster()
   const history = useHistory()
 
@@ -118,7 +119,7 @@ const useDeleteRepoModal = () => {
                   history.push(routes.toCODERepositories({ space }))
                   showSuccess(getString('repoDelete.deleteToastSuccess'))
                 } catch (e) {
-                  showError(deleteError?.message)
+                  showError(getErrorMessage(e))
                 }
               }}
               width="100%"

@@ -141,8 +141,8 @@ export default function Webhooks() {
                                 .then(() => {
                                   showSuccess(getString('webhookUpdated'))
                                 })
-                                .catch(e => {
-                                  showError(e)
+                                .catch(err => {
+                                  showError(getErrorMessage(err))
                                 })
                               setChecked(!checked)
                               setPopoverDialogOpen(false)

@@ -34,7 +34,7 @@ import { Color, FontVariation, Intent } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 import { noop } from 'lodash-es'
 import { useMutate } from 'restful-react'
-import { ACCESS_MODES, permissionProps, voidFn } from 'utils/Utils'
+import { ACCESS_MODES, getErrorMessage, permissionProps, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import type { TypesRepository } from 'services/code'
 import { useAppContext } from 'AppContext'
@@ -122,7 +122,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                   refetch()
                 })
                 .catch(err => {
-                  showError(err)
+                  showError(getErrorMessage(err))
                 })
               refetch()
             }}
@@ -194,12 +194,12 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                             mutate({ description: formik.values?.desc })
                               .then(() => {
                                 showSuccess(getString('repoUpdate'))
+                                setEditDesc(ACCESS_MODES.VIEW)
+                                refetch()
                               })
                               .catch(err => {
-                                showError(err)
+                                showError(getErrorMessage(err))
                               })
-                            setEditDesc(ACCESS_MODES.VIEW)
-                            refetch()
                           }}
                         />
                         <Button
@@ -207,6 +207,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                           variation={ButtonVariation.TERTIARY}
                           size={ButtonSize.SMALL}
                           onClick={() => {
+                            formik.setFieldValue('desc', repoMetadata?.description)
                             setEditDesc(ACCESS_MODES.VIEW)
                           }}
                         />
