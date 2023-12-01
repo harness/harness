@@ -105,15 +105,21 @@ export function usePRChecksDecision({
   }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
+    let tornDown = false
     const pollingFn = () => {
-      if (repoMetadata?.path && pullRequestMetadata?.source_sha && !complete) {
-        refetch().then(() => {
+      if (repoMetadata?.path && pullRequestMetadata?.source_sha && !complete && !tornDown) {
+        // TODO: fix racing condition where an ongoing refetch of the old sha overwrites the new one.
+        // TEMPORARY SOLUTION: set debounce to 1 second to reduce likelyhood
+        refetch({ debounce: 1 }).then(() => {
           interval = window.setTimeout(pollingFn, POLLING_INTERVAL)
         })
       }
     }
     let interval = window.setTimeout(pollingFn, POLLING_INTERVAL)
-    return () => window.clearTimeout(interval)
+    return () => {
+      tornDown = true
+      window.clearTimeout(interval)
+    }
   }, [repoMetadata?.path, pullRequestMetadata?.source_sha, complete]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
