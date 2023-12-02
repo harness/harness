@@ -135,9 +135,13 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
         })
     }
   }
+
   useEffect(() => {
-    dryMerge() // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    // recheck PR in case source SHA changed or PR was marked as unchecked
+    // TODO: optimize call to handle all causes and avoid double calls by keeping track of SHA
+    dryMerge()
+  }, [unchecked, pullRequestMetadata?.source_sha]) // eslint-disable-next-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     // dryMerge()
     const intervalId = setInterval(async () => {
@@ -208,6 +212,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       setMergeOption(mergeOptions[3])
     } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allowedStrats])
+
   const [draftOption, setDraftOption] = useState<PRDraftOption>(draftOptions[0])
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
