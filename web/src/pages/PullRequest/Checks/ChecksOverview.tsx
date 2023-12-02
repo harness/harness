@@ -23,7 +23,7 @@ import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-import type { TypesCheck } from 'services/code'
+import type { TypesCheck, TypesCodeOwnerEvaluation } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { PullRequestCheckType, PullRequestSection, timeDistance } from 'utils/Utils'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
@@ -31,9 +31,15 @@ import css from './ChecksOverview.module.scss'
 
 interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   prChecksDecisionResult: PRChecksDecisionResult
+  codeOwners?: TypesCodeOwnerEvaluation
 }
 
-export function ChecksOverview({ repoMetadata, pullRequestMetadata, prChecksDecisionResult }: ChecksOverviewProps) {
+export function ChecksOverview({
+  repoMetadata,
+  pullRequestMetadata,
+  prChecksDecisionResult,
+  codeOwners
+}: ChecksOverviewProps) {
   const { getString } = useStrings()
   const [isExpanded, toggleExpanded] = useToggle(false)
   const { data, overallStatus, error, color, message } = prChecksDecisionResult
@@ -43,7 +49,7 @@ export function ChecksOverview({ repoMetadata, pullRequestMetadata, prChecksDeci
   return overallStatus && data?.length ? (
     <Container
       className={css.main}
-      margin={{ bottom: pullRequestMetadata.description ? undefined : 'large' }}
+      margin={{ bottom: pullRequestMetadata.description && !codeOwners ? undefined : 'large' }}
       style={{ '--border-color': Utils.getRealCSSColor(color) } as React.CSSProperties}>
       <Match expr={isExpanded}>
         <Truthy>

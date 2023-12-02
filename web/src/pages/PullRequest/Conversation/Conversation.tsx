@@ -383,6 +383,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                       repoMetadata={repoMetadata}
                       pullRequestMetadata={pullRequestMetadata}
                       prChecksDecisionResult={prChecksDecisionResult}
+                      codeOwners={codeOwners as TypesCodeOwnerEvaluation}
                     />
                   )}
                   {codeOwners && prChecksDecisionResult && (
