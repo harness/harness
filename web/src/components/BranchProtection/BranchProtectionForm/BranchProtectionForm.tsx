@@ -93,6 +93,18 @@ const BranchProtectionForm = (props: {
     }
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const transformDataToArray = (data: any) => {
+    return Object.keys(data).map(key => {
+      return {
+        ...data[key]
+      }
+    })
+  }
+  const transformUserArray = transformDataToArray(rule?.users || [])
+  const usersArrayCurr = transformUserArray?.map(user => `${user.id} ${user.display_name}`)
+  const [userArrayState, setUserArrayState] = useState<string[]>(usersArrayCurr)
+
   const { data: statuses } = useGet<string[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/checks/recent`,
     queryParams: {
@@ -154,10 +166,10 @@ const BranchProtectionForm = (props: {
       const includeArr = includeList?.map((arr: string) => ['include', arr])
       const excludeArr = excludeList?.map((arr: string) => ['exclude', arr])
       const finalArray = [...includeArr, ...excludeArr]
-      const idsArray = (rule?.definition as ProtectionBranch)?.bypass?.user_ids
-      const bypassList = users
-        ?.filter(user => idsArray?.includes(user.id as number))
-        ?.map(user => `${user.id} ${user.display_name}`)
+      const usersArray = transformDataToArray(rule.users)
+      const bypassList =
+        userArrayState.length > 0 ? userArrayState : usersArray?.map(user => `${user.id} ${user.display_name}`)
+
       return {
         name: rule?.uid,
         desc: rule.description,
@@ -434,10 +446,10 @@ const BranchProtectionForm = (props: {
                     const id = item.value?.toString().split(' ')[0]
                     const displayName = item.label
                     const bypassEntry = `${id} ${displayName}`
-
                     bypassList?.push(bypassEntry)
                     const uniqueArr = Array.from(new Set(bypassList))
                     formik.setFieldValue('bypassList', uniqueArr)
+                    setUserArrayState([...uniqueArr])
                   }}
                   name={'bypassSelect'}></FormInput.Select>
                 <BypassList bypassList={bypassList} setFieldValue={formik.setFieldValue} />
