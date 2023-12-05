@@ -175,7 +175,8 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
           const [persistModal, setPersistModal] = useState(true)
           const { mutate: deleteBranch } = useMutate({
             verb: 'DELETE',
-            path: `/api/v1/repos/${repoMetadata.path}/+/branches/${row.original.name}?bypass_rules=${bypassed}`
+            path: `/api/v1/repos/${repoMetadata.path}/+/branches/${row.original.name}`,
+            queryParams: { bypass_rules: bypassed }
           })
           const { showSuccess, showError } = useToaster()
           const confirmDeleteBranch = useConfirmAction({

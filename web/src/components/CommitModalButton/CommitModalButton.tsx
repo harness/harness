@@ -170,7 +170,7 @@ export function useCommitModal({
           if (response?.rule_violations?.length) {
             setAllStates({
               violation: true,
-              bypassed: false,
+              bypassed: true,
               bypassable: response?.rule_violations[0]?.bypassable
             })
             setDisableCTA(!response?.rule_violations[0]?.bypassable)
@@ -256,8 +256,8 @@ export function useCommitModal({
                                 <Icon intent={Intent.WARNING} name="danger-icon" size={16} />
                                 <Text font={{ variation: FontVariation.BODY2 }} color={Color.RED_800}>
                                   {bypassable
-                                    ? getString('branchProtection.commitDirectlyBlockText')
-                                    : getString('branchProtection.commitNewBranchBlockText')}
+                                    ? getString('branchProtection.commitDirectlyAlertText')
+                                    : getString('branchProtection.commitDirectlyBlockText')}
                                 </Text>
                               </Layout.Horizontal>
                             </Render>
@@ -319,7 +319,11 @@ export function useCommitModal({
                       disabled={loading}
                       type="submit"
                       variation={ButtonVariation.SECONDARY}
-                      text={getString('branchProtection.commitNewBranchAlertBtn')}
+                      text={
+                        targetBranchOption === CommitToGitRefOption.NEW_BRANCH
+                          ? getString('branchProtection.commitNewBranchAlertBtn')
+                          : getString('branchProtection.commitDirectlyAlertBtn')
+                      }
                     />
                   )}
                   <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />

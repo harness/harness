@@ -926,6 +926,8 @@ branchProtection:
   commitNewBranchAlertText: Some rules will be bypassed to commit by creating branch
   commitNewBranchBlockText: Some rules don't allow you to create new branch for commit
   commitDirectlyBlockText: Some rules don't allow you to commit directly
+  commitDirectlyAlertText: Some rules will be bypassed to commit directly
+  commitDirectlyAlertBtn: Bypass rules and commit directly
 codeOwner:
   title: Code Owner
   changesRequested: '{count} {count|1:change,changes} requested'
