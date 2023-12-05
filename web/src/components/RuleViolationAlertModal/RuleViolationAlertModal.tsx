@@ -38,7 +38,7 @@ const RuleViolationAlertModal = (props: ViolationAlertModalProps) => {
           {rules?.map((rule, idx) => {
             return (
               <Container key={`violation-${idx}`} flex={{ alignItems: 'center' }} className={css.ruleContainer}>
-                <Text padding="small" className={css.ruleText}>
+                <Text padding="small" lineClamp={1} className={css.ruleText}>
                   {rule.violation}
                 </Text>
               </Container>

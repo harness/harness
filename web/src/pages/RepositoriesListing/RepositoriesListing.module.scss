@@ -141,8 +141,9 @@
   background-color: var(--grey-0) !important;
   border-left: 1px solid var(--grey-200) !important;
   position: sticky;
-  bottom: 0;
-
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
   .featureText {
     font-size: 13px !important;
     font-weight: 600 !important;
