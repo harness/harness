@@ -84,10 +84,10 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
         </Text>
         <Container padding={{ bottom: 'medium' }}>
           <Layout.Horizontal className={css.layout}>
-            <Text className={css.url}>{currentUser.display_name}</Text>
+            <Text className={css.url}>{currentUser?.display_name || ''}</Text>
             <FlexExpander />
             <CopyButton
-              content={currentUser.display_name}
+              content={currentUser?.display_name || ''}
               id={css.cloneCopyButton}
               icon={CodeIcon.Copy}
               iconProps={{ size: 14 }}
