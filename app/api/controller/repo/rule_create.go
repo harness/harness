@@ -106,5 +106,10 @@ func (c *Controller) RuleCreate(ctx context.Context,
 		return nil, fmt.Errorf("failed to create repository-level protection rule: %w", err)
 	}
 
+	r.Users, err = c.getRuleUsers(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+
 	return r, nil
 }

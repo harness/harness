@@ -46,21 +46,22 @@ type Controller struct {
 	defaultBranch                 string
 	publicResourceCreationEnabled bool
 
-	tx                dbtx.Transactor
-	urlProvider       url.Provider
-	uidCheck          check.PathUID
-	authorizer        authz.Authorizer
-	repoStore         store.RepoStore
-	spaceStore        store.SpaceStore
-	pipelineStore     store.PipelineStore
-	principalStore    store.PrincipalStore
-	ruleStore         store.RuleStore
-	protectionManager *protection.Manager
-	git               git.Interface
-	importer          *importer.Repository
-	codeOwners        *codeowners.Service
-	eventReporter     *repoevents.Reporter
-	indexer           keywordsearch.Indexer
+	tx                 dbtx.Transactor
+	urlProvider        url.Provider
+	uidCheck           check.PathUID
+	authorizer         authz.Authorizer
+	repoStore          store.RepoStore
+	spaceStore         store.SpaceStore
+	pipelineStore      store.PipelineStore
+	principalStore     store.PrincipalStore
+	ruleStore          store.RuleStore
+	principalInfoCache store.PrincipalInfoCache
+	protectionManager  *protection.Manager
+	git                git.Interface
+	importer           *importer.Repository
+	codeOwners         *codeowners.Service
+	eventReporter      *repoevents.Reporter
+	indexer            keywordsearch.Indexer
 }
 
 func NewController(
@@ -74,6 +75,7 @@ func NewController(
 	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
 	ruleStore store.RuleStore,
+	principalInfoCache store.PrincipalInfoCache,
 	protectionManager *protection.Manager,
 	git git.Interface,
 	importer *importer.Repository,
@@ -93,6 +95,7 @@ func NewController(
 		pipelineStore:                 pipelineStore,
 		principalStore:                principalStore,
 		ruleStore:                     ruleStore,
+		principalInfoCache:            principalInfoCache,
 		protectionManager:             protectionManager,
 		git:                           git,
 		importer:                      importer,
@@ -156,4 +159,23 @@ func (c *Controller) fetchRules(
 	}
 
 	return protectionRules, isRepoOwner, nil
+}
+
+func (c *Controller) getRuleUsers(ctx context.Context, r *types.Rule) (map[int64]*types.PrincipalInfo, error) {
+	rule, err := c.protectionManager.FromJSON(r.Type, r.Definition, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse json rule definition: %w", err)
+	}
+
+	userIDs, err := rule.UserIDs()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user ID from rule: %w", err)
+	}
+
+	userMap, err := c.principalInfoCache.Map(ctx, userIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get principal infos: %w", err)
+	}
+
+	return userMap, nil
 }

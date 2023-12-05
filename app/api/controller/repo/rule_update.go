@@ -92,6 +92,10 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 	}
 
 	if in.isEmpty() {
+		r.Users, err = c.getRuleUsers(ctx, r)
+		if err != nil {
+			return nil, err
+		}
 		return r, nil
 	}
 
@@ -112,6 +116,11 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 		if err != nil {
 			return nil, usererror.BadRequestf("invalid rule definition: %s", err.Error())
 		}
+	}
+
+	r.Users, err = c.getRuleUsers(ctx, r)
+	if err != nil {
+		return nil, err
 	}
 
 	err = c.ruleStore.Update(ctx, r)

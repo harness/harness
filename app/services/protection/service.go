@@ -34,6 +34,8 @@ type (
 	Protection interface {
 		MergeVerifier
 		RefChangeVerifier
+
+		UserIDs() ([]int64, error)
 	}
 
 	Definition interface {

@@ -39,5 +39,10 @@ func (c *Controller) RuleFind(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repository-level protection rule by uid: %w", err)
 	}
 
+	r.Users, err = c.getRuleUsers(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+
 	return r, nil
 }

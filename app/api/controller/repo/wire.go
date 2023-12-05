@@ -47,6 +47,7 @@ func ProvideController(
 	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
 	ruleStore store.RuleStore,
+	principalInfoCache store.PrincipalInfoCache,
 	protectionManager *protection.Manager,
 	rpcClient git.Interface,
 	importer *importer.Repository,
@@ -57,6 +58,6 @@ func ProvideController(
 	return NewController(config, tx, urlProvider,
 		uidCheck, authorizer, repoStore,
 		spaceStore, pipelineStore,
-		principalStore, ruleStore, protectionManager,
+		principalStore, ruleStore, principalInfoCache, protectionManager,
 		rpcClient, importer, codeOwners, reporeporter, indexer)
 }

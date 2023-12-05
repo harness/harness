@@ -103,6 +103,32 @@ func (s ruleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) (
 	return violations, nil
 }
 
+func (s ruleSet) UserIDs() ([]int64, error) {
+	mapIDs := make(map[int64]struct{})
+	for _, rule := range s.rules {
+		prot, err := s.manager.FromJSON(rule.Type, rule.Definition, false)
+		if err != nil {
+			return nil, err
+		}
+
+		userIDs, err := prot.UserIDs()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, userID := range userIDs {
+			mapIDs[userID] = struct{}{}
+		}
+	}
+
+	result := make([]int64, 0, len(mapIDs))
+	for userID := range mapIDs {
+		result = append(result, userID)
+	}
+
+	return result, nil
+}
+
 func backFillRule(vs []types.RuleViolations, rule types.RuleInfo) []types.RuleViolations {
 	for i := range vs {
 		vs[i].Rule = rule

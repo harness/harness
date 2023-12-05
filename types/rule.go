@@ -42,6 +42,8 @@ type Rule struct {
 	Definition json.RawMessage `json:"definition"`
 
 	CreatedByInfo PrincipalInfo `json:"created_by"`
+
+	Users map[int64]*PrincipalInfo `json:"users"`
 }
 
 type RuleType string

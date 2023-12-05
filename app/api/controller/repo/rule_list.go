@@ -60,5 +60,12 @@ func (c *Controller) RuleList(ctx context.Context,
 		return nil, 0, err
 	}
 
+	for i := range list {
+		list[i].Users, err = c.getRuleUsers(ctx, &list[i])
+		if err != nil {
+			return nil, 0, err
+		}
+	}
+
 	return list, count, nil
 }

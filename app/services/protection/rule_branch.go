@@ -74,6 +74,10 @@ func (v *Branch) RefChangeVerify(
 	return
 }
 
+func (v *Branch) UserIDs() ([]int64, error) {
+	return v.Bypass.UserIDs, nil
+}
+
 func (v *Branch) Sanitize() error {
 	if err := v.Bypass.Sanitize(); err != nil {
 		return fmt.Errorf("bypass: %w", err)

@@ -173,7 +173,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, transactor, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, protectionManager, gitInterface, repository, codeownersService, reporter, indexer)
+	repoController := repo.ProvideController(config, transactor, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer)
 	executionStore := database.ProvideExecutionStore(db)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	stageStore := database.ProvideStageStore(db)
