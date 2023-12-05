@@ -24,7 +24,7 @@ import ReactTimeago from 'react-timeago'
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { noop } from 'lodash-es'
-import type { GitrpcBlamePart, TypesRepository } from 'services/code'
+import type { GitBlamePart, TypesRepository } from 'services/code'
 import { normalizeGitRef, type GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
@@ -39,8 +39,8 @@ interface BlameBlock {
   toLineNumber: number
   topPosition: number
   heights: Record<number, number>
-  commitInfo: GitrpcBlamePart['commit']
-  lines: GitrpcBlamePart['lines']
+  commitInfo: GitBlamePart['commit']
+  lines: GitBlamePart['lines']
   numberOfLines: number
 }
 
@@ -65,7 +65,7 @@ export const GitBlame: React.FC<
     data: _data,
     error,
     loading
-  } = useGet<GitrpcBlamePart[]>({
+  } = useGet<GitBlamePart[]>({
     path,
     queryParams: {
       git_ref: normalizeGitRef(gitRef)

@@ -271,7 +271,7 @@ export default function Compare() {
                     <TabTitleWithCount
                       icon={CodeIcon.Commit}
                       title={getString('commits')}
-                      count={data?.commits}
+                      count={data?.commits || 0}
                       padding={{ left: 'medium' }}
                     />
                   ),

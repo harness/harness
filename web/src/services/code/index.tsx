@@ -19,7 +19,7 @@ export type EnumMembershipRole = 'contributor' | 'executor' | 'reader' | 'space_
 
 export type EnumMergeCheckStatus = string
 
-export type EnumMergeMethod = 'merge' | 'squash' | 'rebase'
+export type EnumMergeMethod = 'merge' | 'rebase' | 'squash'
 
 export type EnumParentResourceType = 'space' | 'repo'
 
@@ -76,22 +76,22 @@ export type EnumWebhookTrigger =
   | 'tag_deleted'
   | 'tag_updated'
 
-export interface GitrpcBlamePart {
-  commit?: GitrpcCommit
+export interface GitBlamePart {
+  commit?: GitCommit
   lines?: string[] | null
 }
 
-export interface GitrpcCommit {
-  author?: GitrpcSignature
-  committer?: GitrpcSignature
+export interface GitCommit {
+  author?: GitSignature
+  committer?: GitSignature
   message?: string
   sha?: string
   title?: string
 }
 
-export type GitrpcFileAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE'
+export type GitFileAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE'
 
-export interface GitrpcFileDiff {
+export interface GitFileDiff {
   additions?: number
   changes?: number
   deletions?: number
@@ -102,24 +102,24 @@ export interface GitrpcFileDiff {
   patch?: number[]
   path?: string
   sha?: string
-  status?: GitrpcFileDiffStatus
+  status?: GitFileDiffStatus
 }
 
-export type GitrpcFileDiffStatus = string
+export type GitFileDiffStatus = string
 
-export interface GitrpcIdentity {
+export interface GitIdentity {
   email?: string
   name?: string
 }
 
-export interface GitrpcPathDetails {
-  last_commit?: GitrpcCommit
+export interface GitPathDetails {
+  last_commit?: GitCommit
   path?: string
   size?: number
 }
 
-export interface GitrpcSignature {
-  identity?: GitrpcIdentity
+export interface GitSignature {
+  identity?: GitIdentity
   when?: string
 }
 
@@ -181,11 +181,11 @@ export interface OpenapiCommentUpdatePullReqRequest {
 export interface OpenapiCommitFilesRequest {
   actions?: RepoCommitFileAction[] | null
   branch?: string
+  bypass_rules?: boolean
+  dry_run_rules?: boolean
   message?: string
   new_branch?: string
   title?: string
-  bypass_rules?: boolean
-  dry_run_rules?: boolean
 }
 
 export type OpenapiContent = RepoFileContent | OpenapiDirContent | RepoSymlinkContent | RepoSubmoduleContent
@@ -201,6 +201,7 @@ export interface OpenapiContentInfo {
 export type OpenapiContentType = 'file' | 'dir' | 'symlink' | 'submodule'
 
 export interface OpenapiCreateBranchRequest {
+  bypass_rules?: boolean
   name?: string
   target?: string
 }
@@ -257,6 +258,7 @@ export interface OpenapiCreateSpaceRequest {
 }
 
 export interface OpenapiCreateTagRequest {
+  bypass_rules?: boolean
   message?: string
   name?: string
   target?: string
@@ -352,7 +354,6 @@ export interface OpenapiRegisterRequest {
 export interface OpenapiReviewSubmitPullReqRequest {
   commit_sha?: string
   decision?: EnumPullReqReviewDecision
-  message?: string
 }
 
 export interface OpenapiReviewerAddPullReqRequest {
@@ -369,6 +370,9 @@ export interface OpenapiRule {
   type?: OpenapiRuleType
   uid?: string
   updated?: number
+  users?: {
+    [key: string]: TypesPrincipalInfo
+  } | null
 }
 
 export type OpenapiRuleDefinition = ProtectionBranch
@@ -377,7 +381,6 @@ export type OpenapiRuleType = 'branch'
 
 export interface OpenapiStatePullReqRequest {
   is_draft?: boolean
-  message?: string
   state?: EnumPullReqState
 }
 
@@ -527,7 +530,7 @@ export interface RepoCommitDivergenceRequest {
 }
 
 export interface RepoCommitFileAction {
-  action?: GitrpcFileAction
+  action?: GitFileAction
   encoding?: EnumContentEncodingType
   path?: string
   payload?: string
@@ -570,7 +573,7 @@ export interface RepoMergeCheck {
 }
 
 export interface RepoPathsDetailsOutput {
-  details?: GitrpcPathDetails[] | null
+  details?: GitPathDetails[] | null
 }
 
 export interface RepoSubmoduleContent {
@@ -637,6 +640,7 @@ export interface TypesCodeOwnerEvaluation {
 export interface TypesCodeOwnerEvaluationEntry {
   owner_evaluations?: TypesOwnerEvaluation[] | null
   pattern?: string
+  user_group_owner_evaluations?: TypesUserGroupOwnerEvaluation[] | null
 }
 
 export interface TypesCommit {
@@ -649,6 +653,8 @@ export interface TypesCommit {
 
 export interface TypesCommitFilesResponse {
   commit_id?: string
+  dry_run_rules?: boolean
+  rule_violations?: TypesRuleViolations[]
 }
 
 export interface TypesConnector {
@@ -663,8 +669,8 @@ export interface TypesConnector {
 }
 
 export interface TypesDiffStats {
-  commits?: number
-  files_changed?: number
+  commits?: number | null
+  files_changed?: number | null
 }
 
 export interface TypesExecution {
@@ -742,6 +748,7 @@ export interface TypesMembershipUser {
 }
 
 export interface TypesMergeResponse {
+  allowed_methods?: EnumMergeMethod[]
   branch_deleted?: boolean
   conflict_files?: string[]
   dry_run?: boolean
@@ -859,9 +866,9 @@ export interface TypesPullReqReviewer {
 }
 
 export interface TypesPullReqStats {
-  commits?: number
+  commits?: number | null
   conversations?: number
-  files_changed?: number
+  files_changed?: number | null
   unresolved_count?: number
 }
 
@@ -904,6 +911,7 @@ export interface TypesRuleInfo {
 export type TypesRuleType = string
 
 export interface TypesRuleViolations {
+  bypassable?: boolean
   bypassed?: boolean
   rule?: TypesRuleInfo
   violations?: TypesViolation[] | null
@@ -1042,6 +1050,12 @@ export interface TypesUser {
   email?: string
   uid?: string
   updated?: number
+}
+
+export interface TypesUserGroupOwnerEvaluation {
+  evaluations?: TypesOwnerEvaluation[] | null
+  id?: string
+  name?: string
 }
 
 export interface TypesViolation {
@@ -1644,13 +1658,13 @@ export interface GetBlamePathParams {
 }
 
 export type GetBlameProps = Omit<
-  GetProps<GitrpcBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>,
+  GetProps<GitBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>,
   'path'
 > &
   GetBlamePathParams
 
 export const GetBlame = ({ repo_ref, path, ...props }: GetBlameProps) => (
-  <Get<GitrpcBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>
+  <Get<GitBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>
     path={`/repos/${repo_ref}/blame/${path}`}
     base={getConfig('code/api/v1')}
     {...props}
@@ -1658,13 +1672,13 @@ export const GetBlame = ({ repo_ref, path, ...props }: GetBlameProps) => (
 )
 
 export type UseGetBlameProps = Omit<
-  UseGetProps<GitrpcBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>,
+  UseGetProps<GitBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>,
   'path'
 > &
   GetBlamePathParams
 
 export const useGetBlame = ({ repo_ref, path, ...props }: UseGetBlameProps) =>
-  useGet<GitrpcBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>(
+  useGet<GitBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>(
     (paramsInPath: GetBlamePathParams) => `/repos/${paramsInPath.repo_ref}/blame/${paramsInPath.path}`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, path }, ...props }
   )
@@ -1776,18 +1790,25 @@ export const useCreateBranch = ({ repo_ref, ...props }: UseCreateBranchProps) =>
     ...props
   })
 
+export interface DeleteBranchQueryParams {
+  /**
+   * Bypass rule violations if possible.
+   */
+  bypass_rules?: boolean
+}
+
 export interface DeleteBranchPathParams {
   repo_ref: string
 }
 
 export type DeleteBranchProps = Omit<
-  MutateProps<void, UsererrorError | TypesRulesViolations, void, string, DeleteBranchPathParams>,
+  MutateProps<void, UsererrorError | TypesRulesViolations, DeleteBranchQueryParams, string, DeleteBranchPathParams>,
   'path' | 'verb'
 > &
   DeleteBranchPathParams
 
 export const DeleteBranch = ({ repo_ref, ...props }: DeleteBranchProps) => (
-  <Mutate<void, UsererrorError | TypesRulesViolations, void, string, DeleteBranchPathParams>
+  <Mutate<void, UsererrorError | TypesRulesViolations, DeleteBranchQueryParams, string, DeleteBranchPathParams>
     verb="DELETE"
     path={`/repos/${repo_ref}/branches`}
     base={getConfig('code/api/v1')}
@@ -1796,13 +1817,13 @@ export const DeleteBranch = ({ repo_ref, ...props }: DeleteBranchProps) => (
 )
 
 export type UseDeleteBranchProps = Omit<
-  UseMutateProps<void, UsererrorError | TypesRulesViolations, void, string, DeleteBranchPathParams>,
+  UseMutateProps<void, UsererrorError | TypesRulesViolations, DeleteBranchQueryParams, string, DeleteBranchPathParams>,
   'path' | 'verb'
 > &
   DeleteBranchPathParams
 
 export const useDeleteBranch = ({ repo_ref, ...props }: UseDeleteBranchProps) =>
-  useMutate<void, UsererrorError | TypesRulesViolations, void, string, DeleteBranchPathParams>(
+  useMutate<void, UsererrorError | TypesRulesViolations, DeleteBranchQueryParams, string, DeleteBranchPathParams>(
     'DELETE',
     (paramsInPath: DeleteBranchPathParams) => `/repos/${paramsInPath.repo_ref}/branches`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
@@ -2313,22 +2334,22 @@ export interface RawDiffPathParams {
   range: string
 }
 
-export type RawDiffProps = Omit<GetProps<GitrpcFileDiff[], UsererrorError, void, RawDiffPathParams>, 'path'> &
+export type RawDiffProps = Omit<GetProps<GitFileDiff[], UsererrorError, void, RawDiffPathParams>, 'path'> &
   RawDiffPathParams
 
 export const RawDiff = ({ repo_ref, range, ...props }: RawDiffProps) => (
-  <Get<GitrpcFileDiff[], UsererrorError, void, RawDiffPathParams>
+  <Get<GitFileDiff[], UsererrorError, void, RawDiffPathParams>
     path={`/repos/${repo_ref}/diff/${range}`}
     base={getConfig('code/api/v1')}
     {...props}
   />
 )
 
-export type UseRawDiffProps = Omit<UseGetProps<GitrpcFileDiff[], UsererrorError, void, RawDiffPathParams>, 'path'> &
+export type UseRawDiffProps = Omit<UseGetProps<GitFileDiff[], UsererrorError, void, RawDiffPathParams>, 'path'> &
   RawDiffPathParams
 
 export const useRawDiff = ({ repo_ref, range, ...props }: UseRawDiffProps) =>
-  useGet<GitrpcFileDiff[], UsererrorError, void, RawDiffPathParams>(
+  useGet<GitFileDiff[], UsererrorError, void, RawDiffPathParams>(
     (paramsInPath: RawDiffPathParams) => `/repos/${paramsInPath.repo_ref}/diff/${paramsInPath.range}`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, range }, ...props }
   )
@@ -4156,6 +4177,7 @@ export interface RuleUpdateRequestBody {
   pattern?: ProtectionPattern
   state?: EnumRuleState
   type?: OpenapiRuleType
+  uid?: string
 }
 
 export type RuleUpdateProps = Omit<
@@ -4311,18 +4333,25 @@ export const useCreateTag = ({ repo_ref, ...props }: UseCreateTagProps) =>
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
   )
 
+export interface DeleteTagQueryParams {
+  /**
+   * Bypass rule violations if possible.
+   */
+  bypass_rules?: boolean
+}
+
 export interface DeleteTagPathParams {
   repo_ref: string
 }
 
 export type DeleteTagProps = Omit<
-  MutateProps<void, UsererrorError | TypesRulesViolations, void, string, DeleteTagPathParams>,
+  MutateProps<void, UsererrorError | TypesRulesViolations, DeleteTagQueryParams, string, DeleteTagPathParams>,
   'path' | 'verb'
 > &
   DeleteTagPathParams
 
 export const DeleteTag = ({ repo_ref, ...props }: DeleteTagProps) => (
-  <Mutate<void, UsererrorError | TypesRulesViolations, void, string, DeleteTagPathParams>
+  <Mutate<void, UsererrorError | TypesRulesViolations, DeleteTagQueryParams, string, DeleteTagPathParams>
     verb="DELETE"
     path={`/repos/${repo_ref}/tags`}
     base={getConfig('code/api/v1')}
@@ -4331,13 +4360,13 @@ export const DeleteTag = ({ repo_ref, ...props }: DeleteTagProps) => (
 )
 
 export type UseDeleteTagProps = Omit<
-  UseMutateProps<void, UsererrorError | TypesRulesViolations, void, string, DeleteTagPathParams>,
+  UseMutateProps<void, UsererrorError | TypesRulesViolations, DeleteTagQueryParams, string, DeleteTagPathParams>,
   'path' | 'verb'
 > &
   DeleteTagPathParams
 
 export const useDeleteTag = ({ repo_ref, ...props }: UseDeleteTagProps) =>
-  useMutate<void, UsererrorError | TypesRulesViolations, void, string, DeleteTagPathParams>(
+  useMutate<void, UsererrorError | TypesRulesViolations, DeleteTagQueryParams, string, DeleteTagPathParams>(
     'DELETE',
     (paramsInPath: DeleteTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
