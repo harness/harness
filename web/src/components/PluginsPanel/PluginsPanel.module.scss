@@ -89,3 +89,9 @@
 .fontWeight600 {
   font-weight: 600 !important;
 }
+
+.breadCrumbs {
+  overflow: hidden;
+  white-space: nowrap !important;
+  text-overflow: ellipsis;
+}

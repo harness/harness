@@ -222,6 +222,7 @@ export interface StringsMap {
   diff: string
   disableWebhookContent: string
   disableWebhookTitle: string
+  discard: string
   displayName: string
   download: string
   draft: string
@@ -498,6 +499,7 @@ export interface StringsMap {
   permissions: string
   permissionsFor: string
   'pipelineConfig.label': string
+  'pipelineConfig.yamlUpdated': string
   'pipelines.createNewPipeline': string
   'pipelines.created': string
   'pipelines.deletePipelineButton': string

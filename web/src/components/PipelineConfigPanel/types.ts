@@ -2,13 +2,13 @@ export enum PipelineEntity {
   STEP = 'STEP'
 }
 
-export enum CodeLensAction {
+export enum Action {
   ADD = 'ADD',
   EDIT = 'EDIT'
 }
 
 export interface CodeLensClickMetaData {
   entity: PipelineEntity
-  action: CodeLensAction
+  action: Action
   highlightSelection?: boolean
 }

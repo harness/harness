@@ -17,6 +17,7 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const arrow: string
+export declare const breadCrumbs: string
 export declare const configForm: string
 export declare const cursor: string
 export declare const fontWeight600: string

@@ -571,7 +571,7 @@ export const isIterable = (value: unknown): boolean => {
  * @param prefix - Optional prefix for keys
  * @returns all keys with their prefixes
  */
-export const getAllKeysWithPrefix = (obj: Record<string, any>, prefix = ''): string[] => {
+export const getAllKeysWithPrefix = (obj: { [key: string]: string | boolean | object }, prefix = ''): string[] => {
   let keys: string[] = []
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -579,7 +579,7 @@ export const getAllKeysWithPrefix = (obj: Record<string, any>, prefix = ''): str
       keys.push(currentKey)
       if (typeof obj[key] === 'object') {
         // Recursively get keys from nested objects with updated prefix
-        keys = keys.concat(getAllKeysWithPrefix(obj[key], currentKey))
+        keys = keys.concat(getAllKeysWithPrefix(obj[key] as { [key: string]: string | boolean | object }, currentKey))
       }
     }
   }

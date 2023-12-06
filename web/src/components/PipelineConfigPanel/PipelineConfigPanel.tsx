@@ -12,6 +12,7 @@ import css from './PipelineConfigPanel.module.scss'
 export interface PipelineConfigPanelProps {
   entityDataFromYAML: EntityAddUpdateInterface
   onEntityAddUpdate: (data: EntityAddUpdateInterface) => void
+  entityFieldUpdateData: Partial<EntityAddUpdateInterface>
 }
 
 interface ConfigPanelEntityInterface {
@@ -22,7 +23,7 @@ interface ConfigPanelEntityInterface {
 }
 
 const PipelineConfigPanel: React.FC<PipelineConfigPanelProps> = props => {
-  const { entityDataFromYAML, onEntityAddUpdate } = props
+  const { entityDataFromYAML, onEntityAddUpdate, entityFieldUpdateData } = props
   const { getString } = useStrings()
   const [selectedEntity, setSelectedEntity] = useState<PipelineEntity | undefined>()
 
@@ -34,17 +35,20 @@ const PipelineConfigPanel: React.FC<PipelineConfigPanelProps> = props => {
     { entity: PipelineEntity.STEP, name: 'Step', description: 'Add a step', icon: { name: 'run-step', size: 18 } }
   ]
 
-  const renderPanelForEntity = useCallback(
-    (entitySelected: PipelineEntity): JSX.Element => {
-      switch (entitySelected) {
-        case PipelineEntity.STEP:
-          return <PluginsPanel onPluginAddUpdate={onEntityAddUpdate} pluginDataFromYAML={entityDataFromYAML} />
-        default:
-          return <></>
-      }
-    },
-    [entityDataFromYAML]
-  )
+  const renderPanelForEntity = (entitySelected: PipelineEntity): JSX.Element => {
+    switch (entitySelected) {
+      case PipelineEntity.STEP:
+        return (
+          <PluginsPanel
+            onPluginAddUpdate={onEntityAddUpdate}
+            pluginDataFromYAML={entityDataFromYAML}
+            pluginFieldUpdateData={entityFieldUpdateData}
+          />
+        )
+      default:
+        return <></>
+    }
+  }
 
   const renderEntityOptions = useCallback((): JSX.Element => {
     return (
@@ -83,7 +87,7 @@ const PipelineConfigPanel: React.FC<PipelineConfigPanelProps> = props => {
         })}
       </Layout.Vertical>
     )
-  }, [])
+  }, [ConfigPanelEntities]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Container height="100%" padding={{ top: 'large', bottom: 'large', left: 'xlarge', right: 'xlarge' }}>

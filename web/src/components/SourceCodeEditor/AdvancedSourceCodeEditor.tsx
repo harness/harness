@@ -14,40 +14,65 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { debounce, get } from 'lodash-es'
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { debounce, get, isEmpty } from 'lodash-es'
 import { parse } from 'yaml'
+import { Range } from 'monaco-editor'
+import type { EditorDidMount } from 'react-monaco-editor'
 import { useStrings } from 'framework/strings'
 import type { SourceCodeEditorProps } from 'utils/Utils'
-import { CodeLensConfig, useCodeLenses } from 'hooks/useCodeLenses'
+import { CodeLensConfig, getDocumentSymbols, getPathFromRange, useCodeLenses } from 'hooks/useCodeLenses'
 import type { EntityAddUpdateInterface } from 'components/PluginsPanel/PluginsPanel'
-import { PipelineEntity, CodeLensAction, CodeLensClickMetaData } from 'components/PipelineConfigPanel/types'
+import { PipelineEntity, Action, CodeLensClickMetaData } from 'components/PipelineConfigPanel/types'
 import { MonacoCodeEditorRef, SourceCodeEditorWithRef } from './SourceCodeEditorWithRef'
-import { highlightInsertedYAML } from './EditorUtils'
+import { highlightInsertedYAML, setForwardedRef } from './EditorUtils'
 
 import css from './AdvancedSourceCodeEditor.module.scss'
 
 type AdvancedSourceCodeEditorProps = SourceCodeEditorProps & {
   enableCodeLens: boolean
   onEntityAddUpdate: (data: EntityAddUpdateInterface) => void
+  onEntityFieldAddUpdate: (data: Partial<EntityAddUpdateInterface>) => void
 }
 
-function Editor(props: AdvancedSourceCodeEditorProps) {
+const Editor = forwardRef<MonacoCodeEditorRef, AdvancedSourceCodeEditorProps>((props, ref) => {
   const { getString } = useStrings()
-  const { onChange, onEntityAddUpdate } = props
-  const editorRef = useRef<MonacoCodeEditorRef>(null)
+  const { onChange, onEntityAddUpdate, onEntityFieldAddUpdate } = props
+  const editorRef = useRef<MonacoCodeEditorRef | null>(null)
   const [latestYAML, setLatestYAML] = useState<string>('')
   const [entityYAMLData, setEntityYAMLData] = useState<EntityAddUpdateInterface>()
+  const [entityFieldData, setEntityFieldYAMLData] = useState<Partial<EntityAddUpdateInterface>>()
+  const entityYAMLDataRef = useRef<EntityAddUpdateInterface>()
+  const highlighterTimerIdRef = useRef<NodeJS.Timeout>()
+
+  const editorDidMount: EditorDidMount = (editor, _monaco) => {
+    editorRef.current = editor
+    setForwardedRef(ref, editor)
+  }
 
   useEffect(() => {
     onChange?.(latestYAML)
-  }, [latestYAML])
+  }, [latestYAML]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (entityYAMLData) {
+    if (!isEmpty(entityYAMLData)) {
       onEntityAddUpdate(entityYAMLData)
     }
-  }, [entityYAMLData])
+  }, [entityYAMLData]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (entityFieldData) {
+      onEntityFieldAddUpdate(entityFieldData)
+    }
+  }, [entityFieldData]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    return () => {
+      if (highlighterTimerIdRef.current) {
+        clearTimeout(highlighterTimerIdRef.current)
+      }
+    }
+  }, [])
 
   const codeLensConfigs = useMemo<CodeLensConfig[]>(
     () => [
@@ -60,7 +85,7 @@ function Editor(props: AdvancedSourceCodeEditorProps) {
             args: [
               {
                 entity: PipelineEntity.STEP,
-                action: CodeLensAction.EDIT,
+                action: Action.EDIT,
                 highlightSelection: true
               } as CodeLensClickMetaData
             ]
@@ -76,7 +101,7 @@ function Editor(props: AdvancedSourceCodeEditorProps) {
             args: [
               {
                 entity: PipelineEntity.STEP,
-                action: CodeLensAction.ADD,
+                action: Action.ADD,
                 highlightSelection: false
               } as CodeLensClickMetaData
             ]
@@ -84,46 +109,77 @@ function Editor(props: AdvancedSourceCodeEditorProps) {
         ]
       }
     ],
-    []
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   useCodeLenses({ editor: editorRef.current, codeLensConfigs })
 
-  const handleOnCodeLensClick = useCallback(
-    args => {
-      try {
-        const [{ path: pathToField, range }, metadata] = args
-        const { entity: entityClicked, action: entityAction, highlightSelection } = metadata as CodeLensClickMetaData
-        if (pathToField && editorRef.current && editorRef.current.getModel() != null) {
-          try {
-            setEntityYAMLData({
-              isUpdate: entityAction === CodeLensAction.EDIT,
-              pathToField,
-              formData: get(parse(editorRef.current.getModel()?.getValue() || ''), (pathToField as string[]).join('.')),
-              ...{ entity: entityClicked, action: entityAction }
-            })
-          } catch (e) {
-            // ignore parse error
+  const handleOnCodeLensClick = useCallback(args => {
+    try {
+      const [{ path: pathToField, range }, metadata] = args
+      const { entity: entityClicked, action: entityAction, highlightSelection } = metadata as CodeLensClickMetaData
+      const model = editorRef.current?.getModel()
+      if (pathToField && editorRef.current && model && model != null) {
+        try {
+          const entityData = {
+            isUpdate: entityAction === Action.EDIT,
+            pathToField,
+            range,
+            formData: get(parse(model.getValue() || ''), (pathToField as string[]).join('.')),
+            ...{ entity: entityClicked, action: entityAction }
           }
-          if (highlightSelection)
-            highlightInsertedYAML({
-              range,
-              editor: editorRef.current,
-              style: css
-            })
+          setEntityYAMLData(entityData)
+          entityYAMLDataRef.current = entityData
+        } catch (e) {
+          // ignore parse error
         }
-      } catch (e) {
-        // ignore error
+        if (highlightSelection)
+          highlighterTimerIdRef.current = highlightInsertedYAML({
+            range,
+            editor: editorRef.current,
+            style: css
+          })
       }
-    },
-    [editorRef.current]
-  )
-
-  const handleYAMLUpdate = useCallback((updatedYAML: string) => {
-    setLatestYAML(updatedYAML)
+    } catch (e) {
+      // ignore error
+    }
   }, [])
 
-  const debouncedHandleYAMLUpdate = useCallback(debounce(handleYAMLUpdate, 200), [handleYAMLUpdate])
+  /* Prepare info required to update a specific field inside an entity */
+  const prepareEntityFieldUpdate = useCallback(async () => {
+    const editor = editorRef.current
+    if (editor && !isEmpty(entityYAMLDataRef.current)) {
+      const { range: selectSymbolRange } = entityYAMLDataRef.current
+      const currentPosition = editor.getPosition()
+      /* Proceed with form UI update only if yaml update is relevant to the selected symbol */
+      if (selectSymbolRange && currentPosition && Range.containsPosition(selectSymbolRange, currentPosition)) {
+        const model = editor.getModel()
+        if (model && model !== null) {
+          const { lineNumber, column } = currentPosition || {}
+          const symbols = await getDocumentSymbols(model)
+          if (lineNumber && column) {
+            const pathToField: string[] = getPathFromRange(
+              { startLineNumber: lineNumber, startColumn: column, endLineNumber: lineNumber, endColumn: column },
+              symbols
+            )
+            setEntityFieldYAMLData({
+              pathToField,
+              formData: get(parse(model.getValue() || ''), (pathToField as string[]).join('.'))
+            })
+          }
+        }
+      }
+    }
+  }, [])
+
+  const debouncedHandleYAMLUpdate = useMemo(
+    () =>
+      debounce((updatedYAML: string) => {
+        setLatestYAML(updatedYAML)
+        prepareEntityFieldUpdate()
+      }, 300),
+    [prepareEntityFieldUpdate]
+  )
 
   return (
     <SourceCodeEditorWithRef
@@ -131,8 +187,11 @@ function Editor(props: AdvancedSourceCodeEditorProps) {
       onChange={debouncedHandleYAMLUpdate}
       ref={editorRef}
       editorOptions={{ codeLens: true }}
+      editorDidMount={editorDidMount}
     />
   )
-}
+})
+
+Editor.displayName = 'AdvancedSourceCodeEditor'
 
 export const AdvancedSourceCodeEditor = React.memo(Editor)

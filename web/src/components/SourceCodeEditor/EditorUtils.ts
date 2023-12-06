@@ -25,25 +25,30 @@ export const highlightInsertedYAML = ({
   range: languages.DocumentSymbol['range']
   editor: MonacoCodeEditorRef
   style: CSSAttributes
-}): void => {
+}): NodeJS.Timeout => {
   const { endLineNumber } = range
   const pluginInputDecoration: editor.IModelDeltaDecoration = {
     range,
     options: {
       isWholeLine: false,
-      className: style.pluginDecorator
+      className: style.highlight
     }
   }
-  const decorations = editor.createDecorationsCollection([pluginInputDecoration])
-  if (decorations) {
-    setTimeout(() => editor.createDecorationsCollection([]), 10000)
-  }
-  // Scroll to the end of the inserted text
+
+  /* Scroll to the end of the inserted text */
   const endingLineNumber = endLineNumber > 0 ? endLineNumber - 1 : 0
   const endingColumnNumber = (editor.getModel()?.getLineContent(endingLineNumber) || '')?.length + 1
   editor.setPosition({ column: endingColumnNumber, lineNumber: endingLineNumber })
   editor.revealLineInCenter(endLineNumber)
   editor.focus()
+
+  /* Add decorations */
+  const decorations = editor.createDecorationsCollection([pluginInputDecoration])
+
+  /* Auto-clear decorations */
+  return setTimeout(() => {
+    decorations.clear()
+  }, 8000)
 }
 
 export const getStepCount = (symbols: YAMLSymbol[]): number => symbols.filter(symbol => symbol.name === 'steps').length

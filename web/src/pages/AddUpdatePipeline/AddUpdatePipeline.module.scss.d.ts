@@ -23,6 +23,7 @@ export declare const extendedHeight: string
 export declare const generate: string
 export declare const generateHeader: string
 export declare const header: string
+export declare const highlight: string
 export declare const layout: string
 export declare const main: string
 export declare const menuItem: string

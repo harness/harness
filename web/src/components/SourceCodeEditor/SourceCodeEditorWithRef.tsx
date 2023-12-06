@@ -27,11 +27,14 @@ const SourceCodeEditor = forwardRef<MonacoCodeEditorRef, SourceCodeEditorProps>(
   const _ref = useRef<MonacoCodeEditorRef | null>(null)
 
   const editorDidMount: EditorDidMount = (editor, _monaco) => {
+    props.editorDidMount?.(editor, _monaco)
     _ref.current = editor
     setForwardedRef(ref, editor)
   }
 
   return <MonacoSourceCodeEditor {...props} editorDidMount={editorDidMount} />
 })
+
+SourceCodeEditor.displayName = 'SourceCodeEditor'
 
 export const SourceCodeEditorWithRef = React.memo(SourceCodeEditor)

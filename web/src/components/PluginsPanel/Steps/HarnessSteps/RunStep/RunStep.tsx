@@ -7,7 +7,7 @@ import { useStrings } from 'framework/strings'
 
 import css from './RunStep.module.scss'
 
-function _RunStep({ formik }: FormikContextProps<any>): JSX.Element {
+function _RunStep({ formik }: FormikContextProps<unknown>): JSX.Element {
   const { getString } = useStrings()
 
   useEffect(() => {
@@ -15,7 +15,7 @@ function _RunStep({ formik }: FormikContextProps<any>): JSX.Element {
     if (isString(container)) {
       formik?.setFieldValue('container.image', container)
     }
-  }, [formik?.values])
+  }, [formik?.values]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const getActiveTabId = useCallback((): string => {
     if (has(formik?.values, 'container')) {

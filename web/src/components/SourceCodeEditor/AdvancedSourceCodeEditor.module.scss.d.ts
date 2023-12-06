@@ -16,4 +16,4 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const pluginDecorator: string
+export declare const highlight: string

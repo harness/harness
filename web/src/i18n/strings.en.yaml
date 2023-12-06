@@ -941,3 +941,5 @@ selectStatuses: Select Statuses
 featureRoadmap: Feature Roadmap
 pipelineConfig:
   label: Pipeline Configuration
+  yamlUpdated: It looks like the YAML got modified. Refresh changes?
+discard: Discard
