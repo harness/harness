@@ -249,7 +249,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             enableReplyPlaceHolder={comment.commentItems?.length > 0}
             onCancel={comment.destroy}
             setDirty={setDirty}
-            currentUserName={currentUser.display_name}
+            currentUserName={currentUser?.display_name || currentUser?.email || ''}
             handleAction={async (action, value, commentItem) => {
               let result = true
               let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
@@ -387,7 +387,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     [
       // eslint-disable-line react-hooks/exhaustive-deps
       comments,
-      currentUser.display_name,
+      currentUser?.display_name,
       deleteComment,
       diff.activities,
       diff.filePath,

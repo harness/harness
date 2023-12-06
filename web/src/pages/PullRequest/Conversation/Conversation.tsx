@@ -196,7 +196,7 @@ export const Conversation: React.FC<ConversationProps> = ({
         boxClassName={css.commentBox}
         editorClassName={css.commentEditor}
         commentItems={[]}
-        currentUserName={currentUser.display_name || currentUser.email || ''}
+        currentUserName={currentUser?.display_name || currentUser?.email || ''}
         resetOnSave
         hideCancel={false}
         setDirty={setDirtyNewComment}
@@ -265,7 +265,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                 boxClassName={css.threadbox}
                 outerClassName={css.hideDottedLine}
                 commentItems={commentItems}
-                currentUserName={currentUser.display_name}
+                currentUserName={currentUser?.display_name || currentUser?.email || ''}
                 setDirty={setDirtyCurrentComments}
                 enableReplyPlaceHolder={true}
                 autoFocusAndPosition={true}
