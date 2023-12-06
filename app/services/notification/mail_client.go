@@ -1,0 +1,149 @@
+// Copyright 2023 Harness, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package notification
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+
+	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/notification/mailer"
+	"github.com/harness/gitness/types"
+)
+
+const (
+	TemplateReviewerAdded        = "reviewer_added.html"
+	TemplateCommentCreated       = "comment_created.html"
+	TemplatePullReqBranchUpdated = "pullreq_branch_updated.html"
+)
+
+type MailClient struct {
+	mailer.Mailer
+}
+
+func NewMailClient(mailer mailer.Mailer) MailClient {
+	return MailClient{
+		Mailer: mailer,
+	}
+}
+
+func (m MailClient) SendCommentCreated(
+	ctx context.Context,
+	recipients []*types.PrincipalInfo,
+	payload *CommentCreatedPayload,
+) error {
+	mailPayload, err := GenerateEmailFromPayload(
+		TemplateCommentCreated,
+		recipients,
+		payload.Base,
+		payload,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to generate mail requests after processing %s event: %w",
+			pullreqevents.CommentCreatedEvent, err)
+	}
+
+	return m.Mailer.Send(ctx, *mailPayload)
+}
+
+func (m MailClient) SendReviewerAdded(
+	ctx context.Context,
+	recipients []*types.PrincipalInfo,
+	payload *ReviewerAddedPayload,
+) error {
+	reviewerAddedMail, err := GenerateEmailFromPayload(
+		TemplateReviewerAdded,
+		recipients,
+		payload.Base,
+		payload,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to generate mail requests after processing %s event: %w",
+			pullreqevents.ReviewerAddedEvent, err)
+	}
+
+	return m.Mailer.Send(ctx, *reviewerAddedMail)
+}
+
+func (m MailClient) SendPullReqBranchUpdated(
+	ctx context.Context,
+	recipients []*types.PrincipalInfo,
+	payload *PullReqBranchUpdatedPayload,
+) error {
+	mailPayload, err := GenerateEmailFromPayload(
+		TemplatePullReqBranchUpdated,
+		recipients,
+		payload.Base,
+		payload,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to generate mail requests after processing %s event: %w",
+			pullreqevents.BranchUpdatedEvent, err)
+	}
+
+	return m.Mailer.Send(ctx, *mailPayload)
+}
+
+func GetSubjectPullRequest(
+	repoUID string,
+	prNum int64,
+	prTitle string,
+) string {
+	return fmt.Sprintf(subjectPullReqEvent, repoUID, prTitle, prNum)
+}
+
+func GetHTMLBody(templateName string, data interface{}) ([]byte, error) {
+	tmpl := htmlTemplates[templateName]
+	tmplOutput := bytes.Buffer{}
+	err := tmpl.Execute(&tmplOutput, data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute template %s", templateName)
+	}
+
+	return tmplOutput.Bytes(), nil
+}
+
+func GenerateEmailFromPayload(
+	templateName string,
+	recipients []*types.PrincipalInfo,
+	base *BasePullReqPayload,
+	payload interface{},
+) (*mailer.Payload, error) {
+	subject := GetSubjectPullRequest(base.Repo.UID, base.PullReq.Number,
+		base.PullReq.Title)
+
+	body, err := GetHTMLBody(templateName, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	var mail mailer.Payload
+	mail.Body = string(body)
+	mail.Subject = subject
+	mail.RepoRef = base.Repo.Path
+
+	recipientEmails := RetrieveEmailsFromPrincipals(recipients)
+	mail.ToRecipients = recipientEmails
+	return &mail, nil
+}
+
+func RetrieveEmailsFromPrincipals(principals []*types.PrincipalInfo) []string {
+	emails := make([]string, len(principals))
+	for i, principal := range principals {
+		emails[i] = principal.Email
+	}
+	return emails
+}

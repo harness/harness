@@ -15,12 +15,13 @@
 package mailer
 
 import (
+	"context"
 	"crypto/tls"
 
 	gomail "gopkg.in/mail.v2"
 )
 
-type Service struct {
+type GoMailClient struct {
 	dialer   *gomail.Dialer
 	fromMail string
 }
@@ -32,18 +33,18 @@ func NewMailClient(
 	fromMail string,
 	password string,
 	insecure bool,
-) *Service {
+) GoMailClient {
 	d := gomail.NewDialer(host, port, username, password)
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: insecure} // #nosec G402 (insecure TLS configuration)
 
-	return &Service{
+	return GoMailClient{
 		dialer:   d,
 		fromMail: fromMail,
 	}
 }
 
-func (c *Service) SendMail(mailRequest *MailRequest) error {
-	mail := mailRequest.ToGoMail()
+func (c GoMailClient) Send(_ context.Context, mailPayload Payload) error {
+	mail := ToGoMail(mailPayload)
 	mail.SetHeader("From", c.fromMail)
 	return c.dialer.DialAndSend(mail)
 }

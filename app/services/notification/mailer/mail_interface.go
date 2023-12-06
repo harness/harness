@@ -14,21 +14,34 @@
 
 package mailer
 
-import gomail "gopkg.in/mail.v2"
+import (
+	"context"
 
-type MailRequest struct {
-	CCRecipients []string `json:"cc_recipients"`
-	ToRecipients []string `json:"to_recipients"`
-	Subject      string   `json:"subject"`
-	Body         string   `json:"body"`
-	ContentType  string   `json:"content_type"`
+	gomail "gopkg.in/mail.v2"
+)
+
+const (
+	mailContentType = "text/html"
+)
+
+type Mailer interface {
+	Send(ctx context.Context, mailPayload Payload) error
 }
 
-func (dto *MailRequest) ToGoMail() *gomail.Message {
+type Payload struct {
+	CCRecipients []string
+	ToRecipients []string
+	Subject      string
+	Body         string
+	ContentType  string
+	RepoRef      string
+}
+
+func ToGoMail(dto Payload) *gomail.Message {
 	mail := gomail.NewMessage()
 	mail.SetHeader("To", dto.ToRecipients...)
 	mail.SetHeader("Cc", dto.CCRecipients...)
 	mail.SetHeader("Subject", dto.Subject)
-	mail.SetBody(dto.ContentType, dto.Body)
+	mail.SetBody(mailContentType, dto.Body)
 	return mail
 }

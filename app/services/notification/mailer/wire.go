@@ -21,11 +21,11 @@ import (
 )
 
 var WireSet = wire.NewSet(
-	ProvideMailService,
+	ProvideMailClient,
 )
 
-func ProvideMailService(config *types.Config) *Service {
-	mailSvc := NewMailClient(
+func ProvideMailClient(config *types.Config) Mailer {
+	return NewMailClient(
 		config.SMTP.Host,
 		config.SMTP.Port,
 		config.SMTP.Username,
@@ -33,5 +33,4 @@ func ProvideMailService(config *types.Config) *Service {
 		config.SMTP.Password,
 		config.SMTP.Insecure, // #nosec G402 (insecure skipVerify configuration)
 	)
-	return mailSvc
 }

@@ -55,6 +55,8 @@ import (
 	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/metric"
+	"github.com/harness/gitness/app/services/notification"
+	"github.com/harness/gitness/app/services/notification/mailer"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
@@ -286,12 +288,19 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
+	mailerMailer := mailer.ProvideMailClient(config)
+	notificationClient := notification.ProvideMailClient(mailerMailer)
+	notificationConfig := server.ProvideNotificationConfig(config)
+	notificationService, err := notification.ProvideNotificationService(ctx, notificationClient, notificationConfig, eventsReaderFactory, pullReqStore, repoStore, principalInfoView, principalInfoCache, pullReqReviewerStore, pullReqActivityStore, spacePathStore, provider)
+	if err != nil {
+		return nil, err
+	}
 	keywordsearchConfig := server.ProvideKeywordSearchConfig(config)
 	keywordsearchService, err := keywordsearch.ProvideService(ctx, keywordsearchConfig, readerFactory, repoStore, indexer)
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, cleanupService, keywordsearchService)
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, cleanupService, notificationService, keywordsearchService)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, pluginManager, servicesServices)
 	return serverSystem, nil
 }

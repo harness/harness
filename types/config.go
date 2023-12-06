@@ -324,6 +324,11 @@ type Config struct {
 		Insecure bool   `envconfig:"GITNESS_SMTP_INSECURE"`
 	}
 
+	Notification struct {
+		MaxRetries  int `envconfig:"GITNESS_NOTIFICATION_MAX_RETRIES" default:"3"`
+		Concurrency int `envconfig:"GITNESS_NOTIFICATION_CONCURRENCY" default:"4"`
+	}
+
 	KeywordSearch struct {
 		Concurrency int `envconfig:"GITNESS_KEYWORD_SEARCH_CONCURRENCY" default:"4"`
 		MaxRetries  int `envconfig:"GITNESS_KEYWORD_SEARCH_MAX_RETRIES" default:"3"`

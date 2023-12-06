@@ -9,7 +9,6 @@ package main
 
 import (
 	"context"
-
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -56,6 +55,8 @@ import (
 	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/metric"
+	"github.com/harness/gitness/app/services/notification"
+	"github.com/harness/gitness/app/services/notification/mailer"
 	"github.com/harness/gitness/app/services/protection"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/trigger"
@@ -92,6 +93,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideDatabaseConfig,
 		database.WireSet,
 		cliserver.ProvideBlobStoreConfig,
+		mailer.WireSet,
+		notification.WireSet,
 		blob.WireSet,
 		dbtx.WireSet,
 		cache.WireSet,
@@ -124,6 +127,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideEventsConfig,
 		events.WireSet,
 		cliserver.ProvideWebhookConfig,
+		cliserver.ProvideNotificationConfig,
 		webhook.WireSet,
 		cliserver.ProvideTriggerConfig,
 		trigger.WireSet,

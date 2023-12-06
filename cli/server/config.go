@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/keywordsearch"
+	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
@@ -276,6 +277,14 @@ func ProvideWebhookConfig(config *types.Config) webhook.Config {
 		MaxRetries:          config.Webhook.MaxRetries,
 		AllowPrivateNetwork: config.Webhook.AllowPrivateNetwork,
 		AllowLoopback:       config.Webhook.AllowLoopback,
+	}
+}
+
+func ProvideNotificationConfig(config *types.Config) notification.Config {
+	return notification.Config{
+		EventReaderName: config.InstanceID,
+		Concurrency:     config.Notification.Concurrency,
+		MaxRetries:      config.Notification.MaxRetries,
 	}
 }
 
