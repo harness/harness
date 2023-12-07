@@ -124,6 +124,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		return MergeOutput{}, fmt.Errorf("Merge: params not valid: %w", err)
 	}
 
+	log := log.Ctx(ctx).With().Str("repo_uid", params.RepoUID).Logger()
+
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	baseBranch := "base"
@@ -135,6 +137,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		HeadBranch:   params.HeadBranch,
 	}
 
+	log.Debug().Msg("create temporary repository")
+
 	// Clone base repo.
 	tmpRepo, err := s.adapter.CreateTemporaryRepoForPR(ctx, s.tmpDir, pr, baseBranch, trackingBranch)
 	if err != nil {
@@ -143,9 +147,11 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	defer func() {
 		rmErr := tempdir.RemoveTemporaryPath(tmpRepo.Path)
 		if rmErr != nil {
-			log.Ctx(ctx).Warn().Msgf("Removing temporary location %s for merge operation was not successful", tmpRepo.Path)
+			log.Warn().Msgf("Removing temporary location %s for merge operation was not successful", tmpRepo.Path)
 		}
 	}()
+
+	log.Debug().Msg("get merge base")
 
 	mergeBaseCommitSHA, _, err := s.adapter.GetMergeBase(ctx, tmpRepo.Path, "origin", baseBranch, trackingBranch)
 	if err != nil {
@@ -165,12 +171,16 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 			params.HeadExpectedSHA)
 	}
 
+	log.Debug().Msg("get diff tree")
+
 	var outbuf, errbuf strings.Builder
 	// Enable sparse-checkout
 	sparseCheckoutList, err := s.adapter.GetDiffTree(ctx, tmpRepo.Path, baseBranch, trackingBranch)
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("execution of GetDiffTree failed: %w", err)
 	}
+
+	log.Debug().Msg("prepare sparse-checkout")
 
 	infoPath := filepath.Join(tmpRepo.Path, ".git", "info")
 	if err = os.MkdirAll(infoPath, 0o700); err != nil {
@@ -183,11 +193,15 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 			fmt.Errorf("unable to write .git/info/sparse-checkout file in tmpRepo.Path: %w", err)
 	}
 
+	log.Debug().Msg("get diff stats")
+
 	shortStat, err := s.adapter.DiffShortStat(ctx, tmpRepo.Path, tmpRepo.BaseSHA, tmpRepo.HeadSHA, true)
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("execution of DiffShortStat failed: %w", err)
 	}
 	changedFileCount := shortStat.Files
+
+	log.Debug().Msg("get commit divergene")
 
 	divergences, err := s.adapter.GetCommitDivergences(ctx, tmpRepo.Path,
 		[]types.CommitDivergenceRequest{{From: tmpRepo.HeadSHA, To: tmpRepo.BaseSHA}}, 0)
@@ -195,6 +209,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		return MergeOutput{}, fmt.Errorf("execution of GetCommitDivergences failed: %w", err)
 	}
 	commitCount := int(divergences[0].Ahead)
+
+	log.Debug().Msg("update git configuration")
 
 	// Switch off LFS process (set required, clean and smudge here also)
 	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.process", ""); err != nil {
@@ -216,6 +232,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	if err = s.adapter.Config(ctx, tmpRepo.Path, "core.sparseCheckout", "true"); err != nil {
 		return MergeOutput{}, err
 	}
+
+	log.Debug().Msg("read tree")
 
 	// Read base branch index
 	if err = s.adapter.ReadTree(ctx, tmpRepo.Path, "HEAD", io.Discard); err != nil {
@@ -262,6 +280,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		params.Method = enum.MergeMethodMerge
 	}
 
+	log.Debug().Msg("perform merge")
+
 	result, err := s.adapter.Merge(
 		ctx,
 		pr,
@@ -291,12 +311,16 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		}, nil
 	}
 
+	log.Debug().Msg("get commit id")
+
 	mergeCommitSHA, err := s.adapter.GetFullCommitID(ctx, tmpRepo.Path, baseBranch)
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("failed to get full commit id for the new merge: %w", err)
 	}
 
 	if params.RefType == enum.RefTypeUndefined {
+		log.Debug().Msg("done (merge-check only)")
+
 		return MergeOutput{
 			BaseSHA:          tmpRepo.BaseSHA,
 			HeadSHA:          tmpRepo.HeadSHA,
@@ -316,6 +340,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	}
 	pushRef := baseBranch + ":" + refPath
 
+	log.Debug().Msg("push to original repo")
+
 	if err = s.adapter.Push(ctx, tmpRepo.Path, types.PushOptions{
 		Remote: "origin",
 		Branch: pushRef,
@@ -324,6 +350,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	}); err != nil {
 		return MergeOutput{}, fmt.Errorf("failed to push merge commit to ref '%s': %w", refPath, err)
 	}
+
+	log.Debug().Msg("done")
 
 	return MergeOutput{
 		BaseSHA:          tmpRepo.BaseSHA,

@@ -412,9 +412,11 @@ func (r *SharedRepo) push(
 		} else if gitea.IsErrPushRejected(err) {
 			rejectErr := new(gitea.ErrPushRejected)
 			if errors.As(err, &rejectErr) {
-				log.Ctx(ctx).Info().Msgf("Unable to push back to repo from temporary repo due to rejection:"+
-					" %s \nStdout: %s\nStderr: %s\nError: %v",
-					r.repoUID, rejectErr.StdOut, rejectErr.StdErr, rejectErr.Err)
+				log.Ctx(ctx).Warn().Str("repo_uid", r.repoUID).Err(rejectErr).Msgf(
+					"Unable to push back to repo from temporary repo due to rejection:\nStdout: %s\nStderr: %s",
+					rejectErr.StdOut,
+					rejectErr.StdErr,
+				)
 			}
 			return err
 		}

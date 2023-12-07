@@ -30,6 +30,7 @@ import (
 
 	"code.gitea.io/gitea/modules/git"
 	"code.gitea.io/gitea/services/repository/files"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 )
 
@@ -95,6 +96,8 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		return CommitFilesResponse{}, err
 	}
 
+	log := log.Ctx(ctx).With().Str("repo_uid", params.RepoUID).Logger()
+
 	committer := params.Actor
 	if params.Committer != nil {
 		committer = *params.Committer
@@ -115,10 +118,14 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
+	log.Debug().Msg("open repository")
+
 	repo, err := s.adapter.OpenRepository(ctx, repoPath)
 	if err != nil {
 		return CommitFilesResponse{}, fmt.Errorf("CommitFiles: failed to open repo: %w", err)
 	}
+
+	log.Debug().Msg("check if empty")
 
 	// check if repo is empty
 	// IMPORTANT: we don't use gitea's repo.IsEmpty() as that only checks whether the default branch exists (in HEAD).
@@ -130,10 +137,14 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		return CommitFilesResponse{}, fmt.Errorf("CommitFiles: failed to determine if repository is empty: %w", err)
 	}
 
+	log.Debug().Msg("validate and prepare input")
+
 	// ensure input data is valid
 	if err = s.validateAndPrepareHeader(repo, isEmpty, params); err != nil {
 		return CommitFilesResponse{}, err
 	}
+
+	log.Debug().Msg("create shared repo")
 
 	// create a new shared repo
 	shared, err := s.adapter.SharedRepository(s.tmpDir, params.RepoUID, repo.Path)
@@ -141,6 +152,8 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		return CommitFilesResponse{}, fmt.Errorf("failed to create shared repository: %w", err)
 	}
 	defer shared.Close(ctx)
+
+	log.Debug().Msgf("prepare tree (empty: %t)", isEmpty)
 
 	// handle empty repo separately (as branch doesn't exist, no commit exists, ...)
 	var parentCommitSHA string
@@ -156,6 +169,8 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		}
 	}
 
+	log.Debug().Msg("write tree")
+
 	// Now write the tree
 	treeHash, err := shared.WriteTree(ctx)
 	if err != nil {
@@ -166,6 +181,8 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 	if len(params.Message) > 0 {
 		message += "\n\n" + strings.TrimSpace(params.Message)
 	}
+
+	log.Debug().Msg("commit tree")
 
 	// Now commit the tree
 	commitSHA, err := shared.CommitTreeWithDate(
@@ -189,15 +206,21 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		return CommitFilesResponse{}, fmt.Errorf("failed to commit the tree: %w", err)
 	}
 
+	log.Debug().Msg("push branch to original repo")
+
 	env := CreateEnvironmentForPush(ctx, params.WriteParams)
 	if err = shared.PushCommitToBranch(ctx, commitSHA, params.NewBranch, false, env...); err != nil {
 		return CommitFilesResponse{}, fmt.Errorf("failed to push commits to remote repository: %w", err)
 	}
 
+	log.Debug().Msg("get commit")
+
 	commit, err := shared.GetCommit(commitSHA)
 	if err != nil {
 		return CommitFilesResponse{}, fmt.Errorf("failed to get commit for SHA %s: %w", commitSHA, err)
 	}
+
+	log.Debug().Msg("done")
 
 	return CommitFilesResponse{
 		CommitID: commit.ID.String(),
