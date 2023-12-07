@@ -249,7 +249,7 @@ func (s *Service) getCodeOwnerFileNode(
 			Path:       path,
 		})
 
-		if errors.AsStatus(err) == errors.StatusPathNotFound {
+		if errors.AsStatus(err) == errors.StatusNotFound {
 			continue
 		}
 		if err != nil {
