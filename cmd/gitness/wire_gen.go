@@ -131,7 +131,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	cacheCache := adapter.ProvideLastCommitCache(config, universalClient, goGitRepoProvider)
+	cacheCache := adapter.ProvideLastCommitCache(config, universalClient)
 	gitAdapter, err := git.ProvideGITAdapter(goGitRepoProvider, cacheCache)
 	if err != nil {
 		return nil, err

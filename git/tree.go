@@ -163,7 +163,6 @@ type PathsDetailsOutput struct {
 type PathDetails struct {
 	Path       string  `json:"path"`
 	LastCommit *Commit `json:"last_commit,omitempty"`
-	Size       int64   `json:"size,omitempty"`
 }
 
 func (s *Service) PathsDetails(ctx context.Context, params PathsDetailsParams) (PathsDetailsOutput, error) {
@@ -195,7 +194,6 @@ func (s *Service) PathsDetails(ctx context.Context, params PathsDetailsParams) (
 
 		details[i] = PathDetails{
 			Path:       pathDetail.Path,
-			Size:       pathDetail.Size,
 			LastCommit: lastCommit,
 		}
 	}

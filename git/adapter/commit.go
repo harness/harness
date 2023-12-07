@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	giteaPrettyLogFormat = `--pretty=format:%H`
+	giteaPrettyLogFormat = `--pretty=format:` + fmtCommitHash
 )
 
 // GetLatestCommit gets the latest commit of a path relative from the provided reference.

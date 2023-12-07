@@ -44,17 +44,16 @@ func ProvideGoGitRepoProvider() *GoGitRepoProvider {
 func ProvideLastCommitCache(
 	config *apptypes.Config,
 	redisClient redis.UniversalClient,
-	repoProvider *GoGitRepoProvider,
 ) cache.Cache[CommitEntryKey, *types.Commit] {
 	cacheDuration := config.Git.LastCommitCache.Duration
 
 	if config.Git.LastCommitCache.Mode == ModeNone || cacheDuration < time.Second {
-		return NoLastCommitCache(repoProvider)
+		return NoLastCommitCache()
 	}
 
 	if config.Git.LastCommitCache.Mode == ModeRedis && redisClient != nil {
-		return NewRedisLastCommitCache(redisClient, cacheDuration, repoProvider)
+		return NewRedisLastCommitCache(redisClient, cacheDuration)
 	}
 
-	return NewInMemoryLastCommitCache(cacheDuration, repoProvider)
+	return NewInMemoryLastCommitCache(cacheDuration)
 }

@@ -50,7 +50,6 @@ func setupGit(t *testing.T) adapter.Adapter {
 		adapter.ProvideLastCommitCache(
 			config,
 			nil,
-			gogitProvider,
 		),
 	)
 	if err != nil {

@@ -358,7 +358,6 @@ type TempRepository struct {
 type PathDetails struct {
 	Path       string
 	LastCommit *Commit
-	Size       int64
 }
 
 type FileContent struct {

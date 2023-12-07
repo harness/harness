@@ -7113,8 +7113,6 @@ components:
           $ref: '#/components/schemas/GitCommit'
         path:
           type: string
-        size:
-          type: integer
       type: object
     GitSignature:
       properties:

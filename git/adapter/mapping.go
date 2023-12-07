@@ -21,7 +21,6 @@ import (
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
-	gogitfilemode "github.com/go-git/go-git/v5/plumbing/filemode"
 )
 
 func mapGiteaRawRef(
@@ -83,24 +82,21 @@ func mapGiteaCommit(giteaCommit *gitea.Commit) (*types.Commit, error) {
 	}, nil
 }
 
-func mapGogitNodeToTreeNodeModeAndType(
-	gogitMode gogitfilemode.FileMode,
-) (types.TreeNodeType, types.TreeNodeMode, error) {
-	//nolint:exhaustive
-	switch gogitMode {
-	case gogitfilemode.Regular, gogitfilemode.Deprecated:
+func mapGiteaNodeToTreeNodeModeAndType(giteaMode gitea.EntryMode) (types.TreeNodeType, types.TreeNodeMode, error) {
+	switch giteaMode {
+	case gitea.EntryModeBlob:
 		return types.TreeNodeTypeBlob, types.TreeNodeModeFile, nil
-	case gogitfilemode.Symlink:
+	case gitea.EntryModeSymlink:
 		return types.TreeNodeTypeBlob, types.TreeNodeModeSymlink, nil
-	case gogitfilemode.Executable:
+	case gitea.EntryModeExec:
 		return types.TreeNodeTypeBlob, types.TreeNodeModeExec, nil
-	case gogitfilemode.Submodule:
+	case gitea.EntryModeCommit:
 		return types.TreeNodeTypeCommit, types.TreeNodeModeCommit, nil
-	case gogitfilemode.Dir:
+	case gitea.EntryModeTree:
 		return types.TreeNodeTypeTree, types.TreeNodeModeTree, nil
 	default:
 		return types.TreeNodeTypeBlob, types.TreeNodeModeFile,
-			fmt.Errorf("received unknown tree node mode from gogit: '%s'", gogitMode.String())
+			fmt.Errorf("received unknown tree node mode from gitea: '%s'", giteaMode.String())
 	}
 }
 

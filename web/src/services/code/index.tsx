@@ -115,7 +115,6 @@ export interface GitIdentity {
 export interface GitPathDetails {
   last_commit?: GitCommit
   path?: string
-  size?: number
 }
 
 export interface GitSignature {

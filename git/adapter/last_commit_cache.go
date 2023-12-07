@@ -20,38 +20,33 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/harness/gitness/cache"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
-	gogitplumbing "github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-redis/redis/v8"
 )
 
 func NewInMemoryLastCommitCache(
 	cacheDuration time.Duration,
-	repoProvider *GoGitRepoProvider,
 ) cache.Cache[CommitEntryKey, *types.Commit] {
 	return cache.New[CommitEntryKey, *types.Commit](
-		commitEntryGetter{
-			repoProvider: repoProvider,
-		},
+		commitEntryGetter{},
 		cacheDuration)
 }
 
 func NewRedisLastCommitCache(
 	redisClient redis.UniversalClient,
 	cacheDuration time.Duration,
-	repoProvider *GoGitRepoProvider,
 ) cache.Cache[CommitEntryKey, *types.Commit] {
 	return cache.NewRedis[CommitEntryKey, *types.Commit](
 		redisClient,
-		commitEntryGetter{
-			repoProvider: repoProvider,
-		},
+		commitEntryGetter{},
 		func(key CommitEntryKey) string {
 			h := sha256.New()
 			h.Write([]byte(key))
@@ -61,22 +56,20 @@ func NewRedisLastCommitCache(
 		cacheDuration)
 }
 
-func NoLastCommitCache(
-	repoProvider *GoGitRepoProvider,
-) cache.Cache[CommitEntryKey, *types.Commit] {
-	return cache.NewNoCache[CommitEntryKey, *types.Commit](commitEntryGetter{repoProvider: repoProvider})
+func NoLastCommitCache() cache.Cache[CommitEntryKey, *types.Commit] {
+	return cache.NewNoCache[CommitEntryKey, *types.Commit](commitEntryGetter{})
 }
 
 type CommitEntryKey string
 
-const commitEntryKeySeparator = "\x00"
+const separatorZero = "\x00"
 
 func makeCommitEntryKey(
 	repoPath string,
 	commitSHA string,
 	path string,
 ) CommitEntryKey {
-	return CommitEntryKey(repoPath + commitEntryKeySeparator + commitSHA + commitEntryKeySeparator + path)
+	return CommitEntryKey(repoPath + separatorZero + commitSHA + separatorZero + path)
 }
 
 func (c CommitEntryKey) Split() (
@@ -84,7 +77,7 @@ func (c CommitEntryKey) Split() (
 	commitSHA string,
 	path string,
 ) {
-	parts := strings.Split(string(c), commitEntryKeySeparator)
+	parts := strings.Split(string(c), separatorZero)
 	if len(parts) != 3 {
 		return
 	}
@@ -113,69 +106,70 @@ func (c commitValueCodec) Decode(s string) (*types.Commit, error) {
 	return commit, nil
 }
 
-type commitEntryGetter struct {
-	repoProvider *GoGitRepoProvider
-}
+type commitEntryGetter struct{}
 
 // Find implements the cache.Getter interface.
 func (c commitEntryGetter) Find(
 	ctx context.Context,
 	key CommitEntryKey,
 ) (*types.Commit, error) {
-	repoPath, rev, path := key.Split()
+	repoPath, commitSHA, path := key.Split()
 
 	if path == "" {
 		path = "."
 	}
 
-	args := []string{"log", "--max-count=1", "--format=%H", rev, "--", path}
-	commitSHA, _, runErr := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{Dir: repoPath})
-	if runErr != nil {
-		return nil, fmt.Errorf("failed to run git: %w", runErr)
-	}
+	const format = "" +
+		fmtCommitHash + fmtZero + // 0
+		fmtAuthorName + fmtZero + // 1
+		fmtAuthorEmail + fmtZero + // 2
+		fmtAuthorUnix + fmtZero + // 3
+		fmtCommitterName + fmtZero + // 4
+		fmtCommitterEmail + fmtZero + // 5
+		fmtCommitterUnix + fmtZero + // 6
+		fmtSubject + fmtZero + // 7
+		fmtBody // 8
 
-	commitSHA = strings.TrimSpace(commitSHA)
-
-	if commitSHA == "" {
-		return nil, types.ErrNotFound("revision '%s' not found", rev)
-	}
-
-	repo, err := c.repoProvider.Get(ctx, repoPath)
+	args := []string{"log", "--max-count=1", "--format=" + format, commitSHA, "--", path}
+	commitLine, _, err := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{Dir: repoPath})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get repository %s from cache: %w", repoPath, err)
+		return nil, fmt.Errorf("failed to run git to get the last commit for path: %w", err)
 	}
 
-	commit, err := repo.CommitObject(gogitplumbing.NewHash(commitSHA))
-	if err != nil {
-		return nil, fmt.Errorf("failed to load commit data: %w", err)
+	const columnCount = 9
+
+	commitData := strings.Split(strings.TrimSpace(commitLine), separatorZero)
+	if len(commitData) != columnCount {
+		return nil, errors.InvalidArgument("path %q not found in commit %s", path, commitSHA)
 	}
 
-	var title string
-	var message string
-
-	title = commit.Message
-	if idx := strings.IndexRune(commit.Message, '\n'); idx >= 0 {
-		title = commit.Message[:idx]
-		message = commit.Message[idx+1:]
-	}
+	sha := commitData[0]
+	authorName := commitData[1]
+	authorEmail := commitData[2]
+	authorTime, _ := strconv.ParseInt(commitData[3], 10, 64) // parse failure produces 01-01-1970
+	committerName := commitData[4]
+	committerEmail := commitData[5]
+	committerTime, _ := strconv.ParseInt(commitData[6], 10, 64) // parse failure produces 01-01-1970
+	subject := commitData[7]
+	body := commitData[8]
 
 	return &types.Commit{
-		SHA:     commitSHA,
-		Title:   title,
-		Message: message,
+		SHA:     sha,
+		Title:   subject,
+		Message: body,
 		Author: types.Signature{
 			Identity: types.Identity{
-				Name:  commit.Author.Name,
-				Email: commit.Author.Email,
+				Name:  authorName,
+				Email: authorEmail,
 			},
-			When: commit.Author.When,
+			When: time.Unix(authorTime, 0),
 		},
 		Committer: types.Signature{
 			Identity: types.Identity{
-				Name:  commit.Committer.Name,
-				Email: commit.Committer.Email,
+				Name:  committerName,
+				Email: committerEmail,
 			},
-			When: commit.Committer.When,
+			When: time.Unix(committerTime, 0),
 		},
 	}, nil
 }
