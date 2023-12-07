@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/git"
 
 	"github.com/google/wire"
 )
@@ -34,6 +35,7 @@ func ProvideController(
 	principalStore store.PrincipalStore,
 	repoStore store.RepoStore,
 	gitReporter *eventsgit.Reporter,
+	git git.Interface,
 	pullreqStore store.PullReqStore,
 	urlProvider url.Provider,
 	protectionManager *protection.Manager,
@@ -43,6 +45,7 @@ func ProvideController(
 		principalStore,
 		repoStore,
 		gitReporter,
+		git,
 		pullreqStore,
 		urlProvider,
 		protectionManager)

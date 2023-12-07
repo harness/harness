@@ -411,3 +411,29 @@ func (s *Service) MergeBase(
 		MergeBaseSHA: result,
 	}, nil
 }
+
+type IsAncestorParams struct {
+	ReadParams
+	AncestorCommitSHA   string
+	DescendantCommitSHA string
+}
+
+type IsAncestorOutput struct {
+	Ancestor bool
+}
+
+func (s *Service) IsAncestor(
+	ctx context.Context,
+	params IsAncestorParams,
+) (IsAncestorOutput, error) {
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	result, err := s.adapter.IsAncestor(ctx, repoPath, params.AncestorCommitSHA, params.DescendantCommitSHA)
+	if err != nil {
+		return IsAncestorOutput{}, err
+	}
+
+	return IsAncestorOutput{
+		Ancestor: result,
+	}, nil
+}

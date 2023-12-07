@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -57,6 +58,7 @@ type Controller struct {
 	principalStore    store.PrincipalStore
 	repoStore         store.RepoStore
 	gitReporter       *eventsgit.Reporter
+	git               git.Interface
 	pullreqStore      store.PullReqStore
 	urlProvider       url.Provider
 	protectionManager *protection.Manager
@@ -67,6 +69,7 @@ func NewController(
 	principalStore store.PrincipalStore,
 	repoStore store.RepoStore,
 	gitReporter *eventsgit.Reporter,
+	git git.Interface,
 	pullreqStore store.PullReqStore,
 	urlProvider url.Provider,
 	protectionManager *protection.Manager,
@@ -76,6 +79,7 @@ func NewController(
 		principalStore:    principalStore,
 		repoStore:         repoStore,
 		gitReporter:       gitReporter,
+		git:               git,
 		pullreqStore:      pullreqStore,
 		urlProvider:       urlProvider,
 		protectionManager: protectionManager,

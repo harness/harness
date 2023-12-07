@@ -21,6 +21,7 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/git"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/githook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -53,7 +54,7 @@ func (c *Controller) PostReceive(
 	}
 
 	// report ref events (best effort)
-	c.reportReferenceEvents(ctx, repoID, principalID, in)
+	c.reportReferenceEvents(ctx, repo, principalID, in)
 
 	// create output object and have following messages fill its messages
 	out := &githook.Output{}
@@ -69,16 +70,16 @@ func (c *Controller) PostReceive(
 // TODO: in the future we might want to think about propagating errors so user is aware of events not being triggered.
 func (c *Controller) reportReferenceEvents(
 	ctx context.Context,
-	repoID int64,
+	repo *types.Repository,
 	principalID int64,
 	in githook.PostReceiveInput,
 ) {
 	for _, refUpdate := range in.RefUpdates {
 		switch {
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):
-			c.reportBranchEvent(ctx, repoID, principalID, refUpdate)
+			c.reportBranchEvent(ctx, repo, principalID, refUpdate)
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixTag):
-			c.reportTagEvent(ctx, repoID, principalID, refUpdate)
+			c.reportTagEvent(ctx, repo, principalID, refUpdate)
 		default:
 			// Ignore any other references in post-receive
 		}
@@ -87,61 +88,75 @@ func (c *Controller) reportReferenceEvents(
 
 func (c *Controller) reportBranchEvent(
 	ctx context.Context,
-	repoID int64,
+	repo *types.Repository,
 	principalID int64,
 	branchUpdate githook.ReferenceUpdate,
 ) {
 	switch {
 	case branchUpdate.Old == types.NilSHA:
 		c.gitReporter.BranchCreated(ctx, &events.BranchCreatedPayload{
-			RepoID:      repoID,
+			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
 			SHA:         branchUpdate.New,
 		})
 	case branchUpdate.New == types.NilSHA:
 		c.gitReporter.BranchDeleted(ctx, &events.BranchDeletedPayload{
-			RepoID:      repoID,
+			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
 			SHA:         branchUpdate.Old,
 		})
 	default:
+		result, err := c.git.IsAncestor(ctx, git.IsAncestorParams{
+			ReadParams:          git.ReadParams{RepoUID: repo.GitUID},
+			AncestorCommitSHA:   branchUpdate.Old,
+			DescendantCommitSHA: branchUpdate.New,
+		})
+		if err != nil {
+			log.Ctx(ctx).Err(err).
+				Str("ref", branchUpdate.Ref).
+				Msg("failed to check ancestor")
+		}
+		// In case of an error consider this a forced update. In post-update the branch has already been updated,
+		// so there's less harm in declaring the update as forced. A force update event might trigger some additional
+		// operations that aren't required for ordinary updates (force pushes alter the commit history of a branch).
+		forced := err != nil || !result.Ancestor
 		c.gitReporter.BranchUpdated(ctx, &events.BranchUpdatedPayload{
-			RepoID:      repoID,
+			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
 			OldSHA:      branchUpdate.Old,
 			NewSHA:      branchUpdate.New,
-			Forced:      false, // TODO: data not available yet
+			Forced:      forced,
 		})
 	}
 }
 
 func (c *Controller) reportTagEvent(
 	ctx context.Context,
-	repoID int64,
+	repo *types.Repository,
 	principalID int64,
 	tagUpdate githook.ReferenceUpdate,
 ) {
 	switch {
 	case tagUpdate.Old == types.NilSHA:
 		c.gitReporter.TagCreated(ctx, &events.TagCreatedPayload{
-			RepoID:      repoID,
+			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
 			SHA:         tagUpdate.New,
 		})
 	case tagUpdate.New == types.NilSHA:
 		c.gitReporter.TagDeleted(ctx, &events.TagDeletedPayload{
-			RepoID:      repoID,
+			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
 			SHA:         tagUpdate.Old,
 		})
 	default:
 		c.gitReporter.TagUpdated(ctx, &events.TagUpdatedPayload{
-			RepoID:      repoID,
+			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
 			OldSHA:      tagUpdate.Old,

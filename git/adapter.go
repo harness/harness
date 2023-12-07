@@ -74,6 +74,7 @@ type Adapter interface {
 	Merge(ctx context.Context, pr *types.PullRequest, mergeMethod enum.MergeMethod, baseBranch, trackingBranch string,
 		tmpBasePath string, mergeMsg string, identity *types.Identity, env ...string) (types.MergeResult, error)
 	GetMergeBase(ctx context.Context, repoPath, remote, base, head string) (string, string, error)
+	IsAncestor(ctx context.Context, repoPath, ancestorCommitSHA, descendantCommitSHA string) (bool, error)
 	Blame(ctx context.Context, repoPath, rev, file string, lineFrom, lineTo int) types.BlameReader
 	Sync(ctx context.Context, repoPath string, source string, refSpecs []string) error
 

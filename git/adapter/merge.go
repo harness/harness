@@ -585,6 +585,28 @@ func (a Adapter) GetMergeBase(
 	return strings.TrimSpace(stdout), base, nil
 }
 
+// IsAncestor returns if the provided commit SHA is ancestor of the other commit SHA.
+func (a Adapter) IsAncestor(
+	ctx context.Context,
+	repoPath string,
+	ancestorCommitSHA, descendantCommitSHA string,
+) (bool, error) {
+	if repoPath == "" {
+		return false, ErrRepositoryPathEmpty
+	}
+
+	_, stderr, runErr := git.NewCommand(ctx, "merge-base", "--is-ancestor", ancestorCommitSHA, descendantCommitSHA).
+		RunStdString(&git.RunOpts{Dir: repoPath})
+	if runErr != nil {
+		if runErr.IsExitCode(1) && stderr == "" {
+			return false, nil
+		}
+		return false, processGiteaErrorf(runErr, "failed to check commit ancestry: %v", stderr)
+	}
+
+	return true, nil
+}
+
 // giteaRunStdError is an implementation of the RunStdError interface in the gitea codebase.
 // It allows us to process gitea errors even when using cmd.Run() instead of cmd.RunStdString() or run.StdBytes().
 type giteaRunStdError struct {

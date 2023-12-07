@@ -53,6 +53,7 @@ type Interface interface {
 	GetCommitDivergences(ctx context.Context, params *GetCommitDivergencesParams) (*GetCommitDivergencesOutput, error)
 	CommitFiles(ctx context.Context, params *CommitFilesParams) (CommitFilesResponse, error)
 	MergeBase(ctx context.Context, params MergeBaseParams) (MergeBaseOutput, error)
+	IsAncestor(ctx context.Context, params IsAncestorParams) (IsAncestorOutput, error)
 
 	/*
 	 * Git Cli Service
