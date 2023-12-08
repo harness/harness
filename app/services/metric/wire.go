@@ -15,8 +15,8 @@
 package metric
 
 import (
-	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"

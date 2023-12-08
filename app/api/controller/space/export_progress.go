@@ -22,14 +22,14 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/exporter"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/pkg/errors"
 )
 
 type ExportProgressOutput struct {
-	Repos []types.JobProgress `json:"repos"`
+	Repos []job.Progress `json:"repos"`
 }
 
 // ExportProgress returns progress of the export job.

@@ -26,13 +26,13 @@ import (
 
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/githook"
-	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/job"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -328,7 +328,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	return "", nil
 }
 
-func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (types.JobProgress, error) {
+func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (job.Progress, error) {
 	progress, err := r.scheduler.GetJobProgress(ctx, JobIDFromRepoID(repo.ID))
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
 		if repo.Importing {
@@ -337,10 +337,10 @@ func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (t
 		}
 
 		// otherwise there either was no import, or it completed a long time ago (job cleaned up by now)
-		return types.JobProgress{}, ErrNotFound
+		return job.Progress{}, ErrNotFound
 	}
 	if err != nil {
-		return types.JobProgress{}, fmt.Errorf("failed to get job progress: %w", err)
+		return job.Progress{}, fmt.Errorf("failed to get job progress: %w", err)
 	}
 
 	return progress, nil

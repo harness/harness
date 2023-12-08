@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/lock"
 
 	"github.com/rs/zerolog/log"
@@ -32,18 +31,18 @@ const (
 )
 
 type jobPurge struct {
-	store     store.JobStore
+	store     Store
 	mxManager lock.MutexManager
 	minOldAge time.Duration
 }
 
-func newJobPurge(jobStore store.JobStore, mxManager lock.MutexManager, minOldAge time.Duration) *jobPurge {
+func newJobPurge(store Store, mxManager lock.MutexManager, minOldAge time.Duration) *jobPurge {
 	if minOldAge < 0 {
 		minOldAge = 0
 	}
 
 	return &jobPurge{
-		store:     jobStore,
+		store:     store,
 		mxManager: mxManager,
 		minOldAge: minOldAge,
 	}

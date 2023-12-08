@@ -19,9 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/lock"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -33,14 +31,14 @@ const (
 )
 
 type jobOverdue struct {
-	store     store.JobStore
+	store     Store
 	mxManager lock.MutexManager
 	scheduler *Scheduler
 }
 
-func newJobOverdue(jobStore store.JobStore, mxManager lock.MutexManager, scheduler *Scheduler) *jobOverdue {
+func newJobOverdue(store Store, mxManager lock.MutexManager, scheduler *Scheduler) *jobOverdue {
 	return &jobOverdue{
-		store:     jobStore,
+		store:     store,
 		mxManager: mxManager,
 		scheduler: scheduler,
 	}
@@ -81,7 +79,7 @@ func (j *jobOverdue) Handle(ctx context.Context, _ string, _ ProgressReporter) (
 			return "", fmt.Errorf("failed update overdue job")
 		}
 
-		if job.State == enum.JobStateScheduled {
+		if job.State == JobStateScheduled {
 			scheduled := time.UnixMilli(job.Scheduled)
 			if minScheduled.IsZero() || minScheduled.After(scheduled) {
 				minScheduled = scheduled

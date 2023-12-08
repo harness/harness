@@ -21,10 +21,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/pubsub"
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -34,7 +31,7 @@ import (
 type Executor struct {
 	handlerMap      map[string]Handler
 	handlerComplete bool
-	store           store.JobStore
+	store           Store
 	publisher       pubsub.Publisher
 }
 
@@ -56,11 +53,11 @@ type Handler interface {
 var errNoHandlerDefined = errors.New("no handler registered for the job type")
 
 // NewExecutor creates new Executor.
-func NewExecutor(jobStore store.JobStore, publisher pubsub.Publisher) *Executor {
+func NewExecutor(store Store, publisher pubsub.Publisher) *Executor {
 	return &Executor{
 		handlerMap:      make(map[string]Handler),
 		handlerComplete: false,
-		store:           jobStore,
+		store:           store,
 		publisher:       publisher,
 	}
 }
@@ -124,19 +121,19 @@ func (e *Executor) exec(
 			return errors.New("progress must be between 0 and 100")
 		}
 
-		jobDummy := &types.Job{
+		jobDummy := &Job{
 			UID:         jobUID,
 			Type:        jobType,
 			Updated:     time.Now().UnixMilli(),
 			Result:      result,
-			State:       enum.JobStateRunning,
+			State:       JobStateRunning,
 			RunProgress: progress,
 		}
 
 		// This doesn't need to be behind the global lock because it only updates the single row.
 		// While a job is running no other process should touch it.
 		// Even this call will fail if the context deadline has been exceeded.
-		// The job parameter is a dummy types.Job object that just holds fields that should be updated.
+		// The job parameter is a dummy Job object that just holds fields that should be updated.
 		if err := e.store.UpdateProgress(ctx, jobDummy); err != nil {
 			return err
 		}
@@ -152,9 +149,9 @@ func (e *Executor) exec(
 	return exec.Handle(ctx, input, progressReporter) // runs the job
 }
 
-func FailProgress() types.JobProgress {
-	return types.JobProgress{
-		State:    enum.JobStateFailed,
+func FailProgress() Progress {
+	return Progress{
+		State:    JobStateFailed,
 		Progress: ProgressMax,
 		Result:   "",
 		Failure:  "",

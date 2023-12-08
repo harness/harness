@@ -478,49 +478,6 @@ type (
 		// Delete removes a required status checks for a repo.
 		Delete(ctx context.Context, repoID, reqCheckID int64) error
 	}
-
-	JobStore interface {
-		// Find fetches a job by its unique identifier.
-		Find(ctx context.Context, uid string) (*types.Job, error)
-
-		// ListByGroupID fetches all jobs for a group id
-		ListByGroupID(ctx context.Context, groupID string) ([]*types.Job, error)
-
-		// DeleteByGroupID deletes all jobs for a group id
-		DeleteByGroupID(ctx context.Context, groupID string) (int64, error)
-
-		// Create is used to create a new job.
-		Create(ctx context.Context, job *types.Job) error
-
-		// Upsert will insert the job in the database if the job didn't already exist,
-		// or it will update the existing one but only if its definition has changed.
-		Upsert(ctx context.Context, job *types.Job) error
-
-		// UpdateDefinition is used to update a job definition.
-		UpdateDefinition(ctx context.Context, job *types.Job) error
-
-		// UpdateExecution is used to update a job before and after execution.
-		UpdateExecution(ctx context.Context, job *types.Job) error
-
-		// UpdateProgress is used to update a job progress data.
-		UpdateProgress(ctx context.Context, job *types.Job) error
-
-		// CountRunning returns number of jobs that are currently being run.
-		CountRunning(ctx context.Context) (int, error)
-
-		// ListReady returns a list of jobs that are ready for execution.
-		ListReady(ctx context.Context, now time.Time, limit int) ([]*types.Job, error)
-
-		// ListDeadlineExceeded returns a list of jobs that have exceeded their execution deadline.
-		ListDeadlineExceeded(ctx context.Context, now time.Time) ([]*types.Job, error)
-
-		// NextScheduledTime returns a scheduled time of the next ready job.
-		NextScheduledTime(ctx context.Context, now time.Time) (time.Time, error)
-
-		// DeleteOld removes non-recurring jobs that have finished execution or have failed.
-		DeleteOld(ctx context.Context, olderThan time.Time) (int64, error)
-	}
-
 	PipelineStore interface {
 		// Find returns a pipeline given a pipeline ID from the datastore.
 		Find(ctx context.Context, id int64) (*types.Pipeline, error)

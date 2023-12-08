@@ -21,17 +21,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/job"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
 )
 
-var _ store.JobStore = (*JobStore)(nil)
+var _ job.Store = (*JobStore)(nil)
 
 func NewJobStore(db *sqlx.DB) *JobStore {
 	return &JobStore{
@@ -73,13 +72,13 @@ const (
 )
 
 // Find fetches a job by its unique identifier.
-func (s *JobStore) Find(ctx context.Context, uid string) (*types.Job, error) {
+func (s *JobStore) Find(ctx context.Context, uid string) (*job.Job, error) {
 	const sqlQuery = jobSelectBase + `
 	WHERE job_uid = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	result := &types.Job{}
+	result := &job.Job{}
 	if err := db.GetContext(ctx, result, sqlQuery, uid); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find job by uid")
 	}
@@ -114,13 +113,13 @@ func (s *JobStore) DeleteByGroupID(ctx context.Context, groupID string) (int64, 
 }
 
 // ListByGroupID fetches all jobs for a group id.
-func (s *JobStore) ListByGroupID(ctx context.Context, groupID string) ([]*types.Job, error) {
+func (s *JobStore) ListByGroupID(ctx context.Context, groupID string) ([]*job.Job, error) {
 	const sqlQuery = jobSelectBase + `
 	WHERE job_group_id = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := make([]*types.Job, 0)
+	dst := make([]*job.Job, 0)
 	if err := db.SelectContext(ctx, &dst, sqlQuery, groupID); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find job by group id")
 	}
@@ -129,7 +128,7 @@ func (s *JobStore) ListByGroupID(ctx context.Context, groupID string) ([]*types.
 }
 
 // Create creates a new job.
-func (s *JobStore) Create(ctx context.Context, job *types.Job) error {
+func (s *JobStore) Create(ctx context.Context, job *job.Job) error {
 	const sqlQuery = `
 		INSERT INTO jobs (` + jobColumns + `
 		) VALUES (
@@ -172,7 +171,7 @@ func (s *JobStore) Create(ctx context.Context, job *types.Job) error {
 
 // Upsert creates or updates a job. If the job didn't exist it will insert it in the database,
 // otherwise it will update it but only if its definition has changed.
-func (s *JobStore) Upsert(ctx context.Context, job *types.Job) error {
+func (s *JobStore) Upsert(ctx context.Context, job *job.Job) error {
 	const sqlQuery = `
 		INSERT INTO jobs (` + jobColumns + `
 		) VALUES (
@@ -235,7 +234,7 @@ func (s *JobStore) Upsert(ctx context.Context, job *types.Job) error {
 }
 
 // UpdateDefinition is used to update a job definition.
-func (s *JobStore) UpdateDefinition(ctx context.Context, job *types.Job) error {
+func (s *JobStore) UpdateDefinition(ctx context.Context, job *job.Job) error {
 	const sqlQuery = `
 	UPDATE jobs
 	SET
@@ -278,7 +277,7 @@ func (s *JobStore) UpdateDefinition(ctx context.Context, job *types.Job) error {
 }
 
 // UpdateExecution is used to update a job before and after execution.
-func (s *JobStore) UpdateExecution(ctx context.Context, job *types.Job) error {
+func (s *JobStore) UpdateExecution(ctx context.Context, job *job.Job) error {
 	const sqlQuery = `
 	UPDATE jobs
 	SET
@@ -318,7 +317,7 @@ func (s *JobStore) UpdateExecution(ctx context.Context, job *types.Job) error {
 	return nil
 }
 
-func (s *JobStore) UpdateProgress(ctx context.Context, job *types.Job) error {
+func (s *JobStore) UpdateProgress(ctx context.Context, job *job.Job) error {
 	const sqlQuery = `
 	UPDATE jobs
 	SET
@@ -376,7 +375,7 @@ func (s *JobStore) CountRunning(ctx context.Context) (int, error) {
 
 // ListReady returns a list of jobs that are ready for execution:
 // The jobs with state="scheduled" and scheduled time in the past.
-func (s *JobStore) ListReady(ctx context.Context, now time.Time, limit int) ([]*types.Job, error) {
+func (s *JobStore) ListReady(ctx context.Context, now time.Time, limit int) ([]*job.Job, error) {
 	stmt := database.Builder.
 		Select(jobColumns).
 		From("jobs").
@@ -390,7 +389,7 @@ func (s *JobStore) ListReady(ctx context.Context, now time.Time, limit int) ([]*
 		return nil, fmt.Errorf("failed to convert list scheduled jobs query to sql: %w", err)
 	}
 
-	result := make([]*types.Job, 0)
+	result := make([]*job.Job, 0)
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -402,7 +401,7 @@ func (s *JobStore) ListReady(ctx context.Context, now time.Time, limit int) ([]*
 }
 
 // ListDeadlineExceeded returns a list of jobs that have exceeded their execution deadline.
-func (s *JobStore) ListDeadlineExceeded(ctx context.Context, now time.Time) ([]*types.Job, error) {
+func (s *JobStore) ListDeadlineExceeded(ctx context.Context, now time.Time) ([]*job.Job, error) {
 	stmt := database.Builder.
 		Select(jobColumns).
 		From("jobs").
@@ -415,7 +414,7 @@ func (s *JobStore) ListDeadlineExceeded(ctx context.Context, now time.Time) ([]*
 		return nil, fmt.Errorf("failed to convert list overdue jobs query to sql: %w", err)
 	}
 
-	result := make([]*types.Job, 0)
+	result := make([]*job.Job, 0)
 
 	db := dbtx.GetAccessor(ctx, s.db)
 

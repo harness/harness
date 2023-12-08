@@ -17,9 +17,6 @@ package job
 import (
 	"errors"
 	"time"
-
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
 type Definition struct {
@@ -50,19 +47,19 @@ func (def *Definition) Validate() error {
 	return nil
 }
 
-func (def *Definition) toNewJob() *types.Job {
+func (def *Definition) toNewJob() *Job {
 	nowMilli := time.Now().UnixMilli()
-	return &types.Job{
+	return &Job{
 		UID:                 def.UID,
 		Created:             nowMilli,
 		Updated:             nowMilli,
 		Type:                def.Type,
-		Priority:            enum.JobPriorityNormal,
+		Priority:            JobPriorityNormal,
 		Data:                def.Data,
 		Result:              "",
 		MaxDurationSeconds:  int(def.Timeout / time.Second),
 		MaxRetries:          def.MaxRetries,
-		State:               enum.JobStateScheduled,
+		State:               JobStateScheduled,
 		Scheduled:           nowMilli,
 		TotalExecutions:     0,
 		RunBy:               "",

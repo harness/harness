@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/job"
 )
 
 type Config struct {

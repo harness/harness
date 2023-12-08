@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/pubsub"
-	"github.com/harness/gitness/types"
 )
 
 const (
@@ -29,8 +28,8 @@ const (
 	PubSubTopicStateChange = "gitness:job:state_change"
 )
 
-func encodeStateChange(job *types.Job) ([]byte, error) {
-	stateChange := &types.JobStateChange{
+func encodeStateChange(job *Job) ([]byte, error) {
+	stateChange := &StateChange{
 		UID:      job.UID,
 		Type:     job.Type,
 		State:    job.State,
@@ -47,8 +46,8 @@ func encodeStateChange(job *types.Job) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func DecodeStateChange(payload []byte) (*types.JobStateChange, error) {
-	stateChange := &types.JobStateChange{}
+func DecodeStateChange(payload []byte) (*StateChange, error) {
+	stateChange := &StateChange{}
 	if err := gob.NewDecoder(bytes.NewReader(payload)).Decode(stateChange); err != nil {
 		return nil, err
 	}
@@ -56,15 +55,15 @@ func DecodeStateChange(payload []byte) (*types.JobStateChange, error) {
 	return stateChange, nil
 }
 
-func publishStateChange(ctx context.Context, publisher pubsub.Publisher, job *types.Job) error {
+func publishStateChange(ctx context.Context, publisher pubsub.Publisher, job *Job) error {
 	payload, err := encodeStateChange(job)
 	if err != nil {
-		return fmt.Errorf("failed to gob encode JobStateChange: %w", err)
+		return fmt.Errorf("failed to gob encode StateChange: %w", err)
 	}
 
 	err = publisher.Publish(ctx, PubSubTopicStateChange, payload)
 	if err != nil {
-		return fmt.Errorf("failed to publish JobStateChange: %w", err)
+		return fmt.Errorf("failed to publish StateChange: %w", err)
 	}
 
 	return nil

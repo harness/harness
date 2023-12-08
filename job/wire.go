@@ -15,7 +15,6 @@
 package job
 
 import (
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
@@ -29,24 +28,24 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideExecutor(
-	jobStore store.JobStore,
+	store Store,
 	pubsubService pubsub.PubSub,
 ) *Executor {
 	return NewExecutor(
-		jobStore,
+		store,
 		pubsubService,
 	)
 }
 
 func ProvideScheduler(
-	jobStore store.JobStore,
+	store Store,
 	executor *Executor,
 	mutexManager lock.MutexManager,
 	pubsubService pubsub.PubSub,
 	config *types.Config,
 ) (*Scheduler, error) {
 	return NewScheduler(
-		jobStore,
+		store,
 		executor,
 		mutexManager,
 		pubsubService,

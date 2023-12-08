@@ -16,13 +16,13 @@ package services
 
 import (
 	"github.com/harness/gitness/app/services/cleanup"
-	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
+	"github.com/harness/gitness/job"
 
 	"github.com/google/wire"
 )

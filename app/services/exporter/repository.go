@@ -25,12 +25,12 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/controller/repo"
-	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -146,7 +146,7 @@ func (r *Repository) RunManyForSpace(
 	return r.scheduler.RunJobs(ctx, jobGroupID, jobDefinitions)
 }
 
-func checkJobAlreadyRunning(jobs []types.JobProgress) error {
+func checkJobAlreadyRunning(jobs []job.Progress) error {
 	if jobs == nil {
 		return nil
 	}
@@ -251,7 +251,7 @@ func (r *Repository) getJobInput(data string) (Input, error) {
 	return input, nil
 }
 
-func (r *Repository) GetProgressForSpace(ctx context.Context, spaceID int64) ([]types.JobProgress, error) {
+func (r *Repository) GetProgressForSpace(ctx context.Context, spaceID int64) ([]job.Progress, error) {
 	groupID := getJobGroupID(spaceID)
 	progress, err := r.scheduler.GetJobProgressForGroup(ctx, groupID)
 	if err != nil {

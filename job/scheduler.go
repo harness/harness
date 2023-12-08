@@ -22,11 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/gorhill/cronexpr"
 	"github.com/rs/zerolog/log"
@@ -35,7 +32,7 @@ import (
 // Scheduler controls execution of background jobs.
 type Scheduler struct {
 	// dependencies
-	store         store.JobStore
+	store         Store
 	executor      *Executor
 	mxManager     lock.MutexManager
 	pubsubService pubsub.PubSub
@@ -54,7 +51,7 @@ type Scheduler struct {
 }
 
 func NewScheduler(
-	jobStore store.JobStore,
+	store Store,
 	executor *Executor,
 	mxManager lock.MutexManager,
 	pubsubService pubsub.PubSub,
@@ -66,7 +63,7 @@ func NewScheduler(
 		maxRunning = 1
 	}
 	return &Scheduler{
-		store:         jobStore,
+		store:         store,
 		executor:      executor,
 		mxManager:     mxManager,
 		pubsubService: pubsubService,
@@ -210,14 +207,14 @@ func (s *Scheduler) CancelJob(ctx context.Context, jobUID string) error {
 		return errors.New("can't cancel recurring jobs")
 	}
 
-	if job.State != enum.JobStateScheduled && job.State != enum.JobStateRunning {
+	if job.State != JobStateScheduled && job.State != JobStateRunning {
 		return nil // return no error if the job is already canceled or has finished or failed.
 	}
 
 	// first we update the job in the database...
 
 	job.Updated = time.Now().UnixMilli()
-	job.State = enum.JobStateCanceled
+	job.State = JobStateCanceled
 
 	err = s.store.UpdateExecution(ctx, job)
 	if err != nil {
@@ -299,7 +296,7 @@ func (s *Scheduler) RunJobs(ctx context.Context, groupID string, defs []Definiti
 		return nil
 	}
 
-	jobs := make([]*types.Job, len(defs))
+	jobs := make([]*Job, len(defs))
 	for i, def := range defs {
 		if err := def.Validate(); err != nil {
 			return err
@@ -416,7 +413,7 @@ func (s *Scheduler) availableSlots(ctx context.Context) (int, error) {
 
 // runJob updates the job in the database and starts it in a separate goroutine.
 // The function will also log the execution.
-func (s *Scheduler) runJob(ctx context.Context, j *types.Job) {
+func (s *Scheduler) runJob(ctx context.Context, j *Job) {
 	s.wgRunning.Add(1)
 	go func(ctx context.Context,
 		jobUID, jobType, jobData string,
@@ -474,19 +471,19 @@ func (s *Scheduler) runJob(ctx context.Context, j *types.Job) {
 		}
 
 		switch job.State {
-		case enum.JobStateFinished:
+		case JobStateFinished:
 			logInfo.Msg("job successfully finished")
 			s.scheduleIfHaveMoreJobs()
 
-		case enum.JobStateFailed:
+		case JobStateFailed:
 			logInfo.Msg("job failed")
 			s.scheduleIfHaveMoreJobs()
 
-		case enum.JobStateCanceled:
+		case JobStateCanceled:
 			log.Ctx(ctx).Error().Msg("job canceled")
 			s.scheduleIfHaveMoreJobs()
 
-		case enum.JobStateScheduled:
+		case JobStateScheduled:
 			scheduledTime := time.UnixMilli(job.Scheduled)
 			logInfo.
 				Str("job.Scheduled", scheduledTime.Format(time.RFC3339Nano)).
@@ -494,7 +491,7 @@ func (s *Scheduler) runJob(ctx context.Context, j *types.Job) {
 
 			s.scheduleProcessing(scheduledTime)
 
-		case enum.JobStateRunning:
+		case JobStateRunning:
 			log.Ctx(ctx).Error().Msg("should not happen; job still has state=running after finishing")
 		}
 
@@ -505,8 +502,8 @@ func (s *Scheduler) runJob(ctx context.Context, j *types.Job) {
 	}(ctx, j.UID, j.Type, j.Data, j.RunDeadline)
 }
 
-// preExec updates the provided types.Job before execution.
-func (s *Scheduler) preExec(job *types.Job) {
+// preExec updates the provided Job before execution.
+func (s *Scheduler) preExec(job *Job) {
 	if job.MaxDurationSeconds < 1 {
 		job.MaxDurationSeconds = 1
 	}
@@ -519,7 +516,7 @@ func (s *Scheduler) preExec(job *types.Job) {
 
 	job.Updated = nowMilli
 	job.LastExecuted = nowMilli
-	job.State = enum.JobStateRunning
+	job.State = JobStateRunning
 	job.RunDeadline = execDeadline.UnixMilli()
 	job.RunBy = s.instanceID
 	job.RunProgress = ProgressMin
@@ -528,7 +525,7 @@ func (s *Scheduler) preExec(job *types.Job) {
 	job.LastFailureError = ""
 }
 
-// doExec executes the provided types.Job.
+// doExec executes the provided Job.
 func (s *Scheduler) doExec(ctx context.Context,
 	jobUID, jobType, jobData string,
 	jobRunDeadline int64,
@@ -561,14 +558,14 @@ func (s *Scheduler) doExec(ctx context.Context,
 	return
 }
 
-// postExec updates the provided types.Job after execution and reschedules it if necessary.
+// postExec updates the provided Job after execution and reschedules it if necessary.
 //
 //nolint:gocognit // refactor if needed.
-func postExec(job *types.Job, resultData, resultErr string) {
+func postExec(job *Job, resultData, resultErr string) {
 	// Proceed with the update of the job if it's in the running state or
 	// if it's marked as canceled but has succeeded nonetheless.
 	// Other states should not happen, but if they do, just leave the job as it is.
-	if job.State != enum.JobStateRunning && (job.State != enum.JobStateCanceled || resultErr != "") {
+	if job.State != JobStateRunning && (job.State != JobStateCanceled || resultErr != "") {
 		return
 	}
 
@@ -581,10 +578,10 @@ func postExec(job *types.Job, resultData, resultErr string) {
 
 	if resultErr != "" {
 		job.ConsecutiveFailures++
-		job.State = enum.JobStateFailed
+		job.State = JobStateFailed
 		job.LastFailureError = resultErr
 	} else {
-		job.State = enum.JobStateFinished
+		job.State = JobStateFinished
 		job.RunProgress = ProgressMax
 	}
 
@@ -597,7 +594,7 @@ func postExec(job *types.Job, resultData, resultErr string) {
 
 		exp, err := cronexpr.Parse(job.RecurringCron)
 		if err != nil {
-			job.State = enum.JobStateFailed
+			job.State = JobStateFailed
 
 			messages := fmt.Sprintf("failed to parse cron string: %s", err.Error())
 			if job.LastFailureError != "" {
@@ -606,7 +603,7 @@ func postExec(job *types.Job, resultData, resultErr string) {
 
 			job.LastFailureError = messages
 		} else {
-			job.State = enum.JobStateScheduled
+			job.State = JobStateScheduled
 			job.Scheduled = exp.Next(now).UnixMilli()
 		}
 
@@ -614,24 +611,24 @@ func postExec(job *types.Job, resultData, resultErr string) {
 	}
 
 	// Reschedule the failed job if retrying is allowed
-	if job.State == enum.JobStateFailed && job.ConsecutiveFailures <= job.MaxRetries {
+	if job.State == JobStateFailed && job.ConsecutiveFailures <= job.MaxRetries {
 		const retryDelay = 15 * time.Second
-		job.State = enum.JobStateScheduled
+		job.State = JobStateScheduled
 		job.Scheduled = now.Add(retryDelay).UnixMilli()
 		job.RunProgress = ProgressMin
 	}
 }
 
-func (s *Scheduler) GetJobProgress(ctx context.Context, jobUID string) (types.JobProgress, error) {
+func (s *Scheduler) GetJobProgress(ctx context.Context, jobUID string) (Progress, error) {
 	job, err := s.store.Find(ctx, jobUID)
 	if err != nil {
-		return types.JobProgress{}, err
+		return Progress{}, err
 	}
 
 	return mapToProgress(job), nil
 }
 
-func (s *Scheduler) GetJobProgressForGroup(ctx context.Context, jobGroupUID string) ([]types.JobProgress, error) {
+func (s *Scheduler) GetJobProgressForGroup(ctx context.Context, jobGroupUID string) ([]Progress, error) {
 	job, err := s.store.ListByGroupID(ctx, jobGroupUID)
 	if err != nil {
 		return nil, err
@@ -647,19 +644,19 @@ func (s *Scheduler) PurgeJobsByGroupID(ctx context.Context, jobGroupID string) (
 	return n, nil
 }
 
-func mapToProgressMany(jobs []*types.Job) []types.JobProgress {
+func mapToProgressMany(jobs []*Job) []Progress {
 	if jobs == nil {
 		return nil
 	}
-	j := make([]types.JobProgress, len(jobs))
+	j := make([]Progress, len(jobs))
 	for i, job := range jobs {
 		j[i] = mapToProgress(job)
 	}
 	return j
 }
 
-func mapToProgress(job *types.Job) types.JobProgress {
-	return types.JobProgress{
+func mapToProgress(job *Job) Progress {
+	return Progress{
 		State:    job.State,
 		Progress: job.RunProgress,
 		Result:   job.Result,
@@ -684,17 +681,17 @@ func (s *Scheduler) AddRecurring(
 
 	nextExec := cronExp.Next(now)
 
-	job := &types.Job{
+	job := &Job{
 		UID:                 jobUID,
 		Created:             nowMilli,
 		Updated:             nowMilli,
 		Type:                jobType,
-		Priority:            enum.JobPriorityElevated,
+		Priority:            JobPriorityElevated,
 		Data:                "",
 		Result:              "",
 		MaxDurationSeconds:  int(maxDur / time.Second),
 		MaxRetries:          0,
-		State:               enum.JobStateScheduled,
+		State:               JobStateScheduled,
 		Scheduled:           nextExec.UnixMilli(),
 		TotalExecutions:     0,
 		RunBy:               "",

@@ -19,6 +19,7 @@ import (
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/store/database/migrate"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/store/database"
 
 	"github.com/google/wire"
@@ -120,7 +121,7 @@ func ProvideRuleStore(
 }
 
 // ProvideJobStore provides a job store.
-func ProvideJobStore(db *sqlx.DB) store.JobStore {
+func ProvideJobStore(db *sqlx.DB) job.Store {
 	return NewJobStore(db)
 }
 

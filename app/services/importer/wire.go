@@ -15,13 +15,13 @@
 package importer
 
 import (
-	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 

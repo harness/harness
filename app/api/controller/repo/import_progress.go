@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -31,23 +31,23 @@ import (
 func (c *Controller) ImportProgress(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-) (types.JobProgress, error) {
+) (job.Progress, error) {
 	// note: can't use c.getRepoCheckAccess because this needs to fetch a repo being imported.
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return types.JobProgress{}, err
+		return job.Progress{}, err
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return types.JobProgress{}, err
+		return job.Progress{}, err
 	}
 
 	progress, err := c.importer.GetProgress(ctx, repo)
 	if errors.Is(err, importer.ErrNotFound) {
-		return types.JobProgress{}, usererror.NotFound("No recent or ongoing import found for repository.")
+		return job.Progress{}, usererror.NotFound("No recent or ongoing import found for repository.")
 	}
 	if err != nil {
-		return types.JobProgress{}, fmt.Errorf("failed to retrieve import progress: %w", err)
+		return job.Progress{}, fmt.Errorf("failed to retrieve import progress: %w", err)
 	}
 
 	return progress, err
