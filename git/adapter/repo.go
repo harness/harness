@@ -25,6 +25,7 @@ import (
 
 	gitea "code.gitea.io/gitea/modules/git"
 	"code.gitea.io/gitea/modules/util"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -259,26 +260,10 @@ func (a Adapter) Commit(
 	return nil
 }
 
-func (a Adapter) Push(
-	ctx context.Context,
-	repoPath string,
-	opts types.PushOptions,
-) error {
-	if repoPath == "" {
-		return ErrRepositoryPathEmpty
-	}
-	err := Push(ctx, repoPath, opts)
-	if err != nil {
-		return processGiteaErrorf(err, "failed to push changes")
-	}
-
-	return nil
-}
-
 // Push pushs local commits to given remote branch.
 // NOTE: Modification of gitea implementation that supports --force-with-lease.
 // TODOD: return our own error types and move to above adapter.Push method
-func Push(
+func (a Adapter) Push(
 	ctx context.Context,
 	repoPath string,
 	opts types.PushOptions,
@@ -306,25 +291,30 @@ func Push(
 	}
 
 	// remove credentials if there are any
-	logRemote := opts.Remote
-	if strings.Contains(logRemote, "://") && strings.Contains(logRemote, "@") {
-		logRemote = util.SanitizeCredentialURLs(logRemote)
+	if strings.Contains(opts.Remote, "://") && strings.Contains(opts.Remote, "@") {
+		opts.Remote = util.SanitizeCredentialURLs(opts.Remote)
 	}
-	cmd.SetDescription(
-		fmt.Sprintf(
-			"pushing %s to %s (Force: %t, ForceWithLease: %s)",
-			opts.Branch,
-			logRemote,
-			opts.Force,
-			opts.ForceWithLease,
-		),
-	)
-	var outbuf, errbuf strings.Builder
 
 	if opts.Timeout == 0 {
 		opts.Timeout = -1
 	}
 
+	if a.traceGit {
+		// create copy to not modify original underlying array
+		opts.Env = append([]string{gitTrace + "=true"}, opts.Env...)
+	}
+
+	cmd.SetDescription(
+		fmt.Sprintf(
+			"pushing %s to %s (Force: %t, ForceWithLease: %s)",
+			opts.Branch,
+			opts.Remote,
+			opts.Force,
+			opts.ForceWithLease,
+		),
+	)
+
+	var outbuf, errbuf strings.Builder
 	err := cmd.Run(&gitea.RunOpts{
 		Env:     opts.Env,
 		Timeout: opts.Timeout,
@@ -332,6 +322,14 @@ func Push(
 		Stdout:  &outbuf,
 		Stderr:  &errbuf,
 	})
+
+	if a.traceGit {
+		log.Ctx(ctx).Trace().
+			Str("git", "push").
+			Err(err).
+			Msgf("IN:\n%#v\n\nSTDOUT:\n%s\n\nSTDERR:\n%s", opts, outbuf.String(), errbuf.String())
+	}
+
 	if err != nil {
 		switch {
 		case strings.Contains(errbuf.String(), "non-fast-forward"):
@@ -364,5 +362,5 @@ func Push(
 		return fmt.Errorf("%w - %s", err, errbuf.String())
 	}
 
-	return err
+	return processGiteaErrorf(err, "failed to push changes")
 }

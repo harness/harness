@@ -19,32 +19,10 @@ import (
 
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/events"
+	gitenum "github.com/harness/gitness/git/types/enum"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 )
-
-// LastCommitCache holds configuration options for the last commit cache.
-type LastCommitCache struct {
-	// Mode determines where the cache will be. Valid values are "inmemory" (default), "redis" or "none".
-	Mode string `envconfig:"GITNESS_GIT_LAST_COMMIT_CACHE_MODE" default:"inmemory"`
-
-	// Duration defines cache duration of last commit.
-	Duration time.Duration `envconfig:"GITNESS_GIT_LAST_COMMIT_CACHE_DURATION" default:"12h"`
-}
-
-// Git defines the git configuration parameters.
-type Git struct {
-	DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
-	// GitRoot specifies the directory containing git related data (e.g. repos, ...)
-	Root string `envconfig:"GITNESS_GIT_ROOT"`
-	// TmpDir (optional) specifies the directory for temporary data (e.g. repo clones, ...)
-	TmpDir string `envconfig:"GITNESS_GIT_TMP_DIR"`
-	// GitHookPath points to the binary used as git server hook.
-	HookPath string `envconfig:"GITNESS_GIT_HOOK_PATH"`
-
-	// LastCommitCache holds configuration options for the last commit cache.
-	LastCommitCache LastCommitCache
-}
 
 // Config stores the system configuration.
 type Config struct {
@@ -108,7 +86,28 @@ type Config struct {
 	}
 
 	// Git defines the git configuration parameters
-	Git Git
+	Git struct {
+		// Trace specifies whether git operations should be traces.
+		// NOTE: Currently limited to 'push' operation until we move to internal command package.
+		Trace bool `envconfig:"GITNESS_GIT_TRACE"`
+		// DefaultBranch specifies the default branch for new repositories.
+		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
+		// Root specifies the directory containing git related data (e.g. repos, ...)
+		Root string `envconfig:"GITNESS_GIT_ROOT"`
+		// TmpDir (optional) specifies the directory for temporary data (e.g. repo clones, ...)
+		TmpDir string `envconfig:"GITNESS_GIT_TMP_DIR"`
+		// HookPath points to the binary used as git server hook.
+		HookPath string `envconfig:"GITNESS_GIT_HOOK_PATH"`
+
+		// LastCommitCache holds configuration options for the last commit cache.
+		LastCommitCache struct {
+			// Mode determines where the cache will be. Valid values are "inmemory" (default), "redis" or "none".
+			Mode gitenum.LastCommitCacheMode `envconfig:"GITNESS_GIT_LAST_COMMIT_CACHE_MODE" default:"inmemory"`
+
+			// Duration defines cache duration of last commit.
+			Duration time.Duration `envconfig:"GITNESS_GIT_LAST_COMMIT_CACHE_DURATION" default:"12h"`
+		}
+	}
 
 	// Encrypter defines the parameters for the encrypter
 	Encrypter struct {

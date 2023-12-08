@@ -43,7 +43,11 @@ func NewInMemoryLastCommitCache(
 func NewRedisLastCommitCache(
 	redisClient redis.UniversalClient,
 	cacheDuration time.Duration,
-) cache.Cache[CommitEntryKey, *types.Commit] {
+) (cache.Cache[CommitEntryKey, *types.Commit], error) {
+	if redisClient == nil {
+		return nil, errors.New("unable to create redis based LastCommitCache as redis client is nil")
+	}
+
 	return cache.NewRedis[CommitEntryKey, *types.Commit](
 		redisClient,
 		commitEntryGetter{},
@@ -53,7 +57,7 @@ func NewRedisLastCommitCache(
 			return "last_commit:" + hex.EncodeToString(h.Sum(nil))
 		},
 		commitValueCodec{},
-		cacheDuration)
+		cacheDuration), nil
 }
 
 func NoLastCommitCache() cache.Cache[CommitEntryKey, *types.Commit] {

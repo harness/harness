@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -120,6 +121,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		repoevents.WireSet,
 		storage.WireSet,
 		adapter.WireSet,
+		cliserver.ProvideGitConfig,
 		git.WireSet,
 		store.WireSet,
 		check.WireSet,

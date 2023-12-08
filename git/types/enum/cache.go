@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package adapter
+package enum
+
+// LastCommitCacheMode specifies the type of the cache used for caching last commit information.
+type LastCommitCacheMode string
 
 const (
-	gitTrace          = "GIT_TRACE"
-	gitCommitterEmail = "GIT_COMMITTER_EMAIL"
-	gitCommitterName  = "GIT_COMMITTER_NAME"
-	gitCommitterDate  = "GIT_COMMITTER_DATE"
+	LastCommitCacheModeInMemory LastCommitCacheMode = "inmemory"
+	LastCommitCacheModeRedis    LastCommitCacheMode = "redis"
+	LastCommitCacheModeNone     LastCommitCacheMode = "none"
 )

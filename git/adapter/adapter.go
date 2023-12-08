@@ -25,11 +25,13 @@ import (
 )
 
 type Adapter struct {
+	traceGit        bool
 	repoProvider    *GoGitRepoProvider
 	lastCommitCache cache.Cache[CommitEntryKey, *types.Commit]
 }
 
 func New(
+	config types.Config,
 	repoProvider *GoGitRepoProvider,
 	lastCommitCache cache.Cache[CommitEntryKey, *types.Commit],
 ) (Adapter, error) {
@@ -42,6 +44,7 @@ func New(
 	}
 
 	return Adapter{
+		traceGit:        config.Trace,
 		repoProvider:    repoProvider,
 		lastCommitCache: lastCommitCache,
 	}, nil

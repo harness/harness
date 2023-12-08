@@ -20,9 +20,10 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/harness/gitness/git/adapter"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
 )
@@ -43,14 +44,11 @@ var (
 
 func setupGit(t *testing.T) adapter.Adapter {
 	t.Helper()
-	config := &types.Config{}
 	gogitProvider := adapter.ProvideGoGitRepoProvider()
 	git, err := adapter.New(
+		types.Config{Trace: true},
 		gogitProvider,
-		adapter.ProvideLastCommitCache(
-			config,
-			nil,
-		),
+		adapter.NewInMemoryLastCommitCache(5*time.Minute),
 	)
 	if err != nil {
 		t.Fatalf("error initializing repository: %v", err)
