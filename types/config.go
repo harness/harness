@@ -19,7 +19,7 @@ import (
 
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/events"
-	gitenum "github.com/harness/gitness/git/types/enum"
+	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 )

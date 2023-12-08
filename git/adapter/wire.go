@@ -19,8 +19,8 @@ import (
 	"time"
 
 	"github.com/harness/gitness/cache"
+	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/types"
-	"github.com/harness/gitness/git/types/enum"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
