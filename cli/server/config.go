@@ -68,6 +68,32 @@ func LoadConfig() (*types.Config, error) {
 		return nil, fmt.Errorf("failed to backfil urls: %w", err)
 	}
 
+	if config.Git.HookPath == "" {
+		executablePath, err := os.Executable()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get path of current executable: %w", err)
+		}
+
+		config.Git.HookPath = executablePath
+	}
+
+	if config.Git.Root == "" {
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+
+		newPath := filepath.Join(homedir, gitnessHomeDir)
+		config.Git.Root = newPath
+
+		oldPath := filepath.Join(homedir, ".gitrpc")
+		if _, err := os.Stat(oldPath); err == nil {
+			if err := os.Rename(oldPath, newPath); err != nil {
+				config.Git.Root = oldPath
+			}
+		}
+	}
+
 	return config, nil
 }
 
@@ -234,8 +260,8 @@ func ProvideBlobStoreConfig(config *types.Config) (blob.Config, error) {
 }
 
 // ProvideGitConfig loads the git config from the main config.
-func ProvideGitConfig(config *types.Config) (gittypes.Config, error) {
-	gitConfig := gittypes.Config{
+func ProvideGitConfig(config *types.Config) gittypes.Config {
+	return gittypes.Config{
 		Trace:    config.Git.Trace,
 		Root:     config.Git.Root,
 		TmpDir:   config.Git.TmpDir,
@@ -245,34 +271,6 @@ func ProvideGitConfig(config *types.Config) (gittypes.Config, error) {
 			Duration: config.Git.LastCommitCache.Duration,
 		},
 	}
-
-	if gitConfig.HookPath == "" {
-		executablePath, err := os.Executable()
-		if err != nil {
-			return gittypes.Config{}, fmt.Errorf("failed to get path of current executable: %w", err)
-		}
-
-		gitConfig.HookPath = executablePath
-	}
-
-	if gitConfig.Root == "" {
-		homedir, err := os.UserHomeDir()
-		if err != nil {
-			return gittypes.Config{}, err
-		}
-
-		newPath := filepath.Join(homedir, gitnessHomeDir)
-		gitConfig.Root = newPath
-
-		oldPath := filepath.Join(homedir, ".gitrpc")
-		if _, err := os.Stat(oldPath); err == nil {
-			if err := os.Rename(oldPath, newPath); err != nil {
-				gitConfig.Root = oldPath
-			}
-		}
-	}
-
-	return gitConfig, nil
 }
 
 // ProvideEventsConfig loads the events config from the main config.

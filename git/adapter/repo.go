@@ -358,9 +358,14 @@ func (a Adapter) Push(
 		}
 	}
 
-	if errbuf.Len() > 0 && err != nil {
-		return fmt.Errorf("%w - %s", err, errbuf.String())
+	if err != nil {
+		// add commandline error output to error
+		if errbuf.Len() > 0 {
+			err = fmt.Errorf("%w\ncmd error output: %s", err, errbuf.String())
+		}
+
+		return processGiteaErrorf(err, "failed to push changes")
 	}
 
-	return processGiteaErrorf(err, "failed to push changes")
+	return nil
 }
