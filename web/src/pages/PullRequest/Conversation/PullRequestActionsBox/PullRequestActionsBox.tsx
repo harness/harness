@@ -61,6 +61,7 @@ import ReviewSplitButton from 'components/Changes/ReviewSplitButton/ReviewSplitB
 import RuleViolationAlertModal from 'components/RuleViolationAlertModal/RuleViolationAlertModal'
 import css from './PullRequestActionsBox.module.scss'
 
+const codeOwnersNotFoundMessage = 'CODEOWNERS file not found'
 const POLLING_INTERVAL = 60000
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
@@ -129,6 +130,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
             setRuleViolation(true)
             setRuleViolationArr(err)
             setAllowedStrats(err.allowed_methods)
+          } else if (getErrorMessage(err) === codeOwnersNotFoundMessage) {
+            return
           } else {
             showError(getErrorMessage(err))
           }
