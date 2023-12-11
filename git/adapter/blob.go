@@ -16,12 +16,13 @@ package adapter
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/types"
 
-	gogitplumbing "github.com/go-git/go-git/v5/plumbing"
+	"code.gitea.io/gitea/modules/git"
 )
 
 // GetBlob returns the blob for the given object sha.
@@ -31,58 +32,60 @@ func (a Adapter) GetBlob(
 	sha string,
 	sizeLimit int64,
 ) (*types.BlobReader, error) {
-	if repoPath == "" {
-		return nil, ErrRepositoryPathEmpty
-	}
-	repo, err := a.repoProvider.Get(ctx, repoPath)
+	stdIn, stdOut, cancel := git.CatFileBatch(ctx, repoPath)
+
+	_, err := stdIn.Write([]byte(sha + "\n"))
 	if err != nil {
-		return nil, errors.Internal("failed to open repository", err)
+		cancel()
+		return nil, fmt.Errorf("failed to write blob sha to git stdin: %w", err)
 	}
 
-	blob, err := repo.BlobObject(gogitplumbing.NewHash(sha))
+	objectSHA, objectType, objectSize, err := git.ReadBatchLine(stdOut)
 	if err != nil {
-		if errors.Is(err, gogitplumbing.ErrObjectNotFound) {
-			return nil, errors.NotFound("blob sha %s not found", sha)
-		}
-		return nil, errors.Internal("failed to get blob object for sha '%s'", sha, err)
+		cancel()
+		return nil, processGiteaErrorf(err, "failed to read cat-file batch line")
 	}
 
-	objectSize := blob.Size
+	if string(objectSHA) != sha {
+		cancel()
+		return nil, fmt.Errorf("cat-file returned object sha '%s' but expected '%s'", objectSHA, sha)
+	}
+	if objectType != string(git.ObjectBlob) {
+		cancel()
+		return nil, errors.InvalidArgument(
+			"cat-file returned object type '%s' but expected '%s'", objectType, git.ObjectBlob)
+	}
+
 	contentSize := objectSize
-	if sizeLimit > 0 && contentSize > sizeLimit {
+	if sizeLimit > 0 && sizeLimit < contentSize {
 		contentSize = sizeLimit
-	}
-
-	reader, err := blob.Reader()
-	if err != nil {
-		return nil, errors.Internal("failed to open blob object for sha '%s'", sha, err)
 	}
 
 	return &types.BlobReader{
 		SHA:         sha,
 		Size:        objectSize,
 		ContentSize: contentSize,
-		Content:     LimitReadCloser(reader, contentSize),
+		Content:     newLimitReaderCloser(stdOut, contentSize, cancel),
 	}, nil
 }
 
-func LimitReadCloser(r io.ReadCloser, n int64) io.ReadCloser {
-	return limitReadCloser{
-		r: io.LimitReader(r, n),
-		c: r,
+func newLimitReaderCloser(reader io.Reader, limit int64, stop func()) limitReaderCloser {
+	return limitReaderCloser{
+		reader: io.LimitReader(reader, limit),
+		stop:   stop,
 	}
 }
 
-// limitReadCloser implements io.ReadCloser interface.
-type limitReadCloser struct {
-	r io.Reader
-	c io.Closer
+type limitReaderCloser struct {
+	reader io.Reader
+	stop   func()
 }
 
-func (l limitReadCloser) Read(p []byte) (n int, err error) {
-	return l.r.Read(p)
+func (l limitReaderCloser) Read(p []byte) (n int, err error) {
+	return l.reader.Read(p)
 }
 
-func (l limitReadCloser) Close() error {
-	return l.c.Close()
+func (l limitReaderCloser) Close() error {
+	l.stop()
+	return nil
 }

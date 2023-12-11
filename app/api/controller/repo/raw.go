@@ -32,7 +32,7 @@ func (c *Controller) Raw(ctx context.Context,
 	repoRef string,
 	gitRef string,
 	repoPath string,
-) (io.Reader, int64, error) {
+) (io.ReadCloser, int64, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
 	if err != nil {
 		return nil, 0, err

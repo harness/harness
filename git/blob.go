@@ -17,8 +17,6 @@ package git
 import (
 	"context"
 	"io"
-
-	"github.com/rs/zerolog/log"
 )
 
 type GetBlobParams struct {
@@ -34,7 +32,7 @@ type GetBlobOutput struct {
 	// ContentSize is the total number of bytes returned by the Content Reader.
 	ContentSize int64
 	// Content contains the (partial) content of the blob.
-	Content io.Reader
+	Content io.ReadCloser
 }
 
 func (s *Service) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOutput, error) {
@@ -49,12 +47,6 @@ func (s *Service) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobO
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		dErr := reader.Content.Close()
-		if dErr != nil {
-			log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader.")
-		}
-	}()
 
 	return &GetBlobOutput{
 		SHA:         reader.SHA,

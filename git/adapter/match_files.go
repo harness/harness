@@ -16,93 +16,86 @@ package adapter
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"path"
 
 	"github.com/harness/gitness/git/types"
 
-	gogitobject "github.com/go-git/go-git/v5/plumbing/object"
+	gitea "code.gitea.io/gitea/modules/git"
 )
 
-// nolint:gocognit
+//nolint:gocognit
 func (a Adapter) MatchFiles(
 	ctx context.Context,
 	repoPath string,
-	ref string,
-	dirPath string,
+	rev string,
+	treePath string,
 	pattern string,
 	maxSize int,
 ) ([]types.FileContent, error) {
-	if repoPath == "" {
-		return nil, ErrRepositoryPathEmpty
-	}
-	_, refCommit, err := a.getGoGitCommit(ctx, repoPath, ref)
+	nodes, err := lsDirectory(ctx, repoPath, rev, treePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list files in match files: %w", err)
 	}
 
-	tree, err := refCommit.Tree()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get tree for the commit: %w", err)
-	}
-
-	if dirPath != "" {
-		tree, err = tree.Tree(dirPath)
-		if errors.Is(err, gogitobject.ErrDirectoryNotFound) {
-			return nil, &types.PathNotFoundError{Path: dirPath}
-		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to navigate to %s directory: %w", dirPath, err)
-		}
-	}
+	catFileWriter, catFileReader, catFileStop := gitea.CatFileBatch(ctx, repoPath)
+	defer catFileStop()
 
 	var files []types.FileContent
-	for i := range tree.Entries {
-		fileEntry := tree.Entries[i]
-		ok, err := path.Match(pattern, fileEntry.Name)
+	for i := range nodes {
+		if nodes[i].NodeType != types.TreeNodeTypeBlob {
+			continue
+		}
+
+		fileName := nodes[i].Name
+		ok, err := path.Match(pattern, fileName)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to match file name against pattern: %w", err)
 		}
 		if !ok {
 			continue
 		}
 
-		name := fileEntry.Name
-
-		f, err := tree.TreeEntryFile(&fileEntry)
+		_, err = catFileWriter.Write([]byte(nodes[i].Sha + "\n"))
 		if err != nil {
-			return nil, fmt.Errorf("failed to get tree entry file %s: %w", name, err)
+			return nil, fmt.Errorf("failed to ask for file content from cat file batch: %w", err)
 		}
 
-		reader, err := f.Reader()
+		_, _, size, err := gitea.ReadBatchLine(catFileReader)
 		if err != nil {
-			return nil, fmt.Errorf("failed to open tree entry file %s: %w", name, err)
+			return nil, fmt.Errorf("failed to read cat-file batch header: %w", err)
 		}
 
-		filePath := path.Join(dirPath, name)
+		reader := io.LimitReader(catFileReader, size+1) // plus eol
 
-		content, err := func(r io.ReadCloser) ([]byte, error) {
-			defer func() {
-				_ = r.Close()
-			}()
-			return io.ReadAll(io.LimitReader(reader, int64(maxSize)))
-		}(reader)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read file content %s: %w", name, err)
+		if size > int64(maxSize) {
+			_, err = io.Copy(io.Discard, reader)
+			if err != nil {
+				return nil, fmt.Errorf("failed to discard a large file: %w", err)
+			}
 		}
 
-		if len(content) == maxSize {
-			// skip truncated files
+		data, err := io.ReadAll(reader)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read cat-file content: %w", err)
+		}
+
+		if len(data) > 0 {
+			data = data[:len(data)-1]
+		}
+
+		if len(data) == 0 {
 			continue
 		}
 
 		files = append(files, types.FileContent{
-			Path:    filePath,
-			Content: content,
+			Path:    nodes[i].Path,
+			Content: data,
 		})
 	}
+
+	_ = catFileWriter.Close()
 
 	return files, nil
 }

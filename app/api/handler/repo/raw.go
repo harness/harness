@@ -21,6 +21,8 @@ import (
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+
+	"github.com/rs/zerolog/log"
 )
 
 // HandleRaw returns the raw content of a file.
@@ -44,6 +46,12 @@ func HandleRaw(repoCtrl *repo.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
+
+		defer func() {
+			if err := dataReader.Close(); err != nil {
+				log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader.")
+			}
+		}()
 
 		w.Header().Add("Content-Length", fmt.Sprint(dataLength))
 

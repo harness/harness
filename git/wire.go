@@ -31,10 +31,9 @@ var WireSet = wire.NewSet(
 
 func ProvideGITAdapter(
 	config types.Config,
-	repoProvider *adapter.GoGitRepoProvider,
 	lastCommitCache cache.Cache[adapter.CommitEntryKey, *types.Commit],
 ) (Adapter, error) {
-	return adapter.New(config, repoProvider, lastCommitCache)
+	return adapter.New(config, lastCommitCache)
 }
 
 func ProvideService(config types.Config, adapter Adapter, storage storage.Store) (Interface, error) {

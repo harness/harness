@@ -47,7 +47,7 @@ func (c *Controller) CodeOwners(
 	}
 
 	ownerEvaluation, err := c.codeOwners.Evaluate(ctx, repo, pr, reviewers)
-	if errors.Is(codeowners.ErrNotFound, err) {
+	if errors.Is(err, codeowners.ErrNotFound) {
 		return types.CodeOwnerEvaluation{}, usererror.ErrNotFound
 	}
 	if codeowners.IsTooLargeError(err) {

@@ -26,6 +26,8 @@ import (
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -186,6 +188,12 @@ func (c *Controller) getFileContent(ctx context.Context,
 		return nil, fmt.Errorf("failed to get file content: %w", err)
 	}
 
+	defer func() {
+		if err := output.Content.Close(); err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader.")
+		}
+	}()
+
 	content, err := io.ReadAll(output.Content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read blob content: %w", err)
@@ -212,6 +220,12 @@ func (c *Controller) getSymlinkContent(ctx context.Context,
 		// TODO: handle not found error
 		return nil, fmt.Errorf("failed to get symlink: %w", err)
 	}
+
+	defer func() {
+		if err := output.Content.Close(); err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader.")
+		}
+	}()
 
 	content, err := io.ReadAll(output.Content)
 	if err != nil {

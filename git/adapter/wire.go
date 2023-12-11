@@ -27,14 +27,8 @@ import (
 )
 
 var WireSet = wire.NewSet(
-	ProvideGoGitRepoProvider,
 	ProvideLastCommitCache,
 )
-
-func ProvideGoGitRepoProvider() *GoGitRepoProvider {
-	const objectCacheSize = 16 << 20 // 16MiB
-	return NewGoGitRepoProvider(objectCacheSize, 15*time.Minute)
-}
 
 func ProvideLastCommitCache(
 	config types.Config,

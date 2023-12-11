@@ -21,6 +21,8 @@ import (
 
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 type service struct {
@@ -62,6 +64,12 @@ func (f *service) Get(
 	if err != nil {
 		return nil, fmt.Errorf("failed to read blob: %w", err)
 	}
+
+	defer func() {
+		if err := blobReader.Content.Close(); err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader.")
+		}
+	}()
 
 	buf, err := io.ReadAll(blobReader.Content)
 	if err != nil {

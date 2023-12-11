@@ -82,24 +82,6 @@ func mapGiteaCommit(giteaCommit *gitea.Commit) (*types.Commit, error) {
 	}, nil
 }
 
-func mapGiteaNodeToTreeNodeModeAndType(giteaMode gitea.EntryMode) (types.TreeNodeType, types.TreeNodeMode, error) {
-	switch giteaMode {
-	case gitea.EntryModeBlob:
-		return types.TreeNodeTypeBlob, types.TreeNodeModeFile, nil
-	case gitea.EntryModeSymlink:
-		return types.TreeNodeTypeBlob, types.TreeNodeModeSymlink, nil
-	case gitea.EntryModeExec:
-		return types.TreeNodeTypeBlob, types.TreeNodeModeExec, nil
-	case gitea.EntryModeCommit:
-		return types.TreeNodeTypeCommit, types.TreeNodeModeCommit, nil
-	case gitea.EntryModeTree:
-		return types.TreeNodeTypeTree, types.TreeNodeModeTree, nil
-	default:
-		return types.TreeNodeTypeBlob, types.TreeNodeModeFile,
-			fmt.Errorf("received unknown tree node mode from gitea: '%s'", giteaMode.String())
-	}
-}
-
 func mapGiteaSignature(
 	giteaSignature *gitea.Signature,
 ) (types.Signature, error) {

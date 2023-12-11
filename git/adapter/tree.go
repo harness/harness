@@ -15,14 +15,16 @@
 package adapter
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"path"
-	"path/filepath"
+	"regexp"
 	"strings"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
@@ -32,108 +34,173 @@ func cleanTreePath(treePath string) string {
 	return strings.Trim(path.Clean("/"+treePath), "/")
 }
 
-// GetTreeNode returns the tree node at the given path as found for the provided reference.
-// Note: ref can be Branch / Tag / CommitSHA.
-func (a Adapter) GetTreeNode(
-	ctx context.Context,
-	repoPath string,
-	ref string,
-	treePath string,
-) (*types.TreeNode, error) {
-	treePath = cleanTreePath(treePath)
-
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to open repository")
+func parseTreeNodeMode(s string) (types.TreeNodeType, types.TreeNodeMode, error) {
+	switch s {
+	case "100644":
+		return types.TreeNodeTypeBlob, types.TreeNodeModeFile, nil
+	case "120000":
+		return types.TreeNodeTypeBlob, types.TreeNodeModeSymlink, nil
+	case "100775":
+		return types.TreeNodeTypeBlob, types.TreeNodeModeExec, nil
+	case "160000":
+		return types.TreeNodeTypeCommit, types.TreeNodeModeCommit, nil
+	case "040000":
+		return types.TreeNodeTypeTree, types.TreeNodeModeTree, nil
+	default:
+		return types.TreeNodeTypeBlob, types.TreeNodeModeFile,
+			fmt.Errorf("unknown git tree node mode: '%s'", s)
 	}
-	defer giteaRepo.Close()
-
-	// Get the giteaCommit object for the ref
-	giteaCommit, err := giteaRepo.GetCommit(ref)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "error getting commit for ref '%s'", ref)
-	}
-
-	// TODO: handle ErrNotExist :)
-	giteaTreeEntry, err := giteaCommit.GetTreeEntryByPath(treePath)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to get tree entry for commit '%s' at path '%s'",
-			giteaCommit.ID.String(), treePath)
-	}
-
-	nodeType, mode, err := mapGiteaNodeToTreeNodeModeAndType(giteaTreeEntry.Mode())
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.TreeNode{
-		Mode:     mode,
-		NodeType: nodeType,
-		Sha:      giteaTreeEntry.ID.String(),
-		Name:     giteaTreeEntry.Name(),
-		Path:     treePath,
-	}, nil
 }
 
-// ListTreeNodes lists the child nodes of a tree reachable from ref via the specified path
-// and includes the latest commit for all nodes if requested.
-// Note: ref can be Branch / Tag / CommitSHA.
-func (a Adapter) ListTreeNodes(
+func scanZeroSeparated(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil // Return nothing if at end of file and no data passed
+	}
+	if i := strings.IndexByte(string(data), 0); i >= 0 {
+		return i + 1, data[0:i], nil // Split at zero byte
+	}
+	if atEOF {
+		return len(data), data, nil // at the end of file return the data
+	}
+	return
+}
+
+var regexpLsTreeLongColumns = regexp.MustCompile(`^(\d{6})\s+(\w+)\s+(\w+)\t(.+)$`)
+
+func lsTree(
 	ctx context.Context,
 	repoPath string,
-	ref string,
+	rev string,
 	treePath string,
 ) ([]types.TreeNode, error) {
+	if repoPath == "" {
+		return nil, ErrRepositoryPathEmpty
+	}
+
+	args := []string{"ls-tree", "-z", rev, treePath}
+	output, stderr, err := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{Dir: repoPath})
+	if strings.Contains(stderr, "fatal: Not a valid object name") {
+		return nil, errors.InvalidArgument("revision %q not found", rev)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to run git ls-tree: %w", err)
+	}
+
+	if output == "" {
+		return nil, errors.Format(errors.StatusPathNotFound, "path %q not found", treePath)
+	}
+
+	n := strings.Count(output, "\x00")
+
+	list := make([]types.TreeNode, 0, n)
+	scan := bufio.NewScanner(strings.NewReader(output))
+	scan.Split(scanZeroSeparated)
+	for scan.Scan() {
+		columns := regexpLsTreeLongColumns.FindStringSubmatch(scan.Text())
+		if columns == nil {
+			return nil, errors.New("unrecognized format of git directory listing")
+		}
+
+		nodeType, nodeMode, err := parseTreeNodeMode(columns[1])
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse git mode: %w", err)
+		}
+
+		nodeSha := columns[3]
+		nodePath := columns[4]
+		nodeName := path.Base(nodePath)
+
+		list = append(list, types.TreeNode{
+			NodeType: nodeType,
+			Mode:     nodeMode,
+			Sha:      nodeSha,
+			Name:     nodeName,
+			Path:     nodePath,
+		})
+	}
+
+	return list, nil
+}
+
+// lsFile returns all tree node entries in the requested directory.
+func lsDirectory(
+	ctx context.Context,
+	repoPath string,
+	rev string,
+	treePath string,
+) ([]types.TreeNode, error) {
+	treePath = path.Clean(treePath)
+	if treePath == "" {
+		treePath = "."
+	} else {
+		treePath += "/"
+	}
+
+	return lsTree(ctx, repoPath, rev, treePath)
+}
+
+// lsFile returns one tree node entry.
+func lsFile(
+	ctx context.Context,
+	repoPath string,
+	rev string,
+	treePath string,
+) (types.TreeNode, error) {
 	treePath = cleanTreePath(treePath)
 
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	list, err := lsTree(ctx, repoPath, rev, treePath)
 	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to open repository")
+		return types.TreeNode{}, fmt.Errorf("failed to ls file: %w", err)
 	}
-	defer giteaRepo.Close()
-
-	// Get the giteaCommit object for the ref
-	giteaCommit, err := giteaRepo.GetCommit(ref)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "error getting commit for ref '%s'", ref)
+	if len(list) != 1 {
+		return types.TreeNode{}, fmt.Errorf("ls file list contains more than one element, len=%d", len(list))
 	}
 
-	// Get the giteaTree object for the ref
-	giteaTree, err := giteaCommit.SubTree(treePath)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "error getting tree for '%s'", treePath)
-	}
+	return list[0], nil
+}
 
-	giteaEntries, err := giteaTree.ListEntries()
-	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to list entries for tree '%s'", treePath)
-	}
+// GetTreeNode returns the tree node at the given path as found for the provided reference.
+func (a Adapter) GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (*types.TreeNode, error) {
+	// root path (empty path) is a special case
+	if treePath == "" {
+		if repoPath == "" {
+			return nil, ErrRepositoryPathEmpty
+		}
 
-	nodes := make([]types.TreeNode, len(giteaEntries))
-	for i := range giteaEntries {
-		giteaEntry := giteaEntries[i]
-
-		var nodeType types.TreeNodeType
-		var mode types.TreeNodeMode
-		nodeType, mode, err = mapGiteaNodeToTreeNodeModeAndType(giteaEntry.Mode())
+		args := []string{"show", "--no-patch", "--format=" + fmtTreeHash, rev}
+		treeSHA, stderr, err := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{Dir: repoPath})
+		if strings.Contains(stderr, "ambiguous argument") {
+			return nil, errors.InvalidArgument("could not resolve git revision: %s", rev)
+		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get root tree node: %w", err)
 		}
 
-		// giteaNode.Name() returns the path of the node relative to the tree.
-		relPath := giteaEntry.Name()
-		name := filepath.Base(relPath)
-
-		nodes[i] = types.TreeNode{
-			NodeType: nodeType,
-			Mode:     mode,
-			Sha:      giteaEntry.ID.String(),
-			Name:     name,
-			Path:     filepath.Join(treePath, relPath),
-		}
+		return &types.TreeNode{
+			NodeType: types.TreeNodeTypeTree,
+			Mode:     types.TreeNodeModeTree,
+			Sha:      treeSHA,
+			Name:     "",
+			Path:     "",
+		}, err
 	}
 
-	return nodes, nil
+	treeNode, err := lsFile(ctx, repoPath, rev, treePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tree node: %w", err)
+	}
+
+	return &treeNode, nil
+}
+
+// ListTreeNodes lists the child nodes of a tree reachable from ref via the specified path.
+func (a Adapter) ListTreeNodes(ctx context.Context, repoPath, rev, treePath string) ([]types.TreeNode, error) {
+	list, err := lsDirectory(ctx, repoPath, rev, treePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list tree nodes: %w", err)
+	}
+
+	return list, nil
 }
 
 func (a Adapter) ReadTree(

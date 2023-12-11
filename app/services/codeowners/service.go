@@ -223,6 +223,12 @@ func (s *Service) getCodeOwnerFile(
 		return nil, fmt.Errorf("failed to get file content: %w", err)
 	}
 
+	defer func() {
+		if err := output.Content.Close(); err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader.")
+		}
+	}()
+
 	content, err := io.ReadAll(output.Content)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read blob content: %w", err)

@@ -127,7 +127,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	typesConfig := server.ProvideGitConfig(config)
-	goGitRepoProvider := adapter.ProvideGoGitRepoProvider()
 	universalClient, err := server.ProvideRedis(config)
 	if err != nil {
 		return nil, err
@@ -136,7 +135,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	gitAdapter, err := git.ProvideGITAdapter(typesConfig, goGitRepoProvider, cacheCache)
+	gitAdapter, err := git.ProvideGITAdapter(typesConfig, cacheCache)
 	if err != nil {
 		return nil, err
 	}

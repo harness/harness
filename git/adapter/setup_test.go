@@ -44,10 +44,8 @@ var (
 
 func setupGit(t *testing.T) adapter.Adapter {
 	t.Helper()
-	gogitProvider := adapter.ProvideGoGitRepoProvider()
 	git, err := adapter.New(
 		types.Config{Trace: true},
-		gogitProvider,
 		adapter.NewInMemoryLastCommitCache(5*time.Minute),
 	)
 	if err != nil {
