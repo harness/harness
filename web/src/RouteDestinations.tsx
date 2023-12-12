@@ -47,6 +47,7 @@ import ExecutionList from 'pages/ExecutionList/ExecutionList'
 import Execution from 'pages/Execution/Execution'
 import Secret from 'pages/Secret/Secret'
 import Search from 'pages/Search/Search'
+import KeywordSearch from 'pages/Search/KeywordSearch'
 import AddUpdatePipeline from 'pages/AddUpdatePipeline/AddUpdatePipeline'
 import { useAppContext } from 'AppContext'
 import PipelineSettings from 'components/PipelineSettings/PipelineSettings'
@@ -292,7 +293,15 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </LayoutWithSideNav>
         </Route>
 
-        <Route path={routes.toCODESearch({ repoPath })} exact>
+        <Route
+          path={[routes.toCODEProjectSearch({ space: pathProps.space }), routes.toCODERepositorySearch({ repoPath })]}
+          exact>
+          <LayoutWithSideNav title={'Search'}>
+            <KeywordSearch />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODESemanticSearch({ repoPath })} exact>
           <LayoutWithSideNav title={getString('pageTitle.search')}>
             <Search />
           </LayoutWithSideNav>

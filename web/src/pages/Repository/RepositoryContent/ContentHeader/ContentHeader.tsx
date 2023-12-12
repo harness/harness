@@ -14,23 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useMemo, useState } from 'react'
-import { noop } from 'lodash-es'
-import {
-  Container,
-  Layout,
-  Button,
-  ButtonSize,
-  FlexExpander,
-  ButtonVariation,
-  Text,
-  Utils,
-  Dialog
-} from '@harnessio/uicore'
+import React, { useMemo } from 'react'
+import { Container, Layout, Button, FlexExpander, ButtonVariation, Text } from '@harnessio/uicore'
 import cx from 'classnames'
 import { Icon } from '@harnessio/icons'
-import { useHotkeys } from 'react-hotkeys-hook'
-import { LongArrowDownLeft, Search } from 'iconoir-react'
 import { Color } from '@harnessio/design-system'
 import { Breadcrumbs, IBreadcrumbProps } from '@blueprintjs/core'
 import { Link, useHistory } from 'react-router-dom'
@@ -40,10 +27,9 @@ import { CloneButtonTooltip } from 'components/CloneButtonTooltip/CloneButtonToo
 import { CodeIcon, GitInfoProps, isDir, isGitRev, isRefATag } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
+import KeywordSearch from 'components/CodeSearch/KeywordSearch'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { ButtonRoleProps, permissionProps } from 'utils/Utils'
-import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import svg from './search-background.svg'
+import { permissionProps } from 'utils/Utils'
 import css from './ContentHeader.module.scss'
 
 export function ContentHeader({
@@ -57,37 +43,6 @@ export function ContentHeader({
   const history = useHistory()
   const _isDir = isDir(resourceContent)
   const space = useGetSpaceParam()
-  const [showSearchModal, setShowSearchModal] = useState(false)
-  const [searchSampleQueryIndex, setSearchSampleQueryIndex] = useState<number>(0)
-  const [search, setSearch] = useState('')
-  const performSearch = useCallback(
-    (q: string) => {
-      history.push({
-        pathname: routes.toCODESearch({
-          repoPath: repoMetadata.path as string
-        }),
-        search: `q=${q}`
-      })
-    },
-    [history, repoMetadata.path, routes]
-  )
-  const onSearch = useCallback(() => {
-    if (search?.trim()) {
-      performSearch(search)
-    } else if (searchSampleQueryIndex > 0 && searchSampleQueryIndex <= searchSampleQueries.length) {
-      performSearch(searchSampleQueries[searchSampleQueryIndex - 1])
-    }
-  }, [performSearch, search, searchSampleQueryIndex])
-
-  useHotkeys(
-    'ctrl+k',
-    () => {
-      if (!showSearchModal) {
-        setShowSearchModal(true)
-      }
-    },
-    [showSearchModal]
-  )
 
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
@@ -200,109 +155,7 @@ export function ContentHeader({
           </>
         )}
       </Layout.Horizontal>
-      {!standalone && false && (
-        <Container
-          className={css.searchBox}
-          {...ButtonRoleProps}
-          onClick={() => {
-            setShowSearchModal(true)
-          }}>
-          <SearchInputWithSpinner
-            readOnly
-            placeholder={getString('codeSearch') + ` (ctrl-k)`}
-            query={''}
-            setQuery={noop}
-          />
-          {<img src={svg} width={95} height={22} />}
-
-          {showSearchModal && (
-            <Container onClick={Utils.stopEvent}>
-              <Dialog
-                className={css.searchModal}
-                backdropClassName={css.backdrop}
-                portalClassName={css.portal}
-                isOpen={true}
-                enforceFocus={false}
-                onClose={() => {
-                  setShowSearchModal(false)
-                }}>
-                <Container>
-                  <Layout.Vertical spacing="large">
-                    <Container>
-                      <Layout.Horizontal className={css.layout}>
-                        <Container className={css.searchContainer}>
-                          <Search className={css.searchIcon} width={18} height={18} color="var(--ai-purple-600)" />
-                          <SearchInputWithSpinner
-                            placeholder={getString('codeSearchModal')}
-                            spinnerPosition="right"
-                            query={search}
-                            type="text"
-                            setQuery={q => {
-                              if (q?.trim()) {
-                                setSearchSampleQueryIndex(0)
-                              }
-                              setSearch(q)
-                            }}
-                            height={40}
-                            onSearch={onSearch}
-                            onKeyDown={e => {
-                              if (!search?.trim()) {
-                                switch (e.key) {
-                                  case 'ArrowDown':
-                                    setSearchSampleQueryIndex(index => {
-                                      return index + 1 > searchSampleQueries.length ? 1 : index + 1
-                                    })
-                                    break
-                                  case 'ArrowUp':
-                                    setSearchSampleQueryIndex(index => {
-                                      return index - 1 > 0 ? index - 1 : searchSampleQueries.length
-                                    })
-                                    break
-                                }
-                              }
-                            }}
-                          />
-                          {!search && <img src={svg} width={132} height={28} />}
-                        </Container>
-                        <Button
-                          variation={ButtonVariation.AI}
-                          text={getString('search')}
-                          size={ButtonSize.MEDIUM}
-                          onClick={onSearch}
-                        />
-                      </Layout.Horizontal>
-                    </Container>
-                    <Text className={css.sectionHeader}>{getString('searchHeader')}</Text>
-                    <Container>
-                      <Layout.Vertical spacing="medium">
-                        {searchSampleQueries.map((sampleQuery, index) => (
-                          <Text
-                            key={index}
-                            className={cx(css.sampleQuery, { [css.selected]: index === searchSampleQueryIndex - 1 })}
-                            {...ButtonRoleProps}
-                            onClick={() => {
-                              performSearch(sampleQuery)
-                            }}>
-                            {sampleQuery}
-                            <LongArrowDownLeft color="" />
-                          </Text>
-                        ))}
-                      </Layout.Vertical>
-                    </Container>
-                  </Layout.Vertical>
-                </Container>
-              </Dialog>
-            </Container>
-          )}
-        </Container>
-      )}
+      <div className={css.searchBoxCtn}>{!standalone ? <KeywordSearch repoMetadata={repoMetadata} /> : null}</div>
     </Container>
   )
 }
-
-// These sample queries are in English only - No need to do i18n for them
-const searchSampleQueries = [
-  `Where is the code that handles authentication?`,
-  `Where is the application entry point?`,
-  `Where do we configure the logger?`
-]

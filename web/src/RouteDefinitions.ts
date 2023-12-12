@@ -98,7 +98,9 @@ export interface CODERoutes {
   toCODESettings: (
     args: RequiredField<Pick<CODEProps, 'repoPath' | 'settingSection' | 'ruleId' | 'settingSectionMode'>, 'repoPath'>
   ) => string
-  toCODESearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODEProjectSearch: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODERepositorySearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODESemanticSearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEExecutions: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
   toCODEExecution: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline' | 'execution'>>) => string
   toCODESecret: (args: Required<Pick<CODEProps, 'space' | 'secret'>>) => string
@@ -155,7 +157,9 @@ export const routes: CODERoutes = {
     `/${repoPath}/settings${settingSection ? '/' + settingSection : ''}${ruleId ? '/' + ruleId : ''}${
       settingSectionMode ? '/' + settingSectionMode : ''
     }`,
-  toCODESearch: ({ repoPath }) => `/${repoPath}/search`,
+  toCODEProjectSearch: ({ space }) => `/${space}/search`,
+  toCODERepositorySearch: ({ repoPath }) => `/${repoPath}/search`,
+  toCODESemanticSearch: ({ repoPath }) => `/${repoPath}/search/semantic`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
   toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,

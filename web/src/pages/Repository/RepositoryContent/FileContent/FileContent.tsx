@@ -32,6 +32,8 @@ import { Color } from '@harnessio/design-system'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { Render, Match, Truthy, Falsy, Case, Else } from 'react-jsx-match'
 import { Link, useHistory } from 'react-router-dom'
+import type { EditorDidMount } from 'react-monaco-editor'
+import type { editor } from 'monaco-editor'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { OpenapiContentInfo, RepoFileContent, TypesCommit } from 'services/code'
 import {
@@ -54,6 +56,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useQueryParams } from 'hooks/useQueryParams'
 import { FileCategory, RepoContentExtended, useFileContentViewerDecision } from 'utils/FileUtils'
 import { useDownloadRawFile } from 'hooks/useDownloadRawFile'
 import { usePageIndex } from 'hooks/usePageIndex'
@@ -161,6 +164,34 @@ export function FileContent({
     () => editButtonDisabled && !isFileTooLarge && category === FileCategory.OTHER,
     [editButtonDisabled, isFileTooLarge, category]
   )
+
+  const { keyword } = useQueryParams<{ keyword?: string }>()
+
+  const onEditorMount: EditorDidMount = editor => {
+    if (!keyword) {
+      return
+    }
+
+    const editorModel = editor.getModel() as editor.ITextModel
+    const keywordMatches: editor.FindMatch[] = editorModel.findMatches(keyword, false, false, false, null, false)
+
+    if (keywordMatches.length > 0) {
+      keywordMatches.forEach((match: editor.FindMatch): void => {
+        editorModel.deltaDecorations(
+          [],
+          [
+            {
+              range: match.range,
+              options: {
+                isWholeLine: false,
+                inlineClassName: 'highlight'
+              }
+            }
+          ]
+        )
+      })
+    }
+  }
 
   return (
     <Container className={css.tabsContainer} ref={ref}>
@@ -409,6 +440,7 @@ export function FileContent({
                                         </Case>
                                         <Case val={FileCategory.TEXT}>
                                           <SourceCodeViewer
+                                            editorDidMount={onEditorMount}
                                             language={filenameToLanguage(filename)}
                                             source={decodeGitContent(base64Data)}
                                           />

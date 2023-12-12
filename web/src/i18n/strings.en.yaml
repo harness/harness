@@ -943,3 +943,13 @@ pipelineConfig:
   label: Pipeline Configuration
   yamlUpdated: It looks like the YAML got modified. Refresh changes?
 discard: Discard
+language: Language
+selectLanguagePlaceholder: '- Select language here -'
+selectRepositoryPlaceholder: '- Select repository here -'
+results: Results
+showNMoreMatches: Show {{ n }} more matches
+showLessMatches: Show less
+clear: Clear
+searchExamples: Search Examples
+nMoreMatches: This file contains {{ n }} more matches not shown.
+seeNMoreMatches: See all {{ n }} matches in the full file

@@ -50,6 +50,8 @@ export const DefaultMenu: React.FC = () => {
     return !isGitRev(ref) ? ref : ''
   }, [commitRef, gitRef])
 
+  const isSemanticSearchEnabled = false
+
   return (
     <Container className={css.main}>
       <Layout.Vertical spacing="small">
@@ -159,13 +161,24 @@ export const DefaultMenu: React.FC = () => {
                   data-code-repo-section="search"
                   isSubLink
                   label={getString('search')}
-                  to={routes.toCODESearch({
-                    repoPath
-                  })}
+                  to={
+                    isSemanticSearchEnabled
+                      ? routes.toCODESemanticSearch({ repoPath })
+                      : `${routes.toCODERepositorySearch({ repoPath })}?q=repo:${repoPath}`
+                  }
                 />
               )}
             </Layout.Vertical>
           </Container>
+        </Render>
+
+        <Render when={selectedSpace}>
+          <NavMenuItem
+            icon="thinner-search"
+            data-code-repo-section="search"
+            label={getString('search')}
+            to={routes.toCODEProjectSearch({ space: selectedSpace?.path as string })}
+          />
         </Render>
 
         {standalone && (

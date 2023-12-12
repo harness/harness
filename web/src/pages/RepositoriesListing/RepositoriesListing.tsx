@@ -47,6 +47,7 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
+import KeywordSearch from 'components/CodeSearch/KeywordSearch'
 import noRepoImage from './no-repo.svg'
 import FeatureMap from './FeatureMap/FeatureMap'
 import css from './RepositoriesListing.module.scss'
@@ -62,7 +63,7 @@ export default function RepositoriesListing() {
   const [nameTextWidth, setNameTextWidth] = useState(600)
   const space = useGetSpaceParam()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const { updateQueryParams } = useUpdateQueryParams()
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
@@ -197,7 +198,7 @@ export default function RepositoriesListing() {
 
   return (
     <Container className={css.main}>
-      <PageHeader title={getString('repositories')} />
+      <PageHeader title={getString('repositories')} toolbar={standalone ? null : <KeywordSearch />} />
       <PageBody
         className={cx({ [css.withError]: !!error })}
         error={error ? getErrorMessage(error) : null}

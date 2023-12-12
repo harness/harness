@@ -132,6 +132,7 @@ export interface StringsMap {
   checkRuns: string
   checkSuites: string
   checks: string
+  clear: string
   clickHereToDownload: string
   clone: string
   cloneHTTPS: string
@@ -389,6 +390,7 @@ export interface StringsMap {
   isRequired: string
   key: string
   killed: string
+  language: string
   leaveAComment: string
   license: string
   lineBreaks: string
@@ -407,6 +409,7 @@ export interface StringsMap {
   missingPermsContent: string
   myComments: string
   nDays: string
+  nMoreMatches: string
   name: string
   nameYourBranch: string
   nameYourFile: string
@@ -690,6 +693,7 @@ export interface StringsMap {
   resolve: string
   resolved: string
   resolvedComments: string
+  results: string
   reviewerNotFound: string
   reviewers: string
   role: string
@@ -701,6 +705,7 @@ export interface StringsMap {
   scrollToTop: string
   search: string
   searchBranches: string
+  searchExamples: string
   searchHeader: string
   searchResult: string
   secret: string
@@ -721,8 +726,11 @@ export interface StringsMap {
   'secrets.secretUpdated': string
   'secrets.showValue': string
   'secrets.updateSecret': string
+  seeNMoreMatches: string
   selectBranchPlaceHolder: string
+  selectLanguagePlaceholder: string
   selectRange: string
+  selectRepositoryPlaceholder: string
   selectSpace: string
   selectSpaceText: string
   selectStatuses: string
@@ -734,7 +742,9 @@ export interface StringsMap {
   showCommitHistory: string
   showEverything: string
   showLess: string
+  showLessMatches: string
   showMore: string
+  showNMoreMatches: string
   signIn: string
   signUp: string
   skipped: string
