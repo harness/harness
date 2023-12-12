@@ -186,14 +186,15 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
                 key={`keyContainer-${row.original.pattern}`}
                 className={css.ownerContainer}
                 spacing="tiny">
-                {row.original.owner_evaluations?.map((owner, idx) => {
+                {row.original.owner_evaluations?.map(({ owner }, idx) => {
                   if (idx < 4) {
                     return (
                       <Avatar
-                        key={`text-${owner.owner?.display_name}-${idx}-avatar`}
-                        hoverCard={false}
+                        key={`text-${owner?.display_name}-${idx}-avatar`}
+                        hoverCard={true}
+                        email={owner?.email || ' '}
                         size="small"
-                        name={owner.owner?.display_name || ''}
+                        name={owner?.display_name || ''}
                       />
                     )
                   }
@@ -204,7 +205,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
                   ) {
                     return (
                       <Text
-                        key={`text-${owner.owner?.display_name}-${idx}-top`}
+                        key={`text-${owner?.display_name}-${idx}-top`}
                         padding={{ top: 'xsmall' }}
                         tooltipProps={{ isDark: true }}
                         tooltip={
