@@ -16,11 +16,14 @@
 
 import { useHistory } from 'react-router-dom'
 import React, { useMemo, useState } from 'react'
-import { Container, Layout, FlexExpander, DropDown, ButtonVariation, Button } from '@harnessio/uicore'
+import { Container, Layout, FlexExpander, DropDown, ButtonVariation, Button, SelectOption } from '@harnessio/uicore'
+import { sortBy } from 'lodash-es'
+import { getConfig, getUsingFetch } from 'services/config'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import type { TypesPrincipalInfo } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { permissionProps } from 'utils/Utils'
@@ -29,15 +32,19 @@ import css from './PullRequestsContentHeader.module.scss'
 interface PullRequestsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
   loading?: boolean
   activePullRequestFilterOption?: string
+  activePullRequestAuthorFilterOption?: string
   onPullRequestFilterChanged: (filter: string) => void
+  onPullRequestAuthorFilterChanged: (authorFilter: string) => void
   onSearchTermChanged: (searchTerm: string) => void
 }
 
 export function PullRequestsContentHeader({
   loading,
   onPullRequestFilterChanged,
+  onPullRequestAuthorFilterChanged,
   onSearchTermChanged,
   activePullRequestFilterOption = PullRequestFilterOption.OPEN,
+  activePullRequestAuthorFilterOption,
   repoMetadata
 }: PullRequestsContentHeaderProps) {
   const history = useHistory()
@@ -47,10 +54,13 @@ export function PullRequestsContentHeader({
     UserPreference.PULL_REQUESTS_FILTER_SELECTED_OPTIONS,
     activePullRequestFilterOption
   )
-  const [searchTerm, setSearchTerm] = useState('')
-  const space = useGetSpaceParam()
 
-  const { standalone } = useAppContext()
+  const [authorFilterOption, setAuthorFilterOption] = useState(activePullRequestAuthorFilterOption)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [query, setQuery] = useState<string>('')
+  const [loadingAuthors, setLoadingAuthors] = useState<boolean>(false)
+  const space = useGetSpaceParam()
+  const { standalone, routingId } = useAppContext()
   const { hooks } = useAppContext()
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
@@ -73,6 +83,40 @@ export function PullRequestsContentHeader({
     [getString]
   )
 
+  const getAuthorsPromise = (): Promise<SelectOption[]> => {
+    return new Promise((resolve, reject) => {
+      setLoadingAuthors(true)
+      try {
+        getUsingFetch(getConfig('code/api/v1'), `/principals`, {
+          queryParams: {
+            query: query?.trim(),
+            type: 'user',
+            accountIdentifier: routingId
+          }
+        })
+          .then((obj: TypesPrincipalInfo[]) => {
+            const updatedAuthorsList = Array.isArray(obj)
+              ? ([
+                  ...(obj || []).map(item => ({
+                    label: String(item?.display_name),
+                    value: String(item?.id)
+                  }))
+                ] as SelectOption[])
+              : ([] as SelectOption[])
+            setLoadingAuthors(false)
+            resolve(sortBy(updatedAuthorsList, item => item.label.toLowerCase()))
+          })
+          .catch(error => {
+            setLoadingAuthors(false)
+            reject(error)
+          })
+      } catch (error) {
+        setLoadingAuthors(false)
+        reject(error)
+      }
+    })
+  }
+
   return (
     <Container className={css.main} padding="xlarge">
       <Layout.Horizontal spacing="medium">
@@ -86,6 +130,27 @@ export function PullRequestsContentHeader({
           }}
         />
         <FlexExpander />
+        <DropDown
+          value={authorFilterOption}
+          items={() => getAuthorsPromise()}
+          disabled={loadingAuthors}
+          onChange={({ value, label }) => {
+            setAuthorFilterOption(label as string)
+            onPullRequestAuthorFilterChanged(value as string)
+          }}
+          popoverClassName={css.branchDropdown}
+          icon="nav-user-profile"
+          iconProps={{ size: 16 }}
+          placeholder="Select Authors"
+          addClearBtn={true}
+          resetOnClose
+          resetOnSelect
+          resetOnQuery
+          query={query}
+          onQueryChange={newQuery => {
+            setQuery(newQuery)
+          }}
+        />
         <DropDown
           value={filterOption}
           items={items}

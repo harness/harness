@@ -56,19 +56,18 @@ export default function PullRequests() {
     UserPreference.PULL_REQUESTS_FILTER_SELECTED_OPTIONS,
     PullRequestFilterOption.OPEN
   )
+  const [authorFilter, setAuthorFilter] = useState<string>()
   const space = useGetSpaceParam()
   const { updateQueryParams } = useUpdateQueryParams()
 
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
-
   useEffect(() => {
     if (page > 1) {
       updateQueryParams({ page: page.toString() })
     }
   }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
-
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
     data,
@@ -84,7 +83,8 @@ export default function PullRequests() {
       sort: filter == PullRequestFilterOption.MERGED ? 'merged' : 'number',
       order: 'desc',
       query: searchTerm,
-      state: filter == PullRequestFilterOption.ALL ? '' : filter
+      state: filter == PullRequestFilterOption.ALL ? '' : filter,
+      ...(authorFilter && { created_by: Number(authorFilter) })
     },
     debounce: 500,
     lazy: !repoMetadata
@@ -232,6 +232,11 @@ export default function PullRequests() {
               }}
               onSearchTermChanged={value => {
                 setSearchTerm(value)
+                setPage(1)
+              }}
+              activePullRequestAuthorFilterOption={authorFilter}
+              onPullRequestAuthorFilterChanged={_authorFilter => {
+                setAuthorFilter(_authorFilter)
                 setPage(1)
               }}
             />
