@@ -62,6 +62,8 @@ import RuleViolationAlertModal from 'components/RuleViolationAlertModal/RuleViol
 import css from './PullRequestActionsBox.module.scss'
 
 const codeOwnersNotFoundMessage = 'CODEOWNERS file not found'
+const codeOwnersNotFoundMessage2 = `path "CODEOWNERS" not found`
+
 const POLLING_INTERVAL = 60000
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
@@ -130,7 +132,10 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
             setRuleViolation(true)
             setRuleViolationArr(err)
             setAllowedStrats(err.allowed_methods)
-          } else if (getErrorMessage(err) === codeOwnersNotFoundMessage) {
+          } else if (
+            getErrorMessage(err) === codeOwnersNotFoundMessage ||
+            getErrorMessage(err) === codeOwnersNotFoundMessage2
+          ) {
             return
           } else {
             showError(getErrorMessage(err))
