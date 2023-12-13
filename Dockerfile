@@ -18,7 +18,7 @@ RUN yarn && yarn build && yarn cache clean
 # ---------------------------------------------------------#
 #                   Build gitness image                    #
 # ---------------------------------------------------------#
-FROM --platform=$BUILDPLATFORM golang:1.19-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.20-alpine as builder
 
 RUN apk update \
     && apk add --no-cache protoc build-base git

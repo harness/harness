@@ -12,13 +12,10 @@ permissions:
   # Optional: allow read access to pull request. Use with `only-new-issues` option.
   # pull-requests: read
 jobs:
-  golangci:
-    name: lint
+  web:
+    name: CI linter for js/ts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.19
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -31,11 +28,23 @@ jobs:
           yarn install
           yarn check:all
           yarn build
+  gitness:
+    name: CI linter for go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+      - name: get dependencies
+        run: |
+          mkdir -p ./web/dist
+          touch ./web/dist/empty.txt
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-          version: v1.49
+          version: v1.54
 
           # Optional: working directory, useful for monorepos
           # working-directory: somedir
