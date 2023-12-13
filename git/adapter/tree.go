@@ -65,7 +65,7 @@ func scanZeroSeparated(data []byte, atEOF bool) (advance int, token []byte, err 
 	return
 }
 
-var regexpLsTreeLongColumns = regexp.MustCompile(`^(\d{6})\s+(\w+)\s+(\w+)\t(.+)$`)
+var regexpLsTreeColumns = regexp.MustCompile(`^(\d{6})\s+(\w+)\s+(\w+)\t(.+)$`)
 
 func lsTree(
 	ctx context.Context,
@@ -80,7 +80,7 @@ func lsTree(
 	args := []string{"ls-tree", "-z", rev, treePath}
 	output, stderr, err := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{Dir: repoPath})
 	if strings.Contains(stderr, "fatal: Not a valid object name") {
-		return nil, errors.InvalidArgument("revision %q not found", rev)
+		return nil, errors.NotFound("revision %q not found", rev)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to run git ls-tree: %w", err)
@@ -96,7 +96,7 @@ func lsTree(
 	scan := bufio.NewScanner(strings.NewReader(output))
 	scan.Split(scanZeroSeparated)
 	for scan.Scan() {
-		columns := regexpLsTreeLongColumns.FindStringSubmatch(scan.Text())
+		columns := regexpLsTreeColumns.FindStringSubmatch(scan.Text())
 		if columns == nil {
 			return nil, errors.New("unrecognized format of git directory listing")
 		}
@@ -170,7 +170,7 @@ func (a Adapter) GetTreeNode(ctx context.Context, repoPath, rev, treePath string
 		args := []string{"show", "--no-patch", "--format=" + fmtTreeHash, rev}
 		treeSHA, stderr, err := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{Dir: repoPath})
 		if strings.Contains(stderr, "ambiguous argument") {
-			return nil, errors.InvalidArgument("could not resolve git revision: %s", rev)
+			return nil, errors.NotFound("could not resolve git revision: %s", rev)
 		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to get root tree node: %w", err)
