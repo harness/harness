@@ -40,7 +40,7 @@ func parseTreeNodeMode(s string) (types.TreeNodeType, types.TreeNodeMode, error)
 		return types.TreeNodeTypeBlob, types.TreeNodeModeFile, nil
 	case "120000":
 		return types.TreeNodeTypeBlob, types.TreeNodeModeSymlink, nil
-	case "100775":
+	case "100755":
 		return types.TreeNodeTypeBlob, types.TreeNodeModeExec, nil
 	case "160000":
 		return types.TreeNodeTypeCommit, types.TreeNodeModeCommit, nil
