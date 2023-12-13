@@ -155,7 +155,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	executor := job.ProvideExecutor(jobStore, pubSub)
 	lockConfig := server.ProvideLockConfig(config)
 	mutexManager := lock.ProvideMutexManager(lockConfig, universalClient)
-	jobScheduler, err := job.ProvideScheduler(jobStore, executor, mutexManager, pubSub, config)
+	jobConfig := server.ProvideJobsConfig(config)
+	jobScheduler, err := job.ProvideScheduler(jobStore, executor, mutexManager, pubSub, jobConfig)
 	if err != nil {
 		return nil, err
 	}

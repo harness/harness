@@ -141,6 +141,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideCleanupConfig,
 		cleanup.WireSet,
 		codecomments.WireSet,
+		cliserver.ProvideJobsConfig,
 		job.WireSet,
 		protection.WireSet,
 		checkcontroller.WireSet,

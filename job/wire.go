@@ -17,7 +17,6 @@ package job
 import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
-	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -42,7 +41,7 @@ func ProvideScheduler(
 	executor *Executor,
 	mutexManager lock.MutexManager,
 	pubsubService pubsub.PubSub,
-	config *types.Config,
+	config Config,
 ) (*Scheduler, error) {
 	return NewScheduler(
 		store,
@@ -50,7 +49,7 @@ func ProvideScheduler(
 		mutexManager,
 		pubsubService,
 		config.InstanceID,
-		config.BackgroundJobs.MaxRunning,
-		config.BackgroundJobs.RetentionTime,
+		config.BackgroundJobsMaxRunning,
+		config.BackgroundJobsRetentionTime,
 	)
 }

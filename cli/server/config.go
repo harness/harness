@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/events"
 	gittypes "github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/store/database"
@@ -359,5 +360,13 @@ func ProvideKeywordSearchConfig(config *types.Config) keywordsearch.Config {
 		EventReaderName: config.InstanceID,
 		Concurrency:     config.KeywordSearch.Concurrency,
 		MaxRetries:      config.KeywordSearch.MaxRetries,
+	}
+}
+
+func ProvideJobsConfig(config *types.Config) job.Config {
+	return job.Config{
+		InstanceID:                  config.InstanceID,
+		BackgroundJobsMaxRunning:    config.BackgroundJobs.MaxRunning,
+		BackgroundJobsRetentionTime: config.BackgroundJobs.RetentionTime,
 	}
 }
