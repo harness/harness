@@ -31,37 +31,78 @@ func (c *Controller) ActivityList(
 	repoRef string,
 	prNum int64,
 	filter *types.PullReqActivityFilter,
-) ([]*types.PullReqActivity, int64, error) {
+) ([]*types.PullReqActivity, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to acquire access to repo: %w", err)
+		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
 	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find pull request by number: %w", err)
+		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
 	list, err := c.activityStore.List(ctx, pr.ID, filter)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list pull requests activities: %w", err)
+		return nil, fmt.Errorf("failed to list pull requests activities: %w", err)
 	}
 
-	// the function returns deleted comments, but it removes their content
-	for _, act := range list {
-		if act.Deleted != nil {
-			act.Text = ""
+	list = removeDeletedComments(list)
+
+	return list, nil
+}
+
+func allCommentsDeleted(comments []*types.PullReqActivity) bool {
+	for _, comment := range comments {
+		if comment.Deleted == nil {
+			return false
 		}
 	}
+	return true
+}
 
-	if filter.Limit == 0 {
-		return list, int64(len(list)), nil
+// removeDeletedComments removes all (ordinary comment and change comment) threads
+// (the top level comment and all replies to it), but only if all comments
+// in the thread are deleted. Just one non-deleted reply in a thread will cause
+// the entire thread to be included in the resulting list.
+func removeDeletedComments(list []*types.PullReqActivity) []*types.PullReqActivity {
+	var (
+		threadIdx int
+		threadLen int
+		listIdx   int
+	)
+
+	inspectThread := func() {
+		if threadLen > 0 && !allCommentsDeleted(list[threadIdx:threadIdx+threadLen]) {
+			copy(list[listIdx:listIdx+threadLen], list[threadIdx:threadIdx+threadLen])
+			listIdx += threadLen
+		}
+		threadLen = 0
 	}
 
-	count, err := c.activityStore.Count(ctx, pr.ID, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count pull request activities: %w", err)
+	for i, act := range list {
+		if act.Deleted != nil {
+			act.Text = "" // return deleted comments, but remove their content
+		}
+
+		if act.Kind == enum.PullReqActivityKindComment || act.Kind == enum.PullReqActivityKindChangeComment {
+			if threadLen == 0 || list[threadIdx].Order != act.Order {
+				inspectThread()
+				threadIdx = i
+				threadLen = 1
+			} else {
+				threadLen++
+			}
+			continue
+		}
+
+		inspectThread()
+
+		list[listIdx] = act
+		listIdx++
 	}
 
-	return list, count, nil
+	inspectThread()
+
+	return list[:listIdx]
 }

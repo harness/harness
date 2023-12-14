@@ -46,13 +46,12 @@ func HandleListActivities(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		list, total, err := pullreqCtrl.ActivityList(ctx, session, repoRef, pullreqNumber, filter)
+		list, err := pullreqCtrl.ActivityList(ctx, session, repoRef, pullreqNumber, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.PaginationLimit(r, w, int(total))
 		render.JSON(w, http.StatusOK, list)
 	}
 }
