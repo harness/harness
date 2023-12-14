@@ -18,7 +18,7 @@ RUN yarn && yarn build && yarn cache clean
 # ---------------------------------------------------------#
 #                   Build gitness image                    #
 # ---------------------------------------------------------#
-FROM --platform=$BUILDPLATFORM golang:1.20-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.20-alpine3.18 as builder
 
 RUN apk update \
     && apk add --no-cache protoc build-base git
@@ -32,6 +32,7 @@ COPY go.mod .
 COPY go.sum .
 
 COPY Makefile .
+ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
 RUN make dep
 RUN make tools
 # COPY the source code as the last step
