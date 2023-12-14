@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -39,41 +40,49 @@ func (c *Controller) CommentDelete(
 		return fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
-	if err != nil {
-		return fmt.Errorf("failed to find pull request by number: %w", err)
-	}
+	var pr *types.PullReq
 
-	act, err := c.getCommentCheckEditAccess(ctx, session, pr, commentID)
-	if err != nil {
-		return fmt.Errorf("failed to get comment: %w", err)
-	}
+	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
+		var err error
 
-	if act.Deleted != nil {
-		return nil
-	}
+		pr, err = c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
+		if err != nil {
+			return fmt.Errorf("failed to find pull request by number: %w", err)
+		}
 
-	isBlocking := act.IsBlocking()
+		act, err := c.getCommentCheckEditAccess(ctx, session, pr, commentID)
+		if err != nil {
+			return fmt.Errorf("failed to get comment: %w", err)
+		}
 
-	_, err = c.activityStore.UpdateOptLock(ctx, act, func(act *types.PullReqActivity) error {
+		if act.Deleted != nil {
+			return nil
+		}
+
 		now := time.Now().UnixMilli()
-		act.Deleted = &now
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to mark comment as deleted: %w", err)
-	}
 
-	_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		isBlocking := act.IsBlocking()
+		act.Deleted = &now
+
+		err = c.activityStore.Update(ctx, act)
+		if err != nil {
+			return fmt.Errorf("failed to mark comment as deleted: %w", err)
+		}
+
 		pr.CommentCount--
 		if isBlocking {
 			pr.UnresolvedCount--
 		}
+
+		err = c.pullreqStore.Update(ctx, pr)
+		if err != nil {
+			return fmt.Errorf("failed to decrement pull request comment counters: %w", err)
+		}
+
 		return nil
 	})
 	if err != nil {
-		// non-critical error
-		log.Ctx(ctx).Err(err).Msgf("failed to decrement pull request comment counters")
+		return err
 	}
 
 	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
