@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
@@ -176,7 +177,7 @@ func (c *Controller) Merge(
 
 	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, sourceRepo, pr, reviewers)
 	// check for error and ignore if it is codeowners file not found else throw error
-	if err != nil && errors.AsStatus(err) != errors.StatusNotFound {
+	if err != nil && !errors.Is(err, codeowners.ErrNotFound) {
 		return nil, nil, fmt.Errorf("CODEOWNERS evaluation failed: %w", err)
 	}
 
