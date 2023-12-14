@@ -22,7 +22,13 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 )
 
+// TxOptionRetryCount transaction option allows setting number of transaction executions reties.
+// A transaction started with TxOptLock will be automatically retried in case of version conflict error.
 type TxOptionRetryCount int
+
+// TxOptionResetFunc transaction provides a function that will be executed before the transaction retry.
+// A transaction started with TxOptLock will be automatically retried in case of version conflict error.
+type TxOptionResetFunc func()
 
 // TxOptLock runs the provided function inside a database transaction. If optimistic lock error occurs
 // during the operation, the function will retry the whole transaction again (to the maximum of 5 times,
@@ -33,9 +39,13 @@ func TxOptLock(ctx context.Context,
 	opts ...interface{},
 ) (err error) {
 	tries := 5
+	var resetFuncs []func()
 	for _, opt := range opts {
 		if n, ok := opt.(TxOptionRetryCount); ok {
 			tries = int(n)
+		}
+		if fn, ok := opt.(TxOptionResetFunc); ok {
+			resetFuncs = append(resetFuncs, fn)
 		}
 	}
 
@@ -43,6 +53,10 @@ func TxOptLock(ctx context.Context,
 		err = tx.WithTx(ctx, txFn, opts...)
 		if !errors.Is(err, store.ErrVersionConflict) {
 			break
+		}
+
+		for _, fn := range resetFuncs {
+			fn()
 		}
 	}
 

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/pullreq"
@@ -82,7 +83,7 @@ func (in *CommentCreateInput) Validate() error {
 
 // CommentCreate creates a new pull request comment (pull request activity, type=comment/code-comment).
 //
-//nolint:gocognit,funlen // refactor if needed
+//nolint:gocognit // refactor if needed
 func (c *Controller) CommentCreate(
 	ctx context.Context,
 	session *auth.Session,
@@ -95,102 +96,102 @@ func (c *Controller) CommentCreate(
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
-	}
-
 	if errValidate := in.Validate(); errValidate != nil {
 		return nil, errValidate
 	}
 
-	act := getCommentActivity(session, pr, in)
+	var pr *types.PullReq
+	var act *types.PullReqActivity
 
-	switch {
-	case in.IsCodeComment():
-		cut, err := c.git.DiffCut(ctx, &git.DiffCutParams{
-			ReadParams:      git.ReadParams{RepoUID: repo.GitUID},
-			SourceCommitSHA: in.SourceCommitSHA,
-			SourceBranch:    pr.SourceBranch,
-			TargetCommitSHA: in.TargetCommitSHA,
-			TargetBranch:    pr.TargetBranch,
-			Path:            in.Path,
-			LineStart:       in.LineStart,
-			LineStartNew:    in.LineStartNew,
-			LineEnd:         in.LineEnd,
-			LineEndNew:      in.LineEndNew,
-		})
-		if errors.AsStatus(err) == errors.StatusNotFound || errors.AsStatus(err) == errors.StatusPathNotFound {
-			return nil, usererror.BadRequest(errors.Message(err))
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		setAsCodeComment(act, cut, in.Path, in.SourceCommitSHA)
-		_ = act.SetPayload(&types.PullRequestActivityPayloadCodeComment{
-			Title:        cut.LinesHeader,
-			Lines:        cut.Lines,
-			LineStartNew: in.LineStartNew,
-			LineEndNew:   in.LineEndNew,
-		})
-
-		err = c.writeActivity(ctx, pr, act)
-
-		// Migrate the comment if necessary... Note: we still need to return the code comment as is.
-		needsNewLineMigrate := in.SourceCommitSHA != cut.LatestSourceSHA
-		needsOldLineMigrate := pr.MergeBaseSHA != cut.MergeBaseSHA
-		if err == nil && (needsNewLineMigrate || needsOldLineMigrate) {
-			comments := []*types.CodeComment{act.AsCodeComment()}
-
-			if needsNewLineMigrate {
-				c.codeCommentMigrator.MigrateNew(ctx, repo.GitUID, cut.LatestSourceSHA, comments)
-			}
-			if needsOldLineMigrate {
-				c.codeCommentMigrator.MigrateOld(ctx, repo.GitUID, cut.MergeBaseSHA, comments)
-			}
-
-			if errMigrateUpdate := c.codeCommentView.UpdateAll(ctx, comments); errMigrateUpdate != nil {
-				// non-critical error
-				log.Ctx(ctx).Err(errMigrateUpdate).
-					Msgf("failed to migrate code comment to the latest source/merge-base commit SHA")
-			}
-		}
-	case in.ParentID != 0:
-		var parentAct *types.PullReqActivity
-		parentAct, err = c.checkIsReplyable(ctx, pr, in.ParentID)
-		if err != nil {
-			return nil, err
-		}
-
-		act.ParentID = &parentAct.ID
-		act.Kind = parentAct.Kind
-		_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
-
-		err = c.writeReplyActivity(ctx, parentAct, act)
-	default:
-		_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
-		err = c.writeActivity(ctx, pr, act)
-	}
+	pr, err = c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create comment: %w", err)
+		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
-	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+	var cut git.DiffCutOutput
+	if in.IsCodeComment() {
+		// fetch code snippet from git for code comments
+		cut, err = c.fetchDiffCut(ctx, repo, pr, in)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
+		var err error
+
+		if pr == nil {
+			// the pull request was fetched before the transaction, we re-fetch it in case of the version conflict error
+			pr, err = c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
+			if err != nil {
+				return fmt.Errorf("failed to find pull request by number: %w", err)
+			}
+		}
+
+		act = getCommentActivity(session, pr, in)
+
+		// In the switch the pull request activity (the code comment)
+		// is written to the DB (as code comment, a reply, or ordinary comment).
+		switch {
+		case in.IsCodeComment():
+			setAsCodeComment(act, cut, in.Path, in.SourceCommitSHA)
+			_ = act.SetPayload(&types.PullRequestActivityPayloadCodeComment{
+				Title:        cut.LinesHeader,
+				Lines:        cut.Lines,
+				LineStartNew: in.LineStartNew,
+				LineEndNew:   in.LineEndNew,
+			})
+
+			err = c.writeActivity(ctx, pr, act)
+
+		case in.ParentID != 0:
+			var parentAct *types.PullReqActivity
+
+			parentAct, err = c.checkIsReplyable(ctx, pr, in.ParentID)
+			if err != nil {
+				return err
+			}
+
+			act.ParentID = &parentAct.ID
+			act.Kind = parentAct.Kind
+			_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
+
+			err = c.writeReplyActivity(ctx, parentAct, act)
+		default:
+			_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
+			err = c.writeActivity(ctx, pr, act)
+		}
+		if err != nil {
+			return fmt.Errorf("failed to write pull request comment: %w", err)
+		}
+
 		pr.CommentCount++
 		if act.IsBlocking() {
 			pr.UnresolvedCount++
 		}
+
+		err = c.pullreqStore.Update(ctx, pr)
+		if err != nil {
+			return fmt.Errorf("failed to increment pull request comment counters: %w", err)
+		}
+
 		return nil
-	})
+	}, controller.TxOptionResetFunc(func() {
+		pr = nil // on the version conflict error force re-fetch of the pull request
+	}))
 	if err != nil {
-		// non-critical error
-		log.Ctx(ctx).Err(err).Msgf("failed to increment pull request comment counters")
+		return nil, err
+	}
+
+	if in.IsCodeComment() {
+		// Migrate the comment if necessary... Note: we still need to return the code comment as is.
+		c.migrateCodeComment(ctx, repo, pr, in, act.AsCodeComment(), cut)
 	}
 
 	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
+
 	// if it's a regular comment publish a comment create event
 	if !act.IsReply() && act.Type == enum.PullReqActivityTypeComment && act.Kind == enum.PullReqActivityKindComment {
 		c.eventReporter.CommentCreated(ctx, &events.CommentCreatedPayload{
@@ -205,11 +206,15 @@ func (c *Controller) CommentCreate(
 			SourceSHA:  pr.SourceSHA,
 		})
 	}
+
 	return act, nil
 }
 
-func (c *Controller) checkIsReplyable(ctx context.Context,
-	pr *types.PullReq, parentID int64) (*types.PullReqActivity, error) {
+func (c *Controller) checkIsReplyable(
+	ctx context.Context,
+	pr *types.PullReq,
+	parentID int64,
+) (*types.PullReqActivity, error) {
 	// make sure the parent comment exists, belongs to the same PR and isn't itself a reply
 	parentAct, err := c.activityStore.Find(ctx, parentID)
 	if errors.Is(err, store.ErrResourceNotFound) || parentAct == nil {
@@ -317,5 +322,63 @@ func setAsCodeComment(a *types.PullReqActivity, cut git.DiffCutOutput, path, sou
 		SpanNew:      cut.Header.NewSpan,
 		LineOld:      cut.Header.OldLine,
 		SpanOld:      cut.Header.OldSpan,
+	}
+}
+
+func (c *Controller) fetchDiffCut(
+	ctx context.Context,
+	repo *types.Repository,
+	pr *types.PullReq,
+	in *CommentCreateInput,
+) (git.DiffCutOutput, error) {
+	cut, err := c.git.DiffCut(ctx, &git.DiffCutParams{
+		ReadParams:      git.ReadParams{RepoUID: repo.GitUID},
+		SourceCommitSHA: in.SourceCommitSHA,
+		SourceBranch:    pr.SourceBranch,
+		TargetCommitSHA: in.TargetCommitSHA,
+		TargetBranch:    pr.TargetBranch,
+		Path:            in.Path,
+		LineStart:       in.LineStart,
+		LineStartNew:    in.LineStartNew,
+		LineEnd:         in.LineEnd,
+		LineEndNew:      in.LineEndNew,
+	})
+	if errors.AsStatus(err) == errors.StatusNotFound || errors.AsStatus(err) == errors.StatusPathNotFound {
+		return git.DiffCutOutput{}, usererror.BadRequest(errors.Message(err))
+	}
+	if err != nil {
+		return git.DiffCutOutput{}, fmt.Errorf("failed to fetch git diff cut: %w", err)
+	}
+
+	return cut, nil
+}
+
+func (c *Controller) migrateCodeComment(
+	ctx context.Context,
+	repo *types.Repository,
+	pr *types.PullReq,
+	in *CommentCreateInput,
+	cc *types.CodeComment,
+	cut git.DiffCutOutput,
+) {
+	needsNewLineMigrate := in.SourceCommitSHA != cut.LatestSourceSHA
+	needsOldLineMigrate := pr.MergeBaseSHA != cut.MergeBaseSHA
+	if !needsNewLineMigrate && !needsOldLineMigrate {
+		return
+	}
+
+	comments := []*types.CodeComment{cc}
+
+	if needsNewLineMigrate {
+		c.codeCommentMigrator.MigrateNew(ctx, repo.GitUID, cut.LatestSourceSHA, comments)
+	}
+	if needsOldLineMigrate {
+		c.codeCommentMigrator.MigrateOld(ctx, repo.GitUID, cut.MergeBaseSHA, comments)
+	}
+
+	if errMigrateUpdate := c.codeCommentView.UpdateAll(ctx, comments); errMigrateUpdate != nil {
+		// non-critical error
+		log.Ctx(ctx).Err(errMigrateUpdate).
+			Msgf("failed to migrate code comment to the latest source/merge-base commit SHA")
 	}
 }
