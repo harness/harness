@@ -172,7 +172,7 @@ export const DefaultMenu: React.FC = () => {
           </Container>
         </Render>
 
-        <Render when={selectedSpace}>
+        <Render when={!standalone && selectedSpace}>
           <NavMenuItem
             icon="thinner-search"
             data-code-repo-section="search"
