@@ -43,7 +43,7 @@ func (c *Controller) ReviewerAdd(
 	prNum int64,
 	in *ReviewerAddInput,
 ) (*types.PullReqReviewer, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
