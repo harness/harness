@@ -64,7 +64,7 @@ func (in *ReportInput) Validate(
 
 	// Validate and sanitize the input data based on version; Require a link... and similar operations.
 	if err := validatorFn(in, session); err != nil {
-		return err
+		return fmt.Errorf("payload validation failed: %w", err)
 	}
 
 	return nil
