@@ -35,6 +35,7 @@ type Controller struct {
 	repoStore  store.RepoStore
 	checkStore store.CheckStore
 	git        git.Interface
+	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
 }
 
 func NewController(
@@ -43,6 +44,7 @@ func NewController(
 	repoStore store.RepoStore,
 	checkStore store.CheckStore,
 	git git.Interface,
+	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
 ) *Controller {
 	return &Controller{
 		tx:         tx,
@@ -50,6 +52,7 @@ func NewController(
 		repoStore:  repoStore,
 		checkStore: checkStore,
 		git:        git,
+		sanitizers: sanitizers,
 	}
 }
 

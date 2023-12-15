@@ -252,7 +252,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	githookController := githook.ProvideController(authorizer, principalStore, repoStore, reporter2, gitInterface, pullReqStore, provider, protectionManager)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore)
-	checkController := check2.ProvideController(transactor, authorizer, repoStore, checkStore, gitInterface)
+	v := check2.ProvideCheckSanitizers()
+	checkController := check2.ProvideController(transactor, authorizer, repoStore, checkStore, gitInterface, v)
 	systemController := system.NewController(principalStore, config)
 	blobConfig, err := server.ProvideBlobStoreConfig(config)
 	if err != nil {

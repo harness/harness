@@ -15,16 +15,19 @@
 package check
 
 import (
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
+	ProvideCheckSanitizers,
 	ProvideController,
 )
 
@@ -34,6 +37,7 @@ func ProvideController(
 	repoStore store.RepoStore,
 	checkStore store.CheckStore,
 	rpcClient git.Interface,
+	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
 ) *Controller {
 	return NewController(
 		tx,
@@ -41,5 +45,6 @@ func ProvideController(
 		repoStore,
 		checkStore,
 		rpcClient,
+		sanitizers,
 	)
 }

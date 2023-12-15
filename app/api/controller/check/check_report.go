@@ -41,7 +41,9 @@ var regexpCheckUID = "^[0-9a-zA-Z-_.$]{1,127}$"
 var matcherCheckUID = regexp.MustCompile(regexpCheckUID)
 
 // Validate validates and sanitizes the ReportInput data.
-func (in *ReportInput) Validate() error {
+func (in *ReportInput) Validate(
+	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, session *auth.Session) error, session *auth.Session,
+) error {
 	if in.CheckUID == "" {
 		return usererror.BadRequest("Status check UID is missing")
 	}
@@ -55,44 +57,20 @@ func (in *ReportInput) Validate() error {
 		return usererror.BadRequest("Invalid value provided for status check status")
 	}
 
-	payloadKind, ok := in.Payload.Kind.Sanitize()
+	validatorFn, ok := sanitizers[in.Payload.Kind]
 	if !ok {
-		return usererror.BadRequest("Invalid value provided for the payload type")
+		return usererror.BadRequest("Invalid value provided for the payload kind")
 	}
-	in.Payload.Kind = payloadKind
 
-	switch in.Payload.Kind {
-	case enum.CheckPayloadKindEmpty:
-		// the default payload kind (empty) does not support the payload data: clear it here
-		in.Payload.Version = ""
-		in.Payload.Data = []byte("{}")
-
-		if in.Link == "" { // the link is mandatory as there is nothing in the payload
-			return usererror.BadRequest("Link is missing")
-		}
-
-	case enum.CheckPayloadKindRaw, enum.CheckPayloadKindMarkdown:
-		// the text payload kinds (raw and markdown) do not support the version
-		if in.Payload.Version != "" {
-			return usererror.BadRequestf("Payload version must be empty for the payload kind '%s'",
-				in.Payload.Kind)
-		}
-
-		payloadDataJSON, err := sanitizeJSONPayload(in.Payload.Data, &types.CheckPayloadText{})
-		if err != nil {
-			return err
-		}
-
-		in.Payload.Data = payloadDataJSON
-
-	case enum.CheckPayloadKindPipeline:
-		return usererror.BadRequest("Kind cannot be pipeline for external checks")
+	// Validate and sanitize the input data based on version; Require a link... and similar operations.
+	if err := validatorFn(in, session); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func sanitizeJSONPayload(source json.RawMessage, data any) (json.RawMessage, error) {
+func SanitizeJSONPayload(source json.RawMessage, data any) (json.RawMessage, error) {
 	if len(source) == 0 {
 		return json.Marshal(data) // marshal the empty object
 	}
@@ -136,7 +114,7 @@ func (c *Controller) Report(
 		return nil, fmt.Errorf("failed to acquire access access to repo: %w", err)
 	}
 
-	if errValidate := in.Validate(); errValidate != nil {
+	if errValidate := in.Validate(c.sanitizers, session); errValidate != nil {
 		return nil, errValidate
 	}
 
