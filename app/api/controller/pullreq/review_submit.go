@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -107,6 +108,11 @@ func (c *Controller) ReviewSubmit(
 		if err != nil {
 			return err
 		}
+		c.eventReporter.ReviewSubmitted(ctx, &events.ReviewSubmittedPayload{
+			Base:       eventBase(pr, &session.Principal),
+			Decision:   review.Decision,
+			ReviewerID: review.CreatedBy,
+		})
 
 		_, err = c.updateReviewer(ctx, session, pr, review, commitSHA)
 		return err

@@ -28,6 +28,7 @@ const (
 	TemplateReviewerAdded        = "reviewer_added.html"
 	TemplateCommentCreated       = "comment_created.html"
 	TemplatePullReqBranchUpdated = "pullreq_branch_updated.html"
+	TemplateNameReviewSubmitted  = "review_submitted.html"
 )
 
 type MailClient struct {
@@ -45,7 +46,7 @@ func (m MailClient) SendCommentCreated(
 	recipients []*types.PrincipalInfo,
 	payload *CommentCreatedPayload,
 ) error {
-	mailPayload, err := GenerateEmailFromPayload(
+	email, err := GenerateEmailFromPayload(
 		TemplateCommentCreated,
 		recipients,
 		payload.Base,
@@ -56,7 +57,7 @@ func (m MailClient) SendCommentCreated(
 			pullreqevents.CommentCreatedEvent, err)
 	}
 
-	return m.Mailer.Send(ctx, *mailPayload)
+	return m.Mailer.Send(ctx, *email)
 }
 
 func (m MailClient) SendReviewerAdded(
@@ -64,7 +65,7 @@ func (m MailClient) SendReviewerAdded(
 	recipients []*types.PrincipalInfo,
 	payload *ReviewerAddedPayload,
 ) error {
-	reviewerAddedMail, err := GenerateEmailFromPayload(
+	email, err := GenerateEmailFromPayload(
 		TemplateReviewerAdded,
 		recipients,
 		payload.Base,
@@ -75,7 +76,7 @@ func (m MailClient) SendReviewerAdded(
 			pullreqevents.ReviewerAddedEvent, err)
 	}
 
-	return m.Mailer.Send(ctx, *reviewerAddedMail)
+	return m.Mailer.Send(ctx, *email)
 }
 
 func (m MailClient) SendPullReqBranchUpdated(
@@ -83,7 +84,7 @@ func (m MailClient) SendPullReqBranchUpdated(
 	recipients []*types.PrincipalInfo,
 	payload *PullReqBranchUpdatedPayload,
 ) error {
-	mailPayload, err := GenerateEmailFromPayload(
+	email, err := GenerateEmailFromPayload(
 		TemplatePullReqBranchUpdated,
 		recipients,
 		payload.Base,
@@ -94,7 +95,23 @@ func (m MailClient) SendPullReqBranchUpdated(
 			pullreqevents.BranchUpdatedEvent, err)
 	}
 
-	return m.Mailer.Send(ctx, *mailPayload)
+	return m.Mailer.Send(ctx, *email)
+}
+
+func (m MailClient) SendReviewSubmitted(
+	ctx context.Context,
+	recipients []*types.PrincipalInfo,
+	payload *ReviewSubmittedPayload,
+) error {
+	email, err := GenerateEmailFromPayload(TemplateNameReviewSubmitted, recipients, payload.Base, payload)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate mail requests after processing %s event: %w",
+			pullreqevents.ReviewSubmittedEvent,
+			err,
+		)
+	}
+	return m.Mailer.Send(ctx, *email)
 }
 
 func GetSubjectPullRequest(
@@ -130,14 +147,14 @@ func GenerateEmailFromPayload(
 		return nil, err
 	}
 
-	var mail mailer.Payload
-	mail.Body = string(body)
-	mail.Subject = subject
-	mail.RepoRef = base.Repo.Path
+	var email mailer.Payload
+	email.Body = string(body)
+	email.Subject = subject
+	email.RepoRef = base.Repo.Path
 
 	recipientEmails := RetrieveEmailsFromPrincipals(recipients)
-	mail.ToRecipients = recipientEmails
-	return &mail, nil
+	email.ToRecipients = recipientEmails
+	return &email, nil
 }
 
 func RetrieveEmailsFromPrincipals(principals []*types.PrincipalInfo) []string {

@@ -141,6 +141,7 @@ func NewService(
 			_ = r.RegisterReviewerAdded(service.notifyReviewerAdded)
 			_ = r.RegisterCommentCreated(service.notifyCommentCreated)
 			_ = r.RegisterBranchUpdated(service.notifyPullReqBranchUpdated)
+			_ = r.RegisterReviewSubmitted(service.notifyReviewSubmitted)
 			return nil
 		})
 	if err != nil {

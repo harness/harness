@@ -21,61 +21,80 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-type ReviewerAddedPayload struct {
+type ReviewSubmittedPayload struct {
 	Base     *BasePullReqPayload
+	Author   *types.PrincipalInfo
 	Reviewer *types.PrincipalInfo
+	Decision enum.PullReqReviewDecision
 }
 
-func (s *Service) notifyReviewerAdded(
+func (s *Service) notifyReviewSubmitted(
 	ctx context.Context,
-	event *events.Event[*pullreqevents.ReviewerAddedPayload],
+	event *events.Event[*pullreqevents.ReviewSubmittedPayload],
 ) error {
-	payload, recipients, err := s.processReviewerAddedEvent(ctx, event)
+	notificationPayload, recipients, err := s.processReviewSubmittedEvent(ctx, event)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to process %s event for pullReqID %d: %w",
-			pullreqevents.ReviewerAddedEvent,
+			pullreqevents.ReviewSubmittedEvent,
 			event.Payload.PullReqID,
 			err,
 		)
 	}
 
-	err = s.notificationClient.SendReviewerAdded(ctx, recipients, payload)
+	err = s.notificationClient.SendReviewSubmitted(
+		ctx,
+		recipients,
+		notificationPayload,
+	)
+
 	if err != nil {
 		return fmt.Errorf(
 			"failed to send notification for event %s for pullReqID %d: %w",
-			pullreqevents.ReviewerAddedEvent,
+			pullreqevents.ReviewSubmittedEvent,
 			event.Payload.PullReqID,
 			err,
 		)
 	}
-
 	return nil
 }
 
-func (s *Service) processReviewerAddedEvent(
+func (s *Service) processReviewSubmittedEvent(
 	ctx context.Context,
-	event *events.Event[*pullreqevents.ReviewerAddedPayload],
-) (*ReviewerAddedPayload, []*types.PrincipalInfo, error) {
+	event *events.Event[*pullreqevents.ReviewSubmittedPayload],
+) (*ReviewSubmittedPayload, []*types.PrincipalInfo, error) {
 	base, err := s.getBasePayload(ctx, event.Payload.Base)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get base payload: %w", err)
 	}
 
+	authorPrincipal, err := s.principalInfoCache.Get(ctx, base.PullReq.CreatedBy)
+	if err != nil {
+		return nil, nil, fmt.Errorf(
+			"failed to get author from principalInfoCache on %s event for pullReqID %d: %w",
+			pullreqevents.ReviewSubmittedEvent,
+			event.Payload.PullReqID,
+			err,
+		)
+	}
+
 	reviewerPrincipal, err := s.principalInfoCache.Get(ctx, event.Payload.ReviewerID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get reviewer from principalInfoCache: %w", err)
+		return nil, nil, fmt.Errorf(
+			"failed to get reviewer from principalInfoCache on event %s for pullReqID %d: %w",
+			pullreqevents.ReviewSubmittedEvent,
+			event.Payload.PullReqID,
+			err,
+		)
 	}
 
-	recipients := []*types.PrincipalInfo{
-		base.Author,
-		reviewerPrincipal,
-	}
-
-	return &ReviewerAddedPayload{
+	return &ReviewSubmittedPayload{
 		Base:     base,
+		Author:   authorPrincipal,
+		Decision: event.Payload.Decision,
 		Reviewer: reviewerPrincipal,
-	}, recipients, nil
+	}, []*types.PrincipalInfo{authorPrincipal}, nil
 }

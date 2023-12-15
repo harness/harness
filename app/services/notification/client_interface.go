@@ -30,4 +30,5 @@ type Client interface {
 		recipients []*types.PrincipalInfo,
 		payload *PullReqBranchUpdatedPayload,
 	) error
+	SendReviewSubmitted(ctx context.Context, recipients []*types.PrincipalInfo, payload *ReviewSubmittedPayload) error
 }
