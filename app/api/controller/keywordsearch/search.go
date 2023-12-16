@@ -23,6 +23,8 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *Controller) Search(
@@ -54,8 +56,7 @@ func (c *Controller) Search(
 	}
 
 	if len(repoIDToPathMap) == 0 {
-		return types.SearchResult{}, fmt.Errorf(
-			"no repositories found for the given paths")
+		return types.SearchResult{}, usererror.NotFound("no repositories found")
 	}
 
 	repoIDs := make([]int64, 0, len(repoIDToPathMap))
@@ -69,7 +70,13 @@ func (c *Controller) Search(
 	}
 
 	for idx, fileMatch := range result.FileMatches {
-		result.FileMatches[idx].RepoPath = repoIDToPathMap[fileMatch.RepoID]
+		repoPath, ok := repoIDToPathMap[fileMatch.RepoID]
+		if !ok {
+			log.Ctx(ctx).Warn().Msgf("repo path not found for repo ID %d, repo mapping: %v",
+				fileMatch.RepoID, repoIDToPathMap)
+			continue
+		}
+		result.FileMatches[idx].RepoPath = repoPath
 	}
 	return result, nil
 }
