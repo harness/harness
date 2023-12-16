@@ -142,6 +142,11 @@ func NewService(
 			_ = r.RegisterCommentCreated(service.notifyCommentCreated)
 			_ = r.RegisterBranchUpdated(service.notifyPullReqBranchUpdated)
 			_ = r.RegisterReviewSubmitted(service.notifyReviewSubmitted)
+
+			// state changes
+			_ = r.RegisterMerged(service.notifyPullReqStateMerged)
+			_ = r.RegisterClosed(service.notifyPullReqStateClosed)
+			_ = r.RegisterReopened(service.notifyPullReqStateReOpened)
 			return nil
 		})
 	if err != nil {

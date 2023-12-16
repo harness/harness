@@ -46,7 +46,7 @@ func (s *Service) notifyCommentCreated(
 	err = s.notificationClient.SendCommentCreated(ctx, recipients, payload)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to send notification for event %s for pullReqID %d: %w",
+			"failed to send email for event %s for pullReqID %d: %w",
 			pullreqevents.CommentCreatedEvent,
 			event.Payload.PullReqID,
 			err,

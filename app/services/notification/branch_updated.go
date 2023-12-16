@@ -50,7 +50,7 @@ func (s *Service) notifyPullReqBranchUpdated(
 	err = s.notificationClient.SendPullReqBranchUpdated(ctx, reviewers, payload)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to send notification for event %s for pullReqID %d: %w",
+			"failed to send email for event %s for pullReqID %d: %w",
 			pullreqevents.BranchUpdatedEvent,
 			event.Payload.PullReqID,
 			err,

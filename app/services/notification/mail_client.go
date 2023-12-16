@@ -29,6 +29,7 @@ const (
 	TemplateCommentCreated       = "comment_created.html"
 	TemplatePullReqBranchUpdated = "pullreq_branch_updated.html"
 	TemplateNameReviewSubmitted  = "review_submitted.html"
+	TemplatePullReqStateChanged  = "pullreq_state_changed.html"
 )
 
 type MailClient struct {
@@ -111,6 +112,22 @@ func (m MailClient) SendReviewSubmitted(
 			err,
 		)
 	}
+	return m.Mailer.Send(ctx, *email)
+}
+
+func (m MailClient) SendPullReqStateChanged(
+	ctx context.Context,
+	recipients []*types.PrincipalInfo,
+	payload *PullReqStateChangedPayload,
+) error {
+	email, err := GenerateEmailFromPayload(TemplatePullReqStateChanged, recipients, payload.Base, payload)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate mail requests after processing pullReqState change event: %w",
+			err,
+		)
+	}
+
 	return m.Mailer.Send(ctx, *email)
 }
 

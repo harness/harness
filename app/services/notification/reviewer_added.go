@@ -45,7 +45,7 @@ func (s *Service) notifyReviewerAdded(
 	err = s.notificationClient.SendReviewerAdded(ctx, recipients, payload)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to send notification for event %s for pullReqID %d: %w",
+			"failed to send email for event %s for pullReqID %d: %w",
 			pullreqevents.ReviewerAddedEvent,
 			event.Payload.PullReqID,
 			err,
