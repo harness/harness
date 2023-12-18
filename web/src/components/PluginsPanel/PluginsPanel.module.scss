@@ -49,6 +49,10 @@
   }
 }
 
+.formHeightWithSyncToolbar {
+  height: calc(100% - 5 * var(--spacing-large) - var(--spacing-xxlarge));
+}
+
 .arrow {
   &:hover {
     cursor: pointer;
@@ -84,6 +88,10 @@
 
 .configForm {
   height: calc(100% - var(--spacing-medium));
+}
+
+.configFormWithSyncToolbar {
+  height: calc(100% - 2 * var(--spacing-medium));
 }
 
 .fontWeight600 {

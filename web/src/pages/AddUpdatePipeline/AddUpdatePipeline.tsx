@@ -17,9 +17,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useGet, useMutate } from 'restful-react'
 import { useParams } from 'react-router-dom'
-import { get, isEmpty, isObject, isUndefined } from 'lodash-es'
+import { get, isEmpty, isObject, isUndefined, set } from 'lodash-es'
 import * as yamlNS from 'yaml'
-import { stringify, parseDocument, YAMLMap, YAMLSeq, Scalar } from 'yaml'
+import { stringify, parseDocument, YAMLMap, Scalar, YAMLSeq, Pair } from 'yaml'
 import cx from 'classnames'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Container, PageBody, Layout, ButtonVariation, Text, useToaster, SplitButton, Button } from '@harnessio/uicore'
@@ -38,7 +38,7 @@ import type { CODEProps } from 'RouteDefinitions'
 import { getAllKeysWithPrefix, getErrorMessage } from 'utils/Utils'
 import { normalizeGitRef, decodeGitContent } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { generateDefaultStepInsertionPath, highlightInsertedYAML } from 'components/SourceCodeEditor/EditorUtils'
+import { highlightInsertedYAML } from 'components/SourceCodeEditor/EditorUtils'
 import type { MonacoCodeEditorRef } from 'components/SourceCodeEditor/SourceCodeEditorWithRef'
 import pipelineSchemaV1 from './schema/pipeline-schema-v1.json'
 import pipelineSchemaV0 from './schema/pipeline-schema-v0.json'
@@ -264,50 +264,56 @@ const AddUpdatePipeline = (): JSX.Element => {
     ({ pathToField, range, isUpdate, formData, highlightSelection }: EntityAddUpdateInterface): void => {
       try {
         const yamlDocument = parseDocument(editorYAMLRef.current)
-        const iterableJSONPath = isUpdate ? pathToField : generateDefaultStepInsertionPath().split('.')
+        /*
+         * Copy all fields from UI to it's corresponding location in YAML AST
+         * UI values will override YAML values
+         */
         if (isUpdate) {
-          /* Currently, handle updates only "spec" of a step */
-          const nodeSpecFromFormData = get(formData, 'spec', {})
-          if (isEmpty(nodeSpecFromFormData)) {
-            return
-          }
-          /*
-           * Copy all fields from UI to it's YAML node
-           * UI values will override YAML values
+          /**
+           * @TODO - Enforce below through typecheck
            */
 
           /* Get all keys (including nested) from the UI spec object */
-          const uiKeySet = new Set(
-            getAllKeysWithPrefix(nodeSpecFromFormData as { [key: string]: string | boolean | object })
-          )
-          const iterablePathWithSpec = [...iterableJSONPath, 'spec']
-
-          uiKeySet.forEach((field: string) => {
-            const iterablePathForField = [...iterablePathWithSpec]
-            /* Fields inside nested object would have a period "." in their full field name with prefix. */
-            if (field.includes('.')) {
-              iterablePathForField.push(...(field.split('.') || []))
-            } else {
-              iterablePathForField.push(field)
-            }
-            /* Set node in YAML at specified YAML path */
-
-            /* Avoid setting objects directly as it causes comments to be dropped */
-            if (!isObject(get(nodeSpecFromFormData, field))) {
-              yamlDocument.setIn(iterablePathForField, get(nodeSpecFromFormData, field, ''))
+          const fieldPaths = getAllKeysWithPrefix(formData as { [key: string]: string | boolean | object })
+          if (!fieldPaths.length) {
+            return
+          }
+          const fieldPathSet = new Set(fieldPaths) /* To weed out duplicates, if any */
+          fieldPathSet.forEach((fieldPath: string) => {
+            const iterablePathForField = [...fieldPath.split('.')]
+            /**
+             * Set node in YAML at specified YAML path
+             * Avoid setting objects directly as it causes comments to be dropped
+             */
+            const fieldValue = get(formData, fieldPath)
+            if (!isObject(fieldValue)) {
+              yamlDocument.setIn(iterablePathForField, fieldValue)
               return
             }
-
             /* This is a corner case where
             the type of the field in UI (Object/Map) and in YAML(Scalar) are different.
             This handling is necessary to allow setting of keys from UI object to YAML 
             by changing the existing type of node in YAML to be a Map instead.
             */
-
-            const existingFieldInYAML = yamlDocument.getIn(iterablePathForField, true) as Scalar
-            if (existingFieldInYAML.type === yamlNS.Scalar.PLAIN) {
-              const fieldAsYAMLMap = new yamlNS.YAMLMap()
-              yamlDocument.setIn(iterablePathForField, fieldAsYAMLMap)
+            const existingFieldInYamlAST = yamlDocument.getIn(iterablePathForField, true) as Scalar
+            if (existingFieldInYamlAST && existingFieldInYamlAST.type === yamlNS.Scalar.PLAIN) {
+              /* Change the existing Scalar field type to a Map */
+              /* Make sure to include the actual field's comment in the Map as well */
+              /* This is a easy way to convert a JSON object to YAMLMap of fields */
+              const fieldAsYamlDocument = parseDocument(yamlNS.stringify({ ...fieldValue }))
+              const fieldMapToBeInserted = fieldAsYamlDocument.contents as YAMLMap
+              if (fieldMapToBeInserted) {
+                const mapFields: Pair[] = (fieldMapToBeInserted.items as Pair[]).map((item: Pair) => {
+                  const fieldComment = existingFieldInYamlAST.comment
+                  if ((item.value as Scalar).value === existingFieldInYamlAST.value && fieldComment) {
+                    set(item.value as Scalar, 'comment', fieldComment)
+                    return item
+                  }
+                  return item
+                })
+                set(fieldMapToBeInserted, 'items', mapFields)
+                yamlDocument.setIn(iterablePathForField, fieldMapToBeInserted)
+              }
             }
           })
 
@@ -316,9 +322,10 @@ const AddUpdatePipeline = (): JSX.Element => {
             highlightInsertedYAML({ range, editor: editorRef.current, style: css })
           }
         } else {
-          const existingSteps = (yamlDocument.getIn(iterableJSONPath) as YAMLSeq).items as [YAMLMap]
-          if (existingSteps.length > 0) {
-            yamlDocument.setIn([...iterableJSONPath, existingSteps.length], formData)
+          const fieldsToInsert = get(formData, pathToField, {})
+          const existingSteps = (yamlDocument.getIn(pathToField) as YAMLSeq).items as [YAMLMap]
+          if (!isEmpty(fieldsToInsert)) {
+            yamlDocument.setIn([...pathToField, existingSteps.length], fieldsToInsert)
           }
           /**
            * @TODO Handle highlight for entity add

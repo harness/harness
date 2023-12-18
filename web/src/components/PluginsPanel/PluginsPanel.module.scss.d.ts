@@ -19,10 +19,12 @@
 export declare const arrow: string
 export declare const breadCrumbs: string
 export declare const configForm: string
+export declare const configFormWithSyncToolbar: string
 export declare const cursor: string
 export declare const fontWeight600: string
 export declare const form: string
 export declare const formFields: string
+export declare const formHeightWithSyncToolbar: string
 export declare const pluginCategoryCard: string
 export declare const pluginDesc: string
 export declare const pluginDetailsPanel: string

@@ -1,42 +1,72 @@
 import React, { useCallback, useEffect } from 'react'
-import { connect, getIn } from 'formik'
+import { connect, getIn, useFormikContext } from 'formik'
 import type { FormikContextProps } from '@harnessio/uicore/dist/components/FormikForm/utils'
-import { has, isString } from 'lodash-es'
+import { has, isEmpty, isString } from 'lodash-es'
 import { Accordion, FormInput, Layout } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
+import type { PluginFormDataInterface } from 'components/PluginsPanel/PluginsPanel'
 
 import css from './RunStep.module.scss'
 
-function _RunStep({ formik }: FormikContextProps<unknown>): JSX.Element {
+interface RunStepProps extends FormikContextProps<PluginFormDataInterface> {
+  prefix: string
+}
+
+function _RunStep({ formik, prefix }: RunStepProps): JSX.Element {
+  const { setFieldValue, initialValues } = useFormikContext<PluginFormDataInterface>()
   const { getString } = useStrings()
 
   useEffect(() => {
-    const container = getIn(formik?.values, 'container')
-    if (isString(container)) {
-      formik?.setFieldValue('container.image', container)
+    if (!isEmpty(initialValues)) {
+      const prefixWithSpec = prefix ? `${prefix}.spec` : 'spec'
+      const containerImage = getIn(initialValues, `${prefixWithSpec}.container`)
+      if (isString(containerImage)) {
+        setFieldValue(`${prefixWithSpec}.container.image`, containerImage)
+      }
     }
-  }, [formik?.values]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [initialValues]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const getActiveTabId = useCallback((): string => {
-    if (has(formik?.values, 'container')) {
+    if (has(initialValues, getSpecFieldNameWithPrefix('container'))) {
       return 'container'
-    } else if (has(formik?.values, 'mount')) {
+    } else if (has(initialValues, getSpecFieldNameWithPrefix('mount'))) {
       return 'mount'
     }
     return ''
-  }, [formik?.values])
+  }, [initialValues])
+
+  const getFieldNameWithPrefix = useCallback(
+    (fieldName: string) => {
+      return prefix ? `${prefix}.${fieldName}` : fieldName
+    },
+    [prefix]
+  )
+
+  const getSpecFieldNameWithPrefix = useCallback(
+    (fieldName: string) => {
+      const prefixWithSpec = prefix ? `${prefix}.spec` : 'spec'
+      return prefix ? `${prefixWithSpec}.${fieldName}` : fieldName
+    },
+    [prefix]
+  )
 
   return (
     <Layout.Vertical width="inherit">
-      <FormInput.Text name={'name'} label={getString('name')} style={{ width: '100%' }} key={'name'} />
+      {/* "name" gets rendered at outside step's spec */}
+      <FormInput.Text
+        name={getFieldNameWithPrefix('name')}
+        label={getString('name')}
+        style={{ width: '100%' }}
+        key={'name'}
+      />
       <FormInput.TextArea
-        name={'script'}
+        name={getSpecFieldNameWithPrefix('script')}
         label={getString('pluginsPanel.run.script')}
         style={{ width: '100%' }}
         key={'script'}
       />
       <FormInput.Select
-        name={'shell'}
+        name={getSpecFieldNameWithPrefix('shell')}
         label={getString('pluginsPanel.run.shell')}
         style={{ width: '100%' }}
         key={'shell'}
@@ -54,13 +84,13 @@ function _RunStep({ formik }: FormikContextProps<unknown>): JSX.Element {
           details={
             <Layout.Vertical className={css.indent}>
               <FormInput.Text
-                name={'container.image'}
+                name={getSpecFieldNameWithPrefix('container.image')}
                 label={getString('pluginsPanel.run.image')}
                 style={{ width: '100%' }}
                 key={'container.image'}
               />
               <FormInput.Select
-                name={'container.pull'}
+                name={getSpecFieldNameWithPrefix('container.pull')}
                 label={getString('pluginsPanel.run.pull')}
                 style={{ width: '100%' }}
                 key={'container.pull'}
@@ -71,31 +101,31 @@ function _RunStep({ formik }: FormikContextProps<unknown>): JSX.Element {
                 ]}
               />
               <FormInput.Text
-                name={'container.entrypoint'}
+                name={getSpecFieldNameWithPrefix('container.entrypoint')}
                 label={getString('pluginsPanel.run.entrypoint')}
                 style={{ width: '100%' }}
                 key={'container.entrypoint'}
               />
               <FormInput.Text
-                name={'container.network'}
+                name={getSpecFieldNameWithPrefix('container.network')}
                 label={getString('pluginsPanel.run.network')}
                 style={{ width: '100%' }}
                 key={'container.network'}
               />
               <FormInput.Text
-                name={'container.networkMode'}
+                name={getSpecFieldNameWithPrefix('container.networkMode')}
                 label={getString('pluginsPanel.run.networkMode')}
                 style={{ width: '100%' }}
                 key={'container.networkMode'}
               />
               <FormInput.Toggle
-                name={'container.privileged'}
+                name={getSpecFieldNameWithPrefix('container.privileged')}
                 label={getString('pluginsPanel.run.privileged')}
                 style={{ width: '100%' }}
                 key={'container.privileged'}
               />
               <FormInput.Text
-                name={'container.user'}
+                name={getSpecFieldNameWithPrefix('container.user')}
                 label={getString('user')}
                 style={{ width: '100%' }}
                 key={'container.user'}
@@ -107,16 +137,16 @@ function _RunStep({ formik }: FormikContextProps<unknown>): JSX.Element {
                   details={
                     <Layout.Vertical className={css.indent}>
                       <FormInput.Text
-                        name={'container.credentials.username'}
+                        name={getSpecFieldNameWithPrefix('container.credentials.username')}
                         label={getString('pluginsPanel.run.username')}
                         style={{ width: '100%' }}
-                        key={'container.credentials.username'}
+                        key={getSpecFieldNameWithPrefix('container.credentials.username')}
                       />
                       <FormInput.Text
-                        name={'container.credentials.password'}
+                        name={getSpecFieldNameWithPrefix('container.credentials.password')}
                         label={getString('pluginsPanel.run.password')}
                         style={{ width: '100%' }}
-                        key={'container.credentials.password'}
+                        key={getSpecFieldNameWithPrefix('container.credentials.password')}
                       />
                     </Layout.Vertical>
                   }
@@ -131,13 +161,13 @@ function _RunStep({ formik }: FormikContextProps<unknown>): JSX.Element {
           details={
             <Layout.Vertical className={css.indent}>
               <FormInput.Text
-                name={'mount.name'}
+                name={getSpecFieldNameWithPrefix('mount.name')}
                 label={getString('name')}
                 style={{ width: '100%' }}
                 key={'mount.name'}
               />
               <FormInput.Text
-                name={'mount.path'}
+                name={getSpecFieldNameWithPrefix('mount.path')}
                 label={getString('pluginsPanel.run.path')}
                 style={{ width: '100%' }}
                 key={'mount.path'}

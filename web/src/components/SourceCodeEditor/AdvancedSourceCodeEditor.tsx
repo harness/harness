@@ -147,28 +147,32 @@ const Editor = forwardRef<MonacoCodeEditorRef, AdvancedSourceCodeEditorProps>((p
 
   /* Prepare info required to update a specific field inside an entity */
   const prepareEntityFieldUpdate = useCallback(async () => {
-    const editor = editorRef.current
-    if (editor && !isEmpty(entityYAMLDataRef.current)) {
-      const { range: selectSymbolRange } = entityYAMLDataRef.current
-      const currentPosition = editor.getPosition()
-      /* Proceed with form UI update only if yaml update is relevant to the selected symbol */
-      if (selectSymbolRange && currentPosition && Range.containsPosition(selectSymbolRange, currentPosition)) {
-        const model = editor.getModel()
-        if (model && model !== null) {
-          const { lineNumber, column } = currentPosition || {}
-          const symbols = await getDocumentSymbols(model)
-          if (lineNumber && column) {
-            const pathToField: string[] = getPathFromRange(
-              { startLineNumber: lineNumber, startColumn: column, endLineNumber: lineNumber, endColumn: column },
-              symbols
-            )
-            setEntityFieldYAMLData({
-              pathToField,
-              formData: get(parse(model.getValue() || ''), (pathToField as string[]).join('.'))
-            })
+    try {
+      const editor = editorRef.current
+      if (editor && !isEmpty(entityYAMLDataRef.current)) {
+        const { range: selectSymbolRange } = entityYAMLDataRef.current
+        const currentPosition = editor.getPosition()
+        /* Proceed with form UI update only if yaml update is relevant to the selected symbol */
+        if (selectSymbolRange && currentPosition && Range.containsPosition(selectSymbolRange, currentPosition)) {
+          const model = editor.getModel()
+          if (model && model !== null) {
+            const { lineNumber, column } = currentPosition || {}
+            const symbols = await getDocumentSymbols(model)
+            if (lineNumber && column) {
+              const pathToField: string[] = getPathFromRange(
+                { startLineNumber: lineNumber, startColumn: column, endLineNumber: lineNumber, endColumn: column },
+                symbols
+              )
+              setEntityFieldYAMLData({
+                pathToField,
+                formData: get(parse(model.getValue() || ''), (pathToField as string[]).join('.'))
+              })
+            }
           }
         }
       }
+    } catch (e) {
+      // ignore error, including YAML parse error required on YAML change
     }
   }, [])
 
