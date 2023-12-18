@@ -18,20 +18,11 @@ import React, { useState } from 'react'
 import { Intent } from '@blueprintjs/core'
 import * as yup from 'yup'
 import { Color } from '@harnessio/design-system'
-import { Button, Container, Layout, FlexExpander, Formik, FormikForm, FormInput, Text } from '@harnessio/uicore'
+import { Button, Layout, FlexExpander, Formik, FormikForm, FormInput, Text } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { FontVariation } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { REGEX_VALID_REPO_NAME } from 'utils/Utils'
-import {
-  ImportFormData,
-  RepoVisibility,
-  GitProviders,
-  getProviders,
-  getOrgLabel,
-  getOrgPlaceholder
-} from 'utils/GitUtils'
-import Private from '../../../icons/private.svg'
+import { ImportFormData, GitProviders, getProviders, getOrgLabel, getOrgPlaceholder } from 'utils/GitUtils'
 import css from '../NewRepoModalButton.module.scss'
 
 interface ImportFormProps {
@@ -56,8 +47,7 @@ const ImportForm = (props: ImportFormProps) => {
     username: '',
     password: '',
     name: '',
-    description: '',
-    isPublic: RepoVisibility.PRIVATE
+    description: ''
   }
 
   const validationSchemaStepOne = yup.object().shape({
@@ -243,56 +233,6 @@ const ImportForm = (props: ImportFormProps) => {
                 dataTooltipId: 'repositoryDescriptionTextField'
               }}
             />
-
-            <hr className={css.dividerContainer} />
-
-            <Container>
-              <FormInput.RadioGroup
-                name="isPublic"
-                label=""
-                items={[
-                  {
-                    label: (
-                      <Container>
-                        <Layout.Horizontal>
-                          <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} />
-                          <Container>
-                            <Layout.Vertical spacing="xsmall">
-                              <Text>{getString('public')}</Text>
-                              <Text font={{ variation: FontVariation.TINY }}>
-                                {getString('createRepoModal.publicLabel')}
-                              </Text>
-                            </Layout.Vertical>
-                          </Container>
-                        </Layout.Horizontal>
-                      </Container>
-                    ),
-                    value: RepoVisibility.PUBLIC
-                  },
-                  {
-                    label: (
-                      <Container>
-                        <Layout.Horizontal>
-                          <Container margin={{ right: 'medium' }}>
-                            <img width={20} height={20} src={Private} />
-                          </Container>
-                          {/* <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} /> */}
-                          <Container margin={{ left: 'small' }}>
-                            <Layout.Vertical spacing="xsmall">
-                              <Text>{getString('private')}</Text>
-                              <Text font={{ variation: FontVariation.TINY }}>
-                                {getString('createRepoModal.privateLabel')}
-                              </Text>
-                            </Layout.Vertical>
-                          </Container>
-                        </Layout.Horizontal>
-                      </Container>
-                    ),
-                    value: RepoVisibility.PRIVATE
-                  }
-                ]}
-              />
-            </Container>
 
             <Layout.Horizontal
               spacing="small"

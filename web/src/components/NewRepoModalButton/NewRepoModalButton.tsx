@@ -46,6 +46,7 @@ import {
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useGet, useMutate } from 'restful-react'
+import { Render } from 'react-jsx-match'
 import { get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
@@ -107,6 +108,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
     const [branchName, setBranchName] = useState(DEFAULT_BRANCH_NAME)
+    const [enablePublicRepo, setEnablePublicRepo] = useState(false)
     const { showError } = useToaster()
 
     const { mutate: createRepo, loading: submitLoading } = useMutate<TypesRepository>({
@@ -141,13 +143,31 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       loading: licenseLoading,
       error: licenseError
     } = useGet({ path: '/api/v1/resources/license' })
-    const loading = submitLoading || gitIgnoreLoading || licenseLoading || importRepoLoading || submitImportLoading
+    const {
+      data: systemConfig,
+      loading: systemConfigLoading,
+      error: systemConfigError
+    } = useGet({ path: 'api/v1/system/config' })
+
+    const loading =
+      submitLoading ||
+      gitIgnoreLoading ||
+      licenseLoading ||
+      importRepoLoading ||
+      submitImportLoading ||
+      systemConfigLoading
 
     useEffect(() => {
-      if (gitIgnoreError || licenseError) {
-        showError(getErrorMessage(gitIgnoreError || licenseError), 0)
+      if (gitIgnoreError || licenseError || systemConfigError) {
+        showError(getErrorMessage(gitIgnoreError || licenseError || systemConfigError), 0)
       }
-    }, [gitIgnoreError, licenseError, showError])
+    }, [gitIgnoreError, licenseError, systemConfigError, showError])
+
+    useEffect(() => {
+      if (systemConfig) {
+        setEnablePublicRepo(systemConfig.public_resource_creation_enabled)
+      }
+    }, [systemConfig])
     const handleSubmit = (formData: RepoFormData) => {
       try {
         const payload: OpenapiCreateRepositoryRequest = {
@@ -309,54 +329,56 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
                       {getString('createRepoModal.branch')}
                     </Text>
                   </Container>
-                  <hr className={css.dividerContainer} />
-                  <Container>
-                    <FormInput.RadioGroup
-                      name="isPublic"
-                      label=""
-                      items={[
-                        {
-                          label: (
-                            <Container>
-                              <Layout.Horizontal>
-                                <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} />
-                                <Container>
-                                  <Layout.Vertical spacing="xsmall">
-                                    <Text>{getString('public')}</Text>
-                                    <Text font={{ variation: FontVariation.TINY }}>
-                                      {getString('createRepoModal.publicLabel')}
-                                    </Text>
-                                  </Layout.Vertical>
-                                </Container>
-                              </Layout.Horizontal>
-                            </Container>
-                          ),
-                          value: RepoVisibility.PUBLIC
-                        },
-                        {
-                          label: (
-                            <Container>
-                              <Layout.Horizontal>
-                                <Container margin={{ right: 'medium' }}>
-                                  <img width={20} height={20} src={Private} />
-                                </Container>
-                                {/* <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} /> */}
-                                <Container margin={{ left: 'small' }}>
-                                  <Layout.Vertical spacing="xsmall">
-                                    <Text>{getString('private')}</Text>
-                                    <Text font={{ variation: FontVariation.TINY }}>
-                                      {getString('createRepoModal.privateLabel')}
-                                    </Text>
-                                  </Layout.Vertical>
-                                </Container>
-                              </Layout.Horizontal>
-                            </Container>
-                          ),
-                          value: RepoVisibility.PRIVATE
-                        }
-                      ]}
-                    />
-                  </Container>
+                  <Render when={enablePublicRepo}>
+                    <hr className={css.dividerContainer} />
+                    <Container>
+                      <FormInput.RadioGroup
+                        name="isPublic"
+                        label=""
+                        items={[
+                          {
+                            label: (
+                              <Container>
+                                <Layout.Horizontal>
+                                  <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} />
+                                  <Container>
+                                    <Layout.Vertical spacing="xsmall">
+                                      <Text>{getString('public')}</Text>
+                                      <Text font={{ variation: FontVariation.TINY }}>
+                                        {getString('createRepoModal.publicLabel')}
+                                      </Text>
+                                    </Layout.Vertical>
+                                  </Container>
+                                </Layout.Horizontal>
+                              </Container>
+                            ),
+                            value: RepoVisibility.PUBLIC
+                          },
+                          {
+                            label: (
+                              <Container>
+                                <Layout.Horizontal>
+                                  <Container margin={{ right: 'medium' }}>
+                                    <img width={20} height={20} src={Private} />
+                                  </Container>
+                                  {/* <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} /> */}
+                                  <Container margin={{ left: 'small' }}>
+                                    <Layout.Vertical spacing="xsmall">
+                                      <Text>{getString('private')}</Text>
+                                      <Text font={{ variation: FontVariation.TINY }}>
+                                        {getString('createRepoModal.privateLabel')}
+                                      </Text>
+                                    </Layout.Vertical>
+                                  </Container>
+                                </Layout.Horizontal>
+                              </Container>
+                            ),
+                            value: RepoVisibility.PRIVATE
+                          }
+                        ]}
+                      />
+                    </Container>
+                  </Render>
                   <hr className={css.dividerContainer} />
 
                   <FormInput.Select

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Container,
   Layout,
@@ -33,7 +33,8 @@ import cx from 'classnames'
 import { Color, FontVariation, Intent } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 import { noop } from 'lodash-es'
-import { useMutate } from 'restful-react'
+import { useMutate, useGet } from 'restful-react'
+import { Render } from 'react-jsx-match'
 import { ACCESS_MODES, getErrorMessage, permissionProps, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import type { TypesRepository } from 'services/code'
@@ -64,6 +65,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const currRepoVisibility = repoMetadata?.is_public === true ? RepoVisibility.PUBLIC : RepoVisibility.PRIVATE
 
   const [repoVis, setRepoVis] = useState<RepoVisibility>(currRepoVisibility)
+  const [enablePublicRepo, setEnablePublicRepo] = useState(false)
   const { mutate } = useMutate({
     verb: 'PATCH',
     path: `/api/v1/repos/${repoMetadata?.path}/+/`
@@ -87,6 +89,14 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
     },
     [space]
   )
+  const { data: systemConfig } = useGet({ path: 'api/v1/system/config' })
+
+  useEffect(() => {
+    if (systemConfig) {
+      setEnablePublicRepo(systemConfig.public_resource_creation_enabled)
+    }
+  }, [systemConfig])
+
   const ModalComponent: React.FC = () => {
     return (
       <Dialog
@@ -231,87 +241,89 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 </Container>
               </Layout.Horizontal>
             </Container>
-            <Container padding="large" margin={{ bottom: 'medium' }} className={css.generalContainer}>
-              <Layout.Horizontal padding={{ bottom: 'medium' }}>
-                <Container className={css.label}>
-                  <Text color={Color.GREY_600} font={{ size: 'small' }}>
-                    {getString('repoVisibility')}
-                  </Text>
-                </Container>
-                <Container className={css.content}>
-                  <FormInput.RadioGroup
-                    name="isPublic"
-                    label=""
-                    onChange={evt => {
-                      setRepoVis((evt.target as HTMLInputElement).value as RepoVisibility)
-                    }}
-                    className={css.radioContainer}
-                    items={[
-                      {
-                        label: (
-                          <Container>
-                            <Layout.Horizontal>
-                              <Icon
-                                className={css.iconContainer}
-                                name="git-clone-step"
-                                size={20}
-                                margin={{ left: 'small', right: 'medium' }}
-                              />
-                              <Container>
-                                <Layout.Vertical spacing="xsmall">
-                                  <Text font={{ size: 'small' }}>{getString('public')}</Text>
-                                  <Text font={{ variation: FontVariation.TINY }}>
-                                    {getString('createRepoModal.publicLabel')}
-                                  </Text>
-                                </Layout.Vertical>
-                              </Container>
-                            </Layout.Horizontal>
-                          </Container>
-                        ),
+            <Render when={enablePublicRepo}>
+              <Container padding="large" margin={{ bottom: 'medium' }} className={css.generalContainer}>
+                <Layout.Horizontal padding={{ bottom: 'medium' }}>
+                  <Container className={css.label}>
+                    <Text color={Color.GREY_600} font={{ size: 'small' }}>
+                      {getString('repoVisibility')}
+                    </Text>
+                  </Container>
+                  <Container className={css.content}>
+                    <FormInput.RadioGroup
+                      name="isPublic"
+                      label=""
+                      onChange={evt => {
+                        setRepoVis((evt.target as HTMLInputElement).value as RepoVisibility)
+                      }}
+                      className={css.radioContainer}
+                      items={[
+                        {
+                          label: (
+                            <Container>
+                              <Layout.Horizontal>
+                                <Icon
+                                  className={css.iconContainer}
+                                  name="git-clone-step"
+                                  size={20}
+                                  margin={{ left: 'small', right: 'medium' }}
+                                />
+                                <Container>
+                                  <Layout.Vertical spacing="xsmall">
+                                    <Text font={{ size: 'small' }}>{getString('public')}</Text>
+                                    <Text font={{ variation: FontVariation.TINY }}>
+                                      {getString('createRepoModal.publicLabel')}
+                                    </Text>
+                                  </Layout.Vertical>
+                                </Container>
+                              </Layout.Horizontal>
+                            </Container>
+                          ),
 
-                        value: RepoVisibility.PUBLIC
-                      },
-                      {
-                        label: (
-                          <Container>
-                            <Layout.Horizontal>
-                              <Container className={css.iconContainer} margin={{ left: 'small', right: 'medium' }}>
-                                <img width={20} height={20} src={Private} />
-                              </Container>
-                              <Container margin={{ left: 'small' }}>
-                                <Layout.Vertical spacing="xsmall">
-                                  <Text font={{ size: 'small' }}>{getString('private')}</Text>
-                                  <Text font={{ variation: FontVariation.TINY }}>
-                                    {getString('createRepoModal.privateLabel')}
-                                  </Text>
-                                </Layout.Vertical>
-                              </Container>
-                            </Layout.Horizontal>
-                          </Container>
-                        ),
-                        value: RepoVisibility.PRIVATE
-                      }
-                    ]}
-                  />
-                  <hr className={css.dividerContainer} />
-                  <Layout.Horizontal className={css.buttonContainer}>
-                    {repoVis !== currRepoVisibility ? (
-                      <Button
-                        margin={{ right: 'medium' }}
-                        type="submit"
-                        text={getString('save')}
-                        variation={ButtonVariation.PRIMARY}
-                        size={ButtonSize.SMALL}
-                        onClick={() => {
-                          setRepoVis(formik.values.isPublic)
-                          openModal()
-                        }}
-                      />
-                    ) : null}
-                  </Layout.Horizontal>
-                </Container>
-              </Layout.Horizontal>
-            </Container>
+                          value: RepoVisibility.PUBLIC
+                        },
+                        {
+                          label: (
+                            <Container>
+                              <Layout.Horizontal>
+                                <Container className={css.iconContainer} margin={{ left: 'small', right: 'medium' }}>
+                                  <img width={20} height={20} src={Private} />
+                                </Container>
+                                <Container margin={{ left: 'small' }}>
+                                  <Layout.Vertical spacing="xsmall">
+                                    <Text font={{ size: 'small' }}>{getString('private')}</Text>
+                                    <Text font={{ variation: FontVariation.TINY }}>
+                                      {getString('createRepoModal.privateLabel')}
+                                    </Text>
+                                  </Layout.Vertical>
+                                </Container>
+                              </Layout.Horizontal>
+                            </Container>
+                          ),
+                          value: RepoVisibility.PRIVATE
+                        }
+                      ]}
+                    />
+                    <hr className={css.dividerContainer} />
+                    <Layout.Horizontal className={css.buttonContainer}>
+                      {repoVis !== currRepoVisibility ? (
+                        <Button
+                          margin={{ right: 'medium' }}
+                          type="submit"
+                          text={getString('save')}
+                          variation={ButtonVariation.PRIMARY}
+                          size={ButtonSize.SMALL}
+                          onClick={() => {
+                            setRepoVis(formik.values.isPublic)
+                            openModal()
+                          }}
+                        />
+                      ) : null}
+                    </Layout.Horizontal>
+                  </Container>
+                </Layout.Horizontal>
+              </Container>
+            </Render>
             <Container padding="medium" className={css.generalContainer}>
               <Container className={css.deleteContainer}>
                 <Text icon="main-trash" color={Color.GREY_600} font={{ size: 'small' }}>

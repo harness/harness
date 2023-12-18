@@ -58,7 +58,6 @@ export interface ImportFormData {
   password: string
   name: string
   description: string
-  isPublic: RepoVisibility
 }
 
 export interface ExportFormData {
