@@ -1,13 +1,5 @@
 import React, { Dispatch, SetStateAction } from 'react'
-import {
-  Container,
-  Text,
-  type SelectOption,
-  MultiSelectDropDown,
-  Button,
-  ButtonVariation,
-  DropDown
-} from '@harnessio/uicore'
+import { Container, Text, type SelectOption, MultiSelectDropDown, Button, ButtonVariation } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useGet } from 'restful-react'
 
@@ -38,15 +30,15 @@ interface KeywordSearchFiltersProps {
   isRepoLevelSearch?: boolean
   selectedRepositories: SelectOption[]
   setRepositories: Dispatch<SetStateAction<SelectOption[]>>
-  selectedLanguage?: string
-  setLanguage: Dispatch<SetStateAction<string | undefined>>
+  selectedLanguages: SelectOption[]
+  setLanguages: Dispatch<SetStateAction<SelectOption[]>>
 }
 
 const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
   isRepoLevelSearch,
-  selectedLanguage,
+  selectedLanguages,
   selectedRepositories,
-  setLanguage,
+  setLanguages,
   setRepositories
 }) => {
   const { getString } = useStrings()
@@ -84,11 +76,11 @@ const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
         <Text font={{ variation: FontVariation.SMALL_SEMI }} color={Color.GREY_600} margin={{ bottom: 'xsmall' }}>
           {getString('language')}
         </Text>
-        <DropDown
+        <MultiSelectDropDown
           className={css.multiSelect}
-          value={selectedLanguage}
-          placeholder={getString('selectLanguagePlaceholder')}
-          onChange={option => setLanguage(String(option.value))}
+          value={selectedLanguages}
+          placeholder={selectedLanguages.length ? '' : getString('selectLanguagePlaceholder')}
+          onChange={setLanguages}
           items={languageOptions}
         />
       </Container>
@@ -97,7 +89,7 @@ const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
         text={getString('clear')}
         onClick={() => {
           setRepositories([])
-          setLanguage(undefined)
+          setLanguages([])
         }}
       />
     </div>

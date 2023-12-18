@@ -31,7 +31,7 @@ import {
 import type { Extension } from '@codemirror/state'
 import { Link } from 'react-router-dom'
 import { useMutate } from 'restful-react'
-import { debounce, escapeRegExp } from 'lodash-es'
+import { debounce, flatten, sortBy, uniq } from 'lodash-es'
 import Keywords from 'react-keywords'
 import cx from 'classnames'
 
@@ -66,7 +66,7 @@ const Search = () => {
   const [searchTerm, setSearchTerm] = useState(q || '')
 
   const [selectedRepositories, setSelectedRepositories] = useState<SelectOption[]>([])
-  const [selectedLanguage, setSelectedLanguage] = useState<string>()
+  const [selectedLanguages, setSelectedLanguages] = useState<SelectOption[]>([])
 
   const [searchResults, setSearchResults] = useState<KeywordSearchResponse>()
 
@@ -83,8 +83,17 @@ const Search = () => {
 
           const repoPaths = selectedRepositories.map(option => String(option.value))
 
-          if (selectedLanguage) {
-            text += ` lang:${String(selectedLanguage)}`
+          if (selectedLanguages.length) {
+            if (selectedLanguages.length === 1) {
+              text += ` lang:${String(selectedLanguages[0].value)}`
+            } else {
+              const multiLangQuery = `(${selectedLanguages.map(option => `lang:${String(option.value)}`).join(' or ')})`
+              text += ` ${multiLangQuery}`
+            }
+          }
+
+          if (!text.match(/case:(yes|no)/gi)?.length) {
+            text += ` case:no`
           }
 
           const query = text.replace(/(?:repo|count):(?:[^\s]+|$)/g, '').trim()
@@ -104,14 +113,14 @@ const Search = () => {
         showError(getErrorMessage(error))
       }
     }, 300),
-    [selectedLanguage, selectedRepositories, repoPath]
+    [selectedLanguages, selectedRepositories, repoPath]
   )
 
   useEffect(() => {
     if (searchTerm) {
       debouncedSearch(searchTerm)
     }
-  }, [selectedLanguage, selectedRepositories])
+  }, [selectedLanguages, selectedRepositories])
 
   return (
     <Container className={css.main}>
@@ -119,8 +128,10 @@ const Search = () => {
         <KeywordSearchbar
           value={searchTerm}
           onChange={text => {
-            setSearchResults(undefined)
             setSearchTerm(text)
+          }}
+          onSearch={text => {
+            setSearchResults(undefined)
             updateQueryParams({ q: text })
             debouncedSearch(text)
           }}
@@ -130,9 +141,9 @@ const Search = () => {
         <LoadingSpinner visible={isSearching} />
         <KeywordSearchFilters
           isRepoLevelSearch={Boolean(repoName)}
-          selectedLanguage={selectedLanguage}
+          selectedLanguages={selectedLanguages}
           selectedRepositories={selectedRepositories}
-          setLanguage={setSelectedLanguage}
+          setLanguages={setSelectedLanguages}
           setRepositories={setSelectedRepositories}
         />
         {searchResults?.file_matches.length ? (
@@ -161,45 +172,23 @@ export default Search
 interface CodeBlock {
   lineNumberOffset: number
   codeBlock: string
+  fragmentMatches: string[]
 }
 
 export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; searchTerm: string }) => {
   const { routes } = useAppContext()
-  const { getString } = useStrings()
 
   const [isCollapsed, setIsCollapsed] = useToggle(false)
   const [showMoreMatchs, setShowMoreMatches] = useState(false)
 
-  const matchDecoratorPlugin: Extension = useMemo(() => {
-    const placeholderMatcher = new MatchDecorator({
-      regexp: new RegExp(`${escapeRegExp(fileMatch.matches[0].fragments[0].match)}`, 'gi'),
-      decoration: Decoration.mark({ class: css.highlight })
-    })
-
-    return ViewPlugin.fromClass(
-      class {
-        placeholders: DecorationSet
-        constructor(view: EditorView) {
-          this.placeholders = placeholderMatcher.createDeco(view)
-        }
-        update(update: ViewUpdate) {
-          this.placeholders = placeholderMatcher.updateDeco(update, this.placeholders)
-        }
-      },
-      {
-        decorations: instance => instance.placeholders,
-        provide: plugin =>
-          EditorView.atomicRanges.of(view => {
-            return view.plugin(plugin)?.placeholders || Decoration.none
-          })
-      }
-    )
-  }, [])
+  const isCaseSensitive = searchTerm.includes('case:yes')
 
   const codeBlocks: CodeBlock[] = useMemo(() => {
-    const codeBlocksArr: Array<{ lineNumberOffset: number; codeBlock: string }> = []
+    const codeBlocksArr: CodeBlock[] = []
 
-    fileMatch.matches.forEach(keywordMatch => {
+    const sortedMatches = sortBy(fileMatch.matches, 'line_num')
+
+    sortedMatches.forEach(keywordMatch => {
       const lines: string[] = []
 
       if (keywordMatch.before.trim()) {
@@ -226,7 +215,8 @@ export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; 
 
       codeBlocksArr.push({
         lineNumberOffset,
-        codeBlock
+        codeBlock,
+        fragmentMatches: keywordMatch.fragments.map(fragmentMatch => fragmentMatch.match)
       })
     })
 
@@ -235,6 +225,11 @@ export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; 
 
   const collapsedCodeBlocks = showMoreMatchs ? codeBlocks.slice(0, 25) : codeBlocks.slice(0, 2)
   const repoName = fileMatch.repo_path.split('/').pop()
+
+  const isFileMatch = fileMatch.matches[0].line_num === 0
+
+  const flattenedMatches = flatten(codeBlocks.map(codeBlock => codeBlock.fragmentMatches))
+  const allFileMatches = isCaseSensitive ? flattenedMatches : uniq(flattenedMatches.map(match => match.toLowerCase()))
 
   return (
     <Container className={css.searchResult}>
@@ -251,13 +246,15 @@ export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; 
           </Text>
         </Link>
         <Link
-          to={routes.toCODERepository({
+          to={`${routes.toCODERepository({
             repoPath: fileMatch.repo_path,
             gitRef: fileMatch.repo_branch,
             resourcePath: fileMatch.file_name
-          })}>
+          })}?keyword=${allFileMatches.join('|')}`}>
           <Text font={{ variation: FontVariation.SMALL_BOLD }} color={Color.PRIMARY_7}>
-            <Keywords value={searchTerm} backgroundColor="var(--yellow-300">
+            <Keywords
+              value={isFileMatch ? fileMatch.matches[0].fragments[0].match : ''}
+              backgroundColor="var(--yellow-300)">
               {fileMatch.file_name}
             </Keywords>
           </Text>
@@ -265,68 +262,133 @@ export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; 
       </Layout.Horizontal>
       <div className={cx({ [css.isCollapsed]: isCollapsed })}>
         {collapsedCodeBlocks.map((codeBlock, index) => {
-          const showMoreMatchesFooter = codeBlocks.length > 2 && index === collapsedCodeBlocks.length - 1
-
-          /** File Match */
-          if (codeBlock.lineNumberOffset === 0) {
-            return null
-          }
-
           return (
-            <>
-              <Editor
-                inGitBlame
-                content={codeBlock.codeBlock}
-                standalone={true}
-                readonly={true}
-                repoMetadata={undefined}
-                filename={fileMatch.file_name}
-                extensions={[
-                  matchDecoratorPlugin,
-                  lineNumbers({
-                    formatNumber: n => String(n - 1 + codeBlock.lineNumberOffset)
-                  })
-                ]}
-                className={css.editorCtn}
-              />
-              {showMoreMatchesFooter ? (
-                <Layout.Horizontal
-                  spacing="small"
-                  className={css.showMoreCtn}
-                  onClick={() => setShowMoreMatches(prevVal => !prevVal)}
-                  flex={{ alignItems: 'center', justifyContent: 'flex-start' }}
-                  {...ButtonRoleProps}>
-                  {!showMoreMatchs ? <Plus /> : <Minus />}
-                  <Text font={{ variation: FontVariation.TINY_SEMI }} color={Color.GREY_400}>
-                    {!showMoreMatchs
-                      ? getString('showNMoreMatches', { n: codeBlocks.length - 2 })
-                      : getString('showLessMatches')}
-                  </Text>
-                  {codeBlocks.length > 25 && showMoreMatchs ? (
-                    <Text
-                      font={{ variation: FontVariation.TINY }}
-                      border={{ left: true }}
-                      padding={{ left: 'small' }}
-                      color={Color.GREY_400}>
-                      {getString('nMoreMatches', { n: codeBlocks.length - 25 })}{' '}
-                      <Link
-                        target="_blank"
-                        referrerPolicy="no-referrer"
-                        to={`${routes.toCODERepository({
-                          repoPath: fileMatch.repo_path,
-                          gitRef: fileMatch.repo_branch,
-                          resourcePath: fileMatch.file_name
-                        })}?keyword=${searchTerm}`}>
-                        {getString('seeNMoreMatches', { n: codeBlocks.length })}
-                      </Link>
-                    </Text>
-                  ) : null}
-                </Layout.Horizontal>
-              ) : null}
-            </>
+            <CodeBlock
+              key={`${fileMatch.file_name}_${index}`}
+              codeBlock={codeBlock}
+              fileName={fileMatch.file_name}
+              isCaseSensitive={isCaseSensitive}
+              showMoreMatchesFooter={codeBlocks.length > 2 && index === collapsedCodeBlocks.length - 1}
+              totalCodeBlocks={codeBlocks.length}
+              repoBranch={fileMatch.repo_branch}
+              repoPath={fileMatch.repo_path}
+              allFileMatches={allFileMatches}
+              showMoreMatchs={showMoreMatchs}
+              setShowMoreMatches={setShowMoreMatches}
+            />
           )
         })}
       </div>
     </Container>
+  )
+}
+
+const CodeBlock = ({
+  codeBlock,
+  fileName,
+  isCaseSensitive,
+  showMoreMatchesFooter,
+  repoPath,
+  repoBranch,
+  totalCodeBlocks,
+  allFileMatches,
+  showMoreMatchs,
+  setShowMoreMatches
+}: {
+  codeBlock: CodeBlock
+  showMoreMatchesFooter: boolean
+  isCaseSensitive: boolean
+  fileName: string
+  repoPath: string
+  repoBranch: string
+  totalCodeBlocks: number
+  allFileMatches: string[]
+  showMoreMatchs: boolean
+  setShowMoreMatches: React.Dispatch<React.SetStateAction<boolean>>
+}) => {
+  const { routes } = useAppContext()
+  const { getString } = useStrings()
+
+  const matchDecoratorPlugin: Extension = useMemo(() => {
+    const placeholderMatcher = new MatchDecorator({
+      regexp: new RegExp(codeBlock.fragmentMatches.join('|'), isCaseSensitive ? 'g' : 'gi'),
+      decoration: Decoration.mark({ class: css.highlight })
+    })
+
+    return ViewPlugin.fromClass(
+      class {
+        placeholders: DecorationSet
+        constructor(view: EditorView) {
+          this.placeholders = placeholderMatcher.createDeco(view)
+        }
+        update(update: ViewUpdate) {
+          this.placeholders = placeholderMatcher.updateDeco(update, this.placeholders)
+        }
+      },
+      {
+        decorations: instance => instance.placeholders,
+        provide: plugin =>
+          EditorView.atomicRanges.of(view => {
+            return view.plugin(plugin)?.placeholders || Decoration.none
+          })
+      }
+    )
+  }, [isCaseSensitive])
+
+  /** File Match */
+  if (codeBlock.lineNumberOffset === 0) {
+    return null
+  }
+
+  return (
+    <>
+      <Editor
+        inGitBlame
+        content={codeBlock.codeBlock}
+        standalone={true}
+        readonly={true}
+        repoMetadata={undefined}
+        filename={fileName}
+        extensions={[
+          matchDecoratorPlugin,
+          lineNumbers({
+            formatNumber: n => String(n - 1 + codeBlock.lineNumberOffset)
+          })
+        ]}
+        className={css.editorCtn}
+      />
+      {showMoreMatchesFooter ? (
+        <Layout.Horizontal
+          spacing="small"
+          className={css.showMoreCtn}
+          onClick={() => setShowMoreMatches(prevVal => !prevVal)}
+          flex={{ alignItems: 'center', justifyContent: 'flex-start' }}
+          {...ButtonRoleProps}>
+          {!showMoreMatchs ? <Plus /> : <Minus />}
+          <Text font={{ variation: FontVariation.TINY_SEMI }} color={Color.GREY_400}>
+            {!showMoreMatchs ? getString('showNMoreMatches', { n: totalCodeBlocks - 2 }) : getString('showLessMatches')}
+          </Text>
+          {totalCodeBlocks > 25 && showMoreMatchs ? (
+            <Text
+              font={{ variation: FontVariation.TINY }}
+              border={{ left: true }}
+              padding={{ left: 'small' }}
+              color={Color.GREY_400}>
+              {getString('nMoreMatches', { n: totalCodeBlocks - 25 })}{' '}
+              <Link
+                target="_blank"
+                referrerPolicy="no-referrer"
+                to={`${routes.toCODERepository({
+                  repoPath,
+                  gitRef: repoBranch,
+                  resourcePath: fileName
+                })}?keyword=${allFileMatches.join('|')}`}>
+                {getString('seeNMoreMatches', { n: totalCodeBlocks })}
+              </Link>
+            </Text>
+          ) : null}
+        </Layout.Horizontal>
+      ) : null}
+    </>
   )
 }

@@ -173,7 +173,7 @@ export function FileContent({
     }
 
     const editorModel = editor.getModel() as editor.ITextModel
-    const keywordMatches: editor.FindMatch[] = editorModel.findMatches(keyword, false, false, false, null, false)
+    const keywordMatches: editor.FindMatch[] = editorModel.findMatches(keyword, false, true, false, null, false)
 
     if (keywordMatches.length > 0) {
       keywordMatches.forEach((match: editor.FindMatch): void => {
