@@ -380,43 +380,44 @@ const CommentsThread = <T = unknown,>({
                         {outlets[CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]}
                       </Container>
                     </Render>
-                    <OptionsMenuButton
-                      isDark={true}
-                      icon="Options"
-                      iconProps={{ size: 14 }}
-                      style={{ padding: '5px' }}
-                      disabled={!!commentItem?.deleted}
-                      width="100px"
-                      items={[
-                        {
-                          hasIcon: true,
-                          className: css.optionMenuIcon,
-                          iconName: 'Edit',
-                          text: getString('edit'),
-                          onClick: () => setEditIndexes({ ...editIndexes, ...{ [index]: true } })
-                        },
-                        {
-                          hasIcon: true,
-                          className: css.optionMenuIcon,
-                          iconName: 'code-quote',
-                          text: getString('quote'),
-                          onClick: () => onQuote(commentItem?.content)
-                        },
-                        '-',
-                        {
-                          className: css.deleteIcon,
-                          hasIcon: true,
-                          iconName: 'main-trash',
-                          isDanger: true,
-                          text: getString('delete'),
-                          onClick: async () => {
-                            if (await handleAction(CommentAction.DELETE, '', commentItem)) {
-                              resetStateAtIndex(index)
+                    <Render when={!commentItem?.deleted}>
+                      <OptionsMenuButton
+                        isDark={true}
+                        icon="Options"
+                        iconProps={{ size: 14 }}
+                        style={{ padding: '5px' }}
+                        width="100px"
+                        items={[
+                          {
+                            hasIcon: true,
+                            className: css.optionMenuIcon,
+                            iconName: 'Edit',
+                            text: getString('edit'),
+                            onClick: () => setEditIndexes({ ...editIndexes, ...{ [index]: true } })
+                          },
+                          {
+                            hasIcon: true,
+                            className: css.optionMenuIcon,
+                            iconName: 'code-quote',
+                            text: getString('quote'),
+                            onClick: () => onQuote(commentItem?.content)
+                          },
+                          '-',
+                          {
+                            className: css.deleteIcon,
+                            hasIcon: true,
+                            iconName: 'main-trash',
+                            isDanger: true,
+                            text: getString('delete'),
+                            onClick: async () => {
+                              if (await handleAction(CommentAction.DELETE, '', commentItem)) {
+                                resetStateAtIndex(index)
+                              }
                             }
                           }
-                        }
-                      ]}
-                    />
+                        ]}
+                      />
+                    </Render>
                   </Layout.Horizontal>
                 </Layout.Horizontal>
               }

@@ -83,8 +83,9 @@ export const useConfirmationDialog = (props: UseConfirmationDialogProps): UseCon
   const onClose = React.useCallback(
     (isConfirmed: boolean): void => {
       onCloseDialog?.(isConfirmed)
+      hideModal()
+      if (persistDialog) showModal()
       if (!isConfirmed) hideModal()
-      else if (persistDialog) showModal()
     },
     [hideModal, onCloseDialog, persistDialog]
   )
