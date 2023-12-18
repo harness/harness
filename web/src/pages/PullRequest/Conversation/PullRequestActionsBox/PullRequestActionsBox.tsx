@@ -63,6 +63,7 @@ import css from './PullRequestActionsBox.module.scss'
 
 const codeOwnersNotFoundMessage = 'CODEOWNERS file not found'
 const codeOwnersNotFoundMessage2 = `path "CODEOWNERS" not found`
+const codeOwnersNotFoundMessage3 = `failed to find node 'CODEOWNERS' in 'main': failed to get tree node: failed to ls file: path "CODEOWNERS" not found`
 
 const POLLING_INTERVAL = 60000
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
@@ -134,7 +135,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
             setAllowedStrats(err.allowed_methods)
           } else if (
             getErrorMessage(err) === codeOwnersNotFoundMessage ||
-            getErrorMessage(err) === codeOwnersNotFoundMessage2
+            getErrorMessage(err) === codeOwnersNotFoundMessage2 ||
+            getErrorMessage(err) === codeOwnersNotFoundMessage3
           ) {
             return
           } else {
@@ -147,8 +149,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   useEffect(() => {
     // recheck PR in case source SHA changed or PR was marked as unchecked
     // TODO: optimize call to handle all causes and avoid double calls by keeping track of SHA
-    dryMerge()
-  }, [unchecked, pullRequestMetadata?.source_sha]) // eslint-disable-next-line react-hooks/exhaustive-deps
+    dryMerge() // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unchecked, pullRequestMetadata?.source_sha])
 
   useEffect(() => {
     // dryMerge()

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useReducer, useState } from 'react'
 import { Falsy, Match, Render, Truthy } from 'react-jsx-match'
 import { get } from 'lodash-es'
 import cx from 'classnames'
@@ -34,12 +34,32 @@ import { CheckPipelineSteps } from './CheckPipelineSteps'
 import { ChecksMenu } from './ChecksMenu'
 import css from './Checks.module.scss'
 
+// Define the reducer outside your component
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapReducer = (state: any, action: { type: any; newEntries: any }) => {
+  switch (action.type) {
+    case 'UPDATE_MAP':
+      // Return a new updated map
+      return new Map([...state, ...action.newEntries])
+    default:
+      return state
+  }
+}
+
+interface SelectedItemDataInterface {
+  execution_id: string
+  stage_id: string
+}
+
 export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadata, prChecksDecisionResult }) => {
   const { getString } = useStrings()
   const history = useHistory()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const [selectedItemData, setSelectedItemData] = useState<TypesCheck>()
   const [selectedStage, setSelectedStage] = useState<TypesStage | null>(null)
+  const [queue, setQueue] = useState<string[]>([])
+  const [stepNameLogKeyMap, dispatch] = useReducer(mapReducer, new Map())
+  const { hooks } = useAppContext()
   const isCheckDataMarkdown = useMemo(
     () => selectedItemData?.payload?.kind === PullRequestCheckType.MARKDOWN,
     [selectedItemData?.payload?.kind]
@@ -59,9 +79,76 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
       return selectedItemData?.link
     }
   }, [repoMetadata?.path, routes, selectedItemData, selectedStage])
+  const executionId =
+    standalone && selectedItemData ? null : (selectedItemData?.payload?.data as SelectedItemDataInterface)?.execution_id
+  const selectedStageId =
+    standalone && selectedItemData ? null : (selectedItemData?.payload?.data as SelectedItemDataInterface)?.stage_id
+
+  const hookData = hooks?.useExecutionDataHook?.(executionId, selectedStageId)
+  const executionApiCallData = hookData?.data
+  const rootNodeId = executionApiCallData?.data?.executionGraph?.rootNodeId
+
+  useEffect(() => {
+    if (rootNodeId) {
+      enqueue(rootNodeId)
+    }
+  }, [rootNodeId])
+
+  useEffect(() => {
+    if (queue.length !== 0) {
+      processExecutionData(queue)
+    } // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue])
 
   if (!prChecksDecisionResult) {
     return null
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const enqueue = (item: any) => {
+    setQueue(prevQueue => [...prevQueue, item])
+  }
+
+  const processExecutionData = (curQueue: string[]) => {
+    const newQueue = [...curQueue]
+    const newEntries = []
+
+    while (newQueue.length !== 0) {
+      const item = newQueue.shift()
+      if (item) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const nodeArray = (executionApiCallData.data.executionGraph.nodeAdjacencyListMap as any)[item]
+        //add node to queue
+        if (nodeArray) {
+          nodeArray.children.map((node: string) => {
+            newQueue.push(node)
+          })
+        }
+        if (nodeArray) {
+          nodeArray.nextIds.map((node: string) => {
+            newQueue.push(node)
+          })
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const nodeMapItem = (executionApiCallData.data.executionGraph.nodeMap as any)[item]
+        if (nodeMapItem) {
+          // Assume that you generate a key-yarn value pair for the map here
+          const key = nodeMapItem.stepParameters.name
+          const value = nodeMapItem.logBaseKey
+          if (item !== rootNodeId) {
+            newEntries.push([key, value])
+          }
+        } else {
+          continue
+        }
+      }
+    }
+    // Update the map using the reducer
+    if (newEntries.length > 0) {
+      dispatch({ type: 'UPDATE_MAP', newEntries })
+    }
+
+    setQueue(newQueue) // Update the queue state
   }
 
   return (
@@ -141,7 +228,13 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
                       />
                     </Truthy>
                     <Falsy>
-                      <LogViewer content={logContent} className={css.logViewer} />
+                      <LogViewer
+                        content={logContent}
+                        stepNameLogKeyMap={stepNameLogKeyMap}
+                        className={css.logViewer}
+                        setSelectedStage={setSelectedStage}
+                        selectedItemData={selectedItemData}
+                      />
                     </Falsy>
                   </Match>
                 </Falsy>
