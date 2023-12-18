@@ -26,7 +26,6 @@ const (
 	StatusInternal           Status = "internal"
 	StatusInvalidArgument    Status = "invalid"
 	StatusNotFound           Status = "not_found"
-	StatusPathNotFound       Status = "path_not_found"
 	StatusNotImplemented     Status = "not_implemented"
 	StatusUnauthorized       Status = "unauthorized"
 	StatusFailed             Status = "failed"

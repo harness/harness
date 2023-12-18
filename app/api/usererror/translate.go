@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/errors"
+	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/check"
@@ -79,6 +80,11 @@ func Translate(err error) *Error {
 		return RequestTooLargef("The request is too large. maximum allowed size is %d bytes", maxBytesErr.Limit)
 
 	// git errors
+	case errors.Is(err, &gittypes.PathNotFoundError{}):
+		return &Error{
+			Status:  http.StatusNotFound,
+			Message: err.Error(),
+		}
 	case errors.As(err, &appError):
 		return NewWithPayload(httpStatusCode(
 			appError.Status),
@@ -124,7 +130,6 @@ var codes = map[errors.Status]int{
 	errors.StatusConflict:           http.StatusConflict,
 	errors.StatusInvalidArgument:    http.StatusBadRequest,
 	errors.StatusNotFound:           http.StatusNotFound,
-	errors.StatusPathNotFound:       http.StatusNotFound,
 	errors.StatusNotImplemented:     http.StatusNotImplemented,
 	errors.StatusPreconditionFailed: http.StatusPreconditionFailed,
 	errors.StatusUnauthorized:       http.StatusUnauthorized,

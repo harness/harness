@@ -26,13 +26,11 @@ const (
 )
 
 var (
-	ErrAlreadyExists       = errors.New("already exists")
-	ErrRepositoryNotFound  = errors.New("repository not found")
-	ErrRepositoryCorrupted = errors.New("repository corrupted")
-	ErrInvalidPath         = errors.New("path is invalid")
-	ErrSHADoesNotMatch     = errors.New("sha does not match")
-	ErrNoDefaultBranch     = errors.New("no default branch")
-	ErrHunkNotFound        = errors.New("hunk not found")
+	ErrAlreadyExists   = errors.New("already exists")
+	ErrInvalidPath     = errors.New("path is invalid")
+	ErrSHADoesNotMatch = errors.New("sha does not match")
+	ErrNoDefaultBranch = errors.New("no default branch")
+	ErrHunkNotFound    = errors.New("hunk not found")
 )
 
 type NotFoundError struct {

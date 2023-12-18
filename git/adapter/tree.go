@@ -87,7 +87,7 @@ func lsTree(
 	}
 
 	if output == "" {
-		return nil, errors.Format(errors.StatusPathNotFound, "path %q not found", treePath)
+		return nil, &types.PathNotFoundError{Path: treePath}
 	}
 
 	n := strings.Count(output, "\x00")
