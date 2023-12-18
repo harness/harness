@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/types"
@@ -27,16 +28,11 @@ import (
 	gitea "code.gitea.io/gitea/modules/git"
 )
 
-const (
-	giteaPrettyLogFormat = `--pretty=format:` + fmtCommitHash
-)
-
-// GetLatestCommit gets the latest commit of a path relative from the provided reference.
-// Note: ref can be Branch / Tag / CommitSHA.
+// GetLatestCommit gets the latest commit of a path relative from the provided revision.
 func (a Adapter) GetLatestCommit(
 	ctx context.Context,
 	repoPath string,
-	ref string,
+	rev string,
 	treePath string,
 ) (*types.Commit, error) {
 	if repoPath == "" {
@@ -44,45 +40,7 @@ func (a Adapter) GetLatestCommit(
 	}
 	treePath = cleanTreePath(treePath)
 
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to open repository")
-	}
-	defer giteaRepo.Close()
-
-	giteaCommit, err := giteaGetCommitByPath(giteaRepo, ref, treePath)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "error getting latest commit for '%s'", treePath)
-	}
-
-	return mapGiteaCommit(giteaCommit)
-}
-
-// giteaGetCommitByPath returns the latest commit per specific branch.
-func giteaGetCommitByPath(
-	giteaRepo *gitea.Repository,
-	ref string,
-	treePath string,
-) (*gitea.Commit, error) {
-	if treePath == "" {
-		treePath = "."
-	}
-
-	// NOTE: the difference to gitea implementation is passing `ref`.
-	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, "log", ref, "-1", giteaPrettyLogFormat, "--", treePath).
-		RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
-	if runErr != nil {
-		return nil, fmt.Errorf("in giteaGetCommitByPath: failed to trigger log command: %w", runErr)
-	}
-
-	lines := parseLinesToSlice(stdout)
-
-	giteaCommits, err := getGiteaCommits(giteaRepo, lines)
-	if err != nil {
-		return nil, fmt.Errorf("in giteaGetCommitByPath: failed to get commits: %w", err)
-	}
-
-	return giteaCommits[0], nil
+	return getCommit(ctx, repoPath, rev, treePath)
 }
 
 func getGiteaCommits(
@@ -324,28 +282,17 @@ func getFileChangeTypeFromLog(
 	return nil, nil, nil, fmt.Errorf("could not parse change for the file '%s'", filePath)
 }
 
-// GetCommit returns the (latest) commit for a specific ref.
-// Note: ref can be Branch / Tag / CommitSHA.
+// GetCommit returns the (latest) commit for a specific revision.
 func (a Adapter) GetCommit(
 	ctx context.Context,
 	repoPath string,
-	ref string,
+	rev string,
 ) (*types.Commit, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to open repository")
-	}
-	defer giteaRepo.Close()
 
-	commit, err := giteaRepo.GetCommit(ref)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "error getting commit for ref '%s'", ref)
-	}
-
-	return mapGiteaCommit(commit)
+	return getCommit(ctx, repoPath, rev, "")
 }
 
 func (a Adapter) GetFullCommitID(
@@ -496,4 +443,80 @@ func parseLinesToSlice(output []byte) []string {
 	}
 
 	return slice
+}
+
+func getCommit(
+	ctx context.Context,
+	repoPath string,
+	rev string,
+	path string,
+) (*types.Commit, error) {
+	const format = "" +
+		fmtCommitHash + fmtZero + // 0
+		fmtAuthorName + fmtZero + // 1
+		fmtAuthorEmail + fmtZero + // 2
+		fmtAuthorTime + fmtZero + // 3
+		fmtCommitterName + fmtZero + // 4
+		fmtCommitterEmail + fmtZero + // 5
+		fmtCommitterTime + fmtZero + // 6
+		fmtSubject + fmtZero + // 7
+		fmtBody // 8
+
+	args := []string{"log", "--max-count=1", "--format=" + format, rev}
+	if path != "" {
+		args = append(args, "--", path)
+	}
+
+	commitLine, stderr, err := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{Dir: repoPath})
+	if strings.Contains(stderr, "ambiguous argument") {
+		return nil, errors.NotFound("revision %q not found", rev)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to run git to get commit data: %w", err)
+	}
+
+	if commitLine == "" {
+		return nil, errors.InvalidArgument("path %q not found in %s", path, rev)
+	}
+
+	const columnCount = 9
+
+	commitData := strings.Split(strings.TrimSpace(commitLine), separatorZero)
+	if len(commitData) != columnCount {
+		return nil, fmt.Errorf(
+			"unexpected git log formatted output, expected %d, but got %d columns", columnCount, len(commitData))
+	}
+
+	sha := commitData[0]
+	authorName := commitData[1]
+	authorEmail := commitData[2]
+	authorTimestamp := commitData[3]
+	committerName := commitData[4]
+	committerEmail := commitData[5]
+	committerTimestamp := commitData[6]
+	subject := commitData[7]
+	body := commitData[8]
+
+	authorTime, _ := time.Parse(time.RFC3339Nano, authorTimestamp)
+	committerTime, _ := time.Parse(time.RFC3339Nano, committerTimestamp)
+
+	return &types.Commit{
+		SHA:     sha,
+		Title:   subject,
+		Message: body,
+		Author: types.Signature{
+			Identity: types.Identity{
+				Name:  authorName,
+				Email: authorEmail,
+			},
+			When: authorTime,
+		},
+		Committer: types.Signature{
+			Identity: types.Identity{
+				Name:  committerName,
+				Email: committerEmail,
+			},
+			When: committerTime,
+		},
+	}, nil
 }

@@ -16,9 +16,9 @@ package adapter
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
-	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
@@ -37,30 +37,15 @@ func (a Adapter) GetBranch(
 		return nil, ErrBranchNameEmpty
 	}
 
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	ref := GetReferenceFromBranchName(branchName)
+	commit, err := getCommit(ctx, repoPath, ref, "")
 	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to open repository")
-	}
-	defer giteaRepo.Close()
-
-	giteaBranch, err := giteaRepo.GetBranch(branchName)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to get branch '%s'", branchName)
-	}
-
-	giteaCommit, err := giteaBranch.GetCommit()
-	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to get commit '%s'", branchName)
-	}
-
-	commit, err := mapGiteaCommit(giteaCommit)
-	if err != nil {
-		return nil, errors.Internal("failed to map gitea commit", err)
+		return nil, fmt.Errorf("failed to find the commit for the branch: %w", err)
 	}
 
 	return &types.Branch{
-		Name:   giteaBranch.Name,
-		SHA:    giteaCommit.ID.String(),
+		Name:   branchName,
+		SHA:    commit.SHA,
 		Commit: commit,
 	}, nil
 }

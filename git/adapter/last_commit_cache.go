@@ -20,7 +20,6 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -28,7 +27,6 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/types"
 
-	gitea "code.gitea.io/gitea/modules/git"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -123,57 +121,5 @@ func (c commitEntryGetter) Find(
 		path = "."
 	}
 
-	const format = "" +
-		fmtCommitHash + fmtZero + // 0
-		fmtAuthorName + fmtZero + // 1
-		fmtAuthorEmail + fmtZero + // 2
-		fmtAuthorUnix + fmtZero + // 3
-		fmtCommitterName + fmtZero + // 4
-		fmtCommitterEmail + fmtZero + // 5
-		fmtCommitterUnix + fmtZero + // 6
-		fmtSubject + fmtZero + // 7
-		fmtBody // 8
-
-	args := []string{"log", "--max-count=1", "--format=" + format, commitSHA, "--", path}
-	commitLine, _, err := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{Dir: repoPath})
-	if err != nil {
-		return nil, fmt.Errorf("failed to run git to get the last commit for path: %w", err)
-	}
-
-	const columnCount = 9
-
-	commitData := strings.Split(strings.TrimSpace(commitLine), separatorZero)
-	if len(commitData) != columnCount {
-		return nil, errors.InvalidArgument("path %q not found in commit %s", path, commitSHA)
-	}
-
-	sha := commitData[0]
-	authorName := commitData[1]
-	authorEmail := commitData[2]
-	authorTime, _ := strconv.ParseInt(commitData[3], 10, 64) // parse failure produces 01-01-1970
-	committerName := commitData[4]
-	committerEmail := commitData[5]
-	committerTime, _ := strconv.ParseInt(commitData[6], 10, 64) // parse failure produces 01-01-1970
-	subject := commitData[7]
-	body := commitData[8]
-
-	return &types.Commit{
-		SHA:     sha,
-		Title:   subject,
-		Message: body,
-		Author: types.Signature{
-			Identity: types.Identity{
-				Name:  authorName,
-				Email: authorEmail,
-			},
-			When: time.Unix(authorTime, 0),
-		},
-		Committer: types.Signature{
-			Identity: types.Identity{
-				Name:  committerName,
-				Email: committerEmail,
-			},
-			When: time.Unix(committerTime, 0),
-		},
-	}, nil
+	return getCommit(ctx, repoPath, commitSHA, path)
 }
