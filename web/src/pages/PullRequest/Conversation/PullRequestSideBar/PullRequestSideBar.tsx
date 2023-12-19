@@ -15,16 +15,18 @@
  */
 
 import React from 'react'
+import { PopoverInteractionKind } from '@blueprintjs/core'
 import { useMutate } from 'restful-react'
 import { omit } from 'lodash-es'
-import { Container, Layout, Text, Avatar, FlexExpander, useToaster } from '@harnessio/uicore'
+import { Container, Layout, Text, Avatar, FlexExpander, useToaster, Utils } from '@harnessio/uicore'
 import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useStrings } from 'framework/strings'
-import type { TypesPullReq, TypesRepository } from 'services/code'
+import type { TypesPullReq, TypesRepository, EnumPullReqReviewDecision } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { ReviewerSelect } from 'components/ReviewerSelect/ReviewerSelect'
+import ignoreFailed from '../../../../icons/ignoreFailed.svg'
 import css from './PullRequestSideBar.module.scss'
 
 interface PullRequestSideBarProps {
@@ -32,6 +34,13 @@ interface PullRequestSideBarProps {
   repoMetadata: TypesRepository
   pullRequestMetadata: TypesPullReq
   refetchReviewers: () => void
+}
+
+enum PullReqReviewDecision {
+  approved = 'approved',
+  changeReq = 'changereq',
+  pending = 'pending',
+  outdated = 'outdated'
 }
 
 const PullRequestSideBar = (props: PullRequestSideBarProps) => {
@@ -42,37 +51,87 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   // const tagArr = []
   const { showError } = useToaster()
 
-  const generateReviewDecisionIcon = (
-    reviewDecision: string
+  const processReviewDecision = (
+    review_decision: EnumPullReqReviewDecision,
+    reviewedSHA?: string,
+    sourceSHA?: string
+  ) =>
+    review_decision === PullReqReviewDecision.approved && reviewedSHA !== sourceSHA
+      ? PullReqReviewDecision.outdated
+      : review_decision
+
+  const generateReviewDecisionInfo = (
+    reviewDecision: EnumPullReqReviewDecision | PullReqReviewDecision.outdated
   ): {
     name: IconName
-    color: string | undefined
-    size: number | undefined
+    color?: Color
+    size?: number
     icon: IconName
     iconProps?: { color?: Color }
+    message: string
   } => {
-    let icon: IconName = 'dot'
-    let color: Color | undefined = undefined
-    let size: number | undefined = undefined
+    let info: {
+      name: IconName
+      color?: Color
+      size?: number
+      icon: IconName
+      iconProps?: { color?: Color }
+      message: string
+    }
 
     switch (reviewDecision) {
-      case 'changereq':
-        icon = 'cross'
-        color = Color.RED_700
-        size = 16
+      case PullReqReviewDecision.changeReq:
+        info = {
+          name: 'circle-cross',
+          color: Color.RED_700,
+          size: 16,
+          icon: 'circle-cross',
+          iconProps: { color: Color.RED_700 },
+          message: 'requested changes'
+        }
         break
-      case 'approved':
-        icon = 'tick'
-        size = 16
-        color = Color.GREEN_700
+      case PullReqReviewDecision.approved:
+        info = {
+          name: 'tick-circle',
+          color: Color.GREEN_700,
+          size: 16,
+          icon: 'tick-circle',
+          iconProps: { color: Color.GREEN_700 },
+          message: 'approved changes'
+        }
+        break
+      case PullReqReviewDecision.pending:
+        info = {
+          name: 'waiting',
+          color: Color.GREY_700,
+          size: 16,
+          icon: 'waiting',
+          iconProps: { color: Color.GREY_700 },
+          message: 'pending review'
+        }
+        break
+      case PullReqReviewDecision.outdated:
+        info = {
+          name: 'dot',
+          color: Color.GREY_100,
+          size: 16,
+          icon: 'dot',
+          message: 'outdated approval'
+        }
         break
       default:
-        color = Color.GREY_100
-        size = 16
+        info = {
+          name: 'dot',
+          color: Color.GREY_100,
+          size: 16,
+          icon: 'dot',
+          message: 'status'
+        }
     }
-    const name = icon
-    return { name, color, size, icon, ...(color ? { iconProps: { color } } : undefined) }
+
+    return info
   }
+
   // const { data: reviewersData,refetch:refetchReviewers } = useGet<Unknown[]>({
   //   path: `/api/v1/principals`,
   //   queryParams: {
@@ -177,13 +236,32 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
             </Text> */}
             {reviewers && reviewers?.length !== 0 ? (
               reviewers.map(
-                (reviewer: { reviewer: { display_name: string; id: number }; review_decision: string }): Unknown => {
+                (reviewer: {
+                  reviewer: { display_name: string; id: number }
+                  review_decision: EnumPullReqReviewDecision
+                  sha: string
+                }): Unknown => {
+                  const updatedReviewDecision = processReviewDecision(
+                    reviewer.review_decision,
+                    reviewer.sha,
+                    pullRequestMetadata?.source_sha
+                  )
+                  const reviewerInfo = generateReviewDecisionInfo(updatedReviewDecision)
                   return (
-                    <Layout.Horizontal key={reviewer.reviewer.id}>
-                      <Icon
-                        className={css.reviewerPadding}
-                        {...omit(generateReviewDecisionIcon(reviewer.review_decision), 'iconProps')}
-                      />
+                    <Layout.Horizontal key={reviewer.reviewer.id} className={css.alignLayout}>
+                      <Utils.WrapOptionalTooltip
+                        tooltip={
+                          <Text color={Color.GREY_100} padding="small">
+                            {reviewerInfo.message}
+                          </Text>
+                        }
+                        tooltipProps={{ isDark: true, interactionKind: PopoverInteractionKind.HOVER }}>
+                        {updatedReviewDecision === PullReqReviewDecision.outdated ? (
+                          <img className={css.svgOutdated} src={ignoreFailed} width={20} height={20} />
+                        ) : (
+                          <Icon {...omit(reviewerInfo, 'iconProps')} />
+                        )}
+                      </Utils.WrapOptionalTooltip>
                       <Avatar
                         className={css.reviewerAvatar}
                         name={reviewer.reviewer.display_name}
