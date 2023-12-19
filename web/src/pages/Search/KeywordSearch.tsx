@@ -31,7 +31,7 @@ import {
 import type { Extension } from '@codemirror/state'
 import { Link } from 'react-router-dom'
 import { useMutate } from 'restful-react'
-import { debounce, flatten, sortBy, uniq } from 'lodash-es'
+import { debounce, escapeRegExp, flatten, sortBy, uniq } from 'lodash-es'
 import Keywords from 'react-keywords'
 import cx from 'classnames'
 
@@ -82,21 +82,21 @@ const Search = () => {
           const maxResultCount = Number(text.match(/count:(\d*)/)?.[1]) || 50
 
           const repoPaths = selectedRepositories.map(option => String(option.value))
+          let query = text.replace(/(?:repo|count):(?:[^\s]+|$)/g, '').trim()
+          query = `(${query})`
 
           if (selectedLanguages.length) {
             if (selectedLanguages.length === 1) {
-              text += ` lang:${String(selectedLanguages[0].value)}`
+              query += ` lang:${String(selectedLanguages[0].value)}`
             } else {
               const multiLangQuery = `(${selectedLanguages.map(option => `lang:${String(option.value)}`).join(' or ')})`
-              text += ` ${multiLangQuery}`
+              query += ` ${multiLangQuery}`
             }
           }
 
-          if (!text.match(/case:(yes|no)/gi)?.length) {
-            text += ` case:no`
+          if (!query.match(/case:(yes|no)/gi)?.length) {
+            query += ` case:no`
           }
-
-          const query = text.replace(/(?:repo|count):(?:[^\s]+|$)/g, '').trim()
 
           const res = await mutate({
             repo_paths: repoPath ? [repoPath] : repoPaths,
@@ -157,7 +157,9 @@ const Search = () => {
               </Text>
             </Layout.Horizontal>
             {searchResults?.file_matches?.map(fileMatch => {
-              return <SearchResult key={fileMatch.file_name} fileMatch={fileMatch} searchTerm={searchTerm} />
+              if (fileMatch.matches.length) {
+                return <SearchResult key={fileMatch.file_name} fileMatch={fileMatch} searchTerm={searchTerm} />
+              }
             })}
           </>
         ) : null}
@@ -216,7 +218,7 @@ export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; 
       codeBlocksArr.push({
         lineNumberOffset,
         codeBlock,
-        fragmentMatches: keywordMatch.fragments.map(fragmentMatch => fragmentMatch.match)
+        fragmentMatches: keywordMatch.fragments.map(fragmentMatch => escapeRegExp(fragmentMatch.match))
       })
     })
 
@@ -226,7 +228,7 @@ export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; 
   const collapsedCodeBlocks = showMoreMatchs ? codeBlocks.slice(0, 25) : codeBlocks.slice(0, 2)
   const repoName = fileMatch.repo_path.split('/').pop()
 
-  const isFileMatch = fileMatch.matches[0].line_num === 0
+  const isFileMatch = fileMatch.matches?.[0]?.line_num === 0
 
   const flattenedMatches = flatten(codeBlocks.map(codeBlock => codeBlock.fragmentMatches))
   const allFileMatches = isCaseSensitive ? flattenedMatches : uniq(flattenedMatches.map(match => match.toLowerCase()))
@@ -253,7 +255,7 @@ export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; 
           })}?keyword=${allFileMatches.join('|')}`}>
           <Text font={{ variation: FontVariation.SMALL_BOLD }} color={Color.PRIMARY_7}>
             <Keywords
-              value={isFileMatch ? fileMatch.matches[0].fragments[0].match : ''}
+              value={isFileMatch ? fileMatch.matches?.[0]?.fragments?.[0].match : ''}
               backgroundColor="var(--yellow-300)">
               {fileMatch.file_name}
             </Keywords>
