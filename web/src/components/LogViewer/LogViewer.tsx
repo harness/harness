@@ -47,7 +47,7 @@ export interface LogLine {
 }
 enum StepTypes {
   LITEENGINETASK = 'liteEngineTask',
-  INITIALIZE = 'initialize'
+  INITIALIZE = 'Initialize'
 }
 
 export type EnumCheckPayloadKindExtended = EnumCheckPayloadKind | 'harness_stage'
