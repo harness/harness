@@ -15,38 +15,30 @@
 package types
 
 import (
-	"errors"
+	"github.com/harness/gitness/git/hook"
 )
 
-// GithookPayload defines the GithookPayload the githook binary is initiated with when executing the git hooks.
-type GithookPayload struct {
-	BaseURL     string
+// GithookInputBase contains the base input of the githook apis.
+type GithookInputBase struct {
 	RepoID      int64
 	PrincipalID int64
-	RequestID   string
-	Disabled    bool
-	Internal    bool // Internal calls comer for the Gitness, and external calls are direct git pushes.
+	Internal    bool // Internal calls originate from Gitness, and external calls are direct git pushes.
 }
 
-func (p *GithookPayload) Validate() error {
-	if p == nil {
-		return errors.New("payload is empty")
-	}
+// GithookPreReceiveInput is the input for the pre-receive githook api call.
+type GithookPreReceiveInput struct {
+	GithookInputBase
+	hook.PreReceiveInput
+}
 
-	// skip further validation if githook is disabled
-	if p.Disabled {
-		return nil
-	}
+// GithookUpdateInput is the input for the update githook api call.
+type GithookUpdateInput struct {
+	GithookInputBase
+	hook.UpdateInput
+}
 
-	if p.BaseURL == "" {
-		return errors.New("payload doesn't contain a base url")
-	}
-	if p.PrincipalID <= 0 {
-		return errors.New("payload doesn't contain a principal id")
-	}
-	if p.RepoID <= 0 {
-		return errors.New("payload doesn't contain a repo id")
-	}
-
-	return nil
+// GithookPostReceiveInput is the input for the post-receive githook api call.
+type GithookPostReceiveInput struct {
+	GithookInputBase
+	hook.PostReceiveInput
 }

@@ -18,7 +18,7 @@ import (
 	"os"
 
 	"github.com/harness/gitness/cli/operations/hooks"
-	"github.com/harness/gitness/githook"
+	"github.com/harness/gitness/git/hook"
 )
 
 func GetArguments() []string {
@@ -26,7 +26,7 @@ func GetArguments() []string {
 	args := os.Args[1:]
 
 	// in case of githooks, translate the arguments coming from git to work with gitness.
-	if gitArgs, fromGit := githook.SanitizeArgsForGit(command, args); fromGit {
+	if gitArgs, fromGit := hook.SanitizeArgsForGit(command, args); fromGit {
 		return append([]string{hooks.ParamHooks}, gitArgs...)
 	}
 

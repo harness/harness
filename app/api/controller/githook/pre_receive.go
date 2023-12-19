@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/githook"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -37,16 +37,13 @@ import (
 func (c *Controller) PreReceive(
 	ctx context.Context,
 	session *auth.Session,
-	repoID int64,
-	principalID int64,
-	internal bool,
-	in githook.PreReceiveInput,
-) (*githook.Output, error) {
-	output := &githook.Output{}
+	in types.GithookPreReceiveInput,
+) (hook.Output, error) {
+	output := hook.Output{}
 
-	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoPush)
+	repo, err := c.getRepoCheckAccess(ctx, session, in.RepoID, enum.PermissionRepoPush)
 	if err != nil {
-		return nil, err
+		return hook.Output{}, err
 	}
 
 	refUpdates := groupRefsByAction(in.RefUpdates)
@@ -57,7 +54,7 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
-	if internal {
+	if in.Internal {
 		// It's an internal call, so no need to verify protection rules.
 		return output, nil
 	}
@@ -68,9 +65,9 @@ func (c *Controller) PreReceive(
 	}
 
 	// TODO: use store.PrincipalInfoCache once we abstracted principals.
-	principal, err := c.principalStore.Find(ctx, principalID)
+	principal, err := c.principalStore.Find(ctx, in.PrincipalID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find inner principal with id %d: %w", principalID, err)
+		return hook.Output{}, fmt.Errorf("failed to find inner principal with id %d: %w", in.PrincipalID, err)
 	}
 
 	dummySession := &auth.Session{
@@ -78,9 +75,9 @@ func (c *Controller) PreReceive(
 		Metadata:  nil,
 	}
 
-	err = c.checkProtectionRules(ctx, dummySession, repo, refUpdates, output)
+	err = c.checkProtectionRules(ctx, dummySession, repo, refUpdates, &output)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check protection rules: %w", err)
+		return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
 	}
 
 	return output, nil
@@ -101,7 +98,7 @@ func (c *Controller) checkProtectionRules(
 	session *auth.Session,
 	repo *types.Repository,
 	refUpdates changedRefs,
-	output *githook.Output,
+	output *hook.Output,
 ) error {
 	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
 	if err != nil {
@@ -169,7 +166,7 @@ type changes struct {
 	updated []string
 }
 
-func (c *changes) groupByAction(refUpdate githook.ReferenceUpdate, name string) {
+func (c *changes) groupByAction(refUpdate hook.ReferenceUpdate, name string) {
 	switch {
 	case refUpdate.Old == types.NilSHA:
 		c.created = append(c.created, name)
@@ -186,7 +183,7 @@ type changedRefs struct {
 	other    changes
 }
 
-func groupRefsByAction(refUpdates []githook.ReferenceUpdate) (c changedRefs) {
+func groupRefsByAction(refUpdates []hook.ReferenceUpdate) (c changedRefs) {
 	for _, refUpdate := range refUpdates {
 		switch {
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):

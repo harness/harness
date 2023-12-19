@@ -16,10 +16,10 @@ package githook
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/githook"
+	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/types"
 )
 
 // Update executes the update hook for a git repository.
@@ -28,15 +28,8 @@ import (
 func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
-	repoID int64,
-	principalID int64,
-	in *githook.UpdateInput,
-) (*githook.Output, error) {
-	if in == nil {
-		return nil, fmt.Errorf("input is nil")
-	}
-
+	in types.GithookUpdateInput,
+) (hook.Output, error) {
 	// We currently don't have any update action (nothing planned as of now)
-
-	return &githook.Output{}, nil
+	return hook.Output{}, nil
 }

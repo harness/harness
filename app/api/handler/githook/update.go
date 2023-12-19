@@ -21,7 +21,7 @@ import (
 	githookcontroller "github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/githook"
+	"github.com/harness/gitness/types"
 )
 
 // HandleUpdate returns a handler function that handles update git hooks.
@@ -30,26 +30,14 @@ func HandleUpdate(githookCtrl *githookcontroller.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		repoID, err := request.GetRepoIDFromQuery(r)
-		if err != nil {
-			render.TranslatedUserError(w, err)
-			return
-		}
-
-		principalID, err := request.GetPrincipalIDFromQuery(r)
-		if err != nil {
-			render.TranslatedUserError(w, err)
-			return
-		}
-
-		in := new(githook.UpdateInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		in := types.GithookUpdateInput{}
+		err := json.NewDecoder(r.Body).Decode(&in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		out, err := githookCtrl.Update(ctx, session, repoID, principalID, in)
+		out, err := githookCtrl.Update(ctx, session, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

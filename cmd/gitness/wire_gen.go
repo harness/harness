@@ -12,7 +12,6 @@ import (
 	check2 "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
-	"github.com/harness/gitness/app/api/controller/githook"
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
 	logs2 "github.com/harness/gitness/app/api/controller/logs"
 	"github.com/harness/gitness/app/api/controller/pipeline"
@@ -36,6 +35,7 @@ import (
 	events4 "github.com/harness/gitness/app/events/git"
 	events3 "github.com/harness/gitness/app/events/pullreq"
 	events2 "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/file"
@@ -135,7 +135,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	gitAdapter, err := git.ProvideGITAdapter(typesConfig, cacheCache)
+	clientFactory := githook.ProvideFactory()
+	gitAdapter, err := git.ProvideGITAdapter(typesConfig, cacheCache, clientFactory)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +250,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(authorizer, principalStore, repoStore, reporter2, gitInterface, pullReqStore, provider, protectionManager)
+	githookController := githook.ProvideController(authorizer, principalStore, repoStore, reporter2, gitInterface, pullReqStore, provider, protectionManager, clientFactory)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore)
 	v := check2.ProvideCheckSanitizers()

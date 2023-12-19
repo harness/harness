@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/storage"
+	"github.com/harness/gitness/git/types"
 )
 
 const (
@@ -37,14 +38,12 @@ type Service struct {
 }
 
 func New(
-	gitRoot string,
-	tmpDir string,
+	config types.Config,
 	adapter Adapter,
 	storage storage.Store,
-	gitHookPath string,
 ) (*Service, error) {
 	// Create repos folder
-	reposRoot := filepath.Join(gitRoot, repoSubdirName)
+	reposRoot := filepath.Join(config.Root, repoSubdirName)
 	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
 		if err = os.MkdirAll(reposRoot, 0o700); err != nil {
 			return nil, err
@@ -61,10 +60,10 @@ func New(
 	}
 	return &Service{
 		reposRoot:      reposRoot,
-		tmpDir:         tmpDir,
+		tmpDir:         config.TmpDir,
+		reposGraveyard: reposGraveyard,
 		adapter:        adapter,
 		store:          storage,
-		gitHookPath:    gitHookPath,
-		reposGraveyard: reposGraveyard,
+		gitHookPath:    config.HookPath,
 	}, nil
 }

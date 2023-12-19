@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/git"
 	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/githook"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -44,23 +44,21 @@ const (
 func (c *Controller) PostReceive(
 	ctx context.Context,
 	session *auth.Session,
-	repoID int64,
-	principalID int64,
-	in githook.PostReceiveInput,
-) (*githook.Output, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoPush)
+	in types.GithookPostReceiveInput,
+) (hook.Output, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, in.RepoID, enum.PermissionRepoPush)
 	if err != nil {
-		return nil, err
+		return hook.Output{}, err
 	}
 
 	// report ref events (best effort)
-	c.reportReferenceEvents(ctx, repo, principalID, in)
+	c.reportReferenceEvents(ctx, repo, in.PrincipalID, in.PostReceiveInput)
 
 	// create output object and have following messages fill its messages
-	out := &githook.Output{}
+	out := hook.Output{}
 
 	// handle branch updates related to PRs - best effort
-	c.handlePRMessaging(ctx, repo, in, out)
+	c.handlePRMessaging(ctx, repo, in.PostReceiveInput, &out)
 
 	return out, nil
 }
@@ -72,7 +70,7 @@ func (c *Controller) reportReferenceEvents(
 	ctx context.Context,
 	repo *types.Repository,
 	principalID int64,
-	in githook.PostReceiveInput,
+	in hook.PostReceiveInput,
 ) {
 	for _, refUpdate := range in.RefUpdates {
 		switch {
@@ -90,7 +88,7 @@ func (c *Controller) reportBranchEvent(
 	ctx context.Context,
 	repo *types.Repository,
 	principalID int64,
-	branchUpdate githook.ReferenceUpdate,
+	branchUpdate hook.ReferenceUpdate,
 ) {
 	switch {
 	case branchUpdate.Old == types.NilSHA:
@@ -137,7 +135,7 @@ func (c *Controller) reportTagEvent(
 	ctx context.Context,
 	repo *types.Repository,
 	principalID int64,
-	tagUpdate githook.ReferenceUpdate,
+	tagUpdate hook.ReferenceUpdate,
 ) {
 	switch {
 	case tagUpdate.Old == types.NilSHA:
@@ -172,8 +170,8 @@ func (c *Controller) reportTagEvent(
 func (c *Controller) handlePRMessaging(
 	ctx context.Context,
 	repo *types.Repository,
-	in githook.PostReceiveInput,
-	out *githook.Output,
+	in hook.PostReceiveInput,
+	out *hook.Output,
 ) {
 	// skip anything that was a batch push / isn't branch related / isn't updating/creating a branch.
 	if len(in.RefUpdates) != 1 ||
@@ -194,7 +192,7 @@ func (c *Controller) suggestPullRequest(
 	ctx context.Context,
 	repo *types.Repository,
 	branchName string,
-	out *githook.Output,
+	out *hook.Output,
 ) {
 	if branchName == repo.DefaultBranch {
 		// Don't suggest a pull request if this is a push to the default branch.

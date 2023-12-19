@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package githook
+package hook
 
 import (
 	"bufio"
@@ -28,12 +28,12 @@ import (
 // CLICore implements the core of a githook cli. It uses the client and execution timeout
 // to perform githook operations as part of a cli.
 type CLICore struct {
-	client           *Client
+	client           Client
 	executionTimeout time.Duration
 }
 
 // NewCLICore returns a new CLICore using the provided client and execution timeout.
-func NewCLICore(client *Client, executionTimeout time.Duration) *CLICore {
+func NewCLICore(client Client, executionTimeout time.Duration) *CLICore {
 	return &CLICore{
 		client:           client,
 		executionTimeout: executionTimeout,
@@ -47,7 +47,7 @@ func (c *CLICore) PreReceive(ctx context.Context) error {
 		return fmt.Errorf("failed to read updated references from std in: %w", err)
 	}
 
-	in := &PreReceiveInput{
+	in := PreReceiveInput{
 		RefUpdates: refUpdates,
 	}
 
@@ -58,7 +58,7 @@ func (c *CLICore) PreReceive(ctx context.Context) error {
 
 // Update executes the update git hook.
 func (c *CLICore) Update(ctx context.Context, ref string, oldSHA string, newSHA string) error {
-	in := &UpdateInput{
+	in := UpdateInput{
 		RefUpdate: ReferenceUpdate{
 			Ref: ref,
 			Old: oldSHA,
@@ -78,7 +78,7 @@ func (c *CLICore) PostReceive(ctx context.Context) error {
 		return fmt.Errorf("failed to read updated references from std in: %w", err)
 	}
 
-	in := &PostReceiveInput{
+	in := PostReceiveInput{
 		RefUpdates: refUpdates,
 	}
 
@@ -88,13 +88,9 @@ func (c *CLICore) PostReceive(ctx context.Context) error {
 }
 
 //nolint:forbidigo // outputing to CMD as that's where git reads the data
-func handleServerHookOutput(out *Output, err error) error {
+func handleServerHookOutput(out Output, err error) error {
 	if err != nil {
 		return fmt.Errorf("an error occurred when calling the server: %w", err)
-	}
-
-	if out == nil {
-		return errors.New("the server returned an empty output")
 	}
 
 	// print messages before any error

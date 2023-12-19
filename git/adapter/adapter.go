@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/cache"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
@@ -27,11 +28,13 @@ import (
 type Adapter struct {
 	traceGit        bool
 	lastCommitCache cache.Cache[CommitEntryKey, *types.Commit]
+	githookFactory  hook.ClientFactory
 }
 
 func New(
 	config types.Config,
 	lastCommitCache cache.Cache[CommitEntryKey, *types.Commit],
+	githookFactory hook.ClientFactory,
 ) (Adapter, error) {
 	// TODO: should be subdir of gitRoot? What is it being used for?
 	setting.Git.HomePath = "home"
@@ -44,5 +47,6 @@ func New(
 	return Adapter{
 		traceGit:        config.Trace,
 		lastCommitCache: lastCommitCache,
+		githookFactory:  githookFactory,
 	}, nil
 }

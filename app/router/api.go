@@ -69,7 +69,7 @@ import (
 	middlewareprincipal "github.com/harness/gitness/app/api/middleware/principal"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authn"
-	"github.com/harness/gitness/githook"
+	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 

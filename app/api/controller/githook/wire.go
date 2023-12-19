@@ -14,39 +14,4 @@
 
 package githook
 
-import (
-	"github.com/harness/gitness/app/auth/authz"
-	eventsgit "github.com/harness/gitness/app/events/git"
-	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/git"
-
-	"github.com/google/wire"
-)
-
-// WireSet provides a wire set for this package.
-var WireSet = wire.NewSet(
-	ProvideController,
-)
-
-func ProvideController(
-	authorizer authz.Authorizer,
-	principalStore store.PrincipalStore,
-	repoStore store.RepoStore,
-	gitReporter *eventsgit.Reporter,
-	git git.Interface,
-	pullreqStore store.PullReqStore,
-	urlProvider url.Provider,
-	protectionManager *protection.Manager,
-) *Controller {
-	return NewController(
-		authorizer,
-		principalStore,
-		repoStore,
-		gitReporter,
-		git,
-		pullreqStore,
-		urlProvider,
-		protectionManager)
-}
+// Due to cyclic injection dependencies, wiring can be found at app/githook/wire.go

@@ -112,11 +112,6 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 	}, nil
 }
 
-// GetInternalFromQueryOrDefault returns the internal flag from the request query.
-func GetInternalFromQueryOrDefault(r *http.Request, dflt bool) (bool, error) {
-	return QueryParamAsBoolOrDefault(r, QueryParamInternal, dflt)
-}
-
 // GetGitProtocolFromHeadersOrDefault returns the git protocol from the request headers.
 func GetGitProtocolFromHeadersOrDefault(r *http.Request, deflt string) string {
 	return GetHeaderOrDefault(r, HeaderParamGitProtocol, deflt)

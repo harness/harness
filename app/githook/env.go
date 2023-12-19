@@ -17,14 +17,11 @@ package githook
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/githook"
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/version"
+	"github.com/harness/gitness/git/hook"
 
 	"github.com/rs/zerolog/log"
 )
@@ -55,7 +52,7 @@ func GenerateEnvironmentVariables(
 	// generate githook base url
 	baseURL := strings.TrimLeft(apiBaseURL, "/") + "/v1/internal/git-hooks"
 
-	payload := &types.GithookPayload{
+	payload := Payload{
 		BaseURL:     baseURL,
 		RepoID:      repoID,
 		PrincipalID: principalID,
@@ -68,48 +65,27 @@ func GenerateEnvironmentVariables(
 		return nil, fmt.Errorf("generated payload is invalid: %w", err)
 	}
 
-	return githook.GenerateEnvironmentVariables(payload)
+	return hook.GenerateEnvironmentVariables(payload)
 }
 
 // LoadFromEnvironment returns a new githook.CLICore created by loading the payload from the environment variable.
-func LoadFromEnvironment() (*githook.CLICore, error) {
-	payload, err := githook.LoadPayloadFromEnvironment[*types.GithookPayload]()
+func LoadFromEnvironment() (*hook.CLICore, error) {
+	payload, err := hook.LoadPayloadFromEnvironment[Payload]()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load payload from environment: %w", err)
 	}
 
 	// ensure we return disabled error in case it's explicitly disabled (will result in no-op)
 	if payload.Disabled {
-		return nil, githook.ErrDisabled
+		return nil, hook.ErrDisabled
 	}
 
 	if err := payload.Validate(); err != nil {
 		return nil, fmt.Errorf("payload validation failed: %w", err)
 	}
 
-	return githook.NewCLICore(
-		githook.NewClient(
-			http.DefaultClient,
-			payload.BaseURL,
-			func(r *http.Request) *http.Request {
-				// add query params
-				query := r.URL.Query()
-				query.Add(request.QueryParamRepoID, fmt.Sprint(payload.RepoID))
-				query.Add(request.QueryParamPrincipalID, fmt.Sprint(payload.PrincipalID))
-				if payload.Internal {
-					query.Add(request.QueryParamInternal, "true")
-				}
-				r.URL.RawQuery = query.Encode()
-
-				// add headers
-				if len(payload.RequestID) > 0 {
-					r.Header.Add(request.HeaderRequestID, payload.RequestID)
-				}
-				r.Header.Add(request.HeaderUserAgent, fmt.Sprintf("Gitness/%s", version.Version))
-
-				return r
-			},
-		),
+	return hook.NewCLICore(
+		NewRestClient(payload),
 		ExecutionTimeout,
 	), nil
 }

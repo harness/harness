@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/git/adapter"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
@@ -42,11 +43,18 @@ var (
 	}
 )
 
+type mockClientFactory struct{}
+
+func (f *mockClientFactory) NewClient(_ context.Context, _ map[string]string) (hook.Client, error) {
+	return hook.NewNoopClient([]string{"mocked client"}), nil
+}
+
 func setupGit(t *testing.T) adapter.Adapter {
 	t.Helper()
 	git, err := adapter.New(
 		types.Config{Trace: true},
 		adapter.NewInMemoryLastCommitCache(5*time.Minute),
+		&mockClientFactory{},
 	)
 	if err != nil {
 		t.Fatalf("error initializing repository: %v", err)

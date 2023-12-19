@@ -37,11 +37,6 @@ func GetRepoRefFromPath(r *http.Request) (string, error) {
 	return url.PathUnescape(rawRef)
 }
 
-// GetRepoIDFromQuery returns the repo id from the request query.
-func GetRepoIDFromQuery(r *http.Request) (int64, error) {
-	return QueryParamAsPositiveInt64(r, QueryParamRepoID)
-}
-
 // ParseSortRepo extracts the repo sort parameter from the url.
 func ParseSortRepo(r *http.Request) enum.RepoAttr {
 	return enum.ParseRepoAttr(
