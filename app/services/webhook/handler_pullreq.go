@@ -60,7 +60,7 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr),
+					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -107,7 +107,7 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr),
+					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -161,7 +161,7 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr),
+					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -215,7 +215,7 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr),
+					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -265,7 +265,7 @@ func (s *Service) handleEventPullReqMerged(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr),
+					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -321,7 +321,7 @@ func (s *Service) handleEventPullReqComment(
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr),
+					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{

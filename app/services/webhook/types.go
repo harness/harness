@@ -102,10 +102,11 @@ type PullReqInfo struct {
 	TargetBranch  string            `json:"target_branch"`
 	MergeStrategy *enum.MergeMethod `json:"merge_strategy,omitempty"`
 	Author        PrincipalInfo     `json:"author"`
+	PrURL         string            `json:"pr_url"`
 }
 
 // pullReqInfoFrom gets the PullReqInfo from a types.PullReq.
-func pullReqInfoFrom(pr *types.PullReq) PullReqInfo {
+func pullReqInfoFrom(pr *types.PullReq, repo *types.Repository, urlProvider url.Provider) PullReqInfo {
 	return PullReqInfo{
 		Number:        pr.Number,
 		State:         pr.State,
@@ -117,6 +118,7 @@ func pullReqInfoFrom(pr *types.PullReq) PullReqInfo {
 		TargetBranch:  pr.TargetBranch,
 		MergeStrategy: pr.MergeMethod,
 		Author:        principalInfoFrom(&pr.Author),
+		PrURL:         urlProvider.GenerateUIPRURL(repo.Path, pr.Number),
 	}
 }
 
