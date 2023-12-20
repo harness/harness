@@ -365,6 +365,7 @@ webhookPRCreated: PR created
 webhookPRReopened: PR reopened
 webhookPRClosed: PR closed
 webhookPRCommentCreated: PR comment created
+webhookPRMerged: PR merged
 nameYourWebhook: Name your webhook
 submitReview: Submit Review
 approve: Approve

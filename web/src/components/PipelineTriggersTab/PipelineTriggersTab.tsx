@@ -55,7 +55,8 @@ const pullRequestActions: TriggerAction[] = [
   { name: 'Pull Request Created', value: 'pullreq_created' },
   { name: 'Pull Request Updated', value: 'pullreq_branch_updated' },
   { name: 'Pull Request Reopened', value: 'pullreq_reopened' },
-  { name: 'Pull Request Closed', value: 'pullreq_closed' }
+  { name: 'Pull Request Closed', value: 'pullreq_closed' },
+  { name: 'Pull Request Merged', value: 'pullreq_merged' }
 ]
 
 const tagActions: TriggerAction[] = [

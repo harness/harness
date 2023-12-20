@@ -131,6 +131,7 @@ func New(
 			_ = r.RegisterBranchUpdated(service.handleEventPullReqBranchUpdated)
 			_ = r.RegisterReopened(service.handleEventPullReqReopened)
 			_ = r.RegisterClosed(service.handleEventPullReqClosed)
+			_ = r.RegisterMerged(service.handleEventPullReqMerged)
 
 			return nil
 		})

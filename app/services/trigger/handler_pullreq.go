@@ -85,6 +85,23 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context,
 	return s.trigger(ctx, event.Payload.SourceRepoID, enum.TriggerActionPullReqClosed, hook)
 }
 
+func (s *Service) handleEventPullReqMerged(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.MergedPayload],
+) error {
+	hook := &triggerer.Hook{
+		Trigger:     enum.TriggerHook,
+		Action:      enum.TriggerActionPullReqMerged,
+		TriggeredBy: bootstrap.NewSystemServiceSession().Principal.ID,
+		After:       event.Payload.SourceSHA,
+	}
+	err := s.augmentPullReqInfo(ctx, hook, event.Payload.PullReqID)
+	if err != nil {
+		return fmt.Errorf("could not augment pull request info: %w", err)
+	}
+	return s.trigger(ctx, event.Payload.SourceRepoID, enum.TriggerActionPullReqMerged, hook)
+}
+
 // augmentPullReqInfo adds in information into the hook pertaining to the pull request
 // by querying the database.
 func (s *Service) augmentPullReqInfo(

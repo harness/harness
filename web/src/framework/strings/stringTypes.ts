@@ -870,6 +870,7 @@ export interface StringsMap {
   webhookPRClosed: string
   webhookPRCommentCreated: string
   webhookPRCreated: string
+  webhookPRMerged: string
   webhookPRReopened: string
   webhookSelectAllEvents: string
   webhookSelectIndividualEvents: string

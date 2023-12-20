@@ -135,6 +135,8 @@ export const ExecutionText: React.FC<ExecutionTextProps> = ({
               ? 'updated'
               : action === 'pullreq_closed'
               ? 'closed'
+              : action === 'pullreq_merged'
+              ? 'merged'
               : 'created'
           } pull request`}</Text>
           <Pill type={PillType.BRANCH} text={source} />

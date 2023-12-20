@@ -137,6 +137,8 @@ const (
 	WebhookTriggerPullReqClosed WebhookTrigger = "pullreq_closed"
 	// WebhookTriggerPullReqCommentCreated gets triggered when a pull request comment gets created.
 	WebhookTriggerPullReqCommentCreated WebhookTrigger = "pullreq_comment_created"
+	// WebhookTriggerPullReqMerged gets triggered when a pull request is merged.
+	WebhookTriggerPullReqMerged WebhookTrigger = "pullreq_merged"
 )
 
 var webhookTriggers = sortEnum([]WebhookTrigger{
@@ -151,4 +153,5 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqBranchUpdated,
 	WebhookTriggerPullReqClosed,
 	WebhookTriggerPullReqCommentCreated,
+	WebhookTriggerPullReqMerged,
 })
