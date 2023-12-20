@@ -51,7 +51,6 @@ export function parseLogString(logString: string) {
     const jsonEntry = JSON.parse(entry)
     // Apply the regex to the 'out' field
     const parts = jsonEntry.out.match(/time="([^"]+)" level=([^ ]+) msg="([^"]+)"(.*)/)
-
     if (parts) {
       const [, time, level, message, details, out] = parts
       const detailParts = details.trim().split(' ')
@@ -64,9 +63,15 @@ export function parseLogString(logString: string) {
           detailDict[key.trim()] = value.trim()
         }
       })
-      parsedLogs.push({ time, level, message, out, details: detailDict })
+      parsedLogs.push({ time, level, message, out, details: detailDict, pos: jsonEntry.pos, logLevel: jsonEntry.level })
     } else {
-      parsedLogs.push({ time: jsonEntry.time, level: jsonEntry.level, message: jsonEntry.out })
+      parsedLogs.push({
+        time: jsonEntry.time,
+        level: jsonEntry.level,
+        message: jsonEntry.out,
+        pos: jsonEntry.pos,
+        logLevel: jsonEntry.level
+      })
     }
   })
 

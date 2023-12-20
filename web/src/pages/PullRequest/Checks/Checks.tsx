@@ -87,7 +87,6 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
   const hookData = hooks?.useExecutionDataHook?.(executionId, selectedStageId)
   const executionApiCallData = hookData?.data
   const rootNodeId = executionApiCallData?.data?.executionGraph?.rootNodeId
-
   useEffect(() => {
     if (rootNodeId) {
       enqueue(rootNodeId)
@@ -134,9 +133,13 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
         if (nodeMapItem) {
           // Assume that you generate a key-yarn value pair for the map here
           const key = nodeMapItem.stepParameters.name
-          const value = nodeMapItem.logBaseKey
+          const logBaseKey = nodeMapItem.logBaseKey
+          const status = nodeMapItem.status
+          const timeStart = nodeMapItem.startTs
+          const timeEnd = nodeMapItem.endTs
+
           if (item !== rootNodeId) {
-            newEntries.push([key, value])
+            newEntries.push([key, { status, logBaseKey, timeStart, timeEnd }])
           }
         } else {
           continue

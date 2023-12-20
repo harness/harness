@@ -121,6 +121,14 @@
   }
 }
 
+.status {
+  align-self: center;
+
+  &.invert {
+    filter: invert(100%);
+  }
+}
+
 .noShrink {
   flex-shrink: inherit;
 }

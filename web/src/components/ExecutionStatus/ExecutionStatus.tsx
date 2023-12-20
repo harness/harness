@@ -41,6 +41,10 @@ interface ExecutionStatusProps {
   inExecution?: boolean
 }
 
+export enum ExecutionStateExtended {
+  FAILED = 'failed'
+}
+
 export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
   status,
   iconSize = 20,
@@ -67,6 +71,11 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         icon: 'execution-success',
         css: css.success,
         title: getString('success').toLocaleUpperCase()
+      },
+      [ExecutionStateExtended.FAILED]: {
+        icon: 'circle-cross',
+        css: css.failure,
+        title: getString('failed').toLocaleUpperCase()
       },
       [ExecutionState.FAILURE]: {
         icon: 'error-transparent-no-outline',

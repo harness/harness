@@ -19,19 +19,20 @@ import Anser from 'anser'
 import cx from 'classnames'
 import { Container, FlexExpander, Layout, Text, Utils } from '@harnessio/uicore'
 import { NavArrowRight } from 'iconoir-react'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Render } from 'react-jsx-match'
 import { parseLogString } from 'pages/PullRequest/Checks/ChecksUtils'
 import { useAppContext } from 'AppContext'
-import { ButtonRoleProps } from 'utils/Utils'
+import { ButtonRoleProps, timeDistance } from 'utils/Utils'
 import type { EnumCheckPayloadKind, TypesCheck, TypesStage } from 'services/code'
+import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import css from './LogViewer.module.scss'
 
 export interface LogViewerProps {
   search?: string
   content?: string
   className?: string
-  stepNameLogKeyMap?: Map<string, string>
+  stepNameLogKeyMap?: Map<string, { status: string; logBaseKey: string; timeStart: number; timeEnd: number }>
   setSelectedStage: React.Dispatch<React.SetStateAction<TypesStage | null>>
   selectedItemData: TypesCheck | undefined
 }
@@ -44,6 +45,8 @@ export interface LogLine {
   details: {
     [key: string]: string
   }
+  pos: number
+  logLevel: string
 }
 enum StepTypes {
   LITEENGINETASK = 'liteEngineTask',
@@ -90,7 +93,7 @@ const LogTerminal: React.FC<LogViewerProps> = ({
   useEffect(() => {
     const states = new Map<string, boolean>()
     stepNameLogKeyMap?.forEach(value => {
-      states.set(value, false)
+      states.set(value.logBaseKey, false)
     })
     setExpandedStates(states) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -108,13 +111,12 @@ const LogTerminal: React.FC<LogViewerProps> = ({
     (selectedItemData?.payload?.kind as EnumCheckPayloadKindExtended) === 'harness_stage' &&
     selectedItemData?.status !== 'running'
   ) {
-    const renderedSteps = Array.from(stepNameLogKeyMap?.entries() || []).map(([key, value], idx) => {
-      // const data = getLogData(value)
+    const renderedSteps = Array.from(stepNameLogKeyMap?.entries() || []).map(([key, data], idx) => {
       if (key === undefined || idx === 0) {
         return
       }
       return (
-        <Container key={value} className={cx(css.pipelineSteps)}>
+        <Container key={data.logBaseKey} className={cx(css.pipelineSteps)}>
           <Container className={css.stepContainer}>
             <Layout.Horizontal
               spacing="small"
@@ -127,18 +129,29 @@ const LogTerminal: React.FC<LogViewerProps> = ({
                 toggleExpandedState(key)
               }}>
               <NavArrowRight color={Utils.getRealCSSColor(Color.GREY_500)} className={cx(css.noShrink, css.chevron)} />
-
+              <ExecutionStatus
+                className={cx(css.status, css.noShrink)}
+                status={data.status.toLowerCase() as ExecutionState}
+                iconSize={16}
+                noBackground
+                iconOnly
+              />
               <Text className={css.name} lineClamp={1}>
                 {key === StepTypes.LITEENGINETASK ? StepTypes.INITIALIZE : key}
               </Text>
 
               <FlexExpander />
+              <Render when={data.timeStart && data.timeEnd}>
+                <Text color={Color.GREY_300} font={{ variation: FontVariation.SMALL }} className={css.noShrink}>
+                  {timeDistance(data.timeStart, data.timeEnd)}
+                </Text>
+              </Render>
             </Layout.Horizontal>
             <Render when={expandedStates.get(key)}>
               <LogStageContainer
                 value={key}
                 getLogData={getLogData}
-                logKey={value}
+                logKey={data.logBaseKey}
                 expanded={expandedStates.get(key)}
                 setSelectedStage={setSelectedStage}
               />
@@ -190,7 +203,15 @@ export const LogStageContainer: React.FC<LogStageContainerProps> = ({
         localRef.current.innerHTML = ''
       }
       if (pipelineArr) {
-        pipelineArr?.forEach((line: LogLine) => fragment.appendChild(lineElement(line.message)))
+        pipelineArr?.forEach((line: LogLine) => {
+          const linePos = line.pos + 1
+          const localDate = new Date(line.time)
+          // Format date to a more readable format (local time)
+          const formattedDate = localDate.toLocaleString()
+          fragment.appendChild(
+            lineElement(`${linePos}  ${line.logLevel}  ${formattedDate.replace(',', '')}  ${line.message}`)
+          )
+        })
         const logContainer = localRef.current as HTMLDivElement
         logContainer.appendChild(fragment)
       }
