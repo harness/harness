@@ -21,10 +21,12 @@ import (
 	"math"
 	"strings"
 
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
 	gitearef "code.gitea.io/gitea/modules/git/foreachref"
+	"github.com/rs/zerolog/log"
 )
 
 func DefaultInstructor(
@@ -156,18 +158,18 @@ func walkGiteaReferenceParser(
 func (a Adapter) GetRef(
 	ctx context.Context,
 	repoPath string,
-	reference string,
+	ref string,
 ) (string, error) {
 	if repoPath == "" {
 		return "", ErrRepositoryPathEmpty
 	}
-	cmd := gitea.NewCommand(ctx, "show-ref", "--verify", "-s", "--", reference)
+	cmd := gitea.NewCommand(ctx, "show-ref", "--verify", "-s", "--", ref)
 	stdout, _, err := cmd.RunStdString(&gitea.RunOpts{
 		Dir: repoPath,
 	})
 	if err != nil {
 		if err.IsExitCode(128) && strings.Contains(err.Stderr(), "not a valid ref") {
-			return "", types.ErrNotFound("reference '%s' not found", reference)
+			return "", types.ErrNotFound("reference %q not found", ref)
 		}
 		return "", err
 	}
@@ -180,34 +182,147 @@ func (a Adapter) GetRef(
 // (e.g `refs/heads/main` instead of `main`).
 func (a Adapter) UpdateRef(
 	ctx context.Context,
+	envVars map[string]string,
 	repoPath string,
-	reference string,
-	newValue string,
+	ref string,
 	oldValue string,
+	newValue string,
 ) error {
 	if repoPath == "" {
 		return ErrRepositoryPathEmpty
 	}
+
+	// don't break existing interface - user calls with empty value to delete the ref.
+	if newValue == "" {
+		newValue = types.NilSHA
+	}
+
+	// if no old value was provided, use current value (as required for hooks)
+	// TODO: technically a delete could fail if someone updated the ref in the meanwhile.
+	//nolint:gocritic,nestif
+	if oldValue == "" {
+		val, err := a.GetRef(ctx, repoPath, ref)
+		if types.IsNotFoundError(err) {
+			// fail in case someone tries to delete a reference that doesn't exist.
+			if newValue == types.NilSHA {
+				return types.ErrNotFound("reference %q not found", ref)
+			}
+
+			oldValue = types.NilSHA
+		} else if err != nil {
+			return fmt.Errorf("failed to get current value of reference: %w", err)
+		} else {
+			oldValue = val
+		}
+	}
+
+	err := a.updateRefWithHooks(
+		ctx,
+		envVars,
+		repoPath,
+		ref,
+		oldValue,
+		newValue,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update reference with hooks: %w", err)
+	}
+
+	return nil
+}
+
+// updateRefWithHooks performs a git-ref update for the provided reference.
+// Requires both old and new value to be provided explcitly, or the call fails (ensures consistency across operation).
+// pre-receice will be called before the update, post-receive after.
+func (a Adapter) updateRefWithHooks(
+	ctx context.Context,
+	envVars map[string]string,
+	repoPath string,
+	ref string,
+	oldValue string,
+	newValue string,
+) error {
+	if repoPath == "" {
+		return ErrRepositoryPathEmpty
+	}
+
+	if oldValue == "" {
+		return fmt.Errorf("oldValue can't be empty")
+	}
+	if newValue == "" {
+		return fmt.Errorf("newValue can't be empty")
+	}
+	if oldValue == types.NilSHA && newValue == types.NilSHA {
+		return fmt.Errorf("provided values cannot be both empty")
+	}
+
+	githookClient, err := a.githookFactory.NewClient(ctx, envVars)
+	if err != nil {
+		return fmt.Errorf("failed to create githook client: %w", err)
+	}
+
+	// call pre-receive before updating the reference
+	out, err := githookClient.PreReceive(ctx, hook.PreReceiveInput{
+		RefUpdates: []hook.ReferenceUpdate{
+			{
+				Ref: ref,
+				Old: oldValue,
+				New: newValue,
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("pre-receive call failed with: %w", err)
+	}
+	if out.Error != nil {
+		return fmt.Errorf("pre-receive call returned error: %q", *out.Error)
+	}
+
+	if a.traceGit {
+		log.Ctx(ctx).Trace().
+			Str("git", "pre-receive").
+			Msgf("pre-receive call succeeded with output:\n%s", strings.Join(out.Messages, "\n"))
+	}
+
 	args := make([]string, 0, 4)
 	args = append(args, "update-ref")
-	if newValue == "" {
-		// if newvalue is empty, delete ref
-		args = append(args, "-d", reference)
+	if newValue == types.NilSHA {
+		args = append(args, "-d", ref)
 	} else {
-		args = append(args, reference, newValue)
+		args = append(args, ref, newValue)
 	}
 
-	// if an old value was provided, verify it matches.
-	if oldValue != "" {
-		args = append(args, oldValue)
-	}
+	args = append(args, oldValue)
 
 	cmd := gitea.NewCommand(ctx, args...)
-	_, _, err := cmd.RunStdString(&gitea.RunOpts{
+	_, _, err = cmd.RunStdString(&gitea.RunOpts{
 		Dir: repoPath,
 	})
 	if err != nil {
-		return processGiteaErrorf(err, "update-ref failed")
+		return processGiteaErrorf(err, "update of ref %q from %q to %q failed", ref, oldValue, newValue)
+	}
+
+	// call post-receive after updating the reference
+	out, err = githookClient.PostReceive(ctx, hook.PostReceiveInput{
+		RefUpdates: []hook.ReferenceUpdate{
+			{
+				Ref: ref,
+				Old: oldValue,
+				New: newValue,
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("post-receive call failed with: %w", err)
+	}
+	if out.Error != nil {
+		return fmt.Errorf("post-receive call returned error: %q", *out.Error)
+	}
+
+	if a.traceGit {
+		log.Ctx(ctx).Trace().
+			Str("git", "post-receive").
+			Msgf("post-receive call succeeded with output:\n%s", strings.Join(out.Messages, "\n"))
 	}
 
 	return nil

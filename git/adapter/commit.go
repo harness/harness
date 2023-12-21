@@ -357,7 +357,7 @@ func (a Adapter) GetCommitDivergences(
 	res := make([]types.CommitDivergence, len(requests))
 	for i, req := range requests {
 		res[i], err = a.getCommitDivergence(ctx, repoPath, req, max)
-		if errors.Is(err, &types.NotFoundError{}) {
+		if types.IsNotFoundError(err) {
 			res[i] = types.CommitDivergence{Ahead: -1, Behind: -1}
 			continue
 		}

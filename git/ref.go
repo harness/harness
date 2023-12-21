@@ -92,49 +92,16 @@ func (s *Service) UpdateRef(ctx context.Context, params UpdateRefParams) error {
 		return fmt.Errorf("UpdateRef: failed to fetch reference '%s': %w", params.Name, err)
 	}
 
-	repo, err := s.adapter.OpenRepository(ctx, repoPath)
+	err = s.adapter.UpdateRef(
+		ctx,
+		params.EnvVars,
+		repoPath,
+		reference,
+		params.OldValue,
+		params.NewValue,
+	)
 	if err != nil {
-		return fmt.Errorf("UpdateRef: failed to open repo: %w", err)
-	}
-
-	if ok, _ := repo.IsEmpty(); ok {
-		return errors.InvalidArgument("branch cannot be created on empty repository")
-	}
-
-	sharedRepo, err := s.adapter.SharedRepository(s.tmpDir, params.RepoUID, repo.Path)
-	if err != nil {
-		return fmt.Errorf("UpdateRef: failed to create new shared repo: %w", err)
-	}
-	defer sharedRepo.Close(ctx)
-
-	// clone repo (with HEAD branch - target might be anything)
-	err = sharedRepo.Clone(ctx, "")
-	if err != nil {
-		return fmt.Errorf("UpdateRef: failed to clone shared repo: %w", err)
-	}
-
-	pushOpts := types.PushOptions{
-		Remote: sharedRepo.RemotePath(),
-		Env:    CreateEnvironmentForPush(ctx, params.WriteParams),
-	}
-
-	// handle deletion explicitly to avoid any unwanted side effects
-	if params.NewValue == "" {
-		pushOpts.Branch = ":" + reference
-	} else {
-		pushOpts.Branch = params.NewValue + ":" + reference
-	}
-
-	if params.OldValue == "" {
-		pushOpts.Force = true
-	} else {
-		pushOpts.ForceWithLease = reference + ":" + params.OldValue
-	}
-
-	// TODO: our shared repo has so much duplication, that should be changed IMHO.
-	err = s.adapter.Push(ctx, sharedRepo.Path(), pushOpts)
-	if err != nil {
-		return fmt.Errorf("UpdateRef: failed to push changes to original repo: %w", err)
+		return fmt.Errorf("failed to update ref: %w", err)
 	}
 
 	return nil

@@ -22,6 +22,8 @@ import (
 	"github.com/harness/gitness/errors"
 )
 
+const NilSHA = "0000000000000000000000000000000000000000"
+
 type CloneRepoOptions struct {
 	Timeout       time.Duration
 	Mirror        bool

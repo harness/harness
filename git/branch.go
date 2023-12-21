@@ -24,7 +24,6 @@ import (
 	"github.com/harness/gitness/git/check"
 	"github.com/harness/gitness/git/types"
 
-	gitea "code.gitea.io/gitea/modules/git"
 	"github.com/rs/zerolog/log"
 )
 
@@ -93,80 +92,42 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 	if err := params.Validate(); err != nil {
 		return nil, err
 	}
-
-	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	env := CreateEnvironmentForPush(ctx, params.WriteParams)
-
 	if err := check.BranchName(params.BranchName); err != nil {
 		return nil, errors.InvalidArgument(err.Error())
 	}
 
-	repo, err := s.adapter.OpenRepository(ctx, repoPath)
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	targetCommit, err := s.adapter.GetCommit(ctx, repoPath, strings.TrimSpace(params.Target))
 	if err != nil {
-		return nil, fmt.Errorf("failed to open repo: %w", err)
+		return nil, fmt.Errorf("failed to get target commit: %w", err)
 	}
-
-	if ok, err := repo.IsEmpty(); ok {
-		if err != nil {
-			return nil, errors.Internal("failed to check if repository is empty: %v", err)
-		}
-		return nil, errors.InvalidArgument("branch cannot be created on empty repository")
-	}
-
-	sharedRepo, err := s.adapter.SharedRepository(s.tmpDir, params.RepoUID, repo.Path)
-	if err != nil {
-		return nil, errors.Internal("failed to create new shared repo", err)
-	}
-	defer sharedRepo.Close(ctx)
-
-	// clone repo (with HEAD branch - target might be anything)
-	err = sharedRepo.Clone(ctx, "")
-	if err != nil {
-		return nil, errors.Internal("failed to clone shared repo with branch '%s'", params.BranchName, err)
-	}
-
-	_, err = sharedRepo.GetBranchCommit(params.BranchName)
-	// return an error if branch alredy exists (push doesn't fail if it's a noop or fast forward push)
-	if err == nil {
-		return nil, errors.Conflict("branch '%s' already exists", params.BranchName)
-	}
-	if !gitea.IsErrNotExist(err) {
-		return nil, errors.Internal("branch creation of '%s' failed: %w", params.BranchName, err)
-	}
-
-	// get target commit (as target could be branch/tag/commit, and tag can't be pushed using source:destination syntax)
-	targetCommit, err := s.adapter.GetCommit(ctx, sharedRepo.Path(), strings.TrimSpace(params.Target))
-	if gitea.IsErrNotExist(err) {
-		return nil, errors.NotFound("target '%s' doesn't exist", params.Target)
-	}
-	if err != nil {
-		return nil, errors.Internal("failed to get commit id for target '%s'", params.Target, err)
-	}
-
-	// push to new branch (all changes should go through push flow for hooks and other safety meassures)
-	err = sharedRepo.PushCommitToBranch(ctx, targetCommit.SHA, params.BranchName, false, env...)
-	if err != nil {
-		return nil, err
-	}
-
-	// get branch
-	// TODO: get it from shared repo to avoid opening another gitea repo and having to strip here.
-	gitBranch, err := s.adapter.GetBranch(
+	branchRef := adapter.GetReferenceFromBranchName(params.BranchName)
+	err = s.adapter.UpdateRef(
 		ctx,
+		params.EnvVars,
 		repoPath,
-		strings.TrimPrefix(params.BranchName, gitReferenceNamePrefixBranch),
+		branchRef,
+		types.NilSHA, // we want to make sure we don't overwrite any parallel create
+		targetCommit.SHA,
 	)
+	if errors.IsConflict(err) {
+		return nil, errors.Conflict("branch %q already exists", params.BranchName, err)
+	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to get git branch '%s': %w", params.BranchName, err)
+		return nil, fmt.Errorf("failed to update branch reference: %w", err)
 	}
 
-	branch, err := mapBranch(gitBranch)
+	commit, err := mapCommit(targetCommit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map rpc branch %v: %w", gitBranch.Name, err)
+		return nil, fmt.Errorf("failed to map git commit: %w", err)
 	}
 
 	return &CreateBranchOutput{
-		Branch: *branch,
+		Branch: Branch{
+			Name:   params.BranchName,
+			SHA:    commit.SHA,
+			Commit: commit,
+		},
 	}, nil
 }
 
@@ -199,37 +160,21 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	env := CreateEnvironmentForPush(ctx, params.WriteParams)
+	branchRef := adapter.GetReferenceFromBranchName(params.BranchName)
 
-	repo, err := s.adapter.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return fmt.Errorf("failed to open repo: %w", err)
+	err := s.adapter.UpdateRef(
+		ctx,
+		params.EnvVars,
+		repoPath,
+		branchRef,
+		"", // delete whatever is there
+		types.NilSHA,
+	)
+	if types.IsNotFoundError(err) {
+		return errors.NotFound("branch %q does not exist", params.BranchName, err)
 	}
-
-	sharedRepo, err := s.adapter.SharedRepository(s.tmpDir, params.RepoUID, repo.Path)
 	if err != nil {
-		return fmt.Errorf("failed to create new shared repo: %w", err)
-	}
-	defer sharedRepo.Close(ctx)
-
-	// clone repo (technically we don't care about which branch we clone)
-	err = sharedRepo.Clone(ctx, params.BranchName)
-	if err != nil {
-		return fmt.Errorf("failed to clone shared repo with branch '%s': %w", params.BranchName, err)
-	}
-
-	// get latest branch commit before we delete
-	_, err = sharedRepo.GetBranchCommit(params.BranchName)
-	if err != nil {
-		return fmt.Errorf("failed to get gitea commit for branch '%s': %w", params.BranchName, err)
-	}
-
-	// push to remote (all changes should go through push flow for hooks and other safety meassures)
-	// NOTE: setting sourceRef to empty will delete the remote branch when pushing:
-	// https://git-scm.com/docs/git-push#Documentation/git-push.txt-ltrefspecgt82308203
-	err = sharedRepo.PushDeleteBranch(ctx, params.BranchName, true, env...)
-	if err != nil {
-		return fmt.Errorf("failed to delete branch '%s' from remote repo: %w", params.BranchName, err)
+		return fmt.Errorf("failed to delete branch reference: %w", err)
 	}
 
 	return nil

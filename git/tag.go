@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/adapter"
 	"github.com/harness/gitness/git/types"
 
 	"code.gitea.io/gitea/modules/git"
@@ -224,6 +225,7 @@ func (s *Service) ListCommitTags(
 		Tags: tags,
 	}, nil
 }
+
 func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagParams) (*CreateCommitTagOutput, error) {
 	if err := params.Validate(); err != nil {
 		return nil, err
@@ -334,28 +336,21 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	tagRef := adapter.GetReferenceFromTagName(params.Name)
 
-	repo, err := s.adapter.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return fmt.Errorf("DeleteTag: failed to open repo: %w", err)
+	err := s.adapter.UpdateRef(
+		ctx,
+		params.EnvVars,
+		repoPath,
+		tagRef,
+		"", // delete whatever is there
+		types.NilSHA,
+	)
+	if types.IsNotFoundError(err) {
+		return errors.NotFound("tag %q does not exist", params.Name, err)
 	}
-
-	sharedRepo, err := s.adapter.SharedRepository(s.tmpDir, params.RepoUID, repo.Path)
 	if err != nil {
-		return fmt.Errorf("DeleteTag: failed to create new shared repo: %w", err)
-	}
-
-	defer sharedRepo.Close(ctx)
-
-	// clone repo (with HEAD branch - tag target might be anything)
-	err = sharedRepo.Clone(ctx, "")
-	if err != nil {
-		return fmt.Errorf("DeleteTag: failed to clone shared repo with tag '%s': %w",
-			params.Name, err)
-	}
-	envs := CreateEnvironmentForPush(ctx, params.WriteParams)
-	if err = sharedRepo.PushDeleteTag(ctx, params.Name, true, envs...); err != nil {
-		return fmt.Errorf("DeleteTag: Failed to push the tag %s to remote: %w", params.Name, err)
+		return fmt.Errorf("failed to delete tag reference: %w", err)
 	}
 
 	return nil

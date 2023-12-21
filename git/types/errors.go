@@ -37,8 +37,18 @@ type NotFoundError struct {
 	Msg string
 }
 
+func IsNotFoundError(err error) bool {
+	return errors.Is(err, &NotFoundError{})
+}
+
 func (e *NotFoundError) Error() string {
 	return e.Msg
+}
+
+//nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
+func (e *NotFoundError) Is(target error) bool {
+	_, ok := target.(*NotFoundError)
+	return ok
 }
 
 func ErrNotFound(format string, args ...any) error {
