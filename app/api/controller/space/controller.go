@@ -15,6 +15,7 @@
 package space
 
 import (
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth/authz"
@@ -55,6 +56,7 @@ type Controller struct {
 	membershipStore store.MembershipStore
 	importer        *importer.Repository
 	exporter        *exporter.Repository
+	resourceLimiter limiter.ResourceLimiter
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
@@ -63,6 +65,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
+	limiter limiter.ResourceLimiter,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled:           config.NestedSpacesEnabled,
@@ -84,5 +87,6 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		membershipStore:               membershipStore,
 		importer:                      importer,
 		exporter:                      exporter,
+		resourceLimiter:               limiter,
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
@@ -66,6 +67,10 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 	var space *types.Space
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		if err := c.resourceLimiter.RepoCount(ctx, len(remoteRepositories)); err != nil {
+			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
+		}
+
 		space, err = c.createSpaceInnerInTX(ctx, session, parentSpaceID, &in.CreateInput)
 		if err != nil {
 			return err

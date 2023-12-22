@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 )
 
@@ -46,13 +47,16 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	remoteRepository, provider, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
-	if err != nil {
-		return nil, err
+	if err := c.resourceLimiter.RepoCount(ctx, 1); err != nil {
+		return nil, errors.PreconditionFailed(err.Error())
 	}
 
 	var repo *types.Repository
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		remoteRepository, provider, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
+		if err != nil {
+			return err
+		}
 		repo = remoteRepository.ToRepo(
 			parentSpace.ID,
 			in.UID,

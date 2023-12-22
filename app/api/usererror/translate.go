@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
@@ -72,6 +73,8 @@ func Translate(err error) *Error {
 		return ErrCyclicHierarchy
 	case errors.Is(err, store.ErrSpaceWithChildsCantBeDeleted):
 		return ErrSpaceWithChildsCantBeDeleted
+	case errors.Is(err, limiter.ErrMaxNumReposReached):
+		return Forbidden(err.Error())
 
 	//	upload errors
 	case errors.Is(err, blob.ErrNotFound):

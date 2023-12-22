@@ -20,9 +20,11 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
+	gitnesserrors "github.com/harness/gitness/errors"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -89,12 +91,20 @@ func (c *Controller) ImportRepositories(
 		return ImportRepositoriesOutput{}, usererror.BadRequestf("found no repositories at %s", in.ProviderSpace)
 	}
 
+	if err := c.resourceLimiter.RepoCount(ctx, len(remoteRepositories)); err != nil {
+		return ImportRepositoriesOutput{}, gitnesserrors.PreconditionFailed(err.Error())
+	}
+
 	repoIDs := make([]int64, 0, len(remoteRepositories))
 	cloneURLs := make([]string, 0, len(remoteRepositories))
 	repos := make([]*types.Repository, 0, len(remoteRepositories))
 	duplicateRepos := make([]*types.Repository, 0, len(remoteRepositories))
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		if err := c.resourceLimiter.RepoCount(ctx, len(remoteRepositories)); err != nil {
+			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
+		}
+
 		for _, remoteRepository := range remoteRepositories {
 			repo := remoteRepository.ToRepo(
 				space.ID,

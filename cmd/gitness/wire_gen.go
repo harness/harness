@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
+	"github.com/harness/gitness/app/api/controller/limiter"
 	logs2 "github.com/harness/gitness/app/api/controller/logs"
 	"github.com/harness/gitness/app/api/controller/pipeline"
 	"github.com/harness/gitness/app/api/controller/plugin"
@@ -180,7 +181,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, transactor, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer)
+	resourceLimiter, err := limiter.ProvideLimiter()
+	if err != nil {
+		return nil, err
+	}
+	repoController := repo.ProvideController(config, transactor, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter)
 	executionStore := database.ProvideExecutionStore(db)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	stageStore := database.ProvideStageStore(db)
@@ -204,7 +209,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	spaceController := space.ProvideController(config, transactor, provider, streamer, pathUID, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, pathUID, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter)
 	pipelineController := pipeline.ProvideController(pathUID, repoStore, triggerStore, authorizer, pipelineStore)
 	secretController := secret.ProvideController(pathUID, encrypter, secretStore, authorizer, spaceStore)
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pathUID, pipelineStore, repoStore)

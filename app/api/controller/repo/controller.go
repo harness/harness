@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
@@ -62,6 +63,7 @@ type Controller struct {
 	codeOwners         *codeowners.Service
 	eventReporter      *repoevents.Reporter
 	indexer            keywordsearch.Indexer
+	resourceLimiter    limiter.ResourceLimiter
 }
 
 func NewController(
@@ -82,6 +84,7 @@ func NewController(
 	codeOwners *codeowners.Service,
 	eventReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
+	limiter limiter.ResourceLimiter,
 ) *Controller {
 	return &Controller{
 		defaultBranch:                 config.Git.DefaultBranch,
@@ -102,6 +105,7 @@ func NewController(
 		codeOwners:                    codeOwners,
 		eventReporter:                 eventReporter,
 		indexer:                       indexer,
+		resourceLimiter:               limiter,
 	}
 }
 

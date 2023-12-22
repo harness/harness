@@ -15,6 +15,7 @@
 package repo
 
 import (
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/auth/authz"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/codeowners"
@@ -54,10 +55,11 @@ func ProvideController(
 	codeOwners *codeowners.Service,
 	reporeporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
+	limiter limiter.ResourceLimiter,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		uidCheck, authorizer, repoStore,
 		spaceStore, pipelineStore,
 		principalStore, ruleStore, principalInfoCache, protectionManager,
-		rpcClient, importer, codeOwners, reporeporter, indexer)
+		rpcClient, importer, codeOwners, reporeporter, indexer, limiter)
 }

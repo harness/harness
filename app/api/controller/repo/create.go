@@ -17,11 +17,13 @@ package repo
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
@@ -64,31 +66,43 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	gitResp, err := c.createGitRepository(ctx, session, in)
-	if err != nil {
-		return nil, fmt.Errorf("error creating repository on git: %w", err)
-	}
-
-	now := time.Now().UnixMilli()
-	repo := &types.Repository{
-		Version:       0,
-		ParentID:      parentSpace.ID,
-		UID:           in.UID,
-		GitUID:        gitResp.UID,
-		Description:   in.Description,
-		IsPublic:      in.IsPublic,
-		CreatedBy:     session.Principal.ID,
-		Created:       now,
-		Updated:       now,
-		ForkID:        in.ForkID,
-		DefaultBranch: in.DefaultBranch,
-	}
-	err = c.repoStore.Create(ctx, repo)
-	if err != nil {
-		if dErr := c.deleteGitRepository(ctx, session, repo); dErr != nil {
-			log.Ctx(ctx).Warn().Err(dErr).Msg("failed to delete repo for cleanup")
+	var repo *types.Repository
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		if err := c.resourceLimiter.RepoCount(ctx, 1); err != nil {
+			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
-		return nil, fmt.Errorf("failed to create repository in storage: %w", err)
+
+		gitResp, err := c.createGitRepository(ctx, session, in)
+		if err != nil {
+			return fmt.Errorf("error creating repository on git: %w", err)
+		}
+
+		now := time.Now().UnixMilli()
+		repo = &types.Repository{
+			Version:       0,
+			ParentID:      parentSpace.ID,
+			UID:           in.UID,
+			GitUID:        gitResp.UID,
+			Description:   in.Description,
+			IsPublic:      in.IsPublic,
+			CreatedBy:     session.Principal.ID,
+			Created:       now,
+			Updated:       now,
+			ForkID:        in.ForkID,
+			DefaultBranch: in.DefaultBranch,
+		}
+		err = c.repoStore.Create(ctx, repo)
+		if err != nil {
+			if dErr := c.deleteGitRepository(ctx, session, repo); dErr != nil {
+				log.Ctx(ctx).Warn().Err(dErr).Msg("failed to delete repo for cleanup")
+			}
+			return fmt.Errorf("failed to create repository in storage: %w", err)
+		}
+
+		return nil
+	}, sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return nil, err
 	}
 
 	// backfil GitURL
