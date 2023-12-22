@@ -22,10 +22,16 @@ import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { Container, Layout, Text, FlexExpander, Utils } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { ButtonRoleProps, PullRequestCheckType, PullRequestSection, timeDistance } from 'utils/Utils'
+import {
+  ButtonRoleProps,
+  PullRequestCheckType,
+  PullRequestSection,
+  generateAlphaNumericHash,
+  timeDistance
+} from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { useQueryParams } from 'hooks/useQueryParams'
-import type { TypesCheck, TypesStage } from 'services/code'
+import type { EnumCheckPayloadKind, TypesCheck, TypesStage } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { CheckPipelineStages } from './CheckPipelineStages'
 import { ChecksProps, findDefaultExecution } from './ChecksUtils'
@@ -36,6 +42,13 @@ interface ChecksMenuProps extends ChecksProps {
   setSelectedStage: (stage: TypesStage | null) => void
 }
 
+type TypesCheckPayloadExtended = EnumCheckPayloadKind | 'harness_stage'
+type ExpandedStates = { [key: string]: boolean }
+type ElapsedTimeStatusMap = { [key: string]: { status: 'string'; time: string } }
+
+enum CheckKindPayload {
+  HARNESS_STAGE = 'harness_stage'
+}
 export const ChecksMenu: React.FC<ChecksMenuProps> = ({
   repoMetadata,
   pullRequestMetadata,
@@ -43,13 +56,12 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
   onDataItemChanged,
   setSelectedStage: setSelectedStageFromProps
 }) => {
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const history = useHistory()
   const { uid } = useQueryParams<{ uid: string }>()
   const [selectedUID, setSelectedUID] = React.useState<string | undefined>()
   const [selectedStage, setSelectedStage] = useState<TypesStage | null>(null)
   const checksData = useMemo(() => sortBy(prChecksDecisionResult?.data || [], ['uid']), [prChecksDecisionResult?.data])
-
   useMemo(() => {
     if (selectedUID) {
       const selectedDataItem = checksData.find(item => item.uid === selectedUID)
@@ -90,38 +102,151 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
     onDataItemChanged,
     selectedStage
   ])
+  const [expandedStates, setExpandedStates] = useState<{ [key: string]: boolean }>({})
+  const [statusTimeStates, setStatusTimeStates] = useState<{ [key: string]: { status: string; time: string } }>({})
 
+  const groupByPipeline = (data: TypesCheck[]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return data.reduce((acc: any, item: any) => {
+      const hash = generateAlphaNumericHash(6)
+
+      const pipelineId =
+        (item?.payload?.kind as TypesCheckPayloadExtended) === CheckKindPayload.HARNESS_STAGE
+          ? item?.payload?.data?.pipeline_identifier
+          : `raw-${hash}`
+
+      if (!acc[pipelineId]) {
+        acc[pipelineId] = []
+      }
+      acc[pipelineId].push(item)
+
+      return acc
+    }, {})
+  }
+
+  const toggleExpandedState = (key: string) => {
+    setExpandedStates(prevStates => ({
+      ...prevStates,
+      [key]: !prevStates[key]
+    }))
+  }
+  const groupedData = useMemo(() => groupByPipeline(checksData), [checksData])
+  useEffect(() => {
+    const initialStates: ExpandedStates = {}
+    const initialMap: ElapsedTimeStatusMap = {}
+
+    Object.keys(groupedData).forEach(key => {
+      const findStatus = () => {
+        const statusPriority = ['running', 'failure', 'error', 'success']
+
+        for (const status of statusPriority) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const foundObject = groupedData[key].find((obj: any) => obj.status === status)
+          if (foundObject) return foundObject
+        }
+
+        return null
+      }
+
+      const dataArr = groupedData[key]
+      if (groupedData && dataArr) {
+        let startTime = 0
+        let endTime = 0
+        dataArr.map((item: TypesCheck) => {
+          if (item) {
+            startTime += item.created ? item?.created : 0
+            endTime += item.updated ? item?.updated : 0
+          }
+        })
+        const res = findStatus()
+        initialMap[key] = { status: res.status, time: timeDistance(startTime, endTime) }
+      }
+      if (uid) {
+        initialStates[key] = uid.includes(key) ? true : false // or true if you want them initially expanded
+      } else {
+        initialStates[key] = false
+      }
+    })
+    setStatusTimeStates(initialMap)
+    setExpandedStates(initialStates)
+  }, [groupedData, uid])
   return (
-    <Container className={css.menu}>
-      {checksData.map(itemData => (
-        <CheckMenuItem
-          repoMetadata={repoMetadata}
-          pullRequestMetadata={pullRequestMetadata}
-          prChecksDecisionResult={prChecksDecisionResult}
-          key={itemData.uid}
-          itemData={itemData}
-          isPipeline={itemData.payload?.kind === PullRequestCheckType.PIPELINE}
-          isSelected={itemData.uid === selectedUID}
-          onClick={stage => {
-            setSelectedUID(itemData.uid)
-            setSelectedStage(stage || null)
-            setSelectedStageFromProps(stage || null)
+    <Layout.Vertical padding={{ top: 'large' }} spacing={'small'} className={cx(css.menu, css.leftPaneContent)}>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      {Object.entries(groupedData).map(([pipelineId, checks]: any) => (
+        <Container
+          key={pipelineId}
+          onClick={() => {
+            toggleExpandedState(pipelineId)
+          }}
+          className={cx(css.leftPaneMenuItem, {
+            [css.expanded]: expandedStates[pipelineId] && !pipelineId.includes('raw-') && !standalone,
+            [css.layout]: !pipelineId.includes('raw-') && !standalone,
+            [css.menuItem]: !pipelineId.includes('raw-') && !standalone,
+            [css.hideStages]: !expandedStates[pipelineId] && !pipelineId.includes('raw-') && !standalone
+          })}>
+          {!standalone && !pipelineId.includes('raw-') && (
+            <Layout.Horizontal className={css.layout}>
+              <Render when={statusTimeStates[pipelineId]?.status}>
+                <ExecutionStatus
+                  className={cx(css.status, css.noShrink)}
+                  status={statusTimeStates[pipelineId]?.status as ExecutionState}
+                  iconSize={16}
+                  noBackground
+                  iconOnly
+                />
+              </Render>
+              <Text className={css.uid} lineClamp={1} padding={{ left: 'small' }}>
+                {pipelineId}
+              </Text>
+              <FlexExpander />
+              <Render when={statusTimeStates[pipelineId]?.time}>
+                <Text
+                  color={Color.GREY_300}
+                  padding={{ right: 'small' }}
+                  font={{ variation: FontVariation.SMALL }}
+                  className={css.noShrink}>
+                  {statusTimeStates[pipelineId]?.time}
+                </Text>
+              </Render>
+              <NavArrowRight
+                color={Utils.getRealCSSColor(Color.GREY_500)}
+                className={cx(css.noShrink, css.chevron)}
+                strokeWidth="1.5"
+              />
+            </Layout.Horizontal>
+          )}
+          {(checks as TypesCheck[]).map((itemData: TypesCheck) => (
+            <CheckMenuItem
+              repoMetadata={repoMetadata}
+              pullRequestMetadata={pullRequestMetadata}
+              prChecksDecisionResult={prChecksDecisionResult}
+              key={itemData.uid}
+              itemData={itemData}
+              isPipeline={itemData.payload?.kind === PullRequestCheckType.PIPELINE}
+              isSelected={itemData.uid === selectedUID}
+              onClick={stage => {
+                setSelectedUID(itemData.uid)
+                setSelectedStage(stage || null)
+                setSelectedStageFromProps(stage || null)
 
-            history.replace(
-              routes.toCODEPullRequest({
-                repoPath: repoMetadata.path as string,
-                pullRequestId: String(pullRequestMetadata.number),
-                pullRequestSection: PullRequestSection.CHECKS
-              }) + `?uid=${itemData.uid}${stage ? `&stageId=${stage.name}` : ''}`
-            )
-          }}
-          setSelectedStage={stage => {
-            setSelectedStage(stage)
-            setSelectedStageFromProps(stage)
-          }}
-        />
+                history.replace(
+                  routes.toCODEPullRequest({
+                    repoPath: repoMetadata.path as string,
+                    pullRequestId: String(pullRequestMetadata.number),
+                    pullRequestSection: PullRequestSection.CHECKS
+                  }) + `?uid=${itemData.uid}${stage ? `&stageId=${stage.name}` : ''}`
+                )
+              }}
+              setSelectedStage={stage => {
+                setSelectedStage(stage)
+                setSelectedStageFromProps(stage)
+              }}
+            />
+          ))}
+        </Container>
       ))}
-    </Container>
+    </Layout.Vertical>
   )
 }
 
@@ -149,7 +274,12 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
       setExpanded(isSelected)
     }
   }, [isSelected])
-
+  const name =
+    itemData?.uid &&
+    itemData?.uid.includes('-') &&
+    (itemData.payload?.kind as TypesCheckPayloadExtended) === CheckKindPayload.HARNESS_STAGE
+      ? itemData.uid.split('-')[1]
+      : itemData.uid
   return (
     <Container className={css.menuItem}>
       <Layout.Horizontal
@@ -160,23 +290,23 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
           [css.forPipeline]: isPipeline
         })}
         {...ButtonRoleProps}
-        onClick={() => {
+        onClick={e => {
+          e.stopPropagation()
           if (isPipeline) {
             setExpanded(!expanded)
           } else {
             onClick()
           }
         }}>
-        <Render when={isPipeline}>
-          <NavArrowRight
-            color={Utils.getRealCSSColor(Color.GREY_500)}
-            className={cx(css.noShrink, css.chevron)}
-            strokeWidth="1.5"
-          />
-        </Render>
-
+        <ExecutionStatus
+          className={cx(css.status, css.noShrink)}
+          status={itemData.status as ExecutionState}
+          iconSize={16}
+          noBackground
+          iconOnly
+        />
         <Text className={css.uid} lineClamp={1}>
-          {itemData.uid}
+          {name}
         </Text>
 
         <FlexExpander />
@@ -185,13 +315,13 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
           {timeDistance(itemData.updated, itemData.created)}
         </Text>
 
-        <ExecutionStatus
-          className={cx(css.status, css.noShrink)}
-          status={itemData.status as ExecutionState}
-          iconSize={16}
-          noBackground
-          iconOnly
-        />
+        <Render when={isPipeline}>
+          <NavArrowRight
+            color={Utils.getRealCSSColor(Color.GREY_500)}
+            className={cx(css.noShrink, css.chevron)}
+            strokeWidth="1.5"
+          />
+        </Render>
       </Layout.Horizontal>
 
       <Render when={isPipeline}>

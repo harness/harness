@@ -42,7 +42,8 @@ interface ExecutionStatusProps {
 }
 
 export enum ExecutionStateExtended {
-  FAILED = 'failed'
+  FAILED = 'failed',
+  ABORTED = 'aborted'
 }
 
 export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
@@ -96,12 +97,16 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         icon: 'execution-stopped',
         css: null,
         title: getString('killed').toLocaleUpperCase()
+      },
+      [ExecutionStateExtended.ABORTED]: {
+        icon: 'execution-stopped',
+        css: null,
+        title: getString('killed').toLocaleUpperCase()
       }
     }),
     [getString, inExecution, isCi]
   )
   const map = useMemo(() => maps[status], [maps, status])
-
   return (
     <Text
       tag="span"
