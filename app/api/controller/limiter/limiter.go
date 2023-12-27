@@ -28,17 +28,17 @@ type ResourceLimiter interface {
 	RepoCount(ctx context.Context, count int) error
 }
 
-var _ ResourceLimiter = unlimited{}
+var _ ResourceLimiter = Unlimited{}
 
-type unlimited struct {
+type Unlimited struct {
 }
 
 // NewResourceLimiter creates a new instance of ResourceLimiter.
 func NewResourceLimiter() ResourceLimiter {
-	return unlimited{}
+	return Unlimited{}
 }
 
 //nolint:revive
-func (unlimited) RepoCount(ctx context.Context, count int) error {
+func (Unlimited) RepoCount(ctx context.Context, count int) error {
 	return nil
 }
