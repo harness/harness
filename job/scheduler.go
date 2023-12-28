@@ -644,6 +644,14 @@ func (s *Scheduler) PurgeJobsByGroupID(ctx context.Context, jobGroupID string) (
 	return n, nil
 }
 
+func (s *Scheduler) PurgeJobByUID(ctx context.Context, jobUID string) error {
+	err := s.store.DeleteByUID(ctx, jobUID)
+	if err != nil {
+		return fmt.Errorf("failed to delete job with id=%s: %w", jobUID, err)
+	}
+	return nil
+}
+
 func mapToProgressMany(jobs []*Job) []Progress {
 	if jobs == nil {
 		return nil

@@ -483,3 +483,22 @@ func (s *JobStore) DeleteOld(ctx context.Context, olderThan time.Time) (int64, e
 
 	return n, nil
 }
+
+// DeleteByID deletes a job by its unique identifier.
+func (s *JobStore) DeleteByUID(ctx context.Context, jobUID string) error {
+	stmt := database.Builder.
+		Delete("jobs").
+		Where("job_uid = ?", jobUID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert delete job query to sql: %w", err)
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	_, err = db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "failed to execute delete job query")
+	}
+	return nil
+}

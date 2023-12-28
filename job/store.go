@@ -59,4 +59,7 @@ type Store interface {
 
 	// DeleteOld removes non-recurring jobs that have finished execution or have failed.
 	DeleteOld(ctx context.Context, olderThan time.Time) (int64, error)
+
+	// DeleteByUID deletes a job by its unique identifier.
+	DeleteByUID(ctx context.Context, jobUID string) error
 }
