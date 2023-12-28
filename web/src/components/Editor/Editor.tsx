@@ -103,15 +103,18 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   const updateContentWithoutStateChange = () => {
     setUploading(true)
     if (view.current && markdownContent && !inGitBlame) {
-      const currentContent = view.current.state.doc.toString()
       const markdownInsert = `![image](${markdownContent})`
+      const range = view.current.state.selection.main
+      const cursorPos = range.from
+      const newCursorPos = cursorPos + markdownInsert.length
       // Create a transaction to update the document content
       const transaction = view.current.state.update({
         changes: {
-          from: currentContent.length,
-          to: currentContent.length,
+          from: cursorPos,
+          to: range.to,
           insert: markdownInsert
-        }
+        },
+        selection: { anchor: newCursorPos }
       })
       // Apply the transaction to update the view's state
       view.current.dispatch(transaction)
