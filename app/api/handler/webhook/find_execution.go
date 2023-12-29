@@ -34,7 +34,7 @@ func HandleFindExecution(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		webhookID, err := request.GetWebhookIDFromPath(r)
+		webhookUID, err := request.GetWebhookUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -46,7 +46,7 @@ func HandleFindExecution(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		execution, err := webhookCtrl.FindExecution(ctx, session, repoRef, webhookID, webhookExecutionID)
+		execution, err := webhookCtrl.FindExecution(ctx, session, repoRef, webhookUID, webhookExecutionID)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

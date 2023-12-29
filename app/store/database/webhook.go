@@ -57,6 +57,8 @@ type webhook struct {
 	Updated   int64    `db:"webhook_updated"`
 	Internal  bool     `db:"webhook_internal"`
 
+	UID string `db:"webhook_uid"`
+	// TODO: Remove once UID migration is completed.
 	DisplayName           string      `db:"webhook_display_name"`
 	Description           string      `db:"webhook_description"`
 	URL                   string      `db:"webhook_url"`
@@ -76,6 +78,7 @@ const (
 		,webhook_created_by
 		,webhook_created
 		,webhook_updated
+		,webhook_uid
 		,webhook_display_name
 		,webhook_description
 		,webhook_url
@@ -111,6 +114,47 @@ func (s *WebhookStore) Find(ctx context.Context, id int64) (*types.Webhook, erro
 	return res, nil
 }
 
+// FindByUID finds the webhook with the given UID for the given parent.
+func (s *WebhookStore) FindByUID(
+	ctx context.Context,
+	parentType enum.WebhookParent,
+	parentID int64,
+	uid string,
+) (*types.Webhook, error) {
+	stmt := database.Builder.
+		Select(webhookColumns).
+		From("webhooks").
+		Where("LOWER(webhook_uid) = ?", strings.ToLower(uid))
+
+	switch parentType {
+	case enum.WebhookParentRepo:
+		stmt = stmt.Where("webhook_repo_id = ?", parentID)
+	case enum.WebhookParentSpace:
+		stmt = stmt.Where("webhook_space_id = ?", parentID)
+	default:
+		return nil, fmt.Errorf("webhook parent type '%s' is not supported", parentType)
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := &webhook{}
+	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Select query failed")
+	}
+
+	res, err := mapToWebhook(dst)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map webhook to external type: %w", err)
+	}
+
+	return res, nil
+}
+
 // Create creates a new webhook.
 func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 	const sqlQuery = `
@@ -120,6 +164,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,webhook_created_by
 			,webhook_created
 			,webhook_updated
+			,webhook_uid
 			,webhook_display_name
 			,webhook_description
 			,webhook_url
@@ -135,6 +180,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,:webhook_created_by
 			,:webhook_created
 			,:webhook_updated
+			,:webhook_uid
 			,:webhook_display_name
 			,:webhook_description
 			,:webhook_url
@@ -172,6 +218,7 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 		SET
 			 webhook_version = :webhook_version
 			,webhook_updated = :webhook_updated
+			,webhook_uid = :webhook_uid
 			,webhook_display_name = :webhook_display_name
 			,webhook_description = :webhook_description
 			,webhook_url = :webhook_url
@@ -251,7 +298,43 @@ func (s *WebhookStore) Delete(ctx context.Context, id int64) error {
 		DELETE FROM webhooks
 		WHERE webhook_id = $1`
 
-	if _, err := s.db.ExecContext(ctx, sqlQuery, id); err != nil {
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
+		return database.ProcessSQLErrorf(err, "The delete query failed")
+	}
+
+	return nil
+}
+
+// DeleteByUID deletes the webhook with the given UID for the given parent.
+func (s *WebhookStore) DeleteByUID(
+	ctx context.Context,
+	parentType enum.WebhookParent,
+	parentID int64,
+	uid string,
+) error {
+	stmt := database.Builder.
+		Delete("webhooks").
+		Where("LOWER(webhook_uid) = ?", strings.ToLower(uid))
+
+	switch parentType {
+	case enum.WebhookParentRepo:
+		stmt = stmt.Where("webhook_repo_id = ?", parentID)
+	case enum.WebhookParentSpace:
+		stmt = stmt.Where("webhook_space_id = ?", parentID)
+	default:
+		return fmt.Errorf("webhook parent type '%s' is not supported", parentType)
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
 		return database.ProcessSQLErrorf(err, "The delete query failed")
 	}
 
@@ -275,7 +358,7 @@ func (s *WebhookStore) Count(ctx context.Context, parentType enum.WebhookParent,
 	}
 
 	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(webhook_display_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+		stmt = stmt.Where("LOWER(webhook_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -311,7 +394,7 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 	}
 
 	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(webhook_display_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+		stmt = stmt.Where("LOWER(webhook_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
 	if opts.SkipInternal {
@@ -327,6 +410,8 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
 		stmt = stmt.OrderBy("webhook_id " + opts.Order.String())
+	case enum.WebhookAttrUID:
+		stmt = stmt.OrderBy("LOWER(webhook_uid) " + opts.Order.String())
 	case enum.WebhookAttrDisplayName:
 		stmt = stmt.OrderBy("webhook_display_name " + opts.Order.String())
 		//TODO: Postgres does not support COLLATE NOCASE for UTF8
@@ -363,6 +448,7 @@ func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 		CreatedBy:             hook.CreatedBy,
 		Created:               hook.Created,
 		Updated:               hook.Updated,
+		UID:                   hook.UID,
 		DisplayName:           hook.DisplayName,
 		Description:           hook.Description,
 		URL:                   hook.URL,
@@ -397,6 +483,7 @@ func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 		CreatedBy:             hook.CreatedBy,
 		Created:               hook.Created,
 		Updated:               hook.Updated,
+		UID:                   hook.UID,
 		DisplayName:           hook.DisplayName,
 		Description:           hook.Description,
 		URL:                   hook.URL,

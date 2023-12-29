@@ -22,13 +22,18 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/store/database/migrate"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type CreateInput struct {
+	UID string `json:"uid"`
+	// TODO: Remove once UID migration is completed.
 	DisplayName string                `json:"display_name"`
 	Description string                `json:"description"`
 	URL         string                `json:"url"`
@@ -51,6 +56,18 @@ func (c *Controller) Create(
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
+	}
+
+	// backfill required data - during migration period we have to accept both, displayname only and uid only
+	// TODO: Remove once UID migration is completed
+	if in.DisplayName == "" && in.UID != "" {
+		in.DisplayName = in.UID
+	}
+	if in.UID == "" && in.DisplayName != "" {
+		in.UID, err = migrate.WebhookDisplayNameToUID(in.DisplayName, false)
+		if err != nil {
+			return nil, fmt.Errorf("failed to migrate webhook displayname %q to uid: %w", in.DisplayName, err)
+		}
 	}
 
 	// validate input
@@ -76,6 +93,7 @@ func (c *Controller) Create(
 		Internal:   internal,
 
 		// user input
+		UID:                   in.UID,
 		DisplayName:           in.DisplayName,
 		Description:           in.Description,
 		URL:                   in.URL,
@@ -88,18 +106,33 @@ func (c *Controller) Create(
 
 	err = c.webhookStore.Create(ctx, hook)
 
-	if errors.Is(err, store.ErrDuplicate) && hook.Internal {
-		return nil, usererror.Conflict("the provided uid is reserved for internal purposes")
+	// internal hooks are hidden from non-internal read requests - properly communicate their existence on duplicate.
+	// This is best effort, any error we just ignore and fallback to original duplicate error.
+	if errors.Is(err, store.ErrDuplicate) && !internal {
+		existingHook, derr := c.webhookStore.FindByUID(ctx, enum.WebhookParentRepo, repo.ID, hook.UID)
+		if derr != nil {
+			log.Ctx(ctx).Warn().Err(derr).Msgf(
+				"failed to retrieve webhook for repo %d with uid %q on duplicate error",
+				repo.ID,
+				hook.UID,
+			)
+		}
+		if derr == nil && existingHook.Internal {
+			return nil, usererror.Conflict("The provided uid is reserved for internal purposes.")
+		}
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to store webhook: %w", err)
 	}
 
 	return hook, nil
 }
 
 func checkCreateInput(in *CreateInput, allowLoopback bool, allowPrivateNetwork bool) error {
+	if err := check.UID(in.UID); err != nil {
+		return err
+	}
 	if err := check.DisplayName(in.DisplayName); err != nil {
 		return err
 	}

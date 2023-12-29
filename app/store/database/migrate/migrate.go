@@ -101,13 +101,33 @@ func Current(ctx context.Context, db *sqlx.DB) (string, error) {
 }
 
 func getMigrator(db *sqlx.DB) (migrate.Options, error) {
-	before := func(_ context.Context, _ *sql.Tx, version string) error {
-		log.Trace().Str("version", version).Msg("migration started")
+	before := func(ctx context.Context, _ *sql.Tx, version string) error {
+		ctx = log.Ctx(ctx).With().
+			Str("migrate.version", version).
+			Str("migrate.phase", "before").
+			Logger().WithContext(ctx)
+		log := log.Ctx(ctx)
+
+		log.Info().Msg("[START]")
+		defer log.Info().Msg("[DONE]")
+
 		return nil
 	}
 
-	after := func(_ context.Context, _ *sql.Tx, version string) error {
-		log.Trace().Str("version", version).Msg("migration complete")
+	after := func(ctx context.Context, dbtx *sql.Tx, version string) error {
+		ctx = log.Ctx(ctx).With().
+			Str("migrate.version", version).
+			Str("migrate.phase", "after").
+			Logger().WithContext(ctx)
+		log := log.Ctx(ctx)
+
+		log.Info().Msg("[START]")
+		defer log.Info().Msg("[DONE]")
+
+		if version == "0039_alter_table_webhooks_uid" {
+			return migrateAfter_0039_alter_table_webhooks_uid(ctx, dbtx)
+		}
+
 		return nil
 	}
 

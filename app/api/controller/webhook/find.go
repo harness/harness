@@ -17,6 +17,8 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -29,25 +31,32 @@ func (c *Controller) Find(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	webhookID int64,
+	webhookUID string,
 ) (*types.Webhook, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.getWebhookVerifyOwnership(ctx, repo.ID, webhookID)
+	return c.getWebhookVerifyOwnership(ctx, repo.ID, webhookUID)
 }
 
 func (c *Controller) getWebhookVerifyOwnership(ctx context.Context, repoID int64,
-	webhookID int64) (*types.Webhook, error) {
-	if webhookID <= 0 {
-		return nil, usererror.BadRequest("A valid webhook ID must be provided.")
+	webhookUID string) (*types.Webhook, error) {
+	// TODO: Remove once webhook UID migration completed
+	webhookID, err := strconv.ParseInt(webhookUID, 10, 64)
+	if (err == nil && webhookID <= 0) || len(strings.TrimSpace(webhookUID)) == 0 {
+		return nil, usererror.BadRequest("A valid webhook UID must be provided.")
 	}
 
-	webhook, err := c.webhookStore.Find(ctx, webhookID)
+	var webhook *types.Webhook
+	if err == nil {
+		webhook, err = c.webhookStore.Find(ctx, webhookID)
+	} else {
+		webhook, err = c.webhookStore.FindByUID(ctx, enum.WebhookParentRepo, repoID, webhookUID)
+	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to find webhook with id %d: %w", webhookID, err)
+		return nil, fmt.Errorf("failed to find webhook with uid %q: %w", webhookUID, err)
 	}
 
 	// ensure the webhook actually belongs to the repo

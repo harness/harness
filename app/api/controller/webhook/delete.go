@@ -26,7 +26,7 @@ func (c *Controller) Delete(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	webhookID int64,
+	webhookUID string,
 	allowDeletingInternal bool,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
@@ -35,7 +35,7 @@ func (c *Controller) Delete(
 	}
 
 	// get the webhook and ensure it belongs to us
-	webhook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookID)
+	webhook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookUID)
 	if err != nil {
 		return err
 	}

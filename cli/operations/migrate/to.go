@@ -29,7 +29,8 @@ type commandTo struct {
 }
 
 func (c *commandTo) run(_ *kingpin.ParseContext) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx := setupLoggingContext(context.Background())
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 
 	db, err := getDB(ctx, c.envfile)

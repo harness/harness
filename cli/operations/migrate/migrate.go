@@ -23,8 +23,17 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+// Register the server command.
+func Register(app *kingpin.Application) {
+	cmd := app.Command("migrate", "database migration tool")
+	registerCurrent(cmd)
+	registerTo(cmd)
+}
 
 func getDB(ctx context.Context, envfile string) (*sqlx.DB, error) {
 	_ = godotenv.Load(envfile)
@@ -42,9 +51,8 @@ func getDB(ctx context.Context, envfile string) (*sqlx.DB, error) {
 	return db, nil
 }
 
-// Register the server command.
-func Register(app *kingpin.Application) {
-	cmd := app.Command("migrate", "database migration tool")
-	registerCurrent(cmd)
-	registerTo(cmd)
+func setupLoggingContext(ctx context.Context) context.Context {
+	zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	log := log.Logger.With().Logger()
+	return log.WithContext(ctx)
 }

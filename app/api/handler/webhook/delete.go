@@ -34,13 +34,13 @@ func HandleDelete(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		webhookID, err := request.GetWebhookIDFromPath(r)
+		webhookUID, err := request.GetWebhookUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		err = webhookCtrl.Delete(ctx, session, repoRef, webhookID, false)
+		err = webhookCtrl.Delete(ctx, session, repoRef, webhookUID, false)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

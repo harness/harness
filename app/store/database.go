@@ -416,6 +416,9 @@ type (
 		// Find finds the webhook by id.
 		Find(ctx context.Context, id int64) (*types.Webhook, error)
 
+		// FindByUID finds the webhook with the given UID for the given parent.
+		FindByUID(ctx context.Context, parentType enum.WebhookParent, parentID int64, uid string) (*types.Webhook, error)
+
 		// Create creates a new webhook.
 		Create(ctx context.Context, hook *types.Webhook) error
 
@@ -428,6 +431,9 @@ type (
 
 		// Delete deletes the webhook for the given id.
 		Delete(ctx context.Context, id int64) error
+
+		// DeleteByUID deletes the webhook with the given UID for the given parent.
+		DeleteByUID(ctx context.Context, parentType enum.WebhookParent, parentID int64, uid string) error
 
 		// Count counts the webhooks for a given parent type and id.
 		Count(ctx context.Context, parentType enum.WebhookParent, parentID int64,

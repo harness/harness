@@ -524,7 +524,7 @@ func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 		r.Post("/", handlerwebhook.HandleCreate(webhookCtrl))
 		r.Get("/", handlerwebhook.HandleList(webhookCtrl))
 
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookID), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookUID), func(r chi.Router) {
 			r.Get("/", handlerwebhook.HandleFind(webhookCtrl))
 			r.Patch("/", handlerwebhook.HandleUpdate(webhookCtrl))
 			r.Delete("/", handlerwebhook.HandleDelete(webhookCtrl))

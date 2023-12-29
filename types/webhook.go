@@ -31,6 +31,8 @@ type Webhook struct {
 	Updated    int64              `json:"updated"`
 	Internal   bool               `json:"-"`
 
+	UID string `json:"uid"`
+	// TODO: Remove once UID migration is completed.
 	DisplayName           string                       `json:"display_name"`
 	Description           string                       `json:"description"`
 	URL                   string                       `json:"url"`

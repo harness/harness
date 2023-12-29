@@ -25,7 +25,7 @@ const (
 	maxDisplayNameLength = 256
 
 	minUIDLength = 1
-	maxUIDLength = 100
+	MaxUIDLength = 100
 	uidRegex     = "^[a-zA-Z_][a-zA-Z0-9-_.]*$"
 
 	minEmailLength = 1
@@ -51,7 +51,7 @@ var (
 
 	ErrUIDLength = &ValidationError{
 		fmt.Sprintf("UID has to be between %d and %d in length.",
-			minUIDLength, maxUIDLength),
+			minUIDLength, MaxUIDLength),
 	}
 	ErrUIDRegex = &ValidationError{
 		"UID has to start with a letter (or _) and only contain the following characters [a-zA-Z0-9-_.].",
@@ -102,7 +102,7 @@ func ForControlCharacters(s string) error {
 // UID checks the provided uid and returns an error if it isn't valid.
 func UID(uid string) error {
 	l := len(uid)
-	if l < minUIDLength || l > maxUIDLength {
+	if l < minUIDLength || l > MaxUIDLength {
 		return ErrUIDLength
 	}
 

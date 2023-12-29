@@ -85,10 +85,25 @@ var queryParameterSortWebhook = openapi3.ParameterOrRef{
 				Default: ptrptr(enum.WebhookAttrID.String()),
 				Enum: []interface{}{
 					ptr.String(enum.WebhookAttrID.String()),
+					ptr.String(enum.WebhookAttrUID.String()),
 					ptr.String(enum.WebhookAttrDisplayName.String()),
 					ptr.String(enum.WebhookAttrCreated.String()),
 					ptr.String(enum.WebhookAttrUpdated.String()),
 				},
+			},
+		},
+	},
+}
+
+var queryParameterQueryWebhook = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter the webhooks by their uid."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
 			},
 		},
 	},
@@ -110,7 +125,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	listWebhooks := openapi3.Operation{}
 	listWebhooks.WithTags("webhook")
 	listWebhooks.WithMapOfAnything(map[string]interface{}{"operationId": "listWebhooks"})
-	listWebhooks.WithParameters(queryParameterQuerySpace, queryParameterSortWebhook, queryParameterOrder,
+	listWebhooks.WithParameters(queryParameterQueryWebhook, queryParameterSortWebhook, queryParameterOrder,
 		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&listWebhooks, new(listWebhooksRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listWebhooks, new([]webhookType), http.StatusOK)

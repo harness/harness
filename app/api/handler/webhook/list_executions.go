@@ -34,7 +34,7 @@ func HandleListExecutions(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		webhookID, err := request.GetWebhookIDFromPath(r)
+		webhookUID, err := request.GetWebhookUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -42,7 +42,7 @@ func HandleListExecutions(webhookCtrl *webhook.Controller) http.HandlerFunc {
 
 		filter := request.ParseWebhookExecutionFilter(r)
 
-		executions, err := webhookCtrl.ListExecutions(ctx, session, repoRef, webhookID, filter)
+		executions, err := webhookCtrl.ListExecutions(ctx, session, repoRef, webhookUID, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

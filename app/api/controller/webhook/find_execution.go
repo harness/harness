@@ -29,7 +29,7 @@ func (c *Controller) FindExecution(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	webhookID int64,
+	webhookUID string,
 	webhookExecutionID int64,
 ) (*types.WebhookExecution, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
@@ -38,7 +38,7 @@ func (c *Controller) FindExecution(
 	}
 
 	// get the webhook and ensure it belongs to us
-	webhook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookID)
+	webhook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookUID)
 	if err != nil {
 		return nil, err
 	}

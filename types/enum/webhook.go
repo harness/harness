@@ -22,6 +22,7 @@ type WebhookAttr int
 const (
 	WebhookAttrNone WebhookAttr = iota
 	WebhookAttrID
+	WebhookAttrUID
 	WebhookAttrDisplayName
 	WebhookAttrCreated
 	WebhookAttrUpdated
@@ -33,6 +34,8 @@ func ParseWebhookAttr(s string) WebhookAttr {
 	switch strings.ToLower(s) {
 	case id:
 		return WebhookAttrID
+	case uid:
+		return WebhookAttrUID
 	case displayName:
 		return WebhookAttrDisplayName
 	case created, createdAt:
@@ -49,6 +52,8 @@ func (a WebhookAttr) String() string {
 	switch a {
 	case WebhookAttrID:
 		return id
+	case WebhookAttrUID:
+		return uid
 	case WebhookAttrDisplayName:
 		return displayName
 	case WebhookAttrCreated:

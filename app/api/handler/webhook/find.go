@@ -34,13 +34,13 @@ func HandleFind(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		webhookID, err := request.GetWebhookIDFromPath(r)
+		webhookUID, err := request.GetWebhookUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		webhook, err := webhookCtrl.Find(ctx, session, repoRef, webhookID)
+		webhook, err := webhookCtrl.Find(ctx, session, repoRef, webhookUID)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

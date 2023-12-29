@@ -25,6 +25,8 @@ import (
 )
 
 type UpdateInput struct {
+	UID *string `json:"uid"`
+	// TODO: Remove once UID migration is completed.
 	DisplayName *string               `json:"display_name"`
 	Description *string               `json:"description"`
 	URL         *string               `json:"url"`
@@ -39,7 +41,7 @@ func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	webhookID int64,
+	webhookUID string,
 	in *UpdateInput,
 	allowModifyingInternal bool,
 ) (*types.Webhook, error) {
@@ -49,7 +51,7 @@ func (c *Controller) Update(
 	}
 
 	// get the hook and ensure it belongs to us
-	hook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookID)
+	hook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookUID)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +65,9 @@ func (c *Controller) Update(
 	}
 
 	// update webhook struct (only for values that are provided)
+	if in.UID != nil {
+		hook.UID = *in.UID
+	}
 	if in.DisplayName != nil {
 		hook.DisplayName = *in.DisplayName
 	}
@@ -97,6 +102,11 @@ func (c *Controller) Update(
 }
 
 func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork bool) error {
+	if in.UID != nil {
+		if err := check.UID(*in.UID); err != nil {
+			return err
+		}
+	}
 	if in.DisplayName != nil {
 		if err := check.DisplayName(*in.DisplayName); err != nil {
 			return err
