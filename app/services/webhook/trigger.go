@@ -336,9 +336,9 @@ func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.Webho
 	req.Header.Add("User-Agent", fmt.Sprintf("%s/%s", s.config.UserAgentIdentity, version.Version))
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add(s.toXHeader("Trigger"), string(triggerType))
-	req.Header.Add(s.toXHeader("Webhook-Id"), fmt.Sprint(webhook.ID))
 	req.Header.Add(s.toXHeader("Webhook-Parent-Type"), string(webhook.ParentType))
 	req.Header.Add(s.toXHeader("Webhook-Parent-Id"), fmt.Sprint(webhook.ParentID))
+	req.Header.Add(s.toXHeader("Webhook-Uid"), fmt.Sprint(webhook.UID))
 
 	// add HMAC only if a secret was provided
 	if webhook.Secret != "" {
