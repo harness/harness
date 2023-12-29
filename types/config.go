@@ -310,6 +310,13 @@ type Config struct {
 		Token    string `envconfig:"GITNESS_METRIC_TOKEN"`
 	}
 
+	RepoSize struct {
+		Enabled     bool          `envconfig:"GITNESS_REPO_SIZE_ENABLED" default:"true"`
+		CRON        string        `envconfig:"GITNESS_REPO_SIZE_CRON" default:"* * 0 * * * *"`
+		MaxDuration time.Duration `envconfig:"GITNESS_REPO_SIZE_MAX_DURATION" default:"15m"`
+		NumWorkers  int           `envconfig:"GITNESS_REPO_SIZE_NUM_WORKERS" default:"5"`
+	}
+
 	CodeOwners struct {
 		FilePaths []string `envconfig:"GITNESS_CODEOWNERS_FILEPATH" default:"CODEOWNERS,.harness/CODEOWNERS"`
 	}

@@ -32,6 +32,9 @@ type Repository struct {
 	Created     int64  `json:"created"`
 	Updated     int64  `json:"updated"`
 
+	Size        int64 `json:"size"`
+	SizeUpdated int64 `json:"size_updated"`
+
 	GitUID        string `json:"-"`
 	DefaultBranch string `json:"default_branch"`
 	ForkID        int64  `json:"fork_id"`
@@ -47,6 +50,13 @@ type Repository struct {
 
 	// git urls
 	GitURL string `json:"git_url"`
+}
+
+type RepositorySizeInfo struct {
+	ID          int64  `json:"id"`
+	GitUID      string `json:"git_uid"`
+	Size        int64  `json:"size"`
+	SizeUpdated int64  `json:"size_updated"`
 }
 
 func (r Repository) GetGitUID() string {

@@ -370,3 +370,16 @@ type FileContent struct {
 type MergeResult struct {
 	ConflictFiles []string
 }
+
+// ObjectCount represents the parsed information from the `git count-objects -v` command.
+// For field meanings, see https://git-scm.com/docs/git-count-objects#_options.
+type ObjectCount struct {
+	Count         int
+	Size          int64
+	InPack        int
+	Packs         int
+	SizePack      int64
+	PrunePackable int
+	Garbage       int
+	SizeGarbage   int64
+}

@@ -93,6 +93,13 @@ func (c *command) run(*kingpin.ParseContext) error {
 			}
 		}
 
+		if system.services.RepoSizeCalculator != nil {
+			if err := system.services.RepoSizeCalculator.Register(gCtx); err != nil {
+				log.Error().Err(err).Msg("failed to register repo size calculator")
+				return err
+			}
+		}
+
 		if err := system.services.Cleanup.Register(gCtx); err != nil {
 			log.Error().Err(err).Msg("failed to register cleanup service")
 			return err

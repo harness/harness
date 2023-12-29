@@ -67,6 +67,9 @@ type repository struct {
 	Created     int64  `db:"repo_created"`
 	Updated     int64  `db:"repo_updated"`
 
+	Size        int64 `db:"repo_size"`
+	SizeUpdated int64 `db:"repo_size_updated"`
+
 	GitUID        string `db:"repo_git_uid"`
 	DefaultBranch string `db:"repo_default_branch"`
 	ForkID        int64  `db:"repo_fork_id"`
@@ -92,6 +95,8 @@ const (
 		,repo_created_by
 		,repo_created
 		,repo_updated
+		,repo_size
+		,repo_size_updated
 		,repo_git_uid
 		,repo_default_branch
 		,repo_pullreq_seq
@@ -170,6 +175,8 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_created_by
 			,repo_created
 			,repo_updated
+			,repo_size
+			,repo_size_updated	
 			,repo_git_uid
 			,repo_default_branch
 			,repo_fork_id
@@ -189,6 +196,8 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_created_by
 			,:repo_created
 			,:repo_updated
+			,:repo_size
+			,:repo_size_updated
 			,:repo_git_uid
 			,:repo_default_branch
 			,:repo_fork_id
@@ -277,6 +286,38 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	repo.Path, err = s.getRepoPath(ctx, repo.ParentID, repo.UID)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// UpdateSize updates the size of a specific repository in the database.
+func (s *RepoStore) UpdateSize(ctx context.Context, repoID int64, size int64) error {
+	stmt := database.Builder.
+		Update("repositories").
+		Set("repo_size", size).
+		Set("repo_size_updated", time.Now().UnixMilli()).
+		Where("repo_id = ?", repoID)
+
+	sqlQuery, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to create sql query")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	result, err := db.ExecContext(ctx, sqlQuery, args...)
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to update repo size")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+	}
+
+	if count == 0 {
+		return fmt.Errorf("repo %d size not updated: %w", repoID, gitness_store.ErrResourceNotFound)
 	}
 
 	return nil
@@ -395,6 +436,33 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 	return s.mapToRepos(ctx, dst)
 }
 
+type repoSize struct {
+	ID          int64  `db:"repo_id"`
+	GitUID      string `db:"repo_git_uid"`
+	Size        int64  `db:"repo_size"`
+	SizeUpdated int64  `db:"repo_size_updated"`
+}
+
+func (s *RepoStore) ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeInfo, error) {
+	stmt := database.Builder.
+		Select("repo_id", "repo_git_uid", "repo_size", "repo_size_updated").
+		From("repositories")
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*repoSize{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+	}
+
+	return s.mapToRepoSizes(dst), nil
+}
+
 func (s *RepoStore) mapToRepo(
 	ctx context.Context,
 	in *repository,
@@ -410,6 +478,8 @@ func (s *RepoStore) mapToRepo(
 		Created:        in.Created,
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,
+		Size:           in.Size,
+		SizeUpdated:    in.SizeUpdated,
 		GitUID:         in.GitUID,
 		DefaultBranch:  in.DefaultBranch,
 		ForkID:         in.ForkID,
@@ -454,6 +524,27 @@ func (s *RepoStore) mapToRepos(
 	return res, nil
 }
 
+func (s *RepoStore) mapToRepoSize(
+	in *repoSize,
+) *types.RepositorySizeInfo {
+	return &types.RepositorySizeInfo{
+		ID:          in.ID,
+		GitUID:      in.GitUID,
+		Size:        in.Size,
+		SizeUpdated: in.SizeUpdated,
+	}
+}
+
+func (s *RepoStore) mapToRepoSizes(
+	repoSizes []*repoSize,
+) []*types.RepositorySizeInfo {
+	res := make([]*types.RepositorySizeInfo, len(repoSizes))
+	for i := range repoSizes {
+		res[i] = s.mapToRepoSize(repoSizes[i])
+	}
+	return res
+}
+
 func mapToInternalRepo(in *types.Repository) *repository {
 	return &repository{
 		ID:             in.ID,
@@ -465,6 +556,8 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		Created:        in.Created,
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,
+		Size:           in.Size,
+		SizeUpdated:    in.SizeUpdated,
 		GitUID:         in.GitUID,
 		DefaultBranch:  in.DefaultBranch,
 		ForkID:         in.ForkID,

@@ -95,6 +95,14 @@ type DeleteRepositoryParams struct {
 	WriteParams
 }
 
+type GetRepositorySizeParams struct {
+	ReadParams
+}
+
+type GetRepositorySizeOutput struct {
+	Size int64
+}
+
 type SyncRepositoryParams struct {
 	WriteParams
 	Source            string
@@ -480,6 +488,22 @@ func (s *Service) createRepositoryInternal(
 
 	log.Info().Msgf("repository created. Path: %s", repoPath)
 	return nil
+}
+
+// GetRepositorySize accumulates the sizes of counted Git objects.
+func (s *Service) GetRepositorySize(
+	ctx context.Context,
+	params *GetRepositorySizeParams,
+) (*GetRepositorySizeOutput, error) {
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	count, err := s.adapter.CountObjects(ctx, repoPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count objects for repo: %w", err)
+	}
+
+	return &GetRepositorySizeOutput{
+		Size: count.Size + count.SizePack,
+	}, nil
 }
 
 // isValidGitSHA returns true iff the provided string is a valid git sha (short or long form).

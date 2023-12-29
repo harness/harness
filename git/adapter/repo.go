@@ -369,3 +369,54 @@ func (a Adapter) Push(
 
 	return nil
 }
+
+func (a Adapter) CountObjects(ctx context.Context, repoPath string) (types.ObjectCount, error) {
+	cmd := gitea.NewCommand(ctx,
+		"count-objects", "-v",
+	)
+
+	var outbuf strings.Builder
+	if err := cmd.Run(&gitea.RunOpts{
+		Dir:    repoPath,
+		Stdout: &outbuf,
+	}); err != nil {
+		return types.ObjectCount{}, fmt.Errorf("error running git count-objects: %w", err)
+	}
+
+	objectCount := parseGitCountObjectsOutput(ctx, outbuf.String())
+	return objectCount, nil
+}
+
+func parseGitCountObjectsOutput(ctx context.Context, output string) types.ObjectCount {
+	info := types.ObjectCount{}
+
+	output = strings.TrimSpace(output)
+	lines := strings.Split(output, "\n")
+
+	for _, line := range lines {
+		fields := strings.Fields(line)
+
+		switch fields[0] {
+		case "count:":
+			fmt.Sscanf(fields[1], "%d", &info.Count)
+		case "size:":
+			fmt.Sscanf(fields[1], "%d", &info.Size)
+		case "in-pack:":
+			fmt.Sscanf(fields[1], "%d", &info.InPack)
+		case "packs:":
+			fmt.Sscanf(fields[1], "%d", &info.Packs)
+		case "size-pack:":
+			fmt.Sscanf(fields[1], "%d", &info.SizePack)
+		case "prune-packable:":
+			fmt.Sscanf(fields[1], "%d", &info.PrunePackable)
+		case "garbage:":
+			fmt.Sscanf(fields[1], "%d", &info.Garbage)
+		case "size-garbage:":
+			fmt.Sscanf(fields[1], "%d", &info.SizeGarbage)
+		default:
+			log.Ctx(ctx).Warn().Msgf("line '%s: %s' not processed", fields[0], fields[1])
+		}
+	}
+
+	return info
+}

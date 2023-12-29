@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/pullreq"
+	"github.com/harness/gitness/app/services/reposize"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/job"
@@ -32,14 +33,15 @@ var WireSet = wire.NewSet(
 )
 
 type Services struct {
-	Webhook         *webhook.Service
-	PullReq         *pullreq.Service
-	Trigger         *trigger.Service
-	JobScheduler    *job.Scheduler
-	MetricCollector *metric.Collector
-	Cleanup         *cleanup.Service
-	Notification    *notification.Service
-	Keywordsearch   *keywordsearch.Service
+	Webhook            *webhook.Service
+	PullReq            *pullreq.Service
+	Trigger            *trigger.Service
+	JobScheduler       *job.Scheduler
+	MetricCollector    *metric.Collector
+	RepoSizeCalculator *reposize.Calculator
+	Cleanup            *cleanup.Service
+	Notification       *notification.Service
+	Keywordsearch      *keywordsearch.Service
 }
 
 func ProvideServices(
@@ -48,18 +50,20 @@ func ProvideServices(
 	triggerSvc *trigger.Service,
 	jobScheduler *job.Scheduler,
 	metricCollector *metric.Collector,
+	repoSizeCalculator *reposize.Calculator,
 	cleanupSvc *cleanup.Service,
 	notificationSvc *notification.Service,
 	keywordsearchSvc *keywordsearch.Service,
 ) Services {
 	return Services{
-		Webhook:         webhooksSvc,
-		PullReq:         pullReqSvc,
-		Trigger:         triggerSvc,
-		JobScheduler:    jobScheduler,
-		MetricCollector: metricCollector,
-		Cleanup:         cleanupSvc,
-		Notification:    notificationSvc,
-		Keywordsearch:   keywordsearchSvc,
+		Webhook:            webhooksSvc,
+		PullReq:            pullReqSvc,
+		Trigger:            triggerSvc,
+		JobScheduler:       jobScheduler,
+		MetricCollector:    metricCollector,
+		RepoSizeCalculator: repoSizeCalculator,
+		Cleanup:            cleanupSvc,
+		Notification:       notificationSvc,
+		Keywordsearch:      keywordsearchSvc,
 	}
 }
