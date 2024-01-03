@@ -103,7 +103,7 @@ export default function Compare() {
       }
 
       if (!title) {
-        return showToaster(getString('pr.titleIsRequired'))
+        return showError(getString('pr.titleIsRequired'))
       }
 
       const pullReqUrl = window.location.href.split('compare')?.[0]
