@@ -41,6 +41,8 @@ const mapReducer = (state: any, action: { type: any; newEntries: any }) => {
     case 'UPDATE_MAP':
       // Return a new updated map
       return new Map([...state, ...action.newEntries])
+    case 'RESET_MAP':
+      return new Map()
     default:
       return state
   }
@@ -84,9 +86,16 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
   const selectedStageId =
     standalone && selectedItemData ? null : (selectedItemData?.payload?.data as SelectedItemDataInterface)?.stage_id
 
+  useEffect(() => {
+    // If there is a new selectedStageId, reset the map
+    if (selectedStageId) {
+      dispatch({ type: 'RESET_MAP', newEntries: {} })
+    }
+  }, [selectedStageId])
   const hookData = hooks?.useExecutionDataHook?.(executionId, selectedStageId)
   const executionApiCallData = hookData?.data
   const rootNodeId = executionApiCallData?.data?.executionGraph?.rootNodeId
+
   useEffect(() => {
     if (rootNodeId) {
       enqueue(rootNodeId)
@@ -97,7 +106,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
     if (queue.length !== 0) {
       processExecutionData(queue)
     } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queue])
+  }, [queue, selectedStageId])
 
   if (!prChecksDecisionResult) {
     return null
@@ -111,7 +120,6 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
   const processExecutionData = (curQueue: string[]) => {
     const newQueue = [...curQueue]
     const newEntries = []
-
     while (newQueue.length !== 0) {
       const item = newQueue.shift()
       if (item) {
@@ -199,7 +207,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
                         className={css.noShrink}
                         text={getString('prChecks.viewExternal')}
                         rightIcon="chevron-right"
-                        variation={ButtonVariation.SECONDARY}
+                        variation={ButtonVariation.TERTIARY}
                         size={ButtonSize.SMALL}
                         onClick={() => {
                           if (selectedStage) {

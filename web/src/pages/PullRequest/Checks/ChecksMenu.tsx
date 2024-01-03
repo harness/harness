@@ -34,7 +34,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import type { EnumCheckPayloadKind, TypesCheck, TypesStage } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { CheckPipelineStages } from './CheckPipelineStages'
-import { ChecksProps, findDefaultExecution } from './ChecksUtils'
+import { ChecksProps, extractBetweenPipelinesAndExecutions, findDefaultExecution } from './ChecksUtils'
 import css from './Checks.module.scss'
 
 interface ChecksMenuProps extends ChecksProps {
@@ -102,18 +102,20 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
     onDataItemChanged,
     selectedStage
   ])
-  const [expandedStates, setExpandedStates] = useState<{ [key: string]: boolean }>({})
+  const [expandedPipelineId, setExpandedPipelineId] = useState<string | null>(null)
   const [statusTimeStates, setStatusTimeStates] = useState<{ [key: string]: { status: string; time: string } }>({})
 
   const groupByPipeline = (data: TypesCheck[]) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return data.reduce((acc: any, item: any) => {
       const hash = generateAlphaNumericHash(6)
+      const rawPipelineName = extractBetweenPipelinesAndExecutions(item.link)
+      const rawPipelineId = rawPipelineName !== '' ? rawPipelineName : `raw-${hash}`
 
       const pipelineId =
         (item?.payload?.kind as TypesCheckPayloadExtended) === CheckKindPayload.HARNESS_STAGE
           ? item?.payload?.data?.pipeline_identifier
-          : `raw-${hash}`
+          : rawPipelineId
 
       if (!acc[pipelineId]) {
         acc[pipelineId] = []
@@ -123,13 +125,10 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
       return acc
     }, {})
   }
-
   const toggleExpandedState = (key: string) => {
-    setExpandedStates(prevStates => ({
-      ...prevStates,
-      [key]: !prevStates[key]
-    }))
+    setExpandedPipelineId(prevKey => (prevKey === key ? null : key))
   }
+
   const groupedData = useMemo(() => groupByPipeline(checksData), [checksData])
   useEffect(() => {
     const initialStates: ExpandedStates = {}
@@ -137,7 +136,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
 
     Object.keys(groupedData).forEach(key => {
       const findStatus = () => {
-        const statusPriority = ['running', 'failure', 'error', 'success']
+        const statusPriority = ['running', 'pending', 'failure', 'error', 'success']
 
         for (const status of statusPriority) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -159,16 +158,20 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
           }
         })
         const res = findStatus()
-        initialMap[key] = { status: res.status, time: timeDistance(startTime, endTime) }
+        const statusVal = res ? res.status : ''
+        initialMap[key] = { status: statusVal, time: timeDistance(startTime, endTime) }
       }
       if (uid) {
+        if (uid.includes(key)) {
+          setExpandedPipelineId(key)
+        }
         initialStates[key] = uid.includes(key) ? true : false // or true if you want them initially expanded
       } else {
+        setExpandedPipelineId(null)
         initialStates[key] = false
       }
     })
     setStatusTimeStates(initialMap)
-    setExpandedStates(initialStates)
   }, [groupedData, uid])
   return (
     <Layout.Vertical padding={{ top: 'large' }} spacing={'small'} className={cx(css.menu, css.leftPaneContent)}>
@@ -180,10 +183,10 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
             toggleExpandedState(pipelineId)
           }}
           className={cx(css.leftPaneMenuItem, {
-            [css.expanded]: expandedStates[pipelineId] && !pipelineId.includes('raw-') && !standalone,
+            [css.expanded]: expandedPipelineId === pipelineId && !pipelineId.includes('raw-') && !standalone,
             [css.layout]: !pipelineId.includes('raw-') && !standalone,
             [css.menuItem]: !pipelineId.includes('raw-') && !standalone,
-            [css.hideStages]: !expandedStates[pipelineId] && !pipelineId.includes('raw-') && !standalone
+            [css.hideStages]: expandedPipelineId !== pipelineId && !pipelineId.includes('raw-') && !standalone
           })}>
           {!standalone && !pipelineId.includes('raw-') && (
             <Layout.Horizontal className={css.layout}>
@@ -191,7 +194,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
                 <ExecutionStatus
                   className={cx(css.status, css.noShrink)}
                   status={statusTimeStates[pipelineId]?.status as ExecutionState}
-                  iconSize={16}
+                  iconSize={22}
                   noBackground
                   iconOnly
                 />
@@ -217,32 +220,34 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
             </Layout.Horizontal>
           )}
           {(checks as TypesCheck[]).map((itemData: TypesCheck) => (
-            <CheckMenuItem
-              repoMetadata={repoMetadata}
-              pullRequestMetadata={pullRequestMetadata}
-              prChecksDecisionResult={prChecksDecisionResult}
-              key={itemData.uid}
-              itemData={itemData}
-              isPipeline={itemData.payload?.kind === PullRequestCheckType.PIPELINE}
-              isSelected={itemData.uid === selectedUID}
-              onClick={stage => {
-                setSelectedUID(itemData.uid)
-                setSelectedStage(stage || null)
-                setSelectedStageFromProps(stage || null)
+            <Container key={`container_${itemData.uid}`} className={css.checkMenuItemContainer}>
+              <CheckMenuItem
+                repoMetadata={repoMetadata}
+                pullRequestMetadata={pullRequestMetadata}
+                prChecksDecisionResult={prChecksDecisionResult}
+                key={itemData.uid}
+                itemData={itemData}
+                isPipeline={itemData.payload?.kind === PullRequestCheckType.PIPELINE}
+                isSelected={itemData.uid === selectedUID}
+                onClick={stage => {
+                  setSelectedUID(itemData.uid)
+                  setSelectedStage(stage || null)
+                  setSelectedStageFromProps(stage || null)
 
-                history.replace(
-                  routes.toCODEPullRequest({
-                    repoPath: repoMetadata.path as string,
-                    pullRequestId: String(pullRequestMetadata.number),
-                    pullRequestSection: PullRequestSection.CHECKS
-                  }) + `?uid=${itemData.uid}${stage ? `&stageId=${stage.name}` : ''}`
-                )
-              }}
-              setSelectedStage={stage => {
-                setSelectedStage(stage)
-                setSelectedStageFromProps(stage)
-              }}
-            />
+                  history.replace(
+                    routes.toCODEPullRequest({
+                      repoPath: repoMetadata.path as string,
+                      pullRequestId: String(pullRequestMetadata.number),
+                      pullRequestSection: PullRequestSection.CHECKS
+                    }) + `?uid=${itemData.uid}${stage ? `&stageId=${stage.name}` : ''}`
+                  )
+                }}
+                setSelectedStage={stage => {
+                  setSelectedStage(stage)
+                  setSelectedStageFromProps(stage)
+                }}
+              />
+            </Container>
           ))}
         </Container>
       ))}
@@ -301,7 +306,7 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
         <ExecutionStatus
           className={cx(css.status, css.noShrink)}
           status={itemData.status as ExecutionState}
-          iconSize={16}
+          iconSize={18}
           noBackground
           iconOnly
         />

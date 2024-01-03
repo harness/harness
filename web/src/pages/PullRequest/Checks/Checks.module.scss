@@ -17,7 +17,10 @@
 @import 'src/utils/utils';
 
 .main {
-  --stage-title-height: 54px;
+  --stage-title-height: 50px;
+  --stage-title-font: 14px;
+  --stage-title-color: var(--grey-700);
+  --stage-title-weight: 500;
   --stage-detail-section-height: 48px;
   --log-content-header-height: 64px;
 
@@ -53,14 +56,70 @@
           .chevron {
             transform: rotate(90deg) !important;
           }
+          > .layout {
+            background-color: var(--grey-50);
+
+            height: fit-content !important;
+            .bp3-popover-wrapper {
+              .bp3-popover-target {
+                .uid {
+                  color: var(--grey-600) !important;
+                  font-weight: 500 !important;
+                  font-size: 13px !important;
+                }
+              }
+            }
+          }
+
+          .checkMenuItemContainer {
+            > .menuItem {
+              padding-left: var(--spacing-xxlarge);
+              .layout {
+                border-radius: 100px 0px 0px 100px;
+                &:hover,
+                &.selected {
+                  background-color: #e5faff;
+                }
+
+                &.selected .uid {
+                  color: var(--primary-7) !important;
+                }
+              }
+            }
+            &:nth-child(2) {
+              padding-top: var(--spacing-small) !important;
+            }
+            &:last-child {
+              padding-bottom: var(--spacing-small) !important;
+            }
+            &:nth-child(2):last-child {
+              padding-top: var(--spacing-small) !important;
+              padding-bottom: var(--spacing-small) !important;
+            }
+          }
+
           .menuItem {
             border-bottom: unset !important;
             > .layout {
-              padding: 0px var(--spacing-xxxlarge);
+              --stage-title-height: 36px;
+              --stage-title-font: 13px !important;
+              --stage-title-color: var(--grey-600) !important;
+              --stage-title-weight: 400 !important;
+              padding-left: var(--spacing-large);
+              padding-right: var(--spacing-xxxlarge);
               border-bottom: unset !important;
+              .bp3-popover-wrapper {
+                .bp3-popover-target {
+                  .uid {
+                    color: var(--grey-600) !important;
+                    font-weight: 400 !important;
+                    font-size: 13px !important;
+                  }
+                }
+              }
               > .uid {
                 color: var(--grey-600) !important;
-                font-weight: 500 !important;
+                font-weight: 400 !important;
                 font-size: 13px !important;
               }
             }
@@ -104,9 +163,9 @@
           }
 
           .uid {
-            color: var(--grey-700) !important;
-            font-weight: 600 !important;
-            font-size: 14px !important;
+            color: var(--stage-title-color);
+            font-weight: var(--stage-title-weight);
+            font-size: var(--stage-title-font);
           }
         }
 
@@ -334,19 +393,9 @@
 }
 
 .hideStages {
-  > .menuItem {
-    display: none;
-  }
-}
-
-:global {
-  .bp3-popover-wrapper {
-    > .bp3-popover-target {
-      > .uid {
-        color: var(--grey-600) !important;
-        font-weight: 500 !important;
-        font-size: 13px !important;
-      }
+  > .checkMenuItemContainer {
+    > .menuItem {
+      display: none;
     }
   }
 }

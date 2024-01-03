@@ -17,6 +17,9 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const active: string
+export declare const bp3PopoverTarget: string
+export declare const bp3PopoverWrapper: string
+export declare const checkMenuItemContainer: string
 export declare const chevron: string
 export declare const consoleLine: string
 export declare const content: string

@@ -39,6 +39,20 @@ export interface DetailDict {
   [key: string]: string
 }
 
+export function extractBetweenPipelinesAndExecutions(url: string) {
+  const pipelinesIndex = url.indexOf('/pipelines/')
+  const executionsIndex = url.indexOf('/executions/')
+
+  if (pipelinesIndex === -1 || executionsIndex === -1) {
+    return '' // Not found
+  }
+
+  const startIndex = pipelinesIndex + '/pipelines/'.length
+  const endIndex = executionsIndex
+
+  return url.substring(startIndex, endIndex)
+}
+
 export function parseLogString(logString: string) {
   if (!logString) {
     return ''

@@ -63,6 +63,7 @@ const LogTerminal: React.FC<LogViewerProps> = ({
   selectedItemData
 }) => {
   const { hooks } = useAppContext()
+
   const ref = useRef<HTMLDivElement | null>(null)
 
   const containerKey = selectedItemData ? selectedItemData.id : 'default-key'
@@ -83,11 +84,9 @@ const LogTerminal: React.FC<LogViewerProps> = ({
 
   const getLogData = (logBaseKey: string) => {
     const logContent = hooks?.useLogsContentHook([logBaseKey])
-
     return logContent.blobDataCur
   }
   // State to manage expanded states of all containers
-
   const [expandedStates, setExpandedStates] = useState(new Map<string, boolean>())
   // UseEffect to initialize the states
   useEffect(() => {
@@ -96,7 +95,8 @@ const LogTerminal: React.FC<LogViewerProps> = ({
       states.set(value.logBaseKey, false)
     })
     setExpandedStates(states) // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [selectedItemData])
+
   // Function to toggle expanded state of a container
   const toggleExpandedState = (key: string) => {
     setExpandedStates(prevStates => {
@@ -105,7 +105,6 @@ const LogTerminal: React.FC<LogViewerProps> = ({
       return newStates
     })
   }
-
   if (
     stepNameLogKeyMap &&
     (selectedItemData?.payload?.kind as EnumCheckPayloadKindExtended) === 'harness_stage' &&
@@ -176,8 +175,8 @@ export const LogViewer = React.memo(LogTerminal)
 
 export interface LogStageContainerProps {
   stepNameLogKeyMap?: Map<string, string>
-  expanded?: boolean
-  getLogData: (logKey: string) => any // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  expanded?: boolean // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getLogData: (logKey: string) => any
   logKey: string
   value: string
   setSelectedStage: React.Dispatch<React.SetStateAction<TypesStage | null>>
@@ -185,7 +184,6 @@ export interface LogStageContainerProps {
 
 export const LogStageContainer: React.FC<LogStageContainerProps> = ({
   getLogData,
-  stepNameLogKeyMap,
   expanded,
   logKey,
   value,
@@ -193,7 +191,6 @@ export const LogStageContainer: React.FC<LogStageContainerProps> = ({
 }) => {
   const localRef = useRef<HTMLDivElement | null>(null) // Create a unique ref for each LogStageContainer instance
   const data = getLogData(logKey)
-
   useEffect(() => {
     if (expanded) {
       const pipelineArr = parseLogString(data)
@@ -216,6 +213,6 @@ export const LogStageContainer: React.FC<LogStageContainerProps> = ({
         logContainer.appendChild(fragment)
       }
     }
-  }, [expanded, data, setSelectedStage, stepNameLogKeyMap])
+  }, [expanded, data, setSelectedStage])
   return <Container key={`harnesslog_${value}`} ref={localRef} className={cx(css.main, css.stepLogContainer)} />
 }

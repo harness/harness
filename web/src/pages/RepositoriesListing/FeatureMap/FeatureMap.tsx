@@ -19,17 +19,22 @@ import cx from 'classnames'
 import { Icon } from '@harnessio/icons'
 import { Container, Layout, Text, Link } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
+import { useAppContext } from 'AppContext'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { FeatureType, type FeatureData } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
-import features from './featureRoadmap.json'
+import featuresData from './featureRoadmap.json'
+import featuresStandaloneData from './featureRoadmapStandalone.json'
+
 import Launch from '../../../icons/Launch.svg'
 
 import css from '../RepositoriesListing.module.scss'
 
 const FeatureMap = () => {
   const { getString } = useStrings()
+  const { standalone } = useAppContext()
 
+  const features = standalone ? featuresStandaloneData : featuresData
   return (
     <Container padding={'medium'} className={css.featureContainer} width={`285px`}>
       <Text className={css.featureText} color={Color.GREY_400} padding={{ top: 'large', bottom: 'small' }}>
