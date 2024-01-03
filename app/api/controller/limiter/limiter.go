@@ -21,11 +21,15 @@ import (
 )
 
 var ErrMaxNumReposReached = errors.New("maximum number of repositories reached")
+var ErrMaxRepoSizeReached = errors.New("maximum size of repository reached")
 
 // ResourceLimiter is an interface for managing resource limitation.
 type ResourceLimiter interface {
 	// RepoCount allows the creation of a specified number of repositories.
 	RepoCount(ctx context.Context, count int) error
+
+	// RepoSize allows repository growth up to a limit for the given repoID.
+	RepoSize(ctx context.Context, repoID int64) error
 }
 
 var _ ResourceLimiter = Unlimited{}
@@ -40,5 +44,10 @@ func NewResourceLimiter() ResourceLimiter {
 
 //nolint:revive
 func (Unlimited) RepoCount(ctx context.Context, count int) error {
+	return nil
+}
+
+//nolint:revive
+func (Unlimited) RepoSize(ctx context.Context, repoID int64) error {
 	return nil
 }

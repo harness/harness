@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
@@ -62,6 +63,7 @@ type Controller struct {
 	pullreqStore      store.PullReqStore
 	urlProvider       url.Provider
 	protectionManager *protection.Manager
+	resourceLimiter   limiter.ResourceLimiter
 }
 
 func NewController(
@@ -73,6 +75,7 @@ func NewController(
 	pullreqStore store.PullReqStore,
 	urlProvider url.Provider,
 	protectionManager *protection.Manager,
+	limiter limiter.ResourceLimiter,
 ) *Controller {
 	return &Controller{
 		authorizer:        authorizer,
@@ -83,6 +86,7 @@ func NewController(
 		pullreqStore:      pullreqStore,
 		urlProvider:       urlProvider,
 		protectionManager: protectionManager,
+		resourceLimiter:   limiter,
 	}
 }
 

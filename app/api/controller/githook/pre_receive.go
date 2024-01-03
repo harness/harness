@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
@@ -44,6 +45,12 @@ func (c *Controller) PreReceive(
 	repo, err := c.getRepoCheckAccess(ctx, session, in.RepoID, enum.PermissionRepoPush)
 	if err != nil {
 		return hook.Output{}, err
+	}
+
+	if err := c.resourceLimiter.RepoSize(ctx, in.RepoID); err != nil {
+		return hook.Output{}, fmt.Errorf(
+			"resource limit exceeded: %w",
+			limiter.ErrMaxRepoSizeReached)
 	}
 
 	refUpdates := groupRefsByAction(in.RefUpdates)

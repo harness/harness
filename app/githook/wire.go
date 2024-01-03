@@ -16,6 +16,7 @@ package githook
 
 import (
 	"github.com/harness/gitness/app/api/controller/githook"
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/auth/authz"
 	eventsgit "github.com/harness/gitness/app/events/git"
 	"github.com/harness/gitness/app/services/protection"
@@ -50,6 +51,7 @@ func ProvideController(
 	urlProvider url.Provider,
 	protectionManager *protection.Manager,
 	githookFactory hook.ClientFactory,
+	limiter limiter.ResourceLimiter,
 ) *githook.Controller {
 	ctrl := githook.NewController(
 		authorizer,
@@ -59,7 +61,8 @@ func ProvideController(
 		git,
 		pullreqStore,
 		urlProvider,
-		protectionManager)
+		protectionManager,
+		limiter)
 
 	// TODO: improve wiring if possible
 	if fct, ok := githookFactory.(*ControllerClientFactory); ok {
