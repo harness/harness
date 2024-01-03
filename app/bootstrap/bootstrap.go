@@ -32,6 +32,8 @@ import (
 // It is used for all operations executed by gitness itself.
 var systemServicePrincipal *types.Principal
 
+var ErrAdminEmailRequired = errors.New("config.Principal.Admin.Email is required")
+
 func NewSystemServiceSession() *auth.Session {
 	return &auth.Session{
 		Principal: *systemServicePrincipal,
@@ -76,6 +78,10 @@ func System(config *types.Config, userCtrl *user.Controller,
 func AdminUser(ctx context.Context, config *types.Config, userCtrl *user.Controller) error {
 	if config.Principal.Admin.Password == "" {
 		return nil
+	}
+
+	if config.Principal.Admin.Email == "" {
+		return fmt.Errorf("failed to set up admin user: %w", ErrAdminEmailRequired)
 	}
 
 	usr, err := userCtrl.FindNoAuth(ctx, config.Principal.Admin.UID)

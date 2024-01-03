@@ -44,6 +44,8 @@ type CreateInput struct {
 }
 
 // Create creates a new webhook.
+//
+//nolint:gocognit
 func (c *Controller) Create(
 	ctx context.Context,
 	session *auth.Session,

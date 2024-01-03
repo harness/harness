@@ -181,6 +181,8 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 
 // WebhookDisplayNameToUID migrates the provided displayname to a webhook uid.
 // If randomize is true, a random suffix is added to randomize the uid.
+//
+//nolint:gocognit
 func WebhookDisplayNameToUID(displayName string, randomize bool) (string, error) {
 	const placeholder = '_'
 	const specialChars = ".-_"

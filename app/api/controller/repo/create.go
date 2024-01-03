@@ -56,6 +56,8 @@ type CreateInput struct {
 }
 
 // Create creates a new repository.
+//
+//nolint:gocognit
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Repository, error) {
 	parentSpace, err := c.getSpaceCheckAuthRepoCreation(ctx, session, in.ParentRef)
 	if err != nil {
