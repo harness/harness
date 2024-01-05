@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/pipeline/checks"
+	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/manager"
 	"github.com/harness/gitness/app/pipeline/scheduler"
@@ -77,15 +78,16 @@ type Triggerer interface {
 }
 
 type triggerer struct {
-	executionStore store.ExecutionStore
-	checkStore     store.CheckStore
-	stageStore     store.StageStore
-	tx             dbtx.Transactor
-	pipelineStore  store.PipelineStore
-	fileService    file.Service
-	urlProvider    url.Provider
-	scheduler      scheduler.Scheduler
-	repoStore      store.RepoStore
+	executionStore   store.ExecutionStore
+	checkStore       store.CheckStore
+	stageStore       store.StageStore
+	tx               dbtx.Transactor
+	pipelineStore    store.PipelineStore
+	fileService      file.Service
+	converterService converter.Service
+	urlProvider      url.Provider
+	scheduler        scheduler.Scheduler
+	repoStore        store.RepoStore
 }
 
 func New(
@@ -98,17 +100,19 @@ func New(
 	urlProvider url.Provider,
 	scheduler scheduler.Scheduler,
 	fileService file.Service,
+	converterService converter.Service,
 ) Triggerer {
 	return &triggerer{
-		executionStore: executionStore,
-		checkStore:     checkStore,
-		stageStore:     stageStore,
-		scheduler:      scheduler,
-		urlProvider:    urlProvider,
-		tx:             tx,
-		pipelineStore:  pipelineStore,
-		fileService:    fileService,
-		repoStore:      repoStore,
+		executionStore:   executionStore,
+		checkStore:       checkStore,
+		stageStore:       stageStore,
+		scheduler:        scheduler,
+		urlProvider:      urlProvider,
+		tx:               tx,
+		pipelineStore:    pipelineStore,
+		fileService:      fileService,
+		converterService: converterService,
+		repoStore:        repoStore,
 	}
 }
 
@@ -186,6 +190,19 @@ func (t *triggerer) Trigger(
 	stages := []*types.Stage{}
 	//nolint:nestif // refactor if needed
 	if !isV1Yaml(file.Data) {
+		// Convert from jsonnet/starlark to drone yaml
+		args := &converter.ConvertArgs{
+			Repo:      repo,
+			Pipeline:  pipeline,
+			Execution: execution,
+			File:      file,
+		}
+		file, err = t.converterService.Convert(ctx, args)
+		if err != nil {
+			log.Warn().Err(err).Msg("trigger: cannot convert from template")
+			return t.createExecutionWithError(ctx, pipeline, base, err.Error())
+		}
+
 		manifest, err := yaml.ParseString(string(file.Data))
 		if err != nil {
 			log.Warn().Err(err).Msg("trigger: cannot parse yaml")

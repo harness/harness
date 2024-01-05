@@ -39,6 +39,7 @@ import (
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
+	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/manager"
 	plugin2 "github.com/harness/gitness/app/pipeline/plugin"
@@ -198,7 +199,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	cancelerCanceler := canceler.ProvideCanceler(executionStore, streamer, repoStore, schedulerScheduler, stageStore, stepStore)
 	commitService := commit.ProvideService(gitInterface)
 	fileService := file.ProvideService(gitInterface)
-	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, transactor, pipelineStore, fileService, schedulerScheduler, repoStore, provider)
+	converterService := converter.ProvideService(fileService)
+	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, transactor, pipelineStore, fileService, converterService, schedulerScheduler, repoStore, provider)
 	executionController := execution.ProvideController(transactor, authorizer, executionStore, checkStore, cancelerCanceler, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream()
@@ -278,7 +280,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler, provider)
 	serverServer := server2.ProvideServer(config, routerRouter)
-	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
+	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, converterService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
 	client := manager.ProvideExecutionClient(executionManager, provider, config)
 	pluginManager := plugin2.ProvidePluginManager(config, pluginStore)
 	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, pluginManager)

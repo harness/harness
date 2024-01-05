@@ -15,6 +15,7 @@
 package manager
 
 import (
+	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/sse"
@@ -41,6 +42,7 @@ func ProvideExecutionManager(
 	urlProvider url.Provider,
 	sseStreamer sse.Streamer,
 	fileService file.Service,
+	converterService converter.Service,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
 	checkStore store.CheckStore,
@@ -50,8 +52,8 @@ func ProvideExecutionManager(
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	userStore store.PrincipalStore) ExecutionManager {
-	return New(config, executionStore, pipelineStore, urlProvider, sseStreamer, fileService, logStore,
-		logStream, checkStore, repoStore, scheduler, secretStore, stageStore, stepStore, userStore)
+	return New(config, executionStore, pipelineStore, urlProvider, sseStreamer, fileService, converterService,
+		logStore, logStream, checkStore, repoStore, scheduler, secretStore, stageStore, stepStore, userStore)
 }
 
 // ProvideExecutionClient provides a client implementation to interact with the execution manager.

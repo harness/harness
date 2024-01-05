@@ -40,6 +40,7 @@ import (
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
+	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/manager"
 	pluginmanager "github.com/harness/gitness/app/pipeline/plugin"
@@ -159,6 +160,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		manager.WireSet,
 		triggerer.WireSet,
 		file.WireSet,
+		converter.WireSet,
 		runner.WireSet,
 		sse.WireSet,
 		scheduler.WireSet,

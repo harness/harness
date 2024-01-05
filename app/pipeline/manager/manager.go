@@ -24,6 +24,7 @@ import (
 
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/jwt"
+	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/sse"
@@ -125,12 +126,13 @@ type (
 // Manager provides a simplified interface to the build runner so that it
 // can more easily interact with the server.
 type Manager struct {
-	Executions  store.ExecutionStore
-	Config      *types.Config
-	FileService file.Service
-	Pipelines   store.PipelineStore
-	urlProvider urlprovider.Provider
-	Checks      store.CheckStore
+	Executions       store.ExecutionStore
+	Config           *types.Config
+	FileService      file.Service
+	ConverterService converter.Service
+	Pipelines        store.PipelineStore
+	urlProvider      urlprovider.Provider
+	Checks           store.CheckStore
 	// Converter  store.ConvertService
 	SSEStreamer sse.Streamer
 	// Globals    store.GlobalSecretStore
@@ -155,6 +157,7 @@ func New(
 	urlProvider urlprovider.Provider,
 	sseStreamer sse.Streamer,
 	fileService file.Service,
+	converterService converter.Service,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
 	checkStore store.CheckStore,
@@ -166,21 +169,22 @@ func New(
 	userStore store.PrincipalStore,
 ) *Manager {
 	return &Manager{
-		Config:      config,
-		Executions:  executionStore,
-		Pipelines:   pipelineStore,
-		urlProvider: urlProvider,
-		SSEStreamer: sseStreamer,
-		FileService: fileService,
-		Logs:        logStore,
-		Logz:        logStream,
-		Checks:      checkStore,
-		Repos:       repoStore,
-		Scheduler:   scheduler,
-		Secrets:     secretStore,
-		Stages:      stageStore,
-		Steps:       stepStore,
-		Users:       userStore,
+		Config:           config,
+		Executions:       executionStore,
+		Pipelines:        pipelineStore,
+		urlProvider:      urlProvider,
+		SSEStreamer:      sseStreamer,
+		FileService:      fileService,
+		ConverterService: converterService,
+		Logs:             logStore,
+		Logz:             logStream,
+		Checks:           checkStore,
+		Repos:            repoStore,
+		Scheduler:        scheduler,
+		Secrets:          secretStore,
+		Stages:           stageStore,
+		Steps:            stepStore,
+		Users:            userStore,
 	}
 }
 
@@ -322,6 +326,19 @@ func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, 
 	file, err := m.FileService.Get(noContext, repo, pipeline.ConfigPath, execution.After)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot fetch file")
+		return nil, err
+	}
+
+	// Convert file contents in case templates are being used.
+	args := &converter.ConvertArgs{
+		Repo:      repo,
+		Pipeline:  pipeline,
+		Execution: execution,
+		File:      file,
+	}
+	file, err = m.ConverterService.Convert(noContext, args)
+	if err != nil {
+		log.Warn().Err(err).Msg("manager: cannot convert template contents")
 		return nil, err
 	}
 

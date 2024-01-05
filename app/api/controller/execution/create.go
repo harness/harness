@@ -75,7 +75,7 @@ func (c *Controller) Create(
 		AuthorEmail: commit.Author.Identity.Email,
 		Ref:         ref,
 		Message:     commit.Message,
-		Title:       "", // we expect this to be empty.
+		Title:       commit.Title,
 		Before:      commit.SHA,
 		After:       commit.SHA,
 		Sender:      session.Principal.UID,
