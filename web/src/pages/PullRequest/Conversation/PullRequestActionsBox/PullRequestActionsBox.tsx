@@ -419,7 +419,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                             text={mergeOption.title}
                             disabled={
                               loading ||
-                              unchecked ||
+                              (unchecked && mergeOption.method !== 'close') ||
                               (isConflict && mergeOption.method !== 'close') ||
                               (ruleViolation && !bypass && mergeOption.method !== 'close')
                             }
