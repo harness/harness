@@ -31,11 +31,12 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { EditorView } from '@codemirror/view'
 import { EditorSelection } from '@codemirror/state'
+import { isEmpty } from 'lodash-es'
 import { Editor } from 'components/Editor/Editor'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
 import { formatBytes, handleFileDrop, handlePaste } from 'utils/Utils'
-import { handleUpload } from 'utils/GitUtils'
+import { decodeGitContent, handleUpload } from 'utils/GitUtils'
 import type { TypesRepository } from 'services/code'
 import css from './MarkdownEditorWithPreview.module.scss'
 
@@ -73,6 +74,7 @@ const toolbar: ToolbarItem[] = [
 interface MarkdownEditorWithPreviewProps {
   className?: string
   value?: string
+  templateData?: string
   onChange?: (value: string) => void
   onSave?: (value: string) => void
   onCancel?: () => void
@@ -102,6 +104,7 @@ interface MarkdownEditorWithPreviewProps {
 export function MarkdownEditorWithPreview({
   className,
   value = '',
+  templateData = '',
   onChange,
   onSave,
   onCancel,
@@ -270,6 +273,18 @@ export function MarkdownEditorWithPreview({
       scrollToAndSetCursorToEnd(containerRef, viewRef, true)
     } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoFocusAndPosition, viewRef, containerRef, scrollToAndSetCursorToEnd, dirty])
+
+  useEffect(() => {
+    if (!isEmpty(templateData)) {
+      viewRef.current?.dispatch({
+        changes: {
+          from: 0,
+          to: 0,
+          insert: decodeGitContent(templateData)
+        }
+      })
+    }
+  }, [templateData])
 
   const setFileCallback = (newFile: File) => {
     setFile(newFile)

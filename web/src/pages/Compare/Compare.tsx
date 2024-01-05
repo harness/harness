@@ -41,6 +41,8 @@ import { CodeIcon, normalizeGitRef, isRefATag, makeDiffRefs, isGitRev } from 'ut
 import { Changes } from 'components/Changes/Changes'
 import type {
   OpenapiCreatePullReqRequest,
+  OpenapiGetContentOutput,
+  RepoFileContent,
   TypesCommit,
   TypesDiffStats,
   TypesPullReq,
@@ -88,6 +90,15 @@ export default function Compare() {
     },
     lazy: !repoMetadata || sourceGitRef === ''
   })
+  const { data: prTemplateData } = useGet<OpenapiGetContentOutput>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/content/.harness/pull_request_template.md`,
+    queryParams: {
+      include_commit: false,
+      git_ref: normalizeGitRef(targetGitRef)
+    },
+    lazy: !repoMetadata || sourceGitRef === ''
+  })
+
   const onCreatePullRequest = useCallback(
     (creationType: PRCreationType) => {
       if (!sourceGitRef || !targetGitRef) {
@@ -247,6 +258,7 @@ export default function Compare() {
                               standalone={standalone}
                               repoMetadata={repoMetadata}
                               value={description}
+                              templateData={(prTemplateData?.content as RepoFileContent)?.data}
                               onChange={setDescription}
                               hideButtons
                               autoFocusAndPosition={true}
