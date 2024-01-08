@@ -289,21 +289,22 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
             )
             return (
               <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
-                {approvedEvaluations?.map((owner, idx) => {
+                {approvedEvaluations?.map(({ owner }, idx) => {
                   if (idx < 4) {
                     return (
                       <Avatar
-                        key={`approved-${owner.owner?.display_name}-avatar`}
-                        hoverCard={false}
+                        key={`approved-${owner?.display_name}-avatar`}
+                        hoverCard={true}
+                        email={owner?.email || ' '}
                         size="small"
-                        name={owner.owner?.display_name || ''}
+                        name={owner?.display_name || ''}
                       />
                     )
                   }
                   if (idx === 4 && approvedEvaluations.length && approvedEvaluations.length > 4) {
                     return (
                       <Text
-                        key={`approved-${owner.owner?.display_name}-text`}
+                        key={`approved-${owner?.display_name}-text`}
                         padding={{ top: 'xsmall' }}
                         tooltipProps={{ isDark: true }}
                         tooltip={
