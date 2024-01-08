@@ -102,7 +102,7 @@ const App: React.FC<AppProps> = React.memo(function App({
         </Container>
       ) : null
     },
-    [strings] // eslint-disable-line react-hooks/exhaustive-deps
+    [strings, space] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   useEffect(() => {
