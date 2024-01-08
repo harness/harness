@@ -103,6 +103,10 @@ func worker(ctx context.Context, c *Calculator, wg *sync.WaitGroup, taskCh <-cha
 			log.Error().Msgf("failed to get repo size: %s", err.Error())
 			continue
 		}
+		if sizeOut.Size == sizeInfo.Size {
+			log.Debug().Msg("repo size not changed")
+			continue
+		}
 
 		if err := c.repoStore.UpdateSize(ctx, sizeInfo.ID, sizeOut.Size); err != nil {
 			log.Error().Msgf("failed to update repo size: %s", err.Error())
