@@ -51,7 +51,7 @@ func (c *Controller) Create(
 	session *auth.Session,
 	in *CreateInput,
 ) (*types.Space, error) {
-	parentID, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
+	parentSpace, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (c *Controller) Create(
 	}
 	var space *types.Space
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		space, err = c.createSpaceInnerInTX(ctx, session, parentID, in)
+		space, err = c.createSpaceInnerInTX(ctx, session, parentSpace.ID, in)
 		return err
 	})
 	if err != nil {
@@ -151,20 +151,20 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 	ctx context.Context,
 	session *auth.Session,
 	parentRef string,
-) (int64, error) {
+) (*types.Space, error) {
 	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
 	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
 		// TODO: Restrict top level space creation - should be move to authorizer?
 		if session == nil {
-			return 0, fmt.Errorf("anonymous user not allowed to create top level spaces: %w", usererror.ErrUnauthorized)
+			return nil, fmt.Errorf("anonymous user not allowed to create top level spaces: %w", usererror.ErrUnauthorized)
 		}
 
-		return 0, nil
+		return &types.Space{}, nil
 	}
 
 	parentSpace, err := c.spaceStore.FindByRef(ctx, parentRef)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get parent space: %w", err)
+		return nil, fmt.Errorf("failed to get parent space: %w", err)
 	}
 
 	// create is a special case - check permission without specific resource
@@ -174,10 +174,10 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 		Name: "",
 	}
 	if err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionSpaceCreate); err != nil {
-		return 0, fmt.Errorf("authorization failed: %w", err)
+		return nil, fmt.Errorf("authorization failed: %w", err)
 	}
 
-	return parentSpace.ID, nil
+	return parentSpace, nil
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {

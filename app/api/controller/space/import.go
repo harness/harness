@@ -38,7 +38,7 @@ type ImportInput struct {
 
 // Import creates new space and starts import of all repositories from the remote provider's space into it.
 func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*types.Space, error) {
-	parentSpaceID, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
+	parentSpace, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
 	if err != nil {
 		return nil, err
 	}
@@ -67,11 +67,12 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 	var space *types.Space
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		if err := c.resourceLimiter.RepoCount(ctx, len(remoteRepositories)); err != nil {
+		if err := c.resourceLimiter.RepoCount(
+			ctx, parentSpace.ID, len(remoteRepositories)); err != nil {
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
 
-		space, err = c.createSpaceInnerInTX(ctx, session, parentSpaceID, &in.CreateInput)
+		space, err = c.createSpaceInnerInTX(ctx, session, parentSpace.ID, &in.CreateInput)
 		if err != nil {
 			return err
 		}

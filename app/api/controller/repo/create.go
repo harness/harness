@@ -70,7 +70,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 
 	var repo *types.Repository
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		if err := c.resourceLimiter.RepoCount(ctx, 1); err != nil {
+		if err := c.resourceLimiter.RepoCount(ctx, parentSpace.ID, 1); err != nil {
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
 
