@@ -140,6 +140,11 @@
     --background-color-hover: var(--white) !important;
     --background-color-active: var(--grey-100) !important;
   }
+  &.hasRuleViolated a {
+    --background-color: var(--grey-50) !important;
+    --background-color-hover: var(--white) !important;
+    --background-color-active: var(--grey-100) !important;
+  }
 
   &.disabled {
     pointer-events: none;

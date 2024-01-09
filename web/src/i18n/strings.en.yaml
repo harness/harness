@@ -852,7 +852,7 @@ enterBitbucketPlaceholder: https://bitbucket.org/
 changeRepoVis: Change repository visibility
 changeRepoVisContent: Are you sure you want to make this repository {repoVis}? {repoText}
 repoVisibility: Repository Visibility
-attachText: Attach files by dragging & dropping, selecting or pasting them.
+attachText: Attach images by dragging & dropping, selecting or pasting them.
 key: Key
 setting: Setting
 mergeCommit: Merge commit
