@@ -53,7 +53,7 @@ platform:
 
 steps:
 - name: build
-  image: golang:1.14.15
+  image: golang:1.21.5
   commands:
   - sh scripts/build.sh
   environment:
