@@ -323,6 +323,18 @@ func (s *RepoStore) UpdateSize(ctx context.Context, repoID int64, size int64) er
 	return nil
 }
 
+// GetSize returns the repo size.
+func (s *RepoStore) GetSize(ctx context.Context, repoID int64) (int64, error) {
+	query := "SELECT repo_size FROM repositories WHERE repo_id = $1;"
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var size int64
+	if err := db.GetContext(ctx, &size, query, repoID); err != nil {
+		return 0, database.ProcessSQLErrorf(err, "failed to get repo size")
+	}
+	return size, nil
+}
+
 // UpdateOptLock updates the repository using the optimistic locking mechanism.
 func (s *RepoStore) UpdateOptLock(ctx context.Context,
 	repo *types.Repository,
@@ -393,6 +405,42 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 	return count, nil
+}
+
+// Count all repos in a hierarchy of spaces.
+func (s *RepoStore) CountAll(ctx context.Context, spaceID int64) (int64, error) {
+	query := `WITH RECURSIVE SpaceHierarchy AS (
+    SELECT space_id, space_parent_id
+    FROM spaces
+    WHERE space_id = $1
+    
+    UNION
+    
+    SELECT s.space_id, s.space_parent_id
+    FROM spaces s
+    JOIN SpaceHierarchy h ON s.space_parent_id = h.space_id
+)
+SELECT space_id
+FROM SpaceHierarchy h1;`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var spaceIDs []int64
+	if err := db.SelectContext(ctx, &spaceIDs, query, spaceID); err != nil {
+		return 0, database.ProcessSQLErrorf(err, "failed to retrieve spaces")
+	}
+
+	query = fmt.Sprintf(
+		"SELECT COUNT(repo_id) FROM repositories WHERE repo_parent_id IN (%s);",
+		intsToCSV(spaceIDs),
+	)
+
+	var numRepos int64
+	if err := db.GetContext(ctx, &numRepos, query); err != nil {
+		return 0, database.ProcessSQLErrorf(err, "failed to count repositories")
+	}
+
+	return numRepos, nil
 }
 
 // List returns a list of repos in a space.
@@ -569,4 +617,12 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		NumMergedPulls: in.NumMergedPulls,
 		Importing:      in.Importing,
 	}
+}
+
+func intsToCSV(elems []int64) string {
+	strSlice := make([]string, len(elems))
+	for i, num := range elems {
+		strSlice[i] = fmt.Sprint(num)
+	}
+	return strings.Join(strSlice, ",")
 }

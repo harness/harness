@@ -156,6 +156,9 @@ type (
 		// FindByRef finds the space using the spaceRef as either the id or the space path.
 		FindByRef(ctx context.Context, spaceRef string) (*types.Space, error)
 
+		// GetRootSpace returns a space where space_parent_id is NULL.
+		GetRootSpace(ctx context.Context, spaceID int64) (*types.Space, error)
+
 		// Create creates a new space
 		Create(ctx context.Context, space *types.Space) error
 
@@ -193,6 +196,9 @@ type (
 		// Update the repo size.
 		UpdateSize(ctx context.Context, repoID int64, repoSize int64) error
 
+		// Get the repo size.
+		GetSize(ctx context.Context, repoID int64) (int64, error)
+
 		// UpdateOptLock the repo details using the optimistic locking mechanism.
 		UpdateOptLock(ctx context.Context, repo *types.Repository,
 			mutateFn func(repository *types.Repository) error) (*types.Repository, error)
@@ -202,6 +208,9 @@ type (
 
 		// Count of repos in a space.
 		Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error)
+
+		// Count all repos in a hierarchy of spaces.
+		CountAll(ctx context.Context, spaceID int64) (int64, error)
 
 		// List returns a list of repos in a space.
 		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)

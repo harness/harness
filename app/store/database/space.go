@@ -118,6 +118,33 @@ func (s *SpaceStore) FindByRef(ctx context.Context, spaceRef string) (*types.Spa
 	return s.Find(ctx, id)
 }
 
+// GetRootSpace returns a space where space_parent_id is NULL.
+func (s *SpaceStore) GetRootSpace(ctx context.Context, spaceID int64) (*types.Space, error) {
+	query := `WITH RECURSIVE SpaceHierarchy AS (
+	SELECT space_id, space_parent_id
+	FROM spaces
+	WHERE space_id = $1
+	
+	UNION
+	
+	SELECT s.space_id, s.space_parent_id
+	FROM spaces s
+	JOIN SpaceHierarchy h ON s.space_id = h.space_parent_id
+)
+SELECT space_id
+FROM SpaceHierarchy
+WHERE space_parent_id IS NULL;`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var rootID int64
+	if err := db.GetContext(ctx, &rootID, query, spaceID); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "failed to get root space_id")
+	}
+
+	return s.Find(ctx, rootID)
+}
+
 // Create a new space.
 func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	if space == nil {
