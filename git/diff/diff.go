@@ -240,7 +240,7 @@ func (p *Parser) parseFileHeader() (*File, error) {
 
 	// NOTE: In case file name is surrounded by double quotes (it happens only in
 	// git-shell). e.g. diff --git "a/xxx" "b/xxx"
-	hasQuote := line[len(diffHead)] == '"'
+	hasQuote := line[len(diffHead)] == '"' || line[len(line)-1] == '"'
 	middle := strings.Index(line, ` b/`)
 	if hasQuote {
 		middle = strings.Index(line, ` "b/`)
