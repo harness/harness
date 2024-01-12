@@ -22,6 +22,7 @@ import { Button, Container, Label, Layout, FlexExpander, Formik, FormikForm, For
 import { Icon } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
 import { type ImportSpaceFormData, GitProviders, getProviders, getOrgLabel, getOrgPlaceholder } from 'utils/GitUtils'
+import { useAppContext } from 'AppContext'
 import css from '../../NewSpaceModalButton/NewSpaceModalButton.module.scss'
 
 interface ImportReposProps {
@@ -50,6 +51,7 @@ const getHostPlaceHolder = (gitProvider: string) => {
 
 const ImportReposForm = (props: ImportReposProps) => {
   const { handleSubmit, loading, hideModal, spaceRef } = props
+  const { standalone } = useAppContext()
   const { getString } = useStrings()
   const [auth, setAuth] = useState(false)
   const [step, setStep] = useState(0)
@@ -62,7 +64,8 @@ const ImportReposForm = (props: ImportReposProps) => {
     name: spaceRef,
     description: '',
     organization: '',
-    host: ''
+    host: '',
+    importPipelineLabel: false
   }
 
   const validationSchemaStepOne = yup.object().shape({
@@ -246,41 +249,44 @@ const ImportReposForm = (props: ImportReposProps) => {
                         {formik.errors.organization}
                       </Text>
                     ) : null}
-                    <Layout.Horizontal>
-                      <Label>{getString('importSpace.importLabel')}</Label>
-                      <Icon padding={{ left: 'small' }} className={css.icon} name="code-info" size={16} />
-                    </Layout.Horizontal>
-
-                    <Container className={css.importContainer} padding={'medium'}>
+                    {standalone && (
                       <Layout.Horizontal>
-                        <FormInput.CheckBox
-                          name="repositories"
-                          label={getString('pageTitle.repositories')}
-                          tooltipProps={{
-                            dataTooltipId: 'authorization'
-                          }}
-                          defaultChecked
-                          onClick={() => {
-                            setAuth(!auth)
-                          }}
-                          disabled
-                          padding={{ right: 'small' }}
-                          className={css.checkbox}
-                        />
-                        <Container padding={{ left: 'xxxlarge' }}>
+                        <Label>{getString('importSpace.importLabel')}</Label>
+                        <Icon padding={{ left: 'small' }} className={css.icon} name="code-info" size={16} />
+                      </Layout.Horizontal>
+                    )}
+                    {standalone && (
+                      <Container className={css.importContainer} padding={'medium'}>
+                        <Layout.Horizontal>
                           <FormInput.CheckBox
-                            name="pipelines"
-                            label={getString('pageTitle.pipelines')}
+                            name="repositories"
+                            label={getString('pageTitle.repositories')}
                             tooltipProps={{
-                              dataTooltipId: 'pipelines'
+                              dataTooltipId: 'authorization'
                             }}
+                            defaultChecked
                             onClick={() => {
                               setAuth(!auth)
                             }}
+                            disabled
+                            padding={{ right: 'small' }}
+                            className={css.checkbox}
                           />
-                        </Container>
-                      </Layout.Horizontal>
-                    </Container>
+                          <Container padding={{ left: 'xxxlarge' }}>
+                            <FormInput.CheckBox
+                              name="importPipelineLabel"
+                              label={getString('pageTitle.pipelines')}
+                              tooltipProps={{
+                                dataTooltipId: 'pipelines'
+                              }}
+                              onClick={() => {
+                                setAuth(!auth)
+                              }}
+                            />
+                          </Container>
+                        </Layout.Horizontal>
+                      </Container>
+                    )}
                   </Container>
                 </>
               ) : null}

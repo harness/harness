@@ -61,7 +61,8 @@ const ImportSpaceForm = (props: ImportFormProps) => {
     name: '',
     description: '',
     organization: '',
-    host: ''
+    host: '',
+    importPipelineLabel: false
   }
 
   const validationSchemaStepOne = yup.object().shape({
@@ -273,7 +274,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                         />
                         <Container padding={{ left: 'xxxlarge' }}>
                           <FormInput.CheckBox
-                            name="pipelines"
+                            name="importPipelineLabel"
                             label={getString('pageTitle.pipelines')}
                             tooltipProps={{
                               dataTooltipId: 'pipelines'

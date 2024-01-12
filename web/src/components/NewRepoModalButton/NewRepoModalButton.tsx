@@ -58,6 +58,7 @@ import {
   SUGGESTED_BRANCH_NAMES
 } from 'utils/Utils'
 import {
+  ConvertPipelineLabel,
   GitProviders,
   ImportFormData,
   ImportSpaceFormData,
@@ -212,7 +213,8 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         parent_ref: space,
         uid: formData.name,
         provider,
-        provider_repo: `${formData.org}/${formData.repo}`.replace(/\.git$/, '')
+        provider_repo: `${formData.org}/${formData.repo}`.replace(/\.git$/, ''),
+        pipelines: standalone ? ConvertPipelineLabel.CONVERT : ConvertPipelineLabel.IGNORE
       }
       importRepo(importPayload)
         .then(response => {
@@ -244,7 +246,9 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           parent_ref: space,
           uid: formData.name.trim(),
           provider,
-          provider_space: formData.organization
+          provider_space: formData.organization,
+          pipelines:
+            standalone && formData.importPipelineLabel ? ConvertPipelineLabel.CONVERT : ConvertPipelineLabel.IGNORE
         }
         const response = await importMultipleRepositories(importPayload)
         hideModal()

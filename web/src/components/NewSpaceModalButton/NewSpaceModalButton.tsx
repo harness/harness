@@ -42,7 +42,13 @@ import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps, REGEX_VALID_REPO_NAME } from 'utils/Utils'
 import type { TypesSpace, OpenapiCreateSpaceRequest } from 'services/code'
 import { useAppContext } from 'AppContext'
-import { ImportSpaceFormData, SpaceCreationType, GitProviders, getProviderTypeMapping } from 'utils/GitUtils'
+import {
+  ImportSpaceFormData,
+  SpaceCreationType,
+  GitProviders,
+  getProviderTypeMapping,
+  ConvertPipelineLabel
+} from 'utils/GitUtils'
 import ImportSpaceForm from './ImportSpaceForm/ImportSpaceForm'
 import css from './NewSpaceModalButton.module.scss'
 
@@ -148,7 +154,9 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
           description: (formData.description || '').trim(),
           uid: formData.name.trim(),
           provider,
-          provider_space: formData.organization
+          provider_space: formData.organization,
+          pipelines:
+            standalone && formData.importPipelineLabel ? ConvertPipelineLabel.CONVERT : ConvertPipelineLabel.IGNORE
         }
         const response = await importSpace(importPayload)
         hideModal()

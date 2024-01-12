@@ -79,6 +79,7 @@ export interface ImportSpaceFormData {
   description: string
   organization: string
   host: string
+  importPipelineLabel: boolean
 }
 
 export enum RepoVisibility {
@@ -174,6 +175,11 @@ export enum GitProviders {
   BITBUCKET_SERVER = 'Bitbucket Server',
   GITEA = 'Gitea',
   GOGS = 'Gogs'
+}
+
+export enum ConvertPipelineLabel {
+  CONVERT = 'convert',
+  IGNORE = 'ignore'
 }
 
 export const PullRequestFilterOption = {
