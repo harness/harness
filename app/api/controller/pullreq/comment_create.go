@@ -112,7 +112,7 @@ func (c *Controller) CommentCreate(
 	var cut git.DiffCutOutput
 	if in.IsCodeComment() {
 		// fetch code snippet from git for code comments
-		cut, err = c.fetchDiffCut(ctx, repo, pr, in)
+		cut, err = c.fetchDiffCut(ctx, repo, in)
 		if err != nil {
 			return nil, err
 		}
@@ -329,15 +329,12 @@ func setAsCodeComment(a *types.PullReqActivity, cut git.DiffCutOutput, path, sou
 func (c *Controller) fetchDiffCut(
 	ctx context.Context,
 	repo *types.Repository,
-	pr *types.PullReq,
 	in *CommentCreateInput,
 ) (git.DiffCutOutput, error) {
 	cut, err := c.git.DiffCut(ctx, &git.DiffCutParams{
 		ReadParams:      git.ReadParams{RepoUID: repo.GitUID},
 		SourceCommitSHA: in.SourceCommitSHA,
-		SourceBranch:    pr.SourceBranch,
 		TargetCommitSHA: in.TargetCommitSHA,
-		TargetBranch:    pr.TargetBranch,
 		Path:            in.Path,
 		LineStart:       in.LineStart,
 		LineStartNew:    in.LineStartNew,
@@ -362,8 +359,8 @@ func (c *Controller) migrateCodeComment(
 	cc *types.CodeComment,
 	cut git.DiffCutOutput,
 ) {
-	needsNewLineMigrate := in.SourceCommitSHA != cut.LatestSourceSHA
-	needsOldLineMigrate := pr.MergeBaseSHA != cut.MergeBaseSHA
+	needsNewLineMigrate := in.SourceCommitSHA != pr.SourceSHA
+	needsOldLineMigrate := cut.MergeBaseSHA != pr.MergeBaseSHA
 	if !needsNewLineMigrate && !needsOldLineMigrate {
 		return
 	}
@@ -371,10 +368,10 @@ func (c *Controller) migrateCodeComment(
 	comments := []*types.CodeComment{cc}
 
 	if needsNewLineMigrate {
-		c.codeCommentMigrator.MigrateNew(ctx, repo.GitUID, cut.LatestSourceSHA, comments)
+		c.codeCommentMigrator.MigrateNew(ctx, repo.GitUID, pr.SourceSHA, comments)
 	}
 	if needsOldLineMigrate {
-		c.codeCommentMigrator.MigrateOld(ctx, repo.GitUID, cut.MergeBaseSHA, comments)
+		c.codeCommentMigrator.MigrateOld(ctx, repo.GitUID, pr.MergeBaseSHA, comments)
 	}
 
 	if errMigrateUpdate := c.codeCommentView.UpdateAll(ctx, comments); errMigrateUpdate != nil {

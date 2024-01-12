@@ -225,19 +225,16 @@ func (s *Service) GetDiffHunkHeaders(
 }
 
 type DiffCutOutput struct {
-	Header          HunkHeader
-	LinesHeader     string
-	Lines           []string
-	MergeBaseSHA    string
-	LatestSourceSHA string
+	Header       HunkHeader
+	LinesHeader  string
+	Lines        []string
+	MergeBaseSHA string
 }
 
 type DiffCutParams struct {
 	ReadParams
 	SourceCommitSHA string
-	SourceBranch    string
 	TargetCommitSHA string
-	TargetBranch    string
 	Path            string
 	LineStart       int
 	LineStartNew    bool
@@ -246,20 +243,17 @@ type DiffCutParams struct {
 }
 
 // DiffCut extracts diff snippet from a git diff hunk.
-// The snippet is from the specific commit (specified by commit SHA), between refs
-// source branch and target branch, from the specific file.
+// The snippet is from the diff between the specified commit SHAs.
 func (s *Service) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOutput, error) {
-	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-
-	mergeBase, _, err := s.adapter.GetMergeBase(ctx, repoPath, "", params.TargetBranch, params.SourceBranch)
-	if err != nil {
-		return DiffCutOutput{}, fmt.Errorf("DiffCut: failed to find merge base: %w", err)
+	if params.SourceCommitSHA == params.TargetCommitSHA {
+		return DiffCutOutput{}, errors.InvalidArgument("source and target SHA cannot be the same")
 	}
 
-	sourceCommits, err := s.adapter.ListCommitSHAs(ctx, repoPath, params.SourceBranch, 0, 1,
-		types.CommitFilter{AfterRef: params.TargetBranch})
-	if err != nil || len(sourceCommits) == 0 {
-		return DiffCutOutput{}, fmt.Errorf("DiffCut: failed to get list of source branch commits: %w", err)
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	mergeBaseSHA, _, err := s.adapter.GetMergeBase(ctx, repoPath, "", params.TargetCommitSHA, params.SourceCommitSHA)
+	if err != nil {
+		return DiffCutOutput{}, fmt.Errorf("DiffCut: failed to find merge base: %w", err)
 	}
 
 	header, linesHunk, err := s.adapter.DiffCut(ctx,
@@ -289,11 +283,10 @@ func (s *Service) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOu
 	}
 
 	return DiffCutOutput{
-		Header:          hunkHeader,
-		LinesHeader:     linesHunk.HunkHeader.String(),
-		Lines:           linesHunk.Lines,
-		MergeBaseSHA:    mergeBase,
-		LatestSourceSHA: sourceCommits[0],
+		Header:       hunkHeader,
+		LinesHeader:  linesHunk.HunkHeader.String(),
+		Lines:        linesHunk.Lines,
+		MergeBaseSHA: mergeBaseSHA,
 	}, nil
 }
 
