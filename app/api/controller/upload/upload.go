@@ -33,7 +33,7 @@ type Result struct {
 }
 
 const (
-	fileNameFmt = "%s.%s"
+	fileNameFmt = "%s%s"
 )
 
 func (c *Controller) Upload(ctx context.Context,
@@ -51,8 +51,8 @@ func (c *Controller) Upload(ctx context.Context,
 		return nil, usererror.BadRequest("no file provided")
 	}
 	bufReader := bufio.NewReader(file)
-	// Check if the file is an image
-	extn, err := c.ensureTypeImgAndGetExtn(bufReader)
+	// Check if the file is an image or video
+	extn, err := c.getFileExtension(bufReader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to determine file type: %w", err)
 	}

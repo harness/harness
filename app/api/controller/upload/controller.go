@@ -17,8 +17,9 @@ package upload
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
-	"net/http"
+	"io"
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -29,14 +30,20 @@ import (
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/gabriel-vasile/mimetype"
 )
 
 const (
-	imageContentType  = "image"
-	MaxFileSize       = 5 << 20 // 5 MB file limit set in Handler
+	MaxFileSize       = 10 << 20 // 10 MB file limit set in Handler
 	fileBucketPathFmt = "uploads/%d/%s"
 	peekBytes         = 512
 )
+
+var supportedFileTypes = map[string]struct{}{
+	"image": {},
+	"video": {},
+}
 
 type Controller struct {
 	authorizer authz.Authorizer
@@ -76,23 +83,24 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	return repo, nil
 }
 
-func (c *Controller) ensureTypeImgAndGetExtn(file *bufio.Reader) (string, error) {
+func (c *Controller) getFileExtension(file *bufio.Reader) (string, error) {
 	buf, err := file.Peek(peekBytes)
-	if err != nil {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return "", fmt.Errorf("failed to read file: %w", err)
 	}
 
-	detectedContentType := http.DetectContentType(buf)
-	if !strings.HasPrefix(detectedContentType, imageContentType) {
-		return "", usererror.BadRequestf("only image files are supported, uploaded file is of type %s", detectedContentType)
+	// Example: mType.String() = image/png
+	// Splitting on "/" and taking the first element of the slice
+	// will give us the file type.
+	mType := mimetype.Detect(buf)
+	if _, ok := supportedFileTypes[strings.Split(mType.String(), "/")[0]]; !ok {
+		return "",
+			usererror.BadRequestf(
+				"only image and video files are supported, uploaded file is of type %s",
+				mType.String())
 	}
 
-	contentTypeSlice := strings.Split(detectedContentType, "/")
-	if len(contentTypeSlice) < 2 {
-		return "", fmt.Errorf("failed to parse content type %s", detectedContentType)
-	}
-	extn := contentTypeSlice[1]
-	return extn, nil
+	return mType.Extension(), nil
 }
 
 func getFileBucketPath(repoID int64, fileName string) string {
