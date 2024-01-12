@@ -23,7 +23,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string, uid string) error {
+func (c *Controller) Delete(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	uid string,
+	resolverType enum.ResolverType,
+) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return fmt.Errorf("failed to find space: %w", err)
@@ -33,7 +39,7 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef
 	if err != nil {
 		return fmt.Errorf("failed to authorize: %w", err)
 	}
-	err = c.templateStore.DeleteByUID(ctx, space.ID, uid)
+	err = c.templateStore.DeleteByUIDAndType(ctx, space.ID, uid, resolverType)
 	if err != nil {
 		return fmt.Errorf("could not delete template: %w", err)
 	}

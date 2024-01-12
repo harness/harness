@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package plugin
+package resolver
 
 import (
 	"github.com/harness/gitness/app/store"
@@ -23,13 +23,16 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvidePluginManager,
+	ProvideResolver,
 )
 
-// ProvidePluginManager provides an execution runner.
-func ProvidePluginManager(
+// ProvideResolver provides a resolver which can resolve templates and plugins.
+func ProvideResolver(
 	config *types.Config,
 	pluginStore store.PluginStore,
+	templateStore store.TemplateStore,
+	executionStore store.ExecutionStore,
+	repoStore store.RepoStore,
 ) *Manager {
-	return NewManager(config, pluginStore)
+	return NewManager(config, pluginStore, templateStore, executionStore, repoStore)
 }

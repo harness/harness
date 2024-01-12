@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/types/enum"
 )
 
 func HandleUpdate(templateCtrl *template.Controller) http.HandlerFunc {
@@ -47,7 +48,19 @@ func HandleUpdate(templateCtrl *template.Controller) http.HandlerFunc {
 			return
 		}
 
-		template, err := templateCtrl.Update(ctx, session, spaceRef, templateUID, in)
+		resolverType, err := request.GetTemplateTypeFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+		}
+
+		resolverTypeEnum, err := enum.ParseResolverType(resolverType)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		template, err := templateCtrl.Update(ctx, session, spaceRef, templateUID,
+			resolverTypeEnum, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

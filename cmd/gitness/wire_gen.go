@@ -42,7 +42,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/manager"
-	plugin2 "github.com/harness/gitness/app/pipeline/plugin"
+	"github.com/harness/gitness/app/pipeline/resolver"
 	"github.com/harness/gitness/app/pipeline/runner"
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/pipeline/triggerer"
@@ -172,8 +172,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	codeownersConfig := server.ProvideCodeOwnerConfig(config)
-	resolver := usergroup.ProvideUserGroupResolver()
-	codeownersService := codeowners.ProvideCodeOwners(gitInterface, repoStore, codeownersConfig, principalStore, resolver)
+	usergroupResolver := usergroup.ProvideUserGroupResolver()
+	codeownersService := codeowners.ProvideCodeOwners(gitInterface, repoStore, codeownersConfig, principalStore, usergroupResolver)
 	eventsConfig := server.ProvideEventsConfig(config)
 	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {
@@ -200,14 +200,15 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	commitService := commit.ProvideService(gitInterface)
 	fileService := file.ProvideService(gitInterface)
 	converterService := converter.ProvideService(fileService)
-	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, transactor, pipelineStore, fileService, converterService, schedulerScheduler, repoStore, provider)
+	templateStore := database.ProvideTemplateStore(db)
+	pluginStore := database.ProvidePluginStore(db)
+	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, transactor, pipelineStore, fileService, converterService, schedulerScheduler, repoStore, provider, templateStore, pluginStore)
 	executionController := execution.ProvideController(transactor, authorizer, executionStore, checkStore, cancelerCanceler, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream()
 	logsController := logs2.ProvideController(authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
-	templateStore := database.ProvideTemplateStore(db)
 	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
 	if err != nil {
 		return nil, err
@@ -218,7 +219,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pathUID, pipelineStore, repoStore)
 	connectorController := connector.ProvideController(pathUID, connectorStore, authorizer, spaceStore)
 	templateController := template.ProvideController(pathUID, templateStore, authorizer, spaceStore)
-	pluginStore := database.ProvidePluginStore(db)
 	pluginController := plugin.ProvideController(pluginStore)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
@@ -282,8 +282,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	serverServer := server2.ProvideServer(config, routerRouter)
 	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, converterService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
 	client := manager.ProvideExecutionClient(executionManager, provider, config)
-	pluginManager := plugin2.ProvidePluginManager(config, pluginStore)
-	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, pluginManager)
+	resolverManager := resolver.ProvideResolver(config, pluginStore, templateStore, executionStore, repoStore)
+	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, resolverManager)
 	if err != nil {
 		return nil, err
 	}
@@ -319,6 +319,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, calculator, cleanupService, notificationService, keywordsearchService)
-	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, pluginManager, servicesServices)
+	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

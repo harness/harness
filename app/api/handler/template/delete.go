@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/types/enum"
 )
 
 func HandleDelete(templateCtrl *template.Controller) http.HandlerFunc {
@@ -38,7 +39,19 @@ func HandleDelete(templateCtrl *template.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = templateCtrl.Delete(ctx, session, spaceRef, templateUID)
+		resolverType, err := request.GetTemplateTypeFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		tempalateTypeEnum, err := enum.ParseResolverType(resolverType)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		err = templateCtrl.Delete(ctx, session, spaceRef, templateUID, tempalateTypeEnum)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

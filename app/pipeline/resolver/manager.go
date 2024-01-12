@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package plugin
+package resolver
 
 import (
 	"archive/zip"
@@ -32,44 +32,55 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Lookup returns a resource by name, kind and type.
-type LookupFunc func(name, kind, typ, version string) (*v1yaml.Config, error)
+// Lookup returns a resource by name, kind and type. It also sends in the
+// execution ID.
+type LookupFunc func(name, kind, typ, version string, id int64) (*v1yaml.Config, error)
 
 type Manager struct {
-	config      *types.Config
-	pluginStore store.PluginStore
+	config         *types.Config
+	pluginStore    store.PluginStore
+	templateStore  store.TemplateStore
+	executionStore store.ExecutionStore
+	repoStore      store.RepoStore
 }
 
 func NewManager(
 	config *types.Config,
 	pluginStore store.PluginStore,
+	templateStore store.TemplateStore,
+	executionStore store.ExecutionStore,
+	repoStore store.RepoStore,
 ) *Manager {
 	return &Manager{
-		config:      config,
-		pluginStore: pluginStore,
+		config:         config,
+		pluginStore:    pluginStore,
+		templateStore:  templateStore,
+		executionStore: executionStore,
+		repoStore:      repoStore,
 	}
 }
 
-// GetLookupFn returns a lookup function for plugins which can be used in the resolver.
+// GetLookupFn returns a lookup function for plugins and templates which can be used in the resolver
+// passed to the drone runner.
+//
+//nolint:gocognit
 func (m *Manager) GetLookupFn() LookupFunc {
-	return func(name, kind, typ, version string) (*v1yaml.Config, error) {
-		if kind != "plugin" {
-			return nil, fmt.Errorf("only plugin kind supported")
-		}
-		if typ != "step" {
-			return nil, fmt.Errorf("only step plugins supported")
-		}
-		plugin, err := m.pluginStore.Find(context.Background(), name, version)
+	noContext := context.Background()
+	return func(name, kind, typ, version string, executionID int64) (*v1yaml.Config, error) {
+		// Find space ID corresponding to the executionID
+		execution, err := m.executionStore.Find(noContext, executionID)
 		if err != nil {
-			return nil, fmt.Errorf("could not lookup plugin: %w", err)
-		}
-		// Convert plugin to v1yaml spec
-		config, err := parse.ParseString(plugin.Spec)
-		if err != nil {
-			return nil, fmt.Errorf("could not unmarshal plugin to v1yaml spec: %w", err)
+			return nil, fmt.Errorf("could not find relevant execution: %w", err)
 		}
 
-		return config, nil
+		// Find the repo so we know in which space templates should be searched
+		repo, err := m.repoStore.Find(noContext, execution.RepoID)
+		if err != nil {
+			return nil, fmt.Errorf("could not find relevant repo: %w", err)
+		}
+
+		f := Resolve(noContext, m.pluginStore, m.templateStore, repo.ParentID)
+		return f(name, kind, typ, version)
 	}
 }
 

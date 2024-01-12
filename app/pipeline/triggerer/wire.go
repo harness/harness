@@ -42,7 +42,10 @@ func ProvideTriggerer(
 	scheduler scheduler.Scheduler,
 	repoStore store.RepoStore,
 	urlProvider url.Provider,
+	templateStore store.TemplateStore,
+	pluginStore store.PluginStore,
 ) Triggerer {
 	return New(executionStore, checkStore, stageStore, pipelineStore,
-		tx, repoStore, urlProvider, scheduler, fileService, converterService)
+		tx, repoStore, urlProvider, scheduler, fileService, converterService,
+		templateStore, pluginStore)
 }

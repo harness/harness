@@ -29,6 +29,7 @@ func (c *Controller) Find(
 	session *auth.Session,
 	spaceRef string,
 	uid string,
+	resolverType enum.ResolverType,
 ) (*types.Template, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
@@ -38,7 +39,7 @@ func (c *Controller) Find(
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	template, err := c.templateStore.FindByUID(ctx, space.ID, uid)
+	template, err := c.templateStore.FindByUIDAndType(ctx, space.ID, uid, resolverType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find template: %w", err)
 	}

@@ -87,7 +87,7 @@ type APIHandler interface {
 var (
 	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
 	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/",
-		"/v1/secrets/", "/v1/connectors", "/v1/templates"}
+		"/v1/secrets/", "/v1/connectors", "/v1/templates/step", "/v1/templates/stage"}
 )
 
 // NewAPIHandler returns a new APIHandler.
@@ -394,11 +394,12 @@ func setupTemplates(
 	r.Route("/templates", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlertemplate.HandleCreate(templateCtrl))
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamTemplateRef), func(r chi.Router) {
-			r.Get("/", handlertemplate.HandleFind(templateCtrl))
-			r.Patch("/", handlertemplate.HandleUpdate(templateCtrl))
-			r.Delete("/", handlertemplate.HandleDelete(templateCtrl))
-		})
+		r.Route(fmt.Sprintf("/{%s}/{%s}", request.PathParamTemplateType, request.PathParamTemplateRef),
+			func(r chi.Router) {
+				r.Get("/", handlertemplate.HandleFind(templateCtrl))
+				r.Patch("/", handlertemplate.HandleUpdate(templateCtrl))
+				r.Delete("/", handlertemplate.HandleDelete(templateCtrl))
+			})
 	})
 }
 

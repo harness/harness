@@ -15,7 +15,7 @@
 package runner
 
 import (
-	"github.com/harness/gitness/app/pipeline/plugin"
+	"github.com/harness/gitness/app/pipeline/resolver"
 	"github.com/harness/gitness/types"
 
 	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
@@ -34,9 +34,9 @@ var WireSet = wire.NewSet(
 func ProvideExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
-	pluginManager *plugin.Manager,
+	resolver *resolver.Manager,
 ) (*runtime2.Runner, error) {
-	return NewExecutionRunner(config, client, pluginManager)
+	return NewExecutionRunner(config, client, resolver)
 }
 
 // ProvideExecutionPoller provides a poller which can poll the manager

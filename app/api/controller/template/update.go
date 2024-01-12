@@ -38,6 +38,7 @@ func (c *Controller) Update(
 	session *auth.Session,
 	spaceRef string,
 	uid string,
+	resolverType enum.ResolverType,
 	in *UpdateInput,
 ) (*types.Template, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
@@ -54,7 +55,7 @@ func (c *Controller) Update(
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	template, err := c.templateStore.FindByUID(ctx, space.ID, uid)
+	template, err := c.templateStore.FindByUIDAndType(ctx, space.ID, uid, resolverType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find template: %w", err)
 	}
@@ -67,7 +68,10 @@ func (c *Controller) Update(
 			original.Description = *in.Description
 		}
 		if in.Data != nil {
+			// ignore error as it's already validated in sanitize function
+			t, _ := parseResolverType(*in.Data)
 			original.Data = *in.Data
+			original.Type = t
 		}
 
 		return nil
@@ -88,7 +92,12 @@ func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
 		}
 	}
 
-	// TODO: Validate Data
+	if in.Data != nil {
+		_, err := parseResolverType(*in.Data)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

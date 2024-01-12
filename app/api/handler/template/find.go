@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/types/enum"
 )
 
 // HandleFind finds a template from the database.
@@ -39,7 +40,19 @@ func HandleFind(templateCtrl *template.Controller) http.HandlerFunc {
 			return
 		}
 
-		template, err := templateCtrl.Find(ctx, session, spaceRef, templateUID)
+		resolverType, err := request.GetTemplateTypeFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		tempalateTypeEnum, err := enum.ParseResolverType(resolverType)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		template, err := templateCtrl.Find(ctx, session, spaceRef, templateUID, tempalateTypeEnum)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

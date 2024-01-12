@@ -12,33 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package request
+package template
 
 import (
-	"net/http"
-	"net/url"
+	"fmt"
+
+	"github.com/harness/gitness/types/check"
+	"github.com/harness/gitness/types/enum"
+
+	"github.com/drone/spec/dist/go/parse"
 )
 
-const (
-	PathParamTemplateRef  = "template_ref"
-	PathParamTemplateType = "template_type"
-)
-
-func GetTemplateRefFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamTemplateRef)
+// parseResolverType parses and validates the input yaml. It returns back the parsed
+// template type.
+func parseResolverType(data string) (enum.ResolverType, error) {
+	config, err := parse.ParseString(data)
 	if err != nil {
-		return "", err
+		return "", check.NewValidationError(fmt.Sprintf("could not parse template data: %s", err))
 	}
-
-	// paths are unescaped
-	return url.PathUnescape(rawRef)
-}
-
-func GetTemplateTypeFromPath(r *http.Request) (string, error) {
-	templateType, err := PathParamOrError(r, PathParamTemplateType)
+	resolverTypeEnum, err := enum.ParseResolverType(config.Type)
 	if err != nil {
-		return "", err
+		return "", check.NewValidationError(fmt.Sprintf("could not parse template type: %s", config.Type))
 	}
-
-	return templateType, nil
+	return resolverTypeEnum, nil
 }

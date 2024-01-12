@@ -664,8 +664,9 @@ type (
 		// Find returns a template given an ID.
 		Find(ctx context.Context, id int64) (*types.Template, error)
 
-		// FindByUID returns a template given a space ID and a UID.
-		FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Template, error)
+		// FindByUIDAndType returns a template given a space ID, UID and a type
+		FindByUIDAndType(ctx context.Context, spaceID int64,
+			uid string, resolverType enum.ResolverType) (*types.Template, error)
 
 		// Create creates a new template.
 		Create(ctx context.Context, template *types.Template) error
@@ -683,8 +684,8 @@ type (
 		// Delete deletes a template given an ID.
 		Delete(ctx context.Context, id int64) error
 
-		// DeleteByUID deletes a template given a space ID and a uid.
-		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
+		// DeleteByUIDAndType deletes a template given a space ID, uid and a type.
+		DeleteByUIDAndType(ctx context.Context, spaceID int64, uid string, resolverType enum.ResolverType) error
 
 		// List lists the templates in a given space.
 		List(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Template, error)

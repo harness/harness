@@ -39,7 +39,6 @@ type CreateInput struct {
 	Description string `json:"description"`
 	SpaceRef    string `json:"space_ref"` // Ref of the parent space
 	UID         string `json:"uid"`
-	Type        string `json:"type"`
 	Data        string `json:"data"`
 }
 
@@ -58,6 +57,10 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
+	// Try to parse template data into valid v1 config. Ignore error as it's
+	// already validated in sanitize function.
+	resolverType, _ := parseResolverType(in.Data)
+
 	var template *types.Template
 	now := time.Now().UnixMilli()
 	template = &types.Template{
@@ -65,6 +68,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		Data:        in.Data,
 		SpaceID:     parentSpace.ID,
 		UID:         in.UID,
+		Type:        resolverType,
 		Created:     now,
 		Updated:     now,
 		Version:     0,
@@ -85,6 +89,11 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	}
 
 	if err := c.uidCheck(in.UID, false); err != nil {
+		return err
+	}
+
+	_, err = parseResolverType(in.Data)
+	if err != nil {
 		return err
 	}
 

@@ -13,7 +13,7 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/coreos/go-semver v0.3.0
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
-	github.com/drone-runners/drone-runner-docker v1.8.4-0.20231106161015-8c0240291f1d
+	github.com/drone-runners/drone-runner-docker v1.8.4-0.20240109154718-47375e234554
 	github.com/drone/drone-go v1.7.1
 	github.com/drone/drone-yaml v1.2.3
 	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
@@ -54,6 +54,7 @@ require (
 	go.uber.org/multierr v1.8.0
 	golang.org/x/crypto v0.13.0
 	golang.org/x/exp v0.0.0-20230108222341-4b8118a2686a
+	golang.org/x/oauth2 v0.10.0
 	golang.org/x/sync v0.3.0
 	golang.org/x/term v0.12.0
 	golang.org/x/text v0.13.0
@@ -72,6 +73,7 @@ require (
 	gitea.com/go-chi/cache v0.2.0 // indirect
 	gitea.com/lunny/levelqueue v0.4.2-0.20220729054728-f020868cc2f7 // indirect
 	github.com/42wim/sshsig v0.0.0-20211121163825-841cf5bbc121 // indirect
+	github.com/99designs/basicauth-go v0.0.0-20160802081356-2a93ba0f464d // indirect
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
@@ -116,6 +118,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
+	github.com/drone/signal v1.0.0 // indirect
 	github.com/duo-labs/webauthn v0.0.0-20220330035159-03696f3d4499 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/editorconfig/editorconfig-core-go/v2 v2.4.4 // indirect
@@ -215,7 +218,6 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/oauth2 v0.10.0 // indirect
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

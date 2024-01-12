@@ -114,7 +114,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	if c.enableCI {
 		// start populating plugins
 		g.Go(func() error {
-			err := system.pluginManager.Populate(ctx)
+			err := system.resolverManager.Populate(ctx)
 			if err != nil {
 				log.Error().Err(err).Msg("could not populate plugins")
 			}

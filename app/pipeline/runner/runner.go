@@ -15,7 +15,7 @@
 package runner
 
 import (
-	"github.com/harness/gitness/app/pipeline/plugin"
+	"github.com/harness/gitness/app/pipeline/resolver"
 	"github.com/harness/gitness/types"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
@@ -50,7 +50,7 @@ var Privileged = []string{
 func NewExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
-	pluginManager *plugin.Manager,
+	resolver *resolver.Manager,
 ) (*runtime2.Runner, error) {
 	// For linux, containers need to have extra hosts set in order to interact with
 	// the gitness container.
@@ -102,7 +102,7 @@ func NewExecutionRunner(
 	runner := &runtime2.Runner{
 		Machine:      config.InstanceID,
 		Client:       client,
-		Resolver:     pluginManager.GetLookupFn(),
+		Resolver:     resolver.GetLookupFn(),
 		Reporter:     tracer,
 		Compiler:     compiler2,
 		Exec:         exec2.Exec,

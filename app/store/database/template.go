@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -40,6 +41,7 @@ const (
 	templateColumns = `
 	template_id,
 	template_description,
+	template_type,
 	template_space_id,
 	template_uid,
 	template_data,
@@ -73,14 +75,18 @@ func (s *templateStore) Find(ctx context.Context, id int64) (*types.Template, er
 	return dst, nil
 }
 
-// FindByUID returns a template in a given space with a given UID.
-func (s *templateStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Template, error) {
+// FindByUIDAndType returns a template in a space with a given UID and a given type.
+func (s *templateStore) FindByUIDAndType(
+	ctx context.Context,
+	spaceID int64,
+	uid string,
+	resolverType enum.ResolverType) (*types.Template, error) {
 	const findQueryStmt = templateQueryBase + `
-		WHERE template_space_id = $1 AND template_uid = $2`
+		WHERE template_space_id = $1 AND template_uid = $2 AND template_type = $3`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.Template)
-	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, uid); err != nil {
+	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, uid, resolverType.String()); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find template")
 	}
 	return dst, nil
@@ -94,6 +100,7 @@ func (s *templateStore) Create(ctx context.Context, template *types.Template) er
 		template_space_id,
 		template_uid,
 		template_data,
+		template_type,
 		template_created,
 		template_updated,
 		template_version
@@ -102,6 +109,7 @@ func (s *templateStore) Create(ctx context.Context, template *types.Template) er
 		:template_space_id,
 		:template_uid,
 		:template_data,
+		:template_type,
 		:template_created,
 		:template_updated,
 		:template_version
@@ -127,6 +135,7 @@ func (s *templateStore) Update(ctx context.Context, p *types.Template) error {
 		template_description = :template_description,
 		template_uid = :template_uid,
 		template_data = :template_data,
+		template_type = :template_type,
 		template_updated = :template_updated,
 		template_version = :template_version
 	WHERE template_id = :template_id AND template_version = :template_version - 1`
@@ -239,14 +248,19 @@ func (s *templateStore) Delete(ctx context.Context, id int64) error {
 }
 
 // DeleteByUID deletes a template with a given UID in a space.
-func (s *templateStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
+func (s *templateStore) DeleteByUIDAndType(
+	ctx context.Context,
+	spaceID int64,
+	uid string,
+	resolverType enum.ResolverType,
+) error {
 	const templateDeleteStmt = `
 	DELETE FROM templates
-	WHERE template_space_id = $1 AND template_uid = $2`
+	WHERE template_space_id = $1 AND template_uid = $2 AND template_type = $3`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, templateDeleteStmt, spaceID, uid); err != nil {
+	if _, err := db.ExecContext(ctx, templateDeleteStmt, spaceID, uid, resolverType.String()); err != nil {
 		return database.ProcessSQLErrorf(err, "Could not delete template")
 	}
 
