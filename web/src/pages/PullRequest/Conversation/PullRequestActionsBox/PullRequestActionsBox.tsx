@@ -136,7 +136,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
           } else if (
             getErrorMessage(err) === codeOwnersNotFoundMessage ||
             getErrorMessage(err) === codeOwnersNotFoundMessage2 ||
-            getErrorMessage(err) === codeOwnersNotFoundMessage3
+            getErrorMessage(err) === codeOwnersNotFoundMessage3 ||
+            err.status === 423 // resource locked (merge / dry-run already ongoing)
           ) {
             return
           } else {

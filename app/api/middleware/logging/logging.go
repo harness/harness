@@ -20,9 +20,9 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/logging"
 
 	"github.com/rs/xid"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -51,10 +51,7 @@ func HLogRequestIDHandler() func(http.Handler) http.Handler {
 			ctx = git.WithRequestID(ctx, reqID)
 
 			// update logging context with request ID
-			log := zerolog.Ctx(ctx)
-			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Str("request_id", reqID)
-			})
+			logging.UpdateContext(ctx, logging.WithRequestID(reqID))
 
 			// write request ID to response headers
 			w.Header().Set(requestIDHeader, reqID)

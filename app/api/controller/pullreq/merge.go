@@ -27,6 +27,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/contextutil"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
@@ -96,21 +97,23 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
-	// if two requests for merging comes at the same time then mutex will lock
+	// the max time we give a merge to succeed
+	const timeout = 3 * time.Minute
+
+	// if two requests for merging comes at the same time then unlock will lock
 	// first one and second one will wait, when first one is done then second one
 	// continue with latest data from db with state merged and return error that
 	// pr is already merged.
-	mutex, err := c.newMutexForPR(targetRepo.GitUID, 0) // 0 means locks all PRs for this repo
+	unlock, err := c.lockPR(
+		ctx,
+		targetRepo.GitUID,
+		0,                      // 0 means locks all PRs for this repo
+		timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
+	)
 	if err != nil {
 		return nil, nil, err
 	}
-	err = mutex.Lock(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer func() {
-		_ = mutex.Unlock(ctx)
-	}()
+	defer unlock()
 
 	pr, err := c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
 	if err != nil {
@@ -197,6 +200,16 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
+	// we want to complete the merge independent of request cancel - start with new, time restricted context.
+	// TODO: This is a small change to reduce likelihood of dirty state.
+	// We still require a proper solution to handle an application crash or very slow execution times
+	// (which could cause an unlocking pre operation completion).
+	ctx, cancel := context.WithTimeout(
+		contextutil.WithNewValues(context.Background(), ctx),
+		timeout,
+	)
+	defer cancel()
+
 	//nolint:nestif
 	if in.DryRun {
 		// As the merge API is always executed under a global lock, we use the opportunity of dry-running the merge
@@ -273,6 +286,8 @@ func (c *Controller) Merge(
 		mergeTitle = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
 	}
 
+	log.Ctx(ctx).Debug().Msgf("all pre-check passed, merge PR")
+
 	now := time.Now()
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams:     targetWriteParams,
@@ -323,6 +338,8 @@ func (c *Controller) Merge(
 			RuleViolations: violations,
 		}, nil
 	}
+
+	log.Ctx(ctx).Debug().Msgf("successfully merged PR")
 
 	var activitySeqMerge, activitySeqBranchDeleted int64
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {

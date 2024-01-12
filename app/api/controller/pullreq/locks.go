@@ -15,22 +15,69 @@
 package pullreq
 
 import (
+	"context"
+	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/harness/gitness/contextutil"
 	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/logging"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
-func (c *Controller) newMutexForPR(repoUID string, pr int64, options ...lock.Option) (lock.Mutex, error) {
+func (c *Controller) lockPR(
+	ctx context.Context,
+	repoUID string,
+	prNum int64,
+	expiry time.Duration,
+) (func(), error) {
 	key := repoUID + "/pulls"
-	if pr != 0 {
-		key += "/" + strconv.FormatInt(pr, 10)
+	if prNum != 0 {
+		key += "/" + strconv.FormatInt(prNum, 10)
 	}
-	return c.mtxManager.NewMutex(
+
+	// annotate logs for easier debugging of lock related merge issues
+	// TODO: refactor once common logging annotations are added
+	ctx = logging.NewContext(ctx, func(c zerolog.Context) zerolog.Context {
+		return c.
+			Str("pullreq_lock", key).
+			Str("repo_uid", repoUID)
+	})
+
+	mutex, err := c.mtxManager.NewMutex(
 		key,
-		append(options,
-			lock.WithNamespace("repo"),
-			lock.WithExpiry(16*time.Second),
-			lock.WithTimeoutFactor(0.25), // 4s
-		)...)
+		lock.WithNamespace("repo"),
+		lock.WithExpiry(expiry),
+		lock.WithTimeoutFactor(4/expiry.Seconds()), // 4s
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new mutex for pr %d in repo %q: %w", prNum, repoUID, err)
+	}
+	err = mutex.Lock(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock mutex for pr %d in repo %q: %w", prNum, repoUID, err)
+	}
+
+	log.Ctx(ctx).Debug().Msgf("successfully locked PR (expiry: %s)", expiry)
+
+	unlockFn := func() {
+		// always unlock independent of whether source context got canceled or not
+		ctx, cancel := context.WithTimeout(
+			contextutil.WithNewValues(context.Background(), ctx),
+			30*time.Second,
+		)
+		defer cancel()
+
+		err := mutex.Unlock(ctx)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msg("failed to unlock PR")
+		} else {
+			log.Ctx(ctx).Debug().Msg("successfully unlocked PR")
+		}
+	}
+
+	return unlockFn, nil
 }
