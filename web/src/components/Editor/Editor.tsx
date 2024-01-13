@@ -79,6 +79,7 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   const { getString } = useStrings()
   const view = useRef<EditorView>()
   const ref = useRef<HTMLDivElement>()
+  const [fileData, setFile] = useState<File>()
 
   const languageConfig = useMemo(() => new Compartment(), [])
   const [markdownContent, setMarkdownContent] = useState('')
@@ -103,7 +104,7 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   const updateContentWithoutStateChange = () => {
     setUploading(true)
     if (view.current && markdownContent && !inGitBlame) {
-      const markdownInsert = `![image](${markdownContent})`
+      const markdownInsert = fileData?.type.startsWith('image/') ? `![image](${markdownContent})` : `${markdownContent}`
       const range = view.current.state.selection.main
       const cursorPos = range.from
       const newCursorPos = cursorPos + markdownInsert.length
@@ -206,6 +207,7 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   }, [filename, forMarkdown, view, languageConfig, markdownLanguageSupport])
   const handleUploadCallback = (file: File) => {
     if (!inGitBlame) {
+      setFile(file)
       handleUpload(file, setMarkdownContent, repoMetadata, showError, standalone, routingId)
     }
   }

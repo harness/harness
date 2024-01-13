@@ -169,6 +169,7 @@ export function MarkdownEditorWithPreview({
       }
 
       case ToolbarAction.UPLOAD: {
+        setFile(undefined)
         setOpen(true)
 
         break
@@ -303,7 +304,7 @@ export function MarkdownEditorWithPreview({
   useEffect(() => {
     const view = viewRef.current
     if (markdownContent && view) {
-      const insertText = `![image](${markdownContent})`
+      const insertText = file?.type.startsWith('image/') ? `![image](${markdownContent})` : `${markdownContent}`
       view.dispatch(
         view.state.changeByRange(range => ({
           changes: [{ from: range.from, insert: insertText }],
@@ -384,7 +385,6 @@ export function MarkdownEditorWithPreview({
               onClick={() => {
                 handleUpload(file as File, setMarkdownContent, repoMetadata, showError, standalone, routingId)
                 setOpen(false)
-                setFile(undefined)
               }}
             />
             <Button

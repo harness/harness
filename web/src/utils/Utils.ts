@@ -258,7 +258,7 @@ export const handlePaste = (event: { preventDefault: () => void; clipboardData: 
 
   if (items.length > 0) {
     const firstItem = items[0]
-    if (firstItem.type.startsWith('image/')) {
+    if (firstItem.type.startsWith('image/') || firstItem.type.startsWith('video/')) {
       const blob = firstItem.getAsFile()
       callback(blob)
     }
