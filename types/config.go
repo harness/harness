@@ -139,6 +139,15 @@ type Config struct {
 		// This could be a local path or an external location.
 		//nolint:lll
 		PluginsZipURL string `envconfig:"GITNESS_CI_PLUGINS_ZIP_URL" default:"https://github.com/bradrydzewski/plugins/archive/refs/heads/master.zip"`
+
+		// ContainerNetworks is a list of networks that all containers created as part of CI
+		// should be attached to.
+		// This can be needed when we don't want to use host.docker.internal (eg when a service mesh
+		// or proxy is being used) and instead want all the containers to run on the same network as
+		// the gitness container so that they can interact via the container name.
+		// In that case, GITNESS_URL_CONTAINER should also be changed
+		// (eg to http://<gitness_container_name>:<port>).
+		ContainerNetworks []string `envconfig:"GITNESS_CI_CONTAINER_NETWORKS"`
 	}
 
 	// Database defines the database configuration parameters.

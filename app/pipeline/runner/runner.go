@@ -61,6 +61,7 @@ func NewExecutionRunner(
 		Secret:     secret.Encrypted(),
 		ExtraHosts: extraHosts,
 		Privileged: Privileged,
+		Networks:   config.CI.ContainerNetworks,
 	}
 
 	remote := remote.New(client)
@@ -97,6 +98,7 @@ func NewExecutionRunner(
 		Secret:     secret.Encrypted(),
 		ExtraHosts: extraHosts,
 		Privileged: Privileged,
+		Networks:   config.CI.ContainerNetworks,
 	}
 
 	runner := &runtime2.Runner{
