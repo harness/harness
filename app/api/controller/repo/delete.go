@@ -52,8 +52,6 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 		if err != nil {
 			return fmt.Errorf("failed to cancel repository import")
 		}
-
-		return c.DeleteNoAuth(ctx, session, repo)
 	}
 
 	return c.DeleteNoAuth(ctx, session, repo)

@@ -24,6 +24,7 @@ import (
 
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/store"
 
 	"github.com/gorhill/cronexpr"
 	"github.com/rs/zerolog/log"
@@ -199,6 +200,9 @@ func (s *Scheduler) CancelJob(ctx context.Context, jobUID string) error {
 	}()
 
 	job, err := s.store.Find(ctx, jobUID)
+	if errors.Is(err, store.ErrResourceNotFound) {
+		return nil // ensure consistent response for completed jobs
+	}
 	if err != nil {
 		return fmt.Errorf("failed to find job to cancel: %w", err)
 	}
