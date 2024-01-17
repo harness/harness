@@ -141,7 +141,7 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
           }
         }}
         rehypePlugins={[
-          rehypeVideo,
+          [rehypeVideo, { test: /\/(.*)(.mp4|.mov|.webm|.mkv|.flv)$/, details: null }],
           [rehypeExternalLinks, { rel: ['nofollow noreferrer noopener'], target: '_blank' }]
         ]}
       />
