@@ -65,7 +65,7 @@ func NewGitHandler(
 		// routes that aren't coming from git
 		r.Group(func(r chi.Router) {
 			// redirect to repo (meant for UI, in case user navigates to clone url in browser)
-			r.Get("/", handlerrepo.HandleGitRedirect(repoCtrl, urlProvider))
+			r.Get("/", handlerrepo.HandleGitRedirect(urlProvider))
 		})
 
 		// routes that are coming from git (where we block the usage of session tokens)
