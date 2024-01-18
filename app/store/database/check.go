@@ -65,7 +65,14 @@ const (
 		,check_payload
 		,check_metadata
 		,check_payload_kind
-		,check_payload_version`
+		,check_payload_version
+		,check_started
+		,check_ended`
+
+	//nolint:goconst
+	checkSelectBase = `
+    SELECT` + checkColumns + `
+	FROM checks`
 )
 
 type check struct {
@@ -83,6 +90,23 @@ type check struct {
 	Metadata       json.RawMessage       `db:"check_metadata"`
 	PayloadKind    enum.CheckPayloadKind `db:"check_payload_kind"`
 	PayloadVersion string                `db:"check_payload_version"`
+	Started        int64                 `db:"check_started"`
+	Ended          int64                 `db:"check_ended"`
+}
+
+// Find returns status check result for given unique key.
+func (s *CheckStore) Find(ctx context.Context, repoID int64, commitSHA string, uid string) (types.Check, error) {
+	const sqlQuery = checkSelectBase + `
+		WHERE check_repo_id = $1 AND check_uid = $2 AND check_commit_sha = $3`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(check)
+	if err := db.GetContext(ctx, dst, sqlQuery, repoID, uid, commitSHA); err != nil {
+		return types.Check{}, database.ProcessSQLErrorf(err, "Failed to find check")
+	}
+
+	return mapCheck(dst), nil
 }
 
 // Upsert creates new or updates an existing status check result.
@@ -102,6 +126,8 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 		,check_metadata
 		,check_payload_kind
 		,check_payload_version
+		,check_started
+		,check_ended
 	) VALUES (
 		 :check_created_by
 		,:check_created
@@ -116,6 +142,8 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 		,:check_metadata
 		,:check_payload_kind
 		,:check_payload_version
+		,:check_started
+		,:check_ended
 	)
 	ON CONFLICT (check_repo_id, check_commit_sha, check_uid) DO
 	UPDATE SET
@@ -127,6 +155,8 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 		,check_metadata = :check_metadata
 		,check_payload_kind = :check_payload_kind
 		,check_payload_version = :check_payload_version
+	    	,check_started = :check_started
+	    	,check_ended = :check_ended
 	RETURNING check_id, check_created_by, check_created`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -296,6 +326,8 @@ func mapInternalCheck(c *types.Check) *check {
 		Metadata:       c.Metadata,
 		PayloadKind:    c.Payload.Kind,
 		PayloadVersion: c.Payload.Version,
+		Started:        c.Started,
+		Ended:          c.Ended,
 	}
 
 	return m
@@ -320,6 +352,8 @@ func mapCheck(c *check) types.Check {
 			Data:    c.Payload,
 		},
 		ReportedBy: types.PrincipalInfo{},
+		Started:    c.Started,
+		Ended:      c.Ended,
 	}
 }
 

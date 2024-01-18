@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -35,6 +37,9 @@ type ReportInput struct {
 	Summary  string             `json:"summary"`
 	Link     string             `json:"link"`
 	Payload  types.CheckPayload `json:"payload"`
+
+	Started int64 `json:"started,omitempty"`
+	Ended   int64 `json:"ended,omitempty"`
 }
 
 var regexpCheckUID = "^[0-9a-zA-Z-_.$]{1,127}$"
@@ -65,6 +70,10 @@ func (in *ReportInput) Validate(
 	// Validate and sanitize the input data based on version; Require a link... and similar operations.
 	if err := validatorFn(in, session); err != nil {
 		return fmt.Errorf("payload validation failed: %w", err)
+	}
+
+	if in.Ended != 0 && in.Ended < in.Started {
+		return usererror.BadRequest("started time reported after ended time")
 	}
 
 	return nil
@@ -134,6 +143,15 @@ func (c *Controller) Report(
 
 	metadataJSON, _ := json.Marshal(metadata)
 
+	existingCheck, err := c.checkStore.Find(ctx, repo.ID, commitSHA, in.CheckUID)
+
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		return nil, fmt.Errorf("failed to find existing check for UID=%q: %w", in.CheckUID, err)
+	}
+
+	started := getStartTime(in, existingCheck, now)
+	ended := getEndTime(in, now)
+
 	statusCheckReport := &types.Check{
 		CreatedBy:  session.Principal.ID,
 		Created:    now,
@@ -147,6 +165,8 @@ func (c *Controller) Report(
 		Payload:    in.Payload,
 		Metadata:   metadataJSON,
 		ReportedBy: *session.Principal.ToPrincipalInfo(),
+		Started:    started,
+		Ended:      ended,
 	}
 
 	err = c.checkStore.Upsert(ctx, statusCheckReport)
@@ -155,4 +175,52 @@ func (c *Controller) Report(
 	}
 
 	return statusCheckReport, nil
+}
+
+func getStartTime(in *ReportInput, check types.Check, now int64) int64 {
+	// start value came in api
+	if in.Started != 0 {
+		return in.Started
+	}
+	// in.started has no value we smartly put value for started
+
+	// in case of pending we assume check has not started running
+	if in.Status == enum.CheckStatusPending {
+		return 0
+	}
+
+	// new check
+	if check.Started == 0 {
+		return now
+	}
+
+	// The incoming check status can now be running or terminal.
+
+	// in case we already have running status we don't update time else we return current time as check has started
+	// running.
+	if check.Status == enum.CheckStatusRunning {
+		return check.Started
+	}
+
+	// Note: In case of reporting terminal statuses again and again we have assumed its
+	// a report of new status check everytime.
+
+	// In case someone reports any status before marking running return current time.
+	// This can happen if someone only reports terminal status or marks running status again after terminal.
+	return now
+}
+
+func getEndTime(in *ReportInput, now int64) int64 {
+	// end value came in api
+	if in.Ended != 0 {
+		return in.Ended
+	}
+
+	// if we get terminal status i.e. error, failure or success we return current time.
+	if in.Status.IsCompleted() {
+		return now
+	}
+
+	// in case of other status we return value as 0, which means we have not yet completed the check.
+	return 0
 }

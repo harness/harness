@@ -14,6 +14,8 @@
 
 package enum
 
+import "golang.org/x/exp/slices"
+
 // CheckStatus defines status check status.
 type CheckStatus string
 
@@ -37,6 +39,8 @@ var checkStatuses = sortEnum([]CheckStatus{
 	CheckStatusFailure,
 	CheckStatusError,
 })
+
+var terminalCheckStatuses = []CheckStatus{CheckStatusFailure, CheckStatusSuccess, CheckStatusError}
 
 // CheckPayloadKind defines status payload type.
 type CheckPayloadKind string
@@ -63,3 +67,7 @@ var checkPayloadTypes = sortEnum([]CheckPayloadKind{
 	CheckPayloadKindMarkdown,
 	CheckPayloadKindPipeline,
 })
+
+func (s CheckStatus) IsCompleted() bool {
+	return slices.Contains(terminalCheckStatuses, s)
+}

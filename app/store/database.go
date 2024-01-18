@@ -473,6 +473,9 @@ type (
 	}
 
 	CheckStore interface {
+		// Find returns status check result for given unique key.
+		Find(ctx context.Context, repoID int64, commitSHA string, uid string) (types.Check, error)
+
 		// Upsert creates new or updates an existing status check result.
 		Upsert(ctx context.Context, check *types.Check) error
 

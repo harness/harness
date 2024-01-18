@@ -32,6 +32,8 @@ type Check struct {
 	Summary   string           `json:"summary"`
 	Link      string           `json:"link"`
 	Metadata  json.RawMessage  `json:"metadata"`
+	Started   int64            `json:"started"`
+	Ended     int64            `json:"ended"`
 
 	Payload    CheckPayload  `json:"payload"`
 	ReportedBy PrincipalInfo `json:"reported_by"`
