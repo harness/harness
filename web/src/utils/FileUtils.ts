@@ -480,7 +480,10 @@ const TextExtensions = [
   'asciidoc',
   'slk',
   'env',
-  'alpine'
+  'alpine',
+  'tf',
+  'tfvars',
+  'hcl'
 ]
 
 const SpecialTextFiles = [

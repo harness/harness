@@ -237,7 +237,8 @@ module.exports = {
         'typescript',
         'vb',
         'xml',
-        'yaml'
+        'yaml',
+        'hcl'
       ],
       globalAPI: true,
       filename: '[name].worker.[contenthash:6].js',

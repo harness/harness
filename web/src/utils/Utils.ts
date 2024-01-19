@@ -407,6 +407,7 @@ const MONACO_SUPPORTED_LANGUAGES = [
   'go',
   'graphql',
   'handlebars',
+  'hcl',
   'html',
   'ini',
   'java',
@@ -468,6 +469,8 @@ const EXTENSION_TO_LANG: Record<string, string> = {
   makefile: 'shell',
   toml: 'ini',
   tsx: 'typescript',
+  tf: 'hcl',
+  tfvars: 'hcl',
   workspace: 'python'
 }
 
