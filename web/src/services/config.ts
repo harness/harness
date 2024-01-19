@@ -15,6 +15,7 @@
  */
 
 import qs, { IStringifyOptions } from 'qs'
+import { mapKeys } from 'lodash'
 
 export const getConfig = (str: string): string => {
   // 'code/api/v1' -> 'api/v1'       (standalone)
@@ -40,6 +41,7 @@ export interface GetUsingFetchProps<
   queryParamStringifyOptions?: IStringifyOptions
   pathParams?: TPathParams
   requestOptions?: RequestInit
+  bearerToken?: string
   mock?: _TData
 }
 
@@ -55,6 +57,7 @@ export const getUsingFetch = <
 >(
   base: string,
   path: string,
+  bearerToken: string,
   props: GetUsingFetchProps<TData, _TError, TQueryParams, TPathParams>,
   signal?: RequestInit['signal']
 ): Promise<TData> => {
@@ -63,14 +66,14 @@ export const getUsingFetch = <
   if (props.queryParams && Object.keys(props.queryParams).length) {
     url += `?${qs.stringify(props.queryParams, props.queryParamStringifyOptions)}`
   }
+  const headers = getHeaders(props.requestOptions?.headers, bearerToken)
   return fetch(url, {
     signal,
-    ...(props.requestOptions || {})
-    // headers: getHeaders(props.requestOptions?.headers)
+    ...(props.requestOptions || {}),
+    headers // Include generated headers in the request
   }).then(res => {
-    // custom event to allow the app framework to handle api responses
     const responseEvent = new CustomEvent('PROMISE_API_RESPONSE', { detail: { response: res } })
-    window.dispatchEvent(responseEvent) // this will be captured in App.tsx to handle 401 and token refresh
+    window.dispatchEvent(responseEvent)
 
     const contentType = res.headers.get('content-type') || ''
 
@@ -87,4 +90,23 @@ export const getUsingFetch = <
 
     return res.text()
   })
+}
+
+const getHeaders = (headers: RequestInit['headers'] = {}, bearerToken?: string): RequestInit['headers'] => {
+  const retHeaders: RequestInit['headers'] = {
+    'content-type': 'application/json'
+  }
+
+  const token = bearerToken
+  if (token && token.length > 0) {
+    retHeaders.Authorization = `Bearer ${token}`
+  }
+
+  // add/overwrite passed headers
+  Object.assign(
+    retHeaders,
+    mapKeys(headers, (_value, key) => key.toLowerCase())
+  )
+
+  return retHeaders
 }

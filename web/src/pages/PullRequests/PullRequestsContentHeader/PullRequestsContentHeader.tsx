@@ -83,11 +83,12 @@ export function PullRequestsContentHeader({
     [getString]
   )
 
+  const bearerToken = hooks?.useGetToken?.() || ''
   const getAuthorsPromise = (): Promise<SelectOption[]> => {
     return new Promise((resolve, reject) => {
       setLoadingAuthors(true)
       try {
-        getUsingFetch(getConfig('code/api/v1'), `/principals`, {
+        getUsingFetch(getConfig('code/api/v1'), `/principals`, bearerToken, {
           queryParams: {
             query: query?.trim(),
             type: 'user',
