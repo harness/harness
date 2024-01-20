@@ -1,7 +1,7 @@
 ALTER TABLE checks
-    ADD COLUMN check_started INTEGER NOT NULL DEFAULT 0;
+    ADD COLUMN check_started BIGINT NOT NULL DEFAULT 0;
 ALTER TABLE checks
-    ADD COLUMN check_ended INTEGER NOT NULL DEFAULT 0;
+    ADD COLUMN check_ended BIGINT NOT NULL DEFAULT 0;
 
 UPDATE checks
 SET check_started = check_created;
