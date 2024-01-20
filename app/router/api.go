@@ -267,6 +267,8 @@ func setupRepos(r chi.Router,
 
 			r.Get("/import-progress", handlerrepo.HandleImportProgress(repoCtrl))
 
+			r.Post("/default-branch", handlerrepo.HandleUpdateDefaultBranch(repoCtrl))
+
 			// content operations
 			// NOTE: this allows /content and /content/ to both be valid (without any other tricks.)
 			// We don't expect there to be any other operations in that route (as that could overlap with file names)

@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -56,10 +57,11 @@ func ProvideController(
 	reporeporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
 	limiter limiter.ResourceLimiter,
+	mtxManager lock.MutexManager,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		uidCheck, authorizer, repoStore,
 		spaceStore, pipelineStore,
 		principalStore, ruleStore, principalInfoCache, protectionManager,
-		rpcClient, importer, codeOwners, reporeporter, indexer, limiter)
+		rpcClient, importer, codeOwners, reporeporter, indexer, limiter, mtxManager)
 }

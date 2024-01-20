@@ -34,7 +34,6 @@ type Adapter interface {
 	SharedRepository(tmp string, repoUID string, remotePath string) (*adapter.SharedRepo, error)
 	Config(ctx context.Context, repoPath, key, value string) error
 	CountObjects(ctx context.Context, repoPath string) (types.ObjectCount, error)
-
 	SetDefaultBranch(ctx context.Context, repoPath string,
 		defaultBranch string, allowEmpty bool) error
 	GetDefaultBranch(ctx context.Context, repoPath string) (string, error)

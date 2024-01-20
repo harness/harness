@@ -70,7 +70,7 @@ type GetBranchOutput struct {
 
 type DeleteBranchParams struct {
 	WriteParams
-	// Name is the name of the branch
+	// BranchName is the name of the branch
 	BranchName string
 }
 

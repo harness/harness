@@ -33,6 +33,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -64,6 +65,7 @@ type Controller struct {
 	eventReporter      *repoevents.Reporter
 	indexer            keywordsearch.Indexer
 	resourceLimiter    limiter.ResourceLimiter
+	mtxManager         lock.MutexManager
 }
 
 func NewController(
@@ -85,6 +87,7 @@ func NewController(
 	eventReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
 	limiter limiter.ResourceLimiter,
+	mtxManager lock.MutexManager,
 ) *Controller {
 	return &Controller{
 		defaultBranch:                 config.Git.DefaultBranch,
@@ -106,6 +109,7 @@ func NewController(
 		eventReporter:                 eventReporter,
 		indexer:                       indexer,
 		resourceLimiter:               limiter,
+		mtxManager:                    mtxManager,
 	}
 }
 

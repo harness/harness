@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/check"
 	"github.com/harness/gitness/git/hash"
 	"github.com/harness/gitness/git/types"
 
@@ -129,6 +130,11 @@ func (p *HashRepositoryParams) Validate() error {
 
 type HashRepositoryOutput struct {
 	Hash []byte
+}
+type UpdateDefaultBranchParams struct {
+	WriteParams
+	// BranchName is the name of the branch
+	BranchName string
 }
 
 func (s *Service) CreateRepository(
@@ -504,6 +510,28 @@ func (s *Service) GetRepositorySize(
 	return &GetRepositorySizeOutput{
 		Size: count.Size + count.SizePack,
 	}, nil
+}
+
+// UpdateDefaultBranch updates the default barnch of the repo.
+func (s *Service) UpdateDefaultBranch(
+	ctx context.Context,
+	params *UpdateDefaultBranchParams,
+) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+	if err := check.BranchName(params.BranchName); err != nil {
+		return errors.InvalidArgument(err.Error())
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	err := s.adapter.SetDefaultBranch(ctx, repoPath, params.BranchName, false)
+	if err != nil {
+		return fmt.Errorf("UpdateDefaultBranch: failed to update repo default branch %q: %w",
+			params.BranchName, err)
+	}
+	return nil
 }
 
 // isValidGitSHA returns true iff the provided string is a valid git sha (short or long form).
