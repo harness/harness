@@ -41,14 +41,7 @@ func ProvidePathCache(
 	pathStore store.SpacePathStore,
 	spacePathTransformation store.SpacePathTransformation,
 ) store.SpacePathCache {
-	return &pathCache{
-		inner: cache.New[string, *types.SpacePath](
-			&pathCacheGetter{
-				spacePathStore: pathStore,
-			},
-			1*time.Minute),
-		spacePathTransformation: spacePathTransformation,
-	}
+	return New(pathStore, spacePathTransformation)
 }
 
 // ProvideRepoGitInfoCache provides a cache for storing types.RepositoryGitInfo objects.

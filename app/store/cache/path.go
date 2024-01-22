@@ -16,6 +16,7 @@ package cache
 
 import (
 	"context"
+	"time"
 
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/store"
@@ -27,6 +28,20 @@ import (
 // IMPORTANT: It assumes that the pathCache already transformed the key.
 type pathCacheGetter struct {
 	spacePathStore store.SpacePathStore
+}
+
+func New(
+	pathStore store.SpacePathStore,
+	spacePathTransformation store.SpacePathTransformation,
+) store.SpacePathCache {
+	return &pathCache{
+		inner: cache.New[string, *types.SpacePath](
+			&pathCacheGetter{
+				spacePathStore: pathStore,
+			},
+			1*time.Minute),
+		spacePathTransformation: spacePathTransformation,
+	}
 }
 
 func (g *pathCacheGetter) Find(ctx context.Context, key string) (*types.SpacePath, error) {
