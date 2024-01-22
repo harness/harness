@@ -45,16 +45,16 @@ func New(
 	// Create repos folder
 	reposRoot := filepath.Join(config.Root, repoSubdirName)
 	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
-		if err = os.MkdirAll(reposRoot, 0o700); err != nil {
+		if err = os.MkdirAll(reposRoot, fileMode700); err != nil {
 			return nil, err
 		}
 	}
 
 	// create a temp dir for deleted repositories
 	// this dir should get cleaned up peridocally if it's not empty
-	reposGraveyard := filepath.Join(reposRoot, ReposGraveyardSubdirName)
+	reposGraveyard := filepath.Join(config.Root, ReposGraveyardSubdirName)
 	if _, errdir := os.Stat(reposGraveyard); os.IsNotExist(errdir) {
-		if errdir = os.MkdirAll(reposGraveyard, 0o700); errdir != nil {
+		if errdir = os.MkdirAll(reposGraveyard, fileMode700); errdir != nil {
 			return nil, errdir
 		}
 	}

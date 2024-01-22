@@ -45,6 +45,8 @@ const (
 	gitReferenceNamePrefixTag    = "refs/tags/"
 
 	gitHooksDir = "hooks"
+
+	fileMode700 = 0o700
 )
 
 var (
@@ -223,6 +225,12 @@ func (s *Service) DeleteRepositoryBestEffort(ctx context.Context, repoUID string
 	repoPath := getFullPathForRepo(s.reposRoot, repoUID)
 	tempPath := path.Join(s.reposGraveyard, repoUID)
 
+	// delete should not fail if repoGraveyard dir does not exist
+	if _, err := os.Stat(s.reposGraveyard); os.IsNotExist(err) {
+		if errdir := os.MkdirAll(s.reposGraveyard, fileMode700); errdir != nil {
+			return fmt.Errorf("clean up dir '%s' doesn't exist and can't be created: %w", s.reposGraveyard, errdir)
+		}
+	}
 	// move current dir to a temp dir (prevent partial deletion)
 	if err := os.Rename(repoPath, tempPath); err != nil {
 		return fmt.Errorf("couldn't move dir %s to %s : %w", repoPath, tempPath, err)

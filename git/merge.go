@@ -183,7 +183,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	log.Debug().Msg("prepare sparse-checkout")
 
 	infoPath := filepath.Join(tmpRepo.Path, ".git", "info")
-	if err = os.MkdirAll(infoPath, 0o700); err != nil {
+	if err = os.MkdirAll(infoPath, fileMode700); err != nil {
 		return MergeOutput{}, fmt.Errorf("unable to create .git/info in tmpRepo.Path: %w", err)
 	}
 
