@@ -56,10 +56,10 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
 
   useEffect(() => {
     if (tokenData) {
-      if (tokenData && tokenData?.status !== 400) {
-        setToken(tokenData?.data)
-      } else if (tokenData?.status === 400 && flag) {
-        showError(tokenData?.data?.message || tokenData?.message)
+      if (tokenData.status >= 400 && flag) {
+        showError(tokenData.data.message || tokenData.message)
+      } else {
+        setToken(tokenData.data)
       }
     } else if (!tokenData && standalone && flag) {
       genToken({ uid: `code_token_${hash}` })
