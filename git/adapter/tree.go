@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
+	"github.com/rs/zerolog/log"
 )
 
 func cleanTreePath(treePath string) string {
@@ -65,7 +66,10 @@ func scanZeroSeparated(data []byte, atEOF bool) (advance int, token []byte, err 
 	return
 }
 
-var regexpLsTreeColumns = regexp.MustCompile(`^(\d{6})\s+(\w+)\s+(\w+)\t(.+)$`)
+// regexpLsTreeColumns is a regular expression that is used to parse a single line
+// of a "git ls-tree" output (which uses the NULL character as the line break).
+// The single line mode must be used because output might contain the EOL and other control characters.
+var regexpLsTreeColumns = regexp.MustCompile(`(?s)^(\d{6})\s+(\w+)\s+(\w+)\t(.+)`)
 
 func lsTree(
 	ctx context.Context,
@@ -96,14 +100,23 @@ func lsTree(
 	scan := bufio.NewScanner(strings.NewReader(output))
 	scan.Split(scanZeroSeparated)
 	for scan.Scan() {
-		columns := regexpLsTreeColumns.FindStringSubmatch(scan.Text())
+		line := scan.Text()
+
+		columns := regexpLsTreeColumns.FindStringSubmatch(line)
 		if columns == nil {
-			return nil, errors.New("unrecognized format of git directory listing")
+			log.Ctx(ctx).Error().
+				Str("ls-tree", output). // logs the whole directory listing for the additional context
+				Str("line", line).
+				Msg("unrecognized format of git directory listing")
+			return nil, fmt.Errorf("unrecognized format of git directory listing: %q", line)
 		}
 
 		nodeType, nodeMode, err := parseTreeNodeMode(columns[1])
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse git mode: %w", err)
+			log.Ctx(ctx).Err(err).
+				Str("line", line).
+				Msg("failed to parse git mode")
+			return nil, fmt.Errorf("failed to parse git node type and file mode: %w", err)
 		}
 
 		nodeSha := columns[3]
