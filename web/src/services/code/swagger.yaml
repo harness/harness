@@ -828,8 +828,7 @@ paths:
     get:
       operationId: getBlame
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -901,8 +900,7 @@ paths:
     get:
       operationId: listBranches
       parameters:
-        - description:
-            Indicates whether optional commit information should be included
+        - description: Indicates whether optional commit information should be included
             in the response.
           in: query
           name: include_commit
@@ -1168,8 +1166,7 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
-        - description:
-            The substring which is used to filter the status checks by their
+        - description: The substring which is used to filter the status checks by their
             UID.
           in: query
           name: query
@@ -1241,10 +1238,14 @@ paths:
               properties:
                 check_uid:
                   type: string
+                ended:
+                  type: integer
                 link:
                   type: string
                 payload:
                   $ref: '#/components/schemas/TypesCheckPayload'
+                started:
+                  type: integer
                 status:
                   $ref: '#/components/schemas/EnumCheckStatus'
                 summary:
@@ -1287,16 +1288,14 @@ paths:
     get:
       operationId: listStatusCheckRecent
       parameters:
-        - description:
-            The substring which is used to filter the status checks by their
+        - description: The substring which is used to filter the status checks by their
             UID.
           in: query
           name: query
           required: false
           schema:
             type: string
-        - description:
-            The timestamp (in Unix time millis) since the status checks have
+        - description: The timestamp (in Unix time millis) since the status checks have
             been run.
           in: query
           name: since
@@ -1347,8 +1346,7 @@ paths:
     get:
       operationId: codeOwnersValidate
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -1401,8 +1399,7 @@ paths:
     get:
       operationId: listCommits
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -1411,8 +1408,7 @@ paths:
           schema:
             default: '{Repository Default Branch}'
             type: string
-        - description:
-            The result should only contain commits that occurred after the
+        - description: The result should only contain commits that occurred after the
             provided reference.
           in: query
           name: after
@@ -1706,8 +1702,7 @@ paths:
     get:
       operationId: getContent
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -1716,8 +1711,7 @@ paths:
           schema:
             default: '{Repository Default Branch}'
             type: string
-        - description:
-            Indicates whether optional commit information should be included
+        - description: Indicates whether optional commit information should be included
             in the response.
           in: query
           name: include_commit
@@ -1950,8 +1944,7 @@ paths:
     post:
       operationId: pathDetails
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -2007,8 +2000,7 @@ paths:
     get:
       operationId: listPipelines
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -2487,8 +2479,8 @@ paths:
           description: Internal Server Error
       tags:
         - pipeline
-  ? /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/cancel
-  : post:
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/cancel:
+    post:
       operationId: cancelExecution
       parameters:
         - in: path
@@ -2539,8 +2531,8 @@ paths:
           description: Internal Server Error
       tags:
         - pipeline
-  ? /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/logs/{stage_number}/{step_number}
-  : get:
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/logs/{stage_number}/{step_number}:
+    get:
       operationId: viewLogs
       parameters:
         - in: path
@@ -2607,8 +2599,7 @@ paths:
     get:
       operationId: listTriggers
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -3193,8 +3184,7 @@ paths:
                 - title-change
               type: string
             type: array
-        - description:
-            The result should contain only entries created at and after this
+        - description: The result should contain only entries created at and after this
             timestamp (unix millis).
           in: query
           name: after
@@ -3202,8 +3192,7 @@ paths:
           schema:
             minimum: 0
             type: integer
-        - description:
-            The result should contain only entries created before this timestamp
+        - description: The result should contain only entries created before this timestamp
             (unix millis).
           in: query
           name: before
@@ -3480,8 +3469,8 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
-  ? /repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/status
-  : put:
+  /repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/status:
+    put:
       operationId: commentStatusPullReq
       parameters:
         - in: path
@@ -4120,8 +4109,7 @@ paths:
     get:
       operationId: getRaw
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -4520,8 +4508,7 @@ paths:
     get:
       operationId: listTags
       parameters:
-        - description:
-            Indicates whether optional commit information should be included
+        - description: Indicates whether optional commit information should be included
             in the response.
           in: query
           name: include_commit
@@ -4833,9 +4820,7 @@ paths:
     get:
       operationId: listWebhooks
       parameters:
-        - description:
-            The substring which is used to filter the spaces by their path
-            name.
+        - description: The substring which is used to filter the webhooks by their uid.
           in: query
           name: query
           required: false
@@ -4849,6 +4834,7 @@ paths:
             default: id
             enum:
               - id
+              - uid
               - display_name
               - created
               - updated
@@ -5720,8 +5706,7 @@ paths:
     get:
       operationId: listConnectors
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -6156,8 +6141,7 @@ paths:
     get:
       operationId: listRepos
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -6246,8 +6230,7 @@ paths:
     get:
       operationId: listSecrets
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -6359,8 +6342,7 @@ paths:
     get:
       operationId: listSpaces
       parameters:
-        - description:
-            The substring which is used to filter the spaces by their path
+        - description: The substring which is used to filter the spaces by their path
             name.
           in: query
           name: query
@@ -6449,8 +6431,7 @@ paths:
     get:
       operationId: listTemplates
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -6810,8 +6791,7 @@ paths:
     get:
       operationId: membershipSpaces
       parameters:
-        - description:
-            The substring by which the spaces the users is a member of are
+        - description: The substring by which the spaces the users is a member of are
             filtered.
           in: query
           name: query
@@ -6919,14 +6899,6 @@ components:
         - base64
         - utf8
       type: string
-    EnumJobState:
-      enum:
-        - canceled
-        - failed
-        - finished
-        - running
-        - scheduled
-      type: string
     EnumMembershipRole:
       enum:
         - contributor
@@ -6994,6 +6966,8 @@ components:
         - merged
         - open
       type: string
+    EnumResolverType:
+      type: string
     EnumRuleState:
       enum:
         - active
@@ -7010,6 +6984,7 @@ components:
         - pullreq_branch_updated
         - pullreq_closed
         - pullreq_created
+        - pullreq_merged
         - pullreq_reopened
         - tag_created
         - tag_updated
@@ -7035,6 +7010,7 @@ components:
         - pullreq_closed
         - pullreq_comment_created
         - pullreq_created
+        - pullreq_merged
         - pullreq_reopened
         - tag_created
         - tag_deleted
@@ -7146,6 +7122,25 @@ components:
         - stash
         - gitea
         - gogs
+      type: string
+    JobProgress:
+      properties:
+        failure:
+          type: string
+        progress:
+          type: integer
+        result:
+          type: string
+        state:
+          $ref: '#/components/schemas/JobState'
+      type: object
+    JobState:
+      enum:
+        - canceled
+        - failed
+        - finished
+        - running
+        - scheduled
       type: string
     LivelogLine:
       properties:
@@ -7379,8 +7374,6 @@ components:
           type: string
         space_ref:
           type: string
-        type:
-          type: string
         uid:
           type: string
       type: object
@@ -7424,6 +7417,8 @@ components:
             $ref: '#/components/schemas/EnumWebhookTrigger'
           nullable: true
           type: array
+        uid:
+          type: string
         url:
           type: string
       type: object
@@ -7693,6 +7688,9 @@ components:
             $ref: '#/components/schemas/EnumWebhookTrigger'
           nullable: true
           type: array
+        uid:
+          nullable: true
+          type: string
         url:
           nullable: true
           type: string
@@ -7726,6 +7724,8 @@ components:
             $ref: '#/components/schemas/EnumWebhookTrigger'
           nullable: true
           type: array
+        uid:
+          type: string
         updated:
           type: integer
         url:
@@ -7930,7 +7930,7 @@ components:
       properties:
         repos:
           items:
-            $ref: '#/components/schemas/TypesJobProgress'
+            $ref: '#/components/schemas/JobProgress'
           nullable: true
           type: array
       type: object
@@ -7961,6 +7961,8 @@ components:
       properties:
         created:
           type: integer
+        ended:
+          type: integer
         id:
           type: integer
         link:
@@ -7970,6 +7972,8 @@ components:
           $ref: '#/components/schemas/TypesCheckPayload'
         reported_by:
           $ref: '#/components/schemas/TypesPrincipalInfo'
+        started:
+          type: integer
         status:
           $ref: '#/components/schemas/EnumCheckStatus'
         summary:
@@ -8166,17 +8170,6 @@ components:
           type: string
         name:
           type: string
-      type: object
-    TypesJobProgress:
-      properties:
-        failure:
-          type: string
-        progress:
-          type: integer
-        result:
-          type: string
-        state:
-          $ref: '#/components/schemas/EnumJobState'
       type: object
     TypesListCommitResponse:
       properties:
@@ -8503,6 +8496,10 @@ components:
           type: integer
         path:
           type: string
+        size:
+          type: integer
+        size_updated:
+          type: integer
         uid:
           type: string
         updated:
@@ -8710,6 +8707,8 @@ components:
           type: integer
         space_id:
           type: integer
+        type:
+          $ref: '#/components/schemas/EnumResolverType'
         uid:
           type: string
         updated:

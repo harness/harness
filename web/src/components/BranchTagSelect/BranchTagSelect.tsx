@@ -39,6 +39,7 @@ export interface BranchTagSelectProps extends Omit<ButtonProps, 'onSelect'>, Pic
   labelPrefix?: string
   placeHolder?: string
   popoverClassname?: string
+  hidePopoverContent?: boolean
 }
 
 export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
@@ -53,12 +54,12 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
   placeHolder,
   className,
   popoverClassname,
+  hidePopoverContent,
   ...props
 }) => {
   const [query, onQuery] = useState('')
   const [gitRefType, setGitRefType] = useState(isRefATag(gitRef) ? GitRefType.TAG : GitRefType.BRANCH)
   const text = gitRef.replace(REFS_TAGS_PREFIX, '')
-
   return (
     <Button
       className={cx(css.button, className, gitRefType == GitRefType.BRANCH ? css.branchContainer : null)}
@@ -95,6 +96,7 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
       iconProps={{ size: 14 }}
       tooltip={
         <PopoverContent
+          hidePopoverContent={hidePopoverContent}
           gitRef={gitRef}
           gitRefType={gitRefType}
           repoMetadata={repoMetadata}
@@ -135,7 +137,8 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
   onQuery,
   forBranchesOnly,
   disableBranchCreation,
-  disableViewAllBranches
+  disableViewAllBranches,
+  hidePopoverContent
 }) => {
   const { getString } = useStrings()
   const [activeTab, setActiveTab] = useState(gitRefType)
@@ -144,7 +147,7 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
 
-  return (
+  return !hidePopoverContent ? (
     <Container padding="medium" className={css.main}>
       <Layout.Vertical spacing="small">
         <TextInput
@@ -213,6 +216,8 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
         </Container>
       </Layout.Vertical>
     </Container>
+  ) : (
+    <></>
   )
 }
 

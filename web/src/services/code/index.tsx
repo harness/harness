@@ -13,8 +13,6 @@ export type EnumCheckStatus = 'error' | 'failure' | 'pending' | 'running' | 'suc
 
 export type EnumContentEncodingType = 'base64' | 'utf8'
 
-export type EnumJobState = 'canceled' | 'failed' | 'finished' | 'running' | 'scheduled'
-
 export type EnumMembershipRole = 'contributor' | 'executor' | 'reader' | 'space_owner'
 
 export type EnumMergeCheckStatus = string
@@ -45,6 +43,8 @@ export type EnumPullReqReviewerType = 'assigned' | 'requested' | 'self_assigned'
 
 export type EnumPullReqState = 'closed' | 'merged' | 'open'
 
+export type EnumResolverType = string
+
 export type EnumRuleState = 'active' | 'disabled' | 'monitor' | null
 
 export type EnumTokenType = string
@@ -54,8 +54,8 @@ export type EnumTriggerAction =
   | 'branch_updated'
   | 'pullreq_branch_updated'
   | 'pullreq_closed'
-  | 'pullreq_merged'
   | 'pullreq_created'
+  | 'pullreq_merged'
   | 'pullreq_reopened'
   | 'tag_created'
   | 'tag_updated'
@@ -71,8 +71,8 @@ export type EnumWebhookTrigger =
   | 'pullreq_branch_updated'
   | 'pullreq_closed'
   | 'pullreq_comment_created'
-  | 'pullreq_merged'
   | 'pullreq_created'
+  | 'pullreq_merged'
   | 'pullreq_reopened'
   | 'tag_created'
   | 'tag_deleted'
@@ -134,6 +134,15 @@ export interface ImporterProvider {
 }
 
 export type ImporterProviderType = 'github' | 'gitlab' | 'bitbucket' | 'stash' | 'gitea' | 'gogs'
+
+export interface JobProgress {
+  failure?: string
+  progress?: number
+  result?: string
+  state?: JobState
+}
+
+export type JobState = 'canceled' | 'failed' | 'finished' | 'running' | 'scheduled'
 
 export interface LivelogLine {
   out?: string
@@ -269,7 +278,6 @@ export interface OpenapiCreateTemplateRequest {
   data?: string
   description?: string
   space_ref?: string
-  type?: string
   uid?: string
 }
 
@@ -293,6 +301,7 @@ export interface OpenapiCreateWebhookRequest {
   insecure?: boolean
   secret?: string
   triggers?: EnumWebhookTrigger[] | null
+  uid?: string
   url?: string
 }
 
@@ -444,6 +453,7 @@ export interface OpenapiUpdateWebhookRequest {
   insecure?: boolean | null
   secret?: string | null
   triggers?: EnumWebhookTrigger[] | null
+  uid?: string | null
   url?: string | null
 }
 
@@ -460,6 +470,7 @@ export interface OpenapiWebhookType {
   parent_id?: number
   parent_type?: EnumWebhookParent
   triggers?: EnumWebhookTrigger[] | null
+  uid?: string
   updated?: number
   url?: string
   version?: number
@@ -588,7 +599,7 @@ export interface RepoSymlinkContent {
 }
 
 export interface SpaceExportProgressOutput {
-  repos?: TypesJobProgress[] | null
+  repos?: JobProgress[] | null
 }
 
 export interface SpaceImportRepositoriesOutput {
@@ -605,11 +616,13 @@ export type TimeDuration = number | null
 
 export interface TypesCheck {
   created?: number
+  ended?: number
   id?: number
   link?: string
   metadata?: {}
   payload?: TypesCheckPayload
   reported_by?: TypesPrincipalInfo
+  started?: number
   status?: EnumCheckStatus
   summary?: string
   uid?: string
@@ -717,13 +730,6 @@ export interface TypesExecution {
 export interface TypesIdentity {
   email?: string
   name?: string
-}
-
-export interface TypesJobProgress {
-  failure?: string
-  progress?: number
-  result?: string
-  state?: EnumJobState
 }
 
 export interface TypesListCommitResponse {
@@ -897,6 +903,8 @@ export interface TypesRepository {
   num_pulls?: number
   parent_id?: number
   path?: string
+  size?: number
+  size_updated?: number
   uid?: string
   updated?: number
 }
@@ -1011,6 +1019,7 @@ export interface TypesTemplate {
   description?: string
   id?: number
   space_id?: number
+  type?: EnumResolverType
   uid?: string
   updated?: number
 }
@@ -1909,8 +1918,10 @@ export interface ReportStatusCheckResultsPathParams {
 
 export interface ReportStatusCheckResultsRequestBody {
   check_uid?: string
+  ended?: number
   link?: string
   payload?: TypesCheckPayload
+  started?: number
   status?: EnumCheckStatus
   summary?: string
 }
@@ -4439,13 +4450,13 @@ export const useRepoArtifactDownload = ({ repo_ref, file_ref, ...props }: UseRep
 
 export interface ListWebhooksQueryParams {
   /**
-   * The substring which is used to filter the spaces by their path name.
+   * The substring which is used to filter the webhooks by their uid.
    */
   query?: string
   /**
    * The data by which the webhooks are sorted.
    */
-  sort?: 'id' | 'display_name' | 'created' | 'updated'
+  sort?: 'id' | 'uid' | 'display_name' | 'created' | 'updated'
   /**
    * The order of the output.
    */

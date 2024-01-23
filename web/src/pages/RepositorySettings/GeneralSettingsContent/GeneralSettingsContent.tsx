@@ -41,21 +41,26 @@ import type { TypesRepository } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { RepoVisibility } from 'utils/GitUtils'
+import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useModalHook } from 'hooks/useModalHook'
 import useDeleteRepoModal from './DeleteRepoModal/DeleteRepoModal'
+import useDefaultBranchModal from './DefaultBranchModal/DefaultBranchModal'
 import Private from '../../../icons/private.svg'
 import css from '../RepositorySettings.module.scss'
 
 interface GeneralSettingsProps {
   repoMetadata: TypesRepository | undefined
   refetch: () => void
+  gitRef: string
 }
 
 const GeneralSettingsContent = (props: GeneralSettingsProps) => {
-  const { repoMetadata, refetch } = props
+  const { repoMetadata, refetch, gitRef } = props
   const { openModal: openDeleteRepoModal } = useDeleteRepoModal()
-
+  const [currentGitRef, setCurrentGitRef] = useState(gitRef)
   const [editDesc, setEditDesc] = useState(ACCESS_MODES.VIEW)
+  const [defaultBranch, setDefaultBranch] = useState(ACCESS_MODES.VIEW)
+  const { openModal: openDefaultBranchModal } = useDefaultBranchModal({ currentGitRef, setDefaultBranch, refetch })
   const { showError, showSuccess } = useToaster()
 
   const space = useGetSpaceParam()
@@ -156,6 +161,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
       initialValues={{
         name: repoMetadata?.uid,
         desc: repoMetadata?.description,
+        defaultBranch: repoMetadata?.default_branch,
         isPublic: currRepoVisibility
       }}
       onSubmit={voidFn(mutate)}>
@@ -166,7 +172,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
               <Layout.Horizontal padding={{ bottom: 'medium' }}>
                 <Container className={css.label}>
                   <Text color={Color.GREY_600} className={css.textSize}>
-                    {getString('repositoryName')}
+                    {getString('name')}
                   </Text>
                 </Container>
                 <Container className={css.content}>
@@ -175,7 +181,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                   </Text>
                 </Container>
               </Layout.Horizontal>
-              <Layout.Horizontal>
+              <Layout.Horizontal padding={{ bottom: 'medium' }}>
                 <Container className={cx(css.label, css.descText)}>
                   <Text color={Color.GREY_600} className={css.textSize}>
                     {getString('description')}
@@ -240,13 +246,77 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                   )}
                 </Container>
               </Layout.Horizontal>
+              <Layout.Horizontal>
+                <Container className={cx(css.label, css.descText)}>
+                  <Text color={Color.GREY_600} className={css.textSize}>
+                    {getString('defaultBranchTitle')}
+                  </Text>
+                </Container>
+                <Container className={css.content}>
+                  <Layout.Horizontal className={css.editContainer}>
+                    {repoMetadata && (
+                      <BranchTagSelect
+                        forBranchesOnly={true}
+                        disableBranchCreation={true}
+                        disabled={defaultBranch !== ACCESS_MODES.EDIT}
+                        hidePopoverContent={defaultBranch !== ACCESS_MODES.EDIT}
+                        repoMetadata={repoMetadata}
+                        margin={{ right: 'large' }}
+                        gitRef={currentGitRef}
+                        size={ButtonSize.SMALL}
+                        onSelect={ref => {
+                          setCurrentGitRef(ref)
+                        }}
+                      />
+                    )}
+                    {defaultBranch === ACCESS_MODES.EDIT ? (
+                      <>
+                        <Button
+                          className={css.saveBtn}
+                          margin={{ right: 'small' }}
+                          text={getString('save')}
+                          disabled={currentGitRef === repoMetadata?.default_branch}
+                          variation={ButtonVariation.PRIMARY}
+                          size={ButtonSize.SMALL}
+                          onClick={() => {
+                            openDefaultBranchModal()
+                          }}
+                        />
+                        <Button
+                          text={getString('cancel')}
+                          variation={ButtonVariation.TERTIARY}
+                          size={ButtonSize.SMALL}
+                          onClick={() => {
+                            setCurrentGitRef(repoMetadata?.default_branch as string)
+                            setDefaultBranch(ACCESS_MODES.VIEW)
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          className={css.saveBtn}
+                          margin={{ right: 'medium' }}
+                          text={getString('switchBranch')}
+                          variation={ButtonVariation.SECONDARY}
+                          size={ButtonSize.SMALL}
+                          onClick={() => {
+                            setDefaultBranch(ACCESS_MODES.EDIT)
+                          }}
+                          {...permissionProps(permEditResult, standalone)}
+                        />
+                      </>
+                    )}
+                  </Layout.Horizontal>
+                </Container>
+              </Layout.Horizontal>
             </Container>
             <Render when={enablePublicRepo}>
               <Container padding="large" margin={{ bottom: 'medium' }} className={css.generalContainer}>
                 <Layout.Horizontal padding={{ bottom: 'medium' }}>
                   <Container className={css.label}>
                     <Text color={Color.GREY_600} font={{ size: 'small' }}>
-                      {getString('repoVisibility')}
+                      {getString('visibility')}
                     </Text>
                   </Container>
                   <Container className={css.content}>

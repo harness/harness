@@ -37,7 +37,7 @@ import { useHistory } from 'react-router-dom'
 import { Dialog } from '@blueprintjs/core'
 import { ProgressBar, Intent as IntentCore } from '@blueprintjs/core'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
-import { TypesJobProgress, useGetSpace } from 'services/code'
+import { JobProgress, useGetSpace } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
@@ -78,18 +78,18 @@ export default function SpaceSettings() {
     path: `/api/v1/spaces/${space}/export-progress`
   })
   const countFinishedRepos = (): number => {
-    return exportProgressSpace?.repos.filter((repo: TypesJobProgress) => repo.state === 'finished').length
+    return exportProgressSpace?.repos.filter((repo: JobProgress) => repo.state === 'finished').length
   }
 
   const checkReposState = () => {
     return exportProgressSpace?.repos.every(
-      (repo: TypesJobProgress) => repo.state === 'finished' || repo.state === 'failed' || repo.state === 'canceled'
+      (repo: JobProgress) => repo.state === 'finished' || repo.state === 'failed' || repo.state === 'canceled'
     )
   }
 
   const checkExportIsRunning = () => {
     return exportProgressSpace?.repos.every(
-      (repo: TypesJobProgress) => repo.state === 'running' || repo.state === 'scheduled'
+      (repo: JobProgress) => repo.state === 'running' || repo.state === 'scheduled'
     )
   }
 

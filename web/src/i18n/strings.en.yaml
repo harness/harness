@@ -41,6 +41,12 @@ create: Create
 clone: Clone
 copy: Copy
 defaultBranch: Default
+defaultBranchTitle: Default branch
+switchBranch: Switch Branch
+confirmDefaultBranch:
+  title: Change the default branch
+  message: 'Are you sure you want to update the default branch to <strong style="color: var(--primary-7)">{{currentGitRef}}</strong> ?'
+  points: 'Open pull requests will still point to the previous default branch, Branch rules using pattern matching may need to be updated, Cloning the repository will now clone the new default branch'
 in: in
 ok: OK
 on: On
@@ -851,7 +857,8 @@ enterGithubPlaceholder: https://api.github.com/
 enterBitbucketPlaceholder: https://bitbucket.org/
 changeRepoVis: Change repository visibility
 changeRepoVisContent: Are you sure you want to make this repository {repoVis}? {repoText}
-repoVisibility: Repository Visibility
+repoVisibility: Repository visibility
+visibility: Visibility
 attachText: Attach images & videos by dragging & dropping, selecting or pasting them.
 key: Key
 setting: Setting

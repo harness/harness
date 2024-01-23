@@ -33,7 +33,7 @@ import GeneralSettingsContent from './GeneralSettingsContent/GeneralSettingsCont
 import css from './RepositorySettings.module.scss'
 
 export default function RepositorySettings() {
-  const { repoMetadata, error, loading, refetch, settingSection } = useGetRepositoryMetadata()
+  const { repoMetadata, error, loading, refetch, settingSection, gitRef } = useGetRepositoryMetadata()
   const history = useHistory()
   const { routes } = useAppContext()
   const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.general)
@@ -71,7 +71,7 @@ export default function RepositorySettings() {
                   title: getString('settings'),
                   panel: (
                     <Container padding={'large'}>
-                      <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} />
+                      <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} gitRef={gitRef} />
                     </Container>
                   )
                 },

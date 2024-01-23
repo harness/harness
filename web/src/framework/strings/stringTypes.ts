@@ -161,6 +161,9 @@ export interface StringsMap {
   compareEmptyDiffTitle: string
   comparingChanges: string
   confirm: string
+  'confirmDefaultBranch.message': string
+  'confirmDefaultBranch.points': string
+  'confirmDefaultBranch.title': string
   confirmDelete: string
   confirmDeleteWebhook: string
   confirmNewPassword: string
@@ -202,6 +205,7 @@ export interface StringsMap {
   creationDate: string
   dangerDeleteRepo: string
   defaultBranch: string
+  defaultBranchTitle: string
   delete: string
   deleteBranch: string
   deleteBranchConfirm: string
@@ -774,6 +778,7 @@ export interface StringsMap {
   'stepCategory.select': string
   submitReview: string
   success: string
+  switchBranch: string
   switchBranchesTags: string
   tag: string
   tagCreated: string
@@ -853,6 +858,7 @@ export interface StringsMap {
   viewRaw: string
   viewRepo: string
   viewed: string
+  visibility: string
   webhook: string
   webhookAllEventsSelected: string
   webhookBranchCreated: string
