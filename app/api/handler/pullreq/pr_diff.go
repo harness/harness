@@ -15,12 +15,16 @@
 package pullreq
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 
 	"github.com/harness/gitness/app/api/controller/pullreq"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/errors"
+	gittypes "github.com/harness/gitness/git/types"
 )
 
 // HandleDiff returns a http.HandlerFunc that returns diff.
@@ -45,9 +49,21 @@ func HandleDiff(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			w.Header().Set("X-Source-Sha", sourceSHA)
 			w.Header().Set("X-Merge-Base-Sha", mergeBaseSHA)
 		}
+		files := gittypes.FileDiffRequests{}
+
+		switch r.Method {
+		case http.MethodPost:
+			if err = json.NewDecoder(r.Body).Decode(&files); err != nil && !errors.Is(err, io.EOF) {
+				render.TranslatedUserError(w, err)
+				return
+			}
+		case http.MethodGet:
+			// TBD: this will be removed in future because of URL limit in browser to 2048 chars.
+			files = request.GetFileDiffFromQuery(r)
+		}
 
 		if strings.HasPrefix(r.Header.Get("Accept"), "text/plain") {
-			err := pullreqCtrl.RawDiff(ctx, session, repoRef, pullreqNumber, setSHAs, w)
+			err := pullreqCtrl.RawDiff(ctx, w, session, repoRef, pullreqNumber, setSHAs, files...)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusOK)
 			}
@@ -55,7 +71,7 @@ func HandleDiff(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 		}
 
 		_, includePatch := request.QueryParam(r, "include_patch")
-		stream, err := pullreqCtrl.Diff(ctx, session, repoRef, pullreqNumber, setSHAs, includePatch)
+		stream, err := pullreqCtrl.Diff(ctx, session, repoRef, pullreqNumber, setSHAs, includePatch, files...)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

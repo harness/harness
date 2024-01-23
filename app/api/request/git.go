@@ -17,9 +17,11 @@ package request
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/app/api/usererror"
+	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -131,4 +133,30 @@ func GetGitServiceTypeFromQuery(r *http.Request) (enum.GitServiceType, error) {
 	}
 
 	return enum.ParseGitServiceType(val[len(gitPrefix):])
+}
+
+func GetFileDiffFromQuery(r *http.Request) (files gittypes.FileDiffRequests) {
+	paths, _ := QueryParamList(r, "path")
+	ranges, _ := QueryParamList(r, "range")
+
+	for i, filepath := range paths {
+		start := 0
+		end := 0
+		if i < len(ranges) {
+			linesRange := ranges[i]
+			parts := strings.Split(linesRange, ":")
+			if len(parts) > 1 {
+				end, _ = strconv.Atoi(parts[1])
+			}
+			if len(parts) > 0 {
+				start, _ = strconv.Atoi(parts[0])
+			}
+		}
+		files = append(files, gittypes.FileDiffRequest{
+			Path:      filepath,
+			StartLine: start,
+			EndLine:   end,
+		})
+	}
+	return
 }

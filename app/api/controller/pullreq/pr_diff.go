@@ -21,6 +21,7 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
+	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -28,11 +29,12 @@ import (
 // RawDiff writes raw git diff to writer w.
 func (c *Controller) RawDiff(
 	ctx context.Context,
+	w io.Writer,
 	session *auth.Session,
 	repoRef string,
 	pullreqNum int64,
 	setSHAs func(sourceSHA, mergeBaseSHA string),
-	w io.Writer,
+	files ...gittypes.FileDiffRequest,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
@@ -48,12 +50,12 @@ func (c *Controller) RawDiff(
 		setSHAs(pr.SourceSHA, pr.MergeBaseSHA)
 	}
 
-	return c.git.RawDiff(ctx, &git.DiffParams{
+	return c.git.RawDiff(ctx, w, &git.DiffParams{
 		ReadParams: git.CreateReadParams(repo),
 		BaseRef:    pr.MergeBaseSHA,
 		HeadRef:    pr.SourceSHA,
 		MergeBase:  true,
-	}, w)
+	}, files...)
 }
 
 func (c *Controller) Diff(
@@ -63,6 +65,7 @@ func (c *Controller) Diff(
 	pullreqNum int64,
 	setSHAs func(sourceSHA, mergeBaseSHA string),
 	includePatch bool,
+	files ...gittypes.FileDiffRequest,
 ) (types.Stream[*git.FileDiff], error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
@@ -84,7 +87,7 @@ func (c *Controller) Diff(
 		HeadRef:      pr.SourceSHA,
 		MergeBase:    true,
 		IncludePatch: includePatch,
-	}))
+	}, files...))
 
 	return reader, nil
 }

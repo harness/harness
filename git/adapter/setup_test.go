@@ -108,14 +108,14 @@ func writeFile(
 	path string,
 	content string,
 	parents []string,
-) gitea.SHA1 {
+) (oid gitea.SHA1, commitSha gitea.SHA1) {
 	t.Helper()
-	sha, err := repo.HashObject(strings.NewReader(content))
+	oid, err := repo.HashObject(strings.NewReader(content))
 	if err != nil {
 		t.Fatalf("failed to hash object: %v", err)
 	}
 
-	err = repo.AddObjectToIndex("100644", sha, path)
+	err = repo.AddObjectToIndex("100644", oid, path)
 	if err != nil {
 		t.Fatalf("failed to add object to index: %v", err)
 	}
@@ -125,12 +125,12 @@ func writeFile(
 		t.Fatalf("failed to write tree: %v", err)
 	}
 
-	sha, err = repo.CommitTree(testAuthor, testCommitter, tree, gitea.CommitTreeOpts{
+	commitSha, err = repo.CommitTree(testAuthor, testCommitter, tree, gitea.CommitTreeOpts{
 		Message: "write file operation",
 		Parents: parents,
 	})
 	if err != nil {
 		t.Fatalf("failed to commit tree: %v", err)
 	}
-	return sha
+	return oid, commitSha
 }

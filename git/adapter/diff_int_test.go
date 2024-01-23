@@ -15,20 +15,21 @@
 package adapter_test
 
 import (
+	"bytes"
 	"context"
 	"testing"
-
-	"github.com/harness/gitness/git/adapter"
 )
 
-func TestAdapter_GetMergeBase(t *testing.T) {
+func TestAdapter_RawDiff(t *testing.T) {
 	git := setupGit(t)
-	repo, teardown := setupRepo(t, git, "testmergebase")
+	repo, teardown := setupRepo(t, git, "testrawdiff")
 	defer teardown()
+
+	testFileName := "file.txt"
 
 	baseBranch := "main"
 	// write file to main branch
-	_, parentSHA := writeFile(t, repo, "file1.txt", "some content", nil)
+	oid1, parentSHA := writeFile(t, repo, testFileName, "some content", nil)
 
 	err := repo.SetReference("refs/heads/"+baseBranch, parentSHA.String())
 	if err != nil {
@@ -50,7 +51,7 @@ func TestAdapter_GetMergeBase(t *testing.T) {
 	}
 
 	// write file to main branch
-	_, sha := writeFile(t, repo, "file1.txt", "new content", []string{parentSHA.String()})
+	oid2, sha := writeFile(t, repo, testFileName, "new content", []string{parentSHA.String()})
 
 	err = repo.SetReference("refs/heads/"+headBranch, sha.String())
 	if err != nil {
@@ -63,60 +64,89 @@ func TestAdapter_GetMergeBase(t *testing.T) {
 		t.Fatalf("error creating annotated tag '%s': %v", headTag, err)
 	}
 
+	want := `diff --git a/` + testFileName + ` b/` + testFileName + `
+index ` + oid1.String() + `..` + oid2.String() + ` 100644
+--- a/` + testFileName + `
++++ b/` + testFileName + `
+@@ -1 +1 @@
+-some content
+\ No newline at end of file
++new content
+\ No newline at end of file
+`
+
 	type args struct {
-		ctx      context.Context
-		repoPath string
-		remote   string
-		base     string
-		head     string
+		ctx       context.Context
+		repoPath  string
+		baseRef   string
+		headRef   string
+		mergeBase bool
 	}
 	tests := []struct {
 		name    string
-		git     adapter.Adapter
 		args    args
-		want    string
-		want1   string
+		wantW   string
 		wantErr bool
 	}{
 		{
-			name: "git merge base using branch names",
-			git:  git,
+			name: "test branches",
 			args: args{
-				ctx:      context.Background(),
-				repoPath: repo.Path,
-				remote:   "",
-				base:     baseBranch,
-				head:     headBranch,
+				ctx:       context.Background(),
+				repoPath:  repo.Path,
+				baseRef:   baseBranch,
+				headRef:   headBranch,
+				mergeBase: false,
 			},
-			want:  parentSHA.String(),
-			want1: baseBranch,
+			wantW:   want,
+			wantErr: false,
 		},
 		{
-			name: "git merge base using annotated tags",
-			git:  git,
+			name: "test annotated tag",
 			args: args{
-				ctx:      context.Background(),
-				repoPath: repo.Path,
-				remote:   "",
-				base:     baseTag,
-				head:     headTag,
+				ctx:       context.Background(),
+				repoPath:  repo.Path,
+				baseRef:   baseTag,
+				headRef:   headTag,
+				mergeBase: false,
 			},
-			want:  parentSHA.String(),
-			want1: baseTag,
+			wantW:   want,
+			wantErr: false,
+		},
+		{
+			name: "test branches using merge-base",
+			args: args{
+				ctx:       context.Background(),
+				repoPath:  repo.Path,
+				baseRef:   baseBranch,
+				headRef:   headBranch,
+				mergeBase: true,
+			},
+			wantW:   want,
+			wantErr: false,
+		},
+		{
+			name: "test annotated tag using merge-base",
+			args: args{
+				ctx:       context.Background(),
+				repoPath:  repo.Path,
+				baseRef:   baseTag,
+				headRef:   headTag,
+				mergeBase: true,
+			},
+			wantW:   want,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := tt.git.GetMergeBase(tt.args.ctx, tt.args.repoPath, tt.args.remote, tt.args.base, tt.args.head)
+			w := &bytes.Buffer{}
+			err := git.RawDiff(tt.args.ctx, w, tt.args.repoPath, tt.args.baseRef, tt.args.headRef, tt.args.mergeBase)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetMergeBase() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RawDiff() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("GetMergeBase() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("GetMergeBase() got1 = %v, want %v", got1, tt.want1)
+			if gotW := w.String(); gotW != tt.wantW {
+				t.Errorf("RawDiff() gotW = %v, want %v", gotW, tt.wantW)
 			}
 		})
 	}

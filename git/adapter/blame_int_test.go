@@ -29,7 +29,7 @@ func TestBlameEmptyFile(t *testing.T) {
 
 	baseBranch := "main"
 	// write empty file to main branch
-	parentSHA := writeFile(t, repo, "file.txt", "", nil)
+	_, parentSHA := writeFile(t, repo, "file.txt", "", nil)
 
 	err := repo.SetReference("refs/heads/"+baseBranch, parentSHA.String())
 	if err != nil {

@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/git"
+	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -154,6 +155,13 @@ type deleteTagRequest struct {
 
 type getRawDiffRequest struct {
 	repoRequest
+	Range string   `path:"range" example:"main..dev"`
+	Path  []string `query:"path" description:"provide path for diff operation"`
+}
+
+type postRawDiffRequest struct {
+	repoRequest
+	gittypes.FileDiffRequests
 	Range string `path:"range" example:"main..dev"`
 }
 
@@ -720,13 +728,24 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDiff := openapi3.Operation{}
 	opDiff.WithTags("repository")
 	opDiff.WithMapOfAnything(map[string]interface{}{"operationId": "rawDiff"})
-	_ = reflector.SetRequest(&opDiff, new(getRawDiffRequest), http.MethodGet)
-	_ = reflector.SetStringResponse(&opDiff, http.StatusOK, "text/plain")
-	_ = reflector.SetJSONResponse(&opDiff, []git.FileDiff{}, http.StatusOK)
-	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/diff/{range}", opDiff)
+	panicOnErr(reflector.SetRequest(&opDiff, new(getRawDiffRequest), http.MethodGet))
+	panicOnErr(reflector.SetStringResponse(&opDiff, http.StatusOK, "text/plain"))
+	panicOnErr(reflector.SetJSONResponse(&opDiff, []git.FileDiff{}, http.StatusOK))
+	panicOnErr(reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusInternalServerError))
+	panicOnErr(reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusUnauthorized))
+	panicOnErr(reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusForbidden))
+	panicOnErr(reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/diff/{range}", opDiff))
+
+	opPostDiff := openapi3.Operation{}
+	opPostDiff.WithTags("repository")
+	opPostDiff.WithMapOfAnything(map[string]interface{}{"operationId": "rawDiffPost"})
+	panicOnErr(reflector.SetRequest(&opPostDiff, new(postRawDiffRequest), http.MethodPost))
+	panicOnErr(reflector.SetStringResponse(&opPostDiff, http.StatusOK, "text/plain"))
+	panicOnErr(reflector.SetJSONResponse(&opPostDiff, []git.FileDiff{}, http.StatusOK))
+	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new(usererror.Error), http.StatusInternalServerError))
+	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new(usererror.Error), http.StatusUnauthorized))
+	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new(usererror.Error), http.StatusForbidden))
+	panicOnErr(reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/diff/{range}", opPostDiff))
 
 	opCommitDiff := openapi3.Operation{}
 	opCommitDiff.WithTags("repository")

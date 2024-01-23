@@ -15,10 +15,13 @@
 package adapter
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"math"
+	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/errors"
@@ -28,13 +31,122 @@ import (
 	"code.gitea.io/gitea/modules/git"
 )
 
+// modifyHeader needs to modify diff hunk header with the new start line
+// and end line with calculated span.
+// if diff hunk header is -100, 50 +100, 50 and startLine = 120, endLine=140
+// then we need to modify header to -120,20 +120,20.
+// warning: changes are possible and param endLine may not exist in the future.
+func modifyHeader(hunk types.HunkHeader, startLine, endLine int) []byte {
+	oldStartLine := hunk.OldLine
+	newStartLine := hunk.NewLine
+	oldSpan := hunk.OldSpan
+	newSpan := hunk.NewSpan
+
+	oldEndLine := oldStartLine + oldSpan
+	newEndLine := newStartLine + newSpan
+
+	if startLine > 0 {
+		if startLine < oldEndLine {
+			oldStartLine = startLine
+		}
+
+		if startLine < newEndLine {
+			newStartLine = startLine
+		}
+	}
+
+	if endLine > 0 {
+		if endLine < oldEndLine {
+			oldSpan = endLine - startLine
+		} else if oldEndLine > startLine {
+			oldSpan = oldEndLine - startLine
+		}
+
+		if endLine < newEndLine {
+			newSpan = endLine - startLine
+		} else if newEndLine > startLine {
+			newSpan = newEndLine - startLine
+		}
+	}
+
+	return []byte(fmt.Sprintf("@@ -%d,%d +%d,%d @@",
+		oldStartLine, oldSpan, newStartLine, newSpan))
+}
+
+// cutLinesFromFullFileDiff reads from r and writes to w headers and between
+// startLine and endLine. if startLine and endLine is equal to 0 then it uses io.Copy
+// warning: changes are possible and param endLine may not exist in the future
+func cutLinesFromFullFileDiff(w io.Writer, r io.Reader, startLine, endLine int) error {
+	if startLine < 0 {
+		startLine = 0
+	}
+
+	if endLine < 0 {
+		endLine = 0
+	}
+
+	if startLine == 0 && endLine > 0 {
+		startLine = 1
+	}
+
+	if endLine < startLine {
+		endLine = 0
+	}
+
+	// no need for processing lines just copy the data
+	if startLine == 0 && endLine == 0 {
+		_, err := io.Copy(w, r)
+		return err
+	}
+
+	linePos := 0
+	start := false
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+
+		if start {
+			linePos++
+		}
+
+		if endLine > 0 && linePos > endLine {
+			break
+		}
+
+		if linePos > 0 &&
+			(startLine > 0 && linePos < startLine) {
+			continue
+		}
+
+		if len(line) >= 2 && bytes.HasPrefix(line, []byte{'@', '@'}) {
+			hunk, ok := parser.ParseDiffHunkHeader(string(line)) // TBD: maybe reader?
+			if !ok {
+				return fmt.Errorf("failed to extract lines from diff, range [%d,%d] : %w",
+					startLine, endLine, ErrParseDiffHunkHeader)
+			}
+			line = modifyHeader(hunk, startLine, endLine)
+			start = true
+		}
+
+		if _, err := w.Write(line); err != nil {
+			return err
+		}
+
+		if _, err := w.Write([]byte{'\n'}); err != nil {
+			return err
+		}
+	}
+	return scanner.Err()
+}
+
 func (a Adapter) RawDiff(
 	ctx context.Context,
+	w io.Writer,
 	repoPath string,
 	baseRef string,
 	headRef string,
 	mergeBase bool,
-	w io.Writer,
+	files ...types.FileDiffRequest,
 ) error {
 	if repoPath == "" {
 		return ErrRepositoryPathEmpty
@@ -55,8 +167,78 @@ func (a Adapter) RawDiff(
 	if mergeBase {
 		args = append(args, "--merge-base")
 	}
-	args = append(args, baseRef, headRef)
+	perFileDiffRequired := false
+	paths := make([]string, 0, len(files))
+	if len(files) > 0 {
+		for _, file := range files {
+			paths = append(paths, file.Path)
+			if file.StartLine > 0 || file.EndLine > 0 {
+				perFileDiffRequired = true
+			}
+		}
+	}
 
+	processed := 0
+
+again:
+	startLine := 0
+	endLine := 0
+	newargs := make([]string, len(args), len(args)+8)
+	copy(newargs, args)
+
+	if len(files) > 0 {
+		startLine = files[processed].StartLine
+		endLine = files[processed].EndLine
+	}
+
+	if perFileDiffRequired {
+		if startLine > 0 || endLine > 0 {
+			newargs = append(newargs, "-U"+strconv.Itoa(math.MaxInt32))
+		}
+		paths = []string{files[processed].Path}
+	}
+
+	newargs = append(newargs, baseRef, headRef)
+
+	if len(paths) > 0 {
+		newargs = append(newargs, "--")
+		newargs = append(newargs, paths...)
+	}
+
+	pipeRead, pipeWrite := io.Pipe()
+	go func() {
+		var err error
+
+		defer func() {
+			// If running of the command below fails, make the pipe reader also fail with the same error.
+			_ = pipeWrite.CloseWithError(err)
+		}()
+
+		err = a.rawDiff(ctx, pipeWrite, repoPath, baseRef, headRef, newargs...)
+	}()
+
+	if err = cutLinesFromFullFileDiff(w, pipeRead, startLine, endLine); err != nil {
+		return err
+	}
+
+	if perFileDiffRequired {
+		processed++
+		if processed < len(files) {
+			goto again
+		}
+	}
+
+	return nil
+}
+
+func (a Adapter) rawDiff(
+	ctx context.Context,
+	w io.Writer,
+	repoPath string,
+	baseRef string,
+	headRef string,
+	args ...string,
+) error {
 	cmd := git.NewCommand(ctx, args...)
 	cmd.SetDescription(fmt.Sprintf("GetDiffRange [repo_path: %s]", repoPath))
 	errbuf := bytes.Buffer{}
@@ -68,7 +250,7 @@ func (a Adapter) RawDiff(
 		if errbuf.Len() > 0 {
 			err = &runStdError{err: err, stderr: errbuf.String()}
 		}
-		return processGiteaErrorf(err, "git diff failed between '%s' and '%s'", baseRef, headRef)
+		return processGiteaErrorf(err, "git diff failed between %q and %q", baseRef, headRef)
 	}
 	return nil
 }

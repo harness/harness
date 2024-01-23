@@ -15,12 +15,16 @@
 package repo
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/errors"
+	gittypes "github.com/harness/gitness/git/types"
 )
 
 // HandleDiff returns the diff between two commits, branches or tags.
@@ -36,8 +40,20 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		path := request.GetOptionalRemainderFromPath(r)
 
+		files := gittypes.FileDiffRequests{}
+		switch r.Method {
+		case http.MethodPost:
+			if err = json.NewDecoder(r.Body).Decode(&files); err != nil && !errors.Is(err, io.EOF) {
+				render.TranslatedUserError(w, err)
+				return
+			}
+		case http.MethodGet:
+			// TBD: this will be removed in future because of URL limit in browser to 2048 chars.
+			files = request.GetFileDiffFromQuery(r)
+		}
+
 		if strings.HasPrefix(r.Header.Get("Accept"), "text/plain") {
-			err := repoCtrl.RawDiff(ctx, session, repoRef, path, w)
+			err := repoCtrl.RawDiff(ctx, w, session, repoRef, path, files...)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusOK)
 			}
@@ -45,7 +61,7 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		}
 
 		_, includePatch := request.QueryParam(r, "include_patch")
-		stream, err := repoCtrl.Diff(ctx, session, repoRef, path, includePatch)
+		stream, err := repoCtrl.Diff(ctx, session, repoRef, path, includePatch, files...)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

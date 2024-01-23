@@ -89,3 +89,9 @@ func Generate() *openapi3.Spec {
 
 	return reflector.Spec
 }
+
+func panicOnErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

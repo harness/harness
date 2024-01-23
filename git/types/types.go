@@ -383,3 +383,11 @@ type ObjectCount struct {
 	Garbage       int
 	SizeGarbage   int64
 }
+
+type FileDiffRequest struct {
+	Path      string `json:"path"`
+	StartLine int    `json:"start_line"`
+	EndLine   int    `json:"-"` // warning: changes are possible and this field may not exist in the future
+}
+
+type FileDiffRequests []FileDiffRequest

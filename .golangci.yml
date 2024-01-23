@@ -34,11 +34,6 @@ linters-settings:
     # Default: 40
     statements: 50
 
-  gocognit:
-    # Minimal code complexity to report
-    # Default: 30 (but we recommend 10-20)
-    min-complexity: 20
-
   gocritic:
     # Settings passed to gocritic.
     # The settings key is the name of a supported gocritic checker.

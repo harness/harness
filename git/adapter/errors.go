@@ -27,6 +27,7 @@ import (
 var (
 	ErrRepositoryPathEmpty = errors.InvalidArgument("repository path cannot be empty")
 	ErrBranchNameEmpty     = errors.InvalidArgument("branch name cannot be empty")
+	ErrParseDiffHunkHeader = errors.Internal("failed to parse diff hunk header")
 )
 
 type runStdError struct {

@@ -88,11 +88,12 @@ type Adapter interface {
 		headBranch string) (string, error)
 
 	RawDiff(ctx context.Context,
+		w io.Writer,
 		repoPath,
 		base,
 		head string,
 		mergeBase bool,
-		w io.Writer) error
+		paths ...types.FileDiffRequest) error
 
 	CommitDiff(ctx context.Context,
 		repoPath,

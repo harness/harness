@@ -320,6 +320,7 @@ func setupRepos(r chi.Router,
 			// diffs
 			r.Route("/diff", func(r chi.Router) {
 				r.Get("/*", handlerrepo.HandleDiff(repoCtrl))
+				r.Post("/*", handlerrepo.HandleDiff(repoCtrl))
 			})
 			r.Route("/diff-stats", func(r chi.Router) {
 				r.Get("/*", handlerrepo.HandleDiffStats(repoCtrl))
@@ -518,6 +519,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			})
 			r.Get("/codeowners", handlerpullreq.HandleCodeOwner(pullreqCtrl))
 			r.Get("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
+			r.Post("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
 		})
 	})
 }

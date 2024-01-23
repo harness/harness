@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/git"
+	gittypes "github.com/harness/gitness/git/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -120,6 +121,16 @@ type fileViewListPullReqRequest struct {
 type fileViewDeletePullReqRequest struct {
 	pullReqRequest
 	Path string `path:"file_path"`
+}
+
+type getRawPRDiffRequest struct {
+	pullReqRequest
+	Path []string `query:"path" description:"provide path for diff operation"`
+}
+
+type postRawPRDiffRequest struct {
+	pullReqRequest
+	gittypes.FileDiffRequests
 }
 
 var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
@@ -549,11 +560,24 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	opDiff := openapi3.Operation{}
 	opDiff.WithTags("pullreq")
 	opDiff.WithMapOfAnything(map[string]interface{}{"operationId": "diffPullReq"})
-	_ = reflector.SetStringResponse(&opDiff, http.StatusOK, "text/plain")
-	_ = reflector.SetJSONResponse(&opDiff, new([]git.FileDiff), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/diff", opDiff)
+	panicOnErr(reflector.SetRequest(&opDiff, new(getRawPRDiffRequest), http.MethodGet))
+	panicOnErr(reflector.SetStringResponse(&opDiff, http.StatusOK, "text/plain"))
+	panicOnErr(reflector.SetJSONResponse(&opDiff, new([]git.FileDiff), http.StatusOK))
+	panicOnErr(reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusInternalServerError))
+	panicOnErr(reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusUnauthorized))
+	panicOnErr(reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusForbidden))
+	panicOnErr(reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusNotFound))
+	panicOnErr(reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/diff", opDiff))
+
+	opPostDiff := openapi3.Operation{}
+	opPostDiff.WithTags("pullreq")
+	opPostDiff.WithMapOfAnything(map[string]interface{}{"operationId": "diffPullReqPost"})
+	panicOnErr(reflector.SetRequest(&opPostDiff, new(postRawPRDiffRequest), http.MethodPost))
+	panicOnErr(reflector.SetStringResponse(&opPostDiff, http.StatusOK, "text/plain"))
+	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new([]git.FileDiff), http.StatusOK))
+	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new(usererror.Error), http.StatusInternalServerError))
+	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new(usererror.Error), http.StatusUnauthorized))
+	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new(usererror.Error), http.StatusForbidden))
+	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new(usererror.Error), http.StatusNotFound))
+	panicOnErr(reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/pullreq/{pullreq_number}/diff", opPostDiff))
 }

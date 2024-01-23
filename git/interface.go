@@ -17,6 +17,8 @@ package git
 import (
 	"context"
 	"io"
+
+	"github.com/harness/gitness/git/types"
 )
 
 type Interface interface {
@@ -66,8 +68,8 @@ type Interface interface {
 	/*
 	 * Diff services
 	 */
-	RawDiff(ctx context.Context, in *DiffParams, w io.Writer) error
-	Diff(ctx context.Context, in *DiffParams) (<-chan *FileDiff, <-chan error)
+	RawDiff(ctx context.Context, w io.Writer, in *DiffParams, files ...types.FileDiffRequest) error
+	Diff(ctx context.Context, in *DiffParams, files ...types.FileDiffRequest) (<-chan *FileDiff, <-chan error)
 	DiffFileNames(ctx context.Context, in *DiffParams) (DiffFileNamesOutput, error)
 	CommitDiff(ctx context.Context, params *GetCommitParams, w io.Writer) error
 	DiffShortStat(ctx context.Context, params *DiffParams) (DiffShortStatOutput, error)

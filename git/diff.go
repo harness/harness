@@ -48,18 +48,23 @@ func (p DiffParams) Validate() error {
 	return nil
 }
 
-func (s *Service) RawDiff(ctx context.Context, params *DiffParams, out io.Writer) error {
-	return s.rawDiff(ctx, params, out)
+func (s *Service) RawDiff(
+	ctx context.Context,
+	out io.Writer,
+	params *DiffParams,
+	files ...types.FileDiffRequest,
+) error {
+	return s.rawDiff(ctx, out, params, files...)
 }
 
-func (s *Service) rawDiff(ctx context.Context, params *DiffParams, w io.Writer) error {
+func (s *Service) rawDiff(ctx context.Context, w io.Writer, params *DiffParams, files ...types.FileDiffRequest) error {
 	if err := params.Validate(); err != nil {
 		return err
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	err := s.adapter.RawDiff(ctx, repoPath, params.BaseRef, params.HeadRef, params.MergeBase, w)
+	err := s.adapter.RawDiff(ctx, w, repoPath, params.BaseRef, params.HeadRef, params.MergeBase, files...)
 	if err != nil {
 		return err
 	}
@@ -336,6 +341,7 @@ func parseFileDiffStatus(ftype diff.FileType) FileDiffStatus {
 func (s *Service) Diff(
 	ctx context.Context,
 	params *DiffParams,
+	files ...types.FileDiffRequest,
 ) (<-chan *FileDiff, <-chan error) {
 	wg := sync.WaitGroup{}
 	ch := make(chan *FileDiff)
@@ -353,7 +359,7 @@ func (s *Service) Diff(
 			return
 		}
 
-		err := s.rawDiff(ctx, params, pw)
+		err := s.rawDiff(ctx, pw, params, files...)
 		if err != nil {
 			cherr <- err
 			return
