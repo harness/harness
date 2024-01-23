@@ -48,8 +48,8 @@ ARG GITNESS_VERSION_PATCH
 ARG TARGETOS TARGETARCH
 
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
-        wget -P ~ https://musl.cc/aarch64-linux-musl-cross.tgz && \
-        tar -xvf ~/aarch64-linux-musl-cross.tgz -C ~ ; \
+    wget -P ~ https://musl.cc/aarch64-linux-musl-cross.tgz && \
+    tar -xvf ~/aarch64-linux-musl-cross.tgz -C ~ ; \
     fi
 
 # set required build flags
@@ -64,7 +64,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 ### Pull CA Certs
 FROM --platform=$BUILDPLATFORM alpine:latest as cert-image
 
-RUN apk --update add ca-certificates
+RUN apk --update add ca-certificates tini
 
 # ---------------------------------------------------------#
 #                   Create final image                     #
@@ -85,8 +85,9 @@ ENV GITNESS_TOKEN_COOKIE_NAME=token
 
 COPY --from=builder /app/gitness /app/gitness
 COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=cert-image --chmod=700 /sbin/tini /sbin/tini
 
 EXPOSE 3000
 EXPOSE 3001
 
-ENTRYPOINT [ "/app/gitness", "server" ]
+ENTRYPOINT [ "/sbin/tini", "--", "/app/gitness", "server" ]
