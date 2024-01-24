@@ -483,6 +483,7 @@ const TextExtensions = [
   'alpine',
   'tf',
   'tfvars',
+  'tfstate',
   'hcl'
 ]
 

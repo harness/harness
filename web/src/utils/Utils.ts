@@ -471,7 +471,8 @@ const EXTENSION_TO_LANG: Record<string, string> = {
   tsx: 'typescript',
   tf: 'hcl',
   tfvars: 'hcl',
-  workspace: 'python'
+  workspace: 'python',
+  tfstate: 'hcl'
 }
 
 export const PLAIN_TEXT = 'plaintext'
