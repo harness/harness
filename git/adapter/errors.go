@@ -27,7 +27,7 @@ import (
 var (
 	ErrRepositoryPathEmpty = errors.InvalidArgument("repository path cannot be empty")
 	ErrBranchNameEmpty     = errors.InvalidArgument("branch name cannot be empty")
-	ErrParseDiffHunkHeader = errors.Internal("failed to parse diff hunk header")
+	ErrParseDiffHunkHeader = errors.Internal(nil, "failed to parse diff hunk header")
 )
 
 type runStdError struct {
@@ -64,7 +64,7 @@ func (r *runStdError) IsExitCode(code int) bool {
 // Always logs the full message with error as warning.
 func processGiteaErrorf(err error, format string, args ...interface{}) error {
 	// create fallback error returned if we can't map it
-	fallbackErr := errors.Internal(format, args...)
+	fallbackErr := errors.Internal(err, format, args...)
 
 	// always log internal error together with message.
 	log.Warn().Msgf("%v: [GITEA] %v", fallbackErr, err)
@@ -125,7 +125,7 @@ func mapGiteaRunStdError(err gitea.RunStdError, fallback error) error {
 	// exit status 128 - fatal: unable to access 'http://127.0.0.1:4101/hvfl1xj5fojwlrw77xjflw80uxjous254jrr967rvj/':
 	//   Failed to connect to 127.0.0.1 port 4101 after 4 ms: Connection refused
 	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "Failed to connect"):
-		return errors.Internal("failed to connect")
+		return errors.Internal(err, "failed to connect")
 
 	default:
 		return fallback

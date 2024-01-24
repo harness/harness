@@ -347,7 +347,7 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 		types.NilSHA,
 	)
 	if types.IsNotFoundError(err) {
-		return errors.NotFound("tag %q does not exist", params.Name, err)
+		return errors.NotFound("tag %q does not exist", params.Name)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to delete tag reference: %w", err)

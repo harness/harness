@@ -91,7 +91,7 @@ func (r *SharedRepo) Clone(ctx context.Context, branchName string) error {
 		} else if matched, _ = regexp.MatchString(".* repository .* does not exist.*", stderr); matched {
 			return errors.NotFound("repository '%s' does not exist", r.repoUID)
 		}
-		return errors.Internal("error while cloning repository: %s", stderr)
+		return errors.Internal(nil, "error while cloning repository: %s", stderr)
 	}
 	gitRepo, err := gitea.OpenRepository(ctx, r.tmpPath)
 	if err != nil {

@@ -111,7 +111,7 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 		targetCommit.SHA,
 	)
 	if errors.IsConflict(err) {
-		return nil, errors.Conflict("branch %q already exists", params.BranchName, err)
+		return nil, errors.Conflict("branch %q already exists", params.BranchName)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to update branch reference: %w", err)
@@ -171,7 +171,7 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 		types.NilSHA,
 	)
 	if types.IsNotFoundError(err) {
-		return errors.NotFound("branch %q does not exist", params.BranchName, err)
+		return errors.NotFound("branch %q does not exist", params.BranchName)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to delete branch reference: %w", err)

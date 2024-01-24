@@ -271,7 +271,7 @@ func (s *Service) prepareTreeEmptyRepo(ctx context.Context, shared *adapter.Shar
 
 		reader := bytes.NewReader(action.Payload)
 		if err = createFile(ctx, shared, nil, filePath, defaultFilePermission, reader); err != nil {
-			return errors.Internal("failed to create file '%s': %w", action.Path, err)
+			return errors.Internal(err, "failed to create file '%s'", action.Path)
 		}
 	}
 
@@ -343,7 +343,7 @@ func (s *Service) processAction(
 ) (err error) {
 	filePath := files.CleanUploadFileName(action.Path)
 	if filePath == "" {
-		return errors.InvalidArgument("invalid path: %w", err)
+		return errors.InvalidArgument("path cannot be empty")
 	}
 
 	reader := bytes.NewReader(action.Payload)

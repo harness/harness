@@ -303,6 +303,6 @@ func mapNodeModeToContentType(m git.TreeNodeMode) (ContentType, error) {
 	case git.TreeNodeModeTree:
 		return ContentTypeDir, nil
 	default:
-		return ContentTypeFile, errors.Internal("unsupported tree node mode '%s'", m)
+		return ContentTypeFile, errors.Internal(nil, "unsupported tree node mode '%s'", m)
 	}
 }

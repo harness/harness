@@ -117,7 +117,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		case enum.ContentEncodingTypeBase64:
 			rawPayload, err = base64.StdEncoding.DecodeString(action.Payload)
 			if err != nil {
-				return types.CommitFilesResponse{}, nil, errors.InvalidArgument("failed to decode base64 payload", err)
+				return types.CommitFilesResponse{}, nil, errors.Internal(err, "failed to decode base64 payload")
 			}
 		case enum.ContentEncodingTypeUTF8:
 			fallthrough

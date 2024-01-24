@@ -17,7 +17,6 @@ package render
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,6 +24,7 @@ import (
 	"strconv"
 
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
@@ -41,7 +41,13 @@ func init() {
 
 // TranslatedUserError writes the translated user error of the provided error.
 func TranslatedUserError(w http.ResponseWriter, err error) {
-	log.Warn().Msgf("operation resulted in user facing error. Internal details: %s", err)
+	statusError := errors.AsError(err)
+	format := "operation resulted in user facing error. Internal details: %s"
+	if statusError != nil && statusError.Status == errors.StatusInternal {
+		log.Error().Msgf(format, statusError.Err)
+	} else {
+		log.Warn().Msgf(format, err)
+	}
 	UserError(w, usererror.Translate(err))
 }
 

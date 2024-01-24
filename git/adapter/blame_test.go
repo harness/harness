@@ -163,7 +163,7 @@ func TestBlameReader_NextPart_CmdError(t *testing.T) {
 	}
 
 	_, err := reader.NextPart()
-	if s := errors.AsError(err); s.Status != errors.StatusInternal || s.Message != "dummy error" {
-		t.Errorf("expected Internal error but got: %v", err)
+	if s := errors.AsError(err); s.Status != errors.StatusInternal || s.Message != "failed to start git blame command" {
+		t.Errorf("expected %v, but got: %v", s.Message, err)
 	}
 }

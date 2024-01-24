@@ -255,12 +255,12 @@ func (s *Service) SyncRepository(
 	// create repo if requested
 	_, err := os.Stat(repoPath)
 	if err != nil && !os.IsNotExist(err) {
-		return nil, errors.Internal("failed to create repo: %w", err)
+		return nil, errors.Internal(err, "failed to create repository")
 	}
 
 	if os.IsNotExist(err) {
 		if !params.CreateIfNotExists {
-			return nil, errors.NotFound("repo not found")
+			return nil, errors.NotFound("repository not found")
 		}
 
 		// the default branch doesn't matter for a sync,
@@ -459,7 +459,7 @@ func (s *Service) createRepositoryInternal(
 			break
 		}
 		if err != nil {
-			return errors.Internal("failed to receive file: %v", err)
+			return errors.Internal(err, "failed to receive file %s", file)
 		}
 
 		filePaths = append(filePaths, filePath)
@@ -495,8 +495,8 @@ func (s *Service) createRepositoryInternal(
 		hookPath := path.Join(repoPath, gitHooksDir, hook)
 		err = os.Symlink(s.gitHookPath, hookPath)
 		if err != nil {
-			return errors.Internal("failed to setup symlink for hook '%s' ('%s' -> '%s'): %s",
-				hook, hookPath, s.gitHookPath, err)
+			return errors.Internal(err, "failed to setup symlink for hook '%s' ('%s' -> '%s')",
+				hook, hookPath, s.gitHookPath)
 		}
 	}
 

@@ -53,7 +53,10 @@ func (s *Service) PushRemote(ctx context.Context, params *PushRemoteParams) erro
 		return fmt.Errorf("PushRemote: failed to open repo: %w", err)
 	}
 	if ok, err := repo.IsEmpty(); ok {
-		return errors.InvalidArgument("cannot push empty repo", err)
+		if err != nil {
+			return errors.Internal(err, "push to repo failed")
+		}
+		return errors.InvalidArgument("cannot push empty repo")
 	}
 
 	err = s.adapter.Push(ctx, repoPath, types.PushOptions{

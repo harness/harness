@@ -198,13 +198,13 @@ func (r *BlameReader) NextPart() (*types.BlamePart, error) {
 		case blamePorcelainOutOfRangeErrorRE.MatchString(line):
 			return nil, errors.InvalidArgument(line)
 		default:
-			return nil, errors.Internal(line)
+			return nil, errors.Internal(nil, "failed to get next part: %s", line)
 		}
 	}
 
 	// This error can happen if the command git failed to start. Triggered by pipe writer's CloseWithError call.
 	if !errors.Is(err, io.EOF) {
-		return nil, errors.Internal(err.Error())
+		return nil, errors.Internal(err, "failed to start git blame command")
 	}
 
 	var part *types.BlamePart

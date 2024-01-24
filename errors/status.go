@@ -34,17 +34,27 @@ const (
 )
 
 type Error struct {
-	// Source error
-	Err error
-
 	// Machine-readable status code.
 	Status Status
 
 	// Human-readable error message.
 	Message string
 
+	// Source error
+	Err error
+
 	// Details
 	Details map[string]any
+}
+
+func (e *Error) SetErr(err error) *Error {
+	e.Err = err
+	return e
+}
+
+func (e *Error) SetDetails(details map[string]any) *Error {
+	e.Details = details
+	return e
 }
 
 func (e *Error) Unwrap() error {
@@ -104,48 +114,13 @@ func AsError(err error) (e *Error) {
 	return
 }
 
-type Arg struct {
-	Key   string
-	Value any
-}
-
 // Format is a helper function to return an Error with a given status and formatted message.
 func Format(code Status, format string, args ...interface{}) *Error {
-	var (
-		err     error
-		details []Arg
-		newArgs []any
-	)
-
-	for _, arg := range args {
-		if arg == nil {
-			continue
-		}
-		switch obj := arg.(type) {
-		case error:
-			err = obj
-		case Arg:
-			details = append(details, obj)
-		case []Arg:
-			details = append(details, obj...)
-		default:
-			newArgs = append(newArgs, obj)
-		}
-	}
-
-	msg := fmt.Sprintf(format, newArgs...)
-	newErr := &Error{
+	msg := fmt.Sprintf(format, args...)
+	return &Error{
 		Status:  code,
 		Message: msg,
-		Err:     err,
 	}
-	if len(details) > 0 {
-		newErr.Details = make(map[string]any)
-		for _, arg := range details {
-			newErr.Details[arg.Key] = arg.Value
-		}
-	}
-	return newErr
 }
 
 // NotFound is a helper function to return an not found Error.
@@ -159,8 +134,11 @@ func InvalidArgument(format string, args ...interface{}) *Error {
 }
 
 // Internal is a helper function to return an internal Error.
-func Internal(format string, args ...interface{}) *Error {
-	return Format(StatusInternal, format, args...)
+func Internal(err error, format string, args ...interface{}) *Error {
+	msg := fmt.Sprintf(format, args...)
+	return Format(StatusInternal, msg).SetErr(
+		fmt.Errorf("%s: %w", msg, err),
+	)
 }
 
 // Conflict is a helper function to return an conflict Error.

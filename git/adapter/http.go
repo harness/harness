@@ -42,18 +42,18 @@ func (a Adapter) InfoRefs(
 			Dir:    repoPath,
 			Stdout: cmd,
 		}); err != nil {
-		return errors.Internal("InfoRefsUploadPack: cmd: %v", err)
+		return errors.Internal(err, "InfoRefs service %s failed", service)
 	}
 	if _, err := w.Write(packetWrite("# service=git-" + service + "\n")); err != nil {
-		return errors.Internal("InfoRefsUploadPack: pktLine: %v", err)
+		return errors.Internal(err, "failed to write pktLine in InfoRefs %s service", service)
 	}
 
 	if _, err := w.Write([]byte("0000")); err != nil {
-		return errors.Internal("InfoRefsUploadPack: flush: %v", err)
+		return errors.Internal(err, "failed to flush data in InfoRefs %s service", service)
 	}
 
 	if _, err := io.Copy(w, cmd); err != nil {
-		return errors.Internal("InfoRefsUploadPack: %v", err)
+		return errors.Internal(err, "streaming InfoRefs %s service failed", service)
 	}
 	return nil
 }
