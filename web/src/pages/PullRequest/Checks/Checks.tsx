@@ -138,9 +138,9 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const nodeMapItem = (executionApiCallData.data.executionGraph.nodeMap as any)[item]
-        if (nodeMapItem) {
+        if (nodeMapItem && nodeMapItem?.stepParameters) {
           // Assume that you generate a key-yarn value pair for the map here
-          const key = nodeMapItem.stepParameters.name
+          const key = nodeMapItem.stepParameters.name ? nodeMapItem.stepParameters.name : ''
           const logBaseKey = nodeMapItem.logBaseKey
           const status = nodeMapItem.status
           const timeStart = nodeMapItem.startTs
