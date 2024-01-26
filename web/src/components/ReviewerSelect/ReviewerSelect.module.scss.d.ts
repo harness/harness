@@ -26,8 +26,12 @@ export declare const listContainer: string
 export declare const main: string
 export declare const menuItem: string
 export declare const newBtnText: string
+export declare const noReviewerContainer: string
+export declare const noTextContainer: string
+export declare const noWrapText: string
 export declare const owner: string
 export declare const popover: string
 export declare const prefix: string
+export declare const reviewerPopover: string
 export declare const tabContainer: string
 export declare const textInputMain: string

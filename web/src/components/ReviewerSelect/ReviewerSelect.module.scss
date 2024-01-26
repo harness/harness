@@ -38,6 +38,7 @@
 }
 
 .main {
+  max-width: 376px;
   .input {
     margin-bottom: 0 !important;
 
@@ -101,4 +102,19 @@
 
 .avatar {
   padding: var(--spacing-small) 0;
+}
+
+.noTextContainer {
+  .noWrapText {
+    white-space: nowrap !important;
+  }
+}
+.noReviewerContainer {
+  max-width: 356px;
+  padding-right: 2px !important;
+}
+
+.reviewerPopover {
+  z-index: 999;
+  padding: var(--spacing-small) !important;
 }

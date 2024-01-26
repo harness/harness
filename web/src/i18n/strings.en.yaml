@@ -515,7 +515,7 @@ addLabel: Add
 updateLabel: Update
 users: Users
 findAUser: Find a user
-reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
+reviewerNotFound: 'Reviewer {reviewer} not found.'
 spaces: Projects
 space: Project
 selectSpace: Select project here

@@ -25,12 +25,13 @@ import {
   TextInput,
   Text,
   ButtonSize,
-  Avatar
+  Avatar,
+  StringSubstitute
 } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
-import { String, useStrings } from 'framework/strings'
+import { useStrings } from 'framework/strings'
 import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { CodeIcon } from 'utils/GitUtils'
@@ -120,6 +121,7 @@ function ReviewerList({
 
   setLoading
 }: ReviewerListProps) {
+  const { getString } = useStrings()
   const [page] = usePageIndex(1)
   const { routingId } = useAppContext()
   const { data, error, loading } = useGet<Unknown[]>({
@@ -177,10 +179,23 @@ function ReviewerList({
       )}
 
       {data?.length === 0 && (
-        <Container flex={{ align: 'center-center' }} padding="large">
+        <Container className={css.noTextContainer} flex={{ align: 'center-center' }} padding="large">
           {
-            <Text padding={{ top: 'small' }}>
-              <String stringID="reviewerNotFound" tagName="span" vars={{ reviewer: query }} useRichText />
+            <Text className={css.noWrapText} flex padding={{ top: 'small' }}>
+              <StringSubstitute
+                str={getString('reviewerNotFound')}
+                vars={{
+                  reviewer: (
+                    <Text
+                      padding={{ right: 'tiny' }}
+                      tooltipProps={{ popoverClassName: css.reviewerPopover }}
+                      className={css.noReviewerContainer}
+                      lineClamp={1}>
+                      <strong> {query}</strong>
+                    </Text>
+                  )
+                }}
+              />
             </Text>
           }
         </Container>
