@@ -35,7 +35,7 @@ import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
-import { BranchTargetType, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
+import { BranchTargetType, SettingTypeMode, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { REGEX_VALID_REPO_NAME, getErrorMessage, permissionProps, rulesFormInitialPayload } from 'utils/Utils'
 import type {
@@ -60,12 +60,13 @@ const BranchProtectionForm = (props: {
   editMode: boolean
   repoMetadata?: TypesRepository | undefined
   refetchRules: () => void
+  settingSectionMode: SettingTypeMode
 }) => {
   const { routes, routingId, standalone, hooks } = useAppContext()
 
   const { ruleId } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
-  const { editMode = false, repoMetadata, ruleUid, refetchRules } = props
+  const { editMode = false, repoMetadata, ruleUid, refetchRules, settingSectionMode } = props
   const { getString } = useStrings()
   const { data: rule } = useGet<OpenapiRule>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/rules/${ruleId}`,
@@ -92,7 +93,6 @@ const BranchProtectionForm = (props: {
       debounce: 500
     }
   })
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformDataToArray = (data: any) => {
     return Object.keys(data).map(key => {
@@ -129,10 +129,11 @@ const BranchProtectionForm = (props: {
     [users]
   )
 
-  const handleSubmit = async (operation: Promise<OpenapiRule>, successMessage: string) => {
+  const handleSubmit = async (operation: Promise<OpenapiRule>, successMessage: string, resetForm: () => void) => {
     try {
       await operation
       showSuccess(successMessage)
+      resetForm()
       history.push(
         routes.toCODESettings({
           repoPath: repoMetadata?.path as string,
@@ -195,7 +196,9 @@ const BranchProtectionForm = (props: {
         autoDelete: (rule.definition as ProtectionBranch)?.pullreq?.merge?.delete_branch,
         blockBranchCreation: (rule.definition as ProtectionBranch)?.lifecycle?.create_forbidden,
         blockBranchDeletion: (rule.definition as ProtectionBranch)?.lifecycle?.delete_forbidden,
-        requirePr: (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden
+        requirePr: (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden,
+        targetSet: false,
+        bypassSet: false
       }
     }
 
@@ -220,7 +223,7 @@ const BranchProtectionForm = (props: {
         name: yup.string().trim().required().matches(REGEX_VALID_REPO_NAME, getString('validation.nameLogic')),
         minReviewers: yup.number().typeError(getString('enterANumber'))
       })}
-      onSubmit={async formData => {
+      onSubmit={async (formData, { resetForm }) => {
         const stratArray = [
           formData.squashMerge && 'squash',
           formData.rebaseMerge && 'rebase',
@@ -278,14 +281,16 @@ const BranchProtectionForm = (props: {
           delete (payload?.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count
         }
         if (editMode) {
-          handleSubmit(updateRule(payload), getString('branchProtection.ruleUpdated'))
+          handleSubmit(updateRule(payload), getString('branchProtection.ruleUpdated'), resetForm)
         } else {
-          handleSubmit(mutate(payload), getString('branchProtection.ruleCreated'))
+          handleSubmit(mutate(payload), getString('branchProtection.ruleCreated'), resetForm)
         }
       }}>
       {formik => {
-        const targetList = formik.values.targetList
-        const bypassList = formik.values.bypassList || []
+        const targetList =
+          settingSectionMode === SettingTypeMode.EDIT || formik.values.targetSet ? formik.values.targetList : []
+        const bypassList =
+          settingSectionMode === SettingTypeMode.EDIT || formik.values.bypassSet ? formik.values.bypassList : []
         const minReviewers = formik.values.requireMinReviewers
         const statusChecks = formik.values.statusChecks
         const limitMergeStrats = formik.values.limitMergeStrategies
@@ -294,6 +299,7 @@ const BranchProtectionForm = (props: {
         const filteredUserOptions = userOptions.filter(
           (item: SelectOption) => !bypassList.includes(item.value as string)
         )
+
         return (
           <FormikForm>
             <Container className={css.main} padding="xlarge">
@@ -379,6 +385,8 @@ const BranchProtectionForm = (props: {
                       }}
                       onClick={() => {
                         if (formik.values.target !== '') {
+                          formik.setFieldValue('targetSet', true)
+
                           targetList.push([BranchTargetType.INCLUDE, formik.values.target])
                           formik.setFieldValue('targetList', targetList)
                           formik.setFieldValue('target', '')
@@ -392,6 +400,8 @@ const BranchProtectionForm = (props: {
                             text={<Text font={{ variation: FontVariation.BODY2 }}>{option.title}</Text>}
                             onClick={() => {
                               if (formik.values.target !== '') {
+                                formik.setFieldValue('targetSet', true)
+
                                 targetList.push([BranchTargetType.EXCLUDE, formik.values.target])
                                 formik.setFieldValue('targetList', targetList)
                                 formik.setFieldValue('target', '')
@@ -449,6 +459,7 @@ const BranchProtectionForm = (props: {
                     bypassList?.push(bypassEntry)
                     const uniqueArr = Array.from(new Set(bypassList))
                     formik.setFieldValue('bypassList', uniqueArr)
+                    formik.setFieldValue('bypassSet', true)
                     setUserArrayState([...uniqueArr])
                   }}
                   name={'bypassSelect'}></FormInput.Select>

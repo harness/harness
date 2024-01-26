@@ -389,6 +389,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
           repoMetadata={repoMetadata}
           ruleUid={curRuleName}
           refetchRules={refetchRules}
+          settingSectionMode={settingSectionMode}
         />
       ) : (
         <Container padding="xlarge">

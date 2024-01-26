@@ -356,7 +356,9 @@ export const rulesFormInitialPayload = {
   autoDelete: false,
   blockBranchCreation: false,
   blockBranchDeletion: false,
-  requirePr: false
+  requirePr: false,
+  bypassSet: false,
+  targetSet: false
 }
 
 /**
