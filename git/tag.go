@@ -17,14 +17,12 @@ package git
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/adapter"
 	"github.com/harness/gitness/git/types"
 
-	"code.gitea.io/gitea/modules/git"
 	"github.com/rs/zerolog/log"
 )
 
@@ -226,6 +224,7 @@ func (s *Service) ListCommitTags(
 	}, nil
 }
 
+//nolint:gocognit
 func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagParams) (*CreateCommitTagOutput, error) {
 	if err := params.Validate(); err != nil {
 		return nil, err
@@ -233,74 +232,101 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	repo, err := git.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, fmt.Errorf("CreateCommitTag: failed to open repo: %w", err)
-	}
-
-	sharedRepo, err := s.adapter.SharedRepository(s.tmpDir, params.RepoUID, repo.Path)
-	if err != nil {
-		return nil, fmt.Errorf("CreateCommitTag: failed to create new shared repo: %w", err)
-	}
-
-	defer sharedRepo.Close(ctx)
-
-	// clone repo (with HEAD branch - target might be anything)
-	err = sharedRepo.Clone(ctx, "")
-	if err != nil {
-		return nil, fmt.Errorf("CreateCommitTag: failed to clone shared repo: %w", err)
-	}
-
-	// get target commit (as target could be branch/tag/commit, and tag can't be pushed using source:destination syntax)
-	// NOTE: in case the target is an annotated tag, the targetCommit title and message are that of the tag, not the commit
-	targetCommit, err := sharedRepo.GetCommit(strings.TrimSpace(params.Target))
-	if git.IsErrNotExist(err) {
+	targetCommit, err := s.adapter.GetCommit(ctx, repoPath, params.Target)
+	if errors.IsNotFound(err) {
 		return nil, errors.NotFound("target '%s' doesn't exist", params.Target)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to get commit id for target '%s': %w", params.Target, err)
+		return nil, fmt.Errorf("CreateCommitTag: failed to get commit id for target '%s': %w", params.Target, err)
 	}
 
-	tagger := params.Actor
-	if params.Tagger != nil {
-		tagger = *params.Tagger
+	tagName := params.Name
+	tagRef := adapter.GetReferenceFromTagName(tagName)
+	var tag *types.Tag
+
+	sha, err := s.adapter.GetRef(ctx, repoPath, tagRef)
+	// TODO: Change GetRef to use errors.NotFound and then remove types.IsNotFoundError(err) below.
+	if err != nil && !types.IsNotFoundError(err) && !errors.IsNotFound(err) {
+		return nil, fmt.Errorf("CreateCommitTag: failed to verify tag existence: %w", err)
 	}
-	taggerDate := time.Now().UTC()
-	if params.TaggerDate != nil {
-		taggerDate = *params.TaggerDate
+	if err == nil && sha != "" {
+		return nil, errors.Conflict("tag '%s' already exists", tagName)
 	}
 
-	createTagRequest := &types.CreateTagOptions{
-		Message: params.Message,
-		Tagger: types.Signature{
-			Identity: types.Identity{
-				Name:  tagger.Name,
-				Email: tagger.Email,
+	err = func() error {
+		// Create a directory for the temporary shared repository.
+		sharedRepo, err := s.adapter.SharedRepository(s.tmpDir, params.RepoUID, repoPath)
+		if err != nil {
+			return fmt.Errorf("failed to create new shared repo: %w", err)
+		}
+		defer sharedRepo.Close(ctx)
+
+		// Create bare repository with alternates pointing to the original repository.
+		err = sharedRepo.InitAsShared(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to create temp repo with alternates: %w", err)
+		}
+
+		tagger := params.Actor
+		if params.Tagger != nil {
+			tagger = *params.Tagger
+		}
+		taggerDate := time.Now().UTC()
+		if params.TaggerDate != nil {
+			taggerDate = *params.TaggerDate
+		}
+
+		createTagRequest := &types.CreateTagOptions{
+			Message: params.Message,
+			Tagger: types.Signature{
+				Identity: types.Identity{
+					Name:  tagger.Name,
+					Email: tagger.Email,
+				},
+				When: taggerDate,
 			},
-			When: taggerDate,
-		},
-	}
-	err = s.adapter.CreateTag(
-		ctx,
-		sharedRepo.Path(),
-		params.Name,
-		targetCommit.ID.String(),
-		createTagRequest)
-	if errors.Is(err, types.ErrAlreadyExists) {
-		return nil, errors.Conflict("tag '%s' already exists", params.Name)
-	}
+		}
+		err = s.adapter.CreateTag(
+			ctx,
+			sharedRepo.Path(),
+			tagName,
+			targetCommit.SHA,
+			createTagRequest)
+		if err != nil {
+			return fmt.Errorf("failed to create tag '%s': %w", tagName, err)
+		}
+
+		tag, err = s.adapter.GetAnnotatedTag(ctx, sharedRepo.Path(), tagName)
+		if err != nil {
+			return fmt.Errorf("failed to read annotated tag after creation: %w", err)
+		}
+
+		err = sharedRepo.MoveObjects(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to move git objects: %w", err)
+		}
+
+		return nil
+	}()
 	if err != nil {
-		return nil, fmt.Errorf("CreateCommitTag: failed to create tag '%s': %w", params.Name, err)
+		return nil, fmt.Errorf("CreateCommitTag: failed to create tag in shared repository: %w", err)
 	}
 
-	envs := CreateEnvironmentForPush(ctx, params.WriteParams)
-	if err = sharedRepo.PushTag(ctx, params.Name, true, envs...); err != nil {
-		return nil, fmt.Errorf("CreateCommitTag: failed to push the tag to remote")
+	err = s.adapter.UpdateRef(
+		ctx,
+		params.EnvVars,
+		repoPath,
+		tagRef,
+		types.NilSHA,
+		tag.Sha,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create tag reference: %w", err)
 	}
 
 	var commitTag *CommitTag
 	if params.Message != "" {
-		tag, err := s.adapter.GetAnnotatedTag(ctx, repoPath, params.Name)
+		tag, err = s.adapter.GetAnnotatedTag(ctx, repoPath, params.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read annotated tag after creation: %w", err)
 		}
@@ -309,19 +335,11 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 		commitTag = &CommitTag{
 			Name:        params.Name,
 			IsAnnotated: false,
-			SHA:         targetCommit.ID.String(),
+			SHA:         targetCommit.SHA,
 		}
 	}
 
-	// gitea overwrites some commit details in case getCommit(ref) was called with ref being a tag
-	// To avoid this issue, let's get the commit again using the actual id of the commit
-	// TODO: can we do this nicer?
-	rawCommit, err := s.adapter.GetCommit(ctx, repoPath, targetCommit.ID.String())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get the raw commit '%s' after tag creation: %w", targetCommit.ID.String(), err)
-	}
-
-	c, err := mapCommit(rawCommit)
+	c, err := mapCommit(targetCommit)
 	if err != nil {
 		return nil, err
 	}

@@ -19,7 +19,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
+	"os"
+	"path"
+	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -51,6 +56,7 @@ func NewSharedRepo(
 	if err != nil {
 		return nil, err
 	}
+
 	t := &SharedRepo{
 		adapter:        adapter,
 		repoUID:        repoUID,
@@ -74,6 +80,168 @@ func (r *SharedRepo) Close(ctx context.Context) {
 	if err := tempdir.RemoveTemporaryPath(r.tmpPath); err != nil {
 		log.Ctx(ctx).Err(err).Msgf("Failed to remove temporary path %s", r.tmpPath)
 	}
+}
+
+// filePriority is based on https://github.com/git/git/blob/master/tmp-objdir.c#L168
+func filePriority(name string) int {
+	switch {
+	case !strings.HasPrefix(name, "pack"):
+		return 0
+	case strings.HasSuffix(name, ".keep"):
+		return 1
+	case strings.HasSuffix(name, ".pack"):
+		return 2
+	case strings.HasSuffix(name, ".rev"):
+		return 3
+	case strings.HasSuffix(name, ".idx"):
+		return 4
+	default:
+		return 5
+	}
+}
+
+type fileEntry struct {
+	fileName string
+	fullPath string
+	relPath  string
+	priority int
+}
+
+func (r *SharedRepo) MoveObjects(ctx context.Context) error {
+	srcDir := path.Join(r.tmpPath, "objects")
+	dstDir := path.Join(r.remoteRepoPath, "objects")
+
+	var files []fileEntry
+
+	err := filepath.WalkDir(srcDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(srcDir, path)
+		if err != nil {
+			return fmt.Errorf("failed to get relative path: %w", err)
+		}
+
+		// avoid coping anything in the info/
+		if strings.HasPrefix(relPath, "info/") {
+			return nil
+		}
+
+		fileName := filepath.Base(relPath)
+
+		files = append(files, fileEntry{
+			fileName: fileName,
+			fullPath: path,
+			relPath:  relPath,
+			priority: filePriority(fileName),
+		})
+
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to walk source directory: %w", err)
+	}
+
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].priority < files[j].priority // 0 is top priority, 5 is lowest priority
+	})
+
+	for _, f := range files {
+		dstPath := filepath.Join(dstDir, f.relPath)
+
+		err = os.MkdirAll(filepath.Dir(dstPath), os.ModePerm)
+		if err != nil {
+			return err
+		}
+
+		// Try to move the file
+
+		errRename := os.Rename(f.fullPath, dstPath)
+		if errRename == nil {
+			log.Ctx(ctx).Debug().
+				Str("object", f.relPath).
+				Msg("moved git object")
+			continue
+		}
+
+		// Try to copy the file
+
+		copyError := func() error {
+			srcFile, err := os.Open(f.fullPath)
+			if err != nil {
+				return fmt.Errorf("failed to open source file: %w", err)
+			}
+			defer func() { _ = srcFile.Close() }()
+
+			dstFile, err := os.Create(dstPath)
+			if err != nil {
+				return fmt.Errorf("failed to create target file: %w", err)
+			}
+			defer func() { _ = dstFile.Close() }()
+
+			_, err = io.Copy(dstFile, srcFile)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}()
+		if copyError != nil {
+			log.Ctx(ctx).Err(copyError).
+				Str("object", f.relPath).
+				Str("renameErr", errRename.Error()).
+				Msg("failed to move or copy git object")
+			return copyError
+		}
+
+		log.Ctx(ctx).Warn().
+			Str("object", f.relPath).
+			Str("renameErr", errRename.Error()).
+			Msg("copied git object")
+	}
+
+	return nil
+}
+
+func (r *SharedRepo) InitAsShared(ctx context.Context) error {
+	args := []string{"init", "--bare"}
+	if _, stderr, err := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{
+		Dir: r.tmpPath,
+	}); err != nil {
+		return errors.Internal(err, "error while creating empty repository: %s", stderr)
+	}
+
+	if err := func() error {
+		alternates := filepath.Join(r.tmpPath, "objects", "info", "alternates")
+		f, err := os.OpenFile(alternates, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+		if err != nil {
+			return fmt.Errorf("failed to open alternates file '%s': %w", alternates, err)
+		}
+		defer func() { _ = f.Close() }()
+
+		data := filepath.Join(r.remoteRepoPath, "objects")
+		if _, err = fmt.Fprintln(f, data); err != nil {
+			return fmt.Errorf("failed to write alternates file '%s': %w", alternates, err)
+		}
+
+		return nil
+	}(); err != nil {
+		return errors.Internal(err, "failed to create alternate in empty repository: %s", err.Error())
+	}
+
+	gitRepo, err := gitea.OpenRepository(ctx, r.tmpPath)
+	if err != nil {
+		return processGiteaErrorf(err, "failed to open repo")
+	}
+
+	r.repo = gitRepo
+
+	return nil
 }
 
 // Clone the base repository to our path and set branch as the HEAD.
@@ -117,7 +285,15 @@ func (r *SharedRepo) Init(ctx context.Context) error {
 // SetDefaultIndex sets the git index to our HEAD.
 func (r *SharedRepo) SetDefaultIndex(ctx context.Context) error {
 	if _, _, err := gitea.NewCommand(ctx, "read-tree", "HEAD").RunStdString(&gitea.RunOpts{Dir: r.tmpPath}); err != nil {
-		return fmt.Errorf("SetDefaultIndex: %w", err)
+		return fmt.Errorf("failed to git read-tree HEAD: %w", err)
+	}
+	return nil
+}
+
+// SetIndex sets the git index to the provided treeish.
+func (r *SharedRepo) SetIndex(ctx context.Context, treeish string) error {
+	if _, _, err := gitea.NewCommand(ctx, "read-tree", treeish).RunStdString(&gitea.RunOpts{Dir: r.tmpPath}); err != nil {
+		return fmt.Errorf("failed to git read-tree %s: %w", treeish, err)
 	}
 	return nil
 }
