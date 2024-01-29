@@ -53,7 +53,7 @@ interface SelectedItemDataInterface {
   stage_id: string
 }
 
-export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadata, prChecksDecisionResult }) => {
+export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, prChecksDecisionResult }) => {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes, standalone } = useAppContext()
@@ -169,7 +169,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
           <Split split="vertical" size={400} minSize={300} maxSize={700} primary="first">
             <ChecksMenu
               repoMetadata={repoMetadata}
-              pullRequestMetadata={pullRequestMetadata}
+              pullReqMetadata={pullReqMetadata}
               prChecksDecisionResult={prChecksDecisionResult}
               onDataItemChanged={data => {
                 setTimeout(() => setSelectedItemData(data), 0)
@@ -232,7 +232,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
                     <Truthy>
                       <CheckPipelineSteps
                         repoMetadata={repoMetadata}
-                        pullRequestMetadata={pullRequestMetadata}
+                        pullReqMetadata={pullReqMetadata}
                         pipelineName={selectedItemData?.uid as string}
                         stage={selectedStage as TypesStage}
                         executionNumber={get(selectedItemData, 'payload.data.execution_number', '')}

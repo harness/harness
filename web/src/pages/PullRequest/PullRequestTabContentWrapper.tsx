@@ -23,7 +23,7 @@ interface PullRequestTabContentWrapperProps {
   className?: string
   loading?: boolean
   error?: Unknown
-  onRetry: () => void
+  onRetry?: () => void
 }
 
 export const PullRequestTabContentWrapper: React.FC<PullRequestTabContentWrapperProps> = ({

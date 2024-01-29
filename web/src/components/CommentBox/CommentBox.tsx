@@ -15,14 +15,13 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useResizeDetector } from 'react-resize-detector'
 import type { EditorView } from '@codemirror/view'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
 import { Container, Layout, Avatar, TextInput, Text, FlexExpander, Button } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import { noop } from 'lodash-es'
+import { isEqual, noop } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
@@ -31,8 +30,9 @@ import type { TypesRepository } from 'services/code'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
-import { ButtonRoleProps, CodeCommentState } from 'utils/Utils'
-import { useEmitCodeCommentStatus } from 'hooks/useEmitCodeCommentStatus'
+import { ButtonRoleProps } from 'utils/Utils'
+import { useResizeObserver } from 'hooks/useResizeObserver'
+import { useCustomEventListener } from 'hooks/useEventListener'
 import css from './CommentBox.module.scss'
 
 export interface CommentItem<T = unknown> {
@@ -68,20 +68,6 @@ export enum CommentBoxOutletPosition {
 }
 
 export type CommentItemsHandler<T> = (t: T) => void
-export class SingleConsumerEventStream<T> {
-  consumerHandler: CommentItemsHandler<T> | undefined
-
-  subscribe(fn: CommentItemsHandler<T>): () => void {
-    this.consumerHandler = fn
-    return () => {
-      this.consumerHandler = undefined
-    }
-  }
-
-  publish(t: T) {
-    this.consumerHandler?.(t)
-  }
-}
 
 interface CommentBoxProps<T> {
   outerClassName?: string
@@ -95,14 +81,13 @@ interface CommentBoxProps<T> {
   hideCancel?: boolean
   currentUserName: string
   commentItems: CommentItem<T>[]
-  eventStream?: SingleConsumerEventStream<CommentItem<T>[]>
   handleAction: (
     action: CommentAction,
     content: string,
     atCommentItem?: CommentItem<T>
   ) => Promise<[boolean, CommentItem<T> | undefined]>
   onCancel?: () => void
-  setDirty: (dirty: boolean) => void
+  setDirty: React.Dispatch<React.SetStateAction<boolean>>
   outlets?: Partial<Record<CommentBoxOutletPosition, React.ReactNode>>
   autoFocusAndPosition?: boolean
   enableReplyPlaceHolder?: boolean
@@ -111,7 +96,7 @@ interface CommentBoxProps<T> {
   routingId: string
 }
 
-export const CommentBox = <T = unknown,>({
+const CommentBoxInternal = <T = unknown,>({
   outerClassName,
   editorClassName,
   boxClassName,
@@ -120,13 +105,12 @@ export const CommentBox = <T = unknown,>({
   width,
   fluid,
   commentItems = [],
-  eventStream,
   currentUserName,
   handleAction,
   onCancel = noop,
   hideCancel,
   resetOnSave,
-  setDirty: setDirtyProp,
+  setDirty,
   outlets = {},
   autoFocusAndPosition,
   enableReplyPlaceHolder,
@@ -136,42 +120,28 @@ export const CommentBox = <T = unknown,>({
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
-  const emitCodeCommentStatus = useEmitCodeCommentStatus({
-    id: comments?.[0]?.id,
-    onMatch: () => undefined
-  })
-  useEffect(() => {
-    if (!eventStream) {
-      return
-    }
-
-    const unsubscribe = eventStream.subscribe(updatedComments => {
-      // TODO: could be more efficient?
-      setComments([...updatedComments])
-
-      const payload = updatedComments[0]?.payload
-      if (payload && typeof payload == 'object') {
-        emitCodeCommentStatus(
-          'resolved' in payload && payload.resolved ? CodeCommentState.RESOLVED : CodeCommentState.ACTIVE
-        )
-      }
-    })
-
-    return () => {
-      unsubscribe() // Clean up the subscription on unmount
-    }
-  }, [eventStream, setComments, emitCodeCommentStatus])
-
+  const enableReplyPlaceHolderRef = useRef<boolean | undefined>(enableReplyPlaceHolder)
   const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(enableReplyPlaceHolder)
   const [markdown, setMarkdown] = useState(initialContent)
   const [dirties, setDirties] = useState<Record<string, boolean>>({})
-  const { ref } = useResizeDetector<HTMLDivElement>({
-    refreshMode: 'debounce',
-    handleWidth: false,
-    refreshRate: 50,
-    observerOptions: { box: 'border-box' },
-    onResize: () => onHeightChange(ref.current?.offsetHeight as number)
-  })
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useResizeObserver(
+    containerRef,
+    useCallback(dom => onHeightChange(dom.offsetHeight), [onHeightChange])
+  )
+
+  useCustomEventListener(
+    customEventForCommentWithId(comments?.[0]?.id),
+    useCallback((event: CustomEvent) => {
+      const updatedComments = event.detail
+      setComments(_comments => {
+        return isEqual(_comments, updatedComments) ? _comments : updatedComments
+      })
+    }, []),
+    () => !!comments?.[0]?.id
+  )
+
   const _onCancel = useCallback(() => {
     setMarkdown('')
     setShowReplyPlaceHolder(true)
@@ -192,22 +162,24 @@ export const CommentBox = <T = unknown,>({
   const viewRef = useRef<EditorView>()
 
   useEffect(() => {
-    setDirtyProp(Object.values(dirties).some(dirty => dirty))
-    return () => {
-      setDirtyProp(false)
-    }
-  }, [dirties]) // eslint-disable-line react-hooks/exhaustive-deps
+    setDirty(_oldDirty => {
+      const someDirty = Object.values(dirties).some(dirty => dirty)
+      return someDirty !== _oldDirty ? someDirty : _oldDirty
+    })
+  }, [dirties])
 
   return (
     <Container
       className={cx(css.main, { [css.fluid]: fluid }, outerClassName)}
       padding={!fluid ? 'medium' : undefined}
       width={width}
-      ref={ref}>
+      ref={containerRef}
+      data-comment-thread-id={comments?.[0]?.id || ''}>
       <Container className={cx(boxClassName, css.box)}>
         {outlets[CommentBoxOutletPosition.TOP]}
 
         <Layout.Vertical>
+          {/* CommentsThread is rendered only when comments.length > 0 */}
           <CommentsThread<T>
             repoMetadata={repoMetadata}
             commentItems={comments}
@@ -227,7 +199,7 @@ export const CommentBox = <T = unknown,>({
             }}
             outlets={outlets}
           />
-          <Match expr={showReplyPlaceHolder && enableReplyPlaceHolder}>
+          <Match expr={showReplyPlaceHolder && enableReplyPlaceHolderRef.current}>
             <Truthy>
               <Container>
                 <Layout.Horizontal
@@ -275,6 +247,11 @@ export const CommentBox = <T = unknown,>({
                         setMarkdown('')
                         setShowReplyPlaceHolder(true)
 
+                        // New comment? Enable the reply place-holder after saving
+                        if (!comments.length) {
+                          enableReplyPlaceHolderRef.current = true
+                        }
+
                         if (resetOnSave) {
                           viewRef.current?.dispatch({
                             changes: {
@@ -287,8 +264,6 @@ export const CommentBox = <T = unknown,>({
                           setComments([...comments, updatedItem as CommentItem<T>])
                         }
                       }
-                    } else {
-                      console.error('handleAction must be implemented...') // eslint-disable-line no-console
                     }
                   }}
                   secondarySaveButton={
@@ -477,5 +452,9 @@ const CommentsThread = <T = unknown,>({
     </Render>
   )
 }
+
+export const CommentBox = React.memo(CommentBoxInternal)
+
+export const customEventForCommentWithId = (id: number) => `CommentBoxCustomEvent-${id}`
 
 const CRLF = '\n'

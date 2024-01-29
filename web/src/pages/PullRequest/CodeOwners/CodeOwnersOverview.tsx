@@ -41,7 +41,7 @@ import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import { findChangeReqDecisions, findWaitingDecisions } from 'utils/Utils'
 import css from './CodeOwnersOverview.module.scss'
 
-interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   prChecksDecisionResult: PRChecksDecisionResult
   codeOwners?: TypesCodeOwnerEvaluation
   standalone: boolean
@@ -56,7 +56,7 @@ enum CodeOwnerReqDecision {
 export function CodeOwnersOverview({
   codeOwners,
   repoMetadata,
-  pullRequestMetadata,
+  pullReqMetadata,
   prChecksDecisionResult,
   standalone
 }: ChecksOverviewProps) {
@@ -103,16 +103,12 @@ export function CodeOwnersOverview({
   return codeOwners?.evaluation_entries?.length ? (
     <Container
       className={cx(css.main, { [css.codeOwner]: !standalone })}
-      margin={{ top: 'medium', bottom: pullRequestMetadata.description ? undefined : 'large' }}
+      margin={{ top: 'medium', bottom: pullReqMetadata.description ? undefined : 'large' }}
       style={{ '--border-color': Utils.getRealCSSColor(borderColor) } as React.CSSProperties}>
       <Match expr={isExpanded}>
         <Truthy>
           {codeOwners && (
-            <CodeOwnerSections
-              repoMetadata={repoMetadata}
-              pullRequestMetadata={pullRequestMetadata}
-              data={codeOwners}
-            />
+            <CodeOwnerSections repoMetadata={repoMetadata} pullReqMetadata={pullReqMetadata} data={codeOwners} />
           )}
         </Truthy>
         <Falsy>
@@ -141,15 +137,15 @@ export function CodeOwnersOverview({
   ) : null
 }
 
-interface CodeOwnerSectionsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface CodeOwnerSectionsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   data: TypesCodeOwnerEvaluation
 }
 
-const CodeOwnerSections: React.FC<CodeOwnerSectionsProps> = ({ repoMetadata, pullRequestMetadata, data }) => {
+const CodeOwnerSections: React.FC<CodeOwnerSectionsProps> = ({ repoMetadata, pullReqMetadata, data }) => {
   return (
     <Container className={css.checks}>
       <Layout.Vertical spacing="medium">
-        <CodeOwnerSection repoMetadata={repoMetadata} pullRequestMetadata={pullRequestMetadata} data={data} />
+        <CodeOwnerSection repoMetadata={repoMetadata} pullReqMetadata={pullReqMetadata} data={data} />
       </Layout.Vertical>
     </Container>
   )

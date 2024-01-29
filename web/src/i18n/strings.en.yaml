@@ -252,6 +252,8 @@ pr:
   showDiff: Show Diff
   fileDeleted: This file was deleted.
   fileUnchanged: File without changes.
+  diffTooLarge: Large diffs are not rendered by default.
+  fileBinary: Binary file not shown.
   showLink: '{count} changed {count|1:file,files}'
   diffStatsLabel: 'Showing {changedFilesLink} with {addedLines} {addedLines|1:addition,additions} and {deletedLines} {deletedLines|1:deletion,deletions} {configuration}'
   diffView: Diff View

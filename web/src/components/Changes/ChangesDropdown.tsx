@@ -26,8 +26,6 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import css from './ChangesDropdown.module.scss'
 
-const STICKY_TOP_POSITION = 64
-
 export const ChangesDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs }) => {
   const { getString } = useStrings()
 
@@ -75,20 +73,18 @@ export const ChangesDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs })
                   if (containerDOM) {
                     containerDOM.scrollIntoView()
 
-                    waitUntil(
-                      () => !!containerDOM.querySelector('[data-rendered="true"]'),
-                      () => {
-                        containerDOM.scrollIntoView()
+                    waitUntil({
+                      test: () => containerDOM.style.visibility === 'visible',
+                      onMatched: () => {
+                        containerDOM.scrollIntoView({ block: 'start' })
 
                         // Check to adjust scroll position to make sure content is not
                         // cut off due to current scroll position
                         if (containerDOM.getBoundingClientRect().y - STICKY_TOP_POSITION < 1) {
-                          if (STICKY_TOP_POSITION) {
-                            window.scroll({ top: window.scrollY - STICKY_TOP_POSITION })
-                          }
+                          window.scroll({ top: window.scrollY - STICKY_TOP_POSITION })
                         }
                       }
-                    )
+                    })
                   }
                 }}
               />
@@ -101,3 +97,5 @@ export const ChangesDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs })
     </Button>
   )
 }
+
+const STICKY_TOP_POSITION = 64

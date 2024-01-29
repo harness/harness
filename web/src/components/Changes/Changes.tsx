@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Container,
   FlexExpander,
@@ -23,35 +23,32 @@ import {
   Text,
   StringSubstitute,
   Button,
-  PageError
+  PageError,
+  useIsMounted
 } from '@harnessio/uicore'
+import { atom, useAtom } from 'jotai'
 import { Match, Case, Render } from 'react-jsx-match'
 import * as Diff2Html from 'diff2html'
 import cx from 'classnames'
-import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import { isEqual, noop } from 'lodash-es'
+import { isEqual, noop, throttle } from 'lodash-es'
+import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { normalizeGitRef, type GitInfoProps, FILE_VIEWED_OBSOLETE_SHA } from 'utils/GitUtils'
-import { PullRequestSection, formatNumber, getErrorMessage, voidFn } from 'utils/Utils'
+import { formatNumber, getErrorMessage, PullRequestSection, voidFn } from 'utils/Utils'
 import { DiffViewer } from 'components/DiffViewer/DiffViewer'
-import { useEventListener } from 'hooks/useEventListener'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import type {
-  TypesCommit,
-  TypesPullReqFileView,
-  TypesPullReq,
-  TypesPullReqActivity,
-  TypesPullReqStats
-} from 'services/code'
+import type { TypesPullReqFileView, TypesPullReq, TypesCommit } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { PlainButton } from 'components/PlainButton/PlainButton'
+import { useEventListener } from 'hooks/useEventListener'
+import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import ReviewSplitButton from './ReviewSplitButton/ReviewSplitButton'
@@ -71,14 +68,12 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   emptyMessage: string
   pullRequestMetadata?: TypesPullReq
   className?: string
-  onCommentUpdate: () => void
-  prStats?: TypesPullReqStats
-  onDataReady?: (data: DiffFileEntry[]) => void
   defaultCommitRange?: string[]
   scrollElement: HTMLElement
+  refetchActivities?: UseGetPullRequestInfoResult['refetchActivities']
 }
 
-export const Changes: React.FC<ChangesProps> = ({
+const ChangesInternal: React.FC<ChangesProps> = ({
   repoMetadata,
   targetRef: _targetRef,
   sourceRef: _sourceRef,
@@ -88,51 +83,23 @@ export const Changes: React.FC<ChangesProps> = ({
   emptyMessage,
   pullRequestMetadata,
   className,
-  onCommentUpdate,
-  prStats,
-  onDataReady,
-  defaultCommitRange,
-  scrollElement
+  defaultCommitRange = [],
+  scrollElement,
+  refetchActivities
 }) => {
   const { getString } = useStrings()
-  const history = useHistory()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
   const [lineBreaks, setLineBreaks] = useUserPreference(UserPreference.DIFF_LINE_BREAKS, false)
   const [diffs, setDiffs] = useState<DiffFileEntry[]>([])
-  const [isSticky, setSticky] = useState(false)
-  const [commitRange, setCommitRange] = useState<string[]>(defaultCommitRange || [])
-  const { routes } = useAppContext()
+  const headerRef = useRef<HTMLDivElement | null>(null)
+  const scrollTopRef = useRef<HTMLDivElement | null>(null)
+  const [commitRange, setCommitRange] = useState(defaultCommitRange)
   const [prHasChanged, setPrHasChanged] = useState(false)
   const [sourceRef, setSourceRef] = useState(_sourceRef)
   const [targetRef, setTargetRef] = useState(_targetRef)
-  const { data: prCommits } = useGet<{
-    commits: TypesCommit[]
-  }>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
-    queryParams: {
-      git_ref: normalizeGitRef(sourceRef),
-      after: normalizeGitRef(targetRef)
-    },
-    lazy: !pullRequestMetadata?.number
-  })
+  const isMounted = useIsMounted()
 
-  useEffect(() => {
-    if (!pullRequestMetadata?.number || commitRange.length === 0) {
-      return
-    }
-
-    history.push(
-      routes.toCODEPullRequest({
-        repoPath: repoMetadata.path as string,
-        pullRequestId: String(pullRequestMetadata?.number),
-        pullRequestSection: PullRequestSection.FILES_CHANGED,
-        commitSHA:
-          commitRange.length === 1 ? commitRange[0] : `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
-      })
-    )
-  }, [commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number])
-
-  const diffSubPath = useMemo(
+  const diffApiPath = useMemo(
     () =>
       commitSHA
         ? // show specific commit
@@ -144,6 +111,8 @@ export const Changes: React.FC<ChangesProps> = ({
           `diff/${normalizeGitRef(targetRef)}...${normalizeGitRef(sourceRef)}`,
     [commitSHA, commitRange, targetRef, sourceRef]
   )
+  const path = useMemo(() => `/api/v1/repos/${repoMetadata?.path}/+/${diffApiPath}`, [repoMetadata?.path, diffApiPath])
+  const [cachedDiff, setCachedDiff] = useAtom(rawDiffAtom)
 
   const {
     data: rawDiff,
@@ -151,17 +120,17 @@ export const Changes: React.FC<ChangesProps> = ({
     loading,
     refetch
   } = useGet<string>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/${diffSubPath}`,
+    path,
     requestOptions: {
       headers: {
         Accept: 'text/plain'
       }
     },
-    lazy: commitSHA ? false : !targetRef || !sourceRef
+    lazy: cachedDiff.path === path ? true : commitSHA ? false : !targetRef || !sourceRef
   })
 
   const {
-    data: rawFileViews,
+    data: fileViewsData,
     loading: loadingFileViews,
     error: errorFileViews,
     refetch: refetchFileViews
@@ -170,31 +139,26 @@ export const Changes: React.FC<ChangesProps> = ({
     lazy: !pullRequestMetadata?.number
   })
 
+  const [cachedFileViewsData, setCachedFileViewsData] = useState<TypesPullReqFileView[] | null>()
+
+  useEffect(() => {
+    if (fileViewsData) {
+      setCachedFileViewsData(_old => (isEqual(_old, fileViewsData) ? _old : fileViewsData))
+    }
+  }, [fileViewsData])
+
   // create a map for faster lookup and ability to insert / remove single elements
   const fileViews = useMemo(() => {
     const out = new Map<string, string>()
-    rawFileViews
-      ?.filter(({ path, sha }) => path && sha) // every entry is expected to have a path and sha - otherwise skip ...
-      .forEach(({ path, sha, obsolete }) => {
-        out.set(path || '', obsolete ? FILE_VIEWED_OBSOLETE_SHA : sha || '')
+    cachedFileViewsData
+      ?.filter(({ path: _path, sha }) => _path && sha) // every entry is expected to have a path and sha - otherwise skip ...
+      .forEach(({ path: _path, sha, obsolete }) => {
+        out.set(_path || '', obsolete ? FILE_VIEWED_OBSOLETE_SHA : sha || '')
       })
-    return out
-  }, [rawFileViews])
+    return cachedFileViewsData ? out : undefined
+  }, [cachedFileViewsData])
 
-  const {
-    data: prActivities,
-    loading: loadingActivities,
-    error: errorActivities,
-    refetch: refetchActivities
-  } = useGet<TypesPullReqActivity[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/activities`,
-    lazy: !pullRequestMetadata?.number
-  })
-  const [activities, setActivities] = useState<TypesPullReqActivity[]>()
-  const showSpinner = useMemo(
-    () => loading || (loadingActivities && !activities) || (loadingFileViews && !fileViews),
-    [loading, loadingActivities, activities, loadingFileViews, fileViews]
-  )
+  const showSpinner = useMemo(() => loading || (loadingFileViews && !fileViews), [loading, loadingFileViews, fileViews])
   const diffStats = useMemo(
     () =>
       (diffs || []).reduce(
@@ -212,33 +176,12 @@ export const Changes: React.FC<ChangesProps> = ({
     [readOnly, pullRequestMetadata?.state]
   )
   const { currentUser } = useAppContext()
-  const isActiveUserPROwner = useMemo(() => {
-    return (
-      !!currentUser?.uid && !!pullRequestMetadata?.author?.uid && currentUser?.uid === pullRequestMetadata?.author?.uid
-    )
-  }, [currentUser, pullRequestMetadata])
-
-  // Optimization to avoid showing unnecessary loading spinner. The trick is to
-  // show only the spinner when the component is mounted and not when refetching
-  // happens after some comments are authored.
-  useEffect(
-    function setActivitiesIfNotSet() {
-      if (!prActivities) {
-        return
-      }
-
-      setActivities(oldActivities => (isEqual(oldActivities, prActivities) ? oldActivities : prActivities))
-    },
-    [prActivities]
+  const isActiveUserPROwner = useMemo(
+    () =>
+      !!currentUser?.uid && !!pullRequestMetadata?.author?.uid && currentUser?.uid === pullRequestMetadata?.author?.uid,
+    [currentUser, pullRequestMetadata]
   )
-
-  useEffect(() => {
-    if (readOnly) {
-      return
-    }
-
-    refetchActivities()
-  }, [readOnly, prStats?.conversations, prStats?.unresolved_count, refetchActivities])
+  const internalFlags = useRef({ justRefreshed: false })
 
   useEffect(() => {
     if (sourceRef !== _sourceRef || targetRef !== _targetRef) {
@@ -246,10 +189,18 @@ export const Changes: React.FC<ChangesProps> = ({
     }
   }, [_sourceRef, sourceRef, _targetRef, targetRef])
 
+  //
+  // Parsing diff and construct data structure to pass into DiffViewer component
+  //
   useEffect(() => {
-    const _raw = rawDiff && typeof rawDiff === 'string' ? rawDiff : ''
+    const _raw =
+      cachedDiff.path === path && cachedDiff.raw
+        ? cachedDiff.raw
+        : rawDiff && typeof rawDiff === 'string'
+        ? rawDiff
+        : ''
 
-    if (rawDiff) {
+    if (_raw && fileViews) {
       const _diffs = Diff2Html.parse(_raw, DIFF2HTML_CONFIG).map(diff => {
         const fileId = changedFileId([diff.oldName, diff.newName])
         const containerId = `container-${fileId}`
@@ -262,33 +213,101 @@ export const Changes: React.FC<ChangesProps> = ({
           contentId,
           fileId,
           filePath,
-          activities: activities || [],
-          fileViews: fileViews || []
+          fileViews: fileViews || [] // TODO: Move fileViews to a better location
         }
       })
 
-      setDiffs(oldDiffs => {
-        if (isEqual(oldDiffs, _diffs)) {
-          return oldDiffs
-        }
+      setDiffs(oldDiffs => (isEqual(oldDiffs, _diffs) ? oldDiffs : _diffs))
 
-        // notify parent of new data
-        onDataReady?.(_diffs)
-
-        return _diffs
-      })
+      if (cachedDiff.path !== path) {
+        setCachedDiff({ path, raw: _raw })
+      }
     }
-  }, [rawDiff, activities, fileViews, onDataReady])
 
+    if (internalFlags.current.justRefreshed) {
+      internalFlags.current.justRefreshed = false
+      refetchFileViews()
+    }
+  }, [rawDiff, fileViews, errorFileViews, refetchFileViews])
+
+  //
+  // Listen to scroll event to toggle "scroll to top" button
+  //
   useEventListener(
     'scroll',
-    useCallback(() => {
-      setSticky(scrollElement.scrollTop >= STICKY_HEADER_HEIGHT)
-    }, [scrollElement.scrollTop]),
-    scrollElement
+    useMemo(() => {
+      let done = false
+      let scrollRafId = 0
+
+      return throttle(() => {
+        cancelAnimationFrame(scrollRafId)
+
+        scrollRafId = requestAnimationFrame(() => {
+          if (isMounted.current && headerRef.current && scrollTopRef.current) {
+            const { classList: headerCL } = headerRef.current
+            const { classList: scrollTopCL } = scrollTopRef.current
+            const isSticky = (scrollElement.scrollTop || window.scrollY) >= STICKY_HEADER_HEIGHT
+
+            if (isSticky) {
+              if (!done) {
+                headerCL.add(css.stickied)
+                scrollTopCL.add(css.show)
+                done = true
+              }
+            } else if (done) {
+              headerCL.remove(css.stickied)
+              scrollTopCL.remove(css.show)
+              done = false
+            }
+          }
+        })
+      }, 150)
+    }, []), // eslint-disable-line react-hooks/exhaustive-deps
+    scrollElement,
+    {
+      capture: true,
+      passive: true
+    }
   )
 
-  useShowRequestError(errorActivities || errorFileViews)
+  const history = useHistory()
+  const { routes } = useAppContext()
+
+  const { data: prCommits, error: errorCommits } = useGet<{
+    commits: TypesCommit[]
+  }>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
+    queryParams: {
+      git_ref: normalizeGitRef(sourceRef),
+      after: normalizeGitRef(targetRef)
+    },
+    lazy: !pullRequestMetadata?.number
+  })
+  const commitSHARef = useRef(commitSHA)
+
+  useEffect(
+    function updatePageWhenCommitRangeIsChanged() {
+      if (!pullRequestMetadata?.number && !isMounted.current) {
+        return
+      }
+
+      if (commitSHARef.current !== commitSHA) {
+        commitSHARef.current = commitSHA
+        history.push(
+          routes.toCODEPullRequest({
+            repoPath: repoMetadata.path as string,
+            pullRequestId: String(pullRequestMetadata?.number),
+            pullRequestSection: PullRequestSection.FILES_CHANGED,
+            commitSHA
+          })
+        )
+      }
+    },
+    [commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number, commitSHA]
+  )
+
+  useShowRequestError(errorFileViews || errorCommits, 0)
+
   return (
     <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
       <LoadingSpinner visible={loading || showSpinner} withBorder={true} />
@@ -296,16 +315,14 @@ export const Changes: React.FC<ChangesProps> = ({
         <PageError message={getErrorMessage(error)} onClick={voidFn(refetch)} />
       </Render>
       <Render when={!error && !loading}>
-        <Container className={cx(css.header, { [css.stickied]: isSticky })}>
+        <Container className={css.header} ref={headerRef}>
           <Layout.Horizontal>
             <Container flex={{ alignItems: 'center' }}>
-              <Render when={pullRequestMetadata?.number}>
-                <CommitRangeDropdown
-                  allCommits={prCommits?.commits || []}
-                  selectedCommits={commitRange}
-                  setSelectedCommits={setCommitRange}
-                />
-              </Render>
+              <CommitRangeDropdown
+                allCommits={prCommits?.commits || []}
+                selectedCommits={commitRange}
+                setSelectedCommits={setCommitRange}
+              />
 
               {/* Files Changed stats */}
               <Text flex className={css.diffStatsLabel}>
@@ -327,33 +344,32 @@ export const Changes: React.FC<ChangesProps> = ({
                 />
               </Text>
 
-              <Render when={prHasChanged && !readOnly}>
+              <Render when={prHasChanged && !readOnly && commitRange?.length === 0}>
                 <PlainButton
                   text={getString('refresh')}
                   className={css.refreshBtn}
                   onClick={() => {
+                    setCachedDiff({})
                     setPrHasChanged(false)
                     setTargetRef(_targetRef)
                     setSourceRef(_sourceRef)
-                    refetchFileViews()
+                    internalFlags.current.justRefreshed = true
                   }}
                 />
               </Render>
 
               {/* Show "Scroll to top" button */}
-              <Render when={isSticky}>
-                <Layout.Horizontal padding={{ left: 'small' }}>
-                  <PipeSeparator height={10} />
-                  <Button
-                    variation={ButtonVariation.ICON}
-                    icon="arrow-up"
-                    iconProps={{ size: 14 }}
-                    onClick={() => scrollElement.scroll({ top: 0 })}
-                    tooltip={getString('scrollToTop')}
-                    tooltipProps={{ isDark: true }}
-                  />
-                </Layout.Horizontal>
-              </Render>
+              <Layout.Horizontal ref={scrollTopRef} className={css.scrollTop}>
+                <PipeSeparator height={10} />
+                <Button
+                  variation={ButtonVariation.ICON}
+                  icon="arrow-up"
+                  iconProps={{ size: 14 }}
+                  onClick={() => scrollElement.scroll({ top: 0 })}
+                  tooltip={getString('scrollToTop')}
+                  tooltipProps={{ isDark: true }}
+                />
+              </Layout.Horizontal>
             </Container>
 
             <FlexExpander />
@@ -377,24 +393,24 @@ export const Changes: React.FC<ChangesProps> = ({
               className={cx(css.main, {
                 [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
               })}>
-              {diffs?.map((diff, index) => (
+              {diffs.map((diff, index) => (
                 // Note: `key={viewStyle + index + lineBreaks}` resets DiffView when view configuration
                 // is changed. Making it easier to control states inside DiffView itself, as it does not
                 //  have to deal with any view configuration
                 <DiffViewer
+                  key={viewStyle + diffApiPath + index + lineBreaks}
                   readOnly={readOnly || (commitRange?.length || 0) > 0} // render in readonly mode in case a commit is selected
-                  key={viewStyle + index + lineBreaks}
                   diff={diff}
                   viewStyle={viewStyle}
                   stickyTopPosition={STICKY_TOP_POSITION}
                   repoMetadata={repoMetadata}
                   pullRequestMetadata={pullRequestMetadata}
-                  onCommentUpdate={onCommentUpdate}
                   targetRef={targetRef}
                   sourceRef={_sourceRef}
                   commitRange={commitRange}
                   scrollElement={scrollElement}
                   commitSHA={commitSHA}
+                  refetchActivities={refetchActivities}
                 />
               ))}
             </Layout.Vertical>
@@ -402,7 +418,7 @@ export const Changes: React.FC<ChangesProps> = ({
           <Case val={0}>
             <Container padding="xlarge">
               <NoResultCard
-                showWhen={() => diffs?.length === 0}
+                showWhen={() => diffs?.length === 0 && !loading && !showSpinner}
                 forSearch={true}
                 title={emptyTitle}
                 emptySearchMessage={emptyMessage}
@@ -414,3 +430,7 @@ export const Changes: React.FC<ChangesProps> = ({
     </Container>
   )
 }
+
+export const Changes = React.memo(ChangesInternal)
+
+const rawDiffAtom = atom<{ path?: string; raw?: string }>({})

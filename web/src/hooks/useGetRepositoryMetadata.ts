@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import { useAtom } from 'jotai'
+import { useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CODEProps } from 'RouteDefinitions'
 import type { TypesRepository } from 'services/code'
 import { diffRefsToRefs, makeDiffRefs } from 'utils/GitUtils'
 import { getErrorMessage } from 'utils/Utils'
+import { newCacheStrategy } from 'utils/CacheStrategy'
+import { repoMetadataAtom } from 'atoms/repoMetadata'
 import { useGetSpaceParam } from './useGetSpaceParam'
 
 export function useGetRepositoryMetadata() {
@@ -37,22 +40,38 @@ export function useGetRepositoryMetadata() {
     settingSectionMode = '',
     ...otherPathParams
   } = useParams<CODEProps>()
-  const {
-    data: repoMetadata,
-    error,
-    loading,
-    refetch,
-    response
-  } = useGet<TypesRepository>({
-    path: `/api/v1/repos/${space}/${repoName}/+/`,
-    lazy: !repoName
+  const repoPath = useMemo(() => `${space}/${repoName}`, [space, repoName])
+  const { data, error, loading, refetch, response } = useGet<TypesRepository>({
+    path: `/api/v1/repos/${repoPath}/+/`,
+    lazy: true
   })
+  const [repoMetadata, setRepoMetadata] = useAtom(repoMetadataAtom)
   const defaultBranch = repoMetadata?.default_branch || ''
+
+  useEffect(() => {
+    // Fetch repoMetadata when repoName exists and
+    //  - cache does not exist yet
+    //  - or cache is expired
+    //  - or repoPath is changed
+    if (
+      (repoName && (!repoMetadata || cacheStrategy.isExpired())) ||
+      (repoMetadata && repoMetadata.path !== repoPath)
+    ) {
+      refetch()
+    }
+  }, [repoName, refetch, repoMetadata, repoPath])
+
+  useEffect(() => {
+    if (data) {
+      setRepoMetadata(data)
+      cacheStrategy.update()
+    }
+  }, [data, setRepoMetadata])
 
   return {
     space,
     repoName,
-    repoMetadata: repoName ? repoMetadata || undefined : undefined,
+    repoMetadata: repoName && repoMetadata?.path === repoPath ? repoMetadata : undefined,
     error: getErrorMessage(error),
     loading,
     refetch,
@@ -70,5 +89,4 @@ export function useGetRepositoryMetadata() {
   }
 }
 
-// TODO: Repository metadata is rarely changed. It might be good to implement
-// some caching strategy in here
+const cacheStrategy = newCacheStrategy()

@@ -32,7 +32,7 @@ import { useScheduleJob } from 'hooks/useScheduleJob'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import css from './Checks.module.scss'
 
-interface CheckPipelineStepsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface CheckPipelineStepsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   pipelineName: string
   executionNumber: string
   stage: TypesStage
@@ -40,7 +40,7 @@ interface CheckPipelineStepsProps extends Pick<GitInfoProps, 'repoMetadata' | 'p
 
 export const CheckPipelineSteps: React.FC<CheckPipelineStepsProps> = ({
   repoMetadata,
-  pullRequestMetadata,
+  pullReqMetadata,
   pipelineName,
   stage,
   executionNumber
@@ -53,7 +53,7 @@ export const CheckPipelineSteps: React.FC<CheckPipelineStepsProps> = ({
           pipelineName={pipelineName}
           executionNumber={executionNumber}
           repoMetadata={repoMetadata}
-          pullRequestMetadata={pullRequestMetadata}
+          pullReqMetadata={pullReqMetadata}
           stage={stage}
           step={step}
         />

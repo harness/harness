@@ -142,7 +142,7 @@ export interface SourceCodeEditorProps {
   editorOptions?: editor.IStandaloneEditorConstructionOptions
 }
 
-export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   onPRStateChanged: () => void
   refetchReviewers: () => void
 }
@@ -496,14 +496,26 @@ export const filenameToLanguage = (name?: string): string | undefined => {
   return PLAIN_TEXT
 }
 
-export function waitUntil(condition: () => boolean, callback: () => void, maxCount = 100, timeout = 50) {
-  if (condition()) {
-    callback()
+interface WaitUtilParams<T> {
+  test: () => T
+  onMatched: (result: T) => void
+  onExpired?: () => void
+  duration?: number
+  interval?: number
+}
+
+export function waitUntil<T>({ test, onMatched, onExpired, duration = 5000, interval = 50 }: WaitUtilParams<T>) {
+  const result = test()
+
+  if (result) {
+    onMatched(result)
   } else {
-    if (maxCount) {
+    if (duration > 0) {
       setTimeout(() => {
-        waitUntil(condition, callback, maxCount - 1)
-      }, timeout)
+        waitUntil({ test, onMatched, onExpired, duration: duration - interval, interval })
+      }, interval)
+    } else {
+      onExpired?.()
     }
   }
 }
@@ -560,6 +572,83 @@ export function isInViewport(element: Element) {
   )
 }
 
+/**
+ * Returns Element placement information in Viewport
+ * @link https://stackoverflow.com/a/70476497/2453148
+ *
+ * @typedef {object} ViewportInfo - Whether the element is…
+ * @property {boolean} isInViewport - fully or partially in the viewport
+ * @property {boolean} isPartiallyInViewport - partially in the viewport
+ * @property {boolean} isInsideViewport - fully inside viewport
+ * @property {boolean} isAroundViewport - completely covers the viewport
+ * @property {boolean} isOnEdge - intersects the edge of viewport
+ * @property {boolean} isOnTopEdge - intersects the top edge
+ * @property {boolean} isOnRightEdge - intersects the right edge
+ * @property {boolean} isOnBottomEdge - is intersects the bottom edge
+ * @property {boolean} isOnLeftEdge - is intersects the left edge
+ *
+ * @param el Element
+ * @return {Object} ViewportInfo
+ */
+export function getElementViewportInfo(el: Element, marginX = 0, marginY = 0) {
+  const result = {
+    isInsideViewport: false,
+    isAroundViewport: false,
+    isOnTopEdge: false,
+    isOnRightEdge: false,
+    isOnBottomEdge: false,
+    isOnLeftEdge: false,
+    isOnEdge: false,
+    isInViewport: false,
+    isPartiallyInViewport: false
+  }
+
+  const _rect = el.getBoundingClientRect()
+  const rect = {
+    top: _rect.top - marginX,
+    left: _rect.left - marginY,
+    width: _rect.width + marginY,
+    height: _rect.height + marginX
+  }
+
+  const windowHeight = window.innerHeight || document.documentElement.clientHeight
+  const windowWidth = window.innerWidth || document.documentElement.clientWidth
+
+  const insideX = rect.left >= 0 && rect.left + rect.width <= windowWidth
+  const insideY = rect.top >= 0 && rect.top + rect.height <= windowHeight
+
+  result.isInsideViewport = insideX && insideY
+
+  const aroundX = rect.left < 0 && rect.left + rect.width > windowWidth
+  const aroundY = rect.top < 0 && rect.top + rect.height > windowHeight
+
+  result.isAroundViewport = aroundX && aroundY
+
+  const onTop = rect.top < 0 && rect.top + rect.height > 0
+  const onRight = rect.left < windowWidth && rect.left + rect.width > windowWidth
+  const onLeft = rect.left < 0 && rect.left + rect.width > 0
+  const onBottom = rect.top < windowHeight && rect.top + rect.height > windowHeight
+
+  const onY = insideY || aroundY || onTop || onBottom
+  const onX = insideX || aroundX || onLeft || onRight
+
+  result.isOnTopEdge = onTop && onX
+  result.isOnRightEdge = onRight && onY
+  result.isOnBottomEdge = onBottom && onX
+  result.isOnLeftEdge = onLeft && onY
+
+  result.isOnEdge = result.isOnLeftEdge || result.isOnRightEdge || result.isOnTopEdge || result.isOnBottomEdge
+
+  const isInX = insideX || aroundX || result.isOnLeftEdge || result.isOnRightEdge
+  const isInY = insideY || aroundY || result.isOnTopEdge || result.isOnBottomEdge
+
+  result.isInViewport = isInX && isInY
+
+  result.isPartiallyInViewport = result.isInViewport && result.isOnEdge
+
+  return result
+}
+
 export const truncateString = (str: string, length: number): string =>
   str.length <= length ? str : str.slice(0, length - 3) + '...'
 
@@ -591,3 +680,7 @@ export const getAllKeysWithPrefix = (obj: { [key: string]: string | boolean | ob
   }
   return keys
 }
+
+export const CustomEventName = {
+  SIDE_NAV_EXPANDED_EVENT: 'SIDE_NAV_EXPANDED_EVENT'
+} as const

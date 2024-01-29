@@ -16,11 +16,14 @@
 
 import React, { useState, useContext, useEffect, useMemo } from 'react'
 import { matchPath } from 'react-router-dom'
+import { useAtom } from 'jotai'
 import { noop } from 'lodash-es'
 import { useGet } from 'restful-react'
 import type { AppProps } from 'AppProps'
 import { routes } from 'RouteDefinitions'
 import type { TypesUser } from 'services/code'
+import { currentUserAtom } from 'atoms/currentUser'
+import { newCacheStrategy } from 'utils/CacheStrategy'
 
 interface AppContextProps extends AppProps {
   setAppContext: (value: Partial<AppProps>) => void
@@ -54,11 +57,28 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
     () => initialValue.standalone && !!matchPath(location.pathname, { path: '/(signin|register)' }),
     [initialValue.standalone]
   )
-  const { data: currentUser = defaultCurrentUser } = useGet({
+  const { data: _currentUser, refetch: fetchCurrentUser } = useGet({
     path: '/api/v1/user',
-    lazy
+    lazy: true
   })
+  const [currentUser, setCurrentUser] = useAtom(currentUserAtom)
   const [appStates, setAppStates] = useState<AppProps>(initialValue)
+
+  useEffect(() => {
+    // Fetch current user when conditions to fetch it matched and
+    //  - cache does not exist yet
+    //  - or cache is expired
+    if (!lazy && (!currentUser || cacheStrategy.isExpired())) {
+      fetchCurrentUser()
+    }
+  }, [lazy, fetchCurrentUser, currentUser])
+
+  useEffect(() => {
+    if (_currentUser) {
+      setCurrentUser(_currentUser)
+      cacheStrategy.update()
+    }
+  }, [_currentUser, setCurrentUser])
 
   useEffect(() => {
     if (initialValue.space && initialValue.space !== appStates.space) {
@@ -70,7 +90,7 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
     <AppContext.Provider
       value={{
         ...appStates,
-        currentUser: currentUser as Required<TypesUser>,
+        currentUser: (currentUser || defaultCurrentUser) as Required<TypesUser>,
         setAppContext: props => {
           setAppStates({ ...appStates, ...props })
         }
@@ -81,3 +101,5 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
 })
 
 export const useAppContext: () => AppContextProps = () => useContext(AppContext)
+
+const cacheStrategy = newCacheStrategy()

@@ -69,7 +69,7 @@ const codeOwnersNotFoundMessage3 = `failed to find node 'CODEOWNERS' in 'main': 
 const POLLING_INTERVAL = 60000
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
-  pullRequestMetadata,
+  pullReqMetadata,
   onPRStateChanged,
   refetchReviewers
 }) => {
@@ -82,7 +82,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   const { pullRequestSection } = useGetRepositoryMetadata()
   const { mutate: mergePR, loading } = useMutate({
     verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/merge`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/merge`
   })
   const [ruleViolation, setRuleViolation] = useState(false)
   const [ruleViolationArr, setRuleViolationArr] = useState<{ data: { rule_violations: TypesRuleViolations[] } }>()
@@ -92,18 +92,15 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   const [bypass, setBypass] = useState(false)
   const { mutate: updatePRState, loading: loadingState } = useMutate({
     verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/state`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/state`
   })
-  const mergeable = useMemo(
-    () => pullRequestMetadata.merge_check_status === MergeCheckStatus.MERGEABLE,
-    [pullRequestMetadata]
-  )
-  const isClosed = pullRequestMetadata.state === PullRequestState.CLOSED
-  const isOpen = pullRequestMetadata.state === PullRequestState.OPEN
-  const isConflict = pullRequestMetadata.merge_check_status === MergeCheckStatus.CONFLICT
+  const mergeable = useMemo(() => pullReqMetadata.merge_check_status === MergeCheckStatus.MERGEABLE, [pullReqMetadata])
+  const isClosed = pullReqMetadata.state === PullRequestState.CLOSED
+  const isOpen = pullReqMetadata.state === PullRequestState.OPEN
+  const isConflict = pullReqMetadata.merge_check_status === MergeCheckStatus.CONFLICT
   const unchecked = useMemo(
-    () => pullRequestMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
-    [pullRequestMetadata, isClosed]
+    () => pullReqMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
+    [pullReqMetadata, isClosed]
   )
 
   useEffect(() => {
@@ -118,8 +115,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleViolationArr])
   const dryMerge = () => {
-    if (!isClosed && pullRequestMetadata.state !== PullRequestState.MERGED) {
-      mergePR({ bypass_rules: true, dry_run: true, source_sha: pullRequestMetadata?.source_sha })
+    if (!isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
+      mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
         .then(res => {
           if (res?.rule_violations?.length > 0) {
             setRuleViolation(true)
@@ -155,7 +152,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     // recheck PR in case source SHA changed or PR was marked as unchecked
     // TODO: optimize call to handle all causes and avoid double calls by keeping track of SHA
     dryMerge() // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unchecked, pullRequestMetadata?.source_sha])
+  }, [unchecked, pullReqMetadata?.source_sha])
 
   useEffect(() => {
     // dryMerge()
@@ -167,7 +164,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       clearInterval(intervalId)
     } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onPRStateChanged])
-  const isDraft = pullRequestMetadata.is_draft
+  const isDraft = pullReqMetadata.is_draft
   const mergeOptions: PRMergeOption[] = [
     {
       method: 'squash',
@@ -239,13 +236,11 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     [space]
   )
   const isActiveUserPROwner = useMemo(() => {
-    return (
-      !!currentUser?.uid && !!pullRequestMetadata?.author?.uid && currentUser?.uid === pullRequestMetadata?.author?.uid
-    )
-  }, [currentUser, pullRequestMetadata])
+    return !!currentUser?.uid && !!pullReqMetadata?.author?.uid && currentUser?.uid === pullReqMetadata?.author?.uid
+  }, [currentUser, pullReqMetadata])
 
-  if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
-    return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
+  if (pullReqMetadata.state === PullRequestFilterOption.MERGED) {
+    return <MergeInfo pullRequestMetadata={pullReqMetadata} />
   }
   return (
     <Container
@@ -378,7 +373,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
               </Truthy>
               <Else>
                 <Container>
-                  <Match expr={pullRequestMetadata.state}>
+                  <Match expr={pullReqMetadata.state}>
                     <Case val={PullRequestState.CLOSED}>
                       <Button
                         className={css.secondaryButton}
@@ -405,9 +400,9 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           />
                         ) : null}
                         <ReviewSplitButton
-                          shouldHide={(pullRequestMetadata?.state as EnumPullReqState) === 'merged'}
+                          shouldHide={(pullReqMetadata?.state as EnumPullReqState) === 'merged'}
                           repoMetadata={repoMetadata}
-                          pullRequestMetadata={pullRequestMetadata}
+                          pullRequestMetadata={pullReqMetadata}
                           refreshPr={onPRStateChanged}
                           disabled={isActiveUserPROwner}
                           refetchReviewers={refetchReviewers}
@@ -448,7 +443,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                               if (mergeOption.method !== 'close') {
                                 const payload: OpenapiMergePullReq = {
                                   method: mergeOption.method,
-                                  source_sha: pullRequestMetadata?.source_sha,
+                                  source_sha: pullReqMetadata?.source_sha,
                                   bypass_rules: bypass,
                                   dry_run: false
                                 }

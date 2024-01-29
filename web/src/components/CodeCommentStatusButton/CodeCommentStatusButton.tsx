@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { random } from 'lodash-es'
 import { useMutate } from 'restful-react'
 import { useToaster, Button, ButtonVariation, ButtonSize, useIsMounted } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
@@ -24,57 +25,76 @@ import { useEmitCodeCommentStatus } from 'hooks/useEmitCodeCommentStatus'
 import { CodeCommentState, getErrorMessage } from 'utils/Utils'
 import type { CommentItem } from '../CommentBox/CommentBox'
 
-interface CodeCommentStatusButtonProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface CodeCommentStatusButtonProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
-  onCommentUpdate: () => void
 }
 
 export const CodeCommentStatusButton: React.FC<CodeCommentStatusButtonProps> = ({
   repoMetadata,
-  pullRequestMetadata,
-  commentItems,
-  onCommentUpdate
+  pullReqMetadata,
+  commentItems
 }) => {
   const isMounted = useIsMounted()
   const { getString } = useStrings()
   const { showError } = useToaster()
   const path = useMemo(
-    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/comments`,
-    [repoMetadata.path, pullRequestMetadata?.number]
+    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata?.number}/comments`,
+    [repoMetadata.path, pullReqMetadata?.number]
   )
   const { mutate: updateCodeCommentStatus } = useMutate({ verb: 'PUT', path: ({ id }) => `${path}/${id}/status` })
-  const [resolved, setResolved] = useState(commentItems[0]?.payload?.resolved ? true : false)
+  const [parentComment, setParentComment] = useState(commentItems[0])
+  const randomClass = useMemo(() => `CodeCommentStatusButton-${random(1_000_000, false)}`, [])
+  const [resolved, setResolved] = useState(parentComment?.payload?.resolved ? true : false)
   const emitCodeCommentStatus = useEmitCodeCommentStatus({
-    id: commentItems[0]?.payload?.id,
+    id: parentComment?.id,
     onMatch: status => {
       if (isMounted.current) {
         const isResolved = status === CodeCommentState.RESOLVED
         setResolved(isResolved)
 
-        if (commentItems[0]?.payload) {
+        if (parentComment?.payload) {
           if (isResolved) {
-            commentItems[0].payload.resolved = Date.now()
+            parentComment.payload.resolved = Date.now()
           } else {
-            commentItems[0].payload.resolved = 0
+            parentComment.payload.resolved = 0
           }
         }
       }
     }
   })
 
-  return (
+  useEffect(() => {
+    // Comment thread has been just created, check if parentComment is
+    // not set up properly, then query the comment id from DOM and construct
+    // it from scratch (this is a workaround).
+    if (!parentComment?.id) {
+      const id = document
+        .querySelector(`.${randomClass}`)
+        ?.closest('[data-comment-thread-id]')
+        ?.getAttribute('data-comment-thread-id')
+
+      if (id) {
+        setParentComment({
+          id: Number(id),
+          payload: { resolved: 0 }
+        } as CommentItem<TypesPullReqActivity>)
+      }
+    }
+  }, [parentComment?.id])
+
+  return parentComment?.deleted ? null : (
     <Button
+      className={randomClass}
       text={getString(resolved ? 'reactivate' : 'resolve')}
       variation={ButtonVariation.TERTIARY}
       size={ButtonSize.MEDIUM}
       onClick={async () => {
         const status = resolved ? CodeCommentState.ACTIVE : CodeCommentState.RESOLVED
         const payload = { status }
-        const id = commentItems[0]?.payload?.id
+        const id = parentComment?.id
 
         updateCodeCommentStatus(payload, { pathParams: { id } })
           .then(() => {
-            onCommentUpdate()
             emitCodeCommentStatus(status)
 
             if (isMounted.current) {

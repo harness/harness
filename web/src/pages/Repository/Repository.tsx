@@ -19,7 +19,7 @@ import { Container, Layout, PageBody, StringSubstitute, Text } from '@harnessio/
 import { Falsy, Match, Truthy } from 'react-jsx-match'
 import cx from 'classnames'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
-import { voidFn, getErrorMessage } from 'utils/Utils'
+import { getErrorMessage } from 'utils/Utils'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useStrings } from 'framework/strings'
@@ -38,7 +38,8 @@ export default function Repository() {
     data: resourceContent,
     error: resourceError,
     loading: resourceLoading,
-    isRepositoryEmpty
+    isRepositoryEmpty,
+    refetch: refetchContent
   } = useGetResourceContent({
     repoMetadata,
     gitRef: normalizeGitRef(gitRef) as string,
@@ -85,7 +86,12 @@ export default function Repository() {
           </Layout.Vertical>
         </Truthy>
         <Falsy>
-          <PageBody error={getErrorMessage(error || resourceError)} retryOnError={voidFn(refetch)}>
+          <PageBody
+            error={getErrorMessage(error || resourceError)}
+            retryOnError={() => {
+              refetch()
+              refetchContent()
+            }}>
             <LoadingSpinner visible={loading || resourceLoading} withBorder={!!resourceContent && resourceLoading} />
 
             {!!repoMetadata && (

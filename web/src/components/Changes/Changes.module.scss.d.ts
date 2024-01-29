@@ -33,5 +33,7 @@ export declare const refreshIcon: string
 export declare const repeatBtn: string
 export declare const reviewButton: string
 export declare const reviewIcon: string
+export declare const scrollTop: string
+export declare const show: string
 export declare const stickied: string
 export declare const wrapper: string

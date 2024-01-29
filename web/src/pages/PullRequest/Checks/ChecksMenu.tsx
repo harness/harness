@@ -51,7 +51,7 @@ enum CheckKindPayload {
 }
 export const ChecksMenu: React.FC<ChecksMenuProps> = ({
   repoMetadata,
-  pullRequestMetadata,
+  pullReqMetadata,
   prChecksDecisionResult,
   onDataItemChanged,
   setSelectedStage: setSelectedStageFromProps
@@ -85,7 +85,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
         history.replace(
           routes.toCODEPullRequest({
             repoPath: repoMetadata.path as string,
-            pullRequestId: String(pullRequestMetadata.number),
+            pullRequestId: String(pullReqMetadata.number),
             pullRequestSection: PullRequestSection.CHECKS
           }) + `?uid=${defaultSelectedItem.uid}${selectedStage ? `&stageId=${selectedStage.name}` : ''}`
         )
@@ -98,7 +98,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
     history,
     routes,
     repoMetadata.path,
-    pullRequestMetadata.number,
+    pullReqMetadata.number,
     onDataItemChanged,
     selectedStage
   ])
@@ -223,7 +223,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
             <Container key={`container_${itemData.uid}`} className={css.checkMenuItemContainer}>
               <CheckMenuItem
                 repoMetadata={repoMetadata}
-                pullRequestMetadata={pullRequestMetadata}
+                pullReqMetadata={pullReqMetadata}
                 prChecksDecisionResult={prChecksDecisionResult}
                 key={itemData.uid}
                 itemData={itemData}
@@ -237,7 +237,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
                   history.replace(
                     routes.toCODEPullRequest({
                       repoPath: repoMetadata.path as string,
-                      pullRequestId: String(pullRequestMetadata.number),
+                      pullRequestId: String(pullReqMetadata.number),
                       pullRequestSection: PullRequestSection.CHECKS
                     }) + `?uid=${itemData.uid}${stage ? `&stageId=${stage.name}` : ''}`
                   )
@@ -269,7 +269,7 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
   itemData,
   onClick,
   repoMetadata,
-  pullRequestMetadata,
+  pullReqMetadata,
   setSelectedStage
 }) => {
   const [expanded, setExpanded] = useState(isSelected)
@@ -335,7 +335,7 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
           executionNumber={get(itemData, 'payload.data.execution_number', '')}
           expanded={expanded}
           repoMetadata={repoMetadata}
-          pullRequestMetadata={pullRequestMetadata}
+          pullReqMetadata={pullReqMetadata}
           onSelectStage={setSelectedStage}
         />
       </Render>

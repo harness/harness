@@ -19,7 +19,7 @@ import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import type { EnumCheckStatus } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 
-export interface ChecksProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+export interface ChecksProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   prChecksDecisionResult?: PRChecksDecisionResult
 }
 

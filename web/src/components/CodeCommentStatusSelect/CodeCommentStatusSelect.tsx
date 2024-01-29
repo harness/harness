@@ -14,39 +14,36 @@
  * limitations under the License.
  */
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useMutate } from 'restful-react'
+import { random } from 'lodash-es'
+import cx from 'classnames'
 import { useToaster, Select } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReqActivity } from 'services/code'
 import { CodeCommentState, getErrorMessage } from 'utils/Utils'
 import { useEmitCodeCommentStatus } from 'hooks/useEmitCodeCommentStatus'
-import type { CommentItem } from '../CommentBox/CommentBox'
+import type { CommentItem } from 'components/CommentBox/CommentBox'
 import css from './CodeCommentStatusSelect.module.scss'
 
-interface CodeCommentStatusSelectProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface CodeCommentStatusSelectProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
-  onCommentUpdate: () => void
-
-  refetchActivities?: () => void
 }
 
 export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = ({
   repoMetadata,
-  pullRequestMetadata,
-  commentItems,
-  onCommentUpdate,
-  refetchActivities
+  pullReqMetadata,
+  commentItems
 }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
   const path = useMemo(
-    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/comments`,
-    [repoMetadata.path, pullRequestMetadata?.number]
+    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata?.number}/comments`,
+    [repoMetadata.path, pullReqMetadata?.number]
   )
   const { mutate: updateCodeCommentStatus } = useMutate({ verb: 'PUT', path: ({ id }) => `${path}/${id}/status` })
-  const codeCommentStatusItems = useMemo(
+  const commentStatus = useMemo(
     () => [
       {
         label: getString('active'),
@@ -59,42 +56,63 @@ export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = (
     ],
     [getString]
   )
+  const [parentComment, setParentComment] = useState(commentItems[0])
+  const randomClass = useMemo(() => `CodeCommentStatusSelect-${random(1_000_000, false)}`, [])
   const [codeCommentStatus, setCodeCommentStatus] = useState(
-    commentItems[0]?.payload?.resolved ? codeCommentStatusItems[1] : codeCommentStatusItems[0]
+    parentComment?.payload?.resolved ? commentStatus[1] : commentStatus[0]
   )
   const emitCodeCommentStatus = useEmitCodeCommentStatus({
-    id: commentItems[0]?.payload?.id,
+    id: parentComment?.id,
     onMatch: status => {
-      setCodeCommentStatus(status === CodeCommentState.ACTIVE ? codeCommentStatusItems[0] : codeCommentStatusItems[1])
+      setCodeCommentStatus(status === CodeCommentState.ACTIVE ? commentStatus[0] : commentStatus[1])
     }
   })
 
-  return (
+  useEffect(() => {
+    // Comment thread has been just created, check if parentComment is
+    // not set up properly, then query the comment id from DOM and construct
+    // it from scratch (this is a workaround for new comment thread).
+    if (!parentComment?.id) {
+      const id = document
+        .querySelector(`.${randomClass}`)
+        ?.closest('[data-comment-thread-id]')
+        ?.getAttribute('data-comment-thread-id')
+
+      if (id) {
+        setParentComment({
+          id: Number(id),
+          payload: { resolved: 0 }
+        } as CommentItem<TypesPullReqActivity>)
+      }
+    }
+  }, [parentComment?.id])
+
+  return parentComment?.deleted ? null : (
     <Select
-      className={css.select}
-      items={codeCommentStatusItems}
+      className={cx(css.select, randomClass)}
+      items={commentStatus}
       value={codeCommentStatus}
       onChange={newState => {
         const status = newState.value as CodeCommentState
         const payload = { status }
-        const id = commentItems[0]?.payload?.id
+        const id = parentComment?.id
         const isActive = status === CodeCommentState.ACTIVE
 
         updateCodeCommentStatus(payload, { pathParams: { id } })
-          .then(() => {
-            onCommentUpdate()
-            setCodeCommentStatus(isActive ? codeCommentStatusItems[0] : codeCommentStatusItems[1])
+          .then(data => {
+            if (!parentComment?.id) {
+              setParentComment(data)
+            }
+
+            setCodeCommentStatus(isActive ? commentStatus[0] : commentStatus[1])
             emitCodeCommentStatus(status)
 
-            if (commentItems[0]?.payload) {
+            if (parentComment?.payload) {
               if (isActive) {
-                commentItems[0].payload.resolved = 0
+                parentComment.payload.resolved = 0
               } else {
-                commentItems[0].payload.resolved = Date.now()
+                parentComment.payload.resolved = Date.now()
               }
-            }
-            if (refetchActivities) {
-              refetchActivities()
             }
           })
           .catch(_exception => {

@@ -22,8 +22,9 @@
   position: sticky;
   top: 0;
   padding: var(--spacing-medium) 0 !important;
-  z-index: 2;
+  z-index: 4;
   width: 100%;
+  z-index: 5;
 
   /* Create a mask to hide left, right edges of
      contents scrolled up over sticky header */
@@ -40,6 +41,15 @@
 
   &.stickied {
     background-color: var(--primary-bg) !important;
+  }
+
+  .scrollTop {
+    display: none;
+    padding-left: var(--spacing-small);
+
+    &.show {
+      display: inline-block;
+    }
   }
 
   .refreshBtn {

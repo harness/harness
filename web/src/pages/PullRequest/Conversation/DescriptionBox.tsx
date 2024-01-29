@@ -34,31 +34,31 @@ interface DescriptionBoxProps extends Omit<ConversationProps, 'onCancelEditDescr
 
 export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
   repoMetadata,
-  pullRequestMetadata,
-  onCommentUpdate: refreshPullRequestMetadata,
+  pullReqMetadata,
+  onDescriptionSaved,
   onCancelEditDescription,
   standalone,
   routingId
 }) => {
   const [edit, setEdit] = useState(false)
   const [dirty, setDirty] = useState(false)
-  const [originalContent, setOriginalContent] = useState(pullRequestMetadata.description as string)
+  const [originalContent, setOriginalContent] = useState(pullReqMetadata.description as string)
   const [content, setContent] = useState(originalContent)
   const { getString } = useStrings()
   const { showError } = useToaster()
 
   const { mutate } = useMutate({
     verb: 'PATCH',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}`
   })
 
   useEffect(() => {
-    setEdit(!pullRequestMetadata?.description?.length)
+    setEdit(!pullReqMetadata?.description?.length)
 
-    if (pullRequestMetadata?.description) {
-      setContent(pullRequestMetadata?.description)
+    if (pullReqMetadata?.description) {
+      setContent(pullReqMetadata?.description)
     }
-  }, [pullRequestMetadata?.description, pullRequestMetadata?.description?.length])
+  }, [pullReqMetadata?.description, pullReqMetadata?.description?.length])
 
   return (
     <Container className={cx({ [css.box]: !edit, [css.desc]: !edit })}>
@@ -71,7 +71,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
             value={content}
             onSave={value => {
               const payload: OpenapiUpdatePullReqRequest = {
-                title: pullRequestMetadata.title,
+                title: pullReqMetadata.title,
                 description: value || ''
               }
               mutate(payload)
@@ -79,7 +79,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
                   setContent(value)
                   setOriginalContent(value)
                   setEdit(false)
-                  refreshPullRequestMetadata()
+                  onDescriptionSaved()
                 })
                 .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdate')))
             }}

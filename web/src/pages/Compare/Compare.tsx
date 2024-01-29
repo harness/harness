@@ -314,7 +314,6 @@ export default function Compare() {
                         sourceRef={sourceGitRef}
                         emptyTitle={getString('noChanges')}
                         emptyMessage={getString('noChangesCompare')}
-                        onCommentUpdate={noop}
                         scrollElement={
                           (standalone
                             ? document.querySelector(`.${css.main}`)?.parentElement || window

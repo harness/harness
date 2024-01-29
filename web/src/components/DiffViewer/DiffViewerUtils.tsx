@@ -17,7 +17,7 @@
 import type * as Diff2Html from 'diff2html'
 import HoganJsUtils from 'diff2html/lib/hoganjs-utils'
 import { get } from 'lodash-es'
-import type { CommentItem, SingleConsumerEventStream } from 'components/CommentBox/CommentBox'
+import type { CommentItem } from 'components/CommentBox/CommentBox'
 import type { TypesPullReqActivity } from 'services/code'
 import { FILE_VIEWED_OBSOLETE_SHA } from 'utils/GitUtils'
 
@@ -63,9 +63,9 @@ export interface DiffCommentItem<T = Unknown> {
   right: boolean
   lineNumber: number
   commentItems: CommentItem<T>[]
+  _commentItems?: CommentItem<T>[]
   filePath: string
   destroy: (() => void) | undefined
-  eventStream: SingleConsumerEventStream<CommentItem<T>[]> | undefined
 }
 
 export const DIFF2HTML_CONFIG = {
@@ -155,10 +155,6 @@ export const DIFF2HTML_CONFIG = {
   }
 } as Readonly<Diff2Html.Diff2HtmlConfig>
 
-export function contentDOMHasData(contentDOM: HTMLDivElement): boolean {
-  return contentDOM?.querySelector('[data]') != null
-}
-
 export function getCommentLineInfo(
   contentDOM: HTMLDivElement | null,
   commentEntry: DiffCommentItem,
@@ -201,13 +197,14 @@ export function getCommentLineInfo(
   }
 }
 
-export function createCommentOppositePlaceHolder(lineNumber: number): HTMLTableRowElement {
+export function createCommentOppositePlaceHolder(lineNumber: number, isNewCommentThread = false): HTMLTableRowElement {
   const placeHolderRow = document.createElement('tr')
+  const initialHeight = `${isNewCommentThread ? NEW_COMMENT_BOX_INITIAL_HEIGHT : 0}px`
 
   placeHolderRow.dataset.placeHolderForLine = String(lineNumber)
   placeHolderRow.innerHTML = `
-    <td height="${0}px" class="d2h-code-side-linenumber d2h-code-side-emptyplaceholder d2h-cntx d2h-emptyplaceholder"></td>
-    <td class="d2h-cntx d2h-emptyplaceholder" height="${0}px">
+    <td height="${initialHeight}" class="d2h-code-side-linenumber d2h-code-side-emptyplaceholder d2h-cntx d2h-emptyplaceholder"></td>
+    <td class="d2h-cntx d2h-emptyplaceholder" height="${initialHeight}">
       <div class="d2h-code-side-line d2h-code-side-emptyplaceholder">
         <span class="d2h-code-line-prefix">&nbsp;</span>
         <span class="d2h-code-line-ctn hljs"><br></span>
@@ -283,3 +280,5 @@ export function getFileViewedState(
 
   return viewedSHA === fileSha ? FileViewedState.VIEWED : FileViewedState.CHANGED
 }
+
+const NEW_COMMENT_BOX_INITIAL_HEIGHT = 241

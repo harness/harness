@@ -576,6 +576,7 @@ export interface StringsMap {
   'pr.descriptionPlaceHolder': string
   'pr.diffStatsLabel': string
   'pr.diffStatus': string
+  'pr.diffTooLarge': string
   'pr.diffView': string
   'pr.draftOpenForReview.desc': string
   'pr.draftOpenForReview.title': string
@@ -587,6 +588,7 @@ export interface StringsMap {
   'pr.failedToUpdate': string
   'pr.failedToUpdateCommentStatus': string
   'pr.failedToUpdateTitle': string
+  'pr.fileBinary': string
   'pr.fileDeleted': string
   'pr.fileUnchanged': string
   'pr.mergeOptions.close': string

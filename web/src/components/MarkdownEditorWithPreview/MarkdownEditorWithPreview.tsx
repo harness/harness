@@ -171,7 +171,6 @@ export function MarkdownEditorWithPreview({
       case ToolbarAction.UPLOAD: {
         setFile(undefined)
         setOpen(true)
-
         break
       }
 

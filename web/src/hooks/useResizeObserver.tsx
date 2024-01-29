@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-import type { DiffFile } from 'diff2html/lib/types'
+import { useLayoutEffect, type RefObject } from 'react'
+import { useScheduleJob } from './useScheduleJob'
 
-export interface DiffFileEntry extends DiffFile {
-  fileId: string
-  filePath: string
-  containerId: string
-  contentId: string
-  fileViews?: Map<string, string>
+export function useResizeObserver<T extends Element>(ref: RefObject<T>, callback: (element: T) => void) {
+  const sendDataToScheduler = useScheduleJob({
+    handler: () => callback(ref.current as T)
+  })
+  useLayoutEffect(() => {
+    const dom = ref.current as T
+    const resizeObserver = new ResizeObserver(() => {
+      sendDataToScheduler(dom)
+    })
+
+    resizeObserver.observe(dom)
+
+    return () => resizeObserver.unobserve(dom)
+  }, [ref, callback])
 }

@@ -29,7 +29,7 @@ import { PullRequestSection } from 'utils/Utils'
 import { isCodeComment } from '../PullRequestUtils'
 import css from './Conversation.module.scss'
 
-interface CodeCommentHeaderProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface CodeCommentHeaderProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
   threadId: number | undefined
 }
@@ -38,7 +38,7 @@ export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({
   commentItems,
   threadId,
   repoMetadata,
-  pullRequestMetadata
+  pullReqMetadata
 }) => {
   const { routes } = useAppContext()
   const _isCodeComment = isCodeComment(commentItems) && !commentItems[0].deleted
@@ -74,7 +74,7 @@ export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({
             className={css.fname}
             to={`${routes.toCODEPullRequest({
               repoPath: repoMetadata?.path as string,
-              pullRequestId: String(pullRequestMetadata?.number),
+              pullRequestId: String(pullReqMetadata?.number),
               pullRequestSection: PullRequestSection.FILES_CHANGED
             })}?path=${commentItems[0].payload?.code_comment?.path}&commentId=${commentItems[0].payload?.id}`}>
             {commentItems[0].payload?.code_comment?.path}

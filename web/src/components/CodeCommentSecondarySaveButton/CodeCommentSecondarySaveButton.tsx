@@ -25,14 +25,14 @@ import { CodeCommentState, getErrorMessage } from 'utils/Utils'
 import type { CommentItem } from '../CommentBox/CommentBox'
 
 interface CodeCommentSecondarySaveButtonProps
-  extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>,
+  extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'>,
     ButtonProps {
   commentItems: CommentItem<TypesPullReqActivity>[]
 }
 
 export const CodeCommentSecondarySaveButton: React.FC<CodeCommentSecondarySaveButtonProps> = ({
   repoMetadata,
-  pullRequestMetadata,
+  pullReqMetadata,
   commentItems,
   onClick,
   ...props
@@ -41,8 +41,8 @@ export const CodeCommentSecondarySaveButton: React.FC<CodeCommentSecondarySaveBu
   const isMounted = useIsMounted()
   const { showError } = useToaster()
   const path = useMemo(
-    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/comments`,
-    [repoMetadata.path, pullRequestMetadata?.number]
+    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata?.number}/comments`,
+    [repoMetadata.path, pullReqMetadata?.number]
   )
   const { mutate: updateCodeCommentStatus } = useMutate({ verb: 'PUT', path: ({ id }) => `${path}/${id}/status` })
   const [resolved, setResolved] = useState(commentItems[0]?.payload?.resolved ? true : false)
@@ -55,7 +55,7 @@ export const CodeCommentSecondarySaveButton: React.FC<CodeCommentSecondarySaveBu
     }
   })
 
-  return (
+  return commentItems[0]?.payload?.deleted ? null : (
     <Button
       text={getString(resolved ? 'replyAndReactivate' : 'replyAndResolve')}
       variation={ButtonVariation.TERTIARY}

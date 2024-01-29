@@ -29,14 +29,14 @@ import { PullRequestCheckType, PullRequestSection, timeDistance } from 'utils/Ut
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import css from './ChecksOverview.module.scss'
 
-interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   prChecksDecisionResult: PRChecksDecisionResult
   codeOwners?: TypesCodeOwnerEvaluation
 }
 
 export function ChecksOverview({
   repoMetadata,
-  pullRequestMetadata,
+  pullReqMetadata,
   prChecksDecisionResult,
   codeOwners
 }: ChecksOverviewProps) {
@@ -49,11 +49,11 @@ export function ChecksOverview({
   return overallStatus && data?.length ? (
     <Container
       className={css.main}
-      margin={{ bottom: pullRequestMetadata.description && !codeOwners ? undefined : 'large' }}
+      margin={{ bottom: pullReqMetadata.description && !codeOwners ? undefined : 'large' }}
       style={{ '--border-color': Utils.getRealCSSColor(color) } as React.CSSProperties}>
       <Match expr={isExpanded}>
         <Truthy>
-          <CheckSections repoMetadata={repoMetadata} pullRequestMetadata={pullRequestMetadata} data={data} />
+          <CheckSections repoMetadata={repoMetadata} pullReqMetadata={pullReqMetadata} data={data} />
         </Truthy>
         <Falsy>
           <Layout.Horizontal spacing="small" className={css.layout}>
@@ -78,11 +78,11 @@ export function ChecksOverview({
   ) : null
 }
 
-interface CheckSectionsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface CheckSectionsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   data: TypesCheck[]
 }
 
-const CheckSections: React.FC<CheckSectionsProps> = ({ repoMetadata, pullRequestMetadata, data }) => {
+const CheckSections: React.FC<CheckSectionsProps> = ({ repoMetadata, pullReqMetadata, data }) => {
   const [checks, pipelines] = useMemo(
     () =>
       data.reduce(
@@ -102,13 +102,8 @@ const CheckSections: React.FC<CheckSectionsProps> = ({ repoMetadata, pullRequest
   return (
     <Container className={css.checks}>
       <Layout.Vertical spacing="medium">
-        <CheckSection
-          repoMetadata={repoMetadata}
-          pullRequestMetadata={pullRequestMetadata}
-          data={pipelines}
-          isPipeline
-        />
-        <CheckSection repoMetadata={repoMetadata} pullRequestMetadata={pullRequestMetadata} data={checks} />
+        <CheckSection repoMetadata={repoMetadata} pullReqMetadata={pullReqMetadata} data={pipelines} isPipeline />
+        <CheckSection repoMetadata={repoMetadata} pullReqMetadata={pullReqMetadata} data={checks} />
       </Layout.Vertical>
     </Container>
   )
@@ -116,7 +111,7 @@ const CheckSections: React.FC<CheckSectionsProps> = ({ repoMetadata, pullRequest
 
 const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
   repoMetadata,
-  pullRequestMetadata,
+  pullReqMetadata,
   data,
   isPipeline
 }) => {
@@ -145,7 +140,7 @@ const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
                     to={
                       routes.toCODEPullRequest({
                         repoPath: repoMetadata.path as string,
-                        pullRequestId: String(pullRequestMetadata.number),
+                        pullRequestId: String(pullReqMetadata.number),
                         pullRequestSection: PullRequestSection.CHECKS
                       }) + `?uid=${uid}`
                     }>

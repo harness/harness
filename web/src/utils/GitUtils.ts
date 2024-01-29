@@ -38,7 +38,7 @@ export interface GitInfoProps {
   resourceContent: OpenapiGetContentOutput
   commitRef: string
   commits: TypesCommit[]
-  pullRequestMetadata: TypesPullReq
+  pullReqMetadata: TypesPullReq
 }
 export interface RepoFormData {
   name: string

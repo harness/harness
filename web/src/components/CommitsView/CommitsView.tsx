@@ -50,7 +50,8 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   showFileHistoryIcons?: boolean
   resourcePath?: string
   setActiveTab?: React.Dispatch<React.SetStateAction<string>>
-  pullRequestMetadata?: GitInfoProps['pullRequestMetadata']
+  pullRequestMetadata?: GitInfoProps['pullReqMetadata']
+  loading?: boolean
 }
 
 export function CommitsView({
@@ -61,7 +62,8 @@ export function CommitsView({
   showFileHistoryIcons = false,
   resourcePath = '',
   setActiveTab,
-  pullRequestMetadata
+  pullRequestMetadata,
+  loading
 }: CommitsViewProps) {
   const history = useHistory()
   const { getString } = useStrings()
@@ -224,7 +226,7 @@ export function CommitsView({
           )
         })}
       <NoResultCard
-        showWhen={() => commits?.length === 0}
+        showWhen={() => commits?.length === 0 && !loading}
         forSearch={true}
         title={emptyTitle}
         emptySearchMessage={emptyMessage}

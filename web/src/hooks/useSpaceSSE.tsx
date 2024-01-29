@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { isEqual } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { getConfig } from 'services/config'
 
@@ -26,11 +27,16 @@ type UseSpaceSSEProps = {
   shouldRun?: boolean
 }
 
-const useSpaceSSE = ({ space, events, onEvent, onError, shouldRun = true }: UseSpaceSSEProps) => {
+const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = true }: UseSpaceSSEProps) => {
   const { standalone, routingId } = useAppContext()
-
-  //TODO - this is not working right - need to get to the bottom of too many streams being opened and closed... can miss events!
+  const [events, setEvents] = useState(_events)
   const eventSourceRef = useRef<EventSource | null>(null)
+
+  useEffect(() => {
+    if (!isEqual(events, _events)) {
+      setEvents(_events)
+    }
+  }, [_events, setEvents, events])
 
   useEffect(() => {
     // Conditionally establish the event stream - don't want to open on a finished execution
@@ -77,7 +83,11 @@ const useSpaceSSE = ({ space, events, onEvent, onError, shouldRun = true }: UseS
         eventSourceRef.current = null
       }
     }
-  }, [space, events, shouldRun, onEvent, onError])
+  }, [space, events, shouldRun, onEvent, onError, routingId, standalone])
+}
+
+export enum SSEEvents {
+  PULLREQ_UPDATED = 'pullreq_updated'
 }
 
 export default useSpaceSSE

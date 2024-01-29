@@ -28,6 +28,7 @@ import {
   Text,
   useToaster
 } from '@harnessio/uicore'
+import { useAtom } from 'jotai'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
@@ -41,6 +42,7 @@ import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
+import { currentUserAtom } from 'atoms/currentUser'
 import useNewToken from './NewToken/NewToken'
 import EditableTextField from './EditableTextField'
 import css from './UserProfile.module.scss'
@@ -59,10 +61,12 @@ const UserProfile = () => {
 
   const { data: userTokens, loading: tokensLoading, refetch: refetchTokens } = useGet({ path: USER_TOKENS_API_PATH })
   const { mutate: deleteToken } = useMutate({ path: USER_TOKENS_API_PATH, verb: 'DELETE' })
+  const [, setCurrentUser] = useAtom(currentUserAtom)
 
   const onLogout = async () => {
     await logoutUser()
     history.push(routes.toSignIn())
+    setCurrentUser(undefined)
   }
 
   const { openModal } = useNewToken({ onClose: refetchTokens })

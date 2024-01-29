@@ -32,7 +32,7 @@ import { ButtonRoleProps, PullRequestSection } from 'utils/Utils'
 import { findDefaultExecution } from './ChecksUtils'
 import css from './Checks.module.scss'
 
-interface CheckPipelineStagesProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface CheckPipelineStagesProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   pipelineName: string
   executionNumber: string
   expanded?: boolean
@@ -44,7 +44,7 @@ export const CheckPipelineStages: React.FC<CheckPipelineStagesProps> = ({
   executionNumber,
   expanded,
   repoMetadata,
-  pullRequestMetadata,
+  pullReqMetadata,
   onSelectStage
 }) => {
   const { data, error, loading, refetch } = useGet<TypesExecution>({
@@ -84,13 +84,13 @@ export const CheckPipelineStages: React.FC<CheckPipelineStagesProps> = ({
       history.replace(
         routes.toCODEPullRequest({
           repoPath: repoMetadata.path as string,
-          pullRequestId: String(pullRequestMetadata.number),
+          pullRequestId: String(pullReqMetadata.number),
           pullRequestSection: PullRequestSection.CHECKS
         }) + `?uid=${pipelineName}${`&stageId=${stage.name}`}`
       )
       onSelectStage(stage)
     },
-    [history, onSelectStage, pipelineName, pullRequestMetadata.number, repoMetadata.path, routes]
+    [history, onSelectStage, pipelineName, pullReqMetadata.number, repoMetadata.path, routes]
   )
   const stageRef = useRef<TypesStage>()
 

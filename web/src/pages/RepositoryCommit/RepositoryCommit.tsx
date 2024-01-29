@@ -17,7 +17,6 @@
 import React, { useMemo } from 'react'
 import { Container, FlexExpander, Layout, PageBody } from '@harnessio/uicore'
 import { useGet } from 'restful-react'
-import { noop } from 'lodash-es'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import type { TypesCommit } from 'services/code'
@@ -58,7 +57,6 @@ export default function RepositoryCommits() {
             commitSHA={commitRef}
             emptyTitle={getString('noChanges')}
             emptyMessage={getString('noChangesCompare')}
-            onCommentUpdate={noop}
             scrollElement={
               (standalone ? document.querySelector(`.${css.main}`)?.parentElement || window : window) as HTMLElement
             }

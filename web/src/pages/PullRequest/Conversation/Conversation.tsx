@@ -39,16 +39,17 @@ import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestAction
 import PullRequestSideBar from './PullRequestSideBar/PullRequestSideBar'
 import { isCodeComment, isComment, isSystemComment } from '../PullRequestUtils'
 import { ChecksOverview } from '../Checks/ChecksOverview'
+import { usePullReqActivities } from '../useGetPullRequestInfo'
 import { CodeCommentHeader } from './CodeCommentHeader'
 import { SystemComment } from './SystemComment'
 import CodeOwnersOverview from '../CodeOwners/CodeOwnersOverview'
 import css from './Conversation.module.scss'
 
-export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
-  onCommentUpdate: () => void
+export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   prStats?: TypesPullReqStats
   showEditDescription?: boolean
   onCancelEditDescription: () => void
+  onDescriptionSaved: () => void
   prChecksDecisionResult?: PRChecksDecisionResult
   standalone: boolean
   routingId: string
@@ -56,8 +57,8 @@ export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | '
 
 export const Conversation: React.FC<ConversationProps> = ({
   repoMetadata,
-  pullRequestMetadata,
-  onCommentUpdate,
+  pullReqMetadata,
+  onDescriptionSaved,
   prStats,
   showEditDescription,
   onCancelEditDescription,
@@ -67,22 +68,14 @@ export const Conversation: React.FC<ConversationProps> = ({
 }) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
-  const {
-    data: activities,
-    loading,
-    error,
-    refetch: refetchActivities
-  } = useGet<TypesPullReqActivity[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/activities`
-  })
-  const showSpinner = useMemo(() => loading && !activities, [loading, activities])
+  const activities = usePullReqActivities()
   const { data: reviewers, refetch: refetchReviewers } = useGet<Unknown[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`,
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/reviewers`,
     debounce: 500
   })
 
   const { data: codeOwners, refetch: refetchCodeOwners } = useGet<TypesCodeOwnerEvaluation>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/codeowners`,
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/codeowners`,
     debounce: 500
   })
 
@@ -151,8 +144,8 @@ export const Conversation: React.FC<ConversationProps> = ({
     return blocks
   }, [activities, dateOrderSort, activityFilter, currentUser?.uid])
   const path = useMemo(
-    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/comments`,
-    [repoMetadata.path, pullRequestMetadata.number]
+    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/comments`,
+    [repoMetadata.path, pullReqMetadata.number]
   )
   const { mutate: saveComment } = useMutate({ verb: 'POST', path })
   const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${path}/${id}` })
@@ -161,28 +154,21 @@ export const Conversation: React.FC<ConversationProps> = ({
   const [dirtyNewComment, setDirtyNewComment] = useState(false)
   const [dirtyCurrentComments, setDirtyCurrentComments] = useState(false)
   const onPRStateChanged = useCallback(() => {
-    onCommentUpdate()
-    refetchActivities()
     refetchCodeOwners()
-  }, [onCommentUpdate, refetchActivities, refetchCodeOwners])
-  const hasDescription = useMemo(
-    () => !!pullRequestMetadata?.description?.length,
-    [pullRequestMetadata?.description?.length]
-  )
+  }, [refetchCodeOwners])
+  const hasDescription = useMemo(() => !!pullReqMetadata?.description?.length, [pullReqMetadata?.description?.length])
 
   useEffect(() => {
     if (prStats) {
-      refetchActivities()
       refetchCodeOwners()
     }
   }, [
     prStats,
     prStats?.conversations,
     prStats?.unresolved_count,
-    pullRequestMetadata?.title,
-    pullRequestMetadata?.state,
-    pullRequestMetadata?.source_sha,
-    refetchActivities,
+    pullReqMetadata?.title,
+    pullReqMetadata?.state,
+    pullReqMetadata?.source_sha,
     refetchCodeOwners
   ])
 
@@ -215,15 +201,11 @@ export const Conversation: React.FC<ConversationProps> = ({
               showError(getErrorMessage(exception), 0)
             })
 
-          if (result) {
-            onCommentUpdate()
-          }
-
           return [result, updatedItem]
         }}
       />
     ) // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser, onCommentUpdate, saveComment, showError])
+  }, [currentUser, saveComment, showError])
 
   const renderedActivityBlocks = useMemo(
     () =>
@@ -239,7 +221,7 @@ export const Conversation: React.FC<ConversationProps> = ({
               title={
                 <SystemComment
                   key={`system-${threadId}`}
-                  pullRequestMetadata={pullRequestMetadata}
+                  pullReqMetadata={pullReqMetadata}
                   commentItems={commentItems}
                   repoMetadataPath={repoMetadata.path}
                 />
@@ -315,10 +297,6 @@ export const Conversation: React.FC<ConversationProps> = ({
                       break
                   }
 
-                  if (result) {
-                    onCommentUpdate()
-                  }
-
                   return [result, updatedItem]
                 }}
                 outlets={{
@@ -327,30 +305,27 @@ export const Conversation: React.FC<ConversationProps> = ({
                       commentItems={commentItems}
                       threadId={threadId}
                       repoMetadata={repoMetadata}
-                      pullRequestMetadata={pullRequestMetadata}
+                      pullReqMetadata={pullReqMetadata}
                     />
                   ),
                   [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
                     <CodeCommentStatusSelect
                       repoMetadata={repoMetadata}
-                      pullRequestMetadata={pullRequestMetadata}
-                      onCommentUpdate={onCommentUpdate}
+                      pullReqMetadata={pullReqMetadata}
                       commentItems={commentItems}
-                      refetchActivities={refetchActivities}
                     />
                   ),
                   [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (
                     <CodeCommentStatusButton
                       repoMetadata={repoMetadata}
-                      pullRequestMetadata={pullRequestMetadata}
-                      onCommentUpdate={onCommentUpdate}
+                      pullReqMetadata={pullReqMetadata}
                       commentItems={commentItems}
                     />
                   ),
                   [CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS]: (props: ButtonProps) => (
                     <CodeCommentSecondarySaveButton
                       repoMetadata={repoMetadata}
-                      pullRequestMetadata={pullRequestMetadata as TypesPullReq}
+                      pullReqMetadata={pullReqMetadata as TypesPullReq}
                       commentItems={commentItems}
                       {...props}
                     />
@@ -361,16 +336,16 @@ export const Conversation: React.FC<ConversationProps> = ({
         )
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activityBlocks, currentUser, pullRequestMetadata]
+    [activityBlocks, currentUser, pullReqMetadata]
   )
 
   return (
-    <PullRequestTabContentWrapper loading={showSpinner} error={error} onRetry={refetchActivities}>
+    <PullRequestTabContentWrapper>
       <Container>
         <Layout.Vertical spacing="xlarge">
           <PullRequestActionsBox
             repoMetadata={repoMetadata}
-            pullRequestMetadata={pullRequestMetadata}
+            pullReqMetadata={pullReqMetadata}
             onPRStateChanged={onPRStateChanged}
             refetchReviewers={refetchReviewers}
           />
@@ -381,7 +356,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                   {prChecksDecisionResult && (
                     <ChecksOverview
                       repoMetadata={repoMetadata}
-                      pullRequestMetadata={pullRequestMetadata}
+                      pullReqMetadata={pullReqMetadata}
                       prChecksDecisionResult={prChecksDecisionResult}
                       codeOwners={codeOwners as TypesCodeOwnerEvaluation}
                     />
@@ -391,7 +366,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                       standalone={standalone}
                       codeOwners={codeOwners}
                       repoMetadata={repoMetadata}
-                      pullRequestMetadata={pullRequestMetadata}
+                      pullReqMetadata={pullReqMetadata}
                       prChecksDecisionResult={prChecksDecisionResult}
                     />
                   )}
@@ -401,8 +376,8 @@ export const Conversation: React.FC<ConversationProps> = ({
                       routingId={routingId}
                       standalone={standalone}
                       repoMetadata={repoMetadata}
-                      pullRequestMetadata={pullRequestMetadata}
-                      onCommentUpdate={onCommentUpdate}
+                      pullReqMetadata={pullReqMetadata}
+                      onDescriptionSaved={onDescriptionSaved}
                       onCancelEditDescription={onCancelEditDescription}
                       prStats={prStats}
                     />
@@ -418,7 +393,6 @@ export const Conversation: React.FC<ConversationProps> = ({
                         className={css.selectButton}
                         onChange={newState => {
                           setActivityFilter(newState)
-                          refetchActivities()
                         }}
                       />
                     </Container>
@@ -454,7 +428,7 @@ export const Conversation: React.FC<ConversationProps> = ({
               <PullRequestSideBar
                 reviewers={reviewers}
                 repoMetadata={repoMetadata}
-                pullRequestMetadata={pullRequestMetadata}
+                pullRequestMetadata={pullReqMetadata}
                 refetchReviewers={refetchReviewers}
               />
             </Layout.Horizontal>

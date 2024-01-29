@@ -38,7 +38,7 @@ export function useGetResourceContent({
       include_commit: String(includeCommit),
       git_ref: gitRef
     },
-    lazy: !repoMetadata || lazy
+    lazy: !repoMetadata?.path || lazy
   })
   const isRepositoryEmpty = useMemo(
     () => (repoMetadata && resourcePath === '' && error && response?.status === 404) || false,

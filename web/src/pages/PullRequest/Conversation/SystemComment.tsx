@@ -32,16 +32,12 @@ import { CommitActions } from 'components/CommitActions/CommitActions'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import css from './Conversation.module.scss'
 
-interface SystemCommentProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
+interface SystemCommentProps extends Pick<GitInfoProps, 'pullReqMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
   repoMetadataPath?: string
 }
 
-export const SystemComment: React.FC<SystemCommentProps> = ({
-  pullRequestMetadata,
-  commentItems,
-  repoMetadataPath
-}) => {
+export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, commentItems, repoMetadataPath }) => {
   const { getString } = useStrings()
   const payload = commentItems[0].payload
   const type = payload?.type
@@ -56,18 +52,18 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
               <Icon name={CodeIcon.Merged} size={16} color={Color.PURPLE_700} />
             </Container>
 
-            <Avatar name={pullRequestMetadata.merger?.display_name} size="small" hoverCard={false} />
+            <Avatar name={pullReqMetadata.merger?.display_name} size="small" hoverCard={false} />
             <Text>
               <StringSubstitute
                 str={getString('pr.prMergedInfo')}
                 vars={{
-                  user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
-                  source: <strong>{pullRequestMetadata.source_branch}</strong>,
-                  target: <strong>{pullRequestMetadata.target_branch}</strong>,
+                  user: <strong>{pullReqMetadata.merger?.display_name}</strong>,
+                  source: <strong>{pullReqMetadata.source_branch}</strong>,
+                  target: <strong>{pullReqMetadata.target_branch}</strong>,
                   time: (
                     <Text inline margin={{ left: 'xsmall' }}>
                       <PipeSeparator height={9} />
-                      <ReactTimeago className={css.timeText} date={pullRequestMetadata.merged as number} />
+                      <ReactTimeago className={css.timeText} date={pullReqMetadata.merged as number} />
                     </Text>
                   )
                 }}
@@ -131,7 +127,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
                         href={routes.toCODEPullRequest({
                           repoPath: repoMetadataPath as string,
                           pullRequestSection: PullRequestSection.FILES_CHANGED,
-                          pullRequestId: String(pullRequestMetadata.number),
+                          pullRequestId: String(pullReqMetadata.number),
                           commitSHA: (payload?.payload as Unknown)?.new as string
                         })}
                       />
@@ -171,7 +167,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
                         href={routes.toCODEPullRequest({
                           repoPath: repoMetadataPath as string,
                           pullRequestSection: PullRequestSection.FILES_CHANGED,
-                          pullRequestId: String(pullRequestMetadata.number),
+                          pullRequestId: String(pullReqMetadata.number),
                           commitSHA: (payload?.payload as Unknown)?.sha as string
                         })}
                       />
