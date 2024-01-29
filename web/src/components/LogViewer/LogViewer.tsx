@@ -83,7 +83,7 @@ const LogTerminal: React.FC<LogViewerProps> = ({
   }, [content, stepNameLogKeyMap, selectedItemData])
 
   const getLogData = (logBaseKey: string) => {
-    const logContent = hooks?.useLogsContentHook([logBaseKey])
+    const logContent = hooks?.useLogsContent([logBaseKey])
     return logContent.blobDataCur
   }
   // State to manage expanded states of all containers

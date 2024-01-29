@@ -35,7 +35,8 @@ ReactDOM.render(
     hooks={{
       usePermissionTranslate: noop,
       useExecutionDataHook: noop,
-      useLogsContentHook: noop
+      useLogsContent: noop,
+      useLogsStreaming: noop
     }}
     currentUser={defaultCurrentUser}
     currentUserProfileURL=""
