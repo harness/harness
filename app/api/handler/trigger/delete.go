@@ -26,7 +26,7 @@ func HandleDelete(triggerCtrl *trigger.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -36,13 +36,13 @@ func HandleDelete(triggerCtrl *trigger.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		triggerUID, err := request.GetTriggerUIDFromPath(r)
+		triggerIdentifier, err := request.GetTriggerIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		err = triggerCtrl.Delete(ctx, session, repoRef, pipelineUID, triggerUID)
+		err = triggerCtrl.Delete(ctx, session, repoRef, pipelineIdentifier, triggerIdentifier)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

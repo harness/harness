@@ -28,37 +28,38 @@ import (
 
 // TODO: Add more as needed.
 type CreateInput struct {
-	Description string               `json:"description"`
-	UID         string               `json:"uid"`
-	Secret      string               `json:"secret"`
-	Disabled    bool                 `json:"disabled"`
-	Actions     []enum.TriggerAction `json:"actions"`
+	Description string `json:"description"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        string               `json:"uid" deprecated:"true"`
+	Identifier string               `json:"identifier"`
+	Secret     string               `json:"secret"`
+	Disabled   bool                 `json:"disabled"`
+	Actions    []enum.TriggerAction `json:"actions"`
 }
 
 func (c *Controller) Create(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	pipelineUID string,
+	pipelineIdentifier string,
 	in *CreateInput,
 ) (*types.Trigger, error) {
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
 	// Trigger permissions are associated with pipeline permissions. If a user has permissions
 	// to edit the pipeline, they will have permissions to create a trigger as well.
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineEdit)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
 
-	err = c.checkCreateInput(in)
-	if err != nil {
-		return nil, fmt.Errorf("invalid input: %w", err)
-	}
-
-	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
+	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
@@ -71,7 +72,7 @@ func (c *Controller) Create(
 		CreatedBy:   session.Principal.ID,
 		RepoID:      repo.ID,
 		Actions:     deduplicateActions(in.Actions),
-		UID:         in.UID,
+		Identifier:  in.Identifier,
 		PipelineID:  pipeline.ID,
 		Created:     now,
 		Updated:     now,
@@ -85,7 +86,12 @@ func (c *Controller) Create(
 	return trigger, nil
 }
 
-func (c *Controller) checkCreateInput(in *CreateInput) error {
+func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
 	if err := check.Description(in.Description); err != nil {
 		return err
 	}
@@ -95,7 +101,7 @@ func (c *Controller) checkCreateInput(in *CreateInput) error {
 	if err := checkActions(in.Actions); err != nil {
 		return err
 	}
-	if err := c.uidCheck(in.UID, false); err != nil { //nolint:revive
+	if err := check.Identifier(in.Identifier); err != nil { //nolint:revive
 		return err
 	}
 

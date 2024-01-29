@@ -73,8 +73,10 @@ func fromRepo(v *types.Repository, p *types.Pipeline) starlark.StringDict {
 		namespace = v.Path[:idx]
 	}
 	return starlark.StringDict{
-		"uid":                  starlark.String(v.UID),
-		"name":                 starlark.String(v.UID),
+		// TODO [CODE-1363]: remove after identifier migration?
+		"uid":                  starlark.String(v.Identifier),
+		"identifier":           starlark.String(v.Identifier),
+		"name":                 starlark.String(v.Identifier),
 		"namespace":            starlark.String(namespace),
 		"slug":                 starlark.String(v.Path),
 		"git_http_url":         starlark.String(v.GitURL),

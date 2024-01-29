@@ -30,7 +30,7 @@ import (
 
 type pipelineRequest struct {
 	repoRequest
-	Ref string `path:"pipeline_uid"`
+	Identifier string `path:"pipeline_identifier"`
 }
 
 type executionRequest struct {
@@ -40,7 +40,7 @@ type executionRequest struct {
 
 type triggerRequest struct {
 	pipelineRequest
-	UID string `path:"trigger_uid"`
+	Identifier string `path:"trigger_identifier"`
 }
 
 type logRequest struct {
@@ -146,7 +146,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pipelines/{pipeline_uid}", opFind)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pipelines/{pipeline_identifier}", opFind)
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("pipeline")
@@ -157,7 +157,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/pipelines/{pipeline_uid}", opDelete)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/pipelines/{pipeline_identifier}", opDelete)
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("pipeline")
@@ -170,7 +170,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}", opUpdate)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}", opUpdate)
 
 	executionCreate := openapi3.Operation{}
 	executionCreate.WithTags("pipeline")
@@ -183,7 +183,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionCreate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&executionCreate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions", executionCreate)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/executions", executionCreate)
 
 	executionFind := openapi3.Operation{}
 	executionFind.WithTags("pipeline")
@@ -195,7 +195,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionFind, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&executionFind, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}", executionFind)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/executions/{execution_number}", executionFind)
 
 	executionCancel := openapi3.Operation{}
 	executionCancel.WithTags("pipeline")
@@ -207,7 +207,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionCancel, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&executionCancel, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/cancel", executionCancel)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/executions/{execution_number}/cancel", executionCancel)
 
 	executionDelete := openapi3.Operation{}
 	executionDelete.WithTags("pipeline")
@@ -219,7 +219,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&executionDelete, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}", executionDelete)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/executions/{execution_number}", executionDelete)
 
 	executionList := openapi3.Operation{}
 	executionList.WithTags("pipeline")
@@ -232,7 +232,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionList, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&executionList, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions", executionList)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/executions", executionList)
 
 	triggerCreate := openapi3.Operation{}
 	triggerCreate.WithTags("pipeline")
@@ -244,7 +244,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&triggerCreate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&triggerCreate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/triggers", triggerCreate)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/triggers", triggerCreate)
 
 	triggerFind := openapi3.Operation{}
 	triggerFind.WithTags("pipeline")
@@ -256,7 +256,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&triggerFind, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&triggerFind, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/triggers/{trigger_uid}", triggerFind)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/triggers/{trigger_identifier}", triggerFind)
 
 	triggerDelete := openapi3.Operation{}
 	triggerDelete.WithTags("pipeline")
@@ -268,7 +268,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&triggerDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&triggerDelete, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/triggers/{trigger_uid}", triggerDelete)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/triggers/{trigger_identifier}", triggerDelete)
 
 	triggerUpdate := openapi3.Operation{}
 	triggerUpdate.WithTags("pipeline")
@@ -281,7 +281,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/triggers/{trigger_uid}", triggerUpdate)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/triggers/{trigger_identifier}", triggerUpdate)
 
 	triggerList := openapi3.Operation{}
 	triggerList.WithTags("pipeline")
@@ -294,7 +294,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&triggerList, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&triggerList, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/triggers", triggerList)
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/triggers", triggerList)
 
 	logView := openapi3.Operation{}
 	logView.WithTags("pipeline")
@@ -306,6 +306,9 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/logs/{stage_number}/{step_number}", logView)
+	_ = reflector.Spec.AddOperation(
+		http.MethodGet,
+		"/repos/{repo_ref}/pipelines/{pipeline_identifier}/executions/{execution_number}/logs/{stage_number}/{step_number}",
+		logView,
+	)
 }

@@ -32,13 +32,13 @@ func CheckConnector(
 	authorizer authz.Authorizer,
 	session *auth.Session,
 	parentPath,
-	uid string,
+	identifier string,
 	permission enum.Permission,
 ) error {
 	scope := &types.Scope{SpacePath: parentPath}
 	resource := &types.Resource{
-		Type: enum.ResourceTypeConnector,
-		Name: uid,
+		Type:       enum.ResourceTypeConnector,
+		Identifier: identifier,
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)

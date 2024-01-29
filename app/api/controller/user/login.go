@@ -70,11 +70,11 @@ func (c *Controller) Login(
 		return nil, usererror.ErrNotFound
 	}
 
-	tokenUID, err := generateSessionTokenUID()
+	tokenIdentifier, err := generateSessionTokenIdentifier()
 	if err != nil {
 		return nil, err
 	}
-	token, jwtToken, err := token.CreateUserSession(ctx, c.tokenStore, user, tokenUID)
+	token, jwtToken, err := token.CreateUserSession(ctx, c.tokenStore, user, tokenIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (c *Controller) Login(
 	return &types.TokenResponse{Token: *token, AccessToken: jwtToken}, nil
 }
 
-func generateSessionTokenUID() (string, error) {
+func generateSessionTokenIdentifier() (string, error) {
 	r, err := rand.Int(rand.Reader, big.NewInt(10000))
 	if err != nil {
 		return "", fmt.Errorf("failed to generate random number: %w", err)

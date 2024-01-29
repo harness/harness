@@ -28,17 +28,17 @@ func (c *Controller) Find(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	uid string,
+	identifier string,
 ) (*types.Secret, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
-	err = apiauth.CheckSecret(ctx, c.authorizer, session, space.Path, uid, enum.PermissionSecretView)
+	err = apiauth.CheckSecret(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionSecretView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	secret, err := c.secretStore.FindByUID(ctx, space.ID, uid)
+	secret, err := c.secretStore.FindByIdentifier(ctx, space.ID, identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find secret: %w", err)
 	}

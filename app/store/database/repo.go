@@ -60,7 +60,7 @@ type repository struct {
 	ID          int64  `db:"repo_id"`
 	Version     int64  `db:"repo_version"`
 	ParentID    int64  `db:"repo_parent_id"`
-	UID         string `db:"repo_uid"`
+	Identifier  string `db:"repo_uid"`
 	Description string `db:"repo_description"`
 	IsPublic    bool   `db:"repo_is_public"`
 	CreatedBy   int64  `db:"repo_created_by"`
@@ -128,15 +128,19 @@ func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, erro
 	return s.mapToRepo(ctx, dst)
 }
 
-// Find finds the repo with the given UID in the given space ID.
-func (s *RepoStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Repository, error) {
+// Find finds the repo with the given identifier in the given space ID.
+func (s *RepoStore) FindByIdentifier(
+	ctx context.Context,
+	spaceID int64,
+	identifier string,
+) (*types.Repository, error) {
 	const sqlQuery = repoSelectBase + `
 		WHERE repo_parent_id = $1 AND LOWER(repo_uid) = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(repository)
-	if err := db.GetContext(ctx, dst, sqlQuery, spaceID, strings.ToLower(uid)); err != nil {
+	if err := db.GetContext(ctx, dst, sqlQuery, spaceID, strings.ToLower(identifier)); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
 	}
 
@@ -148,7 +152,7 @@ func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repos
 	// ASSUMPTION: digits only is not a valid repo path
 	id, err := strconv.ParseInt(repoRef, 10, 64)
 	if err != nil {
-		spacePath, repoUID, err := paths.DisectLeaf(repoRef)
+		spacePath, repoIdentifier, err := paths.DisectLeaf(repoRef)
 		if err != nil {
 			return nil, fmt.Errorf("failed to disect leaf for path '%s': %w", repoRef, err)
 		}
@@ -157,7 +161,7 @@ func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repos
 			return nil, fmt.Errorf("failed to get space path: %w", err)
 		}
 
-		return s.FindByUID(ctx, pathObject.SpaceID, repoUID)
+		return s.FindByIdentifier(ctx, pathObject.SpaceID, repoIdentifier)
 	}
 
 	return s.Find(ctx, id)
@@ -222,7 +226,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
-	repo.Path, err = s.getRepoPath(ctx, repo.ParentID, repo.UID)
+	repo.Path, err = s.getRepoPath(ctx, repo.ParentID, repo.Identifier)
 	if err != nil {
 		return err
 	}
@@ -282,8 +286,8 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	repo.Version = dbRepo.Version
 	repo.Updated = dbRepo.Updated
 
-	// update path in case parent/uid changed (its most likely cached anyway)
-	repo.Path, err = s.getRepoPath(ctx, repo.ParentID, repo.UID)
+	// update path in case parent/identifier changed (its most likely cached anyway)
+	repo.Path, err = s.getRepoPath(ctx, repo.ParentID, repo.Identifier)
 	if err != nil {
 		return err
 	}
@@ -458,7 +462,8 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	switch opts.Sort {
-	case enum.RepoAttrUID, enum.RepoAttrNone:
+	// TODO [CODE-1363]: remove after identifier migration.
+	case enum.RepoAttrUID, enum.RepoAttrIdentifier, enum.RepoAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
@@ -520,7 +525,7 @@ func (s *RepoStore) mapToRepo(
 		ID:             in.ID,
 		Version:        in.Version,
 		ParentID:       in.ParentID,
-		UID:            in.UID,
+		Identifier:     in.Identifier,
 		Description:    in.Description,
 		IsPublic:       in.IsPublic,
 		Created:        in.Created,
@@ -541,7 +546,7 @@ func (s *RepoStore) mapToRepo(
 		// Path: is set below
 	}
 
-	res.Path, err = s.getRepoPath(ctx, in.ParentID, in.UID)
+	res.Path, err = s.getRepoPath(ctx, in.ParentID, in.Identifier)
 	if err != nil {
 		return nil, err
 	}
@@ -549,12 +554,12 @@ func (s *RepoStore) mapToRepo(
 	return res, nil
 }
 
-func (s *RepoStore) getRepoPath(ctx context.Context, parentID int64, repoUID string) (string, error) {
+func (s *RepoStore) getRepoPath(ctx context.Context, parentID int64, repoIdentifier string) (string, error) {
 	spacePath, err := s.spacePathStore.FindPrimaryBySpaceID(ctx, parentID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get primary path for space %d: %w", parentID, err)
 	}
-	return paths.Concatinate(spacePath.Value, repoUID), nil
+	return paths.Concatinate(spacePath.Value, repoIdentifier), nil
 }
 
 func (s *RepoStore) mapToRepos(
@@ -598,7 +603,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		ID:             in.ID,
 		Version:        in.Version,
 		ParentID:       in.ParentID,
-		UID:            in.UID,
+		Identifier:     in.Identifier,
 		Description:    in.Description,
 		IsPublic:       in.IsPublic,
 		Created:        in.Created,

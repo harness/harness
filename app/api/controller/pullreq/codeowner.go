@@ -73,7 +73,7 @@ func mapCodeOwnerEvaluation(ownerEvaluation *codeowners.Evaluation) []types.Code
 				userGroupEvaluations[k] = mapOwner(userGroupOwner)
 			}
 			userGroupOwnerEvaluations[j] = types.UserGroupOwnerEvaluation{
-				ID:          userGroupOwnerEvaluation.ID,
+				ID:          userGroupOwnerEvaluation.Identifier,
 				Name:        userGroupOwnerEvaluation.Name,
 				Evaluations: userGroupEvaluations,
 			}

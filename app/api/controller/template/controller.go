@@ -17,24 +17,20 @@ package template
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
-	uidCheck      check.PathUID
 	templateStore store.TemplateStore
 	authorizer    authz.Authorizer
 	spaceStore    store.SpaceStore
 }
 
 func NewController(
-	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
 	templateStore store.TemplateStore,
 	spaceStore store.SpaceStore,
 ) *Controller {
 	return &Controller{
-		uidCheck:      uidCheck,
 		templateStore: templateStore,
 		authorizer:    authorizer,
 		spaceStore:    spaceStore,

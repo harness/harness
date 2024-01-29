@@ -41,12 +41,12 @@ func HandleUpdate(secretCtrl *secret.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, secretUID, err := paths.DisectLeaf(secretRef)
+		spaceRef, secretIdentifier, err := paths.DisectLeaf(secretRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 		}
 
-		secret, err := secretCtrl.Update(ctx, session, spaceRef, secretUID, in)
+		secret, err := secretCtrl.Update(ctx, session, spaceRef, secretIdentifier, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

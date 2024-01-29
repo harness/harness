@@ -40,10 +40,10 @@ func (c *Controller) ListRecentChecks(
 		opts.Since = time.Now().Add(-30 * 24 * time.Hour).UnixMilli()
 	}
 
-	checkUIDs, err := c.checkStore.ListRecent(ctx, repo.ID, opts)
+	checkIdentifiers, err := c.checkStore.ListRecent(ctx, repo.ID, opts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list status check results for repo=%s: %w", repo.UID, err)
+		return nil, fmt.Errorf("failed to list status check results for repo=%s: %w", repo.Identifier, err)
 	}
 
-	return checkUIDs, nil
+	return checkIdentifiers, nil
 }

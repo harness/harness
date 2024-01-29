@@ -28,15 +28,15 @@ func (c *Controller) Find(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	uid string,
+	identifier string,
 ) (*types.Pipeline, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, uid, enum.PermissionPipelineView)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, identifier, enum.PermissionPipelineView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
-	return c.pipelineStore.FindByUID(ctx, repo.ID, uid)
+	return c.pipelineStore.FindByIdentifier(ctx, repo.ID, identifier)
 }

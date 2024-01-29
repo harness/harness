@@ -16,7 +16,7 @@
 package types
 
 type UserGroup struct {
-	ID          string `json:"id"`
+	Identifier  string `json:"identifier"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Users       []string

@@ -70,12 +70,16 @@ type MembershipSpaceSort string
 
 // MembershipSpaceSort enumeration.
 const (
-	MembershipSpaceSortUID     MembershipSpaceSort = uid
-	MembershipSpaceSortCreated MembershipSpaceSort = created
+	// TODO [CODE-1363]: remove after identifier migration.
+	MembershipSpaceSortUID        MembershipSpaceSort = uid
+	MembershipSpaceSortIdentifier MembershipSpaceSort = identifier
+	MembershipSpaceSortCreated    MembershipSpaceSort = created
 )
 
 var membershipSpaceSorts = sortEnum([]MembershipSpaceSort{
+	// TODO [CODE-1363]: remove after identifier migration.
 	MembershipSpaceSortUID,
+	MembershipSpaceSortIdentifier,
 	MembershipSpaceSortCreated,
 })
 
@@ -84,27 +88,34 @@ func (s MembershipSpaceSort) Sanitize() (MembershipSpaceSort, bool) {
 	return Sanitize(s, GetAllMembershipSpaceSorts)
 }
 func GetAllMembershipSpaceSorts() ([]MembershipSpaceSort, MembershipSpaceSort) {
-	return membershipSpaceSorts, MembershipSpaceSortUID
+	// TODO [CODE-1363]: remove after identifier migration.
+	return membershipSpaceSorts, MembershipSpaceSortIdentifier
 }
 
 // ParseMembershipSpaceSort parses the membership space sort attribute string
 // and returns the equivalent enumeration.
 func ParseMembershipSpaceSort(s string) MembershipSpaceSort {
 	switch strings.ToLower(s) {
-	case name:
+	case name, identifier:
+		return MembershipSpaceSortIdentifier
+	// TODO [CODE-1363]: remove after identifier migration.
+	case uid:
 		return MembershipSpaceSortUID
 	case created, createdAt:
 		return MembershipSpaceSortCreated
 	default:
-		return MembershipSpaceSortUID
+		return MembershipSpaceSortIdentifier
 	}
 }
 
 // String returns the string representation of the attribute.
 func (s MembershipSpaceSort) String() string {
 	switch s {
+	// TODO [CODE-1363]: remove after identifier migration.
 	case MembershipSpaceSortUID:
 		return uid
+	case MembershipSpaceSortIdentifier:
+		return identifier
 	case MembershipSpaceSortCreated:
 		return created
 	default:

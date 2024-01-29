@@ -69,7 +69,7 @@ type Provider struct {
 
 type RepositoryInfo struct {
 	Space         string
-	UID           string
+	Identifier    string
 	CloneURL      string
 	IsPublic      bool
 	DefaultBranch string
@@ -78,17 +78,17 @@ type RepositoryInfo struct {
 // ToRepo converts the RepositoryInfo into the types.Repository object marked as being imported.
 func (r *RepositoryInfo) ToRepo(
 	spaceID int64,
-	uid string,
+	identifier string,
 	description string,
 	principal *types.Principal,
 	publicResourceCreationEnabled bool,
 ) *types.Repository {
 	now := time.Now().UnixMilli()
-	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(fmt.Sprintf("%d:%s", spaceID, uid)), now)
+	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(fmt.Sprintf("%d:%s", spaceID, identifier)), now)
 	return &types.Repository{
 		Version:       0,
 		ParentID:      spaceID,
-		UID:           uid,
+		Identifier:    identifier,
 		GitUID:        gitTempUID, // the correct git UID will be set by the job handler
 		Description:   description,
 		IsPublic:      publicResourceCreationEnabled && r.IsPublic,
@@ -258,7 +258,7 @@ func LoadRepositoryFromProvider(
 
 	return RepositoryInfo{
 		Space:         scmRepo.Namespace,
-		UID:           scmRepo.Name,
+		Identifier:    scmRepo.Name,
 		CloneURL:      scmRepo.Clone,
 		IsPublic:      !scmRepo.Private,
 		DefaultBranch: scmRepo.Branch,
@@ -339,7 +339,7 @@ func LoadRepositoriesFromProviderSpace(
 
 			repos = append(repos, RepositoryInfo{
 				Space:         scmRepo.Namespace,
-				UID:           scmRepo.Name,
+				Identifier:    scmRepo.Name,
 				CloneURL:      scmRepo.Clone,
 				IsPublic:      !scmRepo.Private,
 				DefaultBranch: scmRepo.Branch,

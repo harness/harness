@@ -64,7 +64,7 @@ type rule struct {
 	SpaceID null.Int `db:"rule_space_id"`
 	RepoID  null.Int `db:"rule_repo_id"`
 
-	UID         string `db:"rule_uid"`
+	Identifier  string `db:"rule_uid"`
 	Description string `db:"rule_description"`
 
 	Type  types.RuleType `db:"rule_type"`
@@ -112,23 +112,28 @@ func (s *RuleStore) Find(ctx context.Context, id int64) (*types.Rule, error) {
 	return &r, nil
 }
 
-func (s *RuleStore) FindByUID(ctx context.Context, spaceID, repoID *int64, uid string) (*types.Rule, error) {
+func (s *RuleStore) FindByIdentifier(
+	ctx context.Context,
+	spaceID *int64,
+	repoID *int64,
+	identifier string,
+) (*types.Rule, error) {
 	stmt := database.Builder.
 		Select(ruleColumns).
 		From("rules").
-		Where("LOWER(rule_uid) = ?", strings.ToLower(uid))
+		Where("LOWER(rule_uid) = ?", strings.ToLower(identifier))
 	stmt = s.applyParentID(stmt, spaceID, repoID)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert find rule by UID to sql: %w", err)
+		return nil, fmt.Errorf("failed to convert find rule by Identifier to sql: %w", err)
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := &rule{}
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing find rule by uid query")
+		return nil, database.ProcessSQLErrorf(err, "Failed executing find rule by identifier query")
 	}
 
 	r := s.mapToRule(ctx, dst)
@@ -247,10 +252,10 @@ func (s *RuleStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *RuleStore) DeleteByUID(ctx context.Context, spaceID, repoID *int64, uid string) error {
+func (s *RuleStore) DeleteByIdentifier(ctx context.Context, spaceID, repoID *int64, identifier string) error {
 	stmt := database.Builder.
 		Delete("rules").
-		Where("LOWER(rule_uid) = ?", strings.ToLower(uid))
+		Where("LOWER(rule_uid) = ?", strings.ToLower(identifier))
 
 	if spaceID != nil {
 		stmt = stmt.Where("rule_space_id = ?", *spaceID)
@@ -262,13 +267,13 @@ func (s *RuleStore) DeleteByUID(ctx context.Context, spaceID, repoID *int64, uid
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return fmt.Errorf("failed to convert delete rule by UID to sql: %w", err)
+		return fmt.Errorf("failed to convert delete rule by identifier to sql: %w", err)
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err = db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(err, "Failed executing delete rule by uid query")
+		return database.ProcessSQLErrorf(err, "Failed executing delete rule by identifier query")
 	}
 
 	return nil
@@ -322,7 +327,8 @@ func (s *RuleStore) List(ctx context.Context, spaceID, repoID *int64, filter *ty
 		stmt = stmt.OrderBy("rule_created " + order.String())
 	case enum.RuleSortUpdated:
 		stmt = stmt.OrderBy("rule_updated " + order.String())
-	case enum.RuleSortUID:
+		// TODO [CODE-1363]: remove after identifier migration.
+	case enum.RuleSortUID, enum.RuleSortIdentifier:
 		stmt = stmt.OrderBy("LOWER(rule_uid) " + order.String())
 	}
 
@@ -345,7 +351,7 @@ type ruleInfo struct {
 	SpacePath  string         `db:"space_path"`
 	RepoPath   string         `db:"repo_path"`
 	ID         int64          `db:"rule_id"`
-	UID        string         `db:"rule_uid"`
+	Identifier string         `db:"rule_uid"`
 	Type       types.RuleType `db:"rule_type"`
 	State      enum.RuleState `db:"rule_state"`
 	Pattern    string         `db:"rule_pattern"`
@@ -465,7 +471,7 @@ func (s *RuleStore) mapToRule(
 		Updated:     in.Updated,
 		SpaceID:     in.SpaceID.Ptr(),
 		RepoID:      in.RepoID.Ptr(),
-		UID:         in.UID,
+		Identifier:  in.Identifier,
 		Description: in.Description,
 		Type:        in.Type,
 		State:       in.State,
@@ -505,7 +511,7 @@ func mapToInternalRule(in *types.Rule) rule {
 		Updated:     in.Updated,
 		SpaceID:     null.IntFromPtr(in.SpaceID),
 		RepoID:      null.IntFromPtr(in.RepoID),
-		UID:         in.UID,
+		Identifier:  in.Identifier,
 		Description: in.Description,
 		Type:        in.Type,
 		State:       in.State,
@@ -517,12 +523,12 @@ func mapToInternalRule(in *types.Rule) rule {
 func (*RuleStore) mapToRuleInfo(in *ruleInfo) types.RuleInfoInternal {
 	return types.RuleInfoInternal{
 		RuleInfo: types.RuleInfo{
-			SpacePath: in.SpacePath,
-			RepoPath:  in.RepoPath,
-			ID:        in.ID,
-			UID:       in.UID,
-			Type:      in.Type,
-			State:     in.State,
+			SpacePath:  in.SpacePath,
+			RepoPath:   in.RepoPath,
+			ID:         in.ID,
+			Identifier: in.Identifier,
+			Type:       in.Type,
+			State:      in.State,
 		},
 		Pattern:    json.RawMessage(in.Pattern),
 		Definition: json.RawMessage(in.Definition),

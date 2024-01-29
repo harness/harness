@@ -50,8 +50,8 @@ func CheckRepo(
 
 	scope := &types.Scope{SpacePath: parentSpace}
 	resource := &types.Resource{
-		Type: enum.ResourceTypeRepo,
-		Name: name,
+		Type:       enum.ResourceTypeRepo,
+		Identifier: name,
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)

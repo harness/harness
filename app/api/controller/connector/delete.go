@@ -23,17 +23,22 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string, uid string) error {
+func (c *Controller) Delete(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	identifier string,
+) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return fmt.Errorf("failed to find space: %w", err)
 	}
 
-	err = apiauth.CheckConnector(ctx, c.authorizer, session, space.Path, uid, enum.PermissionConnectorDelete)
+	err = apiauth.CheckConnector(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionConnectorDelete)
 	if err != nil {
 		return fmt.Errorf("failed to authorize: %w", err)
 	}
-	err = c.connectorStore.DeleteByUID(ctx, space.ID, uid)
+	err = c.connectorStore.DeleteByIdentifier(ctx, space.ID, identifier)
 	if err != nil {
 		return fmt.Errorf("could not delete connector: %w", err)
 	}

@@ -41,13 +41,13 @@ func HandleUpdate(connectorCtrl *connector.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, connectorUID, err := paths.DisectLeaf(connectorRef)
+		spaceRef, connectorIdentifier, err := paths.DisectLeaf(connectorRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		connector, err := connectorCtrl.Update(ctx, session, spaceRef, connectorUID, in)
+		connector, err := connectorCtrl.Update(ctx, session, spaceRef, connectorIdentifier, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

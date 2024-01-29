@@ -35,7 +35,7 @@ func HandleRuleUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		ruleUID, err := request.GetRuleUIDFromPath(r)
+		ruleIdentifier, err := request.GetRuleIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -48,7 +48,7 @@ func HandleRuleUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		rule, err := repoCtrl.RuleUpdate(ctx, session, repoRef, ruleUID, in)
+		rule, err := repoCtrl.RuleUpdate(ctx, session, repoRef, ruleIdentifier, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

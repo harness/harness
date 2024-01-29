@@ -28,7 +28,7 @@ type UserGroupStore struct {
 }
 
 // Find Dummy Method: to be implemented later.
-func (s *UserGroupStore) Find(_ context.Context, _ int64, _ string) (*types.UserGroup, error) {
+func (s *UserGroupStore) FindByIdentifier(_ context.Context, _ int64, _ string) (*types.UserGroup, error) {
 	//nolint: nilnil
 	return nil, store.ErrResourceNotFound
 }

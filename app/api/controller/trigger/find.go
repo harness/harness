@@ -28,26 +28,26 @@ func (c *Controller) Find(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	pipelineUID string,
-	triggerUID string,
+	pipelineIdentifier string,
+	triggerIdentifier string,
 ) (*types.Trigger, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineView)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
 
-	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
+	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
-	trigger, err := c.triggerStore.FindByUID(ctx, pipeline.ID, triggerUID)
+	trigger, err := c.triggerStore.FindByIdentifier(ctx, pipeline.ID, triggerIdentifier)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find trigger %s: %w", triggerUID, err)
+		return nil, fmt.Errorf("failed to find trigger %s: %w", triggerIdentifier, err)
 	}
 
 	return trigger, nil

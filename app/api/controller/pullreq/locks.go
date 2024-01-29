@@ -30,11 +30,11 @@ import (
 
 func (c *Controller) lockPR(
 	ctx context.Context,
-	repoUID string,
+	repoID int64,
 	prNum int64,
 	expiry time.Duration,
 ) (func(), error) {
-	key := repoUID + "/pulls"
+	key := fmt.Sprintf("%d/pulls", repoID)
 	if prNum != 0 {
 		key += "/" + strconv.FormatInt(prNum, 10)
 	}
@@ -44,7 +44,7 @@ func (c *Controller) lockPR(
 	ctx = logging.NewContext(ctx, func(c zerolog.Context) zerolog.Context {
 		return c.
 			Str("pullreq_lock", key).
-			Str("repo_uid", repoUID)
+			Int64("repo_id", repoID)
 	})
 
 	mutex, err := c.mtxManager.NewMutex(
@@ -54,11 +54,11 @@ func (c *Controller) lockPR(
 		lock.WithTimeoutFactor(4/expiry.Seconds()), // 4s
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new mutex for pr %d in repo %q: %w", prNum, repoUID, err)
+		return nil, fmt.Errorf("failed to create new mutex for pr %d in repo %q: %w", prNum, repoID, err)
 	}
 	err = mutex.Lock(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to lock mutex for pr %d in repo %q: %w", prNum, repoUID, err)
+		return nil, fmt.Errorf("failed to lock mutex for pr %d in repo %q: %w", prNum, repoID, err)
 	}
 
 	log.Ctx(ctx).Debug().Msgf("successfully locked PR (expiry: %s)", expiry)

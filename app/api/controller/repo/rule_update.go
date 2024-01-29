@@ -28,7 +28,9 @@ import (
 )
 
 type RuleUpdateInput struct {
-	UID         string              `json:"uid"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID         *string             `json:"uid" deprecated:"true"`
+	Identifier  *string             `json:"identifier"`
 	State       *enum.RuleState     `json:"state"`
 	Description *string             `json:"description"`
 	Pattern     *protection.Pattern `json:"pattern"`
@@ -37,8 +39,13 @@ type RuleUpdateInput struct {
 
 // sanitize validates and sanitizes the update rule input data.
 func (in *RuleUpdateInput) sanitize() error {
-	if in.UID != "" {
-		if err := check.UID(in.UID); err != nil {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == nil {
+		in.Identifier = in.UID
+	}
+
+	if in.Identifier != nil {
+		if err := check.Identifier(*in.Identifier); err != nil {
 			return err
 		}
 	}
@@ -66,29 +73,28 @@ func (in *RuleUpdateInput) sanitize() error {
 }
 
 func (in *RuleUpdateInput) isEmpty() bool {
-	return in.UID == "" && in.State == nil && in.Description == nil && in.Pattern == nil && in.Definition == nil
+	return in.Identifier == nil && in.State == nil && in.Description == nil && in.Pattern == nil && in.Definition == nil
 }
 
 // RuleUpdate updates an existing protection rule for a repository.
 func (c *Controller) RuleUpdate(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	uid string,
+	identifier string,
 	in *RuleUpdateInput,
 ) (*types.Rule, error) {
+	if err := in.sanitize(); err != nil {
+		return nil, err
+	}
+
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
 	if err != nil {
 		return nil, err
 	}
 
-	err = in.sanitize()
+	r, err := c.ruleStore.FindByIdentifier(ctx, nil, &repo.ID, identifier)
 	if err != nil {
-		return nil, err
-	}
-
-	r, err := c.ruleStore.FindByUID(ctx, nil, &repo.ID, uid)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get a repository rule by its uid: %w", err)
+		return nil, fmt.Errorf("failed to get a repository rule by its identifier: %w", err)
 	}
 
 	if in.isEmpty() {
@@ -99,8 +105,8 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 		return r, nil
 	}
 
-	if in.UID != "" {
-		r.UID = in.UID
+	if in.Identifier != nil {
+		r.Identifier = *in.Identifier
 	}
 	if in.State != nil {
 		r.State = *in.State

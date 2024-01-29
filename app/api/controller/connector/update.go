@@ -28,7 +28,9 @@ import (
 
 // UpdateInput is used for updating a connector.
 type UpdateInput struct {
-	UID         *string `json:"uid"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID         *string `json:"uid" deprecated:"true"`
+	Identifier  *string `json:"identifier"`
 	Description *string `json:"description"`
 	Data        *string `json:"data"`
 }
@@ -37,31 +39,31 @@ func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	uid string,
+	identifier string,
 	in *UpdateInput,
 ) (*types.Connector, error) {
+	if err := c.sanitizeUpdateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
 
-	err = apiauth.CheckConnector(ctx, c.authorizer, session, space.Path, uid, enum.PermissionConnectorEdit)
+	err = apiauth.CheckConnector(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionConnectorEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	if err = c.sanitizeUpdateInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
-	}
-
-	connector, err := c.connectorStore.FindByUID(ctx, space.ID, uid)
+	connector, err := c.connectorStore.FindByIdentifier(ctx, space.ID, identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find connector: %w", err)
 	}
 
 	return c.connectorStore.UpdateOptLock(ctx, connector, func(original *types.Connector) error {
-		if in.UID != nil {
-			original.UID = *in.UID
+		if in.Identifier != nil {
+			original.Identifier = *in.Identifier
 		}
 		if in.Description != nil {
 			original.Description = *in.Description
@@ -75,8 +77,13 @@ func (c *Controller) Update(
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
-	if in.UID != nil {
-		if err := c.uidCheck(*in.UID, false); err != nil {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == nil {
+		in.Identifier = in.UID
+	}
+
+	if in.Identifier != nil {
+		if err := check.Identifier(*in.Identifier); err != nil {
 			return err
 		}
 	}

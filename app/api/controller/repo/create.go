@@ -44,8 +44,10 @@ var (
 )
 
 type CreateInput struct {
-	ParentRef     string `json:"parent_ref"`
-	UID           string `json:"uid"`
+	ParentRef string `json:"parent_ref"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID           string `json:"uid" deprecated:"true"`
+	Identifier    string `json:"identifier"`
 	DefaultBranch string `json:"default_branch"`
 	Description   string `json:"description"`
 	IsPublic      bool   `json:"is_public"`
@@ -59,13 +61,13 @@ type CreateInput struct {
 //
 //nolint:gocognit
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Repository, error) {
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	parentSpace, err := c.getSpaceCheckAuthRepoCreation(ctx, session, in.ParentRef)
 	if err != nil {
 		return nil, err
-	}
-
-	if err := c.sanitizeCreateInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
 	var repo *types.Repository
@@ -83,7 +85,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		repo = &types.Repository{
 			Version:       0,
 			ParentID:      parentSpace.ID,
-			UID:           in.UID,
+			Identifier:    in.Identifier,
 			GitUID:        gitResp.UID,
 			Description:   in.Description,
 			IsPublic:      in.IsPublic,
@@ -134,8 +136,8 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 	// create is a special case - check permission without specific resource
 	scope := &types.Scope{SpacePath: space.Path}
 	resource := &types.Resource{
-		Type: enum.ResourceTypeRepo,
-		Name: "",
+		Type:       enum.ResourceTypeRepo,
+		Identifier: "",
 	}
 
 	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoEdit)
@@ -147,6 +149,11 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
 	if in.IsPublic && !c.publicResourceCreationEnabled {
 		return errPublicRepoCreationDisabled
 	}
@@ -155,7 +162,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 		return err
 	}
 
-	if err := c.uidCheck(in.UID, false); err != nil {
+	if err := check.RepoIdentifier(in.Identifier); err != nil {
 		return err
 	}
 
@@ -179,7 +186,7 @@ func (c *Controller) createGitRepository(ctx context.Context, session *auth.Sess
 	)
 	files := make([]git.File, 0, 3) // readme, gitignore, licence
 	if in.Readme {
-		content = createReadme(in.UID, in.Description)
+		content = createReadme(in.Identifier, in.Description)
 		files = append(files, git.File{
 			Path:    "README.md",
 			Content: content,

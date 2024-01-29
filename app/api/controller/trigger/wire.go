@@ -17,7 +17,6 @@ package trigger
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
 )
@@ -30,9 +29,8 @@ var WireSet = wire.NewSet(
 func ProvideController(
 	authorizer authz.Authorizer,
 	triggerStore store.TriggerStore,
-	uidCheck check.PathUID,
 	pipelineStore store.PipelineStore,
 	repoStore store.RepoStore,
 ) *Controller {
-	return NewController(authorizer, triggerStore, uidCheck, pipelineStore, repoStore)
+	return NewController(authorizer, triggerStore, pipelineStore, repoStore)
 }

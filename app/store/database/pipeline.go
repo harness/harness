@@ -78,14 +78,18 @@ func (s *pipelineStore) Find(ctx context.Context, id int64) (*types.Pipeline, er
 	return dst, nil
 }
 
-// FindByUID returns a pipeline for a given repo with a given UID.
-func (s *pipelineStore) FindByUID(ctx context.Context, repoID int64, uid string) (*types.Pipeline, error) {
+// FindByIdentifier returns a pipeline for a given repo with a given Identifier.
+func (s *pipelineStore) FindByIdentifier(
+	ctx context.Context,
+	repoID int64,
+	identifier string,
+) (*types.Pipeline, error) {
 	const findQueryStmt = pipelineQueryBase + `
 		WHERE pipeline_repo_id = $1 AND pipeline_uid = $2`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.Pipeline)
-	if err := db.GetContext(ctx, dst, findQueryStmt, repoID, uid); err != nil {
+	if err := db.GetContext(ctx, dst, findQueryStmt, repoID, identifier); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find pipeline")
 	}
 	return dst, nil
@@ -357,15 +361,15 @@ func (s *pipelineStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// DeleteByUID deletes a pipeline with a given UID under a given repo.
-func (s *pipelineStore) DeleteByUID(ctx context.Context, repoID int64, uid string) error {
+// DeleteByIdentifier deletes a pipeline with a given Identifier under a given repo.
+func (s *pipelineStore) DeleteByIdentifier(ctx context.Context, repoID int64, identifier string) error {
 	const pipelineDeleteStmt = `
 	DELETE FROM pipelines
 	WHERE pipeline_repo_id = $1 AND pipeline_uid = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, pipelineDeleteStmt, repoID, uid); err != nil {
+	if _, err := db.ExecContext(ctx, pipelineDeleteStmt, repoID, identifier); err != nil {
 		return database.ProcessSQLErrorf(err, "Could not delete pipeline")
 	}
 

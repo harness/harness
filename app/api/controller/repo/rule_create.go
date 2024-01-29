@@ -29,9 +29,11 @@ import (
 )
 
 type RuleCreateInput struct {
-	Type        types.RuleType     `json:"type"`
-	State       enum.RuleState     `json:"state"`
-	UID         string             `json:"uid"`
+	Type  types.RuleType `json:"type"`
+	State enum.RuleState `json:"state"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID         string             `json:"uid" deprecated:"true"`
+	Identifier  string             `json:"identifier"`
 	Description string             `json:"description"`
 	Pattern     protection.Pattern `json:"pattern"`
 	Definition  json.RawMessage    `json:"definition"`
@@ -39,7 +41,12 @@ type RuleCreateInput struct {
 
 // sanitize validates and sanitizes the create rule input data.
 func (in *RuleCreateInput) sanitize() error {
-	if err := check.UID(in.UID); err != nil {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
+	if err := check.Identifier(in.Identifier); err != nil {
 		return err
 	}
 
@@ -70,12 +77,11 @@ func (c *Controller) RuleCreate(ctx context.Context,
 	repoRef string,
 	in *RuleCreateInput,
 ) (*types.Rule, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
-	if err != nil {
+	if err := in.sanitize(); err != nil {
 		return nil, err
 	}
 
-	err = in.sanitize()
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +100,7 @@ func (c *Controller) RuleCreate(ctx context.Context,
 		SpaceID:       nil,
 		Type:          in.Type,
 		State:         in.State,
-		UID:           in.UID,
+		Identifier:    in.Identifier,
 		Description:   in.Description,
 		Pattern:       in.Pattern.JSON(),
 		Definition:    in.Definition,

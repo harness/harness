@@ -14,16 +14,31 @@
 
 package types
 
+import "encoding/json"
+
 type Secret struct {
-	ID          int64  `db:"secret_id"              json:"id"`
+	ID          int64  `db:"secret_id"              json:"-"`
 	Description string `db:"secret_description"     json:"description"`
 	SpaceID     int64  `db:"secret_space_id"        json:"space_id"`
 	CreatedBy   int64  `db:"secret_created_by"      json:"created_by"`
-	UID         string `db:"secret_uid"             json:"uid"`
+	Identifier  string `db:"secret_uid"             json:"identifier"`
 	Data        string `db:"secret_data"            json:"-"`
 	Created     int64  `db:"secret_created"         json:"created"`
 	Updated     int64  `db:"secret_updated"         json:"updated"`
 	Version     int64  `db:"secret_version"         json:"-"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (s Secret) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias Secret
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(s),
+		UID:   s.Identifier,
+	})
 }
 
 // Copy makes a copy of the secret without the value.
@@ -31,7 +46,7 @@ func (s *Secret) CopyWithoutData() *Secret {
 	return &Secret{
 		ID:          s.ID,
 		Description: s.Description,
-		UID:         s.UID,
+		Identifier:  s.Identifier,
 		SpaceID:     s.SpaceID,
 		Created:     s.Created,
 		Updated:     s.Updated,

@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	PathParamRuleUID = "rule_uid"
+	PathParamRuleIdentifier = "rule_identifier"
 
 	QueryParamBypassRules = "bypass_rules"
 )
@@ -55,9 +55,9 @@ func parseRuleStates(r *http.Request) []enum.RuleState {
 	return states
 }
 
-// GetRuleUIDFromPath extracts the protection rule UID from the URL.
-func GetRuleUIDFromPath(r *http.Request) (string, error) {
-	return PathParamOrError(r, PathParamRuleUID)
+// GetRuleIdentifierFromPath extracts the protection rule identifier from the URL.
+func GetRuleIdentifierFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamRuleIdentifier)
 }
 
 // parseRuleSort extracts the protection rule sort parameter from the URL.

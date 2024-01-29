@@ -27,18 +27,20 @@ import (
 
 // MoveInput is used for moving a space.
 type MoveInput struct {
-	UID *string `json:"uid"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        *string `json:"uid" deprecated:"true"`
+	Identifier *string `json:"identifier"`
 }
 
 func (i *MoveInput) hasChanges(space *types.Space) bool {
-	if i.UID != nil && *i.UID != space.UID {
+	if i.Identifier != nil && *i.Identifier != space.Identifier {
 		return true
 	}
 
 	return false
 }
 
-// Move moves a space to a new UID.
+// Move moves a space to a new identifier.
 // TODO: Add support for moving to other parents and alias.
 //
 //nolint:gocognit // refactor if needed
@@ -70,7 +72,7 @@ func (c *Controller) Move(
 		ctx,
 		session,
 		space,
-		in.UID,
+		in.Identifier,
 	); err != nil {
 		return nil, err
 	}
@@ -79,8 +81,12 @@ func (c *Controller) Move(
 }
 
 func (c *Controller) sanitizeMoveInput(in *MoveInput, isRoot bool) error {
-	if in.UID != nil {
-		if err := c.uidCheck(*in.UID, isRoot); err != nil {
+	if in.Identifier == nil {
+		in.Identifier = in.UID
+	}
+
+	if in.Identifier != nil {
+		if err := c.identifierCheck(*in.Identifier, isRoot); err != nil {
 			return err
 		}
 	}
@@ -92,7 +98,7 @@ func (c *Controller) moveInner(
 	ctx context.Context,
 	session *auth.Session,
 	space *types.Space,
-	inUID *string,
+	inIdentifier *string,
 ) error {
 	return c.tx.WithTx(ctx, func(ctx context.Context) error {
 		// delete old primary segment
@@ -102,20 +108,20 @@ func (c *Controller) moveInner(
 		}
 
 		// update space with move inputs
-		if inUID != nil {
-			space.UID = *inUID
+		if inIdentifier != nil {
+			space.Identifier = *inIdentifier
 		}
 
 		// add new primary segment using updated space data
 		now := time.Now().UnixMilli()
 		newPrimarySegment := &types.SpacePathSegment{
-			ParentID:  space.ParentID,
-			UID:       space.UID,
-			SpaceID:   space.ID,
-			IsPrimary: true,
-			CreatedBy: session.Principal.ID,
-			Created:   now,
-			Updated:   now,
+			ParentID:   space.ParentID,
+			Identifier: space.Identifier,
+			SpaceID:    space.ID,
+			IsPrimary:  true,
+			CreatedBy:  session.Principal.ID,
+			Created:    now,
+			Updated:    now,
 		}
 		err = c.spacePathStore.InsertSegment(ctx, newPrimarySegment)
 		if err != nil {

@@ -22,23 +22,26 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 // MoveInput is used for moving a repo.
 type MoveInput struct {
-	UID *string `json:"uid"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        *string `json:"uid" deprecated:"true"`
+	Identifier *string `json:"identifier"`
 }
 
 func (i *MoveInput) hasChanges(repo *types.Repository) bool {
-	if i.UID != nil && *i.UID != repo.UID {
+	if i.Identifier != nil && *i.Identifier != repo.Identifier {
 		return true
 	}
 
 	return false
 }
 
-// Move moves a repository to a new space uid.
+// Move moves a repository to a new identifier.
 // TODO: Add support for moving to other parents and aliases.
 //
 //nolint:gocognit // refactor if needed
@@ -47,6 +50,10 @@ func (c *Controller) Move(ctx context.Context,
 	repoRef string,
 	in *MoveInput,
 ) (*types.Repository, error) {
+	if err := c.sanitizeMoveInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
@@ -64,13 +71,9 @@ func (c *Controller) Move(ctx context.Context,
 		return repo, nil
 	}
 
-	if err = c.sanitizeMoveInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
-	}
-
 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
-		if in.UID != nil {
-			r.UID = *in.UID
+		if in.Identifier != nil {
+			r.Identifier = *in.Identifier
 		}
 		return nil
 	})
@@ -84,8 +87,13 @@ func (c *Controller) Move(ctx context.Context,
 }
 
 func (c *Controller) sanitizeMoveInput(in *MoveInput) error {
-	if in.UID != nil {
-		if err := c.uidCheck(*in.UID, false); err != nil {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == nil {
+		in.Identifier = in.UID
+	}
+
+	if in.Identifier != nil {
+		if err := check.RepoIdentifier(*in.Identifier); err != nil {
 			return err
 		}
 	}

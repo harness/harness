@@ -57,8 +57,8 @@ func (c *Controller) Upload(ctx context.Context,
 		return nil, fmt.Errorf("failed to determine file type: %w", err)
 	}
 
-	uid := uuid.New().String()
-	fileName := fmt.Sprintf(fileNameFmt, uid, extn)
+	identifier := uuid.New().String()
+	fileName := fmt.Sprintf(fileNameFmt, identifier, extn)
 
 	fileBucketPath := getFileBucketPath(repo.ID, fileName)
 	err = c.blobStore.Upload(ctx, bufReader, fileBucketPath)

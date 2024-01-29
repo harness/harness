@@ -28,7 +28,7 @@ type Pattern struct {
 }
 
 func (p *Pattern) JSON() json.RawMessage {
-	message, _ := toJSON(p)
+	message, _ := ToJSON(p)
 	return message
 }
 

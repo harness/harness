@@ -242,8 +242,8 @@ type (
 		// Find finds the token by id
 		Find(ctx context.Context, id int64) (*types.Token, error)
 
-		// FindByUID finds the token by principalId and tokenUID
-		FindByUID(ctx context.Context, principalID int64, tokenUID string) (*types.Token, error)
+		// FindByIdentifier finds the token by principalId and token identifier.
+		FindByIdentifier(ctx context.Context, principalID int64, identifier string) (*types.Token, error)
 
 		// Create saves the token details.
 		Create(ctx context.Context, token *types.Token) error
@@ -395,8 +395,8 @@ type (
 		// Find finds a protection rule by ID.
 		Find(ctx context.Context, id int64) (*types.Rule, error)
 
-		// FindByUID finds a protection rule by parent ID and UID.
-		FindByUID(ctx context.Context, spaceID, repoID *int64, uid string) (*types.Rule, error)
+		// FindByIdentifier finds a protection rule by parent ID and identifier.
+		FindByIdentifier(ctx context.Context, spaceID, repoID *int64, identifier string) (*types.Rule, error)
 
 		// Create inserts a new protection rule.
 		Create(ctx context.Context, rule *types.Rule) error
@@ -407,8 +407,8 @@ type (
 		// Delete removes a protection rule by its ID.
 		Delete(ctx context.Context, id int64) error
 
-		// DeleteByUID removes a protection rule by its UID.
-		DeleteByUID(ctx context.Context, spaceID, repoID *int64, uid string) error
+		// DeleteByIdentifier removes a protection rule by its identifier.
+		DeleteByIdentifier(ctx context.Context, spaceID, repoID *int64, identifier string) error
 
 		// Count returns count of protection rules matching the provided criteria.
 		Count(ctx context.Context, spaceID, repoID *int64, filter *types.RuleFilter) (int64, error)
@@ -425,8 +425,13 @@ type (
 		// Find finds the webhook by id.
 		Find(ctx context.Context, id int64) (*types.Webhook, error)
 
-		// FindByUID finds the webhook with the given UID for the given parent.
-		FindByUID(ctx context.Context, parentType enum.WebhookParent, parentID int64, uid string) (*types.Webhook, error)
+		// FindByIdentifier finds the webhook with the given Identifier for the given parent.
+		FindByIdentifier(
+			ctx context.Context,
+			parentType enum.WebhookParent,
+			parentID int64,
+			identifier string,
+		) (*types.Webhook, error)
 
 		// Create creates a new webhook.
 		Create(ctx context.Context, hook *types.Webhook) error
@@ -441,8 +446,8 @@ type (
 		// Delete deletes the webhook for the given id.
 		Delete(ctx context.Context, id int64) error
 
-		// DeleteByUID deletes the webhook with the given UID for the given parent.
-		DeleteByUID(ctx context.Context, parentType enum.WebhookParent, parentID int64, uid string) error
+		// DeleteByIdentifier deletes the webhook with the given identifier for the given parent.
+		DeleteByIdentifier(ctx context.Context, parentType enum.WebhookParent, parentID int64, identifier string) error
 
 		// Count counts the webhooks for a given parent type and id.
 		Count(ctx context.Context, parentType enum.WebhookParent, parentID int64,
@@ -473,8 +478,8 @@ type (
 	}
 
 	CheckStore interface {
-		// Find returns status check result for given unique key.
-		Find(ctx context.Context, repoID int64, commitSHA string, uid string) (types.Check, error)
+		// FindByIdentifier returns status check result for given unique key.
+		FindByIdentifier(ctx context.Context, repoID int64, commitSHA string, identifier string) (types.Check, error)
 
 		// Upsert creates new or updates an existing status check result.
 		Upsert(ctx context.Context, check *types.Check) error
@@ -492,22 +497,12 @@ type (
 		ListResults(ctx context.Context, repoID int64, commitSHA string) ([]types.CheckResult, error)
 	}
 
-	ReqCheckStore interface {
-		// Create creates new required status check.
-		Create(ctx context.Context, reqCheck *types.ReqCheck) error
-
-		// List returns a list of required status checks for a repo.
-		List(ctx context.Context, repoID int64) ([]*types.ReqCheck, error)
-
-		// Delete removes a required status checks for a repo.
-		Delete(ctx context.Context, repoID, reqCheckID int64) error
-	}
 	PipelineStore interface {
 		// Find returns a pipeline given a pipeline ID from the datastore.
 		Find(ctx context.Context, id int64) (*types.Pipeline, error)
 
-		// FindByUID returns a pipeline with a given UID in a space
-		FindByUID(ctx context.Context, id int64, uid string) (*types.Pipeline, error)
+		// FindByIdentifier returns a pipeline with a given Identifier in a space
+		FindByIdentifier(ctx context.Context, id int64, identifier string) (*types.Pipeline, error)
 
 		// Create creates a new pipeline in the datastore.
 		Create(ctx context.Context, pipeline *types.Pipeline) error
@@ -532,8 +527,8 @@ type (
 		// Count the number of pipelines in a repository matching the given filter.
 		Count(ctx context.Context, repoID int64, filter types.ListQueryFilter) (int64, error)
 
-		// DeleteByUID deletes a pipeline with a given UID under a repo.
-		DeleteByUID(ctx context.Context, repoID int64, uid string) error
+		// DeleteByIdentifier deletes a pipeline with a given identifier under a repo.
+		DeleteByIdentifier(ctx context.Context, repoID int64, identifier string) error
 
 		// IncrementSeqNum increments the sequence number of the pipeline
 		IncrementSeqNum(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
@@ -543,8 +538,8 @@ type (
 		// Find returns a secret given an ID
 		Find(ctx context.Context, id int64) (*types.Secret, error)
 
-		// FindByUID returns a secret given a space ID and a UID
-		FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Secret, error)
+		// FindByIdentifier returns a secret given a space ID and a identifier
+		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.Secret, error)
 
 		// Create creates a new secret
 		Create(ctx context.Context, secret *types.Secret) error
@@ -562,8 +557,8 @@ type (
 		// Delete deletes a secret given an ID.
 		Delete(ctx context.Context, id int64) error
 
-		// DeleteByUID deletes a secret given a space ID and a uid.
-		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
+		// DeleteByIdentifier deletes a secret given a space ID and a identifier.
+		DeleteByIdentifier(ctx context.Context, spaceID int64, identifier string) error
 
 		// List lists the secrets in a given space.
 		List(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Secret, error)
@@ -637,8 +632,8 @@ type (
 		// Find returns a connector given an ID.
 		Find(ctx context.Context, id int64) (*types.Connector, error)
 
-		// FindByUID returns a connector given a space ID and a UID.
-		FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Connector, error)
+		// FindByIdentifier returns a connector given a space ID and a identifier.
+		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.Connector, error)
 
 		// Create creates a new connector.
 		Create(ctx context.Context, connector *types.Connector) error
@@ -656,8 +651,8 @@ type (
 		// Delete deletes a connector given an ID.
 		Delete(ctx context.Context, id int64) error
 
-		// DeleteByUID deletes a connector given a space ID and a uid.
-		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
+		// DeleteByIdentifier deletes a connector given a space ID and an identifier.
+		DeleteByIdentifier(ctx context.Context, spaceID int64, identifier string) error
 
 		// List lists the connectors in a given space.
 		List(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Connector, error)
@@ -667,9 +662,9 @@ type (
 		// Find returns a template given an ID.
 		Find(ctx context.Context, id int64) (*types.Template, error)
 
-		// FindByUIDAndType returns a template given a space ID, UID and a type
-		FindByUIDAndType(ctx context.Context, spaceID int64,
-			uid string, resolverType enum.ResolverType) (*types.Template, error)
+		// FindByIdentifierAndType returns a template given a space ID, identifier and a type
+		FindByIdentifierAndType(ctx context.Context, spaceID int64,
+			identifier string, resolverType enum.ResolverType) (*types.Template, error)
 
 		// Create creates a new template.
 		Create(ctx context.Context, template *types.Template) error
@@ -687,16 +682,16 @@ type (
 		// Delete deletes a template given an ID.
 		Delete(ctx context.Context, id int64) error
 
-		// DeleteByUIDAndType deletes a template given a space ID, uid and a type.
-		DeleteByUIDAndType(ctx context.Context, spaceID int64, uid string, resolverType enum.ResolverType) error
+		// DeleteByIdentifierAndType deletes a template given a space ID, identifier and a type.
+		DeleteByIdentifierAndType(ctx context.Context, spaceID int64, identifier string, resolverType enum.ResolverType) error
 
 		// List lists the templates in a given space.
 		List(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Template, error)
 	}
 
 	TriggerStore interface {
-		// FindByUID returns a trigger given a pipeline and a trigger UID.
-		FindByUID(ctx context.Context, pipelineID int64, uid string) (*types.Trigger, error)
+		// FindByIdentifier returns a trigger given a pipeline and a trigger identifier.
+		FindByIdentifier(ctx context.Context, pipelineID int64, identifier string) (*types.Trigger, error)
 
 		// Create creates a new trigger in the datastore.
 		Create(ctx context.Context, trigger *types.Trigger) error
@@ -711,8 +706,8 @@ type (
 		// List lists the triggers for a given pipeline ID.
 		List(ctx context.Context, pipelineID int64, filter types.ListQueryFilter) ([]*types.Trigger, error)
 
-		// Delete deletes an trigger given a pipeline ID and a trigger UID.
-		DeleteByUID(ctx context.Context, pipelineID int64, uid string) error
+		// Delete deletes an trigger given a pipeline ID and a trigger identifier.
+		DeleteByIdentifier(ctx context.Context, pipelineID int64, identifier string) error
 
 		// Count the number of triggers in a pipeline.
 		Count(ctx context.Context, pipelineID int64, filter types.ListQueryFilter) (int64, error)
@@ -744,7 +739,7 @@ type (
 	}
 
 	UserGroupStore interface {
-		// Find returns a types.UserGroup given a space ID and uid.
-		Find(ctx context.Context, spaceID int64, uid string) (*types.UserGroup, error)
+		// FindByIdentifier returns a types.UserGroup given a space ID and identifier.
+		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.UserGroup, error)
 	}
 )

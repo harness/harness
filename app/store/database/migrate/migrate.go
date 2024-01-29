@@ -124,11 +124,14 @@ func getMigrator(db *sqlx.DB) (migrate.Options, error) {
 		log.Info().Msg("[START]")
 		defer log.Info().Msg("[DONE]")
 
-		if version == "0039_alter_table_webhooks_uid" {
+		switch version {
+		case "0039_alter_table_webhooks_uid":
 			return migrateAfter_0039_alter_table_webhooks_uid(ctx, dbtx)
+		case "0042_alter_table_rules":
+			return migrateAfter_0042_alter_table_rules(ctx, dbtx)
+		default:
+			return nil
 		}
-
-		return nil
 	}
 
 	opts := migrate.Options{

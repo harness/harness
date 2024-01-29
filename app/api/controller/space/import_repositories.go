@@ -55,8 +55,8 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 	// create is a special case - check permission without specific resource
 	scope := &types.Scope{SpacePath: space.Path}
 	resource := &types.Resource{
-		Type: enum.ResourceTypeRepo,
-		Name: "",
+		Type:       enum.ResourceTypeRepo,
+		Identifier: "",
 	}
 
 	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoEdit)
@@ -104,7 +104,7 @@ func (c *Controller) ImportRepositories(
 		for _, remoteRepository := range remoteRepositories {
 			repo := remoteRepository.ToRepo(
 				space.ID,
-				remoteRepository.UID,
+				remoteRepository.Identifier,
 				"",
 				&session.Principal,
 				c.publicResourceCreationEnabled,

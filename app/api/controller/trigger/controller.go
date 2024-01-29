@@ -17,13 +17,11 @@ package trigger
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
 	authorizer    authz.Authorizer
 	triggerStore  store.TriggerStore
-	uidCheck      check.PathUID
 	pipelineStore store.PipelineStore
 	repoStore     store.RepoStore
 }
@@ -31,14 +29,12 @@ type Controller struct {
 func NewController(
 	authorizer authz.Authorizer,
 	triggerStore store.TriggerStore,
-	uidCheck check.PathUID,
 	pipelineStore store.PipelineStore,
 	repoStore store.RepoStore,
 ) *Controller {
 	return &Controller{
 		authorizer:    authorizer,
 		triggerStore:  triggerStore,
-		uidCheck:      uidCheck,
 		pipelineStore: pipelineStore,
 		repoStore:     repoStore,
 	}

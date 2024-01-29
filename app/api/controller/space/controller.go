@@ -42,7 +42,7 @@ type Controller struct {
 	tx              dbtx.Transactor
 	urlProvider     url.Provider
 	sseStreamer     sse.Streamer
-	uidCheck        check.PathUID
+	identifierCheck check.SpaceIdentifier
 	authorizer      authz.Authorizer
 	spacePathStore  store.SpacePathStore
 	pipelineStore   store.PipelineStore
@@ -60,7 +60,7 @@ type Controller struct {
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
-	sseStreamer sse.Streamer, uidCheck check.PathUID, authorizer authz.Authorizer,
+	sseStreamer sse.Streamer, identifierCheck check.SpaceIdentifier, authorizer authz.Authorizer,
 	spacePathStore store.SpacePathStore, pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
@@ -73,7 +73,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		tx:                            tx,
 		urlProvider:                   urlProvider,
 		sseStreamer:                   sseStreamer,
-		uidCheck:                      uidCheck,
+		identifierCheck:               identifierCheck,
 		authorizer:                    authorizer,
 		spacePathStore:                spacePathStore,
 		pipelineStore:                 pipelineStore,

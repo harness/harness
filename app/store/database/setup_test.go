@@ -109,15 +109,15 @@ func createSpace(
 ) {
 	t.Helper()
 
-	uid := "space_" + strconv.FormatInt(spaceID, 10)
+	identifier := "space_" + strconv.FormatInt(spaceID, 10)
 
-	space := types.Space{ID: spaceID, UID: uid, CreatedBy: userID, ParentID: parentID}
+	space := types.Space{ID: spaceID, Identifier: identifier, CreatedBy: userID, ParentID: parentID}
 	if err := spaceStore.Create(*ctx, &space); err != nil {
 		t.Fatalf("failed to create space %v", err)
 	}
 
 	if err := spacePathStore.InsertSegment(*ctx, &types.SpacePathSegment{
-		ID: space.ID, UID: uid, CreatedBy: userID, SpaceID: spaceID, IsPrimary: true,
+		ID: space.ID, Identifier: identifier, CreatedBy: userID, SpaceID: spaceID, IsPrimary: true,
 	}); err != nil {
 		t.Fatalf("failed to insert segment %v", err)
 	}

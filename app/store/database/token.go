@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -53,13 +54,19 @@ func (s *TokenStore) Find(ctx context.Context, id int64) (*types.Token, error) {
 	return dst, nil
 }
 
-// FindByUID finds the token by principalId and tokenUID.
-func (s *TokenStore) FindByUID(ctx context.Context, principalID int64, tokenUID string) (*types.Token, error) {
+// FindByIdentifier finds the token by principalId and token identifier.
+func (s *TokenStore) FindByIdentifier(ctx context.Context, principalID int64, identifier string) (*types.Token, error) {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.Token)
-	if err := db.GetContext(ctx, dst, TokenSelectByPrincipalIDAndUID, principalID, tokenUID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find token by UID")
+	if err := db.GetContext(
+		ctx,
+		dst,
+		TokenSelectByPrincipalIDAndIdentifier,
+		principalID,
+		strings.ToLower(identifier),
+	); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to find token by identifier")
 	}
 
 	return dst, nil
@@ -184,8 +191,8 @@ const TokenSelectByID = tokenSelectBase + `
 WHERE token_id = $1
 `
 
-const TokenSelectByPrincipalIDAndUID = tokenSelectBase + `
-WHERE token_principal_id = $1 AND token_uid = $2
+const TokenSelectByPrincipalIDAndIdentifier = tokenSelectBase + `
+WHERE token_principal_id = $1 AND LOWER(token_uid) = $2
 `
 
 const tokenDelete = `

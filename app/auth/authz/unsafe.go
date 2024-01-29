@@ -43,7 +43,7 @@ func (a *UnsafeAuthorizer) Check(ctx context.Context, session *auth.Session,
 		session.Principal.ID,
 		permission,
 		resource.Type,
-		resource.Name,
+		resource.Identifier,
 		scope,
 		session.Metadata,
 	)

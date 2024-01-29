@@ -120,7 +120,7 @@ func (m *Manager) SanitizeJSON(ruleType types.RuleType, message json.RawMessage)
 		return nil, err
 	}
 
-	return toJSON(r)
+	return ToJSON(r)
 }
 
 func (m *Manager) ForRepository(ctx context.Context, repoID int64) (Protection, error) {

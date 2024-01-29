@@ -110,7 +110,7 @@ type EvaluationEntry struct {
 }
 
 type UserGroupOwnerEvaluation struct {
-	ID          string
+	Identifier  string
 	Name        string
 	Evaluations []OwnerEvaluation
 }
@@ -374,8 +374,8 @@ func (s *Service) resolveUserGroupCodeOwner(
 		return nil, fmt.Errorf("not able to resolve usergroup : %w", err)
 	}
 	userGroupEvaluation := &UserGroupOwnerEvaluation{
-		ID:   usrgrp.ID,
-		Name: usrgrp.Name,
+		Identifier: usrgrp.Identifier,
+		Name:       usrgrp.Name,
 	}
 	ownersEvaluations := make([]OwnerEvaluation, 0, len(usrgrp.Users))
 	for _, uid := range usrgrp.Users {

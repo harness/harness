@@ -34,7 +34,7 @@ func HandleFind(templateCtrl *template.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, templateUID, err := paths.DisectLeaf(templateRef)
+		spaceRef, templateIdentifier, err := paths.DisectLeaf(templateRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -52,7 +52,7 @@ func HandleFind(templateCtrl *template.Controller) http.HandlerFunc {
 			return
 		}
 
-		template, err := templateCtrl.Find(ctx, session, spaceRef, templateUID, tempalateTypeEnum)
+		template, err := templateCtrl.Find(ctx, session, spaceRef, templateIdentifier, tempalateTypeEnum)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

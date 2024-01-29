@@ -16,6 +16,7 @@ package protection
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -65,7 +66,7 @@ const (
 	codePullReqApprovalReqCodeOwnersChangeRequested  = "pullreq.approvals.require_code_owners:change_requested"
 	codePullReqApprovalReqCodeOwnersNoLatestApproval = "pullreq.approvals.require_code_owners:no_latest_approval"
 	codePullReqCommentsReqResolveAll                 = "pullreq.comments.require_resolve_all"
-	codePullReqStatusChecksReqUIDs                   = "pullreq.status_checks.required_uids"
+	codePullReqStatusChecksReqIdentifiers            = "pullreq.status_checks.required_identifiers"
 	codePullReqMergeStrategiesAllowed                = "pullreq.merge.strategies_allowed"
 	codePullReqMergeDeleteBranch                     = "pullreq.merge.delete_branch"
 )
@@ -146,26 +147,26 @@ func (v *DefPullReq) MergeVerify(
 
 	// pullreq.status_checks
 
-	var violatingStatusCheckUIDs []string
-	for _, requiredUID := range v.StatusChecks.RequireUIDs {
+	var violatingStatusCheckIdentifiers []string
+	for _, requiredIdentifier := range v.StatusChecks.RequireIdentifiers {
 		var succeeded bool
 		for i := range in.CheckResults {
-			if in.CheckResults[i].UID == requiredUID {
+			if in.CheckResults[i].Identifier == requiredIdentifier {
 				succeeded = in.CheckResults[i].Status == enum.CheckStatusSuccess
 				break
 			}
 		}
 
 		if !succeeded {
-			violatingStatusCheckUIDs = append(violatingStatusCheckUIDs, requiredUID)
+			violatingStatusCheckIdentifiers = append(violatingStatusCheckIdentifiers, requiredIdentifier)
 		}
 	}
 
-	if len(violatingStatusCheckUIDs) > 0 {
+	if len(violatingStatusCheckIdentifiers) > 0 {
 		violations.Addf(
-			codePullReqStatusChecksReqUIDs,
+			codePullReqStatusChecksReqIdentifiers,
 			"The following status checks are required to be completed successfully: %s",
-			strings.Join(violatingStatusCheckUIDs, ", "),
+			strings.Join(violatingStatusCheckIdentifiers, ", "),
 		)
 	}
 
@@ -224,12 +225,47 @@ func (DefComments) Sanitize() error {
 }
 
 type DefStatusChecks struct {
-	RequireUIDs []string `json:"require_uids,omitempty"`
+	RequireIdentifiers []string `json:"require_identifiers,omitempty"`
 }
 
-func (v *DefStatusChecks) Sanitize() error {
-	if err := validateUIDSlice(v.RequireUIDs); err != nil {
-		return fmt.Errorf("required UIDs error: %w", err)
+// TODO [CODE-1363]: remove after identifier migration.
+func (c DefStatusChecks) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias DefStatusChecks
+	return json.Marshal(&struct {
+		alias
+		RequireUIDs []string `json:"require_uids"`
+	}{
+		alias:       (alias)(c),
+		RequireUIDs: c.RequireIdentifiers,
+	})
+}
+
+// TODO [CODE-1363]: remove if we don't have any require_uids left in our DB.
+func (c *DefStatusChecks) UnmarshalJSON(data []byte) error {
+	// alias allows us to extract the original object while avoiding an infinite loop of unmarshaling.
+	type alias DefStatusChecks
+	res := struct {
+		alias
+		RequireUIDs []string `json:"require_uids"`
+	}{}
+
+	err := json.Unmarshal(data, &res)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal to alias type with required uids: %w", err)
+	}
+
+	*c = DefStatusChecks(res.alias)
+	if len(c.RequireIdentifiers) == 0 {
+		c.RequireIdentifiers = res.RequireUIDs
+	}
+
+	return nil
+}
+
+func (c *DefStatusChecks) Sanitize() error {
+	if err := validateIdentifierSlice(c.RequireIdentifiers); err != nil {
+		return fmt.Errorf("required identifiers error: %w", err)
 	}
 
 	return nil

@@ -53,7 +53,6 @@ var WireSet = wire.NewSet(
 	ProvideWebhookStore,
 	ProvideWebhookExecutionStore,
 	ProvideCheckStore,
-	ProvideReqCheckStore,
 	ProvideConnectorStore,
 	ProvideTemplateStore,
 	ProvideTriggerStore,
@@ -239,11 +238,4 @@ func ProvideCheckStore(db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache,
 ) store.CheckStore {
 	return NewCheckStore(db, principalInfoCache)
-}
-
-// ProvideReqCheckStore provides a required status check store.
-func ProvideReqCheckStore(db *sqlx.DB,
-	principalInfoCache store.PrincipalInfoCache,
-) store.ReqCheckStore {
-	return NewReqCheckStore(db, principalInfoCache)
 }

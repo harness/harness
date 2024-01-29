@@ -42,7 +42,7 @@ func (c *Controller) ListChecks(
 	err = c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		checks, err = c.checkStore.List(ctx, repo.ID, commitSHA, opts)
 		if err != nil {
-			return fmt.Errorf("failed to list status check results for repo=%s: %w", repo.UID, err)
+			return fmt.Errorf("failed to list status check results for repo=%s: %w", repo.Identifier, err)
 		}
 
 		if opts.Page == 1 && len(checks) < opts.Size {
@@ -52,7 +52,7 @@ func (c *Controller) ListChecks(
 
 		count, err = c.checkStore.Count(ctx, repo.ID, commitSHA, opts)
 		if err != nil {
-			return fmt.Errorf("failed to count status check results for repo=%s: %w", repo.UID, err)
+			return fmt.Errorf("failed to count status check results for repo=%s: %w", repo.Identifier, err)
 		}
 
 		return nil

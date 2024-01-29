@@ -28,17 +28,17 @@ func (c *Controller) Find(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	uid string,
+	identifier string,
 ) (*types.Connector, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
-	err = apiauth.CheckConnector(ctx, c.authorizer, session, space.Path, uid, enum.PermissionConnectorView)
+	err = apiauth.CheckConnector(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionConnectorView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	connector, err := c.connectorStore.FindByUID(ctx, space.ID, uid)
+	connector, err := c.connectorStore.FindByIdentifier(ctx, space.ID, identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find connector: %w", err)
 	}

@@ -211,10 +211,10 @@ func ConvertToDroneRepo(repo *types.Repository) *drone.Repo {
 	return &drone.Repo{
 		ID:        repo.ID,
 		Trusted:   true, // as builds are running on user machines, the repo is marked trusted.
-		UID:       repo.UID,
+		UID:       repo.Identifier,
 		UserID:    repo.CreatedBy,
 		Namespace: repo.Path,
-		Name:      repo.UID,
+		Name:      repo.Identifier,
 		HTTPURL:   repo.GitURL,
 		Link:      repo.GitURL,
 		Private:   !repo.IsPublic,
@@ -236,7 +236,7 @@ func ConvertToDroneFile(file *file.File) *client.File {
 
 func ConvertToDroneSecret(secret *types.Secret) *drone.Secret {
 	return &drone.Secret{
-		Name: secret.UID,
+		Name: secret.Identifier,
 		Data: secret.Data,
 	}
 }

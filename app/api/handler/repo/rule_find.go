@@ -34,13 +34,13 @@ func HandleRuleFind(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		ruleUID, err := request.GetRuleUIDFromPath(r)
+		ruleIdentifier, err := request.GetRuleIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		rule, err := repoCtrl.RuleFind(ctx, session, repoRef, ruleUID)
+		rule, err := repoCtrl.RuleFind(ctx, session, repoRef, ruleIdentifier)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

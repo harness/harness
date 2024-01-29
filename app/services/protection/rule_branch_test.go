@@ -50,7 +50,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 			branch: Branch{
 				Bypass: DefBypass{},
 				PullReq: DefPullReq{
-					StatusChecks: DefStatusChecks{RequireUIDs: []string{"abc"}},
+					StatusChecks: DefStatusChecks{RequireIdentifiers: []string{"abc"}},
 					Comments:     DefComments{RequireResolveAll: true},
 					Merge:        DefMerge{DeleteBranch: true},
 				},
@@ -70,7 +70,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 					Bypassed:   false,
 					Violations: []types.Violation{
 						{Code: codePullReqCommentsReqResolveAll},
-						{Code: codePullReqStatusChecksReqUIDs},
+						{Code: codePullReqStatusChecksReqIdentifiers},
 					},
 				},
 			},
@@ -80,7 +80,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 			branch: Branch{
 				Bypass: DefBypass{UserIDs: []int64{user.ID}},
 				PullReq: DefPullReq{
-					StatusChecks: DefStatusChecks{RequireUIDs: []string{"abc"}},
+					StatusChecks: DefStatusChecks{RequireIdentifiers: []string{"abc"}},
 					Comments:     DefComments{RequireResolveAll: true},
 					Merge:        DefMerge{DeleteBranch: true},
 				},
@@ -100,7 +100,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 					Bypassed:   true,
 					Violations: []types.Violation{
 						{Code: codePullReqCommentsReqResolveAll},
-						{Code: codePullReqStatusChecksReqUIDs},
+						{Code: codePullReqStatusChecksReqIdentifiers},
 					},
 				},
 			},
@@ -109,7 +109,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 			name: "user-no-bypass",
 			branch: Branch{
 				PullReq: DefPullReq{
-					StatusChecks: DefStatusChecks{RequireUIDs: []string{"abc"}},
+					StatusChecks: DefStatusChecks{RequireIdentifiers: []string{"abc"}},
 					Comments:     DefComments{RequireResolveAll: true},
 					Merge:        DefMerge{DeleteBranch: true},
 				},
@@ -129,7 +129,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 					Bypassed:   false,
 					Violations: []types.Violation{
 						{Code: codePullReqCommentsReqResolveAll},
-						{Code: codePullReqStatusChecksReqUIDs},
+						{Code: codePullReqStatusChecksReqIdentifiers},
 					},
 				},
 			},

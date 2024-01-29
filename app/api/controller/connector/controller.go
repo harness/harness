@@ -17,24 +17,20 @@ package connector
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
-	uidCheck       check.PathUID
 	connectorStore store.ConnectorStore
 	authorizer     authz.Authorizer
 	spaceStore     store.SpaceStore
 }
 
 func NewController(
-	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
 	connectorStore store.ConnectorStore,
 	spaceStore store.SpaceStore,
 ) *Controller {
 	return &Controller{
-		uidCheck:       uidCheck,
 		connectorStore: connectorStore,
 		authorizer:     authorizer,
 		spaceStore:     spaceStore,

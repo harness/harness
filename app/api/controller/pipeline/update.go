@@ -27,7 +27,9 @@ import (
 )
 
 type UpdateInput struct {
-	UID         *string `json:"uid"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID         *string `json:"uid" deprecated:"true"`
+	Identifier  *string `json:"identifier"`
 	Description *string `json:"description"`
 	Disabled    *bool   `json:"disabled"`
 	ConfigPath  *string `json:"config_path"`
@@ -37,14 +39,14 @@ func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	uid string,
+	identifier string,
 	in *UpdateInput,
 ) (*types.Pipeline, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, uid, enum.PermissionPipelineEdit)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, identifier, enum.PermissionPipelineEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
@@ -53,14 +55,14 @@ func (c *Controller) Update(
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, uid)
+	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
 	return c.pipelineStore.UpdateOptLock(ctx, pipeline, func(pipeline *types.Pipeline) error {
-		if in.UID != nil {
-			pipeline.UID = *in.UID
+		if in.Identifier != nil {
+			pipeline.Identifier = *in.Identifier
 		}
 		if in.Description != nil {
 			pipeline.Description = *in.Description
@@ -77,8 +79,13 @@ func (c *Controller) Update(
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
-	if in.UID != nil {
-		if err := c.uidCheck(*in.UID, false); err != nil {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == nil {
+		in.Identifier = in.UID
+	}
+
+	if in.Identifier != nil {
+		if err := check.Identifier(*in.Identifier); err != nil {
 			return err
 		}
 	}

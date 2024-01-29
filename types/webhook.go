@@ -22,6 +22,7 @@ import (
 
 // Webhook represents a webhook.
 type Webhook struct {
+	// TODO [CODE-1364]: Hide once UID/Identifier migration is completed.
 	ID         int64              `json:"id"`
 	Version    int64              `json:"version"`
 	ParentID   int64              `json:"parent_id"`
@@ -31,8 +32,8 @@ type Webhook struct {
 	Updated    int64              `json:"updated"`
 	Internal   bool               `json:"-"`
 
-	UID string `json:"uid"`
-	// TODO: Remove once UID migration is completed.
+	Identifier string `json:"identifier"`
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	DisplayName           string                       `json:"display_name"`
 	Description           string                       `json:"description"`
 	URL                   string                       `json:"url"`
@@ -55,9 +56,13 @@ func (w *Webhook) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		*WebhookAlias
 		HasSecret bool `json:"has_secret"`
+		// TODO [CODE-1363]: remove after identifier migration.
+		UID string `json:"uid"`
 	}{
 		WebhookAlias: (*WebhookAlias)(w),
 		HasSecret:    w != nil && w.Secret != "",
+		// TODO [CODE-1363]: remove after identifier migration.
+		UID: w.Identifier,
 	})
 }
 

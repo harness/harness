@@ -35,7 +35,7 @@ func HandleUpdate(triggerCtrl *trigger.Controller) http.HandlerFunc {
 			return
 		}
 
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -45,13 +45,13 @@ func HandleUpdate(triggerCtrl *trigger.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		triggerUID, err := request.GetTriggerUIDFromPath(r)
+		triggerIdentifier, err := request.GetTriggerIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		pipeline, err := triggerCtrl.Update(ctx, session, repoRef, pipelineUID, triggerUID, in)
+		pipeline, err := triggerCtrl.Update(ctx, session, repoRef, pipelineIdentifier, triggerIdentifier, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

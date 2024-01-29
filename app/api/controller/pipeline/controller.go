@@ -17,12 +17,10 @@ package pipeline
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
 	defaultBranch string
-	uidCheck      check.PathUID
 	repoStore     store.RepoStore
 	triggerStore  store.TriggerStore
 	authorizer    authz.Authorizer
@@ -30,14 +28,12 @@ type Controller struct {
 }
 
 func NewController(
-	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	triggerStore store.TriggerStore,
 	pipelineStore store.PipelineStore,
 ) *Controller {
 	return &Controller{
-		uidCheck:      uidCheck,
 		repoStore:     repoStore,
 		triggerStore:  triggerStore,
 		authorizer:    authorizer,

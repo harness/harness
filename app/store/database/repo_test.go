@@ -120,8 +120,8 @@ func createRepo(
 ) {
 	t.Helper()
 
-	uid := "repo_" + strconv.FormatInt(id, 10)
-	repo := types.Repository{UID: uid, ID: id, ParentID: spaceID, GitUID: uid, Size: size}
+	identifier := "repo_" + strconv.FormatInt(id, 10)
+	repo := types.Repository{Identifier: identifier, ID: id, ParentID: spaceID, GitUID: identifier, Size: size}
 	if err := repoStore.Create(*ctx, &repo); err != nil {
 		t.Fatalf("failed to create repo %v", err)
 	}

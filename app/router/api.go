@@ -365,7 +365,7 @@ func setupPipelines(
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerpipeline.HandleCreate(pipelineCtrl))
 		r.Get("/generate", handlerrepo.HandlePipelineGenerate(repoCtrl))
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamPipelineRef), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamPipelineIdentifier), func(r chi.Router) {
 			r.Get("/", handlerpipeline.HandleFind(pipelineCtrl))
 			r.Patch("/", handlerpipeline.HandleUpdate(pipelineCtrl))
 			r.Delete("/", handlerpipeline.HandleDelete(pipelineCtrl))
@@ -458,7 +458,7 @@ func setupTriggers(
 	r.Route("/triggers", func(r chi.Router) {
 		r.Get("/", handlertrigger.HandleList(triggerCtrl))
 		r.Post("/", handlertrigger.HandleCreate(triggerCtrl))
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamTriggerUID), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamTriggerIdentifier), func(r chi.Router) {
 			r.Get("/", handlertrigger.HandleFind(triggerCtrl))
 			r.Patch("/", handlertrigger.HandleUpdate(triggerCtrl))
 			r.Delete("/", handlertrigger.HandleDelete(triggerCtrl))
@@ -529,7 +529,7 @@ func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 		r.Post("/", handlerwebhook.HandleCreate(webhookCtrl))
 		r.Get("/", handlerwebhook.HandleList(webhookCtrl))
 
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookUID), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookIdentifier), func(r chi.Router) {
 			r.Get("/", handlerwebhook.HandleFind(webhookCtrl))
 			r.Patch("/", handlerwebhook.HandleUpdate(webhookCtrl))
 			r.Delete("/", handlerwebhook.HandleDelete(webhookCtrl))
@@ -560,7 +560,7 @@ func SetupRules(r chi.Router, repoCtrl *repo.Controller) {
 	r.Route("/rules", func(r chi.Router) {
 		r.Post("/", handlerrepo.HandleRuleCreate(repoCtrl))
 		r.Get("/", handlerrepo.HandleRuleList(repoCtrl))
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamRuleUID), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamRuleIdentifier), func(r chi.Router) {
 			r.Patch("/", handlerrepo.HandleRuleUpdate(repoCtrl))
 			r.Delete("/", handlerrepo.HandleRuleDelete(repoCtrl))
 			r.Get("/", handlerrepo.HandleRuleFind(repoCtrl))
@@ -582,7 +582,7 @@ func setupUser(r chi.Router, userCtrl *user.Controller) {
 			r.Post("/", handleruser.HandleCreateAccessToken(userCtrl))
 
 			// per token operations
-			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenUID), func(r chi.Router) {
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenIdentifier), func(r chi.Router) {
 				r.Delete("/", handleruser.HandleDeleteToken(userCtrl, enum.TokenTypePAT))
 			})
 		})
@@ -592,7 +592,7 @@ func setupUser(r chi.Router, userCtrl *user.Controller) {
 			r.Get("/", handleruser.HandleListTokens(userCtrl, enum.TokenTypeSession))
 
 			// per token operations
-			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenUID), func(r chi.Router) {
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenIdentifier), func(r chi.Router) {
 				r.Delete("/", handleruser.HandleDeleteToken(userCtrl, enum.TokenTypeSession))
 			})
 		})
@@ -614,7 +614,7 @@ func setupServiceAccounts(r chi.Router, saCtrl *serviceaccount.Controller) {
 				r.Post("/", handlerserviceaccount.HandleCreateToken(saCtrl))
 
 				// per token operations
-				r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenUID), func(r chi.Router) {
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenIdentifier), func(r chi.Router) {
 					r.Delete("/", handlerserviceaccount.HandleDeleteToken(saCtrl))
 				})
 			})

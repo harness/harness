@@ -32,7 +32,7 @@ type Rule struct {
 	RepoID  *int64 `json:"-"`
 	SpaceID *int64 `json:"-"`
 
-	UID         string `json:"uid"`
+	Identifier  string `json:"identifier"`
 	Description string `json:"description"`
 
 	Type  RuleType       `json:"type"`
@@ -44,6 +44,19 @@ type Rule struct {
 	CreatedByInfo PrincipalInfo `json:"created_by"`
 
 	Users map[int64]*PrincipalInfo `json:"users"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (r Rule) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias Rule
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(r),
+		UID:   r.Identifier,
+	})
 }
 
 type RuleType string
@@ -95,10 +108,23 @@ type RuleInfo struct {
 	SpacePath string `json:"space_path,omitempty"`
 	RepoPath  string `json:"repo_path,omitempty"`
 
-	ID    int64          `json:"-"`
-	UID   string         `json:"uid"`
-	Type  RuleType       `json:"type"`
-	State enum.RuleState `json:"state"`
+	ID         int64          `json:"-"`
+	Identifier string         `json:"identifier"`
+	Type       RuleType       `json:"type"`
+	State      enum.RuleState `json:"state"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (r RuleInfo) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias RuleInfo
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(r),
+		UID:   r.Identifier,
+	})
 }
 
 type RuleInfoInternal struct {

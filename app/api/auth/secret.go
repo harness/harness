@@ -28,11 +28,11 @@ import (
 // Returns nil if the permission is granted, otherwise returns an error.
 // NotAuthenticated, NotAuthorized, or any underlying error.
 func CheckSecret(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	parentPath, uid string, permission enum.Permission) error {
+	parentPath, identifier string, permission enum.Permission) error {
 	scope := &types.Scope{SpacePath: parentPath}
 	resource := &types.Resource{
-		Type: enum.ResourceTypeSecret,
-		Name: uid,
+		Type:       enum.ResourceTypeSecret,
+		Identifier: identifier,
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)

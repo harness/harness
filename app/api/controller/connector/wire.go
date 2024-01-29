@@ -17,7 +17,6 @@ package connector
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
 )
@@ -28,10 +27,9 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(
-	uidCheck check.PathUID,
 	connectorStore store.ConnectorStore,
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
 ) *Controller {
-	return NewController(uidCheck, authorizer, connectorStore, spaceStore)
+	return NewController(authorizer, connectorStore, spaceStore)
 }

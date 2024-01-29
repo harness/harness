@@ -21,8 +21,12 @@ type WebhookAttr int
 
 const (
 	WebhookAttrNone WebhookAttr = iota
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	WebhookAttrID
+	// TODO [CODE-1363]: remove after identifier migration.
 	WebhookAttrUID
+	WebhookAttrIdentifier
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	WebhookAttrDisplayName
 	WebhookAttrCreated
 	WebhookAttrUpdated
@@ -32,10 +36,15 @@ const (
 // and returns the equivalent enumeration.
 func ParseWebhookAttr(s string) WebhookAttr {
 	switch strings.ToLower(s) {
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	case id:
 		return WebhookAttrID
+	// TODO [CODE-1363]: remove after identifier migration.
 	case uid:
 		return WebhookAttrUID
+	case identifier:
+		return WebhookAttrIdentifier
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	case displayName:
 		return WebhookAttrDisplayName
 	case created, createdAt:
@@ -50,10 +59,15 @@ func ParseWebhookAttr(s string) WebhookAttr {
 // String returns the string representation of the attribute.
 func (a WebhookAttr) String() string {
 	switch a {
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	case WebhookAttrID:
 		return id
+	// TODO [CODE-1363]: remove after identifier migration.
 	case WebhookAttrUID:
 		return uid
+	case WebhookAttrIdentifier:
+		return identifier
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	case WebhookAttrDisplayName:
 		return displayName
 	case WebhookAttrCreated:

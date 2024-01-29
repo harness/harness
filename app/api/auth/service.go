@@ -32,8 +32,8 @@ func CheckService(ctx context.Context, authorizer authz.Authorizer, session *aut
 	// a service exists outside any scope
 	scope := &types.Scope{}
 	resource := &types.Resource{
-		Type: enum.ResourceTypeService,
-		Name: svc.UID,
+		Type:       enum.ResourceTypeService,
+		Identifier: svc.UID,
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)

@@ -126,12 +126,12 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 		})
 	if errors.AsStatus(err) == errors.StatusNotFound {
 		return "", usererror.BadRequest(
-			fmt.Sprintf("branch %s does not exist in the repository %s", branch, repo.UID))
+			fmt.Sprintf("branch %q does not exist in the repository %q", branch, repo.Identifier))
 	}
 	if err != nil {
 		return "", fmt.Errorf(
-			"failed to check existence of the branch %s in the repository %s: %w",
-			branch, repo.UID, err)
+			"failed to check existence of the branch %q in the repository %q: %w",
+			branch, repo.Identifier, err)
 	}
 
 	return ref.SHA, nil

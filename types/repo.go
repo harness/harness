@@ -15,6 +15,8 @@
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -24,7 +26,7 @@ type Repository struct {
 	ID          int64  `json:"id"`
 	Version     int64  `json:"-"`
 	ParentID    int64  `json:"parent_id"`
-	UID         string `json:"uid"`
+	Identifier  string `json:"identifier"`
 	Path        string `json:"path"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"is_public"`
@@ -50,6 +52,19 @@ type Repository struct {
 
 	// git urls
 	GitURL string `json:"git_url"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (r Repository) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias Repository
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(r),
+		UID:   r.Identifier,
+	})
 }
 
 type RepositorySizeInfo struct {

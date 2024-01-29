@@ -61,7 +61,7 @@ type Provider interface {
 	GetAPIHostname() string
 
 	// GenerateUIBuildURL returns the endpoint to use for viewing build executions.
-	GenerateUIBuildURL(repoPath, pipelineUID string, seqNumber int64) string
+	GenerateUIBuildURL(repoPath, pipelineIdentifier string, seqNumber int64) string
 
 	// GetGITHostname returns the host for the git endpoint.
 	GetGITHostname() string
@@ -161,9 +161,9 @@ func (p *provider) GenerateGITCloneURL(repoPath string) string {
 	return p.gitURL.JoinPath(repoPath).String()
 }
 
-func (p *provider) GenerateUIBuildURL(repoPath, pipelineUID string, seqNumber int64) string {
+func (p *provider) GenerateUIBuildURL(repoPath, pipelineIdentifier string, seqNumber int64) string {
 	return p.uiURL.JoinPath(repoPath, "pipelines",
-		pipelineUID, "execution", strconv.Itoa(int(seqNumber))).String()
+		pipelineIdentifier, "execution", strconv.Itoa(int(seqNumber))).String()
 }
 
 func (p *provider) GenerateUIRepoURL(repoPath string) string {

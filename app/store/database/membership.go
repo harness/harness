@@ -336,7 +336,8 @@ func (s *MembershipStore) ListSpaces(ctx context.Context,
 	}
 
 	switch filter.Sort {
-	case enum.MembershipSpaceSortUID:
+	// TODO [CODE-1363]: remove after identifier migration.
+	case enum.MembershipSpaceSortUID, enum.MembershipSpaceSortIdentifier:
 		stmt = stmt.OrderBy("space_uid " + order.String())
 	case enum.MembershipSpaceSortCreated:
 		stmt = stmt.OrderBy("membership_created " + order.String())

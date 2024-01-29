@@ -38,9 +38,11 @@ var (
 type CreateInput struct {
 	Description string `json:"description"`
 	SpaceRef    string `json:"space_ref"` // Ref of the parent space
-	UID         string `json:"uid"`
-	Type        string `json:"type"`
-	Data        string `json:"data"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        string `json:"uid" deprecated:"true"`
+	Identifier string `json:"identifier"`
+	Type       string `json:"type"`
+	Data       string `json:"data"`
 }
 
 func (c *Controller) Create(
@@ -51,12 +53,13 @@ func (c *Controller) Create(
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
+
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
 
-	err = apiauth.CheckConnector(ctx, c.authorizer, session, parentSpace.Path, in.UID, enum.PermissionConnectorEdit)
+	err = apiauth.CheckConnector(ctx, c.authorizer, session, parentSpace.Path, in.Identifier, enum.PermissionConnectorEdit)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +70,7 @@ func (c *Controller) Create(
 		Data:        in.Data,
 		Type:        in.Type,
 		SpaceID:     parentSpace.ID,
-		UID:         in.UID,
+		Identifier:  in.Identifier,
 		Created:     now,
 		Updated:     now,
 		Version:     0,
@@ -81,13 +84,18 @@ func (c *Controller) Create(
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
 	parentRefAsID, _ := strconv.ParseInt(in.SpaceRef, 10, 64)
 
 	if parentRefAsID <= 0 || len(strings.TrimSpace(in.SpaceRef)) == 0 {
 		return errConnectorRequiresParent
 	}
 
-	if err := c.uidCheck(in.UID, false); err != nil {
+	if err := check.Identifier(in.Identifier); err != nil {
 		return err
 	}
 

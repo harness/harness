@@ -82,7 +82,7 @@ type check struct {
 	Updated        int64                 `db:"check_updated"`
 	RepoID         int64                 `db:"check_repo_id"`
 	CommitSHA      string                `db:"check_commit_sha"`
-	UID            string                `db:"check_uid"`
+	Identifier     string                `db:"check_uid"`
 	Status         enum.CheckStatus      `db:"check_status"`
 	Summary        string                `db:"check_summary"`
 	Link           string                `db:"check_link"`
@@ -94,15 +94,20 @@ type check struct {
 	Ended          int64                 `db:"check_ended"`
 }
 
-// Find returns status check result for given unique key.
-func (s *CheckStore) Find(ctx context.Context, repoID int64, commitSHA string, uid string) (types.Check, error) {
+// FindByIdentifier returns status check result for given unique key.
+func (s *CheckStore) FindByIdentifier(
+	ctx context.Context,
+	repoID int64,
+	commitSHA string,
+	identifier string,
+) (types.Check, error) {
 	const sqlQuery = checkSelectBase + `
 		WHERE check_repo_id = $1 AND check_uid = $2 AND check_commit_sha = $3`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(check)
-	if err := db.GetContext(ctx, dst, sqlQuery, repoID, uid, commitSHA); err != nil {
+	if err := db.GetContext(ctx, dst, sqlQuery, repoID, identifier, commitSHA); err != nil {
 		return types.Check{}, database.ProcessSQLErrorf(err, "Failed to find check")
 	}
 
@@ -318,7 +323,7 @@ func mapInternalCheck(c *types.Check) *check {
 		Updated:        c.Updated,
 		RepoID:         c.RepoID,
 		CommitSHA:      c.CommitSHA,
-		UID:            c.UID,
+		Identifier:     c.Identifier,
 		Status:         c.Status,
 		Summary:        c.Summary,
 		Link:           c.Link,
@@ -335,17 +340,17 @@ func mapInternalCheck(c *types.Check) *check {
 
 func mapCheck(c *check) types.Check {
 	return types.Check{
-		ID:        c.ID,
-		CreatedBy: c.CreatedBy,
-		Created:   c.Created,
-		Updated:   c.Updated,
-		RepoID:    c.RepoID,
-		CommitSHA: c.CommitSHA,
-		UID:       c.UID,
-		Status:    c.Status,
-		Summary:   c.Summary,
-		Link:      c.Link,
-		Metadata:  c.Metadata,
+		ID:         c.ID,
+		CreatedBy:  c.CreatedBy,
+		Created:    c.Created,
+		Updated:    c.Updated,
+		RepoID:     c.RepoID,
+		CommitSHA:  c.CommitSHA,
+		Identifier: c.Identifier,
+		Status:     c.Status,
+		Summary:    c.Summary,
+		Link:       c.Link,
+		Metadata:   c.Metadata,
 		Payload: types.CheckPayload{
 			Version: c.PayloadVersion,
 			Kind:    c.PayloadKind,

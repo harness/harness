@@ -75,18 +75,25 @@ func (s *templateStore) Find(ctx context.Context, id int64) (*types.Template, er
 	return dst, nil
 }
 
-// FindByUIDAndType returns a template in a space with a given UID and a given type.
-func (s *templateStore) FindByUIDAndType(
+// FindByIdentifierAndType returns a template in a space with a given identifier and a given type.
+func (s *templateStore) FindByIdentifierAndType(
 	ctx context.Context,
 	spaceID int64,
-	uid string,
+	identifier string,
 	resolverType enum.ResolverType) (*types.Template, error) {
 	const findQueryStmt = templateQueryBase + `
 		WHERE template_space_id = $1 AND template_uid = $2 AND template_type = $3`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.Template)
-	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, uid, resolverType.String()); err != nil {
+	if err := db.GetContext(
+		ctx,
+		dst,
+		findQueryStmt,
+		spaceID,
+		identifier,
+		resolverType.String(),
+	); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find template")
 	}
 	return dst, nil
@@ -247,11 +254,11 @@ func (s *templateStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// DeleteByUID deletes a template with a given UID in a space.
-func (s *templateStore) DeleteByUIDAndType(
+// DeleteByIdentifierAndType deletes a template with a given identifier in a space.
+func (s *templateStore) DeleteByIdentifierAndType(
 	ctx context.Context,
 	spaceID int64,
-	uid string,
+	identifier string,
 	resolverType enum.ResolverType,
 ) error {
 	const templateDeleteStmt = `
@@ -260,7 +267,7 @@ func (s *templateStore) DeleteByUIDAndType(
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, templateDeleteStmt, spaceID, uid, resolverType.String()); err != nil {
+	if _, err := db.ExecContext(ctx, templateDeleteStmt, spaceID, identifier, resolverType.String()); err != nil {
 		return database.ProcessSQLErrorf(err, "Could not delete template")
 	}
 

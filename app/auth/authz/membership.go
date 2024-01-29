@@ -67,7 +67,7 @@ func (a *MembershipAuthorizer) Check(
 		session.Principal.ID,
 		permission,
 		resource.Type,
-		resource.Name,
+		resource.Identifier,
 		scope,
 		session.Metadata,
 	)
@@ -81,7 +81,7 @@ func (a *MembershipAuthorizer) Check(
 	//nolint:exhaustive // we want to fail on anything else
 	switch resource.Type {
 	case enum.ResourceTypeSpace:
-		spacePath = paths.Concatinate(scope.SpacePath, resource.Name)
+		spacePath = paths.Concatinate(scope.SpacePath, resource.Identifier)
 
 	case enum.ResourceTypeRepo:
 		spacePath = scope.SpacePath
@@ -103,7 +103,7 @@ func (a *MembershipAuthorizer) Check(
 
 	case enum.ResourceTypeUser:
 		// a user is allowed to view / edit themselves
-		if resource.Name == session.Principal.UID &&
+		if resource.Identifier == session.Principal.UID &&
 			(permission == enum.PermissionUserView || permission == enum.PermissionUserEdit) {
 			return true, nil
 		}

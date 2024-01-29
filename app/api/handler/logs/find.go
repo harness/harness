@@ -32,7 +32,7 @@ func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -53,7 +53,7 @@ func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 			return
 		}
 		lines, err := logCtrl.Find(
-			ctx, session, repoRef, pipelineUID,
+			ctx, session, repoRef, pipelineIdentifier,
 			executionNum, int(stageNum), int(stepNum))
 		if err != nil {
 			render.TranslatedUserError(w, err)

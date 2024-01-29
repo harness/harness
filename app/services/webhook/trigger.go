@@ -338,7 +338,9 @@ func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.Webho
 	req.Header.Add(s.toXHeader("Trigger"), string(triggerType))
 	req.Header.Add(s.toXHeader("Webhook-Parent-Type"), string(webhook.ParentType))
 	req.Header.Add(s.toXHeader("Webhook-Parent-Id"), fmt.Sprint(webhook.ParentID))
-	req.Header.Add(s.toXHeader("Webhook-Uid"), fmt.Sprint(webhook.UID))
+	// TODO [CODE-1363]: remove after identifier migration.
+	req.Header.Add(s.toXHeader("Webhook-Uid"), fmt.Sprint(webhook.Identifier))
+	req.Header.Add(s.toXHeader("Webhook-Identifier"), fmt.Sprint(webhook.Identifier))
 
 	// add HMAC only if a secret was provided
 	if webhook.Secret != "" {

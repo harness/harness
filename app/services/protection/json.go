@@ -19,9 +19,9 @@ import (
 	"encoding/json"
 )
 
-// toJSON is utility function that converts types to a JSON message.
+// ToJSON is utility function that converts types to a JSON message.
 // It's used to sanitize protection definition data.
-func toJSON(v any) (json.RawMessage, error) {
+func ToJSON(v any) (json.RawMessage, error) {
 	buffer := bytes.NewBuffer(nil)
 
 	enc := json.NewEncoder(buffer)

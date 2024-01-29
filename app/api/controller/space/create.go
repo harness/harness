@@ -37,8 +37,10 @@ var (
 )
 
 type CreateInput struct {
-	ParentRef   string `json:"parent_ref"`
-	UID         string `json:"uid"`
+	ParentRef string `json:"parent_ref"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID         string `json:"uid" deprecated:"true"`
+	Identifier  string `json:"identifier"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"is_public"`
 }
@@ -51,14 +53,15 @@ func (c *Controller) Create(
 	session *auth.Session,
 	in *CreateInput,
 ) (*types.Space, error) {
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	parentSpace, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := c.sanitizeCreateInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
-	}
 	var space *types.Space
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		space, err = c.createSpaceInnerInTX(ctx, session, parentSpace.ID, in)
@@ -77,14 +80,14 @@ func (c *Controller) createSpaceInnerInTX(
 	parentID int64,
 	in *CreateInput,
 ) (*types.Space, error) {
-	spacePath := in.UID
+	spacePath := in.Identifier
 	if parentID > 0 {
 		// (re-)read parent path in transaction to ensure correctness
 		parentPath, err := c.spacePathStore.FindPrimaryBySpaceID(ctx, parentID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find primary path for parent '%d': %w", parentID, err)
 		}
-		spacePath = paths.Concatinate(parentPath.Value, in.UID)
+		spacePath = paths.Concatinate(parentPath.Value, in.Identifier)
 
 		// ensure path is within accepted depth!
 		err = check.PathDepth(spacePath, true)
@@ -97,7 +100,7 @@ func (c *Controller) createSpaceInnerInTX(
 	space := &types.Space{
 		Version:     0,
 		ParentID:    parentID,
-		UID:         in.UID,
+		Identifier:  in.Identifier,
 		Description: in.Description,
 		IsPublic:    in.IsPublic,
 		Path:        spacePath,
@@ -111,13 +114,13 @@ func (c *Controller) createSpaceInnerInTX(
 	}
 
 	pathSegment := &types.SpacePathSegment{
-		UID:       space.UID,
-		IsPrimary: true,
-		SpaceID:   space.ID,
-		ParentID:  parentID,
-		CreatedBy: space.CreatedBy,
-		Created:   now,
-		Updated:   now,
+		Identifier: space.Identifier,
+		IsPrimary:  true,
+		SpaceID:    space.ID,
+		ParentID:   parentID,
+		CreatedBy:  space.CreatedBy,
+		Created:    now,
+		Updated:    now,
 	}
 	err = c.spacePathStore.InsertSegment(ctx, pathSegment)
 	if err != nil {
@@ -170,8 +173,8 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 	// create is a special case - check permission without specific resource
 	scope := &types.Scope{SpacePath: parentSpace.Path}
 	resource := &types.Resource{
-		Type: enum.ResourceTypeSpace,
-		Name: "",
+		Type:       enum.ResourceTypeSpace,
+		Identifier: "",
 	}
 	if err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionSpaceCreate); err != nil {
 		return nil, fmt.Errorf("authorization failed: %w", err)
@@ -181,6 +184,11 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
 	if len(in.ParentRef) > 0 && !c.nestedSpacesEnabled {
 		// TODO (Nested Spaces): Remove once support is added
 		return errNestedSpacesNotSupported
@@ -200,7 +208,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 		isRoot = true
 	}
 
-	if err := c.uidCheck(in.UID, isRoot); err != nil {
+	if err := c.identifierCheck(in.Identifier, isRoot); err != nil {
 		return err
 	}
 

@@ -229,7 +229,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	}
 
 	if !repo.Importing {
-		return "", fmt.Errorf("repository %s is not being imported", repo.UID)
+		return "", fmt.Errorf("repository %s is not being imported", repo.Identifier)
 	}
 
 	log := log.Ctx(ctx).With().

@@ -61,7 +61,7 @@ type space struct {
 	Version int64 `db:"space_version"`
 	// IMPORTANT: We need to make parentID optional for spaces to allow it to be a foreign key.
 	ParentID    null.Int `db:"space_parent_id"`
-	UID         string   `db:"space_uid"`
+	Identifier  string   `db:"space_uid"`
 	Description string   `db:"space_description"`
 	IsPublic    bool     `db:"space_is_public"`
 	CreatedBy   int64    `db:"space_created_by"`
@@ -233,7 +233,7 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 	space.Version = dbSpace.Version
 	space.Updated = dbSpace.Updated
 
-	// update path in case parent/uid changed
+	// update path in case parent/identifier changed
 	space.Path, err = getSpacePath(ctx, s.spacePathStore, space.ID)
 	if err != nil {
 		return err
@@ -327,7 +327,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	}
 
 	switch opts.Sort {
-	case enum.SpaceAttrUID, enum.SpaceAttrNone:
+	case enum.SpaceAttrUID, enum.SpaceAttrIdentifier, enum.SpaceAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
@@ -364,7 +364,7 @@ func mapToSpace(
 	res := &types.Space{
 		ID:          in.ID,
 		Version:     in.Version,
-		UID:         in.UID,
+		Identifier:  in.Identifier,
 		Description: in.Description,
 		IsPublic:    in.IsPublic,
 		Created:     in.Created,
@@ -418,7 +418,7 @@ func mapToInternalSpace(s *types.Space) *space {
 	res := &space{
 		ID:          s.ID,
 		Version:     s.Version,
-		UID:         s.UID,
+		Identifier:  s.Identifier,
 		Description: s.Description,
 		IsPublic:    s.IsPublic,
 		Created:     s.Created,

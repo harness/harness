@@ -32,14 +32,14 @@ func validateIDSlice(ids []int64) error {
 	return nil
 }
 
-func validateUIDSlice(uids []string) error {
-	if len(uids) > maxElements {
-		return errors.New("too many UIDs provided")
+func validateIdentifierSlice(identifiers []string) error {
+	if len(identifiers) > maxElements {
+		return errors.New("too many Identifiers provided")
 	}
 
-	for _, uid := range uids {
-		if uid == "" {
-			return errors.New("UID mustn't be an empty string")
+	for _, identifier := range identifiers {
+		if identifier == "" {
+			return errors.New("identifier mustn't be an empty string")
 		}
 	}
 

@@ -801,21 +801,21 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opRuleDelete.WithMapOfAnything(map[string]interface{}{"operationId": "ruleDelete"})
 	_ = reflector.SetRequest(&opRuleDelete, struct {
 		repoRequest
-		RuleUID string `path:"rule_uid"`
+		RuleIdentifier string `path:"rule_identifier"`
 	}{}, http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opRuleDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/rules/{rule_uid}", opRuleDelete)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/rules/{rule_identifier}", opRuleDelete)
 
 	opRuleUpdate := openapi3.Operation{}
 	opRuleUpdate.WithTags("repository")
 	opRuleUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "ruleUpdate"})
 	_ = reflector.SetRequest(&opRuleUpdate, &struct {
 		repoRequest
-		RuleUID string `path:"rule_uid"`
+		Identifier string `path:"rule_identifier"`
 		repo.RuleUpdateInput
 
 		// overshadow Type and Definition to enable oneof.
@@ -827,7 +827,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repo_ref}/rules/{rule_uid}", opRuleUpdate)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repo_ref}/rules/{rule_identifier}", opRuleUpdate)
 
 	opRuleList := openapi3.Operation{}
 	opRuleList.WithTags("repository")
@@ -851,14 +851,14 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opRuleGet.WithMapOfAnything(map[string]interface{}{"operationId": "ruleGet"})
 	_ = reflector.SetRequest(&opRuleGet, &struct {
 		repoRequest
-		RuleUID string `path:"rule_uid"`
+		Identifier string `path:"rule_identifier"`
 	}{}, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opRuleGet, []rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules/{rule_uid}", opRuleGet)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules/{rule_identifier}", opRuleGet)
 
 	opCodeOwnerValidate := openapi3.Operation{}
 	opCodeOwnerValidate.WithTags("repository")

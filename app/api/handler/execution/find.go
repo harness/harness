@@ -26,7 +26,7 @@ func HandleFind(executionCtrl *execution.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -42,7 +42,7 @@ func HandleFind(executionCtrl *execution.Controller) http.HandlerFunc {
 			return
 		}
 
-		execution, err := executionCtrl.Find(ctx, session, repoRef, pipelineUID, n)
+		execution, err := executionCtrl.Find(ctx, session, repoRef, pipelineIdentifier, n)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

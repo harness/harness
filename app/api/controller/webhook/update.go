@@ -25,8 +25,10 @@ import (
 )
 
 type UpdateInput struct {
-	UID *string `json:"uid"`
-	// TODO: Remove once UID migration is completed.
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        *string `json:"uid" deprecated:"true"`
+	Identifier *string `json:"identifier"`
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	DisplayName *string               `json:"display_name"`
 	Description *string               `json:"description"`
 	URL         *string               `json:"url"`
@@ -41,17 +43,21 @@ func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	webhookUID string,
+	webhookIdentifier string,
 	in *UpdateInput,
 	allowModifyingInternal bool,
 ) (*types.Webhook, error) {
+	if err := sanitizeUpdateInput(in, c.allowLoopback, c.allowPrivateNetwork); err != nil {
+		return nil, err
+	}
+
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
 
 	// get the hook and ensure it belongs to us
-	hook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookUID)
+	hook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -59,14 +65,10 @@ func (c *Controller) Update(
 	if !allowModifyingInternal && hook.Internal {
 		return nil, ErrInternalWebhookOperationNotAllowed
 	}
-	// validate input
-	if err = checkUpdateInput(in, c.allowLoopback, c.allowPrivateNetwork); err != nil {
-		return nil, err
-	}
 
 	// update webhook struct (only for values that are provided)
-	if in.UID != nil {
-		hook.UID = *in.UID
+	if in.Identifier != nil {
+		hook.Identifier = *in.Identifier
 	}
 	if in.DisplayName != nil {
 		hook.DisplayName = *in.DisplayName
@@ -101,9 +103,14 @@ func (c *Controller) Update(
 	return hook, nil
 }
 
-func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork bool) error {
-	if in.UID != nil {
-		if err := check.UID(*in.UID); err != nil {
+func sanitizeUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork bool) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == nil {
+		in.Identifier = in.UID
+	}
+
+	if in.Identifier != nil {
+		if err := check.Identifier(*in.Identifier); err != nil {
 			return err
 		}
 	}

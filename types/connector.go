@@ -14,14 +14,29 @@
 
 package types
 
+import "encoding/json"
+
 type Connector struct {
-	ID          int64  `db:"connector_id"              json:"id"`
+	ID          int64  `db:"connector_id"              json:"-"`
 	Description string `db:"connector_description"     json:"description"`
 	SpaceID     int64  `db:"connector_space_id"        json:"space_id"`
-	UID         string `db:"connector_uid"             json:"uid"`
+	Identifier  string `db:"connector_uid"             json:"identifier"`
 	Type        string `db:"connector_type"            json:"type"`
 	Data        string `db:"connector_data"            json:"data"`
 	Created     int64  `db:"connector_created"         json:"created"`
 	Updated     int64  `db:"connector_updated"         json:"updated"`
 	Version     int64  `db:"connector_version"         json:"-"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (s Connector) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias Connector
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(s),
+		UID:   s.Identifier,
+	})
 }

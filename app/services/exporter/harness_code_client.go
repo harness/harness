@@ -162,8 +162,8 @@ func addQueryParams(req *http.Request, params map[string]string) {
 	}
 }
 
-func (c *harnessCodeClient) DeleteRepo(ctx context.Context, repoUID string) error {
-	path := fmt.Sprintf(pathDeleteRepo, c.client.accountID, c.client.orgID, c.client.projectID, repoUID)
+func (c *harnessCodeClient) DeleteRepo(ctx context.Context, repoIdentifier string) error {
+	path := fmt.Sprintf(pathDeleteRepo, c.client.accountID, c.client.orgID, c.client.projectID, repoIdentifier)
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, appendPath(c.client.baseURL, path), nil)
 	if err != nil {
 		return fmt.Errorf("unable to create new http request : %w", err)

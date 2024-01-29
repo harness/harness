@@ -26,12 +26,12 @@ func HandleFind(triggerCtrl *trigger.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		triggerUID, err := request.GetTriggerUIDFromPath(r)
+		triggerIdentifier, err := request.GetTriggerIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -42,7 +42,7 @@ func HandleFind(triggerCtrl *trigger.Controller) http.HandlerFunc {
 			return
 		}
 
-		trigger, err := triggerCtrl.Find(ctx, session, repoRef, pipelineUID, triggerUID)
+		trigger, err := triggerCtrl.Find(ctx, session, repoRef, pipelineIdentifier, triggerIdentifier)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

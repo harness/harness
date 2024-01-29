@@ -37,7 +37,7 @@ var _ store.TriggerStore = (*triggerStore)(nil)
 
 type trigger struct {
 	ID          int64              `db:"trigger_id"`
-	UID         string             `db:"trigger_uid"`
+	Identifier  string             `db:"trigger_uid"`
 	Description string             `db:"trigger_description"`
 	Type        string             `db:"trigger_type"`
 	Secret      string             `db:"trigger_secret"`
@@ -68,7 +68,7 @@ func mapInternalToTrigger(trigger *trigger) (*types.Trigger, error) {
 		CreatedBy:   trigger.CreatedBy,
 		Disabled:    trigger.Disabled,
 		Actions:     actions,
-		UID:         trigger.UID,
+		Identifier:  trigger.Identifier,
 		Created:     trigger.Created,
 		Updated:     trigger.Updated,
 		Version:     trigger.Version,
@@ -90,7 +90,7 @@ func mapInternalToTriggerList(triggers []*trigger) ([]*types.Trigger, error) {
 func mapTriggerToInternal(t *types.Trigger) *trigger {
 	return &trigger{
 		ID:          t.ID,
-		UID:         t.UID,
+		Identifier:  t.Identifier,
 		Description: t.Description,
 		Type:        t.Type,
 		PipelineID:  t.PipelineID,
@@ -130,8 +130,12 @@ const (
 	`
 )
 
-// Find returns an trigger given a pipeline ID and a trigger UID.
-func (s *triggerStore) FindByUID(ctx context.Context, pipelineID int64, uid string) (*types.Trigger, error) {
+// Find returns an trigger given a pipeline ID and a trigger identifier.
+func (s *triggerStore) FindByIdentifier(
+	ctx context.Context,
+	pipelineID int64,
+	identifier string,
+) (*types.Trigger, error) {
 	const findQueryStmt = `
 	SELECT` + triggerColumns + `
 	FROM triggers
@@ -139,7 +143,7 @@ func (s *triggerStore) FindByUID(ctx context.Context, pipelineID int64, uid stri
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(trigger)
-	if err := db.GetContext(ctx, dst, findQueryStmt, pipelineID, uid); err != nil {
+	if err := db.GetContext(ctx, dst, findQueryStmt, pipelineID, identifier); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find trigger")
 	}
 	return mapInternalToTrigger(dst)
@@ -254,7 +258,7 @@ func (s *triggerStore) UpdateOptLock(ctx context.Context,
 			return nil, err
 		}
 
-		trigger, err = s.FindByUID(ctx, trigger.PipelineID, trigger.UID)
+		trigger, err = s.FindByIdentifier(ctx, trigger.PipelineID, trigger.Identifier)
 		if err != nil {
 			return nil, err
 		}
@@ -345,15 +349,15 @@ func (s *triggerStore) Count(ctx context.Context, pipelineID int64, filter types
 	return count, nil
 }
 
-// Delete deletes an trigger given a pipeline ID and a trigger UID.
-func (s *triggerStore) DeleteByUID(ctx context.Context, pipelineID int64, uid string) error {
+// Delete deletes an trigger given a pipeline ID and a trigger identifier.
+func (s *triggerStore) DeleteByIdentifier(ctx context.Context, pipelineID int64, identifier string) error {
 	const triggerDeleteStmt = `
 		DELETE FROM triggers
 		WHERE trigger_pipeline_id = $1 AND trigger_uid = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, triggerDeleteStmt, pipelineID, uid); err != nil {
+	if _, err := db.ExecContext(ctx, triggerDeleteStmt, pipelineID, identifier); err != nil {
 		return database.ProcessSQLErrorf(err, "Could not delete trigger")
 	}
 

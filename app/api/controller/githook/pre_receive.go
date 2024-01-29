@@ -155,7 +155,7 @@ func (c *Controller) checkProtectionRules(
 	for _, ruleViolation := range ruleViolations {
 		criticalViolation = criticalViolation || ruleViolation.IsCritical()
 		for _, violation := range ruleViolation.Violations {
-			message := fmt.Sprintf("Rule %q violation: %s", ruleViolation.Rule.UID, violation.Message)
+			message := fmt.Sprintf("Rule %q violation: %s", ruleViolation.Rule.Identifier, violation.Message)
 			output.Messages = append(output.Messages, message)
 		}
 	}

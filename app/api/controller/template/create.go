@@ -38,8 +38,10 @@ var (
 type CreateInput struct {
 	Description string `json:"description"`
 	SpaceRef    string `json:"space_ref"` // Ref of the parent space
-	UID         string `json:"uid"`
-	Data        string `json:"data"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        string `json:"uid" deprecated:"true"`
+	Identifier string `json:"identifier"`
+	Data       string `json:"data"`
 }
 
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Template, error) {
@@ -52,7 +54,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
 
-	err = apiauth.CheckTemplate(ctx, c.authorizer, session, parentSpace.Path, in.UID, enum.PermissionTemplateEdit)
+	err = apiauth.CheckTemplate(ctx, c.authorizer, session, parentSpace.Path, in.Identifier, enum.PermissionTemplateEdit)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +69,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		Description: in.Description,
 		Data:        in.Data,
 		SpaceID:     parentSpace.ID,
-		UID:         in.UID,
+		Identifier:  in.Identifier,
 		Type:        resolverType,
 		Created:     now,
 		Updated:     now,
@@ -82,13 +84,18 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
 	parentRefAsID, err := strconv.ParseInt(in.SpaceRef, 10, 64)
 
 	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.SpaceRef)) == 0) {
 		return errTemplateRequiresParent
 	}
 
-	if err := c.uidCheck(in.UID, false); err != nil {
+	if err := check.Identifier(in.Identifier); err != nil {
 		return err
 	}
 

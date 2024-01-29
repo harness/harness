@@ -35,7 +35,7 @@ func HandleUpdate(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 			return
 		}
 
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -46,7 +46,7 @@ func HandleUpdate(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 			return
 		}
 
-		pipeline, err := pipelineCtrl.Update(ctx, session, repoRef, pipelineUID, in)
+		pipeline, err := pipelineCtrl.Update(ctx, session, repoRef, pipelineIdentifier, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

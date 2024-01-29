@@ -169,7 +169,7 @@ func (m *Manager) traverseAndUpsertPlugins(ctx context.Context, rc *zip.ReadClos
 	// Put the plugins in a map so we don't have to perform frequent DB queries.
 	pluginMap := map[string]*types.Plugin{}
 	for _, p := range plugins {
-		pluginMap[p.UID] = p
+		pluginMap[p.Identifier] = p
 	}
 	cnt := 0
 	for _, file := range rc.File {
@@ -212,7 +212,7 @@ func (m *Manager) traverseAndUpsertPlugins(ctx context.Context, rc *zip.ReadClos
 
 		plugin := &types.Plugin{
 			Description: desc,
-			UID:         config.Name,
+			Identifier:  config.Name,
 			Type:        config.Type,
 			Spec:        buf.String(),
 		}
@@ -231,7 +231,7 @@ func (m *Manager) traverseAndUpsertPlugins(ctx context.Context, rc *zip.ReadClos
 		}
 
 		// If plugin already exists in the database, skip upsert
-		if p, ok := pluginMap[plugin.UID]; ok {
+		if p, ok := pluginMap[plugin.Identifier]; ok {
 			if p.Matches(plugin) {
 				continue
 			}
@@ -241,7 +241,7 @@ func (m *Manager) traverseAndUpsertPlugins(ctx context.Context, rc *zip.ReadClos
 		// TODO: Once we start using versions, we can think of whether we want to
 		// keep different schemas for each version in the database. For now, we will
 		// simply overwrite the existing version with the new version.
-		if _, ok := pluginMap[plugin.UID]; ok {
+		if _, ok := pluginMap[plugin.Identifier]; ok {
 			err = m.pluginStore.Update(ctx, plugin)
 			if err != nil {
 				log.Warn().Str("name", file.Name).Err(err).Msg("could not update plugin")

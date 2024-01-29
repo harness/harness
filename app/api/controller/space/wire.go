@@ -36,14 +36,14 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider, sseStreamer sse.Streamer,
-	uidCheck check.PathUID, authorizer authz.Authorizer, spacePathStore store.SpacePathStore,
+	identifierCheck check.SpaceIdentifier, authorizer authz.Authorizer, spacePathStore store.SpacePathStore,
 	pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore,
 	spaceStore store.SpaceStore, repoStore store.RepoStore, principalStore store.PrincipalStore,
 	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository,
 	exporter *exporter.Repository, limiter limiter.ResourceLimiter,
 ) *Controller {
-	return NewController(config, tx, urlProvider, sseStreamer, uidCheck, authorizer,
+	return NewController(config, tx, urlProvider, sseStreamer, identifierCheck, authorizer,
 		spacePathStore, pipelineStore, secretStore,
 		connectorStore, templateStore,
 		spaceStore, repoStore, principalStore,

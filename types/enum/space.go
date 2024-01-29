@@ -22,7 +22,9 @@ type SpaceAttr int
 // Order enumeration.
 const (
 	SpaceAttrNone SpaceAttr = iota
+	// TODO [CODE-1363]: remove after identifier migration.
 	SpaceAttrUID
+	SpaceAttrIdentifier
 	SpaceAttrCreated
 	SpaceAttrUpdated
 )
@@ -31,8 +33,11 @@ const (
 // and returns the equivalent enumeration.
 func ParseSpaceAttr(s string) SpaceAttr {
 	switch strings.ToLower(s) {
+	// TODO [CODE-1363]: remove after identifier migration.
 	case uid:
 		return SpaceAttrUID
+	case identifier:
+		return SpaceAttrIdentifier
 	case created, createdAt:
 		return SpaceAttrCreated
 	case updated, updatedAt:
@@ -45,8 +50,11 @@ func ParseSpaceAttr(s string) SpaceAttr {
 // String returns the string representation of the attribute.
 func (a SpaceAttr) String() string {
 	switch a {
+	// TODO [CODE-1363]: remove after identifier migration.
 	case SpaceAttrUID:
 		return uid
+	case SpaceAttrIdentifier:
+		return identifier
 	case SpaceAttrCreated:
 		return created
 	case SpaceAttrUpdated:

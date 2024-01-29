@@ -35,7 +35,7 @@ func HandleUpdate(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		webhookUID, err := request.GetWebhookUIDFromPath(r)
+		webhookIdentifier, err := request.GetWebhookIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -48,7 +48,7 @@ func HandleUpdate(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		hook, err := webhookCtrl.Update(ctx, session, repoRef, webhookUID, in, false)
+		hook, err := webhookCtrl.Update(ctx, session, repoRef, webhookIdentifier, in, false)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

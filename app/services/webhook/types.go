@@ -15,6 +15,7 @@
 package webhook
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/harness/gitness/app/url"
@@ -73,9 +74,22 @@ type PullReqCommentSegment struct {
 type RepositoryInfo struct {
 	ID            int64  `json:"id"`
 	Path          string `json:"path"`
-	UID           string `json:"uid"`
+	Identifier    string `json:"identifier"`
 	DefaultBranch string `json:"default_branch"`
 	GitURL        string `json:"git_url"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (r RepositoryInfo) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias RepositoryInfo
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(r),
+		UID:   r.Identifier,
+	})
 }
 
 // repositoryInfoFrom gets the RespositoryInfo from a types.Repository.
@@ -83,7 +97,7 @@ func repositoryInfoFrom(repo *types.Repository, urlProvider url.Provider) Reposi
 	return RepositoryInfo{
 		ID:            repo.ID,
 		Path:          repo.Path,
-		UID:           repo.UID,
+		Identifier:    repo.Identifier,
 		DefaultBranch: repo.DefaultBranch,
 		GitURL:        urlProvider.GenerateGITCloneURL(repo.Path),
 	}

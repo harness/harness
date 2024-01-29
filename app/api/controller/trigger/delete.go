@@ -27,8 +27,8 @@ func (c *Controller) Delete(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	pipelineUID string,
-	triggerUID string,
+	pipelineIdentifier string,
+	triggerIdentifier string,
 ) error {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
@@ -36,17 +36,17 @@ func (c *Controller) Delete(
 	}
 	// Trigger permissions are associated with pipeline permissions. If a user has permissions
 	// to edit the pipeline, they will have permissions to remove a trigger as well.
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineEdit)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineEdit)
 	if err != nil {
 		return fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
 
-	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
+	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)
 	if err != nil {
 		return fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
-	err = c.triggerStore.DeleteByUID(ctx, pipeline.ID, triggerUID)
+	err = c.triggerStore.DeleteByIdentifier(ctx, pipeline.ID, triggerIdentifier)
 	if err != nil {
 		return fmt.Errorf("could not delete trigger: %w", err)
 	}

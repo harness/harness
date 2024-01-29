@@ -14,6 +14,8 @@
 
 package types
 
+import "encoding/json"
+
 const (
 	PathSeparator = "/"
 )
@@ -28,12 +30,25 @@ type SpacePath struct {
 // SpacePathSegment represents a segment of a path to a space.
 type SpacePathSegment struct {
 	// TODO: int64 ID doesn't match DB
-	ID        int64  `json:"id"`
-	UID       string `json:"uid"`
-	IsPrimary bool   `json:"is_primary"`
-	SpaceID   int64  `json:"space_id"`
-	ParentID  int64  `json:"parent_id"`
-	CreatedBy int64  `json:"created_by"`
-	Created   int64  `json:"created"`
-	Updated   int64  `json:"updated"`
+	ID         int64  `json:"-"`
+	Identifier string `json:"identifier"`
+	IsPrimary  bool   `json:"is_primary"`
+	SpaceID    int64  `json:"space_id"`
+	ParentID   int64  `json:"parent_id"`
+	CreatedBy  int64  `json:"created_by"`
+	Created    int64  `json:"created"`
+	Updated    int64  `json:"updated"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (s SpacePathSegment) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias SpacePathSegment
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(s),
+		UID:   s.Identifier,
+	})
 }

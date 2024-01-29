@@ -31,19 +31,19 @@ func (c *Controller) Cancel(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	pipelineUID string,
+	pipelineIdentifier string,
 	executionNum int64,
 ) (*types.Execution, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineExecute)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineExecute)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
+	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}

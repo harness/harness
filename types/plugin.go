@@ -14,11 +14,13 @@
 
 package types
 
+import "encoding/json"
+
 // Plugin represents a Harness plugin. It has an associated template stored
 // in the spec field. The spec is used by the UI to provide a smart visual
 // editor for adding plugins to YAML schema.
 type Plugin struct {
-	UID         string `db:"plugin_uid"               json:"uid"`
+	Identifier  string `db:"plugin_uid"               json:"identifier"`
 	Description string `db:"plugin_description"       json:"description"`
 	// Currently we only support step level plugins but more can be added in the future.
 	Type    string `db:"plugin_type"              json:"type"`
@@ -31,21 +33,34 @@ type Plugin struct {
 // Matches checks whether two plugins are identical.
 // We can use reflection here, this is just easier to add on to
 // when needed.
-func (plugin *Plugin) Matches(v *Plugin) bool {
-	if plugin.UID != v.UID {
+func (p *Plugin) Matches(v *Plugin) bool {
+	if p.Identifier != v.Identifier {
 		return false
 	}
-	if plugin.Description != v.Description {
+	if p.Description != v.Description {
 		return false
 	}
-	if plugin.Spec != v.Spec {
+	if p.Spec != v.Spec {
 		return false
 	}
-	if plugin.Version != v.Version {
+	if p.Version != v.Version {
 		return false
 	}
-	if plugin.Logo != v.Logo {
+	if p.Logo != v.Logo {
 		return false
 	}
 	return true
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (p Plugin) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias Plugin
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(p),
+		UID:   p.Identifier,
+	})
 }

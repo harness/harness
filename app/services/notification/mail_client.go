@@ -132,11 +132,11 @@ func (m MailClient) SendPullReqStateChanged(
 }
 
 func GetSubjectPullRequest(
-	repoUID string,
+	repoIdentifier string,
 	prNum int64,
 	prTitle string,
 ) string {
-	return fmt.Sprintf(subjectPullReqEvent, repoUID, prTitle, prNum)
+	return fmt.Sprintf(subjectPullReqEvent, repoIdentifier, prTitle, prNum)
 }
 
 func GetHTMLBody(templateName string, data interface{}) ([]byte, error) {
@@ -156,7 +156,7 @@ func GenerateEmailFromPayload(
 	base *BasePullReqPayload,
 	payload interface{},
 ) (*mailer.Payload, error) {
-	subject := GetSubjectPullRequest(base.Repo.UID, base.PullReq.Number,
+	subject := GetSubjectPullRequest(base.Repo.Identifier, base.PullReq.Number,
 		base.PullReq.Title)
 
 	body, err := GetHTMLBody(templateName, payload)

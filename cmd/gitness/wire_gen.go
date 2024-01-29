@@ -121,7 +121,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	pathUID := check.ProvidePathUIDCheck()
 	repoStore := database.ProvideRepoStore(db, spacePathCache, spacePathStore)
 	pipelineStore := database.ProvidePipelineStore(db)
 	ruleStore := database.ProvideRuleStore(db, principalInfoCache)
@@ -187,7 +186,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, transactor, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, mutexManager)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, mutexManager)
 	executionStore := database.ProvideExecutionStore(db)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	stageStore := database.ProvideStageStore(db)
@@ -207,18 +206,19 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream()
 	logsController := logs2.ProvideController(authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)
+	spaceIdentifier := check.ProvideSpaceIdentifierCheck()
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
 	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
 	if err != nil {
 		return nil, err
 	}
-	spaceController := space.ProvideController(config, transactor, provider, streamer, pathUID, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter)
-	pipelineController := pipeline.ProvideController(pathUID, repoStore, triggerStore, authorizer, pipelineStore)
-	secretController := secret.ProvideController(pathUID, encrypter, secretStore, authorizer, spaceStore)
-	triggerController := trigger.ProvideController(authorizer, triggerStore, pathUID, pipelineStore, repoStore)
-	connectorController := connector.ProvideController(pathUID, connectorStore, authorizer, spaceStore)
-	templateController := template.ProvideController(pathUID, templateStore, authorizer, spaceStore)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter)
+	pipelineController := pipeline.ProvideController(repoStore, triggerStore, authorizer, pipelineStore)
+	secretController := secret.ProvideController(encrypter, secretStore, authorizer, spaceStore)
+	triggerController := trigger.ProvideController(authorizer, triggerStore, pipelineStore, repoStore)
+	connectorController := connector.ProvideController(connectorStore, authorizer, spaceStore)
+	templateController := template.ProvideController(templateStore, authorizer, spaceStore)
 	pluginController := plugin.ProvideController(pluginStore)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)

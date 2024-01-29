@@ -37,6 +37,6 @@ func Envs(
 	urlProvider url.Provider,
 ) map[string]string {
 	return map[string]string{
-		"DRONE_BUILD_LINK": urlProvider.GenerateUIBuildURL(repo.Path, pipeline.UID, pipeline.Seq),
+		"DRONE_BUILD_LINK": urlProvider.GenerateUIBuildURL(repo.Path, pipeline.Identifier, pipeline.Seq),
 	}
 }

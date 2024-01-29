@@ -15,6 +15,8 @@
 package types
 
 import (
+	"encoding/json"
+
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -24,12 +26,25 @@ type Token struct {
 	ID          int64          `db:"token_id"                 json:"-"`
 	PrincipalID int64          `db:"token_principal_id"       json:"principal_id"`
 	Type        enum.TokenType `db:"token_type"               json:"type"`
-	UID         string         `db:"token_uid"                json:"uid"`
+	Identifier  string         `db:"token_uid"                json:"identifier"`
 	// ExpiresAt is an optional unix time that if specified restricts the validity of a token.
 	ExpiresAt *int64 `db:"token_expires_at"         json:"expires_at,omitempty"`
 	// IssuedAt is the unix time at which the token was issued.
 	IssuedAt  int64 `db:"token_issued_at"          json:"issued_at"`
 	CreatedBy int64 `db:"token_created_by"         json:"created_by"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (t Token) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias Token
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(t),
+		UID:   t.Identifier,
+	})
 }
 
 // TokenResponse is returned as part of token creation for PAT / SAT / User Session.

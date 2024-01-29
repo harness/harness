@@ -26,8 +26,8 @@ type PermissionCheck struct {
 // Resource represents the resource of a permission check.
 // Note: Keep the name empty in case access is requested for all resources of that type.
 type Resource struct {
-	Type enum.ResourceType
-	Name string
+	Type       enum.ResourceType
+	Identifier string
 }
 
 // Scope represents the scope of a permission check

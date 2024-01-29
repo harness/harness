@@ -106,7 +106,7 @@ func (c *Controller) Merge(
 	// pr is already merged.
 	unlock, err := c.lockPR(
 		ctx,
-		targetRepo.GitUID,
+		targetRepo.ID,
 		0,                      // 0 means locks all PRs for this repo
 		timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
 	)

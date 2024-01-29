@@ -33,13 +33,13 @@ func HandleFind(connectorCtrl *connector.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, connectorUID, err := paths.DisectLeaf(connectorRef)
+		spaceRef, connectorIdentifier, err := paths.DisectLeaf(connectorRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		connector, err := connectorCtrl.Find(ctx, session, spaceRef, connectorUID)
+		connector, err := connectorCtrl.Find(ctx, session, spaceRef, connectorIdentifier)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

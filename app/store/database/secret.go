@@ -75,14 +75,14 @@ func (s *secretStore) Find(ctx context.Context, id int64) (*types.Secret, error)
 	return dst, nil
 }
 
-// FindByUID returns a secret in a given space with a given UID.
-func (s *secretStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Secret, error) {
+// FindByIdentifier returns a secret in a given space with a given identifier.
+func (s *secretStore) FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.Secret, error) {
 	const findQueryStmt = secretQueryBase + `
 		WHERE secret_space_id = $1 AND secret_uid = $2`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.Secret)
-	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, uid); err != nil {
+	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, identifier); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find secret")
 	}
 	return dst, nil
@@ -262,8 +262,8 @@ func (s *secretStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// DeleteByUID deletes a secret with a given UID in a space.
-func (s *secretStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
+// DeleteByIdentifier deletes a secret with a given identifier in a space.
+func (s *secretStore) DeleteByIdentifier(ctx context.Context, spaceID int64, identifier string) error {
 	//nolint:gosec // wrong flagging
 	const secretDeleteStmt = `
 	DELETE FROM secrets
@@ -271,7 +271,7 @@ func (s *secretStore) DeleteByUID(ctx context.Context, spaceID int64, uid string
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, secretDeleteStmt, spaceID, uid); err != nil {
+	if _, err := db.ExecContext(ctx, secretDeleteStmt, spaceID, identifier); err != nil {
 		return database.ProcessSQLErrorf(err, "Could not delete secret")
 	}
 

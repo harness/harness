@@ -44,8 +44,8 @@ func CheckSpace(ctx context.Context, authorizer authz.Authorizer, session *auth.
 
 	scope := &types.Scope{SpacePath: parentSpace}
 	resource := &types.Resource{
-		Type: enum.ResourceTypeSpace,
-		Name: name,
+		Type:       enum.ResourceTypeSpace,
+		Identifier: name,
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)

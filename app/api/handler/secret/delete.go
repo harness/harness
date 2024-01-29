@@ -32,13 +32,13 @@ func HandleDelete(secretCtrl *secret.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, secretUID, err := paths.DisectLeaf(secretRef)
+		spaceRef, secretIdentifier, err := paths.DisectLeaf(secretRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		err = secretCtrl.Delete(ctx, session, spaceRef, secretUID)
+		err = secretCtrl.Delete(ctx, session, spaceRef, secretIdentifier)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

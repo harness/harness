@@ -37,8 +37,10 @@ var (
 )
 
 type CreateInput struct {
-	Description   string `json:"description"`
-	UID           string `json:"uid"`
+	Description string `json:"description"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID           string `json:"uid" deprecated:"true"`
+	Identifier    string `json:"identifier"`
 	Disabled      bool   `json:"disabled"`
 	DefaultBranch string `json:"default_branch"`
 	ConfigPath    string `json:"config_path"`
@@ -50,6 +52,10 @@ func (c *Controller) Create(
 	repoRef string,
 	in *CreateInput,
 ) (*types.Pipeline, error) {
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
@@ -60,16 +66,12 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
 
-	if err := c.sanitizeCreateInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
-	}
-
 	var pipeline *types.Pipeline
 	now := time.Now().UnixMilli()
 	pipeline = &types.Pipeline{
 		Description:   in.Description,
 		RepoID:        repo.ID,
-		UID:           in.UID,
+		Identifier:    in.Identifier,
 		Disabled:      in.Disabled,
 		CreatedBy:     session.Principal.ID,
 		Seq:           0,
@@ -94,7 +96,7 @@ func (c *Controller) Create(
 		PipelineID:  pipeline.ID,
 		RepoID:      pipeline.RepoID,
 		CreatedBy:   session.Principal.ID,
-		UID:         "default",
+		Identifier:  "default",
 		Actions: []enum.TriggerAction{enum.TriggerActionPullReqCreated,
 			enum.TriggerActionPullReqReopened, enum.TriggerActionPullReqBranchUpdated},
 		Disabled: false,
@@ -109,7 +111,12 @@ func (c *Controller) Create(
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	if err := c.uidCheck(in.UID, false); err != nil {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
+	if err := check.Identifier(in.Identifier); err != nil {
 		return err
 	}
 

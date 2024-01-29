@@ -14,10 +14,12 @@
 
 package types
 
+import "encoding/json"
+
 type Pipeline struct {
-	ID          int64  `db:"pipeline_id"              json:"id"`
+	ID          int64  `db:"pipeline_id"              json:"-"`
 	Description string `db:"pipeline_description"     json:"description"`
-	UID         string `db:"pipeline_uid"             json:"uid"`
+	Identifier  string `db:"pipeline_uid"             json:"identifier"`
 	Disabled    bool   `db:"pipeline_disabled"        json:"disabled"`
 	CreatedBy   int64  `db:"pipeline_created_by"      json:"created_by"`
 	// Seq is the last execution number for this pipeline
@@ -30,4 +32,17 @@ type Pipeline struct {
 	Execution *Execution `db:"-"                        json:"execution,omitempty"`
 	Updated   int64      `db:"pipeline_updated"         json:"updated"`
 	Version   int64      `db:"pipeline_version"         json:"-"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (s Pipeline) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias Pipeline
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(s),
+		UID:   s.Identifier,
+	})
 }

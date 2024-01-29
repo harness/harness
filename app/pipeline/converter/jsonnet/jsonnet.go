@@ -194,8 +194,10 @@ func mapRepo(v *types.Repository, p *types.Pipeline, vm *jsonnet.VM) {
 	if idx != -1 {
 		namespace = v.Path[:idx]
 	}
-	vm.ExtVar(repo+"uid", v.UID)
-	vm.ExtVar(repo+"name", v.UID)
+	// TODO [CODE-1363]: remove after identifier migration.
+	vm.ExtVar(repo+"uid", v.Identifier)
+	vm.ExtVar(repo+"identifier", v.Identifier)
+	vm.ExtVar(repo+"name", v.Identifier)
 	vm.ExtVar(repo+"namespace", namespace)
 	vm.ExtVar(repo+"slug", v.Path)
 	vm.ExtVar(repo+"git_http_url", v.GitURL)

@@ -26,7 +26,7 @@ func HandleDelete(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -37,7 +37,7 @@ func HandleDelete(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = pipelineCtrl.Delete(ctx, session, repoRef, pipelineUID)
+		err = pipelineCtrl.Delete(ctx, session, repoRef, pipelineIdentifier)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

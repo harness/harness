@@ -22,11 +22,14 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 )
 
 type ImportInput struct {
-	ParentRef   string `json:"parent_ref"`
-	UID         string `json:"uid"`
+	ParentRef string `json:"parent_ref"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID         string `json:"uid" deprecated:"true"`
+	Identifier  string `json:"identifier"`
 	Description string `json:"description"`
 
 	Provider     importer.Provider `json:"provider"`
@@ -37,14 +40,13 @@ type ImportInput struct {
 
 // Import creates a new empty repository and starts git import to it from a remote repository.
 func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*types.Repository, error) {
+	if err := c.sanitizeImportInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	parentSpace, err := c.getSpaceCheckAuthRepoCreation(ctx, session, in.ParentRef)
 	if err != nil {
 		return nil, err
-	}
-
-	err = c.sanitizeImportInput(in)
-	if err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
 	var repo *types.Repository
@@ -59,7 +61,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		}
 		repo = remoteRepository.ToRepo(
 			parentSpace.ID,
-			in.UID,
+			in.Identifier,
 			in.Description,
 			&session.Principal,
 			c.publicResourceCreationEnabled,
@@ -87,11 +89,16 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 }
 
 func (c *Controller) sanitizeImportInput(in *ImportInput) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
 	if err := c.validateParentRef(in.ParentRef); err != nil {
 		return err
 	}
 
-	if err := c.uidCheck(in.UID, false); err != nil {
+	if err := check.RepoIdentifier(in.Identifier); err != nil {
 		return err
 	}
 

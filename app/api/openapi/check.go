@@ -30,7 +30,7 @@ var queryParameterStatusCheckQuery = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The substring which is used to filter the status checks by their UID."),
+		Description: ptr.String("The substring which is used to filter the status checks by their Identifier."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{

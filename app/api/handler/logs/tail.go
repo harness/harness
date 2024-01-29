@@ -41,7 +41,7 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -85,7 +85,7 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 		f.Flush()
 
 		linec, errc, err := logCtrl.Tail(
-			ctx, session, repoRef, pipelineUID,
+			ctx, session, repoRef, pipelineIdentifier,
 			executionNum, int(stageNum), int(stepNum))
 		if err != nil {
 			render.TranslatedUserError(w, err)

@@ -47,10 +47,10 @@ type SpacePathStore struct {
 // spacePathSegment is an internal representation of a segment of a space path.
 type spacePathSegment struct {
 	ID int64 `db:"space_path_id"`
-	// UID is the original uid that was provided
-	UID string `db:"space_path_uid"`
-	// UIDUnique is a transformed version of UID which is used to ensure uniqueness guarantees
-	UIDUnique string `db:"space_path_uid_unique"`
+	// Identifier is the original identifier that was provided
+	Identifier string `db:"space_path_uid"`
+	// IdentifierUnique is a transformed version of Identifier which is used to ensure uniqueness guarantees
+	IdentifierUnique string `db:"space_path_uid_unique"`
 	// IsPrimary indicates whether the path is the primary path of the space
 	// IMPORTANT: to allow DB enforcement of at most one primary path per repo/space
 	// we have a unique index on spaceID + IsPrimary and set IsPrimary to true
@@ -132,7 +132,7 @@ func (s *SpacePathStore) FindPrimaryBySpaceID(ctx context.Context, spaceID int64
 			return nil, database.ProcessSQLErrorf(err, "Failed to find primary segment for %d", nextSpaceID.Int64)
 		}
 
-		path = paths.Concatinate(dst.UID, path)
+		path = paths.Concatinate(dst.Identifier, path)
 		nextSpaceID = dst.ParentID
 	}
 
@@ -149,8 +149,8 @@ func (s *SpacePathStore) FindByPath(ctx context.Context, path string) (*types.Sp
 	db := dbtx.GetAccessor(ctx, s.db)
 	segment := new(spacePathSegment)
 
-	segmentUIDs := paths.Segments(path)
-	if len(segmentUIDs) == 0 {
+	segmentIdentifiers := paths.Segments(path)
+	if len(segmentIdentifiers) == 0 {
 		return nil, fmt.Errorf("path with no segments was passed '%s'", path)
 	}
 
@@ -158,19 +158,19 @@ func (s *SpacePathStore) FindByPath(ctx context.Context, path string) (*types.Sp
 	var parentID int64
 	originalPath := ""
 	isPrimary := true
-	for i, segmentUID := range segmentUIDs {
-		uniqueSegmentUID := s.spacePathTransformation(segmentUID, i == 0)
+	for i, segmentIdentifier := range segmentIdentifiers {
+		uniqueSegmentIdentifier := s.spacePathTransformation(segmentIdentifier, i == 0)
 
 		if parentID == 0 {
-			err = db.GetContext(ctx, segment, sqlQueryNoParent, uniqueSegmentUID)
+			err = db.GetContext(ctx, segment, sqlQueryNoParent, uniqueSegmentIdentifier)
 		} else {
-			err = db.GetContext(ctx, segment, sqlQueryParent, uniqueSegmentUID, parentID)
+			err = db.GetContext(ctx, segment, sqlQueryParent, uniqueSegmentIdentifier, parentID)
 		}
 		if err != nil {
-			return nil, database.ProcessSQLErrorf(err, "Failed to find segment for '%s' in '%s'", uniqueSegmentUID, path)
+			return nil, database.ProcessSQLErrorf(err, "Failed to find segment for '%s' in '%s'", uniqueSegmentIdentifier, path)
 		}
 
-		originalPath = paths.Concatinate(originalPath, segment.UID)
+		originalPath = paths.Concatinate(originalPath, segment.Identifier)
 		parentID = segment.SpaceID
 		isPrimary = isPrimary && segment.IsPrimary.ValueOrZero()
 	}
@@ -199,13 +199,13 @@ func (s *SpacePathStore) DeletePrimarySegment(ctx context.Context, spaceID int64
 
 func (s *SpacePathStore) mapToInternalSpacePathSegment(p *types.SpacePathSegment) *spacePathSegment {
 	res := &spacePathSegment{
-		ID:        p.ID,
-		UID:       p.UID,
-		UIDUnique: s.spacePathTransformation(p.UID, p.ParentID == 0),
-		SpaceID:   p.SpaceID,
-		Created:   p.Created,
-		CreatedBy: p.CreatedBy,
-		Updated:   p.Updated,
+		ID:               p.ID,
+		Identifier:       p.Identifier,
+		IdentifierUnique: s.spacePathTransformation(p.Identifier, p.ParentID == 0),
+		SpaceID:          p.SpaceID,
+		Created:          p.Created,
+		CreatedBy:        p.CreatedBy,
+		Updated:          p.Updated,
 
 		// ParentID:  is set below
 		// IsPrimary: is set below

@@ -33,13 +33,13 @@ func HandleDeleteToken(saCrl *serviceaccount.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		tokenUID, err := request.GetTokenUIDFromPath(r)
+		tokentokenIdentifier, err := request.GetTokenIdentifierFromPath(r)
 		if err != nil {
 			render.BadRequest(w)
 			return
 		}
 
-		err = saCrl.DeleteToken(ctx, session, saUID, tokenUID)
+		err = saCrl.DeleteToken(ctx, session, saUID, tokentokenIdentifier)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

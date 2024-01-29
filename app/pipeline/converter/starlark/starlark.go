@@ -69,7 +69,7 @@ func Parse(
 		Print: func(_ *starlark.Thread, msg string) {
 			logrus.WithFields(logrus.Fields{
 				"namespace": repo.Path, // TODO: update to just be the space
-				"name":      repo.UID,
+				"name":      repo.Identifier,
 			}).Traceln(msg)
 		},
 	}

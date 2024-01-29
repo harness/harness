@@ -78,7 +78,7 @@ func (s *pluginStore) Create(ctx context.Context, plugin *types.Plugin) error {
 		return database.ProcessSQLErrorf(err, "Failed to bind plugin object")
 	}
 
-	if err = db.QueryRowContext(ctx, query, arg...).Scan(&plugin.UID); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&plugin.Identifier); err != nil {
 		return database.ProcessSQLErrorf(err, "plugin query failed")
 	}
 

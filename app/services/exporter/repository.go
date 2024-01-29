@@ -57,7 +57,7 @@ type Repository struct {
 }
 
 type Input struct {
-	UID             string          `json:"uid"`
+	Identifier      string          `json:"identifier"`
 	ID              int64           `json:"id"`
 	Description     string          `json:"description"`
 	IsPublic        bool            `json:"is_public"`
@@ -115,7 +115,7 @@ func (r *Repository) RunManyForSpace(
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
 		repoJobData := Input{
-			UID:             repository.UID,
+			Identifier:      repository.Identifier,
 			ID:              repository.ID,
 			Description:     repository.Description,
 			IsPublic:        repository.IsPublic,
@@ -185,7 +185,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", err
 	}
 	remoteRepo, err := client.CreateRepo(ctx, repo.CreateInput{
-		UID:           repository.UID,
+		Identifier:    repository.Identifier,
 		DefaultBranch: repository.DefaultBranch,
 		Description:   repository.Description,
 		IsPublic:      repository.IsPublic,
@@ -208,15 +208,15 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		RemoteURL:  urlWithToken,
 	})
 	if err != nil && !strings.Contains(err.Error(), "empty") {
-		errDelete := client.DeleteRepo(ctx, remoteRepo.UID)
+		errDelete := client.DeleteRepo(ctx, remoteRepo.Identifier)
 		if errDelete != nil {
-			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete repo '%s' on harness", remoteRepo.UID)
+			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete repo '%s' on harness", remoteRepo.Identifier)
 		}
 		r.publishSSE(ctx, repository)
 		return "", err
 	}
 
-	log.Ctx(ctx).Info().Msgf("completed exporting repository '%s' to harness", repository.UID)
+	log.Ctx(ctx).Info().Msgf("completed exporting repository '%s' to harness", repository.Identifier)
 
 	r.publishSSE(ctx, repository)
 

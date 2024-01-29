@@ -57,8 +57,8 @@ type webhook struct {
 	Updated   int64    `db:"webhook_updated"`
 	Internal  bool     `db:"webhook_internal"`
 
-	UID string `db:"webhook_uid"`
-	// TODO: Remove once UID migration is completed.
+	Identifier string `db:"webhook_uid"`
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	DisplayName           string      `db:"webhook_display_name"`
 	Description           string      `db:"webhook_description"`
 	URL                   string      `db:"webhook_url"`
@@ -114,17 +114,17 @@ func (s *WebhookStore) Find(ctx context.Context, id int64) (*types.Webhook, erro
 	return res, nil
 }
 
-// FindByUID finds the webhook with the given UID for the given parent.
-func (s *WebhookStore) FindByUID(
+// FindByIdentifier finds the webhook with the given Identifier for the given parent.
+func (s *WebhookStore) FindByIdentifier(
 	ctx context.Context,
 	parentType enum.WebhookParent,
 	parentID int64,
-	uid string,
+	identifier string,
 ) (*types.Webhook, error) {
 	stmt := database.Builder.
 		Select(webhookColumns).
 		From("webhooks").
-		Where("LOWER(webhook_uid) = ?", strings.ToLower(uid))
+		Where("LOWER(webhook_uid) = ?", strings.ToLower(identifier))
 
 	switch parentType {
 	case enum.WebhookParentRepo:
@@ -307,16 +307,16 @@ func (s *WebhookStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// DeleteByUID deletes the webhook with the given UID for the given parent.
-func (s *WebhookStore) DeleteByUID(
+// DeleteByIdentifier deletes the webhook with the given Identifier for the given parent.
+func (s *WebhookStore) DeleteByIdentifier(
 	ctx context.Context,
 	parentType enum.WebhookParent,
 	parentID int64,
-	uid string,
+	identifier string,
 ) error {
 	stmt := database.Builder.
 		Delete("webhooks").
-		Where("LOWER(webhook_uid) = ?", strings.ToLower(uid))
+		Where("LOWER(webhook_uid) = ?", strings.ToLower(identifier))
 
 	switch parentType {
 	case enum.WebhookParentRepo:
@@ -405,13 +405,17 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	switch opts.Sort {
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed
 	case enum.WebhookAttrID, enum.WebhookAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
 		stmt = stmt.OrderBy("webhook_id " + opts.Order.String())
-	case enum.WebhookAttrUID:
+
+		// TODO [CODE-1363]: remove after identifier migration.
+	case enum.WebhookAttrUID, enum.WebhookAttrIdentifier:
 		stmt = stmt.OrderBy("LOWER(webhook_uid) " + opts.Order.String())
+		// TODO [CODE-1364]: Remove once UID/Identifier migration is completed
 	case enum.WebhookAttrDisplayName:
 		stmt = stmt.OrderBy("webhook_display_name " + opts.Order.String())
 		//TODO: Postgres does not support COLLATE NOCASE for UTF8
@@ -443,12 +447,13 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 
 func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 	res := &types.Webhook{
-		ID:                    hook.ID,
-		Version:               hook.Version,
-		CreatedBy:             hook.CreatedBy,
-		Created:               hook.Created,
-		Updated:               hook.Updated,
-		UID:                   hook.UID,
+		ID:         hook.ID,
+		Version:    hook.Version,
+		CreatedBy:  hook.CreatedBy,
+		Created:    hook.Created,
+		Updated:    hook.Updated,
+		Identifier: hook.Identifier,
+		// TODO [CODE-1364]: Remove once UID/Identifier migration is completed
 		DisplayName:           hook.DisplayName,
 		Description:           hook.Description,
 		URL:                   hook.URL,
@@ -478,12 +483,13 @@ func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 
 func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 	res := &webhook{
-		ID:                    hook.ID,
-		Version:               hook.Version,
-		CreatedBy:             hook.CreatedBy,
-		Created:               hook.Created,
-		Updated:               hook.Updated,
-		UID:                   hook.UID,
+		ID:         hook.ID,
+		Version:    hook.Version,
+		CreatedBy:  hook.CreatedBy,
+		Created:    hook.Created,
+		Updated:    hook.Updated,
+		Identifier: hook.Identifier,
+		// TODO [CODE-1364]: Remove once UID/Identifier migration is completed
 		DisplayName:           hook.DisplayName,
 		Description:           hook.Description,
 		URL:                   hook.URL,

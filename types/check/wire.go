@@ -21,11 +21,11 @@ import (
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvidePrincipalUIDCheck,
-	ProvidePathUIDCheck,
+	ProvideSpaceIdentifierCheck,
 )
 
-func ProvidePathUIDCheck() PathUID {
-	return PathUIDDefault
+func ProvideSpaceIdentifierCheck() SpaceIdentifier {
+	return SpaceIdentifierDefault
 }
 
 func ProvidePrincipalUIDCheck() PrincipalUID {

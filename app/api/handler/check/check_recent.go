@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleCheckListRecent is an HTTP handler for listing recently executed status check UIDs for a repository.
+// HandleCheckListRecent is an HTTP handler for listing recently executed status check identifiers for a repository.
 func HandleCheckListRecent(checkCtrl *check.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -40,12 +40,12 @@ func HandleCheckListRecent(checkCtrl *check.Controller) http.HandlerFunc {
 			return
 		}
 
-		checkUIDs, err := checkCtrl.ListRecentChecks(ctx, session, repoRef, opts)
+		checkIdentifiers, err := checkCtrl.ListRecentChecks(ctx, session, repoRef, opts)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, checkUIDs)
+		render.JSON(w, http.StatusOK, checkIdentifiers)
 	}
 }

@@ -39,23 +39,25 @@ var (
 type CreateInput struct {
 	Description string `json:"description"`
 	SpaceRef    string `json:"space_ref"` // Ref of the parent space
-	UID         string `json:"uid"`
-	Data        string `json:"data"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        string `json:"uid" deprecated:"true"`
+	Identifier string `json:"identifier"`
+	Data       string `json:"data"`
 }
 
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Secret, error) {
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
 
-	err = apiauth.CheckSecret(ctx, c.authorizer, session, parentSpace.Path, in.UID, enum.PermissionSecretEdit)
+	err = apiauth.CheckSecret(ctx, c.authorizer, session, parentSpace.Path, in.Identifier, enum.PermissionSecretEdit)
 	if err != nil {
 		return nil, err
-	}
-
-	if err := c.sanitizeCreateInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
 	var secret *types.Secret
@@ -65,7 +67,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		Description: in.Description,
 		Data:        in.Data,
 		SpaceID:     parentSpace.ID,
-		UID:         in.UID,
+		Identifier:  in.Identifier,
 		Created:     now,
 		Updated:     now,
 		Version:     0,
@@ -83,13 +85,18 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
 	parentRefAsID, err := strconv.ParseInt(in.SpaceRef, 10, 64)
 
 	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.SpaceRef)) == 0) {
 		return errSecretRequiresParent
 	}
 
-	if err := c.uidCheck(in.UID, false); err != nil {
+	if err := check.Identifier(in.Identifier); err != nil {
 		return err
 	}
 

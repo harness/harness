@@ -14,16 +14,33 @@
 
 package types
 
-import "github.com/harness/gitness/types/enum"
+import (
+	"encoding/json"
+
+	"github.com/harness/gitness/types/enum"
+)
 
 type Template struct {
-	ID          int64             `db:"template_id"              json:"id"`
+	ID          int64             `db:"template_id"              json:"-"`
 	Description string            `db:"template_description"     json:"description"`
 	Type        enum.ResolverType `db:"template_type"            json:"type"`
 	SpaceID     int64             `db:"template_space_id"        json:"space_id"`
-	UID         string            `db:"template_uid"             json:"uid"`
+	Identifier  string            `db:"template_uid"             json:"identifier"`
 	Data        string            `db:"template_data"            json:"data"`
 	Created     int64             `db:"template_created"         json:"created"`
 	Updated     int64             `db:"template_updated"         json:"updated"`
 	Version     int64             `db:"template_version"         json:"-"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (t Template) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias Template
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(t),
+		UID:   t.Identifier,
+	})
 }

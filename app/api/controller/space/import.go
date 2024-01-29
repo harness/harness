@@ -43,8 +43,8 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, err
 	}
 
-	if in.UID == "" {
-		in.UID = in.ProviderSpace
+	if in.Identifier == "" && in.UID == "" {
+		in.Identifier = in.ProviderSpace
 	}
 
 	err = c.sanitizeImportInput(in)
@@ -80,7 +80,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		for i, remoteRepository := range remoteRepositories {
 			repo := remoteRepository.ToRepo(
 				space.ID,
-				remoteRepository.UID,
+				remoteRepository.Identifier,
 				"",
 				&session.Principal,
 				c.publicResourceCreationEnabled,

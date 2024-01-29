@@ -74,14 +74,18 @@ func (s *connectorStore) Find(ctx context.Context, id int64) (*types.Connector, 
 	return dst, nil
 }
 
-// FindByUID returns a connector in a given space with a given UID.
-func (s *connectorStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Connector, error) {
+// FindByIdentifier returns a connector in a given space with a given identifier.
+func (s *connectorStore) FindByIdentifier(
+	ctx context.Context,
+	spaceID int64,
+	identifier string,
+) (*types.Connector, error) {
 	const findQueryStmt = connectorQueryBase + `
 		WHERE connector_space_id = $1 AND connector_uid = $2`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.Connector)
-	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, uid); err != nil {
+	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, identifier); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find connector")
 	}
 	return dst, nil
@@ -241,15 +245,15 @@ func (s *connectorStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// DeleteByUID deletes a connector with a given UID in a space.
-func (s *connectorStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
+// DeleteByIdentifier deletes a connector with a given identifier in a space.
+func (s *connectorStore) DeleteByIdentifier(ctx context.Context, spaceID int64, identifier string) error {
 	const connectorDeleteStmt = `
 	DELETE FROM connectors
 	WHERE connector_space_id = $1 AND connector_uid = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, connectorDeleteStmt, spaceID, uid); err != nil {
+	if _, err := db.ExecContext(ctx, connectorDeleteStmt, spaceID, identifier); err != nil {
 		return database.ProcessSQLErrorf(err, "Could not delete connector")
 	}
 

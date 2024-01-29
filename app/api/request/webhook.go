@@ -22,12 +22,12 @@ import (
 )
 
 const (
-	PathParamWebhookUID         = "webhook_uid"
+	PathParamWebhookIdentifier  = "webhook_identifier"
 	PathParamWebhookExecutionID = "webhook_execution_id"
 )
 
-func GetWebhookUIDFromPath(r *http.Request) (string, error) {
-	return PathParamOrError(r, PathParamWebhookUID)
+func GetWebhookIdentifierFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamWebhookIdentifier)
 }
 
 func GetWebhookExecutionIDFromPath(r *http.Request) (int64, error) {

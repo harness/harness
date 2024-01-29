@@ -42,7 +42,7 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 		id          int64
 		spaceID     null.Int
 		repoID      null.Int
-		uid         null.String
+		identifier  null.String
 		displayName string
 	}
 
@@ -72,7 +72,7 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 
 		c := 0
 		for rows.Next() {
-			err = rows.Scan(&buffer[c].id, &buffer[c].displayName, &buffer[c].repoID, &buffer[c].spaceID, &buffer[c].uid)
+			err = rows.Scan(&buffer[c].id, &buffer[c].displayName, &buffer[c].repoID, &buffer[c].spaceID, &buffer[c].identifier)
 			if err != nil {
 				return 0, database.ProcessSQLErrorf(err, "failed scanning next row")
 			}
@@ -88,9 +88,9 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 		return c, nil
 	}
 
-	// keep track of unique UIDs for a given parent in memory (ASSUMPTION: limited number of webhooks per repo)
+	// keep track of unique identifiers for a given parent in memory (ASSUMPTION: limited number of webhooks per repo)
 	parentID := ""
-	parentChildUIDs := map[string]bool{}
+	parentChildIdentifiers := map[string]bool{}
 
 	for {
 		n, err := nextPage()
@@ -108,49 +108,49 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 			// concatinate repoID + spaceID to get unique parent id (only used to identify same parents)
 			newParentID := fmt.Sprintf("%d_%d", wh.repoID.ValueOrZero(), wh.spaceID.ValueOrZero())
 			if newParentID != parentID {
-				// new parent? reset child UIDs
-				parentChildUIDs = map[string]bool{}
+				// new parent? reset child identifiers
+				parentChildIdentifiers = map[string]bool{}
 				parentID = newParentID
 			}
 
-			// in case of down migration we already have uids for webhooks
-			if len(wh.uid.ValueOrZero()) > 0 {
-				parentChildUIDs[strings.ToLower(wh.uid.String)] = true
+			// in case of down migration we already have identifiers for webhooks
+			if len(wh.identifier.ValueOrZero()) > 0 {
+				parentChildIdentifiers[strings.ToLower(wh.identifier.String)] = true
 
 				log.Info().Msgf(
-					"skip migration of webhook %d with displayname %q as it has a non-empty uid %q",
+					"skip migration of webhook %d with displayname %q as it has a non-empty identifier %q",
 					wh.id,
 					wh.displayName,
-					wh.uid.String,
+					wh.identifier.String,
 				)
 				continue
 			}
 
-			// try to generate unique id (adds random suffix if deterministic uid derived from display name isn't unique)
+			// try to generate unique id (adds random suffix if deterministic identifier derived from display name isn't unique)
 			for try := 0; try < 5; try++ {
 				randomize := try > 0
-				newUID, err := WebhookDisplayNameToUID(wh.displayName, randomize)
+				newIdentifier, err := WebhookDisplayNameToIdentifier(wh.displayName, randomize)
 				if err != nil {
 					return fmt.Errorf("failed to migrate displayname: %w", err)
 				}
-				newUIDLower := strings.ToLower(newUID)
-				if !parentChildUIDs[newUIDLower] {
-					parentChildUIDs[newUIDLower] = true
-					wh.uid = null.StringFrom(newUID)
+				newIdentifierLower := strings.ToLower(newIdentifier)
+				if !parentChildIdentifiers[newIdentifierLower] {
+					parentChildIdentifiers[newIdentifierLower] = true
+					wh.identifier = null.StringFrom(newIdentifier)
 					break
 				}
 			}
 
-			if len(wh.uid.ValueOrZero()) == 0 {
-				return fmt.Errorf("failed to find a unique uid for webhook %d with displayname %q", wh.id, wh.displayName)
+			if len(wh.identifier.ValueOrZero()) == 0 {
+				return fmt.Errorf("failed to find a unique identifier for webhook %d with displayname %q", wh.id, wh.displayName)
 			}
 
 			log.Info().Msgf(
-				"[%s] migrate webhook %d with displayname %q to uid %q",
+				"[%s] migrate webhook %d with displayname %q to identifier %q",
 				parentID,
 				wh.id,
 				wh.displayName,
-				wh.uid.String,
+				wh.identifier.String,
 			)
 
 			const updateQuery = `
@@ -160,7 +160,7 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 				WHERE
 					webhook_id = $2`
 
-			result, err := dbtx.ExecContext(ctx, updateQuery, wh.uid.String, wh.id)
+			result, err := dbtx.ExecContext(ctx, updateQuery, wh.identifier.String, wh.id)
 			if err != nil {
 				return database.ProcessSQLErrorf(err, "failed to update webhook")
 			}
@@ -171,7 +171,7 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 			}
 
 			if count == 0 {
-				return fmt.Errorf("failed to update webhook uid - no rows were updated")
+				return fmt.Errorf("failed to update webhook identifier - no rows were updated")
 			}
 		}
 	}
@@ -179,16 +179,16 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 	return nil
 }
 
-// WebhookDisplayNameToUID migrates the provided displayname to a webhook uid.
-// If randomize is true, a random suffix is added to randomize the uid.
+// WebhookDisplayNameToIdentifier migrates the provided displayname to a webhook identifier.
+// If randomize is true, a random suffix is added to randomize the identifier.
 //
 //nolint:gocognit
-func WebhookDisplayNameToUID(displayName string, randomize bool) (string, error) {
+func WebhookDisplayNameToIdentifier(displayName string, randomize bool) (string, error) {
 	const placeholder = '_'
 	const specialChars = ".-_"
 	// remove / replace any illegal characters
-	// UID Regex: ^[a-zA-Z_][a-zA-Z0-9-_.]*$
-	uid := strings.Map(func(r rune) rune {
+	// Identifier Regex: ^[a-zA-Z0-9-_.]*$
+	identifier := strings.Map(func(r rune) rune {
 		switch {
 		// drop any control characters or empty characters
 		case r < 32 || r == 127:
@@ -208,32 +208,32 @@ func WebhookDisplayNameToUID(displayName string, randomize bool) (string, error)
 	}, displayName)
 
 	// remove any leading/trailing special characters
-	uid = strings.Trim(uid, specialChars)
+	identifier = strings.Trim(identifier, specialChars)
 
 	// ensure string doesn't start with numbers (leading '_' is valid)
-	if len(uid) > 0 && uid[0] >= '0' && uid[0] <= '9' {
-		uid = string(placeholder) + uid
+	if len(identifier) > 0 && identifier[0] >= '0' && identifier[0] <= '9' {
+		identifier = string(placeholder) + identifier
 	}
 
 	// remove consecutive special characters
-	uid = santizeConsecutiveChars(uid, specialChars)
+	identifier = santizeConsecutiveChars(identifier, specialChars)
 
 	// ensure length restrictions
-	if len(uid) > check.MaxUIDLength {
-		uid = uid[0:check.MaxUIDLength]
+	if len(identifier) > check.MaxIdentifierLength {
+		identifier = identifier[0:check.MaxIdentifierLength]
 	}
 
-	// backfill randomized uid if sanitization ends up with empty uid
-	if len(uid) == 0 {
-		uid = "webhook"
+	// backfill randomized identifier if sanitization ends up with empty identifier
+	if len(identifier) == 0 {
+		identifier = "webhook"
 		randomize = true
 	}
 
 	if randomize {
-		return randomizeUID(uid)
+		return randomizeIdentifier(identifier)
 	}
 
-	return uid, nil
+	return identifier, nil
 }
 
 func santizeConsecutiveChars(in string, charSet string) string {
@@ -257,18 +257,18 @@ func santizeConsecutiveChars(in string, charSet string) string {
 	return out.String()
 }
 
-func randomizeUID(uid string) (string, error) {
+func randomizeIdentifier(identifier string) (string, error) {
 	const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 	const length = 4
-	const maxLength = check.MaxUIDLength - length - 1 // max length of uid to fit random suffix
+	const maxLength = check.MaxIdentifierLength - length - 1 // max length of identifier to fit random suffix
 
-	if len(uid) > maxLength {
-		uid = uid[0:maxLength]
+	if len(identifier) > maxLength {
+		identifier = identifier[0:maxLength]
 	}
 	suffix, err := gonanoid.Generate(alphabet, length)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate gonanoid: %w", err)
 	}
 
-	return uid + "_" + suffix, nil
+	return identifier + "_" + suffix, nil
 }

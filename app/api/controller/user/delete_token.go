@@ -28,8 +28,12 @@ import (
 /*
  * DeleteToken deletes a token of a user.
  */
-func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
-	userUID string, tokenType enum.TokenType, tokenUID string) error {
+func (c *Controller) DeleteToken(
+	ctx context.Context,
+	session *auth.Session,
+	userUID string,
+	tokenType enum.TokenType,
+	tokenIdentifier string) error {
 	user, err := findUserFromUID(ctx, c.principalStore, userUID)
 	if err != nil {
 		return err
@@ -40,7 +44,7 @@ func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
 		return err
 	}
 
-	token, err := c.tokenStore.FindByUID(ctx, user.ID, tokenUID)
+	token, err := c.tokenStore.FindByIdentifier(ctx, user.ID, tokenIdentifier)
 	if err != nil {
 		return err
 	}

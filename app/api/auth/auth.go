@@ -76,8 +76,8 @@ func CheckChild(ctx context.Context, authorizer authz.Authorizer, session *auth.
 	}
 
 	resource := &types.Resource{
-		Type: resourceType,
-		Name: resourceName,
+		Type:       resourceType,
+		Identifier: resourceName,
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)

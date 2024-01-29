@@ -22,11 +22,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWebhookDisplayNameToUID(t *testing.T) {
+func TestWebhookDisplayNameToIdentifier(t *testing.T) {
 	var tests = []struct {
 		displayName        string
 		randomize          bool
-		expectedUID        string
+		expectedIdentifier string
 		expectedRandomized bool
 	}{
 		// ensure only allowed characters get through
@@ -47,7 +47,7 @@ func TestWebhookDisplayNameToUID(t *testing.T) {
 		{strings.Repeat("a", 101), false, strings.Repeat("a", 100), false},
 		{" " + strings.Repeat("a", 100) + " ", false, strings.Repeat("a", 100), false},
 
-		// empty uid after sanitization
+		// empty identifier after sanitization
 		{"", false, "webhook", true},
 		{string(rune(21)), false, "webhook", true},
 		{" .-_-. ", false, "webhook", true},
@@ -65,19 +65,19 @@ func TestWebhookDisplayNameToUID(t *testing.T) {
 	rndSuffixRegex := regexp.MustCompile("^_[a-z0-9]{4}$")
 
 	for i, test := range tests {
-		uid, err := WebhookDisplayNameToUID(test.displayName, test.randomize)
+		identifier, err := WebhookDisplayNameToIdentifier(test.displayName, test.randomize)
 		assert.NoError(t, err, "test case %d - migration ended in error (unexpected)") // no errors expected
 
 		if test.expectedRandomized {
-			assert.True(t, len(uid) >= 5, "test case %d - uid length doesn't indicate random suffix", i)
+			assert.True(t, len(identifier) >= 5, "test case %d - identifier length doesn't indicate random suffix", i)
 
-			rndSuffix := uid[len(uid)-5:]
-			uid = uid[:len(uid)-5]
+			rndSuffix := identifier[len(identifier)-5:]
+			identifier = identifier[:len(identifier)-5]
 
 			matched := rndSuffixRegex.Match([]byte(rndSuffix))
-			assert.True(t, matched, "test case %d - uid doesn't contain expected random suffix", i)
+			assert.True(t, matched, "test case %d - identifier doesn't contain expected random suffix", i)
 		}
 
-		assert.Equal(t, test.expectedUID, uid, "test case %d doesn't match the expected uid'", i)
+		assert.Equal(t, test.expectedIdentifier, identifier, "test case %d doesn't match the expected identifier'", i)
 	}
 }

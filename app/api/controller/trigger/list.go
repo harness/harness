@@ -28,7 +28,7 @@ func (c *Controller) List(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	pipelineUID string,
+	pipelineIdentifier string,
 	filter types.ListQueryFilter,
 ) ([]*types.Trigger, int64, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
@@ -37,12 +37,12 @@ func (c *Controller) List(
 	}
 	// Trigger permissions are associated with pipeline permissions. If a user has permissions
 	// to view the pipeline, they will have permissions to list triggers as well.
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineView)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineView)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
 
-	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
+	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find pipeline: %w", err)
 	}

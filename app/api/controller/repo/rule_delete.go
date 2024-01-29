@@ -22,20 +22,20 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// RuleDelete deletes a protection rule by UID.
+// RuleDelete deletes a protection rule by identifier.
 func (c *Controller) RuleDelete(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	uid string,
+	identifier string,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
 	if err != nil {
 		return err
 	}
 
-	r, err := c.ruleStore.FindByUID(ctx, nil, &repo.ID, uid)
+	r, err := c.ruleStore.FindByIdentifier(ctx, nil, &repo.ID, identifier)
 	if err != nil {
-		return fmt.Errorf("failed to find repository-level protection rule by uid: %w", err)
+		return fmt.Errorf("failed to find repository-level protection rule by identifier: %w", err)
 	}
 
 	err = c.ruleStore.Delete(ctx, r.ID)

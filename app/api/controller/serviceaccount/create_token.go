@@ -16,6 +16,7 @@ package serviceaccount
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -27,8 +28,10 @@ import (
 )
 
 type CreateTokenInput struct {
-	UID      string         `json:"uid"`
-	Lifetime *time.Duration `json:"lifetime"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        string         `json:"uid" deprecated:"true"`
+	Identifier string         `json:"identifier"`
+	Lifetime   *time.Duration `json:"lifetime"`
 }
 
 // CreateToken creates a new service account access token.
@@ -38,15 +41,12 @@ func (c *Controller) CreateToken(
 	saUID string,
 	in *CreateTokenInput,
 ) (*types.TokenResponse, error) {
-	sa, err := findServiceAccountFromUID(ctx, c.principalStore, saUID)
-	if err != nil {
-		return nil, err
+	if err := c.sanitizeCreateTokenInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	if err = check.UID(in.UID); err != nil {
-		return nil, err
-	}
-	if err = check.TokenLifetime(in.Lifetime, true); err != nil {
+	sa, err := findServiceAccountFromUID(ctx, c.principalStore, saUID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -55,12 +55,13 @@ func (c *Controller) CreateToken(
 		sa.ParentType, sa.ParentID, sa.UID, enum.PermissionServiceAccountEdit); err != nil {
 		return nil, err
 	}
+
 	token, jwtToken, err := token.CreateSAT(
 		ctx,
 		c.tokenStore,
 		&session.Principal,
 		sa,
-		in.UID,
+		in.Identifier,
 		in.Lifetime,
 	)
 	if err != nil {
@@ -68,4 +69,22 @@ func (c *Controller) CreateToken(
 	}
 
 	return &types.TokenResponse{Token: *token, AccessToken: jwtToken}, nil
+}
+
+func (c *Controller) sanitizeCreateTokenInput(in *CreateTokenInput) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.UID
+	}
+
+	if err := check.Identifier(in.Identifier); err != nil {
+		return err
+	}
+
+	//nolint:revive
+	if err := check.TokenLifetime(in.Lifetime, true); err != nil {
+		return err
+	}
+
+	return nil
 }

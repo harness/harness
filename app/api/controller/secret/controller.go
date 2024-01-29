@@ -18,11 +18,9 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/encrypt"
-	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
-	uidCheck    check.PathUID
 	encrypter   encrypt.Encrypter
 	secretStore store.SecretStore
 	authorizer  authz.Authorizer
@@ -30,14 +28,12 @@ type Controller struct {
 }
 
 func NewController(
-	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
 	encrypter encrypt.Encrypter,
 	secretStore store.SecretStore,
 	spaceStore store.SpaceStore,
 ) *Controller {
 	return &Controller{
-		uidCheck:    uidCheck,
 		encrypter:   encrypter,
 		secretStore: secretStore,
 		authorizer:  authorizer,

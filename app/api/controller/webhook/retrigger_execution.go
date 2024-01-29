@@ -30,7 +30,7 @@ func (c *Controller) RetriggerExecution(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	webhookUID string,
+	webhookIdentifier string,
 	webhookExecutionID int64,
 ) (*types.WebhookExecution, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
@@ -39,7 +39,7 @@ func (c *Controller) RetriggerExecution(
 	}
 
 	// get the webhook and ensure it belongs to us
-	webhook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookUID)
+	webhook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookIdentifier)
 	if err != nil {
 		return nil, err
 	}

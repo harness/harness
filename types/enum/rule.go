@@ -46,13 +46,17 @@ func GetAllRuleStates() ([]RuleState, RuleState) {
 type RuleSort string
 
 const (
-	RuleSortUID     RuleSort = uid
-	RuleSortCreated RuleSort = createdAt
-	RuleSortUpdated RuleSort = updatedAt
+	// TODO [CODE-1363]: remove after identifier migration.
+	RuleSortUID        RuleSort = uid
+	RuleSortIdentifier RuleSort = identifier
+	RuleSortCreated    RuleSort = createdAt
+	RuleSortUpdated    RuleSort = updatedAt
 )
 
 var ruleSorts = sortEnum([]RuleSort{
+	// TODO [CODE-1363]: remove after identifier migration.
 	RuleSortUID,
+	RuleSortIdentifier,
 	RuleSortCreated,
 	RuleSortUpdated,
 })
@@ -68,11 +72,14 @@ func GetAllRuleSorts() ([]RuleSort, RuleSort) {
 // ParseRuleSortAttr parses the protection rule sorting option.
 func ParseRuleSortAttr(s string) RuleSort {
 	switch strings.ToLower(s) {
+	// TODO [CODE-1363]: remove after identifier migration.
+	case uid:
+		return RuleSortUID
 	case created, createdAt:
 		return RuleSortCreated
 	case updated, updatedAt:
 		return RuleSortUpdated
 	}
 
-	return RuleSortUID
+	return RuleSortIdentifier
 }

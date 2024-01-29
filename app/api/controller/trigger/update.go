@@ -28,50 +28,52 @@ import (
 
 // UpdateInput is used for updating a trigger.
 type UpdateInput struct {
-	Description *string              `json:"description"`
-	UID         *string              `json:"uid"`
-	Actions     []enum.TriggerAction `json:"actions"`
-	Secret      *string              `json:"secret"`
-	Disabled    *bool                `json:"disabled"` // can be nil, so keeping it a pointer
+	Description *string `json:"description"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        *string              `json:"uid" deprecated:"true"`
+	Identifier *string              `json:"identifier"`
+	Actions    []enum.TriggerAction `json:"actions"`
+	Secret     *string              `json:"secret"`
+	Disabled   *bool                `json:"disabled"` // can be nil, so keeping it a pointer
 }
 
 func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	pipelineUID string,
-	triggerUID string,
-	in *UpdateInput) (*types.Trigger, error) {
+	pipelineIdentifier string,
+	triggerIdentifier string,
+	in *UpdateInput,
+) (*types.Trigger, error) {
+	if err := c.sanitizeUpdateInput(in); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
 	// Trigger permissions are associated with pipeline permissions. If a user has permissions
 	// to edit the pipeline, they will have permissions to edit the trigger as well.
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineEdit)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
 
-	err = c.checkUpdateInput(in)
-	if err != nil {
-		return nil, fmt.Errorf("invalid input: %w", err)
-	}
-
-	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
+	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
-	trigger, err := c.triggerStore.FindByUID(ctx, pipeline.ID, triggerUID)
+	trigger, err := c.triggerStore.FindByIdentifier(ctx, pipeline.ID, triggerIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find trigger: %w", err)
 	}
 
 	return c.triggerStore.UpdateOptLock(ctx,
 		trigger, func(original *types.Trigger) error {
-			if in.UID != nil {
-				original.UID = *in.UID
+			if in.Identifier != nil {
+				original.Identifier = *in.Identifier
 			}
 			if in.Description != nil {
 				original.Description = *in.Description
@@ -90,9 +92,14 @@ func (c *Controller) Update(
 		})
 }
 
-func (c *Controller) checkUpdateInput(in *UpdateInput) error {
-	if in.UID != nil {
-		if err := c.uidCheck(*in.UID, false); err != nil {
+func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == nil {
+		in.Identifier = in.UID
+	}
+
+	if in.Identifier != nil {
+		if err := check.Identifier(*in.Identifier); err != nil {
 			return err
 		}
 	}

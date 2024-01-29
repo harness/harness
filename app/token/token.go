@@ -37,7 +37,7 @@ func CreateUserSession(
 	ctx context.Context,
 	tokenStore store.TokenStore,
 	user *types.User,
-	uid string,
+	identifier string,
 ) (*types.Token, string, error) {
 	principal := user.ToPrincipal()
 	return create(
@@ -46,7 +46,7 @@ func CreateUserSession(
 		enum.TokenTypeSession,
 		principal,
 		principal,
-		uid,
+		identifier,
 		ptr.Duration(userSessionTokenLifeTime),
 	)
 }
@@ -56,7 +56,7 @@ func CreatePAT(
 	tokenStore store.TokenStore,
 	createdBy *types.Principal,
 	createdFor *types.User,
-	uid string,
+	identifier string,
 	lifetime *time.Duration,
 ) (*types.Token, string, error) {
 	return create(
@@ -65,7 +65,7 @@ func CreatePAT(
 		enum.TokenTypePAT,
 		createdBy,
 		createdFor.ToPrincipal(),
-		uid,
+		identifier,
 		lifetime,
 	)
 }
@@ -75,7 +75,7 @@ func CreateSAT(
 	tokenStore store.TokenStore,
 	createdBy *types.Principal,
 	createdFor *types.ServiceAccount,
-	uid string,
+	identifier string,
 	lifetime *time.Duration,
 ) (*types.Token, string, error) {
 	return create(
@@ -84,7 +84,7 @@ func CreateSAT(
 		enum.TokenTypeSAT,
 		createdBy,
 		createdFor.ToPrincipal(),
-		uid,
+		identifier,
 		lifetime,
 	)
 }
@@ -95,7 +95,7 @@ func create(
 	tokenType enum.TokenType,
 	createdBy *types.Principal,
 	createdFor *types.Principal,
-	uid string,
+	identifier string,
 	lifetime *time.Duration,
 ) (*types.Token, string, error) {
 	issuedAt := time.Now()
@@ -108,7 +108,7 @@ func create(
 	// create db entry first so we get the id.
 	token := types.Token{
 		Type:        tokenType,
-		UID:         uid,
+		Identifier:  identifier,
 		PrincipalID: createdFor.ID,
 		IssuedAt:    issuedAt.UnixMilli(),
 		ExpiresAt:   expiresAt,

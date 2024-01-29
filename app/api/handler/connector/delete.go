@@ -32,13 +32,13 @@ func HandleDelete(connectorCtrl *connector.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, connectorUID, err := paths.DisectLeaf(connectorRef)
+		spaceRef, connectorIdentifier, err := paths.DisectLeaf(connectorRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		err = connectorCtrl.Delete(ctx, session, spaceRef, connectorUID)
+		err = connectorCtrl.Delete(ctx, session, spaceRef, connectorIdentifier)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

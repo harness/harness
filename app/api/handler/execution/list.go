@@ -26,7 +26,7 @@ func HandleList(executionCtrl *execution.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -39,7 +39,7 @@ func HandleList(executionCtrl *execution.Controller) http.HandlerFunc {
 
 		pagination := request.ParsePaginationFromRequest(r)
 
-		repos, totalCount, err := executionCtrl.List(ctx, session, repoRef, pipelineUID, pagination)
+		repos, totalCount, err := executionCtrl.List(ctx, session, repoRef, pipelineIdentifier, pagination)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

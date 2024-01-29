@@ -32,8 +32,8 @@ func CheckUser(ctx context.Context, authorizer authz.Authorizer, session *auth.S
 	// a user exists outside any scope
 	scope := &types.Scope{}
 	resource := &types.Resource{
-		Type: enum.ResourceTypeUser,
-		Name: user.UID,
+		Type:       enum.ResourceTypeUser,
+		Identifier: user.UID,
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)

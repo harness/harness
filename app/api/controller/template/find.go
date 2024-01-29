@@ -28,18 +28,18 @@ func (c *Controller) Find(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	uid string,
+	identifier string,
 	resolverType enum.ResolverType,
 ) (*types.Template, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
-	err = apiauth.CheckTemplate(ctx, c.authorizer, session, space.Path, uid, enum.PermissionTemplateView)
+	err = apiauth.CheckTemplate(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionTemplateView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	template, err := c.templateStore.FindByUIDAndType(ctx, space.ID, uid, resolverType)
+	template, err := c.templateStore.FindByIdentifierAndType(ctx, space.ID, identifier, resolverType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find template: %w", err)
 	}

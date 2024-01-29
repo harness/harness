@@ -20,17 +20,17 @@ import (
 )
 
 const (
-	PathParamPipelineRef     = "pipeline_uid"
-	PathParamExecutionNumber = "execution_number"
-	PathParamStageNumber     = "stage_number"
-	PathParamStepNumber      = "step_number"
-	PathParamTriggerUID      = "trigger_uid"
-	QueryParamLatest         = "latest"
-	QueryParamBranch         = "branch"
+	PathParamPipelineIdentifier = "pipeline_identifier"
+	PathParamExecutionNumber    = "execution_number"
+	PathParamStageNumber        = "stage_number"
+	PathParamStepNumber         = "step_number"
+	PathParamTriggerIdentifier  = "trigger_identifier"
+	QueryParamLatest            = "latest"
+	QueryParamBranch            = "branch"
 )
 
-func GetPipelineUIDFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamPipelineRef)
+func GetPipelineIdentifierFromPath(r *http.Request) (string, error) {
+	rawRef, err := PathParamOrError(r, PathParamPipelineIdentifier)
 	if err != nil {
 		return "", err
 	}
@@ -60,8 +60,8 @@ func GetLatestFromPath(r *http.Request) bool {
 	return v == "true"
 }
 
-func GetTriggerUIDFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamTriggerUID)
+func GetTriggerIdentifierFromPath(r *http.Request) (string, error) {
+	rawRef, err := PathParamOrError(r, PathParamTriggerIdentifier)
 	if err != nil {
 		return "", err
 	}

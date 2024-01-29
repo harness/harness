@@ -27,7 +27,7 @@ func HandleCreate(triggerCtrl *trigger.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -45,7 +45,7 @@ func HandleCreate(triggerCtrl *trigger.Controller) http.HandlerFunc {
 			return
 		}
 
-		trigger, err := triggerCtrl.Create(ctx, session, repoRef, pipelineUID, in)
+		trigger, err := triggerCtrl.Create(ctx, session, repoRef, pipelineIdentifier, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

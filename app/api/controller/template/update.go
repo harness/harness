@@ -28,7 +28,9 @@ import (
 
 // UpdateInput is used for updating a template.
 type UpdateInput struct {
-	UID         *string `json:"uid"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID         *string `json:"uid" deprecated:"true"`
+	Identifier  *string `json:"identifier"`
 	Description *string `json:"description"`
 	Data        *string `json:"data"`
 }
@@ -37,32 +39,32 @@ func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	uid string,
+	identifier string,
 	resolverType enum.ResolverType,
 	in *UpdateInput,
 ) (*types.Template, error) {
+	if err := c.sanitizeUpdateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
 
-	err = apiauth.CheckTemplate(ctx, c.authorizer, session, space.Path, uid, enum.PermissionTemplateEdit)
+	err = apiauth.CheckTemplate(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionTemplateEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	if err = c.sanitizeUpdateInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
-	}
-
-	template, err := c.templateStore.FindByUIDAndType(ctx, space.ID, uid, resolverType)
+	template, err := c.templateStore.FindByIdentifierAndType(ctx, space.ID, identifier, resolverType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find template: %w", err)
 	}
 
 	return c.templateStore.UpdateOptLock(ctx, template, func(original *types.Template) error {
-		if in.UID != nil {
-			original.UID = *in.UID
+		if in.Identifier != nil {
+			original.Identifier = *in.Identifier
 		}
 		if in.Description != nil {
 			original.Description = *in.Description
@@ -79,8 +81,13 @@ func (c *Controller) Update(
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
-	if in.UID != nil {
-		if err := c.uidCheck(*in.UID, false); err != nil {
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == nil {
+		in.Identifier = in.UID
+	}
+
+	if in.Identifier != nil {
+		if err := check.Identifier(*in.Identifier); err != nil {
 			return err
 		}
 	}

@@ -28,7 +28,6 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
 )
@@ -42,7 +41,6 @@ func ProvideController(
 	config *types.Config,
 	tx dbtx.Transactor,
 	urlProvider url.Provider,
-	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
@@ -60,7 +58,7 @@ func ProvideController(
 	mtxManager lock.MutexManager,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
-		uidCheck, authorizer, repoStore,
+		authorizer, repoStore,
 		spaceStore, pipelineStore,
 		principalStore, ruleStore, principalInfoCache, protectionManager,
 		rpcClient, importer, codeOwners, reporeporter, indexer, limiter, mtxManager)

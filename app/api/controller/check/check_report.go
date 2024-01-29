@@ -32,29 +32,37 @@ import (
 )
 
 type ReportInput struct {
-	CheckUID string             `json:"check_uid"`
-	Status   enum.CheckStatus   `json:"status"`
-	Summary  string             `json:"summary"`
-	Link     string             `json:"link"`
-	Payload  types.CheckPayload `json:"payload"`
+	// TODO [CODE-1363]: remove after identifier migration.
+	CheckUID   string             `json:"check_uid" deprecated:"true"`
+	Identifier string             `json:"identifier"`
+	Status     enum.CheckStatus   `json:"status"`
+	Summary    string             `json:"summary"`
+	Link       string             `json:"link"`
+	Payload    types.CheckPayload `json:"payload"`
 
 	Started int64 `json:"started,omitempty"`
 	Ended   int64 `json:"ended,omitempty"`
 }
 
-var regexpCheckUID = "^[0-9a-zA-Z-_.$]{1,127}$"
-var matcherCheckUID = regexp.MustCompile(regexpCheckUID)
+// TODO: Can we drop the '$' - depends on whether harness allows it.
+var regexpCheckIdentifier = "^[0-9a-zA-Z-_.$]{1,127}$"
+var matcherCheckIdentifier = regexp.MustCompile(regexpCheckIdentifier)
 
-// Validate validates and sanitizes the ReportInput data.
-func (in *ReportInput) Validate(
+// Sanitize validates and sanitizes the ReportInput data.
+func (in *ReportInput) Sanitize(
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, session *auth.Session) error, session *auth.Session,
 ) error {
-	if in.CheckUID == "" {
-		return usererror.BadRequest("Status check UID is missing")
+	// TODO [CODE-1363]: remove after identifier migration.
+	if in.Identifier == "" {
+		in.Identifier = in.CheckUID
 	}
 
-	if !matcherCheckUID.MatchString(in.CheckUID) {
-		return usererror.BadRequestf("Status check UID must match the regular expression: %s", regexpCheckUID)
+	if in.Identifier == "" {
+		return usererror.BadRequest("Identifier is missing")
+	}
+
+	if !matcherCheckIdentifier.MatchString(in.Identifier) {
+		return usererror.BadRequestf("Identifier must match the regular expression: %s", regexpCheckIdentifier)
 	}
 
 	_, ok := in.Status.Sanitize()
@@ -123,7 +131,7 @@ func (c *Controller) Report(
 		return nil, fmt.Errorf("failed to acquire access access to repo: %w", err)
 	}
 
-	if errValidate := in.Validate(c.sanitizers, session); errValidate != nil {
+	if errValidate := in.Sanitize(c.sanitizers, session); errValidate != nil {
 		return nil, errValidate
 	}
 
@@ -143,10 +151,10 @@ func (c *Controller) Report(
 
 	metadataJSON, _ := json.Marshal(metadata)
 
-	existingCheck, err := c.checkStore.Find(ctx, repo.ID, commitSHA, in.CheckUID)
+	existingCheck, err := c.checkStore.FindByIdentifier(ctx, repo.ID, commitSHA, in.Identifier)
 
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
-		return nil, fmt.Errorf("failed to find existing check for UID=%q: %w", in.CheckUID, err)
+		return nil, fmt.Errorf("failed to find existing check for Identifier %q: %w", in.Identifier, err)
 	}
 
 	started := getStartTime(in, existingCheck, now)
@@ -158,7 +166,7 @@ func (c *Controller) Report(
 		Updated:    now,
 		RepoID:     repo.ID,
 		CommitSHA:  commitSHA,
-		UID:        in.CheckUID,
+		Identifier: in.Identifier,
 		Status:     in.Status,
 		Summary:    in.Summary,
 		Link:       in.Link,
@@ -171,7 +179,7 @@ func (c *Controller) Report(
 
 	err = c.checkStore.Upsert(ctx, statusCheckReport)
 	if err != nil {
-		return nil, fmt.Errorf("failed to upsert status check result for repo=%s: %w", repo.UID, err)
+		return nil, fmt.Errorf("failed to upsert status check result for repo=%s: %w", repo.Identifier, err)
 	}
 
 	return statusCheckReport, nil

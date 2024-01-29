@@ -36,7 +36,6 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -50,7 +49,6 @@ type Controller struct {
 
 	tx                 dbtx.Transactor
 	urlProvider        url.Provider
-	uidCheck           check.PathUID
 	authorizer         authz.Authorizer
 	repoStore          store.RepoStore
 	spaceStore         store.SpaceStore
@@ -72,7 +70,6 @@ func NewController(
 	config *types.Config,
 	tx dbtx.Transactor,
 	urlProvider url.Provider,
-	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
@@ -94,7 +91,6 @@ func NewController(
 		publicResourceCreationEnabled: config.PublicResourceCreationEnabled,
 		tx:                            tx,
 		urlProvider:                   urlProvider,
-		uidCheck:                      uidCheck,
 		authorizer:                    authorizer,
 		repoStore:                     repoStore,
 		spaceStore:                    spaceStore,

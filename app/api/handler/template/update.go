@@ -42,7 +42,7 @@ func HandleUpdate(templateCtrl *template.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, templateUID, err := paths.DisectLeaf(templateRef)
+		spaceRef, templateIdentifier, err := paths.DisectLeaf(templateRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -59,7 +59,7 @@ func HandleUpdate(templateCtrl *template.Controller) http.HandlerFunc {
 			return
 		}
 
-		template, err := templateCtrl.Update(ctx, session, spaceRef, templateUID,
+		template, err := templateCtrl.Update(ctx, session, spaceRef, templateIdentifier,
 			resolverTypeEnum, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)

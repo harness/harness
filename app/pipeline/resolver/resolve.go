@@ -60,7 +60,7 @@ func Resolve(
 		}
 
 		// Search for templates in the space
-		template, err := templateStore.FindByUIDAndType(ctx, spaceID, name, t)
+		template, err := templateStore.FindByIdentifierAndType(ctx, spaceID, name, t)
 		if err != nil {
 			return nil, fmt.Errorf("could not find template: %w", err)
 		}

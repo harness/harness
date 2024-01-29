@@ -54,7 +54,7 @@ var queryParameterSortMembershipSpaces = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
-				Default: ptrptr(enum.MembershipSpaceSortUID),
+				Default: ptrptr(enum.MembershipSpaceSortIdentifier),
 				Enum:    enum.MembershipSpaceSort("").Enum(),
 			},
 		},

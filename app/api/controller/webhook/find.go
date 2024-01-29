@@ -31,32 +31,35 @@ func (c *Controller) Find(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	webhookUID string,
+	webhookIdentifier string,
 ) (*types.Webhook, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.getWebhookVerifyOwnership(ctx, repo.ID, webhookUID)
+	return c.getWebhookVerifyOwnership(ctx, repo.ID, webhookIdentifier)
 }
 
-func (c *Controller) getWebhookVerifyOwnership(ctx context.Context, repoID int64,
-	webhookUID string) (*types.Webhook, error) {
-	// TODO: Remove once webhook UID migration completed
-	webhookID, err := strconv.ParseInt(webhookUID, 10, 64)
-	if (err == nil && webhookID <= 0) || len(strings.TrimSpace(webhookUID)) == 0 {
-		return nil, usererror.BadRequest("A valid webhook UID must be provided.")
+func (c *Controller) getWebhookVerifyOwnership(
+	ctx context.Context,
+	repoID int64,
+	webhookIdentifier string,
+) (*types.Webhook, error) {
+	// TODO: Remove once webhook identifier migration completed
+	webhookID, err := strconv.ParseInt(webhookIdentifier, 10, 64)
+	if (err == nil && webhookID <= 0) || len(strings.TrimSpace(webhookIdentifier)) == 0 {
+		return nil, usererror.BadRequest("A valid webhook identifier must be provided.")
 	}
 
 	var webhook *types.Webhook
 	if err == nil {
 		webhook, err = c.webhookStore.Find(ctx, webhookID)
 	} else {
-		webhook, err = c.webhookStore.FindByUID(ctx, enum.WebhookParentRepo, repoID, webhookUID)
+		webhook, err = c.webhookStore.FindByIdentifier(ctx, enum.WebhookParentRepo, repoID, webhookIdentifier)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to find webhook with uid %q: %w", webhookUID, err)
+		return nil, fmt.Errorf("failed to find webhook with identifier %q: %w", webhookIdentifier, err)
 	}
 
 	// ensure the webhook actually belongs to the repo

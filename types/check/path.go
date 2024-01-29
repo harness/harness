@@ -43,7 +43,7 @@ var (
 )
 
 // Path checks the provided path and returns an error in it isn't valid.
-func Path(path string, isSpace bool, uidCheck PathUID) error {
+func Path(path string, isSpace bool, identifierCheck SpaceIdentifier) error {
 	if path == "" {
 		return ErrPathEmpty
 	}
@@ -58,12 +58,12 @@ func Path(path string, isSpace bool, uidCheck PathUID) error {
 		return err
 	}
 
-	// ensure all segments of the path are valid uids
+	// ensure all segments of the path are valid identifiers
 	segments := strings.Split(path, types.PathSeparator)
 	for i, s := range segments {
 		if s == "" {
 			return ErrEmptyPathSegment
-		} else if err := uidCheck(s, i == 0); err != nil {
+		} else if err := identifierCheck(s, i == 0); err != nil {
 			return fmt.Errorf("invalid segment '%s': %w", s, err)
 		}
 	}

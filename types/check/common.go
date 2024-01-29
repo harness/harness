@@ -24,9 +24,10 @@ const (
 	minDisplayNameLength = 1
 	maxDisplayNameLength = 256
 
-	minUIDLength = 1
-	MaxUIDLength = 100
-	uidRegex     = "^[a-zA-Z_][a-zA-Z0-9-_.]*$"
+	minIdentifierLength              = 1
+	MaxIdentifierLength              = 100
+	identifierRegex                  = "^[a-zA-Z0-9-_.]*$"
+	illegalRepoSpaceIdentifierSuffix = ".git"
 
 	minEmailLength = 1
 	maxEmailLength = 250
@@ -35,9 +36,9 @@ const (
 )
 
 var (
-	// illegalRootSpaceUIDs is the list of space UIDs we are blocking for root spaces
+	// illegalRootSpaceIdentifiers is the list of space identifier we are blocking for root spaces
 	// as they might cause issues with routing.
-	illegalRootSpaceUIDs = []string{"api", "git"}
+	illegalRootSpaceIdentifiers = []string{"api", "git"}
 )
 
 var (
@@ -49,12 +50,15 @@ var (
 		fmt.Sprintf("Description can be at most %d in length.", maxDescriptionLength),
 	}
 
-	ErrUIDLength = &ValidationError{
-		fmt.Sprintf("UID has to be between %d and %d in length.",
-			minUIDLength, MaxUIDLength),
+	ErrIdentifierLength = &ValidationError{
+		fmt.Sprintf(
+			"Identifier has to be between %d and %d in length.",
+			minIdentifierLength,
+			MaxIdentifierLength,
+		),
 	}
-	ErrUIDRegex = &ValidationError{
-		"UID has to start with a letter (or _) and only contain the following characters [a-zA-Z0-9-_.].",
+	ErrIdentifierRegex = &ValidationError{
+		"Identifier can only contain the following characters [a-zA-Z0-9-_.].",
 	}
 
 	ErrEmailLen = &ValidationError{
@@ -63,8 +67,12 @@ var (
 
 	ErrInvalidCharacters = &ValidationError{"Input contains invalid characters."}
 
-	ErrIllegalRootSpaceUID = &ValidationError{
-		fmt.Sprintf("The following names are not allowed for a root space: %v", illegalRootSpaceUIDs),
+	ErrIllegalRootSpaceIdentifier = &ValidationError{
+		fmt.Sprintf("The following identifiers are not allowed for a root space: %v", illegalRootSpaceIdentifiers),
+	}
+
+	ErrIllegalRepoSpaceIdentifierSuffix = &ValidationError{
+		fmt.Sprintf("Space and repository identifiers cannot end with %q.", illegalRepoSpaceIdentifierSuffix),
 	}
 )
 
@@ -99,15 +107,29 @@ func ForControlCharacters(s string) error {
 	return nil
 }
 
-// UID checks the provided uid and returns an error if it isn't valid.
-func UID(uid string) error {
-	l := len(uid)
-	if l < minUIDLength || l > MaxUIDLength {
-		return ErrUIDLength
+// Identifier checks the provided identifier and returns an error if it isn't valid.
+func Identifier(identifier string) error {
+	l := len(identifier)
+	if l < minIdentifierLength || l > MaxIdentifierLength {
+		return ErrIdentifierLength
 	}
 
-	if ok, _ := regexp.Match(uidRegex, []byte(uid)); !ok {
-		return ErrUIDRegex
+	if ok, _ := regexp.Match(identifierRegex, []byte(identifier)); !ok {
+		return ErrIdentifierRegex
+	}
+
+	return nil
+}
+
+// RepoIdentifier performs the default Identifier check and also blocks illegal repo identifiers.
+func RepoIdentifier(identifier string) error {
+	if err := Identifier(identifier); err != nil {
+		return err
+	}
+
+	identifierLower := strings.ToLower(identifier)
+	if strings.HasSuffix(identifierLower, illegalRepoSpaceIdentifierSuffix) {
+		return ErrIllegalRepoSpaceIdentifierSuffix
 	}
 
 	return nil
@@ -119,25 +141,29 @@ type PrincipalUID func(uid string) error
 
 // PrincipalUIDDefault performs the default Principal UID check.
 func PrincipalUIDDefault(uid string) error {
-	return UID(uid)
+	return Identifier(uid)
 }
 
-// PathUID is an abstraction of a validation method that returns true
-// iff the UID is valid to be used in a resource path for repo/space.
+// SpaceIdentifier is an abstraction of a validation method that returns true
+// iff the Identifier is valid to be used in a resource path for repo/space.
 // NOTE: Enables support for different path formats.
-type PathUID func(uid string, isRoot bool) error
+type SpaceIdentifier func(identifier string, isRoot bool) error
 
-// PathUIDDefault performs the default UID check and also blocks illegal root space UIDs.
-func PathUIDDefault(uid string, isRoot bool) error {
-	if err := UID(uid); err != nil {
+// SpaceIdentifierDefault performs the default Identifier check and also blocks illegal root space Identifiers.
+func SpaceIdentifierDefault(identifier string, isRoot bool) error {
+	if err := Identifier(identifier); err != nil {
 		return err
 	}
 
+	identifierLower := strings.ToLower(identifier)
+	if strings.HasSuffix(identifierLower, illegalRepoSpaceIdentifierSuffix) {
+		return ErrIllegalRepoSpaceIdentifierSuffix
+	}
+
 	if isRoot {
-		uidLower := strings.ToLower(uid)
-		for _, p := range illegalRootSpaceUIDs {
-			if p == uidLower {
-				return ErrIllegalRootSpaceUID
+		for _, p := range illegalRootSpaceIdentifiers {
+			if p == identifierLower {
+				return ErrIllegalRootSpaceIdentifier
 			}
 		}
 	}

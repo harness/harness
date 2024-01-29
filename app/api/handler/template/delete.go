@@ -33,7 +33,7 @@ func HandleDelete(templateCtrl *template.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, templateUID, err := paths.DisectLeaf(templateRef)
+		spaceRef, templateIdentifier, err := paths.DisectLeaf(templateRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -51,7 +51,7 @@ func HandleDelete(templateCtrl *template.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = templateCtrl.Delete(ctx, session, spaceRef, templateUID, tempalateTypeEnum)
+		err = templateCtrl.Delete(ctx, session, spaceRef, templateIdentifier, tempalateTypeEnum)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

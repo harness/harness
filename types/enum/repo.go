@@ -24,7 +24,9 @@ type RepoAttr int
 // Order enumeration.
 const (
 	RepoAttrNone RepoAttr = iota
+	// TODO [CODE-1363]: remove after identifier migration.
 	RepoAttrUID
+	RepoAttrIdentifier
 	RepoAttrCreated
 	RepoAttrUpdated
 )
@@ -33,8 +35,11 @@ const (
 // and returns the equivalent enumeration.
 func ParseRepoAttr(s string) RepoAttr {
 	switch strings.ToLower(s) {
+	// TODO [CODE-1363]: remove after identifier migration.
 	case uid:
 		return RepoAttrUID
+	case identifier:
+		return RepoAttrIdentifier
 	case created, createdAt:
 		return RepoAttrCreated
 	case updated, updatedAt:
@@ -47,8 +52,11 @@ func ParseRepoAttr(s string) RepoAttr {
 // String returns the string representation of the attribute.
 func (a RepoAttr) String() string {
 	switch a {
+	// TODO [CODE-1363]: remove after identifier migration.
 	case RepoAttrUID:
 		return uid
+	case RepoAttrIdentifier:
+		return identifier
 	case RepoAttrCreated:
 		return created
 	case RepoAttrUpdated:

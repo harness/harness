@@ -45,18 +45,18 @@ func Write(
 	now := time.Now().UnixMilli()
 	summary := pipeline.Description
 	if summary == "" {
-		summary = pipeline.UID
+		summary = pipeline.Identifier
 	}
 	check := &types.Check{
-		RepoID:    execution.RepoID,
-		UID:       pipeline.UID,
-		Summary:   summary,
-		Created:   now,
-		Updated:   now,
-		CreatedBy: execution.CreatedBy,
-		Status:    execution.Status.ConvertToCheckStatus(),
-		CommitSHA: execution.After,
-		Metadata:  []byte("{}"),
+		RepoID:     execution.RepoID,
+		Identifier: pipeline.Identifier,
+		Summary:    summary,
+		Created:    now,
+		Updated:    now,
+		CreatedBy:  execution.CreatedBy,
+		Status:     execution.Status.ConvertToCheckStatus(),
+		CommitSHA:  execution.After,
+		Metadata:   []byte("{}"),
 		Payload: types.CheckPayload{
 			Version: "1",
 			Kind:    enum.CheckPayloadKindPipeline,

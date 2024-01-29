@@ -26,7 +26,7 @@ func HandleList(triggerCtrl *trigger.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineUID, err := request.GetPipelineUIDFromPath(r)
+		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -39,7 +39,7 @@ func HandleList(triggerCtrl *trigger.Controller) http.HandlerFunc {
 
 		filter := request.ParseListQueryFilterFromRequest(r)
 
-		repos, totalCount, err := triggerCtrl.List(ctx, session, repoRef, pipelineUID, filter)
+		repos, totalCount, err := triggerCtrl.List(ctx, session, repoRef, pipelineIdentifier, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

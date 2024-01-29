@@ -31,15 +31,15 @@ import (
 // Returns nil if the permission is granted, otherwise returns an error.
 // NotAuthenticated, NotAuthorized, or any underlying error.
 func CheckPipeline(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	repoPath string, pipelineUID string, permission enum.Permission) error {
+	repoPath string, pipelineIdentifier string, permission enum.Permission) error {
 	spacePath, repoName, err := paths.DisectLeaf(repoPath)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to disect path '%s'", repoPath)
 	}
 	scope := &types.Scope{SpacePath: spacePath, Repo: repoName}
 	resource := &types.Resource{
-		Type: enum.ResourceTypePipeline,
-		Name: pipelineUID,
+		Type:       enum.ResourceTypePipeline,
+		Identifier: pipelineIdentifier,
 	}
 	return Check(ctx, authorizer, session, scope, resource, permission)
 }

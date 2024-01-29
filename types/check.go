@@ -21,27 +21,53 @@ import (
 )
 
 type Check struct {
-	ID        int64            `json:"id"`
-	CreatedBy int64            `json:"-"` // clients will use "reported_by"
-	Created   int64            `json:"created"`
-	Updated   int64            `json:"updated"`
-	RepoID    int64            `json:"-"` // status checks are always returned for a commit in a repository
-	CommitSHA string           `json:"-"` // status checks are always returned for a commit in a repository
-	UID       string           `json:"uid"`
-	Status    enum.CheckStatus `json:"status"`
-	Summary   string           `json:"summary"`
-	Link      string           `json:"link"`
-	Metadata  json.RawMessage  `json:"metadata"`
-	Started   int64            `json:"started"`
-	Ended     int64            `json:"ended"`
+	ID         int64            `json:"id"`
+	CreatedBy  int64            `json:"-"` // clients will use "reported_by"
+	Created    int64            `json:"created"`
+	Updated    int64            `json:"updated"`
+	RepoID     int64            `json:"-"` // status checks are always returned for a commit in a repository
+	CommitSHA  string           `json:"-"` // status checks are always returned for a commit in a repository
+	Identifier string           `json:"identifier"`
+	Status     enum.CheckStatus `json:"status"`
+	Summary    string           `json:"summary"`
+	Link       string           `json:"link"`
+	Metadata   json.RawMessage  `json:"metadata"`
+	Started    int64            `json:"started"`
+	Ended      int64            `json:"ended"`
 
 	Payload    CheckPayload  `json:"payload"`
 	ReportedBy PrincipalInfo `json:"reported_by"`
 }
 
+// TODO [CODE-1363]: remove after identifier migration.
+func (c Check) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias Check
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(c),
+		UID:   c.Identifier,
+	})
+}
+
 type CheckResult struct {
-	UID    string           `json:"uid" db:"check_uid"`
-	Status enum.CheckStatus `json:"status" db:"check_status"`
+	Identifier string           `json:"identifier" db:"check_uid"`
+	Status     enum.CheckStatus `json:"status" db:"check_status"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (s CheckResult) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias CheckResult
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(s),
+		UID:   s.Identifier,
+	})
 }
 
 type CheckPayload struct {
@@ -59,17 +85,6 @@ type CheckListOptions struct {
 type CheckRecentOptions struct {
 	Query string
 	Since int64
-}
-
-type ReqCheck struct {
-	ID            int64  `json:"id"`
-	CreatedBy     int64  `json:"-"` // clients will use "added_by"
-	Created       int64  `json:"created"`
-	RepoID        int64  `json:"-"` // required status checks are always returned for a single repository
-	BranchPattern string `json:"branch_pattern"`
-	CheckUID      string `json:"check_uid"`
-
-	AddedBy PrincipalInfo `json:"added_by"`
 }
 
 type CheckPayloadText struct {

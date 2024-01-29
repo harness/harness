@@ -34,13 +34,13 @@ func HandleRuleDelete(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		ruleUID, err := request.GetRuleUIDFromPath(r)
+		ruleIdentifier, err := request.GetRuleIdentifierFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		err = repoCtrl.RuleDelete(ctx, session, repoRef, ruleUID)
+		err = repoCtrl.RuleDelete(ctx, session, repoRef, ruleIdentifier)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
