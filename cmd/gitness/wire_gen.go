@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/controller/user"
 	webhook2 "github.com/harness/gitness/app/api/controller/webhook"
+	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
@@ -277,7 +278,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, searcher, repoController, spaceController)
 	apiHandler := router.ProvideAPIHandler(ctx, config, authenticator, repoController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController)
 	gitHandler := router.ProvideGitHandler(provider, authenticator, repoController)
-	webHandler := router.ProvideWebHandler(config)
+	openapiService := openapi.ProvideOpenAPIService()
+	webHandler := router.ProvideWebHandler(config, openapiService)
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler, provider)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, converterService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)

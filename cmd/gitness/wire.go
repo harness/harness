@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/controller/user"
 	controllerwebhook "github.com/harness/gitness/app/api/controller/webhook"
+	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
@@ -179,6 +180,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		keywordsearch.WireSet,
 		controllerkeywordsearch.WireSet,
 		usergroup.WireSet,
+		openapi.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

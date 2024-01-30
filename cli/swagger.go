@@ -27,7 +27,8 @@ type swaggerCommand struct {
 }
 
 func (c *swaggerCommand) run(*kingpin.ParseContext) error {
-	spec := openapi.Generate()
+	openAPIGenerator := openapi.NewOpenAPIService()
+	spec := openAPIGenerator.Generate()
 	data, _ := spec.MarshalYAML()
 	if c.path == "" {
 		os.Stdout.Write(data)

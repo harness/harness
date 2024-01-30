@@ -38,6 +38,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/api/controller/webhook"
+	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/types"
@@ -116,6 +117,6 @@ func ProvideAPIHandler(
 		githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl)
 }
 
-func ProvideWebHandler(config *types.Config) WebHandler {
-	return NewWebHandler(config)
+func ProvideWebHandler(config *types.Config, openapi openapi.Service) WebHandler {
+	return NewWebHandler(config, openapi)
 }

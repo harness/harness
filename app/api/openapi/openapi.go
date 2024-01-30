@@ -28,10 +28,18 @@ type (
 	}
 )
 
+var _ Service = (*OpenAPI)(nil)
+
+type OpenAPI struct{}
+
+func NewOpenAPIService() *OpenAPI {
+	return &OpenAPI{}
+}
+
 // Generate is a helper function that constructs the
 // openapi specification object, which can be marshaled
 // to json or yaml, as needed.
-func Generate() *openapi3.Spec {
+func (*OpenAPI) Generate() *openapi3.Spec {
 	reflector := openapi3.Reflector{}
 	reflector.Spec = &openapi3.Spec{Openapi: "3.0.0"}
 	reflector.Spec.Info.
