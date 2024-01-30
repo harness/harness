@@ -225,6 +225,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
       const containerDOM = containerRef.current as HTMLDivElement
       const contentDOM = contentRef.current as HTMLDivElement
       const { style: containerStyle } = containerDOM
+      const { style: contentStyle } = contentDOM
       const { visibility } = containerStyle
       const { isContentEmpty } = internalFlags.current
       const isContainerInViewport =
@@ -274,7 +275,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               // before showing the whole container. Otherwise, there'd be a
               // flicker (diff rendered first, then comments rendered a while
               // later due to React scheduling)
-              if (!visibility) containerStyle.visibility = HIDDEN
+              if (!visibility) contentStyle.visibility = HIDDEN
 
               // Draw diff content and attach all comment threads
               diff2HtmlRef.current.draw()
@@ -288,11 +289,17 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               internalFlags.current.isContentEmpty = false
 
               // Give React some time to process attachAllCommentThreads
-              if (readOnly) containerStyle.visibility = VISIBLE
-              else
+              if (readOnly) {
+                containerStyle.visibility = VISIBLE
+                contentStyle.visibility = VISIBLE
+              } else {
                 setTimeout(() => {
-                  if (isMounted.current) containerStyle.visibility = VISIBLE
+                  if (isMounted.current) {
+                    containerStyle.visibility = VISIBLE
+                    contentStyle.visibility = VISIBLE
+                  }
                 }, 100)
+              }
             }
           })
         } else if (!isContainerInViewport && visibility === VISIBLE) {
@@ -422,7 +429,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
             [css.sidebarCollapsed]: !isSidebarExpanded
           })}
           ref={contentRef}>
-          <Render when={renderCustomContent}>
+          <Render when={renderCustomContent && !collapsed}>
             <Container>
               <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
                 <Render when={fileDeleted || isDiffTooLarge}>
@@ -472,3 +479,4 @@ export const DiffViewer = React.memo(DiffViewerInternal)
 // - Handle container height change when new comments arrive (it's hidden, then new comments...)
 // - PR tabs won't keep their browser history (back button goes back to PR listing)
 // - BUG: "Pull request must be open" error in a draft PR - should not call /merge API
+// - BUG: Scroll to a file when the file list is big: Diff rendering is ignored

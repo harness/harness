@@ -28,8 +28,8 @@ export function useIsSidebarExpanded() {
 
   useCustomEventListener(
     CustomEventName.SIDE_NAV_EXPANDED_EVENT,
-    useCallback((event: Event) => {
-      setIsSidebarExpanded(_ => !!(event as CustomEvent).detail)
+    useCallback((event: CustomEvent) => {
+      setIsSidebarExpanded(_ => !!event.detail)
     }, [])
   )
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -25,6 +25,7 @@ import {
   SplitButton,
   StringSubstitute,
   Text,
+  useIsMounted,
   useToaster
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
@@ -54,6 +55,7 @@ import {
   PRDraftOption,
   PRMergeOption,
   PullRequestActionsBoxProps,
+  PullRequestSection,
   Violation
 } from 'utils/Utils'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
@@ -66,7 +68,6 @@ const codeOwnersNotFoundMessage = 'CODEOWNERS file not found'
 const codeOwnersNotFoundMessage2 = `path "CODEOWNERS" not found`
 const codeOwnersNotFoundMessage3 = `failed to find node 'CODEOWNERS' in 'main': failed to get tree node: failed to ls file: path "CODEOWNERS" not found`
 
-const POLLING_INTERVAL = 60000
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
   pullReqMetadata,
@@ -98,10 +99,13 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   const isClosed = pullReqMetadata.state === PullRequestState.CLOSED
   const isOpen = pullReqMetadata.state === PullRequestState.OPEN
   const isConflict = pullReqMetadata.merge_check_status === MergeCheckStatus.CONFLICT
+  const isMounted = useIsMounted()
   const unchecked = useMemo(
     () => pullReqMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
     [pullReqMetadata, isClosed]
   )
+  // Flags to optimize rendering
+  const internalFlags = useRef({ mergeCheckPollingCount: 0 })
 
   useEffect(() => {
     if (ruleViolationArr && !isDraft && ruleViolationArr.data.rule_violations) {
@@ -116,8 +120,15 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   }, [ruleViolationArr])
   const dryMerge = () => {
     if (!isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
+      // Use an internal flag to prevent flickering during the loading state of buttons
+      internalFlags.current.mergeCheckPollingCount++
+
       mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
         .then(res => {
+          if (!isMounted.current) {
+            return
+          }
+
           if (res?.rule_violations?.length > 0) {
             setRuleViolation(true)
             setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
@@ -128,6 +139,10 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
           }
         })
         .catch(err => {
+          if (!isMounted.current) {
+            return
+          }
+
           if (err.status === 422) {
             setRuleViolation(true)
             setRuleViolationArr(err)
@@ -139,7 +154,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
             err.status === 423 // resource locked (merge / dry-run already ongoing)
           ) {
             return
-          } else if (pullRequestSection !== 'conversation') {
+          } else if (pullRequestSection !== PullRequestSection.CONVERSATION) {
             return
           } else {
             showError(getErrorMessage(err))
@@ -330,7 +345,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
               <Truthy>
                 <SplitButton
                   text={draftOption.title}
-                  disabled={loading}
+                  disabled={loading && internalFlags.current.mergeCheckPollingCount === 1}
                   className={css.secondaryButton}
                   variation={ButtonVariation.TERTIARY}
                   popoverProps={{
@@ -418,7 +433,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           <SplitButton
                             text={mergeOption.title}
                             disabled={
-                              loading ||
+                              (loading && internalFlags.current.mergeCheckPollingCount === 1) ||
                               (unchecked && mergeOption.method !== 'close') ||
                               (isConflict && mergeOption.method !== 'close') ||
                               (ruleViolation && !bypass && mergeOption.method !== 'close')
@@ -521,3 +536,5 @@ const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullReques
     </Container>
   )
 }
+
+const POLLING_INTERVAL = 10000

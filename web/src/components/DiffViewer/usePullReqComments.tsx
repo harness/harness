@@ -373,6 +373,10 @@ export function usePullReqComments({
 
         if (!id) return
 
+        //
+        // TODO: Re-evaluate below logics - we might not need them anymore!
+        //
+
         const existingComment = comments.get(id)
         const latestDeleted = latestComment.commentItems.map(x => !!x.deleted).reduce((a, b) => a && b, true)
 
@@ -432,7 +436,7 @@ export function usePullReqComments({
 
   useEffect(
     function handleCollapsedState() {
-      if (readOnly || !containerRef.current) return
+      if (!containerRef.current) return
 
       const containerDOM = containerRef.current as HTMLDivElement
       const { classList, style } = containerDOM

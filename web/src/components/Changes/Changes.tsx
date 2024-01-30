@@ -199,8 +199,9 @@ const ChangesInternal: React.FC<ChangesProps> = ({
         : rawDiff && typeof rawDiff === 'string'
         ? rawDiff
         : ''
+    const _fileViews = readOnly ? new Map<string, string>() : fileViews
 
-    if (_raw && fileViews) {
+    if (_raw && _fileViews) {
       const _diffs = Diff2Html.parse(_raw, DIFF2HTML_CONFIG).map(diff => {
         const fileId = changedFileId([diff.oldName, diff.newName])
         const containerId = `container-${fileId}`
@@ -213,7 +214,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
           contentId,
           fileId,
           filePath,
-          fileViews: fileViews || [] // TODO: Move fileViews to a better location
+          fileViews: _fileViews
         }
       })
 
