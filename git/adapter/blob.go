@@ -21,8 +21,6 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/types"
-
-	"code.gitea.io/gitea/modules/git"
 )
 
 // GetBlob returns the blob for the given object sha.
@@ -32,7 +30,7 @@ func (a Adapter) GetBlob(
 	sha string,
 	sizeLimit int64,
 ) (*types.BlobReader, error) {
-	stdIn, stdOut, cancel := git.CatFileBatch(ctx, repoPath)
+	stdIn, stdOut, cancel := CatFileBatch(ctx, repoPath)
 
 	_, err := stdIn.Write([]byte(sha + "\n"))
 	if err != nil {
@@ -40,7 +38,7 @@ func (a Adapter) GetBlob(
 		return nil, fmt.Errorf("failed to write blob sha to git stdin: %w", err)
 	}
 
-	objectSHA, objectType, objectSize, err := git.ReadBatchLine(stdOut)
+	objectSHA, objectType, objectSize, err := ReadBatchHeaderLine(stdOut)
 	if err != nil {
 		cancel()
 		return nil, processGiteaErrorf(err, "failed to read cat-file batch line")
@@ -50,10 +48,10 @@ func (a Adapter) GetBlob(
 		cancel()
 		return nil, fmt.Errorf("cat-file returned object sha '%s' but expected '%s'", objectSHA, sha)
 	}
-	if objectType != string(git.ObjectBlob) {
+	if objectType != string(ObjectBlob) {
 		cancel()
 		return nil, errors.InvalidArgument(
-			"cat-file returned object type '%s' but expected '%s'", objectType, git.ObjectBlob)
+			"cat-file returned object type '%s' but expected '%s'", objectType, ObjectBlob)
 	}
 
 	contentSize := objectSize

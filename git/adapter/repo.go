@@ -17,10 +17,12 @@ package adapter
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
@@ -44,7 +46,16 @@ func (a Adapter) InitRepository(
 	if repoPath == "" {
 		return ErrRepositoryPathEmpty
 	}
-	return gitea.InitRepository(ctx, repoPath, bare)
+	err := os.MkdirAll(repoPath, os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed to create directory '%s', err: %w", repoPath, err)
+	}
+
+	cmd := command.New("init")
+	if bare {
+		cmd.Add(command.WithFlag("--bare"))
+	}
+	return cmd.Run(ctx, command.WithDir(repoPath))
 }
 
 func (a Adapter) OpenRepository(

@@ -25,9 +25,8 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/types"
-
-	gitea "code.gitea.io/gitea/modules/git"
 )
 
 var (
@@ -46,8 +45,11 @@ func (a Adapter) Blame(
 	lineTo int,
 ) types.BlameReader {
 	// prepare the git command line arguments
-	args := make([]string, 0, 8)
-	args = append(args, "blame", "--porcelain", "--encoding=UTF-8")
+	cmd := command.New(
+		"blame",
+		command.WithFlag("--porcelain"),
+		command.WithFlag("--encoding", "UTF-8"),
+	)
 	if lineFrom > 0 || lineTo > 0 {
 		var lines string
 		if lineFrom > 0 {
@@ -57,9 +59,11 @@ func (a Adapter) Blame(
 			lines += "," + strconv.Itoa(lineTo)
 		}
 
-		args = append(args, "-L", lines)
+		cmd.Add(command.WithFlag("-L", lines))
 	}
-	args = append(args, rev, "--", file)
+
+	cmd.Add(command.WithArg(rev))
+	cmd.Add(command.WithPostSepArg(file))
 
 	pipeRead, pipeWrite := io.Pipe()
 	stderr := &bytes.Buffer{}
@@ -71,12 +75,11 @@ func (a Adapter) Blame(
 			_ = pipeWrite.CloseWithError(err)
 		}()
 
-		cmd := gitea.NewCommand(ctx, args...)
-		err = cmd.Run(&gitea.RunOpts{
-			Dir:    repoPath,
-			Stdout: pipeWrite,
-			Stderr: stderr, // We capture stderr output in a buffer.
-		})
+		err = cmd.Run(ctx,
+			command.WithDir(repoPath),
+			command.WithStdout(pipeWrite),
+			command.WithStderr(stderr),
+		)
 	}()
 
 	return &BlameReader{

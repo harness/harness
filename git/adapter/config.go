@@ -20,8 +20,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/errors"
-
-	"code.gitea.io/gitea/modules/git"
+	"github.com/harness/gitness/git/command"
 )
 
 // Config set local git key and value configuration.
@@ -38,12 +37,15 @@ func (a Adapter) Config(
 		return errors.InvalidArgument("key cannot be empty")
 	}
 	var outbuf, errbuf strings.Builder
-	if err := git.NewCommand(ctx, "config", "--local").AddArguments(key, value).
-		Run(&git.RunOpts{
-			Dir:    repoPath,
-			Stdout: &outbuf,
-			Stderr: &errbuf,
-		}); err != nil {
+	cmd := command.New("config",
+		command.WithFlag("--local"),
+		command.WithArg(key, value),
+	)
+	err := cmd.Run(ctx, command.WithDir(repoPath),
+		command.WithStdout(&outbuf),
+		command.WithStderr(&errbuf),
+	)
+	if err != nil {
 		return fmt.Errorf("git config [%s -> <%s> ]: %w\n%s\n%s",
 			key, value, err, outbuf.String(), errbuf.String())
 	}

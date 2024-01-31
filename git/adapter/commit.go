@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
@@ -71,51 +72,50 @@ func (a Adapter) listCommitSHAs(
 	limit int,
 	filter types.CommitFilter,
 ) ([]string, error) {
-	args := make([]string, 0, 16)
-	args = append(args, "rev-list")
+	cmd := command.New("rev-list")
 
 	// return commits only up to a certain reference if requested
 	if filter.AfterRef != "" {
 		// ^REF tells the rev-list command to return only commits that aren't reachable by SHA
-		args = append(args, fmt.Sprintf("^%s", filter.AfterRef))
+		cmd.Add(command.WithArg(fmt.Sprintf("^%s", filter.AfterRef)))
 	}
 	// add refCommitSHA as starting point
-	args = append(args, ref)
+	cmd.Add(command.WithArg(ref))
 
 	if len(filter.Path) != 0 {
-		args = append(args, "--", filter.Path)
+		cmd.Add(command.WithPostSepArg(filter.Path))
 	}
 
 	// add pagination if requested
 	// TODO: we should add absolut limits to protect git (return error)
 	if limit > 0 {
-		args = append(args, "--max-count", fmt.Sprint(limit))
+		cmd.Add(command.WithFlag("--max-count", strconv.Itoa(limit)))
 
 		if page > 1 {
-			args = append(args, "--skip", fmt.Sprint((page-1)*limit))
+			cmd.Add(command.WithFlag("--skip", strconv.Itoa((page-1)*limit)))
 		}
 	}
 
 	if filter.Since > 0 || filter.Until > 0 {
-		args = append(args, "--date", "unix")
+		cmd.Add(command.WithFlag("--date", "unix"))
 	}
 	if filter.Since > 0 {
-		args = append(args, "--since", strconv.FormatInt(filter.Since, 10))
+		cmd.Add(command.WithFlag("--since", strconv.FormatInt(filter.Since, 10)))
 	}
 	if filter.Until > 0 {
-		args = append(args, "--until", strconv.FormatInt(filter.Until, 10))
+		cmd.Add(command.WithFlag("--until", strconv.FormatInt(filter.Until, 10)))
 	}
 	if filter.Committer != "" {
-		args = append(args, "--committer", filter.Committer)
+		cmd.Add(command.WithFlag("--committer", filter.Committer))
 	}
-
-	stdout, _, runErr := gitea.NewCommand(ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: repoPath})
-	if runErr != nil {
+	output := &bytes.Buffer{}
+	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
+	if err != nil {
 		// TODO: handle error in case they don't have a common merge base!
-		return nil, processGiteaErrorf(runErr, "failed to trigger rev-list command")
+		return nil, processGiteaErrorf(err, "failed to trigger rev-list command")
 	}
 
-	return parseLinesToSlice(stdout), nil
+	return parseLinesToSlice(output.Bytes()), nil
 }
 
 // ListCommitSHAs lists the commits reachable from ref.
@@ -243,13 +243,18 @@ func giteaGetRenameDetails(
 	ref string,
 	path string,
 ) (*types.PathRenameDetails, error) {
-	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, "log", ref, "--name-status", "--pretty=format:", "-1").
-		RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
-	if runErr != nil {
-		return nil, fmt.Errorf("failed to trigger log command: %w", runErr)
+	cmd := command.New("log",
+		command.WithArg(ref),
+		command.WithFlag("--name-status"),
+		command.WithFlag("--pretty=format:", "-1"),
+	)
+	output := &bytes.Buffer{}
+	err := cmd.Run(giteaRepo.Ctx, command.WithDir(giteaRepo.Path), command.WithStdout(output))
+	if err != nil {
+		return nil, fmt.Errorf("failed to trigger log command: %w", err)
 	}
 
-	lines := parseLinesToSlice(stdout)
+	lines := parseLinesToSlice(output.Bytes())
 
 	changeType, oldPath, newPath, err := getFileChangeTypeFromLog(lines, path)
 	if err != nil {
@@ -303,7 +308,18 @@ func (a Adapter) GetFullCommitID(
 	if repoPath == "" {
 		return "", ErrRepositoryPathEmpty
 	}
-	return gitea.GetFullCommitID(ctx, repoPath, shortID)
+	cmd := command.New("rev-parse",
+		command.WithArg(shortID),
+	)
+	output := &bytes.Buffer{}
+	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
+	if err != nil {
+		if strings.Contains(err.Error(), "exit status 128") {
+			return "", errors.NotFound("commit not found %s", shortID)
+		}
+		return "", err
+	}
+	return strings.TrimSpace(output.String()), nil
 }
 
 // GetCommits returns the (latest) commits for a specific list of refs.
@@ -462,18 +478,24 @@ func getCommit(
 		fmtSubject + fmtZero + // 7
 		fmtBody // 8
 
-	args := []string{"log", "--max-count=1", "--format=" + format, rev}
+	cmd := command.New("log",
+		command.WithFlag("--max-count", "1"),
+		command.WithFlag("--format="+format),
+		command.WithArg(rev),
+	)
 	if path != "" {
-		args = append(args, "--", path)
+		cmd.Add(command.WithPostSepArg(path))
 	}
-
-	commitLine, stderr, err := gitea.NewCommand(ctx, args...).RunStdString(&gitea.RunOpts{Dir: repoPath})
-	if strings.Contains(stderr, "ambiguous argument") {
-		return nil, errors.NotFound("revision %q not found", rev)
-	}
+	output := &bytes.Buffer{}
+	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
+		if strings.Contains(err.Error(), "ambiguous argument") {
+			return nil, errors.NotFound("revision %q not found", rev)
+		}
 		return nil, fmt.Errorf("failed to run git to get commit data: %w", err)
 	}
+
+	commitLine := output.String()
 
 	if commitLine == "" {
 		return nil, errors.InvalidArgument("path %q not found in %s", path, rev)

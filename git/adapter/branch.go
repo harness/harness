@@ -15,13 +15,13 @@
 package adapter
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
 
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/types"
-
-	gitea "code.gitea.io/gitea/modules/git"
 )
 
 // GetBranch gets an existing branch.
@@ -62,11 +62,14 @@ func (a Adapter) HasBranches(
 	}
 	// repo has branches IFF there's at least one commit that is reachable via a branch
 	// (every existing branch points to a commit)
-	stdout, _, runErr := gitea.NewCommand(ctx, "rev-list", "--max-count", "1", "--branches").
-		RunStdBytes(&gitea.RunOpts{Dir: repoPath})
-	if runErr != nil {
-		return false, processGiteaErrorf(runErr, "failed to trigger rev-list command")
+	cmd := command.New("rev-list",
+		command.WithFlag("--max-count", "1"),
+		command.WithFlag("--branches"),
+	)
+	output := &bytes.Buffer{}
+	if err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output)); err != nil {
+		return false, processGiteaErrorf(err, "failed to trigger rev-list command")
 	}
 
-	return strings.TrimSpace(string(stdout)) == "", nil
+	return strings.TrimSpace(output.String()) == "", nil
 }
