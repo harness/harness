@@ -129,6 +129,19 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     lazy: cachedDiff.path === path ? true : commitSHA ? false : !targetRef || !sourceRef
   })
 
+  // In readOnly mode (Compare page), we'd like to refetch diff immediately when source
+  // or target refs changed from Compare page. Otherwise (PullRequest page), we'll need
+  // to confirm with user if they want to refresh (as they might be reviewing the PR)
+  useEffect(
+    function updateInternalRefsOnReadOnlyMode() {
+      if (readOnly && (_sourceRef !== sourceRef || _targetRef !== targetRef)) {
+        setSourceRef(ref => (ref !== _sourceRef ? _sourceRef : ref))
+        setTargetRef(ref => (ref !== _targetRef ? _targetRef : ref))
+      }
+    },
+    [_sourceRef, _targetRef, sourceRef, targetRef]
+  )
+
   const {
     data: fileViewsData,
     loading: loadingFileViews,
@@ -201,27 +214,31 @@ const ChangesInternal: React.FC<ChangesProps> = ({
         : ''
     const _fileViews = readOnly ? new Map<string, string>() : fileViews
 
-    if (_raw && _fileViews) {
-      const _diffs = Diff2Html.parse(_raw, DIFF2HTML_CONFIG).map(diff => {
-        const fileId = changedFileId([diff.oldName, diff.newName])
-        const containerId = `container-${fileId}`
-        const contentId = `content-${fileId}`
-        const filePath = diff.isDeleted ? diff.oldName : diff.newName
+    if (_fileViews) {
+      if (_raw) {
+        const _diffs = Diff2Html.parse(_raw, DIFF2HTML_CONFIG).map(diff => {
+          const fileId = changedFileId([diff.oldName, diff.newName])
+          const containerId = `container-${fileId}`
+          const contentId = `content-${fileId}`
+          const filePath = diff.isDeleted ? diff.oldName : diff.newName
 
-        return {
-          ...diff,
-          containerId,
-          contentId,
-          fileId,
-          filePath,
-          fileViews: _fileViews
+          return {
+            ...diff,
+            containerId,
+            contentId,
+            fileId,
+            filePath,
+            fileViews: _fileViews
+          }
+        })
+
+        setDiffs(oldDiffs => (isEqual(oldDiffs, _diffs) ? oldDiffs : _diffs))
+
+        if (cachedDiff.path !== path) {
+          setCachedDiff({ path, raw: _raw })
         }
-      })
-
-      setDiffs(oldDiffs => (isEqual(oldDiffs, _diffs) ? oldDiffs : _diffs))
-
-      if (cachedDiff.path !== path) {
-        setCachedDiff({ path, raw: _raw })
+      } else {
+        setDiffs([])
       }
     }
 
@@ -401,6 +418,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
                 <DiffViewer
                   key={viewStyle + diffApiPath + index + lineBreaks}
                   readOnly={readOnly || (commitRange?.length || 0) > 0} // render in readonly mode in case a commit is selected
+                  diffs={diffs}
                   diff={diff}
                   viewStyle={viewStyle}
                   stickyTopPosition={STICKY_TOP_POSITION}

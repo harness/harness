@@ -156,7 +156,7 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
             for (let i = 0; i < paths.length; i++) {
               const element = document.querySelector(`[data-resource-path="${paths[i]}"]`)
 
-              if (element && isInViewport(element)) {
+              if (element && isInViewport(element, IN_VIEW_DETECTION_MARGIN)) {
                 pathsChunk.loading = true
 
                 if (isMounted.current) {
@@ -348,3 +348,5 @@ const ListingItemLink: React.FC<ListingItemLinkProps> = ({ url, text, className,
     </Link>
   </Container>
 )
+
+const IN_VIEW_DETECTION_MARGIN = 500

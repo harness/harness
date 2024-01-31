@@ -33,9 +33,9 @@ export function useEventListener<K extends keyof HTMLElementEventMap>(
   }, [element, type, listener, options, parametersCheck])
 }
 
-export function useCustomEventListener(
+export function useCustomEventListener<T = any>(
   name: string,
-  listener: (event: CustomEvent) => void,
+  listener: (event: Omit<CustomEvent, 'detail'> & { detail: T }) => void,
   parametersCheck = () => true
 ) {
   useEventListener(

@@ -315,7 +315,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                       commentItems={commentItems}
                     />
                   ),
-                  [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (
+                  [CommentBoxOutletPosition.RIGHT_OF_REPLY_PLACEHOLDER]: (
                     <CodeCommentStatusButton
                       repoMetadata={repoMetadata}
                       pullReqMetadata={pullReqMetadata}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { random } from 'lodash-es'
 import { useMutate } from 'restful-react'
 import { useToaster, Button, ButtonVariation, ButtonSize, useIsMounted } from '@harnessio/uicore'
@@ -45,9 +45,8 @@ export const CodeCommentStatusButton: React.FC<CodeCommentStatusButtonProps> = (
   const [parentComment, setParentComment] = useState(commentItems[0])
   const randomClass = useMemo(() => `CodeCommentStatusButton-${random(1_000_000, false)}`, [])
   const [resolved, setResolved] = useState(parentComment?.payload?.resolved ? true : false)
-  const emitCodeCommentStatus = useEmitCodeCommentStatus({
-    id: parentComment?.id,
-    onMatch: status => {
+  const onMatch = useCallback(
+    status => {
       if (isMounted.current) {
         const isResolved = status === CodeCommentState.RESOLVED
         setResolved(isResolved)
@@ -60,8 +59,11 @@ export const CodeCommentStatusButton: React.FC<CodeCommentStatusButtonProps> = (
           }
         }
       }
-    }
-  })
+    },
+    [isMounted, parentComment.payload]
+  )
+
+  const emitCodeCommentStatus = useEmitCodeCommentStatus({ id: parentComment?.id, onMatch })
 
   useEffect(() => {
     // Comment thread has been just created, check if parentComment is
@@ -80,7 +82,7 @@ export const CodeCommentStatusButton: React.FC<CodeCommentStatusButtonProps> = (
         } as CommentItem<TypesPullReqActivity>)
       }
     }
-  }, [parentComment?.id])
+  }, [parentComment?.id, randomClass])
 
   return parentComment?.deleted ? null : (
     <Button

@@ -38,12 +38,13 @@ import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { DiffFileEntry } from 'utils/types'
 import { useAppContext } from 'AppContext'
 import type { TypesPullReq } from 'services/code'
-import { getElementViewportInfo } from 'utils/Utils'
+import { isInViewport } from 'utils/Utils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { useIsSidebarExpanded } from 'hooks/useIsSidebarExpanded'
-import { useQueryParams } from 'hooks/useQueryParams'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
+import { dispatchCustomEvent, useCustomEventListener } from 'hooks/useEventListener'
+import { useQueryParams } from 'hooks/useQueryParams'
 import {
   DIFF2HTML_CONFIG,
   DIFF_VIEWER_HEADER_HEIGHT,
@@ -55,6 +56,7 @@ import { usePullReqComments } from './usePullReqComments'
 import css from './DiffViewer.module.scss'
 
 interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  diffs: DiffFileEntry[]
   diff: DiffFileEntry
   viewStyle: ViewStyle
   stickyTopPosition?: number
@@ -69,14 +71,23 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
 }
 
 //
-// Note: (1) Lots of direct DOM manipulations are used to boost performance.
-//       Avoid React re-rendering at all cost as it causes unresponsive UI
-//       when diff content is big, or when a PR has a lot of changed files.
+// Notes:
+//       (1) Lots of direct DOM manipulations are used to boost performance.
+//       Try to avoid React re-rendering at all cost.
 //
 //       (2) This component focuses very much on rendering a diff. Handling
 //       PR comments are consolidated in usePullReqComments hook.
 //
+//       (3) DOM is expensive. The more DOM we have on a page, the slower it
+//       is - does not matter if they are rendered by native JS or React.
+//       The less DOMs we have, the better performance is gained.
+//
+//       (4) For active DOMs that we can't destroy, minimize their impact on
+//       performance by hidding them (visibility: hidden), or using the new
+//       CSS property `content-visibility`.
+//
 const DiffViewerInternal: React.FC<DiffViewerProps> = ({
+  diffs,
   diff,
   viewStyle,
   stickyTopPosition = 0,
@@ -92,11 +103,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
 }) => {
   const { standalone, routes } = useAppContext()
   const { getString } = useStrings()
-  const { path, commentId } = useQueryParams<{ path: string; commentId: string }>()
-  const internalFlags = useRef({
-    isContentEmpty: true,
-    isScrollToCommentRef: !!path && !!commentId
-  })
+  const internalFlags = useRef({ isContentEmpty: true })
   const viewedPath = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata?.number}/file-views`,
     [repoMetadata.path, pullReqMetadata?.number]
@@ -104,11 +111,26 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   const { mutate: markViewed } = useMutate({ verb: 'PUT', path: viewedPath })
   const { mutate: unmarkViewed } = useMutate({ verb: 'DELETE', path: ({ filePath }) => `${viewedPath}/${filePath}` })
 
-  // file viewed feature is only enabled if no commit range is provided (otherwise component is hidden, too)
+  const { path } = useQueryParams<{ path: string; commentId: string }>()
+  const shouldDiffBeShownByDefault = useMemo(() => path === diff.filePath, [path, diff.filePath])
+
+  // File viewed feature is only enabled if no commit range is provided (otherwise component is hidden, too)
   const [viewed, setViewed] = useState(
     commitRange?.length === 0 &&
-      getFileViewedState(diff.filePath, diff.checksumAfter, diff.fileViews) === FileViewedState.VIEWED
+      getFileViewedState(diff.filePath, diff.checksumAfter, diff.fileViews) === FileViewedState.VIEWED &&
+      !shouldDiffBeShownByDefault
   )
+
+  // When `path` is specified in url, the diff associated to this path has highest priority to
+  // be rendered first. This diff can be at anywhere the list so the chance for it to lock to
+  // itself is near zero - as others might have higher change to render themselves. To avoid
+  // others to render before the lock is enforced, any DiffViewer instance, that sees `path` and
+  // finds the lock is still available, will set this lock (even might not for itself) anyway.
+  useEffect(function setLockToSingleDiffAnyway() {
+    if (path && !lockSingleDiffRenderingAtFilePath) {
+      lockSingleDiffRenderingAtFilePath = path
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (commitRange?.length === 0) {
@@ -133,12 +155,11 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     () => diff.addedLines + diff.deletedLines > DIFF_CHANGES_LIMIT,
     [diff.addedLines, diff.deletedLines]
   )
-
   const [renderCustomContent, setRenderCustomContent] = useState(
-    fileUnchanged || fileDeleted || isDiffTooLarge || isBinary
+    !shouldDiffBeShownByDefault && (fileUnchanged || fileDeleted || isDiffTooLarge || isBinary)
   )
   const { ref, inView } = useInView({
-    rootMargin: `${IN_VIEW_DETECTION_MARGIN}px ${IN_VIEW_DETECTION_MARGIN}px`,
+    rootMargin: `${IN_VIEW_MARGIN}px ${IN_VIEW_MARGIN}px`,
     //
     // This flag is important to make sure handleDiffAndCommentsVisibility is not
     // called twice initially for 1st file (one with inView false, one with true).
@@ -163,7 +184,93 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   const isMounted = useIsMounted()
   const [dirty, setDirty] = useState(false)
 
+  //
+  // Handling custom events sent to DiffViewer from external components/features
+  // such as "jump to file", "jump to comment", etc...
+  // Note: This useCustomEventListener() hook must be called before usePullReqComments()
+  // hook in order for usePullReqComments to send back events properly.
+  //
+  useCustomEventListener<DiffViewerCustomEvent>(
+    diff.filePath,
+    useCallback(event => {
+      const { action, onDone, index, commentId } = event.detail
+      const containerDOM = document.getElementById(diff.containerId) as HTMLDivElement
+
+      function scrollToContainer() {
+        if (!isMounted.current) return
+
+        containerDOM.scrollIntoView({ block: 'start' })
+
+        if (!commentId) {
+          // Check to adjust scroll position to make sure content is not
+          // cut off due to current scroll position
+          const scrollGap = containerDOM.getBoundingClientRect().y - stickyTopPosition
+          if (scrollGap < 1) {
+            scrollElement.scroll({ top: (scrollElement.scrollTop || window.scrollY) + scrollGap })
+          }
+        } else {
+          const commentDOM = containerDOM.querySelector(`[data-comment-id="${commentId}"]`) as HTMLDivElement
+          // dom is the great grand parent of the comment DOM (CommentBox)
+          const dom = commentDOM?.parentElement?.parentElement?.parentElement?.parentElement
+          if (dom) dom.lastElementChild?.scrollIntoView({ block: 'center' })
+        }
+      }
+
+      function dispatchRenderIfInViewEventToSibling(diffIndex: number, distance: number) {
+        const siblingIndex = diffIndex + distance
+
+        if (!isMounted.current || siblingIndex < 0 || siblingIndex > diffs.length - 1) return
+
+        // Always scroll back to the current diff container or its comment, otherwise, when
+        // siblings are rendered, scroll position is moved with them
+        scrollToContainer()
+
+        dispatchCustomEvent<DiffViewerCustomEvent>(diffs[siblingIndex].filePath, {
+          action: DiffViewerEvent.RENDER_IF_INVIEW,
+          diffs,
+          index,
+          onDone: () => dispatchRenderIfInViewEventToSibling(siblingIndex, distance)
+        })
+      }
+
+      switch (action) {
+        case DiffViewerEvent.SCROLL_INTO_VIEW: {
+          // When scrolling too quickly over diffs (jump to a file), the diff rendering
+          //  pipeline is super expensive and costly due to many diffs receive the inView
+          // event. To optimize, use a flag to render a single diff (the one we scroll into)
+          // and skip rendering of all others. When this diff rendering is done, dispatch
+          // RENDER_IF_INVIEW event to the diff siblings to consider rendering themselves.
+          // This approach is much more practical than rendering every single diffs that
+          // being scrolled by.
+          lockSingleDiffRenderingAtFilePath = diff.filePath
+          scrollToContainer()
+
+          handleDiffAndCommentsVisibility(true, function onRendered() {
+            setTimeout(() => {
+              if (!isMounted.current) return
+
+              scrollToContainer()
+              lockSingleDiffRenderingAtFilePath = ''
+
+              // Ask (above, below) siblings to consider render themselves
+              dispatchRenderIfInViewEventToSibling(index, -1)
+              dispatchRenderIfInViewEventToSibling(index, +1)
+            }, 50)
+          })
+          break
+        }
+
+        case DiffViewerEvent.RENDER_IF_INVIEW: {
+          handleDiffAndCommentsVisibility(false, onDone)
+          break
+        }
+      }
+    }, []), // eslint-disable-line react-hooks/exhaustive-deps
+    () => !!diff.filePath
+  )
+
   const commentsHook = usePullReqComments({
+    diffs,
     diff,
     viewStyle,
     stickyTopPosition,
@@ -182,13 +289,13 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   })
 
   useEffect(
-    function forceExpandingWithChangedSinceLastView() {
+    function alwaysExpandDiffIfChangedSinceLastView() {
       if (showChangedSinceLastView && collapsed && !viewed) {
         setCollapsed(false)
       }
     },
-    [showChangedSinceLastView, viewed]
-  ) // eslint-disable-line react-hooks/exhaustive-deps
+    [showChangedSinceLastView, viewed] // eslint-disable-line react-hooks/exhaustive-deps
+  )
 
   //
   // Offload diff contents. The purpose of this function:
@@ -218,22 +325,37 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   )
 
   //
-  // Handle diff content and comments visibility.
+  // Handle diff content and comments rendering and visibility.
   //
   const handleDiffAndCommentsVisibility = useCallback(
-    (ignoreChecks = false) => {
+    (ignoreChecks = false, onRendered = noop) => {
       const containerDOM = containerRef.current as HTMLDivElement
       const contentDOM = contentRef.current as HTMLDivElement
       const { style: containerStyle } = containerDOM
       const { style: contentStyle } = contentDOM
       const { visibility } = containerStyle
       const { isContentEmpty } = internalFlags.current
-      const isContainerInViewport =
-        inView || getElementViewportInfo(containerDOM, IN_VIEW_DETECTION_MARGIN, IN_VIEW_DETECTION_MARGIN).isInViewport
+      const isContainerInViewport = inView || isInViewport(containerDOM, IN_VIEW_MARGIN)
+
+      if (renderCustomContent) {
+        onRendered()
+        return
+      }
+
+      // Single diff rendering is locked
+      if (lockSingleDiffRenderingAtFilePath) {
+        if (lockSingleDiffRenderingAtFilePath !== diff.filePath) {
+          // Not for this diff, return
+          return
+        } else if (diffHandlerRafRef.current > 0 && !ignoreChecks) {
+          // Lock is for this diff
+          // Check if there's a task already schedule, and if this call has
+          // low priority (!ignoreChecks), then return
+          return
+        }
+      }
 
       cancelAnimationFrame(diffHandlerRafRef.current)
-
-      if (renderCustomContent && !ignoreChecks) return
 
       if (collapsed) {
         if (!isContentEmpty) offloadDiffContents(false)
@@ -251,15 +373,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
             // is executed. At this time, the container may be out of viewport
             // already. ONLY render diff (and comments) when container is in
             // viewport.
-            if (
-              getElementViewportInfo(containerDOM, IN_VIEW_DETECTION_MARGIN, IN_VIEW_DETECTION_MARGIN).isInViewport ||
-              visibility === HIDDEN ||
-              internalFlags.current.isScrollToCommentRef
-            ) {
-              // Handle scroll to comment once. When isScrollToCommentRef.current
-              // is true, render diff and comment no matter what, then switch off the flag
-              internalFlags.current.isScrollToCommentRef = false
-
+            if (isInViewport(containerDOM, IN_VIEW_MARGIN) || visibility === HIDDEN) {
               diff2HtmlRef.current ||= new Diff2HtmlUI(
                 contentDOM,
                 [diff],
@@ -292,14 +406,19 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               if (readOnly) {
                 containerStyle.visibility = VISIBLE
                 contentStyle.visibility = VISIBLE
+                onRendered()
               } else {
                 setTimeout(() => {
                   if (isMounted.current) {
                     containerStyle.visibility = VISIBLE
                     contentStyle.visibility = VISIBLE
                   }
+                  onRendered()
                 }, 100)
               }
+
+              // Reset RAF id when task is done
+              diffHandlerRafRef.current = 0
             }
           })
         } else if (!isContainerInViewport && visibility === VISIBLE) {
@@ -307,14 +426,16 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
           // performance. When a diff is out of viewport, destroy diff HTML contents so browser
           // can get back allocated memory, plus it has less DOMs to worry about. Secondly, set
           // the container visibility to hidden helps reduce browser load in terms of event
-          // handling
-          diffHandlerRafRef.current = requestAnimationFrame(() => offloadDiffContents(true))
+          // handling against the DOMs.
+          diffHandlerRafRef.current = requestAnimationFrame(() => {
+            offloadDiffContents(true)
+            // Reset RAF id when task is done
+            diffHandlerRafRef.current = 0
+          })
         }
       }
 
-      return () => {
-        cancelAnimationFrame(diffHandlerRafRef.current)
-      }
+      return () => cancelAnimationFrame(diffHandlerRafRef.current)
     },
     [readOnly, commentsHook, inView, collapsed, diff, viewStyle, isMounted, offloadDiffContents, renderCustomContent]
   )
@@ -430,7 +551,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
           })}
           ref={contentRef}>
           <Render when={renderCustomContent && !collapsed}>
-            <Container>
+            <Container height={200} flex={{ align: 'center-center' }}>
               <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
                 <Render when={fileDeleted || isDiffTooLarge}>
                   <Button
@@ -463,7 +584,9 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   )
 }
 
-const IN_VIEW_DETECTION_MARGIN = 1200
+let lockSingleDiffRenderingAtFilePath = ''
+
+const IN_VIEW_MARGIN = 1200
 const AUTO = 'auto'
 const VISIBLE = 'visible'
 const HIDDEN = 'hidden'
@@ -471,12 +594,17 @@ const HIDDEN = 'hidden'
 // addedLines + deletedLines > DIFF_CHANGES_LIMIT ? "Large diffs are not rendered by default"
 const DIFF_CHANGES_LIMIT = 1000
 
-export const DiffViewer = React.memo(DiffViewerInternal)
+export enum DiffViewerEvent {
+  SCROLL_INTO_VIEW = 'scrollIntoView',
+  RENDER_IF_INVIEW = 'renderIfInView'
+}
 
-//
-// TODO / BUGS
-//
-// - Handle container height change when new comments arrive (it's hidden, then new comments...)
-// - PR tabs won't keep their browser history (back button goes back to PR listing)
-// - BUG: "Pull request must be open" error in a draft PR - should not call /merge API
-// - BUG: Scroll to a file when the file list is big: Diff rendering is ignored
+export interface DiffViewerCustomEvent {
+  action: DiffViewerEvent
+  diffs: DiffFileEntry[]
+  index: number
+  commentId?: string
+  onDone: () => void
+}
+
+export const DiffViewer = React.memo(DiffViewerInternal)

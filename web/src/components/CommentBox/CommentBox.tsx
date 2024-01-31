@@ -63,7 +63,7 @@ export enum CommentBoxOutletPosition {
   TOP_OF_FIRST_COMMENT = 'top_of_first_comment',
   BOTTOM_OF_COMMENT_EDITOR = 'bottom_of_comment_editor',
   LEFT_OF_OPTIONS_MENU = 'left_of_options_menu',
-  LEFT_OF_REPLY_PLACEHOLDER = 'left_of_reply_placeholder',
+  RIGHT_OF_REPLY_PLACEHOLDER = 'right_of_reply_placeholder',
   BETWEEN_SAVE_AND_CANCEL_BUTTONS = 'between_save_and_cancel_buttons'
 }
 
@@ -213,7 +213,7 @@ const CommentBoxInternal = <T = unknown,>({
                     onFocus={hidePlaceHolder}
                     onClick={hidePlaceHolder}
                   />
-                  {outlets[CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]}
+                  {outlets[CommentBoxOutletPosition.RIGHT_OF_REPLY_PLACEHOLDER]}
                 </Layout.Horizontal>
               </Container>
             </Truthy>

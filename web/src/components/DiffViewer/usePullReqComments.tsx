@@ -25,7 +25,7 @@ import type { DiffFileEntry } from 'utils/types'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import type { OpenapiCommentCreatePullReqRequest, TypesPullReq, TypesPullReqActivity } from 'services/code'
-import { getErrorMessage, waitUntil } from 'utils/Utils'
+import { getErrorMessage } from 'utils/Utils'
 import { AppWrapper } from 'App'
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
 import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
@@ -50,9 +50,11 @@ import {
   CommentItem,
   customEventForCommentWithId
 } from '../CommentBox/CommentBox'
+import { DiffViewerCustomEvent, DiffViewerEvent } from './DiffViewer'
 import css from './DiffViewer.module.scss'
 
 interface UsePullReqCommentsProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  diffs: DiffFileEntry[]
   diff: DiffFileEntry
   viewStyle: ViewStyle
   stickyTopPosition?: number
@@ -70,6 +72,7 @@ interface UsePullReqCommentsProps extends Pick<GitInfoProps, 'repoMetadata'> {
 }
 
 export function usePullReqComments({
+  diffs,
   diff,
   viewStyle,
   stickyTopPosition = 0,
@@ -294,7 +297,7 @@ export function usePullReqComments({
                   commentItems={comment._commentItems as CommentItem<TypesPullReqActivity>[]}
                 />
               ),
-              [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (
+              [CommentBoxOutletPosition.RIGHT_OF_REPLY_PLACEHOLDER]: (
                 <CodeCommentStatusButton
                   repoMetadata={repoMetadata}
                   pullReqMetadata={pullReqMetadata as TypesPullReq}
@@ -334,7 +337,8 @@ export function usePullReqComments({
       standalone,
       targetRef,
       viewStyle,
-      refetchActivities
+      refetchActivities,
+      setDirty
     ]
   )
 
@@ -530,47 +534,27 @@ export function usePullReqComments({
   useLayoutEffect(() => () => hookRef.current?.detachAllCommentThreads(), [])
 
   //
-  // Scroll page to comment handler. We first scroll to Diff container first, then
-  // scroll to comment. Both use waitUtil() to wait until proper DOM elements exist.
+  // Scroll into view if `path` query param matched with diff.filePath.
   //
   useEffect(() => {
-    if (readOnly || !path || !commentId || path !== diff.filePath || !containerRef.current) {
+    if (readOnly || !path || !commentId || !containerRef.current) {
       return
     }
 
-    waitUntil({
-      test: () => containerRef.current as HTMLDivElement,
-      onMatched: container => {
-        if (!isMounted.current) return
+    if (path === diff.filePath) {
+      const index = diffs.findIndex(_diff => _diff.filePath === diff.filePath)
 
-        setTimeout(() => {
-          if (!isMounted.current) return
-
-          // Scroll window to top to make sure diffs above this diff have a change to render
-          // themselves before this diff. Otherwise, height calculation is not correct.
-          window.scrollTo({ top: 0 })
-
-          // Scroll to container to trigger diff and comment threads rendering.
-          // `behavior: 'smooth'` is required to let other DiffViewer instances have a
-          // change to render themselves
-          container.scrollIntoView({ block: 'start', behavior: 'smooth' })
-
-          // Wait until the comment is visible, then scroll to it
-          waitUntil({
-            test: () => container.querySelector(`[data-comment-id="${commentId}"]`) as HTMLDivElement,
-            onMatched: commentDOM => {
-              // dom is the great grand parent of the comment DOM (CommentBox)
-              const dom = commentDOM.parentElement?.parentElement?.parentElement?.parentElement
-
-              if (isMounted.current && dom) {
-                dom.scrollIntoView({ block: 'center' })
-              }
-            }
-          })
-        }, 250)
+      if (index >= 0) {
+        dispatchCustomEvent<DiffViewerCustomEvent>(diff.filePath, {
+          action: DiffViewerEvent.SCROLL_INTO_VIEW,
+          diffs,
+          index,
+          commentId,
+          onDone: noop
+        })
       }
-    })
-  }, [readOnly, path, commentId, diff.filePath, isMounted, containerRef])
+    }
+  }, [diffs, readOnly, path, commentId, diff.filePath, isMounted, containerRef])
 
   //
   // Add click event listener to start a new comment thread
