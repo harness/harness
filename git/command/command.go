@@ -67,6 +67,7 @@ type Command struct {
 func New(name string, options ...CmdOptionFunc) *Command {
 	c := &Command{
 		Name: name,
+		Envs: make(Envs),
 	}
 
 	for _, opt := range options {
