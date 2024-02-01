@@ -73,7 +73,7 @@ import (
 	"github.com/harness/gitness/app/store/logs"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/blob"
-	cliserver "github.com/harness/gitness/cli/server"
+	cliserver "github.com/harness/gitness/cli/operations/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"

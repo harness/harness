@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cli
+package swagger
 
 import (
 	"os"
@@ -22,24 +22,27 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-type swaggerCommand struct {
-	path string
+type command struct {
+	openAPIService openapi.Service
+	path           string
 }
 
-func (c *swaggerCommand) run(*kingpin.ParseContext) error {
-	openAPIGenerator := openapi.NewOpenAPIService()
-	spec := openAPIGenerator.Generate()
+func (c *command) run(*kingpin.ParseContext) error {
+	spec := c.openAPIService.Generate()
 	data, _ := spec.MarshalYAML()
 	if c.path == "" {
 		os.Stdout.Write(data)
 		return nil
 	}
+
 	return os.WriteFile(c.path, data, 0o600)
 }
 
 // helper function to register the swagger command.
-func RegisterSwagger(app *kingpin.Application) {
-	c := new(swaggerCommand)
+func Register(app *kingpin.Application, openAPIService openapi.Service) {
+	c := &command{
+		openAPIService: openAPIService,
+	}
 
 	cmd := app.Command("swagger", "generate swagger file").
 		Hidden().

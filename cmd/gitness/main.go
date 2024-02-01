@@ -15,13 +15,15 @@
 package main
 
 import (
+	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/cli"
 	"github.com/harness/gitness/cli/operations/account"
 	"github.com/harness/gitness/cli/operations/hooks"
 	"github.com/harness/gitness/cli/operations/migrate"
+	"github.com/harness/gitness/cli/operations/server"
+	"github.com/harness/gitness/cli/operations/swagger"
 	"github.com/harness/gitness/cli/operations/user"
 	"github.com/harness/gitness/cli/operations/users"
-	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/version"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -49,7 +51,7 @@ func main() {
 
 	hooks.Register(app)
 
-	cli.RegisterSwagger(app)
+	swagger.Register(app, openapi.NewOpenAPIService())
 
 	kingpin.Version(version.Version.String())
 	kingpin.MustParse(app.Parse(args))
