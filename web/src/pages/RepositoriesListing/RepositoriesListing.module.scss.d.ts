@@ -38,6 +38,7 @@ export declare const repoName: string
 export declare const repoScope: string
 export declare const row: string
 export declare const rowDisable: string
+export declare const spinner: string
 export declare const table: string
 export declare const tagBackground: string
 export declare const tagText: string

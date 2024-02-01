@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Container,
   FlexExpander,
@@ -42,13 +42,14 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import type { TypesPullReqFileView, TypesPullReq, TypesCommit } from 'services/code'
+import type { TypesPullReqFileView, TypesPullReq, TypesListCommitResponse } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { useEventListener } from 'hooks/useEventListener'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
+import { CHANGES_CONTAINER_WIDTH } from 'pages/PullRequest/PullRequestUtils'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import ReviewSplitButton from './ReviewSplitButton/ReviewSplitButton'
@@ -67,10 +68,12 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   emptyTitle: string
   emptyMessage: string
   pullRequestMetadata?: TypesPullReq
+  pullReqCommits?: TypesListCommitResponse
   className?: string
   defaultCommitRange?: string[]
   scrollElement: HTMLElement
   refetchActivities?: UseGetPullRequestInfoResult['refetchActivities']
+  refetchCommits?: UseGetPullRequestInfoResult['refetchCommits']
 }
 
 const ChangesInternal: React.FC<ChangesProps> = ({
@@ -82,10 +85,12 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   emptyTitle,
   emptyMessage,
   pullRequestMetadata,
+  pullReqCommits,
   className,
   defaultCommitRange = [],
   scrollElement,
-  refetchActivities
+  refetchActivities,
+  refetchCommits
 }) => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
@@ -112,12 +117,12 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     [commitSHA, commitRange, targetRef, sourceRef]
   )
   const path = useMemo(() => `/api/v1/repos/${repoMetadata?.path}/+/${diffApiPath}`, [repoMetadata?.path, diffApiPath])
-  const [cachedDiff, setCachedDiff] = useAtom(rawDiffAtom)
+  const [cachedDiff, setCachedDiff] = useAtom(changesInfoAtom)
 
   const {
     data: rawDiff,
     error,
-    loading,
+    loading: loadingRawDiff,
     refetch
   } = useGet<string>({
     path,
@@ -139,7 +144,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
         setTargetRef(ref => (ref !== _targetRef ? _targetRef : ref))
       }
     },
-    [_sourceRef, _targetRef, sourceRef, targetRef]
+    [readOnly, _sourceRef, _targetRef, sourceRef, targetRef]
   )
 
   const {
@@ -149,29 +154,30 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     refetch: refetchFileViews
   } = useGet<TypesPullReqFileView[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/file-views`,
-    lazy: !pullRequestMetadata?.number
+    lazy: !pullRequestMetadata?.number || cachedDiff.path === path
   })
-
-  const [cachedFileViewsData, setCachedFileViewsData] = useState<TypesPullReqFileView[] | null>()
-
-  useEffect(() => {
-    if (fileViewsData) {
-      setCachedFileViewsData(_old => (isEqual(_old, fileViewsData) ? _old : fileViewsData))
-    }
-  }, [fileViewsData])
 
   // create a map for faster lookup and ability to insert / remove single elements
   const fileViews = useMemo(() => {
-    const out = new Map<string, string>()
-    cachedFileViewsData
-      ?.filter(({ path: _path, sha }) => _path && sha) // every entry is expected to have a path and sha - otherwise skip ...
-      .forEach(({ path: _path, sha, obsolete }) => {
-        out.set(_path || '', obsolete ? FILE_VIEWED_OBSOLETE_SHA : sha || '')
-      })
-    return cachedFileViewsData ? out : undefined
-  }, [cachedFileViewsData])
+    if (!fileViewsData) {
+      if (cachedDiff.path === path) {
+        return cachedDiff.fileViews
+      }
+    } else {
+      const out = new Map<string, string>()
+      fileViewsData
+        .filter(({ path: _path, sha }) => _path && sha) // every entry is expected to have a path and sha - otherwise skip ...
+        .forEach(({ path: _path, sha, obsolete }) => {
+          out.set(_path || '', obsolete ? FILE_VIEWED_OBSOLETE_SHA : sha || '')
+        })
+      return out
+    }
+  }, [fileViewsData, path, cachedDiff])
 
-  const showSpinner = useMemo(() => loading || (loadingFileViews && !fileViews), [loading, loadingFileViews, fileViews])
+  const loading = useMemo(
+    () => (loadingRawDiff && !rawDiff) || (loadingFileViews && !fileViews),
+    [loadingRawDiff, loadingFileViews, fileViews, rawDiff]
+  )
   const diffStats = useMemo(
     () =>
       (diffs || []).reduce(
@@ -194,7 +200,6 @@ const ChangesInternal: React.FC<ChangesProps> = ({
       !!currentUser?.uid && !!pullRequestMetadata?.author?.uid && currentUser?.uid === pullRequestMetadata?.author?.uid,
     [currentUser, pullRequestMetadata]
   )
-  const internalFlags = useRef({ justRefreshed: false })
 
   useEffect(() => {
     if (sourceRef !== _sourceRef || targetRef !== _targetRef) {
@@ -235,18 +240,13 @@ const ChangesInternal: React.FC<ChangesProps> = ({
         setDiffs(oldDiffs => (isEqual(oldDiffs, _diffs) ? oldDiffs : _diffs))
 
         if (cachedDiff.path !== path) {
-          setCachedDiff({ path, raw: _raw })
+          setCachedDiff({ path, raw: _raw, fileViews: _fileViews })
         }
       } else {
         setDiffs([])
       }
     }
-
-    if (internalFlags.current.justRefreshed) {
-      internalFlags.current.justRefreshed = false
-      refetchFileViews()
-    }
-  }, [rawDiff, fileViews, errorFileViews, refetchFileViews])
+  }, [readOnly, path, rawDiff, fileViews, errorFileViews, refetchFileViews]) // eslint-disable-line react-hooks/exhaustive-deps
 
   //
   // Listen to scroll event to toggle "scroll to top" button
@@ -290,17 +290,6 @@ const ChangesInternal: React.FC<ChangesProps> = ({
 
   const history = useHistory()
   const { routes } = useAppContext()
-
-  const { data: prCommits, error: errorCommits } = useGet<{
-    commits: TypesCommit[]
-  }>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
-    queryParams: {
-      git_ref: normalizeGitRef(sourceRef),
-      after: normalizeGitRef(targetRef)
-    },
-    lazy: !pullRequestMetadata?.number
-  })
   const commitSHARef = useRef(commitSHA)
 
   useEffect(
@@ -321,23 +310,36 @@ const ChangesInternal: React.FC<ChangesProps> = ({
         )
       }
     },
-    [commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number, commitSHA]
+    [isMounted, commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number, commitSHA]
   )
 
-  useShowRequestError(errorFileViews || errorCommits, 0)
+  // Set container width CSS var so comments' width can be calculated properly
+  const contentRef = useRef<HTMLDivElement>(null)
+  const onWindowResize = useCallback(() => {
+    const dom = contentRef.current as HTMLDivElement
+    dom.style.setProperty(CHANGES_CONTAINER_WIDTH, dom.clientWidth + 'px')
+  }, [])
+
+  useEffect(onWindowResize, [onWindowResize])
+  useEventListener('resize', onWindowResize)
+
+  useShowRequestError(errorFileViews, 0)
 
   return (
-    <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
-      <LoadingSpinner visible={loading || showSpinner} withBorder={true} />
+    <Container
+      className={cx(css.container, className)}
+      {...(!!loadingRawDiff || !!error ? { flex: true } : {})}
+      ref={contentRef}>
+      <LoadingSpinner visible={loading} withBorder={true} />
       <Render when={error}>
         <PageError message={getErrorMessage(error)} onClick={voidFn(refetch)} />
       </Render>
-      <Render when={!error && !loading}>
+      <Render when={!error && !loadingRawDiff}>
         <Container className={css.header} ref={headerRef}>
           <Layout.Horizontal>
             <Container flex={{ alignItems: 'center' }}>
               <CommitRangeDropdown
-                allCommits={prCommits?.commits || []}
+                allCommits={pullReqCommits?.commits || []}
                 selectedCommits={commitRange}
                 setSelectedCommits={setCommitRange}
               />
@@ -371,7 +373,8 @@ const ChangesInternal: React.FC<ChangesProps> = ({
                     setPrHasChanged(false)
                     setTargetRef(_targetRef)
                     setSourceRef(_sourceRef)
-                    internalFlags.current.justRefreshed = true
+                    refetchCommits?.()
+                    setTimeout(refetch, 0)
                   }}
                 />
               </Render>
@@ -402,7 +405,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
           </Layout.Horizontal>
         </Container>
       </Render>
-      <Render when={!loading && !error}>
+      <Render when={!loadingRawDiff && !error}>
         <Match expr={diffs?.length}>
           <Case val={(len: number) => len > 0}>
             {/* TODO: lineBreaks is broken in line-by-line view, enable it for side-by-side only now */}
@@ -437,7 +440,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
           <Case val={0}>
             <Container padding="xlarge">
               <NoResultCard
-                showWhen={() => diffs?.length === 0 && !loading && !showSpinner}
+                showWhen={() => diffs?.length === 0 && !loadingRawDiff && !loading}
                 forSearch={true}
                 title={emptyTitle}
                 emptySearchMessage={emptyMessage}
@@ -452,4 +455,4 @@ const ChangesInternal: React.FC<ChangesProps> = ({
 
 export const Changes = React.memo(ChangesInternal)
 
-const rawDiffAtom = atom<{ path?: string; raw?: string }>({})
+const changesInfoAtom = atom<{ path?: string; raw?: string; fileViews?: Map<string, string> }>({})

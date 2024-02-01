@@ -60,7 +60,7 @@ export const CodeCommentStatusButton: React.FC<CodeCommentStatusButtonProps> = (
         }
       }
     },
-    [isMounted, parentComment.payload]
+    [isMounted, parentComment?.payload]
   )
 
   const emitCodeCommentStatus = useEmitCodeCommentStatus({ id: parentComment?.id, onMatch })

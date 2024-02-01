@@ -25,6 +25,9 @@ export function isCodeComment(commentItems: CommentItem<TypesPullReqActivity>[])
 export function isComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
   return commentItems[0]?.payload?.type === CommentType.COMMENT
 }
+
 export function isSystemComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
   return commentItems[0].payload?.kind === 'system'
 }
+
+export const CHANGES_CONTAINER_WIDTH = '--changes-container-width'

@@ -39,6 +39,10 @@
       margin-top: 10px !important;
     }
   }
+
+  .spinner {
+    width: calc(100% - 285px);
+  }
 }
 
 .withError {

@@ -209,14 +209,18 @@ export default function RepositoriesListing() {
           message: getString('repos.noDataMessage'),
           button: NewRepoButton
         }}>
-        <LoadingSpinner visible={loading && searchTerm === undefined} />
+        <LoadingSpinner visible={loading && searchTerm === undefined} className={css.spinner} />
         <Layout.Horizontal>
           <Container className={css.repoListingContainer} margin={{ top: 'medium' }}>
             <Container padding="xlarge">
               <Layout.Horizontal spacing="large" className={css.layout}>
                 {NewRepoButton}
                 <FlexExpander />
-                <SearchInputWithSpinner loading={loading} query={searchTerm} setQuery={setSearchTerm} />
+                <SearchInputWithSpinner
+                  loading={loading && searchTerm !== undefined}
+                  query={searchTerm}
+                  setQuery={setSearchTerm}
+                />
               </Layout.Horizontal>
 
               {!!repositories?.length && (

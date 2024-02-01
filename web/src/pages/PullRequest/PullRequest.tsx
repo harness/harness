@@ -51,10 +51,12 @@ export default function PullRequest() {
     setShowEditDescription,
     pullReqMetadata,
     pullReqStats,
+    pullReqCommits,
     pullRequestId,
     pullRequestSection,
     commitSHA,
     refetchActivities,
+    refetchCommits,
     retryOnErrorFunc
   } = useGetPullRequestInfo()
 
@@ -116,7 +118,7 @@ export default function PullRequest() {
                 selectedTabId={activeTab}
                 large={false}
                 onChange={tabId => {
-                  history.replace(
+                  history.push(
                     routes.toCODEPullRequest({
                       repoPath: repoMetadata?.path as string,
                       pullRequestId,
@@ -164,6 +166,7 @@ export default function PullRequest() {
                       <PullRequestCommits
                         repoMetadata={repoMetadata as TypesRepository}
                         pullReqMetadata={pullReqMetadata as TypesPullReq}
+                        pullReqCommits={pullReqCommits}
                       />
                     )
                   },
@@ -183,12 +186,14 @@ export default function PullRequest() {
                           <Changes
                             repoMetadata={repoMetadata}
                             pullRequestMetadata={pullReqMetadata}
+                            pullReqCommits={pullReqCommits}
                             defaultCommitRange={compact(commitSHA?.split(/~1\.\.\.|\.\.\./g))}
                             targetRef={pullReqMetadata.merge_base_sha}
                             sourceRef={pullReqMetadata.source_sha}
                             emptyTitle={getString('noChanges')}
                             emptyMessage={getString('noChangesPR')}
                             refetchActivities={refetchActivities}
+                            refetchCommits={refetchCommits}
                             scrollElement={
                               (standalone
                                 ? document.querySelector(`.${css.main}`)?.parentElement || window

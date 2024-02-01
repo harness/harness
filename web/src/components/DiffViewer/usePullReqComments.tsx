@@ -33,6 +33,7 @@ import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/Code
 import { useQueryParams } from 'hooks/useQueryParams'
 import { dispatchCustomEvent, useEventListener } from 'hooks/useEventListener'
 import { UseGetPullRequestInfoResult, usePullReqActivities } from 'pages/PullRequest/useGetPullRequestInfo'
+import { CHANGES_CONTAINER_WIDTH } from 'pages/PullRequest/PullRequestUtils'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
@@ -570,7 +571,7 @@ export function usePullReqComments({
  * Decide CommentBox container width.
  */
 function getCommentBoxWidth(isSideBySide: boolean) {
-  return isSideBySide ? 'calc(50vw - 200px)' : undefined
+  return isSideBySide ? `min(calc(var(${CHANGES_CONTAINER_WIDTH})/2), 900px)` : undefined
 }
 
 /**

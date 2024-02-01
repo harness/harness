@@ -166,7 +166,7 @@ const CommentBoxInternal = <T = unknown,>({
       const someDirty = Object.values(dirties).some(dirty => dirty)
       return someDirty !== _oldDirty ? someDirty : _oldDirty
     })
-  }, [dirties])
+  }, [dirties, setDirty])
 
   return (
     <Container
