@@ -77,12 +77,12 @@ func (a Adapter) CreateTag(
 	if opts != nil && opts.Message != "" {
 		cmd.Add(command.WithFlag("-m", opts.Message))
 		cmd.Add(
-			command.WithCommitter(
+			command.WithCommitterAndDate(
 				opts.Tagger.Identity.Name,
 				opts.Tagger.Identity.Email,
+				opts.Tagger.When,
 			),
 		)
-		cmd.Add(command.WithEnv(command.GitCommitterDate, opts.Tagger.When.Format(time.RFC3339)))
 	}
 
 	cmd.Add(command.WithArg(name, targetSHA))

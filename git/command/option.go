@@ -17,6 +17,7 @@ package command
 import (
 	"io"
 	"strconv"
+	"time"
 )
 
 type CmdOptionFunc func(c *Command)
@@ -68,11 +69,29 @@ func WithCommitter(name, email string) CmdOptionFunc {
 	}
 }
 
+// WithCommitterAndDate sets given committer and date to the command.
+func WithCommitterAndDate(name, email string, date time.Time) CmdOptionFunc {
+	return func(c *Command) {
+		c.Envs[GitCommitterName] = name
+		c.Envs[GitCommitterEmail] = email
+		c.Envs[GitCommitterDate] = date.Format(time.RFC3339)
+	}
+}
+
 // WithAuthor sets given author to the command.
 func WithAuthor(name, email string) CmdOptionFunc {
 	return func(c *Command) {
 		c.Envs[GitAuthorName] = name
 		c.Envs[GitAuthorEmail] = email
+	}
+}
+
+// WithAuthorAndDate sets given author and date to the command.
+func WithAuthorAndDate(name, email string, date time.Time) CmdOptionFunc {
+	return func(c *Command) {
+		c.Envs[GitAuthorName] = name
+		c.Envs[GitAuthorEmail] = email
+		c.Envs[GitAuthorDate] = date.Format(time.RFC3339)
 	}
 }
 
