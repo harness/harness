@@ -144,7 +144,7 @@
     border-top-left-radius: var(--radius);
     border-top-right-radius: var(--radius);
 
-    .fname {
+    .fname a {
       font-size: 13px !important;
       font-weight: 600 !important;
       color: var(--grey-900) !important;
@@ -240,4 +240,14 @@
 
 .commitContainer {
   padding-top: 1px;
+}
+
+.popover {
+  :global {
+    .bp3-popover-content {
+      padding: var(--spacing-medium);
+      max-width: 700px;
+      word-break: break-all;
+    }
+  }
 }

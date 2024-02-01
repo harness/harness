@@ -167,7 +167,7 @@ export const GitBlame: React.FC<
   // TODO: Normalize loading and error rendering when implementing new Design layout
   // that have Blame in a separate tab.
   if (loading) {
-    return <Container padding="xlarge">{getString('loading')}</Container>
+    return <Container padding={{ left: 'small' }}>{getString('loading')}</Container>
   }
 
   if (error) {

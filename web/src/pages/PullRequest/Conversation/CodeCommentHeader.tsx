@@ -16,7 +16,7 @@
 
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Container, Layout } from '@harnessio/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import * as Diff2Html from 'diff2html'
 import { get } from 'lodash-es'
@@ -70,15 +70,23 @@ export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({
     <Container className={css.snapshot}>
       <Layout.Vertical>
         <Container className={css.title}>
-          <Link
+          <Text
+            inline
             className={css.fname}
-            to={`${routes.toCODEPullRequest({
-              repoPath: repoMetadata?.path as string,
-              pullRequestId: String(pullReqMetadata?.number),
-              pullRequestSection: PullRequestSection.FILES_CHANGED
-            })}?path=${commentItems[0].payload?.code_comment?.path}&commentId=${commentItems[0].payload?.id}`}>
-            {commentItems[0].payload?.code_comment?.path}
-          </Link>
+            lineClamp={1}
+            tooltipProps={{
+              portalClassName: css.popover
+            }}>
+            <Link
+              // className={css.fname}
+              to={`${routes.toCODEPullRequest({
+                repoPath: repoMetadata?.path as string,
+                pullRequestId: String(pullReqMetadata?.number),
+                pullRequestSection: PullRequestSection.FILES_CHANGED
+              })}?path=${commentItems[0].payload?.code_comment?.path}&commentId=${commentItems[0].payload?.id}`}>
+              {commentItems[0].payload?.code_comment?.path}
+            </Link>
+          </Text>
         </Container>
         <Container className={css.snapshotContent} id={id} />
       </Layout.Vertical>

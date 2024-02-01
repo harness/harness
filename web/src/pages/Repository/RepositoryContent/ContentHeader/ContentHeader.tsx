@@ -96,7 +96,7 @@ export function ContentHeader({
           }}
           onCreateBranch={openCreateNewBranchModal}
         />
-        <Container style={{ maxWidth: 'calc(100vw - 750px)' }}>
+        <Container style={{ maxWidth: 'calc(100vw - 800px)' }}>
           <Layout.Horizontal spacing="small">
             <Link
               id="repository-ref-root"
@@ -136,6 +136,7 @@ export function ContentHeader({
             />
             <Button
               text={getString('newFile')}
+              style={{ whiteSpace: 'nowrap' }}
               icon={CodeIcon.Add}
               variation={ButtonVariation.PRIMARY}
               disabled={isRefATag(gitRef) || isGitRev(gitRef)}

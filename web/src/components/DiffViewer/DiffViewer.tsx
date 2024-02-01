@@ -467,7 +467,14 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               }}
               className={css.chevron}
             />
-            <Text inline className={css.fname}>
+            <Text
+              inline
+              className={css.fname}
+              lineClamp={1}
+              tooltipProps={{
+                portalClassName: css.popover,
+                className: css.fnamePopover
+              }}>
               <Link
                 to={routes.toCODERepository({
                   repoPath: repoMetadata.path as string,
