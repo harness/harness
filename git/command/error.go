@@ -17,6 +17,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	"os/exec"
 )
 
 var (
@@ -24,7 +25,7 @@ var (
 	ErrInvalidArg = errors.New("invalid argument")
 )
 
-// Error type with optional Stderr payload.
+// Error type with optional ExitCode and Stderr payload.
 type Error struct {
 	Err    error
 	StdErr []byte
@@ -38,11 +39,24 @@ func NewError(err error, stderr []byte) *Error {
 	}
 }
 
+func (e *Error) ExitCode() int {
+	var exitErr *exec.ExitError
+	ok := errors.As(e.Err, &exitErr)
+	if ok {
+		return exitErr.ExitCode()
+	}
+	return 0
+}
+
 func (e *Error) Error() string {
 	if len(e.StdErr) != 0 {
 		return fmt.Sprintf("%s: %s", e.Err.Error(), e.StdErr)
 	}
 	return e.Err.Error()
+}
+
+func (e *Error) Unwrap() error {
+	return e.Err
 }
 
 // AsError unwraps Error otherwise return nil.

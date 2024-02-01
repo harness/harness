@@ -133,13 +133,15 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 
 		return ctx.Err()
 	case err = <-result:
-		if err != nil && errAsBuff {
-			buff, ok := options.Stderr.(*bytes.Buffer)
-			if ok {
-				return NewError(err, buff.Bytes())
-			}
+		if err == nil {
+			return nil
 		}
-		return err
+
+		var stderr []byte
+		if buff, ok := options.Stderr.(*bytes.Buffer); ok && errAsBuff {
+			stderr = buff.Bytes()
+		}
+		return NewError(err, stderr)
 	}
 }
 
