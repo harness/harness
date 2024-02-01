@@ -17,8 +17,10 @@ package command
 const (
 	GitCommitterName  = "GIT_COMMITTER_NAME"
 	GitCommitterEmail = "GIT_COMMITTER_EMAIL"
+	GitCommitterDate  = "GIT_COMMITTER_DATE"
 	GitAuthorName     = "GIT_AUTHOR_NAME"
 	GitAuthorEmail    = "GIT_AUTHOR_EMAIL"
+	GitAuthorDate     = "GIT_AUTHOR_DATE"
 
 	GitTrace            = "GIT_TRACE"
 	GitTracePack        = "GIT_TRACE_PACK_ACCESS"

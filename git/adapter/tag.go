@@ -17,16 +17,15 @@ package adapter
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/types"
-
-	gitea "code.gitea.io/gitea/modules/git"
 )
 
 const (
@@ -43,7 +42,7 @@ func (a Adapter) GetAnnotatedTag(
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
-	tags, err := giteaGetAnnotatedTags(ctx, repoPath, []string{sha})
+	tags, err := getAnnotatedTags(ctx, repoPath, []string{sha})
 	if err != nil || len(tags) == 0 {
 		return nil, processGiteaErrorf(err, "failed to get annotated tag with sha '%s'", sha)
 	}
@@ -60,7 +59,7 @@ func (a Adapter) GetAnnotatedTags(
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
-	return giteaGetAnnotatedTags(ctx, repoPath, shas)
+	return getAnnotatedTags(ctx, repoPath, shas)
 }
 
 // CreateTag creates the tag pointing at the provided SHA (could be any type, e.g. commit, tag, blob, ...)
@@ -74,40 +73,29 @@ func (a Adapter) CreateTag(
 	if repoPath == "" {
 		return ErrRepositoryPathEmpty
 	}
-	args := []string{
-		"tag",
-	}
-	env := []string{}
-
+	cmd := command.New("tag")
 	if opts != nil && opts.Message != "" {
-		args = append(args,
-			"-m",
-			opts.Message,
+		cmd.Add(command.WithFlag("-m", opts.Message))
+		cmd.Add(
+			command.WithCommitter(
+				opts.Tagger.Identity.Name,
+				opts.Tagger.Identity.Email,
+			),
 		)
-		env = append(env,
-			"GIT_COMMITTER_NAME="+opts.Tagger.Identity.Name,
-			"GIT_COMMITTER_EMAIL="+opts.Tagger.Identity.Email,
-			"GIT_COMMITTER_DATE="+opts.Tagger.When.Format(time.RFC3339),
-		)
+		cmd.Add(command.WithEnv(command.GitCommitterDate, opts.Tagger.When.Format(time.RFC3339)))
 	}
 
-	args = append(args,
-		"--",
-		name,
-		targetSHA,
-	)
-
-	cmd := gitea.NewCommand(ctx, args...)
-	_, _, err := cmd.RunStdString(&gitea.RunOpts{Dir: repoPath, Env: env})
+	cmd.Add(command.WithArg(name, targetSHA))
+	err := cmd.Run(ctx, command.WithDir(repoPath))
 	if err != nil {
 		return processGiteaErrorf(err, "Service failed to create a tag")
 	}
 	return nil
 }
 
-// giteaGetAnnotatedTag is a custom implementation to retrieve an annotated tag from a sha.
+// getAnnotatedTag is a custom implementation to retrieve an annotated tag from a sha.
 // The code is following parts of the gitea implementation.
-func giteaGetAnnotatedTags(
+func getAnnotatedTags(
 	ctx context.Context,
 	repoPath string,
 	shas []string,
@@ -116,7 +104,7 @@ func giteaGetAnnotatedTags(
 		return nil, ErrRepositoryPathEmpty
 	}
 	// The tag is an annotated tag with a message.
-	writer, reader, cancel := gitea.CatFileBatch(ctx, repoPath)
+	writer, reader, cancel := CatFileBatch(ctx, repoPath)
 	defer func() {
 		cancel()
 		_ = writer.Close()
@@ -128,9 +116,9 @@ func giteaGetAnnotatedTags(
 		if _, err := writer.Write([]byte(sha + "\n")); err != nil {
 			return nil, err
 		}
-		tagSha, typ, size, err := gitea.ReadBatchLine(reader)
+		tagSha, typ, size, err := ReadBatchHeaderLine(reader)
 		if err != nil {
-			if errors.Is(err, io.EOF) || gitea.IsErrNotExist(err) {
+			if errors.Is(err, io.EOF) || errors.IsNotFound(err) {
 				return nil, fmt.Errorf("tag with sha %s does not exist", sha)
 			}
 			return nil, err
@@ -168,13 +156,13 @@ func parseTagDataFromCatFile(data []byte) (tag types.Tag, err error) {
 	p := 0
 
 	// parse object Id
-	tag.TargetSha, p, err = giteaParseCatFileLine(data, p, "object")
+	tag.TargetSha, p, err = parseCatFileLine(data, p, "object")
 	if err != nil {
 		return tag, err
 	}
 
 	// parse object type
-	rawType, p, err := giteaParseCatFileLine(data, p, "type")
+	rawType, p, err := parseCatFileLine(data, p, "type")
 	if err != nil {
 		return tag, err
 	}
@@ -185,13 +173,13 @@ func parseTagDataFromCatFile(data []byte) (tag types.Tag, err error) {
 	}
 
 	// parse tag name
-	tag.Name, p, err = giteaParseCatFileLine(data, p, "tag")
+	tag.Name, p, err = parseCatFileLine(data, p, "tag")
 	if err != nil {
 		return tag, err
 	}
 
 	// parse tagger
-	rawTaggerInfo, p, err := giteaParseCatFileLine(data, p, "tagger")
+	rawTaggerInfo, p, err := parseCatFileLine(data, p, "tagger")
 	if err != nil {
 		return tag, err
 	}
@@ -224,7 +212,7 @@ func parseTagDataFromCatFile(data []byte) (tag types.Tag, err error) {
 	return tag, nil
 }
 
-func giteaParseCatFileLine(data []byte, start int, header string) (string, int, error) {
+func parseCatFileLine(data []byte, start int, header string) (string, int, error) {
 	// for simplicity only look at data from start onwards
 	data = data[start:]
 
