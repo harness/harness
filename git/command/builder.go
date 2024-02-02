@@ -26,19 +26,19 @@ const (
 	NoEndOfOptions
 )
 
-type description struct {
+type builder struct {
 	flags                  uint
 	validatePositionalArgs func([]string) error
 }
 
 // supportsEndOfOptions indicates whether a command can handle the
 // `--end-of-options` option.
-func (c description) supportsEndOfOptions() bool {
-	return c.flags&NoEndOfOptions == 0
+func (b builder) supportsEndOfOptions() bool {
+	return b.flags&NoEndOfOptions == 0
 }
 
 // descriptions is a curated list of Git command descriptions.
-var descriptions = map[string]description{
+var descriptions = map[string]builder{
 	"am": {},
 	"apply": {
 		flags: NoRefUpdates,
@@ -166,6 +166,9 @@ var descriptions = map[string]description{
 	"push": {
 		flags: NoRefUpdates,
 	},
+	"read-tree": {
+		flags: NoRefUpdates,
+	},
 	"receive-pack": {
 		flags: 0,
 	},
@@ -240,17 +243,17 @@ var descriptions = map[string]description{
 }
 
 // args validates the given flags and arguments and, if valid, returns the complete command line.
-func (c description) args(flags []string, args []string, postSepArgs []string) ([]string, error) {
+func (b builder) args(flags []string, args []string, postSepArgs []string) ([]string, error) {
 	var cmdArgs []string
 
 	cmdArgs = append(cmdArgs, flags...)
 
-	if c.supportsEndOfOptions() {
+	if b.supportsEndOfOptions() {
 		cmdArgs = append(cmdArgs, "--end-of-options")
 	}
 
-	if c.validatePositionalArgs != nil {
-		if err := c.validatePositionalArgs(args); err != nil {
+	if b.validatePositionalArgs != nil {
+		if err := b.validatePositionalArgs(args); err != nil {
 			return nil, err
 		}
 	} else {
