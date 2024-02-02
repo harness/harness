@@ -113,6 +113,10 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
 
   const { path } = useQueryParams<{ path: string; commentId: string }>()
   const shouldDiffBeShownByDefault = useMemo(() => path === diff.filePath, [path, diff.filePath])
+  const diffHasVeryLongLine = useMemo(
+    () => diff.blocks?.some(block => block.lines?.some(line => line.content?.length > LONG_LINE_SIZE_LIMIT)),
+    [diff]
+  )
 
   // File viewed feature is only enabled if no commit range is provided (otherwise component is hidden, too)
   const [viewed, setViewed] = useState(
@@ -156,7 +160,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     [diff.addedLines, diff.deletedLines]
   )
   const [renderCustomContent, setRenderCustomContent] = useState(
-    !shouldDiffBeShownByDefault && (fileUnchanged || fileDeleted || isDiffTooLarge || isBinary)
+    !shouldDiffBeShownByDefault && (fileUnchanged || fileDeleted || isDiffTooLarge || isBinary || diffHasVeryLongLine)
   )
   const { ref, inView } = useInView({
     rootMargin: `${IN_VIEW_MARGIN}px ${IN_VIEW_MARGIN}px`,
@@ -560,7 +564,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
           <Render when={renderCustomContent && !collapsed}>
             <Container height={200} flex={{ align: 'center-center' }}>
               <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
-                <Render when={fileDeleted || isDiffTooLarge}>
+                <Render when={fileDeleted || isDiffTooLarge || diffHasVeryLongLine}>
                   <Button
                     variation={ButtonVariation.LINK}
                     onClick={() => {
@@ -574,7 +578,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
                   {getString(
                     fileDeleted
                       ? 'pr.fileDeleted'
-                      : isDiffTooLarge
+                      : isDiffTooLarge || diffHasVeryLongLine
                       ? 'pr.diffTooLarge'
                       : isBinary
                       ? 'pr.fileBinary'
@@ -597,6 +601,10 @@ const IN_VIEW_MARGIN = 1200
 const AUTO = 'auto'
 const VISIBLE = 'visible'
 const HIDDEN = 'hidden'
+
+// If diff has a line that exceeds LONG_LINE_SIZE_LIMIT characters, consider
+// it being a large diff
+const LONG_LINE_SIZE_LIMIT = 5000
 
 // addedLines + deletedLines > DIFF_CHANGES_LIMIT ? "Large diffs are not rendered by default"
 const DIFF_CHANGES_LIMIT = 1000

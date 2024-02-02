@@ -150,33 +150,15 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   const {
     data: fileViewsData,
     loading: loadingFileViews,
-    error: errorFileViews,
-    refetch: refetchFileViews
+    error: errorFileViews
   } = useGet<TypesPullReqFileView[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/file-views`,
     lazy: !pullRequestMetadata?.number || cachedDiff.path === path
   })
 
-  // create a map for faster lookup and ability to insert / remove single elements
-  const fileViews = useMemo(() => {
-    if (!fileViewsData) {
-      if (cachedDiff.path === path) {
-        return cachedDiff.fileViews
-      }
-    } else {
-      const out = new Map<string, string>()
-      fileViewsData
-        .filter(({ path: _path, sha }) => _path && sha) // every entry is expected to have a path and sha - otherwise skip ...
-        .forEach(({ path: _path, sha, obsolete }) => {
-          out.set(_path || '', obsolete ? FILE_VIEWED_OBSOLETE_SHA : sha || '')
-        })
-      return out
-    }
-  }, [fileViewsData, path, cachedDiff])
-
   const loading = useMemo(
-    () => (loadingRawDiff && !rawDiff) || (loadingFileViews && !fileViews),
-    [loadingRawDiff, loadingFileViews, fileViews, rawDiff]
+    () => (loadingRawDiff && !rawDiff) || (loadingFileViews && !cachedDiff.fileViews),
+    [loadingRawDiff, loadingFileViews, cachedDiff.fileViews, rawDiff]
   )
   const diffStats = useMemo(
     () =>
@@ -217,9 +199,19 @@ const ChangesInternal: React.FC<ChangesProps> = ({
         : rawDiff && typeof rawDiff === 'string'
         ? rawDiff
         : ''
-    const _fileViews = readOnly ? new Map<string, string>() : fileViews
 
-    if (_fileViews) {
+    const fileViews = readOnly
+      ? new Map<string, string>()
+      : cachedDiff.path === path
+      ? cachedDiff.fileViews
+      : fileViewsData
+          ?.filter(({ path: _path, sha }) => _path && sha)
+          .reduce((map, { path: _path, sha, obsolete }) => {
+            map.set(_path as string, (obsolete ? FILE_VIEWED_OBSOLETE_SHA : sha) as string)
+            return map
+          }, new Map<string, string>())
+
+    if (fileViews) {
       if (_raw) {
         const _diffs = Diff2Html.parse(_raw, DIFF2HTML_CONFIG).map(diff => {
           const fileId = changedFileId([diff.oldName, diff.newName])
@@ -233,20 +225,20 @@ const ChangesInternal: React.FC<ChangesProps> = ({
             contentId,
             fileId,
             filePath,
-            fileViews: _fileViews
+            fileViews
           }
         })
 
         setDiffs(oldDiffs => (isEqual(oldDiffs, _diffs) ? oldDiffs : _diffs))
 
         if (cachedDiff.path !== path) {
-          setCachedDiff({ path, raw: _raw, fileViews: _fileViews })
+          setCachedDiff({ path, raw: _raw, fileViews })
         }
       } else {
         setDiffs([])
       }
     }
-  }, [readOnly, path, rawDiff, fileViews, errorFileViews, refetchFileViews]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [readOnly, path, rawDiff, fileViewsData]) // eslint-disable-line react-hooks/exhaustive-deps
 
   //
   // Listen to scroll event to toggle "scroll to top" button
@@ -414,6 +406,9 @@ const ChangesInternal: React.FC<ChangesProps> = ({
               className={cx(css.main, {
                 [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
               })}>
+              {/*
+               * TODO: Render diffs by blocks, not everything at once
+               */}
               {diffs.map((diff, index) => (
                 // Note: `key={viewStyle + index + lineBreaks}` resets DiffView when view configuration
                 // is changed. Making it easier to control states inside DiffView itself, as it does not
