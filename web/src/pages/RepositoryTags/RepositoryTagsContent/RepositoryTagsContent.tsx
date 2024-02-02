@@ -31,6 +31,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useStrings } from 'framework/strings'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { useCreateTagModal } from 'components/CreateTagModal/CreateTagModal'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { RepositoryTagsContentHeader } from '../RepositoryTagsContentHeader/RepositoryTagsContentHeader'
 import { TagsContent } from '../TagsContent/TagsContent'
 import css from './RepositoryTagsContent.module.scss'
@@ -39,7 +40,7 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const history = useHistory()
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const openModal = useCreateTagModal({
     repoMetadata,
     onSuccess: () => {
@@ -93,47 +94,50 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
   )
 
   return (
-    <Container padding="xlarge" className={css.resourceContent}>
-      <RepositoryTagsContentHeader
-        loading={loading}
-        repoMetadata={repoMetadata}
-        onBranchTypeSwitched={gitRef => {
-          setPage(1)
-          history.push(
-            routes.toCODECommits({
-              repoPath: repoMetadata.path as string,
-              commitRef: gitRef
-            })
-          )
-        }}
-        onSearchTermChanged={value => {
-          setSearchTerm(value)
-          setPage(1)
-        }}
-        onNewBranchCreated={refetch}
-      />
-
-      {!!branches?.length && (
-        <TagsContent
-          branches={branches}
+    <>
+      <LoadingSpinner visible={loading && searchTerm === undefined} />
+      <Container padding="xlarge" className={css.resourceContent}>
+        <RepositoryTagsContentHeader
+          loading={loading && searchTerm !== undefined}
           repoMetadata={repoMetadata}
-          searchTerm={searchTerm}
-          onDeleteSuccess={refetch}
+          onBranchTypeSwitched={gitRef => {
+            setPage(1)
+            history.push(
+              routes.toCODECommits({
+                repoPath: repoMetadata.path as string,
+                commitRef: gitRef
+              })
+            )
+          }}
+          onSearchTermChanged={value => {
+            setSearchTerm(value)
+            setPage(1)
+          }}
+          onNewBranchCreated={refetch}
         />
-      )}
 
-      <NoResultCard
-        permissionProp={permissionProps(permPushResult, standalone)}
-        buttonText={getString('newTag')}
-        showWhen={() => !!branches && branches.length === 0}
-        forSearch={!!searchTerm}
-        message={getString('tagEmpty')}
-        onButtonClick={() => {
-          openModal()
-        }}
-      />
+        {!!branches?.length && (
+          <TagsContent
+            branches={branches}
+            repoMetadata={repoMetadata}
+            searchTerm={searchTerm}
+            onDeleteSuccess={refetch}
+          />
+        )}
 
-      <ResourceListingPagination response={response} page={page} setPage={setPage} />
-    </Container>
+        <NoResultCard
+          permissionProp={permissionProps(permPushResult, standalone)}
+          buttonText={getString('newTag')}
+          showWhen={() => !!branches && branches.length === 0}
+          forSearch={!!searchTerm}
+          message={getString('tagEmpty')}
+          onButtonClick={() => {
+            openModal()
+          }}
+        />
+
+        <ResourceListingPagination response={response} page={page} setPage={setPage} />
+      </Container>
+    </>
   )
 }

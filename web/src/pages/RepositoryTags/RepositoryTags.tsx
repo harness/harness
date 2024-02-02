@@ -33,7 +33,6 @@ export default function RepositoryTags() {
       <RepositoryPageHeader repoMetadata={repoMetadata} title={getString('tags')} dataTooltipId="repositoryTags" />
       <PageBody error={getErrorMessage(error)} retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={loading} />
-
         {repoMetadata ? <RepositoryTagsContent repoMetadata={repoMetadata} /> : null}
       </PageBody>
     </Container>

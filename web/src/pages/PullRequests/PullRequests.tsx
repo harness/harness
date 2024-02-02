@@ -51,7 +51,7 @@ export default function PullRequests() {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes } = useAppContext()
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const [filter, setFilter] = useUserPreference<string>(
     UserPreference.PULL_REQUESTS_FILTER_SELECTED_OPTIONS,
     PullRequestFilterOption.OPEN
@@ -218,12 +218,12 @@ export default function PullRequests() {
         dataTooltipId="repositoryPullRequests"
       />
       <PageBody error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
-        <LoadingSpinner visible={loading} />
+        <LoadingSpinner visible={loading || (prLoading && !data)} />
 
         <Render when={repoMetadata}>
           <Layout.Vertical>
             <PullRequestsContentHeader
-              loading={prLoading}
+              loading={prLoading && searchTerm !== undefined}
               repoMetadata={repoMetadata as TypesRepository}
               activePullRequestFilterOption={filter}
               onPullRequestFilterChanged={_filter => {

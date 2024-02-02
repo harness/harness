@@ -64,7 +64,7 @@ export default function Webhooks() {
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
   const {
@@ -281,13 +281,13 @@ export default function Webhooks() {
     <Container className={css.main}>
       <RepositoryPageHeader repoMetadata={repoMetadata} title={getString('webhooks')} dataTooltipId="webhooks" />
       <PageBody error={getErrorMessage(error || webhooksError)} retryOnError={voidFn(refetch)}>
-        <LoadingSpinner visible={loading} />
+        <LoadingSpinner visible={loading || (webhooksLoading && searchTerm === undefined)} />
 
         {repoMetadata && (
           <Layout.Vertical>
             <WebhooksHeader
               repoMetadata={repoMetadata}
-              loading={webhooksLoading}
+              loading={webhooksLoading && searchTerm !== undefined}
               onSearchTermChanged={value => {
                 setSearchTerm(value)
                 setPage(1)

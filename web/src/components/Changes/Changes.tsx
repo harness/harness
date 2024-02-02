@@ -50,6 +50,7 @@ import { PlainButton } from 'components/PlainButton/PlainButton'
 import { useEventListener } from 'hooks/useEventListener'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
 import { CHANGES_CONTAINER_WIDTH } from 'pages/PullRequest/PullRequestUtils'
+import { useIsSidebarExpanded } from 'hooks/useIsSidebarExpanded'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import ReviewSplitButton from './ReviewSplitButton/ReviewSplitButton'
@@ -312,7 +313,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     dom.style.setProperty(CHANGES_CONTAINER_WIDTH, dom.clientWidth + 'px')
   }, [])
 
-  useEffect(onWindowResize, [onWindowResize])
+  useEffect(onWindowResize, [onWindowResize, useIsSidebarExpanded()])
   useEventListener('resize', onWindowResize)
 
   useShowRequestError(errorFileViews, 0)
