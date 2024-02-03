@@ -48,6 +48,10 @@
     color: var(--primary-8);
   }
 
+  .noWrap {
+    white-space: nowrap !important;
+  }
+
   .time {
     flex-shrink: inherit;
   }

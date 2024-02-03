@@ -19,11 +19,13 @@ import { Color } from '@harnessio/design-system'
 import React, { useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
+import { defaultTo } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
-import type { TypesCommit, TypesRepository, TypesSignature } from 'services/code'
+import type { TypesCommit, TypesRepository } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
-import { LIST_FETCHING_LIMIT, formatDate } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import css from './CommitInfo.module.scss'
 
 const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string }) => {
@@ -85,13 +87,17 @@ const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string })
               <Text className={css.infoText} color={Color.BLACK}>
                 {commitData[0] ? commitData[0].author?.identity?.name : ''}
               </Text>
-              <Text
-                font={{ size: 'small' }}
-                padding={{ left: 'small', right: 'large', top: 'medium', bottom: 'medium' }}>
-                {getString('commitsOn', {
-                  date: commitData[0] ? formatDate((commitData[0].committer as TypesSignature).when as string) : ''
-                })}
+              <Text font={{ size: 'small' }} padding={{ left: 'small', top: 'medium', bottom: 'medium' }}>
+                {getString('committed')}
+                <TimePopoverWithLocal
+                  padding={{ left: 'xsmall' }}
+                  time={defaultTo(commitData[0]?.committer?.when as unknown as number, 0)}
+                  inline={false}
+                  font={{ size: 'small' }}
+                  color={Color.GREY_500}
+                />
               </Text>
+
               <FlexExpander />
               <CommitActions sha={commitRef} href={commitURL} enableCopy />
             </Layout.Horizontal>

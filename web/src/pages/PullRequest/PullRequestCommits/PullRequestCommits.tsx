@@ -41,6 +41,7 @@ export const PullRequestCommits: React.FC<PullRequestCommitsProps> = ({
         emptyMessage={getString('noCommitsPR')}
         pullRequestMetadata={pullReqMetadata}
         loading={!pullReqCommits?.commits}
+        showHistoryIcon={true}
       />
     </PullRequestTabContentWrapper>
   )

@@ -25,6 +25,7 @@
 
     &.time {
       color: var(--grey-400) !important;
+      white-space: nowrap;
     }
 
     strong {
@@ -62,4 +63,9 @@
   font-weight: 600;
   padding: 2px 6px !important;
   width: fit-content !important;
+}
+
+.timeAgo {
+  flex: 1 1 auto;
+  justify-content: flex-end;
 }

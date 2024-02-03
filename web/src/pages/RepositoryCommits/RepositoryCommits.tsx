@@ -104,6 +104,7 @@ export default function RepositoryCommits() {
               repoMetadata={repoMetadata}
               emptyTitle={getString('noCommits')}
               emptyMessage={getString('noCommitsMessage')}
+              showHistoryIcon={true}
             />
 
             <ResourceListingPagination response={response} page={page} setPage={setPage} />

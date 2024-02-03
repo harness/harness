@@ -102,3 +102,14 @@
     padding-right: 4px !important;
   }
 }
+
+.historyBtnLayout {
+  height: 22px;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--grey-200);
+  background-color: var(--grey-50) !important;
+  border-radius: 4px;
+  padding: 0 var(--spacing-xsmall) !important;
+  margin-left: var(--spacing-small) !important;
+}

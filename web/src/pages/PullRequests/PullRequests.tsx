@@ -22,7 +22,7 @@ import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import { Case, Match, Render, Truthy } from 'react-jsx-match'
-import ReactTimeago from 'react-timeago'
+import { defaultTo } from 'lodash-es'
 import { makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -42,6 +42,7 @@ import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import useSpaceSSE from 'hooks/useSpaceSSE'
+import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import css from './PullRequests.module.scss'
 
@@ -158,12 +159,16 @@ export default function PullRequests() {
                             number: <Text inline>{row.original.number}</Text>,
                             time: (
                               <strong>
-                                <ReactTimeago
-                                  date={
+                                <TimePopoverWithLocal
+                                  time={defaultTo(
                                     (row.original.state == 'merged'
                                       ? row.original.merged
-                                      : row.original.created) as number
-                                  }
+                                      : row.original.created) as number,
+                                    0
+                                  )}
+                                  inline={false}
+                                  font={{ variation: FontVariation.SMALL_BOLD }}
+                                  color={Color.GREY_500}
                                 />
                               </strong>
                             ),

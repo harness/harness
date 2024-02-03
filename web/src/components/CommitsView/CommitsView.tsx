@@ -28,9 +28,9 @@ import {
   Popover
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
-import { orderBy } from 'lodash-es'
+import { defaultTo, orderBy } from 'lodash-es'
 import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -41,6 +41,7 @@ import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { FileSection, formatDate, PullRequestSection } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { CODERoutes } from 'RouteDefinitions'
+import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import css from './CommitsView.module.scss'
 
 interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -48,6 +49,7 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   emptyTitle: string
   emptyMessage: string
   showFileHistoryIcons?: boolean
+  showHistoryIcon?: boolean
   resourcePath?: string
   setActiveTab?: React.Dispatch<React.SetStateAction<string>>
   pullRequestMetadata?: GitInfoProps['pullReqMetadata']
@@ -60,6 +62,7 @@ export function CommitsView({
   emptyTitle,
   emptyMessage,
   showFileHistoryIcons = false,
+  showHistoryIcon = false,
   resourcePath = '',
   setActiveTab,
   pullRequestMetadata,
@@ -75,15 +78,14 @@ export function CommitsView({
         width: '20%',
         Cell: ({ row }: CellProps<TypesCommit>) => {
           return (
-            <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} style={{ display: 'inline-flex' }}>
+            <Layout.Horizontal
+              spacing="small"
+              flex={{ alignItems: 'center' }}
+              style={{
+                display: 'inline-flex'
+              }}>
               <Avatar hoverCard={false} size="small" name={row.original.author?.identity?.name || ''} />
-              <Text
-                lineClamp={1}
-                padding={{ right: 'small' }}
-                icon="code-tag"
-                iconProps={{ size: 22 }}
-                className={css.rowText}
-                color={Color.BLACK}>
+              <Text lineClamp={1} padding={{ left: 'large' }} className={css.rowText} color={Color.BLACK}>
                 {row.original.author?.identity?.name}
               </Text>
             </Layout.Horizontal>
@@ -91,8 +93,30 @@ export function CommitsView({
         }
       },
       {
+        id: 'timestamp',
+        width: '20%',
+        Cell: ({ row }: CellProps<TypesCommit>) => {
+          return (
+            <Text
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_500}
+              padding={{ left: 'xsmall' }}
+              style={{ display: 'block', flexWrap: 'nowrap' }}>
+              {getString('committed')}
+              <TimePopoverWithLocal
+                padding={{ left: 'xsmall' }}
+                time={defaultTo(row.original.committer?.when as unknown as number, 0)}
+                inline={false}
+                font={{ variation: FontVariation.SMALL }}
+                color={Color.GREY_500}
+              />
+            </Text>
+          )
+        }
+      },
+      {
         id: 'commit',
-        width: 'calc(80% - 100px)',
+        width: 'calc(60% - 100px)',
         Cell: ({ row }: CellProps<TypesCommit>) => {
           return (
             <Text color={Color.BLACK} lineClamp={1} className={css.rowText}>
@@ -128,7 +152,7 @@ export function CommitsView({
       },
       {
         id: 'buttons',
-        width: showFileHistoryIcons ? '60px' : '0px',
+        width: showFileHistoryIcons || showHistoryIcon ? '60px' : '0px',
         Cell: ({ row }: CellProps<TypesCommit>) => {
           if (showFileHistoryIcons) {
             return (
@@ -160,6 +184,27 @@ export function CommitsView({
                       }}
                     />
                   </Popover>
+                  <Button
+                    id={css.commitRepoButton}
+                    variation={ButtonVariation.ICON}
+                    text={'<>'}
+                    onClick={() => {
+                      history.push(
+                        routes.toCODERepository({
+                          repoPath: repoMetadata.path as string,
+                          gitRef: row.original.sha
+                        })
+                      )
+                    }}
+                    tooltip={getString('viewRepo')}
+                  />
+                </Layout.Horizontal>
+              </Container>
+            )
+          } else if (showHistoryIcon) {
+            return (
+              <Container>
+                <Layout.Horizontal className={css.historyBtnLayout}>
                   <Button
                     id={css.commitRepoButton}
                     variation={ButtonVariation.ICON}

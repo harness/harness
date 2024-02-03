@@ -16,10 +16,12 @@
 
 import React from 'react'
 import { Container, Text, Layout, StringSubstitute } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
-import ReactTimeago from 'react-timeago'
+import { defaultTo } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
+import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReq } from 'services/code'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
@@ -68,9 +70,12 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
         </Text>
 
         <PipeSeparator height={9} />
-        <Text inline className={cx(css.metaline, css.time)}>
-          <ReactTimeago date={edited as number} />
-        </Text>
+        <TimePopoverWithLocal
+          time={defaultTo(edited, 0)}
+          inline={false}
+          className={cx(css.metaline, css.time)}
+          font={{ variation: FontVariation.TINY }}
+        />
       </Layout.Horizontal>
     </Container>
   )

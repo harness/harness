@@ -23,3 +23,4 @@ export declare const linkText: string
 export declare const main: string
 export declare const metaline: string
 export declare const time: string
+export declare const timeAgo: string

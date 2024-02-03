@@ -31,6 +31,7 @@ export interface StringsMap {
   approved: string
   ascending: string
   assignPeople: string
+  at: string
   attachText: string
   basedOn: string
   blame: string
@@ -156,6 +157,7 @@ export interface StringsMap {
   commitToNewBranch: string
   commits: string
   commitsOn: string
+  committed: string
   compare: string
   compareEmptyDiffMessage: string
   compareEmptyDiffTitle: string

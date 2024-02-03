@@ -20,8 +20,8 @@ import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
 import { Container, Layout, Avatar, TextInput, Text, FlexExpander, Button } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
-import ReactTimeago from 'react-timeago'
-import { isEqual, noop } from 'lodash-es'
+import { isEqual, noop, defaultTo } from 'lodash-es'
+import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { useStrings } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
@@ -330,7 +330,12 @@ const CommentsThread = <T = unknown,>({
                   </Text>
                   <PipeSeparator height={8} />
                   <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                    <ReactTimeago date={new Date(commentItem?.edited)} />
+                    <TimePopoverWithLocal
+                      time={defaultTo(commentItem?.edited as number, 0)}
+                      inline={false}
+                      font={{ variation: FontVariation.SMALL }}
+                      color={Color.GREY_400}
+                    />
                   </Text>
 
                   <Render when={commentItem?.edited !== commentItem?.created || !!commentItem?.deleted}>

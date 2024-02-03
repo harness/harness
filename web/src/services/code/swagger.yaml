@@ -1766,6 +1766,14 @@ paths:
     get:
       operationId: diffStats
       parameters:
+        - description: provide path for diff operation
+          in: query
+          name: path
+          schema:
+            description: provide path for diff operation
+            items:
+              type: string
+            type: array
         - in: path
           name: repo_ref
           required: true
@@ -1808,6 +1816,14 @@ paths:
     get:
       operationId: rawDiff
       parameters:
+        - description: provide path for diff operation
+          in: query
+          name: path
+          schema:
+            description: provide path for diff operation
+            items:
+              type: string
+            type: array
         - in: path
           name: repo_ref
           required: true
@@ -1851,10 +1867,69 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+    post:
+      operationId: rawDiffPost
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: range
+          required: true
+          schema:
+            example: main..dev
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiPostRawDiffRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GitFileDiff'
+                type: array
+            text/plain:
+              schema:
+                type: string
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/merge-check/{range}:
     post:
       operationId: mergeCheck
       parameters:
+        - description: provide path for diff operation
+          in: query
+          name: path
+          schema:
+            description: provide path for diff operation
+            items:
+              type: string
+            type: array
         - in: path
           name: repo_ref
           required: true
@@ -3565,6 +3640,122 @@ paths:
                 items:
                   $ref: '#/components/schemas/TypesCommit'
                 type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/diff:
+    get:
+      operationId: diffPullReq
+      parameters:
+        - description: provide path for diff operation
+          in: query
+          name: path
+          schema:
+            description: provide path for diff operation
+            items:
+              type: string
+            type: array
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GitFileDiff'
+                type: array
+            text/plain:
+              schema:
+                type: string
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+    post:
+      operationId: diffPullReqPost
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiPostRawPRDiffRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GitFileDiff'
+                type: array
+            text/plain:
+              schema:
+                type: string
           description: OK
         '401':
           content:
@@ -7501,6 +7692,16 @@ components:
           nullable: true
           type: array
       type: object
+    OpenapiPostRawDiffRequest:
+      items:
+        $ref: '#/components/schemas/TypesFileDiffRequest'
+      nullable: true
+      type: array
+    OpenapiPostRawPRDiffRequest:
+      items:
+        $ref: '#/components/schemas/TypesFileDiffRequest'
+      nullable: true
+      type: array
     OpenapiRegisterRequest:
       properties:
         display_name:
@@ -8162,6 +8363,13 @@ components:
         trigger:
           type: string
         updated:
+          type: integer
+      type: object
+    TypesFileDiffRequest:
+      properties:
+        path:
+          type: string
+        start_line:
           type: integer
       type: object
     TypesIdentity:

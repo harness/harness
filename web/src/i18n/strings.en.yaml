@@ -19,6 +19,7 @@ description: Description
 repositories: Repositories
 files: Files
 commit: Commit
+committed: committed
 commits: Commits
 commitChanges: Commit changes
 pullRequests: Pull Requests
@@ -49,6 +50,7 @@ confirmDefaultBranch:
   points: 'Open pull requests will still point to the previous default branch, Branch rules using pattern matching may need to be updated, Cloning the repository will now clone the new default branch'
 in: in
 ok: OK
+at: at
 on: On
 off: Off
 loading: Loading...

@@ -19,14 +19,15 @@ import { Container, Layout, FlexExpander, Text, Avatar } from '@harnessio/uicore
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Link } from 'react-router-dom'
 import { Render } from 'react-jsx-match'
-import ReactTimeago from 'react-timeago'
 import cx from 'classnames'
+import { defaultTo } from 'lodash-es'
 import type { TypesCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useAppContext } from 'AppContext'
-import { formatBytes, formatDate } from 'utils/Utils'
+import { formatBytes } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import css from './LatestCommit.module.scss'
 
 interface LatestCommitProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -57,9 +58,13 @@ export function LatestCommitForFolder({ repoMetadata, latestCommit, standaloneSt
           </Link>
           <FlexExpander />
           <CommitActions sha={latestCommit?.sha as string} href={commitURL} enableCopy />
-          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400} className={css.time}>
-            <ReactTimeago date={latestCommit?.author?.when as string} />
-          </Text>
+          <TimePopoverWithLocal
+            time={defaultTo(latestCommit?.committer?.when as unknown as number, 0)}
+            inline={false}
+            className={css.time}
+            font={{ variation: FontVariation.SMALL }}
+            color={Color.GREY_400}
+          />
         </Layout.Horizontal>
       </Container>
     </Render>
@@ -91,17 +96,22 @@ export function LatestCommitForFile({ repoMetadata, latestCommit, standaloneStyl
             </Link>
           </Text>
           <PipeSeparator height={9} />
-          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-            {formatDate(latestCommit?.author?.when as string)}
-          </Text>
-          {size && size > 0 && (
+          <TimePopoverWithLocal
+            time={defaultTo(latestCommit?.committer?.when as unknown as number, 0)}
+            inline={false}
+            className={css.time}
+            font={{ variation: FontVariation.SMALL }}
+            color={Color.GREY_400}
+          />
+          {(size && size > 0 && (
             <>
               <PipeSeparator height={9} />
-              <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+              <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400} className={css.noWrap}>
                 {formatBytes(size)}
               </Text>
             </>
-          )}
+          )) ||
+            ''}
 
           <FlexExpander />
           <CommitActions sha={latestCommit?.sha as string} href={commitURL} enableCopy />
