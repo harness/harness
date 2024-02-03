@@ -16,7 +16,7 @@
 
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Container, Layout, Text } from '@harnessio/uicore'
+import { Button, ButtonVariation, Container, Layout, Text, Utils } from '@harnessio/uicore'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import * as Diff2Html from 'diff2html'
 import { get } from 'lodash-es'
@@ -70,23 +70,36 @@ export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({
     <Container className={css.snapshot}>
       <Layout.Vertical>
         <Container className={css.title}>
-          <Text
-            inline
-            className={css.fname}
-            lineClamp={1}
-            tooltipProps={{
-              portalClassName: css.popover
-            }}>
-            <Link
-              // className={css.fname}
-              to={`${routes.toCODEPullRequest({
-                repoPath: repoMetadata?.path as string,
-                pullRequestId: String(pullReqMetadata?.number),
-                pullRequestSection: PullRequestSection.FILES_CHANGED
-              })}?path=${commentItems[0].payload?.code_comment?.path}&commentId=${commentItems[0].payload?.id}`}>
-              {commentItems[0].payload?.code_comment?.path}
-            </Link>
-          </Text>
+          <Layout.Horizontal flex={{ alignItems: 'center' }}>
+            <Text
+              inline
+              className={css.fname}
+              lineClamp={1}
+              tooltipProps={{
+                portalClassName: css.popover
+              }}>
+              <Link
+                // className={css.fname}
+                to={`${routes.toCODEPullRequest({
+                  repoPath: repoMetadata?.path as string,
+                  pullRequestId: String(pullReqMetadata?.number),
+                  pullRequestSection: PullRequestSection.FILES_CHANGED
+                })}?path=${commentItems[0].payload?.code_comment?.path}&commentId=${commentItems[0].payload?.id}`}>
+                {commentItems[0].payload?.code_comment?.path}
+              </Link>
+            </Text>
+            <Button
+              variation={ButtonVariation.ICON}
+              icon="code-copy"
+              className={css.copyButton}
+              iconProps={{ size: 14 }}
+              onClick={() => {
+                if (commentItems[0].payload?.code_comment?.path) {
+                  Utils.copy(commentItems[0].payload?.code_comment?.path)
+                }
+              }}
+            />
+          </Layout.Horizontal>
         </Container>
         <Container className={css.snapshotContent} id={id} />
       </Layout.Vertical>

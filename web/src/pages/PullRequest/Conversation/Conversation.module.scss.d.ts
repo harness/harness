@@ -25,6 +25,7 @@ export declare const commentBox: string
 export declare const commentEditor: string
 export declare const commitContainer: string
 export declare const commitLink: string
+export declare const copyButton: string
 export declare const desc: string
 export declare const descBox: string
 export declare const descContainer: string
