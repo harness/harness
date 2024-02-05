@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Container,
   FlexExpander,
@@ -49,8 +49,6 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { useEventListener } from 'hooks/useEventListener'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
-import { CHANGES_CONTAINER_WIDTH } from 'pages/PullRequest/PullRequestUtils'
-import { useIsSidebarExpanded } from 'hooks/useIsSidebarExpanded'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import ReviewSplitButton from './ReviewSplitButton/ReviewSplitButton'
@@ -306,23 +304,10 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     [isMounted, commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number, commitSHA]
   )
 
-  // Set container width CSS var so comments' width can be calculated properly
-  const contentRef = useRef<HTMLDivElement>(null)
-  const onWindowResize = useCallback(() => {
-    const dom = contentRef.current as HTMLDivElement
-    dom.style.setProperty(CHANGES_CONTAINER_WIDTH, dom.clientWidth + 'px')
-  }, [])
-
-  useEffect(onWindowResize, [onWindowResize, useIsSidebarExpanded()])
-  useEventListener('resize', onWindowResize)
-
   useShowRequestError(errorFileViews, 0)
 
   return (
-    <Container
-      className={cx(css.container, className)}
-      {...(!!loadingRawDiff || !!error ? { flex: true } : {})}
-      ref={contentRef}>
+    <Container className={cx(css.container, className)} {...(!!loadingRawDiff || !!error ? { flex: true } : {})}>
       <LoadingSpinner visible={loading} withBorder={true} />
       <Render when={error}>
         <PageError message={getErrorMessage(error)} onClick={voidFn(refetch)} />

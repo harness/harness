@@ -15,7 +15,7 @@
  */
 
 import { noop } from 'lodash-es'
-import React, { useCallback, useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect, useRef } from 'react'
 import {
   Container,
   PageBody,
@@ -51,8 +51,10 @@ import type {
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
+import { MAX_TEXT_LINE_SIZE_LIMIT, PULL_REQUEST_DESCRIPTION_SIZE_LIMIT } from 'settings'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { TabContentWrapper } from 'components/TabContentWrapper/TabContentWrapper'
+import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
 import { CompareContentHeader, PRCreationType } from './CompareContentHeader/CompareContentHeader'
 import { CompareCommits } from './CompareCommits'
 import css from './Compare.module.scss'
@@ -115,6 +117,17 @@ export default function Compare() {
 
       if (!title) {
         return showError(getString('pr.titleIsRequired'))
+      }
+
+      if (description?.split('\n').some(line => line.length > MAX_TEXT_LINE_SIZE_LIMIT)) {
+        return showError(getString('pr.descHasTooLongLine', { max: MAX_TEXT_LINE_SIZE_LIMIT }), 0)
+      }
+
+      if (description?.length > PULL_REQUEST_DESCRIPTION_SIZE_LIMIT) {
+        return showError(
+          getString('pr.descIsTooLong', { max: PULL_REQUEST_DESCRIPTION_SIZE_LIMIT, len: description?.length }),
+          0
+        )
       }
 
       const pullReqUrl = window.location.href.split('compare')?.[0]
@@ -180,8 +193,12 @@ export default function Compare() {
       setTitle(commits.commits[0].title as string)
     }
   }, [commits?.commits])
+
+  const domRef = useRef<HTMLDivElement>(null)
+  useSetPageContainerWidthVar({ domRef })
+
   return (
-    <Container className={css.main}>
+    <Container className={css.main} ref={domRef}>
       <RepositoryPageHeader
         repoMetadata={repoMetadata}
         title={getString('comparingChanges')}

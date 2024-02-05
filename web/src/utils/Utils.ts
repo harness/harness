@@ -620,3 +620,5 @@ export const getAllKeysWithPrefix = (obj: { [key: string]: string | boolean | ob
 export const CustomEventName = {
   SIDE_NAV_EXPANDED_EVENT: 'SIDE_NAV_EXPANDED_EVENT'
 } as const
+
+export const PAGE_CONTAINER_WIDTH = '--page-container-width'

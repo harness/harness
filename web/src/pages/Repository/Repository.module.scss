@@ -75,3 +75,11 @@
   border-bottom: unset !important;
   padding-bottom: unset !important;
 }
+
+.spinner {
+  top: calc(-107px + 50vh) !important;
+
+  .withBorder {
+    top: calc(-137px + 50vh) !important;
+  }
+}

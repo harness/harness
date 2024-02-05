@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-/* eslint-disable */
-// This is an auto-generated file
-export declare const addedLines: string
-export declare const chevron: string
-export declare const collapsed: string
-export declare const deletedLines: string
-export declare const diffContent: string
-export declare const diffHeader: string
-export declare const fileChanged: string
-export declare const fname: string
-export declare const fnamePopover: string
-export declare const main: string
-export declare const popover: string
-export declare const readOnly: string
-export declare const viewLabel: string
+//
+// This file contains global settings for the whole application. Do not store page or
+// component specific consts here.
+//
+
+export const PULL_REQUEST_DESCRIPTION_SIZE_LIMIT = 65_536
+
+// Browser has performance issue rendering text with long line. Use a max line size
+// to tell user to cut long line into multiple smaller ones.
+export const MAX_TEXT_LINE_SIZE_LIMIT = 5_000

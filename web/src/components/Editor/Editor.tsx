@@ -175,15 +175,16 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
       editorView.focus()
     }
     const messageElement = document.createElement('div')
+
     if (!inGitBlame) {
       // Create a new DOM element for the message
       messageElement.className = 'attachDiv'
       messageElement.textContent = uploading ? 'Uploading your files ...' : getString('attachText')
       editorView.dom.appendChild(messageElement)
     }
+
     return () => {
       messageElement.remove()
-
       editorView.destroy()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -206,6 +207,7 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
         })
     }
   }, [filename, forMarkdown, view, languageConfig, markdownLanguageSupport])
+
   useEffect(() => {
     if (filename) {
       let languageSupport

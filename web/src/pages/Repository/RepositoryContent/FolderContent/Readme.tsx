@@ -98,7 +98,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
     <Container
       className={cx(css.readmeContainer, { [css.contentOnly]: contentOnly })}
       background={Color.WHITE}
-      style={{ '--max-width': maxWidth } as React.CSSProperties}>
+      style={{ maxWidth }}>
       <Render when={!contentOnly}>
         <Layout.Horizontal padding="small" className={css.heading}>
           <Heading level={5}>{readmeInfo.name}</Heading>
@@ -125,7 +125,6 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
           />
         </Layout.Horizontal>
       </Render>
-
       <Render when={(data?.content as RepoFileContent)?.data}>
         <Container className={css.readmeContent}>
           <MarkdownViewer source={decodeGitContent((data?.content as RepoFileContent)?.data)} />

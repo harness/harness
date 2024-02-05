@@ -21,6 +21,8 @@ export declare const cloneCopyButton: string
 export declare const headerContainer: string
 export declare const layout: string
 export declare const main: string
+export declare const spinner: string
 export declare const text: string
 export declare const url: string
+export declare const withBorder: string
 export declare const withFileViewer: string

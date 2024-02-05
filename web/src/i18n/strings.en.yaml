@@ -303,6 +303,8 @@ pr:
   outdated: Outdated
   titleIsRequired: Pull Request title is required.
   descIsRequired: Pull Request description is required.
+  descIsTooLong: 'Description is too long ({{len}}/{{max}} characters).'
+  descHasTooLongLine: 'Some lines in the description exceed the maximum length of {{max}} characters, potentially causing performance issues. Consider dividing them into smaller segments.'
   draftOpenForReview:
     title: Ready for review
     desc: Open this pull request for review.

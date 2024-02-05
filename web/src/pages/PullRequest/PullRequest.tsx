@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo, useRef } from 'react'
 import { Container, Layout, PageBody, Tabs, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { Render } from 'react-jsx-match'
@@ -29,6 +29,7 @@ import type { TypesPullReq, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
 import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
 import { Checks } from './Checks/Checks'
@@ -79,8 +80,11 @@ export default function PullRequest() {
     [pullRequestSection]
   )
 
+  const domRef = useRef<HTMLDivElement>(null)
+  useSetPageContainerWidthVar({ domRef })
+
   return (
-    <Container className={css.main}>
+    <Container className={css.main} ref={domRef}>
       <RepositoryPageHeader
         repoMetadata={repoMetadata}
         title={

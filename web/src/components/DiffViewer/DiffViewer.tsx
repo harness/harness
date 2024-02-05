@@ -41,7 +41,6 @@ import type { TypesPullReq } from 'services/code'
 import { isInViewport } from 'utils/Utils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
-import { useIsSidebarExpanded } from 'hooks/useIsSidebarExpanded'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
 import { dispatchCustomEvent, useCustomEventListener } from 'hooks/useEventListener'
 import { useQueryParams } from 'hooks/useQueryParams'
@@ -101,7 +100,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   commitSHA,
   refetchActivities
 }) => {
-  const { standalone, routes } = useAppContext()
+  const { routes } = useAppContext()
   const { getString } = useStrings()
   const internalFlags = useRef({ isContentEmpty: true })
   const viewedPath = useMemo(
@@ -150,8 +149,6 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     [readOnly, commitRange?.length, diff.filePath, diff.checksumAfter, diff.fileViews]
   )
   const [collapsed, setCollapsed] = useState(viewed)
-  const isSidebarExpanded = useIsSidebarExpanded()
-
   const isBinary = useMemo(() => diff.isBinary, [diff.isBinary])
   const fileUnchanged = useMemo(() => diff.unchangedPercentage === 100, [diff.unchangedPercentage])
   const fileDeleted = useMemo(() => diff.isDeleted, [diff.isDeleted])
@@ -552,15 +549,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
           </Layout.Horizontal>
         </Container>
 
-        <Container
-          id={diff.contentId}
-          data-path={diff.filePath}
-          className={cx(css.diffContent, {
-            [css.standalone]: standalone,
-            [css.navV2]: !!document.querySelector('[data-code-nav-version="2"]'),
-            [css.sidebarCollapsed]: !isSidebarExpanded
-          })}
-          ref={contentRef}>
+        <Container id={diff.contentId} data-path={diff.filePath} className={css.diffContent} ref={contentRef}>
           <Render when={renderCustomContent && !collapsed}>
             <Container height={200} flex={{ align: 'center-center' }}>
               <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>

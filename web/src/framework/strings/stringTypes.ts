@@ -574,7 +574,9 @@ export interface StringsMap {
   'pr.checks': string
   'pr.checksFailure': string
   'pr.createDraftPR': string
+  'pr.descHasTooLongLine': string
   'pr.descIsRequired': string
+  'pr.descIsTooLong': string
   'pr.descriptionPlaceHolder': string
   'pr.diffStatsLabel': string
   'pr.diffStatus': string

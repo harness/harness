@@ -46,7 +46,14 @@ import {
   isRefATag,
   makeDiffRefs
 } from 'utils/GitUtils'
-import { filenameToLanguage, permissionProps, LIST_FETCHING_LIMIT, RenameDetails, FileSection } from 'utils/Utils'
+import {
+  filenameToLanguage,
+  permissionProps,
+  LIST_FETCHING_LIMIT,
+  RenameDetails,
+  FileSection,
+  PAGE_CONTAINER_WIDTH
+} from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
 import { useCommitModal } from 'components/CommitModalButton/CommitModalButton'
@@ -386,7 +393,7 @@ export function FileContent({
                                       metadata={repoMetadata}
                                       readmeInfo={markdownInfo as OpenapiContentInfo}
                                       contentOnly
-                                      maxWidth="calc(100vw - 346px)"
+                                      maxWidth={`calc(var(${PAGE_CONTAINER_WIDTH}) - 80px)`}
                                       gitRef={gitRef}
                                     />
                                   </Truthy>
