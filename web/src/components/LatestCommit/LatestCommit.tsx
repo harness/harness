@@ -48,7 +48,7 @@ export function LatestCommitForFolder({ repoMetadata, latestCommit, standaloneSt
       <Container>
         <Layout.Horizontal spacing="small" className={cx(css.latestCommit, { [css.standalone]: standaloneStyle })}>
           <Avatar hoverCard={false} size="small" name={latestCommit?.author?.identity?.name || ''} />
-          <Text font={{ variation: FontVariation.SMALL_BOLD }}>
+          <Text className={css.noWrap} font={{ variation: FontVariation.SMALL_BOLD }}>
             {latestCommit?.author?.identity?.name || latestCommit?.author?.identity?.email}
           </Text>
           <Link to={commitURL}>
@@ -85,7 +85,7 @@ export function LatestCommitForFile({ repoMetadata, latestCommit, standaloneStyl
           spacing="medium"
           className={cx(css.latestCommit, css.forFile, { [css.standalone]: standaloneStyle })}>
           <Avatar hoverCard={false} size="small" name={latestCommit?.author?.identity?.name || ''} />
-          <Text font={{ variation: FontVariation.SMALL_BOLD }}>
+          <Text font={{ variation: FontVariation.SMALL_BOLD }} className={css.noWrap}>
             {latestCommit?.author?.identity?.name || latestCommit?.author?.identity?.email}
           </Text>
           <PipeSeparator height={9} />
