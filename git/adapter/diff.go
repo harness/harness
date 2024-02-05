@@ -76,6 +76,8 @@ func modifyHeader(hunk types.HunkHeader, startLine, endLine int) []byte {
 // cutLinesFromFullFileDiff reads from r and writes to w headers and between
 // startLine and endLine. if startLine and endLine is equal to 0 then it uses io.Copy
 // warning: changes are possible and param endLine may not exist in the future
+//
+//nolint:gocognit
 func cutLinesFromFullFileDiff(w io.Writer, r io.Reader, startLine, endLine int) error {
 	if startLine < 0 {
 		startLine = 0
