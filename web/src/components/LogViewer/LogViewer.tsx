@@ -221,7 +221,7 @@ const LogTerminal: React.FC<LogViewerProps> = ({
         </Container>
       )
     }) // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [steps, selectedItemData, toggleExpandedState, expandedStates])
+  }, [steps, selectedItemData, toggleExpandedState, expandedStates, isBottom])
   return (
     <>
       {steps && (selectedItemData?.payload?.kind as EnumCheckPayloadKindExtended) === 'harness_stage' ? (
