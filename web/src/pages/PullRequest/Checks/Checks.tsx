@@ -106,15 +106,28 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, p
     if (queue.length !== 0) {
       processExecutionData(queue)
     } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queue, selectedStageId])
-
-  if (!prChecksDecisionResult) {
-    return null
-  }
-
+  }, [queue, selectedStageId, hookData])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const enqueue = (item: any) => {
     setQueue(prevQueue => [...prevQueue, item])
+  }
+  useEffect(() => {
+    const pollingInterval = 4000
+
+    const fetchAndProcessData = () => {
+      hookData?.refetch()
+      if (hookData && rootNodeId) {
+        enqueue(rootNodeId) // Use your existing enqueue logic here
+      }
+    }
+    // Set up the polling with setInterval
+    const intervalId = setInterval(fetchAndProcessData, pollingInterval)
+    // Clean up the interval on component unmount
+    return () => clearInterval(intervalId)
+  }, [hookData, enqueue, dispatch])
+
+  if (!prChecksDecisionResult) {
+    return null
   }
 
   const processExecutionData = (curQueue: string[]) => {

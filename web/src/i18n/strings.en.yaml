@@ -967,3 +967,10 @@ clear: Clear
 searchExamples: Search Examples
 nMoreMatches: This file contains {{ n }} more matches not shown.
 seeNMoreMatches: See all {{ n }} matches in the full file
+bottom: Bottom
+top: Top
+customTime: '{{days}} {{hours}} {{minutes}} {{seconds}}'
+customDay: '{{days}}d'
+customHour: '{{hours}}h'
+customMin: '{{minutes}}m'
+customSecond: '{{seconds}}s'

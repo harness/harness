@@ -38,6 +38,7 @@ export interface StringsMap {
   blameCommitLine: string
   blameEmpty: string
   botAlerts: string
+  bottom: string
   branch: string
   branchCreated: string
   branchDeleted: string
@@ -205,6 +206,11 @@ export interface StringsMap {
   createWebhook: string
   created: string
   creationDate: string
+  customDay: string
+  customHour: string
+  customMin: string
+  customSecond: string
+  customTime: string
   dangerDeleteRepo: string
   defaultBranch: string
   defaultBranchTitle: string
@@ -798,6 +804,7 @@ export interface StringsMap {
   title: string
   token: string
   tooltipRepoEdit: string
+  top: string
   'triggers.actions': string
   'triggers.createSuccess': string
   'triggers.createTrigger': string

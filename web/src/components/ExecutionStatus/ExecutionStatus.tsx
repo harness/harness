@@ -43,7 +43,8 @@ interface ExecutionStatusProps {
 
 export enum ExecutionStateExtended {
   FAILED = 'failed',
-  ABORTED = 'aborted'
+  ABORTED = 'aborted',
+  ASYNCWAITING = 'asyncwaiting'
 }
 
 export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
@@ -102,6 +103,11 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         icon: 'execution-stopped',
         css: null,
         title: getString('killed').toLocaleUpperCase()
+      },
+      [ExecutionStateExtended.ASYNCWAITING]: {
+        icon: 'running-filled',
+        css: css.running,
+        title: getString('running').toLocaleUpperCase()
       }
     }),
     [getString, inExecution, isCi]

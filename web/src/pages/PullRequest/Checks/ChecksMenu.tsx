@@ -21,6 +21,7 @@ import { get, sortBy } from 'lodash-es'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { Container, Layout, Text, FlexExpander, Utils } from '@harnessio/uicore'
+import ReactTimeago from 'react-timeago'
 import { Color, FontVariation } from '@harnessio/design-system'
 import {
   ButtonRoleProps,
@@ -30,6 +31,7 @@ import {
   timeDistance
 } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
+import { useStrings } from 'framework/strings'
 import { useQueryParams } from 'hooks/useQueryParams'
 import type { EnumCheckPayloadKind, TypesCheck, TypesStage } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
@@ -44,7 +46,7 @@ interface ChecksMenuProps extends ChecksProps {
 
 type TypesCheckPayloadExtended = EnumCheckPayloadKind | 'harness_stage'
 type ExpandedStates = { [key: string]: boolean }
-type ElapsedTimeStatusMap = { [key: string]: { status: 'string'; time: string } }
+type ElapsedTimeStatusMap = { [key: string]: { status: 'string'; time: string; started: string } }
 
 enum CheckKindPayload {
   HARNESS_STAGE = 'harness_stage'
@@ -56,6 +58,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
   onDataItemChanged,
   setSelectedStage: setSelectedStageFromProps
 }) => {
+  const { getString } = useStrings()
   const { routes, standalone } = useAppContext()
   const history = useHistory()
   const { uid } = useQueryParams<{ uid: string }>()
@@ -103,7 +106,9 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
     selectedStage
   ])
   const [expandedPipelineId, setExpandedPipelineId] = useState<string | null>(null)
-  const [statusTimeStates, setStatusTimeStates] = useState<{ [key: string]: { status: string; time: string } }>({})
+  const [statusTimeStates, setStatusTimeStates] = useState<{
+    [key: string]: { status: string; time: string; started: string }
+  }>({})
 
   const groupByPipeline = (data: TypesCheck[]) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -159,7 +164,11 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
         })
         const res = findStatus()
         const statusVal = res ? res.status : ''
-        initialMap[key] = { status: statusVal, time: timeDistance(startTime, endTime) }
+        initialMap[key] = {
+          status: statusVal,
+          time: timeDistance(startTime, endTime),
+          started: groupedData[key][0].started
+        }
       }
       if (uid) {
         if (uid.includes(key)) {
@@ -173,6 +182,24 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
     })
     setStatusTimeStates(initialMap)
   }, [groupedData, uid])
+
+  const customFormatter = (_value: number, _unit: string, _suffix: string, date: Date | string | number) => {
+    const now = new Date()
+    const then = new Date(date)
+    const secondsPast = (now.getTime() - then.getTime()) / 1000
+    const days = Math.round(secondsPast / 86400)
+    const remainder = secondsPast % 86400
+    const hours = Math.floor(remainder / 3600)
+    const minutes = Math.floor((remainder % 3600) / 60)
+    const seconds = Math.floor(remainder % 60)
+
+    return getString('customTime', {
+      days: days ? getString('customDay', { days }) : '',
+      hours: hours ? getString('customHour', { hours }) : '',
+      minutes: minutes ? getString('customMin', { minutes }) : '',
+      seconds: seconds ? getString('customSecond', { seconds }) : ''
+    })
+  }
   return (
     <Layout.Vertical padding={{ top: 'large' }} spacing={'small'} className={cx(css.menu, css.leftPaneContent)}>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -209,7 +236,14 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
                   padding={{ right: 'small' }}
                   font={{ variation: FontVariation.SMALL }}
                   className={css.noShrink}>
-                  {statusTimeStates[pipelineId]?.time}
+                  {statusTimeStates[pipelineId]?.status === 'running' ? (
+                    <ReactTimeago
+                      date={new Date(statusTimeStates[pipelineId]?.started || 0)}
+                      formatter={customFormatter}
+                    />
+                  ) : (
+                    statusTimeStates[pipelineId]?.time
+                  )}
                 </Text>
               </Render>
               <NavArrowRight
@@ -227,6 +261,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
                 prChecksDecisionResult={prChecksDecisionResult}
                 key={itemData.uid}
                 itemData={itemData}
+                customFormatter={customFormatter}
                 isPipeline={itemData.payload?.kind === PullRequestCheckType.PIPELINE}
                 isSelected={itemData.uid === selectedUID}
                 onClick={stage => {
@@ -261,6 +296,7 @@ interface CheckMenuItemProps extends ChecksProps {
   itemData: TypesCheck
   onClick: (stage?: TypesStage) => void
   setSelectedStage: (stage: TypesStage | null) => void
+  customFormatter: (_value: number, _unit: string, _suffix: string, date: Date | string | number) => string
 }
 
 const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
@@ -270,7 +306,8 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
   onClick,
   repoMetadata,
   pullReqMetadata,
-  setSelectedStage
+  setSelectedStage,
+  customFormatter
 }) => {
   const [expanded, setExpanded] = useState(isSelected)
 
@@ -317,7 +354,11 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
         <FlexExpander />
 
         <Text color={Color.GREY_300} font={{ variation: FontVariation.SMALL }} className={css.noShrink}>
-          {timeDistance(itemData.updated, itemData.created)}
+          {itemData?.ended && itemData?.started ? (
+            timeDistance(itemData.updated, itemData.created)
+          ) : (
+            <ReactTimeago date={new Date(itemData?.started || 0)} formatter={customFormatter} />
+          )}
         </Text>
 
         <Render when={isPipeline}>

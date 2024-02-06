@@ -132,3 +132,77 @@
 .noShrink {
   flex-shrink: inherit;
 }
+
+.content {
+  background-color: var(--black);
+  overflow: auto;
+
+  &.markdown {
+    :global {
+      .wmde-markdown {
+        background-color: transparent !important;
+      }
+    }
+
+    padding: 0 var(--spacing-large) var(--spacing-medium);
+  }
+
+  &.terminal {
+    .header {
+      padding: var(--spacing-medium) var(--spacing-large) 0;
+    }
+
+    span[data-icon='execution-success'] svg {
+      circle {
+        color: transparent !important;
+      }
+    }
+  }
+
+  .header {
+    padding-top: var(--spacing-medium);
+    position: sticky;
+    top: 0;
+    background-color: var(--black);
+    height: var(--log-content-header-height);
+    z-index: 3;
+
+    .headerLayout {
+      border-bottom: 1px solid var(--grey-800);
+      padding-bottom: var(--spacing-medium);
+      align-items: center;
+    }
+  }
+
+  .markdownContainer {
+    padding-top: var(--spacing-medium);
+    padding-left: var(--spacing-small);
+  }
+
+  .logViewer {
+    padding: var(--spacing-medium) var(--spacing-medium) var(--spacing-medium) var(--spacing-xxlarge);
+  }
+}
+
+.scrollDownBtn {
+  position: absolute;
+  padding: 8px !important;
+  bottom: 7px;
+  right: 30px;
+
+  & > :global(.bp3-icon) {
+    padding: 0 !important;
+  }
+
+  & > :global(.bp3-button-text) {
+    width: 0;
+    padding-left: 0;
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  &:hover > :global(.bp3-button-text) {
+    width: auto;
+    padding-left: 4px;
+  }
+}

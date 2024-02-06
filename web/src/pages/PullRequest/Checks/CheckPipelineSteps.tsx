@@ -237,7 +237,7 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
   )
 }
 
-const createLogLineElement = (line = '') => {
+export const createLogLineElement = (line = '') => {
   const element = document.createElement('pre') as HTMLPreElement & {
     setHTML: (html: string, options: Record<string, unknown>) => void
   }
