@@ -75,8 +75,9 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.SourceSHA,
-					Commit: &commitInfo,
+					SHA:        event.Payload.SourceSHA,
+					Commit:     &commitInfo,
+					HeadCommit: &commitInfo,
 				},
 			}, nil
 		})
@@ -122,8 +123,9 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.SourceSHA,
-					Commit: &commitInfo,
+					SHA:        event.Payload.SourceSHA,
+					Commit:     &commitInfo,
+					HeadCommit: &commitInfo,
 				},
 			}, nil
 		})
@@ -147,10 +149,13 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqBranchUpdated,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.NewSHA)
+			commitsInfo, totalCommits, err := s.fetchCommitsInfoForEvent(ctx, sourceRepo.GitUID,
+				event.Payload.OldSHA, event.Payload.NewSHA)
 			if err != nil {
 				return nil, err
 			}
+
+			commitInfo := commitsInfo[0]
 			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
 			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
 
@@ -176,8 +181,11 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.NewSHA,
-					Commit: &commitInfo,
+					SHA:               event.Payload.NewSHA,
+					Commit:            &commitInfo,
+					HeadCommit:        &commitInfo,
+					Commits:           &commitsInfo,
+					TotalCommitsCount: totalCommits,
 				},
 				ReferenceUpdateSegment: ReferenceUpdateSegment{
 					OldSHA: event.Payload.OldSHA,
@@ -230,8 +238,9 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.SourceSHA,
-					Commit: &commitInfo,
+					SHA:        event.Payload.SourceSHA,
+					Commit:     &commitInfo,
+					HeadCommit: &commitInfo,
 				},
 			}, nil
 		})
@@ -280,8 +289,9 @@ func (s *Service) handleEventPullReqMerged(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.SourceSHA,
-					Commit: &commitInfo,
+					SHA:        event.Payload.SourceSHA,
+					Commit:     &commitInfo,
+					HeadCommit: &commitInfo,
 				},
 			}, nil
 		})
@@ -336,8 +346,9 @@ func (s *Service) handleEventPullReqComment(
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.SourceSHA,
-					Commit: &commitInfo,
+					SHA:        event.Payload.SourceSHA,
+					Commit:     &commitInfo,
+					HeadCommit: &commitInfo,
 				},
 				PullReqCommentSegment: PullReqCommentSegment{
 					CommentInfo: CommentInfo{

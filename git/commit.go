@@ -30,11 +30,12 @@ type GetCommitParams struct {
 }
 
 type Commit struct {
-	SHA       string    `json:"sha"`
-	Title     string    `json:"title"`
-	Message   string    `json:"message,omitempty"`
-	Author    Signature `json:"author"`
-	Committer Signature `json:"committer"`
+	SHA       string          `json:"sha"`
+	Title     string          `json:"title"`
+	Message   string          `json:"message,omitempty"`
+	Author    Signature       `json:"author"`
+	Committer Signature       `json:"committer"`
+	FileStats CommitFileStats `json:"file_stats,omitempty"`
 }
 
 type GetCommitOutput struct {
@@ -105,6 +106,9 @@ type ListCommitsParams struct {
 
 	// Committer allows to filter for commits based on the committer - Optional, ignored if string is empty.
 	Committer string
+
+	// IncludeFileStats allows you to include information about files changed, added and modified.
+	IncludeFileStats bool
 }
 
 type RenameDetails struct {
@@ -120,6 +124,12 @@ type ListCommitsOutput struct {
 	TotalCommits  int
 }
 
+type CommitFileStats struct {
+	Added    []string
+	Modified []string
+	Removed  []string
+}
+
 func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error) {
 	if params == nil {
 		return nil, ErrNoParamsProvided
@@ -133,6 +143,7 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 		params.GitREF,
 		int(params.Page),
 		int(params.Limit),
+		params.IncludeFileStats,
 		types.CommitFilter{
 			AfterRef:  params.After,
 			Path:      params.Path,

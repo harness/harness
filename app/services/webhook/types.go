@@ -42,9 +42,16 @@ type ReferenceSegment struct {
 	Ref ReferenceInfo `json:"ref"`
 }
 
-// ReferenceDetailsSegment contains extra defails for reference related payloads for webhooks.
+// ReferenceDetailsSegment contains extra details for reference related payloads for webhooks.
 type ReferenceDetailsSegment struct {
-	SHA    string      `json:"sha"`
+	SHA string `json:"sha"`
+
+	HeadCommit *CommitInfo `json:"head_commit,omitempty"`
+
+	Commits           *[]CommitInfo `json:"commits,omitempty"`
+	TotalCommitsCount int           `json:"total_commits_count,omitempty"`
+
+	// Deprecated
 	Commit *CommitInfo `json:"commit,omitempty"`
 }
 
@@ -168,6 +175,10 @@ type CommitInfo struct {
 	Message   string        `json:"message"`
 	Author    SignatureInfo `json:"author"`
 	Committer SignatureInfo `json:"committer"`
+
+	Added    []string `json:"added"`
+	Removed  []string `json:"removed"`
+	Modified []string `json:"modified"`
 }
 
 // commitInfoFrom gets the CommitInfo from a git.Commit.
@@ -177,7 +188,19 @@ func commitInfoFrom(commit git.Commit) CommitInfo {
 		Message:   commit.Message,
 		Author:    signatureInfoFrom(commit.Author),
 		Committer: signatureInfoFrom(commit.Committer),
+		Added:     commit.FileStats.Added,
+		Removed:   commit.FileStats.Removed,
+		Modified:  commit.FileStats.Modified,
 	}
+}
+
+// commitsInfoFrom gets the ExtendedCommitInfo from a []git.Commit.
+func commitsInfoFrom(commits []git.Commit) []CommitInfo {
+	commitsInfo := make([]CommitInfo, len(commits))
+	for i, commit := range commits {
+		commitsInfo[i] = commitInfoFrom(commit)
+	}
+	return commitsInfo
 }
 
 // SignatureInfo describes the commit signature related info for a webhook payload.

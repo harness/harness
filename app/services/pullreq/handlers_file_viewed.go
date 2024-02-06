@@ -23,6 +23,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/enum"
 )
 
 // handleFileViewedOnBranchUpdate handles pull request Branch Updated events.
@@ -63,15 +64,16 @@ func (s *Service) handleFileViewedOnBranchUpdate(ctx context.Context,
 		// UPDATED: mark as obsolete - in case pr is closed file SHA is handling it
 		// This strategy leads to a behavior very similar to what github is doing
 		switch fileDiff.Status {
-		case git.FileDiffStatusAdded:
+		case enum.FileDiffStatusAdded:
 			obsoletePaths = append(obsoletePaths, fileDiff.Path)
-		case git.FileDiffStatusDeleted:
+		case enum.FileDiffStatusDeleted:
 			obsoletePaths = append(obsoletePaths, fileDiff.OldPath)
-		case git.FileDiffStatusRenamed:
+		case enum.FileDiffStatusRenamed:
 			obsoletePaths = append(obsoletePaths, fileDiff.OldPath, fileDiff.Path)
-		case git.FileDiffStatusModified:
+		case enum.FileDiffStatusModified:
 			obsoletePaths = append(obsoletePaths, fileDiff.Path)
-		case git.FileDiffStatusUndefined:
+		case enum.FileDiffStatusCopied:
+		case enum.FileDiffStatusUndefined:
 			// other cases we don't care
 		}
 	}

@@ -24,6 +24,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/diff"
+	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/types"
 
 	"golang.org/x/sync/errgroup"
@@ -296,44 +297,31 @@ func (s *Service) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOu
 }
 
 type FileDiff struct {
-	SHA         string         `json:"sha"`
-	OldSHA      string         `json:"old_sha,omitempty"`
-	Path        string         `json:"path"`
-	OldPath     string         `json:"old_path,omitempty"`
-	Status      FileDiffStatus `json:"status"`
-	Additions   int64          `json:"additions"`
-	Deletions   int64          `json:"deletions"`
-	Changes     int64          `json:"changes"`
-	Patch       []byte         `json:"patch,omitempty"`
-	IsBinary    bool           `json:"is_binary"`
-	IsSubmodule bool           `json:"is_submodule"`
+	SHA         string              `json:"sha"`
+	OldSHA      string              `json:"old_sha,omitempty"`
+	Path        string              `json:"path"`
+	OldPath     string              `json:"old_path,omitempty"`
+	Status      enum.FileDiffStatus `json:"status"`
+	Additions   int64               `json:"additions"`
+	Deletions   int64               `json:"deletions"`
+	Changes     int64               `json:"changes"`
+	Patch       []byte              `json:"patch,omitempty"`
+	IsBinary    bool                `json:"is_binary"`
+	IsSubmodule bool                `json:"is_submodule"`
 }
 
-type FileDiffStatus string
-
-const (
-	// NOTE: keeping values upper case for now to stay consistent with current API.
-	// TODO: change drone/go-scm (and potentially new dependencies) to case insensitive.
-
-	FileDiffStatusUndefined FileDiffStatus = "UNDEFINED"
-	FileDiffStatusAdded     FileDiffStatus = "ADDED"
-	FileDiffStatusModified  FileDiffStatus = "MODIFIED"
-	FileDiffStatusDeleted   FileDiffStatus = "DELETED"
-	FileDiffStatusRenamed   FileDiffStatus = "RENAMED"
-)
-
-func parseFileDiffStatus(ftype diff.FileType) FileDiffStatus {
+func parseFileDiffStatus(ftype diff.FileType) enum.FileDiffStatus {
 	switch ftype {
 	case diff.FileAdd:
-		return FileDiffStatusAdded
+		return enum.FileDiffStatusAdded
 	case diff.FileDelete:
-		return FileDiffStatusDeleted
+		return enum.FileDiffStatusDeleted
 	case diff.FileChange:
-		return FileDiffStatusModified
+		return enum.FileDiffStatusModified
 	case diff.FileRename:
-		return FileDiffStatusRenamed
+		return enum.FileDiffStatusRenamed
 	default:
-		return FileDiffStatusUndefined
+		return enum.FileDiffStatusUndefined
 	}
 }
 

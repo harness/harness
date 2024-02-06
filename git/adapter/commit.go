@@ -24,9 +24,11 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
+	"github.com/rs/zerolog/log"
 )
 
 // GetLatestCommit gets the latest commit of a path relative from the provided revision.
@@ -135,11 +137,13 @@ func (a Adapter) ListCommitSHAs(
 // ListCommits lists the commits reachable from ref.
 // Note: ref & afterRef can be Branch / Tag / CommitSHA.
 // Note: commits returned are [ref->...->afterRef).
-func (a Adapter) ListCommits(ctx context.Context,
+func (a Adapter) ListCommits(
+	ctx context.Context,
 	repoPath string,
 	ref string,
 	page int,
 	limit int,
+	includeFileStats bool,
 	filter types.CommitFilter,
 ) ([]types.Commit, []types.PathRenameDetails, error) {
 	if repoPath == "" {
@@ -169,10 +173,17 @@ func (a Adapter) ListCommits(ctx context.Context,
 			return nil, nil, err
 		}
 		commits[i] = *commit
+
+		if includeFileStats {
+			err = includeFileStatsInCommits(ctx, giteaRepo, commits)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
 	}
 
 	if len(filter.Path) != 0 {
-		renameDetailsList, err := getRenameDetails(giteaRepo, commits, filter.Path)
+		renameDetailsList, err := getRenameDetails(ctx, giteaRepo, commits, filter.Path)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -181,6 +192,52 @@ func (a Adapter) ListCommits(ctx context.Context,
 	}
 
 	return commits, nil, nil
+}
+
+func includeFileStatsInCommits(
+	ctx context.Context,
+	giteaRepo *gitea.Repository,
+	commits []types.Commit,
+) error {
+	for i, commit := range commits {
+		fileStats, err := getFileStats(ctx, giteaRepo, commit.SHA)
+		if err != nil {
+			return fmt.Errorf("failed to get file stat: %w", err)
+		}
+		commits[i].FileStats = fileStats
+	}
+	return nil
+}
+
+func getFileStats(
+	ctx context.Context,
+	giteaRepo *gitea.Repository,
+	sha string,
+) (types.CommitFileStats, error) {
+	changeInfos, err := getChangeInfos(ctx, giteaRepo, sha)
+	if err != nil {
+		return types.CommitFileStats{}, fmt.Errorf("failed to get change infos: %w", err)
+	}
+	fileStats := types.CommitFileStats{
+		Added:    make([]string, 0),
+		Removed:  make([]string, 0),
+		Modified: make([]string, 0),
+	}
+	for _, c := range changeInfos {
+		switch {
+		case c.ChangeType == enum.FileDiffStatusModified || c.ChangeType == enum.FileDiffStatusRenamed:
+			fileStats.Modified = append(fileStats.Modified, c.Path)
+		case c.ChangeType == enum.FileDiffStatusDeleted:
+			fileStats.Removed = append(fileStats.Removed, c.Path)
+		case c.ChangeType == enum.FileDiffStatusAdded || c.ChangeType == enum.FileDiffStatusCopied:
+			fileStats.Added = append(fileStats.Added, c.Path)
+		case c.ChangeType == enum.FileDiffStatusUndefined:
+		default:
+			log.Ctx(ctx).Warn().Msgf("unknown change type %q for path %q",
+				c.ChangeType, c.Path)
+		}
+	}
+	return fileStats, nil
 }
 
 // In case of rename of a file, same commit will be listed twice - Once in old file and second time in new file.
@@ -203,6 +260,7 @@ func cleanupCommitsForRename(
 }
 
 func getRenameDetails(
+	ctx context.Context,
 	giteaRepo *gitea.Repository,
 	commits []types.Commit,
 	path string,
@@ -213,7 +271,7 @@ func getRenameDetails(
 
 	renameDetailsList := make([]types.PathRenameDetails, 0, 2)
 
-	renameDetails, err := giteaGetRenameDetails(giteaRepo, commits[0].SHA, path)
+	renameDetails, err := giteaGetRenameDetails(ctx, giteaRepo, commits[0].SHA, path)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +284,7 @@ func getRenameDetails(
 		return renameDetailsList, nil
 	}
 
-	renameDetailsLast, err := giteaGetRenameDetails(giteaRepo, commits[len(commits)-1].SHA, path)
+	renameDetailsLast, err := giteaGetRenameDetails(ctx, giteaRepo, commits[len(commits)-1].SHA, path)
 	if err != nil {
 		return nil, err
 	}
@@ -239,10 +297,33 @@ func getRenameDetails(
 }
 
 func giteaGetRenameDetails(
+	ctx context.Context,
 	giteaRepo *gitea.Repository,
 	ref string,
 	path string,
 ) (*types.PathRenameDetails, error) {
+	changeInfos, err := getChangeInfos(ctx, giteaRepo, ref)
+	if err != nil {
+		return &types.PathRenameDetails{}, fmt.Errorf("failed to get change infos %w", err)
+	}
+
+	for _, c := range changeInfos {
+		if c.ChangeType == enum.FileDiffStatusRenamed && (c.Path == path || c.NewPath == path) {
+			return &types.PathRenameDetails{
+				OldPath: c.Path,
+				NewPath: c.NewPath,
+			}, nil
+		}
+	}
+
+	return &types.PathRenameDetails{}, nil
+}
+
+func getChangeInfos(
+	ctx context.Context,
+	giteaRepo *gitea.Repository,
+	ref string,
+) ([]changeInfo, error) {
 	cmd := command.New("log",
 		command.WithArg(ref),
 		command.WithFlag("--name-status"),
@@ -253,38 +334,60 @@ func giteaGetRenameDetails(
 	if err != nil {
 		return nil, fmt.Errorf("failed to trigger log command: %w", err)
 	}
-
 	lines := parseLinesToSlice(output.Bytes())
 
-	changeType, oldPath, newPath, err := getFileChangeTypeFromLog(lines, path)
+	changeInfos, err := getFileChangeTypeFromLog(ctx, lines)
 	if err != nil {
 		return nil, err
 	}
+	return changeInfos, nil
+}
 
-	if strings.HasPrefix(*changeType, "R") {
-		return &types.PathRenameDetails{
-			OldPath: *oldPath,
-			NewPath: *newPath,
-		}, nil
-	}
-
-	return &types.PathRenameDetails{}, nil
+type changeInfo struct {
+	ChangeType enum.FileDiffStatus
+	Path       string
+	// populated only in case of renames
+	NewPath string
 }
 
 func getFileChangeTypeFromLog(
+	ctx context.Context,
 	changeStrings []string,
-	filePath string,
-) (*string, *string, *string, error) {
-	for _, changeString := range changeStrings {
-		if strings.Contains(changeString, filePath) {
-			changeInfo := strings.Split(changeString, "\t")
-			if len(changeInfo) != 3 {
-				return &changeInfo[0], nil, nil, nil
-			}
-			return &changeInfo[0], &changeInfo[1], &changeInfo[2], nil
+) ([]changeInfo, error) {
+	changeInfos := make([]changeInfo, len(changeStrings))
+	for i, changeString := range changeStrings {
+		changeStringSplit := strings.Split(changeString, "\t")
+		if len(changeStringSplit) < 1 {
+			return changeInfos, fmt.Errorf("could not parse changeString %q", changeString)
 		}
+
+		c := changeInfo{}
+		c.ChangeType = convertChangeType(ctx, changeStringSplit[0])
+		c.Path = changeStringSplit[1]
+		if len(changeStringSplit) == 3 {
+			c.NewPath = changeStringSplit[2]
+		}
+		changeInfos[i] = c
 	}
-	return nil, nil, nil, fmt.Errorf("could not parse change for the file '%s'", filePath)
+	return changeInfos, nil
+}
+
+func convertChangeType(ctx context.Context, c string) enum.FileDiffStatus {
+	switch {
+	case strings.HasPrefix(c, "A"):
+		return enum.FileDiffStatusAdded
+	case strings.HasPrefix(c, "C"):
+		return enum.FileDiffStatusCopied
+	case strings.HasPrefix(c, "D"):
+		return enum.FileDiffStatusDeleted
+	case strings.HasPrefix(c, "M"):
+		return enum.FileDiffStatusModified
+	case strings.HasPrefix(c, "R"):
+		return enum.FileDiffStatusRenamed
+	default:
+		log.Ctx(ctx).Warn().Msgf("encountered unknown change type %s", c)
+		return enum.FileDiffStatusUndefined
+	}
 }
 
 // GetCommit returns the (latest) commit for a specific revision.

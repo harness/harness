@@ -49,8 +49,9 @@ func (s *Service) handleEventTagCreated(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.SHA,
-					Commit: &commitInfo,
+					SHA:        event.Payload.SHA,
+					Commit:     &commitInfo,
+					HeadCommit: &commitInfo,
 				},
 				ReferenceUpdateSegment: ReferenceUpdateSegment{
 					OldSHA: types.NilSHA,
@@ -67,9 +68,15 @@ func (s *Service) handleEventTagUpdated(ctx context.Context,
 	return s.triggerForEventWithRepo(ctx, enum.WebhookTriggerTagUpdated,
 		event.ID, event.Payload.PrincipalID, event.Payload.RepoID,
 		func(principal *types.Principal, repo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, repo.GitUID, event.Payload.NewSHA)
+			commitsInfo, totalCommits, err := s.fetchCommitsInfoForEvent(ctx, repo.GitUID,
+				event.Payload.OldSHA, event.Payload.NewSHA)
 			if err != nil {
 				return nil, err
+			}
+
+			commitInfo := CommitInfo{}
+			if len(commitsInfo) > 0 {
+				commitInfo = commitsInfo[0]
 			}
 			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
 
@@ -86,8 +93,11 @@ func (s *Service) handleEventTagUpdated(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.NewSHA,
-					Commit: &commitInfo,
+					SHA:               event.Payload.NewSHA,
+					Commit:            &commitInfo,
+					HeadCommit:        &commitInfo,
+					Commits:           &commitsInfo,
+					TotalCommitsCount: totalCommits,
 				},
 				ReferenceUpdateSegment: ReferenceUpdateSegment{
 					OldSHA: event.Payload.OldSHA,

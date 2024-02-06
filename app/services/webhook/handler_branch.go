@@ -26,6 +26,8 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+const MaxWebhookCommitFileStats = 20
+
 // ReferencePayload describes the payload of Reference related webhook triggers.
 // Note: Use same payload for all reference operations to make it easier for consumers.
 type ReferencePayload struct {
@@ -61,8 +63,9 @@ func (s *Service) handleEventBranchCreated(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.SHA,
-					Commit: &commitInfo,
+					SHA:        event.Payload.SHA,
+					Commit:     &commitInfo,
+					HeadCommit: &commitInfo,
 				},
 				ReferenceUpdateSegment: ReferenceUpdateSegment{
 					OldSHA: types.NilSHA,
@@ -79,10 +82,13 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 	return s.triggerForEventWithRepo(ctx, enum.WebhookTriggerBranchUpdated,
 		event.ID, event.Payload.PrincipalID, event.Payload.RepoID,
 		func(principal *types.Principal, repo *types.Repository) (any, error) {
-			commitInfo, err := s.fetchCommitInfoForEvent(ctx, repo.GitUID, event.Payload.NewSHA)
+			commitsInfo, totalCommits, err := s.fetchCommitsInfoForEvent(ctx, repo.GitUID,
+				event.Payload.OldSHA, event.Payload.NewSHA)
 			if err != nil {
 				return nil, err
 			}
+
+			commitInfo := commitsInfo[0]
 			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
 
 			return &ReferencePayload{
@@ -98,8 +104,11 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
-					SHA:    event.Payload.NewSHA,
-					Commit: &commitInfo,
+					SHA:               event.Payload.NewSHA,
+					Commit:            &commitInfo,
+					HeadCommit:        &commitInfo,
+					Commits:           &commitsInfo,
+					TotalCommitsCount: totalCommits,
 				},
 				ReferenceUpdateSegment: ReferenceUpdateSegment{
 					OldSHA: event.Payload.OldSHA,
@@ -152,13 +161,46 @@ func (s *Service) fetchCommitInfoForEvent(ctx context.Context, repoUID string, s
 
 	if errors.AsStatus(err) == errors.StatusNotFound {
 		// this could happen if the commit has been deleted and garbage collected by now
-		// or if the sha doesn't point to an event - either way discard the event.
-		return CommitInfo{}, events.NewDiscardEventErrorf("commit with sha '%s' doesn't exist", sha)
+		// or if the targetSha doesn't point to an event - either way discard the event.
+		return CommitInfo{}, events.NewDiscardEventErrorf("commit with targetSha '%s' doesn't exist", sha)
 	}
 
 	if err != nil {
-		return CommitInfo{}, fmt.Errorf("failed to get commit with sha '%s': %w", sha, err)
+		return CommitInfo{}, fmt.Errorf("failed to get commit with targetSha '%s': %w", sha, err)
 	}
 
 	return commitInfoFrom(out.Commit), nil
+}
+
+func (s *Service) fetchCommitsInfoForEvent(
+	ctx context.Context,
+	repoUID string,
+	oldSHA string,
+	newSHA string,
+) ([]CommitInfo, int, error) {
+	listCommitsParams := git.ListCommitsParams{
+		ReadParams:       git.ReadParams{RepoUID: repoUID},
+		GitREF:           newSHA,
+		After:            oldSHA,
+		Page:             0,
+		Limit:            MaxWebhookCommitFileStats,
+		IncludeFileStats: true,
+	}
+	listCommitsOutput, err := s.git.ListCommits(ctx, &listCommitsParams)
+
+	if errors.AsStatus(err) == errors.StatusNotFound {
+		// this could happen if the commit has been deleted and garbage collected by now
+		// or if the targetSha doesn't point to an event - either way discard the event.
+		return []CommitInfo{}, 0, events.NewDiscardEventErrorf("commit with targetSha '%s' doesn't exist", newSHA)
+	}
+
+	if err != nil {
+		return []CommitInfo{}, 0, fmt.Errorf("failed to get commit with targetSha '%s': %w", newSHA, err)
+	}
+
+	if len(listCommitsOutput.Commits) == 0 {
+		return nil, 0, fmt.Errorf("no commit found between %s and %s", oldSHA, newSHA)
+	}
+
+	return commitsInfoFrom(listCommitsOutput.Commits), listCommitsOutput.TotalCommits, nil
 }

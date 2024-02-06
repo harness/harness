@@ -141,11 +141,18 @@ type WalkReferencesOptions struct {
 }
 
 type Commit struct {
-	SHA       string    `json:"sha"`
-	Title     string    `json:"title"`
-	Message   string    `json:"message,omitempty"`
-	Author    Signature `json:"author"`
-	Committer Signature `json:"committer"`
+	SHA       string          `json:"sha"`
+	Title     string          `json:"title"`
+	Message   string          `json:"message,omitempty"`
+	Author    Signature       `json:"author"`
+	Committer Signature       `json:"committer"`
+	FileStats CommitFileStats `json:"file_stats,omitempty"`
+}
+
+type CommitFileStats struct {
+	Added    []string
+	Modified []string
+	Removed  []string
 }
 
 type Branch struct {

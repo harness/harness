@@ -55,8 +55,14 @@ type Adapter interface {
 		opts *types.WalkReferencesOptions) error
 	GetCommit(ctx context.Context, repoPath string, ref string) (*types.Commit, error)
 	GetCommits(ctx context.Context, repoPath string, refs []string) ([]types.Commit, error)
-	ListCommits(ctx context.Context, repoPath string,
-		ref string, page int, limit int, filter types.CommitFilter) ([]types.Commit, []types.PathRenameDetails, error)
+	ListCommits(
+		ctx context.Context,
+		repoPath string,
+		ref string,
+		page int,
+		limit int,
+		includeFileStats bool,
+		filter types.CommitFilter) ([]types.Commit, []types.PathRenameDetails, error)
 	ListCommitSHAs(ctx context.Context, repoPath string,
 		ref string, page int, limit int, filter types.CommitFilter) ([]string, error)
 	GetLatestCommit(ctx context.Context, repoPath string, ref string, treePath string) (*types.Commit, error)
