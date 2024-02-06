@@ -31,6 +31,7 @@
   &.error {
     background-color: var(--red-50) !important;
   }
+
   &.ruleViolation {
     background-color: var(--red-50) !important;
   }
@@ -135,11 +136,19 @@
 }
 
 .btnWrapper {
+  &.hasRuleViolated.bypass button {
+    --background-color: var(--red-500) !important;
+    --background-color-hover: var(--red-600) !important;
+    --background-color-active: var(--red-800) !important;
+    --text-color: var(--white) !important;
+  }
+
   &.hasRuleViolated button {
     --background-color: var(--grey-50) !important;
     --background-color-hover: var(--white) !important;
     --background-color-active: var(--grey-100) !important;
   }
+
   &.hasRuleViolated a {
     --background-color: var(--grey-50) !important;
     --background-color-hover: var(--white) !important;
@@ -150,6 +159,7 @@
     pointer-events: none;
     opacity: 0.5;
   }
+
   &.hasError button {
     --background-color: var(--grey-50) !important;
     --background-color-hover: var(--white) !important;

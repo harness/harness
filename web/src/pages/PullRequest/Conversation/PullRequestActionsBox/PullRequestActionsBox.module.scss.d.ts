@@ -18,6 +18,7 @@
 // This is an auto-generated file
 export declare const btn: string
 export declare const btnWrapper: string
+export declare const bypass: string
 export declare const checkbox: string
 export declare const closed: string
 export declare const disabled: string

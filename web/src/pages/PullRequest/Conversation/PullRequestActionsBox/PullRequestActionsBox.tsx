@@ -105,7 +105,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     [pullReqMetadata, isClosed]
   )
   // Flags to optimize rendering
-  const internalFlags = useRef({ mergeCheckPollingCount: 0 })
+  const internalFlags = useRef({ dryRun: false })
 
   useEffect(() => {
     if (ruleViolationArr && !isDraft && ruleViolationArr.data.rule_violations) {
@@ -121,7 +121,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   const dryMerge = () => {
     if (!isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
       // Use an internal flag to prevent flickering during the loading state of buttons
-      internalFlags.current.mergeCheckPollingCount++
+      internalFlags.current.dryRun = true
 
       mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
         .then(res => {
@@ -159,6 +159,9 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
           } else {
             showError(getErrorMessage(err))
           }
+        })
+        .finally(() => {
+          internalFlags.current.dryRun = false
         })
     }
   }
@@ -345,7 +348,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
               <Truthy>
                 <SplitButton
                   text={draftOption.title}
-                  disabled={loading && internalFlags.current.mergeCheckPollingCount === 1}
+                  disabled={loading && !internalFlags.current.dryRun}
                   className={css.secondaryButton}
                   variation={ButtonVariation.TERTIARY}
                   popoverProps={{
@@ -428,12 +431,13 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           className={cx({
                             [css.btnWrapper]: mergeOption.method !== 'close',
                             [css.hasError]: mergeable === false,
-                            [css.hasRuleViolated]: ruleViolation
+                            [css.hasRuleViolated]: ruleViolation,
+                            [css.bypass]: bypass
                           })}>
                           <SplitButton
                             text={mergeOption.title}
                             disabled={
-                              (loading && internalFlags.current.mergeCheckPollingCount === 1) ||
+                              (loading && !internalFlags.current.dryRun) ||
                               (unchecked && mergeOption.method !== 'close') ||
                               (isConflict && mergeOption.method !== 'close') ||
                               (ruleViolation && !bypass && mergeOption.method !== 'close')

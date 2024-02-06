@@ -350,7 +350,7 @@ export const Conversation: React.FC<ConversationProps> = ({
             refetchReviewers={refetchReviewers}
           />
           <Container>
-            <Layout.Horizontal>
+            <Layout.Horizontal width="calc(var(--page-container-width) - 48px)">
               <Container width={`70%`}>
                 <Layout.Vertical spacing="xlarge">
                   {prChecksDecisionResult && (
