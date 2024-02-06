@@ -133,8 +133,8 @@ const CommitRangeDropdown: React.FC<CommitRangeDropdownProps> = ({
                     {`${allCommits.length - index} ${prCommit.title}`}
                   </Text>
                   <FlexExpander />
-                  <Text font={{ variation: FontVariation.SMALL_SEMI }} style={{ whiteSpace: 'nowrap' }}>
-                    <ReactTimeago date={prCommit.committer?.when || ''} />
+                  <Text font={{ variation: FontVariation.SMALL_SEMI }}>
+                    <ReactTimeago style={{ whiteSpace: 'nowrap' }} date={prCommit.committer?.when || ''} />
                   </Text>
                 </Layout.Horizontal>
               )

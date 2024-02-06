@@ -41,7 +41,7 @@ export function DateTimeWithLocalContentInline({ time }: { time: number }): JSX.
         <Text color={Color.GREY_600} className={css.time}>
           {moment(time).format(DATE_PARSE_FORMAT)}
         </Text>
-        <Text color={Color.GREY_600}>{getString('at')}</Text>
+        <Text color={Color.GREY_450}>{getString('at')}</Text>
         <Text color={Color.GREY_600} className={css.time}>
           {moment(time).format(TIME_PARSE_FORMAT)}
         </Text>
