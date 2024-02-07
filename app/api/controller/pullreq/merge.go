@@ -223,6 +223,7 @@ func (c *Controller) Merge(
 				BaseBranch:      pr.TargetBranch,
 				HeadRepoUID:     sourceRepo.GitUID,
 				HeadBranch:      pr.SourceBranch,
+				RefType:         gitenum.RefTypeUndefined, // update no refs -> no commit will be created
 				HeadExpectedSHA: in.SourceSHA,
 			})
 			if err != nil {
@@ -233,7 +234,7 @@ func (c *Controller) Merge(
 				if pr.SourceSHA != mergeOutput.HeadSHA {
 					return errors.New("source SHA has changed")
 				}
-				if mergeOutput.MergeSHA == "" || len(mergeOutput.ConflictFiles) > 0 {
+				if len(mergeOutput.ConflictFiles) > 0 {
 					pr.MergeCheckStatus = enum.MergeCheckStatusConflict
 					pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
 					pr.MergeTargetSHA = &mergeOutput.BaseSHA
@@ -275,16 +276,40 @@ func (c *Controller) Merge(
 		return nil, &types.MergeViolations{RuleViolations: violations}, nil
 	}
 
-	// TODO: for forking merge title might be different?
-	var mergeTitle string
-	author := *session.Principal.ToPrincipalInfo()
-	if in.Method == enum.MergeMethodSquash {
-		// squash commit should show as authored by PR author
-		author = pr.Author
-		mergeTitle = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
-	} else {
-		mergeTitle = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
+	// commit details: author, committer and message
+
+	var author *git.Identity
+
+	switch in.Method {
+	case enum.MergeMethodMerge:
+		author = identityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
+	case enum.MergeMethodSquash:
+		author = identityFromPrincipalInfo(pr.Author)
+	case enum.MergeMethodRebase:
+		author = nil // Not important for the rebase merge: the author info in the commits will be preserved.
 	}
+
+	var committer *git.Identity
+
+	switch in.Method {
+	case enum.MergeMethodMerge, enum.MergeMethodSquash:
+		committer = identityFromPrincipalInfo(*bootstrap.NewSystemServiceSession().Principal.ToPrincipalInfo())
+	case enum.MergeMethodRebase:
+		committer = identityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
+	}
+
+	var mergeTitle string
+
+	switch in.Method {
+	case enum.MergeMethodMerge:
+		mergeTitle = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
+	case enum.MergeMethodSquash:
+		mergeTitle = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
+	case enum.MergeMethodRebase:
+		mergeTitle = "" // Not used.
+	}
+
+	// create merge commit(s)
 
 	log.Ctx(ctx).Debug().Msgf("all pre-check passed, merge PR")
 
@@ -296,9 +321,9 @@ func (c *Controller) Merge(
 		HeadBranch:      pr.SourceBranch,
 		Title:           mergeTitle,
 		Message:         "",
-		Committer:       identityFromPrincipalInfo(*bootstrap.NewSystemServiceSession().Principal.ToPrincipalInfo()),
+		Committer:       committer,
 		CommitterDate:   &now,
-		Author:          identityFromPrincipalInfo(author),
+		Author:          author,
 		AuthorDate:      &now,
 		RefType:         gitenum.RefTypeBranch,
 		RefName:         pr.TargetBranch,

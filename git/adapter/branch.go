@@ -38,7 +38,7 @@ func (a Adapter) GetBranch(
 	}
 
 	ref := GetReferenceFromBranchName(branchName)
-	commit, err := getCommit(ctx, repoPath, ref, "")
+	commit, err := GetCommit(ctx, repoPath, ref, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to find the commit for the branch: %w", err)
 	}

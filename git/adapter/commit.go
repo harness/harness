@@ -43,7 +43,7 @@ func (a Adapter) GetLatestCommit(
 	}
 	treePath = cleanTreePath(treePath)
 
-	return getCommit(ctx, repoPath, rev, treePath)
+	return GetCommit(ctx, repoPath, rev, treePath)
 }
 
 func getGiteaCommits(
@@ -400,7 +400,7 @@ func (a Adapter) GetCommit(
 		return nil, ErrRepositoryPathEmpty
 	}
 
-	return getCommit(ctx, repoPath, rev, "")
+	return GetCommit(ctx, repoPath, rev, "")
 }
 
 func (a Adapter) GetFullCommitID(
@@ -564,7 +564,9 @@ func parseLinesToSlice(output []byte) []string {
 	return slice
 }
 
-func getCommit(
+// GetCommit returns info about a commit.
+// TODO: Move this function outside of the adapter package.
+func GetCommit(
 	ctx context.Context,
 	repoPath string,
 	rev string,

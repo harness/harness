@@ -17,15 +17,12 @@ package git
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/enum"
-	"github.com/harness/gitness/git/tempdir"
+	"github.com/harness/gitness/git/merge"
 	"github.com/harness/gitness/git/types"
 
 	"github.com/rs/zerolog/log"
@@ -120,242 +117,206 @@ type MergeOutput struct {
 //
 //nolint:gocognit,gocyclo,cyclop
 func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, error) {
-	if err := params.Validate(); err != nil {
-		return MergeOutput{}, fmt.Errorf("Merge: params not valid: %w", err)
+	err := params.Validate()
+	if err != nil {
+		return MergeOutput{}, fmt.Errorf("params not valid: %w", err)
 	}
-
-	log := log.Ctx(ctx).With().Str("repo_uid", params.RepoUID).Logger()
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	baseBranch := "base"
-	trackingBranch := "tracking"
+	// prepare the merge method function
 
-	pr := &types.PullRequest{
-		BaseRepoPath: repoPath,
-		BaseBranch:   params.BaseBranch,
-		HeadBranch:   params.HeadBranch,
+	mergeMethod, ok := params.Method.Sanitize()
+	if !ok && params.Method != "" {
+		return MergeOutput{}, errors.InvalidArgument("Unsupported merge method: %s", params.Method)
 	}
 
-	log.Debug().Msg("create temporary repository")
+	var mergeFunc merge.Func
 
-	// Clone base repo.
-	tmpRepo, err := s.adapter.CreateTemporaryRepoForPR(ctx, s.tmpDir, pr, baseBranch, trackingBranch)
-	if err != nil {
-		return MergeOutput{}, fmt.Errorf("Merge: failed to initialize temporary repo: %w", err)
+	switch mergeMethod {
+	case enum.MergeMethodMerge:
+		mergeFunc = merge.Merge
+	case enum.MergeMethodSquash:
+		mergeFunc = merge.Squash
+	case enum.MergeMethodRebase:
+		mergeFunc = merge.Rebase
+	default:
+		// should not happen, the call to Sanitize above should handle this case.
+		panic("unsupported merge method")
 	}
-	defer func() {
-		rmErr := tempdir.RemoveTemporaryPath(tmpRepo.Path)
-		if rmErr != nil {
-			log.Warn().Msgf("Removing temporary location %s for merge operation was not successful", tmpRepo.Path)
+
+	// set up the target reference
+
+	var refPath string
+	var refOldValue string
+
+	if params.RefType != enum.RefTypeUndefined {
+		refPath, err = GetRefPath(params.RefName, params.RefType)
+		if err != nil {
+			return MergeOutput{}, fmt.Errorf(
+				"failed to generate full reference for type '%s' and name '%s' for merge operation: %w",
+				params.RefType, params.RefName, err)
 		}
-	}()
 
-	log.Debug().Msg("get merge base")
+		refOldValue, err = s.adapter.GetFullCommitID(ctx, repoPath, refPath)
+		if errors.IsNotFound(err) {
+			refOldValue = types.NilSHA
+		} else if err != nil {
+			return MergeOutput{}, fmt.Errorf("failed to resolve %q: %w", refPath, err)
+		}
+	}
 
-	mergeBaseCommitSHA, _, err := s.adapter.GetMergeBase(ctx, tmpRepo.Path, "origin", baseBranch, trackingBranch)
+	// logger
+
+	log := log.Ctx(ctx).With().
+		Str("repo_uid", params.RepoUID).
+		Str("head", params.HeadBranch).
+		Str("base", params.BaseBranch).
+		Str("method", string(mergeMethod)).
+		Str("ref", refPath).
+		Logger()
+
+	// find the commit SHAs
+
+	baseCommitSHA, err := s.adapter.GetFullCommitID(ctx, repoPath, params.BaseBranch)
+	if err != nil {
+		return MergeOutput{}, fmt.Errorf("failed to get merge base branch commit SHA: %w", err)
+	}
+
+	headCommitSHA, err := s.adapter.GetFullCommitID(ctx, repoPath, params.HeadBranch)
+	if err != nil {
+		return MergeOutput{}, fmt.Errorf("failed to get merge base branch commit SHA: %w", err)
+	}
+
+	if params.HeadExpectedSHA != "" && params.HeadExpectedSHA != headCommitSHA {
+		return MergeOutput{}, errors.PreconditionFailed(
+			"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
+			params.HeadBranch,
+			headCommitSHA,
+			params.HeadExpectedSHA)
+	}
+
+	mergeBaseCommitSHA, _, err := s.adapter.GetMergeBase(ctx, repoPath, "origin", baseCommitSHA, headCommitSHA)
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("failed to get merge base: %w", err)
 	}
 
-	if tmpRepo.HeadSHA == mergeBaseCommitSHA {
-		return MergeOutput{}, errors.InvalidArgument("no changes between head branch %s and base branch %s",
-			params.HeadBranch, params.BaseBranch)
+	if headCommitSHA == mergeBaseCommitSHA {
+		return MergeOutput{}, errors.InvalidArgument("head branch doesn't contain any new commits.")
 	}
 
-	if params.HeadExpectedSHA != "" && params.HeadExpectedSHA != tmpRepo.HeadSHA {
-		return MergeOutput{}, errors.PreconditionFailed(
-			"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
-			params.HeadBranch,
-			tmpRepo.HeadSHA,
-			params.HeadExpectedSHA)
-	}
+	// find short stat and number of commits
 
-	log.Debug().Msg("get diff tree")
-
-	var outbuf, errbuf strings.Builder
-	// Enable sparse-checkout
-	sparseCheckoutList, err := s.adapter.GetDiffTree(ctx, tmpRepo.Path, baseBranch, trackingBranch)
+	shortStat, err := s.adapter.DiffShortStat(ctx, repoPath, baseCommitSHA, headCommitSHA, true)
 	if err != nil {
-		return MergeOutput{}, fmt.Errorf("execution of GetDiffTree failed: %w", err)
-	}
-
-	log.Debug().Msg("prepare sparse-checkout")
-
-	infoPath := filepath.Join(tmpRepo.Path, ".git", "info")
-	if err = os.MkdirAll(infoPath, fileMode700); err != nil {
-		return MergeOutput{}, fmt.Errorf("unable to create .git/info in tmpRepo.Path: %w", err)
-	}
-
-	sparseCheckoutListPath := filepath.Join(infoPath, "sparse-checkout")
-	if err = os.WriteFile(sparseCheckoutListPath, []byte(sparseCheckoutList), 0o600); err != nil {
-		return MergeOutput{},
-			fmt.Errorf("unable to write .git/info/sparse-checkout file in tmpRepo.Path: %w", err)
-	}
-
-	log.Debug().Msg("get diff stats")
-
-	shortStat, err := s.adapter.DiffShortStat(ctx, tmpRepo.Path, tmpRepo.BaseSHA, tmpRepo.HeadSHA, true)
-	if err != nil {
-		return MergeOutput{}, fmt.Errorf("execution of DiffShortStat failed: %w", err)
+		return MergeOutput{}, errors.Internal(err,
+			"failed to find short stat between %s and %s", baseCommitSHA, headCommitSHA)
 	}
 	changedFileCount := shortStat.Files
 
-	log.Debug().Msg("get commit divergene")
-
-	divergences, err := s.adapter.GetCommitDivergences(ctx, tmpRepo.Path,
-		[]types.CommitDivergenceRequest{{From: tmpRepo.HeadSHA, To: tmpRepo.BaseSHA}}, 0)
+	commitCount, err := merge.CommitCount(ctx, repoPath, baseCommitSHA, headCommitSHA)
 	if err != nil {
-		return MergeOutput{}, fmt.Errorf("execution of GetCommitDivergences failed: %w", err)
-	}
-	commitCount := int(divergences[0].Ahead)
-
-	log.Debug().Msg("update git configuration")
-
-	// Switch off LFS process (set required, clean and smudge here also)
-	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.process", ""); err != nil {
-		return MergeOutput{}, err
+		return MergeOutput{}, fmt.Errorf("failed to find commit count for merge check: %w", err)
 	}
 
-	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.required", "false"); err != nil {
-		return MergeOutput{}, err
+	// handle simple merge check
+
+	if params.RefType == enum.RefTypeUndefined {
+		_, _, conflicts, err := merge.FindConflicts(ctx, repoPath, baseCommitSHA, headCommitSHA)
+		if err != nil {
+			return MergeOutput{}, errors.Internal(err,
+				"Merge check failed to find conflicts between commits %s and %s",
+				baseCommitSHA, headCommitSHA)
+		}
+
+		log.Debug().Msg("merged check completed")
+
+		return MergeOutput{
+			BaseSHA:          baseCommitSHA,
+			HeadSHA:          headCommitSHA,
+			MergeBaseSHA:     mergeBaseCommitSHA,
+			MergeSHA:         "",
+			CommitCount:      commitCount,
+			ChangedFileCount: changedFileCount,
+			ConflictFiles:    conflicts,
+		}, nil
 	}
 
-	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.clean", ""); err != nil {
-		return MergeOutput{}, err
-	}
+	// author and committer
 
-	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.smudge", ""); err != nil {
-		return MergeOutput{}, err
-	}
+	now := time.Now().UTC()
 
-	if err = s.adapter.Config(ctx, tmpRepo.Path, "core.sparseCheckout", "true"); err != nil {
-		return MergeOutput{}, err
-	}
+	committer := types.Signature{Identity: types.Identity(params.Actor), When: now}
 
-	log.Debug().Msg("read tree")
-
-	// Read base branch index
-	if err = s.adapter.ReadTree(ctx, tmpRepo.Path, "HEAD", io.Discard); err != nil {
-		return MergeOutput{}, fmt.Errorf("failed to read tree: %w", err)
-	}
-	outbuf.Reset()
-	errbuf.Reset()
-
-	committer := params.Actor
 	if params.Committer != nil {
-		committer = *params.Committer
+		committer.Identity = types.Identity(*params.Committer)
 	}
-	committerDate := time.Now().UTC()
 	if params.CommitterDate != nil {
-		committerDate = *params.CommitterDate
+		committer.When = *params.CommitterDate
 	}
 
 	author := committer
+
 	if params.Author != nil {
-		author = *params.Author
+		author.Identity = types.Identity(*params.Author)
 	}
-	authorDate := committerDate
 	if params.AuthorDate != nil {
-		authorDate = *params.AuthorDate
+		author.When = *params.AuthorDate
 	}
 
-	// Because this may call hooks we should pass in the environment
-	// TODO: merge specific envars should be set by the adapter impl.
-	env := append(CreateEnvironmentForPush(ctx, params.WriteParams),
-		"GIT_AUTHOR_NAME="+author.Name,
-		"GIT_AUTHOR_EMAIL="+author.Email,
-		"GIT_AUTHOR_DATE="+authorDate.Format(time.RFC3339),
-		"GIT_COMMITTER_NAME="+committer.Name,
-		"GIT_COMMITTER_EMAIL="+committer.Email,
-		"GIT_COMMITTER_DATE="+committerDate.Format(time.RFC3339),
-	)
+	// merge message
 
 	mergeMsg := strings.TrimSpace(params.Title)
 	if len(params.Message) > 0 {
 		mergeMsg += "\n\n" + strings.TrimSpace(params.Message)
 	}
 
-	if params.Method == "" {
-		params.Method = enum.MergeMethodMerge
-	}
+	// merge
 
-	log.Debug().Msg("perform merge")
-
-	result, err := s.adapter.Merge(
+	mergeCommitSHA, conflicts, err := mergeFunc(
 		ctx,
-		pr,
-		params.Method,
-		baseBranch,
-		trackingBranch,
-		tmpRepo.Path,
+		repoPath, s.tmpDir,
+		&author, &committer,
 		mergeMsg,
-		&types.Identity{
-			Name:  author.Name,
-			Email: author.Email,
-		},
-		env...)
+		mergeBaseCommitSHA, baseCommitSHA, headCommitSHA)
 	if err != nil {
-		return MergeOutput{}, fmt.Errorf("merge failed: %w", err)
+		return MergeOutput{}, errors.Internal(err, "failed to merge %q to %q in %q using the %q merge method.",
+			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod)
 	}
-
-	if len(result.ConflictFiles) > 0 {
+	if len(conflicts) != 0 {
 		return MergeOutput{
-			BaseSHA:          tmpRepo.BaseSHA,
-			HeadSHA:          tmpRepo.HeadSHA,
+			BaseSHA:          baseCommitSHA,
+			HeadSHA:          headCommitSHA,
 			MergeBaseSHA:     mergeBaseCommitSHA,
 			MergeSHA:         "",
 			CommitCount:      commitCount,
 			ChangedFileCount: changedFileCount,
-			ConflictFiles:    result.ConflictFiles,
+			ConflictFiles:    conflicts,
 		}, nil
 	}
 
-	log.Debug().Msg("get commit id")
+	// git reference update
 
-	mergeCommitSHA, err := s.adapter.GetFullCommitID(ctx, tmpRepo.Path, baseBranch)
+	log.Trace().Msg("merge completed - updating git reference")
+
+	err = s.adapter.UpdateRef(
+		ctx,
+		params.EnvVars,
+		repoPath,
+		refPath,
+		refOldValue,
+		mergeCommitSHA,
+	)
 	if err != nil {
-		return MergeOutput{}, fmt.Errorf("failed to get full commit id for the new merge: %w", err)
+		return MergeOutput{},
+			errors.Internal(err, "failed to update branch %q after merging commits", params.HeadBranch)
 	}
 
-	if params.RefType == enum.RefTypeUndefined {
-		log.Debug().Msg("done (merge-check only)")
-
-		return MergeOutput{
-			BaseSHA:          tmpRepo.BaseSHA,
-			HeadSHA:          tmpRepo.HeadSHA,
-			MergeBaseSHA:     mergeBaseCommitSHA,
-			MergeSHA:         mergeCommitSHA,
-			CommitCount:      commitCount,
-			ChangedFileCount: changedFileCount,
-			ConflictFiles:    nil,
-		}, nil
-	}
-
-	refPath, err := GetRefPath(params.RefName, params.RefType)
-	if err != nil {
-		return MergeOutput{}, fmt.Errorf(
-			"failed to generate full reference for type '%s' and name '%s' for merge operation: %w",
-			params.RefType, params.RefName, err)
-	}
-	pushRef := baseBranch + ":" + refPath
-
-	log.Debug().Msg("push to original repo")
-
-	if err = s.adapter.Push(ctx, tmpRepo.Path, types.PushOptions{
-		Remote: "origin",
-		Branch: pushRef,
-		Force:  params.Force,
-		Env:    env,
-	}); err != nil {
-		return MergeOutput{}, fmt.Errorf("failed to push merge commit to ref '%s': %w", refPath, err)
-	}
-
-	log.Debug().Msg("done")
+	log.Trace().Msg("merge completed - git reference updated")
 
 	return MergeOutput{
-		BaseSHA:          tmpRepo.BaseSHA,
-		HeadSHA:          tmpRepo.HeadSHA,
+		BaseSHA:          baseCommitSHA,
+		HeadSHA:          headCommitSHA,
 		MergeBaseSHA:     mergeBaseCommitSHA,
 		MergeSHA:         mergeCommitSHA,
 		CommitCount:      commitCount,
