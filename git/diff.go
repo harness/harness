@@ -20,15 +20,38 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"regexp"
+	"strconv"
 	"sync"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/diff"
 	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/types"
 
 	"golang.org/x/sync/errgroup"
 )
+
+// Parse "1 file changed, 3 insertions(+), 3 deletions(-)" for nums.
+var shortStatsRegexp = regexp.MustCompile(
+	`files? changed(?:, (\d+) insertions?\(\+\))?(?:, (\d+) deletions?\(-\))?`)
+
+type CommitShortStatParams struct {
+	Path string
+	Ref  string
+}
+
+func (p CommitShortStatParams) Validate() error {
+	if p.Path == "" {
+		return errors.InvalidArgument("path cannot be empty")
+	}
+
+	if p.Ref == "" {
+		return errors.InvalidArgument("ref cannot be empty")
+	}
+	return nil
+}
 
 type DiffParams struct {
 	ReadParams
@@ -175,6 +198,69 @@ func (s *Service) DiffStats(ctx context.Context, params *DiffParams) (DiffStatsO
 		Commits:      totalCommits,
 		FilesChanged: totalFiles,
 	}, nil
+}
+
+func parseCommitShortStat(statBuffer *bytes.Buffer) (CommitShortStatOutput, error) {
+	matches := shortStatsRegexp.FindStringSubmatch(statBuffer.String())
+	if len(matches) != 3 {
+		return CommitShortStatOutput{}, errors.Internal(errors.New("failed to match stats line"), "")
+	}
+
+	var stat CommitShortStatOutput
+
+	// if there are insertions; no insertions case: "1 file changed, 3 deletions(-)"
+	if len(matches[1]) > 0 {
+		if value, err := strconv.Atoi(matches[1]); err == nil {
+			stat.Additions = value
+		} else {
+			return CommitShortStatOutput{}, fmt.Errorf("failed to parse additions stats: %w", err)
+		}
+	}
+
+	// if there are deletions; no deletions case: "1 file changed, 3 insertions(+)"
+	if len(matches[2]) > 0 {
+		if value, err := strconv.Atoi(matches[2]); err == nil {
+			stat.Deletions = value
+		} else {
+			return CommitShortStatOutput{}, fmt.Errorf("failed to parse deletions stats: %w", err)
+		}
+	}
+
+	return stat, nil
+}
+
+type CommitShortStatOutput struct {
+	Additions int
+	Deletions int
+}
+
+func (s *Service) CommitShortStat(
+	ctx context.Context,
+	params *CommitShortStatParams,
+) (CommitShortStatOutput, error) {
+	if err := params.Validate(); err != nil {
+		return CommitShortStatOutput{}, err
+	}
+	// git log -1 --shortstat --pretty=format:""
+	cmd := command.New(
+		"log",
+		command.WithFlag("-1"),
+		command.WithFlag("--shortstat"),
+		command.WithFlag(`--pretty=format:""`),
+		command.WithArg(params.Ref),
+	)
+
+	stdout := bytes.NewBuffer(nil)
+	if err := cmd.Run(ctx, command.WithDir(params.Path), command.WithStdout(stdout)); err != nil {
+		return CommitShortStatOutput{}, errors.Internal(err, "failed to show stats")
+	}
+
+	stat, err := parseCommitShortStat(stdout)
+	if err != nil {
+		return CommitShortStatOutput{}, errors.Internal(err, "failed to parse stats line")
+	}
+
+	return stat, nil
 }
 
 type GetDiffHunkHeadersParams struct {

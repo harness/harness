@@ -60,7 +60,8 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef
 	var repos []*types.Repository
 	page := 1
 	for {
-		reposInPage, err := c.repoStore.List(ctx, space.ID, &types.RepoFilter{Size: 200, Page: page, Order: enum.OrderDesc})
+		reposInPage, err := c.repoStore.List(
+			ctx, space.ID, &types.RepoFilter{Size: 200, Page: page, Order: enum.OrderDesc})
 		if err != nil {
 			return err
 		}
