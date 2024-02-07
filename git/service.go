@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/storage"
 	"github.com/harness/gitness/git/types"
 )
@@ -31,7 +32,7 @@ const (
 type Service struct {
 	reposRoot      string
 	tmpDir         string
-	adapter        Adapter
+	git            *api.Git
 	store          storage.Store
 	gitHookPath    string
 	reposGraveyard string
@@ -39,7 +40,7 @@ type Service struct {
 
 func New(
 	config types.Config,
-	adapter Adapter,
+	adapter *api.Git,
 	storage storage.Store,
 ) (*Service, error) {
 	// Create repos folder
@@ -62,7 +63,7 @@ func New(
 		reposRoot:      reposRoot,
 		tmpDir:         config.TmpDir,
 		reposGraveyard: reposGraveyard,
-		adapter:        adapter,
+		git:            adapter,
 		store:          storage,
 		gitHookPath:    config.HookPath,
 	}, nil

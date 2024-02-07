@@ -25,9 +25,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/check"
 	"github.com/harness/gitness/git/hash"
-	"github.com/harness/gitness/git/types"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"github.com/rs/zerolog/log"
@@ -281,14 +281,14 @@ func (s *Service) SyncRepository(
 	}
 
 	// sync repo content
-	err = s.adapter.Sync(ctx, repoPath, params.Source, params.RefSpecs)
+	err = s.git.Sync(ctx, repoPath, params.Source, params.RefSpecs)
 	if err != nil {
 		return nil, fmt.Errorf("SyncRepository: failed to sync git repo: %w", err)
 	}
 
 	// get remote default branch
-	defaultBranch, err := s.adapter.GetRemoteDefaultBranch(ctx, params.Source)
-	if errors.Is(err, types.ErrNoDefaultBranch) {
+	defaultBranch, err := s.git.GetRemoteDefaultBranch(ctx, params.Source)
+	if errors.Is(err, api.ErrNoDefaultBranch) {
 		return &SyncRepositoryOutput{
 			DefaultBranch: "",
 		}, nil
@@ -298,7 +298,7 @@ func (s *Service) SyncRepository(
 	}
 
 	// set default branch
-	err = s.adapter.SetDefaultBranch(ctx, repoPath, defaultBranch, true)
+	err = s.git.SetDefaultBranch(ctx, repoPath, defaultBranch, true)
 	if err != nil {
 		return nil, fmt.Errorf("SyncRepository: failed to set default branch of repo: %w", err)
 	}
@@ -334,7 +334,7 @@ func (s *Service) HashRepository(ctx context.Context, params *HashRepositoryPara
 		}()
 
 		// add default branch to hash
-		defaultBranch, err := s.adapter.GetDefaultBranch(goCtx, repoPath)
+		defaultBranch, err := s.git.GetDefaultBranch(goCtx, repoPath)
 		if err != nil {
 			hashChan <- hash.SourceNext{
 				Err: fmt.Errorf("HashRepository: failed to get default branch: %w", err),
@@ -346,12 +346,12 @@ func (s *Service) HashRepository(ctx context.Context, params *HashRepositoryPara
 			Data: hash.SerializeHead(defaultBranch),
 		}
 
-		err = s.adapter.WalkReferences(goCtx, repoPath, func(wre types.WalkReferencesEntry) error {
-			ref, ok := wre[types.GitReferenceFieldRefName]
+		err = s.git.WalkReferences(goCtx, repoPath, func(wre api.WalkReferencesEntry) error {
+			ref, ok := wre[api.GitReferenceFieldRefName]
 			if !ok {
 				return errors.New("ref entry didn't contain the ref name")
 			}
-			sha, ok := wre[types.GitReferenceFieldObjectName]
+			sha, ok := wre[api.GitReferenceFieldObjectName]
 			if !ok {
 				return errors.New("ref entry didn't contain the ref object sha")
 			}
@@ -361,7 +361,7 @@ func (s *Service) HashRepository(ctx context.Context, params *HashRepositoryPara
 			}
 
 			return nil
-		}, &types.WalkReferencesOptions{})
+		}, &api.WalkReferencesOptions{})
 		if err != nil {
 			hashChan <- hash.SourceNext{
 				Err: fmt.Errorf("HashRepository: failed to walk references: %w", err),
@@ -406,7 +406,7 @@ func (s *Service) createRepositoryInternal(
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	err := s.adapter.InitRepository(ctx, repoPath, true)
+	err := s.git.InitRepository(ctx, repoPath, true)
 	// delete repo dir on error
 	defer func() {
 		if err != nil {
@@ -422,7 +422,7 @@ func (s *Service) createRepositoryInternal(
 	}
 
 	// update default branch (currently set to non-existent branch)
-	err = s.adapter.SetDefaultBranch(ctx, repoPath, defaultBranch, true)
+	err = s.git.SetDefaultBranch(ctx, repoPath, defaultBranch, true)
 	if err != nil {
 		return fmt.Errorf("createRepositoryInternal: error updating default branch for repo '%s': %w",
 			base.RepoUID, err)
@@ -445,7 +445,7 @@ func (s *Service) createRepositoryInternal(
 	}(tempDir)
 
 	// Clone repository to temp dir
-	if err = s.adapter.Clone(ctx, repoPath, tempDir, types.CloneRepoOptions{}); err != nil {
+	if err = s.git.Clone(ctx, repoPath, tempDir, api.CloneRepoOptions{}); err != nil {
 		return fmt.Errorf("createRepositoryInternal: failed to clone repo: %w", err)
 	}
 
@@ -510,7 +510,7 @@ func (s *Service) GetRepositorySize(
 	params *GetRepositorySizeParams,
 ) (*GetRepositorySizeOutput, error) {
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	count, err := s.adapter.CountObjects(ctx, repoPath)
+	count, err := s.git.CountObjects(ctx, repoPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count objects for repo: %w", err)
 	}
@@ -534,7 +534,7 @@ func (s *Service) UpdateDefaultBranch(
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	err := s.adapter.SetDefaultBranch(ctx, repoPath, params.BranchName, false)
+	err := s.git.SetDefaultBranch(ctx, repoPath, params.BranchName, false)
 	if err != nil {
 		return fmt.Errorf("UpdateDefaultBranch: failed to update repo default branch %q: %w",
 			params.BranchName, err)

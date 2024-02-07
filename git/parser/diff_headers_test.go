@@ -18,6 +18,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/types"
 
@@ -65,9 +66,9 @@ index f043b93..0000000
 		return
 	}
 
-	want := []*types.DiffFileHunkHeaders{
+	want := []*api.DiffFileHunkHeaders{
 		{
-			FileHeader: types.DiffFileHeader{
+			FileHeader: api.DiffFileHeader{
 				OldFileName: "new_file.txt",
 				NewFileName: "new_file.txt",
 				Extensions: map[string]string{
@@ -78,7 +79,7 @@ index f043b93..0000000
 			HunksHeaders: []types.HunkHeader{{OldLine: 0, OldSpan: 0, NewLine: 1, NewSpan: 3}},
 		},
 		{
-			FileHeader: types.DiffFileHeader{
+			FileHeader: api.DiffFileHeader{
 				OldFileName: "old_file_name.txt",
 				NewFileName: "changed_file.txt",
 				Extensions: map[string]string{
@@ -91,7 +92,7 @@ index f043b93..0000000
 			},
 		},
 		{
-			FileHeader: types.DiffFileHeader{
+			FileHeader: api.DiffFileHeader{
 				OldFileName: "deleted_file.txt",
 				NewFileName: "deleted_file.txt",
 				Extensions: map[string]string{

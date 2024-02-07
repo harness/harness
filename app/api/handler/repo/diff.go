@@ -24,7 +24,7 @@ import (
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/errors"
-	gittypes "github.com/harness/gitness/git/types"
+	gittypes "github.com/harness/gitness/git/api"
 )
 
 // HandleDiff returns the diff between two commits, branches or tags.

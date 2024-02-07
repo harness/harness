@@ -20,18 +20,22 @@ import (
 	"regexp"
 
 	"github.com/harness/gitness/git/enum"
-	"github.com/harness/gitness/git/types"
 )
+
+type DiffFileHunkHeaders struct {
+	FileHeader   DiffFileHeader
+	HunksHeaders []HunkHeader
+}
 
 var regExpDiffFileHeader = regexp.MustCompile(`^diff --git a/(.+) b/(.+)$`)
 
-func ParseDiffFileHeader(line string) (types.DiffFileHeader, bool) {
+func ParseDiffFileHeader(line string) (DiffFileHeader, bool) {
 	groups := regExpDiffFileHeader.FindStringSubmatch(line)
 	if groups == nil {
-		return types.DiffFileHeader{}, false
+		return DiffFileHeader{}, false
 	}
 
-	return types.DiffFileHeader{
+	return DiffFileHeader{
 		OldFileName: groups[1],
 		NewFileName: groups[2],
 		Extensions:  map[string]string{},
@@ -64,11 +68,11 @@ func ParseDiffFileExtendedHeader(line string) (string, string) {
 
 // GetHunkHeaders parses git diff output and returns all diff headers for all files.
 // See for documentation: https://git-scm.com/docs/git-diff#generate_patch_text_with_p
-func GetHunkHeaders(r io.Reader) ([]*types.DiffFileHunkHeaders, error) {
+func GetHunkHeaders(r io.Reader) ([]*DiffFileHunkHeaders, error) {
 	scanner := bufio.NewScanner(r)
 
-	var currentFile *types.DiffFileHunkHeaders
-	var result []*types.DiffFileHunkHeaders
+	var currentFile *DiffFileHunkHeaders
+	var result []*DiffFileHunkHeaders
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -77,7 +81,7 @@ func GetHunkHeaders(r io.Reader) ([]*types.DiffFileHunkHeaders, error) {
 			if currentFile != nil {
 				result = append(result, currentFile)
 			}
-			currentFile = &types.DiffFileHunkHeaders{
+			currentFile = &DiffFileHunkHeaders{
 				FileHeader:   h,
 				HunksHeaders: nil,
 			}
@@ -87,7 +91,7 @@ func GetHunkHeaders(r io.Reader) ([]*types.DiffFileHunkHeaders, error) {
 
 		if currentFile == nil {
 			// should not happen: we reached the hunk header without first finding the file header.
-			return nil, types.ErrHunkNotFound
+			return nil, ErrHunkNotFound
 		}
 
 		if h, ok := ParseDiffHunkHeader(line); ok {

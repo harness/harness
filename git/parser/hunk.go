@@ -17,16 +17,67 @@ package parser
 import (
 	"regexp"
 	"strconv"
-
-	"github.com/harness/gitness/git/types"
+	"strings"
 )
+
+type Hunk struct {
+	HunkHeader
+	Lines []string
+}
+
+type HunkHeader struct {
+	OldLine int
+	OldSpan int
+	NewLine int
+	NewSpan int
+	Text    string
+}
 
 var regExpHunkHeader = regexp.MustCompile(`^@@ -([0-9]+)(,([0-9]+))? \+([0-9]+)(,([0-9]+))? @@( (.+))?$`)
 
-func ParseDiffHunkHeader(line string) (types.HunkHeader, bool) {
+func (h *HunkHeader) IsZero() bool {
+	return h.OldLine == 0 && h.OldSpan == 0 && h.NewLine == 0 && h.NewSpan == 0
+}
+
+func (h *HunkHeader) IsValid() bool {
+	oldOk := h.OldLine == 0 && h.OldSpan == 0 || h.OldLine > 0 && h.OldSpan > 0
+	newOk := h.NewLine == 0 && h.NewSpan == 0 || h.NewLine > 0 && h.NewSpan > 0
+	return !h.IsZero() && oldOk && newOk
+}
+
+func (h *HunkHeader) String() string {
+	sb := strings.Builder{}
+
+	sb.WriteString("@@ -")
+
+	sb.WriteString(strconv.Itoa(h.OldLine))
+	if h.OldSpan != 1 {
+		sb.WriteByte(',')
+		sb.WriteString(strconv.Itoa(h.OldSpan))
+	}
+
+	sb.WriteString(" +")
+
+	sb.WriteString(strconv.Itoa(h.NewLine))
+	if h.NewSpan != 1 {
+		sb.WriteByte(',')
+		sb.WriteString(strconv.Itoa(h.NewSpan))
+	}
+
+	sb.WriteString(" @@")
+
+	if h.Text != "" {
+		sb.WriteByte(' ')
+		sb.WriteString(h.Text)
+	}
+
+	return sb.String()
+}
+
+func ParseDiffHunkHeader(line string) (HunkHeader, bool) {
 	groups := regExpHunkHeader.FindStringSubmatch(line)
 	if groups == nil {
-		return types.HunkHeader{}, false
+		return HunkHeader{}, false
 	}
 
 	oldLine, _ := strconv.Atoi(groups[1])
@@ -41,7 +92,7 @@ func ParseDiffHunkHeader(line string) (types.HunkHeader, bool) {
 		newSpan, _ = strconv.Atoi(groups[6])
 	}
 
-	return types.HunkHeader{
+	return HunkHeader{
 		OldLine: oldLine,
 		OldSpan: oldSpan,
 		NewLine: newLine,

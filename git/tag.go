@@ -20,21 +20,20 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
-	"github.com/harness/gitness/git/adapter"
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/api"
 
 	"github.com/rs/zerolog/log"
 )
 
 var (
-	listCommitTagsRefFields = []types.GitReferenceField{
-		types.GitReferenceFieldRefName,
-		types.GitReferenceFieldObjectType,
-		types.GitReferenceFieldObjectName,
+	listCommitTagsRefFields = []api.GitReferenceField{
+		api.GitReferenceFieldRefName,
+		api.GitReferenceFieldObjectType,
+		api.GitReferenceFieldObjectName,
 	}
-	listCommitTagsObjectTypeFilter = []types.GitObjectType{
-		types.GitObjectTypeCommit,
-		types.GitObjectTypeTag,
+	listCommitTagsObjectTypeFilter = []api.GitObjectType{
+		api.GitObjectTypeCommit,
+		api.GitObjectTypeTag,
 	}
 )
 
@@ -152,8 +151,8 @@ func (s *Service) ListCommitTags(
 
 	// populate annotation data for all annotated tags
 	if len(annotatedTagSHAs) > 0 {
-		var aTags []types.Tag
-		aTags, err = s.adapter.GetAnnotatedTags(ctx, repoPath, annotatedTagSHAs)
+		var aTags []api.Tag
+		aTags, err = s.git.GetAnnotatedTags(ctx, repoPath, annotatedTagSHAs)
 		if err != nil {
 			return nil, fmt.Errorf("ListCommitTags: failed to get annotated tag: %w", err)
 		}
@@ -175,13 +174,12 @@ func (s *Service) ListCommitTags(
 			// filter out annotated tags that don't point to commit objects (blobs, trees, nested tags, ...)
 			// we don't actually wanna write it, so keep write index
 			// TODO: Support proper pagination: https://harness.atlassian.net/browse/CODE-669
-			if aTags[ai].TargetType != types.GitObjectTypeCommit {
+			if aTags[ai].TargetType != api.GitObjectTypeCommit {
 				ai++
 				continue
 			}
 
 			// correct the commitSHA for the annotated tag (currently it is the tag sha, not the commit sha)
-			// NOTE: This is required as otherwise gitea will wrongly set the committer to the tagger signature.
 			commitSHAs[wi] = aTags[ai].TargetSha
 
 			// update tag information with annotation details
@@ -205,13 +203,13 @@ func (s *Service) ListCommitTags(
 
 	// get commits if needed (single call for perf savings: 1s-4s vs 5s-20s)
 	if params.IncludeCommit {
-		gitCommits, err := s.adapter.GetCommits(ctx, repoPath, commitSHAs)
+		gitCommits, err := s.git.GetCommits(ctx, repoPath, commitSHAs)
 		if err != nil {
 			return nil, fmt.Errorf("ListCommitTags: failed to get commits: %w", err)
 		}
 
 		for i := range gitCommits {
-			c, err := mapCommit(&gitCommits[i])
+			c, err := mapCommit(gitCommits[i])
 			if err != nil {
 				return nil, fmt.Errorf("commit mapping error: %w", err)
 			}
@@ -232,7 +230,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	targetCommit, err := s.adapter.GetCommit(ctx, repoPath, params.Target)
+	targetCommit, err := s.git.GetCommit(ctx, repoPath, params.Target)
 	if errors.IsNotFound(err) {
 		return nil, errors.NotFound("target '%s' doesn't exist", params.Target)
 	}
@@ -241,12 +239,12 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 	}
 
 	tagName := params.Name
-	tagRef := adapter.GetReferenceFromTagName(tagName)
-	var tag *types.Tag
+	tagRef := api.GetReferenceFromTagName(tagName)
+	var tag *api.Tag
 
-	sha, err := s.adapter.GetRef(ctx, repoPath, tagRef)
+	sha, err := s.git.GetRef(ctx, repoPath, tagRef)
 	// TODO: Change GetRef to use errors.NotFound and then remove types.IsNotFoundError(err) below.
-	if err != nil && !types.IsNotFoundError(err) && !errors.IsNotFound(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf("CreateCommitTag: failed to verify tag existence: %w", err)
 	}
 	if err == nil && sha != "" {
@@ -255,7 +253,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	err = func() error {
 		// Create a directory for the temporary shared repository.
-		sharedRepo, err := s.adapter.SharedRepository(s.tmpDir, params.RepoUID, repoPath)
+		sharedRepo, err := api.NewSharedRepo(s.git, s.tmpDir, params.RepoUID, repoPath)
 		if err != nil {
 			return fmt.Errorf("failed to create new shared repo: %w", err)
 		}
@@ -276,19 +274,19 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 			taggerDate = *params.TaggerDate
 		}
 
-		createTagRequest := &types.CreateTagOptions{
+		createTagRequest := &api.CreateTagOptions{
 			Message: params.Message,
-			Tagger: types.Signature{
-				Identity: types.Identity{
+			Tagger: api.Signature{
+				Identity: api.Identity{
 					Name:  tagger.Name,
 					Email: tagger.Email,
 				},
 				When: taggerDate,
 			},
 		}
-		err = s.adapter.CreateTag(
+		err = s.git.CreateTag(
 			ctx,
-			sharedRepo.Path(),
+			sharedRepo.RepoPath,
 			tagName,
 			targetCommit.SHA,
 			createTagRequest)
@@ -296,7 +294,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 			return fmt.Errorf("failed to create tag '%s': %w", tagName, err)
 		}
 
-		tag, err = s.adapter.GetAnnotatedTag(ctx, sharedRepo.Path(), tagName)
+		tag, err = s.git.GetAnnotatedTag(ctx, sharedRepo.RepoPath, tagName)
 		if err != nil {
 			return fmt.Errorf("failed to read annotated tag after creation: %w", err)
 		}
@@ -312,12 +310,12 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 		return nil, fmt.Errorf("CreateCommitTag: failed to create tag in shared repository: %w", err)
 	}
 
-	err = s.adapter.UpdateRef(
+	err = s.git.UpdateRef(
 		ctx,
 		params.EnvVars,
 		repoPath,
 		tagRef,
-		types.NilSHA,
+		api.NilSHA,
 		tag.Sha,
 	)
 	if err != nil {
@@ -326,7 +324,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	var commitTag *CommitTag
 	if params.Message != "" {
-		tag, err = s.adapter.GetAnnotatedTag(ctx, repoPath, params.Name)
+		tag, err = s.git.GetAnnotatedTag(ctx, repoPath, params.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read annotated tag after creation: %w", err)
 		}
@@ -354,17 +352,17 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	tagRef := adapter.GetReferenceFromTagName(params.Name)
+	tagRef := api.GetReferenceFromTagName(params.Name)
 
-	err := s.adapter.UpdateRef(
+	err := s.git.UpdateRef(
 		ctx,
 		params.EnvVars,
 		repoPath,
 		tagRef,
 		"", // delete whatever is there
-		types.NilSHA,
+		api.NilSHA,
 	)
-	if types.IsNotFoundError(err) {
+	if errors.IsNotFound(err) {
 		return errors.NotFound("tag %q does not exist", params.Name)
 	}
 	if err != nil {
@@ -391,7 +389,7 @@ func (s *Service) listCommitTagsLoadReferenceData(
 		return nil, errors.InvalidArgument("invalid pagination details: %v", err)
 	}
 
-	opts := &types.WalkReferencesOptions{
+	opts := &api.WalkReferencesOptions{
 		Patterns:   createReferenceWalkPatternsFromQuery(gitReferenceNamePrefixTag, params.Query),
 		Sort:       mapListCommitTagsSortOption(params.Sort),
 		Order:      mapToSortOrder(params.Order),
@@ -401,27 +399,27 @@ func (s *Service) listCommitTagsLoadReferenceData(
 		MaxWalkDistance: 0,
 	}
 
-	err = s.adapter.WalkReferences(ctx, repoPath, handler, opts)
+	err = s.git.WalkReferences(ctx, repoPath, handler, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to walk tag references: %w", err)
 	}
 
-	log.Ctx(ctx).Trace().Msgf("git adapter returned %d tags", len(tags))
+	log.Ctx(ctx).Trace().Msgf("git api returned %d tags", len(tags))
 
 	return tags, nil
 }
 
-func listCommitTagsWalkReferencesHandler(tags *[]CommitTag) types.WalkReferencesHandler {
-	return func(e types.WalkReferencesEntry) error {
-		fullRefName, ok := e[types.GitReferenceFieldRefName]
+func listCommitTagsWalkReferencesHandler(tags *[]CommitTag) api.WalkReferencesHandler {
+	return func(e api.WalkReferencesEntry) error {
+		fullRefName, ok := e[api.GitReferenceFieldRefName]
 		if !ok {
 			return fmt.Errorf("entry missing reference name")
 		}
-		objectSHA, ok := e[types.GitReferenceFieldObjectName]
+		objectSHA, ok := e[api.GitReferenceFieldObjectName]
 		if !ok {
 			return fmt.Errorf("entry missing object sha")
 		}
-		objectTypeRaw, ok := e[types.GitReferenceFieldObjectType]
+		objectTypeRaw, ok := e[api.GitReferenceFieldObjectType]
 		if !ok {
 			return fmt.Errorf("entry missing object type")
 		}
@@ -429,7 +427,7 @@ func listCommitTagsWalkReferencesHandler(tags *[]CommitTag) types.WalkReferences
 		tag := CommitTag{
 			Name:        fullRefName[len(gitReferenceNamePrefixTag):],
 			SHA:         objectSHA,
-			IsAnnotated: objectTypeRaw == string(types.GitObjectTypeTag),
+			IsAnnotated: objectTypeRaw == string(api.GitObjectTypeTag),
 		}
 
 		// TODO: refactor to not use slice pointers?
@@ -439,21 +437,21 @@ func listCommitTagsWalkReferencesHandler(tags *[]CommitTag) types.WalkReferences
 	}
 }
 
-func newInstructorWithObjectTypeFilter(filter []types.GitObjectType) types.WalkReferencesInstructor {
-	return func(wre types.WalkReferencesEntry) (types.WalkInstruction, error) {
-		v, ok := wre[types.GitReferenceFieldObjectType]
+func newInstructorWithObjectTypeFilter(filter []api.GitObjectType) api.WalkReferencesInstructor {
+	return func(wre api.WalkReferencesEntry) (api.WalkInstruction, error) {
+		v, ok := wre[api.GitReferenceFieldObjectType]
 		if !ok {
-			return types.WalkInstructionStop, fmt.Errorf("ref field for object type is missing")
+			return api.WalkInstructionStop, fmt.Errorf("ref field for object type is missing")
 		}
 
 		// only handle if any of the filters match
 		for _, field := range filter {
 			if v == string(field) {
-				return types.WalkInstructionHandle, nil
+				return api.WalkInstructionHandle, nil
 			}
 		}
 
 		// by default skip
-		return types.WalkInstructionSkip, nil
+		return api.WalkInstructionSkip, nil
 	}
 }

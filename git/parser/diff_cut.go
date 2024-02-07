@@ -18,34 +18,48 @@ import (
 	"bufio"
 	"errors"
 	"io"
-
-	"github.com/harness/gitness/git/types"
 )
+
+type DiffFileHeader struct {
+	OldFileName string
+	NewFileName string
+	Extensions  map[string]string
+}
+
+type DiffCutParams struct {
+	LineStart    int
+	LineStartNew bool
+	LineEnd      int
+	LineEndNew   bool
+	BeforeLines  int
+	AfterLines   int
+	LineLimit    int
+}
 
 // DiffCut parses git diff output that should consist of a single hunk
 // (usually generated with large value passed to the "--unified" parameter)
 // and returns lines specified with the parameters.
 //
 //nolint:funlen,gocognit,nestif,gocognit,gocyclo,cyclop // it's actually very readable
-func DiffCut(r io.Reader, params types.DiffCutParams) (types.HunkHeader, types.Hunk, error) {
+func DiffCut(r io.Reader, params DiffCutParams) (HunkHeader, Hunk, error) {
 	scanner := bufio.NewScanner(r)
 
 	var err error
-	var hunkHeader types.HunkHeader
+	var hunkHeader HunkHeader
 
 	if _, err = scanFileHeader(scanner); err != nil {
-		return types.HunkHeader{}, types.Hunk{}, err
+		return HunkHeader{}, Hunk{}, err
 	}
 
 	if hunkHeader, err = scanHunkHeader(scanner); err != nil {
-		return types.HunkHeader{}, types.Hunk{}, err
+		return HunkHeader{}, Hunk{}, err
 	}
 
 	currentOldLine := hunkHeader.OldLine
 	currentNewLine := hunkHeader.NewLine
 
 	var inCut bool
-	var diffCutHeader types.HunkHeader
+	var diffCutHeader HunkHeader
 	var diffCut []string
 
 	linesBeforeBuf := newStrCircBuf(params.BeforeLines)
@@ -61,7 +75,7 @@ func DiffCut(r io.Reader, params types.DiffCutParams) (types.HunkHeader, types.H
 
 		line, action, err = scanHunkLine(scanner)
 		if err != nil {
-			return types.HunkHeader{}, types.Hunk{}, err
+			return HunkHeader{}, Hunk{}, err
 		}
 
 		if line == "" {
@@ -103,7 +117,7 @@ func DiffCut(r io.Reader, params types.DiffCutParams) (types.HunkHeader, types.H
 	}
 
 	if !inCut {
-		return types.HunkHeader{}, types.Hunk{}, types.ErrHunkNotFound
+		return HunkHeader{}, Hunk{}, ErrHunkNotFound
 	}
 
 	var (
@@ -116,7 +130,7 @@ func DiffCut(r io.Reader, params types.DiffCutParams) (types.HunkHeader, types.H
 		for i := 0; i < params.AfterLines; i++ {
 			line, _, err := scanHunkLine(scanner)
 			if err != nil {
-				return types.HunkHeader{}, types.Hunk{}, err
+				return HunkHeader{}, Hunk{}, err
 			}
 			if line == "" {
 				break
@@ -149,14 +163,14 @@ func DiffCut(r io.Reader, params types.DiffCutParams) (types.HunkHeader, types.H
 		}
 	}
 
-	return diffCutHeader, types.Hunk{
+	return diffCutHeader, Hunk{
 		HunkHeader: diffCutHeaderLines,
 		Lines:      concat(linesBefore, diffCut, linesAfter),
 	}, nil
 }
 
 // scanFileHeader keeps reading lines until file header line is read.
-func scanFileHeader(scan *bufio.Scanner) (types.DiffFileHeader, error) {
+func scanFileHeader(scan *bufio.Scanner) (DiffFileHeader, error) {
 	for scan.Scan() {
 		line := scan.Text()
 		if h, ok := ParseDiffFileHeader(line); ok {
@@ -165,14 +179,14 @@ func scanFileHeader(scan *bufio.Scanner) (types.DiffFileHeader, error) {
 	}
 
 	if err := scan.Err(); err != nil {
-		return types.DiffFileHeader{}, err
+		return DiffFileHeader{}, err
 	}
 
-	return types.DiffFileHeader{}, types.ErrHunkNotFound
+	return DiffFileHeader{}, ErrHunkNotFound
 }
 
 // scanHunkHeader keeps reading lines until hunk header line is read.
-func scanHunkHeader(scan *bufio.Scanner) (types.HunkHeader, error) {
+func scanHunkHeader(scan *bufio.Scanner) (HunkHeader, error) {
 	for scan.Scan() {
 		line := scan.Text()
 		if h, ok := ParseDiffHunkHeader(line); ok {
@@ -181,10 +195,10 @@ func scanHunkHeader(scan *bufio.Scanner) (types.HunkHeader, error) {
 	}
 
 	if err := scan.Err(); err != nil {
-		return types.HunkHeader{}, err
+		return HunkHeader{}, err
 	}
 
-	return types.HunkHeader{}, types.ErrHunkNotFound
+	return HunkHeader{}, ErrHunkNotFound
 }
 
 type diffAction byte
@@ -206,7 +220,7 @@ again:
 
 	line = scan.Text()
 	if line == "" {
-		err = types.ErrHunkNotFound // should not happen: empty line in diff output
+		err = ErrHunkNotFound // should not happen: empty line in diff output
 		return
 	}
 

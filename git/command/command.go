@@ -77,6 +77,33 @@ func New(name string, options ...CmdOptionFunc) *Command {
 	return c
 }
 
+// Clone clones the command object.
+func (c *Command) Clone() *Command {
+	flags := make([]string, 0, len(c.Flags))
+	copy(flags, c.Flags)
+
+	args := make([]string, 0, len(c.Args))
+	copy(args, c.Args)
+
+	postSepArgs := make([]string, 0, len(c.PostSepArgs))
+	copy(postSepArgs, c.Flags)
+
+	envs := make(Envs, len(c.Envs))
+	for key, val := range c.Envs {
+		envs[key] = val
+	}
+
+	return &Command{
+		Name:             c.Name,
+		Action:           c.Action,
+		Flags:            flags,
+		Args:             args,
+		PostSepArgs:      postSepArgs,
+		Envs:             envs,
+		configEnvCounter: c.configEnvCounter,
+	}
+}
+
 // Add appends given options to the command.
 func (c *Command) Add(options ...CmdOptionFunc) *Command {
 	for _, opt := range options {

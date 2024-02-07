@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/api"
 
 	"github.com/rs/zerolog/log"
 )
@@ -55,20 +55,20 @@ func (s *Service) addFilesAndPush(
 		return errors.InvalidArgument("both author and committer have to be provided")
 	}
 
-	err := s.adapter.AddFiles(repoPath, false, filePaths...)
+	err := s.git.AddFiles(ctx, repoPath, false, filePaths...)
 	if err != nil {
 		return fmt.Errorf("failed to add files: %w", err)
 	}
-	err = s.adapter.Commit(ctx, repoPath, types.CommitChangesOptions{
-		Committer: types.Signature{
-			Identity: types.Identity{
+	err = s.git.Commit(ctx, repoPath, api.CommitChangesOptions{
+		Committer: api.Signature{
+			Identity: api.Identity{
 				Name:  committer.Name,
 				Email: committer.Email,
 			},
 			When: committerDate,
 		},
-		Author: types.Signature{
-			Identity: types.Identity{
+		Author: api.Signature{
+			Identity: api.Identity{
 				Name:  author.Name,
 				Email: author.Email,
 			},
@@ -80,7 +80,7 @@ func (s *Service) addFilesAndPush(
 		return fmt.Errorf("failed to commit files: %w", err)
 	}
 
-	err = s.adapter.Push(ctx, repoPath, types.PushOptions{
+	err = s.git.Push(ctx, repoPath, api.PushOptions{
 		// TODO: Don't hard-code
 		Remote:  remote,
 		Branch:  branch,

@@ -39,7 +39,8 @@ func (b builder) supportsEndOfOptions() bool {
 
 // descriptions is a curated list of Git command descriptions.
 var descriptions = map[string]builder{
-	"am": {},
+	"am":  {},
+	"add": {},
 	"apply": {
 		flags: NoRefUpdates,
 	},

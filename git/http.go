@@ -43,7 +43,7 @@ func (s *Service) GetInfoRefs(ctx context.Context, w io.Writer, params *InfoRefs
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	err := s.adapter.InfoRefs(ctx, repoPath, params.Service, w, environ...)
+	err := s.git.InfoRefs(ctx, repoPath, params.Service, w, environ...)
 	if err != nil {
 		return fmt.Errorf("failed to fetch info references: %w", err)
 	}
@@ -96,7 +96,7 @@ func (s *Service) ServicePack(ctx context.Context, w io.Writer, params *ServiceP
 		env = append(env, "GIT_PROTOCOL="+params.GitProtocol)
 	}
 
-	err := s.adapter.ServicePack(ctx, repoPath, params.Service, params.Data, w, env...)
+	err := s.git.ServicePack(ctx, repoPath, params.Service, params.Data, w, env...)
 	if err != nil {
 		return fmt.Errorf("failed to execute git %s: %w", params.Service, err)
 	}

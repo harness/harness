@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/errors"
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/api"
 )
 
 type PushRemoteParams struct {
@@ -48,18 +48,14 @@ func (s *Service) PushRemote(ctx context.Context, params *PushRemoteParams) erro
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	repo, err := s.adapter.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return fmt.Errorf("PushRemote: failed to open repo: %w", err)
-	}
-	if ok, err := repo.IsEmpty(); ok {
+	if ok, err := s.git.HasBranches(ctx, repoPath); ok {
 		if err != nil {
 			return errors.Internal(err, "push to repo failed")
 		}
 		return errors.InvalidArgument("cannot push empty repo")
 	}
 
-	err = s.adapter.Push(ctx, repoPath, types.PushOptions{
+	err := s.git.Push(ctx, repoPath, api.PushOptions{
 		Remote: params.RemoteURL,
 		Force:  false,
 		Env:    nil,

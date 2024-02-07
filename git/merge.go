@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/merge"
-	"github.com/harness/gitness/git/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -158,9 +158,9 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 				params.RefType, params.RefName, err)
 		}
 
-		refOldValue, err = s.adapter.GetFullCommitID(ctx, repoPath, refPath)
+		refOldValue, err = s.git.GetFullCommitID(ctx, repoPath, refPath)
 		if errors.IsNotFound(err) {
-			refOldValue = types.NilSHA
+			refOldValue = api.NilSHA
 		} else if err != nil {
 			return MergeOutput{}, fmt.Errorf("failed to resolve %q: %w", refPath, err)
 		}
@@ -178,12 +178,12 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	// find the commit SHAs
 
-	baseCommitSHA, err := s.adapter.GetFullCommitID(ctx, repoPath, params.BaseBranch)
+	baseCommitSHA, err := s.git.GetFullCommitID(ctx, repoPath, params.BaseBranch)
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("failed to get merge base branch commit SHA: %w", err)
 	}
 
-	headCommitSHA, err := s.adapter.GetFullCommitID(ctx, repoPath, params.HeadBranch)
+	headCommitSHA, err := s.git.GetFullCommitID(ctx, repoPath, params.HeadBranch)
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("failed to get merge base branch commit SHA: %w", err)
 	}
@@ -196,7 +196,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 			params.HeadExpectedSHA)
 	}
 
-	mergeBaseCommitSHA, _, err := s.adapter.GetMergeBase(ctx, repoPath, "origin", baseCommitSHA, headCommitSHA)
+	mergeBaseCommitSHA, _, err := s.git.GetMergeBase(ctx, repoPath, "origin", baseCommitSHA, headCommitSHA)
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("failed to get merge base: %w", err)
 	}
@@ -207,7 +207,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	// find short stat and number of commits
 
-	shortStat, err := s.adapter.DiffShortStat(ctx, repoPath, baseCommitSHA, headCommitSHA, true)
+	shortStat, err := s.git.DiffShortStat(ctx, repoPath, baseCommitSHA, headCommitSHA, true)
 	if err != nil {
 		return MergeOutput{}, errors.Internal(err,
 			"failed to find short stat between %s and %s", baseCommitSHA, headCommitSHA)
@@ -246,10 +246,10 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	now := time.Now().UTC()
 
-	committer := types.Signature{Identity: types.Identity(params.Actor), When: now}
+	committer := api.Signature{Identity: api.Identity(params.Actor), When: now}
 
 	if params.Committer != nil {
-		committer.Identity = types.Identity(*params.Committer)
+		committer.Identity = api.Identity(*params.Committer)
 	}
 	if params.CommitterDate != nil {
 		committer.When = *params.CommitterDate
@@ -258,7 +258,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	author := committer
 
 	if params.Author != nil {
-		author.Identity = types.Identity(*params.Author)
+		author.Identity = api.Identity(*params.Author)
 	}
 	if params.AuthorDate != nil {
 		author.When = *params.AuthorDate
@@ -299,7 +299,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	log.Trace().Msg("merge completed - updating git reference")
 
-	err = s.adapter.UpdateRef(
+	err = s.git.UpdateRef(
 		ctx,
 		params.EnvVars,
 		repoPath,
@@ -363,7 +363,7 @@ func (s *Service) MergeBase(
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	result, _, err := s.adapter.GetMergeBase(ctx, repoPath, "", params.Ref1, params.Ref2)
+	result, _, err := s.git.GetMergeBase(ctx, repoPath, "", params.Ref1, params.Ref2)
 	if err != nil {
 		return MergeBaseOutput{}, err
 	}
@@ -389,7 +389,7 @@ func (s *Service) IsAncestor(
 ) (IsAncestorOutput, error) {
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	result, err := s.adapter.IsAncestor(ctx, repoPath, params.AncestorCommitSHA, params.DescendantCommitSHA)
+	result, err := s.git.IsAncestor(ctx, repoPath, params.AncestorCommitSHA, params.DescendantCommitSHA)
 	if err != nil {
 		return IsAncestorOutput{}, err
 	}

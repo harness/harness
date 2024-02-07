@@ -18,16 +18,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/git/adapter"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/sharedrepo"
-	"github.com/harness/gitness/git/types"
 )
 
 // Func represents a merge method function. The concrete merge implementation functions must have this signature.
 type Func func(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	author, committer *types.Signature,
+	author, committer *api.Signature,
 	message string,
 	mergeBaseSHA, targetSHA, sourceSHA string,
 ) (mergeSHA string, conflicts []string, err error)
@@ -36,7 +35,7 @@ type Func func(
 func Merge(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	author, committer *types.Signature,
+	author, committer *api.Signature,
 	message string,
 	mergeBaseSHA, targetSHA, sourceSHA string,
 ) (mergeSHA string, conflicts []string, err error) {
@@ -52,7 +51,7 @@ func Merge(
 func Squash(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	author, committer *types.Signature,
+	author, committer *api.Signature,
 	message string,
 	mergeBaseSHA, targetSHA, sourceSHA string,
 ) (mergeSHA string, conflicts []string, err error) {
@@ -68,7 +67,7 @@ func Squash(
 func mergeInternal(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	author, committer *types.Signature,
+	author, committer *api.Signature,
 	message string,
 	mergeBaseSHA, targetSHA, sourceSHA string,
 	squash bool,
@@ -111,7 +110,7 @@ func mergeInternal(
 func Rebase(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	_, committer *types.Signature, // commit author isn't used here - it's copied from every commit
+	_, committer *api.Signature, // commit author isn't used here - it's copied from every commit
 	_ string, // commit message isn't used here
 	mergeBaseSHA, targetSHA, sourceSHA string,
 ) (mergeSHA string, conflicts []string, err error) {
@@ -129,7 +128,7 @@ func Rebase(
 			var treeSHA string
 			var commitConflicts []string
 
-			commitInfo, err := adapter.GetCommit(ctx, s.Directory(), commitSHA, "")
+			commitInfo, err := api.GetCommit(ctx, s.Directory(), commitSHA, "")
 			if err != nil {
 				return fmt.Errorf("failed to get commit data in rebase merge: %w", err)
 			}

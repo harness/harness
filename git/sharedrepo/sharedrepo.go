@@ -31,9 +31,9 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/tempdir"
-	"github.com/harness/gitness/git/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -306,7 +306,7 @@ func (r *SharedRepo) MergeTree(
 // CommitTree creates a commit from a given tree for the user with provided message.
 func (r *SharedRepo) CommitTree(
 	ctx context.Context,
-	author, committer *types.Signature,
+	author, committer *api.Signature,
 	treeHash, message string,
 	signoff bool,
 	parentCommits ...string,

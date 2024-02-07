@@ -19,6 +19,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/types"
 )
 
@@ -49,14 +50,14 @@ func TestDiffCut(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		params       types.DiffCutParams
+		params       api.DiffCutParams
 		expCutHeader string
 		expCut       []string
 		expError     error
 	}{
 		{
 			name: "at-'+6,7,8':new",
-			params: types.DiffCutParams{
+			params: api.DiffCutParams{
 				LineStart: 7, LineStartNew: true,
 				LineEnd: 7, LineEndNew: true,
 				BeforeLines: 0, AfterLines: 0,
@@ -68,7 +69,7 @@ func TestDiffCut(t *testing.T) {
 		},
 		{
 			name: "at-'+6,7,8':new-with-lines-around",
-			params: types.DiffCutParams{
+			params: api.DiffCutParams{
 				LineStart: 7, LineStartNew: true,
 				LineEnd: 7, LineEndNew: true,
 				BeforeLines: 1, AfterLines: 2,
@@ -80,7 +81,7 @@ func TestDiffCut(t *testing.T) {
 		},
 		{
 			name: "at-'+0':new-with-lines-around",
-			params: types.DiffCutParams{
+			params: api.DiffCutParams{
 				LineStart: 1, LineStartNew: true,
 				LineEnd: 1, LineEndNew: true,
 				BeforeLines: 3, AfterLines: 3,
@@ -92,7 +93,7 @@ func TestDiffCut(t *testing.T) {
 		},
 		{
 			name: "at-'-13':one-with-lines-around",
-			params: types.DiffCutParams{
+			params: api.DiffCutParams{
 				LineStart: 13, LineStartNew: false,
 				LineEnd: 13, LineEndNew: false,
 				BeforeLines: 1, AfterLines: 1,
@@ -104,7 +105,7 @@ func TestDiffCut(t *testing.T) {
 		},
 		{
 			name: "at-'-13':mixed",
-			params: types.DiffCutParams{
+			params: api.DiffCutParams{
 				LineStart: 7, LineStartNew: false,
 				LineEnd: 7, LineEndNew: true,
 				BeforeLines: 0, AfterLines: 0,
@@ -167,7 +168,7 @@ index 541cb64f..047d7ee2 100644
 
 	hh, h, err := DiffCut(
 		strings.NewReader(input),
-		types.DiffCutParams{
+		api.DiffCutParams{
 			LineStart:    3,
 			LineStartNew: true,
 			LineEnd:      3,
@@ -210,7 +211,7 @@ index af7864ba..541cb64f 100644
 `
 	hh, h, err := DiffCut(
 		strings.NewReader(input),
-		types.DiffCutParams{
+		api.DiffCutParams{
 			LineStart:    1,
 			LineStartNew: true,
 			LineEnd:      1,

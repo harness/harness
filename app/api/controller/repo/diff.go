@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
-	gittypes "github.com/harness/gitness/git/types"
+	gittypes "github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )

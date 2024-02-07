@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/api"
 )
 
 func TestGetFileDiffRequestsFromQuery(t *testing.T) {
@@ -30,7 +30,7 @@ func TestGetFileDiffRequestsFromQuery(t *testing.T) {
 	tests := []struct {
 		name      string
 		args      args
-		wantFiles types.FileDiffRequests
+		wantFiles api.FileDiffRequests
 	}{
 		{
 			name: "full range",
@@ -42,7 +42,7 @@ func TestGetFileDiffRequestsFromQuery(t *testing.T) {
 					},
 				},
 			},
-			wantFiles: types.FileDiffRequests{
+			wantFiles: api.FileDiffRequests{
 				{
 					Path:      "file.txt",
 					StartLine: 1,
@@ -60,7 +60,7 @@ func TestGetFileDiffRequestsFromQuery(t *testing.T) {
 					},
 				},
 			},
-			wantFiles: types.FileDiffRequests{
+			wantFiles: api.FileDiffRequests{
 				{
 					Path:      "file.txt",
 					StartLine: 1,
@@ -77,7 +77,7 @@ func TestGetFileDiffRequestsFromQuery(t *testing.T) {
 					},
 				},
 			},
-			wantFiles: types.FileDiffRequests{
+			wantFiles: api.FileDiffRequests{
 				{
 					Path:    "file.txt",
 					EndLine: 20,
@@ -94,7 +94,7 @@ func TestGetFileDiffRequestsFromQuery(t *testing.T) {
 					},
 				},
 			},
-			wantFiles: types.FileDiffRequests{
+			wantFiles: api.FileDiffRequests{
 				{
 					Path:    "file.txt",
 					EndLine: 20,
@@ -119,7 +119,7 @@ func TestGetFileDiffRequestsFromQuery(t *testing.T) {
 					},
 				},
 			},
-			wantFiles: types.FileDiffRequests{
+			wantFiles: api.FileDiffRequests{
 				{
 					Path:    "file.txt",
 					EndLine: 20,

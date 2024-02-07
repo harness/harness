@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/api"
 )
 
 type MatchFilesParams struct {
@@ -30,7 +30,7 @@ type MatchFilesParams struct {
 }
 
 type MatchFilesOutput struct {
-	Files []types.FileContent
+	Files []api.FileContent
 }
 
 func (s *Service) MatchFiles(ctx context.Context,
@@ -38,7 +38,7 @@ func (s *Service) MatchFiles(ctx context.Context,
 ) (*MatchFilesOutput, error) {
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	matchedFiles, err := s.adapter.MatchFiles(ctx, repoPath,
+	matchedFiles, err := s.git.MatchFiles(ctx, repoPath,
 		params.Ref, params.DirPath, params.Pattern, params.MaxSize)
 	if err != nil {
 		return nil, fmt.Errorf("MatchFiles: failed to open repo: %w", err)

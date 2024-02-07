@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/api"
 
 	"github.com/drone/go-generate/builder"
 	"github.com/drone/go-generate/chroot"
@@ -55,7 +55,7 @@ func (s *Service) GeneratePipeline(ctx context.Context,
 	}(tempDir)
 
 	// Clone repository to temp dir
-	if err = s.adapter.Clone(ctx, repoPath, tempDir, types.CloneRepoOptions{Depth: 1}); err != nil {
+	if err = s.git.Clone(ctx, repoPath, tempDir, api.CloneRepoOptions{Depth: 1}); err != nil {
 		return GeneratePipelinesOutput{}, fmt.Errorf("failed to clone repo: %w", err)
 	}
 

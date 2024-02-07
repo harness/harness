@@ -23,9 +23,10 @@ import (
 	"sync"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/diff"
 	"github.com/harness/gitness/git/enum"
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/parser"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -53,19 +54,19 @@ func (s *Service) RawDiff(
 	ctx context.Context,
 	out io.Writer,
 	params *DiffParams,
-	files ...types.FileDiffRequest,
+	files ...api.FileDiffRequest,
 ) error {
 	return s.rawDiff(ctx, out, params, files...)
 }
 
-func (s *Service) rawDiff(ctx context.Context, w io.Writer, params *DiffParams, files ...types.FileDiffRequest) error {
+func (s *Service) rawDiff(ctx context.Context, w io.Writer, params *DiffParams, files ...api.FileDiffRequest) error {
 	if err := params.Validate(); err != nil {
 		return err
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	err := s.adapter.RawDiff(ctx, w, repoPath, params.BaseRef, params.HeadRef, params.MergeBase, files...)
+	err := s.git.RawDiff(ctx, w, repoPath, params.BaseRef, params.HeadRef, params.MergeBase, files...)
 	if err != nil {
 		return err
 	}
@@ -77,7 +78,7 @@ func (s *Service) CommitDiff(ctx context.Context, params *GetCommitParams, out i
 		return errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", params.SHA)
 	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	err := s.adapter.CommitDiff(ctx, repoPath, params.SHA, out)
+	err := s.git.CommitDiff(ctx, repoPath, params.SHA, out)
 	if err != nil {
 		return err
 	}
@@ -96,7 +97,7 @@ func (s *Service) DiffShortStat(ctx context.Context, params *DiffParams) (DiffSh
 		return DiffShortStatOutput{}, err
 	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	stat, err := s.adapter.DiffShortStat(ctx,
+	stat, err := s.git.DiffShortStat(ctx,
 		repoPath,
 		params.BaseRef,
 		params.HeadRef,
@@ -208,7 +209,7 @@ func (s *Service) GetDiffHunkHeaders(
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	hunkHeaders, err := s.adapter.GetDiffHunkHeaders(ctx, repoPath, params.TargetCommitSHA, params.SourceCommitSHA)
+	hunkHeaders, err := s.git.GetDiffHunkHeaders(ctx, repoPath, params.TargetCommitSHA, params.SourceCommitSHA)
 	if err != nil {
 		return GetDiffHunkHeadersOutput{}, err
 	}
@@ -257,17 +258,17 @@ func (s *Service) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOu
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	mergeBaseSHA, _, err := s.adapter.GetMergeBase(ctx, repoPath, "", params.TargetCommitSHA, params.SourceCommitSHA)
+	mergeBaseSHA, _, err := s.git.GetMergeBase(ctx, repoPath, "", params.TargetCommitSHA, params.SourceCommitSHA)
 	if err != nil {
 		return DiffCutOutput{}, fmt.Errorf("DiffCut: failed to find merge base: %w", err)
 	}
 
-	header, linesHunk, err := s.adapter.DiffCut(ctx,
+	header, linesHunk, err := s.git.DiffCut(ctx,
 		repoPath,
 		params.TargetCommitSHA,
 		params.SourceCommitSHA,
 		params.Path,
-		types.DiffCutParams{
+		parser.DiffCutParams{
 			LineStart:    params.LineStart,
 			LineStartNew: params.LineStartNew,
 			LineEnd:      params.LineEnd,
@@ -329,7 +330,7 @@ func parseFileDiffStatus(ftype diff.FileType) enum.FileDiffStatus {
 func (s *Service) Diff(
 	ctx context.Context,
 	params *DiffParams,
-	files ...types.FileDiffRequest,
+	files ...api.FileDiffRequest,
 ) (<-chan *FileDiff, <-chan error) {
 	wg := sync.WaitGroup{}
 	ch := make(chan *FileDiff)
@@ -413,7 +414,7 @@ func (s *Service) DiffFileNames(ctx context.Context, params *DiffParams) (DiffFi
 		return DiffFileNamesOutput{}, err
 	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	fileNames, err := s.adapter.DiffFileName(
+	fileNames, err := s.git.DiffFileName(
 		ctx,
 		repoPath,
 		params.BaseRef,
