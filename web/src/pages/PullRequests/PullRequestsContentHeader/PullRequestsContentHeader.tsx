@@ -21,7 +21,6 @@ import { sortBy } from 'lodash-es'
 import { getConfig, getUsingFetch } from 'services/config'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
-import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { TypesPrincipalInfo } from 'services/code'
 import { useAppContext } from 'AppContext'
@@ -33,7 +32,7 @@ interface PullRequestsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadat
   loading?: boolean
   activePullRequestFilterOption?: string
   activePullRequestAuthorFilterOption?: string
-  onPullRequestFilterChanged: (filter: string) => void
+  onPullRequestFilterChanged: React.Dispatch<React.SetStateAction<string>>
   onPullRequestAuthorFilterChanged: (authorFilter: string) => void
   onSearchTermChanged: (searchTerm: string) => void
 }
@@ -50,11 +49,7 @@ export function PullRequestsContentHeader({
   const history = useHistory()
   const { routes } = useAppContext()
   const { getString } = useStrings()
-  const [filterOption, setFilterOption] = useUserPreference(
-    UserPreference.PULL_REQUESTS_FILTER_SELECTED_OPTIONS,
-    activePullRequestFilterOption
-  )
-
+  const [filterOption, setFilterOption] = useState(activePullRequestFilterOption)
   const [authorFilterOption, setAuthorFilterOption] = useState(activePullRequestAuthorFilterOption)
   const [searchTerm, setSearchTerm] = useState('')
   const [query, setQuery] = useState<string>('')

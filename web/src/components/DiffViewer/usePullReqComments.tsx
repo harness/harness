@@ -101,18 +101,21 @@ export function usePullReqComments({
   const isMounted = useIsMounted()
   const { path, commentId } = useQueryParams<{ path: string; commentId: string }>()
   const { save, update, remove } = useCommentAPI(commentPath)
-  const [comments, setComments] = useState(new Map<number, DiffCommentItem<TypesPullReqActivity>>())
+  const [comments] = useState(new Map<number, DiffCommentItem<TypesPullReqActivity>>())
 
   //
   // Attach a single comment thread to its binding DOM. Thread can be a
   // draft/uncommitted/not-saved one.
   //
   const attachSingleCommentThread = useCallback(
-    (id: number) => {
-      const comment = comments.get(id)
+    (commentThreadId: number) => {
+      const comment = comments.get(commentThreadId)
 
       // Early exit if conditions for the comment thread existing don't exist
       if (!comment || !isDiffRendered(contentRef)) return
+
+      // If all comments in this thread are deleted, do nothing
+      if (comment.commentItems.length && comment.commentItems.every(item => !!item.deleted)) return
 
       const isSideBySide = viewStyle === ViewStyle.SIDE_BY_SIDE
       const lineInfo = getCommentLineInfo(contentRef.current, comment, viewStyle)
@@ -123,7 +126,7 @@ export function usePullReqComments({
         // Comment data changed, send updated data to CommentBox to update itself
         if (lineInfo.hasCommentsRendered && !isEqual(comment._commentItems, comment.commentItems)) {
           comment._commentItems = structuredClone(comment.commentItems)
-          dispatchCustomEvent(customEventForCommentWithId(id), comment._commentItems)
+          dispatchCustomEvent(customEventForCommentWithId(commentThreadId), comment._commentItems)
         }
         return
       }
@@ -133,7 +136,7 @@ export function usePullReqComments({
 
       // Create placeholder for opposite row (id < 0 means this is a new thread). This placeholder
       // expands itself when CommentBox's height is changed (in split view)
-      const oppositeRowPlaceHolder = createCommentOppositePlaceHolder(comment.lineNumber, id < 0)
+      const oppositeRowPlaceHolder = createCommentOppositePlaceHolder(comment.lineNumber, commentThreadId < 0)
 
       // Attach the opposite placeholder (in split view)
       if (isSideBySide && !!lineInfo.oppositeRowElement) {
@@ -157,7 +160,7 @@ export function usePullReqComments({
         lineInfo.oppositeRowElement?.parentElement?.removeChild(oppositeRowPlaceHolder as Element)
         delete lineInfo.rowElement.dataset.annotated
         comment.destroy = undefined
-        comments.delete(id)
+        comments.delete(commentThreadId)
       }
 
       // Note: comment._commentItems keeps the latest data passed to CommentBox.
@@ -197,7 +200,7 @@ export function usePullReqComments({
             handleAction={async (action, value, commentItem) => {
               let result = true
               let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
-              const parentId = (commentItem as CommentItem<TypesPullReqActivity>)?.id
+              const id = (commentItem as CommentItem<TypesPullReqActivity>)?.id
 
               switch (action) {
                 case CommentAction.NEW: {
@@ -213,15 +216,12 @@ export function usePullReqComments({
                   }
 
                   await save(payload)
-                    .then((createdActivity: TypesPullReqActivity) => {
-                      // Does this ever happen? If yes, show an error instead
-                      // if (!createdActivity.id) return comment.destroy?.()
-
-                      updatedItem = activityToCommentItem(createdActivity)
+                    .then((_activity: TypesPullReqActivity) => {
+                      updatedItem = activityToCommentItem(_activity)
 
                       // Delete the place-holder comment (negative id) in comments
-                      comments.delete(id)
-                      comments.set(createdActivity.id as number, comment)
+                      comments.delete(commentThreadId)
+                      comments.set(_activity.id as number, comment)
                     })
                     .catch(exception => {
                       result = false
@@ -234,12 +234,10 @@ export function usePullReqComments({
                   await save({
                     type: CommentType.CODE_COMMENT,
                     text: value,
-                    parent_id: Number(parentId)
+                    parent_id: Number(id)
                   })
-                    .then(createdActivity => {
-                      // Does this ever happen? If yes, show an error instead
-                      // if (!createdActivity.id) return comment.destroy?.()
-                      updatedItem = activityToCommentItem(createdActivity)
+                    .then((_activity: TypesPullReqActivity) => {
+                      updatedItem = activityToCommentItem(_activity)
                     })
                     .catch(exception => {
                       result = false
@@ -253,7 +251,7 @@ export function usePullReqComments({
                   await confirmAct({
                     message: getString('deleteCommentConfirm'),
                     action: async () => {
-                      await remove({}, { pathParams: { id: parentId } })
+                      await remove({}, { pathParams: { id } })
                         .then(() => {
                           result = true
                         })
@@ -263,13 +261,26 @@ export function usePullReqComments({
                         })
                     }
                   })
+
+                  // Reflect deleted item in comment.commentItems and comment._commentItems
+                  const deletedItem1 = comment.commentItems.find(it => it.id === id)
+                  const deletedItem2 = comment._commentItems?.find(it => it.id === id)
+
+                  if (deletedItem1) deletedItem1.deleted = Date.now()
+                  if (deletedItem2) deletedItem2.deleted = Date.now()
+
+                  // Remove CommentBox if all items are deleted
+                  if (comment._commentItems?.every(it => !!it.deleted)) {
+                    setTimeout(comment.destroy || noop, 0)
+                  }
+
                   break
                 }
 
                 case CommentAction.UPDATE: {
-                  await update({ text: value }, { pathParams: { id: parentId } })
-                    .then(newComment => {
-                      updatedItem = activityToCommentItem(newComment)
+                  await update({ text: value }, { pathParams: { id } })
+                    .then((_activity: TypesPullReqActivity) => {
+                      updatedItem = activityToCommentItem(_activity)
                     })
                     .catch(exception => {
                       result = false
@@ -343,18 +354,11 @@ export function usePullReqComments({
   )
 
   // Attach (render) all comment threads to their binding DOMs
-  const attachAllCommentThreads = useCallback(
-    (rebuildCommentsFromActivities = false) => {
-      if (!readOnly && isDiffRendered(contentRef)) {
-        if (!comments.size && rebuildCommentsFromActivities) {
-          setComments(new Map<number, DiffCommentItem<TypesPullReqActivity>>())
-        } else {
-          comments.forEach(item => attachSingleCommentThread(item.inner.id || 0))
-        }
-      }
-    },
-    [readOnly, contentRef, comments, attachSingleCommentThread]
-  )
+  const attachAllCommentThreads = useCallback(() => {
+    if (!readOnly && isDiffRendered(contentRef)) {
+      comments.forEach(item => attachSingleCommentThread(item.inner.id || 0))
+    }
+  }, [readOnly, contentRef, comments, attachSingleCommentThread])
 
   // Detach (remove) all comment threads from their binding DOMs
   const detachAllCommentThreads = useCallback(() => {
@@ -365,6 +369,10 @@ export function usePullReqComments({
     }
   }, [readOnly, contentRef])
 
+  // Use a ref to keep latest comment items from activities to make sure rendering process is called
+  // only when there's some real change from upstream (API) and not from React re-rendering process
+  const diffCommentItemsRef = useRef<DiffCommentItem<TypesPullReqActivity>[]>()
+
   useEffect(
     function handleActivitiesChanged() {
       // Read only, no activities, commit range view, diff not rendered yet? Ignore handling comments
@@ -372,59 +380,65 @@ export function usePullReqComments({
         return
       }
 
-      activitiesToDiffCommentItems(diff.filePath, activities).forEach(latestComment => {
-        const { id } = latestComment.inner
+      const _diffCommentItems = activitiesToDiffCommentItems(diff.filePath, activities)
 
-        if (!id) return
+      if (!isEqual(_diffCommentItems, diffCommentItemsRef.current)) {
+        diffCommentItemsRef.current = _diffCommentItems
 
-        //
-        // TODO: Re-evaluate below logics - we might not need them anymore!
-        //
+        _diffCommentItems.forEach(latestComment => {
+          const { id } = latestComment.inner
 
-        const existingComment = comments.get(id)
-        const latestDeleted = latestComment.commentItems.map(x => !!x.deleted).reduce((a, b) => a && b, true)
+          if (!id) return
 
-        // is this a to us new, but already delete comment? perfect, nothing to do
-        if (!existingComment && latestDeleted) return
+          //
+          // TODO: Re-evaluate below logics - we might not need them anymore!
+          //
 
-        // is this a new comment or we failed to render it before? add to our internal cache and render!
-        if (!existingComment || !existingComment.destroy) {
-          comments.set(id, latestComment)
-          return
-        }
+          const existingComment = comments.get(id)
+          const latestDeleted = latestComment.commentItems.map(x => !!x.deleted).reduce((a, b) => a && b, true)
 
-        // heuristic: whoever has the latest update timestamp has the latest data
-        const mostRecentExisting = existingComment.commentItems
-          .map(x => max([x.updated as number, x.edited as number, x.deleted as number]) || 0)
-          .reduce(
-            (x, y) => max([x, y]) || 0,
-            max([
-              existingComment.inner.updated,
-              existingComment.inner.edited,
-              existingComment.inner.deleted as number,
-              existingComment.inner.resolved
-            ]) || 0
-          )
-        const mostRecentLatest = latestComment.commentItems
-          .map(x => max([x.updated as number, x.edited as number, x.deleted as number]) || 0)
-          .reduce(
-            (x, y) => max([x, y]) || 0,
-            max([
-              latestComment.inner.updated,
-              latestComment.inner.edited,
-              latestComment.inner.deleted as number,
-              latestComment.inner.resolved
-            ]) || 0
-          )
+          // is this a to us new, but already delete comment? perfect, nothing to do
+          if (!existingComment && latestDeleted) return
 
-        if (mostRecentExisting >= mostRecentLatest) return
+          // is this a new comment or we failed to render it before? add to our internal cache and render!
+          if (!existingComment || !existingComment.destroy) {
+            comments.set(id, latestComment)
+            return
+          }
 
-        // comment changed -- update everything that can change
-        existingComment.inner = latestComment.inner
-        existingComment.commentItems = [...latestComment.commentItems]
-      })
+          // heuristic: whoever has the latest update timestamp has the latest data
+          const mostRecentExisting = existingComment.commentItems
+            .map(x => max([x.updated as number, x.edited as number, x.deleted as number]) || 0)
+            .reduce(
+              (x, y) => max([x, y]) || 0,
+              max([
+                existingComment.inner.updated,
+                existingComment.inner.edited,
+                existingComment.inner.deleted as number,
+                existingComment.inner.resolved
+              ]) || 0
+            )
+          const mostRecentLatest = latestComment.commentItems
+            .map(x => max([x.updated as number, x.edited as number, x.deleted as number]) || 0)
+            .reduce(
+              (x, y) => max([x, y]) || 0,
+              max([
+                latestComment.inner.updated,
+                latestComment.inner.edited,
+                latestComment.inner.deleted as number,
+                latestComment.inner.resolved
+              ]) || 0
+            )
 
-      attachAllCommentThreads()
+          if (mostRecentExisting >= mostRecentLatest) return
+
+          // comment changed -- update everything that can change
+          existingComment.inner = latestComment.inner
+          existingComment.commentItems = [...latestComment.commentItems]
+        })
+
+        attachAllCommentThreads()
+      }
     },
     [
       commitRange?.length,

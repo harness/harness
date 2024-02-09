@@ -30,6 +30,7 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
 import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
+import { useScrollTop } from 'hooks/useScrollTop'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
 import { Checks } from './Checks/Checks'
@@ -82,6 +83,7 @@ export default function PullRequest() {
 
   const domRef = useRef<HTMLDivElement>(null)
   useSetPageContainerWidthVar({ domRef })
+  useScrollTop()
 
   return (
     <Container className={css.main} ref={domRef}>

@@ -17,7 +17,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { EditorView } from '@codemirror/view'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
-import { Container, Layout, Avatar, TextInput, Text, FlexExpander, Button } from '@harnessio/uicore'
+import { Container, Layout, Avatar, TextInput, Text, FlexExpander, Button, useIsMounted } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import { isEqual, noop, defaultTo } from 'lodash-es'
@@ -125,19 +125,23 @@ const CommentBoxInternal = <T = unknown,>({
   const [markdown, setMarkdown] = useState(initialContent)
   const [dirties, setDirties] = useState<Record<string, boolean>>({})
   const containerRef = useRef<HTMLDivElement>(null)
+  const isMounted = useIsMounted()
 
   useResizeObserver(
     containerRef,
-    useCallback(dom => onHeightChange(dom.offsetHeight), [onHeightChange])
+    useCallback(
+      dom => {
+        if (isMounted.current && dom) onHeightChange(dom.offsetHeight)
+      },
+      [onHeightChange, isMounted]
+    )
   )
 
   useCustomEventListener(
     customEventForCommentWithId(comments?.[0]?.id),
     useCallback((event: CustomEvent) => {
       const updatedComments = event.detail
-      setComments(_comments => {
-        return isEqual(_comments, updatedComments) ? _comments : updatedComments
-      })
+      setComments(_comments => (isEqual(_comments, updatedComments) ? _comments : updatedComments))
     }, []),
     () => !!comments?.[0]?.id
   )

@@ -35,7 +35,6 @@ import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useQueryParams } from 'hooks/useQueryParams'
 import type { TypesPullReq, TypesRepository } from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
-import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
@@ -53,10 +52,7 @@ export default function PullRequests() {
   const history = useHistory()
   const { routes } = useAppContext()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
-  const [filter, setFilter] = useUserPreference<string>(
-    UserPreference.PULL_REQUESTS_FILTER_SELECTED_OPTIONS,
-    PullRequestFilterOption.OPEN
-  )
+  const [filter, setFilter] = useState(PullRequestFilterOption.OPEN as string)
   const [authorFilter, setAuthorFilter] = useState<string>()
   const space = useGetSpaceParam()
   const { updateQueryParams } = useUpdateQueryParams()
@@ -223,7 +219,7 @@ export default function PullRequests() {
         dataTooltipId="repositoryPullRequests"
       />
       <PageBody error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
-        <LoadingSpinner visible={loading || (prLoading && !data)} />
+        <LoadingSpinner visible={loading || (prLoading && !searchTerm)} withBorder={!searchTerm} />
 
         <Render when={repoMetadata}>
           <Layout.Vertical>
