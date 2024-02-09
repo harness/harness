@@ -185,7 +185,7 @@ func TestJSONArrayDynamic(t *testing.T) {
 			name: "happy path",
 			args: args[*mock]{
 				ctx: noctx,
-				f: func(ch chan<- *mock, cherr chan<- error) {
+				f: func(ch chan<- *mock, _ chan<- error) {
 					defer close(ch)
 					ch <- &mock{ID: 1}
 				},
@@ -197,7 +197,7 @@ func TestJSONArrayDynamic(t *testing.T) {
 			name: "empty array response",
 			args: args[*mock]{
 				ctx: noctx,
-				f: func(ch chan<- *mock, cherr chan<- error) {
+				f: func(ch chan<- *mock, _ chan<- error) {
 					close(ch)
 				},
 			},

@@ -52,7 +52,7 @@ func (m *InMemory) NewMutex(key string, options ...Option) (Mutex, error) {
 
 	// set default delayFunc
 	if config.DelayFunc == nil {
-		config.DelayFunc = func(i int) time.Duration {
+		config.DelayFunc = func(_ int) time.Duration {
 			return config.RetryDelay
 		}
 	}

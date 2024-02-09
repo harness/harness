@@ -96,7 +96,7 @@ func NewGitHandler(
 }
 
 func stubGitHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte("Seems like an asteroid destroyed the ancient git protocol"))
 		w.WriteHeader(http.StatusBadGateway)
 	}

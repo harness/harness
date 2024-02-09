@@ -35,8 +35,8 @@ func ProvideCheckSanitizers() map[enum.CheckPayloadKind]func(in *ReportInput, s 
 	return registeredCheckSanitizers
 }
 
-func createEmptyPayloadSanitizer() func(in *ReportInput, s *auth.Session) error {
-	return func(in *ReportInput, s *auth.Session) error {
+func createEmptyPayloadSanitizer() func(in *ReportInput, _ *auth.Session) error {
+	return func(in *ReportInput, _ *auth.Session) error {
 		// the default payload kind (empty) does not support the payload data: clear it here
 		in.Payload.Version = ""
 		in.Payload.Data = []byte("{}")
@@ -49,8 +49,8 @@ func createEmptyPayloadSanitizer() func(in *ReportInput, s *auth.Session) error 
 	}
 }
 
-func createRawPayloadSanitizer() func(in *ReportInput, s *auth.Session) error {
-	return func(in *ReportInput, s *auth.Session) error {
+func createRawPayloadSanitizer() func(in *ReportInput, _ *auth.Session) error {
+	return func(in *ReportInput, _ *auth.Session) error {
 		// the text payload kinds (raw and markdown) do not support the version
 		if in.Payload.Version != "" {
 			return usererror.BadRequestf("Payload version must be empty for the payload kind '%s'",
@@ -68,8 +68,8 @@ func createRawPayloadSanitizer() func(in *ReportInput, s *auth.Session) error {
 	}
 }
 
-func createPipelinePayloadSanitizer() func(in *ReportInput, s *auth.Session) error {
-	return func(in *ReportInput, s *auth.Session) error {
+func createPipelinePayloadSanitizer() func(in *ReportInput, _ *auth.Session) error {
+	return func(_ *ReportInput, _ *auth.Session) error {
 		return usererror.BadRequest("Kind cannot be pipeline for external checks")
 	}
 }
