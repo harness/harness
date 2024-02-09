@@ -148,6 +148,7 @@ type File struct {
 
 	IsBinary    bool
 	IsSubmodule bool
+	Patch       bytes.Buffer
 }
 
 func (f *File) Status() string {
@@ -206,18 +207,20 @@ type Parser struct {
 	// of process should go in.
 	buffer []byte
 	isEOF  bool
+
+	IncludePatch bool
+	Patch        bytes.Buffer
 }
 
-func (p *Parser) readLine() error {
+func (p *Parser) readLine() (newLine bool, err error) {
 	if p.buffer != nil {
-		return nil
+		return false, nil
 	}
 
-	var err error
 	p.buffer, err = p.ReadBytes('\n')
 	if err != nil {
 		if !errors.Is(err, io.EOF) {
-			return fmt.Errorf("read string: %w", err)
+			return false, fmt.Errorf("read string: %w", err)
 		}
 
 		p.isEOF = true
@@ -225,16 +228,22 @@ func (p *Parser) readLine() error {
 
 	// Remove line break
 	if len(p.buffer) > 0 && p.buffer[len(p.buffer)-1] == '\n' {
+		newLine = true
 		p.buffer = p.buffer[:len(p.buffer)-1]
 	}
-	return nil
+	return newLine, nil
 }
 
 var diffHead = []byte("diff --git ")
 
 //nolint:gocognit
 func (p *Parser) parseFileHeader() (*File, error) {
+	p.Patch.Reset()
 	submoduleMode := " 160000"
+	if p.IncludePatch && len(p.buffer) > 0 {
+		p.Patch.Write(p.buffer)
+		p.Patch.Write([]byte{'\n'})
+	}
 	line := string(p.buffer)
 	p.buffer = nil
 
@@ -260,12 +269,18 @@ func (p *Parser) parseFileHeader() (*File, error) {
 		Type:    FileChange,
 	}
 
-	// Check file diff type and submodule
-	var err error
 checkType:
 	for !p.isEOF {
-		if err = p.readLine(); err != nil {
+		newLine, err := p.readLine()
+		if err != nil {
 			return nil, err
+		}
+
+		if p.IncludePatch && len(p.buffer) > 0 {
+			p.Patch.Write(p.buffer)
+			if newLine {
+				p.Patch.Write([]byte{'\n'})
+			}
 		}
 
 		subLine := string(p.buffer)
@@ -365,9 +380,9 @@ func (p *Parser) parseSection() (*Section, error) {
 		rightLine = leftLine
 	}
 
-	var err error
 	for !p.isEOF {
-		if err = p.readLine(); err != nil {
+		newLine, err := p.readLine()
+		if err != nil {
 			return nil, err
 		}
 
@@ -387,6 +402,13 @@ func (p *Parser) parseSection() (*Section, error) {
 				continue
 			}
 			return section, nil
+		}
+
+		if p.IncludePatch && len(p.buffer) > 0 {
+			p.Patch.Write(p.buffer)
+			if newLine {
+				p.Patch.Write([]byte{'\n'})
+			}
 		}
 
 		subLine := string(p.buffer)
@@ -433,17 +455,13 @@ func (p *Parser) Parse(send func(f *File) error) error {
 	additions := 0
 	deletions := 0
 
-	var (
-		err error
-	)
 	for !p.isEOF {
-		if err = p.readLine(); err != nil {
+		newLine, err := p.readLine()
+		if err != nil {
 			return err
 		}
 
-		if len(p.buffer) == 0 ||
-			bytes.HasPrefix(p.buffer, []byte("+++ ")) ||
-			bytes.HasPrefix(p.buffer, []byte("--- ")) {
+		if len(p.buffer) == 0 {
 			p.buffer = nil
 			continue
 		}
@@ -452,6 +470,7 @@ func (p *Parser) Parse(send func(f *File) error) error {
 		if bytes.HasPrefix(p.buffer, diffHead) {
 			// stream previous file
 			if !file.IsEmpty() && send != nil {
+				_, _ = p.Patch.WriteTo(&file.Patch)
 				err = send(file)
 				if err != nil {
 					return fmt.Errorf("failed to send out file: %w", err)
@@ -469,6 +488,13 @@ func (p *Parser) Parse(send func(f *File) error) error {
 		if file == nil {
 			p.buffer = nil
 			continue
+		}
+
+		if p.IncludePatch && len(p.buffer) > 0 {
+			p.Patch.Write(p.buffer)
+			if newLine {
+				p.Patch.Write([]byte{'\n'})
+			}
 		}
 
 		if bytes.HasPrefix(p.buffer, []byte("Binary")) {
@@ -497,7 +523,8 @@ func (p *Parser) Parse(send func(f *File) error) error {
 
 	// stream last file
 	if !file.IsEmpty() && send != nil {
-		err = send(file)
+		file.Patch.Write(p.Patch.Bytes())
+		err := send(file)
 		if err != nil {
 			return fmt.Errorf("failed to send last file: %w", err)
 		}

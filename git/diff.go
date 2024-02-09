@@ -446,20 +446,11 @@ func (s *Service) Diff(
 		defer pr.Close()
 
 		parser := diff.Parser{
-			Reader: bufio.NewReader(pr),
+			Reader:       bufio.NewReader(pr),
+			IncludePatch: params.IncludePatch,
 		}
 
 		err := parser.Parse(func(f *diff.File) error {
-			patch := bytes.Buffer{}
-			if params.IncludePatch {
-				for _, sec := range f.Sections {
-					for _, line := range sec.Lines {
-						if line.Type != diff.DiffLinePlain {
-							patch.WriteString(line.Content)
-						}
-					}
-				}
-			}
 			ch <- &FileDiff{
 				SHA:         f.SHA,
 				OldSHA:      f.OldSHA,
@@ -469,7 +460,7 @@ func (s *Service) Diff(
 				Additions:   int64(f.NumAdditions()),
 				Deletions:   int64(f.NumDeletions()),
 				Changes:     int64(f.NumChanges()),
-				Patch:       patch.Bytes(),
+				Patch:       f.Patch.Bytes(),
 				IsBinary:    f.IsBinary,
 				IsSubmodule: f.IsSubmodule,
 			}
