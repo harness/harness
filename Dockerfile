@@ -69,7 +69,7 @@ RUN apk --update add ca-certificates tini
 # ---------------------------------------------------------#
 #                   Create final image                     #
 # ---------------------------------------------------------#
-FROM --platform=$TARGETPLATFORM alpine/git:2.40.1 as final
+FROM --platform=$TARGETPLATFORM alpine/git:2.43.0 as final
 
 # setup app dir and its content
 WORKDIR /app
