@@ -107,7 +107,7 @@ export function useCommitModal({
             {
               action: commitAction,
               path: oldResourcePath || resourcePath,
-              payload: `${oldResourcePath ? `file://${resourcePath}\n` : ''}${payload}`,
+              payload: `${oldResourcePath ? `${resourcePath}\0` : ''}${payload}`,
               sha
               // encoding: 'base64',
               // payload: window.btoa(payload || '')
@@ -153,7 +153,7 @@ export function useCommitModal({
               {
                 action: commitAction,
                 path: oldResourcePath || resourcePath,
-                payload: `${oldResourcePath ? `file://${resourcePath}\n` : ''}${payload}`,
+                payload: `${oldResourcePath ? `${resourcePath}\0` : ''}${payload}`,
                 sha
               }
             ],
