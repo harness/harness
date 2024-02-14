@@ -26,6 +26,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/types"
 
 	"github.com/rs/zerolog/log"
@@ -51,19 +52,6 @@ func parseTreeNodeMode(s string) (types.TreeNodeType, types.TreeNodeMode, error)
 		return types.TreeNodeTypeBlob, types.TreeNodeModeFile,
 			fmt.Errorf("unknown git tree node mode: '%s'", s)
 	}
-}
-
-func scanZeroSeparated(data []byte, atEOF bool) (advance int, token []byte, err error) {
-	if atEOF && len(data) == 0 {
-		return 0, nil, nil // Return nothing if at end of file and no data passed
-	}
-	if i := strings.IndexByte(string(data), 0); i >= 0 {
-		return i + 1, data[0:i], nil // Split at zero byte
-	}
-	if atEOF {
-		return len(data), data, nil // at the end of file return the data
-	}
-	return
 }
 
 // regexpLsTreeColumns is a regular expression that is used to parse a single line
@@ -105,7 +93,7 @@ func lsTree(
 
 	list := make([]types.TreeNode, 0, n)
 	scan := bufio.NewScanner(output)
-	scan.Split(scanZeroSeparated)
+	scan.Split(parser.ScanZeroSeparated)
 	for scan.Scan() {
 		line := scan.Text()
 

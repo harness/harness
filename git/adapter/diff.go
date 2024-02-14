@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/types"
 
@@ -365,6 +366,8 @@ func (a Adapter) GetDiffHunkHeaders(
 
 // DiffCut parses full file git diff output and returns lines specified with the parameters.
 // The purpose of this function is to get diff data with which code comments could be generated.
+//
+//nolint:gocognit
 func (a Adapter) DiffCut(
 	ctx context.Context,
 	repoPath string,
@@ -376,8 +379,10 @@ func (a Adapter) DiffCut(
 	if repoPath == "" {
 		return types.HunkHeader{}, types.Hunk{}, ErrRepositoryPathEmpty
 	}
+
+	// first fetch the list of the changed files
+
 	pipeRead, pipeWrite := io.Pipe()
-	stderr := &bytes.Buffer{}
 	go func() {
 		var err error
 
@@ -386,25 +391,103 @@ func (a Adapter) DiffCut(
 			_ = pipeWrite.CloseWithError(err)
 		}()
 
-		cmd := git.NewCommand(ctx,
-			"diff", "--merge-base", "--patch", "--no-color", "--unified=100000000",
-			targetRef, sourceRef, "--", path)
-		err = cmd.Run(&git.RunOpts{
-			Dir:    repoPath,
-			Stdout: pipeWrite,
-			Stderr: stderr, // We capture stderr output in a buffer.
-		})
+		cmd := command.New("diff",
+			command.WithFlag("--raw"),
+			command.WithFlag("--merge-base"),
+			command.WithFlag("-z"),
+			command.WithFlag("--find-renames"),
+			command.WithArg(targetRef),
+			command.WithArg(sourceRef))
+		err = cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(pipeWrite))
+	}()
+
+	diffEntries, err := parser.DiffRaw(pipeRead)
+	if err != nil {
+		return types.HunkHeader{}, types.Hunk{}, fmt.Errorf("failed to find the list of changed files: %w", err)
+	}
+
+	var (
+		oldSHA, newSHA string
+		filePath       string
+	)
+
+	for _, entry := range diffEntries {
+		switch entry.Status {
+		case parser.DiffStatusRenamed, parser.DiffStatusCopied:
+			if entry.Path != path && entry.OldPath != path {
+				continue
+			}
+
+			if params.LineStartNew && path == entry.OldPath {
+				msg := "for renamed files provide the new file name if commenting the changed lines"
+				return types.HunkHeader{}, types.Hunk{}, errors.InvalidArgument(msg)
+			}
+			if !params.LineStartNew && path == entry.Path {
+				msg := "for renamed files provide the old file name if commenting the old lines"
+				return types.HunkHeader{}, types.Hunk{}, errors.InvalidArgument(msg)
+			}
+		default:
+			if entry.Path != path {
+				continue
+			}
+		}
+
+		switch entry.Status {
+		case parser.DiffStatusRenamed, parser.DiffStatusCopied, parser.DiffStatusModified:
+			// For modified and renamed compare file blobs directly.
+			oldSHA = entry.OldBlobSHA
+			newSHA = entry.NewBlobSHA
+		case parser.DiffStatusAdded, parser.DiffStatusDeleted:
+			// For added and deleted compare commits, but with the provided path.
+			oldSHA = targetRef
+			newSHA = sourceRef
+			filePath = entry.Path
+		}
+
+		break
+	}
+
+	if newSHA == "" {
+		return types.HunkHeader{}, types.Hunk{}, errors.NotFound("file %s not found in the diff", path)
+	}
+
+	// next pull the diff cut for the requested file
+
+	pipeRead, pipeWrite = io.Pipe()
+	stderr := bytes.NewBuffer(nil)
+	go func() {
+		var err error
+
+		defer func() {
+			// If running of the command below fails, make the pipe reader also fail with the same error.
+			_ = pipeWrite.CloseWithError(err)
+		}()
+
+		cmd := command.New("diff",
+			command.WithFlag("--patch"),
+			command.WithFlag("--no-color"),
+			command.WithFlag("--unified=100000000"),
+			command.WithArg(oldSHA),
+			command.WithArg(newSHA))
+		if filePath != "" {
+			cmd.Add(
+				command.WithFlag("--merge-base"),
+				command.WithPostSepArg(filePath))
+		}
+
+		err = cmd.Run(ctx,
+			command.WithDir(repoPath),
+			command.WithStdout(pipeWrite),
+			command.WithStderr(stderr))
 	}()
 
 	diffCutHeader, linesHunk, err := parser.DiffCut(pipeRead, params)
-
-	// First check if there's something in the stderr buffer, if yes that's the error
 	if errStderr := parseDiffStderr(stderr); errStderr != nil {
+		// First check if there's something in the stderr buffer, if yes that's the error
 		return types.HunkHeader{}, types.Hunk{}, errStderr
 	}
-
-	// Next check if reading the git diff output caused an error
 	if err != nil {
+		// Next check if reading the git diff output caused an error
 		return types.HunkHeader{}, types.Hunk{}, err
 	}
 

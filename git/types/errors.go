@@ -26,11 +26,11 @@ const (
 )
 
 var (
-	ErrAlreadyExists   = errors.New("already exists")
-	ErrInvalidPath     = errors.New("path is invalid")
-	ErrSHADoesNotMatch = errors.New("sha does not match")
-	ErrNoDefaultBranch = errors.New("no default branch")
-	ErrHunkNotFound    = errors.New("hunk not found")
+	ErrAlreadyExists   = errors.Conflict("already exists")
+	ErrInvalidPath     = errors.NotFound("path is invalid")
+	ErrSHADoesNotMatch = errors.InvalidArgument("sha does not match")
+	ErrNoDefaultBranch = errors.NotFound("no default branch")
+	ErrHunkNotFound    = errors.NotFound("hunk not found")
 )
 
 type NotFoundError struct {
