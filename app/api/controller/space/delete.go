@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
@@ -73,18 +74,29 @@ func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, sp
 // WARNING this is meant for internal calls only.
 func (c *Controller) deleteRepositoriesNoAuth(ctx context.Context, session *auth.Session, spaceID int64) error {
 	filter := &types.RepoFilter{
-		Page:  1,
-		Size:  int(math.MaxInt),
-		Query: "",
-		Order: enum.OrderAsc,
-		Sort:  enum.RepoAttrNone,
+		Page:          1,
+		Size:          int(math.MaxInt),
+		Query:         "",
+		Order:         enum.OrderAsc,
+		Sort:          enum.RepoAttrNone,
+		DeletedBefore: nil,
 	}
 	repos, _, err := c.ListRepositoriesNoAuth(ctx, spaceID, filter)
 	if err != nil {
 		return fmt.Errorf("failed to list space repositories: %w", err)
 	}
+
+	// TEMPORARY until we support space delete/restore CODE-1413
+	recent := time.Now().Add(+time.Hour * 24).UnixMilli()
+	filter.DeletedBefore = &recent
+	alreadyDeletedRepos, _, err := c.ListRepositoriesNoAuth(ctx, spaceID, filter)
+	if err != nil {
+		return fmt.Errorf("failed to list delete repositories for space %d: %w", spaceID, err)
+	}
+	repos = append(repos, alreadyDeletedRepos...)
+
 	for _, repo := range repos {
-		err = c.repoCtrl.DeleteNoAuth(ctx, session, repo)
+		err = c.repoCtrl.PurgeNoAuth(ctx, session, repo)
 		if err != nil {
 			return fmt.Errorf("failed to delete repository %d: %w", repo.ID, err)
 		}

@@ -225,7 +225,7 @@ func (s *Service) DeleteRepositoryBestEffort(ctx context.Context, repoUID string
 	repoPath := getFullPathForRepo(s.reposRoot, repoUID)
 	tempPath := path.Join(s.reposGraveyard, repoUID)
 
-	// delete should not fail if repoGraveyard dir does not exist
+	// delete should not fail if repoGraveyard dir does not exist.
 	if _, err := os.Stat(s.reposGraveyard); os.IsNotExist(err) {
 		if errdir := os.MkdirAll(s.reposGraveyard, fileMode700); errdir != nil {
 			return fmt.Errorf("clean up dir '%s' doesn't exist and can't be created: %w", s.reposGraveyard, errdir)

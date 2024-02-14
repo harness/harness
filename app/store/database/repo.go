@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -57,15 +58,16 @@ type RepoStore struct {
 
 type repository struct {
 	// TODO: int64 ID doesn't match DB
-	ID          int64  `db:"repo_id"`
-	Version     int64  `db:"repo_version"`
-	ParentID    int64  `db:"repo_parent_id"`
-	Identifier  string `db:"repo_uid"`
-	Description string `db:"repo_description"`
-	IsPublic    bool   `db:"repo_is_public"`
-	CreatedBy   int64  `db:"repo_created_by"`
-	Created     int64  `db:"repo_created"`
-	Updated     int64  `db:"repo_updated"`
+	ID          int64    `db:"repo_id"`
+	Version     int64    `db:"repo_version"`
+	ParentID    int64    `db:"repo_parent_id"`
+	Identifier  string   `db:"repo_uid"`
+	Description string   `db:"repo_description"`
+	IsPublic    bool     `db:"repo_is_public"`
+	CreatedBy   int64    `db:"repo_created_by"`
+	Created     int64    `db:"repo_created"`
+	Updated     int64    `db:"repo_updated"`
+	Deleted     null.Int `db:"repo_deleted"`
 
 	Size        int64 `db:"repo_size"`
 	SizeUpdated int64 `db:"repo_size_updated"`
@@ -95,6 +97,7 @@ const (
 		,repo_created_by
 		,repo_created
 		,repo_updated
+		,repo_deleted
 		,repo_size
 		,repo_size_updated
 		,repo_git_uid
@@ -115,40 +118,53 @@ const (
 
 // Find finds the repo by id.
 func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, error) {
-	const sqlQuery = repoSelectBase + `
-		WHERE repo_id = $1`
+	return s.find(ctx, id, nil)
+}
+
+// find is a wrapper to find a repo by id w/o deleted timestamp.
+func (s *RepoStore) find(ctx context.Context, id int64, deletedAt *int64) (*types.Repository, error) {
+	var sqlQuery = repoSelectBase + `
+		WHERE repo_id = $1 AND repo_deleted IS NULL`
+	if deletedAt != nil {
+		sqlQuery = repoSelectBase + `
+		WHERE repo_id = $1 AND repo_deleted = $2`
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(repository)
-	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
+	if err := db.GetContext(ctx, dst, sqlQuery, id, deletedAt); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
 	}
 
 	return s.mapToRepo(ctx, dst)
 }
 
-// Find finds the repo with the given identifier in the given space ID.
-func (s *RepoStore) FindByIdentifier(
+func (s *RepoStore) findByIdentifier(
 	ctx context.Context,
 	spaceID int64,
 	identifier string,
+	deletedAt *int64,
 ) (*types.Repository, error) {
-	const sqlQuery = repoSelectBase + `
-		WHERE repo_parent_id = $1 AND LOWER(repo_uid) = $2`
+	var sqlQuery = repoSelectBase + `
+	WHERE repo_parent_id = $1 AND LOWER(repo_uid) = $2 AND repo_deleted IS NULL`
+
+	if deletedAt != nil {
+		sqlQuery = repoSelectBase + `
+		WHERE repo_parent_id = $1 AND LOWER(repo_uid) = $2 AND repo_deleted = $3`
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(repository)
-	if err := db.GetContext(ctx, dst, sqlQuery, spaceID, strings.ToLower(identifier)); err != nil {
+	if err := db.GetContext(ctx, dst, sqlQuery, spaceID, strings.ToLower(identifier), deletedAt); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
 	}
 
 	return s.mapToRepo(ctx, dst)
 }
 
-// FindByRef finds the repo using the repoRef as either the id or the repo path.
-func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repository, error) {
+func (s *RepoStore) findByRef(ctx context.Context, repoRef string, deletedAt *int64) (*types.Repository, error) {
 	// ASSUMPTION: digits only is not a valid repo path
 	id, err := strconv.ParseInt(repoRef, 10, 64)
 	if err != nil {
@@ -161,10 +177,23 @@ func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repos
 			return nil, fmt.Errorf("failed to get space path: %w", err)
 		}
 
-		return s.FindByIdentifier(ctx, pathObject.SpaceID, repoIdentifier)
+		return s.findByIdentifier(ctx, pathObject.SpaceID, repoIdentifier, deletedAt)
 	}
+	return s.find(ctx, id, deletedAt)
+}
 
-	return s.Find(ctx, id)
+// FindByRef finds the repo using the repoRef as either the id or the repo path.
+func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repository, error) {
+	return s.findByRef(ctx, repoRef, nil)
+}
+
+// FindByRefAndDeletedAt finds the repo using the repoRef and deleted timestamp.
+func (s *RepoStore) FindByRefAndDeletedAt(
+	ctx context.Context,
+	repoRef string,
+	deletedAt int64,
+) (*types.Repository, error) {
+	return s.findByRef(ctx, repoRef, &deletedAt)
 }
 
 // Create creates a new repository.
@@ -179,6 +208,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_created_by
 			,repo_created
 			,repo_updated
+			,repo_deleted
 			,repo_size
 			,repo_size_updated	
 			,repo_git_uid
@@ -200,6 +230,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_created_by
 			,:repo_created
 			,:repo_updated
+			,:repo_deleted
 			,:repo_size
 			,:repo_size_updated
 			,:repo_git_uid
@@ -241,6 +272,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 		SET
 			 repo_version = :repo_version
 			,repo_updated = :repo_updated
+			,repo_deleted = :repo_deleted
 			,repo_parent_id = :repo_parent_id
 			,repo_uid = :repo_uid
 			,repo_git_uid = :repo_git_uid
@@ -296,12 +328,12 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 }
 
 // UpdateSize updates the size of a specific repository in the database.
-func (s *RepoStore) UpdateSize(ctx context.Context, repoID int64, size int64) error {
+func (s *RepoStore) UpdateSize(ctx context.Context, id int64, size int64) error {
 	stmt := database.Builder.
 		Update("repositories").
 		Set("repo_size", size).
 		Set("repo_size_updated", time.Now().UnixMilli()).
-		Where("repo_id = ?", repoID)
+		Where("repo_id = ? AND repo_deleted IS NULL", id)
 
 	sqlQuery, args, err := stmt.ToSql()
 	if err != nil {
@@ -321,26 +353,62 @@ func (s *RepoStore) UpdateSize(ctx context.Context, repoID int64, size int64) er
 	}
 
 	if count == 0 {
-		return fmt.Errorf("repo %d size not updated: %w", repoID, gitness_store.ErrResourceNotFound)
+		return fmt.Errorf("repo %d size not updated: %w", id, gitness_store.ErrResourceNotFound)
 	}
 
 	return nil
 }
 
 // GetSize returns the repo size.
-func (s *RepoStore) GetSize(ctx context.Context, repoID int64) (int64, error) {
-	query := "SELECT repo_size FROM repositories WHERE repo_id = $1;"
+func (s *RepoStore) GetSize(ctx context.Context, id int64) (int64, error) {
+	query := "SELECT repo_size FROM repositories WHERE repo_id = $1 AND repo_deleted IS NULL;"
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var size int64
-	if err := db.GetContext(ctx, &size, query, repoID); err != nil {
+	if err := db.GetContext(ctx, &size, query, id); err != nil {
 		return 0, database.ProcessSQLErrorf(err, "failed to get repo size")
 	}
 	return size, nil
 }
 
-// UpdateOptLock updates the repository using the optimistic locking mechanism.
-func (s *RepoStore) UpdateOptLock(ctx context.Context,
+// UpdateOptLock updates the active repository using the optimistic locking mechanism.
+func (s *RepoStore) UpdateOptLock(
+	ctx context.Context,
+	repo *types.Repository,
+	mutateFn func(repository *types.Repository) error,
+) (*types.Repository, error) {
+	return s.updateOptLock(
+		ctx,
+		repo,
+		func(r *types.Repository) error {
+			if repo.Deleted != nil {
+				return gitness_store.ErrResourceNotFound
+			}
+			return mutateFn(r)
+		},
+	)
+}
+
+// UpdateDeletedOptLock updates a deleted repository using the optimistic locking mechanism.
+func (s *RepoStore) updateDeletedOptLock(ctx context.Context,
+	repo *types.Repository,
+	mutateFn func(repository *types.Repository) error,
+) (*types.Repository, error) {
+	return s.updateOptLock(
+		ctx,
+		repo,
+		func(r *types.Repository) error {
+			if repo.Deleted == nil {
+				return gitness_store.ErrResourceNotFound
+			}
+			return mutateFn(r)
+		},
+	)
+}
+
+// updateOptLock updates the repository using the optimistic locking mechanism.
+func (s *RepoStore) updateOptLock(
+	ctx context.Context,
 	repo *types.Repository,
 	mutateFn func(repository *types.Repository) error,
 ) (*types.Repository, error) {
@@ -360,29 +428,61 @@ func (s *RepoStore) UpdateOptLock(ctx context.Context,
 			return nil, err
 		}
 
-		repo, err = s.Find(ctx, repo.ID)
+		repo, err = s.find(ctx, repo.ID, repo.Deleted)
 		if err != nil {
 			return nil, err
 		}
 	}
 }
 
-// Delete the repository.
-func (s *RepoStore) Delete(ctx context.Context, id int64) error {
+// SoftDelete deletes a repo softly by setting the deleted timestamp.
+func (s *RepoStore) SoftDelete(ctx context.Context, repo *types.Repository, deletedAt *int64) error {
+	_, err := s.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
+		r.Deleted = deletedAt
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to soft delete repo: %w", err)
+	}
+	return nil
+}
+
+// Purge deletes the repo permanently.
+func (s *RepoStore) Purge(ctx context.Context, id int64, deletedAt *int64) error {
 	const repoDelete = `
 		DELETE FROM repositories
-		WHERE repo_id = $1`
+		WHERE repo_id = $1 AND repo_deleted = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, repoDelete, id); err != nil {
+	if _, err := db.ExecContext(ctx, repoDelete, id, deletedAt); err != nil {
 		return database.ProcessSQLErrorf(err, "the delete query failed")
 	}
 
 	return nil
 }
 
-// Count of repos in a space. if parentID (space) is zero then it will count all repositories in the system.
+// Restore restores a deleted repo.
+func (s *RepoStore) Restore(
+	ctx context.Context,
+	repo *types.Repository,
+	newIdentifier string,
+) (*types.Repository, error) {
+	repo, err := s.updateDeletedOptLock(ctx, repo, func(r *types.Repository) error {
+		r.Deleted = nil
+		if newIdentifier != "" {
+			r.Identifier = newIdentifier
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(err, "failed to restore the repo")
+	}
+	return repo, nil
+}
+
+// Count of active repos in a space. if parentID (space) is zero then it will count all repositories in the system.
+// With "DeletedBefore" filter, counts only deleted repos by opts.DeletedBefore.
 func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
@@ -394,6 +494,12 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 
 	if opts.Query != "" {
 		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+	}
+
+	if opts.DeletedBefore != nil {
+		stmt = stmt.Where("repo_deleted < ?", opts.DeletedBefore)
+	} else {
+		stmt = stmt.Where("repo_deleted IS NULL")
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -411,7 +517,7 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 	return count, nil
 }
 
-// Count all repos in a hierarchy of spaces.
+// Count all active repos in a hierarchy of spaces.
 func (s *RepoStore) CountAll(ctx context.Context, spaceID int64) (int64, error) {
 	query := `WITH RECURSIVE SpaceHierarchy AS (
     SELECT space_id, space_parent_id
@@ -435,7 +541,7 @@ FROM SpaceHierarchy h1;`
 	}
 
 	query = fmt.Sprintf(
-		"SELECT COUNT(repo_id) FROM repositories WHERE repo_parent_id IN (%s);",
+		"SELECT COUNT(repo_id) FROM repositories WHERE repo_parent_id IN (%s) AND repo_deleted IS NULL;",
 		intsToCSV(spaceIDs),
 	)
 
@@ -447,12 +553,19 @@ FROM SpaceHierarchy h1;`
 	return numRepos, nil
 }
 
-// List returns a list of repos in a space.
+// List returns a list of active repos in a space.
+// With "DeletedBefore" filter, shows deleted repos by opts.DeletedBefore.
 func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error) {
 	stmt := database.Builder.
 		Select(repoColumnsForJoin).
 		From("repositories").
 		Where("repo_parent_id = ?", fmt.Sprint(parentID))
+
+	if opts.DeletedBefore != nil {
+		stmt = stmt.Where("repo_deleted < ?", opts.DeletedBefore)
+	} else {
+		stmt = stmt.Where("repo_deleted IS NULL")
+	}
 
 	if opts.Query != "" {
 		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
@@ -472,6 +585,8 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 		stmt = stmt.OrderBy("repo_created " + opts.Order.String())
 	case enum.RepoAttrUpdated:
 		stmt = stmt.OrderBy("repo_updated " + opts.Order.String())
+	case enum.RepoAttrDeleted:
+		stmt = stmt.OrderBy("repo_deleted " + opts.Order.String())
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -499,7 +614,8 @@ type repoSize struct {
 func (s *RepoStore) ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeInfo, error) {
 	stmt := database.Builder.
 		Select("repo_id", "repo_git_uid", "repo_size", "repo_size_updated").
-		From("repositories")
+		From("repositories").
+		Where("repo_deleted IS NULL")
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -531,6 +647,7 @@ func (s *RepoStore) mapToRepo(
 		Created:        in.Created,
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,
+		Deleted:        in.Deleted.Ptr(),
 		Size:           in.Size,
 		SizeUpdated:    in.SizeUpdated,
 		GitUID:         in.GitUID,
@@ -609,6 +726,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		Created:        in.Created,
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,
+		Deleted:        null.IntFromPtr(in.Deleted),
 		Size:           in.Size,
 		SizeUpdated:    in.SizeUpdated,
 		GitUID:         in.GitUID,

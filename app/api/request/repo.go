@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	PathParamRepoRef = "repo_ref"
-	QueryParamRepoID = "repo_id"
+	PathParamRepoRef        = "repo_ref"
+	QueryParamRepoID        = "repo_id"
+	QueryParamRepoDeletedAt = "repo_deleted_at"
 )
 
 func GetRepoRefFromPath(r *http.Request) (string, error) {
@@ -53,4 +54,9 @@ func ParseRepoFilter(r *http.Request) *types.RepoFilter {
 		Sort:  ParseSortRepo(r),
 		Size:  ParseLimit(r),
 	}
+}
+
+// GetRepoDeletedAtFromQuery extracts the repository deleted timestamp from the query.
+func GetRepoDeletedAtFromQuery(r *http.Request) (int64, error) {
+	return QueryParamAsPositiveInt64(r, QueryParamRepoDeletedAt)
 }

@@ -184,6 +184,9 @@ type (
 		// Find the repo by id.
 		Find(ctx context.Context, id int64) (*types.Repository, error)
 
+		// FindByRefAndDeletedAt finds the repo using the repoRef and deleted timestamp.
+		FindByRefAndDeletedAt(ctx context.Context, repoRef string, deletedAt int64) (*types.Repository, error)
+
 		// FindByRef finds the repo using the repoRef as either the id or the repo path.
 		FindByRef(ctx context.Context, repoRef string) (*types.Repository, error)
 
@@ -194,28 +197,36 @@ type (
 		Update(ctx context.Context, repo *types.Repository) error
 
 		// Update the repo size.
-		UpdateSize(ctx context.Context, repoID int64, repoSize int64) error
+		UpdateSize(ctx context.Context, id int64, repoSize int64) error
 
 		// Get the repo size.
-		GetSize(ctx context.Context, repoID int64) (int64, error)
+		GetSize(ctx context.Context, id int64) (int64, error)
 
 		// UpdateOptLock the repo details using the optimistic locking mechanism.
 		UpdateOptLock(ctx context.Context, repo *types.Repository,
 			mutateFn func(repository *types.Repository) error) (*types.Repository, error)
 
-		// Delete the repo.
-		Delete(ctx context.Context, id int64) error
+		// SoftDelete a repo.
+		SoftDelete(ctx context.Context, repo *types.Repository, deletedAt *int64) error
 
-		// Count of repos in a space.
+		// Purge the soft deleted repo permanently.
+		Purge(ctx context.Context, id int64, deletedAt *int64) error
+
+		// Restore a deleted repo using the optimistic locking mechanism.
+		Restore(ctx context.Context, repo *types.Repository,
+			newIdentifier string) (*types.Repository, error)
+
+		// Count of active repos in a space. With "DeletedBefore" filter, counts only deleted repos by opts.DeletedBefore.
 		Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error)
 
-		// Count all repos in a hierarchy of spaces.
+		// Count all active repos in a hierarchy of spaces.
 		CountAll(ctx context.Context, spaceID int64) (int64, error)
 
-		// List returns a list of repos in a space.
+		// List returns a list of active repos in a space.
+		// With "DeletedBefore" filter, shows deleted repos by opts.DeletedBefore.
 		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 
-		// ListSizeInfos returns a list of all repo sizes.
+		// ListSizeInfos returns a list of all active repo sizes.
 		ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeInfo, error)
 	}
 

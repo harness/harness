@@ -15,6 +15,7 @@
 package cleanup
 
 import (
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/job"
 
@@ -31,6 +32,8 @@ func ProvideService(
 	executor *job.Executor,
 	webhookExecutionStore store.WebhookExecutionStore,
 	tokenStore store.TokenStore,
+	repoStore store.RepoStore,
+	repoCtrl *repo.Controller,
 ) (*Service, error) {
 	return NewService(
 		config,
@@ -38,5 +41,7 @@ func ProvideService(
 		executor,
 		webhookExecutionStore,
 		tokenStore,
+		repoStore,
+		repoCtrl,
 	)
 }

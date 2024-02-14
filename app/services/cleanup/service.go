@@ -20,12 +20,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/job"
 )
 
 type Config struct {
-	WebhookExecutionsRetentionTime time.Duration
+	WebhookExecutionsRetentionTime   time.Duration
+	DeletedRepositoriesRetentionTime time.Duration
 }
 
 func (c *Config) Prepare() error {
@@ -34,6 +36,10 @@ func (c *Config) Prepare() error {
 	}
 	if c.WebhookExecutionsRetentionTime <= 0 {
 		return errors.New("config.WebhookExecutionsRetentionTime has to be provided")
+	}
+
+	if c.DeletedRepositoriesRetentionTime <= 0 {
+		return errors.New("config.DeletedRepositoriesRetentionTime has to be provided")
 	}
 	return nil
 }
@@ -45,6 +51,8 @@ type Service struct {
 	executor              *job.Executor
 	webhookExecutionStore store.WebhookExecutionStore
 	tokenStore            store.TokenStore
+	repoStore             store.RepoStore
+	repoCtrl              *repo.Controller
 }
 
 func NewService(
@@ -53,6 +61,8 @@ func NewService(
 	executor *job.Executor,
 	webhookExecutionStore store.WebhookExecutionStore,
 	tokenStore store.TokenStore,
+	repoStore store.RepoStore,
+	repoCtrl *repo.Controller,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided cleanup config is invalid: %w", err)
@@ -65,6 +75,8 @@ func NewService(
 		executor:              executor,
 		webhookExecutionStore: webhookExecutionStore,
 		tokenStore:            tokenStore,
+		repoStore:             repoStore,
+		repoCtrl:              repoCtrl,
 	}, nil
 }
 
@@ -104,6 +116,16 @@ func (s *Service) scheduleRecurringCleanupJobs(ctx context.Context) error {
 		return fmt.Errorf("failed to schedule token job: %w", err)
 	}
 
+	err = s.scheduler.AddRecurring(
+		ctx,
+		jobTypeDeletedRepos,
+		jobTypeDeletedRepos,
+		jobCronDeletedRepos,
+		jobMaxDurationDeletedRepos,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to schedule deleted repo cleanup job: %w", err)
+	}
 	return nil
 }
 
@@ -128,5 +150,15 @@ func (s *Service) registerJobHandlers() error {
 		return fmt.Errorf("failed to register job handler for token cleanup: %w", err)
 	}
 
+	if err := s.executor.Register(
+		jobTypeDeletedRepos,
+		newDeletedReposCleanupJob(
+			s.config.DeletedRepositoriesRetentionTime,
+			s.repoStore,
+			s.repoCtrl,
+		),
+	); err != nil {
+		return fmt.Errorf("failed to register job handler for deleted repos cleanup: %w", err)
+	}
 	return nil
 }

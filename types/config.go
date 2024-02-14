@@ -348,4 +348,9 @@ type Config struct {
 		Concurrency int `envconfig:"GITNESS_KEYWORD_SEARCH_CONCURRENCY" default:"4"`
 		MaxRetries  int `envconfig:"GITNESS_KEYWORD_SEARCH_MAX_RETRIES" default:"3"`
 	}
+
+	Repos struct {
+		// DeletedRetentionTime is the duration after which deleted repositories will be purged.
+		DeletedRetentionTime time.Duration `envconfig:"GITNESS_REPOS_DELETED_RETENTION_TIME" default:"2160h"` // 90 days
+	}
 }

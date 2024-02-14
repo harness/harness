@@ -260,7 +260,9 @@ func setupRepos(r chi.Router,
 			// repo level operations
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))
 			r.Patch("/", handlerrepo.HandleUpdate(repoCtrl))
-			r.Delete("/", handlerrepo.HandleDelete(repoCtrl))
+			r.Delete("/", handlerrepo.HandleSoftDelete(repoCtrl))
+			r.Post("/purge", handlerrepo.HandlePurge(repoCtrl))
+			r.Post("/restore", handlerrepo.HandleRestore(repoCtrl))
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
