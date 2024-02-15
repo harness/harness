@@ -110,10 +110,6 @@ const (
 		,repo_num_open_pulls
 		,repo_num_merged_pulls
 		,repo_importing`
-
-	repoSelectBase = `
-		SELECT` + repoColumnsForJoin + `
-		FROM repositories`
 )
 
 // Find finds the repo by id.
@@ -123,17 +119,26 @@ func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, erro
 
 // find is a wrapper to find a repo by id w/o deleted timestamp.
 func (s *RepoStore) find(ctx context.Context, id int64, deletedAt *int64) (*types.Repository, error) {
-	var sqlQuery = repoSelectBase + `
-		WHERE repo_id = $1 AND repo_deleted IS NULL`
+	stmt := database.Builder.
+		Select(repoColumnsForJoin).
+		From("repositories").
+		Where("repo_id = ?", id)
+
 	if deletedAt != nil {
-		sqlQuery = repoSelectBase + `
-		WHERE repo_id = $1 AND repo_deleted = $2`
+		stmt = stmt.Where("repo_deleted = ?", *deletedAt)
+	} else {
+		stmt = stmt.Where("repo_deleted IS NULL")
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(repository)
-	if err := db.GetContext(ctx, dst, sqlQuery, id, deletedAt); err != nil {
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
 	}
 
@@ -146,18 +151,26 @@ func (s *RepoStore) findByIdentifier(
 	identifier string,
 	deletedAt *int64,
 ) (*types.Repository, error) {
-	var sqlQuery = repoSelectBase + `
-	WHERE repo_parent_id = $1 AND LOWER(repo_uid) = $2 AND repo_deleted IS NULL`
+	stmt := database.Builder.
+		Select(repoColumnsForJoin).
+		From("repositories").
+		Where("repo_parent_id = ? AND LOWER(repo_uid) = ?", spaceID, strings.ToLower(identifier))
 
 	if deletedAt != nil {
-		sqlQuery = repoSelectBase + `
-		WHERE repo_parent_id = $1 AND LOWER(repo_uid) = $2 AND repo_deleted = $3`
+		stmt = stmt.Where("repo_deleted = ?", *deletedAt)
+	} else {
+		stmt = stmt.Where("repo_deleted IS NULL")
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(repository)
-	if err := db.GetContext(ctx, dst, sqlQuery, spaceID, strings.ToLower(identifier), deletedAt); err != nil {
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
 	}
 
