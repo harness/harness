@@ -703,6 +703,7 @@ export interface StringsMap {
   'repos.updated': string
   repositories: string
   repositoryName: string
+  reqChanges: string
   requestChanges: string
   required: string
   resetZoom: string

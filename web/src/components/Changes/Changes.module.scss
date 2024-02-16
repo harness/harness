@@ -132,16 +132,9 @@
     }
   }
   .menuReviewItem {
-    &:hover {
-      p {
-        color: var(--white) !important;
-      }
-
-      svg path {
-        fill: var(--white) !important;
-      }
+    &.bp3-disabled {
+      opacity: 0.5 !important;
     }
-
     .reviewIcon {
       margin-top: 2px;
     }
@@ -157,6 +150,22 @@
       line-height: 16px;
       max-width: 320px;
     }
+    &:hover p {
+      color: var(--white) !important;
+    }
+    &:hover .reviewIcon {
+      color: var(--white) !important;
+    }
+  }
+  :global {
+    .menuReviewItem:hover {
+      reviewIcon {
+        color: white !important;
+      }
+      p {
+        color: transparent !important;
+      }
+    }
   }
 }
 
@@ -169,6 +178,20 @@
     pointer-events: none;
     opacity: 0.5;
   }
+  :global {
+    & .bp3-button[aria-label='Approved'] {
+      pointer-events: none;
+      --background-color: var(--green-700) !important;
+      --background-color-hover: var(--green-900) !important;
+      --background-color-active: var(--green-900) !important;
+    }
+    & .bp3-button[aria-label='Changes Requested'] {
+      pointer-events: none;
+      --background-color: var(--orange-800) !important;
+      --background-color-hover: var(--orange-900) !important;
+      --background-color-active: var(--orange-900) !important;
+    }
+  }
 }
 
 .commitsDropdown {
@@ -176,4 +199,20 @@
   background-color: var(--grey-100) !important;
   border-radius: 4px;
   padding: var(--spacing-xsmall) var(--spacing-4) !important;
+}
+
+.btnDisabled {
+  opacity: 0.5;
+}
+
+.changeReqBtn {
+  --background-color: var(--orange-800) !important;
+  --background-color-hover: var(--orange-900) !important;
+  --background-color-active: var(--orange-900) !important;
+}
+
+.approvedBtn {
+  --background-color: var(--green-700) !important;
+  --background-color-hover: var(--green-900) !important;
+  --background-color-active: var(--green-900) !important;
 }

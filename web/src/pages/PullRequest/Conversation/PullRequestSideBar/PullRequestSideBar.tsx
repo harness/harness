@@ -26,6 +26,7 @@ import { useStrings } from 'framework/strings'
 import type { TypesPullReq, TypesRepository, EnumPullReqReviewDecision } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { ReviewerSelect } from 'components/ReviewerSelect/ReviewerSelect'
+import { PullReqReviewDecision, processReviewDecision } from 'pages/PullRequest/PullRequestUtils'
 import ignoreFailed from '../../../../icons/ignoreFailed.svg'
 import css from './PullRequestSideBar.module.scss'
 
@@ -36,13 +37,6 @@ interface PullRequestSideBarProps {
   refetchReviewers: () => void
 }
 
-enum PullReqReviewDecision {
-  approved = 'approved',
-  changeReq = 'changereq',
-  pending = 'pending',
-  outdated = 'outdated'
-}
-
 const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   const { reviewers, repoMetadata, pullRequestMetadata, refetchReviewers } = props
   // const [searchTerm, setSearchTerm] = useState('')
@@ -50,15 +44,6 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   const { getString } = useStrings()
   // const tagArr = []
   const { showError } = useToaster()
-
-  const processReviewDecision = (
-    review_decision: EnumPullReqReviewDecision,
-    reviewedSHA?: string,
-    sourceSHA?: string
-  ) =>
-    review_decision === PullReqReviewDecision.approved && reviewedSHA !== sourceSHA
-      ? PullReqReviewDecision.outdated
-      : review_decision
 
   const generateReviewDecisionInfo = (
     reviewDecision: EnumPullReqReviewDecision | PullReqReviewDecision.outdated
