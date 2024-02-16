@@ -13,19 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 .imageModal {
   width: 100% !important;
   background: unset !important;
 
   .content {
-    width: fit-content !important;
+    width: 100% !important;
+    max-width: 100vw;
+    height: auto;
     background: unset !important;
+    overflow: hidden;
 
-    overflow: visible;
     .image {
       padding: var(--spacing-small);
-      scale: 1;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
     }
   }
 
@@ -48,7 +53,7 @@
     .Dialog--children,
     .Carousel--carouselItem {
       justify-content: center !important;
-      display: flex !important;
+      align-items: center;
     }
 
     .Dialog--close {
