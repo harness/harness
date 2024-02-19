@@ -83,7 +83,14 @@ func (p *CommitFilesParams) Validate() error {
 	return p.WriteParams.Validate()
 }
 
+type CommitFileStat struct {
+	Total     int
+	Additions int
+	Deletions int
+}
+
 type CommitFilesResponse struct {
+	Stats    CommitFileStat
 	CommitID string
 }
 
@@ -220,6 +227,14 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 	log.Debug().Msg("update ref")
 
 	branchRef := api.GetReferenceFromBranchName(params.Branch)
+	stats, err := s.CommitShortStat(ctx, &CommitShortStatParams{
+		Path: repoPath,
+		Ref:  newCommitSHA,
+	})
+	if err != nil {
+		return CommitFilesResponse{}, fmt.Errorf("failed to get diff stats: %w", err)
+	}
+
 	if params.Branch != params.NewBranch {
 		// we are creating a new branch, rather than updating the existing one
 		oldCommitSHA = api.NilSHA
@@ -248,6 +263,11 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 
 	return CommitFilesResponse{
 		CommitID: commit.SHA,
+		Stats: CommitFileStat{
+			Total:     stats.Additions + stats.Deletions,
+			Additions: stats.Additions,
+			Deletions: stats.Deletions,
+		},
 	}, nil
 }
 

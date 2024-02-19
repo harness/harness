@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/git/api/url"
 	"github.com/harness/gitness/git/command"
 
 	"github.com/rs/zerolog/log"
@@ -348,18 +347,8 @@ func (g *Git) Push(
 		cmd.Add(command.WithPostSepArg(opts.Branch))
 	}
 
-	// remove credentials if there are any
-	if strings.Contains(opts.Remote, "://") && strings.Contains(opts.Remote, "@") {
-		opts.Remote = url.SanitizeCredentialURLs(opts.Remote)
-	}
-
-	if opts.Timeout == 0 {
-		opts.Timeout = -1
-	}
-
 	if g.traceGit {
-		// create copy to not modify original underlying array
-		opts.Env = append([]string{gitTrace + "=true"}, opts.Env...)
+		cmd.Add(command.WithEnv(command.GitTrace, "true"))
 	}
 
 	var outbuf, errbuf strings.Builder
@@ -367,6 +356,7 @@ func (g *Git) Push(
 		command.WithDir(repoPath),
 		command.WithStdout(&outbuf),
 		command.WithStderr(&errbuf),
+		command.WithEnvs(opts.Env...),
 	)
 
 	if g.traceGit {

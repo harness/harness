@@ -26,7 +26,6 @@ import (
 )
 
 var (
-	ErrAlreadyExists       = errors.New("already exists")
 	ErrInvalidPath         = errors.New("path is invalid")
 	ErrRepositoryPathEmpty = errors.InvalidArgument("repository path cannot be empty")
 	ErrBranchNameEmpty     = errors.InvalidArgument("branch name cannot be empty")

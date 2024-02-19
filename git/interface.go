@@ -74,6 +74,7 @@ type Interface interface {
 	CommitDiff(ctx context.Context, params *GetCommitParams, w io.Writer) error
 	DiffShortStat(ctx context.Context, params *DiffParams) (DiffShortStatOutput, error)
 	DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOutput, error)
+	CommitShortStat(ctx context.Context, params *CommitShortStatParams) (CommitShortStatOutput, error)
 
 	GetDiffHunkHeaders(ctx context.Context, params GetDiffHunkHeadersParams) (GetDiffHunkHeadersOutput, error)
 	DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOutput, error)

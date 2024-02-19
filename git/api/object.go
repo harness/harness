@@ -14,23 +14,52 @@
 
 package api
 
-// ObjectType git object type.
-type ObjectType string
+import "fmt"
+
+//// ObjectType git object type.
+//type ObjectType string
+//
+//const (
+//	// ObjectCommit commit object type.
+//	ObjectCommit ObjectType = "commit"
+//	// ObjectTree tree object type.
+//	ObjectTree ObjectType = "tree"
+//	// ObjectBlob blob object type.
+//	ObjectBlob ObjectType = "blob"
+//	// ObjectTag tag object type.
+//	ObjectTag ObjectType = "tag"
+//	// ObjectBranch branch object type.
+//	ObjectBranch ObjectType = "branch"
+//)
+
+type GitObjectType string
 
 const (
-	// ObjectCommit commit object type.
-	ObjectCommit ObjectType = "commit"
-	// ObjectTree tree object type.
-	ObjectTree ObjectType = "tree"
-	// ObjectBlob blob object type.
-	ObjectBlob ObjectType = "blob"
-	// ObjectTag tag object type.
-	ObjectTag ObjectType = "tag"
-	// ObjectBranch branch object type.
-	ObjectBranch ObjectType = "branch"
+	GitObjectTypeCommit GitObjectType = "commit"
+	GitObjectTypeTree   GitObjectType = "tree"
+	GitObjectTypeBlob   GitObjectType = "blob"
+	GitObjectTypeTag    GitObjectType = "tag"
 )
 
-// Bytes returns the byte array for the Object Type.
-func (o ObjectType) Bytes() []byte {
-	return []byte(o)
+func ParseGitObjectType(t string) (GitObjectType, error) {
+	switch t {
+	case string(GitObjectTypeCommit):
+		return GitObjectTypeCommit, nil
+	case string(GitObjectTypeBlob):
+		return GitObjectTypeBlob, nil
+	case string(GitObjectTypeTree):
+		return GitObjectTypeTree, nil
+	case string(GitObjectTypeTag):
+		return GitObjectTypeTag, nil
+	default:
+		return GitObjectTypeBlob, fmt.Errorf("unknown git object type '%s'", t)
+	}
 }
+
+type SortOrder int
+
+const (
+	SortOrderDefault SortOrder = iota
+	SortOrderAsc
+	SortOrderDesc
+)

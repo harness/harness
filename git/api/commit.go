@@ -78,6 +78,13 @@ type CommitDivergence struct {
 	Behind int32
 }
 
+type PathRenameDetails struct {
+	OldPath         string
+	NewPath         string
+	CommitSHABefore string
+	CommitSHAAfter  string
+}
+
 // GetLatestCommit gets the latest commit of a path relative from the provided revision.
 func (g *Git) GetLatestCommit(
 	ctx context.Context,

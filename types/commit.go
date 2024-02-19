@@ -14,9 +14,12 @@
 
 package types
 
+import "github.com/harness/gitness/git"
+
 // CommitFilesResponse holds commit id.
 type CommitFilesResponse struct {
-	DryRunRules    bool             `json:"dry_run_rules,omitempty"`
-	CommitID       string           `json:"commit_id"`
-	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
+	DryRunRules    bool               `json:"dry_run_rules,omitempty"`
+	CommitID       string             `json:"commit_id"`
+	RuleViolations []RuleViolations   `json:"rule_violations,omitempty"`
+	Stats          git.CommitFileStat `json:"stats,omitempty"`
 }

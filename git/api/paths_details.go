@@ -19,6 +19,11 @@ import (
 	"fmt"
 )
 
+type PathDetails struct {
+	Path       string
+	LastCommit *Commit
+}
+
 // PathsDetails returns additional details about provided the paths.
 func (g *Git) PathsDetails(ctx context.Context,
 	repoPath string,

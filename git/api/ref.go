@@ -31,6 +31,77 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// GitReferenceField represents the different fields available When listing references.
+// For the full list, see https://git-scm.com/docs/git-for-each-ref#_field_names
+type GitReferenceField string
+
+const (
+	GitReferenceFieldRefName     GitReferenceField = "refname"
+	GitReferenceFieldObjectType  GitReferenceField = "objecttype"
+	GitReferenceFieldObjectName  GitReferenceField = "objectname"
+	GitReferenceFieldCreatorDate GitReferenceField = "creatordate"
+)
+
+func ParseGitReferenceField(f string) (GitReferenceField, error) {
+	switch f {
+	case string(GitReferenceFieldCreatorDate):
+		return GitReferenceFieldCreatorDate, nil
+	case string(GitReferenceFieldRefName):
+		return GitReferenceFieldRefName, nil
+	case string(GitReferenceFieldObjectName):
+		return GitReferenceFieldObjectName, nil
+	case string(GitReferenceFieldObjectType):
+		return GitReferenceFieldObjectType, nil
+	default:
+		return GitReferenceFieldRefName, fmt.Errorf("unknown git reference field '%s'", f)
+	}
+}
+
+type WalkInstruction int
+
+const (
+	WalkInstructionStop WalkInstruction = iota
+	WalkInstructionHandle
+	WalkInstructionSkip
+)
+
+type WalkReferencesEntry map[GitReferenceField]string
+
+// TODO: can be generic (so other walk methods can use the same)
+type WalkReferencesInstructor func(WalkReferencesEntry) (WalkInstruction, error)
+
+// TODO: can be generic (so other walk methods can use the same)
+type WalkReferencesHandler func(WalkReferencesEntry) error
+
+type WalkReferencesOptions struct {
+	// Patterns are the patterns used to pre-filter the references of the repo.
+	// OPTIONAL. By default all references are walked.
+	Patterns []string
+
+	// Fields indicates the fields that are passed to the instructor & handler
+	// OPTIONAL. Default fields are:
+	// - GitReferenceFieldRefName
+	// - GitReferenceFieldObjectName
+	Fields []GitReferenceField
+
+	// Instructor indicates on how to handle the reference.
+	// OPTIONAL. By default all references are handled.
+	// NOTE: once walkInstructionStop is returned, the walking stops.
+	Instructor WalkReferencesInstructor
+
+	// Sort indicates the field by which the references should be sorted.
+	// OPTIONAL. By default GitReferenceFieldRefName is used.
+	Sort GitReferenceField
+
+	// Order indicates the Order (asc or desc) of the sorted output
+	Order SortOrder
+
+	// MaxWalkDistance is the maximum number of nodes that are iterated over before the walking stops.
+	// OPTIONAL. A value of <= 0 will walk all references.
+	// WARNING: Skipped elements count towards the walking distance
+	MaxWalkDistance int32
+}
+
 func DefaultInstructor(
 	_ WalkReferencesEntry,
 ) (WalkInstruction, error) {

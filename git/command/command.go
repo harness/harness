@@ -135,6 +135,7 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 	cmd := exec.CommandContext(ctx, GitExecutable, args...)
 	if len(c.Envs) > 0 {
 		cmd.Env = c.Envs.Args()
+		cmd.Env = append(cmd.Env, options.Envs...)
 	}
 	cmd.Dir = options.Dir
 	cmd.Stdin = options.Stdin

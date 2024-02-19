@@ -57,10 +57,10 @@ func (g *Git) GetBlob(
 		cancel()
 		return nil, fmt.Errorf("cat-file returned object sha '%s' but expected '%s'", objectSHA, sha)
 	}
-	if objectType != string(ObjectBlob) {
+	if objectType != string(GitObjectTypeBlob) {
 		cancel()
 		return nil, errors.InvalidArgument(
-			"cat-file returned object type '%s' but expected '%s'", objectType, ObjectBlob)
+			"cat-file returned object type '%s' but expected '%s'", objectType, GitObjectTypeBlob)
 	}
 
 	contentSize := objectSize

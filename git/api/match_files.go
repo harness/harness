@@ -21,6 +21,11 @@ import (
 	"path"
 )
 
+type FileContent struct {
+	Path    string
+	Content []byte
+}
+
 //nolint:gocognit
 func (g *Git) MatchFiles(
 	ctx context.Context,

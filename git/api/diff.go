@@ -38,6 +38,12 @@ type FileDiffRequest struct {
 
 type FileDiffRequests []FileDiffRequest
 
+type DiffShortStat struct {
+	Files     int
+	Additions int
+	Deletions int
+}
+
 // modifyHeader needs to modify diff hunk header with the new start line
 // and end line with calculated span.
 // if diff hunk header is -100, 50 +100, 50 and startLine = 120, endLine=140
