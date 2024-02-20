@@ -72,9 +72,14 @@ func mapGiteaCommit(giteaCommit *gitea.Commit) (*types.Commit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to map gitea commiter: %w", err)
 	}
+	parentShas := make([]string, len(giteaCommit.Parents))
+	for i := range giteaCommit.Parents {
+		parentShas[i] = giteaCommit.Parents[i].String()
+	}
 	return &types.Commit{
-		SHA:   giteaCommit.ID.String(),
-		Title: giteaCommit.Summary(),
+		SHA:        giteaCommit.ID.String(),
+		ParentSHAs: parentShas,
+		Title:      giteaCommit.Summary(),
 		// remove potential tailing newlines from message
 		Message:   strings.TrimRight(giteaCommit.Message(), "\n"),
 		Author:    author,

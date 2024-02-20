@@ -21,6 +21,8 @@ import (
 	"github.com/harness/gitness/git/adapter"
 	"github.com/harness/gitness/git/sharedrepo"
 	"github.com/harness/gitness/git/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Func represents a merge method function. The concrete merge implementation functions must have this signature.
@@ -108,6 +110,8 @@ func mergeInternal(
 }
 
 // Rebase merges two the commits (targetSHA and sourceSHA) using the Rebase method.
+//
+//nolint:gocognit // refactor if needed.
 func Rebase(
 	ctx context.Context,
 	repoPath, tmpDir string,
@@ -116,18 +120,19 @@ func Rebase(
 	mergeBaseSHA, targetSHA, sourceSHA string,
 ) (mergeSHA string, conflicts []string, err error) {
 	err = runInSharedRepo(ctx, tmpDir, repoPath, func(s *sharedrepo.SharedRepo) error {
-		sourceSHAs, err := s.CommitSHAList(ctx, mergeBaseSHA, sourceSHA)
+		sourceSHAs, err := s.CommitSHAsForRebase(ctx, mergeBaseSHA, sourceSHA)
 		if err != nil {
 			return fmt.Errorf("failed to find commit list in rebase merge: %w", err)
 		}
 
 		lastCommitSHA := targetSHA
+		lastTreeSHA, err := s.GetTreeSHA(ctx, targetSHA)
+		if err != nil {
+			return fmt.Errorf("failed to get tree sha for target: %w", err)
+		}
 
-		for i := len(sourceSHAs) - 1; i >= 0; i-- {
-			commitSHA := sourceSHAs[i]
-
+		for _, commitSHA := range sourceSHAs {
 			var treeSHA string
-			var commitConflicts []string
 
 			commitInfo, err := adapter.GetCommit(ctx, s.Directory(), commitSHA, "")
 			if err != nil {
@@ -141,29 +146,41 @@ func Rebase(
 				message += "\n\n" + commitInfo.Message
 			}
 
-			treeSHA, commitConflicts, err = s.MergeTree(ctx, mergeBaseSHA, lastCommitSHA, commitSHA)
+			mergeTreeMergeBaseSHA := ""
+			if len(commitInfo.ParentSHAs) > 0 {
+				// use parent of commit as merge base to only apply changes introduced by commit.
+				// See example usage of when --merge-base was introduced:
+				// https://github.com/git/git/commit/66265a693e8deb3ab86577eb7f69940410044081
+				//
+				// NOTE: CommitSHAsForRebase only returns non-merge commits.
+				mergeTreeMergeBaseSHA = commitInfo.ParentSHAs[0]
+			}
+
+			treeSHA, conflicts, err = s.MergeTree(ctx, mergeTreeMergeBaseSHA, lastCommitSHA, commitSHA)
 			if err != nil {
 				return fmt.Errorf("failed to merge tree in rebase merge: %w", err)
 			}
-
-			if len(commitConflicts) > 0 {
-				_, _, conflicts, err = FindConflicts(ctx, s.Directory(), targetSHA, sourceSHA)
-				if err != nil {
-					return fmt.Errorf("failed to find conflicts in rebase merge: %w", err)
-				}
-
-				if len(conflicts) == 0 {
-					return fmt.Errorf("expected to find conflicts after rebase merge between %s and %s, but couldn't",
-						mergeBaseSHA, sourceSHA)
-				}
-
+			if len(conflicts) > 0 {
 				return nil
+			}
+
+			// Drop any commit which after being rebased would be empty.
+			// There's two cases in which that can happen:
+			// 1. Empty commit.
+			//    Github is dropping empty commits, so we'll do the same.
+			// 2. The changes of the commit already exist on the target branch.
+			//    Git's `git rebase` is dropping such commits on default (and so does Github)
+			//    https://git-scm.com/docs/git-rebase#Documentation/git-rebase.txt---emptydropkeepask
+			if treeSHA == lastTreeSHA {
+				log.Ctx(ctx).Debug().Msgf("skipping commit %s as it's empty after rebase", commitSHA)
+				continue
 			}
 
 			lastCommitSHA, err = s.CommitTree(ctx, author, committer, treeSHA, message, false, lastCommitSHA)
 			if err != nil {
 				return fmt.Errorf("failed to commit tree in rebase merge: %w", err)
 			}
+			lastTreeSHA = treeSHA
 		}
 
 		mergeSHA = lastCommitSHA

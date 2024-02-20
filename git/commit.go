@@ -30,12 +30,13 @@ type GetCommitParams struct {
 }
 
 type Commit struct {
-	SHA       string          `json:"sha"`
-	Title     string          `json:"title"`
-	Message   string          `json:"message,omitempty"`
-	Author    Signature       `json:"author"`
-	Committer Signature       `json:"committer"`
-	FileStats CommitFileStats `json:"file_stats,omitempty"`
+	SHA        string          `json:"sha"`
+	ParentSHAs []string        `json:"parent_shas,omitempty"`
+	Title      string          `json:"title"`
+	Message    string          `json:"message,omitempty"`
+	Author     Signature       `json:"author"`
+	Committer  Signature       `json:"committer"`
+	FileStats  CommitFileStats `json:"file_stats,omitempty"`
 }
 
 type GetCommitOutput struct {

@@ -56,12 +56,13 @@ func mapCommit(c *types.Commit) (*Commit, error) {
 		return nil, fmt.Errorf("failed to map rpc committer: %w", err)
 	}
 	return &Commit{
-		SHA:       c.SHA,
-		Title:     c.Title,
-		Message:   c.Message,
-		Author:    *author,
-		Committer: *comitter,
-		FileStats: *mapFileStats(&c.FileStats),
+		SHA:        c.SHA,
+		ParentSHAs: c.ParentSHAs,
+		Title:      c.Title,
+		Message:    c.Message,
+		Author:     *author,
+		Committer:  *comitter,
+		FileStats:  *mapFileStats(&c.FileStats),
 	}, nil
 }
 

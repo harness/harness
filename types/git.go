@@ -57,11 +57,12 @@ type TagFilter struct {
 }
 
 type Commit struct {
-	SHA       string    `json:"sha"`
-	Title     string    `json:"title"`
-	Message   string    `json:"message"`
-	Author    Signature `json:"author"`
-	Committer Signature `json:"committer"`
+	SHA        string    `json:"sha"`
+	ParentSHAs []string  `json:"parent_shas,omitempty"`
+	Title      string    `json:"title"`
+	Message    string    `json:"message"`
+	Author     Signature `json:"author"`
+	Committer  Signature `json:"committer"`
 }
 
 type Signature struct {

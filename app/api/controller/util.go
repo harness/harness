@@ -95,11 +95,12 @@ func MapCommit(c *git.Commit) (*types.Commit, error) {
 	}
 
 	return &types.Commit{
-		SHA:       c.SHA,
-		Title:     c.Title,
-		Message:   c.Message,
-		Author:    *author,
-		Committer: *committer,
+		SHA:        c.SHA,
+		ParentSHAs: c.ParentSHAs,
+		Title:      c.Title,
+		Message:    c.Message,
+		Author:     *author,
+		Committer:  *committer,
 	}, nil
 }
 

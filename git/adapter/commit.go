@@ -574,14 +574,15 @@ func GetCommit(
 ) (*types.Commit, error) {
 	const format = "" +
 		fmtCommitHash + fmtZero + // 0
-		fmtAuthorName + fmtZero + // 1
-		fmtAuthorEmail + fmtZero + // 2
-		fmtAuthorTime + fmtZero + // 3
-		fmtCommitterName + fmtZero + // 4
-		fmtCommitterEmail + fmtZero + // 5
-		fmtCommitterTime + fmtZero + // 6
-		fmtSubject + fmtZero + // 7
-		fmtBody // 8
+		fmtParentHashes + fmtZero + // 1
+		fmtAuthorName + fmtZero + // 2
+		fmtAuthorEmail + fmtZero + // 3
+		fmtAuthorTime + fmtZero + // 4
+		fmtCommitterName + fmtZero + // 5
+		fmtCommitterEmail + fmtZero + // 6
+		fmtCommitterTime + fmtZero + // 7
+		fmtSubject + fmtZero + // 8
+		fmtBody // 9
 
 	cmd := command.New("log",
 		command.WithFlag("--max-count", "1"),
@@ -606,7 +607,7 @@ func GetCommit(
 		return nil, errors.InvalidArgument("path %q not found in %s", path, rev)
 	}
 
-	const columnCount = 9
+	const columnCount = 10
 
 	commitData := strings.Split(strings.TrimSpace(commitLine), separatorZero)
 	if len(commitData) != columnCount {
@@ -615,22 +616,24 @@ func GetCommit(
 	}
 
 	sha := commitData[0]
-	authorName := commitData[1]
-	authorEmail := commitData[2]
-	authorTimestamp := commitData[3]
-	committerName := commitData[4]
-	committerEmail := commitData[5]
-	committerTimestamp := commitData[6]
-	subject := commitData[7]
-	body := commitData[8]
+	parentSHAs := strings.Split(commitData[1], " ")
+	authorName := commitData[2]
+	authorEmail := commitData[3]
+	authorTimestamp := commitData[4]
+	committerName := commitData[5]
+	committerEmail := commitData[6]
+	committerTimestamp := commitData[7]
+	subject := commitData[8]
+	body := commitData[9]
 
 	authorTime, _ := time.Parse(time.RFC3339Nano, authorTimestamp)
 	committerTime, _ := time.Parse(time.RFC3339Nano, committerTimestamp)
 
 	return &types.Commit{
-		SHA:     sha,
-		Title:   subject,
-		Message: body,
+		SHA:        sha,
+		ParentSHAs: parentSHAs,
+		Title:      subject,
+		Message:    body,
 		Author: types.Signature{
 			Identity: types.Identity{
 				Name:  authorName,

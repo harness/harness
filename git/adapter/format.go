@@ -19,9 +19,9 @@ const (
 	fmtPerc = "%%"
 	fmtZero = "%x00"
 
-	fmtCommitHash = "%H"
-	fmtTreeHash   = "%T"
-	fmtParentHash = "%T"
+	fmtCommitHash   = "%H"
+	fmtTreeHash     = "%T"
+	fmtParentHashes = "%P"
 
 	fmtAuthorName  = "%an"
 	fmtAuthorEmail = "%ae"
