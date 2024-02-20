@@ -209,7 +209,7 @@ export function usePullReqComments({
                     line_end: comment.lineNumber,
                     line_start_new: !comment.left,
                     line_end_new: !comment.left,
-                    path: diff.filePath,
+                    path: diff.isRename && comment.left ? diff.oldName : diff.filePath,
                     source_commit_sha: sourceRef,
                     target_commit_sha: targetRef,
                     text: value
