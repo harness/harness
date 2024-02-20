@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-/* eslint-disable */
-// This is an auto-generated file
-export declare const andOr: string
-export declare const highltedText: string
-export declare const searchCtn: string
-export declare const textCtn: string
-export declare const toggleSearch: string
-export declare const toggleTitle: string
+export function useFeatureFlags<T = Record<string, boolean>>() {
+  return {} as T
+}

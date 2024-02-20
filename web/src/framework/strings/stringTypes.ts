@@ -3,6 +3,7 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
+  AIDA: string
   Enable: string
   accessControl: string
   accountEmail: string
@@ -251,6 +252,7 @@ export interface StringsMap {
   emptyRepoHeader: string
   emptyRepoInclude: string
   emptySpaceText: string
+  enableAISearch: string
   enableSSLVerification: string
   enableWebhookContent: string
   enableWebhookTitle: string
@@ -401,6 +403,11 @@ export interface StringsMap {
   inactiveBranches: string
   isRequired: string
   key: string
+  'keywordSearch.sampleQueries.searchForClass': string
+  'keywordSearch.sampleQueries.searchForFilesWithCMD': string
+  'keywordSearch.sampleQueries.searchForInitialCommit': string
+  'keywordSearch.sampleQueries.searchForPattern': string
+  keywordSearchPlaceholder: string
   killed: string
   language: string
   leaveAComment: string
@@ -753,6 +760,7 @@ export interface StringsMap {
   selectStatuses: string
   selectToViewMore: string
   selectUsers: string
+  'semanticSearch.sampleQueries': string
   setAsAdmin: string
   setting: string
   settings: string

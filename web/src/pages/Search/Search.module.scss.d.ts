@@ -27,6 +27,7 @@ export declare const highlight: string
 export declare const highlightLineNumber: string
 export declare const isCollapsed: string
 export declare const layout: string
+export declare const loadingSpinner: string
 export declare const main: string
 export declare const multiSelect: string
 export declare const noResult: string
@@ -41,6 +42,7 @@ export declare const resultTitle: string
 export declare const searchBox: string
 export declare const searchResult: string
 export declare const selected: string
+export declare const semanticStamp: string
 export declare const showMoreCtn: string
 export declare const split: string
 export declare const texts: string

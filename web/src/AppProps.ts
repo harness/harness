@@ -66,6 +66,7 @@ export interface AppProps {
     useExecutionDataHook: Unknown
     useLogsContent: Unknown
     useLogsStreaming: Unknown
+    useFeatureFlags: Unknown
   }>
 
   currentUser: Required<TypesUser>

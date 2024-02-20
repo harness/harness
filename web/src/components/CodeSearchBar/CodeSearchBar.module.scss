@@ -18,10 +18,19 @@
   position: relative;
   width: 100%;
 
-  input {
-    background-color: transparent !important;
-    color: transparent !important;
-    caret-color: var(--black);
+  &[data-search-mode='keyword'] {
+    input {
+      background-color: transparent !important;
+      color: transparent !important;
+      caret-color: var(--black);
+    }
+  }
+
+  &[data-search-mode='semantic'] {
+    input {
+      caret-color: var(--black);
+      border-color: var(--ai-purple-600) !important;
+    }
   }
 
   > div:nth-child(2),
@@ -40,6 +49,7 @@
     top: 8px;
     color: black;
     font-size: 13px;
+    z-index: 1;
   }
 
   .highltedText {
@@ -52,16 +62,52 @@
     color: var(--red-700);
   }
 
-  .toggleSearch {
+  .toggleBtn {
     position: absolute;
-    right: 14px;
-    top: 6px;
+    right: 31px;
+    top: 7px;
     z-index: 1;
   }
 
+  .toggleHiddenBtn {
+    position: absolute;
+    cursor: pointer;
+    right: 41px !important;
+    top: 8px;
+    border-radius: 8px;
+    right: 49px;
+    font-size: 9px;
+    padding: 7.5px 14px;
+    color: transparent;
+    border: none;
+    background-color: transparent;
+    z-index: 2;
+  }
+
+  :global {
+    .bp3-control.bp3-switch input:checked ~ .bp3-control-indicator {
+      background-color: var(--ai-purple-600);
+    }
+    .bp3-control.bp3-switch input:checked ~ .bp3-control-indicator {
+      background-color: var(--ai-purple-800);
+    }
+  }
   .toggleTitle {
     position: absolute;
-    right: 53px;
-    top: 9px;
+    right: 81px;
+    top: 7px;
+  }
+
+  .toggleLogo {
+    position: absolute;
+    right: 80px !important;
+    top: 3.7px !important;
+  }
+
+  .searchIcon {
+    position: absolute;
+    left: 12px;
+    top: 11px;
+    z-index: 1;
   }
 }

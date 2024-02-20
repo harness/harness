@@ -27,9 +27,10 @@ import { CloneButtonTooltip } from 'components/CloneButtonTooltip/CloneButtonToo
 import { CodeIcon, GitInfoProps, isDir, isGitRev, isRefATag } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
-import KeywordSearch from 'components/CodeSearch/KeywordSearch'
+// import KeywordSearch from 'components/CodeSearch/KeywordSearch'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { permissionProps } from 'utils/Utils'
+import CodeSearch from 'components/CodeSearch/CodeSearch'
 import css from './ContentHeader.module.scss'
 
 export function ContentHeader({
@@ -156,7 +157,7 @@ export function ContentHeader({
           </>
         )}
       </Layout.Horizontal>
-      <div className={css.searchBoxCtn}>{!standalone ? <KeywordSearch repoMetadata={repoMetadata} /> : null}</div>
+      <div className={css.searchBoxCtn}>{!standalone ? <CodeSearch repoMetadata={repoMetadata} /> : null}</div>
     </Container>
   )
 }
