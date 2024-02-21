@@ -616,7 +616,10 @@ func GetCommit(
 	}
 
 	sha := commitData[0]
-	parentSHAs := strings.Split(commitData[1], " ")
+	var parentSHAs []string
+	if commitData[1] != "" {
+		parentSHAs = strings.Split(commitData[1], " ")
+	}
 	authorName := commitData[2]
 	authorEmail := commitData[3]
 	authorTimestamp := commitData[4]
