@@ -91,14 +91,12 @@ pageTitle:
   pullRequest: Pull Request
   pullRequests: Pull Requests
   createWebhook: Create Webhook
-  webhookDetail: Webhook Detail
   webhooks: Webhooks
   repositorySettings: Repository Settings
   repositories: Repositories
-  commits: Commits
   branches: Branches
   tags: Tags
-  editFile: Edit File
+  editFileLocation: Editing {{{path}}}
   repository: Repository
   home: Home
   users: Users
@@ -844,6 +842,7 @@ step:
 stepCategory:
   select: Select step category
 exportSpace:
+  harness: Harness
   accIdRequired: Account ID is required
   accesstokenReq: Access token is required
   accIdLabel: 'Harness Account Id'

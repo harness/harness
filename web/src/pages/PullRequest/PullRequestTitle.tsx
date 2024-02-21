@@ -19,11 +19,13 @@ import { Container, Text, Layout, Button, ButtonVariation, ButtonSize, TextInput
 import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { Match, Truthy, Else } from 'react-jsx-match'
+import { compact } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps, getErrorMessage } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReq } from 'services/code'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import { useDocumentTitle } from 'hooks/useDocumentTitle'
 import css from './PullRequest.module.scss'
 
 interface PullRequestTitleProps extends TypesPullReq, Pick<GitInfoProps, 'repoMetadata'> {
@@ -67,6 +69,8 @@ export const PullRequestTitle: React.FC<PullRequestTitleProps> = ({
       setVal(title)
     }
   }, [title, edit])
+
+  useDocumentTitle(compact([original, `(#${number})`]).join(' '))
 
   return (
     <Layout.Horizontal spacing="small" className={css.prTitle}>

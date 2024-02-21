@@ -23,6 +23,7 @@ import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { GitInfoProps, isFile } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
+import { useDocumentTitle } from 'hooks/useDocumentTitle'
 import css from './RepositoryFileEditHeader.module.scss'
 
 interface RepositoryFileEditHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -36,6 +37,9 @@ export const RepositoryFileEditHeader: React.FC<RepositoryFileEditHeaderProps> =
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
+  useDocumentTitle(
+    getString(isFile(resourceContent) ? 'pageTitle.editFileLocation' : 'newFile', { path: resourceContent?.path })
+  )
 
   return (
     <Container className={css.header}>

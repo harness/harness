@@ -159,7 +159,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             repoPath,
             webhookId: pathProps.webhookId
           })}>
-          <LayoutWithSideNav title={getString('pageTitle.webhookDetail')}>
+          <LayoutWithSideNav title={getString('webhookDetails')}>
             <WebhookDetails />
           </LayoutWithSideNav>
         </Route>
@@ -266,7 +266,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             repoPath,
             commitRef: pathProps.commitRef
           })}>
-          <LayoutWithSideNav title={getString('pageTitle.commits')}>
+          <LayoutWithSideNav title={getString('commit')}>
             <RepositoryCommit />
           </LayoutWithSideNav>
         </Route>
@@ -276,7 +276,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             repoPath,
             commitRef: pathProps.commitRef
           })}>
-          <LayoutWithSideNav title={getString('pageTitle.commits')}>
+          <LayoutWithSideNav title={getString('commits')}>
             <RepositoryCommits />
           </LayoutWithSideNav>
         </Route>
@@ -313,7 +313,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             gitRef: pathProps.gitRef,
             resourcePath: pathProps.resourcePath
           })}>
-          <LayoutWithSideNav title={getString('pageTitle.editFile')}>
+          <LayoutWithSideNav title={getString('editFile')}>
             <RepositoryFileEdit />
           </LayoutWithSideNav>
         </Route>
