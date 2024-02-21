@@ -59,16 +59,21 @@ var (
 )
 
 const (
-	codePullReqApprovalReqMinCount                   = "pullreq.approvals.require_minimum_count"
-	codePullReqApprovalReqMinCountLatest             = "pullreq.approvals.require_minimum_count:latest_commit"
-	codePullReqApprovalReqLatestCommit               = "pullreq.approvals.require_latest_commit"
+	codePullReqApprovalReqMinCount              = "pullreq.approvals.require_minimum_count"
+	codePullReqApprovalReqMinCountLatest        = "pullreq.approvals.require_minimum_count:latest_commit"
+	codePullReqApprovalReqLatestCommit          = "pullreq.approvals.require_latest_commit"
+	codePullReqApprovalReqChangeRequested       = "pullreq.approvals.require_change_requested"
+	codePullReqApprovalReqChangeRequestedOldSHA = "pullreq.approvals.require_change_requested_old_SHA"
+
 	codePullReqApprovalReqCodeOwnersNoApproval       = "pullreq.approvals.require_code_owners:no_approval"
 	codePullReqApprovalReqCodeOwnersChangeRequested  = "pullreq.approvals.require_code_owners:change_requested"
 	codePullReqApprovalReqCodeOwnersNoLatestApproval = "pullreq.approvals.require_code_owners:no_latest_approval"
-	codePullReqCommentsReqResolveAll                 = "pullreq.comments.require_resolve_all"
-	codePullReqStatusChecksReqIdentifiers            = "pullreq.status_checks.required_identifiers"
-	codePullReqMergeStrategiesAllowed                = "pullreq.merge.strategies_allowed"
-	codePullReqMergeDeleteBranch                     = "pullreq.merge.delete_branch"
+
+	codePullReqMergeStrategiesAllowed = "pullreq.merge.strategies_allowed"
+	codePullReqMergeDeleteBranch      = "pullreq.merge.delete_branch"
+
+	codePullReqCommentsReqResolveAll      = "pullreq.comments.require_resolve_all"
+	codePullReqStatusChecksReqIdentifiers = "pullreq.status_checks.required_identifiers"
 )
 
 //nolint:gocognit // well aware of this
@@ -85,14 +90,31 @@ func (v *DefPullReq) MergeVerify(
 
 	approvedBy := make([]types.PrincipalInfo, 0, len(in.Reviewers))
 	for _, reviewer := range in.Reviewers {
-		if reviewer.ReviewDecision != enum.PullReqReviewDecisionApproved {
-			continue
+		switch reviewer.ReviewDecision {
+		case enum.PullReqReviewDecisionApproved:
+			if v.Approvals.RequireLatestCommit && reviewer.SHA != in.PullReq.SourceSHA {
+				continue
+			}
+			approvedBy = append(approvedBy, reviewer.Reviewer)
+		case enum.PullReqReviewDecisionChangeReq:
+			if v.Approvals.RequireNoChangeRequest {
+				if reviewer.SHA == in.PullReq.SourceSHA {
+					violations.Addf(
+						codePullReqApprovalReqChangeRequested,
+						"Reviewer %s requested changes",
+						reviewer.Reviewer.DisplayName,
+					)
+				} else {
+					violations.Addf(
+						codePullReqApprovalReqChangeRequestedOldSHA,
+						"Reviewer %s requested changes for an older commit",
+						reviewer.Reviewer.DisplayName,
+					)
+				}
+			}
+		case enum.PullReqReviewDecisionPending,
+			enum.PullReqReviewDecisionReviewed:
 		}
-		if v.Approvals.RequireLatestCommit && reviewer.SHA != in.PullReq.SourceSHA {
-			continue
-		}
-
-		approvedBy = append(approvedBy, reviewer.Reviewer)
 	}
 
 	if len(approvedBy) < v.Approvals.RequireMinimumCount {
@@ -199,9 +221,10 @@ func (v *DefPullReq) MergeVerify(
 }
 
 type DefApprovals struct {
-	RequireCodeOwners   bool `json:"require_code_owners,omitempty"`
-	RequireMinimumCount int  `json:"require_minimum_count,omitempty"`
-	RequireLatestCommit bool `json:"require_latest_commit,omitempty"`
+	RequireCodeOwners      bool `json:"require_code_owners,omitempty"`
+	RequireMinimumCount    int  `json:"require_minimum_count,omitempty"`
+	RequireLatestCommit    bool `json:"require_latest_commit,omitempty"`
+	RequireNoChangeRequest bool `json:"require_no_change_request,omitempty"`
 }
 
 func (v *DefApprovals) Sanitize() error {

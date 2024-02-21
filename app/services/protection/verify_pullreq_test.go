@@ -328,6 +328,71 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				AllowedMethods:     nil,
 			},
 		},
+		{
+			name: codePullReqApprovalReqChangeRequested + "-true",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireNoChangeRequest: true},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{SourceSHA: "abc"},
+				Method:  enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{},
+		},
+		{
+			name: codePullReqApprovalReqChangeRequested + "-false",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireNoChangeRequest: false},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{SourceSHA: "abc"},
+				Reviewers: []*types.PullReqReviewer{
+					{ReviewDecision: enum.PullReqReviewDecisionChangeReq, SHA: "abc"},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expOut: MergeVerifyOutput{},
+		},
+		{
+			name: codePullReqApprovalReqChangeRequested + "-sameSHA",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireNoChangeRequest: true},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{SourceSHA: "abc"},
+				Reviewers: []*types.PullReqReviewer{
+					{
+						ReviewDecision: enum.PullReqReviewDecisionChangeReq,
+						Reviewer:       types.PrincipalInfo{DisplayName: "John"},
+						SHA:            "abc",
+					},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqChangeRequested},
+			expParams: [][]any{{"John"}},
+			expOut:    MergeVerifyOutput{},
+		},
+		{
+			name: codePullReqApprovalReqChangeRequested + "-diffSHA",
+			def: DefPullReq{
+				Approvals: DefApprovals{RequireNoChangeRequest: true},
+			},
+			in: MergeVerifyInput{
+				PullReq: &types.PullReq{SourceSHA: "abc"},
+				Reviewers: []*types.PullReqReviewer{
+					{
+						ReviewDecision: enum.PullReqReviewDecisionChangeReq,
+						Reviewer:       types.PrincipalInfo{DisplayName: "John"},
+						SHA:            "def",
+					},
+				},
+				Method: enum.MergeMethodMerge,
+			},
+			expCodes:  []string{codePullReqApprovalReqChangeRequestedOldSHA},
+			expParams: [][]any{{"John"}},
+			expOut:    MergeVerifyOutput{},
+		},
 	}
 
 	for _, test := range tests {
