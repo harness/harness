@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -496,7 +497,22 @@ func (s *RepoStore) Restore(
 
 // Count of active repos in a space. if parentID (space) is zero then it will count all repositories in the system.
 // With "DeletedBefore" filter, counts only deleted repos by opts.DeletedBefore.
-func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error) {
+func (s *RepoStore) Count(
+	ctx context.Context,
+	parentID int64,
+	filter *types.RepoFilter,
+) (int64, error) {
+	if filter.Recursive {
+		return s.countAll(ctx, parentID, filter)
+	}
+	return s.count(ctx, parentID, filter)
+}
+
+func (s *RepoStore) count(
+	ctx context.Context,
+	parentID int64,
+	filter *types.RepoFilter,
+) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("repositories")
@@ -505,15 +521,7 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 		stmt = stmt.Where("repo_parent_id = ?", parentID)
 	}
 
-	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
-	}
-
-	if opts.DeletedBefore != nil {
-		stmt = stmt.Where("repo_deleted < ?", opts.DeletedBefore)
-	} else {
-		stmt = stmt.Where("repo_deleted IS NULL")
-	}
+	stmt = applyQueryFilter(stmt, filter)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -530,8 +538,11 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 	return count, nil
 }
 
-// Count all active repos in a hierarchy of spaces.
-func (s *RepoStore) CountAll(ctx context.Context, spaceID int64) (int64, error) {
+func (s *RepoStore) countAll(
+	ctx context.Context,
+	parentID int64,
+	filter *types.RepoFilter,
+) (int64, error) {
 	query := `WITH RECURSIVE SpaceHierarchy AS (
     SELECT space_id, space_parent_id
     FROM spaces
@@ -549,17 +560,24 @@ FROM SpaceHierarchy h1;`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var spaceIDs []int64
-	if err := db.SelectContext(ctx, &spaceIDs, query, spaceID); err != nil {
+	if err := db.SelectContext(ctx, &spaceIDs, query, parentID); err != nil {
 		return 0, database.ProcessSQLErrorf(err, "failed to retrieve spaces")
 	}
 
-	query = fmt.Sprintf(
-		"SELECT COUNT(repo_id) FROM repositories WHERE repo_parent_id IN (%s) AND repo_deleted IS NULL;",
-		intsToCSV(spaceIDs),
-	)
+	stmt := database.Builder.
+		Select("COUNT(repo_id)").
+		From("repositories").
+		Where(squirrel.Eq{"repo_parent_id": spaceIDs})
+
+	stmt = applyQueryFilter(stmt, filter)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
 
 	var numRepos int64
-	if err := db.GetContext(ctx, &numRepos, query); err != nil {
+	if err := db.GetContext(ctx, &numRepos, sql, args...); err != nil {
 		return 0, database.ProcessSQLErrorf(err, "failed to count repositories")
 	}
 
@@ -568,39 +586,29 @@ FROM SpaceHierarchy h1;`
 
 // List returns a list of active repos in a space.
 // With "DeletedBefore" filter, shows deleted repos by opts.DeletedBefore.
-func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error) {
+func (s *RepoStore) List(
+	ctx context.Context,
+	parentID int64,
+	filter *types.RepoFilter,
+) ([]*types.Repository, error) {
+	if filter.Recursive {
+		return s.listAll(ctx, parentID, filter)
+	}
+	return s.list(ctx, parentID, filter)
+}
+
+func (s *RepoStore) list(
+	ctx context.Context,
+	parentID int64,
+	filter *types.RepoFilter,
+) ([]*types.Repository, error) {
 	stmt := database.Builder.
 		Select(repoColumnsForJoin).
 		From("repositories").
 		Where("repo_parent_id = ?", fmt.Sprint(parentID))
 
-	if opts.DeletedBefore != nil {
-		stmt = stmt.Where("repo_deleted < ?", opts.DeletedBefore)
-	} else {
-		stmt = stmt.Where("repo_deleted IS NULL")
-	}
-
-	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
-	}
-
-	stmt = stmt.Limit(database.Limit(opts.Size))
-	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
-
-	switch opts.Sort {
-	// TODO [CODE-1363]: remove after identifier migration.
-	case enum.RepoAttrUID, enum.RepoAttrIdentifier, enum.RepoAttrNone:
-		// NOTE: string concatenation is safe because the
-		// order attribute is an enum and is not user-defined,
-		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("repo_importing desc, repo_uid " + opts.Order.String())
-	case enum.RepoAttrCreated:
-		stmt = stmt.OrderBy("repo_created " + opts.Order.String())
-	case enum.RepoAttrUpdated:
-		stmt = stmt.OrderBy("repo_updated " + opts.Order.String())
-	case enum.RepoAttrDeleted:
-		stmt = stmt.OrderBy("repo_deleted " + opts.Order.String())
-	}
+	stmt = applyQueryFilter(stmt, filter)
+	stmt = applySortFilter(stmt, filter)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -615,6 +623,52 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 	}
 
 	return s.mapToRepos(ctx, dst)
+}
+
+func (s *RepoStore) listAll(
+	ctx context.Context,
+	parentID int64,
+	filter *types.RepoFilter,
+) ([]*types.Repository, error) {
+	where := `WITH RECURSIVE SpaceHierarchy AS (
+    SELECT space_id, space_parent_id
+    FROM spaces
+    WHERE space_id = $1
+    
+    UNION
+    
+    SELECT s.space_id, s.space_parent_id
+    FROM spaces s
+    JOIN SpaceHierarchy h ON s.space_parent_id = h.space_id
+)
+SELECT space_id
+FROM SpaceHierarchy h1;`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var spaceIDs []int64
+	if err := db.SelectContext(ctx, &spaceIDs, where, parentID); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "failed to retrieve spaces")
+	}
+
+	stmt := database.Builder.
+		Select(repoColumnsForJoin).
+		From("repositories").
+		Where(squirrel.Eq{"repo_parent_id": spaceIDs})
+
+	stmt = applyQueryFilter(stmt, filter)
+	stmt = applySortFilter(stmt, filter)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+	repos := []*repository{}
+	if err := db.SelectContext(ctx, &repos, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "failed to count repositories")
+	}
+
+	return s.mapToRepos(ctx, repos)
 }
 
 type repoSize struct {
@@ -755,10 +809,36 @@ func mapToInternalRepo(in *types.Repository) *repository {
 	}
 }
 
-func intsToCSV(elems []int64) string {
-	strSlice := make([]string, len(elems))
-	for i, num := range elems {
-		strSlice[i] = fmt.Sprint(num)
+func applyQueryFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squirrel.SelectBuilder {
+	if filter.Query != "" {
+		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
 	}
-	return strings.Join(strSlice, ",")
+	if filter.DeletedBefore != nil {
+		stmt = stmt.Where("repo_deleted < ?", filter.DeletedBefore)
+	} else {
+		stmt = stmt.Where("repo_deleted IS NULL")
+	}
+	return stmt
+}
+
+func applySortFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squirrel.SelectBuilder {
+	stmt = stmt.Limit(database.Limit(filter.Size))
+	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
+
+	switch filter.Sort {
+	// TODO [CODE-1363]: remove after identifier migration.
+	case enum.RepoAttrUID, enum.RepoAttrIdentifier, enum.RepoAttrNone:
+		// NOTE: string concatenation is safe because the
+		// order attribute is an enum and is not user-defined,
+		// and is therefore not subject to injection attacks.
+		stmt = stmt.OrderBy("repo_importing desc, repo_uid " + filter.Order.String())
+	case enum.RepoAttrCreated:
+		stmt = stmt.OrderBy("repo_created " + filter.Order.String())
+	case enum.RepoAttrUpdated:
+		stmt = stmt.OrderBy("repo_updated " + filter.Order.String())
+
+	case enum.RepoAttrDeleted:
+	}
+
+	return stmt
 }

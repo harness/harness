@@ -16,15 +16,18 @@ package database_test
 
 import (
 	"context"
-	"math/rand"
 	"strconv"
 	"testing"
 
+	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/store/database"
 	"github.com/harness/gitness/types"
 )
 
-const repoSize = int64(100)
+const (
+	numTestRepos = 10
+	repoSize     = int64(100)
+)
 
 func TestDatabase_GetSize(t *testing.T) {
 	db, teardown := setupDB(t)
@@ -34,11 +37,11 @@ func TestDatabase_GetSize(t *testing.T) {
 
 	ctx := context.Background()
 
-	createUser(t, &ctx, principalStore, 1)
-	createSpace(t, &ctx, spaceStore, spacePathStore, userID, 1, 0)
+	createUser(ctx, t, principalStore)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
 
 	repoID := int64(1)
-	createRepo(t, &ctx, repoStore, repoID, 1, repoSize)
+	createRepo(ctx, t, repoStore, repoID, 1, repoSize)
 
 	tests := []struct {
 		name       string
@@ -76,7 +79,7 @@ func TestDatabase_GetSize(t *testing.T) {
 	}
 }
 
-func TestDatabase_CountAll(t *testing.T) {
+func TestDatabase_Count(t *testing.T) {
 	db, teardown := setupDB(t)
 	defer teardown()
 
@@ -84,24 +87,12 @@ func TestDatabase_CountAll(t *testing.T) {
 
 	ctx := context.Background()
 
-	createUser(t, &ctx, principalStore, 1)
+	createUser(ctx, t, principalStore)
 
-	var numRepos int64
-	spaceTree, numSpaces := createSpaceTree()
-	createSpace(t, &ctx, spaceStore, spacePathStore, userID, 1, 0)
-	for i := 1; i < numSpaces; i++ {
-		parentID := int64(i)
-		for _, spaceID := range spaceTree[parentID] {
-			createSpace(t, &ctx, spaceStore, spacePathStore, userID, spaceID, parentID)
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+	numRepos := createRepos(ctx, t, repoStore, 0, numTestRepos, 1)
 
-			for j := 0; j < rand.Intn(4); j++ {
-				numRepos++
-				createRepo(t, &ctx, repoStore, numRepos, spaceID, 0)
-			}
-		}
-	}
-
-	count, err := repoStore.CountAll(ctx, 1)
+	count, err := repoStore.Count(ctx, 1, &types.RepoFilter{})
 	if err != nil {
 		t.Fatalf("failed to count repos %v", err)
 	}
@@ -110,9 +101,85 @@ func TestDatabase_CountAll(t *testing.T) {
 	}
 }
 
+func TestDatabase_CountAll(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, repoStore := setupStores(t, db)
+
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+
+	numSpaces := createNestedSpaces(ctx, t, spaceStore, spacePathStore)
+	var numRepos int64
+	for i := 1; i <= numSpaces; i++ {
+		numRepos += createRepos(ctx, t, repoStore, numRepos, numTestRepos/2, int64(i))
+	}
+
+	count, err := repoStore.Count(ctx, 1, &types.RepoFilter{Recursive: true})
+	if err != nil {
+		t.Fatalf("failed to count repos %v", err)
+	}
+	if count != numRepos {
+		t.Errorf("count = %v, want %v", count, numRepos)
+	}
+}
+
+func TestDatabase_List(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, repoStore := setupStores(t, db)
+
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+	numRepos := createRepos(ctx, t, repoStore, 0, numTestRepos, 1)
+
+	repos, err := repoStore.List(ctx, 1, &types.RepoFilter{})
+	if err != nil {
+		t.Fatalf("failed to count repos %v", err)
+	}
+
+	lenRepos := int64(len(repos))
+	if lenRepos != numRepos {
+		t.Errorf("count = %v, want %v", lenRepos, numRepos)
+	}
+}
+
+func TestDatabase_ListAll(t *testing.T) {
+	db, teardown := setupDB(t)
+	defer teardown()
+
+	principalStore, spaceStore, spacePathStore, repoStore := setupStores(t, db)
+
+	ctx := context.Background()
+
+	createUser(ctx, t, principalStore)
+
+	numSpaces := createNestedSpaces(ctx, t, spaceStore, spacePathStore)
+	var numRepos int64
+	for i := 1; i <= numSpaces; i++ {
+		numRepos += createRepos(ctx, t, repoStore, numRepos, numTestRepos/2, int64(i))
+	}
+
+	repos, err := repoStore.List(ctx, 1,
+		&types.RepoFilter{Size: numSpaces * numTestRepos, Recursive: true})
+	if err != nil {
+		t.Fatalf("failed to count repos %v", err)
+	}
+	lenRepos := int64(len(repos))
+	if lenRepos != numRepos {
+		t.Errorf("count = %v, want %v", lenRepos, numRepos)
+	}
+}
+
 func createRepo(
+	ctx context.Context,
 	t *testing.T,
-	ctx *context.Context,
 	repoStore *database.RepoStore,
 	id int64,
 	spaceID int64,
@@ -122,7 +189,45 @@ func createRepo(
 
 	identifier := "repo_" + strconv.FormatInt(id, 10)
 	repo := types.Repository{Identifier: identifier, ID: id, ParentID: spaceID, GitUID: identifier, Size: size}
-	if err := repoStore.Create(*ctx, &repo); err != nil {
+	if err := repoStore.Create(ctx, &repo); err != nil {
 		t.Fatalf("failed to create repo %v", err)
 	}
+}
+
+func createRepos(
+	ctx context.Context,
+	t *testing.T,
+	repoStore *database.RepoStore,
+	numCreatedRepos int64,
+	numReposToCreate int64,
+	spaceID int64,
+) int64 {
+	t.Helper()
+
+	var numRepos int64
+	for j := 0; j < int(numReposToCreate); j++ {
+		// numCreatedRepos+numRepos ensures the uniqueness of the repo id
+		createRepo(ctx, t, repoStore, numCreatedRepos+numRepos, spaceID, 0)
+		numRepos++
+	}
+	return numRepos
+}
+
+func createNestedSpaces(
+	ctx context.Context,
+	t *testing.T,
+	spaceStore *database.SpaceStore,
+	spacePathStore store.SpacePathStore,
+) int {
+	t.Helper()
+
+	spaceTree, numSpaces := createSpaceTree()
+	createSpace(ctx, t, spaceStore, spacePathStore, userID, 1, 0)
+	for i := 1; i < numSpaces; i++ {
+		parentID := int64(i)
+		for _, spaceID := range spaceTree[parentID] {
+			createSpace(ctx, t, spaceStore, spacePathStore, userID, spaceID, parentID)
+		}
+	}
+	return numSpaces
 }

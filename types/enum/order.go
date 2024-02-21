@@ -36,7 +36,7 @@ func (e Order) String() string {
 	case OrderAsc:
 		return asc
 	case OrderDefault:
-		return defaultString
+		return desc
 	default:
 		return undefined
 	}

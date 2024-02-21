@@ -87,6 +87,7 @@ type RepoFilter struct {
 	Sort          enum.RepoAttr `json:"sort"`
 	Order         enum.Order    `json:"order"`
 	DeletedBefore *int64        `json:"deleted_before,omitempty"`
+	Recursive     bool
 }
 
 // RepositoryGitInfo holds git info for a repository.

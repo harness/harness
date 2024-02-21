@@ -27,7 +27,11 @@ import (
 )
 
 // Delete deletes a space.
-func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string) error {
+func (c *Controller) Delete(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return err
@@ -41,7 +45,11 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef
 
 // DeleteNoAuth deletes the space - no authorization is verified.
 // WARNING this is meant for internal calls only.
-func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, spaceID int64) error {
+func (c *Controller) DeleteNoAuth(
+	ctx context.Context,
+	session *auth.Session,
+	spaceID int64,
+) error {
 	filter := &types.SpaceFilter{
 		Page:  1,
 		Size:  math.MaxInt,
@@ -72,7 +80,11 @@ func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, sp
 
 // deleteRepositoriesNoAuth deletes all repositories in a space - no authorization is verified.
 // WARNING this is meant for internal calls only.
-func (c *Controller) deleteRepositoriesNoAuth(ctx context.Context, session *auth.Session, spaceID int64) error {
+func (c *Controller) deleteRepositoriesNoAuth(
+	ctx context.Context,
+	session *auth.Session,
+	spaceID int64,
+) error {
 	filter := &types.RepoFilter{
 		Page:          1,
 		Size:          int(math.MaxInt),
@@ -81,6 +93,7 @@ func (c *Controller) deleteRepositoriesNoAuth(ctx context.Context, session *auth
 		Sort:          enum.RepoAttrNone,
 		DeletedBefore: nil,
 	}
+
 	repos, _, err := c.ListRepositoriesNoAuth(ctx, spaceID, filter)
 	if err != nil {
 		return fmt.Errorf("failed to list space repositories: %w", err)

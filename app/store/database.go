@@ -219,11 +219,7 @@ type (
 		// Count of active repos in a space. With "DeletedBefore" filter, counts only deleted repos by opts.DeletedBefore.
 		Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error)
 
-		// Count all active repos in a hierarchy of spaces.
-		CountAll(ctx context.Context, spaceID int64) (int64, error)
-
-		// List returns a list of active repos in a space.
-		// With "DeletedBefore" filter, shows deleted repos by opts.DeletedBefore.
+		// List returns a list of repos in a space.
 		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 
 		// ListSizeInfos returns a list of all active repo sizes.

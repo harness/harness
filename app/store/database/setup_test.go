@@ -84,23 +84,22 @@ func setupStores(t *testing.T, db *sqlx.DB) (
 }
 
 func createUser(
+	ctx context.Context,
 	t *testing.T,
-	ctx *context.Context,
 	principalStore *database.PrincipalStore,
-	userID int64,
 ) {
 	t.Helper()
 
 	uid := "user_" + strconv.FormatInt(userID, 10)
-	if err := principalStore.CreateUser(*ctx,
+	if err := principalStore.CreateUser(ctx,
 		&types.User{ID: userID, UID: uid}); err != nil {
 		t.Fatalf("failed to create user %v", err)
 	}
 }
 
 func createSpace(
+	ctx context.Context,
 	t *testing.T,
-	ctx *context.Context,
 	spaceStore *database.SpaceStore,
 	spacePathStore store.SpacePathStore,
 	userID int64,
@@ -112,11 +111,11 @@ func createSpace(
 	identifier := "space_" + strconv.FormatInt(spaceID, 10)
 
 	space := types.Space{ID: spaceID, Identifier: identifier, CreatedBy: userID, ParentID: parentID}
-	if err := spaceStore.Create(*ctx, &space); err != nil {
+	if err := spaceStore.Create(ctx, &space); err != nil {
 		t.Fatalf("failed to create space %v", err)
 	}
 
-	if err := spacePathStore.InsertSegment(*ctx, &types.SpacePathSegment{
+	if err := spacePathStore.InsertSegment(ctx, &types.SpacePathSegment{
 		ID: space.ID, Identifier: identifier, CreatedBy: userID, SpaceID: spaceID, IsPrimary: true,
 	}); err != nil {
 		t.Fatalf("failed to insert segment %v", err)
