@@ -31,6 +31,7 @@ import (
 type (
 	MergeVerifier interface {
 		MergeVerify(ctx context.Context, in MergeVerifyInput) (MergeVerifyOutput, []types.RuleViolations, error)
+		RequiredChecks(ctx context.Context, in RequiredChecksInput) (RequiredChecksOutput, error)
 	}
 
 	MergeVerifyInput struct {
@@ -49,6 +50,18 @@ type (
 	MergeVerifyOutput struct {
 		DeleteSourceBranch bool
 		AllowedMethods     []enum.MergeMethod
+	}
+
+	RequiredChecksInput struct {
+		Actor       *types.Principal
+		IsRepoOwner bool
+		Repo        *types.Repository
+		PullReq     *types.PullReq
+	}
+
+	RequiredChecksOutput struct {
+		RequiredIdentifiers   map[string]struct{}
+		BypassableIdentifiers map[string]struct{}
 	}
 )
 
@@ -218,6 +231,19 @@ func (v *DefPullReq) MergeVerify(
 	}
 
 	return out, nil, nil
+}
+
+func (v *DefPullReq) RequiredChecks(
+	_ context.Context,
+	_ RequiredChecksInput,
+) (RequiredChecksOutput, error) {
+	m := make(map[string]struct{}, len(v.StatusChecks.RequireIdentifiers))
+	for _, id := range v.StatusChecks.RequireIdentifiers {
+		m[id] = struct{}{}
+	}
+	return RequiredChecksOutput{
+		RequiredIdentifiers: m,
+	}, nil
 }
 
 type DefApprovals struct {

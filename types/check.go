@@ -23,20 +23,20 @@ import (
 type Check struct {
 	ID         int64            `json:"id"`
 	CreatedBy  int64            `json:"-"` // clients will use "reported_by"
-	Created    int64            `json:"created"`
-	Updated    int64            `json:"updated"`
+	Created    int64            `json:"created,omitempty"`
+	Updated    int64            `json:"updated,omitempty"`
 	RepoID     int64            `json:"-"` // status checks are always returned for a commit in a repository
 	CommitSHA  string           `json:"-"` // status checks are always returned for a commit in a repository
 	Identifier string           `json:"identifier"`
 	Status     enum.CheckStatus `json:"status"`
-	Summary    string           `json:"summary"`
-	Link       string           `json:"link"`
+	Summary    string           `json:"summary,omitempty"`
+	Link       string           `json:"link,omitempty"`
 	Metadata   json.RawMessage  `json:"metadata"`
-	Started    int64            `json:"started"`
-	Ended      int64            `json:"ended"`
+	Started    int64            `json:"started,omitempty"`
+	Ended      int64            `json:"ended,omitempty"`
 
-	Payload    CheckPayload  `json:"payload"`
-	ReportedBy PrincipalInfo `json:"reported_by"`
+	Payload    CheckPayload   `json:"payload"`
+	ReportedBy *PrincipalInfo `json:"reported_by,omitempty"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.
@@ -97,4 +97,15 @@ type CheckPayloadInternal struct {
 	Number     int64 `json:"execution_number"`
 	RepoID     int64 `json:"repo_id"`
 	PipelineID int64 `json:"pipeline_id"`
+}
+
+type PullReqChecks struct {
+	CommitSHA string         `json:"commit_sha"`
+	Checks    []PullReqCheck `json:"checks"`
+}
+
+type PullReqCheck struct {
+	Required   bool  `json:"required"`
+	Bypassable bool  `json:"bypassable"`
+	Check      Check `json:"check"`
 }

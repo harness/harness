@@ -522,6 +522,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Get("/codeowners", handlerpullreq.HandleCodeOwner(pullreqCtrl))
 			r.Get("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
 			r.Post("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
+			r.Get("/checks", handlerpullreq.HandleCheckList(pullreqCtrl))
 		})
 	})
 }

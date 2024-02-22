@@ -172,7 +172,7 @@ func (c *Controller) Report(
 		Link:       in.Link,
 		Payload:    in.Payload,
 		Metadata:   metadataJSON,
-		ReportedBy: *session.Principal.ToPrincipalInfo(),
+		ReportedBy: session.Principal.ToPrincipalInfo(),
 		Started:    started,
 		Ended:      ended,
 	}

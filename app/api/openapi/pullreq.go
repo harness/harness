@@ -133,6 +133,10 @@ type postRawPRDiffRequest struct {
 	gittypes.FileDiffRequests
 }
 
+type getPullReqChecksRequest struct {
+	pullReqRequest
+}
+
 var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -580,4 +584,15 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new(usererror.Error), http.StatusForbidden))
 	panicOnErr(reflector.SetJSONResponse(&opPostDiff, new(usererror.Error), http.StatusNotFound))
 	panicOnErr(reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/pullreq/{pullreq_number}/diff", opPostDiff))
+
+	opChecks := openapi3.Operation{}
+	opChecks.WithTags("pullreq")
+	opChecks.WithMapOfAnything(map[string]interface{}{"operationId": "checksPullReq"})
+	_ = reflector.SetRequest(&opChecks, new(getPullReqChecksRequest), http.MethodGet)
+	panicOnErr(reflector.SetJSONResponse(&opChecks, new([]types.PullReqChecks), http.StatusOK))
+	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusInternalServerError))
+	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusUnauthorized))
+	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusForbidden))
+	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusNotFound))
+	panicOnErr(reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/checks", opChecks))
 }
