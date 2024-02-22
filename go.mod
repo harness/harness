@@ -52,7 +52,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.4
 	github.com/swaggest/openapi-go v0.2.23
-	github.com/swaggest/swgui v1.4.2
+	github.com/swaggest/swgui v1.8.0
 	github.com/unrolled/secure v1.0.8
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09
 	go.uber.org/multierr v1.8.0
@@ -249,8 +249,8 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/djherbis/buffer v1.2.0 // indirect
-	github.com/djherbis/nio/v3 v3.0.1 // indirect
+	github.com/djherbis/buffer v1.2.0
+	github.com/djherbis/nio/v3 v3.0.1
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-enry/go-enry/v2 v2.8.2 // indirect
 	github.com/go-enry/go-oniguruma v1.2.1 // indirect
@@ -276,7 +276,7 @@ require (
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/swaggest/jsonschema-go v0.3.40 // indirect
 	github.com/swaggest/refl v1.1.0 // indirect
-	github.com/vearutop/statigz v1.1.5 // indirect
+	github.com/vearutop/statigz v1.4.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/yuin/goldmark v1.4.13 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
