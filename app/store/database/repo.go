@@ -450,9 +450,9 @@ func (s *RepoStore) updateOptLock(
 }
 
 // SoftDelete deletes a repo softly by setting the deleted timestamp.
-func (s *RepoStore) SoftDelete(ctx context.Context, repo *types.Repository, deletedAt *int64) error {
+func (s *RepoStore) SoftDelete(ctx context.Context, repo *types.Repository, deletedAt int64) error {
 	_, err := s.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
-		r.Deleted = deletedAt
+		r.Deleted = &deletedAt
 		return nil
 	})
 	if err != nil {
@@ -463,13 +463,25 @@ func (s *RepoStore) SoftDelete(ctx context.Context, repo *types.Repository, dele
 
 // Purge deletes the repo permanently.
 func (s *RepoStore) Purge(ctx context.Context, id int64, deletedAt *int64) error {
-	const repoDelete = `
-		DELETE FROM repositories
-		WHERE repo_id = $1 AND repo_deleted = $2`
+	stmt := database.Builder.
+		Delete("repositories").
+		Where("repo_id = ?", id)
+
+	if deletedAt != nil {
+		stmt = stmt.Where("repo_deleted = ?", *deletedAt)
+	} else {
+		stmt = stmt.Where("repo_deleted IS NULL")
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge repo query to sql: %w", err)
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, repoDelete, id, deletedAt); err != nil {
+	_, err = db.ExecContext(ctx, sql, args...)
+	if err != nil {
 		return database.ProcessSQLErrorf(err, "the delete query failed")
 	}
 
@@ -490,13 +502,13 @@ func (s *RepoStore) Restore(
 		return nil
 	})
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "failed to restore the repo")
+		return nil, err
 	}
 	return repo, nil
 }
 
 // Count of active repos in a space. if parentID (space) is zero then it will count all repositories in the system.
-// With "DeletedBefore" filter, counts only deleted repos by opts.DeletedBefore.
+// Count deleted repos requires opts.DeletedBeforeOrAt filter.
 func (s *RepoStore) Count(
 	ctx context.Context,
 	parentID int64,
@@ -585,7 +597,7 @@ FROM SpaceHierarchy h1;`
 }
 
 // List returns a list of active repos in a space.
-// With "DeletedBefore" filter, shows deleted repos by opts.DeletedBefore.
+// With "DeletedBeforeOrAt" filter, lists deleted repos by opts.DeletedBeforeOrAt.
 func (s *RepoStore) List(
 	ctx context.Context,
 	parentID int64,
@@ -813,8 +825,8 @@ func applyQueryFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squ
 	if filter.Query != "" {
 		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
 	}
-	if filter.DeletedBefore != nil {
-		stmt = stmt.Where("repo_deleted < ?", filter.DeletedBefore)
+	if filter.DeletedBeforeOrAt != nil {
+		stmt = stmt.Where("repo_deleted <= ?", filter.DeletedBeforeOrAt)
 	} else {
 		stmt = stmt.Where("repo_deleted IS NULL")
 	}
@@ -836,8 +848,8 @@ func applySortFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squi
 		stmt = stmt.OrderBy("repo_created " + filter.Order.String())
 	case enum.RepoAttrUpdated:
 		stmt = stmt.OrderBy("repo_updated " + filter.Order.String())
-
 	case enum.RepoAttrDeleted:
+		stmt = stmt.OrderBy("repo_deleted " + filter.Order.String())
 	}
 
 	return stmt

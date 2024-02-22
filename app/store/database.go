@@ -207,7 +207,7 @@ type (
 			mutateFn func(repository *types.Repository) error) (*types.Repository, error)
 
 		// SoftDelete a repo.
-		SoftDelete(ctx context.Context, repo *types.Repository, deletedAt *int64) error
+		SoftDelete(ctx context.Context, repo *types.Repository, deletedAt int64) error
 
 		// Purge the soft deleted repo permanently.
 		Purge(ctx context.Context, id int64, deletedAt *int64) error
@@ -216,10 +216,10 @@ type (
 		Restore(ctx context.Context, repo *types.Repository,
 			newIdentifier string) (*types.Repository, error)
 
-		// Count of active repos in a space. With "DeletedBefore" filter, counts only deleted repos by opts.DeletedBefore.
+		// Count of active repos in a space. With "DeletedBeforeOrAt" filter, counts deleted repos.
 		Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error)
 
-		// List returns a list of repos in a space.
+		// List returns a list of repos in a space. With "DeletedBeforeOrAt" filter, lists deleted repos.
 		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 
 		// ListSizeInfos returns a list of all active repo sizes.

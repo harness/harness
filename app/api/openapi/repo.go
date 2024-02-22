@@ -458,11 +458,11 @@ var queryParameterBypassRules = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterRepoDeletedAt = openapi3.ParameterOrRef{
+var queryParameterDeletedAt = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamRepoDeletedAt,
+		Name:        request.QueryParamDeletedAt,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The time repository was deleted at in epoch format."),
+		Description: ptr.String("The exact time the resource was delete at in epoch format."),
 		Required:    ptr.Bool(true),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
@@ -525,7 +525,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDelete.WithTags("repository")
 	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteRepository"})
 	_ = reflector.SetRequest(&opDelete, new(repoRequest), http.MethodDelete)
-	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opDelete, new(repo.SoftDeleteResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusForbidden)
@@ -535,7 +535,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opPurge := openapi3.Operation{}
 	opPurge.WithTags("repository")
 	opPurge.WithMapOfAnything(map[string]interface{}{"operationId": "purgeRepository"})
-	opPurge.WithParameters(queryParameterRepoDeletedAt)
+	opPurge.WithParameters(queryParameterDeletedAt)
 	_ = reflector.SetRequest(&opPurge, new(repoRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opPurge, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opPurge, new(usererror.Error), http.StatusInternalServerError)
@@ -547,6 +547,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opRestore := openapi3.Operation{}
 	opRestore.WithTags("repository")
 	opRestore.WithMapOfAnything(map[string]interface{}{"operationId": "restoreRepository"})
+	opRestore.WithParameters(queryParameterDeletedAt)
 	_ = reflector.SetRequest(&opRestore, new(restoreRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opRestore, new(types.Repository), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusBadRequest)

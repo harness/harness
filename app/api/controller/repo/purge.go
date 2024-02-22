@@ -32,7 +32,12 @@ import (
 )
 
 // Purge removes a repo permanently.
-func (c *Controller) Purge(ctx context.Context, session *auth.Session, repoRef string, deletedAt int64) error {
+func (c *Controller) Purge(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	deletedAt int64,
+) error {
 	repo, err := c.repoStore.FindByRefAndDeletedAt(ctx, repoRef, deletedAt)
 	if err != nil {
 		return fmt.Errorf("failed to find the repo (deleted at %d): %w", deletedAt, err)

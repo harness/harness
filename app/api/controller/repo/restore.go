@@ -27,16 +27,16 @@ import (
 
 type RestoreInput struct {
 	NewIdentifier string `json:"new_identifier,omitempty"`
-	DeletedAt     int64  `json:"deleted_at"`
 }
 
 func (c *Controller) Restore(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
+	deletedAt int64,
 	in *RestoreInput,
 ) (*types.Repository, error) {
-	repo, err := c.repoStore.FindByRefAndDeletedAt(ctx, repoRef, in.DeletedAt)
+	repo, err := c.repoStore.FindByRefAndDeletedAt(ctx, repoRef, deletedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}

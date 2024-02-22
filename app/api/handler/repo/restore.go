@@ -35,6 +35,12 @@ func HandleRestore(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
+		deletedAt, err := request.GetDeletedAtFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
 		in := new(repo.RestoreInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
@@ -42,7 +48,7 @@ func HandleRestore(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		repo, err := repoCtrl.Restore(ctx, session, repoRef, in)
+		repo, err := repoCtrl.Restore(ctx, session, repoRef, deletedAt, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

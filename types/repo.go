@@ -81,13 +81,13 @@ func (r Repository) GetGitUID() string {
 
 // RepoFilter stores repo query parameters.
 type RepoFilter struct {
-	Page          int           `json:"page"`
-	Size          int           `json:"size"`
-	Query         string        `json:"query"`
-	Sort          enum.RepoAttr `json:"sort"`
-	Order         enum.Order    `json:"order"`
-	DeletedBefore *int64        `json:"deleted_before,omitempty"`
-	Recursive     bool
+	Page              int           `json:"page"`
+	Size              int           `json:"size"`
+	Query             string        `json:"query"`
+	Sort              enum.RepoAttr `json:"sort"`
+	Order             enum.Order    `json:"order"`
+	DeletedBeforeOrAt *int64        `json:"deleted_before_or_at,omitempty"`
+	Recursive         bool
 }
 
 // RepositoryGitInfo holds git info for a repository.

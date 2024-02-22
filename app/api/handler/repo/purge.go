@@ -34,7 +34,7 @@ func HandlePurge(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		deletedAt, err := request.GetRepoDeletedAtFromQuery(r)
+		deletedAt, err := request.GetDeletedAtFromQuery(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

@@ -65,14 +65,14 @@ func (j *deletedReposCleanupJob) Handle(ctx context.Context, _ string, _ job.Pro
 		j.retentionTime,
 		olderThan.Format(time.RFC3339Nano))
 
-	deletedBefore := olderThan.UnixMilli()
+	deletedBeforeOrAt := olderThan.UnixMilli()
 	filter := &types.RepoFilter{
-		Page:          1,
-		Size:          int(math.MaxInt),
-		Query:         "",
-		Order:         enum.OrderAsc,
-		Sort:          enum.RepoAttrDeleted,
-		DeletedBefore: &deletedBefore,
+		Page:              1,
+		Size:              int(math.MaxInt),
+		Query:             "",
+		Order:             enum.OrderAsc,
+		Sort:              enum.RepoAttrDeleted,
+		DeletedBeforeOrAt: &deletedBeforeOrAt,
 	}
 	toBePurgedRepos, err := j.repoStore.List(ctx, 0, filter)
 	if err != nil {

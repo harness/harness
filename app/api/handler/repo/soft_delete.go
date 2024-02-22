@@ -37,12 +37,12 @@ func HandleSoftDelete(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = repoCtrl.SoftDelete(ctx, session, repoRef)
+		softDeleteResponse, err := repoCtrl.SoftDelete(ctx, session, repoRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.DeleteSuccessful(w)
+		render.JSON(w, http.StatusOK, softDeleteResponse)
 	}
 }
