@@ -21,6 +21,8 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 type GetCommitParams struct {
@@ -37,6 +39,7 @@ type Commit struct {
 	Author     Signature       `json:"author"`
 	Committer  Signature       `json:"committer"`
 	FileStats  CommitFileStats `json:"file_stats,omitempty"`
+	DiffStats  CommitDiffStats `json:"diff_stats,omitempty"`
 }
 
 type GetCommitOutput struct {
@@ -179,6 +182,20 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 		if err != nil {
 			return nil, fmt.Errorf("failed to map rpc commit: %w", err)
 		}
+
+		stat, err := s.CommitShortStat(ctx, &CommitShortStatParams{
+			Path: repoPath,
+			Ref:  commit.SHA,
+		})
+		if err != nil {
+			log.Warn().Msgf("failed to get diff stats: %s", err)
+		}
+		commit.DiffStats = CommitDiffStats{
+			Additions: stat.Additions,
+			Deletions: stat.Deletions,
+			Total:     stat.Additions + stat.Deletions,
+		}
+
 		commits[i] = *commit
 	}
 

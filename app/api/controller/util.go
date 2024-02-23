@@ -101,6 +101,11 @@ func MapCommit(c *git.Commit) (*types.Commit, error) {
 		Message:    c.Message,
 		Author:     *author,
 		Committer:  *committer,
+		DiffStats: types.CommitDiffStats{
+			Additions: c.DiffStats.Additions,
+			Deletions: c.DiffStats.Deletions,
+			Total:     c.DiffStats.Additions + c.DiffStats.Deletions,
+		},
 	}, nil
 }
 

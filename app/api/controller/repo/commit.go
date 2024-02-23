@@ -160,6 +160,5 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	return types.CommitFilesResponse{
 		CommitID:       commit.CommitID,
 		RuleViolations: violations,
-		Stats:          commit.Stats,
 	}, nil, nil
 }
