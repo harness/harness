@@ -36,41 +36,41 @@ type BlobReader struct {
 func (g *Git) GetBlob(
 	ctx context.Context,
 	repoPath string,
-	sha string,
+	sha *SHA,
 	sizeLimit int64,
 ) (*BlobReader, error) {
 	stdIn, stdOut, cancel := CatFileBatch(ctx, repoPath)
-
-	_, err := stdIn.Write([]byte(sha + "\n"))
+	line := sha.String() + "\n"
+	_, err := stdIn.Write([]byte(line))
 	if err != nil {
 		cancel()
 		return nil, fmt.Errorf("failed to write blob sha to git stdin: %w", err)
 	}
 
-	objectSHA, objectType, objectSize, err := ReadBatchHeaderLine(stdOut)
+	output, err := ReadBatchHeaderLine(stdOut)
 	if err != nil {
 		cancel()
 		return nil, processGitErrorf(err, "failed to read cat-file batch line")
 	}
 
-	if string(objectSHA) != sha {
+	if !output.SHA.Equal(sha) {
 		cancel()
-		return nil, fmt.Errorf("cat-file returned object sha '%s' but expected '%s'", objectSHA, sha)
+		return nil, fmt.Errorf("cat-file returned object sha '%s' but expected '%s'", output.SHA, sha)
 	}
-	if objectType != string(GitObjectTypeBlob) {
+	if output.Type != string(GitObjectTypeBlob) {
 		cancel()
 		return nil, errors.InvalidArgument(
-			"cat-file returned object type '%s' but expected '%s'", objectType, GitObjectTypeBlob)
+			"cat-file returned object type '%s' but expected '%s'", output.Type, GitObjectTypeBlob)
 	}
 
-	contentSize := objectSize
+	contentSize := output.Size
 	if sizeLimit > 0 && sizeLimit < contentSize {
 		contentSize = sizeLimit
 	}
 
 	return &BlobReader{
-		SHA:         sha,
-		Size:        objectSize,
+		SHA:         sha.String(),
+		Size:        output.Size,
 		ContentSize: contentSize,
 		Content:     newLimitReaderCloser(stdOut, contentSize, cancel),
 	}, nil

@@ -369,13 +369,13 @@ func (g *Git) Push(
 	if err != nil {
 		switch {
 		case strings.Contains(errbuf.String(), "non-fast-forward"):
-			return &ErrPushOutOfDate{
+			return &PushOutOfDateError{
 				StdOut: outbuf.String(),
 				StdErr: errbuf.String(),
 				Err:    err,
 			}
 		case strings.Contains(errbuf.String(), "! [remote rejected]"):
-			err := &ErrPushRejected{
+			err := &PushRejectedError{
 				StdOut: outbuf.String(),
 				StdErr: errbuf.String(),
 				Err:    err,
@@ -383,7 +383,7 @@ func (g *Git) Push(
 			err.GenerateMessage()
 			return err
 		case strings.Contains(errbuf.String(), "matches more than one"):
-			err := &ErrMoreThanOne{
+			err := &MoreThanOneError{
 				StdOut: outbuf.String(),
 				StdErr: errbuf.String(),
 				Err:    err,

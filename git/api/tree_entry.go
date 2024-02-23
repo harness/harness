@@ -1,10 +1,24 @@
+// Copyright 2023 Harness, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package api
 
 import (
 	"strconv"
 )
 
-// EntryMode the type of the object in the git tree
+// EntryMode the type of the object in the git tree.
 type EntryMode int
 
 // There are only a few file modes in Git. They look like unix file modes, but they can only be
@@ -17,22 +31,20 @@ const (
 	EntryModeTree    EntryMode = 0o040000
 )
 
-// String converts an EntryMode to a string
+// String converts an EntryMode to a string.
 func (e EntryMode) String() string {
 	return strconv.FormatInt(int64(e), 8)
 }
 
-// ToEntryMode converts a string to an EntryMode
+// ToEntryMode converts a string to an EntryMode.
 func ToEntryMode(value string) EntryMode {
 	v, _ := strconv.ParseInt(value, 8, 32)
 	return EntryMode(v)
 }
 
-// TreeEntry the leaf in the git tree
+// TreeEntry the leaf in the git tree.
 type TreeEntry struct {
 	ID SHA
-
-	ptree *Tree
 
 	entryMode EntryMode
 	name      string
@@ -42,40 +54,40 @@ type TreeEntry struct {
 	fullName string
 }
 
-// Name returns the name of the entry
-func (te *TreeEntry) Name() string {
-	if te.fullName != "" {
-		return te.fullName
+// Name returns the name of the entry.
+func (e *TreeEntry) Name() string {
+	if e.fullName != "" {
+		return e.fullName
 	}
-	return te.name
+	return e.name
 }
 
-// Mode returns the mode of the entry
-func (te *TreeEntry) Mode() EntryMode {
-	return te.entryMode
+// Mode returns the mode of the entry.
+func (e *TreeEntry) Mode() EntryMode {
+	return e.entryMode
 }
 
-// IsSubModule if the entry is a sub module
-func (te *TreeEntry) IsSubModule() bool {
-	return te.entryMode == EntryModeCommit
+// IsSubModule if the entry is a sub module.
+func (e *TreeEntry) IsSubModule() bool {
+	return e.entryMode == EntryModeCommit
 }
 
-// IsDir if the entry is a sub dir
-func (te *TreeEntry) IsDir() bool {
-	return te.entryMode == EntryModeTree
+// IsDir if the entry is a sub dir.
+func (e *TreeEntry) IsDir() bool {
+	return e.entryMode == EntryModeTree
 }
 
-// IsLink if the entry is a symlink
-func (te *TreeEntry) IsLink() bool {
-	return te.entryMode == EntryModeSymlink
+// IsLink if the entry is a symlink.
+func (e *TreeEntry) IsLink() bool {
+	return e.entryMode == EntryModeSymlink
 }
 
-// IsRegular if the entry is a regular file
-func (te *TreeEntry) IsRegular() bool {
-	return te.entryMode == EntryModeBlob
+// IsRegular if the entry is a regular file.
+func (e *TreeEntry) IsRegular() bool {
+	return e.entryMode == EntryModeBlob
 }
 
-// IsExecutable if the entry is an executable file (not necessarily binary)
-func (te *TreeEntry) IsExecutable() bool {
-	return te.entryMode == EntryModeExec
+// IsExecutable if the entry is an executable file (not necessarily binary).
+func (e *TreeEntry) IsExecutable() bool {
+	return e.entryMode == EntryModeExec
 }

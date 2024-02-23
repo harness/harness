@@ -39,11 +39,11 @@ func (g *Git) InfoRefs(
 		command.WithFlag("--stateless-rpc"),
 		command.WithFlag("--advertise-refs"),
 		command.WithArg("."),
-		command.WithEnv(env...),
 	)
 	if err := cmd.Run(ctx,
 		command.WithDir(repoPath),
 		command.WithStdout(stdout),
+		command.WithEnvs(env...),
 	); err != nil {
 		return errors.Internal(err, "InfoRefs service %s failed", service)
 	}
@@ -72,13 +72,13 @@ func (g *Git) ServicePack(
 	cmd := command.New(service,
 		command.WithFlag("--stateless-rpc"),
 		command.WithArg(repoPath),
-		command.WithEnv(env...),
 		command.WithEnv("SSH_ORIGINAL_COMMAND", service),
 	)
 	err := cmd.Run(ctx,
 		command.WithDir(repoPath),
 		command.WithStdout(stdout),
 		command.WithStdin(stdin),
+		command.WithEnvs(env...),
 	)
 	if err != nil && err.Error() != "signal: killed" {
 		log.Ctx(ctx).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v - %s", service, repoPath, err)

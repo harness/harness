@@ -120,5 +120,5 @@ func (c commitEntryGetter) Find(
 		path = "."
 	}
 
-	return GetCommit(ctx, repoPath, commitSHA, path)
+	return getCommit(ctx, repoPath, commitSHA, path)
 }

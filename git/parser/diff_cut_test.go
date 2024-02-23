@@ -18,9 +18,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/harness/gitness/git/api"
-	"github.com/harness/gitness/git/types"
 )
 
 //nolint:gocognit // it's a unit test!!!
@@ -50,14 +47,14 @@ func TestDiffCut(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		params       api.DiffCutParams
+		params       DiffCutParams
 		expCutHeader string
 		expCut       []string
 		expError     error
 	}{
 		{
 			name: "at-'+6,7,8':new",
-			params: api.DiffCutParams{
+			params: DiffCutParams{
 				LineStart: 7, LineStartNew: true,
 				LineEnd: 7, LineEndNew: true,
 				BeforeLines: 0, AfterLines: 0,
@@ -69,7 +66,7 @@ func TestDiffCut(t *testing.T) {
 		},
 		{
 			name: "at-'+6,7,8':new-with-lines-around",
-			params: api.DiffCutParams{
+			params: DiffCutParams{
 				LineStart: 7, LineStartNew: true,
 				LineEnd: 7, LineEndNew: true,
 				BeforeLines: 1, AfterLines: 2,
@@ -81,7 +78,7 @@ func TestDiffCut(t *testing.T) {
 		},
 		{
 			name: "at-'+0':new-with-lines-around",
-			params: api.DiffCutParams{
+			params: DiffCutParams{
 				LineStart: 1, LineStartNew: true,
 				LineEnd: 1, LineEndNew: true,
 				BeforeLines: 3, AfterLines: 3,
@@ -93,7 +90,7 @@ func TestDiffCut(t *testing.T) {
 		},
 		{
 			name: "at-'-13':one-with-lines-around",
-			params: api.DiffCutParams{
+			params: DiffCutParams{
 				LineStart: 13, LineStartNew: false,
 				LineEnd: 13, LineEndNew: false,
 				BeforeLines: 1, AfterLines: 1,
@@ -105,7 +102,7 @@ func TestDiffCut(t *testing.T) {
 		},
 		{
 			name: "at-'-13':mixed",
-			params: api.DiffCutParams{
+			params: DiffCutParams{
 				LineStart: 7, LineStartNew: false,
 				LineEnd: 7, LineEndNew: true,
 				BeforeLines: 0, AfterLines: 0,
@@ -168,7 +165,7 @@ index 541cb64f..047d7ee2 100644
 
 	hh, h, err := DiffCut(
 		strings.NewReader(input),
-		api.DiffCutParams{
+		DiffCutParams{
 			LineStart:    3,
 			LineStartNew: true,
 			LineEnd:      3,
@@ -183,13 +180,13 @@ index 541cb64f..047d7ee2 100644
 		return
 	}
 
-	expectedHH := types.HunkHeader{OldLine: 2, OldSpan: 0, NewLine: 3, NewSpan: 1}
+	expectedHH := HunkHeader{OldLine: 2, OldSpan: 0, NewLine: 3, NewSpan: 1}
 	if expectedHH != hh {
 		t.Errorf("expected hunk header: %+v, but got: %+v", expectedHH, hh)
 	}
 
-	expectedHunkLines := types.Hunk{
-		HunkHeader: types.HunkHeader{OldLine: 2, OldSpan: 0, NewLine: 2, NewSpan: 2},
+	expectedHunkLines := Hunk{
+		HunkHeader: HunkHeader{OldLine: 2, OldSpan: 0, NewLine: 2, NewSpan: 2},
 		Lines:      []string{"+456", "+789"},
 	}
 	if !reflect.DeepEqual(expectedHunkLines, h) {
@@ -211,7 +208,7 @@ index af7864ba..541cb64f 100644
 `
 	hh, h, err := DiffCut(
 		strings.NewReader(input),
-		api.DiffCutParams{
+		DiffCutParams{
 			LineStart:    1,
 			LineStartNew: true,
 			LineEnd:      1,
@@ -226,13 +223,13 @@ index af7864ba..541cb64f 100644
 		return
 	}
 
-	expectedHH := types.HunkHeader{OldLine: 1, OldSpan: 3, NewLine: 1, NewSpan: 1}
+	expectedHH := HunkHeader{OldLine: 1, OldSpan: 3, NewLine: 1, NewSpan: 1}
 	if expectedHH != hh {
 		t.Errorf("expected hunk header: %+v, but got: %+v", expectedHH, hh)
 	}
 
-	expectedHunkLines := types.Hunk{
-		HunkHeader: types.HunkHeader{OldLine: 1, OldSpan: 3, NewLine: 1, NewSpan: 1},
+	expectedHunkLines := Hunk{
+		HunkHeader: HunkHeader{OldLine: 1, OldSpan: 3, NewLine: 1, NewSpan: 1},
 		Lines:      []string{"-123", "-456", "-789", "+test"},
 	}
 	if !reflect.DeepEqual(expectedHunkLines, h) {

@@ -1,8 +1,23 @@
+// Copyright 2023 Harness, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package foreachref
 
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -35,7 +50,7 @@ func NewParser(r io.Reader, format Format) *Parser {
 
 	// Split input into delimiter-separated "reference blocks".
 	scanner.Split(
-		func(data []byte, atEOF bool) (advance int, token []byte, err error) {
+		func(data []byte, atEOF bool) (int, []byte, error) {
 			// Scan until delimiter, marking end of reference.
 			delimIdx := bytes.Index(data, refDelim)
 			if delimIdx >= 0 {
@@ -70,7 +85,7 @@ func (p *Parser) Next() map[string]string {
 		return nil
 	}
 	fields, err := p.parseRef(p.scanner.Text())
-	if err != nil {
+	if err != nil && !errors.Is(err, io.EOF) {
 		p.err = err
 		return nil
 	}
@@ -84,11 +99,11 @@ func (p *Parser) Err() error {
 
 // parseRef parses out all key-value pairs from a single reference block, such as
 //
-//	"objecttype tag\0refname:short v1.16.4\0object f460b7543ed500e49c133c2cd85c8c55ee9dbe27"
+//	"type tag\0ref:short v1.16.4\0object f460b7543ed500e49c133c2cd85c8c55ee9dbe27"
 func (p *Parser) parseRef(refBlock string) (map[string]string, error) {
 	if refBlock == "" {
 		// must be at EOF
-		return nil, nil
+		return nil, io.EOF
 	}
 
 	fieldValues := make(map[string]string)

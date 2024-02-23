@@ -21,14 +21,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/parser"
 
 	"github.com/google/go-cmp/cmp"
 )
 
 func Test_modifyHeader(t *testing.T) {
 	type args struct {
-		hunk      types.HunkHeader
+		hunk      parser.HunkHeader
 		startLine int
 		endLine   int
 	}
@@ -40,7 +40,7 @@ func Test_modifyHeader(t *testing.T) {
 		{
 			name: "test empty",
 			args: args{
-				hunk: types.HunkHeader{
+				hunk: parser.HunkHeader{
 					OldLine: 0,
 					OldSpan: 0,
 					NewLine: 0,
@@ -54,7 +54,7 @@ func Test_modifyHeader(t *testing.T) {
 		{
 			name: "test empty 1",
 			args: args{
-				hunk: types.HunkHeader{
+				hunk: parser.HunkHeader{
 					OldLine: 0,
 					OldSpan: 0,
 					NewLine: 0,
@@ -68,7 +68,7 @@ func Test_modifyHeader(t *testing.T) {
 		{
 			name: "test empty old",
 			args: args{
-				hunk: types.HunkHeader{
+				hunk: parser.HunkHeader{
 					OldLine: 0,
 					OldSpan: 0,
 					NewLine: 1,
@@ -82,7 +82,7 @@ func Test_modifyHeader(t *testing.T) {
 		{
 			name: "test empty new",
 			args: args{
-				hunk: types.HunkHeader{
+				hunk: parser.HunkHeader{
 					OldLine: 1,
 					OldSpan: 10,
 					NewLine: 0,
@@ -96,7 +96,7 @@ func Test_modifyHeader(t *testing.T) {
 		{
 			name: "test 1",
 			args: args{
-				hunk: types.HunkHeader{
+				hunk: parser.HunkHeader{
 					OldLine: 2,
 					OldSpan: 20,
 					NewLine: 2,
@@ -110,7 +110,7 @@ func Test_modifyHeader(t *testing.T) {
 		{
 			name: "test 2",
 			args: args{
-				hunk: types.HunkHeader{
+				hunk: parser.HunkHeader{
 					OldLine: 2,
 					OldSpan: 20,
 					NewLine: 2,
@@ -124,7 +124,7 @@ func Test_modifyHeader(t *testing.T) {
 		{
 			name: "test 4",
 			args: args{
-				hunk: types.HunkHeader{
+				hunk: parser.HunkHeader{
 					OldLine: 1,
 					OldSpan: 10,
 					NewLine: 1,
@@ -138,7 +138,7 @@ func Test_modifyHeader(t *testing.T) {
 		{
 			name: "test 5",
 			args: args{
-				hunk: types.HunkHeader{
+				hunk: parser.HunkHeader{
 					OldLine: 1,
 					OldSpan: 108,
 					NewLine: 1,

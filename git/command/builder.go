@@ -227,6 +227,9 @@ var descriptions = map[string]builder{
 	"update-ref": {
 		flags: 0,
 	},
+	"update-index": {
+		flags: NoEndOfOptions,
+	},
 	"upload-archive": {
 		// git-upload-archive(1) has a handrolled parser which always interprets the
 		// first argument as directory, so we cannot use `--end-of-options`.
@@ -239,6 +242,9 @@ var descriptions = map[string]builder{
 		flags: NoRefUpdates,
 	},
 	"worktree": {
+		flags: 0,
+	},
+	"write-tree": {
 		flags: 0,
 	},
 }

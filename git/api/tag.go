@@ -52,7 +52,7 @@ type CreateTagOptions struct {
 	Tagger Signature
 }
 
-// TagPrefix tags prefix path on the repository
+// TagPrefix tags prefix path on the repository.
 const TagPrefix = "refs/tags/"
 
 // GetAnnotatedTag returns the tag for a specific tag sha.
@@ -137,19 +137,20 @@ func getAnnotatedTags(
 		if _, err := writer.Write([]byte(sha + "\n")); err != nil {
 			return nil, err
 		}
-		tagSha, typ, size, err := ReadBatchHeaderLine(reader)
+		output, err := ReadBatchHeaderLine(reader)
 		if err != nil {
 			if errors.Is(err, io.EOF) || errors.IsNotFound(err) {
 				return nil, fmt.Errorf("tag with sha %s does not exist", sha)
 			}
 			return nil, err
 		}
-		if typ != string(GitObjectTypeTag) {
-			return nil, fmt.Errorf("git object is of type '%s', expected tag", typ)
+		if output.Type != string(GitObjectTypeTag) {
+			return nil, fmt.Errorf("git object is of type '%s', expected tag",
+				output.Type)
 		}
 
 		// read the remaining rawData
-		rawData, err := io.ReadAll(io.LimitReader(reader, size))
+		rawData, err := io.ReadAll(io.LimitReader(reader, output.Size))
 		if err != nil {
 			return nil, err
 		}
@@ -164,7 +165,7 @@ func getAnnotatedTags(
 		}
 
 		// fill in the sha
-		tag.Sha = string(tagSha)
+		tag.Sha = output.SHA.String()
 
 		tags[i] = tag
 	}
@@ -268,7 +269,7 @@ const defaultGitTimeLayout = "Mon Jan _2 15:04:05 2006 -0700"
 // parseSignatureFromCatFileLine parses the signature from a cat-file output.
 // This is used for commit / tag outputs. Input will be similar to (without 'author 'prefix):
 // - author Max Mustermann <mm@gitness.io> 1666401234 -0700
-// - author Max Mustermann <mm@gitness.io> Tue Oct 18 05:13:26 2022 +0530
+// - author Max Mustermann <mm@gitness.io> Tue Oct 18 05:13:26 2022 +0530.
 func parseSignatureFromCatFileLine(line string) (Signature, error) {
 	sig := Signature{}
 	emailStart := strings.LastIndexByte(line, '<')
@@ -347,18 +348,19 @@ func parseSignatureFromCatFileLine(line string) (Signature, error) {
 
 // Parse commit information from the (uncompressed) raw
 // data from the commit object.
-// \n\n separate headers from message
-func parseTagData(data []byte) (*Tag, error) {
-	tag := new(Tag)
-	tag.Tagger = Signature{}
+// \n\n separate headers from message.
+func parseTagData(data []byte) *Tag {
+	tag := &Tag{
+		Tagger: Signature{},
+	}
 	// we now have the contents of the commit object. Let's investigate...
-	nextline := 0
+	nextLine := 0
 l:
 	for {
-		eol := bytes.IndexByte(data[nextline:], '\n')
+		eol := bytes.IndexByte(data[nextLine:], '\n')
 		switch {
 		case eol > 0:
-			line := data[nextline : nextline+eol]
+			line := data[nextLine : nextLine+eol]
 			spacePos := bytes.IndexByte(line, ' ')
 			refType := line[:spacePos]
 			switch string(refType) {
@@ -368,17 +370,12 @@ l:
 				// A commit can have one or more parents
 				tag.TargetType = GitObjectType(line[spacePos+1:])
 			case "tagger":
-				sig, err := NewSignatureFromCommitLine(line[spacePos+1:])
-				if err != nil {
-					return nil, err
-				}
-				if tag != nil {
-					tag.Tagger = *sig
-				}
+				sig := NewSignatureFromCommitLine(line[spacePos+1:])
+				tag.Tagger = *sig
 			}
-			nextline += eol + 1
+			nextLine += eol + 1
 		case eol == 0:
-			tag.Message = string(data[nextline+1:])
+			tag.Message = string(data[nextLine+1:])
 			break l
 		default:
 			break l
@@ -395,5 +392,5 @@ l:
 			tag.Message = tag.Message[:idx+1]
 		}
 	}
-	return tag, nil
+	return tag
 }

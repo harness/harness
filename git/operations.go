@@ -15,11 +15,9 @@
 package git
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -302,8 +300,7 @@ func (s *Service) prepareTreeEmptyRepo(
 			return errors.InvalidArgument("invalid path")
 		}
 
-		reader := bytes.NewReader(action.Payload)
-		if err := createFile(ctx, shared, nil, filePath, defaultFilePermission, reader); err != nil {
+		if err := createFile(ctx, shared, nil, filePath, defaultFilePermission, action.Payload); err != nil {
 			return errors.Internal(err, "failed to create file '%s'", action.Path)
 		}
 	}
@@ -369,15 +366,13 @@ func (s *Service) processAction(
 		return errors.InvalidArgument("path cannot be empty")
 	}
 
-	reader := bytes.NewReader(action.Payload)
-
 	switch action.Action {
 	case CreateAction:
-		err = createFile(ctx, shared, commit, filePath, defaultFilePermission, reader)
+		err = createFile(ctx, shared, commit, filePath, defaultFilePermission, action.Payload)
 	case UpdateAction:
-		err = updateFile(ctx, shared, commit, filePath, action.SHA, defaultFilePermission, reader)
+		err = updateFile(ctx, shared, commit, filePath, action.SHA, defaultFilePermission, action.Payload)
 	case MoveAction:
-		err = moveFile(ctx, shared, commit, filePath, defaultFilePermission, reader)
+		err = moveFile(ctx, shared, commit, filePath, action.SHA, defaultFilePermission, action.Payload)
 	case DeleteAction:
 		err = deleteFile(ctx, shared, filePath)
 	}
@@ -386,7 +381,7 @@ func (s *Service) processAction(
 }
 
 func createFile(ctx context.Context, repo *api.SharedRepo, commit *api.Commit,
-	filePath, mode string, reader io.Reader) error {
+	filePath, mode string, payload []byte) error {
 	// only check path availability if a source commit is available (empty repo won't have such a commit)
 	if commit != nil {
 		if err := checkPathAvailability(commit, filePath, true); err != nil {
@@ -394,7 +389,7 @@ func createFile(ctx context.Context, repo *api.SharedRepo, commit *api.Commit,
 		}
 	}
 
-	hash, err := repo.WriteGitObject(ctx, reader)
+	hash, err := repo.WriteGitObject(ctx, bytes.NewReader(payload))
 	if err != nil {
 		return fmt.Errorf("createFile: error hashing object: %w", err)
 	}
@@ -407,7 +402,7 @@ func createFile(ctx context.Context, repo *api.SharedRepo, commit *api.Commit,
 }
 
 func updateFile(ctx context.Context, repo *api.SharedRepo, commit *api.Commit, filePath, sha,
-	mode string, reader io.Reader) error {
+	mode string, payload []byte) error {
 	// get file mode from existing file (default unless executable)
 	entry, err := getFileEntry(commit, sha, filePath)
 	if err != nil {
@@ -417,7 +412,7 @@ func updateFile(ctx context.Context, repo *api.SharedRepo, commit *api.Commit, f
 		mode = "100755"
 	}
 
-	hash, err := repo.WriteGitObject(ctx, reader)
+	hash, err := repo.WriteGitObject(ctx, bytes.NewReader(payload))
 	if err != nil {
 		return fmt.Errorf("updateFile: error hashing object: %w", err)
 	}
@@ -429,38 +424,42 @@ func updateFile(ctx context.Context, repo *api.SharedRepo, commit *api.Commit, f
 }
 
 func moveFile(ctx context.Context, repo *api.SharedRepo, commit *api.Commit,
-	filePath, mode string, reader io.Reader) error {
-	buffer := &bytes.Buffer{}
-	newPath, err := parsePayload(reader, buffer)
+	filePath, sha, mode string, payload []byte) error {
+	newPath, newContent, err := parseMovePayload(payload)
 	if err != nil {
 		return err
 	}
 
-	if buffer.Len() == 0 && newPath != "" {
-		err = repo.ShowFile(ctx, filePath, commit.SHA, buffer)
-		if err != nil {
-			return fmt.Errorf("moveFile: failed lookup for path '%s': %w", newPath, err)
-		}
+	// ensure file exists and matches SHA
+	entry, err := getFileEntry(commit, sha, filePath)
+	if err != nil {
+		return err
 	}
 
+	// ensure new path is available
 	if err = checkPathAvailability(commit, newPath, false); err != nil {
 		return err
 	}
 
-	filesInIndex, err := repo.LsFiles(ctx, filePath)
-	if err != nil {
-		return fmt.Errorf("moveFile: listing files error: %w", err)
-	}
-	if !slices.Contains(filesInIndex, filePath) {
-		return errors.NotFound("path %s not found", filePath)
+	var fileHash string
+	var fileMode string
+	if newContent != nil {
+		hash, err := repo.WriteGitObject(ctx, bytes.NewReader(newContent))
+		if err != nil {
+			return fmt.Errorf("moveFile: error hashing object: %w", err)
+		}
+
+		fileHash = hash
+		fileMode = mode
+		if entry.IsExecutable() {
+			fileMode = "100755"
+		}
+	} else {
+		fileHash = entry.ID.String()
+		fileMode = entry.Mode().String()
 	}
 
-	hash, err := repo.WriteGitObject(ctx, buffer)
-	if err != nil {
-		return fmt.Errorf("moveFile: error hashing object: %w", err)
-	}
-
-	if err = repo.AddObjectToIndex(ctx, mode, hash, newPath); err != nil {
+	if err = repo.AddObjectToIndex(ctx, fileMode, fileHash, newPath); err != nil {
 		return fmt.Errorf("moveFile: add object error: %w", err)
 	}
 
@@ -491,7 +490,7 @@ func getFileEntry(
 	path string,
 ) (*api.TreeEntry, error) {
 	//entry, err := commit.GetTreeEntryByPath(path)
-	//if git.IsErrNotExist(err) {
+	//if errors.IsNotFound(err) {
 	//	return nil, errors.NotFound("path %s not found", path)
 	//}
 	//if err != nil {
@@ -503,7 +502,7 @@ func getFileEntry(
 	//	return nil, errors.InvalidArgument("sha does not match for path %s [given: %s, expected: %s]",
 	//		path, sha, entry.ID.String())
 	//}
-
+	//return entry, nil
 	return nil, nil
 }
 
@@ -544,29 +543,22 @@ func checkPathAvailability(commit *api.Commit, filePath string, isNewFile bool) 
 	return nil
 }
 
-func parsePayload(payload io.Reader, content io.Writer) (string, error) {
-	newPath := ""
-	reader := bufio.NewReader(payload)
-	// check for filePrefix
-	prefixBytes := make([]byte, len(filePrefix))
-	if _, err := reader.Read(prefixBytes); err != nil {
-		if errors.Is(err, io.EOF) {
-			return "", nil
-		}
-		return "", err
-	}
-	// check if payload starts with filePrefix constant
-	if bytes.Equal(prefixBytes, []byte(filePrefix)) {
-		filename, _ := reader.ReadString('\n') // no err handling because next statement will check filename
-		newPath = api.CleanUploadFileName(filename)
-		if newPath == "" {
-			return "", api.ErrInvalidPath
-		}
+func parseMovePayload(payload []byte) (string, []byte, error) {
+	var newContent []byte
+	var newPath string
+	filePathEnd := bytes.IndexByte(payload, 0)
+	if filePathEnd < 0 {
+		newPath = string(payload)
+		newContent = nil
 	} else {
-		if _, err := content.Write(prefixBytes); err != nil {
-			return "", err
-		}
+		newPath = string(payload[:filePathEnd])
+		newContent = payload[filePathEnd+1:]
 	}
-	_, err := io.Copy(content, reader)
-	return newPath, err
+
+	newPath = api.CleanUploadFileName(newPath)
+	if newPath == "" {
+		return "", nil, api.ErrInvalidPath
+	}
+
+	return newPath, newContent, nil
 }

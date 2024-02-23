@@ -234,7 +234,7 @@ func (g *Git) GetRef(
 	cmd := command.New("show-ref",
 		command.WithFlag("--verify"),
 		command.WithFlag("-s"),
-		command.WithPostSepArg(ref),
+		command.WithArg(ref),
 	)
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))

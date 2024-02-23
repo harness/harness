@@ -27,7 +27,6 @@ import (
 
 	"github.com/djherbis/buffer"
 	"github.com/djherbis/nio/v3"
-	"github.com/rs/zerolog/log"
 )
 
 // WriteCloserError wraps an io.WriteCloser with an additional CloseWithError function.
@@ -41,6 +40,7 @@ type WriteCloserError interface {
 func CatFileBatch(
 	ctx context.Context,
 	repoPath string,
+	flags ...command.CmdOptionFunc,
 ) (WriteCloserError, *bufio.Reader, func()) {
 	const bufferSize = 32 * 1024
 	// We often want to feed the commits in order into cat-file --batch,
@@ -64,7 +64,10 @@ func CatFileBatch(
 
 	go func() {
 		stderr := bytes.Buffer{}
-		cmd := command.New("cat-file", command.WithFlag("--batch"))
+		cmd := command.New("cat-file",
+			command.WithFlag("--batch"),
+		)
+		cmd.Add(flags...)
 		err := cmd.Run(ctx,
 			command.WithDir(repoPath),
 			command.WithStdin(batchStdinReader),
@@ -87,42 +90,48 @@ func CatFileBatch(
 	return batchStdinWriter, batchReader, cancel
 }
 
+type BatchHeaderResponse struct {
+	SHA  *SHA
+	Type string
+	Size int64
+}
+
 // ReadBatchHeaderLine reads the header line from cat-file --batch
-// We expect:
 // <sha> SP <type> SP <size> LF
 // sha is a 40byte not 20byte here.
-func ReadBatchHeaderLine(rd *bufio.Reader) (sha []byte, objType string, size int64, err error) {
-	objType, err = rd.ReadString('\n')
+func ReadBatchHeaderLine(rd *bufio.Reader) (*BatchHeaderResponse, error) {
+	line, err := rd.ReadString('\n')
 	if err != nil {
-		return nil, "", 0, err
+		return nil, err
 	}
-	if len(objType) == 1 {
-		objType, err = rd.ReadString('\n')
+	if len(line) == 1 {
+		line, err = rd.ReadString('\n')
 		if err != nil {
-			return nil, "", 0, err
+			return nil, err
 		}
 	}
-	idx := strings.IndexByte(objType, ' ')
+	idx := strings.IndexByte(line, ' ')
 	if idx < 0 {
-		log.Debug().Msgf("missing space type: %s", objType)
-		err = errors.NotFound("sha '%s' not found", sha)
-		return nil, "", 0, err
+		return nil, errors.NotFound("missing space for: %s", line)
 	}
-	sha = []byte(objType[:idx])
-	objType = objType[idx+1:]
+	sha := MustNewSHA(line[:idx])
+	objType := line[idx+1:]
 
 	idx = strings.IndexByte(objType, ' ')
 	if idx < 0 {
-		err = errors.NotFound("sha '%s' not found", sha)
-		return nil, "", 0, err
+		return nil, errors.NotFound("sha '%s' not found", sha)
 	}
 
 	sizeStr := objType[idx+1 : len(objType)-1]
 	objType = objType[:idx]
 
-	size, err = strconv.ParseInt(sizeStr, 10, 64)
+	size, err := strconv.ParseInt(sizeStr, 10, 64)
 	if err != nil {
-		return nil, "", 0, err
+		return nil, err
 	}
-	return sha, objType, size, nil
+	return &BatchHeaderResponse{
+		SHA:  sha,
+		Type: objType,
+		Size: size,
+	}, nil
 }

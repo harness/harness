@@ -22,7 +22,7 @@ import (
 
 func TestAdapter_RawDiff(t *testing.T) {
 	git := setupGit(t)
-	repo, teardown := setupRepo(t, git, "testrawdiff")
+	teardown := setupRepo(t, git, "testrawdiff")
 	defer teardown()
 
 	testFileName := "file.txt"

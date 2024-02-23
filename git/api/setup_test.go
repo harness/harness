@@ -18,6 +18,7 @@ import (
 	"context"
 	"os"
 	"path"
+	"strings"
 	"testing"
 	"time"
 
@@ -63,7 +64,7 @@ func setupGit(t *testing.T) *api.Git {
 	return git
 }
 
-func setupRepo(t *testing.T, git api.Git, name string) teardown {
+func setupRepo(t *testing.T, git *api.Git, name string) teardown {
 	t.Helper()
 	ctx := context.Background()
 
@@ -98,35 +99,36 @@ func setupRepo(t *testing.T, git api.Git, name string) teardown {
 	}
 }
 
-//func writeFile(
-//	t *testing.T,
-//	repo *gitea.Repository,
-//	path string,
-//	content string,
-//	parents []string,
-//) (oid gitea.SHA1, commitSha gitea.SHA1) {
-//	t.Helper()
-//	oid, err := repo.HashObject(strings.NewReader(content))
-//	if err != nil {
-//		t.Fatalf("failed to hash object: %v", err)
-//	}
-//
-//	err = repo.AddObjectToIndex("100644", oid, path)
-//	if err != nil {
-//		t.Fatalf("failed to add object to index: %v", err)
-//	}
-//
-//	tree, err := repo.WriteTree()
-//	if err != nil {
-//		t.Fatalf("failed to write tree: %v", err)
-//	}
-//
-//	commitSha, err = repo.CommitTree(testAuthor, testCommitter, tree, gitea.CommitTreeOpts{
-//		Message: "write file operation",
-//		Parents: parents,
-//	})
-//	if err != nil {
-//		t.Fatalf("failed to commit tree: %v", err)
-//	}
-//	return oid, commitSha
-//}
+func writeFile(
+	t *testing.T,
+	git *api.Git,
+	repoPath string,
+	path string,
+	content string,
+	parents []string,
+) (oid api.SHA, commitSha api.SHA) {
+	t.Helper()
+	oid, err := git.HashObject(context.Background(), repoPath, strings.NewReader(content))
+	if err != nil {
+		t.Fatalf("failed to hash object: %v", err)
+	}
+
+	err = repo.AddObjectToIndex("100644", oid, path)
+	if err != nil {
+		t.Fatalf("failed to add object to index: %v", err)
+	}
+
+	tree, err := repo.WriteTree()
+	if err != nil {
+		t.Fatalf("failed to write tree: %v", err)
+	}
+
+	commitSha, err = repo.CommitTree(testAuthor, testCommitter, tree, gitea.CommitTreeOpts{
+		Message: "write file operation",
+		Parents: parents,
+	})
+	if err != nil {
+		t.Fatalf("failed to commit tree: %v", err)
+	}
+	return oid, commitSha
+}

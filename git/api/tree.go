@@ -80,7 +80,7 @@ type Tree struct {
 	entriesRecursiveParsed bool
 }
 
-// Entries a list of entry
+// Entries a list of entry.
 type Entries []*TreeEntry
 
 func cleanTreePath(treePath string) string {

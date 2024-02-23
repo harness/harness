@@ -14,23 +14,14 @@
 
 package api
 
-import "fmt"
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"io"
 
-//// ObjectType git object type.
-//type ObjectType string
-//
-//const (
-//	// ObjectCommit commit object type.
-//	ObjectCommit ObjectType = "commit"
-//	// ObjectTree tree object type.
-//	ObjectTree ObjectType = "tree"
-//	// ObjectBlob blob object type.
-//	ObjectBlob ObjectType = "blob"
-//	// ObjectTag tag object type.
-//	ObjectTag ObjectType = "tag"
-//	// ObjectBranch branch object type.
-//	ObjectBranch ObjectType = "branch"
-//)
+	"github.com/harness/gitness/git/command"
+)
 
 type GitObjectType string
 
@@ -63,3 +54,20 @@ const (
 	SortOrderAsc
 	SortOrderDesc
 )
+
+func (g *Git) HashObject(ctx context.Context, repoPath string, reader io.Reader) (*SHA, error) {
+	cmd := command.New("hash-object",
+		command.WithFlag("-w"),
+		command.WithFlag("--stdin"),
+	)
+	stdout := new(bytes.Buffer)
+	err := cmd.Run(ctx,
+		command.WithDir(repoPath),
+		command.WithStdin(reader),
+		command.WithStdout(stdout),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return NewSHA(stdout.Bytes())
+}

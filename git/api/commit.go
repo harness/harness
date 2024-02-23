@@ -50,7 +50,7 @@ type Commit struct {
 	Author    Signature `json:"author"`
 	Committer Signature `json:"committer"`
 	Signature *CommitGPGSignature
-	Parents   []SHA
+	Parents   []*SHA
 	FileStats CommitFileStats
 }
 
@@ -97,7 +97,7 @@ func (g *Git) GetLatestCommit(
 	}
 	treePath = cleanTreePath(treePath)
 
-	return GetCommit(ctx, repoPath, rev, treePath)
+	return getCommit(ctx, repoPath, rev, treePath)
 }
 
 func getCommits(
@@ -110,7 +110,7 @@ func getCommits(
 	}
 	commits := make([]*Commit, 0, len(commitIDs))
 	for _, commitID := range commitIDs {
-		commit, err := GetCommit(ctx, repoPath, commitID, "")
+		commit, err := getCommit(ctx, repoPath, commitID, "")
 		if err != nil {
 			return nil, fmt.Errorf("failed to get commit '%s': %w", commitID, err)
 		}
@@ -445,7 +445,7 @@ func (g *Git) GetCommit(
 		return nil, ErrRepositoryPathEmpty
 	}
 
-	return GetCommit(ctx, repoPath, rev, "")
+	return getCommit(ctx, repoPath, rev, "")
 }
 
 func (g *Git) GetFullCommitID(
@@ -585,9 +585,9 @@ func parseLinesToSlice(output []byte) []string {
 	return slice
 }
 
-// GetCommit returns info about a commit.
-// TODO: Move this function outside of the api package.
-func GetCommit(
+// getCommit returns info about a commit.
+// TODO: This function is used only for last used cache
+func getCommit(
 	ctx context.Context,
 	repoPath string,
 	rev string,
@@ -669,40 +669,48 @@ func GetCommit(
 	}, nil
 }
 
+// GetCommit returns info about a commit.
+// TODO: Move this function outside of the api package.
+func GetCommit(
+	ctx context.Context,
+	repoPath string,
+	rev string,
+) (*Commit, error) {
+	wr, rd, cancel := CatFileBatch(ctx, repoPath)
+	defer cancel()
+
+	_, _ = wr.Write([]byte(rev + "\n"))
+
+	return getCommitFromBatchReader(ctx, repoPath, rd, rev)
+}
+
 func getCommitFromBatchReader(
 	ctx context.Context,
 	repoPath string,
 	rd *bufio.Reader,
-	id SHA,
+	rev string,
 ) (*Commit, error) {
-	_, objtype, size, err := ReadBatchHeaderLine(rd)
+	output, err := ReadBatchHeaderLine(rd)
 	if err != nil {
-		if errors.Is(err, io.EOF) || errors.IsNotFound(err) {
-			return nil, err
-		}
 		return nil, err
 	}
 
-	switch objtype {
+	switch output.Type {
 	case "missing":
-		return nil, errors.NotFound("sha '%s' not found", id.String())
+		return nil, errors.NotFound("sha '%s' not found", output.SHA)
 	case "tag":
 		// then we need to parse the tag
 		// and load the commit
-		data, err := io.ReadAll(io.LimitReader(rd, size))
+		data, err := io.ReadAll(io.LimitReader(rd, output.Size))
 		if err != nil {
 			return nil, err
 		}
-		_, err = rd.Discard(1)
-		if err != nil {
+		if _, err = rd.Discard(1); err != nil {
 			return nil, err
 		}
-		tag, err := parseTagData(data)
-		if err != nil {
-			return nil, err
-		}
+		tag := parseTagData(data)
 
-		commit, err := GetCommit(ctx, repoPath, tag.TargetSha, "")
+		commit, err := GetCommit(ctx, repoPath, tag.TargetSha)
 		if err != nil {
 			return nil, err
 		}
@@ -713,31 +721,30 @@ func getCommitFromBatchReader(
 
 		return commit, nil
 	case "commit":
-		commit, err := CommitFromReader(ctx, repoPath, id, io.LimitReader(rd, size))
+		commit, err := CommitFromReader(output.SHA, io.LimitReader(rd, output.Size))
 		if err != nil {
 			return nil, err
 		}
-		_, err = rd.Discard(1)
-		if err != nil {
+		if _, err = rd.Discard(1); err != nil {
 			return nil, err
 		}
 
 		return commit, nil
 	default:
-		log.Debug().Msgf("Unknown object type: %s", objtype)
-		_, err = rd.Discard(int(size) + 1)
+		log.Debug().Msgf("Unknown object type: %s", output.Type)
+		_, err = rd.Discard(int(output.Size) + 1)
 		if err != nil {
 			return nil, err
 		}
-		return nil, errors.NotFound("sha '%s' not found", id.String())
+		return nil, errors.NotFound("rev '%s' not found", rev)
 	}
 }
 
 // CommitFromReader will generate a Commit from a provided reader
 // We need this to interpret commits from cat-file or cat-file --batch
 //
-// If used as part of a cat-file --batch stream you need to limit the reader to the correct size
-func CommitFromReader(ctx context.Context, repoPath string, sha SHA, reader io.Reader) (*Commit, error) {
+// If used as part of a cat-file --batch stream you need to limit the reader to the correct size.
+func CommitFromReader(sha *SHA, reader io.Reader) (*Commit, error) {
 	commit := &Commit{
 		SHA:       sha.String(),
 		Author:    Signature{},
@@ -772,9 +779,8 @@ readLoop:
 			if len(line) > 0 && line[0] == ' ' {
 				_, _ = signatureSB.Write(line[1:])
 				continue
-			} else {
-				pgpsig = false
 			}
+			pgpsig = false
 		}
 
 		if !message {

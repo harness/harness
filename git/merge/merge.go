@@ -128,7 +128,7 @@ func Rebase(
 			var treeSHA string
 			var commitConflicts []string
 
-			commitInfo, err := api.GetCommit(ctx, s.Directory(), commitSHA, "")
+			commitInfo, err := api.GetCommit(ctx, s.Directory(), commitSHA)
 			if err != nil {
 				return fmt.Errorf("failed to get commit data in rebase merge: %w", err)
 			}

@@ -63,14 +63,14 @@ func (g *Git) MatchFiles(
 			return nil, fmt.Errorf("failed to ask for file content from cat file batch: %w", err)
 		}
 
-		_, _, size, err := ReadBatchHeaderLine(catFileReader)
+		output, err := ReadBatchHeaderLine(catFileReader)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read cat-file batch header: %w", err)
 		}
 
-		reader := io.LimitReader(catFileReader, size+1) // plus eol
+		reader := io.LimitReader(catFileReader, output.Size+1) // plus eol
 
-		if size > int64(maxSize) {
+		if output.Size > int64(maxSize) {
 			_, err = io.Copy(io.Discard, reader)
 			if err != nil {
 				return nil, fmt.Errorf("failed to discard a large file: %w", err)

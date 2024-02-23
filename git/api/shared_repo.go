@@ -39,9 +39,8 @@ import (
 type SharedRepo struct {
 	git            *Git
 	repoUID        string
-	RepoPath       string
 	remoteRepoPath string
-	tmpPath        string
+	RepoPath       string
 }
 
 // NewSharedRepo creates a new temporary upload repository.
@@ -60,19 +59,15 @@ func NewSharedRepo(
 		git:            adapter,
 		repoUID:        repoUID,
 		remoteRepoPath: remoteRepoPath,
-		tmpPath:        tmpPath,
+		RepoPath:       tmpPath,
 	}
 	return t, nil
 }
 
-func (r *SharedRepo) RemotePath() string {
-	return r.remoteRepoPath
-}
-
 // Close the repository cleaning up all files.
 func (r *SharedRepo) Close(ctx context.Context) {
-	if err := tempdir.RemoveTemporaryPath(r.tmpPath); err != nil {
-		log.Ctx(ctx).Err(err).Msgf("Failed to remove temporary path %s", r.tmpPath)
+	if err := tempdir.RemoveTemporaryPath(r.RepoPath); err != nil {
+		log.Ctx(ctx).Err(err).Msgf("Failed to remove temporary path %s", r.RepoPath)
 	}
 }
 
@@ -102,7 +97,7 @@ type fileEntry struct {
 }
 
 func (r *SharedRepo) MoveObjects(ctx context.Context) error {
-	srcDir := path.Join(r.tmpPath, "objects")
+	srcDir := path.Join(r.RepoPath, "objects")
 	dstDir := path.Join(r.remoteRepoPath, "objects")
 
 	var files []fileEntry
@@ -204,12 +199,12 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 
 func (r *SharedRepo) InitAsShared(ctx context.Context) error {
 	cmd := command.New("init", command.WithFlag("--bare"))
-	if err := cmd.Run(ctx, command.WithDir(r.tmpPath)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.RepoPath)); err != nil {
 		return errors.Internal(err, "error while creating empty repository")
 	}
 
 	if err := func() error {
-		alternates := filepath.Join(r.tmpPath, "objects", "info", "alternates")
+		alternates := filepath.Join(r.RepoPath, "objects", "info", "alternates")
 		f, err := os.OpenFile(alternates, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
 		if err != nil {
 			return fmt.Errorf("failed to open alternates file '%s': %w", alternates, err)
@@ -238,7 +233,7 @@ func (r *SharedRepo) Clone(ctx context.Context, branchName string) error {
 	if branchName != "" {
 		cmd.Add(command.WithFlag("-b", strings.TrimPrefix(branchName, gitReferenceNamePrefixBranch)))
 	}
-	cmd.Add(command.WithArg(r.remoteRepoPath, r.tmpPath))
+	cmd.Add(command.WithArg(r.remoteRepoPath, r.RepoPath))
 
 	if err := cmd.Run(ctx); err != nil {
 		cmderr := command.AsError(err)
@@ -260,7 +255,7 @@ func (r *SharedRepo) Clone(ctx context.Context, branchName string) error {
 
 // Init the repository.
 func (r *SharedRepo) Init(ctx context.Context) error {
-	err := r.git.InitRepository(ctx, r.tmpPath, false)
+	err := r.git.InitRepository(ctx, r.RepoPath, false)
 	if err != nil {
 		return fmt.Errorf("failed to initialize shared repo: %w", err)
 	}
@@ -275,7 +270,7 @@ func (r *SharedRepo) SetDefaultIndex(ctx context.Context) error {
 // SetIndex sets the git index to the provided treeish.
 func (r *SharedRepo) SetIndex(ctx context.Context, treeish string) error {
 	cmd := command.New("read-tree", command.WithArg(treeish))
-	if err := cmd.Run(ctx, command.WithDir(r.tmpPath)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.RepoPath)); err != nil {
 		return fmt.Errorf("failed to git read-tree %s: %w", treeish, err)
 	}
 	return nil
@@ -294,7 +289,7 @@ func (r *SharedRepo) LsFiles(
 	stdout := bytes.NewBuffer(nil)
 
 	err := cmd.Run(ctx,
-		command.WithDir(r.tmpPath),
+		command.WithDir(r.RepoPath),
 		command.WithStdout(stdout),
 	)
 	if err != nil {
@@ -331,7 +326,7 @@ func (r *SharedRepo) RemoveFilesFromIndex(
 	)
 
 	if err := cmd.Run(ctx,
-		command.WithDir(r.tmpPath),
+		command.WithDir(r.RepoPath),
 		command.WithStdin(stdIn),
 		command.WithStdout(stdOut),
 	); err != nil {
@@ -352,7 +347,7 @@ func (r *SharedRepo) WriteGitObject(
 		command.WithFlag("--stdin"),
 	)
 	if err := cmd.Run(ctx,
-		command.WithDir(r.tmpPath),
+		command.WithDir(r.RepoPath),
 		command.WithStdin(content),
 		command.WithStdout(stdOut),
 	); err != nil {
@@ -391,12 +386,12 @@ func (r *SharedRepo) AddObjectToIndex(
 	objectPath string,
 ) error {
 	cmd := command.New("update-index",
-		command.WithFlag("-add"),
+		command.WithFlag("--add"),
 		command.WithFlag("--replace"),
 		command.WithFlag("--cacheinfo"),
 		command.WithArg(mode, objectHash, objectPath),
 	)
-	if err := cmd.Run(ctx, command.WithDir(r.tmpPath)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.RepoPath)); err != nil {
 		if matched, _ := regexp.MatchString(".*Invalid path '.*", err.Error()); matched {
 			return errors.InvalidArgument("invalid path '%s'", objectPath)
 		}
@@ -411,7 +406,7 @@ func (r *SharedRepo) WriteTree(ctx context.Context) (string, error) {
 	stdout := &bytes.Buffer{}
 	cmd := command.New("write-tree")
 	err := cmd.Run(ctx,
-		command.WithDir(r.tmpPath),
+		command.WithDir(r.RepoPath),
 		command.WithStdout(stdout),
 	)
 	if err != nil {
@@ -439,7 +434,7 @@ func (r *SharedRepo) GetLastCommitByRef(
 		command.WithArg(ref),
 	)
 	err := cmd.Run(ctx,
-		command.WithDir(r.tmpPath),
+		command.WithDir(r.RepoPath),
 		command.WithStdout(stdout),
 	)
 	if err != nil {
@@ -498,7 +493,7 @@ func (r *SharedRepo) CommitTreeWithDate(
 
 	stdout := new(bytes.Buffer)
 	if err := cmd.Run(ctx,
-		command.WithDir(r.tmpPath),
+		command.WithDir(r.RepoPath),
 		command.WithStdin(messageBytes),
 		command.WithStdout(stdout),
 	); err != nil {
@@ -575,7 +570,7 @@ func (r *SharedRepo) push(
 	env ...string,
 ) error {
 	// Because calls hooks we need to pass in the environment
-	if err := r.git.Push(ctx, r.tmpPath, PushOptions{
+	if err := r.git.Push(ctx, r.RepoPath, PushOptions{
 		Remote: r.remoteRepoPath,
 		Branch: sourceRef + ":" + destinationRef,
 		Env:    env,

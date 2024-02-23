@@ -437,7 +437,7 @@ func (g *Git) DiffFileName(ctx context.Context,
 	return parseLinesToSlice(stdout.Bytes()), nil
 }
 
-// GetDiffShortStat counts number of changed files, number of additions and deletions
+// GetDiffShortStat counts number of changed files, number of additions and deletions.
 func GetDiffShortStat(
 	ctx context.Context,
 	repoPath string,
@@ -447,16 +447,12 @@ func GetDiffShortStat(
 	// $ git diff --shortstat 1ebb35b98889ff77299f24d82da426b434b0cca0...788b8b1440462d477f45b0088875
 	// we get:
 	// " 9902 files changed, 2034198 insertions(+), 298800 deletions(-)\n"
-	args = append([]string{
-		"diff",
-		"--shortstat",
-	}, args...)
 
 	cmd := command.New("diff",
 		command.WithFlag("--shortstat"),
+		command.WithArg(args...),
 	)
 
-	cmd.Add(command.WithArg(args...))
 	stdout := &bytes.Buffer{}
 	if err := cmd.Run(ctx,
 		command.WithDir(repoPath),
@@ -471,8 +467,6 @@ func GetDiffShortStat(
 var shortStatFormat = regexp.MustCompile(
 	`\s*(\d+) files? changed(?:, (\d+) insertions?\(\+\))?(?:, (\d+) deletions?\(-\))?`)
 
-var patchCommits = regexp.MustCompile(`^From\s(\w+)\s`)
-
 func parseDiffStat(stdout string) (stat DiffShortStat, err error) {
 	if len(stdout) == 0 || stdout == "\n" {
 		return DiffShortStat{}, nil
@@ -484,20 +478,23 @@ func parseDiffStat(stdout string) (stat DiffShortStat, err error) {
 
 	stat.Files, err = strconv.Atoi(groups[1])
 	if err != nil {
-		return DiffShortStat{}, fmt.Errorf("unable to parse shortstat: %s. Error parsing NumFiles %v", stdout, err)
+		return DiffShortStat{}, fmt.Errorf("unable to parse shortstat: %s. Error parsing NumFiles %w",
+			stdout, err)
 	}
 
 	if len(groups[2]) != 0 {
 		stat.Additions, err = strconv.Atoi(groups[2])
 		if err != nil {
-			return DiffShortStat{}, fmt.Errorf("unable to parse shortstat: %s. Error parsing NumAdditions %v", stdout, err)
+			return DiffShortStat{}, fmt.Errorf("unable to parse shortstat: %s. Error parsing NumAdditions %w",
+				stdout, err)
 		}
 	}
 
 	if len(groups[3]) != 0 {
 		stat.Deletions, err = strconv.Atoi(groups[3])
 		if err != nil {
-			return DiffShortStat{}, fmt.Errorf("unable to parse shortstat: %s. Error parsing NumDeletions %v", stdout, err)
+			return DiffShortStat{}, fmt.Errorf("unable to parse shortstat: %s. Error parsing NumDeletions %w",
+				stdout, err)
 		}
 	}
 	return stat, nil

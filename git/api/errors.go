@@ -33,7 +33,7 @@ var (
 	ErrNoDefaultBranch     = errors.New("no default branch")
 )
 
-// ConcatenateError concatenats an error with stderr string
+// ConcatenateError concatenats an error with stderr string.
 func ConcatenateError(err error, stderr string) error {
 	if len(stderr) == 0 {
 		return err
@@ -71,53 +71,47 @@ func (r *runStdError) IsExitCode(code int) bool {
 	return false
 }
 
-// ErrPushOutOfDate represents an error if merging fails due to unrelated histories
-type ErrPushOutOfDate struct {
+// PushOutOfDateError represents an error if merging fails due to unrelated histories.
+type PushOutOfDateError struct {
 	StdOut string
 	StdErr string
 	Err    error
 }
 
-// IsErrPushOutOfDate checks if an error is a ErrPushOutOfDate.
-func IsErrPushOutOfDate(err error) bool {
-	_, ok := err.(*ErrPushOutOfDate)
-	return ok
-}
-
-func (err *ErrPushOutOfDate) Error() string {
+func (err *PushOutOfDateError) Error() string {
 	return fmt.Sprintf("PushOutOfDate Error: %v: %s\n%s", err.Err, err.StdErr, err.StdOut)
 }
 
-// Unwrap unwraps the underlying error
-func (err *ErrPushOutOfDate) Unwrap() error {
+// Unwrap unwraps the underlying error.
+func (err *PushOutOfDateError) Unwrap() error {
 	return fmt.Errorf("%v - %s", err.Err, err.StdErr)
 }
 
-// ErrPushRejected represents an error if merging fails due to rejection from a hook
-type ErrPushRejected struct {
+// PushRejectedError represents an error if merging fails due to rejection from a hook.
+type PushRejectedError struct {
 	Message string
 	StdOut  string
 	StdErr  string
 	Err     error
 }
 
-// IsErrPushRejected checks if an error is a ErrPushRejected.
+// IsErrPushRejected checks if an error is a PushRejectedError.
 func IsErrPushRejected(err error) bool {
-	_, ok := err.(*ErrPushRejected)
-	return ok
+	var errPushRejected *PushRejectedError
+	return errors.As(err, &errPushRejected)
 }
 
-func (err *ErrPushRejected) Error() string {
+func (err *PushRejectedError) Error() string {
 	return fmt.Sprintf("PushRejected Error: %v: %s\n%s", err.Err, err.StdErr, err.StdOut)
 }
 
-// Unwrap unwraps the underlying error
-func (err *ErrPushRejected) Unwrap() error {
-	return fmt.Errorf("%v - %s", err.Err, err.StdErr)
+// Unwrap unwraps the underlying error.
+func (err *PushRejectedError) Unwrap() error {
+	return fmt.Errorf("%w - %s", err.Err, err.StdErr)
 }
 
-// GenerateMessage generates the remote message from the stderr
-func (err *ErrPushRejected) GenerateMessage() {
+// GenerateMessage generates the remote message from the stderr.
+func (err *PushRejectedError) GenerateMessage() {
 	messageBuilder := &strings.Builder{}
 	i := strings.Index(err.StdErr, "remote: ")
 	if i < 0 {
@@ -144,21 +138,22 @@ func (err *ErrPushRejected) GenerateMessage() {
 	err.Message = strings.TrimSpace(messageBuilder.String())
 }
 
-// ErrMoreThanOne represents an error if pull request fails when there are more than one sources (branch, tag) with the same name
-type ErrMoreThanOne struct {
+// MoreThanOneError represents an error if pull request fails when there are more
+// than one sources (branch, tag) with the same name.
+type MoreThanOneError struct {
 	StdOut string
 	StdErr string
 	Err    error
 }
 
-// IsErrMoreThanOne checks if an error is a ErrMoreThanOne
+// IsErrMoreThanOne checks if an error is a MoreThanOneError.
 func IsErrMoreThanOne(err error) bool {
-	_, ok := err.(*ErrMoreThanOne)
-	return ok
+	var errMoreThanOne *MoreThanOneError
+	return errors.As(err, &errMoreThanOne)
 }
 
-func (err *ErrMoreThanOne) Error() string {
-	return fmt.Sprintf("ErrMoreThanOne Error: %v: %s\n%s", err.Err, err.StdErr, err.StdOut)
+func (err *MoreThanOneError) Error() string {
+	return fmt.Sprintf("MoreThanOneError Error: %v: %s\n%s", err.Err, err.StdErr, err.StdOut)
 }
 
 // Logs the error and message, returns either the provided message or a git equivalent if possible.

@@ -40,7 +40,7 @@ type BranchFilter struct {
 	IncludeCommit bool
 }
 
-// BranchPrefix base dir of the branch information file store on git
+// BranchPrefix base dir of the branch information file store on git.
 const BranchPrefix = "refs/heads/"
 
 // GetBranch gets an existing branch.
@@ -57,7 +57,7 @@ func (g *Git) GetBranch(
 	}
 
 	ref := GetReferenceFromBranchName(branchName)
-	commit, err := GetCommit(ctx, repoPath, ref, "")
+	commit, err := GetCommit(ctx, repoPath, ref+"^{commit}")
 	if err != nil {
 		return nil, fmt.Errorf("failed to find the commit for the branch: %w", err)
 	}
