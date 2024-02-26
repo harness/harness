@@ -38,7 +38,7 @@ ReactDOM.render(
       useExecutionDataHook: noop,
       useLogsContent: noop,
       useLogsStreaming: noop,
-      useFeatureFlags: useFeatureFlags
+      useFeatureFlags
     }}
     currentUser={defaultCurrentUser}
     currentUserProfileURL=""
