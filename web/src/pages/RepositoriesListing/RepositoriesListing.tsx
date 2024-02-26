@@ -22,20 +22,23 @@ import {
   Layout,
   PageBody,
   PageHeader,
+  Utils,
   TableV2 as Table,
-  Text
+  Text,
+  useToaster
 } from '@harnessio/uicore'
 import { ProgressBar, Intent } from '@blueprintjs/core'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
-import { useStrings } from 'framework/strings'
+import { useStrings, String } from 'framework/strings'
 import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { TypesRepository } from 'services/code'
+import { useDeleteRepository } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
@@ -48,6 +51,8 @@ import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
 import KeywordSearch from 'components/CodeSearch/KeywordSearch'
+import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
+import { useConfirmAct } from 'hooks/useConfirmAction'
 import noRepoImage from './no-repo.svg'
 import FeatureMap from './FeatureMap/FeatureMap'
 import css from './RepositoriesListing.module.scss'
@@ -112,7 +117,7 @@ export default function RepositoriesListing() {
     () => [
       {
         Header: getString('repos.name'),
-        width: 'calc(100% - 180px)',
+        width: 'calc(100% - 210px)',
 
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
           const record = row.original
@@ -159,6 +164,58 @@ export default function RepositoriesListing() {
           )
         },
         disableSortBy: true
+      },
+      {
+        id: 'action',
+        width: '30px',
+        Cell: ({ row }: CellProps<TypesRepoExtended>) => {
+          const { showSuccess, showError } = useToaster()
+          const { mutate: deleteRepo } = useDeleteRepository({})
+          const confirmCancelImport = useConfirmAct()
+          return (
+            <Container onClick={Utils.stopEvent}>
+              {row.original.importing && (
+                <OptionsMenuButton
+                  isDark
+                  width="100px"
+                  items={[
+                    {
+                      text: getString('cancelImport'),
+                      onClick: () =>
+                        confirmCancelImport({
+                          title: getString('cancelImport'),
+                          confirmText: getString('cancelImport'),
+                          intent: Intent.DANGER,
+                          message: (
+                            <Text
+                              style={{ wordBreak: 'break-word' }}
+                              font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
+                              <String
+                                useRichText
+                                stringID="cancelImportConfirm"
+                                vars={{ name: row.original?.uid }}
+                                tagName="div"
+                              />
+                            </Text>
+                          ),
+                          action: async () => {
+                            deleteRepo(`${row.original?.path as string}/+/`)
+                              .then(() => {
+                                showSuccess(getString('cancelledImport'), 2000)
+                                refetch()
+                              })
+                              .catch(err => {
+                                showError(getErrorMessage(err), 0, getString('failedToCancelImport'))
+                              })
+                          }
+                        })
+                    }
+                  ]}
+                />
+              )}
+            </Container>
+          )
+        }
       }
     ],
     [nameTextWidth, getString, searchTerm]

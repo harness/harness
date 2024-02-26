@@ -11,6 +11,9 @@ existingAccount: Existing Account
 public: Public
 private: Private
 cancel: Cancel
+cancelImport: Cancel Import
+cancelledImport: Cancelled Import
+failedToCancelImport: failed to cancel import
 name: Name
 value: Value
 help: help
@@ -167,6 +170,7 @@ deleteBranch: Delete Branches
 deleteTag: Delete Tag
 deleteTagConfirm: Are you sure you want to delete tag <strong>{{name}}</strong>? You can't undo this action.
 deleteBranchConfirm: Are you sure you want to delete branch <strong>{{name}}</strong>? You can't undo this action.
+cancelImportConfirm: Are you sure you want to abort import for <strong>{{name}}</strong>? You can't undo this action.
 browse: Browse
 browseFiles: Browse Files
 compare: Compare

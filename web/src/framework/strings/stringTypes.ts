@@ -124,6 +124,9 @@ export interface StringsMap {
   browseFiles: string
   bySigningIn: string
   cancel: string
+  cancelImport: string
+  cancelImportConfirm: string
+  cancelledImport: string
   changePassword: string
   changePasswordSuccesfully: string
   changeRepoVis: string
@@ -312,6 +315,7 @@ export interface StringsMap {
   'exportSpace.upgradeProgress': string
   'exportSpace.upgradeTitle': string
   failed: string
+  failedToCancelImport: string
   failedToCreateBranch: string
   failedToCreatePipeline: string
   failedToCreateRepo: string
