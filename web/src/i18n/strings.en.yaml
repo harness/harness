@@ -913,6 +913,8 @@ branchProtection:
   reqReviewFromCodeOwnerTitle: Require review from code owners
   reqReviewFromCodeOwnerText: Require approval on pull requests from one reviewer for each Code Owner rule
   reqNewChangesTitle: Require approval of new changes
+  reqResOfChanges: Require resolution of change requests
+  reqResOfChangesText: All change requests on a pull request must be resolved before it can be merged
   reqNewChangesText: Require re-approval when there are new changes in the pull request
   reqCommentResolutionTitle: Require comment resolution
   reqCommentResolutionText: All comments on a pull request must be resolved before it can be merged

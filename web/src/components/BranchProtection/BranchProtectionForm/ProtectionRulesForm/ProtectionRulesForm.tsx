@@ -121,7 +121,15 @@ const ProtectionRulesForm = (props: {
       <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
         {getString('branchProtection.reqNewChangesText')}
       </Text>
-
+      <hr className={css.dividerContainer} />
+      <FormInput.CheckBox
+        className={css.checkboxLabel}
+        label={getString('branchProtection.reqResOfChanges')}
+        name={'reqResOfChanges'}
+      />
+      <Text padding={{ left: 'xlarge' }} className={css.checkboxText}>
+        {getString('branchProtection.reqResOfChangesText')}
+      </Text>
       <hr className={css.dividerContainer} />
       <FormInput.CheckBox
         className={css.checkboxLabel}

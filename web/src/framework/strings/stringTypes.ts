@@ -95,6 +95,8 @@ export interface StringsMap {
   'branchProtection.reqCommentResolutionTitle': string
   'branchProtection.reqNewChangesText': string
   'branchProtection.reqNewChangesTitle': string
+  'branchProtection.reqResOfChanges': string
+  'branchProtection.reqResOfChangesText': string
   'branchProtection.reqReviewFromCodeOwnerText': string
   'branchProtection.reqReviewFromCodeOwnerTitle': string
   'branchProtection.reqStatusChecksText': string

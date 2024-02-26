@@ -7951,6 +7951,8 @@ components:
           type: boolean
         require_minimum_count:
           type: integer
+        require_no_change_request:
+          type: boolean
       type: object
     ProtectionDefBypass:
       properties:
