@@ -24,6 +24,7 @@ import (
 
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/git/types"
 )
 
@@ -106,7 +107,7 @@ func writeFile(
 	path string,
 	content string,
 	parents []string,
-) (oid api.SHA, commitSha api.SHA) {
+) (oid sha.SHA, commitSha sha.SHA) {
 	t.Helper()
 	oid, err := git.HashObject(context.Background(), repoPath, strings.NewReader(content))
 	if err != nil {

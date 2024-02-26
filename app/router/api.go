@@ -260,7 +260,9 @@ func setupRepos(r chi.Router,
 			// repo level operations
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))
 			r.Patch("/", handlerrepo.HandleUpdate(repoCtrl))
-			r.Delete("/", handlerrepo.HandleDelete(repoCtrl))
+			r.Delete("/", handlerrepo.HandleSoftDelete(repoCtrl))
+			r.Post("/purge", handlerrepo.HandlePurge(repoCtrl))
+			r.Post("/restore", handlerrepo.HandleRestore(repoCtrl))
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
@@ -520,6 +522,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Get("/codeowners", handlerpullreq.HandleCodeOwner(pullreqCtrl))
 			r.Get("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
 			r.Post("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
+			r.Get("/checks", handlerpullreq.HandleCheckList(pullreqCtrl))
 		})
 	})
 }

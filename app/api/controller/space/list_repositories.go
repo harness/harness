@@ -25,8 +25,12 @@ import (
 )
 
 // ListRepositories lists the repositories of a space.
-func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session,
-	spaceRef string, filter *types.RepoFilter) ([]*types.Repository, int64, error) {
+func (c *Controller) ListRepositories(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	filter *types.RepoFilter,
+) ([]*types.Repository, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
@@ -35,6 +39,7 @@ func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionRepoView, true); err != nil {
 		return nil, 0, err
 	}
+
 	return c.ListRepositoriesNoAuth(ctx, space.ID, filter)
 }
 

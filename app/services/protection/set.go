@@ -43,61 +43,81 @@ func (s ruleSet) MergeVerify(
 		out.AllowedMethods = slices.Clone(enum.MergeMethods)
 	}
 
-	for _, r := range s.rules {
-		matches, err := matchesName(r.Pattern, in.TargetRepo.DefaultBranch, in.PullReq.TargetBranch)
-		if err != nil {
-			return out, nil, err
-		}
-		if !matches {
-			continue
-		}
+	err := s.forEachRuleMatchBranch(in.TargetRepo.DefaultBranch, in.PullReq.TargetBranch,
+		func(r *types.RuleInfoInternal, p Protection) error {
+			rOut, rVs, err := p.MergeVerify(ctx, in)
+			if err != nil {
+				return err
+			}
 
-		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
-		if err != nil {
-			return out, nil,
-				fmt.Errorf("failed to parse protection definition ID=%d Type=%s: %w", r.ID, r.Type, err)
-		}
+			violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
+			out.DeleteSourceBranch = out.DeleteSourceBranch || rOut.DeleteSourceBranch
+			out.AllowedMethods = intersectSorted(out.AllowedMethods, rOut.AllowedMethods)
 
-		rOut, rVs, err := protection.MergeVerify(ctx, in)
-		if err != nil {
-			return out, nil, err
-		}
-
-		violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
-		out.DeleteSourceBranch = out.DeleteSourceBranch || rOut.DeleteSourceBranch
-		out.AllowedMethods = intersectSorted(out.AllowedMethods, rOut.AllowedMethods)
+			return nil
+		})
+	if err != nil {
+		return out, nil, fmt.Errorf("failed to merge verify: %w", err)
 	}
 
 	return out, violations, nil
 }
 
+func (s ruleSet) RequiredChecks(
+	ctx context.Context,
+	in RequiredChecksInput,
+) (RequiredChecksOutput, error) {
+	requiredIDMap := map[string]struct{}{}
+	bypassableIDMap := map[string]struct{}{}
+	err := s.forEachRuleMatchBranch(in.Repo.DefaultBranch, in.PullReq.TargetBranch,
+		func(_ *types.RuleInfoInternal, p Protection) error {
+			out, err := p.RequiredChecks(ctx, in)
+			if err != nil {
+				return err
+			}
+
+			for reqCheckID := range out.RequiredIdentifiers {
+				requiredIDMap[reqCheckID] = struct{}{}
+				delete(bypassableIDMap, reqCheckID)
+			}
+			for reqCheckID := range out.BypassableIdentifiers {
+				if _, ok := requiredIDMap[reqCheckID]; ok {
+					continue
+				}
+				bypassableIDMap[reqCheckID] = struct{}{}
+			}
+
+			return nil
+		})
+	if err != nil {
+		return RequiredChecksOutput{}, err
+	}
+
+	return RequiredChecksOutput{
+		RequiredIdentifiers:   requiredIDMap,
+		BypassableIdentifiers: bypassableIDMap,
+	}, nil
+}
+
 func (s ruleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) ([]types.RuleViolations, error) {
 	var violations []types.RuleViolations
 
-	for _, r := range s.rules {
-		matched, err := matchedNames(r.Pattern, in.Repo.DefaultBranch, in.RefNames...)
-		if err != nil {
-			return nil, err
-		}
-		if len(matched) == 0 {
-			continue
-		}
+	err := s.forEachRuleMatchRefs(in.Repo.DefaultBranch, in.RefNames,
+		func(r *types.RuleInfoInternal, p Protection, matched []string) error {
+			ruleIn := in
+			ruleIn.RefNames = matched
 
-		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
-		if err != nil {
-			return nil,
-				fmt.Errorf("failed to parse protection definition ID=%d Type=%s: %w", r.ID, r.Type, err)
-		}
+			rVs, err := p.RefChangeVerify(ctx, ruleIn)
+			if err != nil {
+				return err
+			}
 
-		ruleIn := in
-		ruleIn.RefNames = matched
+			violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
 
-		rVs, err := protection.RefChangeVerify(ctx, ruleIn)
-		if err != nil {
-			return nil, err
-		}
-
-		violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
+			return nil
+		})
+	if err != nil {
+		return nil, err
 	}
 
 	return violations, nil
@@ -105,20 +125,20 @@ func (s ruleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) (
 
 func (s ruleSet) UserIDs() ([]int64, error) {
 	mapIDs := make(map[int64]struct{})
-	for _, rule := range s.rules {
-		prot, err := s.manager.FromJSON(rule.Type, rule.Definition, false)
+	err := s.forEachRule(func(_ *types.RuleInfoInternal, p Protection) error {
+		userIDs, err := p.UserIDs()
 		if err != nil {
-			return nil, err
-		}
-
-		userIDs, err := prot.UserIDs()
-		if err != nil {
-			return nil, err
+			return err
 		}
 
 		for _, userID := range userIDs {
 			mapIDs[userID] = struct{}{}
 		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	result := make([]int64, 0, len(mapIDs))
@@ -127,6 +147,92 @@ func (s ruleSet) UserIDs() ([]int64, error) {
 	}
 
 	return result, nil
+}
+
+func (s ruleSet) forEachRule(
+	fn func(r *types.RuleInfoInternal, p Protection) error,
+) error {
+	for i := range s.rules {
+		r := s.rules[i]
+
+		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
+		if err != nil {
+			return fmt.Errorf("forEachRule: failed to parse protection definition ID=%d Type=%s: %w",
+				r.ID, r.Type, err)
+		}
+
+		err = fn(&r, protection)
+		if err != nil {
+			return fmt.Errorf("forEachRule: failed to process rule ID=%d Type=%s: %w",
+				r.ID, r.Type, err)
+		}
+	}
+
+	return nil
+}
+
+func (s ruleSet) forEachRuleMatchBranch(
+	defaultBranch string,
+	branchName string,
+	fn func(r *types.RuleInfoInternal, p Protection) error,
+) error {
+	for i := range s.rules {
+		r := s.rules[i]
+
+		matches, err := matchesName(r.Pattern, defaultBranch, branchName)
+		if err != nil {
+			return err
+		}
+		if !matches {
+			continue
+		}
+
+		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
+		if err != nil {
+			return fmt.Errorf("forEachRuleMatchBranch: failed to parse protection definition ID=%d Type=%s: %w",
+				r.ID, r.Type, err)
+		}
+
+		err = fn(&r, protection)
+		if err != nil {
+			return fmt.Errorf("forEachRuleMatchBranch: failed to process rule ID=%d Type=%s: %w",
+				r.ID, r.Type, err)
+		}
+	}
+
+	return nil
+}
+
+func (s ruleSet) forEachRuleMatchRefs(
+	defaultBranch string,
+	refNames []string,
+	fn func(r *types.RuleInfoInternal, p Protection, matched []string) error,
+) error {
+	for i := range s.rules {
+		r := s.rules[i]
+
+		matched, err := matchedNames(r.Pattern, defaultBranch, refNames...)
+		if err != nil {
+			return err
+		}
+		if len(matched) == 0 {
+			continue
+		}
+
+		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
+		if err != nil {
+			return fmt.Errorf("forEachRuleMatchRefs: failed to parse protection definition ID=%d Type=%s: %w",
+				r.ID, r.Type, err)
+		}
+
+		err = fn(&r, protection, matched)
+		if err != nil {
+			return fmt.Errorf("forEachRuleMatchRefs: failed to process rule ID=%d Type=%s: %w",
+				r.ID, r.Type, err)
+		}
+	}
+
+	return nil
 }
 
 func backFillRule(vs []types.RuleViolations, rule types.RuleInfo) []types.RuleViolations {

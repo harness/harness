@@ -55,7 +55,7 @@ func WithTries(tries int) Option {
 // WithRetryDelay can be used to set the amount of time to wait between retries.
 func WithRetryDelay(delay time.Duration) Option {
 	return OptionFunc(func(m *Config) {
-		m.DelayFunc = func(tries int) time.Duration {
+		m.DelayFunc = func(_ int) time.Duration {
 			return delay
 		}
 	})

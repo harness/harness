@@ -62,7 +62,7 @@ func (a *JWTAuthenticator) Authenticate(r *http.Request) (*auth.Session, error) 
 	var principal *types.Principal
 	var err error
 	claims := &jwt.Claims{}
-	parsed, err := gojwt.ParseWithClaims(str, claims, func(token_ *gojwt.Token) (interface{}, error) {
+	parsed, err := gojwt.ParseWithClaims(str, claims, func(_ *gojwt.Token) (interface{}, error) {
 		principal, err = a.principalStore.Find(ctx, claims.PrincipalID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get principal for token: %w", err)

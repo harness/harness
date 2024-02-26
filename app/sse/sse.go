@@ -96,7 +96,7 @@ func (e *pubsubStreamer) Stream(
 	namespaceOption := pubsub.WithChannelNamespace(e.namespace)
 	topic := getSpaceTopic(spaceID)
 	consumer := e.pubsub.Subscribe(ctx, topic, g, namespaceOption)
-	cleanupFN := func(ctx context.Context) error {
+	cleanupFN := func(_ context.Context) error {
 		return consumer.Close()
 	}
 

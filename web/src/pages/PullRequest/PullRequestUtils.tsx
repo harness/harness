@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import type { TypesPullReqActivity } from 'services/code'
+import type { EnumPullReqReviewDecision, TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import { CommentType } from 'components/DiffViewer/DiffViewerUtils'
 
@@ -29,3 +29,19 @@ export function isComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
 export function isSystemComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
   return commentItems[0].payload?.kind === 'system'
 }
+
+export enum PullReqReviewDecision {
+  approved = 'approved',
+  changeReq = 'changereq',
+  pending = 'pending',
+  outdated = 'outdated'
+}
+
+export const processReviewDecision = (
+  review_decision: EnumPullReqReviewDecision,
+  reviewedSHA?: string,
+  sourceSHA?: string
+) =>
+  review_decision === PullReqReviewDecision.approved && reviewedSHA !== sourceSHA
+    ? PullReqReviewDecision.outdated
+    : review_decision

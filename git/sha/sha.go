@@ -12,21 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+package sha
 
 import (
 	"bytes"
 	"encoding/hex"
 	"errors"
 	"strings"
-	"sync"
 )
 
-// NilSHA defines empty git SHA.
-const NilSHA = "0000000000000000000000000000000000000000"
+// Nil defines empty git SHA.
+const Nil = "0000000000000000000000000000000000000000"
 
-// EmptyTreeSHA is the SHA of an empty tree.
-const EmptyTreeSHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+// EmptyTree is the SHA of an empty tree.
+const EmptyTree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
 var (
 	ErrTypeNotSupported = errors.New("type not supported")
@@ -36,58 +35,57 @@ var (
 type SHA struct {
 	bytes []byte
 
-	str     string
-	strOnce sync.Once
+	str string
 }
 
 // String returns string (hex) representation of the SHA.
-func (s *SHA) String() string {
-	s.strOnce.Do(func() {
+func (s SHA) String() string {
+	if s.str == "" {
 		s.str = hex.EncodeToString(s.bytes)
-	})
+	}
 	return s.str
 }
 
 // IsZero returns whether this SHA1 is all zeroes.
-func (s *SHA) IsZero() bool {
+func (s SHA) IsZero() bool {
 	return len(s.bytes) == 0
 }
 
 // Equal returns true if val has the same SHA as s. It supports
 // string, []byte, and SHA.
-func (s *SHA) Equal(val any) bool {
+func (s SHA) Equal(val any) bool {
 	switch v := val.(type) {
 	case string:
 		return v == s.String()
 	case []byte:
 		return bytes.Equal(v, s.bytes)
-	case *SHA:
+	case SHA:
 		return bytes.Equal(v.bytes, s.bytes)
 	default:
 		return false
 	}
 }
 
-// NewSHA creates a new SHA from a value T.
-func NewSHA[T interface {
+// New creates a new SHA from a value T.
+func New[T interface {
 	~string | ~[]byte
-}](value T) (*SHA, error) {
+}](value T) (SHA, error) {
 	switch arg := any(value).(type) {
 	case string:
 		s := strings.TrimSpace(arg)
 		b, err := hex.DecodeString(s)
 		if err != nil {
-			return nil, err
+			return SHA{}, err
 		}
-		return &SHA{bytes: b}, nil
+		return SHA{bytes: b}, nil
 	case []byte:
-		return &SHA{bytes: arg}, nil
+		return SHA{bytes: arg}, nil
 	default:
-		return nil, ErrTypeNotSupported
+		return SHA{}, ErrTypeNotSupported
 	}
 }
 
-func MustNewSHA(s string) *SHA {
-	sha, _ := NewSHA(s)
+func MustNew(s string) SHA {
+	sha, _ := New(s)
 	return sha
 }

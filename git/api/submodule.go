@@ -18,6 +18,8 @@ import (
 	"bufio"
 	"context"
 	"strings"
+
+	"github.com/harness/gitness/git/sha"
 )
 
 type Submodule struct {
@@ -50,7 +52,7 @@ func (g *Git) GetSubmodule(
 			ref, commit)
 	}
 
-	reader, err := g.GetBlob(ctx, repoPath, MustNewSHA(node.Sha), 0)
+	reader, err := g.GetBlob(ctx, repoPath, sha.MustNew(node.Sha), 0)
 	if err != nil {
 		return nil, processGitErrorf(err, "error reading  commit for ref '%s'", ref)
 	}

@@ -125,11 +125,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     refetch
   } = useGet<string>({
     path,
-    requestOptions: {
-      headers: {
-        Accept: 'text/plain'
-      }
-    },
+    requestOptions: { headers: { Accept: 'text/plain' } },
     lazy: cachedDiff.path === path ? true : commitSHA ? false : !targetRef || !sourceRef
   })
 
@@ -149,15 +145,22 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   const {
     data: fileViewsData,
     loading: loadingFileViews,
-    error: errorFileViews
+    error: errorFileViews,
+    refetch: refetchFileViews
   } = useGet<TypesPullReqFileView[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/file-views`,
-    lazy: !pullRequestMetadata?.number || cachedDiff.path === path
+    lazy: true
   })
 
+  useEffect(() => {
+    if (pullRequestMetadata?.number && !fileViewsData && !cachedDiff.fileViews) {
+      refetchFileViews()
+    }
+  }, [pullRequestMetadata?.number, fileViewsData, refetchFileViews, cachedDiff.fileViews])
+
   const loading = useMemo(
-    () => (loadingRawDiff && !rawDiff) || (loadingFileViews && !cachedDiff.fileViews),
-    [loadingRawDiff, loadingFileViews, cachedDiff.fileViews, rawDiff]
+    () => (loadingRawDiff && !cachedDiff.raw) || (loadingFileViews && !cachedDiff.fileViews),
+    [loadingRawDiff, loadingFileViews, cachedDiff.fileViews, cachedDiff.raw]
   )
   const diffStats = useMemo(
     () =>
@@ -188,56 +191,54 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     }
   }, [_sourceRef, sourceRef, _targetRef, targetRef])
 
+  useEffect(
+    function updateCacheWhenDiffDataArrives() {
+      if (path && rawDiff && typeof rawDiff === 'string') {
+        const fileViews = readOnly
+          ? new Map<string, string>()
+          : fileViewsData
+              ?.filter(({ path: _path, sha }) => _path && sha)
+              .reduce((map, { path: _path, sha, obsolete }) => {
+                map.set(_path as string, (obsolete ? FILE_VIEWED_OBSOLETE_SHA : sha) as string)
+                return map
+              }, new Map<string, string>())
+
+        setCachedDiff({ path, raw: rawDiff, fileViews })
+      }
+    },
+    [rawDiff, path, setCachedDiff, fileViewsData, readOnly]
+  )
+
   //
   // Parsing diff and construct data structure to pass into DiffViewer component
   //
   useEffect(() => {
-    const _raw =
-      cachedDiff.path === path && cachedDiff.raw
-        ? cachedDiff.raw
-        : rawDiff && typeof rawDiff === 'string'
-        ? rawDiff
-        : ''
-
-    const fileViews = readOnly
-      ? new Map<string, string>()
-      : cachedDiff.path === path
-      ? cachedDiff.fileViews
-      : fileViewsData
-          ?.filter(({ path: _path, sha }) => _path && sha)
-          .reduce((map, { path: _path, sha, obsolete }) => {
-            map.set(_path as string, (obsolete ? FILE_VIEWED_OBSOLETE_SHA : sha) as string)
-            return map
-          }, new Map<string, string>())
-
-    if (fileViews) {
-      if (_raw) {
-        const _diffs = Diff2Html.parse(_raw, DIFF2HTML_CONFIG).map(diff => {
-          const fileId = changedFileId([diff.oldName, diff.newName])
-          const containerId = `container-${fileId}`
-          const contentId = `content-${fileId}`
-          const filePath = diff.isDeleted ? diff.oldName : diff.newName
-
-          return {
-            ...diff,
-            containerId,
-            contentId,
-            fileId,
-            filePath,
-            fileViews
-          }
-        })
-
-        setDiffs(oldDiffs => (isEqual(oldDiffs, _diffs) ? oldDiffs : _diffs))
-
-        if (cachedDiff.path !== path) {
-          setCachedDiff({ path, raw: _raw, fileViews })
-        }
-      } else {
-        setDiffs([])
-      }
+    if (loadingRawDiff || cachedDiff.path !== path || typeof cachedDiff.raw !== 'string' || !cachedDiff.fileViews) {
+      return
     }
-  }, [readOnly, path, rawDiff, fileViewsData]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    if (cachedDiff.raw) {
+      const _diffs = Diff2Html.parse(cachedDiff.raw, DIFF2HTML_CONFIG).map(diff => {
+        const fileId = changedFileId([diff.oldName, diff.newName])
+        const containerId = `container-${fileId}`
+        const contentId = `content-${fileId}`
+        const filePath = diff.isDeleted ? diff.oldName : diff.newName
+
+        return {
+          ...diff,
+          containerId,
+          contentId,
+          fileId,
+          filePath,
+          fileViews: cachedDiff.fileViews
+        }
+      })
+
+      setDiffs(oldDiffs => (isEqual(oldDiffs, _diffs) ? oldDiffs : _diffs))
+    } else {
+      setDiffs([])
+    }
+  }, [readOnly, path, cachedDiff, loadingRawDiff])
 
   //
   // Listen to scroll event to toggle "scroll to top" button
@@ -348,11 +349,10 @@ const ChangesInternal: React.FC<ChangesProps> = ({
                   className={css.refreshBtn}
                   onClick={() => {
                     setCachedDiff({})
-                    setPrHasChanged(false)
                     setTargetRef(_targetRef)
                     setSourceRef(_sourceRef)
+                    setPrHasChanged(false)
                     refetchCommits?.()
-                    setTimeout(refetch, 0)
                   }}
                 />
               </Render>
@@ -390,7 +390,9 @@ const ChangesInternal: React.FC<ChangesProps> = ({
             <Layout.Vertical
               spacing="medium"
               className={cx(css.main, {
-                [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
+                // TODO: Line break barely works. Disable until we find a complete solution for it
+                // https://harness.atlassian.net/browse/CODE-1452
+                // [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
               })}>
               {/*
                * TODO: Render diffs by blocks, not everything at once

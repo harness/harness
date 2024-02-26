@@ -21,6 +21,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
@@ -242,12 +243,12 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 	tagRef := api.GetReferenceFromTagName(tagName)
 	var tag *api.Tag
 
-	sha, err := s.git.GetRef(ctx, repoPath, tagRef)
+	commitSHA, err := s.git.GetRef(ctx, repoPath, tagRef)
 	// TODO: Change GetRef to use errors.NotFound and then remove types.IsNotFoundError(err) below.
 	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf("CreateCommitTag: failed to verify tag existence: %w", err)
 	}
-	if err == nil && sha != "" {
+	if err == nil && commitSHA != "" {
 		return nil, errors.Conflict("tag '%s' already exists", tagName)
 	}
 
@@ -315,7 +316,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 		params.EnvVars,
 		repoPath,
 		tagRef,
-		api.NilSHA,
+		sha.Nil,
 		tag.Sha,
 	)
 	if err != nil {
@@ -360,7 +361,7 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 		repoPath,
 		tagRef,
 		"", // delete whatever is there
-		api.NilSHA,
+		sha.Nil,
 	)
 	if errors.IsNotFound(err) {
 		return errors.NotFound("tag %q does not exist", params.Name)

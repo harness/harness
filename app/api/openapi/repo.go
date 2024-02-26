@@ -194,6 +194,11 @@ type rule struct {
 	Pattern protection.Pattern `json:"pattern"`
 }
 
+type restoreRequest struct {
+	repoRequest
+	repo.RestoreInput
+}
+
 var queryParameterGitRef = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name: request.QueryParamGitRef,
@@ -453,6 +458,20 @@ var queryParameterBypassRules = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterDeletedAt = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamDeletedAt,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The exact time the resource was delete at in epoch format."),
+		Required:    ptr.Bool(true),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func repoOperations(reflector *openapi3.Reflector) {
 	createRepository := openapi3.Operation{}
@@ -506,12 +525,37 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDelete.WithTags("repository")
 	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteRepository"})
 	_ = reflector.SetRequest(&opDelete, new(repoRequest), http.MethodDelete)
-	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opDelete, new(repo.SoftDeleteResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}", opDelete)
+
+	opPurge := openapi3.Operation{}
+	opPurge.WithTags("repository")
+	opPurge.WithMapOfAnything(map[string]interface{}{"operationId": "purgeRepository"})
+	opPurge.WithParameters(queryParameterDeletedAt)
+	_ = reflector.SetRequest(&opPurge, new(repoRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opPurge, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opPurge, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opPurge, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opPurge, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opPurge, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/purge", opPurge)
+
+	opRestore := openapi3.Operation{}
+	opRestore.WithTags("repository")
+	opRestore.WithMapOfAnything(map[string]interface{}{"operationId": "restoreRepository"})
+	opRestore.WithParameters(queryParameterDeletedAt)
+	_ = reflector.SetRequest(&opRestore, new(restoreRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opRestore, new(types.Repository), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/restore", opRestore)
 
 	opMove := openapi3.Operation{}
 	opMove.WithTags("repository")

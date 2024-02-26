@@ -54,6 +54,37 @@ func (v *Branch) MergeVerify(
 	return
 }
 
+func (v *Branch) RequiredChecks(
+	ctx context.Context,
+	in RequiredChecksInput,
+) (RequiredChecksOutput, error) {
+	out, err := v.PullReq.RequiredChecks(ctx, in)
+	if err != nil {
+		return RequiredChecksOutput{}, err
+	}
+
+	ids := out.RequiredIdentifiers
+	if len(ids) == 0 {
+		return RequiredChecksOutput{}, nil
+	}
+
+	var (
+		requiredIDs   map[string]struct{}
+		bypassableIDs map[string]struct{}
+	)
+
+	if bypassable := v.Bypass.matches(in.Actor, in.IsRepoOwner); bypassable {
+		bypassableIDs = ids
+	} else {
+		requiredIDs = ids
+	}
+
+	return RequiredChecksOutput{
+		RequiredIdentifiers:   requiredIDs,
+		BypassableIdentifiers: bypassableIDs,
+	}, nil
+}
+
 func (v *Branch) RefChangeVerify(
 	ctx context.Context,
 	in RefChangeVerifyInput,

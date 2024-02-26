@@ -51,4 +51,17 @@
   .andOr {
     color: var(--red-700);
   }
+
+  .toggleSearch {
+    position: absolute;
+    right: 14px;
+    top: 6px;
+    z-index: 1;
+  }
+
+  .toggleTitle {
+    position: absolute;
+    right: 53px;
+    top: 9px;
+  }
 }

@@ -209,6 +209,31 @@ func (r *SharedRepo) WriteGitObject(
 	return strings.TrimSpace(stdout.String()), nil
 }
 
+// GetTreeSHA returns the tree SHA of the rev.
+func (r *SharedRepo) GetTreeSHA(
+	ctx context.Context,
+	rev string,
+) (string, error) {
+	cmd := command.New("show",
+		command.WithFlag("--no-patch"),
+		command.WithFlag("--format=%T"),
+		command.WithArg(rev),
+	)
+	stdout := &bytes.Buffer{}
+	err := cmd.Run(ctx,
+		command.WithDir(r.temporaryPath),
+		command.WithStdout(stdout),
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), "ambiguous argument") {
+			return "", errors.NotFound("could not resolve git revision %q", rev)
+		}
+		return "", fmt.Errorf("failed to get tree sha: %w", err)
+	}
+
+	return strings.TrimSpace(stdout.String()), nil
+}
+
 // ShowFile dumps show file and write to io.Writer.
 func (r *SharedRepo) ShowFile(
 	ctx context.Context,
@@ -356,12 +381,22 @@ func (r *SharedRepo) CommitTree(
 	return strings.TrimSpace(stdout.String()), nil
 }
 
-// CommitSHAList returns list of SHAs of the commits between the two git revisions.
-func (r *SharedRepo) CommitSHAList(
+// CommitSHAsForRebase returns list of SHAs of the commits between the two git revisions
+// for a rebase operation - in the order they should be rebased in.
+func (r *SharedRepo) CommitSHAsForRebase(
 	ctx context.Context,
-	start, end string,
+	target, source string,
 ) ([]string, error) {
-	cmd := command.New("rev-list", command.WithArg(start+".."+end))
+	// the command line arguments are mostly matching default `git rebase` behavior.
+	// Only difference is we use `--date-order` (matches github behavior) whilst `git rebase` uses `--topo-order`.
+	// Git Rebase's rev-list: https://github.com/git/git/blob/v2.41.0/sequencer.c#L5703-L5714
+	cmd := command.New("rev-list",
+		command.WithFlag("--max-parents=1"), // exclude merge commits
+		command.WithFlag("--cherry-pick"),   // drop commits that already exist on target
+		command.WithFlag("--reverse"),
+		command.WithFlag("--right-only"), // only return commits from source
+		command.WithFlag("--date-order"), // childs always before parents, otherwise by commit time stamp
+		command.WithArg(target+"..."+source))
 
 	stdout := bytes.NewBuffer(nil)
 

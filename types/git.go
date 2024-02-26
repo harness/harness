@@ -56,12 +56,20 @@ type TagFilter struct {
 	Size  int                `json:"size"`
 }
 
+type CommitDiffStats struct {
+	Total     int `json:"total,omitempty"`
+	Additions int `json:"additions,omitempty"`
+	Deletions int `json:"deletions,omitempty"`
+}
+
 type Commit struct {
-	SHA       string    `json:"sha"`
-	Title     string    `json:"title"`
-	Message   string    `json:"message"`
-	Author    Signature `json:"author"`
-	Committer Signature `json:"committer"`
+	SHA        string          `json:"sha"`
+	ParentSHAs []string        `json:"parent_shas,omitempty"`
+	Title      string          `json:"title"`
+	Message    string          `json:"message"`
+	Author     Signature       `json:"author"`
+	Committer  Signature       `json:"committer"`
+	DiffStats  CommitDiffStats `json:"diff_stats"`
 }
 
 type Signature struct {

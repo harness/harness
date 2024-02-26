@@ -180,7 +180,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   )
 
   const contentRef = useRef<HTMLDivElement>(null)
-  const diff2HtmlRef = useRef<Diff2HtmlUI>()
+  const diff2HtmlRef = useRef<{ renderer: Diff2HtmlUI; diff: DiffFileEntry }>()
   const diffHandlerRafRef = useRef(0)
   const isMounted = useIsMounted()
   const [dirty, setDirty] = useState(false)
@@ -375,11 +375,16 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
             // already. ONLY render diff (and comments) when container is in
             // viewport.
             if (isInViewport(containerDOM, IN_VIEW_MARGIN) || visibility === HIDDEN) {
-              diff2HtmlRef.current ||= new Diff2HtmlUI(
-                contentDOM,
-                [diff],
-                Object.assign({}, DIFF2HTML_CONFIG, { outputFormat: viewStyle })
-              )
+              if (diff2HtmlRef.current?.diff !== diff) {
+                diff2HtmlRef.current = {
+                  renderer: new Diff2HtmlUI(
+                    contentDOM,
+                    [diff],
+                    Object.assign({}, DIFF2HTML_CONFIG, { outputFormat: viewStyle })
+                  ),
+                  diff
+                }
+              }
 
               // Set container height to auto, allowing new comments to be added
               // inside diff content without having to adjusting its height manually
@@ -393,10 +398,10 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               if (!visibility) contentStyle.visibility = HIDDEN
 
               // Draw diff content and attach all comment threads
-              diff2HtmlRef.current.draw()
+              diff2HtmlRef.current.renderer.draw()
 
               if (!readOnly) {
-                commentsHook.current.attachAllCommentThreads(!collapsed)
+                commentsHook.current.attachAllCommentThreads()
               }
 
               // Use a flag to save content empty state (avoid contentDOM.innerText

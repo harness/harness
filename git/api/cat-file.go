@@ -24,6 +24,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/djherbis/buffer"
 	"github.com/djherbis/nio/v3"
@@ -91,7 +92,7 @@ func CatFileBatch(
 }
 
 type BatchHeaderResponse struct {
-	SHA  *SHA
+	SHA  sha.SHA
 	Type string
 	Size int64
 }
@@ -114,7 +115,7 @@ func ReadBatchHeaderLine(rd *bufio.Reader) (*BatchHeaderResponse, error) {
 	if idx < 0 {
 		return nil, errors.NotFound("missing space for: %s", line)
 	}
-	sha := MustNewSHA(line[:idx])
+	sha := sha.MustNew(line[:idx])
 	objType := line[idx+1:]
 
 	idx = strings.IndexByte(objType, ' ')

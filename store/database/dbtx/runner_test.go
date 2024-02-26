@@ -275,7 +275,7 @@ func TestLocking(t *testing.T) {
 
 	for _, test := range tests {
 		l := &lockerCounter{}
-		t.Run(test.name, func(t *testing.T) {
+		t.Run(test.name, func(_ *testing.T) {
 			test.fn(runnerDB{
 				db: dbMockNop{},
 				mx: l,

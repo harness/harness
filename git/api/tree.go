@@ -22,10 +22,12 @@ import (
 	"io"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/parser"
 
 	"github.com/rs/zerolog/log"
 )
@@ -41,6 +43,18 @@ type TreeNode struct {
 	Sha      string
 	Name     string
 	Path     string
+}
+
+func (n *TreeNode) IsExecutable() bool {
+	return n.Mode == TreeNodeModeExec
+}
+
+func (n *TreeNode) IsDir() bool {
+	return n.Mode == TreeNodeModeTree
+}
+
+func (n *TreeNode) IsLink() bool {
+	return n.Mode == TreeNodeModeSymlink
 }
 
 // TreeNodeType specifies the different types of nodes in a git tree.
@@ -65,23 +79,22 @@ const (
 	TreeNodeModeCommit
 )
 
-// Tree represents a flat directory listing.
-type Tree struct {
-	ID         SHA
-	ResolvedID SHA
-
-	// parent tree
-	ptree *Tree
-
-	entries       Entries
-	entriesParsed bool
-
-	entriesRecursive       Entries
-	entriesRecursiveParsed bool
+func (m TreeNodeMode) String() string {
+	var result int
+	switch m {
+	case TreeNodeModeFile:
+		result = 0o100644
+	case TreeNodeModeSymlink:
+		result = 0o120000
+	case TreeNodeModeExec:
+		result = 0o100755
+	case TreeNodeModeTree:
+		result = 0o040000
+	case TreeNodeModeCommit:
+		result = 0o160000
+	}
+	return strconv.FormatInt(int64(result), 8)
 }
-
-// Entries a list of entry.
-type Entries []*TreeEntry
 
 func cleanTreePath(treePath string) string {
 	return strings.Trim(path.Clean("/"+treePath), "/")
@@ -103,19 +116,6 @@ func parseTreeNodeMode(s string) (TreeNodeType, TreeNodeMode, error) {
 		return TreeNodeTypeBlob, TreeNodeModeFile,
 			fmt.Errorf("unknown git tree node mode: '%s'", s)
 	}
-}
-
-func scanZeroSeparated(data []byte, atEOF bool) (advance int, token []byte, err error) {
-	if atEOF && len(data) == 0 {
-		return 0, nil, nil // Return nothing if at end of file and no data passed
-	}
-	if i := strings.IndexByte(string(data), 0); i >= 0 {
-		return i + 1, data[0:i], nil // Split at zero byte
-	}
-	if atEOF {
-		return len(data), data, nil // at the end of file return the data
-	}
-	return
 }
 
 // regexpLsTreeColumns is a regular expression that is used to parse a single line
@@ -150,14 +150,14 @@ func lsTree(
 	}
 
 	if output.Len() == 0 {
-		return nil, &PathNotFoundError{Path: treePath}
+		return nil, errors.NotFound("path '%s' wasn't found in the repo", treePath)
 	}
 
 	n := bytes.Count(output.Bytes(), []byte{'\x00'})
 
 	list := make([]TreeNode, 0, n)
 	scan := bufio.NewScanner(output)
-	scan.Split(scanZeroSeparated)
+	scan.Split(parser.ScanZeroSeparated)
 	for scan.Scan() {
 		line := scan.Text()
 

@@ -21,15 +21,18 @@ import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
 import { Breadcrumbs, IBreadcrumbProps } from '@blueprintjs/core'
 import { Link, useHistory } from 'react-router-dom'
+import { compact, isEmpty } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { CloneButtonTooltip } from 'components/CloneButtonTooltip/CloneButtonTooltip'
 import { CodeIcon, GitInfoProps, isDir, isGitRev, isRefATag } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
-import KeywordSearch from 'components/CodeSearch/KeywordSearch'
+// import KeywordSearch from 'components/CodeSearch/KeywordSearch'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { permissionProps } from 'utils/Utils'
+import CodeSearch from 'components/CodeSearch/CodeSearch'
+import { useDocumentTitle } from 'hooks/useDocumentTitle'
 import css from './ContentHeader.module.scss'
 
 export function ContentHeader({
@@ -43,6 +46,8 @@ export function ContentHeader({
   const history = useHistory()
   const _isDir = isDir(resourceContent)
   const space = useGetSpaceParam()
+  const repoPath = compact([repoMetadata.uid, resourceContent.path])
+  useDocumentTitle(isEmpty(resourceContent.path) ? getString('pageTitle.repository') : repoPath.join('/'))
 
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
@@ -156,7 +161,7 @@ export function ContentHeader({
           </>
         )}
       </Layout.Horizontal>
-      <div className={css.searchBoxCtn}>{!standalone ? <KeywordSearch repoMetadata={repoMetadata} /> : null}</div>
+      <div className={css.searchBoxCtn}>{!standalone ? <CodeSearch repoMetadata={repoMetadata} /> : null}</div>
     </Container>
   )
 }

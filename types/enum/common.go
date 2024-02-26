@@ -48,6 +48,8 @@ const (
 	updated       = "updated"
 	updatedAt     = "updated_at"
 	updatedBy     = "updated_by"
+	deleted       = "deleted"
+	deletedAt     = "deleted_at"
 	displayName   = "display_name"
 	date          = "date"
 	defaultString = "default"

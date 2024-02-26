@@ -34,7 +34,7 @@ import { useMutate } from 'restful-react'
 import { debounce, escapeRegExp, flatten, sortBy, uniq } from 'lodash-es'
 import Keywords from 'react-keywords'
 import cx from 'classnames'
-
+import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { useQueryParams } from 'hooks/useQueryParams'
@@ -47,34 +47,55 @@ import { Editor } from 'components/Editor/Editor'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import KeywordSearchbar from 'components/KeywordSearchbar/KeywordSearchbar'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
-
+import { SEARCH_MODE } from 'components/CodeSearch/CodeSearch'
+import CodeSearchBar from 'components/CodeSearchBar/CodeSearchBar'
 import KeywordSearchFilters from './KeywordSearchFilters'
-import type { FileMatch, KeywordSearchResponse } from './KeywordSearch.types'
-
+import type { FileMatch, KeywordSearchResponse } from './CodeSearchPage.types'
 import css from './Search.module.scss'
 
+type SemanticSearchResultType = {
+  commit: string
+  file_path: string
+  start_line: number
+  end_line: number
+  file_name: string
+  lines: string[]
+}
+
+// COMMON
 const Search = () => {
   const { getString } = useStrings()
   const space = useGetSpaceParam()
-  const { repoName } = useGetRepositoryMetadata()
+  const { repoName, repoMetadata } = useGetRepositoryMetadata()
   const { updateQueryParams } = useUpdateQueryParams()
   const { showError } = useToaster()
-
   const repoPath = repoName ? `${space}/${repoName}` : undefined
 
-  const { q } = useQueryParams<{ q: string }>()
+  const { q, mode } = useQueryParams<{ q: string; mode: SEARCH_MODE }>()
   const [searchTerm, setSearchTerm] = useState(q || '')
-
+  const [searchMode, setSearchMode] = useState(mode)
   const [selectedRepositories, setSelectedRepositories] = useState<SelectOption[]>([])
-  const [selectedLanguages, setSelectedLanguages] = useState<SelectOption[]>([])
+  const [selectedLanguages, setSelectedLanguages] = useState<(SelectOption & { extension?: string })[]>([])
+  const [keywordSearchResults, setKeyowordSearchResults] = useState<KeywordSearchResponse>()
 
-  const [searchResults, setSearchResults] = useState<KeywordSearchResponse>()
-
+  //semantic
+  // const [loadingSearch, setLoadingSearch] = useState(false)
+  const [semanticSearchResult, setSemanticSearchResult] = useState<SemanticSearchResultType[]>([])
+  const [uniqueFiles, setUniqueFiles] = useState(0)
+  const history = useHistory()
+  //
   const { mutate, loading: isSearching } = useMutate<KeywordSearchResponse>({
     path: `/api/v1/search`,
     verb: 'POST'
   })
-
+  const {
+    mutate: sendSemanticSearch,
+    loading: loadingSearch,
+    cancel: cancelPreviousSearch
+  } = useMutate<SemanticSearchResultType[]>({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata?.path}/+/semantic/search`
+  })
   const debouncedSearch = useCallback(
     debounce(async (text: string) => {
       try {
@@ -105,65 +126,141 @@ const Search = () => {
             max_result_count: maxResultCount
           })
 
-          setSearchResults(res)
+          setKeyowordSearchResults(res)
         } else {
-          setSearchResults(undefined)
+          setKeyowordSearchResults(undefined)
         }
       } catch (error) {
         showError(getErrorMessage(error))
       }
     }, 300),
-    [selectedLanguages, selectedRepositories, repoPath]
+    [selectedLanguages, selectedRepositories, repoPath, mode]
   )
 
-  useEffect(() => {
-    if (searchTerm) {
-      debouncedSearch(searchTerm)
-    }
-  }, [selectedLanguages, selectedRepositories])
+  const performSemanticSearch = useCallback(() => {
+    // setLoadingSearch(true)
+    // history.replace({ pathname: location.pathname, search: `q=${searchTerm}` })
 
+    sendSemanticSearch({ query: searchTerm })
+      .then(response => {
+        setSemanticSearchResult(response)
+        const countUniqueFiles = () => new Set(response.map(item => item.file_path)).size
+        setUniqueFiles(countUniqueFiles)
+      })
+      .catch(exception => {
+        showError(getErrorMessage(exception), 0)
+      })
+      .finally(() => {
+        // setLoadingSearch(false)
+      })
+  }, [searchTerm, history, location, repoPath, sendSemanticSearch, showError, mode])
+
+  useEffect(() => {
+    if (q && mode !== SEARCH_MODE.SEMANTIC) {
+      debouncedSearch(searchTerm)
+    } else if (searchTerm && repoMetadata?.path && mode === SEARCH_MODE.SEMANTIC) {
+      performSemanticSearch()
+    }
+  }, [selectedLanguages, selectedRepositories, repoMetadata?.path])
   return (
     <Container className={css.main}>
       <Container padding="medium" border={{ bottom: true }} flex className={css.header}>
-        <KeywordSearchbar
-          value={searchTerm}
-          onChange={text => {
-            setSearchTerm(text)
-          }}
-          onSearch={text => {
-            setSearchResults(undefined)
-            updateQueryParams({ q: text })
-            debouncedSearch(text)
-          }}
-        />
+        {repoName ? (
+          <CodeSearchBar
+            searchMode={searchMode}
+            setSearchMode={setSearchMode}
+            value={searchTerm}
+            onChange={text => {
+              setSearchTerm(text)
+            }}
+            onSearch={text => {
+              cancelPreviousSearch()
+              setKeyowordSearchResults(undefined)
+              setSemanticSearchResult([])
+              updateQueryParams({ q: text, mode: searchMode })
+              if (searchMode === SEARCH_MODE.SEMANTIC) {
+                performSemanticSearch()
+              } else {
+                debouncedSearch(text)
+              }
+            }}
+          />
+        ) : (
+          <KeywordSearchbar
+            value={searchTerm}
+            onChange={text => {
+              setSearchTerm(text)
+            }}
+            onSearch={text => {
+              setKeyowordSearchResults(undefined)
+              updateQueryParams({ q: text })
+              debouncedSearch(text)
+            }}
+          />
+        )}
       </Container>
       <Container padding="xlarge">
-        <LoadingSpinner visible={isSearching} />
-        <KeywordSearchFilters
-          isRepoLevelSearch={Boolean(repoName)}
-          selectedLanguages={selectedLanguages}
-          selectedRepositories={selectedRepositories}
-          setLanguages={setSelectedLanguages}
-          setRepositories={setSelectedRepositories}
-        />
-        {searchResults?.file_matches.length ? (
+        <LoadingSpinner className={css.loadingSpinner} visible={isSearching || loadingSearch} />
+        {keywordSearchResults && (
+          <KeywordSearchFilters
+            isRepoLevelSearch={Boolean(repoName)}
+            selectedLanguages={selectedLanguages}
+            selectedRepositories={selectedRepositories}
+            setLanguages={setSelectedLanguages}
+            setRepositories={setSelectedRepositories}
+          />
+        )}
+
+        {keywordSearchResults?.file_matches.length ? (
           <>
             <Layout.Horizontal spacing="xsmall" margin={{ bottom: 'large' }}>
               <Text font={{ variation: FontVariation.SMALL_SEMI }}>
-                {searchResults?.stats.total_files} {getString('files')}
+                {keywordSearchResults?.stats.total_files} {getString('files')}
               </Text>
               <Text font={{ variation: FontVariation.SMALL_SEMI }} color={Color.GREY_400}>
                 {getString('results')}
               </Text>
             </Layout.Horizontal>
-            {searchResults?.file_matches?.map(fileMatch => {
+            {keywordSearchResults?.file_matches?.map(fileMatch => {
               if (fileMatch.matches.length) {
                 return <SearchResult key={fileMatch.file_name} fileMatch={fileMatch} searchTerm={searchTerm} />
               }
             })}
           </>
         ) : null}
-        <NoResultCard showWhen={() => !isSearching && !searchResults?.file_matches?.length} forSearch={true} />
+        {/* semantic search results -> */}
+        {semanticSearchResult?.length ? (
+          <>
+            <Layout.Horizontal spacing="xsmall" margin={{ bottom: 'large' }}>
+              {!loadingSearch && (
+                <Text font={{ variation: FontVariation.SMALL_SEMI }}>
+                  {uniqueFiles} {getString('files')}
+                </Text>
+              )}
+              <Text font={{ variation: FontVariation.SMALL_SEMI }} color={Color.GREY_400}>
+                {getString('results')}
+              </Text>
+            </Layout.Horizontal>
+            {loadingSearch ? (
+              <Text></Text>
+            ) : (
+              <Text>
+                {semanticSearchResult.map((result, index) => (
+                  <SemanticSearchResult key={index} result={result} index={index} />
+                ))}
+              </Text>
+            )}
+          </>
+        ) : null}
+        <NoResultCard
+          showWhen={() =>
+            !isSearching &&
+            !keywordSearchResults?.file_matches?.length &&
+            !loadingSearch &&
+            !semanticSearchResult?.length
+          }
+          forSearch={true}
+        />
       </Container>
     </Container>
   )
@@ -171,6 +268,7 @@ const Search = () => {
 
 export default Search
 
+// KEYOWORD SEARCH CODE
 interface CodeBlock {
   lineNumberOffset: number
   codeBlock: string
@@ -232,7 +330,6 @@ export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; 
 
   const flattenedMatches = flatten(codeBlocks.map(codeBlock => codeBlock.fragmentMatches))
   const allFileMatches = isCaseSensitive ? flattenedMatches : uniq(flattenedMatches.map(match => match.toLowerCase()))
-
   return (
     <Container className={css.searchResult}>
       <Layout.Horizontal spacing="small" className={css.resultHeader}>
@@ -389,6 +486,113 @@ const CodeBlock = ({
               </Link>
             </Text>
           ) : null}
+        </Layout.Horizontal>
+      ) : null}
+    </>
+  )
+}
+
+// SEMANTIC SEARCH CODE
+
+interface SemanticCodeBlock {
+  lineNumberOffset: number
+  codeBlock: string
+  result: SemanticSearchResultType
+}
+
+export const SemanticSearchResult = ({ result, index }: { result: SemanticSearchResultType; index: number }) => {
+  const { routes } = useAppContext()
+  const { gitRef, repoName, repoMetadata } = useGetRepositoryMetadata()
+  const [isCollapsed, setIsCollapsed] = useToggle(false)
+  const [showMoreMatchs, setShowMoreMatches] = useState(false)
+  const totalLines = result.end_line - result.start_line + 1
+  const { getString } = useStrings()
+  const showLines = totalLines > 10 ? (showMoreMatchs ? result.lines : result.lines.slice(0, 10)) : result.lines
+  return (
+    <Container className={css.searchResult}>
+      <Layout.Horizontal spacing="small" className={cx(css.resultHeader)}>
+        <Icon name={isCollapsed ? 'chevron-up' : 'chevron-down'} {...ButtonRoleProps} onClick={setIsCollapsed} />
+        <Link to={routes.toCODERepository({ repoPath: repoMetadata?.path as string })}>
+          <Text
+            icon="code-repo"
+            font={{ variation: FontVariation.SMALL_SEMI }}
+            color={Color.GREY_500}
+            border={{ right: true }}
+            padding={{ right: 'small' }}>
+            {repoName}
+          </Text>
+        </Link>
+        <Link
+          to={routes.toCODERepository({
+            repoPath: repoMetadata?.path as string,
+            gitRef: gitRef,
+            resourcePath: result.file_path
+          })}>
+          <Text font={{ variation: FontVariation.SMALL_BOLD }} color={Color.PRIMARY_7}>
+            {result.file_path}
+          </Text>
+        </Link>
+        <span className={css.semanticStamp}>{getString('AIDA')}</span>
+      </Layout.Horizontal>
+      <div className={cx({ [css.isCollapsed]: isCollapsed })}>
+        <SemanticCodeBlock
+          key={`${result.file_name}_${showLines}_${index}`}
+          result={result}
+          showMoreMatchesFooter={totalLines > 10}
+          showMoreLines={showMoreMatchs}
+          setShowMoreMatches={setShowMoreMatches}
+          showLines={showLines}
+        />
+      </div>
+    </Container>
+  )
+}
+
+const SemanticCodeBlock = ({
+  showMoreMatchesFooter,
+  result,
+  showMoreLines,
+  setShowMoreMatches,
+  showLines
+}: {
+  showMoreMatchesFooter: boolean
+  result: SemanticSearchResultType
+  showMoreLines: boolean
+  setShowMoreMatches: React.Dispatch<React.SetStateAction<boolean>>
+  showLines: string[]
+}) => {
+  const { getString } = useStrings()
+  const totalLines = result.end_line - result.start_line + 1
+  if (totalLines === 0) {
+    return null
+  }
+  return (
+    <>
+      <Editor
+        inGitBlame
+        content={showLines.join('\n')}
+        standalone={true}
+        readonly={true}
+        repoMetadata={undefined}
+        filename={result.file_name}
+        extensions={[
+          lineNumbers({
+            formatNumber: n => String(n - 1 + result.start_line)
+          })
+        ]}
+        className={css.editorCtn}
+      />
+      {showMoreMatchesFooter ? (
+        <Layout.Horizontal
+          spacing="small"
+          className={css.showMoreCtn}
+          onClick={() => setShowMoreMatches(prevVal => !prevVal)}
+          flex={{ alignItems: 'center', justifyContent: 'flex-start' }}
+          {...ButtonRoleProps}>
+          {!showMoreLines ? <Plus /> : <Minus />}
+          <Text font={{ variation: FontVariation.TINY_SEMI }} color={Color.GREY_400}>
+            {!showMoreLines ? `Show ${totalLines - 10} more lines` : getString('showLessMatches')}
+          </Text>
         </Layout.Horizontal>
       ) : null}
     </>

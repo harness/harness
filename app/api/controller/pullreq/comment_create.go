@@ -25,7 +25,6 @@ import (
 	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -341,7 +340,7 @@ func (c *Controller) fetchDiffCut(
 		LineEnd:         in.LineEnd,
 		LineEndNew:      in.LineEndNew,
 	})
-	if errors.AsStatus(err) == errors.StatusNotFound || api.IsPathNotFoundError(err) {
+	if errors.AsStatus(err) == errors.StatusNotFound {
 		return git.DiffCutOutput{}, usererror.BadRequest(errors.Message(err))
 	}
 	if err != nil {

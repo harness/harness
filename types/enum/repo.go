@@ -29,6 +29,7 @@ const (
 	RepoAttrIdentifier
 	RepoAttrCreated
 	RepoAttrUpdated
+	RepoAttrDeleted
 )
 
 // ParseRepoAttr parses the repo attribute string
@@ -44,6 +45,8 @@ func ParseRepoAttr(s string) RepoAttr {
 		return RepoAttrCreated
 	case updated, updatedAt:
 		return RepoAttrUpdated
+	case deleted, deletedAt:
+		return RepoAttrDeleted
 	default:
 		return RepoAttrNone
 	}
@@ -61,6 +64,8 @@ func (a RepoAttr) String() string {
 		return created
 	case RepoAttrUpdated:
 		return updated
+	case RepoAttrDeleted:
+		return deleted
 	case RepoAttrNone:
 		return ""
 	default:

@@ -56,13 +56,20 @@ func mapCommit(c *api.Commit) (*Commit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to map rpc committer: %w", err)
 	}
+
+	parentSHAs := make([]string, len(c.Parents))
+	for i, val := range c.Parents {
+		parentSHAs[i] = val.String()
+	}
+
 	return &Commit{
-		SHA:       c.SHA,
-		Title:     c.Title,
-		Message:   c.Message,
-		Author:    *author,
-		Committer: *comitter,
-		FileStats: *mapFileStats(&c.FileStats),
+		SHA:        c.SHA,
+		ParentSHAs: parentSHAs,
+		Title:      c.Title,
+		Message:    c.Message,
+		Author:     *author,
+		Committer:  *comitter,
+		FileStats:  *mapFileStats(&c.FileStats),
 	}, nil
 }
 

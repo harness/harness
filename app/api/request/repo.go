@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	PathParamRepoRef = "repo_ref"
-	QueryParamRepoID = "repo_id"
+	PathParamRepoRef    = "repo_ref"
+	QueryParamRepoID    = "repo_id"
+	QueryParamRecursive = "recursive"
 )
 
 func GetRepoRefFromPath(r *http.Request) (string, error) {
@@ -53,4 +54,9 @@ func ParseRepoFilter(r *http.Request) *types.RepoFilter {
 		Sort:  ParseSortRepo(r),
 		Size:  ParseLimit(r),
 	}
+}
+
+// ParseRecursiveFromQuery extracts the recursive option from the URL query.
+func ParseRecursiveFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamRecursive, false)
 }

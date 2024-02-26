@@ -356,7 +356,7 @@ func mapCheck(c *check) types.Check {
 			Kind:    c.PayloadKind,
 			Data:    c.Payload,
 		},
-		ReportedBy: types.PrincipalInfo{},
+		ReportedBy: nil,
 		Started:    c.Started,
 		Ended:      c.Ended,
 	}
@@ -380,7 +380,7 @@ func (s *CheckStore) mapSliceCheck(ctx context.Context, checks []*check) ([]type
 	for i, c := range checks {
 		m[i] = mapCheck(c)
 		if reportedBy, ok := infoMap[c.CreatedBy]; ok {
-			m[i].ReportedBy = *reportedBy
+			m[i].ReportedBy = reportedBy
 		}
 	}
 

@@ -91,14 +91,12 @@ pageTitle:
   pullRequest: Pull Request
   pullRequests: Pull Requests
   createWebhook: Create Webhook
-  webhookDetail: Webhook Detail
   webhooks: Webhooks
   repositorySettings: Repository Settings
   repositories: Repositories
-  commits: Commits
   branches: Branches
   tags: Tags
-  editFile: Edit File
+  editFileLocation: Editing {{{path}}}
   repository: Repository
   home: Home
   users: Users
@@ -725,11 +723,23 @@ userUpdateSuccess: 'User updated successfully'
 viewFile: View File
 searchResult: 'Search Result {count}'
 aiSearch: AIDA SEARCH
+enableAISearch: Enable AI Search
+AIDA: AIDA
+keywordSearch:
+  sampleQueries:
+    searchForClass: Search for class
+    searchForFilesWithCMD: Search for class in files starting with cmd
+    searchForPattern: Include only results from file paths matching the given search pattern
+    searchForInitialCommit: Search for exact phrase initial commit
+
+keywordSearchPlaceholder: Search for code or files...
 codeSearch: Code Search
 codeSearchModal: Begin search by describing what you are looking for
 searchHeader: 'Here are some example to get you start:'
 startSearching: Begin search by describing what you are looking for.
 poweredByAI: Unlock the power of AI with Semantic Code search. Try phrases like "Locate the code for authentication".
+semanticSearch:
+  sampleQueries: Where is the code that handles authentication?,Where is the application entry point?,Where do we configure the logger?
 failedToFetchFileContent: 'ERROR: Failed to fetch file content.'
 run: Run
 plugins:
@@ -832,6 +842,7 @@ step:
 stepCategory:
   select: Select step category
 exportSpace:
+  harness: Harness
   accIdRequired: Account ID is required
   accesstokenReq: Access token is required
   accIdLabel: 'Harness Account Id'
@@ -974,3 +985,4 @@ customDay: '{{days}}d'
 customHour: '{{hours}}h'
 customMin: '{{minutes}}m'
 customSecond: '{{seconds}}s'
+reqChanges: 'Request changes'

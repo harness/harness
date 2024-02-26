@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/merge"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
@@ -160,7 +161,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 		refOldValue, err = s.git.GetFullCommitID(ctx, repoPath, refPath)
 		if errors.IsNotFound(err) {
-			refOldValue = api.NilSHA
+			refOldValue = sha.Nil
 		} else if err != nil {
 			return MergeOutput{}, fmt.Errorf("failed to resolve %q: %w", refPath, err)
 		}

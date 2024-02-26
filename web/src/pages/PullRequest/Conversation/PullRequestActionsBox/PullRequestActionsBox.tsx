@@ -35,13 +35,7 @@ import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import type {
-  EnumPullReqState,
-  OpenapiMergePullReq,
-  OpenapiStatePullReqRequest,
-  TypesPullReq,
-  TypesRuleViolations
-} from 'services/code'
+import type { OpenapiMergePullReq, OpenapiStatePullReqRequest, TypesPullReq, TypesRuleViolations } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -60,7 +54,6 @@ import {
 } from 'utils/Utils'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
-import ReviewSplitButton from 'components/Changes/ReviewSplitButton/ReviewSplitButton'
 import RuleViolationAlertModal from 'components/RuleViolationAlertModal/RuleViolationAlertModal'
 import css from './PullRequestActionsBox.module.scss'
 
@@ -71,13 +64,11 @@ const codeOwnersNotFoundMessage3 = `failed to find node 'CODEOWNERS' in 'main': 
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
   pullReqMetadata,
-  onPRStateChanged,
-  refetchReviewers
+  onPRStateChanged
 }) => {
   const [isActionBoxOpen, setActionBoxOpen] = useState(false)
   const { getString } = useStrings()
   const { showError } = useToaster()
-  const { currentUser } = useAppContext()
   const { hooks, standalone } = useAppContext()
   const space = useGetSpaceParam()
   const { pullRequestSection } = useGetRepositoryMetadata()
@@ -253,9 +244,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     },
     [space]
   )
-  const isActiveUserPROwner = useMemo(() => {
-    return !!currentUser?.uid && !!pullReqMetadata?.author?.uid && currentUser?.uid === pullReqMetadata?.author?.uid
-  }, [currentUser, pullReqMetadata])
 
   if (pullReqMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullReqMetadata} />
@@ -417,14 +405,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                             }}
                           />
                         ) : null}
-                        <ReviewSplitButton
-                          shouldHide={(pullReqMetadata?.state as EnumPullReqState) === 'merged'}
-                          repoMetadata={repoMetadata}
-                          pullRequestMetadata={pullReqMetadata}
-                          refreshPr={onPRStateChanged}
-                          disabled={isActiveUserPROwner}
-                          refetchReviewers={refetchReviewers}
-                        />
+
                         <Container
                           inline
                           padding={{ left: 'medium' }}

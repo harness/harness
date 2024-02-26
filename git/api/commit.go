@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
@@ -50,7 +51,7 @@ type Commit struct {
 	Author    Signature `json:"author"`
 	Committer Signature `json:"committer"`
 	Signature *CommitGPGSignature
-	Parents   []*SHA
+	Parents   []sha.SHA
 	FileStats CommitFileStats
 }
 
@@ -595,14 +596,15 @@ func getCommit(
 ) (*Commit, error) {
 	const format = "" +
 		fmtCommitHash + fmtZero + // 0
-		fmtAuthorName + fmtZero + // 1
-		fmtAuthorEmail + fmtZero + // 2
-		fmtAuthorTime + fmtZero + // 3
-		fmtCommitterName + fmtZero + // 4
-		fmtCommitterEmail + fmtZero + // 5
-		fmtCommitterTime + fmtZero + // 6
-		fmtSubject + fmtZero + // 7
-		fmtBody // 8
+		fmtParentHashes + fmtZero + // 1
+		fmtAuthorName + fmtZero + // 2
+		fmtAuthorEmail + fmtZero + // 3
+		fmtAuthorTime + fmtZero + // 4
+		fmtCommitterName + fmtZero + // 5
+		fmtCommitterEmail + fmtZero + // 6
+		fmtCommitterTime + fmtZero + // 7
+		fmtSubject + fmtZero + // 8
+		fmtBody // 9
 
 	cmd := command.New("log",
 		command.WithFlag("--max-count", "1"),
@@ -627,7 +629,7 @@ func getCommit(
 		return nil, errors.InvalidArgument("path %q not found in %s", path, rev)
 	}
 
-	const columnCount = 9
+	const columnCount = 10
 
 	commitData := strings.Split(strings.TrimSpace(commitLine), separatorZero)
 	if len(commitData) != columnCount {
@@ -635,21 +637,28 @@ func getCommit(
 			"unexpected git log formatted output, expected %d, but got %d columns", columnCount, len(commitData))
 	}
 
-	sha := commitData[0]
-	authorName := commitData[1]
-	authorEmail := commitData[2]
-	authorTimestamp := commitData[3]
-	committerName := commitData[4]
-	committerEmail := commitData[5]
-	committerTimestamp := commitData[6]
-	subject := commitData[7]
-	body := commitData[8]
+	commitSHA := commitData[0]
+	var parentSHAs []sha.SHA
+	if commitData[1] != "" {
+		for _, parentSHA := range strings.Split(commitData[1], " ") {
+			parentSHAs = append(parentSHAs, sha.MustNew(parentSHA))
+		}
+	}
+	authorName := commitData[2]
+	authorEmail := commitData[3]
+	authorTimestamp := commitData[4]
+	committerName := commitData[5]
+	committerEmail := commitData[6]
+	committerTimestamp := commitData[7]
+	subject := commitData[8]
+	body := commitData[9]
 
 	authorTime, _ := time.Parse(time.RFC3339Nano, authorTimestamp)
 	committerTime, _ := time.Parse(time.RFC3339Nano, committerTimestamp)
 
 	return &Commit{
-		SHA:     sha,
+		SHA:     commitSHA,
+		Parents: parentSHAs,
 		Title:   subject,
 		Message: body,
 		Author: Signature{
@@ -744,9 +753,9 @@ func getCommitFromBatchReader(
 // We need this to interpret commits from cat-file or cat-file --batch
 //
 // If used as part of a cat-file --batch stream you need to limit the reader to the correct size.
-func CommitFromReader(sha *SHA, reader io.Reader) (*Commit, error) {
+func CommitFromReader(commitSHA sha.SHA, reader io.Reader) (*Commit, error) {
 	commit := &Commit{
-		SHA:       sha.String(),
+		SHA:       commitSHA.String(),
 		Author:    Signature{},
 		Committer: Signature{},
 	}
@@ -802,7 +811,7 @@ readLoop:
 			case "tree":
 				_, _ = payloadSB.Write(line)
 			case "parent":
-				commit.Parents = append(commit.Parents, MustNewSHA(string(data)))
+				commit.Parents = append(commit.Parents, sha.MustNew(string(data)))
 				_, _ = payloadSB.Write(line)
 			case "author":
 				commit.Author = Signature{}

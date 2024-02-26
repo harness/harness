@@ -45,12 +45,12 @@ const SemanticSearch = ({ repoMetadata }: Pick<GitInfoProps, 'repoMetadata'>) =>
     (q: string) => {
       history.push({
         pathname: routes.toCODESemanticSearch({
-          repoPath: repoMetadata.path as string
+          repoPath: repoMetadata?.path as string
         }),
         search: `q=${q}`
       })
     },
-    [history, repoMetadata.path, routes]
+    [history, repoMetadata?.path, routes]
   )
   const onSearch = useCallback(() => {
     if (search?.trim()) {

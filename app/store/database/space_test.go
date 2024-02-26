@@ -27,17 +27,9 @@ func TestDatabase_GetRootSpace(t *testing.T) {
 
 	ctx := context.Background()
 
-	createUser(t, &ctx, principalStore, 1)
+	createUser(ctx, t, principalStore)
 
-	spaceTree, numSpaces := createSpaceTree()
-
-	createSpace(t, &ctx, spaceStore, spacePathStore, userID, 1, 0)
-	for i := 1; i < numSpaces; i++ {
-		parentID := int64(i)
-		for _, spaceID := range spaceTree[parentID] {
-			createSpace(t, &ctx, spaceStore, spacePathStore, 1, spaceID, parentID)
-		}
-	}
+	numSpaces := createNestedSpaces(ctx, t, spaceStore, spacePathStore)
 
 	for i := 1; i <= numSpaces; i++ {
 		rootSpc, err := spaceStore.GetRootSpace(ctx, int64(i))

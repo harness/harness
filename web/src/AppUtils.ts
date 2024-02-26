@@ -40,9 +40,9 @@ export function handle401() {
  * service happen here.
  *
  * @param token API token
- * @returns Resful React RequestInit object.
+ * @returns Restful React RequestInit object.
  */
-export function buildResfulReactRequestOptions(token?: string): Partial<RequestInit> {
+export function buildRestfulReactRequestOptions(token?: string): Partial<RequestInit> {
   const headers: RequestInit['headers'] = {}
 
   if (token?.length) {

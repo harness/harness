@@ -50,7 +50,7 @@ var matcherCheckIdentifier = regexp.MustCompile(regexpCheckIdentifier)
 
 // Sanitize validates and sanitizes the ReportInput data.
 func (in *ReportInput) Sanitize(
-	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, session *auth.Session) error, session *auth.Session,
+	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error, session *auth.Session,
 ) error {
 	// TODO [CODE-1363]: remove after identifier migration.
 	if in.Identifier == "" {
@@ -172,7 +172,7 @@ func (c *Controller) Report(
 		Link:       in.Link,
 		Payload:    in.Payload,
 		Metadata:   metadataJSON,
-		ReportedBy: *session.Principal.ToPrincipalInfo(),
+		ReportedBy: session.Principal.ToPrincipalInfo(),
 		Started:    started,
 		Ended:      ended,
 	}

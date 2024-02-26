@@ -21,6 +21,7 @@ import (
 	"io"
 
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 )
 
 type GitObjectType string
@@ -55,7 +56,7 @@ const (
 	SortOrderDesc
 )
 
-func (g *Git) HashObject(ctx context.Context, repoPath string, reader io.Reader) (*SHA, error) {
+func (g *Git) HashObject(ctx context.Context, repoPath string, reader io.Reader) (sha.SHA, error) {
 	cmd := command.New("hash-object",
 		command.WithFlag("-w"),
 		command.WithFlag("--stdin"),
@@ -67,7 +68,7 @@ func (g *Git) HashObject(ctx context.Context, repoPath string, reader io.Reader)
 		command.WithStdout(stdout),
 	)
 	if err != nil {
-		return nil, err
+		return sha.SHA{}, err
 	}
-	return NewSHA(stdout.Bytes())
+	return sha.New(stdout.Bytes())
 }

@@ -33,6 +33,7 @@ type Repository struct {
 	CreatedBy   int64  `json:"created_by"`
 	Created     int64  `json:"created"`
 	Updated     int64  `json:"updated"`
+	Deleted     *int64 `json:"deleted,omitempty"`
 
 	Size        int64 `json:"size"`
 	SizeUpdated int64 `json:"size_updated"`
@@ -80,11 +81,13 @@ func (r Repository) GetGitUID() string {
 
 // RepoFilter stores repo query parameters.
 type RepoFilter struct {
-	Page  int           `json:"page"`
-	Size  int           `json:"size"`
-	Query string        `json:"query"`
-	Sort  enum.RepoAttr `json:"sort"`
-	Order enum.Order    `json:"order"`
+	Page              int           `json:"page"`
+	Size              int           `json:"size"`
+	Query             string        `json:"query"`
+	Sort              enum.RepoAttr `json:"sort"`
+	Order             enum.Order    `json:"order"`
+	DeletedBeforeOrAt *int64        `json:"deleted_before_or_at,omitempty"`
+	Recursive         bool
 }
 
 // RepositoryGitInfo holds git info for a repository.

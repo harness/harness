@@ -592,6 +592,11 @@ func (r *SharedRepo) GetCommit(ctx context.Context, commitID string) (*Commit, e
 	return r.git.GetCommit(ctx, r.RepoPath, commitID)
 }
 
+// GetTreeNode Gets the tree node object of the given commit ID and path.
+func (r *SharedRepo) GetTreeNode(ctx context.Context, commitID, treePath string) (*TreeNode, error) {
+	return r.git.GetTreeNode(ctx, r.RepoPath, commitID, treePath)
+}
+
 // GetReferenceFromBranchName assumes the provided value is the branch name (not the ref!)
 // and first sanitizes the branch name (remove any spaces or 'refs/heads/' prefix)
 // It then returns the full form of the branch reference.

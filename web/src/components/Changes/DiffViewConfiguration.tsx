@@ -32,9 +32,9 @@ interface DiffViewConfigurationProps {
 
 export const DiffViewConfiguration: React.FC<DiffViewConfigurationProps> = ({
   viewStyle,
-  setViewStyle,
-  lineBreaks,
-  setLineBreaks
+  setViewStyle
+  // lineBreaks,
+  // setLineBreaks
 }) => {
   const { getString } = useStrings()
 
@@ -70,6 +70,10 @@ export const DiffViewConfiguration: React.FC<DiffViewConfigurationProps> = ({
                 </ButtonGroup>
               </Layout.Horizontal>
             </Container>
+            {/* 
+            // TODO: Line break barely works. Disable until we find a complete solution for it
+            // https://harness.atlassian.net/browse/CODE-1452
+            // [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
             <Container>
               <Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center' }}>
                 <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('lineBreaks')}</Text>
@@ -87,7 +91,7 @@ export const DiffViewConfiguration: React.FC<DiffViewConfigurationProps> = ({
                   </BButton>
                 </ButtonGroup>
               </Layout.Horizontal>
-            </Container>
+            </Container> */}
           </Layout.Vertical>
         </Container>
       }

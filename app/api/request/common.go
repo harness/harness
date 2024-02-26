@@ -37,6 +37,8 @@ const (
 	QueryParamAfter  = "after"
 	QueryParamBefore = "before"
 
+	QueryParamDeletedAt = "deleted_at"
+
 	QueryParamPage  = "page"
 	QueryParamLimit = "limit"
 	PerPageDefault  = 30
@@ -117,4 +119,9 @@ func ParseListQueryFilterFromRequest(r *http.Request) types.ListQueryFilter {
 // GetContentEncodingFromHeadersOrDefault returns the content encoding from the request headers.
 func GetContentEncodingFromHeadersOrDefault(r *http.Request, dflt string) string {
 	return GetHeaderOrDefault(r, HeaderContentEncoding, dflt)
+}
+
+// GetDeletedAtFromQuery extracts the resource deleted timestamp from the query.
+func GetDeletedAtFromQuery(r *http.Request) (int64, error) {
+	return QueryParamAsPositiveInt64(r, QueryParamDeletedAt)
 }

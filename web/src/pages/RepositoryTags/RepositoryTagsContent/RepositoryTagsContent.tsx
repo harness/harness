@@ -67,9 +67,9 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
       sort: 'date',
       order: 'desc',
       include_commit: true,
-      query: searchTerm,
-      debounce: 500
-    }
+      query: searchTerm
+    },
+    debounce: 500
   })
 
   useEffect(() => {

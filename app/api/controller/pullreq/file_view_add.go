@@ -21,8 +21,8 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -80,7 +80,7 @@ func (c *Controller) FileViewAdd(
 		Path:                in.Path,
 		IncludeLatestCommit: false,
 	})
-	if err != nil && !api.IsPathNotFoundError(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf(
 			"failed to get tree node '%s' for provided sha '%s': %w",
 			in.Path,
@@ -102,7 +102,7 @@ func (c *Controller) FileViewAdd(
 		Path:                in.Path,
 		IncludeLatestCommit: false,
 	})
-	if err != nil && !api.IsPathNotFoundError(err) {
+	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf(
 			"failed to get tree node '%s' for MergeBaseSHA '%s': %w",
 			in.Path,

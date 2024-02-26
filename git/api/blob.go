@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/sha"
 )
 
 type BlobReader struct {
@@ -36,7 +37,7 @@ type BlobReader struct {
 func (g *Git) GetBlob(
 	ctx context.Context,
 	repoPath string,
-	sha *SHA,
+	sha sha.SHA,
 	sizeLimit int64,
 ) (*BlobReader, error) {
 	stdIn, stdOut, cancel := CatFileBatch(ctx, repoPath)

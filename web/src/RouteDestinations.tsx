@@ -47,7 +47,7 @@ import ExecutionList from 'pages/ExecutionList/ExecutionList'
 import Execution from 'pages/Execution/Execution'
 import Secret from 'pages/Secret/Secret'
 import Search from 'pages/Search/Search'
-import KeywordSearch from 'pages/Search/KeywordSearch'
+import CodeSearchPage from 'pages/Search/CodeSearchPage'
 import AddUpdatePipeline from 'pages/AddUpdatePipeline/AddUpdatePipeline'
 import { useAppContext } from 'AppContext'
 import PipelineSettings from 'components/PipelineSettings/PipelineSettings'
@@ -159,7 +159,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             repoPath,
             webhookId: pathProps.webhookId
           })}>
-          <LayoutWithSideNav title={getString('pageTitle.webhookDetail')}>
+          <LayoutWithSideNav title={getString('webhookDetails')}>
             <WebhookDetails />
           </LayoutWithSideNav>
         </Route>
@@ -266,7 +266,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             repoPath,
             commitRef: pathProps.commitRef
           })}>
-          <LayoutWithSideNav title={getString('pageTitle.commits')}>
+          <LayoutWithSideNav title={getString('commit')}>
             <RepositoryCommit />
           </LayoutWithSideNav>
         </Route>
@@ -276,7 +276,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             repoPath,
             commitRef: pathProps.commitRef
           })}>
-          <LayoutWithSideNav title={getString('pageTitle.commits')}>
+          <LayoutWithSideNav title={getString('commits')}>
             <RepositoryCommits />
           </LayoutWithSideNav>
         </Route>
@@ -297,7 +297,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           path={[routes.toCODEProjectSearch({ space: pathProps.space }), routes.toCODERepositorySearch({ repoPath })]}
           exact>
           <LayoutWithSideNav title={getString('search')}>
-            <KeywordSearch />
+            <CodeSearchPage />
           </LayoutWithSideNav>
         </Route>
 
@@ -313,7 +313,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             gitRef: pathProps.gitRef,
             resourcePath: pathProps.resourcePath
           })}>
-          <LayoutWithSideNav title={getString('pageTitle.editFile')}>
+          <LayoutWithSideNav title={getString('editFile')}>
             <RepositoryFileEdit />
           </LayoutWithSideNav>
         </Route>

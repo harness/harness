@@ -3,6 +3,7 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
+  AIDA: string
   Enable: string
   accessControl: string
   accountEmail: string
@@ -251,6 +252,7 @@ export interface StringsMap {
   emptyRepoHeader: string
   emptyRepoInclude: string
   emptySpaceText: string
+  enableAISearch: string
   enableSSLVerification: string
   enableWebhookContent: string
   enableWebhookTitle: string
@@ -294,6 +296,7 @@ export interface StringsMap {
   'exportSpace.exportCompleted': string
   'exportSpace.exportRepo': string
   'exportSpace.exportRepoCompleted': string
+  'exportSpace.harness': string
   'exportSpace.newProject': string
   'exportSpace.organization': string
   'exportSpace.projectName': string
@@ -401,6 +404,11 @@ export interface StringsMap {
   inactiveBranches: string
   isRequired: string
   key: string
+  'keywordSearch.sampleQueries.searchForClass': string
+  'keywordSearch.sampleQueries.searchForFilesWithCMD': string
+  'keywordSearch.sampleQueries.searchForInitialCommit': string
+  'keywordSearch.sampleQueries.searchForPattern': string
+  keywordSearchPlaceholder: string
   killed: string
   language: string
   leaveAComment: string
@@ -483,10 +491,9 @@ export interface StringsMap {
   'pageTitle.accessControl': string
   'pageTitle.branches': string
   'pageTitle.changePassword': string
-  'pageTitle.commits': string
   'pageTitle.compare': string
   'pageTitle.createWebhook': string
-  'pageTitle.editFile': string
+  'pageTitle.editFileLocation': string
   'pageTitle.executions': string
   'pageTitle.home': string
   'pageTitle.pipelines': string
@@ -503,7 +510,6 @@ export interface StringsMap {
   'pageTitle.tags': string
   'pageTitle.userProfile': string
   'pageTitle.users': string
-  'pageTitle.webhookDetail': string
   'pageTitle.webhooks': string
   password: string
   passwordApi: string
@@ -703,6 +709,7 @@ export interface StringsMap {
   'repos.updated': string
   repositories: string
   repositoryName: string
+  reqChanges: string
   requestChanges: string
   required: string
   resetZoom: string
@@ -752,6 +759,7 @@ export interface StringsMap {
   selectStatuses: string
   selectToViewMore: string
   selectUsers: string
+  'semanticSearch.sampleQueries': string
   setAsAdmin: string
   setting: string
   settings: string

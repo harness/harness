@@ -23,6 +23,10 @@
   min-height: var(--page-height);
   background-color: var(--primary-bg) !important;
 
+  .loadingSpinner {
+    width: 77% !important;
+  }
+
   .pageHeader {
     flex-direction: column;
     height: var(--header-height);
@@ -280,6 +284,19 @@
 
   .resultHeader {
     padding: var(--spacing-small);
+  }
+
+  .semanticStamp {
+    background-color: var(--ai-purple-200);
+    color: var(--ai-purple-600);
+    border-radius: 6px;
+    border: none;
+    margin-left: auto !important;
+    padding: 3px 7px;
+    font-size: 10px;
+    font-family: Inter;
+    letter-spacing: 0.34px;
+    font-weight: 600;
   }
 
   .showMoreCtn {

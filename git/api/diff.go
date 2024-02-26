@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/parser"
+	"github.com/harness/gitness/git/sha"
 )
 
 type FileDiffRequest struct {
@@ -297,8 +298,8 @@ func (g *Git) DiffShortStat(
 	}
 
 	shortstatArgs := []string{baseRef + separator + headRef}
-	if len(baseRef) == 0 || baseRef == NilSHA {
-		shortstatArgs = []string{EmptyTreeSHA, headRef}
+	if len(baseRef) == 0 || baseRef == sha.Nil {
+		shortstatArgs = []string{sha.EmptyTree, headRef}
 	}
 	stat, err := GetDiffShortStat(ctx, repoPath, shortstatArgs...)
 	if err != nil {
@@ -362,6 +363,8 @@ func (g *Git) GetDiffHunkHeaders(
 
 // DiffCut parses full file git diff output and returns lines specified with the parameters.
 // The purpose of this function is to get diff data with which code comments could be generated.
+//
+//nolint:gocognit
 func (g *Git) DiffCut(
 	ctx context.Context,
 	repoPath string,
@@ -373,8 +376,10 @@ func (g *Git) DiffCut(
 	if repoPath == "" {
 		return parser.HunkHeader{}, parser.Hunk{}, ErrRepositoryPathEmpty
 	}
+
+	// first fetch the list of the changed files
+
 	pipeRead, pipeWrite := io.Pipe()
-	stderr := &bytes.Buffer{}
 	go func() {
 		var err error
 
@@ -384,29 +389,102 @@ func (g *Git) DiffCut(
 		}()
 
 		cmd := command.New("diff",
+			command.WithFlag("--raw"),
 			command.WithFlag("--merge-base"),
+			command.WithFlag("-z"),
+			command.WithFlag("--find-renames"),
+			command.WithArg(targetRef),
+			command.WithArg(sourceRef))
+		err = cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(pipeWrite))
+	}()
+
+	diffEntries, err := parser.DiffRaw(pipeRead)
+	if err != nil {
+		return parser.HunkHeader{}, parser.Hunk{}, fmt.Errorf("failed to find the list of changed files: %w", err)
+	}
+
+	var (
+		oldSHA, newSHA string
+		filePath       string
+	)
+
+	for _, entry := range diffEntries {
+		switch entry.Status {
+		case parser.DiffStatusRenamed, parser.DiffStatusCopied:
+			if entry.Path != path && entry.OldPath != path {
+				continue
+			}
+
+			if params.LineStartNew && path == entry.OldPath {
+				msg := "for renamed files provide the new file name if commenting the changed lines"
+				return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument(msg)
+			}
+			if !params.LineStartNew && path == entry.Path {
+				msg := "for renamed files provide the old file name if commenting the old lines"
+				return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument(msg)
+			}
+		default:
+			if entry.Path != path {
+				continue
+			}
+		}
+
+		switch entry.Status {
+		case parser.DiffStatusRenamed, parser.DiffStatusCopied, parser.DiffStatusModified:
+			// For modified and renamed compare file blobs directly.
+			oldSHA = entry.OldBlobSHA
+			newSHA = entry.NewBlobSHA
+		case parser.DiffStatusAdded, parser.DiffStatusDeleted:
+			// For added and deleted compare commits, but with the provided path.
+			oldSHA = targetRef
+			newSHA = sourceRef
+			filePath = entry.Path
+		}
+
+		break
+	}
+
+	if newSHA == "" {
+		return parser.HunkHeader{}, parser.Hunk{}, errors.NotFound("file %s not found in the diff", path)
+	}
+
+	// next pull the diff cut for the requested file
+
+	pipeRead, pipeWrite = io.Pipe()
+	stderr := bytes.NewBuffer(nil)
+	go func() {
+		var err error
+
+		defer func() {
+			// If running of the command below fails, make the pipe reader also fail with the same error.
+			_ = pipeWrite.CloseWithError(err)
+		}()
+
+		cmd := command.New("diff",
 			command.WithFlag("--patch"),
 			command.WithFlag("--no-color"),
 			command.WithFlag("--unified=100000000"),
-			command.WithArg(targetRef, sourceRef),
-			command.WithPostSepArg(path),
-		)
+			command.WithArg(oldSHA),
+			command.WithArg(newSHA))
+		if filePath != "" {
+			cmd.Add(
+				command.WithFlag("--merge-base"),
+				command.WithPostSepArg(filePath))
+		}
+
 		err = cmd.Run(ctx,
 			command.WithDir(repoPath),
 			command.WithStdout(pipeWrite),
-			command.WithStderr(stderr), // We capture stderr output in a buffer.
-		)
+			command.WithStderr(stderr))
 	}()
 
 	diffCutHeader, linesHunk, err := parser.DiffCut(pipeRead, params)
-
-	// First check if there's something in the stderr buffer, if yes that's the error
 	if errStderr := parseDiffStderr(stderr); errStderr != nil {
+		// First check if there's something in the stderr buffer, if yes that's the error
 		return parser.HunkHeader{}, parser.Hunk{}, errStderr
 	}
-
-	// Next check if reading the git diff output caused an error
 	if err != nil {
+		// Next check if reading the git diff output caused an error
 		return parser.HunkHeader{}, parser.Hunk{}, err
 	}
 

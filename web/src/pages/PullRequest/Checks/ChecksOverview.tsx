@@ -19,6 +19,7 @@ import { Falsy, Match, Render, Truthy } from 'react-jsx-match'
 import { Container, Layout, Text, useToggle, Button, ButtonVariation, ButtonSize, Utils } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { Link } from 'react-router-dom'
+import ReactTimeago from 'react-timeago'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
@@ -117,7 +118,23 @@ const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
 }) => {
   const { getString } = useStrings()
   const { routes } = useAppContext()
+  const customFormatter = (_value: number, _unit: string, _suffix: string, date: Date | string | number) => {
+    const now = new Date()
+    const then = new Date(date)
+    const secondsPast = (now.getTime() - then.getTime()) / 1000
+    const days = Math.round(secondsPast / 86400)
+    const remainder = secondsPast % 86400
+    const hours = Math.floor(remainder / 3600)
+    const minutes = Math.floor((remainder % 3600) / 60)
+    const seconds = Math.floor(remainder % 60)
 
+    return getString('customTime', {
+      days: days ? getString('customDay', { days }) : '',
+      hours: hours ? getString('customHour', { hours }) : '',
+      minutes: minutes ? getString('customMin', { minutes }) : '',
+      seconds: seconds ? getString('customSecond', { seconds }) : ''
+    })
+  }
   return (
     <Render when={data.length}>
       <Container>
@@ -129,7 +146,7 @@ const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
             {getString(isPipeline ? 'pageTitle.pipelines' : 'checks')}
           </Text>
           <Container className={css.table}>
-            {data.map(({ uid, status, summary, created, updated }) => (
+            {data.map(({ uid, status, summary, created, updated, ended }) => (
               <Container className={css.row} key={uid}>
                 <Layout.Horizontal className={css.rowLayout}>
                   <Container className={css.status}>
@@ -154,7 +171,9 @@ const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
                   </Text>
 
                   <Text className={css.time} font={{ variation: FontVariation.SMALL }}>
-                    {timeDistance(updated, created)}
+                    {ended === 0
+                      ? created && <ReactTimeago date={created} formatter={customFormatter} />
+                      : timeDistance(updated, created)}
                   </Text>
                 </Layout.Horizontal>
               </Container>

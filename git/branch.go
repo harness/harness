@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/check"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
@@ -106,7 +107,7 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 		params.EnvVars,
 		repoPath,
 		branchRef,
-		api.NilSHA, // we want to make sure we don't overwrite any parallel create
+		sha.Nil, // we want to make sure we don't overwrite any parallel create
 		targetCommit.SHA,
 	)
 	if errors.IsConflict(err) {
@@ -167,7 +168,7 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 		repoPath,
 		branchRef,
 		"", // delete whatever is there
-		api.NilSHA,
+		sha.Nil,
 	)
 	if errors.IsNotFound(err) {
 		return errors.NotFound("branch %q does not exist", params.BranchName)

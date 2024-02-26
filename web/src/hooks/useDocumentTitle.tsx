@@ -15,18 +15,29 @@
  */
 
 import { useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
+import { useAppContext } from 'AppContext'
+import type { CODEProps } from 'RouteDefinitions'
 
-export function useDocumentTitle(title: string) {
+type Title = string | string[]
+
+export function useDocumentTitle(title: Title) {
   const { getString } = useStrings()
+  const { standalone } = useAppContext()
+  const { repoName } = useParams<CODEProps>()
 
   useEffect(() => {
     const _title = document.title
+    const titleArray = Array.isArray(title) ? [...title] : [title]
+    if (repoName) {
+      titleArray.push(repoName)
+    }
 
-    document.title = `${title} - ${getString('gitness')}`
+    document.title = [...titleArray, standalone ? getString('gitness') : getString('exportSpace.harness')].join(' | ')
 
     return () => {
       document.title = _title
     }
-  }, [title, getString])
+  }, [title, getString, repoName, standalone])
 }

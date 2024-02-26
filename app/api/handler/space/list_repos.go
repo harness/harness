@@ -39,13 +39,20 @@ func HandleListRepos(spaceCtrl *space.Controller) http.HandlerFunc {
 			filter.Order = enum.OrderAsc
 		}
 
-		repos, totalCount, err := spaceCtrl.ListRepositories(ctx, session, spaceRef, filter)
+		filter.Recursive, err = request.ParseRecursiveFromQuery(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
+		repos, count, err := spaceCtrl.ListRepositories(
+			ctx, session, spaceRef, filter)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		render.Pagination(r, w, filter.Page, filter.Size, int(count))
 		render.JSON(w, http.StatusOK, repos)
 	}
 }

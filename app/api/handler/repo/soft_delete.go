@@ -23,24 +23,26 @@ import (
 )
 
 /*
- * Deletes a repository.
+ * Soft Deletes a repository.
  */
-func HandleDelete(repoCtrl *repo.Controller) http.HandlerFunc {
+func HandleSoftDelete(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+
 		session, _ := request.AuthSessionFrom(ctx)
+
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		err = repoCtrl.Delete(ctx, session, repoRef)
+		softDeleteResponse, err := repoCtrl.SoftDelete(ctx, session, repoRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.DeleteSuccessful(w)
+		render.JSON(w, http.StatusOK, softDeleteResponse)
 	}
 }

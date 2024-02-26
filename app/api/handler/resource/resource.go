@@ -22,7 +22,7 @@ import (
 )
 
 func HandleGitIgnore() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		files, err := resources.GitIgnores()
 		if err != nil {
 			render.ErrorMessagef(w, http.StatusInternalServerError, "error loading gitignore files: %v", err)
@@ -33,7 +33,7 @@ func HandleGitIgnore() http.HandlerFunc {
 }
 
 func HandleLicence() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		response, err := resources.Licenses()
 		if err != nil {
 			render.ErrorMessagef(w, http.StatusInternalServerError, "error loading licence file: %v", err)

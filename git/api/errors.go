@@ -16,7 +16,6 @@ package api
 
 import (
 	"fmt"
-	"os/exec"
 	"strings"
 
 	"github.com/harness/gitness/errors"
@@ -33,44 +32,6 @@ var (
 	ErrNoDefaultBranch     = errors.New("no default branch")
 )
 
-// ConcatenateError concatenats an error with stderr string.
-func ConcatenateError(err error, stderr string) error {
-	if len(stderr) == 0 {
-		return err
-	}
-	return fmt.Errorf("%w - %s", err, stderr)
-}
-
-type runStdError struct {
-	err    error
-	stderr string
-	errMsg string
-}
-
-func (r *runStdError) Error() string {
-	// the stderr must be in the returned error text, some code only checks `strings.Contains(err.Error(), "git error")`
-	if r.errMsg == "" {
-		r.errMsg = ConcatenateError(r.err, r.stderr).Error()
-	}
-	return r.errMsg
-}
-
-func (r *runStdError) Unwrap() error {
-	return r.err
-}
-
-func (r *runStdError) Stderr() string {
-	return r.stderr
-}
-
-func (r *runStdError) IsExitCode(code int) bool {
-	var exitError *exec.ExitError
-	if errors.As(r.err, &exitError) {
-		return exitError.ExitCode() == code
-	}
-	return false
-}
-
 // PushOutOfDateError represents an error if merging fails due to unrelated histories.
 type PushOutOfDateError struct {
 	StdOut string
@@ -84,7 +45,7 @@ func (err *PushOutOfDateError) Error() string {
 
 // Unwrap unwraps the underlying error.
 func (err *PushOutOfDateError) Unwrap() error {
-	return fmt.Errorf("%v - %s", err.Err, err.StdErr)
+	return fmt.Errorf("%w - %s", err.Err, err.StdErr)
 }
 
 // PushRejectedError represents an error if merging fails due to rejection from a hook.
@@ -166,10 +127,6 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	log.Warn().Msgf("%v: [GIT] %v", fallbackErr, err)
 
 	// check if it's a RunStdError error (contains raw git error)
-	var runStdErr *runStdError
-	if errors.As(err, &runStdErr) {
-		return mapRunStdError(runStdErr, fallbackErr)
-	}
 
 	switch {
 	case err.Error() == "no such file or directory":
@@ -177,65 +134,6 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	default:
 		return fallbackErr
 	}
-}
-
-// Doubt this will work for all std errors, as git doesn't seem to have nice error codes.
-func mapRunStdError(err *runStdError, fallback error) error {
-	switch {
-	// exit status 128 - fatal: A branch named 'mybranch' already exists.
-	// exit status 128 - fatal: cannot lock ref 'refs/heads/a': 'refs/heads/a/b' exists; cannot create 'refs/heads/a'
-	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "exists"):
-		return errors.Conflict(err.Stderr())
-
-	// exit status 128 - fatal: 'a/bc/d/' is not a valid branch name.
-	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "not a valid"):
-		return errors.InvalidArgument(err.Stderr())
-
-	// exit status 1 - error: branch 'mybranch' not found.
-	case err.IsExitCode(1) && strings.Contains(err.Stderr(), "not found"):
-		return errors.NotFound(err.Stderr())
-
-	// exit status 128 - fatal: ambiguous argument 'branch1...branch2': unknown revision or path not in the working tree.
-	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "unknown revision"):
-		msg := "unknown revision or path not in the working tree"
-		// parse the error response from git output
-		lines := strings.Split(err.Error(), "\n")
-		if len(lines) > 0 {
-			cols := strings.Split(lines[0], ": ")
-			if len(cols) >= 2 {
-				msg = cols[1] + ", " + cols[2]
-			}
-		}
-		return errors.NotFound(msg)
-
-	// exit status 128 - fatal: couldn't find remote ref v1.
-	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "couldn't find"):
-		return errors.NotFound(err.Stderr())
-
-	// exit status 128 - fatal: unable to access 'http://127.0.0.1:4101/hvfl1xj5fojwlrw77xjflw80uxjous254jrr967rvj/':
-	//   Failed to connect to 127.0.0.1 port 4101 after 4 ms: Connection refused
-	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "Failed to connect"):
-		return errors.Internal(err, "failed to connect")
-
-	default:
-		return fallback
-	}
-}
-
-func ErrNotExist(id, relPath string) error {
-	return errors.NotFound("object does not exist [id: %s, rel_path: %s]", id, relPath)
-}
-
-const (
-	StatusNotMergeable errors.Status = "not_mergeable"
-)
-
-type ValidationError struct {
-	Msg string
-}
-
-func (e *ValidationError) Error() string {
-	return e.Msg
 }
 
 // MergeUnrelatedHistoriesError represents an error if merging fails due to unrelated histories.
@@ -261,28 +159,5 @@ func (e *MergeUnrelatedHistoriesError) Unwrap() error {
 //nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
 func (e *MergeUnrelatedHistoriesError) Is(target error) bool {
 	_, ok := target.(*MergeUnrelatedHistoriesError)
-	return ok
-}
-
-// PathNotFoundError represents an error if a path in a repo can't be found.
-type PathNotFoundError struct {
-	Path string
-}
-
-func IsPathNotFoundError(err error) bool {
-	return errors.Is(err, &PathNotFoundError{})
-}
-
-func (e *PathNotFoundError) Error() string {
-	return fmt.Sprintf("path '%s' wasn't found in the repo", e.Path)
-}
-
-func (e *PathNotFoundError) Unwrap() error {
-	return nil
-}
-
-//nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
-func (e *PathNotFoundError) Is(target error) bool {
-	_, ok := target.(*PathNotFoundError)
 	return ok
 }

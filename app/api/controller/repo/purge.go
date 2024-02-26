@@ -20,6 +20,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/errors"
@@ -30,12 +31,16 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Delete deletes a repo.
-func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef string) error {
-	// note: can't use c.getRepoCheckAccess because import job for repositories being imported must be cancelled.
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+// Purge removes a repo permanently.
+func (c *Controller) Purge(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	deletedAt int64,
+) error {
+	repo, err := c.repoStore.FindByRefAndDeletedAt(ctx, repoRef, deletedAt)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to find the repo (deleted at %d): %w", deletedAt, err)
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoDelete, false); err != nil {
@@ -45,25 +50,26 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 	log.Ctx(ctx).Info().
 		Int64("repo.id", repo.ID).
 		Str("repo.path", repo.Path).
-		Msgf("deleting repository")
+		Msg("purging repository")
 
-	if repo.Importing {
-		err = c.importer.Cancel(ctx, repo)
-		if err != nil {
-			return fmt.Errorf("failed to cancel repository import")
-		}
+	if repo.Deleted == nil {
+		return usererror.BadRequest("Repository has to be deleted before it can be purged.")
 	}
 
-	return c.DeleteNoAuth(ctx, session, repo)
+	return c.PurgeNoAuth(ctx, session, repo)
 }
 
-func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, repo *types.Repository) error {
-	if err := c.deleteGitRepository(ctx, session, repo); err != nil {
-		return fmt.Errorf("failed to delete git repository: %w", err)
+func (c *Controller) PurgeNoAuth(
+	ctx context.Context,
+	session *auth.Session,
+	repo *types.Repository,
+) error {
+	if err := c.repoStore.Purge(ctx, repo.ID, repo.Deleted); err != nil {
+		return fmt.Errorf("failed to delete repo from db: %w", err)
 	}
 
-	if err := c.repoStore.Delete(ctx, repo.ID); err != nil {
-		return fmt.Errorf("failed to delete repo from db: %w", err)
+	if err := c.deleteGitRepository(ctx, session, repo); err != nil {
+		return fmt.Errorf("failed to delete git repository: %w", err)
 	}
 
 	c.eventReporter.Deleted(
@@ -95,13 +101,12 @@ func (c *Controller) deleteGitRepository(
 		WriteParams: writeParams,
 	})
 
-	// deletion should not fail if dir does not exist in repos dir
+	// deletion should not fail if repo dir does not exist.
 	if errors.IsNotFound(err) {
 		log.Ctx(ctx).Warn().Str("repo.git_uid", repo.GitUID).
 			Msg("git repository directory does not exist")
 	} else if err != nil {
-		// deletion has failed before removing(rename) the repo dir
-		return fmt.Errorf("failed to delete git repository directory %s: %w", repo.GitUID, err)
+		return fmt.Errorf("failed to remove git repository %s: %w", repo.GitUID, err)
 	}
 	return nil
 }

@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/git/api/foreachref"
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
@@ -265,7 +266,7 @@ func (g *Git) UpdateRef(
 
 	// don't break existing interface - user calls with empty value to delete the ref.
 	if newValue == "" {
-		newValue = NilSHA
+		newValue = sha.Nil
 	}
 
 	// if no old value was provided, use current value (as required for hooks)
@@ -275,11 +276,11 @@ func (g *Git) UpdateRef(
 		val, err := g.GetRef(ctx, repoPath, ref)
 		if errors.IsNotFound(err) {
 			// fail in case someone tries to delete a reference that doesn't exist.
-			if newValue == NilSHA {
+			if newValue == sha.Nil {
 				return errors.NotFound("reference %q not found", ref)
 			}
 
-			oldValue = NilSHA
+			oldValue = sha.Nil
 		} else if err != nil {
 			return fmt.Errorf("failed to get current value of reference: %w", err)
 		} else {
@@ -323,7 +324,7 @@ func (g *Git) updateRefWithHooks(
 	if newValue == "" {
 		return fmt.Errorf("newValue can't be empty")
 	}
-	if oldValue == NilSHA && newValue == NilSHA {
+	if oldValue == sha.Nil && newValue == sha.Nil {
 		return fmt.Errorf("provided values cannot be both empty")
 	}
 
@@ -356,7 +357,7 @@ func (g *Git) updateRefWithHooks(
 	}
 
 	cmd := command.New("update-ref")
-	if newValue == NilSHA {
+	if newValue == sha.Nil {
 		cmd.Add(command.WithFlag("-d", ref))
 	} else {
 		cmd.Add(command.WithArg(ref, newValue))
