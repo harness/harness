@@ -25,6 +25,7 @@
 
   :global {
     .wmde-markdown {
+      max-width: 100%;
       @include markdown-font;
 
       pre {
@@ -42,6 +43,9 @@
       tt,
       code {
         @include mono-font;
+      }
+      video {
+        max-width: 100%;
       }
 
       // Customize https://wangchujiang.com/rehype-video/
