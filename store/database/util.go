@@ -15,6 +15,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -51,20 +52,21 @@ func Offset(page, size int) uint64 {
 // Always logs the full message with error as warning.
 //
 //nolint:unparam // revisit error processing
-func ProcessSQLErrorf(err error, format string, args ...interface{}) error {
-	// create fallback error returned if we can't map it
-	fallbackErr := fmt.Errorf(format, args...)
-
-	// always log internal error together with message.
-	log.Debug().Msgf("%v: [SQL] %v", fallbackErr, err)
-
+func ProcessSQLErrorf(ctx context.Context, err error, format string, args ...interface{}) error {
 	// If it's a known error, return converted error instead.
+	translatedError := err
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
-		return store.ErrResourceNotFound
+		translatedError = store.ErrResourceNotFound
 	case isSQLUniqueConstraintError(err):
-		return store.ErrDuplicate
+		translatedError = store.ErrDuplicate
 	default:
-		return fallbackErr
 	}
+
+	//nolint:errorlint // we want to match exactly here.
+	if translatedError != err {
+		log.Ctx(ctx).Debug().Err(err).Msgf("translated sql error to: %s", translatedError)
+	}
+
+	return fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), translatedError)
 }

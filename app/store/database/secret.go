@@ -70,7 +70,7 @@ func (s *secretStore) Find(ctx context.Context, id int64) (*types.Secret, error)
 
 	dst := new(types.Secret)
 	if err := db.GetContext(ctx, dst, findQueryStmt, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find secret")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find secret")
 	}
 	return dst, nil
 }
@@ -83,7 +83,7 @@ func (s *secretStore) FindByIdentifier(ctx context.Context, spaceID int64, ident
 
 	dst := new(types.Secret)
 	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, identifier); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find secret")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find secret")
 	}
 	return dst, nil
 }
@@ -115,11 +115,11 @@ func (s *secretStore) Create(ctx context.Context, secret *types.Secret) error {
 
 	query, arg, err := db.BindNamed(secretInsertStmt, secret)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind secret object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind secret object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&secret.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "secret query failed")
+		return database.ProcessSQLErrorf(ctx, err, "secret query failed")
 	}
 
 	return nil
@@ -145,17 +145,17 @@ func (s *secretStore) Update(ctx context.Context, p *types.Secret) error {
 
 	query, arg, err := db.BindNamed(secretUpdateStmt, secret)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind secret object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind secret object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update secret")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update secret")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -218,7 +218,7 @@ func (s *secretStore) List(ctx context.Context, parentID int64, filter types.Lis
 
 	dst := []*types.Secret{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -240,7 +240,7 @@ func (s *secretStore) ListAll(ctx context.Context, parentID int64) ([]*types.Sec
 
 	dst := []*types.Secret{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -256,7 +256,7 @@ func (s *secretStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, secretDeleteStmt, id); err != nil {
-		return database.ProcessSQLErrorf(err, "Could not delete secret")
+		return database.ProcessSQLErrorf(ctx, err, "Could not delete secret")
 	}
 
 	return nil
@@ -272,7 +272,7 @@ func (s *secretStore) DeleteByIdentifier(ctx context.Context, spaceID int64, ide
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, secretDeleteStmt, spaceID, identifier); err != nil {
-		return database.ProcessSQLErrorf(err, "Could not delete secret")
+		return database.ProcessSQLErrorf(ctx, err, "Could not delete secret")
 	}
 
 	return nil
@@ -299,7 +299,7 @@ func (s *secretStore) Count(ctx context.Context, parentID int64, filter types.Li
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 	return count, nil
 }

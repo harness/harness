@@ -31,26 +31,26 @@ func HandleRuleUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		ruleIdentifier, err := request.GetRuleIdentifierFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		in := new(repo.RuleUpdateInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		rule, err := repoCtrl.RuleUpdate(ctx, session, repoRef, ruleIdentifier, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

@@ -51,7 +51,7 @@ func (s *PrincipalStore) FindServiceAccount(ctx context.Context, id int64) (*typ
 
 	dst := new(serviceAccount)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by id query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by id query failed")
 	}
 	return s.mapDBServiceAccount(dst), nil
 }
@@ -73,7 +73,7 @@ func (s *PrincipalStore) FindServiceAccountByUID(ctx context.Context, uid string
 
 	dst := new(serviceAccount)
 	if err = db.GetContext(ctx, dst, sqlQuery, uidUnique); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by uid query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by uid query failed")
 	}
 
 	return s.mapDBServiceAccount(dst), nil
@@ -119,11 +119,11 @@ func (s *PrincipalStore) CreateServiceAccount(ctx context.Context, sa *types.Ser
 
 	query, arg, err := db.BindNamed(sqlQuery, dbSA)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind service account object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind service account object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&sa.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -150,11 +150,11 @@ func (s *PrincipalStore) UpdateServiceAccount(ctx context.Context, sa *types.Ser
 
 	query, arg, err := db.BindNamed(sqlQuery, dbSA)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind service account object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind service account object")
 	}
 
 	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return database.ProcessSQLErrorf(err, "Update query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Update query failed")
 	}
 
 	return err
@@ -169,7 +169,7 @@ func (s *PrincipalStore) DeleteServiceAccount(ctx context.Context, id int64) err
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return database.ProcessSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "The delete query failed")
 	}
 
 	return nil
@@ -187,7 +187,7 @@ func (s *PrincipalStore) ListServiceAccounts(ctx context.Context, parentType enu
 	dst := []*serviceAccount{}
 	err := db.SelectContext(ctx, &dst, sqlQuery, parentType, parentID)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing default list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing default list query")
 	}
 
 	return s.mapDBServiceAccounts(dst), nil
@@ -206,7 +206,7 @@ func (s *PrincipalStore) CountServiceAccounts(ctx context.Context,
 	var count int64
 	err := db.QueryRowContext(ctx, sqlQuery, parentType, parentID).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 
 	return count, nil

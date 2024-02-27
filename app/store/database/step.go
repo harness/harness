@@ -91,7 +91,7 @@ func (s *stepStore) FindByNumber(ctx context.Context, stageID int64, stepNum int
 
 	dst := new(step)
 	if err := db.GetContext(ctx, dst, findQueryStmt, stageID, stepNum); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find step")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find step")
 	}
 	return mapInternalToStep(dst)
 }
@@ -136,11 +136,11 @@ func (s *stepStore) Create(ctx context.Context, step *types.Step) error {
 
 	query, arg, err := db.BindNamed(stepInsertStmt, mapStepToInternal(step))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind step object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind step object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&step.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Step query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Step query failed")
 	}
 
 	return nil
@@ -173,17 +173,17 @@ func (s *stepStore) Update(ctx context.Context, e *types.Step) error {
 
 	query, arg, err := db.BindNamed(stepUpdateStmt, step)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind step object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind step object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update step")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update step")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {

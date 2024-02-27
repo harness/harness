@@ -43,34 +43,34 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		executionNum, err := request.GetExecutionNumberFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		stageNum, err := request.GetStageNumberFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		stepNum, err := request.GetStepNumberFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		f, ok := w.(http.Flusher)
 		if !ok {
 			log.Error().Msg("http writer type assertion failed")
-			render.InternalError(w)
+			render.InternalError(ctx, w)
 			return
 		}
 
@@ -88,7 +88,7 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 			ctx, session, repoRef, pipelineIdentifier,
 			executionNum, int(stageNum), int(stepNum))
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

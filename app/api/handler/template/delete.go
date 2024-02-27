@@ -30,30 +30,30 @@ func HandleDelete(templateCtrl *template.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		templateRef, err := request.GetTemplateRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		spaceRef, templateIdentifier, err := paths.DisectLeaf(templateRef)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		resolverType, err := request.GetTemplateTypeFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		tempalateTypeEnum, err := enum.ParseResolverType(resolverType)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		err = templateCtrl.Delete(ctx, session, spaceRef, templateIdentifier, tempalateTypeEnum)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

@@ -144,7 +144,7 @@ func (s *triggerStore) FindByIdentifier(
 
 	dst := new(trigger)
 	if err := db.GetContext(ctx, dst, findQueryStmt, pipelineID, identifier); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find trigger")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find trigger")
 	}
 	return mapInternalToTrigger(dst)
 }
@@ -184,11 +184,11 @@ func (s *triggerStore) Create(ctx context.Context, t *types.Trigger) error {
 	trigger := mapTriggerToInternal(t)
 	query, arg, err := db.BindNamed(triggerInsertStmt, trigger)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind trigger object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind trigger object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&trigger.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Trigger query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Trigger query failed")
 	}
 
 	return nil
@@ -216,17 +216,17 @@ func (s *triggerStore) Update(ctx context.Context, t *types.Trigger) error {
 
 	query, arg, err := db.BindNamed(triggerUpdateStmt, trigger)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind trigger object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind trigger object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update trigger")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update trigger")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -292,7 +292,7 @@ func (s *triggerStore) List(
 
 	dst := []*trigger{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return mapInternalToTriggerList(dst)
@@ -317,7 +317,7 @@ func (s *triggerStore) ListAllEnabled(
 
 	dst := []*trigger{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return mapInternalToTriggerList(dst)
@@ -344,7 +344,7 @@ func (s *triggerStore) Count(ctx context.Context, pipelineID int64, filter types
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 	return count, nil
 }
@@ -358,7 +358,7 @@ func (s *triggerStore) DeleteByIdentifier(ctx context.Context, pipelineID int64,
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, triggerDeleteStmt, pipelineID, identifier); err != nil {
-		return database.ProcessSQLErrorf(err, "Could not delete trigger")
+		return database.ProcessSQLErrorf(ctx, err, "Could not delete trigger")
 	}
 
 	return nil

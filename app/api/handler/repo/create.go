@@ -32,13 +32,13 @@ func HandleCreate(repoCtrl *repo.Controller) http.HandlerFunc {
 		in := new(repo.CreateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		repo, err := repoCtrl.Create(ctx, session, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

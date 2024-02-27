@@ -31,20 +31,20 @@ func HandleCreateToken(saCrl *serviceaccount.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		saUID, err := request.GetServiceAccountUIDFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		in := new(serviceaccount.CreateTokenInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid request body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return
 		}
 
 		tokenResponse, err := saCrl.CreateToken(ctx, session, saUID, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

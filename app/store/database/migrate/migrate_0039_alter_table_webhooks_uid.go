@@ -67,20 +67,20 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 			}()
 		}
 		if err != nil {
-			return 0, database.ProcessSQLErrorf(err, "failed batch select query")
+			return 0, database.ProcessSQLErrorf(ctx, err, "failed batch select query")
 		}
 
 		c := 0
 		for rows.Next() {
 			err = rows.Scan(&buffer[c].id, &buffer[c].displayName, &buffer[c].repoID, &buffer[c].spaceID, &buffer[c].identifier)
 			if err != nil {
-				return 0, database.ProcessSQLErrorf(err, "failed scanning next row")
+				return 0, database.ProcessSQLErrorf(ctx, err, "failed scanning next row")
 			}
 			c++
 		}
 
 		if rows.Err() != nil {
-			return 0, database.ProcessSQLErrorf(err, "failed reading all rows")
+			return 0, database.ProcessSQLErrorf(ctx, err, "failed reading all rows")
 		}
 
 		page++
@@ -162,12 +162,12 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 
 			result, err := dbtx.ExecContext(ctx, updateQuery, wh.identifier.String, wh.id)
 			if err != nil {
-				return database.ProcessSQLErrorf(err, "failed to update webhook")
+				return database.ProcessSQLErrorf(ctx, err, "failed to update webhook")
 			}
 
 			count, err := result.RowsAffected()
 			if err != nil {
-				return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+				return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 			}
 
 			if count == 0 {

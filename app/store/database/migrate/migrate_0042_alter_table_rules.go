@@ -66,20 +66,20 @@ func migrateAfter_0042_alter_table_rules(
 			}()
 		}
 		if err != nil {
-			return 0, database.ProcessSQLErrorf(err, "failed batch select query")
+			return 0, database.ProcessSQLErrorf(ctx, err, "failed batch select query")
 		}
 
 		c := 0
 		for rows.Next() {
 			err = rows.Scan(&buffer[c].id, &buffer[c].uid, &buffer[c].definition)
 			if err != nil {
-				return 0, database.ProcessSQLErrorf(err, "failed scanning next row")
+				return 0, database.ProcessSQLErrorf(ctx, err, "failed scanning next row")
 			}
 			c++
 		}
 
 		if rows.Err() != nil {
-			return 0, database.ProcessSQLErrorf(err, "failed reading all rows")
+			return 0, database.ProcessSQLErrorf(ctx, err, "failed reading all rows")
 		}
 
 		page++
@@ -136,12 +136,12 @@ func migrateAfter_0042_alter_table_rules(
 
 			result, err := dbtx.ExecContext(ctx, updateQuery, updatedDefinitionString, r.id)
 			if err != nil {
-				return database.ProcessSQLErrorf(err, "failed to update rule")
+				return database.ProcessSQLErrorf(ctx, err, "failed to update rule")
 			}
 
 			count, err := result.RowsAffected()
 			if err != nil {
-				return database.ProcessSQLErrorf(err, "failed to get number of updated rows")
+				return database.ProcessSQLErrorf(ctx, err, "failed to get number of updated rows")
 			}
 
 			if count == 0 {

@@ -33,13 +33,13 @@ func HandleEvents(appCtx context.Context, spaceCtrl *space.Controller) http.Hand
 
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		chEvents, chErr, sseCancel, err := spaceCtrl.Events(ctx, session, spaceRef)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		defer func() {

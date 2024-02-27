@@ -70,7 +70,7 @@ func (s *templateStore) Find(ctx context.Context, id int64) (*types.Template, er
 
 	dst := new(types.Template)
 	if err := db.GetContext(ctx, dst, findQueryStmt, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find template")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find template")
 	}
 	return dst, nil
 }
@@ -94,7 +94,7 @@ func (s *templateStore) FindByIdentifierAndType(
 		identifier,
 		resolverType.String(),
 	); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find template")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find template")
 	}
 	return dst, nil
 }
@@ -125,11 +125,11 @@ func (s *templateStore) Create(ctx context.Context, template *types.Template) er
 
 	query, arg, err := db.BindNamed(templateInsertStmt, template)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind template object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind template object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&template.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "template query failed")
+		return database.ProcessSQLErrorf(ctx, err, "template query failed")
 	}
 
 	return nil
@@ -156,17 +156,17 @@ func (s *templateStore) Update(ctx context.Context, p *types.Template) error {
 
 	query, arg, err := db.BindNamed(templateUpdateStmt, template)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind template object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind template object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update template")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update template")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -233,7 +233,7 @@ func (s *templateStore) List(
 
 	dst := []*types.Template{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -248,7 +248,7 @@ func (s *templateStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, templateDeleteStmt, id); err != nil {
-		return database.ProcessSQLErrorf(err, "Could not delete template")
+		return database.ProcessSQLErrorf(ctx, err, "Could not delete template")
 	}
 
 	return nil
@@ -268,7 +268,7 @@ func (s *templateStore) DeleteByIdentifierAndType(
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, templateDeleteStmt, spaceID, identifier, resolverType.String()); err != nil {
-		return database.ProcessSQLErrorf(err, "Could not delete template")
+		return database.ProcessSQLErrorf(ctx, err, "Could not delete template")
 	}
 
 	return nil
@@ -295,7 +295,7 @@ func (s *templateStore) Count(ctx context.Context, parentID int64, filter types.
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 	return count, nil
 }

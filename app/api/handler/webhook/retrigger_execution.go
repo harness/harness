@@ -30,25 +30,25 @@ func HandleRetriggerExecution(webhookCtrl *webhook.Controller) http.HandlerFunc 
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		webhookIdentifier, err := request.GetWebhookIdentifierFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		webhookExecutionID, err := request.GetWebhookExecutionIDFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		execution, err := webhookCtrl.RetriggerExecution(ctx, session, repoRef, webhookIdentifier, webhookExecutionID)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

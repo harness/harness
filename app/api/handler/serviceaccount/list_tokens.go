@@ -30,12 +30,12 @@ func HandleListTokens(saCrl *serviceaccount.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		saUID, err := request.GetServiceAccountUIDFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		res, err := saCrl.ListTokens(ctx, session, saUID)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

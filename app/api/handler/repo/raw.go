@@ -34,7 +34,7 @@ func HandleRaw(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -43,7 +43,7 @@ func HandleRaw(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		dataReader, dataLength, err := repoCtrl.Raw(ctx, session, repoRef, gitRef, path)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

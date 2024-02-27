@@ -29,7 +29,7 @@ func HandleGetContent(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -37,7 +37,7 @@ func HandleGetContent(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		includeCommit, err := request.GetIncludeCommitFromQueryOrDefault(r, false)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -45,7 +45,7 @@ func HandleGetContent(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		resp, err := repoCtrl.GetContent(ctx, session, repoRef, gitRef, repoPath, includeCommit)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

@@ -28,7 +28,7 @@ func HandleListPipelines(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -36,7 +36,7 @@ func HandleListPipelines(repoCtrl *repo.Controller) http.HandlerFunc {
 		latest := request.GetLatestFromPath(r)
 		repos, totalCount, err := repoCtrl.ListPipelines(ctx, session, repoRef, latest, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

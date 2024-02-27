@@ -108,7 +108,7 @@ func (s *CheckStore) FindByIdentifier(
 
 	dst := new(check)
 	if err := db.GetContext(ctx, dst, sqlQuery, repoID, identifier, commitSHA); err != nil {
-		return types.Check{}, database.ProcessSQLErrorf(err, "Failed to find check")
+		return types.Check{}, database.ProcessSQLErrorf(ctx, err, "Failed to find check")
 	}
 
 	return mapCheck(dst), nil
@@ -168,11 +168,11 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalCheck(check))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind status check object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind status check object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&check.ID, &check.CreatedBy, &check.Created); err != nil {
-		return database.ProcessSQLErrorf(err, "Upsert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Upsert query failed")
 	}
 
 	return nil
@@ -202,7 +202,7 @@ func (s *CheckStore) Count(ctx context.Context,
 	var count int
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed to execute count status checks query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed to execute count status checks query")
 	}
 
 	return count, nil
@@ -237,7 +237,7 @@ func (s *CheckStore) List(ctx context.Context,
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to execute list status checks query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to execute list status checks query")
 	}
 
 	result, err := s.mapSliceCheck(ctx, dst)
@@ -273,7 +273,7 @@ func (s *CheckStore) ListRecent(ctx context.Context,
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to execute list recent status checks query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to execute list recent status checks query")
 	}
 
 	return dst, nil
@@ -301,7 +301,7 @@ func (s *CheckStore) ListResults(ctx context.Context,
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &result, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to execute list status checks results query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to execute list status checks results query")
 	}
 
 	return result, nil

@@ -33,14 +33,14 @@ func HandleGitInfoRefs(repoCtrl *repo.Controller, urlProvider url.Provider) http
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		gitProtocol := request.GetGitProtocolFromHeadersOrDefault(r, "")
 		service, err := request.GetGitServiceTypeFromQuery(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -56,7 +56,7 @@ func HandleGitInfoRefs(repoCtrl *repo.Controller, urlProvider url.Provider) http
 			return
 		}
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 	}

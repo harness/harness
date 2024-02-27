@@ -31,24 +31,24 @@ func HandleUpdate(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 		in := new(pipeline.UpdateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		pipeline, err := pipelineCtrl.Update(ctx, session, repoRef, pipelineIdentifier, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

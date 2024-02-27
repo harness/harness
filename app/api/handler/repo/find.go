@@ -29,13 +29,13 @@ func HandleFind(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		repo, err := repoCtrl.Find(ctx, session, repoRef)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

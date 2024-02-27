@@ -116,7 +116,7 @@ func (s *stageStore) FindByNumber(ctx context.Context, executionID int64, stageN
 
 	dst := new(stage)
 	if err := db.GetContext(ctx, dst, findQueryStmt, executionID, stageNum); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find stage")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find stage")
 	}
 	return mapInternalToStage(dst)
 }
@@ -187,10 +187,10 @@ func (s *stageStore) Create(ctx context.Context, st *types.Stage) error {
 	stage := mapStageToInternal(st)
 	query, arg, err := db.BindNamed(stageInsertStmt, stage)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind stage object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind stage object")
 	}
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&stage.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Stage query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Stage query failed")
 	}
 	return nil
 }
@@ -211,7 +211,7 @@ func (s *stageStore) ListWithSteps(ctx context.Context, executionID int64) ([]*t
 
 	rows, err := db.QueryContext(ctx, queryNumberWithSteps, executionID)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to query stages and steps")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to query stages and steps")
 	}
 	return scanRowsWithSteps(rows)
 }
@@ -227,7 +227,7 @@ func (s *stageStore) Find(ctx context.Context, stageID int64) (*types.Stage, err
 
 	dst := new(stage)
 	if err := db.GetContext(ctx, dst, queryFind, stageID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find stage")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find stage")
 	}
 	return mapInternalToStage(dst)
 }
@@ -244,7 +244,7 @@ func (s *stageStore) ListIncomplete(ctx context.Context) ([]*types.Stage, error)
 
 	dst := []*stage{}
 	if err := db.SelectContext(ctx, &dst, queryListIncomplete); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find incomplete stages")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find incomplete stages")
 	}
 	// map stages list
 	return mapInternalToStageList(dst)
@@ -262,7 +262,7 @@ func (s *stageStore) List(ctx context.Context, executionID int64) ([]*types.Stag
 
 	dst := []*stage{}
 	if err := db.SelectContext(ctx, &dst, queryList, executionID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find stages")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find stages")
 	}
 	// map stages list
 	return mapInternalToStageList(dst)
@@ -300,17 +300,17 @@ func (s *stageStore) Update(ctx context.Context, st *types.Stage) error {
 
 	query, arg, err := db.BindNamed(stageUpdateStmt, stage)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind stage object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind stage object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update stage")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update stage")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {

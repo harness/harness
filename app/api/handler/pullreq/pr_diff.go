@@ -35,13 +35,13 @@ func HandleDiff(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		pullreqNumber, err := request.GetPullReqNumberFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -54,7 +54,7 @@ func HandleDiff(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPost:
 			if err = json.NewDecoder(r.Body).Decode(&files); err != nil && !errors.Is(err, io.EOF) {
-				render.TranslatedUserError(w, err)
+				render.TranslatedUserError(ctx, w, err)
 				return
 			}
 		case http.MethodGet:
@@ -73,7 +73,7 @@ func HandleDiff(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 		_, includePatch := request.QueryParam(r, "include_patch")
 		stream, err := pullreqCtrl.Diff(ctx, session, repoRef, pullreqNumber, setSHAs, includePatch, files...)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

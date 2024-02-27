@@ -31,20 +31,20 @@ func HandleCreate(webhookCtrl *webhook.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		in := new(webhook.CreateInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		hook, err := webhookCtrl.Create(ctx, session, repoRef, in, false)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

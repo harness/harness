@@ -33,7 +33,7 @@ func HandleListTokens(userCtrl *user.Controller, tokenType enum.TokenType) http.
 
 		res, err := userCtrl.ListTokens(ctx, session, userUID, tokenType)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

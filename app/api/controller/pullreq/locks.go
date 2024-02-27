@@ -54,11 +54,11 @@ func (c *Controller) lockPR(
 		lock.WithTimeoutFactor(4/expiry.Seconds()), // 4s
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new mutex for pr %d in repo %q: %w", prNum, repoID, err)
+		return nil, fmt.Errorf("failed to create new mutex for pr %d in repo %d: %w", prNum, repoID, err)
 	}
 	err = mutex.Lock(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to lock mutex for pr %d in repo %q: %w", prNum, repoID, err)
+		return nil, fmt.Errorf("failed to lock mutex for pr %d in repo %d: %w", prNum, repoID, err)
 	}
 
 	log.Ctx(ctx).Debug().Msgf("successfully locked PR (expiry: %s)", expiry)

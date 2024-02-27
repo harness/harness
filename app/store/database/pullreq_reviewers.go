@@ -93,7 +93,7 @@ func (s *PullReqReviewerStore) Find(ctx context.Context, prID, principalID int64
 
 	dst := &pullReqReviewer{}
 	if err := db.GetContext(ctx, dst, sqlQuery, prID, principalID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request reviewer")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find pull request reviewer")
 	}
 
 	return s.mapPullReqReviewer(ctx, dst), nil
@@ -130,11 +130,11 @@ func (s *PullReqReviewerStore) Create(ctx context.Context, v *types.PullReqRevie
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReqReviewer(v))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pull request reviewer object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pull request reviewer object")
 	}
 
 	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to insert pull request reviewer")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to insert pull request reviewer")
 	}
 
 	return nil
@@ -161,12 +161,12 @@ func (s *PullReqReviewerStore) Update(ctx context.Context, v *types.PullReqRevie
 
 	query, arg, err := db.BindNamed(sqlQuery, dbv)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pull request activity object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pull request activity object")
 	}
 
 	_, err = db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update pull request activity")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update pull request activity")
 	}
 
 	v.Updated = dbv.Updated
@@ -184,7 +184,7 @@ func (s *PullReqReviewerStore) Delete(ctx context.Context, prID, reviewerID int6
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, prID, reviewerID); err != nil {
-		return database.ProcessSQLErrorf(err, "delete reviewer query failed")
+		return database.ProcessSQLErrorf(ctx, err, "delete reviewer query failed")
 	}
 	return nil
 }
@@ -208,7 +208,7 @@ func (s *PullReqReviewerStore) List(ctx context.Context, prID int64) ([]*types.P
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing pull request reviewer list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing pull request reviewer list query")
 	}
 
 	result, err := s.mapSlicePullReqReviewer(ctx, dst)

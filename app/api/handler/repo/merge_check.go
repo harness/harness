@@ -29,7 +29,7 @@ func HandleMergeCheck(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -37,7 +37,7 @@ func HandleMergeCheck(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		output, err := repoCtrl.MergeCheck(ctx, session, repoRef, path)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

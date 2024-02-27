@@ -96,7 +96,7 @@ func (s *MembershipStore) Find(ctx context.Context, key types.MembershipKey) (*t
 
 	dst := &membership{}
 	if err := db.GetContext(ctx, dst, sqlQuery, key.SpaceID, key.PrincipalID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find membership")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find membership")
 	}
 
 	result := mapToMembership(dst)
@@ -141,11 +141,11 @@ func (s *MembershipStore) Create(ctx context.Context, membership *types.Membersh
 
 	query, arg, err := db.BindNamed(sqlQuery, mapToInternalMembership(membership))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind membership object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind membership object")
 	}
 
 	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to insert membership")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to insert membership")
 	}
 
 	return nil
@@ -168,12 +168,12 @@ func (s *MembershipStore) Update(ctx context.Context, membership *types.Membersh
 
 	query, arg, err := db.BindNamed(sqlQuery, dbMembership)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind membership object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind membership object")
 	}
 
 	_, err = db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update membership role")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update membership role")
 	}
 
 	membership.Updated = dbMembership.Updated
@@ -191,7 +191,7 @@ func (s *MembershipStore) Delete(ctx context.Context, key types.MembershipKey) e
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, key.SpaceID, key.PrincipalID); err != nil {
-		return database.ProcessSQLErrorf(err, "delete membership query failed")
+		return database.ProcessSQLErrorf(ctx, err, "delete membership query failed")
 	}
 	return nil
 }
@@ -219,7 +219,7 @@ func (s *MembershipStore) CountUsers(ctx context.Context,
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing membership users count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing membership users count query")
 	}
 
 	return count, nil
@@ -263,7 +263,7 @@ func (s *MembershipStore) ListUsers(ctx context.Context,
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing membership users list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing membership users list query")
 	}
 
 	result, err := s.mapToMembershipUsers(ctx, dst)
@@ -308,7 +308,7 @@ func (s *MembershipStore) CountSpaces(ctx context.Context,
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing membership spaces count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing membership spaces count query")
 	}
 
 	return count, nil
@@ -352,7 +352,7 @@ func (s *MembershipStore) ListSpaces(ctx context.Context,
 
 	dst := make([]*membershipSpace, 0)
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	result, err := s.mapToMembershipSpaces(ctx, dst)

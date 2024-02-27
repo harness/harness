@@ -19,24 +19,30 @@ import (
 
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/resources"
+
+	"github.com/rs/zerolog/log"
 )
 
-func HandleGitIgnore() http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
+func HandleGitIgnores() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		files, err := resources.GitIgnores()
 		if err != nil {
-			render.ErrorMessagef(w, http.StatusInternalServerError, "error loading gitignore files: %v", err)
+			log.Ctx(ctx).Err(err).Msgf("Failed to load gitignore files")
+			render.InternalError(ctx, w)
 			return
 		}
 		render.JSON(w, http.StatusOK, files)
 	}
 }
 
-func HandleLicence() http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
+func HandleLicences() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		response, err := resources.Licenses()
 		if err != nil {
-			render.ErrorMessagef(w, http.StatusInternalServerError, "error loading licence file: %v", err)
+			log.Ctx(ctx).Err(err).Msgf("Failed to load license files")
+			render.InternalError(ctx, w)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")

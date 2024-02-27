@@ -31,18 +31,18 @@ func HandleGetCommit(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		commitSHA, err := request.GetCommitSHAFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		commit, err := repoCtrl.GetCommit(ctx, session, repoRef, commitSHA)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

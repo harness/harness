@@ -33,9 +33,10 @@ const (
 // as part of the GIT api (e.g. "space1/repo.git") before executing the provided http.HandlerFunc.
 func GitPathBefore(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		_, err := pathTerminatedWithMarker(r, "", ".git", false)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -48,10 +49,11 @@ func GitPathBefore(next http.Handler) http.Handler {
 // be used during encoding (prefix is ignored during encoding).
 func TerminatedPathBefore(prefixes []string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		for _, p := range prefixes {
 			changed, err := pathTerminatedWithMarker(r, p, "/+", false)
 			if err != nil {
-				render.TranslatedUserError(w, err)
+				render.TranslatedUserError(ctx, w, err)
 				return
 			}
 

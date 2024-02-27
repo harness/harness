@@ -106,7 +106,7 @@ func (s *CodeCommentView) list(ctx context.Context,
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &result, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing code comment list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing code comment list query")
 	}
 
 	return result, nil
@@ -138,7 +138,7 @@ func (s *CodeCommentView) UpdateAll(ctx context.Context, codeComments []*types.C
 	//nolint:sqlclosecheck
 	stmt, err := db.PrepareNamedContext(ctx, sqlQuery)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to prepare update statement for update code comments")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to prepare update statement for update code comments")
 	}
 
 	updatedAt := time.Now()
@@ -149,12 +149,17 @@ func (s *CodeCommentView) UpdateAll(ctx context.Context, codeComments []*types.C
 
 		result, err := stmt.ExecContext(ctx, codeComment)
 		if err != nil {
-			return database.ProcessSQLErrorf(err, "Failed to update code comment=%d", codeComment.ID)
+			return database.ProcessSQLErrorf(ctx, err, "Failed to update code comment=%d", codeComment.ID)
 		}
 
 		count, err := result.RowsAffected()
 		if err != nil {
-			return database.ProcessSQLErrorf(err, "Failed to get number of updated rows for code comment=%d", codeComment.ID)
+			return database.ProcessSQLErrorf(
+				ctx,
+				err,
+				"Failed to get number of updated rows for code comment=%d",
+				codeComment.ID,
+			)
 		}
 
 		if count == 0 {

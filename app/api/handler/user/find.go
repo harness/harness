@@ -32,7 +32,7 @@ func HandleFind(userCtrl *user.Controller) http.HandlerFunc {
 
 		user, err := userCtrl.Find(ctx, session, userUID)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

@@ -86,7 +86,7 @@ func (s *PrincipalStore) Find(ctx context.Context, id int64) (*types.Principal, 
 
 	dst := new(principal)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by id query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by id query failed")
 	}
 
 	return s.mapDBPrincipal(dst), nil
@@ -109,7 +109,7 @@ func (s *PrincipalStore) FindByUID(ctx context.Context, uid string) (*types.Prin
 
 	dst := new(principal)
 	if err = db.GetContext(ctx, dst, sqlQuery, uidUnique); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by uid query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by uid query failed")
 	}
 
 	return s.mapDBPrincipal(dst), nil
@@ -137,12 +137,12 @@ func (s *PrincipalStore) FindManyByUID(ctx context.Context, uids []string) ([]*t
 
 	sqlQuery, params, err := stmt.ToSql()
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "failed to generate find many principal query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to generate find many principal query")
 	}
 
 	dst := []*principal{}
 	if err := db.SelectContext(ctx, &dst, sqlQuery, params...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "find many by uid for principals query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "find many by uid for principals query failed")
 	}
 
 	return s.mapDBPrincipals(dst), nil
@@ -157,7 +157,7 @@ func (s *PrincipalStore) FindByEmail(ctx context.Context, email string) (*types.
 
 	dst := new(principal)
 	if err := db.GetContext(ctx, dst, sqlQuery, strings.ToLower(email)); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by email query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by email query failed")
 	}
 
 	return s.mapDBPrincipal(dst), nil
@@ -200,7 +200,7 @@ func (s *PrincipalStore) List(ctx context.Context,
 
 	dst := []*principal{}
 	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Search by display_name and email query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Search by display_name and email query failed")
 	}
 
 	return s.mapDBPrincipals(dst), nil

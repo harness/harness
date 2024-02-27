@@ -52,7 +52,7 @@ func (s *PrincipalStore) FindUser(ctx context.Context, id int64) (*types.User, e
 
 	dst := new(user)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by id query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by id query failed")
 	}
 
 	return s.mapDBUser(dst), nil
@@ -75,7 +75,7 @@ func (s *PrincipalStore) FindUserByUID(ctx context.Context, uid string) (*types.
 
 	dst := new(user)
 	if err = db.GetContext(ctx, dst, sqlQuery, uidUnique); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by uid query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by uid query failed")
 	}
 
 	return s.mapDBUser(dst), nil
@@ -90,7 +90,7 @@ func (s *PrincipalStore) FindUserByEmail(ctx context.Context, email string) (*ty
 
 	dst := new(user)
 	if err := db.GetContext(ctx, dst, sqlQuery, strings.ToLower(email)); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by email query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by email query failed")
 	}
 
 	return s.mapDBUser(dst), nil
@@ -134,11 +134,11 @@ func (s *PrincipalStore) CreateUser(ctx context.Context, user *types.User) error
 
 	query, arg, err := db.BindNamed(sqlQuery, dbUser)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind user object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind user object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&user.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -167,11 +167,11 @@ func (s *PrincipalStore) UpdateUser(ctx context.Context, user *types.User) error
 
 	query, arg, err := db.BindNamed(sqlQuery, dbUser)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind user object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind user object")
 	}
 
 	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return database.ProcessSQLErrorf(err, "Update query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Update query failed")
 	}
 
 	return err
@@ -186,7 +186,7 @@ func (s *PrincipalStore) DeleteUser(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return database.ProcessSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "The delete query failed")
 	}
 
 	return nil
@@ -233,7 +233,7 @@ func (s *PrincipalStore) ListUsers(ctx context.Context, opts *types.UserFilter) 
 	}
 
 	if err = db.SelectContext(ctx, &dst, sql); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return s.mapDBUsers(dst), nil
@@ -260,7 +260,7 @@ func (s *PrincipalStore) CountUsers(ctx context.Context, opts *types.UserFilter)
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 
 	return count, nil

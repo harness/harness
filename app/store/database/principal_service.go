@@ -49,7 +49,7 @@ func (s *PrincipalStore) FindService(ctx context.Context, id int64) (*types.Serv
 
 	dst := new(service)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by id query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by id query failed")
 	}
 
 	return s.mapDBService(dst), nil
@@ -72,7 +72,7 @@ func (s *PrincipalStore) FindServiceByUID(ctx context.Context, uid string) (*typ
 
 	dst := new(service)
 	if err = db.GetContext(ctx, dst, sqlQuery, uidUnique); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select by uid query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select by uid query failed")
 	}
 
 	return s.mapDBService(dst), nil
@@ -114,11 +114,11 @@ func (s *PrincipalStore) CreateService(ctx context.Context, svc *types.Service) 
 
 	query, arg, err := db.BindNamed(sqlQuery, dbSVC)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind service object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind service object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&svc.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -145,11 +145,11 @@ func (s *PrincipalStore) UpdateService(ctx context.Context, svc *types.Service) 
 
 	query, arg, err := db.BindNamed(sqlQuery, dbSVC)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind service object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind service object")
 	}
 
 	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return database.ProcessSQLErrorf(err, "Update query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Update query failed")
 	}
 
 	return err
@@ -165,7 +165,7 @@ func (s *PrincipalStore) DeleteService(ctx context.Context, id int64) error {
 
 	// delete the service
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return database.ProcessSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "The delete query failed")
 	}
 
 	return nil
@@ -183,7 +183,7 @@ func (s *PrincipalStore) ListServices(ctx context.Context) ([]*types.Service, er
 
 	err := db.SelectContext(ctx, &dst, sqlQuery)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing default list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing default list query")
 	}
 
 	return s.mapDBServices(dst), nil
@@ -201,7 +201,7 @@ func (s *PrincipalStore) CountServices(ctx context.Context) (int64, error) {
 	var count int64
 	err := db.QueryRowContext(ctx, sqlQuery).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 
 	return count, nil

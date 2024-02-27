@@ -140,7 +140,7 @@ func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, erro
 
 	dst := &pullReq{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find pull request")
 	}
 
 	return s.mapPullReq(ctx, dst), nil
@@ -163,7 +163,7 @@ func (s *PullReqStore) findByNumberInternal(
 
 	dst := &pullReq{}
 	if err := db.GetContext(ctx, dst, sqlQuery, repoID, number); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request by number")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find pull request by number")
 	}
 
 	return s.mapPullReq(ctx, dst), nil
@@ -251,11 +251,11 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReq(pr))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pullReq object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pullReq object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&pr.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -299,17 +299,17 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbPR)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pull request object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pull request object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update pull request")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update pull request")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -383,7 +383,7 @@ func (s *PullReqStore) UpdateMergeCheckStatus(
 	_, err := db.ExecContext(ctx, query, now, status, targetRepo, targetBranch,
 		enum.PullReqStateClosed, enum.PullReqStateMerged)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update mergeable status check %s in pull requests", status)
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update mergeable status check %s in pull requests", status)
 	}
 
 	return nil
@@ -396,7 +396,7 @@ func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, pullReqDelete, id); err != nil {
-		return database.ProcessSQLErrorf(err, "the delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "the delete query failed")
 	}
 
 	return nil
@@ -448,7 +448,7 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 
 	return count, nil
@@ -509,7 +509,7 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	result, err := s.mapSlicePullReq(ctx, dst)

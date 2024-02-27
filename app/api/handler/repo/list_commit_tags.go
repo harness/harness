@@ -31,13 +31,13 @@ func HandleListCommitTags(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		includeCommit, err := request.GetIncludeCommitFromQueryOrDefault(r, false)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -45,7 +45,7 @@ func HandleListCommitTags(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		tags, err := repoCtrl.ListCommitTags(ctx, session, repoRef, includeCommit, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

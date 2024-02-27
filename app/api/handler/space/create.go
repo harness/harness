@@ -32,13 +32,13 @@ func HandleCreate(spaceCtrl *space.Controller) http.HandlerFunc {
 		in := new(space.CreateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid request body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return
 		}
 
 		space, err := spaceCtrl.Create(ctx, session, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

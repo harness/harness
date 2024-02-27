@@ -75,11 +75,11 @@ func (s *pluginStore) Create(ctx context.Context, plugin *types.Plugin) error {
 
 	query, arg, err := db.BindNamed(pluginInsertStmt, plugin)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind plugin object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind plugin object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&plugin.Identifier); err != nil {
-		return database.ProcessSQLErrorf(err, "plugin query failed")
+		return database.ProcessSQLErrorf(ctx, err, "plugin query failed")
 	}
 
 	return nil
@@ -96,7 +96,7 @@ func (s *pluginStore) Find(ctx context.Context, name, version string) (*types.Pl
 
 	dst := new(types.Plugin)
 	if err := db.GetContext(ctx, dst, pluginFindStmt, name, version); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find pipeline")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find pipeline")
 	}
 
 	return dst, nil
@@ -127,7 +127,7 @@ func (s *pluginStore) List(
 
 	dst := []*types.Plugin{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -150,7 +150,7 @@ func (s *pluginStore) ListAll(
 
 	dst := []*types.Plugin{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -176,7 +176,7 @@ func (s *pluginStore) Count(ctx context.Context, filter types.ListQueryFilter) (
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 	return count, nil
 }
@@ -196,12 +196,12 @@ func (s *pluginStore) Update(ctx context.Context, p *types.Plugin) error {
 
 	query, arg, err := db.BindNamed(pluginUpdateStmt, p)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind plugin object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind plugin object")
 	}
 
 	_, err = db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update plugin")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update plugin")
 	}
 
 	return nil

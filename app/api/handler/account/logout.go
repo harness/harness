@@ -37,7 +37,7 @@ func HandleLogout(userCtrl *user.Controller, cookieName string) http.HandlerFunc
 		deleteTokenCookieIfPresent(r, w, cookieName)
 
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

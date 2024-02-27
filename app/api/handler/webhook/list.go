@@ -31,7 +31,7 @@ func HandleList(webhookCtrl *webhook.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -45,7 +45,7 @@ func HandleList(webhookCtrl *webhook.Controller) http.HandlerFunc {
 
 		webhooks, totalCount, err := webhookCtrl.List(ctx, session, repoRef, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

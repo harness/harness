@@ -29,13 +29,13 @@ func HandleListServiceAccounts(spaceCtrl *space.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		sas, err := spaceCtrl.ListServiceAccounts(ctx, session, spaceRef)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

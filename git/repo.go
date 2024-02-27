@@ -399,7 +399,7 @@ func (s *Service) createRepositoryInternal(
 	log := log.Ctx(ctx)
 	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUID)
 	if _, err := os.Stat(repoPath); !os.IsNotExist(err) {
-		return errors.Conflict("repository exists already: %v", repoPath)
+		return errors.Conflict("repository already exists at path %q", repoPath)
 	}
 
 	// create repository in repos folder

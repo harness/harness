@@ -27,10 +27,11 @@ import (
 )
 
 func TestWriteErrorf(t *testing.T) {
+	ctx := context.TODO()
 	w := httptest.NewRecorder()
 
 	e := usererror.New(500, "abc")
-	UserError(w, e)
+	UserError(ctx, w, e)
 
 	if got, want := w.Code, 500; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -46,9 +47,10 @@ func TestWriteErrorf(t *testing.T) {
 }
 
 func TestWriteErrorCode(t *testing.T) {
+	ctx := context.TODO()
 	w := httptest.NewRecorder()
 
-	ErrorMessagef(w, 418, "pc load letter %d", 1)
+	UserError(ctx, w, usererror.Newf(418, "pc load letter %d", 1))
 
 	if got, want := w.Code, 418; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -64,9 +66,10 @@ func TestWriteErrorCode(t *testing.T) {
 }
 
 func TestWriteNotFound(t *testing.T) {
+	ctx := context.TODO()
 	w := httptest.NewRecorder()
 
-	NotFound(w)
+	NotFound(ctx, w)
 
 	if got, want := w.Code, 404; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -82,9 +85,10 @@ func TestWriteNotFound(t *testing.T) {
 }
 
 func TestWriteUnauthorized(t *testing.T) {
+	ctx := context.TODO()
 	w := httptest.NewRecorder()
 
-	Unauthorized(w)
+	Unauthorized(ctx, w)
 
 	if got, want := w.Code, 401; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -100,9 +104,10 @@ func TestWriteUnauthorized(t *testing.T) {
 }
 
 func TestWriteForbidden(t *testing.T) {
+	ctx := context.TODO()
 	w := httptest.NewRecorder()
 
-	Forbidden(w)
+	Forbidden(ctx, w)
 
 	if got, want := w.Code, 403; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
@@ -118,9 +123,10 @@ func TestWriteForbidden(t *testing.T) {
 }
 
 func TestWriteBadRequest(t *testing.T) {
+	ctx := context.TODO()
 	w := httptest.NewRecorder()
 
-	BadRequest(w)
+	BadRequest(ctx, w)
 
 	if got, want := w.Code, 400; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)

@@ -30,13 +30,13 @@ func HandleCheckList(checkCtrl *check.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		commitSHA, err := request.GetCommitSHAFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -44,7 +44,7 @@ func HandleCheckList(checkCtrl *check.Controller) http.HandlerFunc {
 
 		checks, count, err := checkCtrl.ListChecks(ctx, session, repoRef, commitSHA, opts)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

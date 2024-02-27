@@ -30,7 +30,7 @@ func HandleRuleList(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -38,7 +38,7 @@ func HandleRuleList(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		rules, rulesCount, err := repoCtrl.RuleList(ctx, session, repoRef, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
