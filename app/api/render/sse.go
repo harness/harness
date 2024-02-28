@@ -37,8 +37,8 @@ func StreamSSE(
 ) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		UserError(w, usererror.ErrResponseNotFlushable)
-		log.Ctx(ctx).Warn().Err(usererror.ErrResponseNotFlushable).Send()
+		UserError(ctx, w, usererror.ErrResponseNotFlushable)
+		log.Ctx(ctx).Warn().Err(usererror.ErrResponseNotFlushable).Msg("failed to build SSE stream")
 		return
 	}
 

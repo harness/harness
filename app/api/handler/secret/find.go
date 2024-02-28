@@ -30,18 +30,18 @@ func HandleFind(secretCtrl *secret.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		secretRef, err := request.GetSecretRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		spaceRef, secretIdentifier, err := paths.DisectLeaf(secretRef)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		secret, err := secretCtrl.Find(ctx, session, spaceRef, secretIdentifier)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

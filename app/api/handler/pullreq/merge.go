@@ -33,26 +33,26 @@ func HandleMerge(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		in := new(pullreq.MergeInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil && !errors.Is(err, io.EOF) { // allow empty body
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		pullreqNumber, err := request.GetPullReqNumberFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		pr, violation, err := pullreqCtrl.Merge(ctx, session, repoRef, pullreqNumber, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		if violation != nil {

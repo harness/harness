@@ -11,6 +11,9 @@ existingAccount: Existing Account
 public: Public
 private: Private
 cancel: Cancel
+cancelImport: Cancel Import
+cancelledImport: Cancelled Import
+failedToCancelImport: failed to cancel import
 name: Name
 value: Value
 help: help
@@ -167,6 +170,7 @@ deleteBranch: Delete Branches
 deleteTag: Delete Tag
 deleteTagConfirm: Are you sure you want to delete tag <strong>{{name}}</strong>? You can't undo this action.
 deleteBranchConfirm: Are you sure you want to delete branch <strong>{{name}}</strong>? You can't undo this action.
+cancelImportConfirm: Are you sure you want to abort import for <strong>{{name}}</strong>? You can't undo this action.
 browse: Browse
 browseFiles: Browse Files
 compare: Compare
@@ -724,6 +728,9 @@ viewFile: View File
 searchResult: 'Search Result {count}'
 aiSearch: AIDA SEARCH
 enableAISearch: Enable AI Search
+enableAIDAMessage: In order to use Harness AIDA Search, you will need to enable it in the Project Settings
+reviewProjectSettings: Review Project Settings
+turnOnSemanticSearch: Turn on semantic search
 AIDA: AIDA
 keywordSearch:
   sampleQueries:
@@ -735,7 +742,7 @@ keywordSearch:
 keywordSearchPlaceholder: Search for code or files...
 codeSearch: Code Search
 codeSearchModal: Begin search by describing what you are looking for
-searchHeader: 'Here are some example to get you start:'
+searchHeader: 'Here are a few examples to help you get started:'
 startSearching: Begin search by describing what you are looking for.
 poweredByAI: Unlock the power of AI with Semantic Code search. Try phrases like "Locate the code for authentication".
 semanticSearch:
@@ -909,6 +916,8 @@ branchProtection:
   reqReviewFromCodeOwnerTitle: Require review from code owners
   reqReviewFromCodeOwnerText: Require approval on pull requests from one reviewer for each Code Owner rule
   reqNewChangesTitle: Require approval of new changes
+  reqResOfChanges: Require resolution of change requests
+  reqResOfChangesText: All change requests on a pull request must be resolved before it can be merged
   reqNewChangesText: Require re-approval when there are new changes in the pull request
   reqCommentResolutionTitle: Require comment resolution
   reqCommentResolutionText: All comments on a pull request must be resolved before it can be merged

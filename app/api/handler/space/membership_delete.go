@@ -30,19 +30,19 @@ func HandleMembershipDelete(spaceCtrl *space.Controller) http.HandlerFunc {
 
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		userUID, err := request.GetUserUIDFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		err = spaceCtrl.MembershipDelete(ctx, session, spaceRef, userUID)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

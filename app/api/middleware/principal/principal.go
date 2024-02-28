@@ -38,7 +38,7 @@ func RestrictTo(pType enum.PrincipalType) func(http.Handler) http.Handler {
 			if !ok || p.Type != pType {
 				log.Ctx(ctx).Debug().Msgf("Principal of type '%s' required.", pType)
 
-				render.Forbidden(w)
+				render.Forbidden(ctx, w)
 				return
 			}
 
@@ -61,7 +61,7 @@ func RestrictToAdmin() func(http.Handler) http.Handler {
 			if !ok || !p.Admin {
 				log.Ctx(ctx).Debug().Msg("No principal found or the principal is no admin")
 
-				render.Forbidden(w)
+				render.Forbidden(ctx, w)
 				return
 			}
 

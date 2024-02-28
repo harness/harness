@@ -104,7 +104,7 @@ func (s *RuleStore) Find(ctx context.Context, id int64) (*types.Rule, error) {
 
 	dst := &rule{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find rule")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find rule")
 	}
 
 	r := s.mapToRule(ctx, dst)
@@ -133,7 +133,7 @@ func (s *RuleStore) FindByIdentifier(
 
 	dst := &rule{}
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing find rule by identifier query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing find rule by identifier query")
 	}
 
 	r := s.mapToRule(ctx, dst)
@@ -178,11 +178,11 @@ func (s *RuleStore) Create(ctx context.Context, rule *types.Rule) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, &dbRule)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind rule object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind rule object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&dbRule.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert rule query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert rule query failed")
 	}
 
 	r := s.mapToRule(ctx, &dbRule)
@@ -214,17 +214,17 @@ func (s *RuleStore) Update(ctx context.Context, rule *types.Rule) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbRule)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind rule object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind rule object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update rule")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update rule")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rule rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rule rows")
 	}
 
 	if count == 0 {
@@ -246,7 +246,7 @@ func (s *RuleStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return database.ProcessSQLErrorf(err, "the delete rule query failed")
+		return database.ProcessSQLErrorf(ctx, err, "the delete rule query failed")
 	}
 
 	return nil
@@ -273,7 +273,7 @@ func (s *RuleStore) DeleteByIdentifier(ctx context.Context, spaceID, repoID *int
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err = db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(err, "Failed executing delete rule by identifier query")
+		return database.ProcessSQLErrorf(ctx, err, "Failed executing delete rule by identifier query")
 	}
 
 	return nil
@@ -299,7 +299,7 @@ func (s *RuleStore) Count(ctx context.Context, spaceID, repoID *int64, filter *t
 
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count rules query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count rules query")
 	}
 
 	return count, nil
@@ -341,7 +341,7 @@ func (s *RuleStore) List(ctx context.Context, spaceID, repoID *int64, filter *ty
 
 	dst := make([]rule, 0)
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return s.mapToRules(ctx, dst), nil
@@ -421,7 +421,7 @@ func (s *RuleStore) ListAllRepoRules(ctx context.Context, repoID int64) ([]types
 
 	result := make([]ruleInfo, 0)
 	if err := db.SelectContext(ctx, &result, query, repoID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return s.mapToRuleInfos(result), nil

@@ -99,7 +99,7 @@ func (s *WebhookExecutionStore) Find(ctx context.Context, id int64) (*types.Webh
 
 	dst := &webhookExecution{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select query failed")
 	}
 
 	return mapToWebhookExecution(dst), nil
@@ -148,11 +148,11 @@ func (s *WebhookExecutionStore) Create(ctx context.Context, execution *types.Web
 
 	query, arg, err := db.BindNamed(sqlQuery, mapToInternalWebhookExecution(execution))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind webhook execution object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind webhook execution object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&execution.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -173,12 +173,12 @@ func (s *WebhookExecutionStore) DeleteOld(ctx context.Context, olderThan time.Ti
 
 	result, err := db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to execute delete executions query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to execute delete executions query")
 	}
 
 	n, err := result.RowsAffected()
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to get number of deleted executions")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of deleted executions")
 	}
 
 	return n, nil
@@ -207,7 +207,7 @@ func (s *WebhookExecutionStore) ListForWebhook(ctx context.Context, webhookID in
 
 	dst := []*webhookExecution{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select query failed")
 	}
 
 	return mapToWebhookExecutions(dst), nil
@@ -223,7 +223,7 @@ func (s *WebhookExecutionStore) ListForTrigger(ctx context.Context,
 
 	dst := []*webhookExecution{}
 	if err := db.SelectContext(ctx, &dst, sqlQuery, triggerID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select query failed")
 	}
 
 	return mapToWebhookExecutions(dst), nil

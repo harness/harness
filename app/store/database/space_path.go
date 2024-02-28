@@ -106,11 +106,11 @@ func (s *SpacePathStore) InsertSegment(ctx context.Context, segment *types.Space
 
 	query, arg, err := db.BindNamed(sqlQuery, s.mapToInternalSpacePathSegment(segment))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind path segment object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind path segment object")
 	}
 
 	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -129,7 +129,7 @@ func (s *SpacePathStore) FindPrimaryBySpaceID(ctx context.Context, spaceID int64
 	for nextSpaceID.Valid {
 		err := db.GetContext(ctx, dst, sqlQuery, nextSpaceID.Int64)
 		if err != nil {
-			return nil, database.ProcessSQLErrorf(err, "Failed to find primary segment for %d", nextSpaceID.Int64)
+			return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find primary segment for %d", nextSpaceID.Int64)
 		}
 
 		path = paths.Concatinate(dst.Identifier, path)
@@ -167,7 +167,13 @@ func (s *SpacePathStore) FindByPath(ctx context.Context, path string) (*types.Sp
 			err = db.GetContext(ctx, segment, sqlQueryParent, uniqueSegmentIdentifier, parentID)
 		}
 		if err != nil {
-			return nil, database.ProcessSQLErrorf(err, "Failed to find segment for '%s' in '%s'", uniqueSegmentIdentifier, path)
+			return nil, database.ProcessSQLErrorf(
+				ctx,
+				err,
+				"Failed to find segment for '%s' in '%s'",
+				uniqueSegmentIdentifier,
+				path,
+			)
 		}
 
 		originalPath = paths.Concatinate(originalPath, segment.Identifier)
@@ -191,7 +197,7 @@ func (s *SpacePathStore) DeletePrimarySegment(ctx context.Context, spaceID int64
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, spaceID); err != nil {
-		return database.ProcessSQLErrorf(err, "the delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "the delete query failed")
 	}
 
 	return nil

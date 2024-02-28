@@ -23,3 +23,25 @@ export interface DiffFileEntry extends DiffFile {
   contentId: string
   fileViews?: Map<string, string>
 }
+
+export enum AidaClient {
+  CODE_SEMANTIC_SEARCH = 'CODE_SEMANTIC_SEARCH'
+}
+export interface TelemeteryProps {
+  aidaClient: AidaClient
+  metadata?: Record<string, string | boolean | number>
+}
+
+export interface UsefulOrNotProps {
+  telemetry: TelemeteryProps
+  allowFeedback?: boolean
+  allowCreateTicket?: boolean
+  onVote?: (vote: Vote) => void
+  className?: string
+}
+
+enum Vote {
+  None,
+  Up,
+  Down
+}

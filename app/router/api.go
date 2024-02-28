@@ -635,8 +635,8 @@ func setupSystem(r chi.Router, config *types.Config, sysCtrl *system.Controller)
 
 func setupResources(r chi.Router) {
 	r.Route("/resources", func(r chi.Router) {
-		r.Get("/gitignore", resource.HandleGitIgnore())
-		r.Get("/license", resource.HandleLicence())
+		r.Get("/gitignore", resource.HandleGitIgnores())
+		r.Get("/license", resource.HandleLicences())
 	})
 }
 

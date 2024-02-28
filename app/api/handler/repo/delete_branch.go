@@ -30,25 +30,25 @@ func HandleDeleteBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		branchName, err := request.GetRemainderFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		bypassRules, err := request.ParseBypassRulesFromQuery(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		violations, err := repoCtrl.DeleteBranch(ctx, session, repoRef, branchName, bypassRules)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 		}
 		if violations != nil {
 			render.Violations(w, violations)

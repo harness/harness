@@ -138,7 +138,7 @@ func (s *PullReqActivityStore) Find(ctx context.Context, id int64) (*types.PullR
 
 	dst := &pullReqActivity{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request activity")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find pull request activity")
 	}
 
 	return s.mapPullReqActivity(ctx, dst), nil
@@ -209,11 +209,11 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReqActivity(act))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pull request activity object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pull request activity object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&act.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to insert pull request activity")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to insert pull request activity")
 	}
 
 	return nil
@@ -284,17 +284,17 @@ func (s *PullReqActivityStore) Update(ctx context.Context, act *types.PullReqAct
 
 	query, arg, err := db.BindNamed(sqlQuery, dbAct)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pull request activity object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pull request activity object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update pull request activity")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update pull request activity")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -374,7 +374,7 @@ func (s *PullReqActivityStore) Count(ctx context.Context,
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 
 	return count, nil
@@ -426,7 +426,7 @@ func (s *PullReqActivityStore) List(ctx context.Context,
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing pull request activity list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing pull request activity list query")
 	}
 
 	result, err := s.mapSlicePullReqActivity(ctx, dst)
@@ -457,7 +457,7 @@ func (s *PullReqActivityStore) CountUnresolved(ctx context.Context, prID int64) 
 	var count int
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count unresolved query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count unresolved query")
 	}
 
 	return count, nil

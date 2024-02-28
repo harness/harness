@@ -103,7 +103,7 @@ func (s *WebhookStore) Find(ctx context.Context, id int64) (*types.Webhook, erro
 
 	dst := &webhook{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select query failed")
 	}
 
 	res, err := mapToWebhook(dst)
@@ -144,7 +144,7 @@ func (s *WebhookStore) FindByIdentifier(
 
 	dst := &webhook{}
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select query failed")
 	}
 
 	res, err := mapToWebhook(dst)
@@ -201,11 +201,11 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbHook)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind webhook object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind webhook object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&hook.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -243,17 +243,17 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbHook)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind webhook object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind webhook object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "failed to update webhook")
+		return database.ProcessSQLErrorf(ctx, err, "failed to update webhook")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -301,7 +301,7 @@ func (s *WebhookStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return database.ProcessSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "The delete query failed")
 	}
 
 	return nil
@@ -335,7 +335,7 @@ func (s *WebhookStore) DeleteByIdentifier(
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "The delete query failed")
 	}
 
 	return nil
@@ -371,7 +371,7 @@ func (s *WebhookStore) Count(ctx context.Context, parentType enum.WebhookParent,
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 
 	return count, nil
@@ -434,7 +434,7 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 
 	dst := []*webhook{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Select query failed")
 	}
 
 	res, err := mapToWebhooks(dst)

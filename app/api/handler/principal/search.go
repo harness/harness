@@ -29,7 +29,7 @@ func HandleList(principalCtrl principal.Controller) http.HandlerFunc {
 		principalFilter := request.ParsePrincipalFilter(r)
 		principalInfos, err := principalCtrl.List(ctx, principalFilter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

@@ -17,6 +17,7 @@
 import type React from 'react'
 import type { CODERoutes } from 'RouteDefinitions'
 import type { TypesUser } from 'services/code'
+import type { UsefulOrNotProps } from 'utils/types'
 import type { LangLocale } from './framework/strings/languageLoader'
 
 /**
@@ -57,7 +58,10 @@ export interface AppProps {
 
   /** 401 handler. Used in parent app to override 401 handling from child app */
   on401?: () => void
-
+  /** React Components which are passed down from the Parent that are needed by the child app */
+  customComponents: {
+    UsefulOrNot: (props: UsefulOrNotProps) => React.ReactElement
+  }
   /** React Hooks that Harness Platform passes down. Note: Pass only hooks that your app need */
   hooks: Partial<{
     useGetToken: Unknown
@@ -67,9 +71,11 @@ export interface AppProps {
     useLogsContent: Unknown
     useLogsStreaming: Unknown
     useFeatureFlags: Unknown
+    useGetSettingValue: Unknown
   }>
 
   currentUser: Required<TypesUser>
 
   currentUserProfileURL: string
+  defaultSettingsURL: string
 }

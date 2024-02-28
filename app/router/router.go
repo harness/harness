@@ -24,7 +24,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zerologr"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -85,8 +84,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 		// remove matched prefix to simplify API handlers (only if it's there)
 		if err = stripPrefix(GitMount, req); err != nil {
-			hlog.FromRequest(req).Err(err).Msgf("Failed striping of prefix for git request.")
-			render.InternalError(w)
+			log.Err(err).Msgf("Failed striping of prefix for git request.")
+			render.InternalError(ctx, w)
 			return
 		}
 
@@ -106,8 +105,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 		// remove matched prefix to simplify API handlers
 		if err = stripPrefix(APIMount, req); err != nil {
-			hlog.FromRequest(req).Err(err).Msgf("Failed striping of prefix for api request.")
-			render.InternalError(w)
+			log.Err(err).Msgf("Failed striping of prefix for api request.")
+			render.InternalError(ctx, w)
 			return
 		}
 

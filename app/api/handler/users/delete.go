@@ -30,13 +30,13 @@ func HandleDelete(userCtrl *user.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		userUID, err := request.GetUserUIDFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		err = userCtrl.Delete(ctx, session, userUID)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

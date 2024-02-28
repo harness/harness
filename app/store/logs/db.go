@@ -58,7 +58,7 @@ func (s *logStore) Find(ctx context.Context, stepID int64) (io.ReadCloser, error
 	var err error
 	dst := new(logs)
 	if err = db.GetContext(ctx, dst, findQueryStmt, stepID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find log")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find log")
 	}
 	return io.NopCloser(
 		bytes.NewBuffer(dst.Data),
@@ -88,11 +88,11 @@ func (s *logStore) Create(ctx context.Context, stepID int64, r io.Reader) error 
 
 	query, arg, err := db.BindNamed(logInsertStmt, params)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind log object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind log object")
 	}
 
 	if _, err := db.ExecContext(ctx, query, arg...); err != nil {
-		return database.ProcessSQLErrorf(err, "log query failed")
+		return database.ProcessSQLErrorf(ctx, err, "log query failed")
 	}
 
 	return nil
@@ -114,12 +114,12 @@ func (s *logStore) Update(ctx context.Context, stepID int64, r io.Reader) error 
 
 	query, arg, err := db.BindNamed(logUpdateStmt, &logs{ID: stepID, Data: data})
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind log object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind log object")
 	}
 
 	_, err = db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update log")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update log")
 	}
 
 	return nil
@@ -134,7 +134,7 @@ func (s *logStore) Delete(ctx context.Context, stepID int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, logDeleteStmt, stepID); err != nil {
-		return database.ProcessSQLErrorf(err, "Could not delete log")
+		return database.ProcessSQLErrorf(ctx, err, "Could not delete log")
 	}
 
 	return nil

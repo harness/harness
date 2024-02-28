@@ -17,13 +17,16 @@
 import React, { useState, useContext, useEffect, useMemo } from 'react'
 import { matchPath } from 'react-router-dom'
 import { useAtom } from 'jotai'
-import { noop } from 'lodash-es'
+import { noop, merge } from 'lodash-es'
 import { useGet } from 'restful-react'
 import type { AppProps } from 'AppProps'
 import { routes } from 'RouteDefinitions'
 import type { TypesUser } from 'services/code'
 import { currentUserAtom } from 'atoms/currentUser'
 import { newCacheStrategy } from 'utils/CacheStrategy'
+import { useGetSettingValue } from 'hooks/useGetSettingValue'
+import { useFeatureFlags } from 'hooks/useFeatureFlag'
+import { defaultUsefulOrNot } from 'utils/componentMocks/UsefulOrNot'
 
 interface AppContextProps extends AppProps {
   setAppContext: (value: Partial<AppProps>) => void
@@ -45,8 +48,12 @@ const AppContext = React.createContext<AppContextProps>({
   routes,
   hooks: {},
   currentUser: defaultCurrentUser,
+  customComponents: {
+    UsefulOrNot: defaultUsefulOrNot
+  },
   currentUserProfileURL: '',
-  routingId: ''
+  routingId: '',
+  defaultSettingsURL: ''
 })
 
 export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(function AppContextProvider({
@@ -62,7 +69,9 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
     lazy: true
   })
   const [currentUser, setCurrentUser] = useAtom(currentUserAtom)
-  const [appStates, setAppStates] = useState<AppProps>(initialValue)
+  const [appStates, setAppStates] = useState<AppProps>(
+    merge({ hooks: { useFeatureFlags, useGetSettingValue } }, initialValue)
+  )
 
   useEffect(() => {
     // Fetch current user when conditions to fetch it matched and

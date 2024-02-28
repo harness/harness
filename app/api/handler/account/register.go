@@ -32,20 +32,20 @@ func HandleRegister(userCtrl *user.Controller, sysCtrl *system.Controller, cooki
 
 		includeCookie, err := request.GetIncludeCookieFromQueryOrDefault(r, false)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		in := new(user.RegisterInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid request body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return
 		}
 
 		tokenResponse, err := userCtrl.Register(ctx, sysCtrl, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

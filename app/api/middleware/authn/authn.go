@@ -58,7 +58,7 @@ func performAuthentication(
 				}
 
 				if required {
-					render.Unauthorized(w)
+					render.Unauthorized(ctx, w)
 					return
 				}
 
@@ -71,7 +71,7 @@ func performAuthentication(
 				// when err == nil session should never be nil!
 				log.Error().Msg("auth session is nil eventhough the authenticator didn't return any error!")
 
-				render.InternalError(w)
+				render.InternalError(ctx, w)
 				return
 			}
 

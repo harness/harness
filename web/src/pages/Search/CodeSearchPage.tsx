@@ -49,6 +49,8 @@ import KeywordSearchbar from 'components/KeywordSearchbar/KeywordSearchbar'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { SEARCH_MODE } from 'components/CodeSearch/CodeSearch'
 import CodeSearchBar from 'components/CodeSearchBar/CodeSearchBar'
+import { defaultUsefulOrNot } from 'utils/componentMocks/UsefulOrNot'
+import { AidaClient } from 'utils/types'
 import KeywordSearchFilters from './KeywordSearchFilters'
 import type { FileMatch, KeywordSearchResponse } from './CodeSearchPage.types'
 import css from './Search.module.scss'
@@ -104,7 +106,7 @@ const Search = () => {
 
           const repoPaths = selectedRepositories.map(option => String(option.value))
           let query = text.replace(/(?:repo|count):(?:[^\s]+|$)/g, '').trim()
-          query = `(${query})`
+          query = `( ${query} )`
 
           if (selectedLanguages.length) {
             if (selectedLanguages.length === 1) {
@@ -246,7 +248,7 @@ const Search = () => {
             ) : (
               <Text>
                 {semanticSearchResult.map((result, index) => (
-                  <SemanticSearchResult key={index} result={result} index={index} />
+                  <SemanticSearchResult key={index} result={result} index={index} query={searchTerm} />
                 ))}
               </Text>
             )}
@@ -500,8 +502,17 @@ interface SemanticCodeBlock {
   result: SemanticSearchResultType
 }
 
-export const SemanticSearchResult = ({ result, index }: { result: SemanticSearchResultType; index: number }) => {
-  const { routes } = useAppContext()
+export const SemanticSearchResult = ({
+  result,
+  index,
+  query
+}: {
+  result: SemanticSearchResultType
+  index: number
+  query: string
+}) => {
+  const { routes, customComponents } = useAppContext()
+  const AIDAFeedback = customComponents ? customComponents.UsefulOrNot : defaultUsefulOrNot
   const { gitRef, repoName, repoMetadata } = useGetRepositoryMetadata()
   const [isCollapsed, setIsCollapsed] = useToggle(false)
   const [showMoreMatchs, setShowMoreMatches] = useState(false)
@@ -542,6 +553,21 @@ export const SemanticSearchResult = ({ result, index }: { result: SemanticSearch
           showMoreLines={showMoreMatchs}
           setShowMoreMatches={setShowMoreMatches}
           showLines={showLines}
+        />
+        <AIDAFeedback
+          className={css.aidaFeedback}
+          allowCreateTicket={true}
+          allowFeedback={true}
+          telemetry={{
+            aidaClient: AidaClient.CODE_SEMANTIC_SEARCH,
+            metadata: {
+              query,
+              searchResponse: JSON.stringify(result)
+            }
+          }}
+          // onVote={() => {
+          //    hide
+          // }}
         />
       </div>
     </Container>

@@ -78,7 +78,7 @@ func (s *PullReqReviewStore) Find(ctx context.Context, id int64) (*types.PullReq
 
 	dst := &pullReqReview{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request activity")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find pull request activity")
 	}
 
 	return mapPullReqReview(dst), nil
@@ -107,11 +107,11 @@ func (s *PullReqReviewStore) Create(ctx context.Context, v *types.PullReqReview)
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReqReview(v))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pull request review object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pull request review object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&v.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to insert pull request review")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to insert pull request review")
 	}
 
 	return nil

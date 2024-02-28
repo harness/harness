@@ -29,18 +29,18 @@ func HandleDelete(connectorCtrl *connector.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		connectorRef, err := request.GetConnectorRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		spaceRef, connectorIdentifier, err := paths.DisectLeaf(connectorRef)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		err = connectorCtrl.Delete(ctx, session, spaceRef, connectorIdentifier)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

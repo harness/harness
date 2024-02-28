@@ -346,6 +346,7 @@ export const rulesFormInitialPayload = {
   minReviewers: '',
   requireCodeOwner: false,
   requireNewChanges: false,
+  reqResOfChanges: false,
   requireCommentResolution: false,
   requireStatusChecks: false,
   statusChecks: [] as string[],

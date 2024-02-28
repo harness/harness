@@ -486,6 +486,7 @@ export interface ProtectionDefApprovals {
   require_code_owners?: boolean
   require_latest_commit?: boolean
   require_minimum_count?: number
+  require_no_change_request?: boolean
 }
 
 export interface ProtectionDefBypass {

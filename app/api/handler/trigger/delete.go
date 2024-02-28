@@ -28,23 +28,23 @@ func HandleDelete(triggerCtrl *trigger.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		triggerIdentifier, err := request.GetTriggerIdentifierFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		err = triggerCtrl.Delete(ctx, session, repoRef, pipelineIdentifier, triggerIdentifier)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

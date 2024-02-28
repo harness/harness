@@ -37,7 +37,7 @@ func HandleList(userCtrl *user.Controller) http.HandlerFunc {
 
 		list, totalCount, err := userCtrl.List(ctx, session, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

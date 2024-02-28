@@ -80,7 +80,7 @@ func (s *JobStore) Find(ctx context.Context, uid string) (*job.Job, error) {
 
 	result := &job.Job{}
 	if err := db.GetContext(ctx, result, sqlQuery, uid); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find job by uid")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find job by uid")
 	}
 
 	return result, nil
@@ -101,12 +101,12 @@ func (s *JobStore) DeleteByGroupID(ctx context.Context, groupID string) (int64, 
 
 	result, err := db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to execute delete jobs by group id query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to execute delete jobs by group id query")
 	}
 
 	n, err := result.RowsAffected()
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to get number of deleted jobs in group")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of deleted jobs in group")
 	}
 
 	return n, nil
@@ -121,7 +121,7 @@ func (s *JobStore) ListByGroupID(ctx context.Context, groupID string) ([]*job.Jo
 
 	dst := make([]*job.Job, 0)
 	if err := db.SelectContext(ctx, &dst, sqlQuery, groupID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find job by group id")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find job by group id")
 	}
 
 	return dst, nil
@@ -159,11 +159,11 @@ func (s *JobStore) Create(ctx context.Context, job *job.Job) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, job)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind job object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind job object")
 	}
 
 	if _, err := db.ExecContext(ctx, query, arg...); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -223,11 +223,11 @@ func (s *JobStore) Upsert(ctx context.Context, job *job.Job) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, job)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind job object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind job object")
 	}
 
 	if _, err := db.ExecContext(ctx, query, arg...); err != nil {
-		return database.ProcessSQLErrorf(err, "Upsert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Upsert query failed")
 	}
 
 	return nil
@@ -256,17 +256,17 @@ func (s *JobStore) UpdateDefinition(ctx context.Context, job *job.Job) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, job)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind job object for update")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind job object for update")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update job definition")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update job definition")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -297,17 +297,17 @@ func (s *JobStore) UpdateExecution(ctx context.Context, job *job.Job) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, job)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind job object for update")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind job object for update")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update job execution")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update job execution")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -330,17 +330,17 @@ func (s *JobStore) UpdateProgress(ctx context.Context, job *job.Job) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, job)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind job object for update")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind job object for update")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update job progress")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update job progress")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -367,7 +367,7 @@ func (s *JobStore) CountRunning(ctx context.Context) (int, error) {
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed executing count running jobs query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed executing count running jobs query")
 	}
 
 	return int(count), nil
@@ -394,7 +394,7 @@ func (s *JobStore) ListReady(ctx context.Context, now time.Time, limit int) ([]*
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &result, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "failed to execute list scheduled jobs query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to execute list scheduled jobs query")
 	}
 
 	return result, nil
@@ -419,7 +419,7 @@ func (s *JobStore) ListDeadlineExceeded(ctx context.Context, now time.Time) ([]*
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &result, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "failed to execute list overdue jobs query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to execute list overdue jobs query")
 	}
 
 	return result, nil
@@ -449,7 +449,7 @@ func (s *JobStore) NextScheduledTime(ctx context.Context, now time.Time) (time.T
 		return time.Time{}, nil
 	}
 	if err != nil {
-		return time.Time{}, database.ProcessSQLErrorf(err, "failed to execute next scheduled time query")
+		return time.Time{}, database.ProcessSQLErrorf(ctx, err, "failed to execute next scheduled time query")
 	}
 
 	return time.UnixMilli(result), nil
@@ -473,12 +473,12 @@ func (s *JobStore) DeleteOld(ctx context.Context, olderThan time.Time) (int64, e
 
 	result, err := db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to execute delete done jobs query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to execute delete done jobs query")
 	}
 
 	n, err := result.RowsAffected()
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to get number of deleted jobs")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of deleted jobs")
 	}
 
 	return n, nil
@@ -498,7 +498,7 @@ func (s *JobStore) DeleteByUID(ctx context.Context, jobUID string) error {
 
 	_, err = db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "failed to execute delete job query")
+		return database.ProcessSQLErrorf(ctx, err, "failed to execute delete job query")
 	}
 	return nil
 }

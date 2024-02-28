@@ -32,23 +32,23 @@ func HandleUpdate(secretCtrl *secret.Controller) http.HandlerFunc {
 		in := new(secret.UpdateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		secretRef, err := request.GetSecretRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		spaceRef, secretIdentifier, err := paths.DisectLeaf(secretRef)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 		}
 
 		secret, err := secretCtrl.Update(ctx, session, spaceRef, secretIdentifier, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

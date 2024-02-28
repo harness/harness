@@ -31,13 +31,13 @@ func HandleDelete(saCrl *serviceaccount.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		saUID, err := request.GetServiceAccountUIDFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		err = saCrl.Delete(ctx, session, saUID)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

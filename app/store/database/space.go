@@ -95,7 +95,7 @@ func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 
 	dst := new(space)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find space")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find space")
 	}
 
 	return mapToSpace(ctx, s.spacePathStore, dst)
@@ -139,7 +139,7 @@ WHERE space_parent_id IS NULL;`
 
 	var rootID int64
 	if err := db.GetContext(ctx, &rootID, query, spaceID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "failed to get root space_id")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to get root space_id")
 	}
 
 	return s.Find(ctx, rootID)
@@ -176,11 +176,11 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 
 	query, args, err := db.BindNamed(sqlQuery, mapToInternalSpace(space))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind space object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind space object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, args...).Scan(&space.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -213,17 +213,17 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbSpace)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind space object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind space object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Update query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Update query failed")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -279,7 +279,7 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return database.ProcessSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "The delete query failed")
 	}
 
 	return nil
@@ -306,7 +306,7 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 
 	return count, nil
@@ -349,7 +349,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 
 	var dst []*space
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return s.mapToSpaces(ctx, dst)

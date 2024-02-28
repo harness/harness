@@ -32,24 +32,24 @@ func HandleUpdate(connectorCtrl *connector.Controller) http.HandlerFunc {
 		in := new(connector.UpdateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		connectorRef, err := request.GetConnectorRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		spaceRef, connectorIdentifier, err := paths.DisectLeaf(connectorRef)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		connector, err := connectorCtrl.Update(ctx, session, spaceRef, connectorIdentifier, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

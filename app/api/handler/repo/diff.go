@@ -34,7 +34,7 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -44,7 +44,7 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPost:
 			if err = json.NewDecoder(r.Body).Decode(&files); err != nil && !errors.Is(err, io.EOF) {
-				render.TranslatedUserError(w, err)
+				render.TranslatedUserError(ctx, w, err)
 				return
 			}
 		case http.MethodGet:
@@ -63,7 +63,7 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		_, includePatch := request.QueryParam(r, "include_patch")
 		stream, err := repoCtrl.Diff(ctx, session, repoRef, path, includePatch, files...)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -78,19 +78,19 @@ func HandleCommitDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		commitSHA, err := request.GetCommitSHAFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		err = repoCtrl.CommitDiff(ctx, session, repoRef, commitSHA, w)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 	}
@@ -103,7 +103,7 @@ func HandleDiffStats(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -111,7 +111,7 @@ func HandleDiffStats(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		output, err := repoCtrl.DiffStats(ctx, session, repoRef, path)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

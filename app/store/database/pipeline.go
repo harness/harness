@@ -73,7 +73,7 @@ func (s *pipelineStore) Find(ctx context.Context, id int64) (*types.Pipeline, er
 
 	dst := new(types.Pipeline)
 	if err := db.GetContext(ctx, dst, findQueryStmt, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find pipeline")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find pipeline")
 	}
 	return dst, nil
 }
@@ -90,7 +90,7 @@ func (s *pipelineStore) FindByIdentifier(
 
 	dst := new(types.Pipeline)
 	if err := db.GetContext(ctx, dst, findQueryStmt, repoID, identifier); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find pipeline")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find pipeline")
 	}
 	return dst, nil
 }
@@ -127,11 +127,11 @@ func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) er
 
 	query, arg, err := db.BindNamed(pipelineInsertStmt, pipeline)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pipeline object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pipeline object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&pipeline.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Pipeline query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Pipeline query failed")
 	}
 
 	return nil
@@ -161,17 +161,17 @@ func (s *pipelineStore) Update(ctx context.Context, p *types.Pipeline) error {
 
 	query, arg, err := db.BindNamed(pipelineUpdateStmt, pipeline)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pipeline object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pipeline object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update pipeline")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update pipeline")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -210,7 +210,7 @@ func (s *pipelineStore) List(
 
 	dst := []*types.Pipeline{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return dst, nil
@@ -284,7 +284,7 @@ func (s *pipelineStore) ListLatest(
 
 	dst := []*pipelineExecutionJoin{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return convert(dst), nil
@@ -341,7 +341,7 @@ func (s *pipelineStore) Count(ctx context.Context, repoID int64, filter types.Li
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 	return count, nil
 }
@@ -355,7 +355,7 @@ func (s *pipelineStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, pipelineDeleteStmt, id); err != nil {
-		return database.ProcessSQLErrorf(err, "Could not delete pipeline")
+		return database.ProcessSQLErrorf(ctx, err, "Could not delete pipeline")
 	}
 
 	return nil
@@ -370,7 +370,7 @@ func (s *pipelineStore) DeleteByIdentifier(ctx context.Context, repoID int64, id
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, pipelineDeleteStmt, repoID, identifier); err != nil {
-		return database.ProcessSQLErrorf(err, "Could not delete pipeline")
+		return database.ProcessSQLErrorf(ctx, err, "Could not delete pipeline")
 	}
 
 	return nil

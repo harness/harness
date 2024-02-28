@@ -32,7 +32,7 @@ func HandleMembershipSpaces(userCtrl *user.Controller) http.HandlerFunc {
 
 		membershipSpaces, membershipSpaceCount, err := userCtrl.MembershipSpaces(ctx, session, userUID, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

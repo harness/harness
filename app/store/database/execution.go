@@ -136,7 +136,7 @@ func (s *executionStore) Find(ctx context.Context, id int64) (*types.Execution, 
 
 	dst := new(execution)
 	if err := db.GetContext(ctx, dst, findQueryStmt, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find execution")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find execution")
 	}
 	return mapInternalToExecution(dst)
 }
@@ -155,7 +155,7 @@ func (s *executionStore) FindByNumber(
 
 	dst := new(execution)
 	if err := db.GetContext(ctx, dst, findQueryStmt, pipelineID, executionNum); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find execution")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find execution")
 	}
 	return mapInternalToExecution(dst)
 }
@@ -240,11 +240,11 @@ func (s *executionStore) Create(ctx context.Context, execution *types.Execution)
 
 	query, arg, err := db.BindNamed(executionInsertStmt, mapExecutionToInternal(execution))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind execution object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind execution object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&execution.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Execution query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Execution query failed")
 	}
 
 	return nil
@@ -275,17 +275,17 @@ func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 
 	query, arg, err := db.BindNamed(executionUpdateStmt, execution)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind execution object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind execution object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update execution")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update execution")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -328,7 +328,7 @@ func (s *executionStore) List(
 
 	dst := []*execution{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return mapInternalToExecutionList(dst)
@@ -354,7 +354,7 @@ func (s *executionStore) Count(ctx context.Context, pipelineID int64) (int64, er
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 	return count, nil
 }
@@ -368,7 +368,7 @@ func (s *executionStore) Delete(ctx context.Context, pipelineID int64, execution
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, executionDeleteStmt, pipelineID, executionNum); err != nil {
-		return database.ProcessSQLErrorf(err, "Could not delete execution")
+		return database.ProcessSQLErrorf(ctx, err, "Could not delete execution")
 	}
 
 	return nil

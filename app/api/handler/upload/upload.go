@@ -28,7 +28,7 @@ func HandleUpload(controller *upload.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -36,7 +36,7 @@ func HandleUpload(controller *upload.Controller) http.HandlerFunc {
 
 		res, err := controller.Upload(ctx, session, repoRef, r.Body)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		render.JSON(w, http.StatusCreated, res)

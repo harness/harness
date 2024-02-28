@@ -53,8 +53,7 @@ func (c *Controller) Login(
 	// always return not found for security reasons.
 	if err != nil {
 		log.Ctx(ctx).Debug().Err(err).
-			Str("user_uid", in.LoginIdentifier).
-			Msgf("failed to retrieve user during login.")
+			Msgf("failed to retrieve user %q during login (returning ErrNotFound).", in.LoginIdentifier)
 		return nil, usererror.ErrNotFound
 	}
 

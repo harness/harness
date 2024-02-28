@@ -30,7 +30,7 @@ func HandleMembershipList(spaceCtrl *space.Controller) http.HandlerFunc {
 
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -38,7 +38,7 @@ func HandleMembershipList(spaceCtrl *space.Controller) http.HandlerFunc {
 
 		memberships, membershipsCount, err := spaceCtrl.MembershipList(ctx, session, spaceRef, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

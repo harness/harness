@@ -31,7 +31,7 @@ func HandleListCommits(repoCtrl *repo.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -39,13 +39,13 @@ func HandleListCommits(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		filter, err := request.ParseCommitFilter(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		list, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

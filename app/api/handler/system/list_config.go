@@ -35,7 +35,7 @@ func HandleGetConfig(config *types.Config, sysCtrl *system.Controller) http.Hand
 
 		userSignupAllowed, err := sysCtrl.IsUserSignupAllowed(ctx)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

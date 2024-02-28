@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/web"
 
 	"github.com/go-chi/chi"
+	"github.com/rs/zerolog/log"
 	"github.com/swaggest/swgui"
 	"github.com/swaggest/swgui/v5emb"
 	"github.com/unrolled/secure"
@@ -64,11 +65,13 @@ func NewWebHandler(config *types.Config,
 
 	// openapi endpoints
 	// TODO: this should not be generated and marshaled on the fly every time?
-	r.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, _ *http.Request) {
+	r.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		spec := openapi.Generate()
 		data, err := spec.MarshalYAML()
 		if err != nil {
-			render.ErrorMessagef(w, http.StatusInternalServerError, "error serializing openapi.yaml: %v", err)
+			log.Ctx(ctx).Err(err).Msgf("failed to serialize openapi.yaml")
+			render.InternalError(ctx, w)
 			return
 		}
 		w.Header().Set("Content-Type", "application/yaml")

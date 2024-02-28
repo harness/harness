@@ -32,20 +32,20 @@ func HandleCalculateCommitDivergence(repoCtrl *repo.Controller) http.HandlerFunc
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		in := new(repo.GetCommitDivergencesInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid request body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return
 		}
 
 		divergences, err := repoCtrl.GetCommitDivergences(ctx, session, repoRef, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

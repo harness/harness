@@ -33,36 +33,36 @@ func HandleUpdate(templateCtrl *template.Controller) http.HandlerFunc {
 		in := new(template.UpdateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		templateRef, err := request.GetTemplateRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		spaceRef, templateIdentifier, err := paths.DisectLeaf(templateRef)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		resolverType, err := request.GetTemplateTypeFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 		}
 
 		resolverTypeEnum, err := enum.ParseResolverType(resolverType)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		template, err := templateCtrl.Update(ctx, session, spaceRef, templateIdentifier,
 			resolverTypeEnum, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

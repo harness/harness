@@ -186,6 +186,7 @@ const BranchProtectionForm = (props: {
           : '',
         requireCodeOwner: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_code_owners,
         requireNewChanges: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_latest_commit,
+        reqResOfChanges: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_no_change_request,
         requireCommentResolution: (rule.definition as ProtectionBranch)?.pullreq?.comments?.require_resolve_all, // eslint-disable-next-line @typescript-eslint/no-explicit-any
         requireStatusChecks: (rule.definition as any)?.pullreq?.status_checks?.require_uids?.length > 0,
         statusChecks: (rule.definition as ProtectionBranch)?.pullreq?.status_checks?.require_uids || ([] as string[]),
@@ -254,7 +255,8 @@ const BranchProtectionForm = (props: {
               approvals: {
                 require_code_owners: formData.requireCodeOwner,
                 require_minimum_count: parseInt(formData.minReviewers as string),
-                require_latest_commit: formData.requireNewChanges
+                require_latest_commit: formData.requireNewChanges,
+                require_no_change_request: formData.reqResOfChanges
               },
               comments: {
                 require_resolve_all: formData.requireCommentResolution

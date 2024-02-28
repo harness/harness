@@ -31,20 +31,20 @@ func HandleMembershipAdd(spaceCtrl *space.Controller) http.HandlerFunc {
 
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		in := new(space.MembershipAddInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		memberInfo, err := spaceCtrl.MembershipAdd(ctx, session, spaceRef, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

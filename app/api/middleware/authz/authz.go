@@ -38,7 +38,7 @@ func BlockSessionToken(next http.Handler) http.Handler {
 				log.Ctx(ctx).Warn().Msg("blocking git operation - session tokens are not allowed for usage with git")
 
 				// NOTE: Git doesn't print the error message, so just return default 401 Unauthorized.
-				render.Unauthorized(w)
+				render.Unauthorized(ctx, w)
 				return
 			}
 		}

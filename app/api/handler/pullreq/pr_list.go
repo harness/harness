@@ -31,13 +31,13 @@ func HandleList(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		filter, err := request.ParsePullReqFilter(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -47,7 +47,7 @@ func HandleList(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 
 		list, total, err := pullreqCtrl.List(ctx, session, repoRef, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

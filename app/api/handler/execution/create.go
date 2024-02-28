@@ -28,12 +28,12 @@ func HandleCreate(executionCtrl *execution.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -41,7 +41,7 @@ func HandleCreate(executionCtrl *execution.Controller) http.HandlerFunc {
 
 		execution, err := executionCtrl.Create(ctx, session, repoRef, pipelineIdentifier, branch)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

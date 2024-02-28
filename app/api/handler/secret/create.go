@@ -32,13 +32,13 @@ func HandleCreate(secretCtrl *secret.Controller) http.HandlerFunc {
 		in := new(secret.CreateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
 		secret, err := secretCtrl.Create(ctx, session, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

@@ -31,13 +31,13 @@ func HandleCommits(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		pullreqNumber, err := request.GetPullReqNumberFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -49,7 +49,7 @@ func HandleCommits(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 		// gitref is Head branch in this case
 		commits, err := pullreqCtrl.Commits(ctx, session, repoRef, pullreqNumber, filter)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

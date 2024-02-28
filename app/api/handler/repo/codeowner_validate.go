@@ -29,14 +29,14 @@ func HandleCodeOwnersValidate(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		ref := request.GetGitRefFromQueryOrDefault(r, "")
 		violations, err := repoCtrl.CodeOwnersValidate(ctx, session, repoRef, ref)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

@@ -20,6 +20,8 @@ import { noop } from 'lodash-es'
 import { routes } from 'RouteDefinitions'
 import { defaultCurrentUser } from 'AppContext'
 import { useFeatureFlags } from 'hooks/useFeatureFlag'
+import { useGetSettingValue } from 'hooks/useGetSettingValue'
+import { defaultUsefulOrNot } from 'utils/componentMocks/UsefulOrNot'
 import App from './App'
 import './bootstrap.scss'
 
@@ -38,11 +40,16 @@ ReactDOM.render(
       useExecutionDataHook: noop,
       useLogsContent: noop,
       useLogsStreaming: noop,
-      useFeatureFlags: useFeatureFlags
+      useFeatureFlags,
+      useGetSettingValue
     }}
     currentUser={defaultCurrentUser}
+    customComponents={{
+      UsefulOrNot: defaultUsefulOrNot
+    }}
     currentUserProfileURL=""
     routingId=""
+    defaultSettingsURL=""
   />,
   document.getElementById('react-root')
 )

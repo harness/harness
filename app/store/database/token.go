@@ -48,7 +48,7 @@ func (s *TokenStore) Find(ctx context.Context, id int64) (*types.Token, error) {
 
 	dst := new(types.Token)
 	if err := db.GetContext(ctx, dst, TokenSelectByID, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find token")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find token")
 	}
 
 	return dst, nil
@@ -66,7 +66,7 @@ func (s *TokenStore) FindByIdentifier(ctx context.Context, principalID int64, id
 		principalID,
 		strings.ToLower(identifier),
 	); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find token by identifier")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find token by identifier")
 	}
 
 	return dst, nil
@@ -78,11 +78,11 @@ func (s *TokenStore) Create(ctx context.Context, token *types.Token) error {
 
 	query, arg, err := db.BindNamed(tokenInsert, token)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind token object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind token object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&token.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	return nil
@@ -93,7 +93,7 @@ func (s *TokenStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, tokenDelete, id); err != nil {
-		return database.ProcessSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "The delete query failed")
 	}
 
 	return nil
@@ -123,12 +123,12 @@ func (s *TokenStore) DeleteExpiredBefore(
 
 	result, err := db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to execute delete token query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to execute delete token query")
 	}
 
 	n, err := result.RowsAffected()
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to get number of deleted tokens")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get number of deleted tokens")
 	}
 
 	return n, nil
@@ -142,7 +142,7 @@ func (s *TokenStore) Count(ctx context.Context,
 	var count int64
 	err := db.QueryRowContext(ctx, tokenCountForPrincipalIDOfType, principalID, tokenType).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 
 	return count, nil
@@ -159,7 +159,7 @@ func (s *TokenStore) List(ctx context.Context,
 
 	err := db.SelectContext(ctx, &dst, tokenSelectForPrincipalIDOfType, principalID, tokenType)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing token list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing token list query")
 	}
 	return dst, nil
 }

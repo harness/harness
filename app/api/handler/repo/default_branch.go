@@ -30,20 +30,20 @@ func HandleUpdateDefaultBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		in := new(repo.UpdateDefaultBranchInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		repo, err := repoCtrl.UpdateDefaultBranch(ctx, session, repoRef, in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

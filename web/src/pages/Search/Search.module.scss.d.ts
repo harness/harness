@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const aidaFeedback: string
 export declare const aiLabel: string
 export declare const editorCtn: string
 export declare const fileContent: string

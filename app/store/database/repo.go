@@ -140,7 +140,7 @@ func (s *RepoStore) find(ctx context.Context, id int64, deletedAt *int64) (*type
 	}
 
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find repo")
 	}
 
 	return s.mapToRepo(ctx, dst)
@@ -172,7 +172,7 @@ func (s *RepoStore) findByIdentifier(
 	}
 
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find repo")
 	}
 
 	return s.mapToRepo(ctx, dst)
@@ -264,11 +264,11 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	// insert repo first so we get id
 	query, arg, err := db.BindNamed(sqlQuery, mapToInternalRepo(repo))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind repo object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind repo object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&repo.ID); err != nil {
-		return database.ProcessSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 
 	repo.Path, err = s.getRepoPath(ctx, repo.ParentID, repo.Identifier)
@@ -312,17 +312,17 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbRepo)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind repo object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind repo object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update repository")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update repository")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -358,12 +358,12 @@ func (s *RepoStore) UpdateSize(ctx context.Context, id int64, size int64) error 
 
 	result, err := db.ExecContext(ctx, sqlQuery, args...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to update repo size")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to update repo size")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
@@ -380,7 +380,7 @@ func (s *RepoStore) GetSize(ctx context.Context, id int64) (int64, error) {
 
 	var size int64
 	if err := db.GetContext(ctx, &size, query, id); err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to get repo size")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get repo size")
 	}
 	return size, nil
 }
@@ -482,7 +482,7 @@ func (s *RepoStore) Purge(ctx context.Context, id int64, deletedAt *int64) error
 
 	_, err = db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "the delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "the delete query failed")
 	}
 
 	return nil
@@ -545,7 +545,7 @@ func (s *RepoStore) count(
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
 	}
 	return count, nil
 }
@@ -573,7 +573,7 @@ FROM SpaceHierarchy h1;`
 
 	var spaceIDs []int64
 	if err := db.SelectContext(ctx, &spaceIDs, query, parentID); err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to retrieve spaces")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to retrieve spaces")
 	}
 
 	stmt := database.Builder.
@@ -590,7 +590,7 @@ FROM SpaceHierarchy h1;`
 
 	var numRepos int64
 	if err := db.GetContext(ctx, &numRepos, sql, args...); err != nil {
-		return 0, database.ProcessSQLErrorf(err, "failed to count repositories")
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to count repositories")
 	}
 
 	return numRepos, nil
@@ -631,7 +631,7 @@ func (s *RepoStore) list(
 
 	dst := []*repository{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return s.mapToRepos(ctx, dst)
@@ -660,7 +660,7 @@ FROM SpaceHierarchy h1;`
 
 	var spaceIDs []int64
 	if err := db.SelectContext(ctx, &spaceIDs, where, parentID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "failed to retrieve spaces")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to retrieve spaces")
 	}
 
 	stmt := database.Builder.
@@ -677,7 +677,7 @@ FROM SpaceHierarchy h1;`
 	}
 	repos := []*repository{}
 	if err := db.SelectContext(ctx, &repos, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "failed to count repositories")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to count repositories")
 	}
 
 	return s.mapToRepos(ctx, repos)
@@ -705,7 +705,7 @@ func (s *RepoStore) ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeI
 
 	dst := []*repoSize{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
 	return s.mapToRepoSizes(dst), nil

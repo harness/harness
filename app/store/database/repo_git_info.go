@@ -49,13 +49,13 @@ func (s *RepoGitInfoView) Find(ctx context.Context, id int64) (*types.Repository
 
 	v := db.QueryRowContext(ctx, sqlQuery, id)
 	if err := v.Err(); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "failed to find git uid by repository id")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to find git uid by repository id")
 	}
 
 	var result = types.RepositoryGitInfo{ID: id}
 
 	if err := v.Scan(&result.GitUID, &result.ParentID); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "failed to scan git uid")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to scan git uid")
 	}
 
 	return &result, nil

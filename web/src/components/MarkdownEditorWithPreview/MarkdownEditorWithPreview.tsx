@@ -276,13 +276,28 @@ export function MarkdownEditorWithPreview({
 
   useEffect(() => {
     if (!isEmpty(templateData)) {
-      viewRef.current?.dispatch({
-        changes: {
-          from: 0,
-          to: 0,
-          insert: decodeGitContent(templateData)
-        }
-      })
+      const currentContent = viewRef.current?.state.doc.toString() ?? ''
+      const newContent = decodeGitContent(templateData)
+
+      // If empty dispatch template data, if content same as old content then dispatch previous content
+      if (currentContent !== newContent) {
+        viewRef.current?.dispatch({
+          changes: {
+            from: 0,
+            to: currentContent.length, // You might need to adjust this based on how your content is structured
+            insert: currentContent
+          }
+        })
+      }
+      if (isEmpty(currentContent)) {
+        viewRef.current?.dispatch({
+          changes: {
+            from: 0,
+            to: 0,
+            insert: newContent
+          }
+        })
+      }
     }
   }, [templateData])
 

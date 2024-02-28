@@ -28,18 +28,18 @@ func HandleFind(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		pipelineIdentifier, err := request.GetPipelineIdentifierFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		pipeline, err := pipelineCtrl.Find(ctx, session, repoRef, pipelineIdentifier)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

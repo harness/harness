@@ -31,7 +31,7 @@ func HandleBlame(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -40,14 +40,14 @@ func HandleBlame(repoCtrl *repo.Controller) http.HandlerFunc {
 		// line_from is optional, skipped if set to 0
 		lineFrom, err := request.QueryParamAsPositiveInt64OrDefault(r, request.QueryParamLineFrom, 0)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		// line_to is optional, skipped if set to 0
 		lineTo, err := request.QueryParamAsPositiveInt64OrDefault(r, request.QueryParamLineTo, 0)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
@@ -55,7 +55,7 @@ func HandleBlame(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		stream, err := repoCtrl.Blame(ctx, session, repoRef, gitRef, path, int(lineFrom), int(lineTo))
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 

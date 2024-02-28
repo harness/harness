@@ -98,11 +98,11 @@ func (s *PullReqFileViewStore) Upsert(ctx context.Context, view *types.PullReqFi
 
 	query, arg, err := db.BindNamed(sqlQuery, mapToInternalPullreqFileView(view))
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Failed to bind pullreq file view object")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pullreq file view object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&view.Created); err != nil {
-		return database.ProcessSQLErrorf(err, "Upsert query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Upsert query failed")
 	}
 
 	return nil
@@ -124,7 +124,7 @@ func (s *PullReqFileViewStore) DeleteByFileForPrincipal(
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, prID, principalID, filePath); err != nil {
-		return database.ProcessSQLErrorf(err, "delete query failed")
+		return database.ProcessSQLErrorf(ctx, err, "delete query failed")
 	}
 
 	return nil
@@ -148,7 +148,7 @@ func (s *PullReqFileViewStore) MarkObsolete(ctx context.Context, prID int64, fil
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(err, "failed to execute update query")
+		return database.ProcessSQLErrorf(ctx, err, "failed to execute update query")
 	}
 
 	return nil
@@ -175,7 +175,7 @@ func (s *PullReqFileViewStore) List(
 
 	var dst []*pullReqFileView
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to execute list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to execute list query")
 	}
 
 	return mapToPullreqFileViews(dst), nil

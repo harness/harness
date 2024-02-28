@@ -26,15 +26,16 @@ import (
 // HandleGitRedirect redirects from the vanilla git clone URL to the repo UI page.
 func HandleGitRedirect(urlProvider url.Provider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		// Explicitly return error in case the user is trying to use the repoID for redirect.
 		if _, err := strconv.ParseInt(repoRef, 10, 64); err == nil {
-			render.BadRequestf(w, "Endpoint only supports repo path.")
+			render.BadRequestf(ctx, w, "Endpoint only supports repo path.")
 			return
 		}
 

@@ -95,6 +95,8 @@ export interface StringsMap {
   'branchProtection.reqCommentResolutionTitle': string
   'branchProtection.reqNewChangesText': string
   'branchProtection.reqNewChangesTitle': string
+  'branchProtection.reqResOfChanges': string
+  'branchProtection.reqResOfChangesText': string
   'branchProtection.reqReviewFromCodeOwnerText': string
   'branchProtection.reqReviewFromCodeOwnerTitle': string
   'branchProtection.reqStatusChecksText': string
@@ -124,6 +126,9 @@ export interface StringsMap {
   browseFiles: string
   bySigningIn: string
   cancel: string
+  cancelImport: string
+  cancelImportConfirm: string
+  cancelledImport: string
   changePassword: string
   changePasswordSuccesfully: string
   changeRepoVis: string
@@ -252,6 +257,7 @@ export interface StringsMap {
   emptyRepoHeader: string
   emptyRepoInclude: string
   emptySpaceText: string
+  enableAIDAMessage: string
   enableAISearch: string
   enableSSLVerification: string
   enableWebhookContent: string
@@ -312,6 +318,7 @@ export interface StringsMap {
   'exportSpace.upgradeProgress': string
   'exportSpace.upgradeTitle': string
   failed: string
+  failedToCancelImport: string
   failedToCreateBranch: string
   failedToCreatePipeline: string
   failedToCreateRepo: string
@@ -717,6 +724,7 @@ export interface StringsMap {
   resolved: string
   resolvedComments: string
   results: string
+  reviewProjectSettings: string
   reviewerNotFound: string
   reviewers: string
   role: string
@@ -826,6 +834,7 @@ export interface StringsMap {
   'triggers.failedToUpdate': string
   'triggers.newTrigger': string
   'triggers.updateSuccess': string
+  turnOnSemanticSearch: string
   unrsolvedComment: string
   'unsavedChanges.leave': string
   'unsavedChanges.message': string

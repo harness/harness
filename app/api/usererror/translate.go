@@ -15,6 +15,7 @@
 package usererror
 
 import (
+	"context"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -30,7 +31,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func Translate(err error) *Error {
+func Translate(ctx context.Context, err error) *Error {
 	var (
 		rError                  *Error
 		checkError              *check.ValidationError
@@ -39,6 +40,9 @@ func Translate(err error) *Error {
 		codeOwnersTooLargeError *codeowners.TooLargeError
 		lockError               *lock.Error
 	)
+
+	// print original error for debugging purposes
+	log.Ctx(ctx).Debug().Err(err).Msgf("translating error to user facing error")
 
 	// TODO: Improve performance of checking multiple errors with errors.Is
 
@@ -83,6 +87,10 @@ func Translate(err error) *Error {
 
 	// git errors
 	case errors.As(err, &appError):
+		if appError.Err != nil {
+			log.Ctx(ctx).Warn().Err(appError.Err).Msgf("Application error translation is omitting internal details.")
+		}
+
 		return NewWithPayload(httpStatusCode(
 			appError.Status),
 			appError.Message,
@@ -105,14 +113,13 @@ func Translate(err error) *Error {
 
 	// unknown error
 	default:
-		log.Warn().Msgf("Unable to translate error: %s", err)
+		log.Ctx(ctx).Warn().Err(err).Msgf("Unable to translate error - returning Internal Error.")
 		return ErrInternal
 	}
 }
 
 // errorFromLockError returns the associated error for a given lock error.
 func errorFromLockError(err *lock.Error) *Error {
-	log.Warn().Err(err).Msg("encountered lock error")
 	if err.Kind == lock.ErrorKindCannotLock ||
 		err.Kind == lock.ErrorKindLockHeld ||
 		err.Kind == lock.ErrorKindMaxRetriesExceeded {
