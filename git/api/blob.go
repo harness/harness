@@ -24,7 +24,7 @@ import (
 )
 
 type BlobReader struct {
-	SHA string
+	SHA sha.SHA
 	// Size is the actual size of the blob.
 	Size int64
 	// ContentSize is the total number of bytes returned by the Content Reader.
@@ -70,7 +70,7 @@ func (g *Git) GetBlob(
 	}
 
 	return &BlobReader{
-		SHA:         sha.String(),
+		SHA:         sha,
 		Size:        output.Size,
 		ContentSize: contentSize,
 		Content:     newLimitReaderCloser(stdOut, contentSize, cancel),

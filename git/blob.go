@@ -51,7 +51,7 @@ func (s *Service) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobO
 	}
 
 	return &GetBlobOutput{
-		SHA:         reader.SHA,
+		SHA:         reader.SHA.String(),
 		Size:        reader.Size,
 		ContentSize: reader.ContentSize,
 		Content:     reader.Content,
