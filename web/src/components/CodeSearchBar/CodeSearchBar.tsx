@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import React, { Dispatch, FC, SetStateAction } from 'react'
+import React, { useState, Dispatch, FC, SetStateAction, useEffect } from 'react'
 
 import cx from 'classnames'
 import { Switch } from '@blueprintjs/core'
-import { Text } from '@harnessio/uicore'
+import { Container, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
+import { Link, useParams } from 'react-router-dom'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
@@ -36,13 +37,28 @@ interface CodeSearchBarProps {
   searchMode: SEARCH_MODE
 }
 
+interface Identifier {
+  accountId: string
+  orgIdentifier: string
+  projectIdentifier: string
+}
+
 const KEYWORD_REGEX = /((?:(?:-{0,1})(?:repo|lang|file|case|count)):\S*|(?: or|and ))/gi
 
 const CodeSearchBar: FC<CodeSearchBarProps> = ({ value, onChange, onSearch, onKeyDown, searchMode, setSearchMode }) => {
   const { getString } = useStrings()
-  const { hooks } = useAppContext()
-  const { SEMANTIC_SEARCH_ENABLED: isSemanticSearchEnabled } = hooks?.useFeatureFlags()
-  const isSemanticMode = isSemanticSearchEnabled && searchMode === SEARCH_MODE.SEMANTIC
+  const { hooks, routingId, defaultSettingsURL } = useAppContext()
+  const { SEMANTIC_SEARCH_ENABLED: isSemanticSearchFFEnabled } = hooks?.useFeatureFlags()
+  const { orgIdentifier, projectIdentifier } = useParams<Identifier>()
+  const { data: aidaSettingResponse, loading: isAidaSettingLoading } = hooks?.useGetSettingValue({
+    identifier: 'aida',
+    queryParams: { accountIdentifier: routingId, orgIdentifier, projectIdentifier }
+  })
+  const [enableSemanticSearch, setEnableSemanticSearch] = useState<boolean>(false)
+  useEffect(() => {
+    setEnableSemanticSearch(isSemanticSearchFFEnabled && aidaSettingResponse?.data?.value == 'true')
+  }, [isAidaSettingLoading, isSemanticSearchFFEnabled])
+  const isSemanticMode = enableSemanticSearch && searchMode === SEARCH_MODE.SEMANTIC
   return (
     <div className={css.searchCtn} data-search-mode={searchMode}>
       <div className={css.textCtn}>
@@ -89,7 +105,8 @@ const CodeSearchBar: FC<CodeSearchBarProps> = ({ value, onChange, onSearch, onKe
         onKeyDown={onKeyDown}
         placeholder={isSemanticMode ? getString('codeSearchModal') : getString('keywordSearchPlaceholder')}
       />
-      {isSemanticSearchEnabled && (
+
+      {enableSemanticSearch ? (
         <>
           {isSemanticMode ? (
             <img className={cx(css.toggleLogo)} src={svg} width={122} height={25} />
@@ -102,27 +119,46 @@ const CodeSearchBar: FC<CodeSearchBarProps> = ({ value, onChange, onSearch, onKe
               {getString('enableAISearch')}
             </Text>
           )}
-        </>
-      )}
+          <Switch
+            onChange={() => {
+              searchMode === SEARCH_MODE.KEYWORD
+                ? setSearchMode(SEARCH_MODE.SEMANTIC)
+                : setSearchMode(SEARCH_MODE.KEYWORD)
+            }}
+            className={cx(css.toggleBtn)}
+            checked={SEARCH_MODE.SEMANTIC === searchMode}></Switch>
 
-      {isSemanticSearchEnabled && (
-        <Switch
-          onChange={() => {
-            searchMode === SEARCH_MODE.KEYWORD
-              ? setSearchMode(SEARCH_MODE.SEMANTIC)
-              : setSearchMode(SEARCH_MODE.KEYWORD)
-          }}
-          className={cx(css.toggleBtn)}
-          checked={SEARCH_MODE.SEMANTIC === searchMode}></Switch>
-      )}
-      {isSemanticSearchEnabled && (
-        <button
-          className={cx(css.toggleHiddenBtn, css.toggleBtn)}
-          onClick={() =>
-            searchMode === SEARCH_MODE.KEYWORD
-              ? setSearchMode(SEARCH_MODE.SEMANTIC)
-              : setSearchMode(SEARCH_MODE.KEYWORD)
-          }></button>
+          <button
+            className={cx(css.toggleHiddenBtn, css.toggleBtn)}
+            onClick={() =>
+              searchMode === SEARCH_MODE.KEYWORD
+                ? setSearchMode(SEARCH_MODE.SEMANTIC)
+                : setSearchMode(SEARCH_MODE.KEYWORD)
+            }></button>
+        </>
+      ) : (
+        aidaSettingResponse?.data?.value != 'true' &&
+        isSemanticSearchFFEnabled &&
+        !isAidaSettingLoading && (
+          <Container
+            background={Color.AI_PURPLE_50}
+            padding="small"
+            margin={{ top: 'xsmall', right: 'small', left: 'xsmall' }}>
+            <Text
+              font={{ variation: FontVariation.BODY2 }}
+              margin={{ bottom: 'small' }}
+              icon="info-messaging"
+              iconProps={{ size: 15 }}>
+              {getString('turnOnSemanticSearch')}
+            </Text>
+            <Text font={{ variation: FontVariation.BODY2_SEMI }} margin={{ bottom: 'small' }} color={Color.GREY_450}>
+              {getString('enableAIDAMessage')}
+            </Text>
+            <Link to={defaultSettingsURL} color={Color.AI_PURPLE_800}>
+              {getString('reviewProjectSettings')}
+            </Link>
+          </Container>
+        )
       )}
     </div>
   )
