@@ -46,8 +46,8 @@ export function ContentHeader({
   const history = useHistory()
   const _isDir = isDir(resourceContent)
   const space = useGetSpaceParam()
-  const repoPath = compact([repoMetadata.uid, resourceContent.path])
-  useDocumentTitle(isEmpty(resourceContent.path) ? getString('pageTitle.repository') : repoPath.join('/'))
+  const repoPath = compact([repoMetadata.uid, resourceContent?.path])
+  useDocumentTitle(isEmpty(resourceContent?.path) ? getString('pageTitle.repository') : repoPath.join('/'))
 
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
