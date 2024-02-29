@@ -995,3 +995,6 @@ customHour: '{{hours}}h'
 customMin: '{{minutes}}m'
 customSecond: '{{seconds}}s'
 reqChanges: 'Request changes'
+summary: Summary
+prGenSummary: Have Harness AIDA summarize the code changes in this pull request
+aidaGenSummary: '[AIDA is generating a summary...]'

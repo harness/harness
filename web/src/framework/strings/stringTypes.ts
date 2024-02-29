@@ -21,6 +21,7 @@ export interface StringsMap {
   addUserToSpace2: string
   admin: string
   aiSearch: string
+  aidaGenSummary: string
   all: string
   allBranches: string
   allComments: string
@@ -661,6 +662,7 @@ export interface StringsMap {
   'prChecks.skipped': string
   'prChecks.success': string
   'prChecks.viewExternal': string
+  prGenSummary: string
   prMustSelectSourceAndTargetBranches: string
   prSourceAndTargetMustBeDifferent: string
   'prState.draftDesc': string
@@ -806,6 +808,7 @@ export interface StringsMap {
   'stepCategory.select': string
   submitReview: string
   success: string
+  summary: string
   switchBranch: string
   switchBranchesTags: string
   tag: string

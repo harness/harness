@@ -32,11 +32,12 @@ import cx from 'classnames'
 import type { EditorView } from '@codemirror/view'
 import { EditorSelection } from '@codemirror/state'
 import { isEmpty } from 'lodash-es'
+import { useMutate } from 'restful-react'
 import { Editor } from 'components/Editor/Editor'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
-import { formatBytes, handleFileDrop, handlePaste } from 'utils/Utils'
-import { decodeGitContent, handleUpload } from 'utils/GitUtils'
+import { CommentBoxOutletPosition, formatBytes, getErrorMessage, handleFileDrop, handlePaste } from 'utils/Utils'
+import { decodeGitContent, handleUpload, normalizeGitRef } from 'utils/GitUtils'
 import type { TypesRepository } from 'services/code'
 import css from './MarkdownEditorWithPreview.module.scss'
 
@@ -96,6 +97,12 @@ interface MarkdownEditorWithPreviewProps {
   // When set to true, the editor will be scrolled to center of screen
   // and cursor is set to the end of the document
   autoFocusAndPosition?: boolean
+  outlets?: Partial<Record<CommentBoxOutletPosition, React.ReactNode>>
+  handleCopilotClick?: () => void
+  flag?: boolean
+  sourceGitRef?: string
+  targetGitRef?: string
+  setFlag?: React.Dispatch<React.SetStateAction<boolean>>
   repoMetadata: TypesRepository | undefined
   standalone: boolean
   routingId: string
@@ -119,7 +126,13 @@ export function MarkdownEditorWithPreview({
   secondarySaveButton: SecondarySaveButton,
   repoMetadata,
   standalone,
-  routingId
+  routingId,
+  handleCopilotClick,
+  outlets = {},
+  setFlag,
+  flag,
+  sourceGitRef,
+  targetGitRef
 }: MarkdownEditorWithPreviewProps) {
   const { getString } = useStrings()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -131,6 +144,54 @@ export function MarkdownEditorWithPreview({
   const [file, setFile] = useState<File>()
   const { showError } = useToaster()
   const [markdownContent, setMarkdownContent] = useState('')
+  const { mutate } = useMutate({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata?.path}/+/genai/change-summary`
+  })
+
+  const [data, setData] = useState({})
+  useEffect(() => {
+    if (flag) {
+      if (handleCopilotClick) {
+        const view = viewRef.current
+        const currentContent = viewRef.current?.state.doc.toString()
+
+        view?.dispatch({
+          changes: {
+            from: 0,
+            to: currentContent?.length,
+            insert: getString('aidaGenSummary')
+          }
+        })
+
+        mutate({
+          head_ref: normalizeGitRef(sourceGitRef),
+          base_ref: normalizeGitRef(targetGitRef)
+        })
+          .then(res => {
+            setData(res.summary || '')
+          })
+          .catch(err => {
+            showError(getErrorMessage(err))
+          })
+      }
+      setFlag?.(false)
+    }
+  }, [handleCopilotClick])
+
+  useEffect(() => {
+    if (!isEmpty(data)) {
+      const view = viewRef.current
+      const currentContent = viewRef.current?.state.doc.toString()
+      view?.dispatch({
+        changes: {
+          from: 0,
+          to: currentContent?.length,
+          insert: `${data}`
+        }
+      })
+    }
+  }, [data])
   const onToolbarAction = useCallback((action: ToolbarAction) => {
     const view = viewRef.current
 
@@ -434,6 +495,7 @@ export function MarkdownEditorWithPreview({
         </li>
       </ul>
       <Container className={css.toolbar}>
+        {outlets[CommentBoxOutletPosition.START_OF_MARKDOWN_EDITOR_TOOLBAR]}
         {toolbar.map((item, index) => {
           return (
             <Button

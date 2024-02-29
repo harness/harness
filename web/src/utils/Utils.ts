@@ -623,3 +623,8 @@ export const CustomEventName = {
 } as const
 
 export const PAGE_CONTAINER_WIDTH = '--page-container-width'
+
+// Outlets are used to insert additional components into CommentBox
+export enum CommentBoxOutletPosition {
+  START_OF_MARKDOWN_EDITOR_TOOLBAR = 'start_of_markdown_editor_toolbar'
+}
