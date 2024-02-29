@@ -30,6 +30,8 @@ import type { IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { EditorView } from '@codemirror/view'
+import { keymap } from '@codemirror/view'
+import { undo, redo, history } from '@codemirror/commands'
 import { EditorSelection } from '@codemirror/state'
 import { isEmpty } from 'lodash-es'
 import { useMutate } from 'restful-react'
@@ -149,21 +151,30 @@ export function MarkdownEditorWithPreview({
     path: `/api/v1/repos/${repoMetadata?.path}/+/genai/change-summary`
   })
 
+  const myKeymap = keymap.of([
+    {
+      key: 'Mod-z',
+      run: undo,
+      preventDefault: true
+    },
+    { key: 'Mod-Shift-z', run: redo, preventDefault: true }
+  ])
+
+  const dispatchContent = (content: string, userEvent: boolean) => {
+    const view = viewRef.current
+    const currentContent = view?.state.doc.toString()
+
+    view?.dispatch({
+      changes: { from: 0, to: currentContent?.length, insert: content },
+      userEvent: userEvent ? 'input' : 'ignore' // Marking this transaction as an input event makes it part of the undo history
+    })
+  }
+
   const [data, setData] = useState({})
   useEffect(() => {
     if (flag) {
       if (handleCopilotClick) {
-        const view = viewRef.current
-        const currentContent = viewRef.current?.state.doc.toString()
-
-        view?.dispatch({
-          changes: {
-            from: 0,
-            to: currentContent?.length,
-            insert: getString('aidaGenSummary')
-          }
-        })
-
+        dispatchContent(getString('aidaGenSummary'), false)
         mutate({
           head_ref: normalizeGitRef(sourceGitRef),
           base_ref: normalizeGitRef(targetGitRef)
@@ -181,15 +192,7 @@ export function MarkdownEditorWithPreview({
 
   useEffect(() => {
     if (!isEmpty(data)) {
-      const view = viewRef.current
-      const currentContent = viewRef.current?.state.doc.toString()
-      view?.dispatch({
-        changes: {
-          from: 0,
-          to: currentContent?.length,
-          insert: `${data}`
-        }
-      })
+      dispatchContent(`${data}`, true)
     }
   }, [data])
   const onToolbarAction = useCallback((action: ToolbarAction) => {
@@ -512,6 +515,7 @@ export function MarkdownEditorWithPreview({
       </Container>
       <Container className={css.tabContent}>
         <Editor
+          extensions={[myKeymap, history()]}
           routingId={routingId}
           standalone={standalone}
           repoMetadata={repoMetadata}
