@@ -26,6 +26,9 @@ type (
 
 		// MaxResultCount is the maximum number of results to return
 		MaxResultCount int `json:"max_result_count"`
+
+		// EnableRegex enables regex search on the query
+		EnableRegex bool `json:"enable_regex"`
 	}
 
 	SearchResult struct {

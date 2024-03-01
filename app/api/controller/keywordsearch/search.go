@@ -64,7 +64,7 @@ func (c *Controller) Search(
 		repoIDs = append(repoIDs, repoID)
 	}
 
-	result, err := c.searcher.Search(ctx, repoIDs, in.Query, in.MaxResultCount)
+	result, err := c.searcher.Search(ctx, repoIDs, in.Query, in.EnableRegex, in.MaxResultCount)
 	if err != nil {
 		return types.SearchResult{}, fmt.Errorf("failed to search: %w", err)
 	}
