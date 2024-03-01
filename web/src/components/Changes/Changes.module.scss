@@ -78,6 +78,11 @@
 
 .main {
   border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-medium);
+  box-sizing: border-box;
+  min-height: 64px;
 
   // This is buggy, especially when scrolling
   // @see https://github.com/rtfpessoa/diff2html/issues/99

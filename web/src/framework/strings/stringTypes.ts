@@ -593,6 +593,7 @@ export interface StringsMap {
   'pr.checkingToMerge': string
   'pr.checks': string
   'pr.checksFailure': string
+  'pr.collapseFullFile': string
   'pr.createDraftPR': string
   'pr.descHasTooLongLine': string
   'pr.descIsRequired': string
@@ -606,6 +607,7 @@ export interface StringsMap {
   'pr.draftOpenForReview.title': string
   'pr.enterDesc': string
   'pr.executionState': string
+  'pr.expandFullFile': string
   'pr.failedToCreate': string
   'pr.failedToDeleteComment': string
   'pr.failedToSaveComment': string

@@ -58,6 +58,8 @@ export function useSetPageContainerWidthVar({ domRef }: { domRef: React.RefObjec
       if (_rect.width > pageWidth) {
         dom.style?.setProperty(PAGE_CONTAINER_WIDTH, `${_rect.width}px`)
       }
+
+      dom.style.maxWidth = 'var(--page-container-width)'
     }
   }, [domRef])
 

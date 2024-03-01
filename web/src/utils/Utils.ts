@@ -572,13 +572,16 @@ export function isInViewport(element: Element, margin = 0, direction: 'x' | 'y' 
 
   const height = window.innerHeight || document.documentElement.clientHeight
   const width = window.innerWidth || document.documentElement.clientWidth
-  const top = 0 - margin
-  const bottom = height + margin
-  const left = 0 - margin
-  const right = width + margin
+  const _top = 0 - margin
+  const _bottom = height + margin
+  const _left = 0 - margin
+  const _right = width + margin
 
-  const yCheck = (rect.top >= top && rect.top <= bottom) || (rect.bottom >= top && rect.bottom <= bottom)
-  const xCheck = (rect.left >= left && rect.left <= right) || (rect.right >= top && rect.right <= right)
+  const yCheck =
+    (rect.top >= _top && rect.top <= _bottom) ||
+    (rect.bottom >= _top && rect.bottom <= _bottom) ||
+    (rect.top <= _top && rect.bottom >= _bottom)
+  const xCheck = (rect.left >= _left && rect.left <= _right) || (rect.right >= _top && rect.right <= _right)
 
   if (direction === 'y') return yCheck
   if (direction === 'x') return xCheck

@@ -24,6 +24,8 @@ export interface DiffFileEntry extends DiffFile {
   fileViews?: Map<string, string>
 }
 
+export type FCWithChildren<T> = React.FC<React.PropsWithChildren<T>>
+
 export enum AidaClient {
   CODE_SEMANTIC_SEARCH = 'CODE_SEMANTIC_SEARCH'
 }

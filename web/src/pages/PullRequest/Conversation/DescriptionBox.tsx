@@ -25,7 +25,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { getErrorMessage } from 'utils/Utils'
-import { MAX_TEXT_LINE_SIZE_LIMIT, PULL_REQUEST_DESCRIPTION_SIZE_LIMIT } from 'settings'
+import Config from 'Config'
 import type { ConversationProps } from './Conversation'
 import css from './Conversation.module.scss'
 
@@ -71,13 +71,13 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
             repoMetadata={repoMetadata}
             value={content}
             onSave={value => {
-              if (value?.split('\n').some(line => line.length > MAX_TEXT_LINE_SIZE_LIMIT)) {
-                return showError(getString('pr.descHasTooLongLine', { max: MAX_TEXT_LINE_SIZE_LIMIT }), 0)
+              if (value?.split('\n').some(line => line.length > Config.MAX_TEXT_LINE_SIZE_LIMIT)) {
+                return showError(getString('pr.descHasTooLongLine', { max: Config.MAX_TEXT_LINE_SIZE_LIMIT }), 0)
               }
 
-              if (value.length > PULL_REQUEST_DESCRIPTION_SIZE_LIMIT) {
+              if (value.length > Config.PULL_REQUEST_DESCRIPTION_SIZE_LIMIT) {
                 return showError(
-                  getString('pr.descIsTooLong', { max: PULL_REQUEST_DESCRIPTION_SIZE_LIMIT, len: value.length }),
+                  getString('pr.descIsTooLong', { max: Config.PULL_REQUEST_DESCRIPTION_SIZE_LIMIT, len: value.length }),
                   0
                 )
               }

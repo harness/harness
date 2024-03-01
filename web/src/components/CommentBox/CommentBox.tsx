@@ -222,7 +222,9 @@ const CommentBoxInternal = <T = unknown,>({
               </Container>
             </Truthy>
             <Falsy>
-              <Container className={cx(css.newCommentContainer, { [css.hasThread]: !!comments.length })}>
+              <Container
+                className={cx(css.newCommentContainer, { [css.hasThread]: !!comments.length })}
+                data-comment-editor-shown="true">
                 <MarkdownEditorWithPreview
                   routingId={routingId}
                   standalone={standalone}
@@ -415,7 +417,7 @@ const CommentsThread = <T = unknown,>({
 
                 <Match expr={editIndexes[index]}>
                   <Truthy>
-                    <Container className={css.editCommentContainer}>
+                    <Container className={css.editCommentContainer} data-comment-editor-shown="true">
                       <MarkdownEditorWithPreview
                         routingId={routingId}
                         standalone={standalone}
