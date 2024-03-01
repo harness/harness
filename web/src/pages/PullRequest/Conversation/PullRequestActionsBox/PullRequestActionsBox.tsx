@@ -110,45 +110,41 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleViolationArr])
   const dryMerge = () => {
-    if (!isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
+    if (isMounted.current && !isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
       // Use an internal flag to prevent flickering during the loading state of buttons
       internalFlags.current.dryRun = true
 
       mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
         .then(res => {
-          if (!isMounted.current) {
-            return
-          }
-
-          if (res?.rule_violations?.length > 0) {
-            setRuleViolation(true)
-            setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
-            setAllowedStrats(res.allowed_methods)
-          } else {
-            setRuleViolation(false)
-            setAllowedStrats(res.allowed_methods)
+          if (isMounted.current) {
+            if (res?.rule_violations?.length > 0) {
+              setRuleViolation(true)
+              setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
+              setAllowedStrats(res.allowed_methods)
+            } else {
+              setRuleViolation(false)
+              setAllowedStrats(res.allowed_methods)
+            }
           }
         })
         .catch(err => {
-          if (!isMounted.current) {
-            return
-          }
-
-          if (err.status === 422) {
-            setRuleViolation(true)
-            setRuleViolationArr(err)
-            setAllowedStrats(err.allowed_methods)
-          } else if (
-            getErrorMessage(err) === codeOwnersNotFoundMessage ||
-            getErrorMessage(err) === codeOwnersNotFoundMessage2 ||
-            getErrorMessage(err) === codeOwnersNotFoundMessage3 ||
-            err.status === 423 // resource locked (merge / dry-run already ongoing)
-          ) {
-            return
-          } else if (pullRequestSection !== PullRequestSection.CONVERSATION) {
-            return
-          } else {
-            showError(getErrorMessage(err))
+          if (isMounted.current) {
+            if (err.status === 422) {
+              setRuleViolation(true)
+              setRuleViolationArr(err)
+              setAllowedStrats(err.allowed_methods)
+            } else if (
+              getErrorMessage(err) === codeOwnersNotFoundMessage ||
+              getErrorMessage(err) === codeOwnersNotFoundMessage2 ||
+              getErrorMessage(err) === codeOwnersNotFoundMessage3 ||
+              err.status === 423 // resource locked (merge / dry-run already ongoing)
+            ) {
+              return
+            } else if (pullRequestSection !== PullRequestSection.CONVERSATION) {
+              return
+            } else {
+              showError(getErrorMessage(err))
+            }
           }
         })
         .finally(() => {

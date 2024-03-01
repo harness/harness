@@ -150,7 +150,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   // states (such as collapse, view full diff) are reset when they are being re-rendered. To fix this,
   // we maintained a map from this component and pass to each diff to retain their latest states.
   // Map entry: <diff.filePath, DiffViewerExchangeState>
-  const exchangeState = useMemo(() => new Map<string, DiffViewerExchangeState>(), [])
+  const memorizedState = useMemo(() => new Map<string, DiffViewerExchangeState>(), [])
 
   // In readOnly mode (Compare page), we'd like to refetch diff immediately when source
   // or target refs changed from Compare page. Otherwise (PullRequest page), we'll need
@@ -259,11 +259,17 @@ const ChangesInternal: React.FC<ChangesProps> = ({
         })
         .sort((a, b) => (a.newName || a.oldName).localeCompare(b.newName || b.oldName, undefined, { numeric: true }))
 
-      setDiffs(oldDiffs => (isEqual(oldDiffs, _diffs) ? oldDiffs : _diffs))
+      setDiffs(oldDiffs => {
+        if (isEqual(oldDiffs, _diffs)) return oldDiffs
+
+        // Clear memorizedState when diffs are changed
+        memorizedState.clear()
+        return _diffs
+      })
     } else {
       setDiffs([])
     }
-  }, [readOnly, path, cachedDiff, loadingRawDiff])
+  }, [readOnly, path, cachedDiff, loadingRawDiff, memorizedState])
 
   //
   // Listen to scroll event to toggle "scroll to top" button
@@ -531,7 +537,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
                             scrollElement={scrollElement}
                             commitSHA={commitSHA}
                             refetchActivities={refetchActivities}
-                            exchangeState={exchangeState}
+                            memorizedState={memorizedState}
                             fullDiffAPIPath={path}
                           />
                         </InViewDiffBlockRenderer>

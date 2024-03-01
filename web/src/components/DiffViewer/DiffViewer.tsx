@@ -73,7 +73,7 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   scrollElement: HTMLElement
   commitSHA?: string
   refetchActivities?: UseGetPullRequestInfoResult['refetchActivities']
-  exchangeState: Map<string, DiffViewerExchangeState>
+  memorizedState: Map<string, DiffViewerExchangeState>
   fullDiffAPIPath: string
 }
 
@@ -90,7 +90,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   scrollElement,
   commitSHA,
   refetchActivities,
-  exchangeState,
+  memorizedState,
   fullDiffAPIPath
 }) => {
   const { routes } = useAppContext()
@@ -130,7 +130,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
       getFileViewedState(diff.filePath, diff.checksumAfter, diff.fileViews) === FileViewedState.CHANGED,
     [readOnly, commitRange?.length, diff.filePath, diff.checksumAfter, diff.fileViews]
   )
-  const [collapsed, setCollapsed] = useState(viewed || !!exchangeState.get(diff.filePath)?.collapsed)
+  const [collapsed, setCollapsed] = useState(viewed || !!memorizedState.get(diff.filePath)?.collapsed)
   const isBinary = useMemo(() => diff.isBinary, [diff.isBinary])
   const fileUnchanged = useMemo(
     () => diff.unchangedPercentage === 100 || (diff.addedLines === 0 && diff.deletedLines === 0),
@@ -149,7 +149,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   const diff2HtmlRef = useRef<{ renderer: Diff2HtmlUI; diff: DiffFileEntry }>()
   const [dirty, setDirty] = useState(false)
   const isMounted = useIsMounted()
-  const [useFullDiff, setUseFullDiff] = useState(!!exchangeState.get(diff.filePath)?.useFullDiff)
+  const [useFullDiff, setUseFullDiff] = useState(!!memorizedState.get(diff.filePath)?.useFullDiff)
 
   //
   // Handling custom events sent to DiffViewer from external components/features
@@ -221,7 +221,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   const renderDiffAndComments = useCallback(() => {
     if (!isMounted.current) return
 
-    const fullDiff = exchangeState.get(diff.filePath)?.fullDiff
+    const fullDiff = memorizedState.get(diff.filePath)?.fullDiff
     const _diff = useFullDiff && fullDiff ? fullDiff : diff
 
     // Create a new diff renderer if cached diff is different from current diff
@@ -239,7 +239,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
 
     diff2HtmlRef.current.renderer.draw()
     commentsHook.current.attachAllCommentThreads()
-  }, [commentsHook, diff, exchangeState, useFullDiff, viewStyle, isMounted])
+  }, [commentsHook, diff, memorizedState, useFullDiff, viewStyle, isMounted])
 
   useEffect(
     function renderDiffAndCommentsIfInViewportOrSchedule() {
@@ -253,11 +253,11 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
         }
       }
 
-      exchangeState.set(diff.filePath, { ...exchangeState.get(diff.filePath), collapsed })
+      memorizedState.set(diff.filePath, { ...memorizedState.get(diff.filePath), collapsed })
 
       return () => cancelTask(taskId)
     },
-    [collapsed, diff.filePath, exchangeState, isMounted, renderDiffAndComments, renderCustomContent]
+    [collapsed, diff.filePath, memorizedState, isMounted, renderDiffAndComments, renderCustomContent]
   )
 
   const {
@@ -270,7 +270,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     path: fullDiffAPIPath,
     requestOptions: { headers: { Accept: 'application/json' } },
     queryParams: { include_patch: true, path: diff.filePath, range: 1 },
-    lazy: !useFullDiff
+    lazy: !useFullDiff || !!memorizedState.get(diff.filePath)?.fullDiff
   })
 
   useShowRequestError(fullDiffError, 0)
@@ -279,8 +279,8 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     function parseAndAssignFullDiff() {
       if (fullDiffData) {
         try {
-          exchangeState.set(diff.filePath, {
-            ...exchangeState.get(diff.filePath),
+          memorizedState.set(diff.filePath, {
+            ...memorizedState.get(diff.filePath),
             fullDiff: Diff2Html.parse(
               window.atob((fullDiffData[0].patch as unknown as string) || ''),
               DIFF2HTML_CONFIG
@@ -294,23 +294,39 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
         }
       }
     },
-    [diff, diff.filePath, exchangeState, fullDiffData, showError]
+    [diff, diff.filePath, memorizedState, fullDiffData, showError]
+  )
+
+  useEffect(
+    function adjustScrollPositionWhenCollapsingFile() {
+      const containerDOM = containerRef.current as HTMLDivElement
+
+      if (
+        containerDOM &&
+        !useFullDiff &&
+        memorizedState.get(diff.filePath)?.useFullDiff === false &&
+        !isInViewport(containerDOM)
+      ) {
+        if (stickyTopPosition && containerDOM.getBoundingClientRect().y - stickyTopPosition < 1) {
+          containerDOM.scrollIntoView()
+          scrollElement.scroll({ top: (scrollElement.scrollTop || window.scrollY) - stickyTopPosition })
+        }
+      }
+    },
+    [scrollElement, stickyTopPosition, useFullDiff, diff, memorizedState]
   )
 
   const toggleFullDiff = useCallback(() => {
     // If full diff is not fetched, fetch it and set useFullDiff when data arrives
-    if (!exchangeState.get(diff.filePath)?.fullDiff) {
+    // Otherwise, toggle useFullDiff flag
+    if (!memorizedState.get(diff.filePath)?.fullDiff && !fullDiffLoading) {
       cancelGetFullDiff()
       getFullDiff()
     } else {
-      // Otherwise, toggle useFullDiff flag
-      exchangeState.set(diff.filePath, {
-        ...exchangeState.get(diff.filePath),
-        useFullDiff: !useFullDiff
-      })
+      memorizedState.set(diff.filePath, { ...memorizedState.get(diff.filePath), useFullDiff: !useFullDiff })
       setUseFullDiff(!useFullDiff)
     }
-  }, [useFullDiff, exchangeState, diff.filePath, cancelGetFullDiff, getFullDiff])
+  }, [useFullDiff, memorizedState, diff.filePath, cancelGetFullDiff, getFullDiff, fullDiffLoading])
 
   return (
     <Container
