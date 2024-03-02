@@ -54,7 +54,7 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
         const href = target.getAttribute('href')
 
         // Intercept click event on internal links and navigate to pages to avoid full page reload
-        if (href) {
+        if (href && !/^http(s)?:\/\//.test(href)) {
           try {
             const url = new URL(target.href)
 
