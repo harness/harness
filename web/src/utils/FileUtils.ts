@@ -484,7 +484,8 @@ const TextExtensions = [
   'tf',
   'tfvars',
   'tfstate',
-  'hcl'
+  'hcl',
+  'ipynb'
 ]
 
 const SpecialTextFiles = [
