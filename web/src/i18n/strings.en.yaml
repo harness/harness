@@ -286,7 +286,7 @@ pr:
   prBranchPushInfo: '{user} pushed a new commit {commit}'
   prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
-  prStateChangedDraft: '{user} opened pull request for review.'
+  prStateChangedDraft: '{user} {changedToDraft|true:marked pull request as draft.,opened pull request for review.}'
   titleChanged: '{user} changed title from {old} to {new}.'
   titleChangedTable: |
     ### Other title changes in history
