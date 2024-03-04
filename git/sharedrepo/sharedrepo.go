@@ -33,6 +33,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/git/tempdir"
 
 	"github.com/rs/zerolog/log"
@@ -213,7 +214,7 @@ func (r *SharedRepo) WriteGitObject(
 func (r *SharedRepo) GetTreeSHA(
 	ctx context.Context,
 	rev string,
-) (string, error) {
+) (sha.SHA, error) {
 	cmd := command.New("show",
 		command.WithFlag("--no-patch"),
 		command.WithFlag("--format=%T"),
@@ -226,12 +227,12 @@ func (r *SharedRepo) GetTreeSHA(
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "ambiguous argument") {
-			return "", errors.NotFound("could not resolve git revision %q", rev)
+			return sha.SHA{}, errors.NotFound("could not resolve git revision %q", rev)
 		}
-		return "", fmt.Errorf("failed to get tree sha: %w", err)
+		return sha.SHA{}, fmt.Errorf("failed to get tree sha: %w", err)
 	}
 
-	return strings.TrimSpace(stdout.String()), nil
+	return sha.New(bytes.TrimSpace(stdout.Bytes()))
 }
 
 // ShowFile dumps show file and write to io.Writer.
@@ -290,17 +291,17 @@ func (r *SharedRepo) WriteTree(ctx context.Context) (string, error) {
 // MergeTree merges commits in git index.
 func (r *SharedRepo) MergeTree(
 	ctx context.Context,
-	commitMergeBase, commitTarget, commitSource string,
-) (string, []string, error) {
+	commitMergeBase, commitTarget, commitSource sha.SHA,
+) (sha.SHA, []string, error) {
 	cmd := command.New("merge-tree",
 		command.WithFlag("--write-tree"),
 		command.WithFlag("--name-only"),
 		command.WithFlag("--no-messages"),
-		command.WithArg(commitTarget),
-		command.WithArg(commitSource))
+		command.WithArg(commitTarget.String()),
+		command.WithArg(commitSource.String()))
 
-	if commitMergeBase != "" {
-		cmd.Add(command.WithFlag("--merge-base=" + commitMergeBase))
+	if !commitMergeBase.IsZero() {
+		cmd.Add(command.WithFlag("--merge-base=" + commitMergeBase.String()))
 	}
 
 	stdout := bytes.NewBuffer(nil)
@@ -311,7 +312,7 @@ func (r *SharedRepo) MergeTree(
 
 	// no error: the output is just the tree object SHA
 	if err == nil {
-		return strings.TrimSpace(stdout.String()), nil, nil
+		return sha.ForceNew(bytes.TrimSpace(stdout.Bytes())), nil, nil
 	}
 
 	// exit code=1: the output is the tree object SHA, and list of files in conflict.
@@ -320,24 +321,25 @@ func (r *SharedRepo) MergeTree(
 		lines := strings.Split(output, "\n")
 		if len(lines) < 2 {
 			log.Ctx(ctx).Err(err).Str("output", output).Msg("unexpected output of merge-tree in shared repo")
-			return "", nil, fmt.Errorf("unexpected output of merge-tree in shared repo: %w", err)
+			return sha.SHA{}, nil, fmt.Errorf("unexpected output of merge-tree in shared repo: %w", err)
 		}
-		return lines[0], lines[1:], nil
+		return sha.ForceNew(lines[0]), lines[1:], nil
 	}
 
-	return "", nil, fmt.Errorf("failed to merge-tree in shared repo: %w", err)
+	return sha.SHA{}, nil, fmt.Errorf("failed to merge-tree in shared repo: %w", err)
 }
 
 // CommitTree creates a commit from a given tree for the user with provided message.
 func (r *SharedRepo) CommitTree(
 	ctx context.Context,
 	author, committer *api.Signature,
-	treeHash, message string,
+	treeHash sha.SHA,
+	message string,
 	signoff bool,
-	parentCommits ...string,
-) (string, error) {
+	parentCommits ...sha.SHA,
+) (sha.SHA, error) {
 	cmd := command.New("commit-tree",
-		command.WithArg(treeHash),
+		command.WithArg(treeHash.String()),
 		command.WithAuthorAndDate(
 			author.Identity.Name,
 			author.Identity.Email,
@@ -351,7 +353,7 @@ func (r *SharedRepo) CommitTree(
 	)
 
 	for _, parentCommit := range parentCommits {
-		cmd.Add(command.WithFlag("-p", parentCommit))
+		cmd.Add(command.WithFlag("-p", parentCommit.String()))
 	}
 
 	// temporary no signing
@@ -375,18 +377,18 @@ func (r *SharedRepo) CommitTree(
 		command.WithStdout(stdout),
 		command.WithStdin(messageBytes))
 	if err != nil {
-		return "", fmt.Errorf("failed to commit-tree in shared repo: %w", err)
+		return sha.SHA{}, fmt.Errorf("failed to commit-tree in shared repo: %w", err)
 	}
 
-	return strings.TrimSpace(stdout.String()), nil
+	return sha.New(bytes.TrimSpace(stdout.Bytes()))
 }
 
 // CommitSHAsForRebase returns list of SHAs of the commits between the two git revisions
 // for a rebase operation - in the order they should be rebased in.
 func (r *SharedRepo) CommitSHAsForRebase(
 	ctx context.Context,
-	target, source string,
-) ([]string, error) {
+	target, source sha.SHA,
+) ([]sha.SHA, error) {
 	// the command line arguments are mostly matching default `git rebase` behavior.
 	// Only difference is we use `--date-order` (matches github behavior) whilst `git rebase` uses `--topo-order`.
 	// Git Rebase's rev-list: https://github.com/git/git/blob/v2.41.0/sequencer.c#L5703-L5714
@@ -396,7 +398,7 @@ func (r *SharedRepo) CommitSHAsForRebase(
 		command.WithFlag("--reverse"),
 		command.WithFlag("--right-only"), // only return commits from source
 		command.WithFlag("--date-order"), // childs always before parents, otherwise by commit time stamp
-		command.WithArg(target+"..."+source))
+		command.WithArg(target.String()+"..."+source.String()))
 
 	stdout := bytes.NewBuffer(nil)
 
@@ -404,11 +406,11 @@ func (r *SharedRepo) CommitSHAsForRebase(
 		return nil, fmt.Errorf("failed to rev-list in shared repo: %w", err)
 	}
 
-	var commitSHAs []string
+	var commitSHAs []sha.SHA
 
 	scan := bufio.NewScanner(stdout)
 	for scan.Scan() {
-		commitSHA := scan.Text()
+		commitSHA := sha.ForceNew(scan.Text())
 		commitSHAs = append(commitSHAs, commitSHA)
 	}
 	if err := scan.Err(); err != nil {

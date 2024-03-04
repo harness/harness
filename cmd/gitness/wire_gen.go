@@ -139,12 +139,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	clientFactory := githook.ProvideFactory()
-	gitAdapter, err := git.ProvideGITAdapter(typesConfig, cacheCache, clientFactory)
+	apiGit, err := git.ProvideGITAdapter(typesConfig, cacheCache, clientFactory)
 	if err != nil {
 		return nil, err
 	}
 	storageStore := storage.ProvideLocalStore()
-	gitInterface, err := git.ProvideService(typesConfig, gitAdapter, storageStore)
+	gitInterface, err := git.ProvideService(typesConfig, apiGit, storageStore)
 	if err != nil {
 		return nil, err
 	}

@@ -95,7 +95,7 @@ func MapCommit(c *git.Commit) (*types.Commit, error) {
 	}
 
 	return &types.Commit{
-		SHA:        c.SHA,
+		SHA:        c.SHA.String(),
 		ParentSHAs: c.ParentSHAs,
 		Title:      c.Title,
 		Message:    c.Message,
@@ -116,8 +116,8 @@ func MapRenameDetails(c *git.RenameDetails) *types.RenameDetails {
 	return &types.RenameDetails{
 		OldPath:         c.OldPath,
 		NewPath:         c.NewPath,
-		CommitShaBefore: c.CommitShaBefore,
-		CommitShaAfter:  c.CommitShaAfter,
+		CommitShaBefore: c.CommitShaBefore.String(),
+		CommitShaAfter:  c.CommitShaAfter.String(),
 	}
 }
 

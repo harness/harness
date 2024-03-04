@@ -19,6 +19,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/harness/gitness/git/sha"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -68,12 +70,12 @@ func testParseSignatureFromCatFileLineFor(t *testing.T, name string, email strin
 
 func TestParseTagDataFromCatFile(t *testing.T) {
 	when, _ := time.Parse(defaultGitTimeLayout, "Fri Sep 23 10:57:49 2022 -0700")
-	testParseTagDataFromCatFileFor(t, "sha012", GitObjectTypeTag, "name1",
+	testParseTagDataFromCatFileFor(t, sha.EmptyTree, GitObjectTypeTag, "name1",
 		Signature{Identity: Identity{Name: "max", Email: "max@mail.com"}, When: when},
 		"some message", "some message")
 
 	// test with signature
-	testParseTagDataFromCatFileFor(t, "sha012", GitObjectTypeCommit, "name2",
+	testParseTagDataFromCatFileFor(t, sha.EmptyTree, GitObjectTypeCommit, "name2",
 		Signature{Identity: Identity{Name: "max", Email: "max@mail.com"}, When: when},
 		"gpgsig -----BEGIN PGP SIGNATURE-----\n\nw...B\n-----END PGP SIGNATURE-----\n\nsome message",
 		"some message")
@@ -90,7 +92,7 @@ func testParseTagDataFromCatFileFor(t *testing.T, object string, typ GitObjectTy
 	require.NoError(t, err)
 
 	require.Equal(t, name, res.Name, data)
-	require.Equal(t, object, res.TargetSha, data)
+	require.Equal(t, object, res.TargetSha.String(), data)
 	require.Equal(t, typ, res.TargetType, data)
 	require.Equal(t, expectedMessage, res.Message, data)
 	require.Equal(t, tagger.Identity.Name, res.Tagger.Identity.Name, data)

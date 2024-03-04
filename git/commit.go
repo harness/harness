@@ -21,18 +21,18 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
 
 type GetCommitParams struct {
 	ReadParams
-	// SHA is the git commit sha
-	SHA string
+	Revision string
 }
 
 type Commit struct {
-	SHA        string          `json:"sha"`                   // TBD: it should br sha.SHA
+	SHA        sha.SHA         `json:"sha"`                   // TBD: it should br sha.SHA
 	ParentSHAs []string        `json:"parent_shas,omitempty"` // TBD: is should be sha.SHA
 	Title      string          `json:"title"`
 	Message    string          `json:"message,omitempty"`
@@ -72,11 +72,8 @@ func (s *Service) GetCommit(ctx context.Context, params *GetCommitParams) (*GetC
 	if params == nil {
 		return nil, ErrNoParamsProvided
 	}
-	if !isValidGitSHA(params.SHA) {
-		return nil, errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", params.SHA)
-	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	result, err := s.git.GetCommit(ctx, repoPath, params.SHA)
+	result, err := s.git.GetCommit(ctx, repoPath, params.Revision)
 	if err != nil {
 		return nil, err
 	}
@@ -118,8 +115,8 @@ type ListCommitsParams struct {
 type RenameDetails struct {
 	OldPath         string
 	NewPath         string
-	CommitShaBefore string
-	CommitShaAfter  string
+	CommitShaBefore sha.SHA
+	CommitShaAfter  sha.SHA
 }
 
 type ListCommitsOutput struct {
@@ -185,7 +182,7 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 
 		stat, err := s.CommitShortStat(ctx, &CommitShortStatParams{
 			Path: repoPath,
-			Ref:  commit.SHA,
+			Ref:  commit.SHA.String(),
 		})
 		if err != nil {
 			log.Warn().Msgf("failed to get diff stats: %s", err)

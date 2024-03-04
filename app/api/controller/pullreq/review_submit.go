@@ -82,7 +82,7 @@ func (c *Controller) ReviewSubmit(
 
 	commit, err := c.git.GetCommit(ctx, &git.GetCommitParams{
 		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-		SHA:        in.CommitSHA,
+		Revision:   in.CommitSHA,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get git branch sha: %w", err)
@@ -101,7 +101,7 @@ func (c *Controller) ReviewSubmit(
 			Updated:   now,
 			PullReqID: pr.ID,
 			Decision:  in.Decision,
-			SHA:       commitSHA,
+			SHA:       commitSHA.String(),
 		}
 
 		err = c.reviewStore.Create(ctx, review)
@@ -114,7 +114,7 @@ func (c *Controller) ReviewSubmit(
 			ReviewerID: review.CreatedBy,
 		})
 
-		_, err = c.updateReviewer(ctx, session, pr, review, commitSHA)
+		_, err = c.updateReviewer(ctx, session, pr, review, commitSHA.String())
 		return err
 	})
 	if err != nil {
@@ -127,7 +127,7 @@ func (c *Controller) ReviewSubmit(
 		}
 
 		payload := &types.PullRequestActivityPayloadReviewSubmit{
-			CommitSHA: commitSHA,
+			CommitSHA: commitSHA.String(),
 			Decision:  in.Decision,
 		}
 		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload)

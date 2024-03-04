@@ -89,7 +89,7 @@ type CommitDiffStats struct {
 }
 
 type CommitFilesResponse struct {
-	CommitID string
+	CommitID sha.SHA
 }
 
 //nolint:gocognit
@@ -141,25 +141,25 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		return CommitFilesResponse{}, err
 	}
 
-	var oldCommitSHA string
+	var oldCommitSHA sha.SHA
 	if commit != nil {
 		oldCommitSHA = commit.SHA
 	}
 
 	log.Debug().Msg("create shared repo")
 
-	newCommitSHA, err := func() (string, error) {
+	newCommitSHA, err := func() (sha.SHA, error) {
 		// Create a directory for the temporary shared repository.
 		shared, err := api.NewSharedRepo(s.git, s.tmpDir, params.RepoUID, repoPath)
 		if err != nil {
-			return "", fmt.Errorf("failed to create shared repository: %w", err)
+			return sha.SHA{}, fmt.Errorf("failed to create shared repository: %w", err)
 		}
 		defer shared.Close(ctx)
 
 		// Create bare repository with alternates pointing to the original repository.
 		err = shared.InitAsShared(ctx)
 		if err != nil {
-			return "", fmt.Errorf("failed to create temp repo with alternates: %w", err)
+			return sha.SHA{}, fmt.Errorf("failed to create temp repo with alternates: %w", err)
 		}
 
 		log.Debug().Msgf("prepare tree (empty: %t)", isEmpty)
@@ -168,15 +168,15 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		if isEmpty {
 			err = s.prepareTreeEmptyRepo(ctx, shared, params.Actions)
 		} else {
-			err = shared.SetIndex(ctx, oldCommitSHA)
+			err = shared.SetIndex(ctx, oldCommitSHA.String())
 			if err != nil {
-				return "", fmt.Errorf("failed to set index to temp repo: %w", err)
+				return sha.SHA{}, fmt.Errorf("failed to set index to temp repo: %w", err)
 			}
 
 			err = s.prepareTree(ctx, shared, params.Actions, commit)
 		}
 		if err != nil {
-			return "", fmt.Errorf("failed to prepare tree: %w", err)
+			return sha.SHA{}, fmt.Errorf("failed to prepare tree: %w", err)
 		}
 
 		log.Debug().Msg("write tree")
@@ -184,7 +184,7 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		// Now write the tree
 		treeHash, err := shared.WriteTree(ctx)
 		if err != nil {
-			return "", fmt.Errorf("failed to write tree object: %w", err)
+			return sha.SHA{}, fmt.Errorf("failed to write tree object: %w", err)
 		}
 
 		message := strings.TrimSpace(params.Title)
@@ -213,12 +213,12 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 			committerDate,
 		)
 		if err != nil {
-			return "", fmt.Errorf("failed to commit the tree: %w", err)
+			return sha.SHA{}, fmt.Errorf("failed to commit the tree: %w", err)
 		}
 
 		err = shared.MoveObjects(ctx)
 		if err != nil {
-			return "", fmt.Errorf("failed to move git objects: %w", err)
+			return sha.SHA{}, fmt.Errorf("failed to move git objects: %w", err)
 		}
 
 		return commitSHA, nil
@@ -249,9 +249,10 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 
 	log.Debug().Msg("get commit")
 
-	commit, err = s.git.GetCommit(ctx, repoPath, newCommitSHA)
+	commit, err = s.git.GetCommit(ctx, repoPath, newCommitSHA.String())
 	if err != nil {
-		return CommitFilesResponse{}, fmt.Errorf("failed to get commit for SHA %s: %w", newCommitSHA, err)
+		return CommitFilesResponse{}, fmt.Errorf("failed to get commit for SHA %s: %w",
+			newCommitSHA.String(), err)
 	}
 
 	log.Debug().Msg("done")
@@ -387,7 +388,7 @@ func createFile(ctx context.Context, repo *api.SharedRepo, commit *api.Commit,
 	}
 
 	// Add the object to the index
-	if err = repo.AddObjectToIndex(ctx, mode, hash, filePath); err != nil {
+	if err = repo.AddObjectToIndex(ctx, mode, hash.String(), filePath); err != nil {
 		return fmt.Errorf("createFile: error creating object: %w", err)
 	}
 	return nil
@@ -416,7 +417,7 @@ func updateFile(
 		return fmt.Errorf("updateFile: error hashing object: %w", err)
 	}
 
-	if err = repo.AddObjectToIndex(ctx, mode, hash, filePath); err != nil {
+	if err = repo.AddObjectToIndex(ctx, mode, hash.String(), filePath); err != nil {
 		return fmt.Errorf("updateFile: error updating object: %w", err)
 	}
 	return nil
@@ -455,7 +456,7 @@ func moveFile(
 			return fmt.Errorf("moveFile: error hashing object: %w", err)
 		}
 
-		fileHash = hash
+		fileHash = hash.String()
 		fileMode = mode
 		if entry.IsExecutable() {
 			fileMode = "100755"
@@ -497,7 +498,7 @@ func getFileEntry(
 	sha string,
 	path string,
 ) (*api.TreeNode, error) {
-	entry, err := repo.GetTreeNode(ctx, commit.SHA, path)
+	entry, err := repo.GetTreeNode(ctx, commit.SHA.String(), path)
 	if errors.IsNotFound(err) {
 		return nil, errors.NotFound("path %s not found", path)
 	}
@@ -530,7 +531,7 @@ func checkPathAvailability(
 	subTreePath := ""
 	for index, part := range parts {
 		subTreePath = path.Join(subTreePath, part)
-		entry, err := repo.GetTreeNode(ctx, commit.SHA, subTreePath)
+		entry, err := repo.GetTreeNode(ctx, commit.SHA.String(), subTreePath)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				// Means there is no item with that name, so we're good

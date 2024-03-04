@@ -180,9 +180,9 @@ type changes struct {
 
 func (c *changes) groupByAction(refUpdate hook.ReferenceUpdate, name string) {
 	switch {
-	case refUpdate.Old == types.NilSHA:
+	case refUpdate.Old.String() == types.NilSHA:
 		c.created = append(c.created, name)
-	case refUpdate.New == types.NilSHA:
+	case refUpdate.New.String() == types.NilSHA:
 		c.deleted = append(c.deleted, name)
 	default:
 		c.updated = append(c.updated, name)

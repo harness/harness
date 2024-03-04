@@ -25,10 +25,12 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
@@ -109,8 +111,8 @@ func (s *Service) deleteMergeRef(ctx context.Context, repoID int64, prNum int64)
 		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(prNum)),
 		Type:        gitenum.RefTypePullReqMerge,
-		NewValue:    "", // when NewValue is empty will delete the ref.
-		OldValue:    "", // we don't care about the old value
+		NewValue:    sha.SHA{}, // when NewValue is empty will delete the ref.
+		OldValue:    sha.SHA{}, // we don't care about the old value
 	})
 	if err != nil {
 		return fmt.Errorf("failed to remove PR merge ref: %w", err)
@@ -205,7 +207,7 @@ func (s *Service) updateMergeDataInner(
 		HeadBranch:      pr.SourceBranch,
 		RefType:         gitenum.RefTypePullReqMerge,
 		RefName:         strconv.Itoa(int(pr.Number)),
-		HeadExpectedSHA: newSHA,
+		HeadExpectedSHA: sha.ForceNew(newSHA),
 		Force:           true,
 
 		// set committer date to ensure repeatability of merge commit across replicas
@@ -222,17 +224,17 @@ func (s *Service) updateMergeDataInner(
 			return events.NewDiscardEventErrorf("PR SHA %s is newer than %s", pr.SourceSHA, newSHA)
 		}
 
-		if mergeOutput.MergeSHA == "" || len(mergeOutput.ConflictFiles) > 0 {
+		if mergeOutput.MergeSHA.IsZero() || len(mergeOutput.ConflictFiles) > 0 {
 			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
-			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
-			pr.MergeTargetSHA = &mergeOutput.BaseSHA
+			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
+			pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
 			pr.MergeSHA = nil
 			pr.MergeConflicts = mergeOutput.ConflictFiles
 		} else {
 			pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
-			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
-			pr.MergeTargetSHA = &mergeOutput.BaseSHA
-			pr.MergeSHA = &mergeOutput.MergeSHA
+			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
+			pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
+			pr.MergeSHA = ptr.String(mergeOutput.MergeSHA.String())
 			pr.MergeConflicts = nil
 		}
 		pr.Stats.DiffStats = types.NewDiffStats(mergeOutput.CommitCount, mergeOutput.ChangedFileCount)

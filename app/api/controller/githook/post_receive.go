@@ -91,19 +91,19 @@ func (c *Controller) reportBranchEvent(
 	branchUpdate hook.ReferenceUpdate,
 ) {
 	switch {
-	case branchUpdate.Old == types.NilSHA:
+	case branchUpdate.Old.String() == types.NilSHA:
 		c.gitReporter.BranchCreated(ctx, &events.BranchCreatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
-			SHA:         branchUpdate.New,
+			SHA:         branchUpdate.New.String(),
 		})
-	case branchUpdate.New == types.NilSHA:
+	case branchUpdate.New.String() == types.NilSHA:
 		c.gitReporter.BranchDeleted(ctx, &events.BranchDeletedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
-			SHA:         branchUpdate.Old,
+			SHA:         branchUpdate.Old.String(),
 		})
 	default:
 		result, err := c.git.IsAncestor(ctx, git.IsAncestorParams{
@@ -124,8 +124,8 @@ func (c *Controller) reportBranchEvent(
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
-			OldSHA:      branchUpdate.Old,
-			NewSHA:      branchUpdate.New,
+			OldSHA:      branchUpdate.Old.String(),
+			NewSHA:      branchUpdate.New.String(),
 			Forced:      forced,
 		})
 	}
@@ -138,27 +138,27 @@ func (c *Controller) reportTagEvent(
 	tagUpdate hook.ReferenceUpdate,
 ) {
 	switch {
-	case tagUpdate.Old == types.NilSHA:
+	case tagUpdate.Old.String() == types.NilSHA:
 		c.gitReporter.TagCreated(ctx, &events.TagCreatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
-			SHA:         tagUpdate.New,
+			SHA:         tagUpdate.New.String(),
 		})
-	case tagUpdate.New == types.NilSHA:
+	case tagUpdate.New.String() == types.NilSHA:
 		c.gitReporter.TagDeleted(ctx, &events.TagDeletedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
-			SHA:         tagUpdate.Old,
+			SHA:         tagUpdate.Old.String(),
 		})
 	default:
 		c.gitReporter.TagUpdated(ctx, &events.TagUpdatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
-			OldSHA:      tagUpdate.Old,
-			NewSHA:      tagUpdate.New,
+			OldSHA:      tagUpdate.Old.String(),
+			NewSHA:      tagUpdate.New.String(),
 			// tags can only be force updated!
 			Forced: true,
 		})
@@ -176,7 +176,7 @@ func (c *Controller) handlePRMessaging(
 	// skip anything that was a batch push / isn't branch related / isn't updating/creating a branch.
 	if len(in.RefUpdates) != 1 ||
 		!strings.HasPrefix(in.RefUpdates[0].Ref, gitReferenceNamePrefixBranch) ||
-		in.RefUpdates[0].New == types.NilSHA {
+		in.RefUpdates[0].New.String() == types.NilSHA {
 		return
 	}
 

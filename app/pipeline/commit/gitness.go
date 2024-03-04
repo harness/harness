@@ -57,14 +57,14 @@ func (f *service) FindRef(
 func (f *service) FindCommit(
 	ctx context.Context,
 	repo *types.Repository,
-	sha string,
+	rawSHA string,
 ) (*types.Commit, error) {
 	readParams := git.ReadParams{
 		RepoUID: repo.GitUID,
 	}
 	commitOutput, err := f.git.GetCommit(ctx, &git.GetCommitParams{
 		ReadParams: readParams,
-		SHA:        sha,
+		Revision:   rawSHA,
 	})
 	if err != nil {
 		return nil, err

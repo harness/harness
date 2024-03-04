@@ -228,9 +228,9 @@ func (g *Git) GetRef(
 	ctx context.Context,
 	repoPath string,
 	ref string,
-) (string, error) {
+) (sha.SHA, error) {
 	if repoPath == "" {
-		return "", ErrRepositoryPathEmpty
+		return sha.SHA{}, ErrRepositoryPathEmpty
 	}
 	cmd := command.New("show-ref",
 		command.WithFlag("--verify"),
@@ -241,12 +241,12 @@ func (g *Git) GetRef(
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
 		if command.AsError(err).IsExitCode(128) && strings.Contains(err.Error(), "not a valid ref") {
-			return "", errors.NotFound("reference %q not found", ref)
+			return sha.SHA{}, errors.NotFound("reference %q not found", ref)
 		}
-		return "", err
+		return sha.SHA{}, err
 	}
 
-	return strings.TrimSpace(output.String()), nil
+	return sha.New(output.Bytes())
 }
 
 // UpdateRef allows to update / create / delete references
@@ -257,26 +257,26 @@ func (g *Git) UpdateRef(
 	envVars map[string]string,
 	repoPath string,
 	ref string,
-	oldValue string,
-	newValue string,
+	oldValue sha.SHA,
+	newValue sha.SHA,
 ) error {
 	if repoPath == "" {
 		return ErrRepositoryPathEmpty
 	}
 
 	// don't break existing interface - user calls with empty value to delete the ref.
-	if newValue == "" {
+	if newValue.IsZero() {
 		newValue = sha.Nil
 	}
 
 	// if no old value was provided, use current value (as required for hooks)
 	// TODO: technically a delete could fail if someone updated the ref in the meanwhile.
 	//nolint:gocritic,nestif
-	if oldValue == "" {
+	if oldValue.IsZero() {
 		val, err := g.GetRef(ctx, repoPath, ref)
 		if errors.IsNotFound(err) {
 			// fail in case someone tries to delete a reference that doesn't exist.
-			if newValue == sha.Nil {
+			if newValue.Equal(sha.Nil) {
 				return errors.NotFound("reference %q not found", ref)
 			}
 
@@ -311,20 +311,20 @@ func (g *Git) updateRefWithHooks(
 	envVars map[string]string,
 	repoPath string,
 	ref string,
-	oldValue string,
-	newValue string,
+	oldValue sha.SHA,
+	newValue sha.SHA,
 ) error {
 	if repoPath == "" {
 		return ErrRepositoryPathEmpty
 	}
 
-	if oldValue == "" {
+	if oldValue.IsZero() {
 		return fmt.Errorf("oldValue can't be empty")
 	}
-	if newValue == "" {
+	if newValue.IsZero() {
 		return fmt.Errorf("newValue can't be empty")
 	}
-	if oldValue == sha.Nil && newValue == sha.Nil {
+	if oldValue.Equal(sha.Nil) && newValue.Equal(sha.Nil) {
 		return fmt.Errorf("provided values cannot be both empty")
 	}
 
@@ -357,13 +357,13 @@ func (g *Git) updateRefWithHooks(
 	}
 
 	cmd := command.New("update-ref")
-	if newValue == sha.Nil {
+	if newValue.Equal(sha.Nil) {
 		cmd.Add(command.WithFlag("-d", ref))
 	} else {
-		cmd.Add(command.WithArg(ref, newValue))
+		cmd.Add(command.WithArg(ref, newValue.String()))
 	}
 
-	cmd.Add(command.WithArg(oldValue))
+	cmd.Add(command.WithArg(oldValue.String()))
 	err = cmd.Run(ctx, command.WithDir(repoPath))
 	if err != nil {
 		return processGitErrorf(err, "update of ref %q from %q to %q failed", ref, oldValue, newValue)

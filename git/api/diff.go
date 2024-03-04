@@ -170,12 +170,12 @@ func (g *Git) RawDiff(
 
 	baseTag, err := g.GetAnnotatedTag(ctx, repoPath, baseRef)
 	if err == nil {
-		baseRef = baseTag.TargetSha
+		baseRef = baseTag.TargetSha.String()
 	}
 
 	headTag, err := g.GetAnnotatedTag(ctx, repoPath, headRef)
 	if err == nil {
-		headRef = headTag.TargetSha
+		headRef = headTag.TargetSha.String()
 	}
 
 	cmd := command.New("diff",
@@ -257,20 +257,20 @@ again:
 func (g *Git) CommitDiff(
 	ctx context.Context,
 	repoPath string,
-	sha string,
+	rev string,
 	w io.Writer,
 ) error {
 	if repoPath == "" {
 		return ErrRepositoryPathEmpty
 	}
-	if sha == "" {
-		return errors.InvalidArgument("commit sha cannot be empty")
+	if rev == "" {
+		return errors.InvalidArgument("git revision cannot be empty")
 	}
 
 	cmd := command.New("show",
 		command.WithFlag("--full-index"),
 		command.WithFlag("--pretty=format:%b"),
-		command.WithArg(sha),
+		command.WithArg(rev),
 	)
 
 	if err := cmd.Run(ctx,
@@ -298,7 +298,7 @@ func (g *Git) DiffShortStat(
 	}
 
 	shortstatArgs := []string{baseRef + separator + headRef}
-	if len(baseRef) == 0 || baseRef == sha.Nil {
+	if len(baseRef) == 0 || baseRef == sha.Nil.String() {
 		shortstatArgs = []string{sha.EmptyTree, headRef}
 	}
 	stat, err := GetDiffShortStat(ctx, repoPath, shortstatArgs...)

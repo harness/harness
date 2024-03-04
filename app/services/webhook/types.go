@@ -184,7 +184,7 @@ type CommitInfo struct {
 // commitInfoFrom gets the CommitInfo from a git.Commit.
 func commitInfoFrom(commit git.Commit) CommitInfo {
 	return CommitInfo{
-		SHA:       commit.SHA,
+		SHA:       commit.SHA.String(),
 		Message:   commit.Message,
 		Author:    signatureInfoFrom(commit.Author),
 		Committer: signatureInfoFrom(commit.Committer),

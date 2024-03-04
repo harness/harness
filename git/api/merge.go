@@ -17,9 +17,9 @@ package api
 import (
 	"bytes"
 	"context"
-	"strings"
 
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 )
 
 const (
@@ -34,9 +34,9 @@ func (g *Git) GetMergeBase(
 	remote string,
 	base string,
 	head string,
-) (string, string, error) {
+) (sha.SHA, string, error) {
 	if repoPath == "" {
-		return "", "", ErrRepositoryPathEmpty
+		return sha.SHA{}, "", ErrRepositoryPathEmpty
 	}
 	if remote == "" {
 		remote = "origin"
@@ -65,17 +65,21 @@ func (g *Git) GetMergeBase(
 		command.WithStdout(stdout),
 	)
 	if err != nil {
-		return "", "", processGitErrorf(err, "failed to get merge-base [%s, %s]", base, head)
+		return sha.SHA{}, "", processGitErrorf(err, "failed to get merge-base [%s, %s]", base, head)
 	}
 
-	return strings.TrimSpace(stdout.String()), base, nil
+	result, err := sha.New(bytes.TrimSpace(stdout.Bytes()))
+	if err != nil {
+		return sha.SHA{}, "", err
+	}
+	return result, base, nil
 }
 
 // IsAncestor returns if the provided commit SHA is ancestor of the other commit SHA.
 func (g *Git) IsAncestor(
 	ctx context.Context,
 	repoPath string,
-	ancestorCommitSHA, descendantCommitSHA string,
+	ancestorCommitSHA, descendantCommitSHA sha.SHA,
 ) (bool, error) {
 	if repoPath == "" {
 		return false, ErrRepositoryPathEmpty
@@ -83,7 +87,7 @@ func (g *Git) IsAncestor(
 
 	cmd := command.New("merge-base",
 		command.WithFlag("--is-ancestor"),
-		command.WithArg(ancestorCommitSHA, descendantCommitSHA),
+		command.WithArg(ancestorCommitSHA.String(), descendantCommitSHA.String()),
 	)
 
 	err := cmd.Run(ctx, command.WithDir(repoPath))

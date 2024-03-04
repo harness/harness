@@ -25,6 +25,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 )
 
 const (
@@ -33,9 +34,9 @@ const (
 )
 
 type Tag struct {
-	Sha        string
+	Sha        sha.SHA
 	Name       string
-	TargetSha  string
+	TargetSha  sha.SHA
 	TargetType GitObjectType
 	Title      string
 	Message    string
@@ -59,14 +60,14 @@ const TagPrefix = "refs/tags/"
 func (g *Git) GetAnnotatedTag(
 	ctx context.Context,
 	repoPath string,
-	sha string,
+	rev string,
 ) (*Tag, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
-	tags, err := getAnnotatedTags(ctx, repoPath, []string{sha})
+	tags, err := getAnnotatedTags(ctx, repoPath, []string{rev})
 	if err != nil || len(tags) == 0 {
-		return nil, processGitErrorf(err, "failed to get annotated tag with sha '%s'", sha)
+		return nil, processGitErrorf(err, "failed to get annotated tag with sha '%s'", rev)
 	}
 
 	return &tags[0], nil
@@ -76,12 +77,12 @@ func (g *Git) GetAnnotatedTag(
 func (g *Git) GetAnnotatedTags(
 	ctx context.Context,
 	repoPath string,
-	shas []string,
+	revs []string,
 ) ([]Tag, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
-	return getAnnotatedTags(ctx, repoPath, shas)
+	return getAnnotatedTags(ctx, repoPath, revs)
 }
 
 // CreateTag creates the tag pointing at the provided SHA (could be any type, e.g. commit, tag, blob, ...)
@@ -89,7 +90,7 @@ func (g *Git) CreateTag(
 	ctx context.Context,
 	repoPath string,
 	name string,
-	targetSHA string,
+	targetSHA sha.SHA,
 	opts *CreateTagOptions,
 ) error {
 	if repoPath == "" {
@@ -107,7 +108,7 @@ func (g *Git) CreateTag(
 		)
 	}
 
-	cmd.Add(command.WithArg(name, targetSHA))
+	cmd.Add(command.WithArg(name, targetSHA.String()))
 	err := cmd.Run(ctx, command.WithDir(repoPath))
 	if err != nil {
 		return processGitErrorf(err, "Service failed to create a tag")
@@ -119,7 +120,7 @@ func (g *Git) CreateTag(
 func getAnnotatedTags(
 	ctx context.Context,
 	repoPath string,
-	shas []string,
+	revs []string,
 ) ([]Tag, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
@@ -131,16 +132,17 @@ func getAnnotatedTags(
 		_ = writer.Close()
 	}()
 
-	tags := make([]Tag, len(shas))
+	tags := make([]Tag, len(revs))
 
-	for i, sha := range shas {
-		if _, err := writer.Write([]byte(sha + "\n")); err != nil {
+	for i, rev := range revs {
+		line := rev + "\n"
+		if _, err := writer.Write([]byte(line)); err != nil {
 			return nil, err
 		}
 		output, err := ReadBatchHeaderLine(reader)
 		if err != nil {
 			if errors.Is(err, io.EOF) || errors.IsNotFound(err) {
-				return nil, fmt.Errorf("tag with sha %s does not exist", sha)
+				return nil, fmt.Errorf("tag with sha %s does not exist", rev)
 			}
 			return nil, err
 		}
@@ -161,11 +163,11 @@ func getAnnotatedTags(
 
 		tag, err := parseTagDataFromCatFile(rawData)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse tag '%s': %w", sha, err)
+			return nil, fmt.Errorf("failed to parse tag '%s': %w", rev, err)
 		}
 
 		// fill in the sha
-		tag.Sha = output.SHA.String()
+		tag.Sha = output.SHA
 
 		tags[i] = tag
 	}
@@ -175,13 +177,12 @@ func getAnnotatedTags(
 
 // parseTagDataFromCatFile parses a tag from a cat-file output.
 func parseTagDataFromCatFile(data []byte) (tag Tag, err error) {
-	p := 0
-
 	// parse object Id
-	tag.TargetSha, p, err = parseCatFileLine(data, p, "object")
+	object, p, err := parseCatFileLine(data, 0, "object")
 	if err != nil {
 		return tag, err
 	}
+	tag.TargetSha = sha.ForceNew(object)
 
 	// parse object type
 	rawType, p, err := parseCatFileLine(data, p, "type")
@@ -365,7 +366,7 @@ l:
 			refType := line[:spacePos]
 			switch string(refType) {
 			case "object":
-				tag.TargetSha = string(line[spacePos+1:])
+				tag.TargetSha = sha.ForceNew(line[spacePos+1:])
 			case "type":
 				// A commit can have one or more parents
 				tag.TargetType = GitObjectType(line[spacePos+1:])

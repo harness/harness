@@ -236,7 +236,7 @@ func (s *Service) getCodeOwnerFile(
 
 	return &File{
 		Content:   string(content),
-		SHA:       output.SHA,
+		SHA:       output.SHA.String(),
 		TotalSize: output.Size,
 	}, nil
 }

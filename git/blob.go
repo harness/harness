@@ -28,7 +28,7 @@ type GetBlobParams struct {
 }
 
 type GetBlobOutput struct {
-	SHA string
+	SHA sha.SHA
 	// Size is the actual size of the blob.
 	Size int64
 	// ContentSize is the total number of bytes returned by the Content Reader.
@@ -45,13 +45,13 @@ func (s *Service) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobO
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	// TODO: do we need to validate request for nil?
-	reader, err := s.git.GetBlob(ctx, repoPath, sha.MustNew(params.SHA), params.SizeLimit)
+	reader, err := s.git.GetBlob(ctx, repoPath, sha.ForceNew(params.SHA), params.SizeLimit)
 	if err != nil {
 		return nil, err
 	}
 
 	return &GetBlobOutput{
-		SHA:         reader.SHA.String(),
+		SHA:         reader.SHA,
 		Size:        reader.Size,
 		ContentSize: reader.ContentSize,
 		Content:     reader.Content,

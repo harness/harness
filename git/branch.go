@@ -42,7 +42,7 @@ var listBranchesRefFields = []api.GitReferenceField{
 
 type Branch struct {
 	Name   string
-	SHA    string
+	SHA    sha.SHA
 	Commit *Commit
 }
 
@@ -167,7 +167,7 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 		params.EnvVars,
 		repoPath,
 		branchRef,
-		"", // delete whatever is there
+		sha.SHA{}, // delete whatever is there
 		sha.Nil,
 	)
 	if errors.IsNotFound(err) {
@@ -203,7 +203,7 @@ func (s *Service) ListBranches(ctx context.Context, params *ListBranchesParams) 
 	if params.IncludeCommit {
 		commitSHAs := make([]string, len(gitBranches))
 		for i := range gitBranches {
-			commitSHAs[i] = gitBranches[i].SHA
+			commitSHAs[i] = gitBranches[i].SHA.String()
 		}
 
 		var gitCommits []*api.Commit
@@ -283,7 +283,7 @@ func listBranchesWalkReferencesHandler(
 
 		branch := &api.Branch{
 			Name: fullRefName[len(gitReferenceNamePrefixBranch):],
-			SHA:  objectSHA,
+			SHA:  sha.ForceNew(objectSHA),
 		}
 
 		// TODO: refactor to not use slice pointers?

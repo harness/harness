@@ -45,7 +45,7 @@ type CommitChangesOptions struct {
 }
 
 type Commit struct {
-	SHA       string    `json:"sha"`
+	SHA       sha.SHA   `json:"sha"`
 	Title     string    `json:"title"`
 	Message   string    `json:"message,omitempty"`
 	Author    Signature `json:"author"`
@@ -82,8 +82,8 @@ type CommitDivergence struct {
 type PathRenameDetails struct {
 	OldPath         string
 	NewPath         string
-	CommitSHABefore string
-	CommitSHAAfter  string
+	CommitSHABefore sha.SHA
+	CommitSHAAfter  sha.SHA
 }
 
 // GetLatestCommit gets the latest commit of a path relative from the provided revision.
@@ -258,9 +258,9 @@ type CommitFileStats struct {
 func getFileStats(
 	ctx context.Context,
 	repoPath string,
-	sha string,
+	sha sha.SHA,
 ) (CommitFileStats, error) {
-	changeInfos, err := getChangeInfos(ctx, repoPath, sha)
+	changeInfos, err := getChangeInfos(ctx, repoPath, sha.String())
 	if err != nil {
 		return CommitFileStats{}, fmt.Errorf("failed to get change infos: %w", err)
 	}
@@ -298,7 +298,7 @@ func cleanupCommitsForRename(
 	}
 	for _, renameDetail := range renameDetails {
 		// Since rename details is present it implies that we have commits and hence don't need null check.
-		if commits[0].SHA == renameDetail.CommitSHABefore && path == renameDetail.OldPath {
+		if commits[0].SHA.Equal(renameDetail.CommitSHABefore) && path == renameDetail.OldPath {
 			return commits[1:]
 		}
 	}
@@ -317,7 +317,7 @@ func getRenameDetails(
 
 	renameDetailsList := make([]PathRenameDetails, 0, 2)
 
-	renameDetails, err := gitGetRenameDetails(ctx, repoPath, commits[0].SHA, path)
+	renameDetails, err := gitGetRenameDetails(ctx, repoPath, commits[0].SHA.String(), path)
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +330,7 @@ func getRenameDetails(
 		return renameDetailsList, nil
 	}
 
-	renameDetailsLast, err := gitGetRenameDetails(ctx, repoPath, commits[len(commits)-1].SHA, path)
+	renameDetailsLast, err := gitGetRenameDetails(ctx, repoPath, commits[len(commits)-1].SHA.String(), path)
 	if err != nil {
 		return nil, err
 	}
@@ -453,9 +453,9 @@ func (g *Git) GetFullCommitID(
 	ctx context.Context,
 	repoPath string,
 	shortID string,
-) (string, error) {
+) (sha.SHA, error) {
 	if repoPath == "" {
-		return "", ErrRepositoryPathEmpty
+		return sha.SHA{}, ErrRepositoryPathEmpty
 	}
 	cmd := command.New("rev-parse",
 		command.WithArg(shortID),
@@ -464,11 +464,11 @@ func (g *Git) GetFullCommitID(
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
 		if strings.Contains(err.Error(), "exit status 128") {
-			return "", errors.NotFound("commit not found %s", shortID)
+			return sha.SHA{}, errors.NotFound("commit not found %s", shortID)
 		}
-		return "", err
+		return sha.SHA{}, err
 	}
-	return strings.TrimSpace(output.String()), nil
+	return sha.New(output.Bytes())
 }
 
 // GetCommits returns the (latest) commits for a specific list of refs.
@@ -637,11 +637,11 @@ func getCommit(
 			"unexpected git log formatted output, expected %d, but got %d columns", columnCount, len(commitData))
 	}
 
-	commitSHA := commitData[0]
+	commitSHA := sha.ForceNew(commitData[0])
 	var parentSHAs []sha.SHA
 	if commitData[1] != "" {
 		for _, parentSHA := range strings.Split(commitData[1], " ") {
-			parentSHAs = append(parentSHAs, sha.MustNew(parentSHA))
+			parentSHAs = append(parentSHAs, sha.ForceNew(parentSHA))
 		}
 	}
 	authorName := commitData[2]
@@ -719,7 +719,7 @@ func getCommitFromBatchReader(
 		}
 		tag := parseTagData(data)
 
-		commit, err := GetCommit(ctx, repoPath, tag.TargetSha)
+		commit, err := GetCommit(ctx, repoPath, tag.TargetSha.String())
 		if err != nil {
 			return nil, err
 		}
@@ -753,9 +753,11 @@ func getCommitFromBatchReader(
 // We need this to interpret commits from cat-file or cat-file --batch
 //
 // If used as part of a cat-file --batch stream you need to limit the reader to the correct size.
+//
+//nolint:gocognit
 func CommitFromReader(commitSHA sha.SHA, reader io.Reader) (*Commit, error) {
 	commit := &Commit{
-		SHA:       commitSHA.String(),
+		SHA:       commitSHA,
 		Author:    Signature{},
 		Committer: Signature{},
 	}
@@ -811,7 +813,7 @@ readLoop:
 			case "tree":
 				_, _ = payloadSB.Write(line)
 			case "parent":
-				commit.Parents = append(commit.Parents, sha.MustNew(string(data)))
+				commit.Parents = append(commit.Parents, sha.ForceNew(string(data)))
 				_, _ = payloadSB.Write(line)
 			case "author":
 				commit.Author = Signature{}

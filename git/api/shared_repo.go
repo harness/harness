@@ -30,6 +30,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/git/tempdir"
 
 	"github.com/rs/zerolog/log"
@@ -268,10 +269,10 @@ func (r *SharedRepo) SetDefaultIndex(ctx context.Context) error {
 }
 
 // SetIndex sets the git index to the provided treeish.
-func (r *SharedRepo) SetIndex(ctx context.Context, treeish string) error {
-	cmd := command.New("read-tree", command.WithArg(treeish))
+func (r *SharedRepo) SetIndex(ctx context.Context, rev string) error {
+	cmd := command.New("read-tree", command.WithArg(rev))
 	if err := cmd.Run(ctx, command.WithDir(r.RepoPath)); err != nil {
-		return fmt.Errorf("failed to git read-tree %s: %w", treeish, err)
+		return fmt.Errorf("failed to git read-tree %s: %w", rev, err)
 	}
 	return nil
 }
@@ -340,7 +341,7 @@ func (r *SharedRepo) RemoveFilesFromIndex(
 func (r *SharedRepo) WriteGitObject(
 	ctx context.Context,
 	content io.Reader,
-) (string, error) {
+) (sha.SHA, error) {
 	stdOut := new(bytes.Buffer)
 	cmd := command.New("hash-object",
 		command.WithFlag("-w"),
@@ -351,11 +352,11 @@ func (r *SharedRepo) WriteGitObject(
 		command.WithStdin(content),
 		command.WithStdout(stdOut),
 	); err != nil {
-		return "", fmt.Errorf("unable to hash-object to temporary repo: %s Error: %w\nstdout: %s",
+		return sha.SHA{}, fmt.Errorf("unable to hash-object to temporary repo: %s Error: %w\nstdout: %s",
 			r.repoUID, err, stdOut.String())
 	}
 
-	return strings.TrimSpace(stdOut.String()), nil
+	return sha.New(stdOut.Bytes())
 }
 
 // ShowFile dumps show file and write to io.Writer.
@@ -376,6 +377,11 @@ func (r *SharedRepo) ShowFile(
 		return fmt.Errorf("show file: %w", err)
 	}
 	return nil
+}
+
+// UpdateRef sets the commit ID string of given reference (e.g. branch or tag).
+func (r *SharedRepo) UpdateRef(ctx context.Context, name string, commitID sha.SHA) error {
+	return r.git.UpdateRef(ctx, nil, r.RepoPath, name, sha.Nil, commitID)
 }
 
 // AddObjectToIndex adds the provided object hash to the index with the provided mode and path.
@@ -402,7 +408,7 @@ func (r *SharedRepo) AddObjectToIndex(
 }
 
 // WriteTree writes the current index as a tree to the object db and returns its hash.
-func (r *SharedRepo) WriteTree(ctx context.Context) (string, error) {
+func (r *SharedRepo) WriteTree(ctx context.Context) (sha.SHA, error) {
 	stdout := &bytes.Buffer{}
 	cmd := command.New("write-tree")
 	err := cmd.Run(ctx,
@@ -410,10 +416,10 @@ func (r *SharedRepo) WriteTree(ctx context.Context) (string, error) {
 		command.WithStdout(stdout),
 	)
 	if err != nil {
-		return "", fmt.Errorf("unable to write-tree in temporary repo path for: %s Error: %w",
+		return sha.SHA{}, fmt.Errorf("unable to write-tree in temporary repo path for: %s Error: %w",
 			r.repoUID, err)
 	}
-	return strings.TrimSpace(stdout.String()), nil
+	return sha.New(stdout.Bytes())
 }
 
 // GetLastCommit gets the last commit ID SHA of the repo.
@@ -447,12 +453,13 @@ func (r *SharedRepo) GetLastCommitByRef(
 // CommitTreeWithDate creates a commit from a given tree for the user with provided message.
 func (r *SharedRepo) CommitTreeWithDate(
 	ctx context.Context,
-	parent string,
+	parent sha.SHA,
 	author, committer *Identity,
-	treeHash, message string,
+	treeHash sha.SHA,
+	message string,
 	signoff bool,
 	authorDate, committerDate time.Time,
-) (string, error) {
+) (sha.SHA, error) {
 	messageBytes := new(bytes.Buffer)
 	_, _ = messageBytes.WriteString(message)
 	_, _ = messageBytes.WriteString("\n")
@@ -469,10 +476,10 @@ func (r *SharedRepo) CommitTreeWithDate(
 			committerDate,
 		),
 	)
-	if parent != "" {
-		cmd.Add(command.WithFlag("-p", parent))
+	if !parent.IsZero() {
+		cmd.Add(command.WithFlag("-p", parent.String()))
 	}
-	cmd.Add(command.WithArg(treeHash))
+	cmd.Add(command.WithArg(treeHash.String()))
 
 	// temporary no signing
 	cmd.Add(command.WithFlag("--no-gpg-sign"))
@@ -497,10 +504,10 @@ func (r *SharedRepo) CommitTreeWithDate(
 		command.WithStdin(messageBytes),
 		command.WithStdout(stdout),
 	); err != nil {
-		return "", processGitErrorf(err, "unable to commit-tree in temporary repo: %s Error: %v\nStdout: %s",
+		return sha.SHA{}, processGitErrorf(err, "unable to commit-tree in temporary repo: %s Error: %v\nStdout: %s",
 			r.repoUID, err, stdout)
 	}
-	return strings.TrimSpace(stdout.String()), nil
+	return sha.New(bytes.TrimSpace(stdout.Bytes()))
 }
 
 func (r *SharedRepo) PushDeleteBranch(

@@ -21,13 +21,14 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
 
 type Branch struct {
 	Name   string
-	SHA    string
+	SHA    sha.SHA
 	Commit *Commit
 }
 
@@ -101,7 +102,7 @@ func (g *Git) IsBranchExist(ctx context.Context, repoPath, name string) bool {
 		command.WithDir(repoPath),
 	)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to check if branch '%s' exist: %w", name, err)
+		log.Ctx(ctx).Err(err).Msgf("failed to check if branch '%s' exist: %v", name, err)
 		return false
 	}
 	return true

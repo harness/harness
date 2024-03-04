@@ -81,7 +81,7 @@ func (g *Git) ServicePack(
 		command.WithEnvs(env...),
 	)
 	if err != nil && err.Error() != "signal: killed" {
-		log.Ctx(ctx).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v - %s", service, repoPath, err)
+		log.Ctx(ctx).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v", service, repoPath, err)
 	}
 	return err
 }

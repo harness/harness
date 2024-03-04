@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/git/diff"
 	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/parser"
+	"github.com/harness/gitness/git/sha"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -97,11 +98,8 @@ func (s *Service) rawDiff(ctx context.Context, w io.Writer, params *DiffParams, 
 }
 
 func (s *Service) CommitDiff(ctx context.Context, params *GetCommitParams, out io.Writer) error {
-	if !isValidGitSHA(params.SHA) {
-		return errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", params.SHA)
-	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	err := s.git.CommitDiff(ctx, repoPath, params.SHA, out)
+	err := s.git.CommitDiff(ctx, repoPath, params.Revision, out)
 	if err != nil {
 		return err
 	}
@@ -321,7 +319,7 @@ type DiffCutOutput struct {
 	Header       HunkHeader
 	LinesHeader  string
 	Lines        []string
-	MergeBaseSHA string
+	MergeBaseSHA sha.SHA
 }
 
 type DiffCutParams struct {

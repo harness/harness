@@ -315,7 +315,7 @@ func setAsCodeComment(a *types.PullReqActivity, cut git.DiffCutOutput, path, sou
 	a.Kind = enum.PullReqActivityKindChangeComment
 	a.CodeComment = &types.CodeCommentFields{
 		Outdated:     falseBool,
-		MergeBaseSHA: cut.MergeBaseSHA,
+		MergeBaseSHA: cut.MergeBaseSHA.String(),
 		SourceSHA:    sourceCommitSHA,
 		Path:         path,
 		LineNew:      cut.Header.NewLine,
@@ -359,7 +359,7 @@ func (c *Controller) migrateCodeComment(
 	cut git.DiffCutOutput,
 ) {
 	needsNewLineMigrate := in.SourceCommitSHA != pr.SourceSHA
-	needsOldLineMigrate := cut.MergeBaseSHA != pr.MergeBaseSHA
+	needsOldLineMigrate := cut.MergeBaseSHA.String() != pr.MergeBaseSHA
 	if !needsNewLineMigrate && !needsOldLineMigrate {
 		return
 	}

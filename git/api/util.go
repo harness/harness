@@ -46,6 +46,7 @@ func NewSignatureFromCommitLine(line []byte) *Signature {
 
 	// Check date format.
 	firstChar := line[emailEnd+2]
+	//nolint:nestif
 	if firstChar >= 48 && firstChar <= 57 {
 		idx := bytes.IndexByte(line[emailEnd+2:], ' ')
 		if idx < 0 {

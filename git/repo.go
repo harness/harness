@@ -20,7 +20,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"regexp"
 	"runtime/debug"
 	"time"
 
@@ -55,11 +54,6 @@ var (
 		// "update", // update is disabled for performance reasons (called once for every ref)
 		"post-receive",
 	}
-
-	// gitSHARegex defines the valid SHA format accepted by GIT (full form and short forms).
-	// Note: as of now SHA is at most 40 characters long, but in the future it's moving to sha256
-	// which is 64 chars - keep this forward-compatible.
-	gitSHARegex = regexp.MustCompile("^[0-9a-f]{4,64}$")
 )
 
 type CreateRepositoryParams struct {
@@ -540,9 +534,4 @@ func (s *Service) UpdateDefaultBranch(
 			params.BranchName, err)
 	}
 	return nil
-}
-
-// isValidGitSHA returns true iff the provided string is a valid git sha (short or long form).
-func isValidGitSHA(sha string) bool {
-	return gitSHARegex.MatchString(sha)
 }

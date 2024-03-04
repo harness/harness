@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/sha"
 )
 
 type GetRefParams struct {
@@ -45,7 +46,7 @@ func (p *GetRefParams) Validate() error {
 }
 
 type GetRefResponse struct {
-	SHA string
+	SHA sha.SHA
 }
 
 func (s *Service) GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error) {
@@ -73,10 +74,10 @@ type UpdateRefParams struct {
 	Name string
 	// NewValue specified the new value the reference should point at.
 	// An empty value will lead to the deletion of the branch.
-	NewValue string
+	NewValue sha.SHA
 	// OldValue is an optional value that can be used to ensure that the reference
 	// is updated iff its current value is matching the provided value.
-	OldValue string
+	OldValue sha.SHA
 }
 
 func (s *Service) UpdateRef(ctx context.Context, params UpdateRefParams) error {

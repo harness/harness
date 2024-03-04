@@ -26,6 +26,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 )
 
 var (
@@ -142,12 +143,12 @@ func (r *BlameReader) NextPart() (*BlamePart, error) {
 		}
 
 		if matches := blamePorcelainHeadRE.FindStringSubmatch(line); matches != nil {
-			sha := matches[1]
+			commitSHA := matches[1]
 
 			if commit == nil {
-				commit = r.commitCache[sha]
+				commit = r.commitCache[commitSHA]
 				if commit == nil {
-					commit = &Commit{SHA: sha}
+					commit = &Commit{SHA: sha.ForceNew(commitSHA)}
 				}
 
 				if matches[5] != "" {
@@ -161,9 +162,9 @@ func (r *BlameReader) NextPart() (*BlamePart, error) {
 				continue
 			}
 
-			if sha != commit.SHA {
+			if !commit.SHA.Equal(commitSHA) {
 				r.unreadLine(line)
-				r.commitCache[commit.SHA] = commit
+				r.commitCache[commit.SHA.String()] = commit
 
 				return &BlamePart{
 					Commit: commit,
