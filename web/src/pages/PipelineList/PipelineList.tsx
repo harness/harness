@@ -57,7 +57,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { CommitActions } from 'components/CommitActions/CommitActions'
-import noPipelineImage from '../RepositoriesListing/no-repo.svg'
+import noPipelineImage from '../RepositoriesListing/no-repo.svg?url'
 import css from './PipelineList.module.scss'
 
 const PipelineList = () => {

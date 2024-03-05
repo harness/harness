@@ -46,7 +46,6 @@ import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useCustomEventListener } from 'hooks/useEventListener'
-import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { getErrorMessage, isInViewport } from 'utils/Utils'
 import { createRequestIdleCallbackTaskPool } from 'utils/Task'
@@ -59,6 +58,8 @@ import {
   FileViewedState
 } from './DiffViewerUtils'
 import { usePullReqComments } from './usePullReqComments'
+import Collapse from '../../icons/collapse.svg'
+import Expand from '../../icons/expand.svg'
 import css from './DiffViewer.module.scss'
 
 interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -354,6 +355,14 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               }}
               className={css.chevron}
             />
+            <Button
+              variation={ButtonVariation.ICON}
+              className={css.expandCollapseDiffBtn}
+              onClick={toggleFullDiff}
+              tooltip={getString(useFullDiff ? 'pr.collapseFullFile' : 'pr.expandFullFile')}
+              tooltipProps={{ isDark: true }}>
+              {useFullDiff ? <Collapse width="18" height="18" /> : <Expand width="18" height="18" />}
+            </Button>
             <Text
               inline
               className={css.fname}
@@ -436,19 +445,6 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
                       {getString('viewed')}
                     </label>
                   </Render>
-                  <OptionsMenuButton
-                    isDark={true}
-                    icon="Options"
-                    iconProps={{ size: 14 }}
-                    style={{ padding: '5px' }}
-                    items={[
-                      {
-                        hasIcon: false,
-                        text: getString(useFullDiff ? 'pr.collapseFullFile' : 'pr.expandFullFile'),
-                        onClick: toggleFullDiff
-                      }
-                    ]}
-                  />
                 </Layout.Horizontal>
               </Container>
             </Render>

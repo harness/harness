@@ -240,8 +240,8 @@ diff: Diff
 draft: Draft
 conversation: Conversation
 pr:
-  expandFullFile: Expand full file
-  collapseFullFile: Collapse file
+  expandFullFile: Expand all
+  collapseFullFile: Collapse expanded lines
   ableToMerge: Able to merge.
   cantBeMerged: This branch has conflicts with the base branch.
   cantMerge: Can't be merged. You can still create the pull request.

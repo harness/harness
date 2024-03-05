@@ -31,7 +31,7 @@ import type { GitInfoProps } from 'utils/GitUtils'
 
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import CodeSearchBar from 'components/CodeSearchBar/CodeSearchBar'
-import svg from './search-background.svg'
+import svg from './search-background.svg?url'
 import css from './CodeSearch.module.scss'
 
 interface CodeSearchProps {

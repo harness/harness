@@ -39,7 +39,7 @@ import type { TypesRepository } from 'services/code'
 
 import { useStrings } from 'framework/strings'
 import type { ExportFormDataExtended } from 'utils/GitUtils'
-import Upgrade from '../../../icons/Upgrade.svg'
+import Upgrade from '../../../icons/Upgrade.svg?url'
 import css from '../SpaceSettings.module.scss'
 
 interface ExportFormProps {

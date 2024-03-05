@@ -259,7 +259,7 @@
     position: sticky;
     top: var(--diff-viewer-sticky-top, 0);
     z-index: 1;
-    padding: 5px 10px 5px 5px;
+    padding: 5px 10px 5px 10px;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     box-shadow: 0px 2px 4px 0px rgba(96, 97, 112, 0.16), 0px 0px 1px 0px rgba(40, 41, 61, 0.04);
@@ -292,6 +292,12 @@
         &:hover {
           color: var(--primary-7) !important;
         }
+      }
+    }
+
+    .expandCollapseDiffBtn {
+      > span {
+        display: flex;
       }
     }
 
