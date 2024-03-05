@@ -20,6 +20,7 @@ export declare const box: string
 export declare const bp3Icon: string
 export declare const deleted: string
 export declare const deleteIcon: string
+export declare const edit: string
 export declare const editCommentContainer: string
 export declare const fluid: string
 export declare const hasThread: string

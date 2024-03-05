@@ -240,6 +240,7 @@ diff: Diff
 draft: Draft
 conversation: Conversation
 pr:
+  copyLinkToComment: Copy link to comment
   expandFullFile: Expand all
   collapseFullFile: Collapse expanded lines
   ableToMerge: Able to merge.

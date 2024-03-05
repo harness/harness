@@ -106,9 +106,23 @@
   }
 }
 
-.optionMenuIcon {
-  > .bp3-icon {
-    padding-right: var(--spacing-xlarge);
+.optionMenuIcon:not(.edit) {
+  :global {
+    .bp3-icon {
+      padding-right: var(--spacing-xlarge);
+
+      svg {
+        width: 16px !important;
+        height: 16px !important;
+        path {
+          fill: #fff !important;
+        }
+      }
+    }
+  }
+
+  .edit {
+    padding-left: 4px;
   }
 }
 

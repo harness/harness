@@ -94,6 +94,7 @@ interface CommentBoxProps<T> {
   repoMetadata: TypesRepository | undefined
   standalone: boolean
   routingId: string
+  copyLinkToComment: (commentId: number, commentItem: CommentItem<T>) => void
 }
 
 const CommentBoxInternal = <T = unknown,>({
@@ -116,7 +117,8 @@ const CommentBoxInternal = <T = unknown,>({
   enableReplyPlaceHolder,
   repoMetadata,
   standalone,
-  routingId
+  routingId,
+  copyLinkToComment
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
@@ -202,6 +204,7 @@ const CommentBoxInternal = <T = unknown,>({
               setDirties({ ...dirties, [index]: dirty })
             }}
             outlets={outlets}
+            copyLinkToComment={copyLinkToComment}
           />
           <Match expr={showReplyPlaceHolder && enableReplyPlaceHolderRef.current}>
             <Truthy>
@@ -293,7 +296,8 @@ const CommentBoxInternal = <T = unknown,>({
   )
 }
 
-interface CommentsThreadProps<T> extends Pick<CommentBoxProps<T>, 'commentItems' | 'handleAction' | 'outlets'> {
+interface CommentsThreadProps<T>
+  extends Pick<CommentBoxProps<T>, 'commentItems' | 'handleAction' | 'outlets' | 'copyLinkToComment'> {
   onQuote: (content: string) => void
   setDirty: (index: number, dirty: boolean) => void
   repoMetadata: TypesRepository | undefined
@@ -305,7 +309,8 @@ const CommentsThread = <T = unknown,>({
   handleAction,
   setDirty,
   outlets = {},
-  repoMetadata
+  repoMetadata,
+  copyLinkToComment
 }: CommentsThreadProps<T>) => {
   const { getString } = useStrings()
   const { standalone, routingId } = useAppContext()
@@ -376,7 +381,7 @@ const CommentsThread = <T = unknown,>({
                         items={[
                           {
                             hasIcon: true,
-                            className: css.optionMenuIcon,
+                            className: cx(css.optionMenuIcon, css.edit),
                             iconName: 'Edit',
                             text: getString('edit'),
                             onClick: () => setEditIndexes({ ...editIndexes, ...{ [index]: true } })
@@ -387,6 +392,13 @@ const CommentsThread = <T = unknown,>({
                             iconName: 'code-quote',
                             text: getString('quote'),
                             onClick: () => onQuote(commentItem?.content)
+                          },
+                          {
+                            hasIcon: true,
+                            className: css.optionMenuIcon,
+                            iconName: 'code-copy',
+                            text: getString('pr.copyLinkToComment'),
+                            onClick: () => copyLinkToComment(commentItem.id, commentItems[0])
                           },
                           '-',
                           {

@@ -17,7 +17,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useMutate } from 'restful-react'
 import ReactDOM from 'react-dom'
-import { useToaster, ButtonProps } from '@harnessio/uicore'
+import { useLocation } from 'react-router-dom'
+import { useToaster, ButtonProps, Utils } from '@harnessio/uicore'
 import { isEqual, max, noop, random } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
@@ -25,7 +26,7 @@ import type { DiffFileEntry } from 'utils/types'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import type { OpenapiCommentCreatePullReqRequest, TypesPullReq, TypesPullReqActivity } from 'services/code'
-import { getErrorMessage } from 'utils/Utils'
+import { PullRequestSection, getErrorMessage } from 'utils/Utils'
 import { AppWrapper } from 'App'
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
 import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
@@ -86,7 +87,7 @@ export function usePullReqComments({
 }: UsePullReqCommentsProps) {
   const activities = usePullReqActivities()
   const { getString } = useStrings()
-  const { routingId, currentUser, standalone } = useAppContext()
+  const { routingId, currentUser, standalone, routes } = useAppContext()
   const { showError } = useToaster()
   const confirmAct = useConfirmAct()
   const commentPath = useMemo(
@@ -94,8 +95,21 @@ export function usePullReqComments({
     [repoMetadata.path, pullReqMetadata?.number]
   )
   const { save, update, remove } = useCommentAPI(commentPath)
+  const location = useLocation()
   const [comments] = useState(new Map<number, DiffCommentItem<TypesPullReqActivity>>())
+  const copyLinkToComment = useCallback(
+    (id, commentItem) => {
+      const path = `${routes.toCODEPullRequest({
+        repoPath: repoMetadata?.path as string,
+        pullRequestId: String(pullReqMetadata?.number),
+        pullRequestSection: PullRequestSection.FILES_CHANGED
+      })}?path=${commentItem.payload?.code_comment?.path}&commentId=${id}`
+      const { pathname, origin } = window.location
 
+      Utils.copy(origin + pathname.replace(location.pathname, '') + path)
+    },
+    [location, pullReqMetadata?.number, repoMetadata?.path, routes]
+  )
   //
   // Attach a single comment thread to its binding DOM. Thread can be a
   // draft/uncommitted/not-saved one.
@@ -190,6 +204,7 @@ export function usePullReqComments({
             onCancel={comment.destroy}
             setDirty={setDirty || noop}
             currentUserName={currentUser?.display_name || currentUser?.email || ''}
+            copyLinkToComment={copyLinkToComment}
             handleAction={async (action, value, commentItem) => {
               let result = true
               let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
