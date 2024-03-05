@@ -63,8 +63,8 @@ func (c *CLICore) Update(ctx context.Context, ref string, oldSHA string, newSHA 
 	in := UpdateInput{
 		RefUpdate: ReferenceUpdate{
 			Ref: ref,
-			Old: sha.ForceNew(oldSHA),
-			New: sha.ForceNew(newSHA),
+			Old: sha.Must(oldSHA),
+			New: sha.Must(newSHA),
 		},
 	}
 
@@ -141,8 +141,8 @@ func getUpdatedReferencesFromStdIn() ([]ReferenceUpdate, error) {
 		}
 
 		updatedRefs = append(updatedRefs, ReferenceUpdate{
-			Old: sha.ForceNew(splitGitHookData[0]),
-			New: sha.ForceNew(splitGitHookData[1]),
+			Old: sha.Must(splitGitHookData[0]),
+			New: sha.Must(splitGitHookData[1]),
 			Ref: splitGitHookData[2],
 		})
 	}

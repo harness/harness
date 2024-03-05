@@ -70,5 +70,5 @@ func (g *Git) HashObject(ctx context.Context, repoPath string, reader io.Reader)
 	if err != nil {
 		return sha.SHA{}, err
 	}
-	return sha.New(stdout.Bytes())
+	return sha.New(stdout.String())
 }

@@ -207,7 +207,7 @@ func (s *Service) updateMergeDataInner(
 		HeadBranch:      pr.SourceBranch,
 		RefType:         gitenum.RefTypePullReqMerge,
 		RefName:         strconv.Itoa(int(pr.Number)),
-		HeadExpectedSHA: sha.ForceNew(newSHA),
+		HeadExpectedSHA: sha.Must(newSHA),
 		Force:           true,
 
 		// set committer date to ensure repeatability of merge commit across replicas
@@ -224,7 +224,7 @@ func (s *Service) updateMergeDataInner(
 			return events.NewDiscardEventErrorf("PR SHA %s is newer than %s", pr.SourceSHA, newSHA)
 		}
 
-		if mergeOutput.MergeSHA.IsZero() || len(mergeOutput.ConflictFiles) > 0 {
+		if mergeOutput.MergeSHA.IsEmpty() || len(mergeOutput.ConflictFiles) > 0 {
 			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
 			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
 			pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())

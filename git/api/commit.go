@@ -468,7 +468,7 @@ func (g *Git) GetFullCommitID(
 		}
 		return sha.SHA{}, err
 	}
-	return sha.New(output.Bytes())
+	return sha.New(output.String())
 }
 
 // GetCommits returns the (latest) commits for a specific list of refs.
@@ -637,11 +637,11 @@ func getCommit(
 			"unexpected git log formatted output, expected %d, but got %d columns", columnCount, len(commitData))
 	}
 
-	commitSHA := sha.ForceNew(commitData[0])
+	commitSHA := sha.Must(commitData[0])
 	var parentSHAs []sha.SHA
 	if commitData[1] != "" {
 		for _, parentSHA := range strings.Split(commitData[1], " ") {
-			parentSHAs = append(parentSHAs, sha.ForceNew(parentSHA))
+			parentSHAs = append(parentSHAs, sha.Must(parentSHA))
 		}
 	}
 	authorName := commitData[2]
@@ -813,7 +813,7 @@ readLoop:
 			case "tree":
 				_, _ = payloadSB.Write(line)
 			case "parent":
-				commit.Parents = append(commit.Parents, sha.ForceNew(string(data)))
+				commit.Parents = append(commit.Parents, sha.Must(string(data)))
 				_, _ = payloadSB.Write(line)
 			case "author":
 				commit.Author = Signature{}

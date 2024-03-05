@@ -248,7 +248,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 	if err != nil && !errors.IsNotFound(err) {
 		return nil, fmt.Errorf("CreateCommitTag: failed to verify tag existence: %w", err)
 	}
-	if err == nil && !commitSHA.IsZero() {
+	if err == nil && !commitSHA.IsEmpty() {
 		return nil, errors.Conflict("tag '%s' already exists", tagName)
 	}
 
@@ -427,7 +427,7 @@ func listCommitTagsWalkReferencesHandler(tags *[]CommitTag) api.WalkReferencesHa
 
 		tag := CommitTag{
 			Name:        fullRefName[len(gitReferenceNamePrefixTag):],
-			SHA:         sha.ForceNew(objectSHA),
+			SHA:         sha.Must(objectSHA),
 			IsAnnotated: objectTypeRaw == string(api.GitObjectTypeTag),
 		}
 

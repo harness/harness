@@ -232,7 +232,7 @@ func (r *SharedRepo) GetTreeSHA(
 		return sha.SHA{}, fmt.Errorf("failed to get tree sha: %w", err)
 	}
 
-	return sha.New(bytes.TrimSpace(stdout.Bytes()))
+	return sha.New(stdout.String())
 }
 
 // ShowFile dumps show file and write to io.Writer.
@@ -300,7 +300,7 @@ func (r *SharedRepo) MergeTree(
 		command.WithArg(commitTarget.String()),
 		command.WithArg(commitSource.String()))
 
-	if !commitMergeBase.IsZero() {
+	if !commitMergeBase.IsEmpty() {
 		cmd.Add(command.WithFlag("--merge-base=" + commitMergeBase.String()))
 	}
 
@@ -312,7 +312,7 @@ func (r *SharedRepo) MergeTree(
 
 	// no error: the output is just the tree object SHA
 	if err == nil {
-		return sha.ForceNew(bytes.TrimSpace(stdout.Bytes())), nil, nil
+		return sha.Must(stdout.String()), nil, nil
 	}
 
 	// exit code=1: the output is the tree object SHA, and list of files in conflict.
@@ -323,7 +323,7 @@ func (r *SharedRepo) MergeTree(
 			log.Ctx(ctx).Err(err).Str("output", output).Msg("unexpected output of merge-tree in shared repo")
 			return sha.SHA{}, nil, fmt.Errorf("unexpected output of merge-tree in shared repo: %w", err)
 		}
-		return sha.ForceNew(lines[0]), lines[1:], nil
+		return sha.Must(lines[0]), lines[1:], nil
 	}
 
 	return sha.SHA{}, nil, fmt.Errorf("failed to merge-tree in shared repo: %w", err)
@@ -380,7 +380,7 @@ func (r *SharedRepo) CommitTree(
 		return sha.SHA{}, fmt.Errorf("failed to commit-tree in shared repo: %w", err)
 	}
 
-	return sha.New(bytes.TrimSpace(stdout.Bytes()))
+	return sha.New(stdout.String())
 }
 
 // CommitSHAsForRebase returns list of SHAs of the commits between the two git revisions
@@ -410,7 +410,7 @@ func (r *SharedRepo) CommitSHAsForRebase(
 
 	scan := bufio.NewScanner(stdout)
 	for scan.Scan() {
-		commitSHA := sha.ForceNew(scan.Text())
+		commitSHA := sha.Must(scan.Text())
 		commitSHAs = append(commitSHAs, commitSHA)
 	}
 	if err := scan.Err(); err != nil {

@@ -356,7 +356,7 @@ func (r *SharedRepo) WriteGitObject(
 			r.repoUID, err, stdOut.String())
 	}
 
-	return sha.New(stdOut.Bytes())
+	return sha.New(stdOut.String())
 }
 
 // ShowFile dumps show file and write to io.Writer.
@@ -419,7 +419,7 @@ func (r *SharedRepo) WriteTree(ctx context.Context) (sha.SHA, error) {
 		return sha.SHA{}, fmt.Errorf("unable to write-tree in temporary repo path for: %s Error: %w",
 			r.repoUID, err)
 	}
-	return sha.New(stdout.Bytes())
+	return sha.New(stdout.String())
 }
 
 // GetLastCommit gets the last commit ID SHA of the repo.
@@ -476,7 +476,7 @@ func (r *SharedRepo) CommitTreeWithDate(
 			committerDate,
 		),
 	)
-	if !parent.IsZero() {
+	if !parent.IsEmpty() {
 		cmd.Add(command.WithFlag("-p", parent.String()))
 	}
 	cmd.Add(command.WithArg(treeHash.String()))
@@ -507,7 +507,7 @@ func (r *SharedRepo) CommitTreeWithDate(
 		return sha.SHA{}, processGitErrorf(err, "unable to commit-tree in temporary repo: %s Error: %v\nStdout: %s",
 			r.repoUID, err, stdout)
 	}
-	return sha.New(bytes.TrimSpace(stdout.Bytes()))
+	return sha.New(stdout.String())
 }
 
 func (r *SharedRepo) PushDeleteBranch(

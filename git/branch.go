@@ -283,7 +283,7 @@ func listBranchesWalkReferencesHandler(
 
 		branch := &api.Branch{
 			Name: fullRefName[len(gitReferenceNamePrefixBranch):],
-			SHA:  sha.ForceNew(objectSHA),
+			SHA:  sha.Must(objectSHA),
 		}
 
 		// TODO: refactor to not use slice pointers?

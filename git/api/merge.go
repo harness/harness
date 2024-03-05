@@ -68,7 +68,7 @@ func (g *Git) GetMergeBase(
 		return sha.SHA{}, "", processGitErrorf(err, "failed to get merge-base [%s, %s]", base, head)
 	}
 
-	result, err := sha.New(bytes.TrimSpace(stdout.Bytes()))
+	result, err := sha.New(stdout.String())
 	if err != nil {
 		return sha.SHA{}, "", err
 	}

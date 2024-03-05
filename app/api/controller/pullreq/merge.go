@@ -226,7 +226,7 @@ func (c *Controller) Merge(
 				HeadRepoUID:     sourceRepo.GitUID,
 				HeadBranch:      pr.SourceBranch,
 				RefType:         gitenum.RefTypeUndefined, // update no refs -> no commit will be created
-				HeadExpectedSHA: sha.ForceNew(in.SourceSHA),
+				HeadExpectedSHA: sha.Must(in.SourceSHA),
 			})
 			if err != nil {
 				return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
@@ -329,7 +329,7 @@ func (c *Controller) Merge(
 		AuthorDate:      &now,
 		RefType:         gitenum.RefTypeBranch,
 		RefName:         pr.TargetBranch,
-		HeadExpectedSHA: sha.ForceNew(in.SourceSHA),
+		HeadExpectedSHA: sha.Must(in.SourceSHA),
 		Method:          gitenum.MergeMethod(in.Method),
 	})
 	if err != nil {

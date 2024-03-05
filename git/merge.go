@@ -189,7 +189,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		return MergeOutput{}, fmt.Errorf("failed to get merge base branch commit SHA: %w", err)
 	}
 
-	if !params.HeadExpectedSHA.IsZero() && !params.HeadExpectedSHA.Equal(headCommitSHA) {
+	if !params.HeadExpectedSHA.IsEmpty() && !params.HeadExpectedSHA.Equal(headCommitSHA) {
 		return MergeOutput{}, errors.PreconditionFailed(
 			"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
 			params.HeadBranch,

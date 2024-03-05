@@ -74,7 +74,7 @@ filename file_name.go
 	}
 
 	commit1 := &Commit{
-		SHA:     sha.ForceNew("16f267ad4f731af1b2e36f42e170ed8921377398"),
+		SHA:     sha.Must("16f267ad4f731af1b2e36f42e170ed8921377398"),
 		Title:   "Pull request 1",
 		Message: "",
 		Author: Signature{
@@ -88,7 +88,7 @@ filename file_name.go
 	}
 
 	commit2 := &Commit{
-		SHA:     sha.ForceNew("dcb4b6b63e86f06ed4e4c52fbc825545dc0b6200"),
+		SHA:     sha.Must("dcb4b6b63e86f06ed4e4c52fbc825545dc0b6200"),
 		Title:   "Pull request 2",
 		Message: "",
 		Author: Signature{

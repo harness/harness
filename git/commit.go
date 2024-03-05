@@ -32,8 +32,8 @@ type GetCommitParams struct {
 }
 
 type Commit struct {
-	SHA        sha.SHA         `json:"sha"`                   // TBD: it should br sha.SHA
-	ParentSHAs []string        `json:"parent_shas,omitempty"` // TBD: is should be sha.SHA
+	SHA        sha.SHA         `json:"sha"`
+	ParentSHAs []string        `json:"parent_shas,omitempty"` // TBD: this should be sha.SHA
 	Title      string          `json:"title"`
 	Message    string          `json:"message,omitempty"`
 	Author     Signature       `json:"author"`

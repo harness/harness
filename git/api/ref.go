@@ -246,7 +246,7 @@ func (g *Git) GetRef(
 		return sha.SHA{}, err
 	}
 
-	return sha.New(output.Bytes())
+	return sha.New(output.String())
 }
 
 // UpdateRef allows to update / create / delete references
@@ -265,14 +265,14 @@ func (g *Git) UpdateRef(
 	}
 
 	// don't break existing interface - user calls with empty value to delete the ref.
-	if newValue.IsZero() {
+	if newValue.IsEmpty() {
 		newValue = sha.Nil
 	}
 
 	// if no old value was provided, use current value (as required for hooks)
 	// TODO: technically a delete could fail if someone updated the ref in the meanwhile.
 	//nolint:gocritic,nestif
-	if oldValue.IsZero() {
+	if oldValue.IsEmpty() {
 		val, err := g.GetRef(ctx, repoPath, ref)
 		if errors.IsNotFound(err) {
 			// fail in case someone tries to delete a reference that doesn't exist.
@@ -318,10 +318,10 @@ func (g *Git) updateRefWithHooks(
 		return ErrRepositoryPathEmpty
 	}
 
-	if oldValue.IsZero() {
+	if oldValue.IsEmpty() {
 		return fmt.Errorf("oldValue can't be empty")
 	}
-	if newValue.IsZero() {
+	if newValue.IsEmpty() {
 		return fmt.Errorf("newValue can't be empty")
 	}
 	if oldValue.Equal(sha.Nil) && newValue.Equal(sha.Nil) {

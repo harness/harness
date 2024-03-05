@@ -45,7 +45,7 @@ func (s *Service) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobO
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	// TODO: do we need to validate request for nil?
-	reader, err := s.git.GetBlob(ctx, repoPath, sha.ForceNew(params.SHA), params.SizeLimit)
+	reader, err := s.git.GetBlob(ctx, repoPath, sha.Must(params.SHA), params.SizeLimit)
 	if err != nil {
 		return nil, err
 	}

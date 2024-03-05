@@ -15,56 +15,45 @@
 package sha
 
 import (
-	"bytes"
 	"reflect"
 	"testing"
 )
 
 func TestSHA_MarshalJSON(t *testing.T) {
-	type fields struct {
-		bytes []byte
-	}
 	tests := []struct {
 		name    string
-		fields  fields
+		input   *SHA
 		want    []byte
 		wantErr bool
 	}{
 		{
 			name: "happy path",
-			fields: fields{
-				bytes: []byte(EmptyTree),
+			input: &SHA{
+				str: EmptyTree,
 			},
 			want: []byte("\"" + EmptyTree + "\""),
 		},
 		{
 			name: "happy path - quotes",
-			fields: fields{
-				bytes: []byte("\"\""),
+			input: &SHA{
+				str: "\"\"",
 			},
 			want: []byte("\"\"\"\""),
 		},
 		{
-			name: "happy path - empty slice",
-			fields: fields{
-				bytes: []byte{},
-			},
-			want: []byte("\"\""),
+			name:  "happy path - empty string",
+			input: &SHA{},
+			want:  []byte("\"\""),
 		},
 		{
-			name: "happy path - nil slice",
-			fields: fields{
-				bytes: nil,
-			},
-			want: []byte("null"),
+			name:  "happy path - nil object",
+			input: nil,
+			want:  []byte("null"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := SHA{
-				bytes: tt.fields.bytes,
-			}
-			got, err := s.MarshalJSON()
+			got, err := tt.input.MarshalJSON()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("MarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -77,42 +66,41 @@ func TestSHA_MarshalJSON(t *testing.T) {
 }
 
 func TestSHA_UnmarshalJSON(t *testing.T) {
-	type fields struct {
-		bytes []byte
-	}
-	type args struct {
-		content []byte
-	}
 	tests := []struct {
 		name     string
-		fields   fields
-		args     args
-		expected []byte
+		input    []byte
+		expected *SHA
 		wantErr  bool
 	}{
 		{
-			name:     "happy path",
-			args:     args{content: []byte("\"" + EmptyTree + "\"")},
-			expected: []byte(EmptyTree),
-			wantErr:  false,
+			name:  "happy path",
+			input: []byte("\"" + EmptyTree + "\""),
+			expected: &SHA{
+				str: EmptyTree,
+			},
+			wantErr: false,
 		},
 		{
 			name:     "empty content return error",
-			args:     args{content: []byte("\"\"")},
-			expected: []byte{},
-			wantErr:  true,
+			input:    []byte("\"\""),
+			expected: &SHA{},
+			wantErr:  false,
+		},
+		{
+			name:     "nil object return nil object SHA",
+			input:    []byte("null"),
+			expected: nil,
+			wantErr:  false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := SHA{
-				bytes: tt.fields.bytes,
-			}
-			if err := s.UnmarshalJSON(tt.args.content); (err != nil) != tt.wantErr {
+			s := &SHA{}
+			if err := s.UnmarshalJSON(tt.input); (err != nil) != tt.wantErr {
 				t.Errorf("UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !bytes.Equal(s.bytes, tt.expected) {
-				t.Errorf("bytes.Equal expected %s, got %s", tt.expected, s.bytes)
+			if !reflect.DeepEqual(s, tt.expected) {
+				t.Errorf("bytes.Equal expected %s, got %s", tt.expected, s)
 			}
 		})
 	}

@@ -143,12 +143,12 @@ func (r *BlameReader) NextPart() (*BlamePart, error) {
 		}
 
 		if matches := blamePorcelainHeadRE.FindStringSubmatch(line); matches != nil {
-			commitSHA := matches[1]
+			commitSHA := sha.Must(matches[1])
 
 			if commit == nil {
-				commit = r.commitCache[commitSHA]
+				commit = r.commitCache[commitSHA.String()]
 				if commit == nil {
-					commit = &Commit{SHA: sha.ForceNew(commitSHA)}
+					commit = &Commit{SHA: commitSHA}
 				}
 
 				if matches[5] != "" {

@@ -15,7 +15,6 @@
 package sha
 
 import (
-	"bytes"
 	"encoding/json"
 	"regexp"
 	"strings"
@@ -23,104 +22,93 @@ import (
 	"github.com/harness/gitness/errors"
 )
 
-// Nil defines empty git SHA.
-var Nil = ForceNew("0000000000000000000000000000000000000000")
-
 // EmptyTree is the SHA of an empty tree.
 const EmptyTree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
 var (
-	ErrTypeNotSupported = errors.New("type not supported")
-	// gitSHARegex defines the valid SHA format accepted by GIT (full form and short forms).
+	Nil = Must("0000000000000000000000000000000000000000")
+	// regex defines the valid SHA format accepted by GIT (full form and short forms).
 	// Note: as of now SHA is at most 40 characters long, but in the future it's moving to sha256
 	// which is 64 chars - keep this forward-compatible.
-	gitSHARegex = regexp.MustCompile("^[0-9a-f]{4,64}$")
+	regex    = regexp.MustCompile("^[0-9a-f]{4,64}$")
+	nilRegex = regexp.MustCompile("^0{4,64}$")
 )
 
 // SHA a git commit name.
 type SHA struct {
-	bytes []byte
+	str string
 }
 
-// New creates a new SHA from a value T.
-func New[T Constraint](value T) (SHA, error) {
-	switch arg := any(value).(type) {
-	case string:
-		s := strings.TrimSpace(arg)
-		if !isValidGitSHA(s) {
-			return SHA{}, errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", s)
-		}
-		return SHA{
-			bytes: []byte(s),
-		}, nil
-	case []byte:
-		arg = bytes.TrimSpace(arg)
-		id := make([]byte, len(arg))
-		copy(id, arg)
-		return SHA{bytes: id}, nil
-	default:
-		return SHA{}, ErrTypeNotSupported
+func New(value string) (SHA, error) {
+	s := strings.TrimSpace(value)
+	if !isValidGitSHA(s) {
+		return SHA{}, errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", s)
 	}
+	return SHA{
+		str: s,
+	}, nil
 }
 
 func (s *SHA) UnmarshalJSON(content []byte) error {
+	if s == nil {
+		return nil
+	}
 	var str string
 	err := json.Unmarshal(content, &str)
 	if err != nil {
 		return err
 	}
-	n, err := New(str)
-	if err != nil {
-		return err
-	}
-	s.bytes = n.bytes
+	s.str = str
 	return nil
 }
 
-func (s SHA) MarshalJSON() ([]byte, error) {
-	if s.bytes == nil {
+func (s *SHA) MarshalJSON() ([]byte, error) {
+	if s == nil {
 		return []byte("null"), nil
 	}
-	return []byte("\"" + s.String() + "\""), nil
+	return []byte("\"" + s.str + "\""), nil
 }
 
-// String returns string (hex) representation of the SHA.
-func (s SHA) String() string {
-	return string(s.bytes)
+// String returns string representation of the SHA.
+func (s *SHA) String() string {
+	if s == nil {
+		return ""
+	}
+	return s.str
 }
 
-// IsZero returns whether this SHA1 is all zeroes.
-func (s SHA) IsZero() bool {
-	return len(s.bytes) == 0
+// IsNil returns whether this SHA1 is all zeroes.
+func (s *SHA) IsNil() bool {
+	// regex check (minimal length 7)
+	return nilRegex.MatchString(s.str)
 }
 
-// Equal returns true if val has the same SHA as s. It supports
-// string, []byte, and SHA.
-func (s SHA) Equal(val any) bool {
-	switch v := val.(type) {
-	case string:
-		v = strings.TrimSpace(v)
-		return v == s.String()
-	case []byte:
-		v = bytes.TrimSpace(v)
-		return bytes.Equal(v, s.bytes)
-	case SHA:
-		return bytes.Equal(v.bytes, s.bytes)
-	default:
+// IsEmpty returns whether this SHA1 is all zeroes.
+func (s *SHA) IsEmpty() bool {
+	return s == nil || s.str == ""
+}
+
+// Equal returns true if val has the same SHA.
+func (s *SHA) Equal(val SHA) bool {
+	if s == nil {
 		return false
 	}
+	return s.str == val.str
 }
 
 type Constraint interface {
 	~string | ~[]byte
 }
 
-func ForceNew[T Constraint](value T) SHA {
-	sha, _ := New(value)
+func Must(value string) SHA {
+	sha, err := New(value)
+	if err != nil {
+		panic("invalid SHA" + err.Error())
+	}
 	return sha
 }
 
 // isValidGitSHA returns true iff the provided string is a valid git sha (short or long form).
 func isValidGitSHA(sha string) bool {
-	return gitSHARegex.MatchString(sha)
+	return regex.MatchString(sha)
 }

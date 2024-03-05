@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
+	"github.com/harness/gitness/types"
 )
 
 type FileDiffRequest struct {
@@ -298,7 +299,7 @@ func (g *Git) DiffShortStat(
 	}
 
 	shortstatArgs := []string{baseRef + separator + headRef}
-	if len(baseRef) == 0 || baseRef == sha.Nil.String() {
+	if len(baseRef) == 0 || baseRef == types.NilSHA {
 		shortstatArgs = []string{sha.EmptyTree, headRef}
 	}
 	stat, err := GetDiffShortStat(ctx, repoPath, shortstatArgs...)

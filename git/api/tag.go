@@ -182,7 +182,7 @@ func parseTagDataFromCatFile(data []byte) (tag Tag, err error) {
 	if err != nil {
 		return tag, err
 	}
-	tag.TargetSha = sha.ForceNew(object)
+	tag.TargetSha = sha.Must(object)
 
 	// parse object type
 	rawType, p, err := parseCatFileLine(data, p, "type")
@@ -366,7 +366,7 @@ l:
 			refType := line[:spacePos]
 			switch string(refType) {
 			case "object":
-				tag.TargetSha = sha.ForceNew(line[spacePos+1:])
+				tag.TargetSha = sha.Must(string(line[spacePos+1:]))
 			case "type":
 				// A commit can have one or more parents
 				tag.TargetType = GitObjectType(line[spacePos+1:])
