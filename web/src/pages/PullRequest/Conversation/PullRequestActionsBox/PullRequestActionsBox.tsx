@@ -113,7 +113,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     if (isMounted.current && !isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
       // Use an internal flag to prevent flickering during the loading state of buttons
       internalFlags.current.dryRun = true
-
       mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
         .then(res => {
           if (isMounted.current) {
@@ -158,17 +157,20 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     // TODO: optimize call to handle all causes and avoid double calls by keeping track of SHA
     dryMerge() // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unchecked, pullReqMetadata?.source_sha])
+  const [prMerged, setPrMerged] = useState(false)
 
   useEffect(() => {
     // dryMerge()
     const intervalId = setInterval(async () => {
-      dryMerge()
+      if (!prMerged) {
+        dryMerge()
+      }
     }, POLLING_INTERVAL) // Poll every 20 seconds
     // Cleanup interval on component unmount
     return () => {
       clearInterval(intervalId)
     } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onPRStateChanged])
+  }, [onPRStateChanged, prMerged])
   const isDraft = pullReqMetadata.is_draft
   const mergeOptions: PRMergeOption[] = [
     {
@@ -213,7 +215,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       desc: getString('pr.mergeOptions.closeDesc')
     }
   ]
-
   const [mergeOption, setMergeOption, resetMergeOption] = useUserPreference<PRMergeOption>(
     UserPreference.PULL_REQUEST_MERGE_STRATEGY,
     mergeOptions[0],
@@ -445,6 +446,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                 }
                                 mergePR(payload)
                                   .then(() => {
+                                    setPrMerged(true)
                                     onPRStateChanged()
                                     setRuleViolationArr(undefined)
                                   })
