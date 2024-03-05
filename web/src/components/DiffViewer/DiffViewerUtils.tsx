@@ -73,9 +73,6 @@ export const DIFF2HTML_CONFIG = {
   drawFileList: false,
   fileListStartVisible: false,
   fileContentToggle: true,
-  // diffMaxChanges: DIFF_MAX_CHANGES,
-  // diffMaxLineLength: DIFF_MAX_LINE_LENGTH,
-  // diffTooBigMessage: index => `${index} - is too big`,
   matching: 'lines',
   synchronisedScroll: true,
   highlight: true,
@@ -84,11 +81,11 @@ export const DIFF2HTML_CONFIG = {
     'generic-line': HoganJsUtils.compile(`
       <tr>
         <td class="{{lineClass}} {{type}}">
-          {{{lineNumber}}} {{{filePath}}}
-        </td>
+          <div style="position: relative; z-index: 100; width: 0px; height: 0px; display: inline-block;">
+            <span data-annotation-for-line="{{lineNumber}}" tab-index="0" role="button">+</span>
+          </div>{{{lineNumber}}}<!-- {{{filePath}}} --></td>
         <td class="{{type}}" data-content-for-line-number="{{lineNumber}}" data-content-for-file-path="{{file.filePath}}">
-            <div class="{{contentClass}}">
-              <span data-annotation-for-line="{{lineNumber}}" tab-index="0" role="button">+</span>
+            <div class="{{contentClass}}" style="position: relative; z-index: 1;">
             {{#prefix}}
               <span class="d2h-code-line-prefix">{{{prefix}}}</span>
             {{/prefix}}

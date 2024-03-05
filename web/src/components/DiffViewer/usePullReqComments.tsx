@@ -475,30 +475,59 @@ export function usePullReqComments({
     function clickToAddAnnotation(event: MouseEvent) {
       if (readOnly) return
 
-      const target = event.target as HTMLDivElement
+      let target = event.target as HTMLDivElement
+      const lineNumberCell = target?.closest('td.d2h-code-linenumber') || target?.closest('td.d2h-code-side-linenumber')
+
+      // If click happens on line number, locate target from the line number as we allow
+      // adding a comment by clicking line number as well
+      if (lineNumberCell) {
+        target = lineNumberCell.querySelector('[data-annotation-for-line]') as HTMLDivElement
+      }
+      //
+      // Note: For future use to support multiple-line code comment
+      //
+      // else if (target?.tagName.toLowerCase() === 'span' && target.classList.contains('d2h-code-line-ctn')) {
+      //   // If click happens in the code line and there's some selection it, then show Add Comment
+      //   const tr = target?.closest('tr')
+      //   const trFromSelection = (
+      //     document.getSelection()?.getRangeAt(0).commonAncestorContainer as HTMLElement
+      //   )?.closest('tr')
+
+      //   if (tr && trFromSelection && tr === trFromSelection) {
+      //     target = tr.querySelector('[data-annotation-for-line]') as HTMLDivElement
+      //   }
+      // }
+      // else if (target?.tagName.toLowerCase() === 'tbody' && target.classList.contains('d2h-diff-tbody')) {
+      //   // Select a couple of lines -> add comment for multiple lines
+      //   target = document
+      //     .elementFromPoint(event.x, event.y)
+      //     ?.closest('tr')
+      //     ?.querySelector('[data-annotation-for-line]') as HTMLDivElement
+      // }
+
       const targetButton = target?.closest('[data-annotation-for-line]') as HTMLDivElement
       const annotatedLineRow = targetButton?.closest('tr') as HTMLTableRowElement
 
-      // Utilize a random negative number as temporary IDs to prevent database entry collisions
-      const randID = -(random(1_000_000, false) + random(1_000_000, false))
-      const commentItem: DiffCommentItem<TypesPullReqActivity> = {
-        inner: { id: randID } as TypesPullReqActivity,
-        left: false,
-        right: false,
-        lineNumber: 0,
-        commentItems: [],
-        filePath: '',
-        destroy: undefined
-      }
-
       if (targetButton && annotatedLineRow) {
+        // Utilize a random negative number as temporary IDs to prevent database entry collisions
+        const randID = -(random(1_000_000, false) + random(1_000_000, false))
+        const commentItem: DiffCommentItem<TypesPullReqActivity> = {
+          inner: { id: randID } as TypesPullReqActivity,
+          left: false,
+          right: false,
+          lineNumber: 0,
+          commentItems: [],
+          filePath: '',
+          destroy: undefined
+        }
+
         if (viewStyle === ViewStyle.SIDE_BY_SIDE) {
           const leftParent = targetButton.closest('.d2h-file-side-diff.left')
           commentItem.left = !!leftParent
           commentItem.right = !leftParent
           commentItem.lineNumber = Number(targetButton.dataset.annotationForLine)
         } else {
-          const lineInfoTD = targetButton.closest('td')?.previousElementSibling
+          const lineInfoTD = targetButton.closest('td')
           const lineNum1 = lineInfoTD?.querySelector('.line-num1')
           const lineNum2 = lineInfoTD?.querySelector('.line-num2')
 
