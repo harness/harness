@@ -290,6 +290,12 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
           })
 
           setUseFullDiff(true)
+          setRenderCustomContent(false)
+
+          if (memorizedState.get(diff.filePath)?.collapsed) {
+            setCollapsed(false)
+            memorizedState.set(diff.filePath, { ...memorizedState.get(diff.filePath), collapsed: false })
+          }
         } catch (exception) {
           showError(getErrorMessage(exception), 0)
         }
@@ -359,9 +365,8 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               variation={ButtonVariation.ICON}
               className={css.expandCollapseDiffBtn}
               onClick={toggleFullDiff}
-              tooltip={getString(useFullDiff ? 'pr.collapseFullFile' : 'pr.expandFullFile')}
-              tooltipProps={{ isDark: true }}>
-              {useFullDiff ? <Collapse width="18" height="18" /> : <Expand width="18" height="18" />}
+              title={getString(useFullDiff ? 'pr.collapseFullFile' : 'pr.expandFullFile')}>
+              {useFullDiff ? <Collapse width="16" height="16" /> : <Expand width="16" height="16" />}
             </Button>
             <Text
               inline
