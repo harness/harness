@@ -335,6 +335,8 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     }
   }, [useFullDiff, memorizedState, diff.filePath, cancelGetFullDiff, getFullDiff, fullDiffLoading])
 
+  const ToggleFullDiffIcon = useMemo(() => (useFullDiff ? Collapse : Expand), [useFullDiff])
+
   return (
     <Container
       ref={containerRef}
@@ -351,7 +353,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               size={ButtonSize.SMALL}
               onClick={() => setCollapsed(!collapsed)}
               iconProps={{
-                size: 10,
+                size: 12,
                 style: {
                   color: '#383946',
                   flexGrow: 1,
@@ -366,7 +368,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               className={css.expandCollapseDiffBtn}
               onClick={toggleFullDiff}
               title={getString(useFullDiff ? 'pr.collapseFullFile' : 'pr.expandFullFile')}>
-              {useFullDiff ? <Collapse width="16" height="16" /> : <Expand width="16" height="16" />}
+              <ToggleFullDiffIcon width="16" height="16" strokeWidth="2" />
             </Button>
             <Text
               inline
