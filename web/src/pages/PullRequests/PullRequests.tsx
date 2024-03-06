@@ -18,7 +18,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Container, PageBody, Text, TableV2, Layout, StringSubstitute, FlexExpander, Utils } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import { Case, Match, Render, Truthy } from 'react-jsx-match'
@@ -123,87 +123,97 @@ export default function PullRequests() {
         width: '100%',
         Cell: ({ row }: CellProps<TypesPullReq>) => {
           return (
-            <Layout.Horizontal className={css.titleRow} spacing="medium">
-              <PullRequestStateLabel iconSize={22} data={row.original} iconOnly />
-              <Container padding={{ left: 'small' }}>
-                <Layout.Vertical spacing="xsmall">
-                  <Container>
-                    <Layout.Horizontal>
-                      <Text color={Color.GREY_800} className={css.title} lineClamp={1}>
-                        {row.original.title}
-                      </Text>
-                      <Container className={css.convo}>
-                        <Icon
-                          className={css.convoIcon}
-                          padding={{ left: 'medium', right: 'xsmall' }}
-                          name="code-chat"
-                          size={15}
-                        />
-                        <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500} tag="span">
-                          {row.original.stats?.conversations}
+            <Link
+              className={css.rowLink}
+              to={routes.toCODEPullRequest({
+                repoPath: repoMetadata?.path as string,
+                pullRequestId: String(row.original.number)
+              })}>
+              <Layout.Horizontal className={css.titleRow} spacing="medium">
+                <PullRequestStateLabel iconSize={22} data={row.original} iconOnly />
+                <Container padding={{ left: 'small' }}>
+                  <Layout.Vertical spacing="xsmall">
+                    <Container>
+                      <Layout.Horizontal>
+                        <Text color={Color.GREY_800} className={css.title} lineClamp={1}>
+                          {row.original.title}
                         </Text>
-                      </Container>
-                    </Layout.Horizontal>
-                  </Container>
-                  <Container>
-                    <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
-                      <Text color={Color.GREY_500} font={{ size: 'small' }}>
-                        <StringSubstitute
-                          str={getString('pr.statusLine')}
-                          vars={{
-                            state: <strong className={css.state}>{row.original.state}</strong>,
-                            number: <Text inline>{row.original.number}</Text>,
-                            time: (
-                              <strong>
-                                <TimePopoverWithLocal
-                                  time={defaultTo(
-                                    (row.original.state == 'merged'
-                                      ? row.original.merged
-                                      : row.original.created) as number,
-                                    0
-                                  )}
-                                  inline={false}
-                                  font={{ variation: FontVariation.SMALL_BOLD }}
-                                  color={Color.GREY_500}
-                                />
-                              </strong>
-                            ),
-                            user: (
-                              <strong>{row.original.author?.display_name || row.original.author?.email || ''}</strong>
-                            )
-                          }}
-                        />
-                      </Text>
-                      <PipeSeparator height={10} />
-                      <Container>
-                        <Layout.Horizontal spacing="xsmall" style={{ alignItems: 'center' }} onClick={Utils.stopEvent}>
-                          <GitRefLink
-                            text={row.original.target_branch as string}
-                            url={routes.toCODERepository({
-                              repoPath: repoMetadata?.path as string,
-                              gitRef: row.original.target_branch
-                            })}
-                            showCopy={false}
+                        <Container className={css.convo}>
+                          <Icon
+                            className={css.convoIcon}
+                            padding={{ left: 'medium', right: 'xsmall' }}
+                            name="code-chat"
+                            size={15}
                           />
-                          <Text color={Color.GREY_500}>←</Text>
-                          <GitRefLink
-                            text={row.original.source_branch as string}
-                            url={routes.toCODERepository({
-                              repoPath: repoMetadata?.path as string,
-                              gitRef: row.original.source_branch
-                            })}
-                            showCopy={false}
+                          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500} tag="span">
+                            {row.original.stats?.conversations}
+                          </Text>
+                        </Container>
+                      </Layout.Horizontal>
+                    </Container>
+                    <Container>
+                      <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+                        <Text color={Color.GREY_500} font={{ size: 'small' }}>
+                          <StringSubstitute
+                            str={getString('pr.statusLine')}
+                            vars={{
+                              state: <strong className={css.state}>{row.original.state}</strong>,
+                              number: <Text inline>{row.original.number}</Text>,
+                              time: (
+                                <strong>
+                                  <TimePopoverWithLocal
+                                    time={defaultTo(
+                                      (row.original.state == 'merged'
+                                        ? row.original.merged
+                                        : row.original.created) as number,
+                                      0
+                                    )}
+                                    inline={false}
+                                    font={{ variation: FontVariation.SMALL_BOLD }}
+                                    color={Color.GREY_500}
+                                  />
+                                </strong>
+                              ),
+                              user: (
+                                <strong>{row.original.author?.display_name || row.original.author?.email || ''}</strong>
+                              )
+                            }}
                           />
-                        </Layout.Horizontal>
-                      </Container>
-                    </Layout.Horizontal>
-                  </Container>
-                </Layout.Vertical>
-              </Container>
-              <FlexExpander />
-              {/* TODO: Pass proper state when check api is fully implemented */}
-              {/* <ExecutionStatusLabel data={{ state: 'success' }} /> */}
-            </Layout.Horizontal>
+                        </Text>
+                        <PipeSeparator height={10} />
+                        <Container>
+                          <Layout.Horizontal
+                            spacing="xsmall"
+                            style={{ alignItems: 'center' }}
+                            onClick={Utils.stopEvent}>
+                            <GitRefLink
+                              text={row.original.target_branch as string}
+                              url={routes.toCODERepository({
+                                repoPath: repoMetadata?.path as string,
+                                gitRef: row.original.target_branch
+                              })}
+                              showCopy={false}
+                            />
+                            <Text color={Color.GREY_500}>←</Text>
+                            <GitRefLink
+                              text={row.original.source_branch as string}
+                              url={routes.toCODERepository({
+                                repoPath: repoMetadata?.path as string,
+                                gitRef: row.original.source_branch
+                              })}
+                              showCopy={false}
+                            />
+                          </Layout.Horizontal>
+                        </Container>
+                      </Layout.Horizontal>
+                    </Container>
+                  </Layout.Vertical>
+                </Container>
+                <FlexExpander />
+                {/* TODO: Pass proper state when check api is fully implemented */}
+                {/* <ExecutionStatusLabel data={{ state: 'success' }} /> */}
+              </Layout.Horizontal>
+            </Link>
           )
         }
       }

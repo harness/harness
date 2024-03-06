@@ -23,6 +23,7 @@
       height: 80px;
       display: flex;
       justify-content: center;
+      padding: 0;
 
       .title {
         font-weight: 600;
@@ -37,11 +38,19 @@
         white-space: nowrap;
       }
     }
+
+    .rowLink:hover {
+      &,
+      *:not(a) {
+        text-decoration: none !important;
+      }
+    }
   }
 
   .titleRow {
     padding-left: var(--spacing-small);
     align-items: center;
+    padding: var(--spacing-medium);
   }
 }
 
