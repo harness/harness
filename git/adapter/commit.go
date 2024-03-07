@@ -175,10 +175,11 @@ func (a Adapter) ListCommits(
 		commits[i] = *commit
 
 		if includeFileStats {
-			err = includeFileStatsInCommits(ctx, giteaRepo, commits)
+			fileStat, err := getFileStats(ctx, giteaRepo, commit.SHA)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, fmt.Errorf("encountered error getting file stat: %w", err)
 			}
+			commit.FileStats = fileStat
 		}
 	}
 
@@ -192,21 +193,6 @@ func (a Adapter) ListCommits(
 	}
 
 	return commits, nil, nil
-}
-
-func includeFileStatsInCommits(
-	ctx context.Context,
-	giteaRepo *gitea.Repository,
-	commits []types.Commit,
-) error {
-	for i, commit := range commits {
-		fileStats, err := getFileStats(ctx, giteaRepo, commit.SHA)
-		if err != nil {
-			return fmt.Errorf("failed to get file stat: %w", err)
-		}
-		commits[i].FileStats = fileStats
-	}
-	return nil
 }
 
 func getFileStats(
