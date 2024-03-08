@@ -57,9 +57,9 @@ type TagFilter struct {
 }
 
 type CommitDiffStats struct {
-	Total     int `json:"total,omitempty"`
-	Additions int `json:"additions,omitempty"`
-	Deletions int `json:"deletions,omitempty"`
+	Total     int `json:"total"`
+	Additions int `json:"additions"`
+	Deletions int `json:"deletions"`
 }
 
 type Commit struct {
