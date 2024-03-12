@@ -45,14 +45,14 @@ type CommitChangesOptions struct {
 }
 
 type Commit struct {
-	SHA       sha.SHA   `json:"sha"`
-	Title     string    `json:"title"`
-	Message   string    `json:"message,omitempty"`
-	Author    Signature `json:"author"`
-	Committer Signature `json:"committer"`
-	Signature *CommitGPGSignature
-	Parents   []sha.SHA
-	FileStats CommitFileStats
+	SHA        sha.SHA   `json:"sha"`
+	Title      string    `json:"title"`
+	Message    string    `json:"message,omitempty"`
+	Author     Signature `json:"author"`
+	Committer  Signature `json:"committer"`
+	Signature  *CommitGPGSignature
+	ParentSHAs []sha.SHA
+	FileStats  CommitFileStats
 }
 
 type CommitFilter struct {
@@ -455,7 +455,7 @@ func (g *Git) GetFullCommitID(
 	shortID string,
 ) (sha.SHA, error) {
 	if repoPath == "" {
-		return sha.SHA{}, ErrRepositoryPathEmpty
+		return sha.None, ErrRepositoryPathEmpty
 	}
 	cmd := command.New("rev-parse",
 		command.WithArg(shortID),
@@ -464,9 +464,9 @@ func (g *Git) GetFullCommitID(
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
 		if strings.Contains(err.Error(), "exit status 128") {
-			return sha.SHA{}, errors.NotFound("commit not found %s", shortID)
+			return sha.None, errors.NotFound("commit not found %s", shortID)
 		}
-		return sha.SHA{}, err
+		return sha.None, err
 	}
 	return sha.New(output.String())
 }
@@ -657,10 +657,10 @@ func getCommit(
 	committerTime, _ := time.Parse(time.RFC3339Nano, committerTimestamp)
 
 	return &Commit{
-		SHA:     commitSHA,
-		Parents: parentSHAs,
-		Title:   subject,
-		Message: body,
+		SHA:        commitSHA,
+		ParentSHAs: parentSHAs,
+		Title:      subject,
+		Message:    body,
 		Author: Signature{
 			Identity: Identity{
 				Name:  authorName,
@@ -813,7 +813,7 @@ readLoop:
 			case "tree":
 				_, _ = payloadSB.Write(line)
 			case "parent":
-				commit.Parents = append(commit.Parents, sha.Must(string(data)))
+				commit.ParentSHAs = append(commit.ParentSHAs, sha.Must(string(data)))
 				_, _ = payloadSB.Write(line)
 			case "author":
 				commit.Author = Signature{}

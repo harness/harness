@@ -167,7 +167,7 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 		params.EnvVars,
 		repoPath,
 		branchRef,
-		sha.SHA{}, // delete whatever is there
+		sha.None, // delete whatever is there
 		sha.Nil,
 	)
 	if errors.IsNotFound(err) {

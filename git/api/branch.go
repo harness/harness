@@ -96,7 +96,7 @@ func (g *Git) HasBranches(
 
 func (g *Git) IsBranchExist(ctx context.Context, repoPath, name string) bool {
 	cmd := command.New("rev-parse",
-		command.WithFlag("--verify", name),
+		command.WithFlag("--verify", BranchPrefix+name),
 	)
 	err := cmd.Run(ctx,
 		command.WithDir(repoPath),

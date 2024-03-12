@@ -360,7 +360,7 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 		params.EnvVars,
 		repoPath,
 		tagRef,
-		sha.SHA{}, // delete whatever is there
+		sha.None, // delete whatever is there
 		sha.Nil,
 	)
 	if errors.IsNotFound(err) {

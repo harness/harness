@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/parser"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
@@ -40,7 +41,7 @@ type TreeNodeWithCommit struct {
 type TreeNode struct {
 	NodeType TreeNodeType
 	Mode     TreeNodeMode
-	Sha      string
+	SHA      sha.SHA
 	Name     string
 	Path     string
 }
@@ -178,14 +179,14 @@ func lsTree(
 			return nil, fmt.Errorf("failed to parse git node type and file mode: %w", err)
 		}
 
-		nodeSha := columns[3]
+		nodeSha := sha.Must(columns[3])
 		nodePath := columns[4]
 		nodeName := path.Base(nodePath)
 
 		list = append(list, TreeNode{
 			NodeType: nodeType,
 			Mode:     nodeMode,
-			Sha:      nodeSha,
+			SHA:      nodeSha,
 			Name:     nodeName,
 			Path:     nodePath,
 		})
@@ -255,7 +256,7 @@ func (g *Git) GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (
 		return &TreeNode{
 			NodeType: TreeNodeTypeTree,
 			Mode:     TreeNodeModeTree,
-			Sha:      strings.TrimSpace(output.String()),
+			SHA:      sha.Must(output.String()),
 			Name:     "",
 			Path:     "",
 		}, err

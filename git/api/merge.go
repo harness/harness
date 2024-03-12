@@ -36,7 +36,7 @@ func (g *Git) GetMergeBase(
 	head string,
 ) (sha.SHA, string, error) {
 	if repoPath == "" {
-		return sha.SHA{}, "", ErrRepositoryPathEmpty
+		return sha.None, "", ErrRepositoryPathEmpty
 	}
 	if remote == "" {
 		remote = "origin"
@@ -65,12 +65,12 @@ func (g *Git) GetMergeBase(
 		command.WithStdout(stdout),
 	)
 	if err != nil {
-		return sha.SHA{}, "", processGitErrorf(err, "failed to get merge-base [%s, %s]", base, head)
+		return sha.None, "", processGitErrorf(err, "failed to get merge-base [%s, %s]", base, head)
 	}
 
 	result, err := sha.New(stdout.String())
 	if err != nil {
-		return sha.SHA{}, "", err
+		return sha.None, "", err
 	}
 	return result, base, nil
 }

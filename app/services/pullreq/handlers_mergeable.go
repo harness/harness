@@ -111,8 +111,8 @@ func (s *Service) deleteMergeRef(ctx context.Context, repoID int64, prNum int64)
 		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(prNum)),
 		Type:        gitenum.RefTypePullReqMerge,
-		NewValue:    sha.SHA{}, // when NewValue is empty will delete the ref.
-		OldValue:    sha.SHA{}, // we don't care about the old value
+		NewValue:    sha.None, // when NewValue is empty will delete the ref.
+		OldValue:    sha.None, // we don't care about the old value
 	})
 	if err != nil {
 		return fmt.Errorf("failed to remove PR merge ref: %w", err)

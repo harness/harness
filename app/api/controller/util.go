@@ -94,9 +94,14 @@ func MapCommit(c *git.Commit) (*types.Commit, error) {
 		return nil, fmt.Errorf("failed to map committer: %w", err)
 	}
 
+	parentSHAs := make([]string, len(c.ParentSHAs))
+	for i, sha := range c.ParentSHAs {
+		parentSHAs[i] = sha.String()
+	}
+
 	return &types.Commit{
 		SHA:        c.SHA.String(),
-		ParentSHAs: c.ParentSHAs,
+		ParentSHAs: parentSHAs,
 		Title:      c.Title,
 		Message:    c.Message,
 		Author:     *author,

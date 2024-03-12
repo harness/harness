@@ -227,9 +227,9 @@ func (r *SharedRepo) GetTreeSHA(
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "ambiguous argument") {
-			return sha.SHA{}, errors.NotFound("could not resolve git revision %q", rev)
+			return sha.None, errors.NotFound("could not resolve git revision %q", rev)
 		}
-		return sha.SHA{}, fmt.Errorf("failed to get tree sha: %w", err)
+		return sha.None, fmt.Errorf("failed to get tree sha: %w", err)
 	}
 
 	return sha.New(stdout.String())
@@ -321,12 +321,12 @@ func (r *SharedRepo) MergeTree(
 		lines := strings.Split(output, "\n")
 		if len(lines) < 2 {
 			log.Ctx(ctx).Err(err).Str("output", output).Msg("unexpected output of merge-tree in shared repo")
-			return sha.SHA{}, nil, fmt.Errorf("unexpected output of merge-tree in shared repo: %w", err)
+			return sha.None, nil, fmt.Errorf("unexpected output of merge-tree in shared repo: %w", err)
 		}
 		return sha.Must(lines[0]), lines[1:], nil
 	}
 
-	return sha.SHA{}, nil, fmt.Errorf("failed to merge-tree in shared repo: %w", err)
+	return sha.None, nil, fmt.Errorf("failed to merge-tree in shared repo: %w", err)
 }
 
 // CommitTree creates a commit from a given tree for the user with provided message.
@@ -377,7 +377,7 @@ func (r *SharedRepo) CommitTree(
 		command.WithStdout(stdout),
 		command.WithStdin(messageBytes))
 	if err != nil {
-		return sha.SHA{}, fmt.Errorf("failed to commit-tree in shared repo: %w", err)
+		return sha.None, fmt.Errorf("failed to commit-tree in shared repo: %w", err)
 	}
 
 	return sha.New(stdout.String())

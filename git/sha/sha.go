@@ -26,7 +26,8 @@ import (
 const EmptyTree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
 var (
-	Nil = Must("0000000000000000000000000000000000000000")
+	Nil  = Must("0000000000000000000000000000000000000000")
+	None = SHA{}
 	// regex defines the valid SHA format accepted by GIT (full form and short forms).
 	// Note: as of now SHA is at most 40 characters long, but in the future it's moving to sha256
 	// which is 64 chars - keep this forward-compatible.
@@ -34,18 +35,19 @@ var (
 	nilRegex = regexp.MustCompile("^0{4,64}$")
 )
 
-// SHA a git commit name.
+// SHA represents a git sha.
 type SHA struct {
 	str string
 }
 
 func New(value string) (SHA, error) {
-	s := strings.TrimSpace(value)
-	if !isValidGitSHA(s) {
-		return SHA{}, errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", s)
+	value = strings.TrimSpace(value)
+	value = strings.ToLower(value)
+	if !regex.MatchString(value) {
+		return SHA{}, errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", value)
 	}
 	return SHA{
-		str: s,
+		str: value,
 	}, nil
 }
 
@@ -58,46 +60,36 @@ func (s *SHA) UnmarshalJSON(content []byte) error {
 	if err != nil {
 		return err
 	}
-	s.str = str
+	sha, err := New(str)
+	if err != nil {
+		return err
+	}
+	s.str = sha.str
 	return nil
 }
 
-func (s *SHA) MarshalJSON() ([]byte, error) {
-	if s == nil {
-		return []byte("null"), nil
-	}
+func (s SHA) MarshalJSON() ([]byte, error) {
 	return []byte("\"" + s.str + "\""), nil
 }
 
 // String returns string representation of the SHA.
-func (s *SHA) String() string {
-	if s == nil {
-		return ""
-	}
+func (s SHA) String() string {
 	return s.str
 }
 
-// IsNil returns whether this SHA1 is all zeroes.
-func (s *SHA) IsNil() bool {
-	// regex check (minimal length 7)
+// IsNil returns whether this SHA is all zeroes.
+func (s SHA) IsNil() bool {
 	return nilRegex.MatchString(s.str)
 }
 
-// IsEmpty returns whether this SHA1 is all zeroes.
-func (s *SHA) IsEmpty() bool {
-	return s == nil || s.str == ""
+// IsEmpty returns whether this SHA is empty string.
+func (s SHA) IsEmpty() bool {
+	return s.str == ""
 }
 
 // Equal returns true if val has the same SHA.
-func (s *SHA) Equal(val SHA) bool {
-	if s == nil {
-		return false
-	}
+func (s SHA) Equal(val SHA) bool {
 	return s.str == val.str
-}
-
-type Constraint interface {
-	~string | ~[]byte
 }
 
 func Must(value string) SHA {
@@ -106,9 +98,4 @@ func Must(value string) SHA {
 		panic("invalid SHA" + err.Error())
 	}
 	return sha
-}
-
-// isValidGitSHA returns true iff the provided string is a valid git sha (short or long form).
-func isValidGitSHA(sha string) bool {
-	return regex.MatchString(sha)
 }

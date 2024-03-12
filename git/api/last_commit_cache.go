@@ -25,6 +25,7 @@ import (
 
 	"github.com/harness/gitness/cache"
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -67,10 +68,10 @@ const separatorZero = "\x00"
 
 func makeCommitEntryKey(
 	repoPath string,
-	commitSHA string,
+	commitSHA sha.SHA,
 	path string,
 ) CommitEntryKey {
-	return CommitEntryKey(repoPath + separatorZero + commitSHA + separatorZero + path)
+	return CommitEntryKey(repoPath + separatorZero + commitSHA.String() + separatorZero + path)
 }
 
 func (c CommitEntryKey) Split() (

@@ -319,7 +319,6 @@ func (g *Git) Commit(
 }
 
 // Push pushs local commits to given remote branch.
-// NOTE: Modification of gitea implementation that supports --force-with-lease.
 // TODOD: return our own error types and move to above api.Push method
 func (g *Git) Push(
 	ctx context.Context,

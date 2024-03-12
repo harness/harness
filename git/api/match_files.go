@@ -58,7 +58,7 @@ func (g *Git) MatchFiles(
 			continue
 		}
 
-		_, err = catFileWriter.Write([]byte(nodes[i].Sha + "\n"))
+		_, err = catFileWriter.Write([]byte(nodes[i].SHA.String() + "\n"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to ask for file content from cat file batch: %w", err)
 		}

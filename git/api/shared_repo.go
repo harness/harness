@@ -352,7 +352,7 @@ func (r *SharedRepo) WriteGitObject(
 		command.WithStdin(content),
 		command.WithStdout(stdOut),
 	); err != nil {
-		return sha.SHA{}, fmt.Errorf("unable to hash-object to temporary repo: %s Error: %w\nstdout: %s",
+		return sha.None, fmt.Errorf("unable to hash-object to temporary repo: %s Error: %w\nstdout: %s",
 			r.repoUID, err, stdOut.String())
 	}
 
@@ -416,7 +416,7 @@ func (r *SharedRepo) WriteTree(ctx context.Context) (sha.SHA, error) {
 		command.WithStdout(stdout),
 	)
 	if err != nil {
-		return sha.SHA{}, fmt.Errorf("unable to write-tree in temporary repo path for: %s Error: %w",
+		return sha.None, fmt.Errorf("unable to write-tree in temporary repo path for: %s Error: %w",
 			r.repoUID, err)
 	}
 	return sha.New(stdout.String())
@@ -504,7 +504,7 @@ func (r *SharedRepo) CommitTreeWithDate(
 		command.WithStdin(messageBytes),
 		command.WithStdout(stdout),
 	); err != nil {
-		return sha.SHA{}, processGitErrorf(err, "unable to commit-tree in temporary repo: %s Error: %v\nStdout: %s",
+		return sha.None, processGitErrorf(err, "unable to commit-tree in temporary repo: %s Error: %v\nStdout: %s",
 			r.repoUID, err, stdout)
 	}
 	return sha.New(stdout.String())

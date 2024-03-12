@@ -22,21 +22,21 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sha"
 )
 
 func (g *Git) ResolveRev(ctx context.Context,
 	repoPath string,
 	rev string,
-) (string, error) {
+) (sha.SHA, error) {
 	cmd := command.New("rev-parse", command.WithArg(rev))
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
 		if strings.Contains(err.Error(), "ambiguous argument") {
-			return "", errors.InvalidArgument("could not resolve git revision: %s", rev)
+			return sha.None, errors.InvalidArgument("could not resolve git revision: %s", rev)
 		}
-		return "", fmt.Errorf("failed to resolve git revision: %w", err)
+		return sha.None, fmt.Errorf("failed to resolve git revision: %w", err)
 	}
-	commitSHA := strings.TrimSpace(output.String())
-	return commitSHA, nil
+	return sha.New(output.String())
 }

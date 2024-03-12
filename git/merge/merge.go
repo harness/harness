@@ -103,7 +103,7 @@ func mergeInternal(
 		return nil
 	})
 	if err != nil {
-		return sha.SHA{}, nil, fmt.Errorf("merge method=merge squash=%t: %w", squash, err)
+		return sha.None, nil, fmt.Errorf("merge method=merge squash=%t: %w", squash, err)
 	}
 
 	return mergeSHA, conflicts, nil
@@ -147,13 +147,13 @@ func Rebase(
 			}
 
 			var mergeTreeMergeBaseSHA sha.SHA
-			if len(commitInfo.Parents) > 0 {
+			if len(commitInfo.ParentSHAs) > 0 {
 				// use parent of commit as merge base to only apply changes introduced by commit.
 				// See example usage of when --merge-base was introduced:
 				// https://github.com/git/git/commit/66265a693e8deb3ab86577eb7f69940410044081
 				//
 				// NOTE: CommitSHAsForRebase only returns non-merge commits.
-				mergeTreeMergeBaseSHA = commitInfo.Parents[0]
+				mergeTreeMergeBaseSHA = commitInfo.ParentSHAs[0]
 			}
 
 			treeSHA, conflicts, err = s.MergeTree(ctx, mergeTreeMergeBaseSHA, lastCommitSHA, commitSHA)
@@ -188,7 +188,7 @@ func Rebase(
 		return nil
 	})
 	if err != nil {
-		return sha.SHA{}, nil, fmt.Errorf("merge method=rebase: %w", err)
+		return sha.None, nil, fmt.Errorf("merge method=rebase: %w", err)
 	}
 
 	return mergeSHA, conflicts, nil

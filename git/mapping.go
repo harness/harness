@@ -57,14 +57,9 @@ func mapCommit(c *api.Commit) (*Commit, error) {
 		return nil, fmt.Errorf("failed to map rpc committer: %w", err)
 	}
 
-	parentSHAs := make([]string, len(c.Parents))
-	for i, val := range c.Parents {
-		parentSHAs[i] = val.String()
-	}
-
 	return &Commit{
 		SHA:        c.SHA,
-		ParentSHAs: parentSHAs,
+		ParentSHAs: c.ParentSHAs,
 		Title:      c.Title,
 		Message:    c.Message,
 		Author:     *author,
@@ -167,7 +162,7 @@ func mapTreeNode(n *api.TreeNode) (TreeNode, error) {
 	return TreeNode{
 		Type: nodeType,
 		Mode: mode,
-		SHA:  n.Sha,
+		SHA:  n.SHA.String(),
 		Name: n.Name,
 		Path: n.Path,
 	}, nil

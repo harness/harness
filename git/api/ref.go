@@ -230,7 +230,7 @@ func (g *Git) GetRef(
 	ref string,
 ) (sha.SHA, error) {
 	if repoPath == "" {
-		return sha.SHA{}, ErrRepositoryPathEmpty
+		return sha.None, ErrRepositoryPathEmpty
 	}
 	cmd := command.New("show-ref",
 		command.WithFlag("--verify"),
@@ -241,9 +241,9 @@ func (g *Git) GetRef(
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
 		if command.AsError(err).IsExitCode(128) && strings.Contains(err.Error(), "not a valid ref") {
-			return sha.SHA{}, errors.NotFound("reference %q not found", ref)
+			return sha.None, errors.NotFound("reference %q not found", ref)
 		}
-		return sha.SHA{}, err
+		return sha.None, err
 	}
 
 	return sha.New(output.String())
@@ -276,7 +276,7 @@ func (g *Git) UpdateRef(
 		val, err := g.GetRef(ctx, repoPath, ref)
 		if errors.IsNotFound(err) {
 			// fail in case someone tries to delete a reference that doesn't exist.
-			if newValue.Equal(sha.Nil) {
+			if newValue.IsNil() {
 				return errors.NotFound("reference %q not found", ref)
 			}
 

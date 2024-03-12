@@ -48,7 +48,7 @@ func (s *Service) createHeadRefOnCreated(ctx context.Context,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
 		Type:        gitenum.RefTypePullReqHead,
 		NewValue:    sha.Must(event.Payload.SourceSHA),
-		OldValue:    sha.SHA{}, // this is a new pull request, so we expect that the ref doesn't exist
+		OldValue:    sha.None, // this is a new pull request, so we expect that the ref doesn't exist
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update PR head ref: %w", err)
@@ -110,7 +110,7 @@ func (s *Service) updateHeadRefOnReopen(ctx context.Context,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
 		Type:        gitenum.RefTypePullReqHead,
 		NewValue:    sha.Must(event.Payload.SourceSHA),
-		OldValue:    sha.SHA{}, // the request is re-opened, so anything can be the old value
+		OldValue:    sha.None, // the request is re-opened, so anything can be the old value
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update PR head ref after pull request reopen: %w", err)
