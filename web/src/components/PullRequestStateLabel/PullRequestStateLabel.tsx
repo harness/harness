@@ -39,7 +39,7 @@ export const PullRequestStateLabel: React.FC<{ data: TypesPullReq; iconSize?: nu
       css: css.merged
     },
     closed: {
-      icon: CodeIcon.Merged,
+      icon: CodeIcon.Rejected,
       css: css.closed
     },
     draft: {
