@@ -148,12 +148,18 @@ type PullReqFileView struct {
 }
 
 type MergeResponse struct {
-	DryRun         bool               `json:"dry_run,omitempty"`
-	SHA            string             `json:"sha,omitempty"`
-	BranchDeleted  bool               `json:"branch_deleted,omitempty"`
-	AllowedMethods []enum.MergeMethod `json:"allowed_methods,omitempty"`
-	ConflictFiles  []string           `json:"conflict_files,omitempty"`
-	RuleViolations []RuleViolations   `json:"rule_violations,omitempty"`
+	SHA            string           `json:"sha,omitempty"`
+	BranchDeleted  bool             `json:"branch_deleted,omitempty"`
+	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
+
+	// values only returned on dryrun
+	DryRun                        bool               `json:"dry_run,omitempty"`
+	ConflictFiles                 []string           `json:"conflict_files,omitempty"`
+	AllowedMethods                []enum.MergeMethod `json:"allowed_methods,omitempty"`
+	MinimumRequiredApprovalsCount int                `json:"minimum_required_approvals_count,omitempty"`
+	RequiresCodeOwnersApproval    bool               `json:"requires_code_owners_approval,omitempty"`
+	RequiresCommentResolution     bool               `json:"requires_comment_resolution,omitempty"`
+	RequiresNoChangeRequests      bool               `json:"requires_no_change_requests,omitempty"`
 }
 
 type MergeViolations struct {

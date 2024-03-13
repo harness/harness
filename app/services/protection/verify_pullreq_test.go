@@ -64,7 +64,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqMinCount},
 			expParams: [][]any{{0, 1}},
-			expOut:    MergeVerifyOutput{},
+			expOut:    MergeVerifyOutput{MinimumRequiredApprovalsCount: 1},
 		},
 		{
 			name: codePullReqApprovalReqMinCount + "-success",
@@ -77,7 +77,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{MinimumRequiredApprovalsCount: 2},
 		},
 		{
 			name: codePullReqApprovalReqLatestCommit + "-fail",
@@ -92,7 +92,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqMinCountLatest},
 			expParams: [][]any{{1, 2}},
-			expOut:    MergeVerifyOutput{},
+			expOut:    MergeVerifyOutput{MinimumRequiredApprovalsCount: 2},
 		},
 		{
 			name: codePullReqApprovalReqLatestCommit + "-success",
@@ -106,7 +106,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{MinimumRequiredApprovalsCount: 2},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoApproval + "-fail",
@@ -141,7 +141,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				codePullReqApprovalReqCodeOwnersNoApproval,
 			},
 			expParams: [][]any{{"app"}, {"data"}},
-			expOut:    MergeVerifyOutput{},
+			expOut:    MergeVerifyOutput{RequiresCodeOwnersApproval: true},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoApproval + "-success",
@@ -167,7 +167,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{RequiresCodeOwnersApproval: true},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersChangeRequested + "-fail",
@@ -197,7 +197,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqCodeOwnersChangeRequested},
 			expParams: [][]any{{"app"}},
-			expOut:    MergeVerifyOutput{},
+			expOut:    MergeVerifyOutput{RequiresCodeOwnersApproval: true},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoLatestApproval + "-fail",
@@ -226,7 +226,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqCodeOwnersNoLatestApproval},
 			expParams: [][]any{{"data"}},
-			expOut:    MergeVerifyOutput{},
+			expOut:    MergeVerifyOutput{RequiresCodeOwnersApproval: true},
 		},
 		{
 			name: codePullReqCommentsReqResolveAll + "-fail",
@@ -237,7 +237,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{"pullreq.comments.require_resolve_all"},
 			expParams: [][]any{{6}},
-			expOut:    MergeVerifyOutput{},
+			expOut:    MergeVerifyOutput{RequiresCommentResolution: true},
 		},
 		{
 			name: codePullReqCommentsReqResolveAll + "-success",
@@ -246,7 +246,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				PullReq: &types.PullReq{UnresolvedCount: 0},
 				Method:  enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{RequiresCommentResolution: true},
 		},
 		{
 			name: codePullReqStatusChecksReqIdentifiers + "-fail",
@@ -337,7 +337,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				PullReq: &types.PullReq{SourceSHA: "abc"},
 				Method:  enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{RequiresNoChangeRequests: true},
 		},
 		{
 			name: codePullReqApprovalReqChangeRequested + "-false",
@@ -371,7 +371,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqChangeRequested},
 			expParams: [][]any{{"John"}},
-			expOut:    MergeVerifyOutput{},
+			expOut:    MergeVerifyOutput{RequiresNoChangeRequests: true},
 		},
 		{
 			name: codePullReqApprovalReqChangeRequested + "-diffSHA",
@@ -391,7 +391,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqChangeRequestedOldSHA},
 			expParams: [][]any{{"John"}},
-			expOut:    MergeVerifyOutput{},
+			expOut:    MergeVerifyOutput{RequiresNoChangeRequests: true},
 		},
 	}
 

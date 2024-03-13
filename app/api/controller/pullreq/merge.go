@@ -262,11 +262,17 @@ func (c *Controller) Merge(
 
 		// With in.DryRun=true this function never returns types.MergeViolations
 		out := &types.MergeResponse{
-			DryRun:         true,
 			BranchDeleted:  ruleOut.DeleteSourceBranch,
-			AllowedMethods: ruleOut.AllowedMethods,
-			ConflictFiles:  pr.MergeConflicts,
 			RuleViolations: violations,
+
+			// values only retured by dry run
+			DryRun:                        true,
+			ConflictFiles:                 pr.MergeConflicts,
+			AllowedMethods:                ruleOut.AllowedMethods,
+			RequiresCodeOwnersApproval:    ruleOut.RequiresCodeOwnersApproval,
+			RequiresCommentResolution:     ruleOut.RequiresCommentResolution,
+			RequiresNoChangeRequests:      ruleOut.RequiresNoChangeRequests,
+			MinimumRequiredApprovalsCount: ruleOut.MinimumRequiredApprovalsCount,
 		}
 
 		return out, nil, nil
