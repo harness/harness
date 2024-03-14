@@ -1611,10 +1611,10 @@
   resolved "https://registry.npmjs.org/@harnessio/icons/-/icons-2.0.0-beta.2.tgz#82c9602e44d3eccadc8b393ba58c4714aa829846"
   integrity sha512-SAA/gDHdb8gNx2LnGgdFwcmJJETyYL2b7DzUSQL3HRZ9Ha3zfhfwAdpErFETpfF5maxfr2rHr8WbDPF69RchlQ==
 
-"@harnessio/uicore@^4.0.0-beta.1":
-  version "4.0.0-beta.1"
-  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.0.0-beta.1.tgz#2ad779d64db206a23ad4122572eaf47cfcd9e143"
-  integrity sha512-xrr7Vxfhfm7a0iVE/WFyNjPh4kFSUPDL7as4NxukITG7sgYCuXMTp0nEwePbIkBK5AvH/vFJk9EpMNHSBuNOSA==
+"@harnessio/uicore@^4.0.0-beta.1a":
+  version "4.0.0-beta.1a"
+  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.0.0-beta.1a.tgz#530d9b859795f2d4048c20c63fa97b6d244a5211"
+  integrity sha512-243zY+ClWj7/LSvbd+7f1qWOP/OALr6KgH7uqNoeVSHIAqNN/8pX9wkovH4AMnH3CPfcb+VTP4mGOMNSh5m1Vg==
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
