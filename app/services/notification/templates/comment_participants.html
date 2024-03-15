@@ -5,7 +5,9 @@
 </head>
 <body>
 <p>
-    <b>@{{.Commenter.DisplayName}}</b> commented on pull request <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
+    <b>@{{.Commenter.DisplayName}}</b>
+    replied to your comment on pull request
+    <b>#{{.Base.PullReq.Number}}:{{.Base.PullReq.Title}}</b>
 </p>
 <p>
     {{.Text}}

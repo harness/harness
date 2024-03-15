@@ -380,41 +380,19 @@ func (s *PullReqActivityStore) Count(ctx context.Context,
 	return count, nil
 }
 
-// List returns a list of pull requests for a repo.
+// List returns a list of pull request activities for a PR.
 func (s *PullReqActivityStore) List(ctx context.Context,
 	prID int64,
-	opts *types.PullReqActivityFilter,
+	filter *types.PullReqActivityFilter,
 ) ([]*types.PullReqActivity, error) {
 	stmt := database.Builder.
 		Select(pullreqActivityColumns).
 		From("pullreq_activities").
 		Where("pullreq_activity_pullreq_id = ?", prID)
 
-	if len(opts.Types) == 1 {
-		stmt = stmt.Where("pullreq_activity_type = ?", opts.Types[0])
-	} else if len(opts.Types) > 1 {
-		stmt = stmt.Where(squirrel.Eq{"pullreq_activity_type": opts.Types})
-	}
+	stmt = applyFilter(filter, stmt)
 
-	if len(opts.Kinds) == 1 {
-		stmt = stmt.Where("pullreq_activity_kind = ?", opts.Kinds[0])
-	} else if len(opts.Kinds) > 1 {
-		stmt = stmt.Where(squirrel.Eq{"pullreq_activity_kind": opts.Kinds})
-	}
-
-	if opts.After != 0 {
-		stmt = stmt.Where("pullreq_activity_created > ?", opts.After)
-	}
-
-	if opts.Before != 0 {
-		stmt = stmt.Where("pullreq_activity_created < ?", opts.Before)
-	}
-
-	if opts.Limit > 0 {
-		stmt = stmt.Limit(database.Limit(opts.Limit))
-	}
-
-	stmt = stmt.OrderBy("pullreq_activity_order asc", "pullreq_activity_sub_order asc")
+	stmt.OrderBy("pullreq_activity_order asc", "pullreq_activity_sub_order asc")
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -435,6 +413,30 @@ func (s *PullReqActivityStore) List(ctx context.Context,
 	}
 
 	return result, nil
+}
+
+// ListAuthorIDs returns a list of pull request activity author ids in a thread for a PR.
+func (s *PullReqActivityStore) ListAuthorIDs(ctx context.Context, prID int64, order int64) ([]int64, error) {
+	stmt := database.Builder.
+		Select("DISTINCT pullreq_activity_created_by").
+		From("pullreq_activities").
+		Where("pullreq_activity_pullreq_id = ?", prID).
+		Where("pullreq_activity_order = ?", order)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert pull request activity query to sql")
+	}
+
+	var dst []int64
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing pull request activity list query")
+	}
+
+	return dst, nil
 }
 
 func (s *PullReqActivityStore) CountUnresolved(ctx context.Context, prID int64) (int, error) {
@@ -604,4 +606,35 @@ func (s *PullReqActivityStore) mapSlicePullReqActivity(
 	}
 
 	return m, nil
+}
+
+func applyFilter(
+	filter *types.PullReqActivityFilter,
+	stmt squirrel.SelectBuilder,
+) squirrel.SelectBuilder {
+	if len(filter.Types) == 1 {
+		stmt = stmt.Where("pullreq_activity_type = ?", filter.Types[0])
+	} else if len(filter.Types) > 1 {
+		stmt = stmt.Where(squirrel.Eq{"pullreq_activity_type": filter.Types})
+	}
+
+	if len(filter.Kinds) == 1 {
+		stmt = stmt.Where("pullreq_activity_kind = ?", filter.Kinds[0])
+	} else if len(filter.Kinds) > 1 {
+		stmt = stmt.Where(squirrel.Eq{"pullreq_activity_kind": filter.Kinds})
+	}
+
+	if filter.After != 0 {
+		stmt = stmt.Where("pullreq_activity_created > ?", filter.After)
+	}
+
+	if filter.Before != 0 {
+		stmt = stmt.Where("pullreq_activity_created < ?", filter.Before)
+	}
+
+	if filter.Limit > 0 {
+		stmt = stmt.Limit(database.Limit(filter.Limit))
+	}
+
+	return stmt
 }

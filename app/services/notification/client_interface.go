@@ -23,14 +23,36 @@ import (
 // Client is an interface for sending notifications, such as emails, Slack messages etc.
 // It is implemented by MailClient and in future we can have other implementations for other channels like Slack etc.
 type Client interface {
-	SendCommentCreated(ctx context.Context, recipients []*types.PrincipalInfo, payload *CommentCreatedPayload) error
-	SendReviewerAdded(ctx context.Context, recipients []*types.PrincipalInfo, payload *ReviewerAddedPayload) error
+	SendCommentPRAuthor(
+		ctx context.Context,
+		recipients []*types.PrincipalInfo,
+		payload *CommentPayload,
+	) error
+	SendCommentMentions(
+		ctx context.Context,
+		recipients []*types.PrincipalInfo,
+		payload *CommentPayload,
+	) error
+	SendCommentParticipants(
+		ctx context.Context,
+		recipients []*types.PrincipalInfo,
+		payload *CommentPayload,
+	) error
+	SendReviewerAdded(
+		ctx context.Context,
+		recipients []*types.PrincipalInfo,
+		payload *ReviewerAddedPayload,
+	) error
 	SendPullReqBranchUpdated(
 		ctx context.Context,
 		recipients []*types.PrincipalInfo,
 		payload *PullReqBranchUpdatedPayload,
 	) error
-	SendReviewSubmitted(ctx context.Context, recipients []*types.PrincipalInfo, payload *ReviewSubmittedPayload) error
+	SendReviewSubmitted(
+		ctx context.Context,
+		recipients []*types.PrincipalInfo,
+		payload *ReviewSubmittedPayload,
+	) error
 	SendPullReqStateChanged(
 		ctx context.Context,
 		recipients []*types.PrincipalInfo,

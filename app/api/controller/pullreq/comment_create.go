@@ -102,7 +102,6 @@ func (c *Controller) CommentCreate(
 	}
 
 	var pr *types.PullReq
-	var act *types.PullReqActivity
 
 	pr, err = c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
 	if err != nil {
@@ -117,6 +116,8 @@ func (c *Controller) CommentCreate(
 			return nil, err
 		}
 	}
+
+	var act *types.PullReqActivity
 
 	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
 		var err error
@@ -145,7 +146,7 @@ func (c *Controller) CommentCreate(
 
 			err = c.writeActivity(ctx, pr, act)
 
-		case in.ParentID != 0:
+		case in.IsReply():
 			var parentAct *types.PullReqActivity
 
 			parentAct, err = c.checkIsReplyable(ctx, pr, in.ParentID)
@@ -158,7 +159,7 @@ func (c *Controller) CommentCreate(
 			_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
 
 			err = c.writeReplyActivity(ctx, parentAct, act)
-		default:
+		default: // top level comment
 			_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
 			err = c.writeActivity(ctx, pr, act)
 		}
@@ -194,18 +195,8 @@ func (c *Controller) CommentCreate(
 	}
 
 	// if it's a regular comment publish a comment create event
-	if !act.IsReply() && act.Type == enum.PullReqActivityTypeComment && act.Kind == enum.PullReqActivityKindComment {
-		c.eventReporter.CommentCreated(ctx, &events.CommentCreatedPayload{
-			Base: events.Base{
-				PullReqID:    pr.ID,
-				SourceRepoID: pr.SourceRepoID,
-				TargetRepoID: pr.TargetRepoID,
-				PrincipalID:  session.Principal.ID,
-				Number:       pr.Number,
-			},
-			ActivityID: act.ID,
-			SourceSHA:  pr.SourceSHA,
-		})
+	if act.Type == enum.PullReqActivityTypeComment && act.Kind == enum.PullReqActivityKindComment {
+		c.reportCommentCreated(ctx, pr, session.Principal.ID, act.ID, act.IsReply())
 	}
 
 	return act, nil
@@ -379,4 +370,25 @@ func (c *Controller) migrateCodeComment(
 		log.Ctx(ctx).Err(errMigrateUpdate).
 			Msgf("failed to migrate code comment to the latest source/merge-base commit SHA")
 	}
+}
+
+func (c *Controller) reportCommentCreated(
+	ctx context.Context,
+	pr *types.PullReq,
+	principalID int64,
+	actID int64,
+	isReply bool,
+) {
+	c.eventReporter.CommentCreated(ctx, &events.CommentCreatedPayload{
+		Base: events.Base{
+			PullReqID:    pr.ID,
+			SourceRepoID: pr.SourceRepoID,
+			TargetRepoID: pr.TargetRepoID,
+			PrincipalID:  principalID,
+			Number:       pr.Number,
+		},
+		ActivityID: actID,
+		SourceSHA:  pr.SourceSHA,
+		IsReply:    isReply,
+	})
 }
