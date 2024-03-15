@@ -46,7 +46,7 @@ import { NewSecretModalButton } from 'components/NewSecretModalButton/NewSecretM
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import useUpdateSecretModal from 'components/UpdateSecretModal/UpdateSecretModal'
-import noSecretsImage from '../RepositoriesListing/no-repo.svg'
+import noSecretsImage from '../RepositoriesListing/no-repo.svg?url'
 import css from './SecretList.module.scss'
 
 const SecretList = () => {

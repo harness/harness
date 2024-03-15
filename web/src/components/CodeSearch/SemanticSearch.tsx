@@ -29,7 +29,7 @@ import type { GitInfoProps } from 'utils/GitUtils'
 
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 
-import svg from './search-background.svg'
+import svg from './search-background.svg?url'
 import css from './SemanticSearch.module.scss'
 
 const SemanticSearch = ({ repoMetadata }: Pick<GitInfoProps, 'repoMetadata'>) => {

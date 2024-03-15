@@ -21,7 +21,6 @@ import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import cx from 'classnames'
-import { Render } from 'react-jsx-match'
 import { isEmpty } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
@@ -181,105 +180,101 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
   return (
     <Container
       className={cx(css.reviewButton, {
-        [css.hide]: shouldHide,
+        [css.hide]: shouldHide || loadingReviewers,
         [css.disabled]: disabled
       })}>
-      <Render when={!loadingReviewers}>
-        <SplitButton
-          className={cx(
-            {
-              [css.approvedBtn]:
-                approveState === ApproveState.APPROVED &&
-                processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) !==
-                  ApproveState.OUTDATED
-            },
-            {
-              [css.changeReqBtn]:
-                approveState === ApproveState.CHANGEREQ &&
-                processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) !==
-                  ApproveState.OUTDATED
-            }
-          )}
-          text={approveState === ApproveState.APPROVE ? prDecisionOptions[0].title : getApprovalState(approveState)}
-          disabled={loading}
-          variation={
-            (approveState === ApproveState.APPROVED &&
-              processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) ===
-                ApproveState.OUTDATED) ||
-            (ApproveState.CHANGEREQ &&
-              processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) ===
-                ApproveState.OUTDATED) ||
-            approveState === ApproveState.APPROVE
-              ? ButtonVariation.SECONDARY
-              : ButtonVariation.PRIMARY
+      <SplitButton
+        className={cx(
+          {
+            [css.approvedBtn]:
+              approveState === ApproveState.APPROVED &&
+              processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) !== ApproveState.OUTDATED
+          },
+          {
+            [css.changeReqBtn]:
+              approveState === ApproveState.CHANGEREQ &&
+              processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) !== ApproveState.OUTDATED
           }
-          popoverProps={{
-            interactionKind: 'click',
-            usePortal: true,
-            popoverClassName: css.popover,
-            position: PopoverPosition.BOTTOM_RIGHT,
-            transitionDuration: 1000
-          }}
-          onClick={() => {
-            if (
-              approveState === ApproveState.APPROVE ||
-              processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) === ApproveState.OUTDATED
-            ) {
-              submitReview(prDecisionOptions[0])
+        )}
+        text={approveState === ApproveState.APPROVE ? prDecisionOptions[0].title : getApprovalState(approveState)}
+        disabled={loading}
+        variation={
+          (approveState === ApproveState.APPROVED &&
+            processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) ===
+              ApproveState.OUTDATED) ||
+          (ApproveState.CHANGEREQ &&
+            processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) ===
+              ApproveState.OUTDATED) ||
+          approveState === ApproveState.APPROVE
+            ? ButtonVariation.SECONDARY
+            : ButtonVariation.PRIMARY
+        }
+        popoverProps={{
+          interactionKind: 'click',
+          usePortal: true,
+          popoverClassName: css.popover,
+          position: PopoverPosition.BOTTOM_RIGHT,
+          transitionDuration: 1000
+        }}
+        onClick={() => {
+          if (
+            approveState === ApproveState.APPROVE ||
+            processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) === ApproveState.OUTDATED
+          ) {
+            submitReview(prDecisionOptions[0])
+          }
+        }}>
+        {showMenuItem(prDecisionOptions[0].method) && (
+          <Menu.Item
+            key={prDecisionOptions[0].method}
+            className={cx(css.menuReviewItem, {
+              [css.btnDisabled]: prDecisionOptions[0].method === getApprovalState(approveState)
+            })}
+            disabled={disabled || prDecisionOptions[0].disabled || !showMenuItem(prDecisionOptions[0].method)}
+            text={
+              <Layout.Horizontal>
+                <Icon
+                  className={css.reviewIcon}
+                  {...(prDecisionOptions[0].icon === 'danger-icon' ? null : { color: prDecisionOptions[0].color })}
+                  size={16}
+                  name={prDecisionOptions[0].icon}
+                />
+                <Text flex width={'fit-content'} font={{ variation: FontVariation.BODY }}>
+                  {prDecisionOptions[0].title}
+                </Text>
+              </Layout.Horizontal>
             }
-          }}>
-          {showMenuItem(prDecisionOptions[0].method) && (
-            <Menu.Item
-              key={prDecisionOptions[0].method}
-              className={cx(css.menuReviewItem, {
-                [css.btnDisabled]: prDecisionOptions[0].method === getApprovalState(approveState)
-              })}
-              disabled={disabled || prDecisionOptions[0].disabled || !showMenuItem(prDecisionOptions[0].method)}
-              text={
-                <Layout.Horizontal>
-                  <Icon
-                    className={css.reviewIcon}
-                    {...(prDecisionOptions[0].icon === 'danger-icon' ? null : { color: prDecisionOptions[0].color })}
-                    size={16}
-                    name={prDecisionOptions[0].icon}
-                  />
-                  <Text flex width={'fit-content'} font={{ variation: FontVariation.BODY }}>
-                    {prDecisionOptions[0].title}
-                  </Text>
-                </Layout.Horizontal>
-              }
-              onClick={() => {
-                submitReview(prDecisionOptions[0])
-              }}
-            />
-          )}
-          {showMenuItem(prDecisionOptions[1].method) && (
-            <Menu.Item
-              key={prDecisionOptions[1].method}
-              className={cx(css.menuReviewItem, {
-                [css.btnDisabled]: prDecisionOptions[1].method === getApprovalState(approveState)
-              })}
-              disabled={disabled || prDecisionOptions[1].disabled || !showMenuItem(prDecisionOptions[1].method)}
-              text={
-                <Layout.Horizontal>
-                  <Icon
-                    className={css.reviewIcon}
-                    {...(prDecisionOptions[1].icon === 'danger-icon' ? null : { color: prDecisionOptions[1].color })}
-                    size={16}
-                    name={prDecisionOptions[1].icon}
-                  />
-                  <Text flex width={'fit-content'} font={{ variation: FontVariation.BODY }}>
-                    {getString('reqChanges')}
-                  </Text>
-                </Layout.Horizontal>
-              }
-              onClick={() => {
-                submitReview(prDecisionOptions[1])
-              }}
-            />
-          )}
-        </SplitButton>
-      </Render>
+            onClick={() => {
+              submitReview(prDecisionOptions[0])
+            }}
+          />
+        )}
+        {showMenuItem(prDecisionOptions[1].method) && (
+          <Menu.Item
+            key={prDecisionOptions[1].method}
+            className={cx(css.menuReviewItem, {
+              [css.btnDisabled]: prDecisionOptions[1].method === getApprovalState(approveState)
+            })}
+            disabled={disabled || prDecisionOptions[1].disabled || !showMenuItem(prDecisionOptions[1].method)}
+            text={
+              <Layout.Horizontal>
+                <Icon
+                  className={css.reviewIcon}
+                  {...(prDecisionOptions[1].icon === 'danger-icon' ? null : { color: prDecisionOptions[1].color })}
+                  size={16}
+                  name={prDecisionOptions[1].icon}
+                />
+                <Text flex width={'fit-content'} font={{ variation: FontVariation.BODY }}>
+                  {getString('reqChanges')}
+                </Text>
+              </Layout.Horizontal>
+            }
+            onClick={() => {
+              submitReview(prDecisionOptions[1])
+            }}
+          />
+        )}
+      </SplitButton>
     </Container>
   )
 }

@@ -117,7 +117,7 @@ module.exports = {
         ]
       },
       {
-        test: /\.(jpg|jpeg|png|svg|gif)$/,
+        test: /\.(jpg|jpeg|png|gif)$/,
         use: [
           {
             loader: 'url-loader',
@@ -127,6 +127,17 @@ module.exports = {
             }
           }
         ]
+      },
+      {
+        test: /\.svg$/i,
+        type: 'asset',
+        resourceQuery: /url/ // *.svg?url
+      },
+      {
+        test: /\.svg$/i,
+        issuer: /\.[jt]sx?$/,
+        resourceQuery: { not: [/url/] }, // exclude react component if *.svg?url
+        use: ['@svgr/webpack']
       },
       {
         test: /\.css$/,
@@ -181,6 +192,7 @@ module.exports = {
         'apex',
         'azcli',
         'bat',
+        'bicep',
         'cameligo',
         'clojure',
         'coffee',
@@ -188,19 +200,30 @@ module.exports = {
         'csharp',
         'csp',
         'css',
+        'cypher',
+        'dart',
         'dockerfile',
+        'ecl',
+        'elixir',
+        'flow9',
+        'freemarker2',
         'fsharp',
         'go',
         'graphql',
         'handlebars',
+        'hcl',
         'html',
         'ini',
         'java',
         'javascript',
         'json',
+        'julia',
         'kotlin',
         'less',
+        'lexon',
+        'liquid',
         'lua',
+        'm3',
         'markdown',
         'mips',
         'msdax',
@@ -211,11 +234,14 @@ module.exports = {
         'perl',
         'pgsql',
         'php',
+        'pla',
         'postiats',
         'powerquery',
         'powershell',
+        'protobuf',
         'pug',
         'python',
+        'qsharp',
         'r',
         'razor',
         'redis',
@@ -224,21 +250,24 @@ module.exports = {
         'ruby',
         'rust',
         'sb',
+        'scala',
         'scheme',
         'scss',
         'shell',
         'solidity',
         'sophia',
+        'sparql',
         'sql',
         'st',
         'swift',
+        'systemverilog',
         'tcl',
         'twig',
         'typescript',
         'vb',
+        'wgsl',
         'xml',
-        'yaml',
-        'hcl'
+        'yaml'
       ],
       globalAPI: true,
       filename: '[name].worker.[contenthash:6].js',

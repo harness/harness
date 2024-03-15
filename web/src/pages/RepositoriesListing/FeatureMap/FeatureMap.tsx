@@ -26,7 +26,7 @@ import { useStrings } from 'framework/strings'
 import featuresData from './featureRoadmap.json'
 import featuresStandaloneData from './featureRoadmapStandalone.json'
 
-import Launch from '../../../icons/Launch.svg'
+import Launch from '../../../icons/Launch.svg?url'
 
 import css from '../RepositoriesListing.module.scss'
 

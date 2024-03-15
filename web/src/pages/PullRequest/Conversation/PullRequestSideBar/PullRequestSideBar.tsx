@@ -27,7 +27,7 @@ import type { TypesPullReq, TypesRepository, EnumPullReqReviewDecision } from 's
 import { getErrorMessage } from 'utils/Utils'
 import { ReviewerSelect } from 'components/ReviewerSelect/ReviewerSelect'
 import { PullReqReviewDecision, processReviewDecision } from 'pages/PullRequest/PullRequestUtils'
-import ignoreFailed from '../../../../icons/ignoreFailed.svg'
+import ignoreFailed from '../../../../icons/ignoreFailed.svg?url'
 import css from './PullRequestSideBar.module.scss'
 
 interface PullRequestSideBarProps {

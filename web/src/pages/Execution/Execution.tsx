@@ -33,7 +33,7 @@ import { ExecutionPageHeader } from 'components/ExecutionPageHeader/ExecutionPag
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/ExecutionUtils'
-import noExecutionImage from '../RepositoriesListing/no-repo.svg'
+import noExecutionImage from '../RepositoriesListing/no-repo.svg?url'
 import css from './Execution.module.scss'
 
 const Execution = () => {

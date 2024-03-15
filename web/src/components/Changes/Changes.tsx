@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Container,
   FlexExpander,
@@ -31,24 +31,33 @@ import { Match, Case, Render } from 'react-jsx-match'
 import * as Diff2Html from 'diff2html'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
-import { isEqual, noop, throttle } from 'lodash-es'
+import { chunk, isEqual, noop, throttle } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { normalizeGitRef, type GitInfoProps, FILE_VIEWED_OBSOLETE_SHA } from 'utils/GitUtils'
-import { formatNumber, getErrorMessage, PullRequestSection, voidFn } from 'utils/Utils'
-import { DiffViewer } from 'components/DiffViewer/DiffViewer'
+import { formatNumber, getErrorMessage, isInViewport, PullRequestSection, voidFn } from 'utils/Utils'
+import {
+  DiffViewer,
+  DiffViewerCustomEvent,
+  DiffViewerEvent,
+  DiffViewerExchangeState
+} from 'components/DiffViewer/DiffViewer'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
+import { useQueryParams } from 'hooks/useQueryParams'
 import type { TypesPullReqFileView, TypesPullReq, TypesListCommitResponse } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import { createRequestIdleCallbackTaskPool } from 'utils/Task'
 import { PlainButton } from 'components/PlainButton/PlainButton'
-import { useEventListener } from 'hooks/useEventListener'
+import { dispatchCustomEvent, useEventListener } from 'hooks/useEventListener'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
+import { InViewDiffBlockRenderer } from 'components/DiffViewer/InViewDiffBlockRenderer'
+import Config from 'Config'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import ReviewSplitButton from './ReviewSplitButton/ReviewSplitButton'
@@ -94,7 +103,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
   const [lineBreaks, setLineBreaks] = useUserPreference(UserPreference.DIFF_LINE_BREAKS, false)
-  const [diffs, setDiffs] = useState<DiffFileEntry[]>([])
+  const [diffs, setDiffs] = useState<DiffFileEntry[]>()
   const headerRef = useRef<HTMLDivElement | null>(null)
   const scrollTopRef = useRef<HTMLDivElement | null>(null)
   const [commitRange, setCommitRange] = useState(defaultCommitRange)
@@ -128,6 +137,20 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     requestOptions: { headers: { Accept: 'text/plain' } },
     lazy: cachedDiff.path === path ? true : commitSHA ? false : !targetRef || !sourceRef
   })
+
+  const { path: selectedPath, commentId } = useQueryParams<{ path: string; commentId: string }>()
+
+  const diffBlocks = useMemo(() => chunk(diffs, Config.PULL_REQUEST_DIFF_RENDERING_BLOCK_SIZE), [diffs])
+  const activeBlockIndex = useMemo(
+    () => diffBlocks.findIndex(block => block.find(diff => diff.filePath === selectedPath)),
+    [selectedPath, diffBlocks]
+  )
+
+  // Diffs are rendered in blocks that can be destroyed when they go off-screen. Hence their internal
+  // states (such as collapse, view full diff) are reset when they are being re-rendered. To fix this,
+  // we maintained a map from this component and pass to each diff to retain their latest states.
+  // Map entry: <diff.filePath, DiffViewerExchangeState>
+  const memorizedState = useMemo(() => new Map<string, DiffViewerExchangeState>(), [])
 
   // In readOnly mode (Compare page), we'd like to refetch diff immediately when source
   // or target refs changed from Compare page. Otherwise (PullRequest page), we'll need
@@ -218,27 +241,35 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     }
 
     if (cachedDiff.raw) {
-      const _diffs = Diff2Html.parse(cachedDiff.raw, DIFF2HTML_CONFIG).map(diff => {
-        const fileId = changedFileId([diff.oldName, diff.newName])
-        const containerId = `container-${fileId}`
-        const contentId = `content-${fileId}`
-        const filePath = diff.isDeleted ? diff.oldName : diff.newName
+      const _diffs = Diff2Html.parse(cachedDiff.raw, DIFF2HTML_CONFIG)
+        .map(diff => {
+          const fileId = changedFileId([diff.oldName, diff.newName])
+          const containerId = `container-${fileId}`
+          const contentId = `content-${fileId}`
+          const filePath = diff.isDeleted ? diff.oldName : diff.newName
 
-        return {
-          ...diff,
-          containerId,
-          contentId,
-          fileId,
-          filePath,
-          fileViews: cachedDiff.fileViews
-        }
+          return {
+            ...diff,
+            containerId,
+            contentId,
+            fileId,
+            filePath,
+            fileViews: cachedDiff.fileViews
+          }
+        })
+        .sort((a, b) => (a.newName || a.oldName).localeCompare(b.newName || b.oldName, undefined, { numeric: true }))
+
+      setDiffs(oldDiffs => {
+        if (isEqual(oldDiffs, _diffs)) return oldDiffs
+
+        // Clear memorizedState when diffs are changed
+        memorizedState.clear()
+        return _diffs
       })
-
-      setDiffs(oldDiffs => (isEqual(oldDiffs, _diffs) ? oldDiffs : _diffs))
     } else {
       setDiffs([])
     }
-  }, [readOnly, path, cachedDiff, loadingRawDiff])
+  }, [readOnly, path, cachedDiff, loadingRawDiff, memorizedState])
 
   //
   // Listen to scroll event to toggle "scroll to top" button
@@ -305,6 +336,89 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     [isMounted, commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number, commitSHA]
   )
 
+  const diffsContainerRef = useRef<HTMLDivElement | null>(null)
+  const scrollElementRef = useRef((scrollElement as unknown as Window) !== window ? scrollElement : document)
+
+  /*
+   * Jump to a file.
+   *
+   * When navigating to a specific file, several steps are taken to ensure accurate
+   * positioning due to the dynamic rendering of diffs:
+   *
+   *    1. Scroll to the block that contains the file/diff.
+   *    2. Dispatch a SCROLL_INTO_VIEW event to the diff. However, this event might be missed
+   *       if the diff is not yet rendered.
+   *    3. Implement a loop to verify if the diff is actually rendered. While scrolling to the
+   *       block, other diffs may render themselves, potentially pushing the target diff out of
+   *       view.
+   *    3.1. If the diff is not rendered or not in view, repeat step 1.
+   *    3.2. Ensure there is an exit condition for the loop to prevent infinite recursion.
+   */
+  const onJumpToFile = useCallback(
+    (diff: DiffFileEntry, _commentId: string | undefined = undefined) => {
+      const blockIndex = diffBlocks.findIndex(block => block.find(_diff => _diff.filePath === diff.filePath))
+      let loopCount = 0
+
+      const dispatchScrollIntoView = () => {
+        if (isMounted.current) {
+          const outterBlockDOM = diffsContainerRef.current?.querySelector(
+            `[data-block="${outterBlockName(blockIndex)}"]`
+          )
+          const innerBlockDOM = outterBlockDOM?.querySelector(`[data-block="${innerBlockName(diff.filePath)}"]`)
+          const diffDOM = innerBlockDOM?.querySelector(`[data-diff-file-path="${diff.filePath}"]`)
+
+          outterBlockDOM?.scrollIntoView(false)
+          innerBlockDOM?.scrollIntoView(false)
+          diffDOM?.scrollIntoView(true)
+
+          if (diffDOM) {
+            dispatchCustomEvent<DiffViewerCustomEvent>(diff.filePath, {
+              action: DiffViewerEvent.SCROLL_INTO_VIEW,
+              commentId: _commentId
+            })
+          }
+
+          scheduleTask(() => {
+            if (isMounted.current && loopCount++ < 50) {
+              if (
+                !outterBlockDOM ||
+                !innerBlockDOM ||
+                !diffDOM ||
+                !isInViewport(outterBlockDOM) ||
+                !isInViewport(innerBlockDOM) ||
+                !isInViewport(diffDOM)
+              ) {
+                dispatchScrollIntoView()
+              }
+            }
+          })
+        }
+      }
+
+      if (blockIndex >= 0) {
+        dispatchScrollIntoView()
+      }
+    },
+    [diffBlocks, isMounted]
+  )
+
+  /*
+   * Jump to file and comment if they are specified in URL. When path and commentId
+   * are specified in URL, leverage onJumpToFile() to jump to file, then comment.
+   */
+  useEffect(
+    function jumpToSelectedPathFromURL() {
+      if (diffs?.length && activeBlockIndex >= 0 && commentId) {
+        const diffIndex = diffs.findIndex(_diff => _diff.filePath === selectedPath)
+
+        if (diffIndex >= 0) {
+          onJumpToFile(diffs[diffIndex], commentId)
+        }
+      }
+    },
+    [activeBlockIndex, commentId, diffs, onJumpToFile, selectedPath]
+  )
+
   useShowRequestError(errorFileViews, 0)
 
   return (
@@ -316,7 +430,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
       <Render when={!error && !loadingRawDiff}>
         <Container className={css.header} ref={headerRef}>
           <Layout.Horizontal>
-            <Container flex={{ alignItems: 'center' }}>
+            <Container flex={{ alignItems: 'center' }} style={{ visibility: diffs ? 'visible' : 'hidden' }}>
               <CommitRangeDropdown
                 allCommits={pullReqCommits?.commits || []}
                 selectedCommits={commitRange}
@@ -328,7 +442,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
                 <StringSubstitute
                   str={getString('pr.diffStatsLabel')}
                   vars={{
-                    changedFilesLink: <ChangesDropdown diffs={diffs} />,
+                    changedFilesLink: <ChangesDropdown diffs={diffs || []} onJumpToFile={onJumpToFile} />,
                     addedLines: diffStats.addedLines ? formatNumber(diffStats.addedLines) : '0',
                     deletedLines: diffStats.deletedLines ? formatNumber(diffStats.deletedLines) : '0',
                     configuration: (
@@ -387,38 +501,52 @@ const ChangesInternal: React.FC<ChangesProps> = ({
         <Match expr={diffs?.length}>
           <Case val={(len: number) => len > 0}>
             {/* TODO: lineBreaks is broken in line-by-line view, enable it for side-by-side only now */}
-            <Layout.Vertical
-              spacing="medium"
+            <Container
+              ref={diffsContainerRef}
               className={cx(css.main, {
                 // TODO: Line break barely works. Disable until we find a complete solution for it
                 // https://harness.atlassian.net/browse/CODE-1452
                 // [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
               })}>
-              {/*
-               * TODO: Render diffs by blocks, not everything at once
-               */}
-              {diffs.map((diff, index) => (
-                // Note: `key={viewStyle + index + lineBreaks}` resets DiffView when view configuration
-                // is changed. Making it easier to control states inside DiffView itself, as it does not
-                //  have to deal with any view configuration
-                <DiffViewer
-                  key={viewStyle + diffApiPath + index + lineBreaks}
-                  readOnly={readOnly || (commitRange?.length || 0) > 0} // render in readonly mode in case a commit is selected
-                  diffs={diffs}
-                  diff={diff}
-                  viewStyle={viewStyle}
-                  stickyTopPosition={STICKY_TOP_POSITION}
-                  repoMetadata={repoMetadata}
-                  pullRequestMetadata={pullRequestMetadata}
-                  targetRef={targetRef}
-                  sourceRef={_sourceRef}
-                  commitRange={commitRange}
-                  scrollElement={scrollElement}
-                  commitSHA={commitSHA}
-                  refetchActivities={refetchActivities}
-                />
-              ))}
-            </Layout.Vertical>
+              {diffBlocks?.map((diffsBlock, blockIndex) => {
+                const key = viewStyle + diffApiPath + blockIndex + lineBreaks
+
+                return (
+                  <InViewDiffBlockRenderer
+                    key={key}
+                    blockName={outterBlockName(blockIndex)}
+                    root={scrollElementRef as RefObject<Element>}
+                    shouldRetainChildren={shouldRetainDiffChildren}>
+                    {diffsBlock.map((diff, index) => {
+                      return (
+                        <InViewDiffBlockRenderer
+                          key={key + index}
+                          blockName={innerBlockName(diff.filePath)}
+                          root={diffsContainerRef}
+                          shouldRetainChildren={shouldRetainDiffChildren}>
+                          <DiffViewer
+                            readOnly={readOnly || (commitRange?.length || 0) > 0} // render in readonly mode in case a commit is selected
+                            diff={diff}
+                            viewStyle={viewStyle}
+                            stickyTopPosition={STICKY_TOP_POSITION}
+                            repoMetadata={repoMetadata}
+                            pullRequestMetadata={pullRequestMetadata}
+                            targetRef={targetRef}
+                            sourceRef={_sourceRef}
+                            commitRange={commitRange}
+                            scrollElement={scrollElement}
+                            commitSHA={commitSHA}
+                            refetchActivities={refetchActivities}
+                            memorizedState={memorizedState}
+                            fullDiffAPIPath={path}
+                          />
+                        </InViewDiffBlockRenderer>
+                      )
+                    })}
+                  </InViewDiffBlockRenderer>
+                )
+              })}
+            </Container>
           </Case>
           <Case val={0}>
             <Container padding="xlarge">
@@ -439,3 +567,11 @@ const ChangesInternal: React.FC<ChangesProps> = ({
 export const Changes = React.memo(ChangesInternal)
 
 const changesInfoAtom = atom<{ path?: string; raw?: string; fileViews?: Map<string, string> }>({})
+
+// If a diff container has a Markdown Editor active, retain it event it's off-screen to make
+// sure editor content is not cleared out during off-screen optimization
+const shouldRetainDiffChildren = (dom: HTMLElement | null) => !!dom?.querySelector('[data-comment-editor-shown="true"]')
+
+const outterBlockName = (blockIndex: number) => `outter-${blockIndex}`
+const innerBlockName = (filePath: string) => `inner-${filePath}`
+const { scheduleTask } = createRequestIdleCallbackTaskPool()

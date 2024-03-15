@@ -209,15 +209,17 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
     case CommentType.STATE_CHANGE: {
       const openFromDraft =
         (payload?.payload as Unknown)?.old_draft === true && (payload?.payload as Unknown)?.new_draft === false
-
+      const changedToDraft =
+        (payload?.payload as Unknown)?.old_draft === false && (payload?.payload as Unknown)?.new_draft === true
       return (
         <Container>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
             <Text>
               <StringSubstitute
-                str={getString(openFromDraft ? 'pr.prStateChangedDraft' : 'pr.prStateChanged')}
+                str={getString(openFromDraft || changedToDraft ? 'pr.prStateChangedDraft' : 'pr.prStateChanged')}
                 vars={{
+                  changedToDraft,
                   user: <strong>{payload?.author?.display_name}</strong>,
                   old: <strong>{(payload?.payload as Unknown)?.old}</strong>,
                   new: <strong>{(payload?.payload as Unknown)?.new}</strong>

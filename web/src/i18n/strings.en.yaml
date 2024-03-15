@@ -240,6 +240,9 @@ diff: Diff
 draft: Draft
 conversation: Conversation
 pr:
+  copyLinkToComment: Copy link to comment
+  expandFullFile: Expand all
+  collapseFullFile: Collapse expanded lines
   ableToMerge: Able to merge.
   cantBeMerged: This branch has conflicts with the base branch.
   cantMerge: Can't be merged. You can still create the pull request.
@@ -284,7 +287,7 @@ pr:
   prBranchPushInfo: '{user} pushed a new commit {commit}'
   prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
-  prStateChangedDraft: '{user} opened pull request for review.'
+  prStateChangedDraft: '{user} {changedToDraft|true:marked pull request as draft.,opened pull request for review.}'
   titleChanged: '{user} changed title from {old} to {new}.'
   titleChangedTable: |
     ### Other title changes in history
@@ -995,3 +998,6 @@ customHour: '{{hours}}h'
 customMin: '{{minutes}}m'
 customSecond: '{{seconds}}s'
 reqChanges: 'Request changes'
+summary: Summary
+prGenSummary: Have Harness AIDA summarize the code changes in this pull request
+aidaGenSummary: '[AIDA is generating a summary...]'

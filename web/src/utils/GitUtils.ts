@@ -195,6 +195,7 @@ export const CodeIcon = {
   PullRequest: 'git-pull' as IconName,
   Merged: 'code-merged' as IconName,
   Draft: 'code-draft' as IconName,
+  Rejected: 'code-rejected' as IconName,
   PullRequestRejected: 'main-close' as IconName,
   Add: 'plus' as IconName,
   BranchSmall: 'code-branch-small' as IconName,

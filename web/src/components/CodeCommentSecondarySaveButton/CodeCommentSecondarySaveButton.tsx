@@ -74,11 +74,11 @@ export const CodeCommentSecondarySaveButton: React.FC<CodeCommentSecondarySaveBu
                 commentItems[0].payload.resolved = Date.now()
               }
             }
-            if (isMounted.current) {
-              setResolved(!resolved)
-            }
-            await emitCodeCommentStatus(status)
-            ;(onClick as () => void)()
+
+            emitCodeCommentStatus(status)
+            await (onClick as () => void)()
+
+            if (isMounted.current) setResolved(!resolved)
           })
           .catch(_exception => {
             showError(getErrorMessage(_exception), 0, getString('pr.failedToUpdateCommentStatus'))

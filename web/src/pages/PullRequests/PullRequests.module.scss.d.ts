@@ -20,6 +20,7 @@ export declare const convo: string
 export declare const convoIcon: string
 export declare const main: string
 export declare const row: string
+export declare const rowLink: string
 export declare const state: string
 export declare const table: string
 export declare const title: string

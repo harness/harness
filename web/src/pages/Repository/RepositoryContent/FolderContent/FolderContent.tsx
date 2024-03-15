@@ -42,9 +42,9 @@ import { LatestCommitForFolder } from 'components/LatestCommit/LatestCommit'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useEventListener } from 'hooks/useEventListener'
 import { Readme } from './Readme'
-import CodeFolder from '../../../../icons/CodeFileFill.svg'
-import Submodule from '../../../../icons/Submodules.svg'
-import Symlink from '../../../../icons/Symlink.svg'
+import CodeFolder from '../../../../icons/CodeFileFill.svg?url'
+import Submodule from '../../../../icons/Submodules.svg?url'
+import Symlink from '../../../../icons/Symlink.svg?url'
 import repositoryCSS from '../../Repository.module.scss'
 import css from './FolderContent.module.scss'
 
@@ -154,39 +154,44 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
 
           if (!loaded && !loading && !failed) {
             for (let i = 0; i < paths.length; i++) {
-              const element = document.querySelector(`[data-resource-path="${paths[i]}"]`)
+              try {
+                const element = document.querySelector(`[data-resource-path="${paths[i]}"]`)
 
-              if (element && isInViewport(element, IN_VIEW_DETECTION_MARGIN)) {
-                pathsChunk.loading = true
+                if (element && isInViewport(element, IN_VIEW_DETECTION_MARGIN)) {
+                  pathsChunk.loading = true
 
-                if (isMounted.current) {
-                  setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
+                  if (isMounted.current) {
+                    setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
 
-                  fetchLastCommitsForPaths({ paths })
-                    .then(response => {
-                      pathsChunk.loaded = true
+                    fetchLastCommitsForPaths({ paths })
+                      .then(response => {
+                        pathsChunk.loaded = true
 
-                      if (isMounted.current) {
-                        response?.details?.forEach(({ path, last_commit }) => {
-                          lastCommitMapping.current[path] = last_commit
-                        })
+                        if (isMounted.current) {
+                          response?.details?.forEach(({ path, last_commit }) => {
+                            lastCommitMapping.current[path] = last_commit
+                          })
 
-                        setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
-                      }
-                    })
-                    .catch(error => {
-                      pathsChunk.loaded = false
-                      pathsChunk.loading = false
-                      pathsChunk.failed = true
+                          setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
+                        }
+                      })
+                      .catch(error => {
+                        pathsChunk.loaded = false
+                        pathsChunk.loading = false
+                        pathsChunk.failed = true
 
-                      if (isMounted.current) {
-                        setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
-                      }
+                        if (isMounted.current) {
+                          setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
+                        }
 
-                      console.error('Failed to fetch path commit details', error) // eslint-disable-line no-console
-                    })
+                        console.error('Failed to fetch path commit details', error) // eslint-disable-line no-console
+                      })
+                  }
+                  break
                 }
-                break
+              } catch (exception) {
+                // eslint-disable-next-line no-console
+                console.error('Failed to handle scroll', exception)
               }
             }
           }

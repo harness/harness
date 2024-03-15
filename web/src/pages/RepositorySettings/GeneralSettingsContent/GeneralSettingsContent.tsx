@@ -45,7 +45,7 @@ import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useModalHook } from 'hooks/useModalHook'
 import useDeleteRepoModal from './DeleteRepoModal/DeleteRepoModal'
 import useDefaultBranchModal from './DefaultBranchModal/DefaultBranchModal'
-import Private from '../../../icons/private.svg'
+import Private from '../../../icons/private.svg?url'
 import css from '../RepositorySettings.module.scss'
 
 interface GeneralSettingsProps {

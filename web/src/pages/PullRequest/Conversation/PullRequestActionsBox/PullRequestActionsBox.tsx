@@ -110,45 +110,40 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleViolationArr])
   const dryMerge = () => {
-    if (!isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
+    if (isMounted.current && !isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
       // Use an internal flag to prevent flickering during the loading state of buttons
       internalFlags.current.dryRun = true
-
       mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
         .then(res => {
-          if (!isMounted.current) {
-            return
-          }
-
-          if (res?.rule_violations?.length > 0) {
-            setRuleViolation(true)
-            setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
-            setAllowedStrats(res.allowed_methods)
-          } else {
-            setRuleViolation(false)
-            setAllowedStrats(res.allowed_methods)
+          if (isMounted.current) {
+            if (res?.rule_violations?.length > 0) {
+              setRuleViolation(true)
+              setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
+              setAllowedStrats(res.allowed_methods)
+            } else {
+              setRuleViolation(false)
+              setAllowedStrats(res.allowed_methods)
+            }
           }
         })
         .catch(err => {
-          if (!isMounted.current) {
-            return
-          }
-
-          if (err.status === 422) {
-            setRuleViolation(true)
-            setRuleViolationArr(err)
-            setAllowedStrats(err.allowed_methods)
-          } else if (
-            getErrorMessage(err) === codeOwnersNotFoundMessage ||
-            getErrorMessage(err) === codeOwnersNotFoundMessage2 ||
-            getErrorMessage(err) === codeOwnersNotFoundMessage3 ||
-            err.status === 423 // resource locked (merge / dry-run already ongoing)
-          ) {
-            return
-          } else if (pullRequestSection !== PullRequestSection.CONVERSATION) {
-            return
-          } else {
-            showError(getErrorMessage(err))
+          if (isMounted.current) {
+            if (err.status === 422) {
+              setRuleViolation(true)
+              setRuleViolationArr(err)
+              setAllowedStrats(err.allowed_methods)
+            } else if (
+              getErrorMessage(err) === codeOwnersNotFoundMessage ||
+              getErrorMessage(err) === codeOwnersNotFoundMessage2 ||
+              getErrorMessage(err) === codeOwnersNotFoundMessage3 ||
+              err.status === 423 // resource locked (merge / dry-run already ongoing)
+            ) {
+              return
+            } else if (pullRequestSection !== PullRequestSection.CONVERSATION) {
+              return
+            } else {
+              showError(getErrorMessage(err))
+            }
           }
         })
         .finally(() => {
@@ -162,17 +157,20 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     // TODO: optimize call to handle all causes and avoid double calls by keeping track of SHA
     dryMerge() // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unchecked, pullReqMetadata?.source_sha])
+  const [prMerged, setPrMerged] = useState(false)
 
   useEffect(() => {
     // dryMerge()
     const intervalId = setInterval(async () => {
-      dryMerge()
+      if (!prMerged) {
+        dryMerge()
+      }
     }, POLLING_INTERVAL) // Poll every 20 seconds
     // Cleanup interval on component unmount
     return () => {
       clearInterval(intervalId)
     } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onPRStateChanged])
+  }, [onPRStateChanged, prMerged])
   const isDraft = pullReqMetadata.is_draft
   const mergeOptions: PRMergeOption[] = [
     {
@@ -217,7 +215,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       desc: getString('pr.mergeOptions.closeDesc')
     }
   ]
-
   const [mergeOption, setMergeOption, resetMergeOption] = useUserPreference<PRMergeOption>(
     UserPreference.PULL_REQUEST_MERGE_STRATEGY,
     mergeOptions[0],
@@ -449,6 +446,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                 }
                                 mergePR(payload)
                                   .then(() => {
+                                    setPrMerged(true)
                                     onPRStateChanged()
                                     setRuleViolationArr(undefined)
                                   })

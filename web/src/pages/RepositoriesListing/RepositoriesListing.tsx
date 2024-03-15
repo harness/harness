@@ -53,7 +53,7 @@ import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
 import KeywordSearch from 'components/CodeSearch/KeywordSearch'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import noRepoImage from './no-repo.svg'
+import noRepoImage from './no-repo.svg?url'
 import FeatureMap from './FeatureMap/FeatureMap'
 import css from './RepositoriesListing.module.scss'
 

@@ -30,7 +30,7 @@ import {
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
-import { defaultTo, orderBy } from 'lodash-es'
+import { defaultTo } from 'lodash-es'
 import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -264,7 +264,7 @@ export function CommitsView({
                 className={css.table}
                 hideHeaders
                 columns={columns}
-                data={orderBy(commitsByDate || [], ['committer.when'], ['desc'])}
+                data={commitsByDate || []}
                 getRowClassName={() => css.row}
               />
             </ThreadSection>

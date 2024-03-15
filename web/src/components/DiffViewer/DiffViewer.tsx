@@ -16,8 +16,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { noop } from 'lodash-es'
-import { useMutate } from 'restful-react'
-import { useInView } from 'react-intersection-observer'
+import { useGet, useMutate } from 'restful-react'
 import {
   Button,
   Container,
@@ -27,23 +26,30 @@ import {
   Text,
   ButtonSize,
   Checkbox,
-  useIsMounted
+  useIsMounted,
+  useToaster
 } from '@harnessio/uicore'
 import cx from 'classnames'
+import * as Diff2Html from 'diff2html'
 import { Render } from 'react-jsx-match'
 import { Link } from 'react-router-dom'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { DiffFileEntry } from 'utils/types'
 import { useAppContext } from 'AppContext'
-import type { TypesPullReq } from 'services/code'
-import { isInViewport } from 'utils/Utils'
+import type { GitFileDiff, TypesPullReq } from 'services/code'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
-import { dispatchCustomEvent, useCustomEventListener } from 'hooks/useEventListener'
 import { useQueryParams } from 'hooks/useQueryParams'
+import { useCustomEventListener } from 'hooks/useEventListener'
+import { useShowRequestError } from 'hooks/useShowRequestError'
+import { getErrorMessage, isInViewport } from 'utils/Utils'
+import { createRequestIdleCallbackTaskPool } from 'utils/Task'
+import Config from 'Config'
 import {
   DIFF2HTML_CONFIG,
   DIFF_VIEWER_HEADER_HEIGHT,
@@ -52,10 +58,11 @@ import {
   FileViewedState
 } from './DiffViewerUtils'
 import { usePullReqComments } from './usePullReqComments'
+import Collapse from '../../icons/collapse.svg'
+import Expand from '../../icons/expand.svg'
 import css from './DiffViewer.module.scss'
 
 interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
-  diffs: DiffFileEntry[]
   diff: DiffFileEntry
   viewStyle: ViewStyle
   stickyTopPosition?: number
@@ -67,26 +74,11 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   scrollElement: HTMLElement
   commitSHA?: string
   refetchActivities?: UseGetPullRequestInfoResult['refetchActivities']
+  memorizedState: Map<string, DiffViewerExchangeState>
+  fullDiffAPIPath: string
 }
 
-//
-// Notes:
-//       (1) Lots of direct DOM manipulations are used to boost performance.
-//       Try to avoid React re-rendering at all cost.
-//
-//       (2) This component focuses very much on rendering a diff. Handling
-//       PR comments are consolidated in usePullReqComments hook.
-//
-//       (3) DOM is expensive. The more DOM we have on a page, the slower it
-//       is - does not matter if they are rendered by native JS or React.
-//       The less DOMs we have, the better performance is gained.
-//
-//       (4) For active DOMs that we can't destroy, minimize their impact on
-//       performance by hidding them (visibility: hidden), or using the new
-//       CSS property `content-visibility`.
-//
 const DiffViewerInternal: React.FC<DiffViewerProps> = ({
-  diffs,
   diff,
   viewStyle,
   stickyTopPosition = 0,
@@ -98,11 +90,13 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   commitRange,
   scrollElement,
   commitSHA,
-  refetchActivities
+  refetchActivities,
+  memorizedState,
+  fullDiffAPIPath
 }) => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
-  const internalFlags = useRef({ isContentEmpty: true })
+  const { showError } = useToaster()
   const viewedPath = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata?.number}/file-views`,
     [repoMetadata.path, pullReqMetadata?.number]
@@ -113,7 +107,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   const { path } = useQueryParams<{ path: string; commentId: string }>()
   const shouldDiffBeShownByDefault = useMemo(() => path === diff.filePath, [path, diff.filePath])
   const diffHasVeryLongLine = useMemo(
-    () => diff.blocks?.some(block => block.lines?.some(line => line.content?.length > LONG_LINE_SIZE_LIMIT)),
+    () => diff.blocks?.some(block => block.lines?.some(line => line.content?.length > Config.MAX_TEXT_LINE_SIZE_LIMIT)),
     [diff]
   )
 
@@ -123,17 +117,6 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
       getFileViewedState(diff.filePath, diff.checksumAfter, diff.fileViews) === FileViewedState.VIEWED &&
       !shouldDiffBeShownByDefault
   )
-
-  // When `path` is specified in url, the diff associated to this path has highest priority to
-  // be rendered first. This diff can be at anywhere the list so the chance for it to lock to
-  // itself is near zero - as others might have higher change to render themselves. To avoid
-  // others to render before the lock is enforced, any DiffViewer instance, that sees `path` and
-  // finds the lock is still available, will set this lock (even might not for itself) anyway.
-  useEffect(function setLockToSingleDiffAnyway() {
-    if (path && !lockSingleDiffRenderingAtFilePath) {
-      lockSingleDiffRenderingAtFilePath = path
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (commitRange?.length === 0) {
@@ -148,53 +131,35 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
       getFileViewedState(diff.filePath, diff.checksumAfter, diff.fileViews) === FileViewedState.CHANGED,
     [readOnly, commitRange?.length, diff.filePath, diff.checksumAfter, diff.fileViews]
   )
-  const [collapsed, setCollapsed] = useState(viewed)
+  const [collapsed, setCollapsed] = useState(viewed || !!memorizedState.get(diff.filePath)?.collapsed)
   const isBinary = useMemo(() => diff.isBinary, [diff.isBinary])
-  const fileUnchanged = useMemo(() => diff.unchangedPercentage === 100, [diff.unchangedPercentage])
+  const fileUnchanged = useMemo(
+    () => diff.unchangedPercentage === 100 || (diff.addedLines === 0 && diff.deletedLines === 0),
+    [diff.addedLines, diff.deletedLines, diff.unchangedPercentage]
+  )
   const fileDeleted = useMemo(() => diff.isDeleted, [diff.isDeleted])
   const isDiffTooLarge = useMemo(
-    () => diff.addedLines + diff.deletedLines > DIFF_CHANGES_LIMIT,
+    () => diff.addedLines + diff.deletedLines > Config.PULL_REQUEST_LARGE_DIFF_CHANGES_LIMIT,
     [diff.addedLines, diff.deletedLines]
   )
   const [renderCustomContent, setRenderCustomContent] = useState(
     !shouldDiffBeShownByDefault && (fileUnchanged || fileDeleted || isDiffTooLarge || isBinary || diffHasVeryLongLine)
   )
-  const { ref, inView } = useInView({
-    rootMargin: `${IN_VIEW_MARGIN}px ${IN_VIEW_MARGIN}px`,
-    //
-    // This flag is important to make sure handleDiffAndCommentsVisibility is not
-    // called twice initially for 1st file (one with inView false, one with true).
-    // Note: Do not set `delay`, as event could be handled incorrectly when page
-    // is scrolled too quickly.
-    //
-    initialInView: true
-  })
-
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const setContainerRef = useCallback(
-    node => {
-      containerRef.current = node
-      ref(node)
-    },
-    [ref]
-  )
-
   const contentRef = useRef<HTMLDivElement>(null)
   const diff2HtmlRef = useRef<{ renderer: Diff2HtmlUI; diff: DiffFileEntry }>()
-  const diffHandlerRafRef = useRef(0)
-  const isMounted = useIsMounted()
   const [dirty, setDirty] = useState(false)
+  const isMounted = useIsMounted()
+  const [useFullDiff, setUseFullDiff] = useState(!!memorizedState.get(diff.filePath)?.useFullDiff)
 
   //
   // Handling custom events sent to DiffViewer from external components/features
   // such as "jump to file", "jump to comment", etc...
-  // Note: This useCustomEventListener() hook must be called before usePullReqComments()
-  // hook in order for usePullReqComments to send back events properly.
   //
   useCustomEventListener<DiffViewerCustomEvent>(
     diff.filePath,
     useCallback(event => {
-      const { action, onDone, index, commentId } = event.detail
+      const { action, commentId } = event.detail
       const containerDOM = document.getElementById(diff.containerId) as HTMLDivElement
 
       function scrollToContainer() {
@@ -217,52 +182,9 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
         }
       }
 
-      function dispatchRenderIfInViewEventToSibling(diffIndex: number, distance: number) {
-        const siblingIndex = diffIndex + distance
-
-        if (!isMounted.current || siblingIndex < 0 || siblingIndex > diffs.length - 1) return
-
-        // Always scroll back to the current diff container or its comment, otherwise, when
-        // siblings are rendered, scroll position is moved with them
-        scrollToContainer()
-
-        dispatchCustomEvent<DiffViewerCustomEvent>(diffs[siblingIndex].filePath, {
-          action: DiffViewerEvent.RENDER_IF_INVIEW,
-          diffs,
-          index,
-          onDone: () => dispatchRenderIfInViewEventToSibling(siblingIndex, distance)
-        })
-      }
-
       switch (action) {
         case DiffViewerEvent.SCROLL_INTO_VIEW: {
-          // When scrolling too quickly over diffs (jump to a file), the diff rendering
-          //  pipeline is super expensive and costly due to many diffs receive the inView
-          // event. To optimize, use a flag to render a single diff (the one we scroll into)
-          // and skip rendering of all others. When this diff rendering is done, dispatch
-          // RENDER_IF_INVIEW event to the diff siblings to consider rendering themselves.
-          // This approach is much more practical than rendering every single diffs that
-          // being scrolled by.
-          lockSingleDiffRenderingAtFilePath = diff.filePath
           scrollToContainer()
-
-          handleDiffAndCommentsVisibility(true, function onRendered() {
-            setTimeout(() => {
-              if (!isMounted.current) return
-
-              scrollToContainer()
-              lockSingleDiffRenderingAtFilePath = ''
-
-              // Ask (above, below) siblings to consider render themselves
-              dispatchRenderIfInViewEventToSibling(index, -1)
-              dispatchRenderIfInViewEventToSibling(index, +1)
-            }, 50)
-          })
-          break
-        }
-
-        case DiffViewerEvent.RENDER_IF_INVIEW: {
-          handleDiffAndCommentsVisibility(false, onDone)
           break
         }
       }
@@ -271,7 +193,6 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   )
 
   const commentsHook = usePullReqComments({
-    diffs,
     diff,
     viewStyle,
     stickyTopPosition,
@@ -298,161 +219,130 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     [showChangedSinceLastView, viewed] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
-  //
-  // Offload diff contents. The purpose of this function:
-  //  - Detach all comment threads, if they exist
-  //  - Set container height to a fixed number to avoid flickering
-  //  - Destroy diff contents to reduce number of DOM elements on page
-  //  - Set container visibility to hidden if requested so
-  //
-  const offloadDiffContents = useCallback(
-    (setContainerVisibilityHidden: boolean) => {
-      if (!isMounted.current) return
+  const renderDiffAndComments = useCallback(() => {
+    if (!isMounted.current) return
 
-      const containerDOM = containerRef.current as HTMLDivElement
-      const contentDOM = contentRef.current as HTMLDivElement
-      const { style } = containerDOM
+    const fullDiff = memorizedState.get(diff.filePath)?.fullDiff
+    const _diff = useFullDiff && fullDiff ? fullDiff : diff
 
-      // Detach all comment threads
-      if (!readOnly) commentsHook.current.detachAllCommentThreads()
-
-      style.height = AUTO
-      if (setContainerVisibilityHidden) style.visibility = HIDDEN
-      style.height = containerDOM.clientHeight + 'px'
-      contentDOM.innerText = ''
-      internalFlags.current.isContentEmpty = true
-    },
-    [isMounted, commentsHook, readOnly]
-  )
-
-  //
-  // Handle diff content and comments rendering and visibility.
-  //
-  const handleDiffAndCommentsVisibility = useCallback(
-    (ignoreChecks = false, onRendered = noop) => {
-      const containerDOM = containerRef.current as HTMLDivElement
-      const contentDOM = contentRef.current as HTMLDivElement
-      const { style: containerStyle } = containerDOM
-      const { style: contentStyle } = contentDOM
-      const { visibility } = containerStyle
-      const { isContentEmpty } = internalFlags.current
-      const isContainerInViewport = inView || isInViewport(containerDOM, IN_VIEW_MARGIN)
-
-      if (renderCustomContent) {
-        onRendered()
-        return
+    // Create a new diff renderer if cached diff is different from current diff
+    // to ensure when new commit is selected, the diff is re-rendered correctly
+    if (diff2HtmlRef.current?.diff !== _diff) {
+      diff2HtmlRef.current = {
+        renderer: new Diff2HtmlUI(
+          contentRef.current as HTMLDivElement,
+          [_diff],
+          Object.assign({}, DIFF2HTML_CONFIG, { outputFormat: viewStyle })
+        ),
+        diff: _diff
       }
+    }
 
-      // Single diff rendering is locked
-      if (lockSingleDiffRenderingAtFilePath) {
-        if (lockSingleDiffRenderingAtFilePath !== diff.filePath) {
-          // Not for this diff, return
-          return
-        } else if (diffHandlerRafRef.current > 0 && !ignoreChecks) {
-          // Lock is for this diff
-          // Check if there's a task already schedule, and if this call has
-          // low priority (!ignoreChecks), then return
-          return
+    diff2HtmlRef.current.renderer.draw()
+    commentsHook.current.attachAllCommentThreads()
+  }, [commentsHook, diff, memorizedState, useFullDiff, viewStyle, isMounted])
+
+  useEffect(
+    function renderDiffAndCommentsIfInViewportOrSchedule() {
+      let taskId = 0
+
+      if (!renderCustomContent && !collapsed) {
+        if (isInViewport(containerRef.current as Element)) {
+          renderDiffAndComments()
+        } else {
+          taskId = scheduleLowPriorityTask(renderDiffAndComments)
         }
       }
 
-      cancelAnimationFrame(diffHandlerRafRef.current)
+      memorizedState.set(diff.filePath, { ...memorizedState.get(diff.filePath), collapsed })
 
-      if (collapsed) {
-        if (!isContentEmpty) offloadDiffContents(false)
-      } else {
-        if (isContainerInViewport && (visibility !== VISIBLE || isContentEmpty || !collapsed || ignoreChecks)) {
-          // Schedule a task to decide if we should render diff
-          // content (and comments). RAF helps:
-          //  (1)- Reduce unresponsive UI
-          //  (2)- Avoid rendering if container is already out of viewport at the
-          //       time RAF callback is executed
-          diffHandlerRafRef.current = requestAnimationFrame(() => {
-            if (!isMounted.current) return
-
-            // Need to check if container in viewport again when RAF callback
-            // is executed. At this time, the container may be out of viewport
-            // already. ONLY render diff (and comments) when container is in
-            // viewport.
-            if (isInViewport(containerDOM, IN_VIEW_MARGIN) || visibility === HIDDEN) {
-              if (diff2HtmlRef.current?.diff !== diff) {
-                diff2HtmlRef.current = {
-                  renderer: new Diff2HtmlUI(
-                    contentDOM,
-                    [diff],
-                    Object.assign({}, DIFF2HTML_CONFIG, { outputFormat: viewStyle })
-                  ),
-                  diff
-                }
-              }
-
-              // Set container height to auto, allowing new comments to be added
-              // inside diff content without having to adjusting its height manually
-              containerStyle.height = AUTO
-
-              // Since attachAllCommentThreads renders comment threads in separate
-              // React roots. Give React time to render the comments completely
-              // before showing the whole container. Otherwise, there'd be a
-              // flicker (diff rendered first, then comments rendered a while
-              // later due to React scheduling)
-              if (!visibility) contentStyle.visibility = HIDDEN
-
-              // Draw diff content and attach all comment threads
-              diff2HtmlRef.current.renderer.draw()
-
-              if (!readOnly) {
-                commentsHook.current.attachAllCommentThreads()
-              }
-
-              // Use a flag to save content empty state (avoid contentDOM.innerText
-              // access and comparision which is costly)
-              internalFlags.current.isContentEmpty = false
-
-              // Give React some time to process attachAllCommentThreads
-              if (readOnly) {
-                containerStyle.visibility = VISIBLE
-                contentStyle.visibility = VISIBLE
-                onRendered()
-              } else {
-                setTimeout(() => {
-                  if (isMounted.current) {
-                    containerStyle.visibility = VISIBLE
-                    contentStyle.visibility = VISIBLE
-                  }
-                  onRendered()
-                }, 100)
-              }
-
-              // Reset RAF id when task is done
-              diffHandlerRafRef.current = 0
-            }
-          })
-        } else if (!isContainerInViewport && visibility === VISIBLE) {
-          // Schedule a task to offload diff contents, and hide container. This is key to gain
-          // performance. When a diff is out of viewport, destroy diff HTML contents so browser
-          // can get back allocated memory, plus it has less DOMs to worry about. Secondly, set
-          // the container visibility to hidden helps reduce browser load in terms of event
-          // handling against the DOMs.
-          diffHandlerRafRef.current = requestAnimationFrame(() => {
-            offloadDiffContents(true)
-            // Reset RAF id when task is done
-            diffHandlerRafRef.current = 0
-          })
-        }
-      }
-
-      return () => cancelAnimationFrame(diffHandlerRafRef.current)
+      return () => cancelTask(taskId)
     },
-    [readOnly, commentsHook, inView, collapsed, diff, viewStyle, isMounted, offloadDiffContents, renderCustomContent]
+    [collapsed, diff.filePath, memorizedState, isMounted, renderDiffAndComments, renderCustomContent]
   )
 
-  useEffect(handleDiffAndCommentsVisibility, [handleDiffAndCommentsVisibility])
+  const {
+    data: fullDiffData,
+    error: fullDiffError,
+    loading: fullDiffLoading,
+    refetch: getFullDiff,
+    cancel: cancelGetFullDiff
+  } = useGet<GitFileDiff[]>({
+    path: fullDiffAPIPath,
+    requestOptions: { headers: { Accept: 'application/json' } },
+    queryParams: { include_patch: true, path: diff.filePath, range: 1 },
+    lazy: !useFullDiff || !!memorizedState.get(diff.filePath)?.fullDiff
+  })
+
+  useShowRequestError(fullDiffError, 0)
+
+  useEffect(
+    function parseAndAssignFullDiff() {
+      if (fullDiffData) {
+        try {
+          memorizedState.set(diff.filePath, {
+            ...memorizedState.get(diff.filePath),
+            fullDiff: Diff2Html.parse(
+              window.atob((fullDiffData[0].patch as unknown as string) || ''),
+              DIFF2HTML_CONFIG
+            ).map(_diff => ({ ...diff, ..._diff }))[0],
+            useFullDiff: true
+          })
+
+          setUseFullDiff(true)
+          setRenderCustomContent(false)
+
+          if (memorizedState.get(diff.filePath)?.collapsed) {
+            setCollapsed(false)
+            memorizedState.set(diff.filePath, { ...memorizedState.get(diff.filePath), collapsed: false })
+          }
+        } catch (exception) {
+          showError(getErrorMessage(exception), 0)
+        }
+      }
+    },
+    [diff, diff.filePath, memorizedState, fullDiffData, showError]
+  )
+
+  useEffect(
+    function adjustScrollPositionWhenCollapsingFile() {
+      const containerDOM = containerRef.current as HTMLDivElement
+
+      if (
+        containerDOM &&
+        !useFullDiff &&
+        memorizedState.get(diff.filePath)?.useFullDiff === false &&
+        !isInViewport(containerDOM)
+      ) {
+        if (stickyTopPosition && containerDOM.getBoundingClientRect().y - stickyTopPosition < 1) {
+          containerDOM.scrollIntoView()
+          scrollElement.scroll({ top: (scrollElement.scrollTop || window.scrollY) - stickyTopPosition })
+        }
+      }
+    },
+    [scrollElement, stickyTopPosition, useFullDiff, diff, memorizedState]
+  )
+
+  const toggleFullDiff = useCallback(() => {
+    // If full diff is not fetched, fetch it and set useFullDiff when data arrives
+    // Otherwise, toggle useFullDiff flag
+    if (!memorizedState.get(diff.filePath)?.fullDiff && !fullDiffLoading) {
+      cancelGetFullDiff()
+      getFullDiff()
+    } else {
+      memorizedState.set(diff.filePath, { ...memorizedState.get(diff.filePath), useFullDiff: !useFullDiff })
+      setUseFullDiff(!useFullDiff)
+    }
+  }, [useFullDiff, memorizedState, diff.filePath, cancelGetFullDiff, getFullDiff, fullDiffLoading])
+
+  const ToggleFullDiffIcon = useMemo(() => (useFullDiff ? Collapse : Expand), [useFullDiff])
 
   return (
     <Container
-      ref={setContainerRef}
+      ref={containerRef}
       id={diff.containerId}
       className={cx(css.main, { [css.readOnly]: readOnly })}
+      data-diff-file-path={diff.filePath}
       style={{ '--diff-viewer-sticky-top': `${stickyTopPosition}px` } as React.CSSProperties}>
       <Layout.Vertical>
         <Container className={css.diffHeader} height={DIFF_VIEWER_HEADER_HEIGHT}>
@@ -463,7 +353,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               size={ButtonSize.SMALL}
               onClick={() => setCollapsed(!collapsed)}
               iconProps={{
-                size: 10,
+                size: 12,
                 style: {
                   color: '#383946',
                   flexGrow: 1,
@@ -473,6 +363,13 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               }}
               className={css.chevron}
             />
+            <Button
+              variation={ButtonVariation.ICON}
+              className={css.expandCollapseDiffBtn}
+              onClick={toggleFullDiff}
+              title={getString(useFullDiff ? 'pr.collapseFullFile' : 'pr.expandFullFile')}>
+              <ToggleFullDiffIcon width="16" height="16" strokeWidth="2" />
+            </Button>
             <Text
               inline
               className={css.fname}
@@ -513,42 +410,49 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               </Container>
             </Render>
 
-            <Render when={!readOnly && commitRange?.length === 0}>
+            <Render when={!readOnly}>
               <Container>
-                <label className={css.viewLabel}>
-                  <Checkbox
-                    checked={viewed}
-                    onChange={async () => {
-                      if (viewed) {
-                        setViewed(false)
-                        setCollapsed(false)
+                <Layout.Horizontal spacing="xsmall" flex>
+                  {fullDiffLoading && (
+                    <Icon name="steps-spinner" color={Color.PRIMARY_7} margin={{ right: 'xsmall' }} />
+                  )}
+                  <Render when={commitRange?.length === 0}>
+                    <label className={css.viewLabel}>
+                      <Checkbox
+                        checked={viewed}
+                        onChange={async () => {
+                          if (viewed) {
+                            setViewed(false)
+                            setCollapsed(false)
 
-                        // update local data first
-                        diff.fileViews?.delete(diff.filePath)
+                            // update local data first
+                            diff.fileViews?.delete(diff.filePath)
 
-                        // best effort attempt to recflect on server (swallow exception - user still sees correct data locally)
-                        await unmarkViewed(null, { pathParams: { filePath: diff.filePath } }).catch(noop)
-                      } else {
-                        setViewed(true)
-                        setCollapsed(true)
+                            // best effort attempt to recflect on server (swallow exception - user still sees correct data locally)
+                            await unmarkViewed(null, { pathParams: { filePath: diff.filePath } }).catch(noop)
+                          } else {
+                            setViewed(true)
+                            setCollapsed(true)
 
-                        // update local data first
-                        // we could wait for server response for the guaranteed correct SHA, but this is non-crucial data so it's okay
-                        diff.fileViews?.set(diff.filePath, diff.checksumAfter || 'unknown')
+                            // update local data first
+                            // we could wait for server response for the guaranteed correct SHA, but this is non-crucial data so it's okay
+                            diff.fileViews?.set(diff.filePath, diff.checksumAfter || 'unknown')
 
-                        // best effort attempt to recflect on server (swallow exception - user still sees correct data locally)
-                        await markViewed(
-                          {
-                            path: diff.filePath,
-                            commit_sha: pullReqMetadata?.source_sha
-                          },
-                          {}
-                        ).catch(noop)
-                      }
-                    }}
-                  />
-                  {getString('viewed')}
-                </label>
+                            // best effort attempt to recflect on server (swallow exception - user still sees correct data locally)
+                            await markViewed(
+                              {
+                                path: diff.filePath,
+                                commit_sha: pullReqMetadata?.source_sha
+                              },
+                              {}
+                            ).catch(noop)
+                          }
+                        }}
+                      />
+                      {getString('viewed')}
+                    </label>
+                  </Render>
+                </Layout.Horizontal>
               </Container>
             </Render>
           </Layout.Horizontal>
@@ -559,12 +463,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
             <Container height={200} flex={{ align: 'center-center' }}>
               <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
                 <Render when={fileDeleted || isDiffTooLarge || diffHasVeryLongLine}>
-                  <Button
-                    variation={ButtonVariation.LINK}
-                    onClick={() => {
-                      setRenderCustomContent(false)
-                      handleDiffAndCommentsVisibility(true)
-                    }}>
+                  <Button variation={ButtonVariation.LINK} onClick={() => setRenderCustomContent(false)}>
                     {getString('pr.showDiff')}
                   </Button>
                 </Render>
@@ -589,31 +488,21 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   )
 }
 
-let lockSingleDiffRenderingAtFilePath = ''
-
-const IN_VIEW_MARGIN = 1200
-const AUTO = 'auto'
-const VISIBLE = 'visible'
-const HIDDEN = 'hidden'
-
-// If diff has a line that exceeds LONG_LINE_SIZE_LIMIT characters, consider
-// it being a large diff
-const LONG_LINE_SIZE_LIMIT = 5000
-
-// addedLines + deletedLines > DIFF_CHANGES_LIMIT ? "Large diffs are not rendered by default"
-const DIFF_CHANGES_LIMIT = 1000
-
 export enum DiffViewerEvent {
-  SCROLL_INTO_VIEW = 'scrollIntoView',
-  RENDER_IF_INVIEW = 'renderIfInView'
+  SCROLL_INTO_VIEW = 'scrollIntoView'
 }
 
 export interface DiffViewerCustomEvent {
   action: DiffViewerEvent
-  diffs: DiffFileEntry[]
-  index: number
   commentId?: string
-  onDone: () => void
 }
+
+export interface DiffViewerExchangeState {
+  collapsed?: boolean
+  useFullDiff?: boolean
+  fullDiff?: DiffFileEntry
+}
+
+const { scheduleTask: scheduleLowPriorityTask, cancelTask } = createRequestIdleCallbackTaskPool()
 
 export const DiffViewer = React.memo(DiffViewerInternal)

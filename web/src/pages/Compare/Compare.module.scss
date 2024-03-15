@@ -102,3 +102,21 @@
   text-decoration: underline;
   font-weight: 600;
 }
+
+.popover {
+  .listContainer {
+    min-height: 50px;
+    max-height: 200px;
+    overflow-y: auto;
+
+    :global {
+      .bp3-menu-item {
+        max-width: 600px;
+      }
+    }
+  }
+
+  .newBtnText {
+    font-weight: normal;
+  }
+}

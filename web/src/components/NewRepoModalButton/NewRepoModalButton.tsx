@@ -77,7 +77,7 @@ import type {
 import { useAppContext } from 'AppContext'
 import ImportForm from './ImportForm/ImportForm'
 import ImportReposForm from './ImportReposForm/ImportReposForm'
-import Private from '../../icons/private.svg'
+import Private from '../../icons/private.svg?url'
 import css from './NewRepoModalButton.module.scss'
 
 const formInitialValues: RepoFormData = {

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useRef } from 'react'
 import { Container, FlexExpander, Layout, PageBody } from '@harnessio/uicore'
 import { useGet } from 'restful-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
 import { useAppContext } from 'AppContext'
 import type { TypesCommit } from 'services/code'
 import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
@@ -65,9 +66,10 @@ export default function RepositoryCommits() {
       )
     }
   }, [repoMetadata, commitRef, getString, standalone])
-
+  const domRef = useRef<HTMLDivElement>(null)
+  useSetPageContainerWidthVar({ domRef })
   return (
-    <Container className={css.main}>
+    <Container className={css.main} ref={domRef}>
       <RepositoryPageHeader
         repoMetadata={repoMetadata}
         title={getString('commits')}

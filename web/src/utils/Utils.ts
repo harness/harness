@@ -398,6 +398,7 @@ const MONACO_SUPPORTED_LANGUAGES = [
   'apex',
   'azcli',
   'bat',
+  'bicep',
   'cameligo',
   'clojure',
   'coffee',
@@ -405,7 +406,13 @@ const MONACO_SUPPORTED_LANGUAGES = [
   'csharp',
   'csp',
   'css',
+  'cypher',
+  'dart',
   'dockerfile',
+  'ecl',
+  'elixir',
+  'flow9',
+  'freemarker2',
   'fsharp',
   'go',
   'graphql',
@@ -416,9 +423,13 @@ const MONACO_SUPPORTED_LANGUAGES = [
   'java',
   'javascript',
   'json',
+  'julia',
   'kotlin',
   'less',
+  'lexon',
+  'liquid',
   'lua',
+  'm3',
   'markdown',
   'mips',
   'msdax',
@@ -429,11 +440,14 @@ const MONACO_SUPPORTED_LANGUAGES = [
   'perl',
   'pgsql',
   'php',
+  'pla',
   'postiats',
   'powerquery',
   'powershell',
+  'protobuf',
   'pug',
   'python',
+  'qsharp',
   'r',
   'razor',
   'redis',
@@ -442,18 +456,22 @@ const MONACO_SUPPORTED_LANGUAGES = [
   'ruby',
   'rust',
   'sb',
+  'scala',
   'scheme',
   'scss',
   'shell',
   'solidity',
   'sophia',
+  'sparql',
   'sql',
   'st',
   'swift',
+  'systemverilog',
   'tcl',
   'twig',
   'typescript',
   'vb',
+  'wgsl',
   'xml',
   'yaml'
 ]
@@ -475,7 +493,8 @@ const EXTENSION_TO_LANG: Record<string, string> = {
   tf: 'hcl',
   tfvars: 'hcl',
   workspace: 'python',
-  tfstate: 'hcl'
+  tfstate: 'hcl',
+  ipynb: 'json'
 }
 
 export const PLAIN_TEXT = 'plaintext'
@@ -572,13 +591,16 @@ export function isInViewport(element: Element, margin = 0, direction: 'x' | 'y' 
 
   const height = window.innerHeight || document.documentElement.clientHeight
   const width = window.innerWidth || document.documentElement.clientWidth
-  const top = 0 - margin
-  const bottom = height + margin
-  const left = 0 - margin
-  const right = width + margin
+  const _top = 0 - margin
+  const _bottom = height + margin
+  const _left = 0 - margin
+  const _right = width + margin
 
-  const yCheck = (rect.top >= top && rect.top <= bottom) || (rect.bottom >= top && rect.bottom <= bottom)
-  const xCheck = (rect.left >= left && rect.left <= right) || (rect.right >= top && rect.right <= right)
+  const yCheck =
+    (rect.top >= _top && rect.top <= _bottom) ||
+    (rect.bottom >= _top && rect.bottom <= _bottom) ||
+    (rect.top <= _top && rect.bottom >= _bottom)
+  const xCheck = (rect.left >= _left && rect.left <= _right) || (rect.right >= _top && rect.right <= _right)
 
   if (direction === 'y') return yCheck
   if (direction === 'x') return xCheck
@@ -623,3 +645,8 @@ export const CustomEventName = {
 } as const
 
 export const PAGE_CONTAINER_WIDTH = '--page-container-width'
+
+// Outlets are used to insert additional components into CommentBox
+export enum CommentBoxOutletPosition {
+  START_OF_MARKDOWN_EDITOR_TOOLBAR = 'start_of_markdown_editor_toolbar'
+}

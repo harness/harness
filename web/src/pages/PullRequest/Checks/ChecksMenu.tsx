@@ -17,7 +17,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Render } from 'react-jsx-match'
 import { NavArrowRight } from 'iconoir-react'
-import { get, sortBy } from 'lodash-es'
+import { get, isEmpty, sortBy } from 'lodash-es'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { Container, Layout, Text, FlexExpander, Utils } from '@harnessio/uicore'
@@ -114,7 +114,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return data.reduce((acc: any, item: any) => {
       const hash = generateAlphaNumericHash(6)
-      const rawPipelineName = extractBetweenPipelinesAndExecutions(item.link)
+      const rawPipelineName = !isEmpty(item.link) ? extractBetweenPipelinesAndExecutions(item.link) : ''
       const rawPipelineId = rawPipelineName !== '' ? rawPipelineName : `raw-${hash}`
 
       const pipelineId =

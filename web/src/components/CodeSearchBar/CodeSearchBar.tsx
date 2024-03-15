@@ -25,7 +25,7 @@ import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/Search
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { SEARCH_MODE } from 'components/CodeSearch/CodeSearch'
-import svg from '../CodeSearch/search-background.svg'
+import svg from '../CodeSearch/search-background.svg?url'
 import css from './CodeSearchBar.module.scss'
 
 interface CodeSearchBarProps {

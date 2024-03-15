@@ -25,9 +25,13 @@ import {
   TextInput,
   Text,
   useToaster,
-  StringSubstitute
+  StringSubstitute,
+  ButtonSize,
+  ButtonVariation,
+  Button
 } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
+import { PopoverPosition } from '@blueprintjs/core'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
@@ -35,7 +39,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { LIST_FETCHING_LIMIT, getErrorMessage, showToaster } from 'utils/Utils'
+import { CommentBoxOutletPosition, LIST_FETCHING_LIMIT, getErrorMessage, showToaster } from 'utils/Utils'
 import { Images } from 'images'
 import { CodeIcon, normalizeGitRef, isRefATag, makeDiffRefs, isGitRev } from 'utils/GitUtils'
 import { Changes } from 'components/Changes/Changes'
@@ -51,7 +55,7 @@ import type {
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
-import { MAX_TEXT_LINE_SIZE_LIMIT, PULL_REQUEST_DESCRIPTION_SIZE_LIMIT } from 'settings'
+import Config from 'Config'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { TabContentWrapper } from 'components/TabContentWrapper/TabContentWrapper'
 import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
@@ -60,9 +64,11 @@ import { CompareCommits } from './CompareCommits'
 import css from './Compare.module.scss'
 
 export default function Compare() {
+  const { routes, standalone, hooks, routingId } = useAppContext()
+  const [flag, setFlag] = useState(false)
+  const { SEMANTIC_SEARCH_ENABLED: isSemanticSearchFFEnabled } = hooks?.useFeatureFlags()
   const { getString } = useStrings()
   const history = useHistory()
-  const { routes, standalone, routingId } = useAppContext()
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
@@ -119,13 +125,13 @@ export default function Compare() {
         return showError(getString('pr.titleIsRequired'))
       }
 
-      if (description?.split('\n').some(line => line.length > MAX_TEXT_LINE_SIZE_LIMIT)) {
-        return showError(getString('pr.descHasTooLongLine', { max: MAX_TEXT_LINE_SIZE_LIMIT }), 0)
+      if (description?.split('\n').some(line => line.length > Config.MAX_TEXT_LINE_SIZE_LIMIT)) {
+        return showError(getString('pr.descHasTooLongLine', { max: Config.MAX_TEXT_LINE_SIZE_LIMIT }), 0)
       }
 
-      if (description?.length > PULL_REQUEST_DESCRIPTION_SIZE_LIMIT) {
+      if (description?.length > Config.PULL_REQUEST_DESCRIPTION_SIZE_LIMIT) {
         return showError(
-          getString('pr.descIsTooLong', { max: PULL_REQUEST_DESCRIPTION_SIZE_LIMIT, len: description?.length }),
+          getString('pr.descIsTooLong', { max: Config.PULL_REQUEST_DESCRIPTION_SIZE_LIMIT, len: description?.length }),
           0
         )
       }
@@ -197,6 +203,9 @@ export default function Compare() {
   const domRef = useRef<HTMLDivElement>(null)
   useSetPageContainerWidthVar({ domRef })
 
+  const handleCopilotClick = () => {
+    setFlag(true)
+  }
   return (
     <Container className={css.main} ref={domRef}>
       <RepositoryPageHeader
@@ -287,6 +296,42 @@ export default function Compare() {
                                 cancel: getString('cancel')
                               }}
                               editorHeight="100%"
+                              handleCopilotClick={handleCopilotClick}
+                              flag={flag}
+                              setFlag={setFlag}
+                              sourceGitRef={sourceGitRef}
+                              targetGitRef={targetGitRef}
+                              outlets={{
+                                [CommentBoxOutletPosition.START_OF_MARKDOWN_EDITOR_TOOLBAR]: (
+                                  <>
+                                    {isSemanticSearchFFEnabled && !standalone ? (
+                                      <Button
+                                        size={ButtonSize.SMALL}
+                                        variation={ButtonVariation.ICON}
+                                        icon={'harness-copilot'}
+                                        withoutCurrentColor
+                                        iconProps={{ color: Color.AI_PURPLE_800, size: 16 }}
+                                        onClick={handleCopilotClick}
+                                        tooltip={
+                                          <Container padding={'small'} width={270}>
+                                            <Layout.Vertical flex={{ align: 'center-center' }}>
+                                              <Text font={{ variation: FontVariation.BODY }}>
+                                                {getString('prGenSummary')}
+                                              </Text>
+                                            </Layout.Vertical>
+                                          </Container>
+                                        }
+                                        tooltipProps={{
+                                          interactionKind: 'hover',
+                                          usePortal: true,
+                                          position: PopoverPosition.BOTTOM_LEFT,
+                                          popoverClassName: cx(css.popover)
+                                        }}
+                                      />
+                                    ) : null}
+                                  </>
+                                )
+                              }}
                             />
                           </Layout.Vertical>
                         </Container>

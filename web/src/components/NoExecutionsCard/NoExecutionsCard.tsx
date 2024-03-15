@@ -17,7 +17,7 @@
 import React from 'react'
 import { Container, NoDataCard } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
-import noExecutionImage from '../../pages/RepositoriesListing/no-repo.svg'
+import noExecutionImage from '../../pages/RepositoriesListing/no-repo.svg?url'
 import css from './NoExecutionsCard.module.scss'
 
 interface NoResultCardProps {

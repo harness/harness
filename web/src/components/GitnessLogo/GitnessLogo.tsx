@@ -18,7 +18,7 @@ import React from 'react'
 import { Container, Layout } from '@harnessio/uicore'
 import { Link } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
-import gitness from './gitness.svg'
+import gitness from './gitness.svg?url'
 import css from './GitnessLogo.module.scss'
 
 export const GitnessLogo: React.FC = () => {

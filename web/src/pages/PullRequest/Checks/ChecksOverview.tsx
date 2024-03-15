@@ -97,7 +97,7 @@ const CheckSections: React.FC<CheckSectionsProps> = ({ repoMetadata, pullReqMeta
         },
         [[], []] as [TypesCheck[], TypesCheck[]]
       ),
-    [data]
+    [data, repoMetadata]
   )
 
   return (
@@ -171,7 +171,7 @@ const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
                   </Text>
 
                   <Text className={css.time} font={{ variation: FontVariation.SMALL }}>
-                    {ended === 0
+                    {!ended
                       ? created && <ReactTimeago date={created} formatter={customFormatter} />
                       : timeDistance(updated, created)}
                   </Text>

@@ -54,7 +54,7 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
         const href = target.getAttribute('href')
 
         // Intercept click event on internal links and navigate to pages to avoid full page reload
-        if (href) {
+        if (href && !/^http(s)?:\/\//.test(href)) {
           try {
             const url = new URL(target.href)
 
@@ -126,12 +126,10 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
                   // If true, rewrite it to point to the correct location
                   if (new URL(window.location.href + '/' + href).origin === window.location.origin) {
                     const currentPath = window.location.href.split('~/')[1]
-                    properties.href = (
-                      refRootHref +
-                      '/~/' +
-                      (currentPath && !currentPath.includes(href) ? currentPath.replace('/README.md', '') + '/' : '') +
-                      href
-                    ).replace(/^\/ng\//, '/')
+                    const replaceReadmeText = currentPath?.replace('README.md', '') ?? ''
+                    const newUrl =
+                      '/~/' + (currentPath && !currentPath.includes(href) ? replaceReadmeText + '/' : '') + href
+                    properties.href = (refRootHref + newUrl.replace(/\/\//g, '/')).replace(/^\/ng\//, '/')
                   }
                 } catch (_exception) {
                   // eslint-disable-line no-empty

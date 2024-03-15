@@ -897,7 +897,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		repoRequest
 		Identifier string `path:"rule_identifier"`
 	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opRuleGet, []rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleGet, rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusForbidden)

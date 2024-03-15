@@ -17,18 +17,20 @@
 import React from 'react'
 import { Container, ButtonVariation, Layout, Text, StringSubstitute, Button } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
-import { noop } from 'lodash-es'
 import { Icon } from '@harnessio/icons'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
-import { dispatchCustomEvent } from 'hooks/useEventListener'
-import { DiffViewerCustomEvent, DiffViewerEvent } from 'components/DiffViewer/DiffViewer'
 import css from './ChangesDropdown.module.scss'
 
-export const ChangesDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs }) => {
+interface ChangesDropdownProps {
+  diffs: DiffFileEntry[]
+  onJumpToFile: (diff: DiffFileEntry) => void
+}
+
+export const ChangesDropdown: React.FC<ChangesDropdownProps> = ({ diffs, onJumpToFile }) => {
   const { getString } = useStrings()
 
   return (
@@ -61,14 +63,7 @@ export const ChangesDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs })
                 text={
                   diff.isDeleted ? diff.oldName : diff.isRename ? `${diff.oldName} -> ${diff.newName}` : diff.newName
                 }
-                onClick={() =>
-                  dispatchCustomEvent<DiffViewerCustomEvent>(diff.filePath, {
-                    action: DiffViewerEvent.SCROLL_INTO_VIEW,
-                    diffs,
-                    index,
-                    onDone: noop
-                  })
-                }
+                onClick={() => onJumpToFile(diff)}
               />
             ))}
           </Menu>

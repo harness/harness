@@ -101,32 +101,57 @@
         }
 
         .d2h-code-linenumber {
-          cursor: default;
+          width: auto;
+          display: flex;
+          padding: 0 5px;
+
+          .line-num1,
+          .line-num2 {
+            flex-basis: 100%;
+            width: auto;
+            text-overflow: initial;
+            overflow: visible;
+            display: inline-block;
+            padding: 0 10px;
+          }
+        }
+      }
+
+      &.line-by-line-file-diff {
+        .d2h-code-line {
+          padding: 0 4px;
+        }
+
+        [data-annotation-for-line] {
+          right: -25px;
+          top: 2px;
         }
       }
 
       &.side-by-side-file-diff {
+        .d2h-code-line {
+          padding: 0 70px;
+        }
+
+        .d2h-code-side-line {
+          padding: 0 6px;
+        }
+
         .d2h-code-side-linenumber.d2h-info {
           pointer-events: none;
         }
+
+        [data-content-for-line-number] {
+          padding-left: 2px;
+        }
       }
 
-      .d2h-code-side-linenumber {
+      .d2h-code-side-linenumber,
+      .d2h-code-linenumber {
         position: sticky;
         left: 0;
         z-index: 2;
-      }
-
-      [data-annotated='true'] [data-content-for-line-number],
-      [data-content-for-line-number=''],
-      .d2h-emptyplaceholder[data-content-for-line-number=''] {
-        &,
-        :hover {
-          [data-annotation-for-line] {
-            pointer-events: none;
-            display: none;
-          }
-        }
+        overflow: visible;
       }
 
       .d2h-code-side-line {
@@ -134,17 +159,8 @@
         padding: 0;
       }
 
-      [data-content-for-line-number] {
-        cursor: default;
-        width: 100%;
-        padding-left: 4px;
-        height: 17.3438px !important;
-
+      tr {
         [data-annotation-for-line] {
-          position: absolute;
-          top: 2px;
-          left: 0;
-          display: flex;
           height: 14px;
           width: 14px;
           font-weight: 600;
@@ -155,24 +171,41 @@
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          visibility: hidden;
           user-select: none;
+          position: absolute;
+          top: -13px;
+          right: -26px;
+          display: none;
+          transform: scale(1.1);
+          transition: transform 0.75s;
         }
 
         &:hover [data-annotation-for-line] {
-          visibility: visible;
+          display: flex;
 
           &:hover {
             transform: scale(1.3);
-            transition: transform 0.75s;
+          }
+        }
+
+        &:has([data-annotated='true'] [data-content-for-line-number]),
+        &:has([data-content-for-line-number='']),
+        &:has(.d2h-emptyplaceholder[data-content-for-line-number='']) {
+          &,
+          :hover {
+            [data-annotation-for-line] {
+              pointer-events: none;
+              display: none;
+            }
           }
         }
       }
 
-      &.line-by-line-file-diff {
-        [data-annotation-for-line] {
-          left: 102px;
-        }
+      [data-content-for-line-number] {
+        cursor: default;
+        width: 100%;
+        padding-left: 4px;
+        height: 17.3438px !important;
       }
     }
 
@@ -199,10 +232,8 @@
   &.readOnly {
     :global {
       .d2h-file-wrapper {
-        [data-content-for-line-number] {
-          cursor: default;
-
-          [data-annotation-for-line] {
+        .d2h-diff-tbody {
+          tr:hover [data-annotation-for-line] {
             display: none !important;
           }
         }
@@ -264,6 +295,14 @@
       }
     }
 
+    .expandCollapseDiffBtn {
+      transform: translateX(-5px);
+
+      > span {
+        display: flex;
+      }
+    }
+
     .addedLines {
       align-self: center;
       min-width: 36px;
@@ -315,8 +354,7 @@
       display: flex;
       background: var(--grey-100);
       height: 28px;
-      width: 82px;
-      padding-left: 8px;
+      padding: 0 8px;
       align-items: center;
 
       font-size: 13px;

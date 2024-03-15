@@ -24,10 +24,10 @@ export function useEventListener<K extends keyof HTMLElementEventMap>(
   parametersCheck = () => true
 ) {
   useEffect(() => {
-    if (parametersCheck()) {
-      element?.addEventListener(type, listener, options)
+    if (parametersCheck() && element) {
+      element.addEventListener(type, listener, options)
       return () => {
-        element?.removeEventListener(type, listener)
+        element.removeEventListener(type, listener)
       }
     }
   }, [element, type, listener, options, parametersCheck])

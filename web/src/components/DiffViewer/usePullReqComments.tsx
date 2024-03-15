@@ -17,7 +17,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useMutate } from 'restful-react'
 import ReactDOM from 'react-dom'
-import { useToaster, ButtonProps, useIsMounted } from '@harnessio/uicore'
+import { useLocation } from 'react-router-dom'
+import { useToaster, ButtonProps, Utils } from '@harnessio/uicore'
 import { isEqual, max, noop, random } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
@@ -25,20 +26,18 @@ import type { DiffFileEntry } from 'utils/types'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import type { OpenapiCommentCreatePullReqRequest, TypesPullReq, TypesPullReqActivity } from 'services/code'
-import { getErrorMessage } from 'utils/Utils'
+import { PullRequestSection, getErrorMessage } from 'utils/Utils'
 import { AppWrapper } from 'App'
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
 import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
 import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/CodeCommentStatusSelect'
-import { useQueryParams } from 'hooks/useQueryParams'
-import { dispatchCustomEvent, useEventListener } from 'hooks/useEventListener'
+import { dispatchCustomEvent } from 'hooks/useEventListener'
 import { UseGetPullRequestInfoResult, usePullReqActivities } from 'pages/PullRequest/useGetPullRequestInfo'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
   CommentType,
   DiffCommentItem,
-  DIFF_VIEWER_HEADER_HEIGHT,
   getCommentLineInfo,
   createCommentOppositePlaceHolder,
   ViewStyle
@@ -50,11 +49,9 @@ import {
   CommentItem,
   customEventForCommentWithId
 } from '../CommentBox/CommentBox'
-import { DiffViewerCustomEvent, DiffViewerEvent } from './DiffViewer'
 import css from './DiffViewer.module.scss'
 
 interface UsePullReqCommentsProps extends Pick<GitInfoProps, 'repoMetadata'> {
-  diffs: DiffFileEntry[]
   diff: DiffFileEntry
   viewStyle: ViewStyle
   stickyTopPosition?: number
@@ -72,7 +69,6 @@ interface UsePullReqCommentsProps extends Pick<GitInfoProps, 'repoMetadata'> {
 }
 
 export function usePullReqComments({
-  diffs,
   diff,
   viewStyle,
   stickyTopPosition = 0,
@@ -91,18 +87,29 @@ export function usePullReqComments({
 }: UsePullReqCommentsProps) {
   const activities = usePullReqActivities()
   const { getString } = useStrings()
-  const { routingId, currentUser, standalone } = useAppContext()
+  const { routingId, currentUser, standalone, routes } = useAppContext()
   const { showError } = useToaster()
   const confirmAct = useConfirmAct()
   const commentPath = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata?.number}/comments`,
     [repoMetadata.path, pullReqMetadata?.number]
   )
-  const isMounted = useIsMounted()
-  const { path, commentId } = useQueryParams<{ path: string; commentId: string }>()
   const { save, update, remove } = useCommentAPI(commentPath)
+  const location = useLocation()
   const [comments] = useState(new Map<number, DiffCommentItem<TypesPullReqActivity>>())
+  const copyLinkToComment = useCallback(
+    (id, commentItem) => {
+      const path = `${routes.toCODEPullRequest({
+        repoPath: repoMetadata?.path as string,
+        pullRequestId: String(pullReqMetadata?.number),
+        pullRequestSection: PullRequestSection.FILES_CHANGED
+      })}?path=${commentItem.payload?.code_comment?.path}&commentId=${id}`
+      const { pathname, origin } = window.location
 
+      Utils.copy(origin + pathname.replace(location.pathname, '') + path)
+    },
+    [location, pullReqMetadata?.number, repoMetadata?.path, routes]
+  )
   //
   // Attach a single comment thread to its binding DOM. Thread can be a
   // draft/uncommitted/not-saved one.
@@ -197,6 +204,7 @@ export function usePullReqComments({
             onCancel={comment.destroy}
             setDirty={setDirty || noop}
             currentUserName={currentUser?.display_name || currentUser?.email || ''}
+            copyLinkToComment={copyLinkToComment}
             handleAction={async (action, value, commentItem) => {
               let result = true
               let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
@@ -331,31 +339,33 @@ export function usePullReqComments({
     },
     [
       comments,
-      confirmAct,
       contentRef,
+      viewStyle,
+      routingId,
+      standalone,
+      repoMetadata,
+      setDirty,
       currentUser?.display_name,
       currentUser?.email,
-      diff.filePath,
-      getString,
       pullReqMetadata,
-      repoMetadata,
-      routingId,
-      save,
-      update,
-      remove,
-      showError,
+      diff.isRename,
+      diff.oldName,
+      diff.filePath,
       sourceRef,
-      standalone,
       targetRef,
-      viewStyle,
-      refetchActivities,
-      setDirty
+      save,
+      showError,
+      confirmAct,
+      getString,
+      remove,
+      update,
+      refetchActivities
     ]
   )
 
   // Attach (render) all comment threads to their binding DOMs
   const attachAllCommentThreads = useCallback(() => {
-    if (!readOnly && isDiffRendered(contentRef)) {
+    if (!readOnly && isDiffRendered(contentRef) && comments.size > 0) {
       comments.forEach(item => attachSingleCommentThread(item.inner.id || 0))
     }
   }, [readOnly, contentRef, comments, attachSingleCommentThread])
@@ -376,7 +386,7 @@ export function usePullReqComments({
   useEffect(
     function handleActivitiesChanged() {
       // Read only, no activities, commit range view, diff not rendered yet? Ignore handling comments
-      if (readOnly || !activities?.length || (commitRange?.length || 0) > 0 || !isDiffRendered(contentRef)) {
+      if (readOnly || !activities?.length || (commitRange?.length || 0) > 0) {
         return
       }
 
@@ -457,14 +467,10 @@ export function usePullReqComments({
       if (!containerRef.current) return
 
       const containerDOM = containerRef.current as HTMLDivElement
-      const { classList, style } = containerDOM
+      const { classList } = containerDOM
 
       if (collapsed) {
         classList.add(css.collapsed)
-
-        if (parseInt(style.height) != DIFF_VIEWER_HEADER_HEIGHT) {
-          style.height = `${DIFF_VIEWER_HEADER_HEIGHT}px`
-        }
 
         // Fix scrolling position messes up with sticky header: When content of the diff content
         // is above the diff header, we need to scroll it back to below the header, adjust window
@@ -475,12 +481,6 @@ export function usePullReqComments({
         }
       } else {
         classList.remove(css.collapsed)
-
-        const newHeight = Number(containerDOM.scrollHeight)
-
-        if (parseInt(style.height) != newHeight) {
-          style.height = `${newHeight}px`
-        }
       }
     },
     [readOnly, collapsed, stickyTopPosition, scrollElement, containerRef]
@@ -490,30 +490,59 @@ export function usePullReqComments({
     function clickToAddAnnotation(event: MouseEvent) {
       if (readOnly) return
 
-      const target = event.target as HTMLDivElement
+      let target = event.target as HTMLDivElement
+      const lineNumberCell = target?.closest('td.d2h-code-linenumber') || target?.closest('td.d2h-code-side-linenumber')
+
+      // If click happens on line number, locate target from the line number as we allow
+      // adding a comment by clicking line number as well
+      if (lineNumberCell) {
+        target = lineNumberCell.querySelector('[data-annotation-for-line]') as HTMLDivElement
+      }
+      //
+      // Note: For future use to support multiple-line code comment
+      //
+      // else if (target?.tagName.toLowerCase() === 'span' && target.classList.contains('d2h-code-line-ctn')) {
+      //   // If click happens in the code line and there's some selection it, then show Add Comment
+      //   const tr = target?.closest('tr')
+      //   const trFromSelection = (
+      //     document.getSelection()?.getRangeAt(0).commonAncestorContainer as HTMLElement
+      //   )?.closest('tr')
+
+      //   if (tr && trFromSelection && tr === trFromSelection) {
+      //     target = tr.querySelector('[data-annotation-for-line]') as HTMLDivElement
+      //   }
+      // }
+      // else if (target?.tagName.toLowerCase() === 'tbody' && target.classList.contains('d2h-diff-tbody')) {
+      //   // Select a couple of lines -> add comment for multiple lines
+      //   target = document
+      //     .elementFromPoint(event.x, event.y)
+      //     ?.closest('tr')
+      //     ?.querySelector('[data-annotation-for-line]') as HTMLDivElement
+      // }
+
       const targetButton = target?.closest('[data-annotation-for-line]') as HTMLDivElement
       const annotatedLineRow = targetButton?.closest('tr') as HTMLTableRowElement
 
-      // Utilize a random negative number as temporary IDs to prevent database entry collisions
-      const randID = -(random(1_000_000, false) + random(1_000_000, false))
-      const commentItem: DiffCommentItem<TypesPullReqActivity> = {
-        inner: { id: randID } as TypesPullReqActivity,
-        left: false,
-        right: false,
-        lineNumber: 0,
-        commentItems: [],
-        filePath: '',
-        destroy: undefined
-      }
-
       if (targetButton && annotatedLineRow) {
+        // Utilize a random negative number as temporary IDs to prevent database entry collisions
+        const randID = -(random(1_000_000, false) + random(1_000_000, false))
+        const commentItem: DiffCommentItem<TypesPullReqActivity> = {
+          inner: { id: randID } as TypesPullReqActivity,
+          left: false,
+          right: false,
+          lineNumber: 0,
+          commentItems: [],
+          filePath: '',
+          destroy: undefined
+        }
+
         if (viewStyle === ViewStyle.SIDE_BY_SIDE) {
           const leftParent = targetButton.closest('.d2h-file-side-diff.left')
           commentItem.left = !!leftParent
           commentItem.right = !leftParent
           commentItem.lineNumber = Number(targetButton.dataset.annotationForLine)
         } else {
-          const lineInfoTD = targetButton.closest('td')?.previousElementSibling
+          const lineInfoTD = targetButton.closest('td')
           const lineNum1 = lineInfoTD?.querySelector('.line-num1')
           const lineNum2 = lineInfoTD?.querySelector('.line-num2')
 
@@ -547,33 +576,18 @@ export function usePullReqComments({
   //
   useLayoutEffect(() => () => hookRef.current?.detachAllCommentThreads(), [])
 
-  //
-  // Scroll into view if `path` query param matched with diff.filePath.
-  //
-  useEffect(() => {
-    if (readOnly || !path || !commentId || !containerRef.current) {
-      return
-    }
+  useEffect(
+    function bindClickEventToStartNewCommentThread() {
+      const containerDOM = containerRef.current
+      const click = 'click'
 
-    if (path === diff.filePath) {
-      const index = diffs.findIndex(_diff => _diff.filePath === diff.filePath)
-
-      if (index >= 0) {
-        dispatchCustomEvent<DiffViewerCustomEvent>(diff.filePath, {
-          action: DiffViewerEvent.SCROLL_INTO_VIEW,
-          diffs,
-          index,
-          commentId,
-          onDone: noop
-        })
+      if (containerDOM) {
+        containerDOM.addEventListener(click, startCommentThread)
+        return () => containerDOM.removeEventListener(click, startCommentThread)
       }
-    }
-  }, [diffs, readOnly, path, commentId, diff.filePath, isMounted, containerRef])
-
-  //
-  // Add click event listener to start a new comment thread
-  //
-  useEventListener('click', startCommentThread, containerRef.current as HTMLDivElement)
+    },
+    [containerRef.current] // eslint-disable-line react-hooks/exhaustive-deps
+  )
 
   // To avoid multiple re-rendering cycles from DiffViewer
   // component, return a ref instead of an object

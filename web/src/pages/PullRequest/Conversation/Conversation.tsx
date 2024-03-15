@@ -15,7 +15,18 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ButtonProps, Container, FlexExpander, Layout, Select, SelectOption, Text, useToaster } from '@harnessio/uicore'
+import {
+  ButtonProps,
+  Container,
+  FlexExpander,
+  Layout,
+  Select,
+  SelectOption,
+  Text,
+  Utils,
+  useToaster
+} from '@harnessio/uicore'
+import { useLocation } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import { orderBy } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
@@ -24,7 +35,7 @@ import { useAppContext } from 'AppContext'
 import type { TypesPullReqActivity, TypesPullReq, TypesPullReqStats, TypesCodeOwnerEvaluation } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { getErrorMessage, orderSortDate, ButtonRoleProps } from 'utils/Utils'
+import { getErrorMessage, orderSortDate, ButtonRoleProps, PullRequestSection } from 'utils/Utils'
 import { activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
@@ -67,7 +78,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   routingId
 }) => {
   const { getString } = useStrings()
-  const { currentUser } = useAppContext()
+  const { currentUser, routes } = useAppContext()
+  const location = useLocation()
   const activities = usePullReqActivities()
   const { data: reviewers, refetch: refetchReviewers } = useGet<Unknown[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/reviewers`,
@@ -157,6 +169,19 @@ export const Conversation: React.FC<ConversationProps> = ({
     refetchCodeOwners()
   }, [refetchCodeOwners])
   const hasDescription = useMemo(() => !!pullReqMetadata?.description?.length, [pullReqMetadata?.description?.length])
+  const copyLinkToComment = useCallback(
+    (id, commentItem) => {
+      const _path = `${routes.toCODEPullRequest({
+        repoPath: repoMetadata?.path as string,
+        pullRequestId: String(pullReqMetadata?.number),
+        pullRequestSection: PullRequestSection.FILES_CHANGED
+      })}?path=${commentItem.payload?.code_comment?.path}&commentId=${id}`
+      const { pathname, origin } = window.location
+
+      Utils.copy(origin + pathname.replace(location.pathname, '') + _path)
+    },
+    [location, pullReqMetadata?.number, repoMetadata?.path, routes]
+  )
 
   useEffect(() => {
     if (prStats) {
@@ -188,6 +213,7 @@ export const Conversation: React.FC<ConversationProps> = ({
         setDirty={setDirtyNewComment}
         enableReplyPlaceHolder={true}
         autoFocusAndPosition={true}
+        copyLinkToComment={copyLinkToComment}
         handleAction={async (_action, value) => {
           let result = true
           let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
@@ -251,6 +277,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                 setDirty={setDirtyCurrentComments}
                 enableReplyPlaceHolder={true}
                 autoFocusAndPosition={true}
+                copyLinkToComment={copyLinkToComment}
                 handleAction={async (action, value, commentItem) => {
                   let result = true
                   let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined

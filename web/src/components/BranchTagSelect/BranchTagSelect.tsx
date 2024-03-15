@@ -26,7 +26,7 @@ import { String, useStrings } from 'framework/strings'
 import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { CodeIcon, GitInfoProps, GitRefType, isRefATag, REFS_TAGS_PREFIX } from 'utils/GitUtils'
-import Branches from '../../icons/Branches.svg'
+import Branches from '../../icons/Branches.svg?url'
 import css from './BranchTagSelect.module.scss'
 
 export interface BranchTagSelectProps extends Omit<ButtonProps, 'onSelect'>, Pick<GitInfoProps, 'repoMetadata'> {

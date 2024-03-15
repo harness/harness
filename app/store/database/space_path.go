@@ -100,7 +100,7 @@ func (s *SpacePathStore) InsertSegment(ctx context.Context, segment *types.Space
 			,:space_path_created_by
 			,:space_path_created
 			,:space_path_updated
-		)`
+		) RETURNING space_path_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -109,7 +109,7 @@ func (s *SpacePathStore) InsertSegment(ctx context.Context, segment *types.Space
 		return database.ProcessSQLErrorf(ctx, err, "Failed to bind path segment object")
 	}
 
-	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&segment.ID); err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 

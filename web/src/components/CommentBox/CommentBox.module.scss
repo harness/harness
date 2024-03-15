@@ -107,8 +107,24 @@
 }
 
 .optionMenuIcon {
-  > .bp3-icon {
-    padding-right: var(--spacing-xlarge);
+  &:not(.edit) {
+    :global {
+      .bp3-icon {
+        padding-right: var(--spacing-xlarge);
+
+        svg {
+          width: 16px !important;
+          height: 16px !important;
+          path {
+            fill: #fff !important;
+          }
+        }
+      }
+    }
+  }
+
+  &.edit > div {
+    padding-left: 4px;
   }
 }
 

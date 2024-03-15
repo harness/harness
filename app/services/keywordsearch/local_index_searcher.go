@@ -32,6 +32,7 @@ func (s *LocalIndexSearcher) Search(
 	_ context.Context,
 	_ []int64,
 	_ string,
+	_ bool,
 	_ int,
 ) (types.SearchResult, error) {
 	return types.SearchResult{}, fmt.Errorf("not implemented")
