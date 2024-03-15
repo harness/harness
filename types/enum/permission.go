@@ -36,7 +36,6 @@ const (
 	/*
 	   ----- SPACE -----
 	*/
-	PermissionSpaceCreate Permission = "space_create"
 	PermissionSpaceView   Permission = "space_view"
 	PermissionSpaceEdit   Permission = "space_edit"
 	PermissionSpaceDelete Permission = "space_delete"
@@ -57,7 +56,6 @@ const (
 	/*
 		----- USER -----
 	*/
-	PermissionUserCreate    Permission = "user_create"
 	PermissionUserView      Permission = "user_view"
 	PermissionUserEdit      Permission = "user_edit"
 	PermissionUserDelete    Permission = "user_delete"
@@ -68,7 +66,6 @@ const (
 	/*
 		----- SERVICE ACCOUNT -----
 	*/
-	PermissionServiceAccountCreate Permission = "serviceaccount_create"
 	PermissionServiceAccountView   Permission = "serviceaccount_view"
 	PermissionServiceAccountEdit   Permission = "serviceaccount_edit"
 	PermissionServiceAccountDelete Permission = "serviceaccount_delete"
@@ -78,7 +75,6 @@ const (
 	/*
 		----- SERVICE -----
 	*/
-	PermissionServiceCreate    Permission = "service_create"
 	PermissionServiceView      Permission = "service_view"
 	PermissionServiceEdit      Permission = "service_edit"
 	PermissionServiceDelete    Permission = "service_delete"

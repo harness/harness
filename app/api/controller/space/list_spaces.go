@@ -36,7 +36,15 @@ func (c *Controller) ListSpaces(ctx context.Context,
 		return nil, 0, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true); err != nil {
+	if err = apiauth.CheckSpaceScope(
+		ctx,
+		c.authorizer,
+		session,
+		space,
+		enum.ResourceTypeSpace,
+		enum.PermissionSpaceView,
+		true,
+	); err != nil {
 		return nil, 0, err
 	}
 	return c.ListSpacesNoAuth(ctx, space.ID, filter)

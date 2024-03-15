@@ -55,7 +55,14 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
 
-	err = apiauth.CheckSecret(ctx, c.authorizer, session, parentSpace.Path, in.Identifier, enum.PermissionSecretEdit)
+	err = apiauth.CheckSecret(
+		ctx,
+		c.authorizer,
+		session,
+		parentSpace.Path,
+		"",
+		enum.PermissionSecretEdit,
+	)
 	if err != nil {
 		return nil, err
 	}

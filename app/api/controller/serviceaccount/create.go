@@ -48,7 +48,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session,
 	// Ensure principal has required permissions on parent (ensures that parent exists)
 	// since it's a create, we use don't pass a resource name.
 	if err := apiauth.CheckServiceAccount(ctx, c.authorizer, session, c.spaceStore, c.repoStore,
-		in.ParentType, in.ParentID, "", enum.PermissionServiceAccountCreate); err != nil {
+		in.ParentType, in.ParentID, "", enum.PermissionServiceAccountEdit); err != nil {
 		return nil, err
 	}
 

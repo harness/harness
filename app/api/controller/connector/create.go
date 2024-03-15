@@ -59,7 +59,14 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
 
-	err = apiauth.CheckConnector(ctx, c.authorizer, session, parentSpace.Path, in.Identifier, enum.PermissionConnectorEdit)
+	err = apiauth.CheckConnector(
+		ctx,
+		c.authorizer,
+		session,
+		parentSpace.Path,
+		"",
+		enum.PermissionConnectorEdit,
+	)
 	if err != nil {
 		return nil, err
 	}
