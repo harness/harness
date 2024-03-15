@@ -701,7 +701,7 @@ func getCommitFromBatchReader(
 ) (*Commit, error) {
 	output, err := ReadBatchHeaderLine(rd)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read cat-file header line: %w", err)
 	}
 
 	switch output.Type {
@@ -712,38 +712,34 @@ func getCommitFromBatchReader(
 		// and load the commit
 		data, err := io.ReadAll(io.LimitReader(rd, output.Size))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to read tag data: %w", err)
 		}
 		if _, err = rd.Discard(1); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("tag reader Discard failed: %w", err)
 		}
 		tag := parseTagData(data)
 
 		commit, err := GetCommit(ctx, repoPath, tag.TargetSha.String())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to fetch commit: %w", err)
 		}
-
-		commit.Message = strings.TrimSpace(tag.Message)
-		commit.Author = tag.Tagger
-		commit.Signature = tag.Signature
 
 		return commit, nil
 	case "commit":
 		commit, err := CommitFromReader(output.SHA, io.LimitReader(rd, output.Size))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("faile to read commit from reader: %w", err)
 		}
 		if _, err = rd.Discard(1); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("commit reader Discard failed: %w", err)
 		}
 
 		return commit, nil
 	default:
-		log.Debug().Msgf("Unknown object type: %s", output.Type)
+		log.Warn().Msgf("Unknown object type: %s", output.Type)
 		_, err = rd.Discard(int(output.Size) + 1)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("reader Discard failed: %w", err)
 		}
 		return nil, errors.NotFound("rev '%s' not found", rev)
 	}
@@ -784,7 +780,7 @@ readLoop:
 				_, _ = payloadSB.Write(line)
 				break readLoop
 			}
-			return nil, err
+			return nil, fmt.Errorf("error occurred while reading a line from buffer: %w", err)
 		}
 		if pgpsig {
 			if len(line) > 0 && line[0] == ' ' {

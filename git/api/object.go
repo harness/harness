@@ -68,7 +68,7 @@ func (g *Git) HashObject(ctx context.Context, repoPath string, reader io.Reader)
 		command.WithStdout(stdout),
 	)
 	if err != nil {
-		return sha.None, err
+		return sha.None, fmt.Errorf("failed to hash object: %w", err)
 	}
 	return sha.New(stdout.String())
 }

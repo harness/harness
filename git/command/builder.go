@@ -125,6 +125,9 @@ var descriptions = map[string]builder{
 	"log": {
 		flags: NoRefUpdates,
 	},
+	"ls-files": {
+		flags: NoRefUpdates,
+	},
 	"ls-remote": {
 		flags: NoRefUpdates,
 	},

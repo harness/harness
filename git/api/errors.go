@@ -126,8 +126,6 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	// always log internal error together with message.
 	log.Warn().Msgf("%v: [GIT] %v", fallbackErr, err)
 
-	// check if it's a RunStdError error (contains raw git error)
-
 	switch {
 	case err.Error() == "no such file or directory":
 		return errors.NotFound("repository not found")

@@ -105,7 +105,11 @@ func (g *Git) SetDefaultBranch(
 	}
 
 	// if requested, error out if branch doesn't exist. Otherwise, blindly set it.
-	if !allowEmpty && !g.IsBranchExist(ctx, repoPath, defaultBranch) {
+	exist, err := g.IsBranchExist(ctx, repoPath, defaultBranch)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to set default branch")
+	}
+	if !allowEmpty && !exist {
 		// TODO: ensure this returns not found error to caller
 		return fmt.Errorf("branch '%s' does not exist", defaultBranch)
 	}
@@ -114,7 +118,7 @@ func (g *Git) SetDefaultBranch(
 	cmd := command.New("symbolic-ref",
 		command.WithArg("HEAD", gitReferenceNamePrefixBranch+defaultBranch),
 	)
-	err := cmd.Run(ctx, command.WithDir(repoPath))
+	err = cmd.Run(ctx, command.WithDir(repoPath))
 	if err != nil {
 		return processGitErrorf(err, "failed to set new default branch")
 	}
@@ -348,6 +352,11 @@ func (g *Git) Push(
 
 	if g.traceGit {
 		cmd.Add(command.WithEnv(command.GitTrace, "true"))
+	}
+
+	// remove credentials if there are any
+	if strings.Contains(opts.Remote, "://") && strings.Contains(opts.Remote, "@") {
+		opts.Remote = SanitizeCredentialURLs(opts.Remote)
 	}
 
 	var outbuf, errbuf strings.Builder

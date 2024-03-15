@@ -22,8 +22,6 @@ import (
 
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/sha"
-
-	"github.com/rs/zerolog/log"
 )
 
 type Branch struct {
@@ -94,7 +92,7 @@ func (g *Git) HasBranches(
 	return strings.TrimSpace(output.String()) == "", nil
 }
 
-func (g *Git) IsBranchExist(ctx context.Context, repoPath, name string) bool {
+func (g *Git) IsBranchExist(ctx context.Context, repoPath, name string) (bool, error) {
 	cmd := command.New("rev-parse",
 		command.WithFlag("--verify", BranchPrefix+name),
 	)
@@ -102,8 +100,7 @@ func (g *Git) IsBranchExist(ctx context.Context, repoPath, name string) bool {
 		command.WithDir(repoPath),
 	)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to check if branch '%s' exist: %v", name, err)
-		return false
+		return false, fmt.Errorf("failed to check if branch '%s' exist: %w", name, err)
 	}
-	return true
+	return true, nil
 }

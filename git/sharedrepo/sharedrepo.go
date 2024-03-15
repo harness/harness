@@ -145,7 +145,10 @@ func (r *SharedRepo) LsFiles(
 	ctx context.Context,
 	filenames ...string,
 ) ([]string, error) {
-	cmd := command.New("ls-files", command.WithFlag("-z"), command.WithPostSepArg(filenames...))
+	cmd := command.New("ls-files",
+		command.WithFlag("-z"),
+		command.WithPostSepArg(filenames...),
+	)
 
 	stdout := bytes.NewBuffer(nil)
 
