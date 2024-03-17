@@ -177,7 +177,7 @@ export const DefaultMenu: React.FC = () => {
             icon="thinner-search"
             data-code-repo-section="search"
             label={getString('search')}
-            to={routes.toCODEProjectSearch({ space: selectedSpace?.path as string })}
+            to={routes.toCODESpaceSearch({ space: selectedSpace?.path as string })}
           />
         </Render>
 

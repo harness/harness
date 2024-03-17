@@ -98,7 +98,7 @@ export interface CODERoutes {
   toCODESettings: (
     args: RequiredField<Pick<CODEProps, 'repoPath' | 'settingSection' | 'ruleId' | 'settingSectionMode'>, 'repoPath'>
   ) => string
-  toCODEProjectSearch: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODESpaceSearch: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODERepositorySearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODESemanticSearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEExecutions: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
@@ -157,7 +157,7 @@ export const routes: CODERoutes = {
     `/${repoPath}/settings${settingSection ? '/' + settingSection : ''}${ruleId ? '/' + ruleId : ''}${
       settingSectionMode ? '/' + settingSectionMode : ''
     }`,
-  toCODEProjectSearch: ({ space }) => `/${space}/search`,
+  toCODESpaceSearch: ({ space }) => `/${space}/search`,
   toCODERepositorySearch: ({ repoPath }) => `/${repoPath}/search`,
   toCODESemanticSearch: ({ repoPath }) => `/${repoPath}/search/semantic`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,

@@ -294,7 +294,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         </Route>
 
         <Route
-          path={[routes.toCODEProjectSearch({ space: pathProps.space }), routes.toCODERepositorySearch({ repoPath })]}
+          path={[routes.toCODESpaceSearch({ space: pathProps.space }), routes.toCODERepositorySearch({ repoPath })]}
           exact>
           <LayoutWithSideNav title={getString('search')}>
             <CodeSearchPage />
