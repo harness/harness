@@ -242,7 +242,7 @@ func (g *Git) GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (
 		cmd := command.New("show",
 			command.WithFlag("--no-patch"),
 			command.WithFlag("--format="+fmtTreeHash),
-			command.WithArg(rev),
+			command.WithArg(rev+"^{commit}"),
 		)
 		output := &bytes.Buffer{}
 		err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))

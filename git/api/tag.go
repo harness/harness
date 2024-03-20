@@ -350,7 +350,7 @@ func parseSignatureFromCatFileLine(line string) (Signature, error) {
 // Parse commit information from the (uncompressed) raw
 // data from the commit object.
 // \n\n separate headers from message.
-func parseTagData(data []byte) *Tag {
+func parseTagData(data []byte) (*Tag, error) {
 	tag := &Tag{
 		Tagger: Signature{},
 	}
@@ -371,8 +371,11 @@ l:
 				// A commit can have one or more parents
 				tag.TargetType = GitObjectType(line[spacePos+1:])
 			case "tagger":
-				sig := NewSignatureFromCommitLine(line[spacePos+1:])
-				tag.Tagger = *sig
+				sig, err := NewSignatureFromCommitLine(line[spacePos+1:])
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse tagger signature: %w", err)
+				}
+				tag.Tagger = sig
 			}
 			nextLine += eol + 1
 		case eol == 0:
@@ -393,5 +396,5 @@ l:
 			tag.Message = tag.Message[:idx+1]
 		}
 	}
-	return tag
+	return tag, nil
 }

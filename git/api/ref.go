@@ -324,7 +324,7 @@ func (g *Git) updateRefWithHooks(
 	if newValue.IsEmpty() {
 		return fmt.Errorf("newValue can't be empty")
 	}
-	if oldValue.Equal(sha.Nil) && newValue.Equal(sha.Nil) {
+	if oldValue.IsNil() && newValue.IsNil() {
 		return fmt.Errorf("provided values cannot be both empty")
 	}
 
@@ -357,7 +357,7 @@ func (g *Git) updateRefWithHooks(
 	}
 
 	cmd := command.New("update-ref")
-	if newValue.Equal(sha.Nil) {
+	if newValue.IsNil() {
 		cmd.Add(command.WithFlag("-d", ref))
 	} else {
 		cmd.Add(command.WithArg(ref, newValue.String()))

@@ -30,6 +30,7 @@ var (
 	ErrBranchNameEmpty     = errors.InvalidArgument("branch name cannot be empty")
 	ErrParseDiffHunkHeader = errors.Internal(nil, "failed to parse diff hunk header")
 	ErrNoDefaultBranch     = errors.New("no default branch")
+	ErrInvalidSignature    = errors.New("invalid signature")
 )
 
 // PushOutOfDateError represents an error if merging fails due to unrelated histories.
@@ -99,7 +100,7 @@ func (err *PushRejectedError) GenerateMessage() {
 	err.Message = strings.TrimSpace(messageBuilder.String())
 }
 
-// MoreThanOneError represents an error if pull request fails when there are more
+// MoreThanOneError represents an error when there are more
 // than one sources (branch, tag) with the same name.
 type MoreThanOneError struct {
 	StdOut string

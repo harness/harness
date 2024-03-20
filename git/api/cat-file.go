@@ -113,7 +113,7 @@ func ReadBatchHeaderLine(rd *bufio.Reader) (*BatchHeaderResponse, error) {
 	}
 	idx := strings.IndexByte(line, ' ')
 	if idx < 0 {
-		return nil, errors.NotFound("missing space for: %s", line)
+		return nil, errors.NotFound("missing space char for: %s", line)
 	}
 	id := line[:idx]
 	objType := line[idx+1:]

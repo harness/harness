@@ -717,7 +717,10 @@ func getCommitFromBatchReader(
 		if _, err = rd.Discard(1); err != nil {
 			return nil, fmt.Errorf("tag reader Discard failed: %w", err)
 		}
-		tag := parseTagData(data)
+		tag, err := parseTagData(data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse tag: %w", err)
+		}
 
 		commit, err := GetCommit(ctx, repoPath, tag.TargetSha.String())
 		if err != nil {
@@ -750,7 +753,7 @@ func getCommitFromBatchReader(
 //
 // If used as part of a cat-file --batch stream you need to limit the reader to the correct size.
 //
-//nolint:gocognit
+//nolint:gocognit,nestif
 func CommitFromReader(commitSHA sha.SHA, reader io.Reader) (*Commit, error) {
 	commit := &Commit{
 		SHA:       commitSHA,
@@ -773,7 +776,7 @@ readLoop:
 	for {
 		line, err := bufReader.ReadBytes('\n')
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				if message {
 					_, _ = messageSB.Write(line)
 				}
@@ -812,12 +815,16 @@ readLoop:
 				commit.ParentSHAs = append(commit.ParentSHAs, sha.Must(string(data)))
 				_, _ = payloadSB.Write(line)
 			case "author":
-				commit.Author = Signature{}
-				commit.Author.Decode(data)
+				commit.Author, err = DecodeSignature(data)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse author signature: %w", err)
+				}
 				_, _ = payloadSB.Write(line)
 			case "committer":
-				commit.Committer = Signature{}
-				commit.Committer.Decode(data)
+				commit.Committer, err = DecodeSignature(data)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse committer signature: %w", err)
+				}
 				_, _ = payloadSB.Write(line)
 			case "gpgsig":
 				_, _ = signatureSB.Write(data)

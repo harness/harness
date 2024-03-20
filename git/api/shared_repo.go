@@ -284,8 +284,13 @@ func (r *SharedRepo) LsFiles(
 ) ([]string, error) {
 	cmd := command.New("ls-files",
 		command.WithFlag("-z"),
-		command.WithPostSepArg(filenames...),
 	)
+
+	for _, arg := range filenames {
+		if arg != "" {
+			cmd.Add(command.WithPostSepArg(arg))
+		}
+	}
 
 	stdout := bytes.NewBuffer(nil)
 
@@ -377,11 +382,6 @@ func (r *SharedRepo) ShowFile(
 		return fmt.Errorf("show file: %w", err)
 	}
 	return nil
-}
-
-// UpdateRef sets the commit ID string of given reference (e.g. branch or tag).
-func (r *SharedRepo) UpdateRef(ctx context.Context, name string, commitID sha.SHA) error {
-	return r.git.UpdateRef(ctx, nil, r.RepoPath, name, sha.Nil, commitID)
 }
 
 // AddObjectToIndex adds the provided object hash to the index with the provided mode and path.

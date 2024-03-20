@@ -28,15 +28,16 @@ type Signature struct {
 	When time.Time
 }
 
-// Decode decodes a byte array representing a signature to signature.
-func (s *Signature) Decode(b []byte) {
-	sig := NewSignatureFromCommitLine(b)
-	s.Identity.Email = sig.Identity.Email
-	s.Identity.Name = sig.Identity.Name
-	s.When = sig.When
+// DecodeSignature decodes a byte array representing a signature to signature.
+func DecodeSignature(b []byte) (Signature, error) {
+	sig, err := NewSignatureFromCommitLine(b)
+	if err != nil {
+		return Signature{}, fmt.Errorf("failed to read signature from commit: %w", err)
+	}
+	return sig, nil
 }
 
-func (s *Signature) String() string {
+func (s Signature) String() string {
 	return fmt.Sprintf("%s <%s>", s.Identity.Name, s.Identity.Email)
 }
 
@@ -49,7 +50,7 @@ func (i Identity) String() string {
 	return fmt.Sprintf("%s <%s>", i.Name, i.Email)
 }
 
-func (i *Identity) Validate() error {
+func (i Identity) Validate() error {
 	if i.Name == "" {
 		return errors.InvalidArgument("identity name is mandatory")
 	}
