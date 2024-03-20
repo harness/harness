@@ -50,9 +50,14 @@ func (s ruleSet) MergeVerify(
 				return err
 			}
 
+			// combine output across rules
 			violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
-			out.DeleteSourceBranch = out.DeleteSourceBranch || rOut.DeleteSourceBranch
 			out.AllowedMethods = intersectSorted(out.AllowedMethods, rOut.AllowedMethods)
+			out.DeleteSourceBranch = out.DeleteSourceBranch || rOut.DeleteSourceBranch
+			out.MinimumRequiredApprovalsCount = maxInt(out.MinimumRequiredApprovalsCount, rOut.MinimumRequiredApprovalsCount)
+			out.RequiresCodeOwnersApproval = out.RequiresCodeOwnersApproval || rOut.RequiresCodeOwnersApproval
+			out.RequiresCommentResolution = out.RequiresCommentResolution || rOut.RequiresCommentResolution
+			out.RequiresNoChangeRequests = out.RequiresNoChangeRequests || rOut.RequiresNoChangeRequests
 
 			return nil
 		})
@@ -264,4 +269,11 @@ func intersectSorted[T constraints.Ordered](sliceA, sliceB []T) []T {
 	sliceA = sliceA[:idxA]
 
 	return sliceA
+}
+
+func maxInt(a int, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

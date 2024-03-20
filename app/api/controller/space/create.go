@@ -170,13 +170,15 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 		return nil, fmt.Errorf("failed to get parent space: %w", err)
 	}
 
-	// create is a special case - check permission without specific resource
-	scope := &types.Scope{SpacePath: parentSpace.Path}
-	resource := &types.Resource{
-		Type:       enum.ResourceTypeSpace,
-		Identifier: "",
-	}
-	if err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionSpaceCreate); err != nil {
+	if err = apiauth.CheckSpaceScope(
+		ctx,
+		c.authorizer,
+		session,
+		parentSpace,
+		enum.ResourceTypeSpace,
+		enum.PermissionSpaceEdit,
+		false,
+	); err != nil {
 		return nil, fmt.Errorf("authorization failed: %w", err)
 	}
 

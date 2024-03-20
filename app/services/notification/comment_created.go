@@ -17,13 +17,17 @@ package notification
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strconv"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
 )
 
-type CommentCreatedPayload struct {
+type CommentPayload struct {
 	Base      *BasePullReqPayload
 	Commenter *types.PrincipalInfo
 	Text      string
@@ -33,7 +37,7 @@ func (s *Service) notifyCommentCreated(
 	ctx context.Context,
 	event *events.Event[*pullreqevents.CommentCreatedPayload],
 ) error {
-	payload, recipients, err := s.processCommentCreatedEvent(ctx, event)
+	payload, mentions, participants, author, err := s.processCommentCreatedEvent(ctx, event)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to process %s event for pullReqID %d: %w",
@@ -43,43 +47,189 @@ func (s *Service) notifyCommentCreated(
 		)
 	}
 
-	err = s.notificationClient.SendCommentCreated(ctx, recipients, payload)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to send email for event %s for pullReqID %d: %w",
-			pullreqevents.CommentCreatedEvent,
-			event.Payload.PullReqID,
-			err,
-		)
+	if len(mentions) > 0 {
+		err = s.notificationClient.SendCommentMentions(ctx, mentions, payload)
+		if err != nil {
+			return fmt.Errorf(
+				"failed to send notification to mentions for event %s for pullReqID %d: %w",
+				pullreqevents.CommentCreatedEvent,
+				event.Payload.PullReqID,
+				err,
+			)
+		}
 	}
+
+	if len(participants) > 0 {
+		err = s.notificationClient.SendCommentParticipants(ctx, participants, payload)
+		if err != nil {
+			return fmt.Errorf(
+				"failed to send notification to participants for event %s for pullReqID %d: %w",
+				pullreqevents.CommentCreatedEvent,
+				event.Payload.PullReqID,
+				err,
+			)
+		}
+	}
+
+	if author != nil {
+		err = s.notificationClient.SendCommentPRAuthor(
+			ctx,
+			[]*types.PrincipalInfo{author},
+			payload,
+		)
+		if err != nil {
+			return fmt.Errorf(
+				"failed to send notification to author for event %s for pullReqID %d: %w",
+				pullreqevents.CommentCreatedEvent,
+				event.Payload.PullReqID,
+				err,
+			)
+		}
+	}
+
 	return nil
 }
 
 func (s *Service) processCommentCreatedEvent(
 	ctx context.Context,
 	event *events.Event[*pullreqevents.CommentCreatedPayload],
-) (*CommentCreatedPayload, []*types.PrincipalInfo, error) {
+) (
+	payload *CommentPayload,
+	mentions []*types.PrincipalInfo,
+	participants []*types.PrincipalInfo,
+	author *types.PrincipalInfo,
+	err error,
+) {
 	base, err := s.getBasePayload(ctx, event.Payload.Base)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get base payload: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("failed to get base payload: %w", err)
 	}
 
 	activity, err := s.pullReqActivityStore.Find(ctx, event.Payload.ActivityID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch activity from pullReqActivityStore: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("failed to fetch activity from pullReqActivityStore: %w", err)
 	}
 
 	commenter, err := s.principalInfoView.Find(ctx, activity.CreatedBy)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch commenter from principalInfoView: %w", err)
-	}
-	recipients := []*types.PrincipalInfo{
-		base.Author,
+		return nil, nil, nil, nil, fmt.Errorf("failed to fetch commenter from principalInfoView: %w", err)
 	}
 
-	return &CommentCreatedPayload{
+	payload = &CommentPayload{
 		Base:      base,
 		Commenter: commenter,
 		Text:      activity.Text,
-	}, recipients, nil
+	}
+
+	seen := make(map[int64]bool)
+	seen[commenter.ID] = true
+
+	// process mentions
+	mentions, err = s.processMentions(ctx, activity.Text, seen)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	// process participants
+	participants, err = s.processParticipants(
+		ctx, event.Payload.IsReply, seen, event.Payload.PullReqID, activity.Order)
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	// process author
+	if !seen[base.Author.ID] {
+		author = base.Author
+	}
+
+	return payload, mentions, participants, author, nil
+}
+
+func (s *Service) processMentions(
+	ctx context.Context,
+	text string,
+	seen map[int64]bool,
+) ([]*types.PrincipalInfo, error) {
+	var mentions []*types.PrincipalInfo
+
+	commentMentions := parseMentions(ctx, text)
+	if len(commentMentions) == 0 {
+		return []*types.PrincipalInfo{}, nil
+	}
+
+	var mentionIDs []int64
+	for _, mentionID := range commentMentions {
+		if !seen[mentionID] {
+			mentionIDs = append(mentionIDs, mentionID)
+			seen[mentionID] = true
+		}
+	}
+	if len(mentionIDs) > 0 {
+		var err error
+		mentions, err = s.principalInfoView.FindMany(ctx, mentionIDs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch thread mentions from principalInfoView: %w", err)
+		}
+	}
+
+	return mentions, nil
+}
+
+func (s *Service) processParticipants(
+	ctx context.Context,
+	isReply bool,
+	seen map[int64]bool,
+	prID int64,
+	order int64,
+) ([]*types.PrincipalInfo, error) {
+	var participants []*types.PrincipalInfo
+
+	if !isReply {
+		return participants, nil
+	}
+
+	authorIDs, err := s.pullReqActivityStore.ListAuthorIDs(
+		ctx,
+		prID,
+		order,
+	)
+	if err != nil {
+		return participants, fmt.Errorf("failed to fetch thread participant IDs from pullReqActivityStore: %w", err)
+	}
+
+	var participantIDs []int64
+	for _, authorID := range authorIDs {
+		if !seen[authorID] {
+			participantIDs = append(participantIDs, authorID)
+			seen[authorID] = true
+		}
+	}
+	if len(participantIDs) > 0 {
+		participants, err = s.principalInfoView.FindMany(ctx, participantIDs)
+		if err != nil {
+			return participants, fmt.Errorf("failed to fetch thread participants from principalInfoView: %w", err)
+		}
+	}
+
+	return participants, nil
+}
+
+var mentionRegex = regexp.MustCompile(`@\[(\d+)\]`)
+
+func parseMentions(ctx context.Context, text string) []int64 {
+	matches := mentionRegex.FindAllStringSubmatch(text, -1)
+
+	var mentions []int64
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+		if mention, err := strconv.ParseInt(match[1], 10, 64); err == nil {
+			mentions = append(mentions, mention)
+		} else {
+			log.Ctx(ctx).Warn().Err(err).Msgf("failed to parse mention %q", match[1])
+		}
+	}
+
+	return mentions
 }

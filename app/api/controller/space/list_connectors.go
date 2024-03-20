@@ -36,7 +36,14 @@ func (c *Controller) ListConnectors(
 		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
 	}
 
-	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionConnectorView, false)
+	err = apiauth.CheckConnector(
+		ctx,
+		c.authorizer,
+		session,
+		space.Path,
+		"",
+		enum.PermissionConnectorView,
+	)
 	if err != nil {
 		return nil, 0, fmt.Errorf("could not authorize: %w", err)
 	}

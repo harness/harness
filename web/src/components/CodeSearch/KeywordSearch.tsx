@@ -59,7 +59,7 @@ const KeywordSearch = ({ repoMetadata }: KeywordSearchProps) => {
         })
       } else {
         history.push({
-          pathname: routes.toCODEProjectSearch({
+          pathname: routes.toCODESpaceSearch({
             space
           }),
           search: `q=${q}`

@@ -352,8 +352,9 @@ func (s *Service) handleEventPullReqComment(
 				},
 				PullReqCommentSegment: PullReqCommentSegment{
 					CommentInfo: CommentInfo{
-						Text: activity.Text,
-						ID:   activity.ID,
+						Text:     activity.Text,
+						ID:       activity.ID,
+						ParentID: activity.ParentID,
 					},
 				},
 			}, nil

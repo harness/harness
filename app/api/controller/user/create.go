@@ -46,7 +46,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	resource := &types.Resource{
 		Type: enum.ResourceTypeUser,
 	}
-	if err := apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionUserCreate); err != nil {
+	if err := apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionUserEdit); err != nil {
 		return nil, err
 	}
 

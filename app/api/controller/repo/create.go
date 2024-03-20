@@ -134,13 +134,15 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 	}
 
 	// create is a special case - check permission without specific resource
-	scope := &types.Scope{SpacePath: space.Path}
-	resource := &types.Resource{
-		Type:       enum.ResourceTypeRepo,
-		Identifier: "",
-	}
-
-	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoEdit)
+	err = apiauth.CheckSpaceScope(
+		ctx,
+		c.authorizer,
+		session,
+		space,
+		enum.ResourceTypeRepo,
+		enum.PermissionRepoEdit,
+		false,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("auth check failed: %w", err)
 	}

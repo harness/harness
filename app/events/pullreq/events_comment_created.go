@@ -28,6 +28,7 @@ type CommentCreatedPayload struct {
 	Base
 	ActivityID int64  `json:"activity_id"`
 	SourceSHA  string `json:"source_sha"`
+	IsReply    bool   `json:"is_reply"`
 }
 
 func (r *Reporter) CommentCreated(

@@ -28,10 +28,14 @@ import (
 
 // CheckSpace checks if a space specific permission is granted for the current auth session
 // in the scope of its parent.
-// Returns nil if the permission is granted, otherwise returns an error.
-// NotAuthenticated, NotAuthorized, or any underlying error.
-func CheckSpace(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	space *types.Space, permission enum.Permission, orPublic bool,
+// Returns nil if permission is granted, otherwise returns NotAuthenticated, NotAuthorized, or the underlying error.
+func CheckSpace(
+	ctx context.Context,
+	authorizer authz.Authorizer,
+	session *auth.Session,
+	space *types.Space,
+	permission enum.Permission,
+	orPublic bool,
 ) error {
 	if orPublic && space.IsPublic {
 		return nil
@@ -46,6 +50,31 @@ func CheckSpace(ctx context.Context, authorizer authz.Authorizer, session *auth.
 	resource := &types.Resource{
 		Type:       enum.ResourceTypeSpace,
 		Identifier: name,
+	}
+
+	return Check(ctx, authorizer, session, scope, resource, permission)
+}
+
+// CheckSpaceScope checks if a specific permission is granted for the current auth session
+// in the scope of the provided space.
+// Returns nil if permission is granted, otherwise returns NotAuthenticated, NotAuthorized, or the underlying error.
+func CheckSpaceScope(
+	ctx context.Context,
+	authorizer authz.Authorizer,
+	session *auth.Session,
+	space *types.Space,
+	resourceType enum.ResourceType,
+	permission enum.Permission,
+	orPublic bool,
+) error {
+	if orPublic && space.IsPublic {
+		return nil
+	}
+
+	scope := &types.Scope{SpacePath: space.Path}
+	resource := &types.Resource{
+		Type:       resourceType,
+		Identifier: "",
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)

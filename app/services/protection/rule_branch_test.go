@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -61,8 +62,9 @@ func TestBranch_MergeVerify(t *testing.T) {
 				PullReq:     &types.PullReq{UnresolvedCount: 1},
 			},
 			expOut: MergeVerifyOutput{
-				DeleteSourceBranch: true,
-				AllowedMethods:     enum.MergeMethods,
+				DeleteSourceBranch:        true,
+				AllowedMethods:            enum.MergeMethods,
+				RequiresCommentResolution: true,
 			},
 			expVs: []types.RuleViolations{
 				{
@@ -91,8 +93,9 @@ func TestBranch_MergeVerify(t *testing.T) {
 				PullReq:     &types.PullReq{UnresolvedCount: 1},
 			},
 			expOut: MergeVerifyOutput{
-				DeleteSourceBranch: true,
-				AllowedMethods:     enum.MergeMethods,
+				DeleteSourceBranch:        true,
+				AllowedMethods:            enum.MergeMethods,
+				RequiresCommentResolution: true,
 			},
 			expVs: []types.RuleViolations{
 				{
@@ -120,8 +123,9 @@ func TestBranch_MergeVerify(t *testing.T) {
 				PullReq:     &types.PullReq{UnresolvedCount: 1},
 			},
 			expOut: MergeVerifyOutput{
-				DeleteSourceBranch: true,
-				AllowedMethods:     enum.MergeMethods,
+				DeleteSourceBranch:        true,
+				AllowedMethods:            enum.MergeMethods,
+				RequiresCommentResolution: true,
 			},
 			expVs: []types.RuleViolations{
 				{
@@ -155,6 +159,48 @@ func TestBranch_MergeVerify(t *testing.T) {
 				AllowedMethods:     []enum.MergeMethod{enum.MergeMethodRebase, enum.MergeMethodSquash},
 			},
 			expVs: []types.RuleViolations{},
+		},
+		{
+			name: "definition-values",
+			branch: Branch{
+				Bypass: DefBypass{},
+				PullReq: DefPullReq{
+					StatusChecks: DefStatusChecks{},
+					Comments: DefComments{
+						RequireResolveAll: true,
+					},
+					Approvals: DefApprovals{
+						RequireCodeOwners:      true,
+						RequireMinimumCount:    2,
+						RequireNoChangeRequest: true,
+					},
+					Merge: DefMerge{
+						DeleteBranch:      true,
+						StrategiesAllowed: []enum.MergeMethod{enum.MergeMethodSquash},
+					},
+				},
+			},
+			in: MergeVerifyInput{
+				Actor:      user,
+				CodeOwners: &codeowners.Evaluation{},
+				PullReq:    &types.PullReq{},
+				Reviewers:  []*types.PullReqReviewer{},
+			},
+			expOut: MergeVerifyOutput{
+				DeleteSourceBranch:            true,
+				AllowedMethods:                []enum.MergeMethod{enum.MergeMethodSquash},
+				RequiresCodeOwnersApproval:    true,
+				RequiresNoChangeRequests:      true,
+				RequiresCommentResolution:     true,
+				MinimumRequiredApprovalsCount: 2,
+			},
+			expVs: []types.RuleViolations{
+				{
+					Violations: []types.Violation{
+						{Code: codePullReqApprovalReqMinCount},
+					},
+				},
+			},
 		},
 	}
 

@@ -109,14 +109,10 @@ func NewController(
 	}
 }
 
-// getRepoCheckAccess fetches an active repo (not one that is currently being imported)
-// and checks if the current user has permission to access it.
-func (c *Controller) getRepoCheckAccess(
+// getRepo fetches an active repo (not one that is currently being imported).
+func (c *Controller) getRepo(
 	ctx context.Context,
-	session *auth.Session,
 	repoRef string,
-	reqPermission enum.Permission,
-	orPublic bool,
 ) (*types.Repository, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
@@ -129,6 +125,23 @@ func (c *Controller) getRepoCheckAccess(
 
 	if repo.Importing {
 		return nil, usererror.BadRequest("Repository import is in progress.")
+	}
+
+	return repo, nil
+}
+
+// getRepoCheckAccess fetches an active repo (not one that is currently being imported)
+// and checks if the current user has permission to access it.
+func (c *Controller) getRepoCheckAccess(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	reqPermission enum.Permission,
+	orPublic bool,
+) (*types.Repository, error) {
+	repo, err := c.getRepo(ctx, repoRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, orPublic); err != nil {

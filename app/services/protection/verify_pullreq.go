@@ -48,8 +48,12 @@ type (
 	}
 
 	MergeVerifyOutput struct {
-		DeleteSourceBranch bool
-		AllowedMethods     []enum.MergeMethod
+		AllowedMethods                []enum.MergeMethod
+		DeleteSourceBranch            bool
+		MinimumRequiredApprovalsCount int
+		RequiresCodeOwnersApproval    bool
+		RequiresCommentResolution     bool
+		RequiresNoChangeRequests      bool
 	}
 
 	RequiredChecksInput struct {
@@ -97,7 +101,12 @@ func (v *DefPullReq) MergeVerify(
 	var out MergeVerifyOutput
 	var violations types.RuleViolations
 
+	// set static merge verify output that comes from the PR definition
 	out.DeleteSourceBranch = v.Merge.DeleteBranch
+	out.MinimumRequiredApprovalsCount = v.Approvals.RequireMinimumCount
+	out.RequiresCodeOwnersApproval = v.Approvals.RequireCodeOwners
+	out.RequiresCommentResolution = v.Comments.RequireResolveAll
+	out.RequiresNoChangeRequests = v.Approvals.RequireNoChangeRequest
 
 	// pullreq.approvals
 

@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -96,8 +97,9 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 				Method:     enum.MergeMethodRebase,
 			},
 			expOut: MergeVerifyOutput{
-				DeleteSourceBranch: true,
-				AllowedMethods:     nil,
+				DeleteSourceBranch:            true,
+				MinimumRequiredApprovalsCount: 1,
+				AllowedMethods:                nil,
 			},
 			expViol: []types.RuleViolations{
 				{
@@ -168,6 +170,151 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 				AllowedMethods:     []enum.MergeMethod{enum.MergeMethodRebase},
 			},
 			expViol: []types.RuleViolations{},
+		},
+		{
+			name: "combine-definition-values",
+			rules: []types.RuleInfoInternal{
+				{
+					RuleInfo: types.RuleInfo{
+						SpacePath:  "",
+						RepoPath:   "space/repo",
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq": {
+							"approvals": {
+								"require_code_owners": false,
+								"require_minimum_count": 2,
+								"require_no_change_request": false
+							},
+							"comments":{
+								"require_resolve_all": false
+							},
+							"merge":{
+								"delete_branch": true,
+								"strategies_allowed": ["merge","rebase"]
+							}
+						}
+					}`),
+				},
+				{
+					RuleInfo: types.RuleInfo{
+						SpacePath:  "space",
+						RepoPath:   "",
+						ID:         2,
+						Identifier: "rule2",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+						"pullreq": {
+							"approvals": {
+								"require_code_owners": true,
+								"require_minimum_count": 3,
+								"require_no_change_request": true
+							},
+							"comments":{
+								"require_resolve_all": true
+							},
+							"merge":{
+								"delete_branch": true,
+								"strategies_allowed": ["rebase","squash"]
+							}
+						}
+					}`),
+				},
+				{
+					RuleInfo: types.RuleInfo{
+						SpacePath:  "",
+						RepoPath:   "space/repo",
+						ID:         3,
+						Identifier: "rule3",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Pattern: []byte(`{"default":true}`),
+					Definition: []byte(`{
+							"pullreq": {
+								"approvals": {
+									"require_code_owners": false,
+									"require_minimum_count": 2,
+									"require_no_change_request": false
+								},
+								"comments":{
+									"require_resolve_all": false
+								},
+								"merge":{
+									"delete_branch": false,
+									"strategies_allowed": ["rebase"]
+								}
+							}
+						}`),
+				},
+			},
+			input: MergeVerifyInput{
+				Actor:      &types.Principal{ID: 1},
+				TargetRepo: &types.Repository{ID: 1, DefaultBranch: "main"},
+				PullReq:    &types.PullReq{ID: 1, SourceBranch: "pr", TargetBranch: "main"},
+				CodeOwners: &codeowners.Evaluation{},
+				Reviewers:  []*types.PullReqReviewer{},
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                []enum.MergeMethod{enum.MergeMethodRebase},
+				DeleteSourceBranch:            true,
+				MinimumRequiredApprovalsCount: 3,
+				RequiresCodeOwnersApproval:    true,
+				RequiresCommentResolution:     true,
+				RequiresNoChangeRequests:      true,
+			},
+			expViol: []types.RuleViolations{
+				{
+					Rule: types.RuleInfo{
+						SpacePath:  "",
+						RepoPath:   "space/repo",
+						ID:         1,
+						Identifier: "rule1",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Bypassed: false,
+					Violations: []types.Violation{
+						{Code: codePullReqApprovalReqMinCount},
+					},
+				},
+				{
+					Rule: types.RuleInfo{
+						SpacePath:  "space",
+						RepoPath:   "",
+						ID:         2,
+						Identifier: "rule2",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Bypassed: false,
+					Violations: []types.Violation{
+						{Code: codePullReqApprovalReqMinCount},
+					},
+				},
+				{
+					Rule: types.RuleInfo{
+						SpacePath:  "",
+						RepoPath:   "space/repo",
+						ID:         3,
+						Identifier: "rule3",
+						Type:       TypeBranch,
+						State:      enum.RuleStateActive,
+					},
+					Bypassed: false,
+					Violations: []types.Violation{
+						{Code: codePullReqApprovalReqMinCount},
+					},
+				},
+			},
 		},
 	}
 

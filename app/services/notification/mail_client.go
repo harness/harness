@@ -26,7 +26,9 @@ import (
 
 const (
 	TemplateReviewerAdded        = "reviewer_added.html"
-	TemplateCommentCreated       = "comment_created.html"
+	TemplateCommentPRAuthor      = "comment_pr_author.html"
+	TemplateCommentMentions      = "comment_mentions.html"
+	TemplateCommentParticipants  = "comment_participants.html"
 	TemplatePullReqBranchUpdated = "pullreq_branch_updated.html"
 	TemplateNameReviewSubmitted  = "review_submitted.html"
 	TemplatePullReqStateChanged  = "pullreq_state_changed.html"
@@ -42,13 +44,49 @@ func NewMailClient(mailer mailer.Mailer) MailClient {
 	}
 }
 
-func (m MailClient) SendCommentCreated(
+func (m MailClient) SendCommentPRAuthor(
 	ctx context.Context,
 	recipients []*types.PrincipalInfo,
-	payload *CommentCreatedPayload,
+	payload *CommentPayload,
 ) error {
 	email, err := GenerateEmailFromPayload(
-		TemplateCommentCreated,
+		TemplateCommentPRAuthor,
+		recipients,
+		payload.Base,
+		payload,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to generate mail requests after processing %s event: %w",
+			pullreqevents.CommentCreatedEvent, err)
+	}
+
+	return m.Mailer.Send(ctx, *email)
+}
+func (m MailClient) SendCommentMentions(
+	ctx context.Context,
+	recipients []*types.PrincipalInfo,
+	payload *CommentPayload,
+) error {
+	email, err := GenerateEmailFromPayload(
+		TemplateCommentMentions,
+		recipients,
+		payload.Base,
+		payload,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to generate mail requests after processing %s event: %w",
+			pullreqevents.CommentCreatedEvent, err)
+	}
+
+	return m.Mailer.Send(ctx, *email)
+}
+func (m MailClient) SendCommentParticipants(
+	ctx context.Context,
+	recipients []*types.PrincipalInfo,
+	payload *CommentPayload,
+) error {
+	email, err := GenerateEmailFromPayload(
+		TemplateCommentParticipants,
 		recipients,
 		payload.Base,
 		payload,

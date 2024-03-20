@@ -337,6 +337,9 @@ type (
 
 		// List returns a list of pull request activities in a pull request (a timeline).
 		List(ctx context.Context, prID int64, opts *types.PullReqActivityFilter) ([]*types.PullReqActivity, error)
+
+		// ListAuthorIDs returns a list of pull request activity author ids in a thread (order).
+		ListAuthorIDs(ctx context.Context, prID int64, order int64) ([]int64, error)
 	}
 
 	// CodeCommentView is to manipulate only code-comment subset of PullReqActivity.

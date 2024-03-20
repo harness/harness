@@ -16,21 +16,37 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 // ListServiceAccounts lists the service accounts of a repo.
-
-func (c *Controller) ListServiceAccounts(ctx context.Context,
+func (c *Controller) ListServiceAccounts(
+	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 ) ([]*types.ServiceAccount, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, false)
+	repo, err := c.getRepo(ctx, repoRef)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find repo: %w", err)
+	}
+
+	if err := apiauth.CheckServiceAccount(
+		ctx,
+		c.authorizer,
+		session,
+		c.spaceStore,
+		c.repoStore,
+		enum.ParentResourceTypeRepo,
+		repo.ID,
+		"",
+		enum.PermissionServiceAccountView,
+	); err != nil {
+		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
 	return c.principalStore.ListServiceAccounts(ctx, enum.ParentResourceTypeRepo, repo.ID)

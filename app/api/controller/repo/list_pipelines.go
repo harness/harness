@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -32,9 +33,12 @@ func (c *Controller) ListPipelines(
 	latest bool,
 	filter types.ListQueryFilter,
 ) ([]*types.Pipeline, int64, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepo(ctx, repoRef)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to find repo: %w", err)
+	}
+	if err := apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, "", enum.PermissionPipelineView); err != nil {
+		return nil, 0, fmt.Errorf("access check failed: %w", err)
 	}
 
 	var count int64
