@@ -22,33 +22,28 @@ import (
 func TestSHA_MarshalJSON(t *testing.T) {
 	tests := []struct {
 		name    string
-		input   *SHA
+		input   SHA
 		want    []byte
 		wantErr bool
 	}{
 		{
 			name: "happy path",
-			input: &SHA{
+			input: SHA{
 				str: EmptyTree,
 			},
 			want: []byte("\"" + EmptyTree + "\""),
 		},
 		{
 			name: "happy path - quotes",
-			input: &SHA{
+			input: SHA{
 				str: "\"\"",
 			},
 			want: []byte("\"\"\"\""),
 		},
 		{
 			name:  "happy path - empty string",
-			input: &SHA{},
+			input: SHA{},
 			want:  []byte("\"\""),
-		},
-		{
-			name:  "happy path - nil object",
-			input: nil,
-			want:  []byte("null"),
 		},
 	}
 	for _, tt := range tests {
@@ -69,13 +64,13 @@ func TestSHA_UnmarshalJSON(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    []byte
-		expected *SHA
+		expected SHA
 		wantErr  bool
 	}{
 		{
 			name:  "happy path",
 			input: []byte("\"" + EmptyTree + "\""),
-			expected: &SHA{
+			expected: SHA{
 				str: EmptyTree,
 			},
 			wantErr: false,
@@ -83,19 +78,13 @@ func TestSHA_UnmarshalJSON(t *testing.T) {
 		{
 			name:     "empty content return error",
 			input:    []byte("\"\""),
-			expected: &SHA{},
-			wantErr:  false,
-		},
-		{
-			name:     "nil object return nil object SHA",
-			input:    []byte("null"),
-			expected: nil,
-			wantErr:  false,
+			expected: SHA{},
+			wantErr:  true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &SHA{}
+			s := SHA{}
 			if err := s.UnmarshalJSON(tt.input); (err != nil) != tt.wantErr {
 				t.Errorf("UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
 			}
