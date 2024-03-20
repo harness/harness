@@ -84,12 +84,6 @@ func (p *CommitFilesParams) Validate() error {
 	return p.WriteParams.Validate()
 }
 
-type CommitDiffStats struct {
-	Total     int
-	Additions int
-	Deletions int
-}
-
 type CommitFilesResponse struct {
 	CommitID string
 }

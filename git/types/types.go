@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/enum"
 )
 
 const NilSHA = "0000000000000000000000000000000000000000"
@@ -140,20 +141,23 @@ type WalkReferencesOptions struct {
 	MaxWalkDistance int32
 }
 
-type Commit struct {
-	SHA        string          `json:"sha"`
-	ParentSHAs []string        `json:"parent_shas,omitempty"`
-	Title      string          `json:"title"`
-	Message    string          `json:"message,omitempty"`
-	Author     Signature       `json:"author"`
-	Committer  Signature       `json:"committer"`
-	FileStats  CommitFileStats `json:"file_stats,omitempty"`
+type CommitFileStats struct {
+	Path       string              `json:"path"`
+	OldPath    string              `json:"old_path,omitempty"`
+	Status     enum.FileDiffStatus `json:"status"`
+	Insertions int64               `json:"insertions"`
+	Deletions  int64               `json:"deletions"`
+	Changes    int64               `json:"changes"`
 }
 
-type CommitFileStats struct {
-	Added    []string
-	Modified []string
-	Removed  []string
+type Commit struct {
+	SHA        string            `json:"sha"`
+	ParentSHAs []string          `json:"parent_shas,omitempty"`
+	Title      string            `json:"title"`
+	Message    string            `json:"message,omitempty"`
+	Author     Signature         `json:"author"`
+	Committer  Signature         `json:"committer"`
+	FileStats  []CommitFileStats `json:"file_stats,omitempty"`
 }
 
 type Branch struct {
@@ -346,7 +350,7 @@ type BlamePart struct {
 
 type PathRenameDetails struct {
 	OldPath         string
-	NewPath         string
+	Path            string
 	CommitSHABefore string
 	CommitSHAAfter  string
 }

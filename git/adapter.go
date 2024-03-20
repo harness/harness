@@ -61,7 +61,7 @@ type Adapter interface {
 		ref string,
 		page int,
 		limit int,
-		includeFileStats bool,
+		includeStats bool,
 		filter types.CommitFilter) ([]types.Commit, []types.PathRenameDetails, error)
 	ListCommitSHAs(ctx context.Context, repoPath string,
 		ref string, page int, limit int, filter types.CommitFilter) ([]string, error)

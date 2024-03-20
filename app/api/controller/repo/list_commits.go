@@ -43,15 +43,16 @@ func (c *Controller) ListCommits(ctx context.Context,
 	}
 
 	rpcOut, err := c.git.ListCommits(ctx, &git.ListCommitsParams{
-		ReadParams: git.CreateReadParams(repo),
-		GitREF:     gitRef,
-		After:      filter.After,
-		Page:       int32(filter.Page),
-		Limit:      int32(filter.Limit),
-		Path:       filter.Path,
-		Since:      filter.Since,
-		Until:      filter.Until,
-		Committer:  filter.Committer,
+		ReadParams:   git.CreateReadParams(repo),
+		GitREF:       gitRef,
+		After:        filter.After,
+		Page:         int32(filter.Page),
+		Limit:        int32(filter.Limit),
+		Path:         filter.Path,
+		Since:        filter.Since,
+		Until:        filter.Until,
+		Committer:    filter.Committer,
+		IncludeStats: filter.IncludeStats,
 	})
 	if err != nil {
 		return types.ListCommitResponse{}, err

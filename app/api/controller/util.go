@@ -94,6 +94,13 @@ func MapCommit(c *git.Commit) (*types.Commit, error) {
 		return nil, fmt.Errorf("failed to map committer: %w", err)
 	}
 
+	var insertions int64
+	var deletions int64
+	for _, stat := range c.FileStats {
+		insertions += stat.Insertions
+		deletions += stat.Deletions
+	}
+
 	return &types.Commit{
 		SHA:        c.SHA,
 		ParentSHAs: c.ParentSHAs,
@@ -101,12 +108,34 @@ func MapCommit(c *git.Commit) (*types.Commit, error) {
 		Message:    c.Message,
 		Author:     *author,
 		Committer:  *committer,
-		DiffStats: types.CommitDiffStats{
-			Additions: c.DiffStats.Additions,
-			Deletions: c.DiffStats.Deletions,
-			Total:     c.DiffStats.Additions + c.DiffStats.Deletions,
+		Stats: types.CommitStats{
+			Total: types.ChangeStats{
+				Insertions: insertions,
+				Deletions:  deletions,
+				Changes:    insertions + deletions,
+			},
+			Files: mapFileStats(c),
 		},
 	}, nil
+}
+
+func mapFileStats(c *git.Commit) []types.CommitFileStats {
+	fileStats := make([]types.CommitFileStats, len(c.FileStats))
+
+	for i, fStat := range c.FileStats {
+		fileStats[i] = types.CommitFileStats{
+			Path:    fStat.Path,
+			OldPath: fStat.OldPath,
+			Status:  fStat.ChangeType,
+			ChangeStats: types.ChangeStats{
+				Insertions: fStat.Insertions,
+				Deletions:  fStat.Deletions,
+				Changes:    fStat.Insertions + fStat.Deletions,
+			},
+		}
+	}
+
+	return fileStats
 }
 
 func MapRenameDetails(c *git.RenameDetails) *types.RenameDetails {

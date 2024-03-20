@@ -17,6 +17,7 @@ package types
 import (
 	"time"
 
+	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -31,11 +32,12 @@ type PaginationFilter struct {
 // CommitFilter stores commit query parameters.
 type CommitFilter struct {
 	PaginationFilter
-	After     string `json:"after"`
-	Path      string `json:"path"`
-	Since     int64  `json:"since"`
-	Until     int64  `json:"until"`
-	Committer string `json:"committer"`
+	After        string `json:"after"`
+	Path         string `json:"path"`
+	Since        int64  `json:"since"`
+	Until        int64  `json:"until"`
+	Committer    string `json:"committer"`
+	IncludeStats bool   `json:"include_stats"`
 }
 
 // BranchFilter stores branch query parameters.
@@ -56,20 +58,32 @@ type TagFilter struct {
 	Size  int                `json:"size"`
 }
 
-type CommitDiffStats struct {
-	Total     int `json:"total"`
-	Additions int `json:"additions"`
-	Deletions int `json:"deletions"`
+type ChangeStats struct {
+	Insertions int64 `json:"insertions"`
+	Deletions  int64 `json:"deletions"`
+	Changes    int64 `json:"changes"`
+}
+
+type CommitFileStats struct {
+	Path    string                 `json:"path"`
+	OldPath string                 `json:"old_path,omitempty"`
+	Status  gitenum.FileDiffStatus `json:"status"`
+	ChangeStats
+}
+
+type CommitStats struct {
+	Total ChangeStats       `json:"total,omitempty"`
+	Files []CommitFileStats `json:"files,omitempty"`
 }
 
 type Commit struct {
-	SHA        string          `json:"sha"`
-	ParentSHAs []string        `json:"parent_shas,omitempty"`
-	Title      string          `json:"title"`
-	Message    string          `json:"message"`
-	Author     Signature       `json:"author"`
-	Committer  Signature       `json:"committer"`
-	DiffStats  CommitDiffStats `json:"diff_stats"`
+	SHA        string      `json:"sha"`
+	ParentSHAs []string    `json:"parent_shas,omitempty"`
+	Title      string      `json:"title"`
+	Message    string      `json:"message"`
+	Author     Signature   `json:"author"`
+	Committer  Signature   `json:"committer"`
+	Stats      CommitStats `json:"stats,omitempty"`
 }
 
 type Signature struct {

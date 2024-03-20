@@ -20,9 +20,8 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/types"
-
-	"github.com/rs/zerolog/log"
 )
 
 type GetCommitParams struct {
@@ -32,14 +31,13 @@ type GetCommitParams struct {
 }
 
 type Commit struct {
-	SHA        string          `json:"sha"`
-	ParentSHAs []string        `json:"parent_shas,omitempty"`
-	Title      string          `json:"title"`
-	Message    string          `json:"message,omitempty"`
-	Author     Signature       `json:"author"`
-	Committer  Signature       `json:"committer"`
-	FileStats  CommitFileStats `json:"file_stats,omitempty"`
-	DiffStats  CommitDiffStats `json:"diff_stats,omitempty"`
+	SHA        string            `json:"sha"`
+	ParentSHAs []string          `json:"parent_shas,omitempty"`
+	Title      string            `json:"title"`
+	Message    string            `json:"message,omitempty"`
+	Author     Signature         `json:"author"`
+	Committer  Signature         `json:"committer"`
+	FileStats  []CommitFileStats `json:"file_stats,omitempty"`
 }
 
 type GetCommitOutput struct {
@@ -111,8 +109,8 @@ type ListCommitsParams struct {
 	// Committer allows to filter for commits based on the committer - Optional, ignored if string is empty.
 	Committer string
 
-	// IncludeFileStats allows you to include information about files changed, added and modified.
-	IncludeFileStats bool
+	// IncludeStats allows to include information about inserted, deletions and status for changed files.
+	IncludeStats bool
 }
 
 type RenameDetails struct {
@@ -129,9 +127,11 @@ type ListCommitsOutput struct {
 }
 
 type CommitFileStats struct {
-	Added    []string
-	Modified []string
-	Removed  []string
+	ChangeType enum.FileDiffStatus
+	Path       string
+	OldPath    string // populated only in case of renames
+	Insertions int64
+	Deletions  int64
 }
 
 func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error) {
@@ -147,7 +147,7 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 		params.GitREF,
 		int(params.Page),
 		int(params.Limit),
-		params.IncludeFileStats,
+		params.IncludeStats,
 		types.CommitFilter{
 			AfterRef:  params.After,
 			Path:      params.Path,
@@ -181,19 +181,6 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 		commit, err := mapCommit(&gitCommits[i])
 		if err != nil {
 			return nil, fmt.Errorf("failed to map rpc commit: %w", err)
-		}
-
-		stat, err := s.CommitShortStat(ctx, &CommitShortStatParams{
-			Path: repoPath,
-			Ref:  commit.SHA,
-		})
-		if err != nil {
-			log.Warn().Msgf("failed to get diff stats: %s", err)
-		}
-		commit.DiffStats = CommitDiffStats{
-			Additions: stat.Additions,
-			Deletions: stat.Deletions,
-			Total:     stat.Additions + stat.Deletions,
 		}
 
 		commits[i] = *commit

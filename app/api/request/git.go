@@ -36,6 +36,7 @@ const (
 	QueryParamSince         = "since"
 	QueryParamUntil         = "until"
 	QueryParamCommitter     = "committer"
+	QueryParamIncludeStats  = "include_stats"
 	QueryParamInternal      = "internal"
 	QueryParamService       = "service"
 	HeaderParamGitProtocol  = "Git-Protocol"
@@ -101,16 +102,22 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 	if err != nil {
 		return nil, err
 	}
+	includeStats, err := QueryParamAsBoolOrDefault(r, QueryParamIncludeStats, false)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.CommitFilter{
 		After: QueryParamOrDefault(r, QueryParamAfter, ""),
 		PaginationFilter: types.PaginationFilter{
 			Page:  ParsePage(r),
 			Limit: ParseLimit(r),
 		},
-		Path:      QueryParamOrDefault(r, QueryParamPath, ""),
-		Since:     since,
-		Until:     until,
-		Committer: QueryParamOrDefault(r, QueryParamCommitter, ""),
+		Path:         QueryParamOrDefault(r, QueryParamPath, ""),
+		Since:        since,
+		Until:        until,
+		Committer:    QueryParamOrDefault(r, QueryParamCommitter, ""),
+		IncludeStats: includeStats,
 	}, nil
 }
 

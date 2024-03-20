@@ -55,6 +55,7 @@ func mapCommit(c *types.Commit) (*Commit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to map rpc committer: %w", err)
 	}
+
 	return &Commit{
 		SHA:        c.SHA,
 		ParentSHAs: c.ParentSHAs,
@@ -62,16 +63,24 @@ func mapCommit(c *types.Commit) (*Commit, error) {
 		Message:    c.Message,
 		Author:     *author,
 		Committer:  *comitter,
-		FileStats:  *mapFileStats(&c.FileStats),
+		FileStats:  mapFileStats(c.FileStats),
 	}, nil
 }
 
-func mapFileStats(s *types.CommitFileStats) *CommitFileStats {
-	return &CommitFileStats{
-		Added:    s.Added,
-		Modified: s.Modified,
-		Removed:  s.Removed,
+func mapFileStats(typeStats []types.CommitFileStats) []CommitFileStats {
+	var stats = make([]CommitFileStats, len(typeStats))
+
+	for i, tStat := range typeStats {
+		stats[i] = CommitFileStats{
+			ChangeType: tStat.Status,
+			Path:       tStat.Path,
+			OldPath:    tStat.OldPath,
+			Insertions: tStat.Insertions,
+			Deletions:  tStat.Deletions,
+		}
 	}
+
+	return stats
 }
 
 func mapSignature(s *types.Signature) (*Signature, error) {
@@ -201,7 +210,7 @@ func mapRenameDetails(c []types.PathRenameDetails) []*RenameDetails {
 	for i, detail := range c {
 		renameDetailsList[i] = &RenameDetails{
 			OldPath:         detail.OldPath,
-			NewPath:         detail.NewPath,
+			NewPath:         detail.Path,
 			CommitShaBefore: detail.CommitSHABefore,
 			CommitShaAfter:  detail.CommitSHAAfter,
 		}
