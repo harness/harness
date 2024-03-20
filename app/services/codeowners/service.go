@@ -320,9 +320,9 @@ func (s *Service) Evaluate(
 		return &Evaluation{}, nil
 	}
 
-	evaluationEntries := make([]EvaluationEntry, len(owners.Entries))
+	evaluationEntries := make([]EvaluationEntry, 0, len(owners.Entries))
 
-	for i, entry := range owners.Entries {
+	for _, entry := range owners.Entries {
 		ownerEvaluations := make([]OwnerEvaluation, 0, len(owners.Entries))
 		userGroupOwnerEvaluations := make([]UserGroupOwnerEvaluation, 0, len(owners.Entries))
 		for _, owner := range entry.Owners {
@@ -348,13 +348,18 @@ func (s *Service) Evaluate(
 			if err != nil {
 				return nil, fmt.Errorf("error resolving user by email : %w", err)
 			}
+			if pr.CreatedBy == userCodeOwner.Owner.ID {
+				continue
+			}
+
 			ownerEvaluations = append(ownerEvaluations, *userCodeOwner)
 		}
-
-		evaluationEntries[i] = EvaluationEntry{
-			Pattern:                   entry.Pattern,
-			OwnerEvaluations:          ownerEvaluations,
-			UserGroupOwnerEvaluations: userGroupOwnerEvaluations,
+		if len(ownerEvaluations) != 0 || len(userGroupOwnerEvaluations) != 0 {
+			evaluationEntries = append(evaluationEntries, EvaluationEntry{
+				Pattern:                   entry.Pattern,
+				OwnerEvaluations:          ownerEvaluations,
+				UserGroupOwnerEvaluations: userGroupOwnerEvaluations,
+			})
 		}
 	}
 
