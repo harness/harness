@@ -100,7 +100,7 @@ delete-tools: ## Delete the tools
 # Install golangci-lint
 $(GOBIN)/golangci-lint:
 	@echo "🔘 Installing golangci-lint... (`date '+%H:%M:%S'`)"
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN)
+	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN) v1.56.2
 
 # Install goimports to format code
 $(GOBIN)/goimports:

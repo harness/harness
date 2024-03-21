@@ -131,7 +131,7 @@ func mapFileStats(c *git.Commit) []types.CommitFileStats {
 		fileStats[i] = types.CommitFileStats{
 			Path:    fStat.Path,
 			OldPath: fStat.OldPath,
-			Status:  fStat.ChangeType,
+			Status:  fStat.Status,
 			ChangeStats: types.ChangeStats{
 				Insertions: fStat.Insertions,
 				Deletions:  fStat.Deletions,

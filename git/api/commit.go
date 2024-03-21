@@ -268,7 +268,7 @@ func getCommitFileStats(
 		fileStats[i] = CommitFileStats{
 			Path:       changeInfoTypes[path].Path,
 			OldPath:    changeInfoTypes[path].OldPath,
-			ChangeType: changeInfoTypes[path].ChangeType,
+			ChangeType: changeInfoTypes[path].Status,
 			Insertions: info.Insertions,
 			Deletions:  info.Deletions,
 		}
@@ -345,7 +345,7 @@ func gitGetRenameDetails(
 	}
 
 	for _, c := range changeInfos {
-		if c.ChangeType == enum.FileDiffStatusRenamed && (c.OldPath == path || c.Path == path) {
+		if c.Status == enum.FileDiffStatusRenamed && (c.OldPath == path || c.Path == path) {
 			return &PathRenameDetails{
 				OldPath: c.OldPath,
 				Path:    c.Path,
@@ -360,8 +360,8 @@ func gitLogNameStatus(ctx context.Context, repoPath string, sha sha.SHA) ([]stri
 	cmd := command.New("log",
 		command.WithFlag("--name-status"),
 		command.WithFlag("--format="),
-		command.WithArg(sha.String()),
 		command.WithFlag("--max-count=1"),
+		command.WithArg(sha.String()),
 	)
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
@@ -419,7 +419,7 @@ func getChangeInfoTypes(
 			c.Path = lineParts[1]
 		}
 
-		c.ChangeType = convertChangeType(ctx, line)
+		c.Status = convertFileDiffStatus(ctx, line)
 
 		changeInfoTypes[c.Path] = c
 	}
@@ -478,16 +478,16 @@ func getChangeInfoChanges(
 }
 
 type changeInfoType struct {
-	ChangeType enum.FileDiffStatus
-	OldPath    string // populated only in case of renames
-	Path       string
+	Status  enum.FileDiffStatus
+	OldPath string // populated only in case of renames
+	Path    string
 }
 type changeInfoChange struct {
 	Insertions int64
 	Deletions  int64
 }
 
-func convertChangeType(ctx context.Context, c string) enum.FileDiffStatus {
+func convertFileDiffStatus(ctx context.Context, c string) enum.FileDiffStatus {
 	switch {
 	case strings.HasPrefix(c, "A"):
 		return enum.FileDiffStatusAdded

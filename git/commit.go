@@ -124,7 +124,7 @@ type ListCommitsOutput struct {
 }
 
 type CommitFileStats struct {
-	ChangeType enum.FileDiffStatus
+	Status     enum.FileDiffStatus
 	Path       string
 	OldPath    string // populated only in case of renames
 	Insertions int64

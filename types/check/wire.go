@@ -22,6 +22,7 @@ import (
 var WireSet = wire.NewSet(
 	ProvidePrincipalUIDCheck,
 	ProvideSpaceIdentifierCheck,
+	ProvideRepoIdentifierCheck,
 )
 
 func ProvideSpaceIdentifierCheck() SpaceIdentifier {
@@ -30,4 +31,8 @@ func ProvideSpaceIdentifierCheck() SpaceIdentifier {
 
 func ProvidePrincipalUIDCheck() PrincipalUID {
 	return PrincipalUIDDefault
+}
+
+func ProvideRepoIdentifierCheck() RepoIdentifier {
+	return RepoIdentifierDefault
 }

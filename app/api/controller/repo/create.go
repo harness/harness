@@ -164,7 +164,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 		return err
 	}
 
-	if err := check.RepoIdentifier(in.Identifier); err != nil {
+	if err := c.identifierCheck(in.Identifier); err != nil {
 		return err
 	}
 

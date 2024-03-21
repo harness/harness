@@ -192,18 +192,18 @@ func commitInfoFrom(commit git.Commit) CommitInfo {
 
 	for _, stat := range commit.FileStats {
 		switch {
-		case stat.ChangeType == gitenum.FileDiffStatusModified:
+		case stat.Status == gitenum.FileDiffStatusModified:
 			modified = append(modified, stat.Path)
-		case stat.ChangeType == gitenum.FileDiffStatusRenamed:
+		case stat.Status == gitenum.FileDiffStatusRenamed:
 			added = append(added, stat.Path)
 			removed = append(removed, stat.OldPath)
-		case stat.ChangeType == gitenum.FileDiffStatusDeleted:
+		case stat.Status == gitenum.FileDiffStatusDeleted:
 			removed = append(removed, stat.Path)
-		case stat.ChangeType == gitenum.FileDiffStatusAdded || stat.ChangeType == gitenum.FileDiffStatusCopied:
+		case stat.Status == gitenum.FileDiffStatusAdded || stat.Status == gitenum.FileDiffStatusCopied:
 			added = append(added, stat.Path)
-		case stat.ChangeType == gitenum.FileDiffStatusUndefined:
+		case stat.Status == gitenum.FileDiffStatusUndefined:
 		default:
-			log.Warn().Msgf("unknown change type %q for path %q", stat.ChangeType, stat.Path)
+			log.Warn().Msgf("unknown status %q for path %q", stat.Status, stat.Path)
 		}
 	}
 

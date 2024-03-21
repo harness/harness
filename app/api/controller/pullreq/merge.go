@@ -17,6 +17,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -42,6 +43,8 @@ import (
 type MergeInput struct {
 	Method      enum.MergeMethod `json:"method"`
 	SourceSHA   string           `json:"source_sha"`
+	Title       string           `json:"title"`
+	Message     string           `json:"message"`
 	BypassRules bool             `json:"bypass_rules"`
 	DryRun      bool             `json:"dry_run"`
 }
@@ -62,6 +65,14 @@ func (in *MergeInput) sanitize() error {
 		}
 
 		in.Method = method
+	}
+
+	// cleanup title / message (NOTE: git doesn't support white space only)
+	in.Title = strings.TrimSpace(in.Title)
+	in.Message = strings.TrimSpace(in.Message)
+
+	if in.Method == enum.MergeMethodRebase && (in.Title != "" || in.Message != "") {
+		return usererror.BadRequest("rebase doesn't support customizing commit title and message")
 	}
 
 	return nil
@@ -306,15 +317,16 @@ func (c *Controller) Merge(
 		committer = identityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
 	}
 
-	var mergeTitle string
-
-	switch in.Method {
-	case enum.MergeMethodMerge:
-		mergeTitle = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
-	case enum.MergeMethodSquash:
-		mergeTitle = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
-	case enum.MergeMethodRebase:
-		mergeTitle = "" // Not used.
+	// backfill commit title if none provided
+	if in.Title == "" {
+		switch in.Method {
+		case enum.MergeMethodMerge:
+			in.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
+		case enum.MergeMethodSquash:
+			in.Title = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
+		case enum.MergeMethodRebase:
+			// Not used.
+		}
 	}
 
 	// create merge commit(s)
@@ -327,8 +339,8 @@ func (c *Controller) Merge(
 		BaseBranch:      pr.TargetBranch,
 		HeadRepoUID:     sourceRepo.GitUID,
 		HeadBranch:      pr.SourceBranch,
-		Title:           mergeTitle,
-		Message:         "",
+		Title:           in.Title,
+		Message:         in.Message,
 		Committer:       committer,
 		CommitterDate:   &now,
 		Author:          author,

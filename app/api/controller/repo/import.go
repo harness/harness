@@ -22,7 +22,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 )
 
 type ImportInput struct {
@@ -98,7 +97,7 @@ func (c *Controller) sanitizeImportInput(in *ImportInput) error {
 		return err
 	}
 
-	if err := check.RepoIdentifier(in.Identifier); err != nil {
+	if err := c.identifierCheck(in.Identifier); err != nil {
 		return err
 	}
 

@@ -73,7 +73,7 @@ func mapFileStats(typeStats []api.CommitFileStats) []CommitFileStats {
 
 	for i, tStat := range typeStats {
 		stats[i] = CommitFileStats{
-			ChangeType: tStat.ChangeType,
+			Status:     tStat.ChangeType,
 			Path:       tStat.Path,
 			OldPath:    tStat.OldPath,
 			Insertions: tStat.Insertions,
