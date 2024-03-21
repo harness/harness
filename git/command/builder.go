@@ -258,7 +258,7 @@ func (b builder) args(flags []string, args []string, postSepArgs []string) ([]st
 
 	cmdArgs = append(cmdArgs, flags...)
 
-	if b.supportsEndOfOptions() {
+	if b.supportsEndOfOptions() && len(flags) > 0 {
 		cmdArgs = append(cmdArgs, "--end-of-options")
 	}
 
