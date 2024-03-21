@@ -179,12 +179,12 @@ func (s *Service) fetchCommitsInfoForEvent(
 	newSHA string,
 ) ([]CommitInfo, int, error) {
 	listCommitsParams := git.ListCommitsParams{
-		ReadParams:       git.ReadParams{RepoUID: repoUID},
-		GitREF:           newSHA,
-		After:            oldSHA,
-		Page:             0,
-		Limit:            MaxWebhookCommitFileStats,
-		IncludeFileStats: true,
+		ReadParams:   git.ReadParams{RepoUID: repoUID},
+		GitREF:       newSHA,
+		After:        oldSHA,
+		Page:         0,
+		Limit:        MaxWebhookCommitFileStats,
+		IncludeStats: true,
 	}
 	listCommitsOutput, err := s.git.ListCommits(ctx, &listCommitsParams)
 

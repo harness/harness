@@ -273,6 +273,21 @@ var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 	},
 }
 
+var QueryParamIncludeStats = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamIncludeStats,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Indicates whether optional stats should be included in the response."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 var queryParameterLineFrom = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamLineFrom,
@@ -633,7 +648,8 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListCommits.WithTags("repository")
 	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listCommits"})
 	opListCommits.WithParameters(queryParameterGitRef, queryParameterAfterCommits, queryParameterPath,
-		queryParameterSince, queryParameterUntil, queryParameterCommitter, queryParameterPage, queryParameterLimit)
+		queryParameterSince, queryParameterUntil, queryParameterCommitter,
+		queryParameterPage, queryParameterLimit, QueryParamIncludeStats)
 	_ = reflector.SetRequest(&opListCommits, new(listCommitsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommits, []types.ListCommitResponse{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusInternalServerError)

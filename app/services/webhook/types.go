@@ -20,8 +20,11 @@ import (
 
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
+	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 /*
@@ -183,14 +186,35 @@ type CommitInfo struct {
 
 // commitInfoFrom gets the CommitInfo from a git.Commit.
 func commitInfoFrom(commit git.Commit) CommitInfo {
+	var added []string
+	var removed []string
+	var modified []string
+
+	for _, stat := range commit.FileStats {
+		switch {
+		case stat.ChangeType == gitenum.FileDiffStatusModified:
+			modified = append(modified, stat.Path)
+		case stat.ChangeType == gitenum.FileDiffStatusRenamed:
+			added = append(added, stat.Path)
+			removed = append(removed, stat.OldPath)
+		case stat.ChangeType == gitenum.FileDiffStatusDeleted:
+			removed = append(removed, stat.Path)
+		case stat.ChangeType == gitenum.FileDiffStatusAdded || stat.ChangeType == gitenum.FileDiffStatusCopied:
+			added = append(added, stat.Path)
+		case stat.ChangeType == gitenum.FileDiffStatusUndefined:
+		default:
+			log.Warn().Msgf("unknown change type %q for path %q", stat.ChangeType, stat.Path)
+		}
+	}
+
 	return CommitInfo{
 		SHA:       commit.SHA.String(),
 		Message:   commit.Message,
 		Author:    signatureInfoFrom(commit.Author),
 		Committer: signatureInfoFrom(commit.Committer),
-		Added:     commit.FileStats.Added,
-		Removed:   commit.FileStats.Removed,
-		Modified:  commit.FileStats.Modified,
+		Added:     added,
+		Removed:   removed,
+		Modified:  modified,
 	}
 }
 

@@ -64,16 +64,24 @@ func mapCommit(c *api.Commit) (*Commit, error) {
 		Message:    c.Message,
 		Author:     *author,
 		Committer:  *comitter,
-		FileStats:  *mapFileStats(&c.FileStats),
+		FileStats:  mapFileStats(c.FileStats),
 	}, nil
 }
 
-func mapFileStats(s *api.CommitFileStats) *CommitFileStats {
-	return &CommitFileStats{
-		Added:    s.Added,
-		Modified: s.Modified,
-		Removed:  s.Removed,
+func mapFileStats(typeStats []api.CommitFileStats) []CommitFileStats {
+	var stats = make([]CommitFileStats, len(typeStats))
+
+	for i, tStat := range typeStats {
+		stats[i] = CommitFileStats{
+			ChangeType: tStat.ChangeType,
+			Path:       tStat.Path,
+			OldPath:    tStat.OldPath,
+			Insertions: tStat.Insertions,
+			Deletions:  tStat.Deletions,
+		}
 	}
+
+	return stats
 }
 
 func mapSignature(s *api.Signature) (*Signature, error) {
@@ -203,7 +211,7 @@ func mapRenameDetails(c []api.PathRenameDetails) []*RenameDetails {
 	for i, detail := range c {
 		renameDetailsList[i] = &RenameDetails{
 			OldPath:         detail.OldPath,
-			NewPath:         detail.NewPath,
+			NewPath:         detail.Path,
 			CommitShaBefore: detail.CommitSHABefore,
 			CommitShaAfter:  detail.CommitSHAAfter,
 		}

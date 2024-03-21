@@ -219,10 +219,6 @@ func (g *Git) Clone(
 	}
 	cmd.Add(command.WithPostSepArg(from, to))
 
-	if opts.Timeout <= 0 {
-		opts.Timeout = -1
-	}
-
 	if err := cmd.Run(ctx); err != nil {
 		return fmt.Errorf("failed to clone repository: %w", err)
 	}
