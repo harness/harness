@@ -39,7 +39,6 @@ const Editor = forwardRef<MonacoCodeEditorRef, AdvancedSourceCodeEditorProps>((p
   const { getString } = useStrings()
   const { onChange, onEntityAddUpdate, onEntityFieldAddUpdate } = props
   const editorRef = useRef<MonacoCodeEditorRef | null>(null)
-  const [latestYAML, setLatestYAML] = useState<string>('')
   const [entityYAMLData, setEntityYAMLData] = useState<EntityAddUpdateInterface>()
   const [entityFieldData, setEntityFieldYAMLData] = useState<Partial<EntityAddUpdateInterface>>()
   const entityYAMLDataRef = useRef<EntityAddUpdateInterface>()
@@ -49,10 +48,6 @@ const Editor = forwardRef<MonacoCodeEditorRef, AdvancedSourceCodeEditorProps>((p
     editorRef.current = editor
     setForwardedRef(ref, editor)
   }
-
-  useEffect(() => {
-    onChange?.(latestYAML)
-  }, [latestYAML]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isEmpty(entityYAMLData)) {
@@ -179,7 +174,7 @@ const Editor = forwardRef<MonacoCodeEditorRef, AdvancedSourceCodeEditorProps>((p
   const debouncedHandleYAMLUpdate = useMemo(
     () =>
       debounce((updatedYAML: string) => {
-        setLatestYAML(updatedYAML)
+        onChange?.(updatedYAML)
         prepareEntityFieldUpdate()
       }, 300),
     [prepareEntityFieldUpdate]
