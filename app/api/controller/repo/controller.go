@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -64,6 +65,7 @@ type Controller struct {
 	indexer            keywordsearch.Indexer
 	resourceLimiter    limiter.ResourceLimiter
 	mtxManager         lock.MutexManager
+	identifierCheck    check.RepoIdentifier
 }
 
 func NewController(
@@ -85,6 +87,7 @@ func NewController(
 	indexer keywordsearch.Indexer,
 	limiter limiter.ResourceLimiter,
 	mtxManager lock.MutexManager,
+	identifierCheck check.RepoIdentifier,
 ) *Controller {
 	return &Controller{
 		defaultBranch:                 config.Git.DefaultBranch,
@@ -106,6 +109,7 @@ func NewController(
 		indexer:                       indexer,
 		resourceLimiter:               limiter,
 		mtxManager:                    mtxManager,
+		identifierCheck:               identifierCheck,
 	}
 }
 

@@ -22,7 +22,6 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -93,7 +92,7 @@ func (c *Controller) sanitizeMoveInput(in *MoveInput) error {
 	}
 
 	if in.Identifier != nil {
-		if err := check.RepoIdentifier(*in.Identifier); err != nil {
+		if err := c.identifierCheck(*in.Identifier); err != nil {
 			return err
 		}
 	}

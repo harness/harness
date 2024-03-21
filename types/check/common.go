@@ -121,8 +121,10 @@ func Identifier(identifier string) error {
 	return nil
 }
 
-// RepoIdentifier performs the default Identifier check and also blocks illegal repo identifiers.
-func RepoIdentifier(identifier string) error {
+type RepoIdentifier func(identifier string) error
+
+// RepoIdentifierDefault performs the default Identifier check and also blocks illegal repo identifiers.
+func RepoIdentifierDefault(identifier string) error {
 	if err := Identifier(identifier); err != nil {
 		return err
 	}
