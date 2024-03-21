@@ -23,9 +23,8 @@ import (
 )
 
 const (
-	PathParamRepoRef    = "repo_ref"
-	QueryParamRepoID    = "repo_id"
-	QueryParamRecursive = "recursive"
+	PathParamRepoRef = "repo_ref"
+	QueryParamRepoID = "repo_id"
 )
 
 func GetRepoRefFromPath(r *http.Request) (string, error) {
@@ -46,17 +45,30 @@ func ParseSortRepo(r *http.Request) enum.RepoAttr {
 }
 
 // ParseRepoFilter extracts the repository filter from the url.
-func ParseRepoFilter(r *http.Request) *types.RepoFilter {
-	return &types.RepoFilter{
-		Query: ParseQuery(r),
-		Order: ParseOrder(r),
-		Page:  ParsePage(r),
-		Sort:  ParseSortRepo(r),
-		Size:  ParseLimit(r),
+func ParseRepoFilter(r *http.Request) (*types.RepoFilter, error) {
+	// recursive is optional to get all repos in a sapce and its subsapces recursively.
+	recursive, err := ParseRecursiveFromQuery(r)
+	if err != nil {
+		return nil, err
 	}
-}
 
-// ParseRecursiveFromQuery extracts the recursive option from the URL query.
-func ParseRecursiveFromQuery(r *http.Request) (bool, error) {
-	return QueryParamAsBoolOrDefault(r, QueryParamRecursive, false)
+	// deletedBeforeOrAt is optional to retrieve repos deleted before or at the specified timestamp.
+	var deletionTime *int64
+	value, ok, err := GetDeletedBeforeOrAtFromQuery(r)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		deletionTime = &value
+	}
+
+	return &types.RepoFilter{
+		Query:             ParseQuery(r),
+		Order:             ParseOrder(r),
+		Page:              ParsePage(r),
+		Sort:              ParseSortRepo(r),
+		Size:              ParseLimit(r),
+		Recursive:         recursive,
+		DeletedBeforeOrAt: deletionTime,
+	}, nil
 }

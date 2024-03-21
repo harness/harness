@@ -60,12 +60,12 @@ func DisectRoot(path string) (string, string, error) {
 }
 
 /*
- * Concatinate two paths together (takes care of leading / trailing '/')
+ * Concatenate two paths together (takes care of leading / trailing '/')
  * e.g. (space1/, /space2/) -> space1/space2
  *
  * NOTE: "//" is not a valid path, so all '/' will be trimmed.
  */
-func Concatinate(path1 string, path2 string) string {
+func Concatenate(path1 string, path2 string) string {
 	path1 = strings.Trim(path1, types.PathSeparator)
 	path2 = strings.Trim(path2, types.PathSeparator)
 

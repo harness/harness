@@ -108,7 +108,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	spaceStore := database.ProvideSpaceStore(db, spacePathCache, spacePathStore)
 	principalInfoView := database.ProvidePrincipalInfoView(db)
 	principalInfoCache := cache.ProvidePrincipalInfoCache(principalInfoView)
-	membershipStore := database.ProvideMembershipStore(db, principalInfoCache, spacePathStore)
+	membershipStore := database.ProvideMembershipStore(db, principalInfoCache, spacePathStore, spaceStore)
 	permissionCache := authz.ProvidePermissionCache(spaceStore, membershipStore)
 	authorizer := authz.ProvideAuthorizer(permissionCache, spaceStore)
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
@@ -122,7 +122,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repoStore := database.ProvideRepoStore(db, spacePathCache, spacePathStore)
+	repoStore := database.ProvideRepoStore(db, spacePathCache, spacePathStore, spaceStore)
 	pipelineStore := database.ProvidePipelineStore(db)
 	ruleStore := database.ProvideRuleStore(db, principalInfoCache)
 	protectionManager, err := protection.ProvideManager(ruleStore)

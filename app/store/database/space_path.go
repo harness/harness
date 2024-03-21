@@ -31,7 +31,10 @@ import (
 var _ store.SpacePathStore = (*SpacePathStore)(nil)
 
 // NewSpacePathStore returns a new SpacePathStore.
-func NewSpacePathStore(db *sqlx.DB, pathTransformation store.SpacePathTransformation) *SpacePathStore {
+func NewSpacePathStore(
+	db *sqlx.DB,
+	pathTransformation store.SpacePathTransformation,
+) *SpacePathStore {
 	return &SpacePathStore{
 		db:                      db,
 		spacePathTransformation: pathTransformation,
@@ -132,7 +135,7 @@ func (s *SpacePathStore) FindPrimaryBySpaceID(ctx context.Context, spaceID int64
 			return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find primary segment for %d", nextSpaceID.Int64)
 		}
 
-		path = paths.Concatinate(dst.Identifier, path)
+		path = paths.Concatenate(dst.Identifier, path)
 		nextSpaceID = dst.ParentID
 	}
 
@@ -176,7 +179,7 @@ func (s *SpacePathStore) FindByPath(ctx context.Context, path string) (*types.Sp
 			)
 		}
 
-		originalPath = paths.Concatinate(originalPath, segment.Identifier)
+		originalPath = paths.Concatenate(originalPath, segment.Identifier)
 		parentID = segment.SpaceID
 		isPrimary = isPrimary && segment.IsPrimary.ValueOrZero()
 	}
@@ -193,6 +196,31 @@ func (s *SpacePathStore) DeletePrimarySegment(ctx context.Context, spaceID int64
 	const sqlQuery = `
 		DELETE FROM space_paths
 		WHERE space_path_space_id = $1 AND space_path_is_primary = TRUE`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, sqlQuery, spaceID); err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
+}
+
+// DeletePathsAndDescendandPaths deletes all space paths reachable from spaceID including itself.
+func (s *SpacePathStore) DeletePathsAndDescendandPaths(ctx context.Context, spaceID int64) error {
+	const sqlQuery = `WITH RECURSIVE DescendantPaths AS (
+		SELECT space_path_id, space_path_space_id, space_path_parent_id
+		FROM space_paths
+		WHERE space_path_space_id = $1
+	  
+		UNION
+	  
+		SELECT sp.space_path_id, sp.space_path_space_id, sp.space_path_parent_id
+		FROM space_paths sp
+		JOIN DescendantPaths dp ON sp.space_path_parent_id = dp.space_path_space_id
+	  )
+	  DELETE FROM space_paths
+	  WHERE space_path_id IN (SELECT space_path_id FROM DescendantPaths);`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 

@@ -27,6 +27,7 @@ const (
 	SpaceAttrIdentifier
 	SpaceAttrCreated
 	SpaceAttrUpdated
+	SpaceAttrDeleted
 )
 
 // ParseSpaceAttr parses the space attribute string
@@ -42,6 +43,8 @@ func ParseSpaceAttr(s string) SpaceAttr {
 		return SpaceAttrCreated
 	case updated, updatedAt:
 		return SpaceAttrUpdated
+	case deleted, deletedAt:
+		return SpaceAttrDeleted
 	default:
 		return SpaceAttrNone
 	}
@@ -59,6 +62,8 @@ func (a SpaceAttr) String() string {
 		return created
 	case SpaceAttrUpdated:
 		return updated
+	case SpaceAttrDeleted:
+		return deleted
 	case SpaceAttrNone:
 		return ""
 	default:

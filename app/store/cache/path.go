@@ -64,7 +64,7 @@ func (c *pathCache) Get(ctx context.Context, key string) (*types.SpacePath, erro
 	segments := paths.Segments(key)
 	uniqueKey := ""
 	for i, segment := range segments {
-		uniqueKey = paths.Concatinate(uniqueKey, c.spacePathTransformation(segment, i == 0))
+		uniqueKey = paths.Concatenate(uniqueKey, c.spacePathTransformation(segment, i == 0))
 	}
 
 	return c.inner.Get(ctx, uniqueKey)

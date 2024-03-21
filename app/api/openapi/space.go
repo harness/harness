@@ -50,6 +50,11 @@ type exportSpaceRequest struct {
 	space.ExportInput
 }
 
+type restoreSpaceRequest struct {
+	spaceRequest
+	space.RestoreInput
+}
+
 var queryParameterSortRepo = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamSort,
@@ -246,12 +251,37 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opDelete.WithTags("space")
 	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteSpace"})
 	_ = reflector.SetRequest(&opDelete, new(spaceRequest), http.MethodDelete)
-	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opDelete, new(space.SoftDeleteResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/spaces/{space_ref}", opDelete)
+
+	opPurge := openapi3.Operation{}
+	opPurge.WithTags("space")
+	opPurge.WithMapOfAnything(map[string]interface{}{"operationId": "purgeSpace"})
+	opPurge.WithParameters(queryParameterDeletedAt)
+	_ = reflector.SetRequest(&opPurge, new(spaceRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opPurge, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opPurge, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opPurge, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opPurge, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opPurge, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{space_ref}/purge", opPurge)
+
+	opRestore := openapi3.Operation{}
+	opRestore.WithTags("space")
+	opRestore.WithMapOfAnything(map[string]interface{}{"operationId": "restoreSpace"})
+	opRestore.WithParameters(queryParameterDeletedAt)
+	_ = reflector.SetRequest(&opRestore, new(restoreSpaceRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opRestore, new(types.Space), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{space_ref}/restore", opRestore)
 
 	opMove := openapi3.Operation{}
 	opMove.WithTags("space")

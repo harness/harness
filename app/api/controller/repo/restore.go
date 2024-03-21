@@ -21,12 +21,15 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type RestoreInput struct {
-	NewIdentifier string `json:"new_identifier,omitempty"`
+	NewIdentifier *string `json:"new_identifier,omitempty"`
+	NewParentRef  *string `json:"new_parent_ref,omitempty"`
 }
 
 func (c *Controller) Restore(
@@ -49,10 +52,31 @@ func (c *Controller) Restore(
 		return nil, usererror.BadRequest("cannot restore a repo that hasn't been deleted")
 	}
 
-	repo, err = c.repoStore.Restore(ctx, repo, in.NewIdentifier)
+	parentID := repo.ParentID
+	if in.NewParentRef != nil {
+		space, err := c.spaceStore.FindByRef(ctx, *in.NewParentRef)
+		if errors.Is(err, store.ErrResourceNotFound) {
+			return nil, usererror.BadRequest("The provided new parent ref wasn't found.")
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to find the parent ref '%s': %w", *in.NewParentRef, err)
+		}
+
+		parentID = space.ID
+	}
+
+	return c.RestoreNoAuth(ctx, repo, in.NewIdentifier, &parentID)
+}
+
+func (c *Controller) RestoreNoAuth(
+	ctx context.Context,
+	repo *types.Repository,
+	newIdentifier *string,
+	newParentID *int64,
+) (*types.Repository, error) {
+	repo, err := c.repoStore.Restore(ctx, repo, newIdentifier, newParentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to restore the repo: %w", err)
 	}
-
 	return repo, nil
 }

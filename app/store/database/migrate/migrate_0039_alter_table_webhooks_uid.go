@@ -105,7 +105,7 @@ func migrateAfter_0039_alter_table_webhooks_uid(ctx context.Context, dbtx *sql.T
 		for i := 0; i < n; i++ {
 			wh := buffer[i]
 
-			// concatinate repoID + spaceID to get unique parent id (only used to identify same parents)
+			// concatenate repoID + spaceID to get unique parent id (only used to identify same parents)
 			newParentID := fmt.Sprintf("%d_%d", wh.repoID.ValueOrZero(), wh.spaceID.ValueOrZero())
 			if newParentID != parentID {
 				// new parent? reset child identifiers

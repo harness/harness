@@ -7,7 +7,7 @@ replace github.com/docker/docker => github.com/docker/engine v17.12.0-ce-rc1.0.2
 require (
 	cloud.google.com/go/storage v1.33.0
 	code.gitea.io/gitea v1.17.2
-	github.com/Masterminds/squirrel v1.5.1
+	github.com/Masterminds/squirrel v1.5.4
 	github.com/adrg/xdg v0.3.2
 	github.com/aws/aws-sdk-go v1.44.322
 	github.com/bmatcuk/doublestar/v4 v4.6.0

@@ -107,8 +107,9 @@ func ProvideRepoStore(
 	db *sqlx.DB,
 	spacePathCache store.SpacePathCache,
 	spacePathStore store.SpacePathStore,
+	spaceStore store.SpaceStore,
 ) store.RepoStore {
-	return NewRepoStore(db, spacePathCache, spacePathStore)
+	return NewRepoStore(db, spacePathCache, spacePathStore, spaceStore)
 }
 
 // ProvideRuleStore provides a rule store.
@@ -178,8 +179,9 @@ func ProvideMembershipStore(
 	db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache,
 	spacePathStore store.SpacePathStore,
+	spaceStore store.SpaceStore,
 ) store.MembershipStore {
-	return NewMembershipStore(db, principalInfoCache, spacePathStore)
+	return NewMembershipStore(db, principalInfoCache, spacePathStore, spaceStore)
 }
 
 // ProvideTokenStore provides a token store.

@@ -22,18 +22,25 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleDelete handles the delete space HTTP API.
-func HandleDelete(spaceCtrl *space.Controller) http.HandlerFunc {
+// HandlePurge handles the purge delete space HTTP API.
+func HandlePurge(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
+
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		err = spaceCtrl.Delete(ctx, session, spaceRef)
+		deletedAt, err := request.GetDeletedAtFromQueryOrError(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		err = spaceCtrl.Purge(ctx, session, spaceRef, deletedAt)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

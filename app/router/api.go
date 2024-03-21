@@ -214,7 +214,9 @@ func setupSpaces(r chi.Router, appCtx context.Context, spaceCtrl *space.Controll
 			// space operations
 			r.Get("/", handlerspace.HandleFind(spaceCtrl))
 			r.Patch("/", handlerspace.HandleUpdate(spaceCtrl))
-			r.Delete("/", handlerspace.HandleDelete(spaceCtrl))
+			r.Delete("/", handlerspace.HandleSoftDelete(spaceCtrl))
+			r.Post("/restore", handlerspace.HandleRestore(spaceCtrl))
+			r.Post("/purge", handlerspace.HandlePurge(spaceCtrl))
 
 			r.Get("/events", handlerspace.HandleEvents(appCtx, spaceCtrl))
 
