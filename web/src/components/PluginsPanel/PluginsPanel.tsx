@@ -18,7 +18,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Formik, FormikContextType } from 'formik'
 import { parse } from 'yaml'
 import cx from 'classnames'
-import { capitalize, get, has, isEmpty, isUndefined, set } from 'lodash-es'
+import { capitalize, get, has, isEmpty, isUndefined, pick, set } from 'lodash-es'
 import type { IRange } from 'monaco-editor'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -381,7 +381,17 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
   )
 
   const renderPluginFormField = useCallback(
-    ({ label, name, properties }: { label: string; name: string; properties: PluginInput }): JSX.Element => {
+    ({
+      label,
+      identifier,
+      name,
+      properties
+    }: {
+      label: string
+      identifier: string
+      name: string
+      properties: PluginInput
+    }): JSX.Element => {
       const { type, options } = properties
 
       switch (type) {
@@ -391,9 +401,9 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
           return (
             <WrapperComponent
               name={name}
+              key={name}
               label={generateLabelForPluginField({ label, properties })}
               style={{ width: '100%' }}
-              key={name}
             />
           )
         }
@@ -402,9 +412,9 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
             <Container className={css.toggle}>
               <FormInput.Toggle
                 name={name}
+                key={name}
                 label={generateLabelForPluginField({ label, properties }) as string}
                 style={{ width: '100%' }}
-                key={name}
               />
             </Container>
           )
@@ -412,7 +422,9 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
           return (
             <Container margin={{ bottom: 'large' }}>
               <MultiList
+                identifier={identifier}
                 name={name}
+                key={name}
                 label={generateLabelForPluginField({ label, properties }) as string}
                 formik={formikRef.current}
               />
@@ -423,6 +435,7 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
             <Container margin={{ bottom: 'large' }}>
               <MultiMap
                 name={name}
+                key={name}
                 label={generateLabelForPluginField({ label, properties }) as string}
                 formik={formikRef.current}
               />
@@ -570,6 +583,14 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
     []
   )
 
+  const sanitizePluginYAMLPayload = useCallback(
+    (existingPayload: Record<string, any>, validKeys: string[]): Record<string, any> => {
+      /* Ensure only keys in a plugin's input are added to the actual YAML, everything else should get removed */
+      return pick(get(existingPayload, PluginSpecInputPath), validKeys)
+    },
+    []
+  )
+
   const renderPluginConfigForm = useCallback((): JSX.Element => {
     const pluginInputs = getPluginInputsFromSpec(get(plugin, PluginSpecPath, '') as string) as PluginInputs
     const allPluginInputs = insertNameFieldToPluginInputs(pluginInputs)
@@ -608,22 +629,20 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
           <Formik<PluginFormDataInterface>
             initialValues={formInitialValues || {}}
             onSubmit={(values: PluginFormDataInterface) => {
-              const payloadForYAMLUpdate = get(values, pathToField, {})
+              let payloadForYAMLUpdate = get(values, pathToField, {})
               if (isEmpty(payloadForYAMLUpdate)) {
                 return
               }
+              if (pluginCategory === PluginCategory.Drone) {
+                payloadForYAMLUpdate = sanitizePluginYAMLPayload(payloadForYAMLUpdate, Object.keys(allPluginInputs))
+              }
+              const updatedYAMLPayload = set({}, PluginSpecInputPath, payloadForYAMLUpdate)
+              set(updatedYAMLPayload, 'type', pluginCategory)
+              set(updatedYAMLPayload, `${PluginSpecPath}.name`, plugin?.uid)
               onPluginAddUpdate({
                 pathToField,
                 isUpdate,
-                formData: set(
-                  {},
-                  pathToField,
-                  pluginCategory === PluginCategory.Drone
-                    ? set(payloadForYAMLUpdate, `${PluginSpecPath}.name`, plugin?.uid)
-                    : has(payloadForYAMLUpdate, 'type')
-                    ? payloadForYAMLUpdate
-                    : set(payloadForYAMLUpdate, 'type', pluginCategory)
-                )
+                formData: set({}, pathToField, updatedYAMLPayload)
               })
             }}
             enableReinitialize>
@@ -644,6 +663,7 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
                           {Object.keys(allPluginInputs).map((field: string) => {
                             return renderPluginFormField({
                               label: field,
+                              identifier: field,
                               /* "name" gets rendered at outside step's spec */
                               name: getFormikFieldName({
                                 fieldName: field,

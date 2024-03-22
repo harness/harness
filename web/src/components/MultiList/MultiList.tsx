@@ -15,7 +15,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { debounce, has, omit } from 'lodash-es'
+import { debounce, get, has, omit } from 'lodash-es'
 import { FormikContextType, connect } from 'formik'
 import { Layout, Text, FormInput, Button, ButtonVariation, ButtonSize, Container } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
@@ -29,6 +29,9 @@ interface MultiListConnectedProps extends MultiListProps {
 }
 
 interface MultiListProps {
+  /** unique field identifier */
+  identifier: string
+  /** fully qualified field name */
   name: string
   label: string
   readOnly?: boolean
@@ -40,7 +43,7 @@ interface MultiListProps {
   - <field-value-2>,
   ...
 */
-export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedProps): JSX.Element => {
+export const MultiList = ({ identifier, name, label, readOnly, formik }: MultiListConnectedProps): JSX.Element => {
   const { getString } = useStrings()
   const [valueMap, setValueMap] = useState<Map<string, string>>(new Map<string, string>([]))
   /*
@@ -50,32 +53,41 @@ export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedP
   */
   const counter = useRef<number>(0)
 
+  /* When list already has items in it */
+  useEffect((): void => {
+    const existingValues: string[] = get(formik?.initialValues, name, [])
+    const existingItemCount = existingValues.length
+    if (existingItemCount > 0) {
+      setValueMap((existingValueMap: Map<string, string>) => {
+        const existingValueMapClone = new Map(existingValueMap)
+        existingValues.map((item: string, index: number) => {
+          const rowKey = getRowKey(identifier, index)
+          existingValueMapClone.set(rowKey, item)
+          formik?.setFieldValue(rowKey, item)
+        })
+        return existingValueMapClone
+      })
+      counter.current += existingItemCount
+    }
+  }, [get(formik?.initialValues, name)])
+
   useEffect(() => {
     const values = Array.from(valueMap.values() || []).filter((value: string) => !!value)
     if (values.length > 0) {
       formik?.setFieldValue(name, values)
-    } else {
-      cleanupField()
     }
   }, [valueMap])
 
-  const cleanupField = useCallback((): void => {
-    formik?.setValues(omit({ ...formik?.values }, name))
-  }, [formik?.values])
-
-  const getFieldName = useCallback(
-    (index: number): string => {
-      return `${name}-${index}`
-    },
-    [name]
-  )
+  const getRowKey = useCallback((prefix: string, index: number): string => {
+    return `${prefix}-${index}`
+  }, [])
 
   const handleAddRowToList = useCallback((): void => {
     setValueMap((existingValueMap: Map<string, string>) => {
-      const rowKeyToAdd = getFieldName(counter.current)
-      if (!existingValueMap.has(rowKeyToAdd)) {
+      const rowKey = getRowKey(identifier, counter.current)
+      if (!existingValueMap.has(rowKey)) {
         const existingValueMapClone = new Map(existingValueMap)
-        existingValueMapClone.set(rowKeyToAdd, '') /* Add key <field-name-1>, <field-name-2>, ... */
+        existingValueMapClone.set(rowKey, '') /* Add key <field-name-1>, <field-name-2>, ... */
         counter.current++ /* this counter always increases, even if a row is removed. This ensures no key collision in the existing value map. */
         return existingValueMapClone
       }
@@ -113,7 +125,10 @@ export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedP
 
   const renderRow = useCallback((rowKey: string): React.ReactElement => {
     return (
-      <Layout.Horizontal margin={{ bottom: 'none' }} flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
+      <Layout.Horizontal
+        margin={{ bottom: 'none' }}
+        flex={{ justifyContent: 'space-between', alignItems: 'center' }}
+        key={rowKey}>
         <Container width="90%">
           <FormInput.Text
             name={rowKey}
