@@ -36,9 +36,12 @@
         }
       }
 
-      p {
-        white-space: break-spaces;
-      }
+      // TODO: Disable white-space on global markdown p tags since it conflicts with simple
+      // html tags from Markdown in Github
+      // Remove later if things don't break....
+      // p {
+      //   white-space: break-spaces;
+      // }
 
       tt,
       code {

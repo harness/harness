@@ -150,6 +150,14 @@ export function MarkdownEditorWithPreview({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata?.path}/+/genai/change-summary`
   })
+  const isDirty = useRef(dirty)
+
+  useEffect(
+    function setDirtyRef() {
+      isDirty.current = dirty
+    },
+    [dirty]
+  )
 
   const myKeymap = keymap.of([
     {
@@ -157,7 +165,15 @@ export function MarkdownEditorWithPreview({
       run: undo,
       preventDefault: true
     },
-    { key: 'Mod-Shift-z', run: redo, preventDefault: true }
+    { key: 'Mod-Shift-z', run: redo, preventDefault: true },
+    {
+      key: 'Mod-Enter',
+      run: () => {
+        if (isDirty.current) onSaveHandler()
+        return true
+      },
+      preventDefault: true
+    }
   ])
 
   const dispatchContent = (content: string, userEvent: boolean) => {
@@ -401,6 +417,7 @@ export function MarkdownEditorWithPreview({
   const handleFileChange = (event: any) => {
     setFile(event?.target?.files[0])
   }
+  const onSaveHandler = useCallback(() => onSave?.(viewRef.current?.state.doc.toString() || ''), [onSave])
 
   return (
     <Container ref={containerRef} className={cx(css.container, { [css.noBorder]: noBorder }, className)}>
@@ -527,8 +544,8 @@ export function MarkdownEditorWithPreview({
           setDirty={setDirty}
           maxHeight={editorHeight}
           className={selectedTab === MarkdownEditorTab.PREVIEW ? css.hidden : undefined}
-          onChange={(doc, _viewUpdate, isDirty) => {
-            if (isDirty) {
+          onChange={(doc, _viewUpdate, _isDirty) => {
+            if (_isDirty) {
               onChange?.(doc.toString())
             }
           }}
@@ -540,17 +557,9 @@ export function MarkdownEditorWithPreview({
       {!hideButtons && (
         <Container className={css.buttonsBar}>
           <Layout.Horizontal spacing="small">
-            <Button
-              disabled={!dirty}
-              variation={ButtonVariation.PRIMARY}
-              onClick={() => onSave?.(viewRef.current?.state.doc.toString() || '')}
-              text={i18n.save}
-            />
+            <Button disabled={!dirty} variation={ButtonVariation.PRIMARY} onClick={onSaveHandler} text={i18n.save} />
             {SecondarySaveButton && (
-              <SecondarySaveButton
-                disabled={!dirty}
-                onClick={async () => await onSave?.(viewRef.current?.state.doc.toString() || '')}
-              />
+              <SecondarySaveButton disabled={!dirty} onClick={async () => await onSaveHandler()} />
             )}
             {!hideCancel && <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={i18n.cancel} />}
           </Layout.Horizontal>
