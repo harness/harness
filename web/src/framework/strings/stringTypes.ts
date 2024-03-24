@@ -359,6 +359,7 @@ export interface StringsMap {
   'imageUpload.text': string
   'imageUpload.title': string
   'imageUpload.upload': string
+  importFailed: string
   importGitRepo: string
   importGitRepos: string
   importProgress: string
