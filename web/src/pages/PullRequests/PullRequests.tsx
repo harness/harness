@@ -22,7 +22,7 @@ import { Link, useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import { Case, Match, Render, Truthy } from 'react-jsx-match'
-import { defaultTo } from 'lodash-es'
+import { defaultTo, noop } from 'lodash-es'
 import { makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -171,6 +171,7 @@ export default function PullRequests() {
                                     inline={false}
                                     font={{ variation: FontVariation.SMALL_BOLD }}
                                     color={Color.GREY_500}
+                                    tag="span"
                                   />
                                 </strong>
                               ),
@@ -261,14 +262,7 @@ export default function PullRequests() {
                       columns={columns}
                       data={data || []}
                       getRowClassName={() => css.row}
-                      onRowClick={row => {
-                        history.push(
-                          routes.toCODEPullRequest({
-                            repoPath: repoMetadata?.path as string,
-                            pullRequestId: String(row.number)
-                          })
-                        )
-                      }}
+                      onRowClick={noop}
                     />
                     <ResourceListingPagination response={response} page={page} setPage={setPage} />
                   </>

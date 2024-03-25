@@ -186,6 +186,16 @@
       .d2h-code-side-linenumber {
         width: 56px;
       }
+
+      tr {
+        td:first-of-type {
+          z-index: 2;
+        }
+
+        td:last-of-type > div {
+          z-index: 0;
+        }
+      }
     }
   }
 

@@ -630,6 +630,7 @@ export interface StringsMap {
   'pr.mergePR': string
   'pr.metaLine': string
   'pr.modalTitle': string
+  'pr.moreComments': string
   'pr.openForReview': string
   'pr.outdated': string
   'pr.prBranchDeleteInfo': string

@@ -13,7 +13,6 @@
   &.hidden {
     height: var(--block-height);
     visibility: hidden;
-
     content-visibility: auto;
     contain-intrinsic-size: auto var(--block-height);
 

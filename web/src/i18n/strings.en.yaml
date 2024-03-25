@@ -240,6 +240,7 @@ diff: Diff
 draft: Draft
 conversation: Conversation
 pr:
+  moreComments: '{num} {count|0:Show more,1:1 more comment,more comments}'
   copyLinkToComment: Copy link to comment
   expandFullFile: Expand all
   collapseFullFile: Collapse expanded lines
