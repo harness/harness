@@ -44,12 +44,30 @@ func ParseSortSpace(r *http.Request) enum.SpaceAttr {
 }
 
 // ParseSpaceFilter extracts the space filter from the url.
-func ParseSpaceFilter(r *http.Request) *types.SpaceFilter {
-	return &types.SpaceFilter{
-		Query: ParseQuery(r),
-		Order: ParseOrder(r),
-		Page:  ParsePage(r),
-		Sort:  ParseSortSpace(r),
-		Size:  ParseLimit(r),
+func ParseSpaceFilter(r *http.Request) (*types.SpaceFilter, error) {
+	// recursive is optional to get sapce and its subsapces recursively.
+	recursive, err := ParseRecursiveFromQuery(r)
+	if err != nil {
+		return nil, err
 	}
+
+	// deletedBeforeOrAt is optional to retrieve spaces deleted before or at the specified timestamp.
+	var deletionTime *int64
+	value, ok, err := GetDeletedBeforeOrAtFromQuery(r)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		deletionTime = &value
+	}
+
+	return &types.SpaceFilter{
+		Query:             ParseQuery(r),
+		Order:             ParseOrder(r),
+		Page:              ParsePage(r),
+		Sort:              ParseSortSpace(r),
+		Size:              ParseLimit(r),
+		Recursive:         recursive,
+		DeletedBeforeOrAt: deletionTime,
+	}, nil
 }

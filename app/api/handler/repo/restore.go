@@ -35,7 +35,7 @@ func HandleRestore(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		deletedAt, err := request.GetDeletedAtFromQuery(r)
+		deletedAt, err := request.GetDeletedAtFromQueryOrError(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

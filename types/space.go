@@ -43,6 +43,7 @@ type Space struct {
 	CreatedBy   int64  `json:"created_by"`
 	Created     int64  `json:"created"`
 	Updated     int64  `json:"updated"`
+	Deleted     *int64 `json:"deleted,omitempty"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.
@@ -60,9 +61,11 @@ func (s Space) MarshalJSON() ([]byte, error) {
 
 // Stores spaces query parameters.
 type SpaceFilter struct {
-	Page  int            `json:"page"`
-	Size  int            `json:"size"`
-	Query string         `json:"query"`
-	Sort  enum.SpaceAttr `json:"sort"`
-	Order enum.Order     `json:"order"`
+	Page              int            `json:"page"`
+	Size              int            `json:"size"`
+	Query             string         `json:"query"`
+	Sort              enum.SpaceAttr `json:"sort"`
+	Order             enum.Order     `json:"order"`
+	DeletedBeforeOrAt *int64         `json:"deleted_before_or_at,omitempty"`
+	Recursive         bool           `json:"recursive"`
 }

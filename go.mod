@@ -73,7 +73,6 @@ require (
 	cloud.google.com/go/iam v1.1.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
-	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/antonmedv/expr v1.15.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect

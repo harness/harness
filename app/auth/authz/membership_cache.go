@@ -57,10 +57,14 @@ func (g permissionCacheGetter) Find(ctx context.Context, key PermissionCacheKey)
 	spaceRef := key.SpaceRef
 	principalID := key.PrincipalID
 
-	// Find the starting space.
-	space, err := g.spaceStore.FindByRef(ctx, spaceRef)
+	// Find the first existing space.
+	space, err := g.findFirstExistingSpace(ctx, spaceRef)
+	// authz fails if no active space is found on the path; admins can still operate on deleted top-level spaces.
+	if errors.Is(err, gitness_store.ErrResourceNotFound) {
+		return false, nil
+	}
 	if err != nil {
-		return false, fmt.Errorf("failed to find space '%s': %w", spaceRef, err)
+		return false, fmt.Errorf("failed to find an existing space on path '%s': %w", spaceRef, err)
 	}
 
 	// limit the depth to be safe (e.g. root/space1/space2 => maxDepth of 3)
@@ -101,4 +105,28 @@ func (g permissionCacheGetter) Find(ctx context.Context, key PermissionCacheKey)
 func roleHasPermission(role enum.MembershipRole, permission enum.Permission) bool {
 	_, hasRole := slices.BinarySearch(role.Permissions(), permission)
 	return hasRole
+}
+
+// findFirstExistingSpace returns the initial or first existing ancestor space (permissions are inherited).
+func (g permissionCacheGetter) findFirstExistingSpace(ctx context.Context, spaceRef string) (*types.Space, error) {
+	for {
+		space, err := g.spaceStore.FindByRef(ctx, spaceRef)
+		if err == nil {
+			return space, nil
+		}
+
+		if !errors.Is(err, gitness_store.ErrResourceNotFound) {
+			return nil, fmt.Errorf("failed to find space '%s': %w", spaceRef, err)
+		}
+
+		// check whether parent space exists as permissions are inherited.
+		spaceRef, _, err = paths.DisectLeaf(spaceRef)
+		if err != nil {
+			return nil, fmt.Errorf("failed to disect path '%s': %w", spaceRef, err)
+		}
+
+		if spaceRef == "" {
+			return nil, gitness_store.ErrResourceNotFound
+		}
+	}
 }

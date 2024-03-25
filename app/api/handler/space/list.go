@@ -34,7 +34,12 @@ func HandleListSpaces(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		spaceFilter := request.ParseSpaceFilter(r)
+		spaceFilter, err := request.ParseSpaceFilter(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
 		if spaceFilter.Order == enum.OrderDefault {
 			spaceFilter.Order = enum.OrderAsc
 		}

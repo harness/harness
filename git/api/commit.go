@@ -426,12 +426,11 @@ func getChangeInfoTypes(
 	return changeInfoTypes, nil
 }
 
-// Will match "31\t0\t.harness/apidiff.yaml".
-// Will extract 31, 0 and .harness/apidiff.yaml.
-var insertionsDeletionsRegex = regexp.MustCompile(`(\d+)\t(\d+)\t(.+)`)
+// Will match "31\t0\t.harness/apidiff.yaml" and extract 31, 0 and .harness/apidiff.yaml.
+// Will match "-\t-\ttools/code-api/chart/charts/harness-common-1.0.27.tgz" and extract -, -, and a filename.
+var insertionsDeletionsRegex = regexp.MustCompile(`(\d+|-)\t(\d+|-)\t(.+)`)
 
-// Will match "0\t0\tREADME.md => README_new.md".
-// Will extract README_new.md.
+// Will match "0\t0\tREADME.md => README_new.md" and extract README_new.md.
 var renameRegexWithArrow = regexp.MustCompile(`\d+\t\d+\t.+\s=>\s(.+)`)
 
 func getChangeInfoChanges(
@@ -455,6 +454,11 @@ func getChangeInfoChanges(
 		path := matches[3]
 		if renMatches := renameRegexWithArrow.FindStringSubmatch(line); len(renMatches) == 2 {
 			path = renMatches[1]
+		}
+
+		if matches[1] == "-" || matches[2] == "-" {
+			changeInfos[path] = changeInfoChange{}
+			continue
 		}
 
 		insertions, err := strconv.ParseInt(matches[1], 10, 64)

@@ -53,12 +53,22 @@ import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
 import KeywordSearch from 'components/CodeSearch/KeywordSearch'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
+import { getUsingFetch, getConfig } from 'services/config'
 import noRepoImage from './no-repo.svg?url'
 import FeatureMap from './FeatureMap/FeatureMap'
 import css from './RepositoriesListing.module.scss'
 
 interface TypesRepoExtended extends TypesRepository {
   importing?: boolean
+  importProgress?: string
+}
+
+enum ImportStatus {
+  FAILED = 'failed'
+}
+
+interface progessState {
+  state: string
 }
 
 export default function RepositoriesListing() {
@@ -68,11 +78,12 @@ export default function RepositoriesListing() {
   const [nameTextWidth, setNameTextWidth] = useState(600)
   const space = useGetSpaceParam()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
-  const { routes, standalone } = useAppContext()
+  const { routes, standalone, hooks, routingId } = useAppContext()
   const { updateQueryParams } = useUpdateQueryParams()
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
+  const [updatedRepositories, setUpdatedRepositories] = useState<TypesRepository[]>()
 
   const {
     data: repositories,
@@ -113,6 +124,42 @@ export default function RepositoriesListing() {
     }
   }, [space, setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const bearerToken = hooks?.useGetToken?.() || ''
+
+  const addImportProgressToData = async (repos: TypesRepository[]) => {
+    const updatedData = await Promise.all(
+      repos.map(async repo => {
+        if (repo.importing) {
+          const importProgress = await getUsingFetch(
+            getConfig('code/api/v1'),
+            `/repos/${repo.path}/+/import-progress`,
+            bearerToken,
+            {
+              queryParams: {
+                accountIdentifier: routingId
+              }
+            }
+          )
+          return { ...repo, importProgress: (importProgress as progessState).state }
+        }
+        return repo
+      })
+    )
+
+    return updatedData
+  }
+
+  useEffect(() => {
+    const fetchRepo = async () => {
+      if (repositories) {
+        const updatedRepos = await addImportProgressToData(repositories)
+        setUpdatedRepositories(updatedRepos)
+      }
+    }
+
+    fetchRepo()
+  }, [repositories]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const columns: Column<TypesRepoExtended>[] = useMemo(
     () => [
       {
@@ -130,7 +177,11 @@ export default function RepositoriesListing() {
                     <RepoPublicLabel isPublic={row.original.is_public} margin={{ left: 'small' }} />
                   </Text>
 
-                  {record.importing ? (
+                  {record?.importProgress === ImportStatus.FAILED ? (
+                    <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
+                      {getString('importFailed')}
+                    </Text>
+                  ) : record.importing ? (
                     <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
                       {getString('importProgress')}
                     </Text>
@@ -151,7 +202,7 @@ export default function RepositoriesListing() {
         Header: getString('repos.updated'),
         width: '180px',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
-          return row.original.importing ? (
+          return row?.original?.importProgress === ImportStatus.FAILED ? null : row.original.importing ? (
             <Layout.Horizontal style={{ alignItems: 'center' }} padding={{ right: 'large' }}>
               <ProgressBar intent={Intent.PRIMARY} className={css.progressBar} />
             </Layout.Horizontal>
@@ -174,51 +225,53 @@ export default function RepositoriesListing() {
           const confirmCancelImport = useConfirmAct()
           return (
             <Container onClick={Utils.stopEvent}>
-              {row.original.importing && (
-                <OptionsMenuButton
-                  isDark
-                  width="100px"
-                  items={[
-                    {
-                      text: getString('cancelImport'),
-                      onClick: () =>
-                        confirmCancelImport({
-                          title: getString('cancelImport'),
-                          confirmText: getString('cancelImport'),
-                          intent: Intent.DANGER,
-                          message: (
-                            <Text
-                              style={{ wordBreak: 'break-word' }}
-                              font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
-                              <String
-                                useRichText
-                                stringID="cancelImportConfirm"
-                                vars={{ name: row.original?.uid }}
-                                tagName="div"
-                              />
-                            </Text>
-                          ),
-                          action: async () => {
-                            deleteRepo(`${row.original?.path as string}/+/`)
-                              .then(() => {
-                                showSuccess(getString('cancelledImport'), 2000)
-                                refetch()
-                              })
-                              .catch(err => {
-                                showError(getErrorMessage(err), 0, getString('failedToCancelImport'))
-                              })
-                          }
-                        })
-                    }
-                  ]}
-                />
-              )}
+              {row?.original?.importProgress === ImportStatus.FAILED
+                ? null
+                : row.original.importing && (
+                    <OptionsMenuButton
+                      isDark
+                      width="100px"
+                      items={[
+                        {
+                          text: getString('cancelImport'),
+                          onClick: () =>
+                            confirmCancelImport({
+                              title: getString('cancelImport'),
+                              confirmText: getString('cancelImport'),
+                              intent: Intent.DANGER,
+                              message: (
+                                <Text
+                                  style={{ wordBreak: 'break-word' }}
+                                  font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
+                                  <String
+                                    useRichText
+                                    stringID="cancelImportConfirm"
+                                    vars={{ name: row.original?.uid }}
+                                    tagName="div"
+                                  />
+                                </Text>
+                              ),
+                              action: async () => {
+                                deleteRepo(`${row.original?.path as string}/+/`)
+                                  .then(() => {
+                                    showSuccess(getString('cancelledImport'), 2000)
+                                    refetch()
+                                  })
+                                  .catch(err => {
+                                    showError(getErrorMessage(err), 0, getString('failedToCancelImport'))
+                                  })
+                              }
+                            })
+                        }
+                      ]}
+                    />
+                  )}
             </Container>
           )
         }
       }
     ],
-    [nameTextWidth, getString, searchTerm]
+    [nameTextWidth, getString, searchTerm] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const onResize = useCallback(() => {
@@ -284,7 +337,7 @@ export default function RepositoriesListing() {
                 <Table<TypesRepoExtended>
                   className={css.table}
                   columns={columns}
-                  data={repositories || []}
+                  data={updatedRepositories || []}
                   onRowClick={repoInfo => {
                     return repoInfo.importing
                       ? undefined

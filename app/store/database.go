@@ -146,6 +146,9 @@ type (
 
 		// DeletePrimarySegment deletes the primary segment of a space.
 		DeletePrimarySegment(ctx context.Context, spaceID int64) error
+
+		// DeletePathsAndDescendandPaths deletes all space paths reachable from spaceID including itself.
+		DeletePathsAndDescendandPaths(ctx context.Context, spaceID int64) error
 	}
 
 	// SpaceStore defines the space data storage.
@@ -155,6 +158,9 @@ type (
 
 		// FindByRef finds the space using the spaceRef as either the id or the space path.
 		FindByRef(ctx context.Context, spaceRef string) (*types.Space, error)
+
+		// FindByRefAndDeletedAt finds the space using the spaceRef and deleted timestamp.
+		FindByRefAndDeletedAt(ctx context.Context, spaceRef string, deletedAt int64) (*types.Space, error)
 
 		// GetRootSpace returns a space where space_parent_id is NULL.
 		GetRootSpace(ctx context.Context, spaceID int64) (*types.Space, error)
@@ -169,8 +175,15 @@ type (
 		UpdateOptLock(ctx context.Context, space *types.Space,
 			mutateFn func(space *types.Space) error) (*types.Space, error)
 
-		// Delete deletes the space.
-		Delete(ctx context.Context, id int64) error
+		// SoftDelete deletes the space.
+		SoftDelete(ctx context.Context, space *types.Space, deletedAt int64) error
+
+		// Purge deletes a space permanently.
+		Purge(ctx context.Context, id int64, deletedAt *int64) error
+
+		// Restore restores a soft deleted space.
+		Restore(ctx context.Context, space *types.Space,
+			newIdentifier *string, newParentID *int64) (*types.Space, error)
 
 		// Count the child spaces of a space.
 		Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error)
@@ -214,7 +227,7 @@ type (
 
 		// Restore a deleted repo using the optimistic locking mechanism.
 		Restore(ctx context.Context, repo *types.Repository,
-			newIdentifier string) (*types.Repository, error)
+			newIdentifier *string, newParentID *int64) (*types.Repository, error)
 
 		// Count of active repos in a space. With "DeletedBeforeOrAt" filter, counts deleted repos.
 		Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error)

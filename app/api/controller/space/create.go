@@ -87,7 +87,7 @@ func (c *Controller) createSpaceInnerInTX(
 		if err != nil {
 			return nil, fmt.Errorf("failed to find primary path for parent '%d': %w", parentID, err)
 		}
-		spacePath = paths.Concatinate(parentPath.Value, in.Identifier)
+		spacePath = paths.Concatenate(parentPath.Value, in.Identifier)
 
 		// ensure path is within accepted depth!
 		err = check.PathDepth(spacePath, true)

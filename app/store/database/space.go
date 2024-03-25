@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/store"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database"
@@ -28,6 +29,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -67,6 +69,7 @@ type space struct {
 	CreatedBy   int64    `db:"space_created_by"`
 	Created     int64    `db:"space_created"`
 	Updated     int64    `db:"space_updated"`
+	Deleted     null.Int `db:"space_deleted"`
 }
 
 const (
@@ -79,7 +82,8 @@ const (
 		,space_is_public
 		,space_created_by
 		,space_created
-		,space_updated`
+		,space_updated
+		,space_deleted`
 
 	spaceSelectBase = `
 	SELECT` + spaceColumns + `
@@ -88,21 +92,57 @@ const (
 
 // Find the space by id.
 func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
-	const sqlQuery = spaceSelectBase + `
-		WHERE space_id = $1`
+	return s.find(ctx, id, nil)
+}
+
+func (s *SpaceStore) find(ctx context.Context, id int64, deletedAt *int64) (*types.Space, error) {
+	stmt := database.Builder.
+		Select(spaceColumns).
+		From("spaces").
+		Where("space_id = ?", id)
+
+	if deletedAt != nil {
+		stmt = stmt.Where("space_deleted = ?", *deletedAt)
+	} else {
+		stmt = stmt.Where("space_deleted IS NULL")
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(space)
-	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find space")
 	}
 
-	return mapToSpace(ctx, s.spacePathStore, dst)
+	return mapToSpace(ctx, s.db, s.spacePathStore, dst)
 }
 
 // FindByRef finds the space using the spaceRef as either the id or the space path.
 func (s *SpaceStore) FindByRef(ctx context.Context, spaceRef string) (*types.Space, error) {
+	return s.findByRef(ctx, spaceRef, nil)
+}
+
+// FindByRefAndDeletedAt finds the space using the spaceRef as either the id or the space path and deleted timestamp.
+func (s *SpaceStore) FindByRefAndDeletedAt(
+	ctx context.Context,
+	spaceRef string,
+	deletedAt int64,
+) (*types.Space, error) {
+	// ASSUMPTION: digits only is not a valid space path
+	id, err := strconv.ParseInt(spaceRef, 10, 64)
+	if err != nil {
+		return s.findByPathAndDeletedAt(ctx, spaceRef, deletedAt)
+	}
+
+	return s.find(ctx, id, &deletedAt)
+}
+
+func (s *SpaceStore) findByRef(ctx context.Context, spaceRef string, deletedAt *int64) (*types.Space, error) {
 	// ASSUMPTION: digits only is not a valid space path
 	id, err := strconv.ParseInt(spaceRef, 10, 64)
 	if err != nil {
@@ -114,8 +154,44 @@ func (s *SpaceStore) FindByRef(ctx context.Context, spaceRef string) (*types.Spa
 
 		id = path.SpaceID
 	}
+	return s.find(ctx, id, deletedAt)
+}
 
-	return s.Find(ctx, id)
+func (s *SpaceStore) findByPathAndDeletedAt(
+	ctx context.Context,
+	spaceRef string,
+	deletedAt int64,
+) (*types.Space, error) {
+	segments := paths.Segments(spaceRef)
+	if len(segments) < 1 {
+		return nil, fmt.Errorf("invalid space reference provided")
+	}
+
+	var stmt squirrel.SelectBuilder
+	switch {
+	case len(segments) == 1:
+		stmt = database.Builder.
+			Select("space_id").
+			From("spaces").
+			Where("space_uid = ? AND space_deleted = ? AND space_parent_id IS NULL", segments[0], deletedAt)
+
+	case len(segments) > 1:
+		stmt = buildRecursiveSelectQueryUsingPath(segments, deletedAt)
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to create sql query")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var spaceID int64
+	if err = db.GetContext(ctx, &spaceID, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom select query")
+	}
+
+	return s.find(ctx, spaceID, &deletedAt)
 }
 
 // GetRootSpace returns a space where space_parent_id is NULL.
@@ -161,6 +237,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 			,space_created_by
 			,space_created
 			,space_updated
+			,space_deleted
 		) values (
 			:space_version
 			,:space_parent_id
@@ -170,6 +247,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 			,:space_created_by
 			,:space_created
 			,:space_updated
+			,:space_deleted
 		) RETURNING space_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -201,6 +279,7 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 			,space_uid			= :space_uid
 			,space_description	= :space_description
 			,space_is_public	= :space_is_public
+			,space_deleted 		= :space_deleted
 		WHERE space_id = :space_id AND space_version = :space_version - 1`
 
 	dbSpace := mapToInternalSpace(space)
@@ -234,7 +313,7 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 	space.Updated = dbSpace.Updated
 
 	// update path in case parent/identifier changed
-	space.Path, err = getSpacePath(ctx, s.spacePathStore, space.ID)
+	space.Path, err = getSpacePath(ctx, s.db, s.spacePathStore, space.ID)
 	if err != nil {
 		return err
 	}
@@ -242,8 +321,9 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 	return nil
 }
 
-// UpdateOptLock updates the space using the optimistic locking mechanism.
-func (s *SpaceStore) UpdateOptLock(ctx context.Context,
+// updateOptLock updates the space using the optimistic locking mechanism.
+func (s *SpaceStore) updateOptLock(
+	ctx context.Context,
 	space *types.Space,
 	mutateFn func(space *types.Space) error,
 ) (*types.Space, error) {
@@ -263,30 +343,129 @@ func (s *SpaceStore) UpdateOptLock(ctx context.Context,
 			return nil, err
 		}
 
-		space, err = s.Find(ctx, space.ID)
+		space, err = s.find(ctx, space.ID, space.Deleted)
 		if err != nil {
 			return nil, err
 		}
 	}
 }
 
-// Delete deletes a space.
-func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
-	const sqlQuery = `
-		DELETE FROM spaces
-		WHERE space_id = $1`
+// UpdateOptLock updates the space using the optimistic locking mechanism.
+func (s *SpaceStore) UpdateOptLock(
+	ctx context.Context,
+	space *types.Space,
+	mutateFn func(space *types.Space) error,
+) (*types.Space, error) {
+	return s.updateOptLock(
+		ctx,
+		space,
+		func(r *types.Space) error {
+			if space.Deleted != nil {
+				return gitness_store.ErrResourceNotFound
+			}
+			return mutateFn(r)
+		},
+	)
+}
+
+// UpdateDeletedOptLock updates a soft deleted space using the optimistic locking mechanism.
+func (s *SpaceStore) updateDeletedOptLock(
+	ctx context.Context,
+	space *types.Space,
+	mutateFn func(space *types.Space) error,
+) (*types.Space, error) {
+	return s.updateOptLock(
+		ctx,
+		space,
+		func(r *types.Space) error {
+			if space.Deleted == nil {
+				return gitness_store.ErrResourceNotFound
+			}
+			return mutateFn(r)
+		},
+	)
+}
+
+// SoftDelete deletes a space softly.
+func (s *SpaceStore) SoftDelete(
+	ctx context.Context,
+	space *types.Space,
+	deletedAt int64,
+) error {
+	_, err := s.UpdateOptLock(ctx, space, func(s *types.Space) error {
+		s.Deleted = &deletedAt
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Purge deletes a space permanently.
+func (s *SpaceStore) Purge(ctx context.Context, id int64, deletedAt *int64) error {
+	stmt := database.Builder.
+		Delete("spaces").
+		Where("space_id = ?", id)
+
+	if deletedAt != nil {
+		stmt = stmt.Where("space_deleted = ?", *deletedAt)
+	} else {
+		stmt = stmt.Where("space_deleted IS NULL")
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge space query to sql: %w", err)
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "The delete query failed")
+	_, err = db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err, "the delete query failed")
 	}
 
 	return nil
 }
 
+// Restore restores a soft deleted space.
+func (s *SpaceStore) Restore(
+	ctx context.Context,
+	space *types.Space,
+	newIdentifier *string,
+	newParentID *int64,
+) (*types.Space, error) {
+	space, err := s.updateDeletedOptLock(ctx, space, func(s *types.Space) error {
+		s.Deleted = nil
+		if newParentID != nil {
+			s.ParentID = *newParentID
+		}
+
+		if newIdentifier != nil {
+			s.Identifier = *newIdentifier
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return space, nil
+}
+
 // Count the child spaces of a space.
 func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error) {
+	if opts.Recursive {
+		return s.countAll(ctx, id, opts)
+	}
+	return s.count(ctx, id, opts)
+}
+
+func (s *SpaceStore) count(
+	ctx context.Context,
+	id int64,
+	opts *types.SpaceFilter,
+) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("spaces").
@@ -295,6 +474,8 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 	if opts.Query != "" {
 		stmt = stmt.Where("LOWER(space_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
+
+	stmt = s.applyQueryFilter(stmt, opts)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -312,33 +493,70 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 	return count, nil
 }
 
+func (s *SpaceStore) countAll(
+	ctx context.Context,
+	id int64,
+	opts *types.SpaceFilter,
+) (int64, error) {
+	ctePrefix := `WITH RECURSIVE SpaceHierarchy AS (
+		SELECT space_id, space_parent_id, space_deleted, space_uid
+		FROM spaces
+		WHERE space_id = ?
+
+		UNION
+
+		SELECT s.space_id, s.space_parent_id, s.space_deleted, s.space_uid
+		FROM spaces s
+		JOIN SpaceHierarchy h ON s.space_parent_id = h.space_id
+	)`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	stmt := database.Builder.
+		Select("COUNT(*)").
+		Prefix(ctePrefix, id).
+		From("SpaceHierarchy h1").
+		Where("h1.space_id <> ?", id)
+
+	stmt = s.applyQueryFilter(stmt, opts)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	var count int64
+	if err = db.GetContext(ctx, &count, sql, args...); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to count sub spaces")
+	}
+
+	return count, nil
+}
+
 // List returns a list of spaces under the parent space.
-func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error) {
+func (s *SpaceStore) List(
+	ctx context.Context,
+	id int64,
+	opts *types.SpaceFilter,
+) ([]*types.Space, error) {
+	if opts.Recursive {
+		return s.listAll(ctx, id, opts)
+	}
+	return s.list(ctx, id, opts)
+}
+
+func (s *SpaceStore) list(
+	ctx context.Context,
+	id int64,
+	opts *types.SpaceFilter,
+) ([]*types.Space, error) {
 	stmt := database.Builder.
 		Select(spaceColumns).
 		From("spaces").
 		Where("space_parent_id = ?", fmt.Sprint(id))
 
-	stmt = stmt.Limit(database.Limit(opts.Size))
-	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
-
-	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(space_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
-	}
-
-	switch opts.Sort {
-	case enum.SpaceAttrUID, enum.SpaceAttrIdentifier, enum.SpaceAttrNone:
-		// NOTE: string concatenation is safe because the
-		// order attribute is an enum and is not user-defined,
-		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("space_uid " + opts.Order.String())
-		//TODO: Postgres does not support COLLATE NOCASE for UTF8
-		// stmt = stmt.OrderBy("space_uid COLLATE NOCASE " + opts.Order.String())
-	case enum.SpaceAttrCreated:
-		stmt = stmt.OrderBy("space_created " + opts.Order.String())
-	case enum.SpaceAttrUpdated:
-		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
-	}
+	stmt = s.applyQueryFilter(stmt, opts)
+	stmt = s.applySortFilter(stmt, opts)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -352,11 +570,121 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
 	}
 
-	return s.mapToSpaces(ctx, dst)
+	return s.mapToSpaces(ctx, s.db, dst)
+}
+
+func (s *SpaceStore) listAll(ctx context.Context,
+	id int64,
+	opts *types.SpaceFilter,
+) ([]*types.Space, error) {
+	ctePrefix := `WITH RECURSIVE SpaceHierarchy AS (
+		SELECT *
+		FROM spaces
+		WHERE space_id = ?
+		
+		UNION
+		
+		SELECT s.*
+		FROM spaces s
+		JOIN SpaceHierarchy h ON s.space_parent_id = h.space_id
+	)`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	stmt := database.Builder.
+		Select(spaceColumns).
+		Prefix(ctePrefix, id).
+		From("SpaceHierarchy h1").
+		Where("h1.space_id <> ?", id)
+
+	stmt = s.applyQueryFilter(stmt, opts)
+	stmt = s.applySortFilter(stmt, opts)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	var dst []*space
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	}
+
+	return s.mapToSpaces(ctx, s.db, dst)
+}
+
+func (s *SpaceStore) applyQueryFilter(
+	stmt squirrel.SelectBuilder,
+	opts *types.SpaceFilter,
+) squirrel.SelectBuilder {
+	if opts.Query != "" {
+		stmt = stmt.Where("LOWER(space_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+	}
+
+	if opts.DeletedBeforeOrAt != nil {
+		stmt = stmt.Where("space_deleted <= ?", opts.DeletedBeforeOrAt)
+	} else {
+		stmt = stmt.Where("space_deleted IS NULL")
+	}
+
+	return stmt
+}
+
+func getPathForDeletedSpace(
+	ctx context.Context,
+	sqlxdb *sqlx.DB,
+	id int64,
+) (string, error) {
+	sqlQuery := spaceSelectBase + `
+		where space_id = $1`
+
+	path := ""
+	nextSpaceID := null.IntFrom(id)
+
+	db := dbtx.GetAccessor(ctx, sqlxdb)
+	dst := new(space)
+
+	for nextSpaceID.Valid {
+		err := db.GetContext(ctx, dst, sqlQuery, nextSpaceID.Int64)
+		if err != nil {
+			return "", fmt.Errorf("failed to find the space %d: %w", id, err)
+		}
+
+		path = paths.Concatenate(dst.Identifier, path)
+		nextSpaceID = dst.ParentID
+	}
+
+	return path, nil
+}
+
+func (s *SpaceStore) applySortFilter(
+	stmt squirrel.SelectBuilder,
+	opts *types.SpaceFilter,
+) squirrel.SelectBuilder {
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
+
+	switch opts.Sort {
+	case enum.SpaceAttrUID, enum.SpaceAttrIdentifier, enum.SpaceAttrNone:
+		// NOTE: string concatenation is safe because the
+		// order attribute is an enum and is not user-defined,
+		// and is therefore not subject to injection attacks.
+		stmt = stmt.OrderBy("space_uid " + opts.Order.String())
+		//TODO: Postgres does not support COLLATE NOCASE for UTF8
+		// stmt = stmt.OrderBy("space_uid COLLATE NOCASE " + opts.Order.String())
+	case enum.SpaceAttrCreated:
+		stmt = stmt.OrderBy("space_created " + opts.Order.String())
+	case enum.SpaceAttrUpdated:
+		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
+	case enum.SpaceAttrDeleted:
+		stmt = stmt.OrderBy("space_deleted " + opts.Order.String())
+	}
+	return stmt
 }
 
 func mapToSpace(
 	ctx context.Context,
+	sqlxdb *sqlx.DB,
 	spacePathStore store.SpacePathStore,
 	in *space,
 ) (*types.Space, error) {
@@ -370,6 +698,7 @@ func mapToSpace(
 		Created:     in.Created,
 		CreatedBy:   in.CreatedBy,
 		Updated:     in.Updated,
+		Deleted:     in.Deleted.Ptr(),
 	}
 
 	// Only overwrite ParentID if it's not a root space
@@ -378,7 +707,7 @@ func mapToSpace(
 	}
 
 	// backfill path
-	res.Path, err = getSpacePath(ctx, spacePathStore, in.ID)
+	res.Path, err = getSpacePath(ctx, sqlxdb, spacePathStore, in.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get primary path for space %d: %w", in.ID, err)
 	}
@@ -388,10 +717,15 @@ func mapToSpace(
 
 func getSpacePath(
 	ctx context.Context,
+	sqlxdb *sqlx.DB,
 	spacePathStore store.SpacePathStore,
 	spaceID int64,
 ) (string, error) {
 	spacePath, err := spacePathStore.FindPrimaryBySpaceID(ctx, spaceID)
+	// delete space will delete paths; generate the path if space is soft deleted.
+	if errors.Is(err, gitness_store.ErrResourceNotFound) {
+		return getPathForDeletedSpace(ctx, sqlxdb, spaceID)
+	}
 	if err != nil {
 		return "", fmt.Errorf("failed to get primary path for space %d: %w", spaceID, err)
 	}
@@ -401,12 +735,13 @@ func getSpacePath(
 
 func (s *SpaceStore) mapToSpaces(
 	ctx context.Context,
+	sqlxdb *sqlx.DB,
 	spaces []*space,
 ) ([]*types.Space, error) {
 	var err error
 	res := make([]*types.Space, len(spaces))
 	for i := range spaces {
-		res[i], err = mapToSpace(ctx, s.spacePathStore, spaces[i])
+		res[i], err = mapToSpace(ctx, sqlxdb, s.spacePathStore, spaces[i])
 		if err != nil {
 			return nil, err
 		}
@@ -424,6 +759,7 @@ func mapToInternalSpace(s *types.Space) *space {
 		Created:     s.Created,
 		CreatedBy:   s.CreatedBy,
 		Updated:     s.Updated,
+		Deleted:     null.IntFromPtr(s.Deleted),
 	}
 
 	// Only overwrite ParentID if it's not a root space
@@ -433,4 +769,28 @@ func mapToInternalSpace(s *types.Space) *space {
 	}
 
 	return res
+}
+
+// buildRecursiveSelectQueryUsingPath builds the recursive select query using path among active or soft deleted spaces.
+func buildRecursiveSelectQueryUsingPath(segments []string, deletedAt int64) squirrel.SelectBuilder {
+	leaf := "s" + fmt.Sprint(len(segments)-1)
+
+	// add the current space (leaf)
+	stmt := database.Builder.
+		Select(leaf+".space_id").
+		From("spaces "+leaf).
+		Where(leaf+".space_uid = ? AND "+leaf+".space_deleted = ?", segments[len(segments)-1], deletedAt)
+
+	for i := len(segments) - 2; i >= 0; i-- {
+		parentAlias := "s" + fmt.Sprint(i)
+		alias := "s" + fmt.Sprint(i+1)
+
+		stmt = stmt.InnerJoin(fmt.Sprintf("spaces %s ON %s.space_id = %s.space_parent_id", parentAlias, parentAlias, alias)).
+			Where(parentAlias+".space_uid = ?", segments[i])
+	}
+
+	// add parent check for root
+	stmt = stmt.Where("s0.space_parent_id IS NULL")
+
+	return stmt
 }

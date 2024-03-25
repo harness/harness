@@ -20,38 +20,27 @@ import (
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/types/enum"
 )
 
-// HandleListRepos writes json-encoded list of repos in the request body.
-func HandleListRepos(spaceCtrl *space.Controller) http.HandlerFunc {
+// HandleSoftDelete handles the soft delete space HTTP API.
+func HandleSoftDelete(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+
 		session, _ := request.AuthSessionFrom(ctx)
+
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		filter, err := request.ParseRepoFilter(r)
+		res, err := spaceCtrl.SoftDelete(ctx, session, spaceRef)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		if filter.Order == enum.OrderDefault {
-			filter.Order = enum.OrderAsc
-		}
-
-		repos, count, err := spaceCtrl.ListRepositories(
-			ctx, session, spaceRef, filter)
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-
-		render.Pagination(r, w, filter.Page, filter.Size, int(count))
-		render.JSON(w, http.StatusOK, repos)
+		render.JSON(w, http.StatusOK, res)
 	}
 }

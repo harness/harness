@@ -68,8 +68,8 @@ func (c *Controller) PurgeNoAuth(
 		return fmt.Errorf("failed to delete repo from db: %w", err)
 	}
 
-	if err := c.deleteGitRepository(ctx, session, repo); err != nil {
-		return fmt.Errorf("failed to delete git repository: %w", err)
+	if err := c.DeleteGitRepository(ctx, session, repo); err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to remove git repository")
 	}
 
 	c.eventReporter.Deleted(
@@ -81,7 +81,7 @@ func (c *Controller) PurgeNoAuth(
 	return nil
 }
 
-func (c *Controller) deleteGitRepository(
+func (c *Controller) DeleteGitRepository(
 	ctx context.Context,
 	session *auth.Session,
 	repo *types.Repository,

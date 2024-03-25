@@ -42,11 +42,13 @@ func NewRepoStore(
 	db *sqlx.DB,
 	spacePathCache store.SpacePathCache,
 	spacePathStore store.SpacePathStore,
+	spaceStore store.SpaceStore,
 ) *RepoStore {
 	return &RepoStore{
 		db:             db,
 		spacePathCache: spacePathCache,
 		spacePathStore: spacePathStore,
+		spaceStore:     spaceStore,
 	}
 }
 
@@ -55,6 +57,7 @@ type RepoStore struct {
 	db             *sqlx.DB
 	spacePathCache store.SpacePathCache
 	spacePathStore store.SpacePathStore
+	spaceStore     store.SpaceStore
 }
 
 type repository struct {
@@ -492,12 +495,16 @@ func (s *RepoStore) Purge(ctx context.Context, id int64, deletedAt *int64) error
 func (s *RepoStore) Restore(
 	ctx context.Context,
 	repo *types.Repository,
-	newIdentifier string,
+	newIdentifier *string,
+	newParentID *int64,
 ) (*types.Repository, error) {
 	repo, err := s.updateDeletedOptLock(ctx, repo, func(r *types.Repository) error {
 		r.Deleted = nil
-		if newIdentifier != "" {
-			r.Identifier = newIdentifier
+		if newIdentifier != nil {
+			r.Identifier = *newIdentifier
+		}
+		if newParentID != nil {
+			r.ParentID = *newParentID
 		}
 		return nil
 	})
@@ -752,10 +759,14 @@ func (s *RepoStore) mapToRepo(
 
 func (s *RepoStore) getRepoPath(ctx context.Context, parentID int64, repoIdentifier string) (string, error) {
 	spacePath, err := s.spacePathStore.FindPrimaryBySpaceID(ctx, parentID)
+	// try to re-create the space path if was soft deleted.
+	if errors.Is(err, gitness_store.ErrResourceNotFound) {
+		return getPathForDeletedSpace(ctx, s.db, parentID)
+	}
 	if err != nil {
 		return "", fmt.Errorf("failed to get primary path for space %d: %w", parentID, err)
 	}
-	return paths.Concatinate(spacePath.Value, repoIdentifier), nil
+	return paths.Concatenate(spacePath.Value, repoIdentifier), nil
 }
 
 func (s *RepoStore) mapToRepos(

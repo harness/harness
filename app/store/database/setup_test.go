@@ -78,7 +78,7 @@ func setupStores(t *testing.T, db *sqlx.DB) (
 	spacePathCache := cache.New(spacePathStore, spacePathTransformation)
 
 	spaceStore := database.NewSpaceStore(db, spacePathCache, spacePathStore)
-	repoStore := database.NewRepoStore(db, spacePathCache, spacePathStore)
+	repoStore := database.NewRepoStore(db, spacePathCache, spacePathStore, spaceStore)
 
 	return principalStore, spaceStore, spacePathStore, repoStore
 }

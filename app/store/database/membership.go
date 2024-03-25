@@ -37,11 +37,13 @@ func NewMembershipStore(
 	db *sqlx.DB,
 	pCache store.PrincipalInfoCache,
 	spacePathStore store.SpacePathStore,
+	spaceStore store.SpaceStore,
 ) *MembershipStore {
 	return &MembershipStore{
 		db:             db,
 		pCache:         pCache,
 		spacePathStore: spacePathStore,
+		spaceStore:     spaceStore,
 	}
 }
 
@@ -50,6 +52,7 @@ type MembershipStore struct {
 	db             *sqlx.DB
 	pCache         store.PrincipalInfoCache
 	spacePathStore store.SpacePathStore
+	spaceStore     store.SpaceStore
 }
 
 type membership struct {
@@ -472,7 +475,7 @@ func (s *MembershipStore) mapToMembershipSpaces(ctx context.Context,
 	for i := range ms {
 		m := ms[i]
 		res[i].Membership = mapToMembership(&m.membership)
-		space, err := mapToSpace(ctx, s.spacePathStore, &m.space)
+		space, err := mapToSpace(ctx, s.db, s.spacePathStore, &m.space)
 		if err != nil {
 			return nil, fmt.Errorf("faild to map space %d: %w", m.space.ID, err)
 		}

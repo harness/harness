@@ -29,6 +29,7 @@ const (
 	QueryParamSort      = "sort"
 	QueryParamOrder     = "order"
 	QueryParamQuery     = "query"
+	QueryParamRecursive = "recursive"
 
 	QueryParamState = "state"
 	QueryParamKind  = "kind"
@@ -37,7 +38,8 @@ const (
 	QueryParamAfter  = "after"
 	QueryParamBefore = "before"
 
-	QueryParamDeletedAt = "deleted_at"
+	QueryParamDeletedBeforeOrAt = "deleted_before_or_at"
+	QueryParamDeletedAt         = "deleted_at"
 
 	QueryParamPage  = "page"
 	QueryParamLimit = "limit"
@@ -121,7 +123,25 @@ func GetContentEncodingFromHeadersOrDefault(r *http.Request, dflt string) string
 	return GetHeaderOrDefault(r, HeaderContentEncoding, dflt)
 }
 
-// GetDeletedAtFromQuery extracts the resource deleted timestamp from the query.
-func GetDeletedAtFromQuery(r *http.Request) (int64, error) {
+// ParseRecursiveFromQuery extracts the recursive option from the URL query.
+func ParseRecursiveFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamRecursive, false)
+}
+
+// GetDeletedAtFromQueryOrError gets the exact resource deletion timestamp from the query.
+func GetDeletedAtFromQueryOrError(r *http.Request) (int64, error) {
 	return QueryParamAsPositiveInt64(r, QueryParamDeletedAt)
+}
+
+// GetDeletedBeforeOrAtFromQuery gets the resource deletion timestamp from the query as an optional parameter.
+func GetDeletedBeforeOrAtFromQuery(r *http.Request) (int64, bool, error) {
+	value, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamDeletedBeforeOrAt, 0)
+	if err != nil {
+		return 0, false, err
+	}
+	if value == 0 {
+		return value, false, nil
+	}
+
+	return value, true, nil
 }
