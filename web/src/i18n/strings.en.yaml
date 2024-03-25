@@ -1002,3 +1002,4 @@ summary: Summary
 prGenSummary: Have Harness AIDA summarize the code changes in this pull request
 aidaGenSummary: '[AIDA is generating a summary...]'
 importFailed: Import Failed
+uploadAFileError: There is no image or video uploaded. Please upload an image or video.

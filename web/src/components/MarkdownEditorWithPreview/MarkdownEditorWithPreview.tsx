@@ -478,8 +478,12 @@ export function MarkdownEditorWithPreview({
               variation={ButtonVariation.PRIMARY}
               disabled={false}
               onClick={() => {
-                handleUpload(file as File, setMarkdownContent, repoMetadata, showError, standalone, routingId)
-                setOpen(false)
+                if (file !== undefined) {
+                  handleUpload(file as File, setMarkdownContent, repoMetadata, showError, standalone, routingId)
+                  setOpen(false)
+                } else {
+                  showError(getString('uploadAFileError'))
+                }
               }}
             />
             <Button

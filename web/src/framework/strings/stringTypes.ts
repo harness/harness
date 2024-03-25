@@ -852,6 +852,7 @@ export interface StringsMap {
   updateUser: string
   updateWebhook: string
   updated: string
+  uploadAFileError: string
   user: string
   userCreated: string
   userId: string
