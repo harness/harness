@@ -16,7 +16,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import cx from 'classnames'
-import { debounce, has, omit, set } from 'lodash-es'
+import { debounce, get, has, omit, set } from 'lodash-es'
 import { FormikContextType, connect } from 'formik'
 import { Layout, Text, FormInput, Button, ButtonVariation, ButtonSize, Container } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -30,6 +30,9 @@ interface MultiMapConnectedProps extends MultiMapProps {
 }
 
 interface MultiMapProps {
+  /** unique field identifier */
+  identifier: string
+  /** fully qualified field name */
   name: string
   label: string
   readOnly?: boolean
@@ -57,7 +60,7 @@ enum KVPairProperty {
   VALUE = 'value'
 }
 
-export const MultiMap = ({ name, label, readOnly, formik }: MultiMapConnectedProps): JSX.Element => {
+export const MultiMap = ({ identifier, name, label, readOnly, formik }: MultiMapConnectedProps): JSX.Element => {
   const { getString } = useStrings()
   const [rowValues, setRowValues] = useState<Map<string, KVPair>>(new Map<string, KVPair>([]))
   const [formErrors, setFormErrors] = useState<Map<string, string>>(new Map<string, string>([]))
@@ -68,12 +71,31 @@ export const MultiMap = ({ name, label, readOnly, formik }: MultiMapConnectedPro
   */
   const counter = useRef<number>(0)
 
+  /* When map already has key-value pairs in it */
+  useEffect((): void => {
+    const existingKVPairs: Record<string, string> = get(formik?.initialValues, name, {})
+    const existingKVPairCount = Object.keys(existingKVPairs).length
+    if (existingKVPairCount > 0) {
+      const formValues = {}
+      const initialValueMap = new Map<string, KVPair>([])
+      Object.keys(existingKVPairs).forEach((key, index) => {
+        const _value = existingKVPairs[key]
+        const kvPair = { key, value: _value }
+        const rowKeyToAdd = getFieldName(identifier, index)
+        initialValueMap.set(rowKeyToAdd, kvPair)
+        set(formValues, `${rowKeyToAdd}-key`, key)
+        set(formValues, `${rowKeyToAdd}-value`, _value)
+      })
+      formik?.setValues(formValues)
+      setRowValues(initialValueMap)
+      counter.current += existingKVPairCount
+    }
+  }, [get(formik?.initialValues, name)])
+
   useEffect(() => {
     const values = Array.from(rowValues.values()).filter((value: KVPair) => !!value.key && !!value.value)
     if (values.length > 0) {
       formik?.setFieldValue(name, createKVMap(values))
-    } else {
-      cleanupField()
     }
   }, [rowValues])
 
@@ -103,16 +125,9 @@ export const MultiMap = ({ name, label, readOnly, formik }: MultiMapConnectedPro
     return map
   }, [])
 
-  const cleanupField = useCallback((): void => {
-    formik?.setValues(omit({ ...formik?.values }, name))
-  }, [formik?.values])
-
-  const getFieldName = useCallback(
-    (index: number): string => {
-      return `${name}-${index}`
-    },
-    [name]
-  )
+  const getFieldName = useCallback((prefix: string, index: number): string => {
+    return `${prefix}-${index}`
+  }, [])
 
   const getFormikNameForRowKey = useCallback((rowIdentifier: string): string => {
     return `${rowIdentifier}-key`
@@ -120,7 +135,7 @@ export const MultiMap = ({ name, label, readOnly, formik }: MultiMapConnectedPro
 
   const handleAddRowToList = useCallback((): void => {
     setRowValues((existingValueMap: Map<string, KVPair>) => {
-      const rowKeyToAdd = getFieldName(counter.current)
+      const rowKeyToAdd = getFieldName(identifier, counter.current)
       if (!existingValueMap.has(rowKeyToAdd)) {
         const existingValueMapClone = new Map(existingValueMap)
         /* Add key with default kv pair
@@ -199,7 +214,7 @@ export const MultiMap = ({ name, label, readOnly, formik }: MultiMapConnectedPro
     (rowIdentifier: string): React.ReactElement => {
       const rowValidationError = formErrors.get(getFormikNameForRowKey(rowIdentifier))
       return (
-        <Layout.Vertical spacing="xsmall">
+        <Layout.Vertical spacing="xsmall" key={rowIdentifier}>
           <Layout.Horizontal
             margin={{ bottom: 'none' }}
             flex={{ justifyContent: 'space-between', alignItems: 'center' }}>

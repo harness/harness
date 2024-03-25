@@ -15,7 +15,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { debounce, get, has, omit } from 'lodash-es'
+import { debounce, get, has, omit, set } from 'lodash-es'
 import { FormikContextType, connect } from 'formik'
 import { Layout, Text, FormInput, Button, ButtonVariation, ButtonSize, Container } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
@@ -58,15 +58,15 @@ export const MultiList = ({ identifier, name, label, readOnly, formik }: MultiLi
     const existingValues: string[] = get(formik?.initialValues, name, [])
     const existingItemCount = existingValues.length
     if (existingItemCount > 0) {
-      setValueMap((existingValueMap: Map<string, string>) => {
-        const existingValueMapClone = new Map(existingValueMap)
-        existingValues.map((item: string, index: number) => {
-          const rowKey = getRowKey(identifier, index)
-          existingValueMapClone.set(rowKey, item)
-          formik?.setFieldValue(rowKey, item)
-        })
-        return existingValueMapClone
+      const formValues = {}
+      const initialValueMap = new Map<string, string>()
+      existingValues.map((item: string, index: number) => {
+        const rowKey = getRowKey(identifier, index)
+        initialValueMap.set(rowKey, item)
+        set(formValues, rowKey, item)
       })
+      formik?.setValues(formValues)
+      setValueMap(initialValueMap)
       counter.current += existingItemCount
     }
   }, [get(formik?.initialValues, name)])

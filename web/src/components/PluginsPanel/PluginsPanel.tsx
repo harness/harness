@@ -434,6 +434,7 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
           return (
             <Container margin={{ bottom: 'large' }}>
               <MultiMap
+                identifier={identifier}
                 name={name}
                 key={name}
                 label={generateLabelForPluginField({ label, properties }) as string}
