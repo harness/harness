@@ -61,7 +61,6 @@ func ProvideController(
 		principalStore,
 		repoStore,
 		gitReporter,
-		git,
 		pullreqStore,
 		urlProvider,
 		protectionManager,
@@ -74,6 +73,7 @@ func ProvideController(
 	// TODO: improve wiring if possible
 	if fct, ok := githookFactory.(*ControllerClientFactory); ok {
 		fct.githookCtrl = ctrl
+		fct.git = git
 	}
 
 	return ctrl

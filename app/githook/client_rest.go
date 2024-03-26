@@ -77,7 +77,7 @@ func NewRestClient(
 		httpClient: http.DefaultClient,
 		baseURL:    strings.TrimRight(payload.BaseURL, "/"),
 		requestID:  payload.RequestID,
-		baseInput:  getInputBaseFromPayload(payload),
+		baseInput:  GetInputBaseFromPayload(payload),
 	}
 }
 

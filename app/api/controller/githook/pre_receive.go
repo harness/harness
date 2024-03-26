@@ -33,10 +33,9 @@ import (
 )
 
 // PreReceive executes the pre-receive hook for a git repository.
-//
-//nolint:revive // not yet fully implemented
 func (c *Controller) PreReceive(
 	ctx context.Context,
+	rgit RestrictedGIT,
 	session *auth.Session,
 	in types.GithookPreReceiveInput,
 ) (hook.Output, error) {
@@ -87,7 +86,7 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
 	}
 
-	err = c.preReceiveExtender.Extend(ctx, session, repo, in, &output)
+	err = c.preReceiveExtender.Extend(ctx, rgit, session, repo, in, &output)
 	if output.Error != nil {
 		return output, nil
 	}

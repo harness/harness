@@ -43,6 +43,7 @@ const (
 // PostReceive executes the post-receive hook for a git repository.
 func (c *Controller) PostReceive(
 	ctx context.Context,
+	rgit RestrictedGIT,
 	session *auth.Session,
 	in types.GithookPostReceiveInput,
 ) (hook.Output, error) {
@@ -52,7 +53,7 @@ func (c *Controller) PostReceive(
 	}
 
 	// report ref events (best effort)
-	c.reportReferenceEvents(ctx, repo, in.PrincipalID, in.PostReceiveInput)
+	c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalID, in.PostReceiveInput)
 
 	// create output object and have following messages fill its messages
 	out := hook.Output{}
@@ -60,7 +61,7 @@ func (c *Controller) PostReceive(
 	// handle branch updates related to PRs - best effort
 	c.handlePRMessaging(ctx, repo, in.PostReceiveInput, &out)
 
-	err = c.postReceiveExtender.Extend(ctx, session, repo, in, &out)
+	err = c.postReceiveExtender.Extend(ctx, rgit, session, repo, in, &out)
 	if out.Error != nil {
 		return out, nil
 	}
@@ -76,6 +77,7 @@ func (c *Controller) PostReceive(
 // TODO: in the future we might want to think about propagating errors so user is aware of events not being triggered.
 func (c *Controller) reportReferenceEvents(
 	ctx context.Context,
+	rgit RestrictedGIT,
 	repo *types.Repository,
 	principalID int64,
 	in hook.PostReceiveInput,
@@ -83,7 +85,7 @@ func (c *Controller) reportReferenceEvents(
 	for _, refUpdate := range in.RefUpdates {
 		switch {
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):
-			c.reportBranchEvent(ctx, repo, principalID, refUpdate)
+			c.reportBranchEvent(ctx, rgit, repo, principalID, in.Environment, refUpdate)
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixTag):
 			c.reportTagEvent(ctx, repo, principalID, refUpdate)
 		default:
@@ -94,8 +96,10 @@ func (c *Controller) reportReferenceEvents(
 
 func (c *Controller) reportBranchEvent(
 	ctx context.Context,
+	rgit RestrictedGIT,
 	repo *types.Repository,
 	principalID int64,
+	env hook.Environment,
 	branchUpdate hook.ReferenceUpdate,
 ) {
 	switch {
@@ -114,8 +118,11 @@ func (c *Controller) reportBranchEvent(
 			SHA:         branchUpdate.Old.String(),
 		})
 	default:
-		result, err := c.git.IsAncestor(ctx, git.IsAncestorParams{
-			ReadParams:          git.ReadParams{RepoUID: repo.GitUID},
+		result, err := rgit.IsAncestor(ctx, git.IsAncestorParams{
+			ReadParams: git.ReadParams{
+				RepoUID:             repo.GitUID,
+				AlternateObjectDirs: env.AlternateObjectDirs,
+			},
 			AncestorCommitSHA:   branchUpdate.Old,
 			DescendantCommitSHA: branchUpdate.New,
 		})

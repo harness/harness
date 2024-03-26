@@ -25,10 +25,9 @@ import (
 )
 
 // Update executes the update hook for a git repository.
-//
-//nolint:revive // not yet implemented
 func (c *Controller) Update(
 	ctx context.Context,
+	rgit RestrictedGIT,
 	session *auth.Session,
 	in types.GithookUpdateInput,
 ) (hook.Output, error) {
@@ -39,7 +38,7 @@ func (c *Controller) Update(
 
 	output := hook.Output{}
 
-	err = c.updateExtender.Extend(ctx, session, repo, in, &output)
+	err = c.updateExtender.Extend(ctx, rgit, session, repo, in, &output)
 	if output.Error != nil {
 		return output, nil
 	}

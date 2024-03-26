@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/sha"
 )
 
@@ -49,8 +50,16 @@ func (c *CLICore) PreReceive(ctx context.Context) error {
 		return fmt.Errorf("failed to read updated references from std in: %w", err)
 	}
 
+	alternateObjDirs, err := getAlternateObjectDirsFromEnv()
+	if err != nil {
+		return fmt.Errorf("failed to read alternate object dirs from env: %w", err)
+	}
+
 	in := PreReceiveInput{
 		RefUpdates: refUpdates,
+		Environment: Environment{
+			AlternateObjectDirs: alternateObjDirs,
+		},
 	}
 
 	out, err := c.client.PreReceive(ctx, in)
@@ -60,11 +69,19 @@ func (c *CLICore) PreReceive(ctx context.Context) error {
 
 // Update executes the update git hook.
 func (c *CLICore) Update(ctx context.Context, ref string, oldSHA string, newSHA string) error {
+	alternateObjDirs, err := getAlternateObjectDirsFromEnv()
+	if err != nil {
+		return fmt.Errorf("failed to read alternate object dirs from env: %w", err)
+	}
+
 	in := UpdateInput{
 		RefUpdate: ReferenceUpdate{
 			Ref: ref,
 			Old: sha.Must(oldSHA),
 			New: sha.Must(newSHA),
+		},
+		Environment: Environment{
+			AlternateObjectDirs: alternateObjDirs,
 		},
 	}
 
@@ -82,6 +99,9 @@ func (c *CLICore) PostReceive(ctx context.Context) error {
 
 	in := PostReceiveInput{
 		RefUpdates: refUpdates,
+		Environment: Environment{
+			AlternateObjectDirs: nil, // all objects are in main objects folder at this point
+		},
 	}
 
 	out, err := c.client.PostReceive(ctx, in)
@@ -148,4 +168,17 @@ func getUpdatedReferencesFromStdIn() ([]ReferenceUpdate, error) {
 	}
 
 	return updatedRefs, nil
+}
+
+// getAlternateObjectDirsFromEnv returns the alternate object directories that have to be used
+// to be able to preemptively access the quarantined objects created by a write operation.
+// NOTE: The temp dir of a write operation is it's main object dir,
+// which is the one that read operations have to use as alternate object dir.
+func getAlternateObjectDirsFromEnv() ([]string, error) {
+	tmpDir, err := getRequiredEnvironmentVariable(command.GitObjectDir)
+	if err != nil {
+		return nil, err
+	}
+
+	return []string{tmpDir}, nil
 }

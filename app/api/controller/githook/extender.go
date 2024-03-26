@@ -25,6 +25,7 @@ import (
 type PreReceiveExtender interface {
 	Extend(
 		context.Context,
+		RestrictedGIT,
 		*auth.Session,
 		*types.Repository,
 		types.GithookPreReceiveInput,
@@ -35,6 +36,7 @@ type PreReceiveExtender interface {
 type UpdateExtender interface {
 	Extend(
 		context.Context,
+		RestrictedGIT,
 		*auth.Session,
 		*types.Repository,
 		types.GithookUpdateInput,
@@ -45,6 +47,7 @@ type UpdateExtender interface {
 type PostReceiveExtender interface {
 	Extend(
 		context.Context,
+		RestrictedGIT,
 		*auth.Session,
 		*types.Repository,
 		types.GithookPostReceiveInput,
@@ -61,6 +64,7 @@ func NewPreReceiveExtender() PreReceiveExtender {
 
 func (NoOpPreReceiveExtender) Extend(
 	context.Context,
+	RestrictedGIT,
 	*auth.Session,
 	*types.Repository,
 	types.GithookPreReceiveInput,
@@ -78,6 +82,7 @@ func NewUpdateExtender() UpdateExtender {
 
 func (NoOpUpdateExtender) Extend(
 	context.Context,
+	RestrictedGIT,
 	*auth.Session,
 	*types.Repository,
 	types.GithookUpdateInput,
@@ -95,6 +100,7 @@ func NewPostReceiveExtender() PostReceiveExtender {
 
 func (NoOpPostReceiveExtender) Extend(
 	context.Context,
+	RestrictedGIT,
 	*auth.Session,
 	*types.Repository,
 	types.GithookPostReceiveInput,

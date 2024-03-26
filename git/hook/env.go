@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"os"
 )
@@ -26,11 +25,6 @@ import (
 const (
 	// envNamePayload defines the environment variable name used to send the payload to githook binary.
 	envNamePayload = "GIT_HOOK_PAYLOAD"
-)
-
-var (
-	// ErrEnvVarNotFound is an error that is returned in case the environment variable isn't found.
-	ErrEnvVarNotFound = errors.New("environment variable not found")
 )
 
 // GenerateEnvironmentVariables generates the environment variables that should be used when calling git
@@ -60,7 +54,7 @@ func LoadPayloadFromMap[T any](envVars map[string]string) (T, error) {
 	// retrieve payload from environment variables
 	payloadBase64, ok := envVars[envNamePayload]
 	if !ok {
-		return payload, ErrEnvVarNotFound
+		return payload, fmt.Errorf("environment variable %q not found", envNamePayload)
 	}
 
 	return decodePayload[T](payloadBase64)
@@ -71,7 +65,7 @@ func LoadPayloadFromEnvironment[T any]() (T, error) {
 	var payload T
 
 	// retrieve payload from environment variables
-	payloadBase64, err := getEnvironmentVariable(envNamePayload)
+	payloadBase64, err := getRequiredEnvironmentVariable(envNamePayload)
 	if err != nil {
 		return payload, fmt.Errorf("failed to load payload from environment variables: %w", err)
 	}
@@ -97,14 +91,14 @@ func decodePayload[T any](encodedPayload string) (T, error) {
 	return payload, nil
 }
 
-func getEnvironmentVariable(name string) (string, error) {
+func getRequiredEnvironmentVariable(name string) (string, error) {
 	val, ok := os.LookupEnv(name)
 	if !ok {
-		return "", ErrEnvVarNotFound
+		return "", fmt.Errorf("environment variable %q not found", name)
 	}
 
 	if val == "" {
-		return "", fmt.Errorf("'%s' found in env but it's empty", name)
+		return "", fmt.Errorf("environment variable %q found but it's empty", name)
 	}
 
 	return val, nil

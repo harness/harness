@@ -18,14 +18,18 @@ import (
 	"encoding/json"
 	"net/http"
 
-	githookcontroller "github.com/harness/gitness/app/api/controller/githook"
+	controllergithook "github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 )
 
 // HandleUpdate returns a handler function that handles update git hooks.
-func HandleUpdate(githookCtrl *githookcontroller.Controller) http.HandlerFunc {
+func HandleUpdate(
+	githookCtrl *controllergithook.Controller,
+	git git.Interface,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -37,7 +41,8 @@ func HandleUpdate(githookCtrl *githookcontroller.Controller) http.HandlerFunc {
 			return
 		}
 
-		out, err := githookCtrl.Update(ctx, session, in)
+		// gitness doesn't require any custom git connector.
+		out, err := githookCtrl.Update(ctx, git, session, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

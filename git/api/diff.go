@@ -183,13 +183,10 @@ func (g *Git) RawDiff(
 	cmd := command.New("diff",
 		command.WithFlag("-M"),
 		command.WithFlag("--full-index"),
+		command.WithAlternateObjectDirs(alternates...),
 	)
 	if mergeBase {
 		cmd.Add(command.WithFlag("--merge-base"))
-	}
-
-	if len(alternates) > 0 {
-		cmd.Add(command.WithAlternateObjectDirs(alternates...))
 	}
 
 	perFileDiffRequired := false

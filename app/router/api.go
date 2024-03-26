@@ -70,6 +70,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/githook"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -108,6 +109,7 @@ func NewAPIHandler(
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	githookCtrl *controllergithook.Controller,
+	git git.Interface,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
@@ -139,7 +141,7 @@ func NewAPIHandler(
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, appCtx, config, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
 			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
-			webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl,
+			webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl,
 			searchCtrl)
 	})
 
@@ -177,6 +179,7 @@ func setupRoutesV1(r chi.Router,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	githookCtrl *controllergithook.Controller,
+	git git.Interface,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
@@ -194,7 +197,7 @@ func setupRoutesV1(r chi.Router,
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupPrincipals(r, principalCtrl)
-	setupInternal(r, githookCtrl)
+	setupInternal(r, githookCtrl, git)
 	setupAdmin(r, userCtrl)
 	setupAccount(r, userCtrl, sysCtrl, config)
 	setupSystem(r, config, sysCtrl)
@@ -470,17 +473,17 @@ func setupTriggers(
 	})
 }
 
-func setupInternal(r chi.Router, githookCtrl *controllergithook.Controller) {
+func setupInternal(r chi.Router, githookCtrl *controllergithook.Controller, git git.Interface) {
 	r.Route("/internal", func(r chi.Router) {
-		SetupGitHooks(r, githookCtrl)
+		SetupGitHooks(r, githookCtrl, git)
 	})
 }
 
-func SetupGitHooks(r chi.Router, githookCtrl *controllergithook.Controller) {
+func SetupGitHooks(r chi.Router, githookCtrl *controllergithook.Controller, git git.Interface) {
 	r.Route("/git-hooks", func(r chi.Router) {
-		r.Post("/"+githook.HTTPRequestPathPreReceive, handlergithook.HandlePreReceive(githookCtrl))
-		r.Post("/"+githook.HTTPRequestPathUpdate, handlergithook.HandleUpdate(githookCtrl))
-		r.Post("/"+githook.HTTPRequestPathPostReceive, handlergithook.HandlePostReceive(githookCtrl))
+		r.Post("/"+githook.HTTPRequestPathPreReceive, handlergithook.HandlePreReceive(githookCtrl, git))
+		r.Post("/"+githook.HTTPRequestPathUpdate, handlergithook.HandleUpdate(githookCtrl, git))
+		r.Post("/"+githook.HTTPRequestPathPostReceive, handlergithook.HandlePostReceive(githookCtrl, git))
 	})
 }
 

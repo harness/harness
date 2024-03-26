@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/api/controller/githook"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -27,9 +28,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var _ hook.ClientFactory = (*ControllerClientFactory)(nil)
+var _ hook.Client = (*ControllerClient)(nil)
+
 // ControllerClientFactory creates clients that directly call the controller to execute githooks.
 type ControllerClientFactory struct {
 	githookCtrl *githook.Controller
+	git         git.Interface
 }
 
 func (f *ControllerClientFactory) NewClient(_ context.Context, envVars map[string]string) (hook.Client, error) {
@@ -48,8 +53,9 @@ func (f *ControllerClientFactory) NewClient(_ context.Context, envVars map[strin
 	}
 
 	return &ControllerClient{
-		baseInput:   getInputBaseFromPayload(payload),
+		baseInput:   GetInputBaseFromPayload(payload),
 		githookCtrl: f.githookCtrl,
+		git:         f.git,
 	}, nil
 }
 
@@ -57,6 +63,7 @@ func (f *ControllerClientFactory) NewClient(_ context.Context, envVars map[strin
 type ControllerClient struct {
 	baseInput   types.GithookInputBase
 	githookCtrl *githook.Controller
+	git         githook.RestrictedGIT
 }
 
 func (c *ControllerClient) PreReceive(
@@ -67,7 +74,8 @@ func (c *ControllerClient) PreReceive(
 
 	out, err := c.githookCtrl.PreReceive(
 		ctx,
-		nil, // TODO: update once githooks are auth protected
+		c.git, // gitness doesn't require any custom git connector.
+		nil,   // TODO: update once githooks are auth protected
 		types.GithookPreReceiveInput{
 			GithookInputBase: c.baseInput,
 			PreReceiveInput:  in,
@@ -88,7 +96,8 @@ func (c *ControllerClient) Update(
 
 	out, err := c.githookCtrl.Update(
 		ctx,
-		nil, // TODO: update once githooks are auth protected
+		c.git, // gitness doesn't require any custom git connector.
+		nil,   // TODO: update once githooks are auth protected
 		types.GithookUpdateInput{
 			GithookInputBase: c.baseInput,
 			UpdateInput:      in,
@@ -109,7 +118,8 @@ func (c *ControllerClient) PostReceive(
 
 	out, err := c.githookCtrl.PostReceive(
 		ctx,
-		nil, // TODO: update once githooks are auth protected
+		c.git, // gitness doesn't require any custom git connector.
+		nil,   // TODO: update once githooks are auth protected
 		types.GithookPostReceiveInput{
 			GithookInputBase: c.baseInput,
 			PostReceiveInput: in,

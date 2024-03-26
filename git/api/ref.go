@@ -342,6 +342,9 @@ func (g *Git) updateRefWithHooks(
 				New: newValue,
 			},
 		},
+		Environment: hook.Environment{
+			// TODO: Update once we properly copy quarantine objects only after pre-receive.
+		},
 	})
 	if err != nil {
 		return fmt.Errorf("pre-receive call failed with: %w", err)
@@ -378,6 +381,7 @@ func (g *Git) updateRefWithHooks(
 				New: newValue,
 			},
 		},
+		Environment: hook.Environment{},
 	})
 	if err != nil {
 		return fmt.Errorf("post-receive call failed with: %w", err)

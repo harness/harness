@@ -41,6 +41,7 @@ import (
 	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -103,6 +104,7 @@ func ProvideAPIHandler(
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	githookCtrl *githook.Controller,
+	git git.Interface,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
@@ -114,7 +116,7 @@ func ProvideAPIHandler(
 	return NewAPIHandler(appCtx, config,
 		authenticator, repoCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
-		githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl)
+		githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl)
 }
 
 func ProvideWebHandler(config *types.Config, openapi openapi.Service) WebHandler {

@@ -21,11 +21,15 @@ import (
 	controllergithook "github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 )
 
 // HandlePreReceive returns a handler function that handles pre-receive git hooks.
-func HandlePreReceive(githookCtrl *controllergithook.Controller) http.HandlerFunc {
+func HandlePreReceive(
+	githookCtrl *controllergithook.Controller,
+	git git.Interface,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -37,7 +41,8 @@ func HandlePreReceive(githookCtrl *controllergithook.Controller) http.HandlerFun
 			return
 		}
 
-		out, err := githookCtrl.PreReceive(ctx, session, in)
+		// gitness doesn't require any custom git connector.
+		out, err := githookCtrl.PreReceive(ctx, git, session, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

@@ -79,7 +79,9 @@ func (g *Git) GetMergeBase(
 func (g *Git) IsAncestor(
 	ctx context.Context,
 	repoPath string,
-	ancestorCommitSHA, descendantCommitSHA sha.SHA,
+	alternates []string,
+	ancestorCommitSHA,
+	descendantCommitSHA sha.SHA,
 ) (bool, error) {
 	if repoPath == "" {
 		return false, ErrRepositoryPathEmpty
@@ -88,6 +90,7 @@ func (g *Git) IsAncestor(
 	cmd := command.New("merge-base",
 		command.WithFlag("--is-ancestor"),
 		command.WithArg(ancestorCommitSHA.String(), descendantCommitSHA.String()),
+		command.WithAlternateObjectDirs(alternates...),
 	)
 
 	err := cmd.Run(ctx, command.WithDir(repoPath))

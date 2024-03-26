@@ -391,7 +391,13 @@ func (s *Service) IsAncestor(
 ) (IsAncestorOutput, error) {
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	result, err := s.git.IsAncestor(ctx, repoPath, params.AncestorCommitSHA, params.DescendantCommitSHA)
+	result, err := s.git.IsAncestor(
+		ctx,
+		repoPath,
+		params.AlternateObjectDirs,
+		params.AncestorCommitSHA,
+		params.DescendantCommitSHA,
+	)
 	if err != nil {
 		return IsAncestorOutput{}, err
 	}

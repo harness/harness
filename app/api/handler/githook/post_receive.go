@@ -21,11 +21,15 @@ import (
 	controllergithook "github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 )
 
 // HandlePostReceive returns a handler function that handles post-receive git hooks.
-func HandlePostReceive(githookCtrl *controllergithook.Controller) http.HandlerFunc {
+func HandlePostReceive(
+	githookCtrl *controllergithook.Controller,
+	git git.Interface,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -37,7 +41,8 @@ func HandlePostReceive(githookCtrl *controllergithook.Controller) http.HandlerFu
 			return
 		}
 
-		out, err := githookCtrl.PostReceive(ctx, session, in)
+		// gitness doesn't require any custom git connector.
+		out, err := githookCtrl.PostReceive(ctx, git, session, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

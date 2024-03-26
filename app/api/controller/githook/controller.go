@@ -26,40 +26,15 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
-
-// ServerHookOutput represents the output of server hook api calls.
-// TODO: support non-error messages (once we need it).
-type ServerHookOutput struct {
-	// Error contains the user facing error (like "branch is protected", ...).
-	Error *string `json:"error,omitempty"`
-}
-
-// ReferenceUpdate represents an update of a git reference.
-type ReferenceUpdate struct {
-	// Ref is the full name of the reference that got updated.
-	Ref string `json:"ref"`
-	// Old is the old commmit hash (before the update).
-	Old string `json:"old"`
-	// New is the new commit hash (after the update).
-	New string `json:"new"`
-}
-
-// BaseInput contains the base input for any githook api call.
-type BaseInput struct {
-	RepoID      int64 `json:"repo_id"`
-	PrincipalID int64 `json:"principal_id"`
-}
 
 type Controller struct {
 	authorizer          authz.Authorizer
 	principalStore      store.PrincipalStore
 	repoStore           store.RepoStore
 	gitReporter         *eventsgit.Reporter
-	git                 git.Interface
 	pullreqStore        store.PullReqStore
 	urlProvider         url.Provider
 	protectionManager   *protection.Manager
@@ -74,7 +49,6 @@ func NewController(
 	principalStore store.PrincipalStore,
 	repoStore store.RepoStore,
 	gitReporter *eventsgit.Reporter,
-	git git.Interface,
 	pullreqStore store.PullReqStore,
 	urlProvider url.Provider,
 	protectionManager *protection.Manager,
@@ -89,7 +63,6 @@ func NewController(
 		principalStore:      principalStore,
 		repoStore:           repoStore,
 		gitReporter:         gitReporter,
-		git:                 git,
 		pullreqStore:        pullreqStore,
 		urlProvider:         urlProvider,
 		protectionManager:   protectionManager,

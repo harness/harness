@@ -49,7 +49,7 @@ func (p Payload) Validate() error {
 	return nil
 }
 
-func getInputBaseFromPayload(p Payload) types.GithookInputBase {
+func GetInputBaseFromPayload(p Payload) types.GithookInputBase {
 	return types.GithookInputBase{
 		RepoID:      p.RepoID,
 		PrincipalID: p.PrincipalID,
