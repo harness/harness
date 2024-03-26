@@ -20,19 +20,19 @@ import (
 	"time"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/enum"
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/sha"
 )
 
 type GetCommitParams struct {
 	ReadParams
-	// SHA is the git commit sha
-	SHA string
+	Revision string
 }
 
 type Commit struct {
-	SHA        string            `json:"sha"`
-	ParentSHAs []string          `json:"parent_shas,omitempty"`
+	SHA        sha.SHA           `json:"sha"`
+	ParentSHAs []sha.SHA         `json:"parent_shas,omitempty"`
 	Title      string            `json:"title"`
 	Message    string            `json:"message,omitempty"`
 	Author     Signature         `json:"author"`
@@ -70,11 +70,8 @@ func (s *Service) GetCommit(ctx context.Context, params *GetCommitParams) (*GetC
 	if params == nil {
 		return nil, ErrNoParamsProvided
 	}
-	if !isValidGitSHA(params.SHA) {
-		return nil, errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", params.SHA)
-	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	result, err := s.adapter.GetCommit(ctx, repoPath, params.SHA)
+	result, err := s.git.GetCommit(ctx, repoPath, params.Revision)
 	if err != nil {
 		return nil, err
 	}
@@ -116,8 +113,8 @@ type ListCommitsParams struct {
 type RenameDetails struct {
 	OldPath         string
 	NewPath         string
-	CommitShaBefore string
-	CommitShaAfter  string
+	CommitShaBefore sha.SHA
+	CommitShaAfter  sha.SHA
 }
 
 type ListCommitsOutput struct {
@@ -141,14 +138,14 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	gitCommits, renameDetails, err := s.adapter.ListCommits(
+	gitCommits, renameDetails, err := s.git.ListCommits(
 		ctx,
 		repoPath,
 		params.GitREF,
 		int(params.Page),
 		int(params.Limit),
 		params.IncludeStats,
-		types.CommitFilter{
+		api.CommitFilter{
 			AfterRef:  params.After,
 			Path:      params.Path,
 			Since:     params.Since,
@@ -165,7 +162,7 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 	if params.Page == 1 && len(gitCommits) < int(params.Limit) {
 		totalCommits = len(gitCommits)
 	} else if params.After != "" && params.GitREF != params.After {
-		div, err := s.adapter.GetCommitDivergences(ctx, repoPath, []types.CommitDivergenceRequest{
+		div, err := s.git.GetCommitDivergences(ctx, repoPath, []api.CommitDivergenceRequest{
 			{From: params.GitREF, To: params.After},
 		}, 0)
 		if err != nil {
@@ -178,7 +175,7 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 
 	commits := make([]Commit, len(gitCommits))
 	for i := range gitCommits {
-		commit, err := mapCommit(&gitCommits[i])
+		commit, err := mapCommit(gitCommits[i])
 		if err != nil {
 			return nil, fmt.Errorf("failed to map rpc commit: %w", err)
 		}
@@ -200,7 +197,7 @@ type GetCommitDivergencesParams struct {
 }
 
 type GetCommitDivergencesOutput struct {
-	Divergences []types.CommitDivergence
+	Divergences []api.CommitDivergence
 }
 
 // CommitDivergenceRequest contains the refs for which the converging commits should be counted.
@@ -229,16 +226,15 @@ func (s *Service) GetCommitDivergences(
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	requests := make([]types.CommitDivergenceRequest, len(params.Requests))
+	requests := make([]api.CommitDivergenceRequest, len(params.Requests))
 	for i, req := range params.Requests {
-		requests[i] = types.CommitDivergenceRequest{
+		requests[i] = api.CommitDivergenceRequest{
 			From: req.From,
 			To:   req.To,
 		}
 	}
 
-	// call gitea
-	divergences, err := s.adapter.GetCommitDivergences(
+	divergences, err := s.git.GetCommitDivergences(
 		ctx,
 		repoPath,
 		requests,

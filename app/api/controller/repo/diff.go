@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
-	gittypes "github.com/harness/gitness/git/types"
+	gittypes "github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -58,7 +58,7 @@ func (c *Controller) CommitDiff(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	sha string,
+	rev string,
 	w io.Writer,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
@@ -68,7 +68,7 @@ func (c *Controller) CommitDiff(
 
 	return c.git.CommitDiff(ctx, &git.GetCommitParams{
 		ReadParams: git.CreateReadParams(repo),
-		SHA:        sha,
+		Revision:   rev,
 	}, w)
 }
 

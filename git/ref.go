@@ -21,10 +21,9 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/enum"
-	"github.com/harness/gitness/git/types"
-
-	"code.gitea.io/gitea/modules/git"
+	"github.com/harness/gitness/git/sha"
 )
 
 type GetRefParams struct {
@@ -47,7 +46,7 @@ func (p *GetRefParams) Validate() error {
 }
 
 type GetRefResponse struct {
-	SHA string
+	SHA sha.SHA
 }
 
 func (s *Service) GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error) {
@@ -61,7 +60,7 @@ func (s *Service) GetRef(ctx context.Context, params GetRefParams) (GetRefRespon
 		return GetRefResponse{}, fmt.Errorf("GetRef: failed to fetch reference '%s': %w", params.Name, err)
 	}
 
-	sha, err := s.adapter.GetRef(ctx, repoPath, reference)
+	sha, err := s.git.GetRef(ctx, repoPath, reference)
 	if err != nil {
 		return GetRefResponse{}, err
 	}
@@ -75,10 +74,10 @@ type UpdateRefParams struct {
 	Name string
 	// NewValue specified the new value the reference should point at.
 	// An empty value will lead to the deletion of the branch.
-	NewValue string
+	NewValue sha.SHA
 	// OldValue is an optional value that can be used to ensure that the reference
 	// is updated iff its current value is matching the provided value.
-	OldValue string
+	OldValue sha.SHA
 }
 
 func (s *Service) UpdateRef(ctx context.Context, params UpdateRefParams) error {
@@ -92,7 +91,7 @@ func (s *Service) UpdateRef(ctx context.Context, params UpdateRefParams) error {
 		return fmt.Errorf("UpdateRef: failed to fetch reference '%s': %w", params.Name, err)
 	}
 
-	err = s.adapter.UpdateRef(
+	err = s.git.UpdateRef(
 		ctx,
 		params.EnvVars,
 		repoPath,
@@ -118,9 +117,9 @@ func GetRefPath(refName string, refType enum.RefType) (string, error) {
 	case enum.RefTypeRaw:
 		return refName, nil
 	case enum.RefTypeBranch:
-		return git.BranchPrefix + refName, nil
+		return api.BranchPrefix + refName, nil
 	case enum.RefTypeTag:
-		return git.TagPrefix + refName, nil
+		return api.TagPrefix + refName, nil
 	case enum.RefTypePullReqHead:
 		return refPullReqPrefix + refName + refPullReqHeadSuffix, nil
 	case enum.RefTypePullReqMerge:
@@ -135,10 +134,10 @@ func GetRefPath(refName string, refType enum.RefType) (string, error) {
 // wrapInstructorWithOptionalPagination wraps the provided walkInstructor with pagination.
 // If no paging is enabled, the original instructor is returned.
 func wrapInstructorWithOptionalPagination(
-	inner types.WalkReferencesInstructor,
+	inner api.WalkReferencesInstructor,
 	page int32,
 	pageSize int32,
-) (types.WalkReferencesInstructor, int32, error) {
+) (api.WalkReferencesInstructor, int32, error) {
 	// ensure pagination is requested
 	if pageSize < 1 {
 		return inner, 0, nil
@@ -159,7 +158,7 @@ func wrapInstructorWithOptionalPagination(
 
 	// we have to count ourselves for proper pagination
 	c := int32(0)
-	return func(e types.WalkReferencesEntry) (types.WalkInstruction, error) {
+	return func(e api.WalkReferencesEntry) (api.WalkInstruction, error) {
 			// execute inner instructor
 			inst, err := inner(e)
 			if err != nil {
@@ -167,7 +166,7 @@ func wrapInstructorWithOptionalPagination(
 			}
 
 			// no pagination if element is filtered out
-			if inst != types.WalkInstructionHandle {
+			if inst != api.WalkInstructionHandle {
 				return inst, nil
 			}
 
@@ -177,11 +176,11 @@ func wrapInstructorWithOptionalPagination(
 			// add pagination on filtered output
 			switch {
 			case c <= startAfter:
-				return types.WalkInstructionSkip, nil
+				return api.WalkInstructionSkip, nil
 			case c > endAfter:
-				return types.WalkInstructionStop, nil
+				return api.WalkInstructionStop, nil
 			default:
-				return types.WalkInstructionHandle, nil
+				return api.WalkInstructionHandle, nil
 			}
 		},
 		endAfter,

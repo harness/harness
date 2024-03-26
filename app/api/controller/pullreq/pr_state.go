@@ -129,7 +129,7 @@ func (c *Controller) State(ctx context.Context,
 			return nil, fmt.Errorf("failed to find merge base: %w", err)
 		}
 
-		mergeBaseSHA = mergeBaseResult.MergeBaseSHA
+		mergeBaseSHA = mergeBaseResult.MergeBaseSHA.String()
 
 		stateChange = changeReopen
 	} else if pr.State == enum.PullReqStateOpen && in.State != enum.PullReqStateOpen {

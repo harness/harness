@@ -77,7 +77,7 @@ import (
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/git/adapter"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/storage"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/livelog"
@@ -135,17 +135,17 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	cacheCache, err := adapter.ProvideLastCommitCache(typesConfig, universalClient)
+	cacheCache, err := api.ProvideLastCommitCache(typesConfig, universalClient)
 	if err != nil {
 		return nil, err
 	}
 	clientFactory := githook.ProvideFactory()
-	gitAdapter, err := git.ProvideGITAdapter(typesConfig, cacheCache, clientFactory)
+	apiGit, err := git.ProvideGITAdapter(typesConfig, cacheCache, clientFactory)
 	if err != nil {
 		return nil, err
 	}
 	storageStore := storage.ProvideLocalStore()
-	gitInterface, err := git.ProvideService(typesConfig, gitAdapter, storageStore)
+	gitInterface, err := git.ProvideService(typesConfig, apiGit, storageStore)
 	if err != nil {
 		return nil, err
 	}

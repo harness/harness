@@ -18,9 +18,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/git/adapter"
+	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/git/sharedrepo"
-	"github.com/harness/gitness/git/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -29,19 +29,19 @@ import (
 type Func func(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	author, committer *types.Signature,
+	author, committer *api.Signature,
 	message string,
-	mergeBaseSHA, targetSHA, sourceSHA string,
-) (mergeSHA string, conflicts []string, err error)
+	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
+) (mergeSHA sha.SHA, conflicts []string, err error)
 
 // Merge merges two the commits (targetSHA and sourceSHA) using the Merge method.
 func Merge(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	author, committer *types.Signature,
+	author, committer *api.Signature,
 	message string,
-	mergeBaseSHA, targetSHA, sourceSHA string,
-) (mergeSHA string, conflicts []string, err error) {
+	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
+) (mergeSHA sha.SHA, conflicts []string, err error) {
 	return mergeInternal(ctx,
 		repoPath, tmpDir,
 		author, committer,
@@ -54,10 +54,10 @@ func Merge(
 func Squash(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	author, committer *types.Signature,
+	author, committer *api.Signature,
 	message string,
-	mergeBaseSHA, targetSHA, sourceSHA string,
-) (mergeSHA string, conflicts []string, err error) {
+	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
+) (mergeSHA sha.SHA, conflicts []string, err error) {
 	return mergeInternal(ctx,
 		repoPath, tmpDir,
 		author, committer,
@@ -70,15 +70,15 @@ func Squash(
 func mergeInternal(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	author, committer *types.Signature,
+	author, committer *api.Signature,
 	message string,
-	mergeBaseSHA, targetSHA, sourceSHA string,
+	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
 	squash bool,
-) (mergeSHA string, conflicts []string, err error) {
+) (mergeSHA sha.SHA, conflicts []string, err error) {
 	err = runInSharedRepo(ctx, tmpDir, repoPath, func(s *sharedrepo.SharedRepo) error {
 		var err error
 
-		var treeSHA string
+		var treeSHA sha.SHA
 
 		treeSHA, conflicts, err = s.MergeTree(ctx, mergeBaseSHA, targetSHA, sourceSHA)
 		if err != nil {
@@ -89,7 +89,7 @@ func mergeInternal(
 			return nil
 		}
 
-		parents := make([]string, 0, 2)
+		parents := make([]sha.SHA, 0, 2)
 		parents = append(parents, targetSHA)
 		if !squash {
 			parents = append(parents, sourceSHA)
@@ -103,7 +103,7 @@ func mergeInternal(
 		return nil
 	})
 	if err != nil {
-		return "", nil, fmt.Errorf("merge method=merge squash=%t: %w", squash, err)
+		return sha.None, nil, fmt.Errorf("merge method=merge squash=%t: %w", squash, err)
 	}
 
 	return mergeSHA, conflicts, nil
@@ -115,10 +115,10 @@ func mergeInternal(
 func Rebase(
 	ctx context.Context,
 	repoPath, tmpDir string,
-	_, committer *types.Signature, // commit author isn't used here - it's copied from every commit
+	_, committer *api.Signature, // commit author isn't used here - it's copied from every commit
 	_ string, // commit message isn't used here
-	mergeBaseSHA, targetSHA, sourceSHA string,
-) (mergeSHA string, conflicts []string, err error) {
+	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
+) (mergeSHA sha.SHA, conflicts []string, err error) {
 	err = runInSharedRepo(ctx, tmpDir, repoPath, func(s *sharedrepo.SharedRepo) error {
 		sourceSHAs, err := s.CommitSHAsForRebase(ctx, mergeBaseSHA, sourceSHA)
 		if err != nil {
@@ -126,15 +126,15 @@ func Rebase(
 		}
 
 		lastCommitSHA := targetSHA
-		lastTreeSHA, err := s.GetTreeSHA(ctx, targetSHA)
+		lastTreeSHA, err := s.GetTreeSHA(ctx, targetSHA.String())
 		if err != nil {
 			return fmt.Errorf("failed to get tree sha for target: %w", err)
 		}
 
 		for _, commitSHA := range sourceSHAs {
-			var treeSHA string
+			var treeSHA sha.SHA
 
-			commitInfo, err := adapter.GetCommit(ctx, s.Directory(), commitSHA, "")
+			commitInfo, err := api.GetCommit(ctx, s.Directory(), commitSHA.String())
 			if err != nil {
 				return fmt.Errorf("failed to get commit data in rebase merge: %w", err)
 			}
@@ -146,7 +146,7 @@ func Rebase(
 				message += "\n\n" + commitInfo.Message
 			}
 
-			mergeTreeMergeBaseSHA := ""
+			var mergeTreeMergeBaseSHA sha.SHA
 			if len(commitInfo.ParentSHAs) > 0 {
 				// use parent of commit as merge base to only apply changes introduced by commit.
 				// See example usage of when --merge-base was introduced:
@@ -171,7 +171,7 @@ func Rebase(
 			// 2. The changes of the commit already exist on the target branch.
 			//    Git's `git rebase` is dropping such commits on default (and so does Github)
 			//    https://git-scm.com/docs/git-rebase#Documentation/git-rebase.txt---emptydropkeepask
-			if treeSHA == lastTreeSHA {
+			if treeSHA.Equal(lastTreeSHA) {
 				log.Ctx(ctx).Debug().Msgf("skipping commit %s as it's empty after rebase", commitSHA)
 				continue
 			}
@@ -188,7 +188,7 @@ func Rebase(
 		return nil
 	})
 	if err != nil {
-		return "", nil, fmt.Errorf("merge method=rebase: %w", err)
+		return sha.None, nil, fmt.Errorf("merge method=rebase: %w", err)
 	}
 
 	return mergeSHA, conflicts, nil

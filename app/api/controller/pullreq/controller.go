@@ -134,7 +134,7 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 			branch, repo.Identifier, err)
 	}
 
-	return ref.SHA, nil
+	return ref.SHA.String(), nil
 }
 
 func (c *Controller) getRepoCheckAccess(ctx context.Context,

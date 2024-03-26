@@ -25,7 +25,6 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
-	gittypes "github.com/harness/gitness/git/types"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -237,7 +236,7 @@ func (s *Service) getCodeOwnerFile(
 
 	return &File{
 		Content:   string(content),
-		SHA:       output.SHA,
+		SHA:       output.SHA.String(),
 		TotalSize: output.Size,
 	}, nil
 }
@@ -256,7 +255,7 @@ func (s *Service) getCodeOwnerFileNode(
 			Path:       path,
 		})
 
-		if gittypes.IsPathNotFoundError(err) {
+		if errors.IsNotFound(err) {
 			continue
 		}
 		if err != nil {

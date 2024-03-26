@@ -28,6 +28,9 @@ const (
 	GitTracePerformance = "GIT_TRACE_PERFORMANCE"
 	GitTraceSetup       = "GIT_TRACE_SETUP"
 	GitExecPath         = "GIT_EXEC_PATH" // tells Git where to find its binaries.
+
+	GitObjectDir           = "GIT_OBJECT_DIRECTORY"
+	GitAlternateObjectDirs = "GIT_ALTERNATE_OBJECT_DIRECTORIES"
 )
 
 // Envs custom key value store for environment variables.

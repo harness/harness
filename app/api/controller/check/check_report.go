@@ -141,7 +141,7 @@ func (c *Controller) Report(
 
 	_, err = c.git.GetCommit(ctx, &git.GetCommitParams{
 		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-		SHA:        commitSHA,
+		Revision:   commitSHA,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to commit sha=%s: %w", commitSHA, err)

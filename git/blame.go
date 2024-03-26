@@ -88,7 +88,7 @@ func (s *Service) Blame(ctx context.Context, params *BlameParams) (<-chan *Blame
 
 		repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-		reader := s.adapter.Blame(ctx,
+		reader := s.git.Blame(ctx,
 			repoPath, params.GitRef, params.Path,
 			params.LineFrom, params.LineTo)
 

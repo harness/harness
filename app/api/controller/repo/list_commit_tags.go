@@ -106,7 +106,7 @@ func mapCommitTag(t git.CommitTag) (CommitTag, error) {
 
 	return CommitTag{
 		Name:        t.Name,
-		SHA:         t.SHA,
+		SHA:         t.SHA.String(),
 		IsAnnotated: t.IsAnnotated,
 		Title:       t.Title,
 		Message:     t.Message,

@@ -48,6 +48,10 @@ func (e *Error) ExitCode() int {
 	return 0
 }
 
+func (e *Error) IsExitCode(code int) bool {
+	return e.ExitCode() == code
+}
+
 func (e *Error) Error() string {
 	if len(e.StdErr) != 0 {
 		return fmt.Sprintf("%s: %s", e.Err.Error(), e.StdErr)

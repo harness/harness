@@ -81,7 +81,7 @@ func (s *Service) GetTreeNode(ctx context.Context, params *GetTreeNodeParams) (*
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	gitNode, err := s.adapter.GetTreeNode(ctx, repoPath, params.GitREF, params.Path)
+	gitNode, err := s.git.GetTreeNode(ctx, repoPath, params.GitREF, params.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find node '%s' in '%s': %w", params.Path, params.GitREF, err)
 	}
@@ -97,7 +97,7 @@ func (s *Service) GetTreeNode(ctx context.Context, params *GetTreeNodeParams) (*
 		}, nil
 	}
 
-	pathDetails, err := s.adapter.PathsDetails(ctx, repoPath, params.GitREF, []string{params.Path})
+	pathDetails, err := s.git.PathsDetails(ctx, repoPath, params.GitREF, []string{params.Path})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get path details for '%s' in '%s': %w", params.Path, params.GitREF, err)
 	}
@@ -126,7 +126,7 @@ func (s *Service) ListTreeNodes(ctx context.Context, params *ListTreeNodeParams)
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	res, err := s.adapter.ListTreeNodes(
+	res, err := s.git.ListTreeNodes(
 		ctx,
 		repoPath,
 		params.GitREF,
@@ -172,7 +172,7 @@ func (s *Service) PathsDetails(ctx context.Context, params PathsDetailsParams) (
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	pathsDetails, err := s.adapter.PathsDetails(
+	pathsDetails, err := s.git.PathsDetails(
 		ctx,
 		repoPath,
 		params.GitREF,

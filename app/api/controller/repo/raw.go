@@ -31,7 +31,7 @@ func (c *Controller) Raw(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	gitRef string,
-	repoPath string,
+	path string,
 ) (io.ReadCloser, int64, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
 	if err != nil {
@@ -48,7 +48,7 @@ func (c *Controller) Raw(ctx context.Context,
 	treeNodeOutput, err := c.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
 		ReadParams:          readParams,
 		GitREF:              gitRef,
-		Path:                repoPath,
+		Path:                path,
 		IncludeLatestCommit: false,
 	})
 	if err != nil {
@@ -59,7 +59,7 @@ func (c *Controller) Raw(ctx context.Context,
 	if treeNodeOutput.Node.Type != git.TreeNodeTypeBlob {
 		return nil, 0, usererror.BadRequestf(
 			"Object in '%s' at '/%s' is of type '%s'. Only objects of type %s support raw viewing.",
-			gitRef, repoPath, treeNodeOutput.Node.Type, git.TreeNodeTypeBlob)
+			gitRef, path, treeNodeOutput.Node.Type, git.TreeNodeTypeBlob)
 	}
 
 	blobReader, err := c.git.GetBlob(ctx, &git.GetBlobParams{

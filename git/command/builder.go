@@ -39,7 +39,8 @@ func (b builder) supportsEndOfOptions() bool {
 
 // descriptions is a curated list of Git command descriptions.
 var descriptions = map[string]builder{
-	"am": {},
+	"am":  {},
+	"add": {},
 	"apply": {
 		flags: NoRefUpdates,
 	},
@@ -122,6 +123,9 @@ var descriptions = map[string]builder{
 		flags: NoRefUpdates,
 	},
 	"log": {
+		flags: NoRefUpdates,
+	},
+	"ls-files": {
 		flags: NoRefUpdates,
 	},
 	"ls-remote": {
@@ -226,6 +230,9 @@ var descriptions = map[string]builder{
 	"update-ref": {
 		flags: 0,
 	},
+	"update-index": {
+		flags: NoEndOfOptions,
+	},
 	"upload-archive": {
 		// git-upload-archive(1) has a handrolled parser which always interprets the
 		// first argument as directory, so we cannot use `--end-of-options`.
@@ -240,6 +247,9 @@ var descriptions = map[string]builder{
 	"worktree": {
 		flags: 0,
 	},
+	"write-tree": {
+		flags: 0,
+	},
 }
 
 // args validates the given flags and arguments and, if valid, returns the complete command line.
@@ -248,7 +258,7 @@ func (b builder) args(flags []string, args []string, postSepArgs []string) ([]st
 
 	cmdArgs = append(cmdArgs, flags...)
 
-	if b.supportsEndOfOptions() {
+	if b.supportsEndOfOptions() && len(flags) > 0 {
 		cmdArgs = append(cmdArgs, "--end-of-options")
 	}
 

@@ -20,7 +20,8 @@ import (
 
 // ReadParams contains the base parameters for read operations.
 type ReadParams struct {
-	RepoUID string
+	RepoUID             string
+	AlternateObjectDirs []string
 }
 
 func (p ReadParams) Validate() error {

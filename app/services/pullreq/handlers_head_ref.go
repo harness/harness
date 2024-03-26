@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/sha"
 )
 
 // createHeadRefOnCreated handles pull request Created events.
@@ -46,8 +47,8 @@ func (s *Service) createHeadRefOnCreated(ctx context.Context,
 		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
 		Type:        gitenum.RefTypePullReqHead,
-		NewValue:    event.Payload.SourceSHA,
-		OldValue:    "", // this is a new pull request, so we expect that the ref doesn't exist
+		NewValue:    sha.Must(event.Payload.SourceSHA),
+		OldValue:    sha.None, // this is a new pull request, so we expect that the ref doesn't exist
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update PR head ref: %w", err)
@@ -77,8 +78,8 @@ func (s *Service) updateHeadRefOnBranchUpdate(ctx context.Context,
 		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
 		Type:        gitenum.RefTypePullReqHead,
-		NewValue:    event.Payload.NewSHA,
-		OldValue:    event.Payload.OldSHA,
+		NewValue:    sha.Must(event.Payload.NewSHA),
+		OldValue:    sha.Must(event.Payload.OldSHA),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update PR head ref after new commit: %w", err)
@@ -108,8 +109,8 @@ func (s *Service) updateHeadRefOnReopen(ctx context.Context,
 		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
 		Type:        gitenum.RefTypePullReqHead,
-		NewValue:    event.Payload.SourceSHA,
-		OldValue:    "", // the request is re-opened, so anything can be the old value
+		NewValue:    sha.Must(event.Payload.SourceSHA),
+		OldValue:    sha.None, // the request is re-opened, so anything can be the old value
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update PR head ref after pull request reopen: %w", err)

@@ -151,22 +151,22 @@ func (s *Service) handleEventBranchDeleted(ctx context.Context,
 		})
 }
 
-func (s *Service) fetchCommitInfoForEvent(ctx context.Context, repoUID string, sha string) (CommitInfo, error) {
+func (s *Service) fetchCommitInfoForEvent(ctx context.Context, repoUID string, commitSHA string) (CommitInfo, error) {
 	out, err := s.git.GetCommit(ctx, &git.GetCommitParams{
 		ReadParams: git.ReadParams{
 			RepoUID: repoUID,
 		},
-		SHA: sha,
+		Revision: commitSHA,
 	})
 
 	if errors.AsStatus(err) == errors.StatusNotFound {
 		// this could happen if the commit has been deleted and garbage collected by now
 		// or if the targetSha doesn't point to an event - either way discard the event.
-		return CommitInfo{}, events.NewDiscardEventErrorf("commit with targetSha '%s' doesn't exist", sha)
+		return CommitInfo{}, events.NewDiscardEventErrorf("commit with targetSha '%s' doesn't exist", commitSHA)
 	}
 
 	if err != nil {
-		return CommitInfo{}, fmt.Errorf("failed to get commit with targetSha '%s': %w", sha, err)
+		return CommitInfo{}, fmt.Errorf("failed to get commit with targetSha '%s': %w", commitSHA, err)
 	}
 
 	return commitInfoFrom(out.Commit), nil

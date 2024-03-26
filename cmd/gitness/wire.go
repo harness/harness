@@ -78,7 +78,7 @@ import (
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/git/adapter"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/storage"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/livelog"
@@ -126,7 +126,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		pullreqevents.WireSet,
 		repoevents.WireSet,
 		storage.WireSet,
-		adapter.WireSet,
+		api.WireSet,
 		cliserver.ProvideGitConfig,
 		git.WireSet,
 		store.WireSet,

@@ -17,10 +17,11 @@ package git
 import (
 	"fmt"
 
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/parser"
 )
 
-func mapBranch(b *types.Branch) (*Branch, error) {
+func mapBranch(b *api.Branch) (*Branch, error) {
 	if b == nil {
 		return nil, fmt.Errorf("rpc branch is nil")
 	}
@@ -41,7 +42,7 @@ func mapBranch(b *types.Branch) (*Branch, error) {
 	}, nil
 }
 
-func mapCommit(c *types.Commit) (*Commit, error) {
+func mapCommit(c *api.Commit) (*Commit, error) {
 	if c == nil {
 		return nil, fmt.Errorf("rpc commit is nil")
 	}
@@ -67,12 +68,12 @@ func mapCommit(c *types.Commit) (*Commit, error) {
 	}, nil
 }
 
-func mapFileStats(typeStats []types.CommitFileStats) []CommitFileStats {
+func mapFileStats(typeStats []api.CommitFileStats) []CommitFileStats {
 	var stats = make([]CommitFileStats, len(typeStats))
 
 	for i, tStat := range typeStats {
 		stats[i] = CommitFileStats{
-			Status:     tStat.Status,
+			Status:     tStat.ChangeType,
 			Path:       tStat.Path,
 			OldPath:    tStat.OldPath,
 			Insertions: tStat.Insertions,
@@ -83,7 +84,7 @@ func mapFileStats(typeStats []types.CommitFileStats) []CommitFileStats {
 	return stats
 }
 
-func mapSignature(s *types.Signature) (*Signature, error) {
+func mapSignature(s *api.Signature) (*Signature, error) {
 	if s == nil {
 		return nil, fmt.Errorf("rpc signature is nil")
 	}
@@ -99,7 +100,7 @@ func mapSignature(s *types.Signature) (*Signature, error) {
 	}, nil
 }
 
-func mapIdentity(id *types.Identity) (Identity, error) {
+func mapIdentity(id *api.Identity) (Identity, error) {
 	if id == nil {
 		return Identity{}, fmt.Errorf("rpc identity is nil")
 	}
@@ -110,12 +111,12 @@ func mapIdentity(id *types.Identity) (Identity, error) {
 	}, nil
 }
 
-func mapBranchesSortOption(o BranchSortOption) types.GitReferenceField {
+func mapBranchesSortOption(o BranchSortOption) api.GitReferenceField {
 	switch o {
 	case BranchSortOptionName:
-		return types.GitReferenceFieldObjectName
+		return api.GitReferenceFieldObjectName
 	case BranchSortOptionDate:
-		return types.GitReferenceFieldCreatorDate
+		return api.GitReferenceFieldCreatorDate
 	case BranchSortOptionDefault:
 		fallthrough
 	default:
@@ -124,7 +125,7 @@ func mapBranchesSortOption(o BranchSortOption) types.GitReferenceField {
 	}
 }
 
-func mapAnnotatedTag(tag *types.Tag) *CommitTag {
+func mapAnnotatedTag(tag *api.Tag) *CommitTag {
 	tagger, _ := mapSignature(&tag.Tagger)
 	return &CommitTag{
 		Name:        tag.Name,
@@ -137,21 +138,21 @@ func mapAnnotatedTag(tag *types.Tag) *CommitTag {
 	}
 }
 
-func mapListCommitTagsSortOption(s TagSortOption) types.GitReferenceField {
+func mapListCommitTagsSortOption(s TagSortOption) api.GitReferenceField {
 	switch s {
 	case TagSortOptionDate:
-		return types.GitReferenceFieldCreatorDate
+		return api.GitReferenceFieldCreatorDate
 	case TagSortOptionName:
-		return types.GitReferenceFieldRefName
+		return api.GitReferenceFieldRefName
 	case TagSortOptionDefault:
-		return types.GitReferenceFieldRefName
+		return api.GitReferenceFieldRefName
 	default:
 		// no need to error out - just use default for sorting
-		return types.GitReferenceFieldRefName
+		return api.GitReferenceFieldRefName
 	}
 }
 
-func mapTreeNode(n *types.TreeNode) (TreeNode, error) {
+func mapTreeNode(n *api.TreeNode) (TreeNode, error) {
 	if n == nil {
 		return TreeNode{}, fmt.Errorf("rpc tree node is nil")
 	}
@@ -169,43 +170,43 @@ func mapTreeNode(n *types.TreeNode) (TreeNode, error) {
 	return TreeNode{
 		Type: nodeType,
 		Mode: mode,
-		SHA:  n.Sha,
+		SHA:  n.SHA.String(),
 		Name: n.Name,
 		Path: n.Path,
 	}, nil
 }
 
-func mapTreeNodeType(t types.TreeNodeType) (TreeNodeType, error) {
+func mapTreeNodeType(t api.TreeNodeType) (TreeNodeType, error) {
 	switch t {
-	case types.TreeNodeTypeBlob:
+	case api.TreeNodeTypeBlob:
 		return TreeNodeTypeBlob, nil
-	case types.TreeNodeTypeCommit:
+	case api.TreeNodeTypeCommit:
 		return TreeNodeTypeCommit, nil
-	case types.TreeNodeTypeTree:
+	case api.TreeNodeTypeTree:
 		return TreeNodeTypeTree, nil
 	default:
 		return TreeNodeTypeBlob, fmt.Errorf("unknown rpc tree node type: %d", t)
 	}
 }
 
-func mapTreeNodeMode(m types.TreeNodeMode) (TreeNodeMode, error) {
+func mapTreeNodeMode(m api.TreeNodeMode) (TreeNodeMode, error) {
 	switch m {
-	case types.TreeNodeModeFile:
+	case api.TreeNodeModeFile:
 		return TreeNodeModeFile, nil
-	case types.TreeNodeModeExec:
+	case api.TreeNodeModeExec:
 		return TreeNodeModeExec, nil
-	case types.TreeNodeModeSymlink:
+	case api.TreeNodeModeSymlink:
 		return TreeNodeModeSymlink, nil
-	case types.TreeNodeModeCommit:
+	case api.TreeNodeModeCommit:
 		return TreeNodeModeCommit, nil
-	case types.TreeNodeModeTree:
+	case api.TreeNodeModeTree:
 		return TreeNodeModeTree, nil
 	default:
 		return TreeNodeModeFile, fmt.Errorf("unknown rpc tree node mode: %d", m)
 	}
 }
 
-func mapRenameDetails(c []types.PathRenameDetails) []*RenameDetails {
+func mapRenameDetails(c []api.PathRenameDetails) []*RenameDetails {
 	renameDetailsList := make([]*RenameDetails, len(c))
 	for i, detail := range c {
 		renameDetailsList[i] = &RenameDetails{
@@ -218,21 +219,21 @@ func mapRenameDetails(c []types.PathRenameDetails) []*RenameDetails {
 	return renameDetailsList
 }
 
-func mapToSortOrder(o SortOrder) types.SortOrder {
+func mapToSortOrder(o SortOrder) api.SortOrder {
 	switch o {
 	case SortOrderAsc:
-		return types.SortOrderAsc
+		return api.SortOrderAsc
 	case SortOrderDesc:
-		return types.SortOrderDesc
+		return api.SortOrderDesc
 	case SortOrderDefault:
-		return types.SortOrderDefault
+		return api.SortOrderDefault
 	default:
 		// no need to error out - just use default for sorting
-		return types.SortOrderDefault
+		return api.SortOrderDefault
 	}
 }
 
-func mapHunkHeader(h *types.HunkHeader) HunkHeader {
+func mapHunkHeader(h *parser.HunkHeader) HunkHeader {
 	return HunkHeader{
 		OldLine: h.OldLine,
 		OldSpan: h.OldSpan,
@@ -242,7 +243,7 @@ func mapHunkHeader(h *types.HunkHeader) HunkHeader {
 	}
 }
 
-func mapDiffFileHeader(h *types.DiffFileHeader) DiffFileHeader {
+func mapDiffFileHeader(h *parser.DiffFileHeader) DiffFileHeader {
 	return DiffFileHeader{
 		OldName:    h.OldFileName,
 		NewName:    h.NewFileName,

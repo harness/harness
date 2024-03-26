@@ -17,6 +17,7 @@ package command
 import (
 	"io"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -105,6 +106,15 @@ func WithConfig(key, value string) CmdOptionFunc {
 	}
 }
 
+// WithAlternateObjectDirs function sets alternates directories for object access.
+func WithAlternateObjectDirs(dirs ...string) CmdOptionFunc {
+	return func(c *Command) {
+		if len(dirs) > 0 {
+			c.Envs[GitAlternateObjectDirs] = strings.Join(dirs, ":")
+		}
+	}
+}
+
 // RunOption contains option for running a command.
 type RunOption struct {
 	// Dir is location of repo.
@@ -115,6 +125,9 @@ type RunOption struct {
 	Stdout io.Writer
 	// Stderr is the error output from the command.
 	Stderr io.Writer
+	// Envs is environments slice containing (final) immutable
+	// environment pair "ENV=value"
+	Envs []string
 }
 
 type RunOptionFunc func(option *RunOption)
@@ -145,5 +158,13 @@ func WithStdout(stdout io.Writer) RunOptionFunc {
 func WithStderr(stderr io.Writer) RunOptionFunc {
 	return func(option *RunOption) {
 		option.Stderr = stderr
+	}
+}
+
+// WithEnvs sets immutable values as slice, it is always added
+// et the end of env slice.
+func WithEnvs(envs ...string) RunOptionFunc {
+	return func(option *RunOption) {
+		option.Envs = append(option.Envs, envs...)
 	}
 }

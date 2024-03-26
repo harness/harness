@@ -101,9 +101,14 @@ func MapCommit(c *git.Commit) (*types.Commit, error) {
 		deletions += stat.Deletions
 	}
 
+	parentSHAs := make([]string, len(c.ParentSHAs))
+	for i, sha := range c.ParentSHAs {
+		parentSHAs[i] = sha.String()
+	}
+
 	return &types.Commit{
-		SHA:        c.SHA,
-		ParentSHAs: c.ParentSHAs,
+		SHA:        c.SHA.String(),
+		ParentSHAs: parentSHAs,
 		Title:      c.Title,
 		Message:    c.Message,
 		Author:     *author,
@@ -145,8 +150,8 @@ func MapRenameDetails(c *git.RenameDetails) *types.RenameDetails {
 	return &types.RenameDetails{
 		OldPath:         c.OldPath,
 		NewPath:         c.NewPath,
-		CommitShaBefore: c.CommitShaBefore,
-		CommitShaAfter:  c.CommitShaAfter,
+		CommitShaBefore: c.CommitShaBefore.String(),
+		CommitShaAfter:  c.CommitShaAfter.String(),
 	}
 }
 

@@ -41,7 +41,7 @@ func (s *Service) GetSubmodule(ctx context.Context, params *GetSubmoduleParams) 
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 	// TODO: do we need to validate request for nil?
-	gitSubmodule, err := s.adapter.GetSubmodule(ctx, repoPath, params.GitREF, params.Path)
+	gitSubmodule, err := s.git.GetSubmodule(ctx, repoPath, params.GitREF, params.Path)
 	if err != nil {
 		return nil, fmt.Errorf("GetSubmodule: failed to get submodule: %w", err)
 	}

@@ -20,9 +20,9 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/errors"
-	"github.com/harness/gitness/git/adapter"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/check"
-	"github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
 )
@@ -35,14 +35,14 @@ const (
 	BranchSortOptionDate
 )
 
-var listBranchesRefFields = []types.GitReferenceField{
-	types.GitReferenceFieldRefName,
-	types.GitReferenceFieldObjectName,
+var listBranchesRefFields = []api.GitReferenceField{
+	api.GitReferenceFieldRefName,
+	api.GitReferenceFieldObjectName,
 }
 
 type Branch struct {
 	Name   string
-	SHA    string
+	SHA    sha.SHA
 	Commit *Commit
 }
 
@@ -97,17 +97,17 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	targetCommit, err := s.adapter.GetCommit(ctx, repoPath, strings.TrimSpace(params.Target))
+	targetCommit, err := s.git.GetCommit(ctx, repoPath, strings.TrimSpace(params.Target))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get target commit: %w", err)
 	}
-	branchRef := adapter.GetReferenceFromBranchName(params.BranchName)
-	err = s.adapter.UpdateRef(
+	branchRef := api.GetReferenceFromBranchName(params.BranchName)
+	err = s.git.UpdateRef(
 		ctx,
 		params.EnvVars,
 		repoPath,
 		branchRef,
-		types.NilSHA, // we want to make sure we don't overwrite any parallel create
+		sha.Nil, // we want to make sure we don't overwrite any parallel create
 		targetCommit.SHA,
 	)
 	if errors.IsConflict(err) {
@@ -139,7 +139,7 @@ func (s *Service) GetBranch(ctx context.Context, params *GetBranchParams) (*GetB
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 	sanitizedBranchName := strings.TrimPrefix(params.BranchName, gitReferenceNamePrefixBranch)
 
-	gitBranch, err := s.adapter.GetBranch(ctx, repoPath, sanitizedBranchName)
+	gitBranch, err := s.git.GetBranch(ctx, repoPath, sanitizedBranchName)
 	if err != nil {
 		return nil, err
 	}
@@ -160,17 +160,17 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	branchRef := adapter.GetReferenceFromBranchName(params.BranchName)
+	branchRef := api.GetReferenceFromBranchName(params.BranchName)
 
-	err := s.adapter.UpdateRef(
+	err := s.git.UpdateRef(
 		ctx,
 		params.EnvVars,
 		repoPath,
 		branchRef,
-		"", // delete whatever is there
-		types.NilSHA,
+		sha.None, // delete whatever is there
+		sha.Nil,
 	)
-	if types.IsNotFoundError(err) {
+	if errors.IsNotFound(err) {
 		return errors.NotFound("branch %q does not exist", params.BranchName)
 	}
 	if err != nil {
@@ -187,7 +187,7 @@ func (s *Service) ListBranches(ctx context.Context, params *ListBranchesParams) 
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	gitBranches, err := s.listBranchesLoadReferenceData(ctx, repoPath, types.BranchFilter{
+	gitBranches, err := s.listBranchesLoadReferenceData(ctx, repoPath, api.BranchFilter{
 		IncludeCommit: params.IncludeCommit,
 		Query:         params.Query,
 		Sort:          mapBranchesSortOption(params.Sort),
@@ -203,17 +203,17 @@ func (s *Service) ListBranches(ctx context.Context, params *ListBranchesParams) 
 	if params.IncludeCommit {
 		commitSHAs := make([]string, len(gitBranches))
 		for i := range gitBranches {
-			commitSHAs[i] = gitBranches[i].SHA
+			commitSHAs[i] = gitBranches[i].SHA.String()
 		}
 
-		var gitCommits []types.Commit
-		gitCommits, err = s.adapter.GetCommits(ctx, repoPath, commitSHAs)
+		var gitCommits []*api.Commit
+		gitCommits, err = s.git.GetCommits(ctx, repoPath, commitSHAs)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get commit: %w", err)
 		}
 
 		for i := range gitCommits {
-			gitBranches[i].Commit = &gitCommits[i]
+			gitBranches[i].Commit = gitCommits[i]
 		}
 	}
 
@@ -234,13 +234,13 @@ func (s *Service) ListBranches(ctx context.Context, params *ListBranchesParams) 
 func (s *Service) listBranchesLoadReferenceData(
 	ctx context.Context,
 	repoPath string,
-	filter types.BranchFilter,
-) ([]*types.Branch, error) {
+	filter api.BranchFilter,
+) ([]*api.Branch, error) {
 	// TODO: can we be smarter with slice allocation
-	branches := make([]*types.Branch, 0, 16)
+	branches := make([]*api.Branch, 0, 16)
 	handler := listBranchesWalkReferencesHandler(&branches)
 	instructor, endsAfter, err := wrapInstructorWithOptionalPagination(
-		adapter.DefaultInstructor, // branches only have one target type, default instructor is enough
+		api.DefaultInstructor, // branches only have one target type, default instructor is enough
 		filter.Page,
 		filter.PageSize,
 	)
@@ -248,7 +248,7 @@ func (s *Service) listBranchesLoadReferenceData(
 		return nil, errors.InvalidArgument("invalid pagination details: %v", err)
 	}
 
-	opts := &types.WalkReferencesOptions{
+	opts := &api.WalkReferencesOptions{
 		Patterns:   createReferenceWalkPatternsFromQuery(gitReferenceNamePrefixBranch, filter.Query),
 		Sort:       filter.Sort,
 		Order:      filter.Order,
@@ -258,32 +258,32 @@ func (s *Service) listBranchesLoadReferenceData(
 		MaxWalkDistance: endsAfter,
 	}
 
-	err = s.adapter.WalkReferences(ctx, repoPath, handler, opts)
+	err = s.git.WalkReferences(ctx, repoPath, handler, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to walk branch references: %w", err)
 	}
 
-	log.Ctx(ctx).Trace().Msgf("git adapter returned %d branches", len(branches))
+	log.Ctx(ctx).Trace().Msgf("git api returned %d branches", len(branches))
 
 	return branches, nil
 }
 
 func listBranchesWalkReferencesHandler(
-	branches *[]*types.Branch,
-) types.WalkReferencesHandler {
-	return func(e types.WalkReferencesEntry) error {
-		fullRefName, ok := e[types.GitReferenceFieldRefName]
+	branches *[]*api.Branch,
+) api.WalkReferencesHandler {
+	return func(e api.WalkReferencesEntry) error {
+		fullRefName, ok := e[api.GitReferenceFieldRefName]
 		if !ok {
 			return fmt.Errorf("entry missing reference name")
 		}
-		objectSHA, ok := e[types.GitReferenceFieldObjectName]
+		objectSHA, ok := e[api.GitReferenceFieldObjectName]
 		if !ok {
 			return fmt.Errorf("entry missing object sha")
 		}
 
-		branch := &types.Branch{
+		branch := &api.Branch{
 			Name: fullRefName[len(gitReferenceNamePrefixBranch):],
-			SHA:  objectSHA,
+			SHA:  sha.Must(objectSHA),
 		}
 
 		// TODO: refactor to not use slice pointers?

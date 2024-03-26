@@ -77,6 +77,33 @@ func New(name string, options ...CmdOptionFunc) *Command {
 	return c
 }
 
+// Clone clones the command object.
+func (c *Command) Clone() *Command {
+	flags := make([]string, len(c.Flags))
+	copy(flags, c.Flags)
+
+	args := make([]string, len(c.Args))
+	copy(args, c.Args)
+
+	postSepArgs := make([]string, len(c.PostSepArgs))
+	copy(postSepArgs, c.Flags)
+
+	envs := make(Envs, len(c.Envs))
+	for key, val := range c.Envs {
+		envs[key] = val
+	}
+
+	return &Command{
+		Name:             c.Name,
+		Action:           c.Action,
+		Flags:            flags,
+		Args:             args,
+		PostSepArgs:      postSepArgs,
+		Envs:             envs,
+		configEnvCounter: c.configEnvCounter,
+	}
+}
+
 // Add appends given options to the command.
 func (c *Command) Add(options ...CmdOptionFunc) *Command {
 	for _, opt := range options {
@@ -109,6 +136,7 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 	if len(c.Envs) > 0 {
 		cmd.Env = c.Envs.Args()
 	}
+	cmd.Env = append(cmd.Env, options.Envs...)
 	cmd.Dir = options.Dir
 	cmd.Stdin = options.Stdin
 	cmd.Stdout = options.Stdout

@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/git/enum"
-	"github.com/harness/gitness/git/types"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -65,9 +64,9 @@ index f043b93..0000000
 		return
 	}
 
-	want := []*types.DiffFileHunkHeaders{
+	want := []*DiffFileHunkHeaders{
 		{
-			FileHeader: types.DiffFileHeader{
+			FileHeader: DiffFileHeader{
 				OldFileName: "new_file.txt",
 				NewFileName: "new_file.txt",
 				Extensions: map[string]string{
@@ -75,23 +74,23 @@ index f043b93..0000000
 					enum.DiffExtHeaderIndex:       "0000000..fb0c863",
 				},
 			},
-			HunksHeaders: []types.HunkHeader{{OldLine: 0, OldSpan: 0, NewLine: 1, NewSpan: 3}},
+			HunksHeaders: []HunkHeader{{OldLine: 0, OldSpan: 0, NewLine: 1, NewSpan: 3}},
 		},
 		{
-			FileHeader: types.DiffFileHeader{
+			FileHeader: DiffFileHeader{
 				OldFileName: "old_file_name.txt",
 				NewFileName: "changed_file.txt",
 				Extensions: map[string]string{
 					enum.DiffExtHeaderIndex: "f043b93..e9449b5 100644",
 				},
 			},
-			HunksHeaders: []types.HunkHeader{
+			HunksHeaders: []HunkHeader{
 				{OldLine: 7, OldSpan: 3, NewLine: 7, NewSpan: 4},
 				{OldLine: 27, OldSpan: 2, NewLine: 28, NewSpan: 3},
 			},
 		},
 		{
-			FileHeader: types.DiffFileHeader{
+			FileHeader: DiffFileHeader{
 				OldFileName: "deleted_file.txt",
 				NewFileName: "deleted_file.txt",
 				Extensions: map[string]string{
@@ -99,7 +98,7 @@ index f043b93..0000000
 					enum.DiffExtHeaderIndex:           "f043b93..0000000",
 				},
 			},
-			HunksHeaders: []types.HunkHeader{{OldLine: 1, OldSpan: 3, NewLine: 0, NewSpan: 0}},
+			HunksHeaders: []HunkHeader{{OldLine: 1, OldSpan: 3, NewLine: 0, NewSpan: 0}},
 		},
 	}
 

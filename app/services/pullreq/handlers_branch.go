@@ -97,7 +97,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 
 			pr.Edited = time.Now().UnixMilli()
 			pr.SourceSHA = event.Payload.NewSHA
-			pr.MergeBaseSHA = newMergeBase
+			pr.MergeBaseSHA = newMergeBase.String()
 
 			// reset merge-check fields for new run
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
@@ -137,7 +137,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			OldSHA:          event.Payload.OldSHA,
 			NewSHA:          event.Payload.NewSHA,
 			OldMergeBaseSHA: oldMergeBase,
-			NewMergeBaseSHA: newMergeBase,
+			NewMergeBaseSHA: newMergeBase.String(),
 			Forced:          event.Payload.Forced,
 		})
 

@@ -16,7 +16,7 @@ package git
 
 import (
 	"github.com/harness/gitness/cache"
-	"github.com/harness/gitness/git/adapter"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/storage"
 	"github.com/harness/gitness/git/types"
@@ -32,15 +32,19 @@ var WireSet = wire.NewSet(
 
 func ProvideGITAdapter(
 	config types.Config,
-	lastCommitCache cache.Cache[adapter.CommitEntryKey, *types.Commit],
+	lastCommitCache cache.Cache[api.CommitEntryKey, *api.Commit],
 	githookFactory hook.ClientFactory,
-) (Adapter, error) {
-	return adapter.New(config, lastCommitCache, githookFactory)
+) (*api.Git, error) {
+	return api.New(
+		config,
+		lastCommitCache,
+		githookFactory,
+	)
 }
 
 func ProvideService(
 	config types.Config,
-	adapter Adapter,
+	adapter *api.Git,
 	storage storage.Store,
 ) (Interface, error) {
 	return New(
