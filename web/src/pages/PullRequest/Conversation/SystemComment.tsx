@@ -120,7 +120,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                 str={getString('pr.prReviewSubmit')}
                 vars={{
                   user: <strong>{payload?.author?.display_name}</strong>,
-                  state: <Text margin={{ right: 'xsmall' }}>{(payload?.payload as Unknown)?.decision}</Text>,
+                  state: (payload?.payload as Unknown)?.decision,
                   time: (
                     <Text inline margin={{ left: 'xsmall' }}>
                       <PipeSeparator height={9} />
