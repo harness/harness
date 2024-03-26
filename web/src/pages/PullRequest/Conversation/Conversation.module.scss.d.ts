@@ -39,11 +39,13 @@ export declare const optionMenuIcon: string
 export declare const popover: string
 export declare const refreshIcon: string
 export declare const repeatBtn: string
+export declare const rightTextPadding: string
 export declare const selectButton: string
 export declare const snapshot: string
 export declare const snapshotContent: string
 export declare const sortContainer: string
 export declare const sortDropdown: string
+export declare const textPadding: string
 export declare const threadbox: string
 export declare const timeButton: string
 export declare const timeText: string

@@ -284,7 +284,8 @@ pr:
   requestSubmitted: Request for changes submitted.
   prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} the pull request.  {time}'
   prMergedBannerInfo: '{user} merged branch {source} into {target} {time}.'
-  prMergedInfo: '{user} merged branch {source} into {target}. {time}'
+  prMergedInfo: '{user} merged changes from {source} into {target} as {mergeSha} {time}'
+  prRebasedInfo: '{user} rebased changes from branch {source} onto {target}, now at {mergeSha} {time}'
   prBranchPushInfo: '{user} pushed a new commit {commit}'
   prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'

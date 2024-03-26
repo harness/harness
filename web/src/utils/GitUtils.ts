@@ -190,6 +190,12 @@ export const PullRequestFilterOption = {
   ALL: 'all'
 }
 
+export enum MergeStrategy {
+  MERGE = 'merge',
+  SQUASH = 'squash',
+  REBASE = 'rebase'
+}
+
 export const CodeIcon = {
   Logo: 'code' as IconName,
   PullRequest: 'git-pull' as IconName,

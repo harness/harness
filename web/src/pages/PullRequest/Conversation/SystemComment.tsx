@@ -20,7 +20,7 @@ import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Render } from 'react-jsx-match'
 import { defaultTo } from 'lodash-es'
-import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps, MergeStrategy } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReqActivity } from 'services/code'
@@ -36,6 +36,11 @@ import css from './Conversation.module.scss'
 interface SystemCommentProps extends Pick<GitInfoProps, 'pullReqMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
   repoMetadataPath?: string
+}
+
+interface MergePayload {
+  merge_sha: string
+  merge_method: string
 }
 
 export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, commentItems, repoMetadataPath }) => {
@@ -54,13 +59,31 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
             </Container>
 
             <Avatar name={pullReqMetadata.merger?.display_name} size="small" hoverCard={false} />
-            <Text>
+            <Text flex tag="div">
               <StringSubstitute
-                str={getString('pr.prMergedInfo')}
+                str={
+                  (payload?.payload as MergePayload)?.merge_method === MergeStrategy.REBASE
+                    ? getString('pr.prRebasedInfo')
+                    : getString('pr.prMergedInfo')
+                }
                 vars={{
-                  user: <strong>{pullReqMetadata.merger?.display_name}</strong>,
-                  source: <strong>{pullReqMetadata.source_branch}</strong>,
-                  target: <strong>{pullReqMetadata.target_branch}</strong>,
+                  user: <strong className={css.rightTextPadding}>{pullReqMetadata.merger?.display_name}</strong>,
+                  source: <strong className={css.textPadding}>{pullReqMetadata.source_branch}</strong>,
+                  target: <strong className={css.textPadding}>{pullReqMetadata.target_branch}</strong>,
+                  mergeSha: (
+                    <Container className={css.commitContainer} padding={{ left: 'small', right: 'xsmall' }}>
+                      <CommitActions
+                        enableCopy
+                        sha={(payload?.payload as MergePayload)?.merge_sha}
+                        href={routes.toCODEPullRequest({
+                          repoPath: repoMetadataPath as string,
+                          pullRequestSection: PullRequestSection.FILES_CHANGED,
+                          pullRequestId: String(pullReqMetadata.number),
+                          commitSHA: (payload?.payload as MergePayload)?.merge_sha as string
+                        })}
+                      />
+                    </Container>
+                  ),
                   time: (
                     <Text inline margin={{ left: 'xsmall' }}>
                       <PipeSeparator height={9} />

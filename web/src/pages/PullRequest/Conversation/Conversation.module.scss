@@ -265,3 +265,12 @@
 .copyButton {
   --button-height: 14px !important;
 }
+
+.textPadding {
+  padding-left: var(--spacing-xsmall);
+  padding-right: var(--spacing-xsmall);
+}
+
+.rightTextPadding {
+  padding-right: var(--spacing-xsmall);
+}
