@@ -70,6 +70,11 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
+	err = c.repoCheck.Create(ctx, session, in)
+	if err != nil {
+		return nil, err
+	}
+
 	var repo *types.Repository
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		if err := c.resourceLimiter.RepoCount(ctx, parentSpace.ID, 1); err != nil {

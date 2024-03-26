@@ -66,6 +66,7 @@ type Controller struct {
 	resourceLimiter    limiter.ResourceLimiter
 	mtxManager         lock.MutexManager
 	identifierCheck    check.RepoIdentifier
+	repoCheck          Check
 }
 
 func NewController(
@@ -88,6 +89,7 @@ func NewController(
 	limiter limiter.ResourceLimiter,
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
+	repoCheck Check,
 ) *Controller {
 	return &Controller{
 		defaultBranch:                 config.Git.DefaultBranch,
@@ -110,6 +112,7 @@ func NewController(
 		resourceLimiter:               limiter,
 		mtxManager:                    mtxManager,
 		identifierCheck:               identifierCheck,
+		repoCheck:                     repoCheck,
 	}
 }
 

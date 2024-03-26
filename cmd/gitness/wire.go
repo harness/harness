@@ -183,6 +183,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		controllerkeywordsearch.WireSet,
 		usergroup.WireSet,
 		openapi.WireSet,
+		repo.ProvideRepoCheck,
 	)
 	return &cliserver.System{}, nil
 }

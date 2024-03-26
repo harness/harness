@@ -58,10 +58,15 @@ func ProvideController(
 	limiter limiter.ResourceLimiter,
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
+	repoChecks Check,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer, repoStore,
 		spaceStore, pipelineStore,
 		principalStore, ruleStore, principalInfoCache, protectionManager,
-		rpcClient, importer, codeOwners, reporeporter, indexer, limiter, mtxManager, identifierCheck)
+		rpcClient, importer, codeOwners, reporeporter, indexer, limiter, mtxManager, identifierCheck, repoChecks)
+}
+
+func ProvideRepoCheck() Check {
+	return NewNoOpRepoChecks()
 }
