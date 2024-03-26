@@ -12,6 +12,7 @@ import (
 	check2 "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
+	githook2 "github.com/harness/gitness/app/api/controller/githook"
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	logs2 "github.com/harness/gitness/app/api/controller/logs"
@@ -260,7 +261,19 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(authorizer, principalStore, repoStore, reporter2, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter)
+	preReceiveExtender, err := githook2.ProvidePreReceiveExtender()
+	if err != nil {
+		return nil, err
+	}
+	updateExtender, err := githook2.ProvideUpdateExtender()
+	if err != nil {
+		return nil, err
+	}
+	postReceiveExtender, err := githook2.ProvidePostReceiveExtender()
+	if err != nil {
+		return nil, err
+	}
+	githookController := githook.ProvideController(authorizer, principalStore, repoStore, reporter2, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, preReceiveExtender, updateExtender, postReceiveExtender)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore)
 	v := check2.ProvideCheckSanitizers()

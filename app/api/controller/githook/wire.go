@@ -14,4 +14,24 @@
 
 package githook
 
+import "github.com/google/wire"
+
 // Due to cyclic injection dependencies, wiring can be found at app/githook/wire.go
+
+var WireSet = wire.NewSet(
+	ProvidePreReceiveExtender,
+	ProvideUpdateExtender,
+	ProvidePostReceiveExtender,
+)
+
+func ProvidePreReceiveExtender() (PreReceiveExtender, error) {
+	return NewPreReceiveExtender(), nil
+}
+
+func ProvideUpdateExtender() (UpdateExtender, error) {
+	return NewUpdateExtender(), nil
+}
+
+func ProvidePostReceiveExtender() (PostReceiveExtender, error) {
+	return NewPostReceiveExtender(), nil
+}

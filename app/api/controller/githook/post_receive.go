@@ -60,6 +60,14 @@ func (c *Controller) PostReceive(
 	// handle branch updates related to PRs - best effort
 	c.handlePRMessaging(ctx, repo, in.PostReceiveInput, &out)
 
+	err = c.postReceiveExtender.Extend(ctx, session, repo, in, &out)
+	if out.Error != nil {
+		return out, nil
+	}
+	if err != nil {
+		return hook.Output{}, fmt.Errorf("failed to extend post-receive hook: %w", err)
+	}
+
 	return out, nil
 }
 

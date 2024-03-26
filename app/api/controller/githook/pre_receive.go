@@ -87,6 +87,14 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
 	}
 
+	err = c.preReceiveExtender.Extend(ctx, session, repo, in, &output)
+	if output.Error != nil {
+		return output, nil
+	}
+	if err != nil {
+		return hook.Output{}, fmt.Errorf("failed to extend pre-receive hook: %w", err)
+	}
+
 	return output, nil
 }
 

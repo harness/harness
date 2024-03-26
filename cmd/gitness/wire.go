@@ -13,6 +13,7 @@ import (
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
+	ctrlgithook "github.com/harness/gitness/app/api/controller/githook"
 	controllerkeywordsearch "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	controllerlogs "github.com/harness/gitness/app/api/controller/logs"
@@ -139,6 +140,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideTriggerConfig,
 		trigger.WireSet,
 		githook.WireSet,
+		ctrlgithook.WireSet,
 		cliserver.ProvideLockConfig,
 		lock.WireSet,
 		cliserver.ProvidePubsubConfig,

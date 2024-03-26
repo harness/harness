@@ -52,6 +52,9 @@ func ProvideController(
 	protectionManager *protection.Manager,
 	githookFactory hook.ClientFactory,
 	limiter limiter.ResourceLimiter,
+	preReceiveExtender githook.PreReceiveExtender,
+	updateExtender githook.UpdateExtender,
+	postReceiveExtender githook.PostReceiveExtender,
 ) *githook.Controller {
 	ctrl := githook.NewController(
 		authorizer,
@@ -62,7 +65,11 @@ func ProvideController(
 		pullreqStore,
 		urlProvider,
 		protectionManager,
-		limiter)
+		limiter,
+		preReceiveExtender,
+		updateExtender,
+		postReceiveExtender,
+	)
 
 	// TODO: improve wiring if possible
 	if fct, ok := githookFactory.(*ControllerClientFactory); ok {

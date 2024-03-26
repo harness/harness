@@ -55,15 +55,18 @@ type BaseInput struct {
 }
 
 type Controller struct {
-	authorizer        authz.Authorizer
-	principalStore    store.PrincipalStore
-	repoStore         store.RepoStore
-	gitReporter       *eventsgit.Reporter
-	git               git.Interface
-	pullreqStore      store.PullReqStore
-	urlProvider       url.Provider
-	protectionManager *protection.Manager
-	resourceLimiter   limiter.ResourceLimiter
+	authorizer          authz.Authorizer
+	principalStore      store.PrincipalStore
+	repoStore           store.RepoStore
+	gitReporter         *eventsgit.Reporter
+	git                 git.Interface
+	pullreqStore        store.PullReqStore
+	urlProvider         url.Provider
+	protectionManager   *protection.Manager
+	resourceLimiter     limiter.ResourceLimiter
+	preReceiveExtender  PreReceiveExtender
+	updateExtender      UpdateExtender
+	postReceiveExtender PostReceiveExtender
 }
 
 func NewController(
@@ -76,17 +79,24 @@ func NewController(
 	urlProvider url.Provider,
 	protectionManager *protection.Manager,
 	limiter limiter.ResourceLimiter,
+	preReceiveExtender PreReceiveExtender,
+	updateExtender UpdateExtender,
+	postReceiveExtender PostReceiveExtender,
+
 ) *Controller {
 	return &Controller{
-		authorizer:        authorizer,
-		principalStore:    principalStore,
-		repoStore:         repoStore,
-		gitReporter:       gitReporter,
-		git:               git,
-		pullreqStore:      pullreqStore,
-		urlProvider:       urlProvider,
-		protectionManager: protectionManager,
-		resourceLimiter:   limiter,
+		authorizer:          authorizer,
+		principalStore:      principalStore,
+		repoStore:           repoStore,
+		gitReporter:         gitReporter,
+		git:                 git,
+		pullreqStore:        pullreqStore,
+		urlProvider:         urlProvider,
+		protectionManager:   protectionManager,
+		resourceLimiter:     limiter,
+		preReceiveExtender:  preReceiveExtender,
+		updateExtender:      updateExtender,
+		postReceiveExtender: postReceiveExtender,
 	}
 }
 
