@@ -154,19 +154,18 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
 
       const dataArr = groupedData[key]
       if (groupedData && dataArr) {
-        let startTime = 0
-        let endTime = 0
-        dataArr.map((item: TypesCheck) => {
-          if (item) {
-            startTime += item.created ? item?.created : 0
-            endTime += item.updated ? item?.updated : 0
-          }
-        })
+        const { minCreated, maxUpdated } = dataArr.reduce(
+          (acc: any, item: TypesCheck) => ({
+            minCreated: item.created && item.created < acc.minCreated ? item.created : acc.minCreated,
+            maxUpdated: item.updated && item.updated > acc.maxUpdated ? item.updated : acc.maxUpdated
+          }),
+          { minCreated: Infinity, maxUpdated: -Infinity }
+        )
         const res = findStatus()
         const statusVal = res ? res.status : ''
         initialMap[key] = {
           status: statusVal,
-          time: timeDistance(startTime, endTime),
+          time: timeDistance(minCreated, maxUpdated),
           started: groupedData[key][0].started
         }
       }
@@ -174,7 +173,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
         if (uid.includes(key)) {
           setExpandedPipelineId(key)
         }
-        initialStates[key] = uid.includes(key) ? true : false // or true if you want them initially expanded
+        initialStates[key] = uid.includes(key)
       } else {
         setExpandedPipelineId(null)
         initialStates[key] = false
