@@ -77,10 +77,12 @@ func (c *Redis[K, V]) Get(ctx context.Context, key K) (V, error) {
 
 	raw, err := c.client.Get(ctx, strKey).Result()
 	if err == nil {
-		c.countHit++
-		return c.codec.Decode(raw)
-	}
-	if !errors.Is(err, redis.Nil) {
+		value, decErr := c.codec.Decode(raw)
+		if decErr == nil {
+			c.countHit++
+			return value, nil
+		}
+	} else if !errors.Is(err, redis.Nil) {
 		return nothing, err
 	}
 
