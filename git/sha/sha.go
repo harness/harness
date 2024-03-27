@@ -15,7 +15,10 @@
 package sha
 
 import (
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -49,6 +52,22 @@ func New(value string) (SHA, error) {
 	return SHA{
 		str: value,
 	}, nil
+}
+
+func (s SHA) GobEncode() ([]byte, error) {
+	buffer := &bytes.Buffer{}
+	err := gob.NewEncoder(buffer).Encode(s.str)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pack sha value: %w", err)
+	}
+	return buffer.Bytes(), nil
+}
+
+func (s *SHA) GobDecode(v []byte) error {
+	if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&s.str); err != nil {
+		return fmt.Errorf("failed to unpack sha value: %w", err)
+	}
+	return nil
 }
 
 func (s *SHA) UnmarshalJSON(content []byte) error {
