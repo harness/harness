@@ -120,6 +120,7 @@ func (err *MoreThanOneError) Error() string {
 
 // Logs the error and message, returns either the provided message or a git equivalent if possible.
 // Always logs the full message with error as warning.
+// Note: git errors should be processed in command package, this will probably be removed in the future.
 func processGitErrorf(err error, format string, args ...interface{}) error {
 	// create fallback error returned if we can't map it
 	fallbackErr := errors.Internal(err, format, args...)
@@ -130,6 +131,8 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	switch {
 	case err.Error() == "no such file or directory":
 		return errors.NotFound("repository not found")
+	case strings.Contains(err.Error(), "reference already exists"):
+		return errors.Conflict("reference already exists")
 	default:
 		return fallbackErr
 	}
