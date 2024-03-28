@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	eventsgit "github.com/harness/gitness/app/events/git"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
@@ -52,6 +53,7 @@ func ProvideController(
 	protectionManager *protection.Manager,
 	githookFactory hook.ClientFactory,
 	limiter limiter.ResourceLimiter,
+	settings *settings.Service,
 	preReceiveExtender githook.PreReceiveExtender,
 	updateExtender githook.UpdateExtender,
 	postReceiveExtender githook.PostReceiveExtender,
@@ -65,6 +67,7 @@ func ProvideController(
 		urlProvider,
 		protectionManager,
 		limiter,
+		settings,
 		preReceiveExtender,
 		updateExtender,
 		postReceiveExtender,

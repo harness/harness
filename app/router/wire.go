@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/principal"
 	"github.com/harness/gitness/app/api/controller/pullreq"
 	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/controller/secret"
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
 	"github.com/harness/gitness/app/api/controller/space"
@@ -92,6 +93,7 @@ func ProvideAPIHandler(
 	config *types.Config,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
+	repoSettingsCtrl *reposettings.Controller,
 	executionCtrl *execution.Controller,
 	logCtrl *logs.Controller,
 	spaceCtrl *space.Controller,
@@ -114,7 +116,7 @@ func ProvideAPIHandler(
 	searchCtrl *keywordsearch.Controller,
 ) APIHandler {
 	return NewAPIHandler(appCtx, config,
-		authenticator, repoCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
+		authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
 		githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl)
 }

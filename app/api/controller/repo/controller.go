@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
@@ -56,6 +57,7 @@ type Controller struct {
 	pipelineStore      store.PipelineStore
 	principalStore     store.PrincipalStore
 	ruleStore          store.RuleStore
+	settings           *settings.Service
 	principalInfoCache store.PrincipalInfoCache
 	protectionManager  *protection.Manager
 	git                git.Interface
@@ -79,6 +81,7 @@ func NewController(
 	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
 	ruleStore store.RuleStore,
+	settings *settings.Service,
 	principalInfoCache store.PrincipalInfoCache,
 	protectionManager *protection.Manager,
 	git git.Interface,
@@ -102,6 +105,7 @@ func NewController(
 		pipelineStore:                 pipelineStore,
 		principalStore:                principalStore,
 		ruleStore:                     ruleStore,
+		settings:                      settings,
 		principalInfoCache:            principalInfoCache,
 		protectionManager:             protectionManager,
 		git:                           git,
@@ -121,20 +125,11 @@ func (c *Controller) getRepo(
 	ctx context.Context,
 	repoRef string,
 ) (*types.Repository, error) {
-	if repoRef == "" {
-		return nil, usererror.BadRequest("A valid repository reference must be provided.")
-	}
-
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find repository: %w", err)
-	}
-
-	if repo.Importing {
-		return nil, usererror.BadRequest("Repository import is in progress.")
-	}
-
-	return repo, nil
+	return GetRepo(
+		ctx,
+		c.repoStore,
+		repoRef,
+	)
 }
 
 // getRepoCheckAccess fetches an active repo (not one that is currently being imported)
@@ -146,16 +141,15 @@ func (c *Controller) getRepoCheckAccess(
 	reqPermission enum.Permission,
 	orPublic bool,
 ) (*types.Repository, error) {
-	repo, err := c.getRepo(ctx, repoRef)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find repo: %w", err)
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, orPublic); err != nil {
-		return nil, fmt.Errorf("access check failed: %w", err)
-	}
-
-	return repo, nil
+	return GetRepoCheckAccess(
+		ctx,
+		c.repoStore,
+		c.authorizer,
+		session,
+		repoRef,
+		reqPermission,
+		orPublic,
+	)
 }
 
 func (c *Controller) validateParentRef(parentRef string) error {

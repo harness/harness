@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	eventsgit "github.com/harness/gitness/app/events/git"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/types"
@@ -38,7 +39,8 @@ type Controller struct {
 	pullreqStore        store.PullReqStore
 	urlProvider         url.Provider
 	protectionManager   *protection.Manager
-	resourceLimiter     limiter.ResourceLimiter
+	limiter             limiter.ResourceLimiter
+	settings            *settings.Service
 	preReceiveExtender  PreReceiveExtender
 	updateExtender      UpdateExtender
 	postReceiveExtender PostReceiveExtender
@@ -53,6 +55,7 @@ func NewController(
 	urlProvider url.Provider,
 	protectionManager *protection.Manager,
 	limiter limiter.ResourceLimiter,
+	settings *settings.Service,
 	preReceiveExtender PreReceiveExtender,
 	updateExtender UpdateExtender,
 	postReceiveExtender PostReceiveExtender,
@@ -66,7 +69,8 @@ func NewController(
 		pullreqStore:        pullreqStore,
 		urlProvider:         urlProvider,
 		protectionManager:   protectionManager,
-		resourceLimiter:     limiter,
+		limiter:             limiter,
+		settings:            settings,
 		preReceiveExtender:  preReceiveExtender,
 		updateExtender:      updateExtender,
 		postReceiveExtender: postReceiveExtender,

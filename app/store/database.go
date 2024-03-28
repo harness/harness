@@ -17,6 +17,7 @@ package store
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/harness/gitness/types"
@@ -237,6 +238,35 @@ type (
 
 		// ListSizeInfos returns a list of all active repo sizes.
 		ListSizeInfos(ctx context.Context) ([]*types.RepositorySizeInfo, error)
+	}
+
+	// SettingsStore defines the settings storage.
+	SettingsStore interface {
+		// Find returns the value of the setting with the given key for the provided scope.
+		Find(
+			ctx context.Context,
+			scope enum.SettingsScope,
+			scopeID int64,
+			key string,
+		) (json.RawMessage, error)
+
+		// FindMany returns the values of the settings with the given keys for the provided scope.
+		// NOTE: if a setting key doesn't exist the map just won't contain an entry for it (no error returned).
+		FindMany(
+			ctx context.Context,
+			scope enum.SettingsScope,
+			scopeID int64,
+			keys ...string,
+		) (map[string]json.RawMessage, error)
+
+		// Upsert upserts the value of the setting with the given key for the provided scope.
+		Upsert(
+			ctx context.Context,
+			scope enum.SettingsScope,
+			scopeID int64,
+			key string,
+			value json.RawMessage,
+		) error
 	}
 
 	// RepoGitInfoView defines the repository GitUID view.

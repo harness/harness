@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/principal"
 	"github.com/harness/gitness/app/api/controller/pullreq"
 	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/controller/secret"
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
 	"github.com/harness/gitness/app/api/controller/space"
@@ -51,6 +52,7 @@ import (
 	handlerprincipal "github.com/harness/gitness/app/api/handler/principal"
 	handlerpullreq "github.com/harness/gitness/app/api/handler/pullreq"
 	handlerrepo "github.com/harness/gitness/app/api/handler/repo"
+	handlerreposettings "github.com/harness/gitness/app/api/handler/reposettings"
 	"github.com/harness/gitness/app/api/handler/resource"
 	handlersecret "github.com/harness/gitness/app/api/handler/secret"
 	handlerserviceaccount "github.com/harness/gitness/app/api/handler/serviceaccount"
@@ -97,6 +99,7 @@ func NewAPIHandler(
 	config *types.Config,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
+	repoSettingsCtrl *reposettings.Controller,
 	executionCtrl *execution.Controller,
 	logCtrl *logs.Controller,
 	spaceCtrl *space.Controller,
@@ -139,7 +142,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, appCtx, config, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
+		setupRoutesV1(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
 			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 			webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl,
 			searchCtrl)
@@ -167,6 +170,7 @@ func setupRoutesV1(r chi.Router,
 	appCtx context.Context,
 	config *types.Config,
 	repoCtrl *repo.Controller,
+	repoSettingsCtrl *reposettings.Controller,
 	executionCtrl *execution.Controller,
 	triggerCtrl *trigger.Controller,
 	logCtrl *logs.Controller,
@@ -189,8 +193,8 @@ func setupRoutesV1(r chi.Router,
 	searchCtrl *keywordsearch.Controller,
 ) {
 	setupSpaces(r, appCtx, spaceCtrl)
-	setupRepos(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl, pullreqCtrl, webhookCtrl, checkCtrl,
-		uploadCtrl)
+	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
+		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl)
 	setupConnectors(r, connectorCtrl)
 	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
@@ -248,6 +252,7 @@ func setupSpaces(r chi.Router, appCtx context.Context, spaceCtrl *space.Controll
 
 func setupRepos(r chi.Router,
 	repoCtrl *repo.Controller,
+	repoSettingsCtrl *reposettings.Controller,
 	pipelineCtrl *pipeline.Controller,
 	executionCtrl *execution.Controller,
 	triggerCtrl *trigger.Controller,
@@ -268,6 +273,9 @@ func setupRepos(r chi.Router,
 			r.Delete("/", handlerrepo.HandleSoftDelete(repoCtrl))
 			r.Post("/purge", handlerrepo.HandlePurge(repoCtrl))
 			r.Post("/restore", handlerrepo.HandleRestore(repoCtrl))
+
+			r.Get("/settings/security", handlerreposettings.HandleSecurityFind(repoSettingsCtrl))
+			r.Patch("/settings/security", handlerreposettings.HandleSecurityUpdate(repoSettingsCtrl))
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))

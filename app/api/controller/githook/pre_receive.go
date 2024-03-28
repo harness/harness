@@ -46,7 +46,7 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, err
 	}
 
-	if err := c.resourceLimiter.RepoSize(ctx, in.RepoID); err != nil {
+	if err := c.limiter.RepoSize(ctx, in.RepoID); err != nil {
 		return hook.Output{}, fmt.Errorf(
 			"resource limit exceeded: %w",
 			limiter.ErrMaxRepoSizeReached)

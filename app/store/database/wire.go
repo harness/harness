@@ -52,6 +52,7 @@ var WireSet = wire.NewSet(
 	ProvidePullReqFileViewStore,
 	ProvideWebhookStore,
 	ProvideWebhookExecutionStore,
+	ProvideSettingsStore,
 	ProvideCheckStore,
 	ProvideConnectorStore,
 	ProvideTemplateStore,
@@ -240,4 +241,9 @@ func ProvideCheckStore(db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache,
 ) store.CheckStore {
 	return NewCheckStore(db, principalInfoCache)
+}
+
+// ProvideSettingsStore provides a settings store.
+func ProvideSettingsStore(db *sqlx.DB) store.SettingsStore {
+	return NewSettingsStore(db)
 }

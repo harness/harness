@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
@@ -48,6 +49,7 @@ func ProvideController(
 	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
 	ruleStore store.RuleStore,
+	settings *settings.Service,
 	principalInfoCache store.PrincipalInfoCache,
 	protectionManager *protection.Manager,
 	rpcClient git.Interface,
@@ -63,7 +65,7 @@ func ProvideController(
 	return NewController(config, tx, urlProvider,
 		authorizer, repoStore,
 		spaceStore, pipelineStore,
-		principalStore, ruleStore, principalInfoCache, protectionManager,
+		principalStore, ruleStore, settings, principalInfoCache, protectionManager,
 		rpcClient, importer, codeOwners, reporeporter, indexer, limiter, mtxManager, identifierCheck, repoChecks)
 }
 

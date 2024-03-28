@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/principal"
 	"github.com/harness/gitness/app/api/controller/pullreq"
 	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/controller/secret"
 	"github.com/harness/gitness/app/api/controller/service"
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
@@ -64,6 +65,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/services/reposize"
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/services/webhook"
@@ -112,6 +114,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		space.WireSet,
 		limiter.WireSet,
 		repo.WireSet,
+		reposettings.WireSet,
 		pullreq.WireSet,
 		controllerwebhook.WireSet,
 		serviceaccount.WireSet,
@@ -181,6 +184,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideKeywordSearchConfig,
 		keywordsearch.WireSet,
 		controllerkeywordsearch.WireSet,
+		settings.WireSet,
 		usergroup.WireSet,
 		openapi.WireSet,
 		repo.ProvideRepoCheck,
