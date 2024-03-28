@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/api"
@@ -44,7 +45,23 @@ func (c *Controller) scanSecrets(
 	in types.GithookPreReceiveInput,
 	output *hook.Output,
 ) error {
-	glOut, err := scanSecretsInternal(
+	// check if scanning is enabled on the repo
+	scanningEnabled, err := settings.RepoGet(
+		ctx,
+		c.settings,
+		repo.ID,
+		settings.KeySecretScanningEnabled,
+		settings.DefaultSecretScanningEnabled,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to check settings whether secret scanning is enabled: %w", err)
+	}
+	if !scanningEnabled {
+		return nil
+	}
+
+	// scan for secrets
+	scanResult, err := scanSecretsInternal(
 		ctx,
 		rgit,
 		repo,
@@ -54,12 +71,14 @@ func (c *Controller) scanSecrets(
 		return fmt.Errorf("failed to scan for git leaks: %w", err)
 	}
 
-	if glOut.HasResults() {
-		printScanSecretsFindings(output, glOut.findings)
-		output.Messages = append(output.Messages, "", "")
-
-		output.Error = ptr.String("Changes blocked by security scan results")
+	if !scanResult.HasResults() {
+		return nil
 	}
+
+	// pretty print output
+	printScanSecretsFindings(output, scanResult.findings)
+	output.Messages = append(output.Messages, "", "")
+	output.Error = ptr.String("Changes blocked by security scan results")
 
 	return nil
 }
@@ -104,7 +123,7 @@ func scanSecretsInternal(ctx context.Context,
 			log.Debug().Msgf("use latest dflt commit %s as comparison for new branch", latestDfltCommitSHA)
 		}
 
-		log.Debug().Msg("scan for gitleaks")
+		log.Debug().Msg("scan for secrets")
 
 		scanSecretsOut, err := rgit.ScanSecrets(ctx, &git.ScanSecretsParams{
 			ReadParams: git.ReadParams{
@@ -119,11 +138,11 @@ func scanSecretsInternal(ctx context.Context,
 		}
 
 		if len(scanSecretsOut.Findings) == 0 {
-			log.Debug().Msg("no leaks found")
+			log.Debug().Msg("no new secrets found")
 			continue
 		}
 
-		log.Debug().Msgf("found %d leaks", len(scanSecretsOut.Findings))
+		log.Debug().Msgf("found %d new secrets", len(scanSecretsOut.Findings))
 
 		res.findings = append(res.findings, scanSecretsOut.Findings...)
 	}

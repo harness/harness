@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/api"
 )
 
 // RestrictedGIT is a git client that is restricted to a subset of operations of git.Interface
@@ -29,4 +30,6 @@ type RestrictedGIT interface {
 	IsAncestor(ctx context.Context, params git.IsAncestorParams) (git.IsAncestorOutput, error)
 	ScanSecrets(ctx context.Context, param *git.ScanSecretsParams) (*git.ScanSecretsOutput, error)
 	GetBranch(ctx context.Context, params *git.GetBranchParams) (*git.GetBranchOutput, error)
+	Diff(ctx context.Context, in *git.DiffParams, files ...api.FileDiffRequest) (<-chan *git.FileDiff, <-chan error)
+	GetBlob(ctx context.Context, params *git.GetBlobParams) (*git.GetBlobOutput, error)
 }
