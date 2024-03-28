@@ -40,7 +40,7 @@ func (g *Git) MatchFiles(
 		return nil, fmt.Errorf("failed to list files in match files: %w", err)
 	}
 
-	catFileWriter, catFileReader, catFileStop := CatFileBatch(ctx, repoPath)
+	catFileWriter, catFileReader, catFileStop := CatFileBatch(ctx, repoPath, nil)
 	defer catFileStop()
 
 	var files []FileContent

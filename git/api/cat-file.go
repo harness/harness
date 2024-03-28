@@ -41,6 +41,7 @@ type WriteCloserError interface {
 func CatFileBatch(
 	ctx context.Context,
 	repoPath string,
+	alternateObjectDirs []string,
 	flags ...command.CmdOptionFunc,
 ) (WriteCloserError, *bufio.Reader, func()) {
 	const bufferSize = 32 * 1024
@@ -67,6 +68,7 @@ func CatFileBatch(
 		stderr := bytes.Buffer{}
 		cmd := command.New("cat-file",
 			command.WithFlag("--batch"),
+			command.WithAlternateObjectDirs(alternateObjectDirs...),
 		)
 		cmd.Add(flags...)
 		err := cmd.Run(ctx,

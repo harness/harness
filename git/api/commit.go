@@ -758,7 +758,7 @@ func GetCommit(
 	repoPath string,
 	rev string,
 ) (*Commit, error) {
-	wr, rd, cancel := CatFileBatch(ctx, repoPath)
+	wr, rd, cancel := CatFileBatch(ctx, repoPath, nil)
 	defer cancel()
 
 	_, _ = wr.Write([]byte(rev + "\n"))

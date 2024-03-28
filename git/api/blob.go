@@ -37,10 +37,11 @@ type BlobReader struct {
 func (g *Git) GetBlob(
 	ctx context.Context,
 	repoPath string,
+	alternateObjectDirs []string,
 	sha sha.SHA,
 	sizeLimit int64,
 ) (*BlobReader, error) {
-	stdIn, stdOut, cancel := CatFileBatch(ctx, repoPath)
+	stdIn, stdOut, cancel := CatFileBatch(ctx, repoPath, alternateObjectDirs)
 	line := sha.String() + "\n"
 	_, err := stdIn.Write([]byte(line))
 	if err != nil {

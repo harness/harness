@@ -126,7 +126,7 @@ func getAnnotatedTags(
 		return nil, ErrRepositoryPathEmpty
 	}
 	// The tag is an annotated tag with a message.
-	writer, reader, cancel := CatFileBatch(ctx, repoPath)
+	writer, reader, cancel := CatFileBatch(ctx, repoPath, nil)
 	defer func() {
 		cancel()
 		_ = writer.Close()
