@@ -177,7 +177,12 @@ func (s *SettingsStore) Upsert(ctx context.Context,
 	UPDATE SET
 		setting_value = EXCLUDED.setting_value
 	WHERE
-		settings.setting_value <> EXCLUDED.setting_value`)
+	`)
+	if strings.HasPrefix(s.db.DriverName(), "sqlite") {
+		stmt = stmt.Suffix(`settings.setting_value <> EXCLUDED.setting_value`)
+	} else {
+		stmt = stmt.Suffix(`settings.setting_value::text <> EXCLUDED.setting_value::text`)
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
