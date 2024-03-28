@@ -197,9 +197,9 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 
 	return nil
 }
-
-func (r *SharedRepo) InitAsShared(ctx context.Context) error {
+func (r *SharedRepo) initRepository(ctx context.Context, alternateObjDirs ...string) error {
 	cmd := command.New("init", command.WithFlag("--bare"))
+
 	if err := cmd.Run(ctx, command.WithDir(r.RepoPath)); err != nil {
 		return errors.Internal(err, "error while creating empty repository")
 	}
@@ -212,7 +212,14 @@ func (r *SharedRepo) InitAsShared(ctx context.Context) error {
 		}
 		defer func() { _ = f.Close() }()
 
-		data := filepath.Join(r.remoteRepoPath, "objects")
+		data := strings.Join(
+			append(
+				alternateObjDirs,
+				filepath.Join(r.remoteRepoPath, "objects"),
+			),
+			"\n",
+		)
+
 		if _, err = fmt.Fprintln(f, data); err != nil {
 			return fmt.Errorf("failed to write alternates file '%s': %w", alternates, err)
 		}
@@ -223,6 +230,15 @@ func (r *SharedRepo) InitAsShared(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (r *SharedRepo) InitAsShared(ctx context.Context) error {
+	return r.initRepository(ctx)
+}
+
+// InitAsSharedWithAlternates initializes repository with provided alternate object directories.
+func (r *SharedRepo) InitAsSharedWithAlternates(ctx context.Context, alternateObjDirs ...string) error {
+	return r.initRepository(ctx, alternateObjDirs...)
 }
 
 // Clone the base repository to our path and set branch as the HEAD.

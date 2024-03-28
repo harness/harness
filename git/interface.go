@@ -90,4 +90,9 @@ type Interface interface {
 	PushRemote(ctx context.Context, params *PushRemoteParams) error
 
 	GeneratePipeline(ctx context.Context, params *GeneratePipelineParams) (GeneratePipelinesOutput, error)
+
+	/*
+	 * Secret Scanning service
+	 */
+	ScanSecrets(ctx context.Context, param *ScanSecretsParams) (*ScanSecretsOutput, error)
 }

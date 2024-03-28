@@ -27,4 +27,6 @@ import (
 // to "soft enforce" no write operations being executed as part of githooks.
 type RestrictedGIT interface {
 	IsAncestor(ctx context.Context, params git.IsAncestorParams) (git.IsAncestorOutput, error)
+	ScanSecrets(ctx context.Context, param *git.ScanSecretsParams) (*git.ScanSecretsOutput, error)
+	GetBranch(ctx context.Context, params *git.GetBranchParams) (*git.GetBranchOutput, error)
 }

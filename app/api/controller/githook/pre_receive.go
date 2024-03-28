@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/gotidy/ptr"
+	"github.com/rs/zerolog"
 	"golang.org/x/exp/slices"
 )
 
@@ -63,6 +64,11 @@ func (c *Controller) PreReceive(
 	if in.Internal {
 		// It's an internal call, so no need to verify protection rules.
 		return output, nil
+	}
+
+	err = c.scanSecrets(ctx, rgit, repo, in, &output)
+	if output.Error != nil || err != nil {
+		return output, err
 	}
 
 	if c.blockPullReqRefUpdate(refUpdates) {
@@ -216,4 +222,10 @@ func groupRefsByAction(refUpdates []hook.ReferenceUpdate) (c changedRefs) {
 		}
 	}
 	return
+}
+
+func loggingWithRefUpdate(refUpdate hook.ReferenceUpdate) func(c zerolog.Context) zerolog.Context {
+	return func(c zerolog.Context) zerolog.Context {
+		return c.Str("ref", refUpdate.Ref).Str("old_sha", refUpdate.Old.String()).Str("new_sha", refUpdate.New.String())
+	}
 }
