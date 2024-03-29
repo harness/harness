@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react'
-import { Container, useToaster } from '@harnessio/uicore'
+import React, { useCallback, useEffect, useState } from 'react'
+import { Button, ButtonSize, ButtonVariation, Container, Layout, useToaster, Text } from '@harnessio/uicore'
 import cx from 'classnames'
 import { useMutate } from 'restful-react'
+import { Color, FontVariation } from '@harnessio/design-system'
+import { PopoverPosition } from '@blueprintjs/core'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
 import type { OpenapiUpdatePullReqRequest } from 'services/code'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
-import { getErrorMessage } from 'utils/Utils'
+import { CommentBoxOutletPosition, getErrorMessage } from 'utils/Utils'
 import Config from 'Config'
+import { useAppContext } from 'AppContext'
 import type { ConversationProps } from './Conversation'
 import css from './Conversation.module.scss'
 
@@ -41,6 +44,10 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
   standalone,
   routingId
 }) => {
+  const { hooks } = useAppContext()
+
+  const [flag, setFlag] = useState(false)
+  const { SEMANTIC_SEARCH_ENABLED } = hooks?.useFeatureFlags()
   const [edit, setEdit] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [originalContent, setOriginalContent] = useState(pullReqMetadata.description as string)
@@ -61,6 +68,11 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
     }
   }, [pullReqMetadata?.description, pullReqMetadata?.description?.length])
 
+  // write the above function handleCopilotClick in a callback
+  const handleCopilotClick = useCallback(() => {
+    setFlag(true)
+  }, [])
+
   return (
     <Container className={cx({ [css.box]: !edit, [css.desc]: !edit })}>
       <Container padding={!edit ? { left: 'small', bottom: 'small' } : undefined}>
@@ -70,6 +82,42 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
             standalone={standalone}
             repoMetadata={repoMetadata}
             value={content}
+            flag={flag}
+            setFlag={setFlag}
+            outlets={{
+              [CommentBoxOutletPosition.START_OF_MARKDOWN_EDITOR_TOOLBAR]: (
+                <>
+                  {SEMANTIC_SEARCH_ENABLED && !standalone ? (
+                    <Button
+                      size={ButtonSize.SMALL}
+                      variation={ButtonVariation.ICON}
+                      icon={'harness-copilot'}
+                      withoutCurrentColor
+                      iconProps={{
+                        color: Color.GREY_0,
+                        size: 22,
+                        className: css.aidaIcon
+                      }}
+                      className={css.aidaIcon}
+                      onClick={handleCopilotClick}
+                      tooltip={
+                        <Container padding={'small'} width={270}>
+                          <Layout.Vertical flex={{ align: 'center-center' }}>
+                            <Text font={{ variation: FontVariation.BODY }}>{getString('prGenSummary')}</Text>
+                          </Layout.Vertical>
+                        </Container>
+                      }
+                      tooltipProps={{
+                        interactionKind: 'hover',
+                        usePortal: true,
+                        position: PopoverPosition.BOTTOM_LEFT,
+                        popoverClassName: cx(css.popover)
+                      }}
+                    />
+                  ) : null}
+                </>
+              )
+            }}
             onSave={value => {
               if (value?.split('\n').some(line => line.length > Config.MAX_TEXT_LINE_SIZE_LIMIT)) {
                 return showError(getString('pr.descHasTooLongLine', { max: Config.MAX_TEXT_LINE_SIZE_LIMIT }), 0)

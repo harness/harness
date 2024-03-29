@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const aidaIcon: string
 export declare const ascContainer: string
 export declare const box: string
 export declare const bp3ButtonText: string

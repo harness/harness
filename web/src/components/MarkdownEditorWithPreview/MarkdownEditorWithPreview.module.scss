@@ -119,6 +119,11 @@
       //     @include mono-font;
       //   }
       // }
+      .cm-line {
+        > .aidaGenText {
+          background: var(--ai-purple-800) !important;
+        }
+      }
 
       .md-editor {
         background-color: transparent !important;
@@ -269,4 +274,9 @@
     border: 1px dashed var(--grey-200);
     background: var(--grey-50);
   }
+}
+
+.aidaGenText {
+  background: var(--ai-purple-800) !important;
+  font-weight: bold !important;
 }

@@ -46,6 +46,20 @@
         padding: var(--spacing-small);
 
         .cm-line {
+          > .aidaGenText {
+            color: var(--ai-purple-800) !important;
+          }
+
+          > .aidaGenText::before {
+            padding-top: 4px;
+            padding-right: 3px;
+            content: url('../../icons/spinner.svg?url');
+          }
+          > .highlightText {
+            padding: 1px;
+            background: var(--ai-purple-100) !important;
+          }
+
           &,
           * {
             @include markdown-font;

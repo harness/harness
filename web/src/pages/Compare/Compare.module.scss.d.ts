@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const aidaIcon: string
 export declare const changesContainer: string
 export declare const generalTab: string
 export declare const hyperlink: string

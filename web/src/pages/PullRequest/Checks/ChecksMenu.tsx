@@ -155,6 +155,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
       const dataArr = groupedData[key]
       if (groupedData && dataArr) {
         const { minCreated, maxUpdated } = dataArr.reduce(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (acc: any, item: TypesCheck) => ({
             minCreated: item.created && item.created < acc.minCreated ? item.created : acc.minCreated,
             maxUpdated: item.updated && item.updated > acc.maxUpdated ? item.updated : acc.maxUpdated

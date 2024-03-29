@@ -66,7 +66,7 @@ import css from './Compare.module.scss'
 export default function Compare() {
   const { routes, standalone, hooks, routingId } = useAppContext()
   const [flag, setFlag] = useState(false)
-  const { SEMANTIC_SEARCH_ENABLED: isSemanticSearchFFEnabled } = hooks?.useFeatureFlags()
+  const { SEMANTIC_SEARCH_ENABLED } = hooks?.useFeatureFlags()
   const { getString } = useStrings()
   const history = useHistory()
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
@@ -304,13 +304,18 @@ export default function Compare() {
                               outlets={{
                                 [CommentBoxOutletPosition.START_OF_MARKDOWN_EDITOR_TOOLBAR]: (
                                   <>
-                                    {isSemanticSearchFFEnabled && !standalone ? (
+                                    {SEMANTIC_SEARCH_ENABLED && !standalone ? (
                                       <Button
                                         size={ButtonSize.SMALL}
                                         variation={ButtonVariation.ICON}
                                         icon={'harness-copilot'}
                                         withoutCurrentColor
-                                        iconProps={{ color: Color.AI_PURPLE_800, size: 16 }}
+                                        iconProps={{
+                                          color: Color.GREY_0,
+                                          size: 22,
+                                          className: css.aidaIcon
+                                        }}
+                                        className={css.aidaIcon}
                                         onClick={handleCopilotClick}
                                         tooltip={
                                           <Container padding={'small'} width={270}>

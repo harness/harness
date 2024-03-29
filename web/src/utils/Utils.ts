@@ -20,6 +20,7 @@ import moment from 'moment'
 import langMap from 'lang-map'
 import type { EditorDidMount } from 'react-monaco-editor'
 import type { editor } from 'monaco-editor'
+import type { EditorView } from '@codemirror/view'
 import type { EnumMergeMethod, TypesRuleViolations, TypesViolation, TypesCodeOwnerEvaluationEntry } from 'services/code'
 import type { GitInfoProps } from './GitUtils'
 
@@ -649,4 +650,32 @@ export const PAGE_CONTAINER_WIDTH = '--page-container-width'
 // Outlets are used to insert additional components into CommentBox
 export enum CommentBoxOutletPosition {
   START_OF_MARKDOWN_EDITOR_TOOLBAR = 'start_of_markdown_editor_toolbar'
+}
+
+// Helper function to escape special characters for use in regex
+export function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // $& means the whole matched string
+}
+
+export function removeSpecificTextOptimized(
+  viewRef: React.MutableRefObject<EditorView | undefined>,
+  textToRemove: string
+) {
+  const doc = viewRef?.current?.state.doc.toString()
+  const regex = new RegExp(escapeRegExp(textToRemove), 'g')
+  let match
+
+  // Initialize an array to hold all changes
+  const changes = []
+
+  // Use regex to find all occurrences of the text
+  while (doc && (match = regex.exec(doc)) !== null) {
+    // Add a change object for each match to remove it
+    changes.push({ from: match.index, to: match.index + match[0].length })
+  }
+
+  // Dispatch a single transaction with all changes if any matches were found
+  if (changes.length > 0) {
+    viewRef?.current?.dispatch({ changes })
+  }
 }

@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const aidaGenText: string
 export declare const buttonsBar: string
 export declare const container: string
 export declare const dialog: string

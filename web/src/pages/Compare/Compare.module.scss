@@ -120,3 +120,11 @@
     font-weight: normal;
   }
 }
+
+.aidaIcon {
+  :global(> svg) {
+    border-radius: 4px !important;
+    background: linear-gradient(317deg, #5e2ce0 11.36%, #a652f9 79.62%) !important;
+    padding: 2px !important;
+  }
+}

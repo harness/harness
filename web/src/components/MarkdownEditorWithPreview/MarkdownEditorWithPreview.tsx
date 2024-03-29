@@ -29,18 +29,25 @@ import {
 import type { IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
-import type { EditorView } from '@codemirror/view'
-import { keymap } from '@codemirror/view'
+import { DecorationSet, EditorView, Decoration, keymap } from '@codemirror/view'
 import { undo, redo, history } from '@codemirror/commands'
-import { EditorSelection } from '@codemirror/state'
+import { EditorSelection, StateEffect, StateField } from '@codemirror/state'
 import { isEmpty } from 'lodash-es'
 import { useMutate } from 'restful-react'
 import { Editor } from 'components/Editor/Editor'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
-import { CommentBoxOutletPosition, formatBytes, getErrorMessage, handleFileDrop, handlePaste } from 'utils/Utils'
+import {
+  CommentBoxOutletPosition,
+  formatBytes,
+  getErrorMessage,
+  handleFileDrop,
+  handlePaste,
+  removeSpecificTextOptimized
+} from 'utils/Utils'
 import { decodeGitContent, handleUpload, normalizeGitRef } from 'utils/GitUtils'
 import type { TypesRepository } from 'services/code'
+import { useEventListener } from 'hooks/useEventListener'
 import css from './MarkdownEditorWithPreview.module.scss'
 
 enum MarkdownEditorTab {
@@ -73,6 +80,32 @@ const toolbar: ToolbarItem[] = [
   { icon: 'form', action: ToolbarAction.CHECK_LIST },
   { icon: 'main-code-yaml', action: ToolbarAction.CODE_BLOCK }
 ]
+
+// Define a unique effect to update decorations
+const addDecorationEffect = StateEffect.define<{ decoration: Decoration; from: number; to: number }[]>()
+const removeDecorationEffect = StateEffect.define<{}>() // No payload needed for removal in this simple case// Create a state field to hold decorations
+const decorationField = StateField.define<DecorationSet>({
+  create() {
+    return Decoration.none
+  },
+  update(decorations, tr) {
+    decorations = decorations.map(tr.changes)
+
+    for (const effect of tr.effects) {
+      if (effect.is(addDecorationEffect)) {
+        const add = []
+        for (const { decoration, from, to } of effect.value) {
+          add.push(decoration.range(from, to))
+        }
+        decorations = decorations.update({ add })
+      } else if (effect.is(removeDecorationEffect)) {
+        decorations = Decoration.none
+      }
+    }
+    return decorations
+  },
+  provide: f => EditorView.decorations.from(f)
+})
 
 interface MarkdownEditorWithPreviewProps {
   className?: string
@@ -151,6 +184,7 @@ export function MarkdownEditorWithPreview({
     path: `/api/v1/repos/${repoMetadata?.path}/+/genai/change-summary`
   })
   const isDirty = useRef(dirty)
+  const [data, setData] = useState({})
 
   useEffect(
     function setDirtyRef() {
@@ -175,22 +209,54 @@ export function MarkdownEditorWithPreview({
       preventDefault: true
     }
   ])
+  const handleMouseDown = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (event: any) => {
+      const editorDom = viewRef?.current?.dom
+      if (!editorDom?.contains(event.target)) {
+        // Clicked outside the editor
+        viewRef?.current?.dispatch({
+          effects: removeDecorationEffect.of({})
+        })
+      }
+    },
+    [viewRef]
+  )
 
-  const dispatchContent = (content: string, userEvent: boolean) => {
+  useEventListener('mousedown', handleMouseDown)
+
+  const dispatchContent = (content: string, userEvent: boolean, decoration = false) => {
     const view = viewRef.current
-    const currentContent = view?.state.doc.toString()
+    const { from, to } = view?.state.selection.main ?? { from: 0, to: 0 }
+    const changeColorDecoration = Decoration.mark({ class: 'aidaGenText' })
+    const highlightDecoration = Decoration.mark({ class: 'highlightText' })
 
-    view?.dispatch({
-      changes: { from: 0, to: currentContent?.length, insert: content },
-      userEvent: userEvent ? 'input' : 'ignore' // Marking this transaction as an input event makes it part of the undo history
-    })
+    if (decoration) {
+      view?.dispatch({
+        changes: { from: from, to: to, insert: content },
+        effects: addDecorationEffect.of([
+          { decoration: changeColorDecoration, from: from, to: content?.length + from }
+        ]),
+        userEvent: userEvent ? 'input' : 'ignore' // Marking this transaction as an input event makes it part of the undo history,
+      })
+    } else {
+      view?.dispatch({
+        effects: removeDecorationEffect.of({ from: from, to: to }),
+        userEvent: userEvent ? 'input' : 'ignore' // Marking this transaction as an input event makes it part of the undo history
+      })
+      view?.dispatch({
+        changes: { from: from, to: to, insert: content },
+        effects: addDecorationEffect.of([{ decoration: highlightDecoration, from: from, to: content?.length + from }]),
+        userEvent: userEvent ? 'input' : 'ignore' // Marking this transaction as an input event makes it part of the undo history
+      })
+      removeSpecificTextOptimized(viewRef, getString('aidaGenSummary'))
+    }
   }
 
-  const [data, setData] = useState({})
   useEffect(() => {
     if (flag) {
       if (handleCopilotClick) {
-        dispatchContent(getString('aidaGenSummary'), false)
+        dispatchContent(getString('aidaGenSummary'), false, true)
         mutate({
           head_ref: normalizeGitRef(sourceGitRef),
           base_ref: normalizeGitRef(targetGitRef)
@@ -204,13 +270,13 @@ export function MarkdownEditorWithPreview({
       }
       setFlag?.(false)
     }
-  }, [handleCopilotClick])
+  }, [handleCopilotClick]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isEmpty(data)) {
       dispatchContent(`${data}`, true)
     }
-  }, [data])
+  }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
   const onToolbarAction = useCallback((action: ToolbarAction) => {
     const view = viewRef.current
 
@@ -406,7 +472,7 @@ export function MarkdownEditorWithPreview({
         }))
       )
     }
-  }, [markdownContent])
+  }, [markdownContent]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleButtonClick = () => {
     if (fileInputRef.current) {
@@ -536,7 +602,7 @@ export function MarkdownEditorWithPreview({
       </Container>
       <Container className={css.tabContent}>
         <Editor
-          extensions={[myKeymap, history()]}
+          extensions={[myKeymap, decorationField, history()]}
           routingId={routingId}
           standalone={standalone}
           repoMetadata={repoMetadata}
