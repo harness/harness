@@ -27,6 +27,11 @@ import (
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -91,4 +96,57 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	// TODO: execute permission check. block anything but gitness service?
 
 	return repo, nil
+}
+
+// GetBaseSHAForScanningChanges returns the commit sha to which the new sha of the reference
+// should be compared against when scanning incoming changes.
+// NOTE: If no such a sha exists, then (sha.None, false, nil) is returned.
+// This will happen in case the default branch doesn't exist yet.
+func GetBaseSHAForScanningChanges(
+	ctx context.Context,
+	rgit RestrictedGIT,
+	repo *types.Repository,
+	env hook.Environment,
+	refUpdates []hook.ReferenceUpdate,
+	findBaseFor hook.ReferenceUpdate,
+) (sha.SHA, bool, error) {
+	// always return old SHA of ref if possible (even if ref was deleted, that's on the caller)
+	if !findBaseFor.Old.IsNil() {
+		return findBaseFor.Old, true, nil
+	}
+
+	// reference is just being created.
+	// For now we use default branch as a fallback (can be optimized to most recent commit on reference that exists)
+	dfltBranchFullRef := api.BranchPrefix + repo.DefaultBranch
+	for _, refUpdate := range refUpdates {
+		if refUpdate.Ref != dfltBranchFullRef {
+			continue
+		}
+
+		// default branch is being updated as part of push - make sure we use OLD default branch sha for comparison
+		if !refUpdate.Old.IsNil() {
+			return refUpdate.Old, true, nil
+		}
+
+		// default branch is being created - no fallback available
+		return sha.None, false, nil
+	}
+
+	// read default branch from git
+	dfltBranchOut, err := rgit.GetBranch(ctx, &git.GetBranchParams{
+		ReadParams: git.ReadParams{
+			RepoUID:             repo.GitUID,
+			AlternateObjectDirs: env.AlternateObjectDirs,
+		},
+		BranchName: repo.DefaultBranch,
+	})
+	if errors.IsNotFound(err) {
+		// this happens for empty repo's where the default branch wasn't created yet.
+		return sha.None, false, nil
+	}
+	if err != nil {
+		return sha.None, false, fmt.Errorf("failed to get default branch from git: %w", err)
+	}
+
+	return dfltBranchOut.Branch.SHA, true, nil
 }

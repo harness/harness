@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/services/settings"
-	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
@@ -88,7 +87,7 @@ func scanSecretsInternal(ctx context.Context,
 	repo *types.Repository,
 	in types.GithookPreReceiveInput,
 ) (scanSecretsResult, error) {
-	var latestDfltCommitSHA string
+	var baseRevFallBack *string
 	res := scanSecretsResult{}
 
 	for _, refUpdate := range in.RefUpdates {
@@ -104,23 +103,32 @@ func scanSecretsInternal(ctx context.Context,
 		baseRev := refUpdate.Old.String() + "^{commit}"
 		rev := refUpdate.New.String() + "^{commit}"
 		//nolint:nestif
-		if refUpdate.Old.String() == types.NilSHA {
-			if latestDfltCommitSHA == "" {
-				branchOut, err := rgit.GetBranch(ctx, &git.GetBranchParams{
-					ReadParams: git.CreateReadParams(repo), // without any custom environment
-					BranchName: repo.DefaultBranch,
-				})
-				if errors.IsNotFound(err) {
-					return scanSecretsResult{}, nil
-				}
+		if refUpdate.Old.IsNil() {
+			if baseRevFallBack == nil {
+				fallbackSHA, fallbackAvailable, err := GetBaseSHAForScanningChanges(
+					ctx,
+					rgit,
+					repo,
+					in.Environment,
+					in.RefUpdates,
+					refUpdate,
+				)
 				if err != nil {
-					return scanSecretsResult{}, fmt.Errorf("failed to retrieve latest commit of default branch: %w", err)
+					return scanSecretsResult{}, fmt.Errorf("failed to get fallback sha: %w", err)
 				}
-				latestDfltCommitSHA = branchOut.Branch.SHA.String()
-			}
-			baseRev = latestDfltCommitSHA
 
-			log.Debug().Msgf("use latest dflt commit %s as comparison for new branch", latestDfltCommitSHA)
+				if fallbackAvailable {
+					log.Debug().Msgf("found fallback sha %q", fallbackSHA)
+					baseRevFallBack = ptr.String(fallbackSHA.String())
+				} else {
+					log.Debug().Msg("no fallback sha available, do full scan instead")
+					baseRevFallBack = ptr.String("")
+				}
+			}
+
+			log.Debug().Msgf("new reference, use rev %q as base for secret scanning", *baseRevFallBack)
+
+			baseRev = *baseRevFallBack
 		}
 
 		log.Debug().Msg("scan for secrets")
