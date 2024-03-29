@@ -76,8 +76,6 @@ func (c *Controller) scanSecrets(
 
 	// pretty print output
 	printScanSecretsFindings(output, scanResult.findings)
-	output.Messages = append(output.Messages, "", "")
-	output.Error = ptr.String("Changes blocked by security scan results")
 
 	return nil
 }

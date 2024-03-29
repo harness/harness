@@ -21,21 +21,24 @@ import (
 	"github.com/harness/gitness/git/hook"
 
 	"github.com/fatih/color"
+	"github.com/gotidy/ptr"
 )
 
 var (
-	colorScanHeaderFound = color.New(color.BgRed, color.FgHiWhite, color.Bold)
+	colorScanHeader  = color.New(color.BgRed, color.FgHiWhite, color.Bold)
+	colorScanSummary = color.New(color.FgHiRed, color.Bold)
 )
 
 func printScanSecretsFindings(out *hook.Output, findings []api.Finding) {
 	findingsCnt := len(findings)
 	out.Messages = append(
 		out.Messages,
-		colorScanHeaderFound.Sprintf(
+		colorScanHeader.Sprintf(
 			" Detected leaked %s ",
 			stringSecretOrSecrets(findingsCnt > 1),
 		),
 	)
+
 	for _, finding := range findings {
 		out.Messages = append(
 			out.Messages,
@@ -63,6 +66,20 @@ func printScanSecretsFindings(out *hook.Output, findings []api.Finding) {
 			"",
 		)
 	}
+
+	out.Messages = append(out.Messages, "")
+
+	out.Messages = append(
+		out.Messages,
+		colorScanSummary.Sprintf(
+			"%d %s found",
+			findingsCnt,
+			stringSecretOrSecrets(findingsCnt > 1),
+		),
+	)
+
+	// block the commit
+	out.Error = ptr.String("Changes blocked by security scan results")
 }
 
 func stringSecretOrSecrets(plural bool) string {
