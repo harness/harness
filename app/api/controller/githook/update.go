@@ -39,9 +39,6 @@ func (c *Controller) Update(
 	output := hook.Output{}
 
 	err = c.updateExtender.Extend(ctx, rgit, session, repo, in, &output)
-	if output.Error != nil {
-		return output, nil
-	}
 	if err != nil {
 		return hook.Output{}, fmt.Errorf("failed to extend update hook: %w", err)
 	}

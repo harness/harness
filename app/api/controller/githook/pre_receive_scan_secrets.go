@@ -17,6 +17,7 @@ package githook
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/git"
@@ -29,12 +30,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type scanSecretsResult struct {
-	findings []api.Finding
-}
-
-func (r *scanSecretsResult) HasResults() bool {
-	return len(r.findings) > 0
+type secretFinding struct {
+	api.Finding
+	Ref string
 }
 
 func (c *Controller) scanSecrets(
@@ -60,7 +58,8 @@ func (c *Controller) scanSecrets(
 	}
 
 	// scan for secrets
-	scanResult, err := scanSecretsInternal(
+	startTime := time.Now()
+	findings, err := scanSecretsInternal(
 		ctx,
 		rgit,
 		repo,
@@ -70,12 +69,13 @@ func (c *Controller) scanSecrets(
 		return fmt.Errorf("failed to scan for git leaks: %w", err)
 	}
 
-	if !scanResult.HasResults() {
-		return nil
-	}
+	// always print result (handles both no results and results found)
+	printScanSecretsFindings(output, findings, len(in.RefUpdates) > 1, time.Since(startTime))
 
-	// pretty print output
-	printScanSecretsFindings(output, scanResult.findings)
+	// block the push if any secrets were found
+	if len(findings) > 0 {
+		output.Error = ptr.String("Changes blocked by security scan results")
+	}
 
 	return nil
 }
@@ -84,9 +84,9 @@ func scanSecretsInternal(ctx context.Context,
 	rgit RestrictedGIT,
 	repo *types.Repository,
 	in types.GithookPreReceiveInput,
-) (scanSecretsResult, error) {
+) ([]secretFinding, error) {
 	var baseRevFallBack *string
-	res := scanSecretsResult{}
+	findings := []secretFinding{}
 
 	for _, refUpdate := range in.RefUpdates {
 		ctx := logging.NewContext(ctx, loggingWithRefUpdate(refUpdate))
@@ -112,7 +112,7 @@ func scanSecretsInternal(ctx context.Context,
 					refUpdate,
 				)
 				if err != nil {
-					return scanSecretsResult{}, fmt.Errorf("failed to get fallback sha: %w", err)
+					return nil, fmt.Errorf("failed to get fallback sha: %w", err)
 				}
 
 				if fallbackAvailable {
@@ -140,7 +140,7 @@ func scanSecretsInternal(ctx context.Context,
 			Rev:     rev,
 		})
 		if err != nil {
-			return scanSecretsResult{}, fmt.Errorf("failed to detect secret leaks: %w", err)
+			return nil, fmt.Errorf("failed to detect secret leaks: %w", err)
 		}
 
 		if len(scanSecretsOut.Findings) == 0 {
@@ -150,8 +150,17 @@ func scanSecretsInternal(ctx context.Context,
 
 		log.Debug().Msgf("found %d new secrets", len(scanSecretsOut.Findings))
 
-		res.findings = append(res.findings, scanSecretsOut.Findings...)
+		for _, finding := range scanSecretsOut.Findings {
+			findings = append(findings, secretFinding{
+				Finding: finding,
+				Ref:     refUpdate.Ref,
+			})
+		}
 	}
 
-	return res, nil
+	if len(findings) > 0 {
+		log.Ctx(ctx).Debug().Msgf("found total of %d new secrets", len(findings))
+	}
+
+	return findings, nil
 }

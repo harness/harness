@@ -115,6 +115,15 @@ func handleServerHookOutput(out Output, err error) error {
 		return fmt.Errorf("an error occurred when calling the server: %w", err)
 	}
 
+	// remove any preceding empty lines
+	for len(out.Messages) > 0 && out.Messages[0] == "" {
+		out.Messages = out.Messages[1:]
+	}
+	// remove any trailing empty lines
+	for len(out.Messages) > 0 && out.Messages[len(out.Messages)-1] == "" {
+		out.Messages = out.Messages[:len(out.Messages)-1]
+	}
+
 	// print messages before any error
 	if len(out.Messages) > 0 {
 		// add empty line before and after to make it easier readable

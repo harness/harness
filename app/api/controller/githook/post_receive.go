@@ -62,9 +62,6 @@ func (c *Controller) PostReceive(
 	c.handlePRMessaging(ctx, repo, in.PostReceiveInput, &out)
 
 	err = c.postReceiveExtender.Extend(ctx, rgit, session, repo, in, &out)
-	if out.Error != nil {
-		return out, nil
-	}
 	if err != nil {
 		return hook.Output{}, fmt.Errorf("failed to extend post-receive hook: %w", err)
 	}
@@ -249,7 +246,7 @@ func (c *Controller) suggestPullRequest(
 
 	// this is a new PR!
 	out.Messages = append(out.Messages,
-		fmt.Sprintf("Create a new PR for branch %q", branchName),
+		fmt.Sprintf("Create a pull request for %q by visiting:", branchName),
 		"  "+c.urlProvider.GenerateUICompareURL(repo.Path, repo.DefaultBranch, branchName),
 	)
 }

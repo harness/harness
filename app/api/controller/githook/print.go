@@ -16,70 +16,75 @@ package githook
 
 import (
 	"fmt"
+	"time"
 
-	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
 
 	"github.com/fatih/color"
-	"github.com/gotidy/ptr"
 )
 
 var (
-	colorScanHeader  = color.New(color.BgRed, color.FgHiWhite, color.Bold)
-	colorScanSummary = color.New(color.FgHiRed, color.Bold)
+	colorScanHeader            = color.New(color.FgHiWhite, color.Underline)
+	colorScanSummary           = color.New(color.FgHiRed, color.Bold)
+	colorScanSummaryNoFindings = color.New(color.FgHiGreen, color.Bold)
 )
 
-func printScanSecretsFindings(out *hook.Output, findings []api.Finding) {
+func printScanSecretsFindings(
+	output *hook.Output,
+	findings []secretFinding,
+	multipleRefs bool,
+	duration time.Duration,
+) {
 	findingsCnt := len(findings)
-	out.Messages = append(
-		out.Messages,
+
+	// no results? output success and continue
+	if findingsCnt == 0 {
+		output.Messages = append(
+			output.Messages,
+			colorScanSummaryNoFindings.Sprintf("No secrets found")+
+				fmt.Sprintf(" in %s", duration.Round(time.Millisecond)),
+			"", "", // add two empty lines for making it visually more consumable
+		)
+		return
+	}
+
+	output.Messages = append(
+		output.Messages,
 		colorScanHeader.Sprintf(
-			" Detected leaked %s ",
+			"Push contains %s:",
 			stringSecretOrSecrets(findingsCnt > 1),
 		),
+		"", // add empty line for making it visually more consumable
 	)
 
 	for _, finding := range findings {
-		out.Messages = append(
-			out.Messages,
-			fmt.Sprintf("  Commit:   %s", finding.Commit),
-			fmt.Sprintf("  File:     %s", finding.File),
-		)
-		if finding.StartLine == finding.EndLine {
-			out.Messages = append(
-				out.Messages,
-				fmt.Sprintf("  Line:     %d", finding.StartLine),
-			)
-		} else {
-			out.Messages = append(
-				out.Messages,
-				fmt.Sprintf("  Lines:    %d-%d", finding.StartLine, finding.EndLine),
-			)
+		headerTxt := fmt.Sprintf("%s in %s:%d", finding.RuleID, finding.File, finding.StartLine)
+		if finding.StartLine != finding.EndLine {
+			headerTxt += fmt.Sprintf("-%d", finding.EndLine)
 		}
-		out.Messages = append(
-			out.Messages,
-			fmt.Sprintf("  Details:  %s", finding.Description),
-			fmt.Sprintf("  Secret:   %s", finding.Match),
-			fmt.Sprintf("  RuleID:   %s", finding.RuleID),
-			fmt.Sprintf("  Author:   %s", finding.Author),
-			fmt.Sprintf("  Date:     %s", finding.Date),
-			"",
+		if multipleRefs {
+			headerTxt += fmt.Sprintf(" [%s]", finding.Ref)
+		}
+
+		output.Messages = append(
+			output.Messages,
+			fmt.Sprintf("  %s", headerTxt),
+			fmt.Sprintf("      Secret:   %s", finding.Secret),
+			fmt.Sprintf("      Commit:   %s", finding.Commit),
+			fmt.Sprintf("      Details:  %s", finding.Description),
+			"", // add empty line for making it visually more consumable
 		)
 	}
 
-	out.Messages = append(out.Messages, "")
-
-	out.Messages = append(
-		out.Messages,
+	output.Messages = append(
+		output.Messages,
 		colorScanSummary.Sprintf(
 			"%d %s found",
 			findingsCnt,
 			stringSecretOrSecrets(findingsCnt > 1),
-		),
+		)+fmt.Sprintf(" in %s", FMTDuration(time.Millisecond)),
+		"", "", // add two empty lines for making it visually more consumable
 	)
-
-	// block the commit
-	out.Error = ptr.String("Changes blocked by security scan results")
 }
 
 func stringSecretOrSecrets(plural bool) string {
@@ -87,4 +92,19 @@ func stringSecretOrSecrets(plural bool) string {
 		return "secrets"
 	}
 	return "secret"
+}
+
+func FMTDuration(d time.Duration) string {
+	const secondsRounding = time.Second / time.Duration(10)
+	switch {
+	case d <= time.Millisecond:
+	// keep anything under a millisecond untouched
+	case d < time.Second:
+		d = d.Round(time.Millisecond) // round under a second to millisecondss
+	case d < time.Minute:
+		d = d.Round(secondsRounding) // round under a minute to .1 precision
+	default:
+		d = d.Round(time.Second) // keep rest at second precision
+	}
+	return d.String()
 }

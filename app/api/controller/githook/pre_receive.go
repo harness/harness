@@ -66,11 +66,6 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
-	err = c.scanSecrets(ctx, rgit, repo, in, &output)
-	if output.Error != nil || err != nil {
-		return output, err
-	}
-
 	if c.blockPullReqRefUpdate(refUpdates) {
 		output.Error = ptr.String(usererror.ErrPullReqRefsCantBeModified.Error())
 		return output, nil
@@ -92,10 +87,12 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
 	}
 
-	err = c.preReceiveExtender.Extend(ctx, rgit, session, repo, in, &output)
-	if output.Error != nil {
-		return output, nil
+	err = c.scanSecrets(ctx, rgit, repo, in, &output)
+	if err != nil {
+		return hook.Output{}, err
 	}
+
+	err = c.preReceiveExtender.Extend(ctx, rgit, session, repo, in, &output)
 	if err != nil {
 		return hook.Output{}, fmt.Errorf("failed to extend pre-receive hook: %w", err)
 	}
