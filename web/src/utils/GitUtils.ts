@@ -107,7 +107,14 @@ export enum GitContentType {
 export enum SettingsTab {
   webhooks = 'webhook',
   general = '/',
-  branchProtection = 'rules'
+  branchProtection = 'rules',
+  security = 'security'
+}
+
+export enum VulnerabilityScanningType {
+  DETECT = 'detect',
+  BLOCK = 'block',
+  DISABLED = 'disabled'
 }
 
 export enum GitBranchType {

@@ -765,6 +765,17 @@ export interface StringsMap {
   'secrets.secretUpdated': string
   'secrets.showValue': string
   'secrets.updateSecret': string
+  security: string
+  'securitySettings.block': string
+  'securitySettings.blockDesc': string
+  'securitySettings.detect': string
+  'securitySettings.detectDesc': string
+  'securitySettings.failedToUpdate': string
+  'securitySettings.scanningSecret': string
+  'securitySettings.scanningSecretDesc': string
+  'securitySettings.updateSuccess': string
+  'securitySettings.vulnerabilityScanning': string
+  'securitySettings.vulnerabilityScanningDesc': string
   seeNMoreMatches: string
   selectBranchPlaceHolder: string
   selectLanguagePlaceholder: string
