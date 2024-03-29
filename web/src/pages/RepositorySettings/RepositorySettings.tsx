@@ -29,15 +29,49 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
 import BranchProtectionListing from 'components/BranchProtection/BranchProtectionListing'
 import { SettingsTab } from 'utils/GitUtils'
+import SecurityScanSettings from 'pages/RepositorySettings/SecurityScanSettings/SecurityScanSettings'
 import GeneralSettingsContent from './GeneralSettingsContent/GeneralSettingsContent'
 import css from './RepositorySettings.module.scss'
 
 export default function RepositorySettings() {
   const { repoMetadata, error, loading, refetch, settingSection, gitRef } = useGetRepositoryMetadata()
   const history = useHistory()
-  const { routes } = useAppContext()
+  const { routes, hooks, standalone } = useAppContext()
+  const { SEMANTIC_SEARCH_ENABLED } = hooks?.useFeatureFlags()
   const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.general)
   const { getString } = useStrings()
+  const tabListArray = [
+    {
+      id: SettingsTab.general,
+      title: getString('settings'),
+      panel: (
+        <Container padding={'large'}>
+          <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} gitRef={gitRef} />
+        </Container>
+      )
+    },
+    {
+      id: SettingsTab.branchProtection,
+      title: getString('branchProtection.title'),
+      panel: <BranchProtectionListing activeTab={activeTab} />
+    }
+    // {
+    //   id: SettingsTab.webhooks,
+    //   title: getString('webhooks'),
+    //   panel: (
+    //     <Container padding={'large'}>
+    //       <Webhooks />
+    //     </Container>
+    //   )
+    // }
+  ]
+  if (SEMANTIC_SEARCH_ENABLED && !standalone) {
+    tabListArray.push({
+      id: SettingsTab.security,
+      title: getString('security'),
+      panel: <SecurityScanSettings repoMetadata={repoMetadata} activeTab={activeTab} />
+    })
+  }
   return (
     <Container className={css.main}>
       <RepositoryPageHeader
@@ -65,31 +99,7 @@ export default function RepositorySettings() {
                   })
                 )
               }}
-              tabList={[
-                {
-                  id: SettingsTab.general,
-                  title: getString('settings'),
-                  panel: (
-                    <Container padding={'large'}>
-                      <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} gitRef={gitRef} />
-                    </Container>
-                  )
-                },
-                {
-                  id: SettingsTab.branchProtection,
-                  title: getString('branchProtection.title'),
-                  panel: <BranchProtectionListing activeTab={activeTab} />
-                }
-                // {
-                //   id: SettingsTab.webhooks,
-                //   title: getString('webhooks'),
-                //   panel: (
-                //     <Container padding={'large'}>
-                //       <Webhooks />
-                //     </Container>
-                //   )
-                // }
-              ]}></Tabs>
+              tabList={tabListArray}></Tabs>
           </Container>
         )}
       </PageBody>

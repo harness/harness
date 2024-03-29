@@ -229,6 +229,7 @@ checkRuns: 'Check runs'
 checkSuites: 'Check suites'
 scanAlerts: 'Code scanning alerts'
 botAlerts: 'Dependabot alerts'
+security: 'Security'
 deployKeys: 'Deploy keys'
 sslVerificationLabel: 'SSL verification'
 enableSSLVerification: 'Enable SSL verification'
@@ -1005,3 +1006,14 @@ prGenSummary: Have Harness AIDA summarize the code changes in this pull request
 aidaGenSummary: '[AIDA is generating a summary...]'
 importFailed: Import Failed
 uploadAFileError: There is no image or video uploaded. Please upload an image or video.
+securitySettings:
+  scanningSecret: Scanning of Secret
+  scanningSecretDesc: Secret scanning will always block the push
+  vulnerabilityScanning: Vulnerability Scanning
+  vulnerabilityScanningDesc: Security scanning should be optional to block the commit
+  failedToUpdate: Failed to update security settings
+  updateSuccess: Updated security settings
+  detect: Detect
+  detectDesc: passive vulnerability will report errors but not block
+  block: Block
+  blockDesc: active vulnerability blocks commit if any vulnerability is found
