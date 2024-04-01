@@ -144,6 +144,7 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
                       tooltipProps={{
                         dataTooltipId: 'secretDescriptionTextField'
                       }}
+                      maxLength={10000}
                       autoComplete="off"
                       className={formik.values.showValue ? css.showValue : css.hideValue}
                     />
