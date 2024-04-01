@@ -71,7 +71,11 @@ const ImportSpaceForm = (props: ImportFormProps) => {
 
   const validationSchemaStepTwo = yup.object().shape({
     organization: yup.string().trim().required(getString('importSpace.orgRequired')),
-    name: yup.string().trim().required(getString('importSpace.spaceNameRequired'))
+    name: yup
+      .string()
+      .trim()
+      .required(getString('importSpace.spaceNameRequired'))
+      .matches(/^[a-zA-Z_][a-zA-Z0-9-_.]*$/, getString('validation.nameLogic'))
   })
 
   return (
