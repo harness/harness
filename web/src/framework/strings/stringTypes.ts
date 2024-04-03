@@ -595,6 +595,7 @@ export interface StringsMap {
   'pr.checks': string
   'pr.checksFailure': string
   'pr.collapseFullFile': string
+  'pr.commentLineNumbers': string
   'pr.copyLinkToComment': string
   'pr.createDraftPR': string
   'pr.descHasTooLongLine': string

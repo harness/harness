@@ -61,7 +61,9 @@ export interface DiffCommentItem<T = Unknown> {
   inner: T
   left: boolean
   right: boolean
-  lineNumber: number
+  lineNumberStart: number
+  lineNumberEnd: number
+  span: number
   commentItems: CommentItem<T>[]
   _commentItems?: CommentItem<T>[]
   filePath: string
@@ -82,7 +84,8 @@ export const DIFF2HTML_CONFIG = {
       <tr>
         <td class="{{lineClass}} {{type}}">
           <div style="position: relative; z-index: 100; width: 0px; height: 0px; display: inline-block;">
-            <span data-annotation-for-line="{{lineNumber}}" tab-index="0" role="button">+</span>
+            <span class="annotation-for-line" data-annotation-for-line="{{lineNumber}}" tab-index="0" role="button">+</span>
+            <span data-selected-indicator></span>
           </div>{{{lineNumber}}}<!-- {{{filePath}}} --></td>
         <td class="{{type}}" data-content-for-line-number="{{lineNumber}}" data-content-for-file-path="{{file.filePath}}">
             <div class="{{contentClass}}" style="position: relative; z-index: 1;">
@@ -153,21 +156,22 @@ export const DIFF2HTML_CONFIG = {
 } as Readonly<Diff2Html.Diff2HtmlConfig>
 
 export function getCommentLineInfo(
+  comment: DiffCommentItem<TypesPullReqActivity>,
   contentDOM: HTMLDivElement | null,
   commentEntry: DiffCommentItem,
   viewStyle: ViewStyle
 ) {
   const isSideBySideView = viewStyle === ViewStyle.SIDE_BY_SIDE
-  const { left, lineNumber, filePath } = commentEntry
+  const { left, lineNumberEnd, filePath } = commentEntry
   const filePathBody = filePath ? contentDOM?.querySelector(`[data="${filePath}"`) : contentDOM
 
   const diffBody = filePathBody?.querySelector(
     `${isSideBySideView ? `.d2h-file-side-diff${left ? '.left' : '.right'} ` : ''}.d2h-diff-tbody`
   )
   const rowElement = (
-    diffBody?.querySelector(`[data-content-for-line-number="${lineNumber}"]`) ||
+    diffBody?.querySelector(`[data-content-for-line-number="${lineNumberEnd}"]`) ||
     diffBody?.querySelector(
-      `${!isSideBySideView ? (left ? '.line-num1' : '.line-num2') : ''}[data-line-number="${lineNumber}"]`
+      `${!isSideBySideView ? (left ? '.line-num1' : '.line-num2') : ''}[data-line-number="${lineNumberEnd}"]`
     )
   )?.closest('tr') as HTMLTableRowElement
 
@@ -189,7 +193,7 @@ export function getCommentLineInfo(
   return {
     rowElement,
     rowPosition,
-    hasCommentsRendered: !!rowElement?.dataset?.annotated,
+    commentThreadRendered: (rowElement?.dataset?.commentIds || '').split('/').includes(String(comment.inner.id)),
     oppositeRowElement
   }
 }
@@ -237,13 +241,18 @@ export function activitiesToDiffCommentItems(
             ?.filter(replyActivity => replyActivity.parent_id === activity.id)
             .map(_activity => activityToCommentItem(_activity)) || []
         const right = get(activity.payload, 'line_start_new', false)
+        const span = right ? activity.code_comment?.span_new || 0 : activity.code_comment?.span_old || 0
+        const lineNumberStart = (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number
+        const lineNumberEnd = lineNumberStart + span - 1
 
         return {
           inner: activity,
           left: !right,
           right,
           height: 0,
-          lineNumber: (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number,
+          lineNumberStart,
+          lineNumberEnd,
+          span,
           commentItems: [activityToCommentItem(activity)].concat(replyComments),
           filePath: filePath,
           destroy: undefined,

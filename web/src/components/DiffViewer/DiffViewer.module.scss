@@ -18,6 +18,18 @@
   --border-color: var(--grey-200);
   --line-height: 17.3438px;
 
+  // TODO: Restyle DiffView to match latest design
+  // https://www.figma.com/file/PgBvi804VdQNyLS8fD9K0p/Code?node-id=9391%3A118114&mode=dev
+  --bg-selected-line-number: #ccf8a5;
+  --bg-selected-line-content: #e7f8b5fc;
+
+  --bg-line-added: var(--green-100);
+  --bg-change-added: var(--green-300);
+  --bg-line-deleted: var(--red-100);
+  --bg-change-deleted: var(--red-200);
+  --bg-hunk: var(--grey-100);
+  --fg-hunk: var(--grey-700);
+
   border-radius: 5px;
   min-height: 36px;
 
@@ -59,34 +71,21 @@
           &[data-annotated-line] {
             background-color: var(--white);
 
-            // These cause one or two pixels mismatched
-            // calculation due to table spacing gaps
-            // border-top: 1px solid var(--grey-200);
-            // border-bottom: 1px solid var(--grey-200);
-          }
-
-          &.selected {
-            &.first {
-              border-top: 1px solid var(--border-color);
-            }
-
-            &.last {
-              border-bottom: 1px solid var(--border-color);
-            }
-
-            td {
-              background-color: #e7ffab91 !important;
+            & + [data-annotated-line] {
+              [data-comment-thread-id] {
+                padding-top: 0;
+              }
             }
           }
         }
 
         tr {
           &:has(.d2h-del) {
-            background-color: #fee8e9;
+            background-color: var(--bg-line-deleted);
           }
 
           &:has(.d2h-ins) {
-            background-color: #dfd;
+            background-color: var(--bg-line-added);
           }
 
           &:has(.d2h-emptyplaceholder) {
@@ -95,9 +94,9 @@
         }
 
         .d2h-info {
-          background-color: var(--grey-100);
-          color: var(--grey-700);
-          line-height: 24px;
+          background-color: var(--bg-hunk);
+          color: var(--fg-hunk);
+          line-height: 26px;
         }
 
         .d2h-code-linenumber {
@@ -117,6 +116,33 @@
         }
       }
 
+      .d2h-code-line,
+      .d2h-code-side-line {
+        .d2h-code-line-ctn {
+          > del:first-child,
+          > ins:first-child {
+            background-color: transparent;
+          }
+
+          ins {
+            background-color: var(--bg-change-added);
+          }
+
+          del {
+            background-color: var(--bg-change-deleted);
+          }
+        }
+      }
+
+      .d2h-file-diff :is(.d2h-del.d2h-change, .d2h-ins.d2h-change) {
+        background-color: transparent;
+      }
+
+      // Line number background - kind of distracted
+      // td:is(.d2h-code-side-linenumber, .d2h-code-linenumber).d2h-del {
+      //   background-color: var(--bg-change-deleted);
+      // }
+
       &.line-by-line-file-diff {
         .d2h-code-line {
           padding: 0 4px;
@@ -124,7 +150,12 @@
 
         [data-annotation-for-line] {
           right: -25px;
-          top: 2px;
+          top: 4px;
+        }
+
+        [data-selected-indicator] {
+          top: 0;
+          right: -8px;
         }
       }
 
@@ -182,11 +213,40 @@
           cursor: pointer;
           user-select: none;
           position: absolute;
-          top: -13px;
+          top: -11px;
           right: -26px;
           display: none;
           transform: scale(1.1);
           transition: transform 0.75s;
+        }
+
+        [data-selected-indicator] {
+          height: 20px;
+          width: 4px;
+          background-color: var(--primary-7);
+          position: absolute;
+          top: -15px;
+          right: -9px;
+          display: none;
+        }
+
+        &.selected,
+        &:has(.selected) {
+          td {
+            &:first-of-type {
+              background-color: var(--bg-selected-line-number) !important;
+              border-color: var(--primary-7) !important;
+            }
+
+            &:last-of-type,
+            *:not(span[data-annotation-for-line], span[data-selected-indicator]) {
+              background-color: var(--bg-selected-line-content) !important;
+            }
+
+            [data-selected-indicator] {
+              display: inline-block;
+            }
+          }
         }
 
         &:hover [data-annotation-for-line] {
@@ -244,6 +304,11 @@
         .d2h-diff-tbody {
           tr:hover [data-annotation-for-line] {
             display: none !important;
+          }
+
+          .d2h-code-side-linenumber,
+          .d2h-code-linenumber {
+            cursor: default;
           }
         }
       }
@@ -416,4 +481,6 @@
   }
 }
 
-// TODO: Restyle DiffView to match latest design (https://www.figma.com/file/PgBvi804VdQNyLS8fD9K0p/Code?node-id=9391%3A118114&mode=dev)
+.selectoSelection {
+  display: none !important;
+}

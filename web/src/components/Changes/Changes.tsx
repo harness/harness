@@ -82,6 +82,7 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   scrollElement: HTMLElement
   refetchActivities?: UseGetPullRequestInfoResult['refetchActivities']
   refetchCommits?: UseGetPullRequestInfoResult['refetchCommits']
+  setPullReqChangesCount?: React.Dispatch<React.SetStateAction<number>>
 }
 
 const ChangesInternal: React.FC<ChangesProps> = ({
@@ -98,7 +99,8 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   defaultCommitRange = [],
   scrollElement,
   refetchActivities,
-  refetchCommits
+  refetchCommits,
+  setPullReqChangesCount
 }) => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
@@ -418,6 +420,12 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     },
     [activeBlockIndex, commentId, diffs, onJumpToFile, selectedPath]
   )
+
+  useEffect(() => {
+    if (diffs?.length && setPullReqChangesCount) {
+      setPullReqChangesCount(diffs?.length)
+    }
+  }, [diffs, setPullReqChangesCount])
 
   useShowRequestError(errorFileViews, 0)
 

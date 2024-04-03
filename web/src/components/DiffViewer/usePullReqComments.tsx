@@ -16,10 +16,12 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useMutate } from 'restful-react'
+import Selecto from 'selecto'
 import ReactDOM from 'react-dom'
 import { useLocation } from 'react-router-dom'
-import { useToaster, ButtonProps, Utils } from '@harnessio/uicore'
-import { isEqual, max, noop, random } from 'lodash-es'
+import { useToaster, ButtonProps, Utils, Text } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
+import { findLastIndex, isEqual, max, noop, random, uniq } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { DiffFileEntry } from 'utils/types'
@@ -110,12 +112,94 @@ export function usePullReqComments({
     },
     [location, pullReqMetadata?.number, repoMetadata?.path, routes]
   )
-  //
-  // Attach a single comment thread to its binding DOM. Thread can be a
-  // draft/uncommitted/not-saved one.
-  //
+
+  /**
+   * Update data-selected-count attribute on a code row/line to keep track of how many
+   * comments mark the line as being selected.
+   */
+  const updateDataSelectedCount = useCallback((row: HTMLElement | null, isSelected: boolean) => {
+    if (row) {
+      const selectedCount = Number(row.dataset.selectedCount || 0) + (isSelected ? 1 : -1)
+
+      row.dataset.selectedCount = String(selectedCount)
+
+      if (isSelected) {
+        // Skip marking info lines (and others if needed)
+        if (!row.querySelector('td.d2h-info')) {
+          row.classList.add(selected)
+        }
+      } else {
+        // When this number is zero, it's time to clear the selected state
+        if (!(selectedCount > 0)) {
+          row.classList.remove(selected)
+          delete row.dataset.selectedCount
+          row.classList.remove(selected)
+        }
+      }
+    }
+  }, [])
+
+  const updateDataCommentIds = useCallback((row: HTMLElement, commentId: number, add = true) => {
+    if (row && commentId) {
+      let ids = (row.dataset.commentIds || '').split('/').filter(Boolean)
+      const id = String(commentId)
+
+      if (add && !ids.includes(id)) {
+        ids.push(id)
+      } else if (!add && ids.includes(id)) {
+        ids = ids.filter(_id => _id !== id)
+      }
+
+      row.dataset.commentIds = ids.join('/')
+    }
+  }, [])
+
+  /**
+   * Mark lines associated with a comment thread `selected`, or not.
+   */
+  const markSelectedLines = useCallback(
+    (comment: DiffCommentItem<TypesPullReqActivity>, atRow: HTMLTableRowElement | null, isSelected: boolean) => {
+      const handledRows = new WeakMap() // use a map to make sure markers are not marked twice per comment
+      const sideBySide = viewStyle === ViewStyle.SIDE_BY_SIDE
+
+      if (atRow && comment.span > 1) {
+        updateDataSelectedCount(atRow, isSelected)
+        handledRows.set(atRow, atRow)
+
+        const tbody = atRow.parentElement as HTMLElement
+        let line = comment.lineNumberStart
+        let rowAtStartLine: HTMLTableRowElement | null = null
+
+        // Travel to get the first possible valid rowAtStartLine, as lines may
+        // be collapsed or not rendered due to diff collapse/partial rendering
+        while (!rowAtStartLine && line <= comment.lineNumberEnd) {
+          rowAtStartLine = sideBySide
+            ? (tbody.querySelector(`[data-annotation-for-line="${line}"]`)?.closest('tr') as HTMLTableRowElement)
+            : (tbody
+                .querySelector(`.line-num${comment.left ? 1 : 2}[data-line-number="${line}"]`)
+                ?.closest('tr') as HTMLTableRowElement)
+          line++
+        }
+
+        // When rowAtStartLine is found, mark all rows from it to atRow
+        while (rowAtStartLine && rowAtStartLine !== atRow) {
+          if (!handledRows.has(rowAtStartLine)) {
+            updateDataSelectedCount(rowAtStartLine, isSelected)
+            handledRows.set(rowAtStartLine, rowAtStartLine)
+          }
+          rowAtStartLine = rowAtStartLine.nextElementSibling as HTMLTableRowElement
+        }
+      }
+    },
+    [viewStyle, updateDataSelectedCount]
+  )
+
+  /**
+   * Attach a single comment thread to its binding DOM. Thread can be a
+   * draft/uncommitted/not-saved one.
+   */
   const attachSingleCommentThread = useCallback(
-    (commentThreadId: number) => {
+    (commentThreadId: number, lineElements?: HTMLElement[]) => {
       const comment = comments.get(commentThreadId)
 
       // Early exit if conditions for the comment thread existing don't exist
@@ -125,25 +209,33 @@ export function usePullReqComments({
       if (comment.commentItems.length && comment.commentItems.every(item => !!item.deleted)) return
 
       const isSideBySide = viewStyle === ViewStyle.SIDE_BY_SIDE
-      const lineInfo = getCommentLineInfo(contentRef.current, comment, viewStyle)
+      const lineInfo = getCommentLineInfo(comment, contentRef.current, comment, viewStyle)
 
-      // Early exit if rowElement does not exist, or already a thread rendered
-      // TODO: Support adding multiple comments on a same line
-      if (!lineInfo.rowElement || lineInfo.hasCommentsRendered) {
+      if (!lineInfo.rowElement) return
+
+      // Exit if comment thread is already rendered
+      if (lineInfo.commentThreadRendered) {
         // Comment data changed, send updated data to CommentBox to update itself
-        if (lineInfo.hasCommentsRendered && !isEqual(comment._commentItems, comment.commentItems)) {
+        if (
+          comment.commentItems?.[0]?.id > 0 &&
+          comment.commentItems?.[0]?.id === comment._commentItems?.[0]?.id &&
+          !isEqual(comment._commentItems, comment.commentItems)
+        ) {
           comment._commentItems = structuredClone(comment.commentItems)
           dispatchCustomEvent(customEventForCommentWithId(commentThreadId), comment._commentItems)
         }
         return
       }
 
+      // Add `selected` class into selected lines / rows (only if selected lines count > 1)
+      markSelectedLines(comment, lineInfo.rowElement, true)
+
       // Annotate that the row is taken. We only support one thread per line as now
-      lineInfo.rowElement.dataset.annotated = 'true'
+      updateDataCommentIds(lineInfo.rowElement, comment.inner.id as number, true)
 
       // Create placeholder for opposite row (id < 0 means this is a new thread). This placeholder
       // expands itself when CommentBox's height is changed (in split view)
-      const oppositeRowPlaceHolder = createCommentOppositePlaceHolder(comment.lineNumber, commentThreadId < 0)
+      const oppositeRowPlaceHolder = createCommentOppositePlaceHolder(comment.lineNumberEnd, commentThreadId < 0)
 
       // Attach the opposite placeholder (in split view)
       if (isSideBySide && !!lineInfo.oppositeRowElement) {
@@ -152,7 +244,7 @@ export function usePullReqComments({
 
       // Create a new row below the lineNumber
       const commentRowElement = document.createElement('tr')
-      commentRowElement.dataset.annotatedLine = String(comment.lineNumber)
+      commentRowElement.dataset.annotatedLine = String(comment.lineNumberEnd)
       commentRowElement.innerHTML = `<td colspan="2"></td>`
       lineInfo.rowElement.after(commentRowElement)
 
@@ -165,9 +257,14 @@ export function usePullReqComments({
         ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
         commentRowElement.parentElement?.removeChild(commentRowElement)
         lineInfo.oppositeRowElement?.parentElement?.removeChild(oppositeRowPlaceHolder as Element)
-        delete lineInfo.rowElement.dataset.annotated
+        updateDataCommentIds(lineInfo.rowElement, comment.inner.id as number, false)
         comment.destroy = undefined
         comments.delete(commentThreadId)
+
+        // Update selected line on cancelling a comment thread
+        if (lineElements?.length) {
+          markSelectedLines(comment, lineInfo.rowElement, false)
+        }
       }
 
       // Note: comment._commentItems keeps the latest data passed to CommentBox.
@@ -213,8 +310,8 @@ export function usePullReqComments({
               switch (action) {
                 case CommentAction.NEW: {
                   const payload: OpenapiCommentCreatePullReqRequest = {
-                    line_start: comment.lineNumber,
-                    line_end: comment.lineNumber,
+                    line_start: comment.lineNumberStart || comment.lineNumberEnd,
+                    line_end: comment.lineNumberEnd,
                     line_start_new: !comment.left,
                     line_end_new: !comment.left,
                     path: diff.isRename && comment.left ? diff.oldName : diff.filePath,
@@ -225,6 +322,10 @@ export function usePullReqComments({
 
                   await save(payload)
                     .then((_activity: TypesPullReqActivity) => {
+                      // Update data-comment-ids (replace tmp one with the new id coming from API)
+                      updateDataCommentIds(lineInfo.rowElement, comment.inner.id as number, false)
+                      updateDataCommentIds(lineInfo.rowElement, _activity.id as number, true)
+
                       updatedItem = activityToCommentItem(_activity)
 
                       // Delete the place-holder comment (negative id) in comments
@@ -270,18 +371,23 @@ export function usePullReqComments({
                     }
                   })
 
-                  // Reflect deleted item in comment.commentItems and comment._commentItems
-                  const deletedItem1 = comment.commentItems.find(it => it.id === id)
-                  const deletedItem2 = comment._commentItems?.find(it => it.id === id)
+                  if (result) {
+                    // Reflect deleted item in comment.commentItems and comment._commentItems
+                    const deletedItem1 = comment.commentItems.find(it => it.id === id)
+                    const deletedItem2 = comment._commentItems?.find(it => it.id === id)
 
-                  if (deletedItem1) deletedItem1.deleted = Date.now()
-                  if (deletedItem2) deletedItem2.deleted = Date.now()
+                    if (deletedItem1) deletedItem1.deleted = Date.now()
+                    if (deletedItem2) deletedItem2.deleted = Date.now()
 
-                  // Remove CommentBox if all items are deleted
-                  if (comment._commentItems?.every(it => !!it.deleted)) {
-                    setTimeout(comment.destroy || noop, 0)
+                    // Remove CommentBox if all items are deleted
+                    if (comment._commentItems?.every(it => !!it.deleted)) {
+                      // Remove `selected` class from selected lines / rows - if any
+                      markSelectedLines(comment, lineInfo.rowElement, false)
+
+                      // Destroy needs to be called outside of React life-cycle
+                      setTimeout(comment.destroy || noop, 0)
+                    }
                   }
-
                   break
                 }
 
@@ -309,6 +415,7 @@ export function usePullReqComments({
               return [result, updatedItem]
             }}
             outlets={{
+              [CommentBoxOutletPosition.TOP]: <CommentThreadTopDecoration comment={comment} />,
               [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
                 <CodeCommentStatusSelect
                   repoMetadata={repoMetadata}
@@ -359,16 +466,196 @@ export function usePullReqComments({
       getString,
       remove,
       update,
-      refetchActivities
+      refetchActivities,
+      copyLinkToComment,
+      markSelectedLines,
+      updateDataCommentIds
     ]
+  )
+
+  const selectoRef = useRef<Selecto>()
+
+  const bindEventToSelectMultipleCodeLines = useCallback(
+    () => {
+      const containerDOM = containerRef.current
+
+      if (containerDOM) {
+        selectoRef.current?.destroy()
+
+        selectoRef.current = new Selecto({
+          className: css.selectoSelection,
+          rootContainer: containerDOM,
+          container: containerDOM,
+          dragContainer: '.d2h-diff-table',
+          dragCondition: e => {
+            const classList = e.inputEvent?.srcElement?.classList
+
+            // Allow drag to start on some certain elements only
+            return (
+              classList?.contains('d2h-code-line-prefix') ||
+              classList?.contains('d2h-code-side-linenumber') ||
+              classList?.contains('d2h-code-linenumber') ||
+              classList?.contains('annotation-for-line') ||
+              classList?.contains('line-num1') ||
+              classList?.contains('line-num2')
+            )
+          },
+          selectableTargets: [
+            'td.d2h-code-side-linenumber:not(.d2h-info, .d2h-emptyplaceholder)',
+            'td.d2h-code-linenumber:not(.d2h-info, .d2h-emptyplaceholder)',
+            'td:not(.d2h-info, .d2h-emptyplaceholder) span[data-annotation-for-line]',
+            'td:not(.d2h-info, .d2h-emptyplaceholder) .line-num1',
+            'td:not(.d2h-info, .d2h-emptyplaceholder) .line-num2',
+            'td:not(.d2h-info, .d2h-emptyplaceholder) .d2h-code-line-prefix'
+          ],
+          hitRate: 0,
+          selectByClick: false,
+          selectFromInside: true,
+          ratio: 0,
+          preventDragFromInside: false,
+          preventClickEventOnDrag: true,
+          preventDefault: false,
+          clickBySelectEnd: true,
+          continueSelect: false,
+          continueSelectWithoutDeselect: true
+        })
+
+        selectoRef.current
+          .on('select', ev => {
+            ev.added.forEach(e => e.classList.add(selected))
+            ev.removed.forEach(e => e.classList.remove(selected))
+          })
+          .on('selectEnd', ev => {
+            // Selecto dispatches event to all instances wrongly, need to filter
+            if (ev.added.length && ev.added[0]?.closest?.(`[data-diff-file-path="${diff.filePath}"]`)) {
+              switch (ev.added.length) {
+                case 1: {
+                  ev.added.forEach(e => e.classList.remove(selected))
+                  break
+                }
+                case 2: {
+                  if (ev.added[1].classList.contains('d2h-code-line-prefix')) {
+                    ev.added.forEach(e => e.classList.remove(selected))
+                  }
+                  break
+                }
+              }
+
+              // Save current added elements
+              const added = ev.added
+
+              // Normalize added elements to make sure they are always unique line numbers
+              ev.added = uniq(
+                ev.added.map(e => {
+                  if (e.classList.contains('d2h-code-line-prefix')) {
+                    return e.closest?.('td')?.previousElementSibling as HTMLDivElement
+                  } else if (e.classList.contains('annotation-for-line')) {
+                    return e.closest?.('td') as HTMLDivElement
+                  } else if (e.classList.contains('line-num1') || e.classList.contains('line-num2')) {
+                    return e.closest?.('td') as HTMLDivElement
+                  }
+
+                  return e
+                })
+              )
+
+              //
+              // Notes:
+              //
+              // - Only allow selecting lines from a same hunk/chunk (continuous line numbers)
+              // - Deselect all lines not belong to the last hunk
+              //
+              if (ev.added.length) {
+                const selectedLineNumbers: number[] = []
+                const _added: (HTMLElement | SVGElement)[] = []
+
+                if (viewStyle === ViewStyle.LINE_BY_LINE) {
+                  const lineNumbers1 = ev.added.map(e =>
+                    parseInt(e.querySelector('.line-num1')?.textContent || '0', 10)
+                  )
+                  const lineNumbers2 = ev.added.map(e =>
+                    parseInt(e.querySelector('.line-num2')?.textContent || '0', 10)
+                  )
+                  const lastLineNumberIndex1 = findLastIndex(lineNumbers1, ln => ln > 0)
+                  const lastLineNumberIndex2 = findLastIndex(lineNumbers2, ln => ln > 0)
+
+                  // Last line number in lineNumbers1 or lineNumbers2 determines the line numbers
+                  // of which side will be picked
+                  const lineNumbers =
+                    lastLineNumberIndex2 >= lastLineNumberIndex1
+                      ? lineNumbers2
+                      : lastLineNumberIndex1 > lastLineNumberIndex2
+                      ? lineNumbers1
+                      : []
+
+                  const len = lineNumbers.length
+                  let index = len
+
+                  while (--index >= 0) {
+                    if (lineNumbers[index]) {
+                      if (
+                        index === len - 1 ||
+                        lineNumbers[index] + 1 === lineNumbers[index + 1] ||
+                        (lineNumbers[index] === 0 && lineNumbers[index - 1] + 1 === lineNumbers[index + 1]) ||
+                        (lineNumbers[index + 1] === 0 && lineNumbers[index] + 1 === lineNumbers[index + 2])
+                      ) {
+                        _added.unshift(ev.added[index])
+                        selectedLineNumbers.unshift(lineNumbers[index])
+                      } else {
+                        break
+                      }
+                    }
+                  }
+                } else {
+                  const lineNumbers = ev.added.map(e => parseInt(e.textContent?.replace(/(\s)(\+)?/g, '') || '0', 10))
+                  const len = lineNumbers.length
+                  let index = len
+
+                  while (--index >= 0) {
+                    if (lineNumbers[index]) {
+                      if (index === len - 1 || lineNumbers[index] + 1 === lineNumbers[index + 1]) {
+                        _added.unshift(ev.added[index])
+                        selectedLineNumbers.unshift(lineNumbers[index])
+                      } else {
+                        break
+                      }
+                    }
+                  }
+                }
+
+                ev.added = _added
+
+                // Remove selected class from child elements which Selecto picked
+                added.forEach(e => e.classList.remove(selected))
+
+                if (ev.added.length) {
+                  startCommentThread(
+                    { target: ev.added[ev.added.length - 1] } as unknown as MouseEvent,
+                    ev.added as HTMLElement[],
+                    selectedLineNumbers
+                  )
+                }
+              }
+
+              // Reset Selecto every time a selection is done
+              selectoRef.current?.setSelectedTargets([])
+            }
+          })
+      }
+    },
+    [containerRef.current, collapsed, diff] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   // Attach (render) all comment threads to their binding DOMs
   const attachAllCommentThreads = useCallback(() => {
-    if (!readOnly && isDiffRendered(contentRef) && comments.size > 0) {
-      comments.forEach(item => attachSingleCommentThread(item.inner.id || 0))
+    if (!readOnly) {
+      if (isDiffRendered(contentRef) && comments.size > 0) {
+        comments.forEach(item => attachSingleCommentThread(item.inner.id || 0))
+      }
+
+      bindEventToSelectMultipleCodeLines()
     }
-  }, [readOnly, contentRef, comments, attachSingleCommentThread])
+  }, [readOnly, contentRef, comments, attachSingleCommentThread, bindEventToSelectMultipleCodeLines])
 
   // Detach (remove) all comment threads from their binding DOMs
   const detachAllCommentThreads = useCallback(() => {
@@ -376,6 +663,9 @@ export function usePullReqComments({
       contentRef.current
         .querySelectorAll('[data-annotated-line]')
         .forEach(element => ReactDOM.unmountComponentAtNode(element.firstElementChild as HTMLTableCellElement))
+
+      selectoRef.current?.destroy()
+      selectoRef.current = undefined
     }
   }, [readOnly, contentRef])
 
@@ -487,7 +777,7 @@ export function usePullReqComments({
   )
 
   const startCommentThread = useCallback(
-    function clickToAddAnnotation(event: MouseEvent) {
+    function clickToAddAnnotation(event: MouseEvent, lineElements?: HTMLElement[], selectedLineNumbers?: number[]) {
       if (readOnly) return
 
       let target = event.target as HTMLDivElement
@@ -498,39 +788,44 @@ export function usePullReqComments({
       if (lineNumberCell) {
         target = lineNumberCell.querySelector('[data-annotation-for-line]') as HTMLDivElement
       }
-      //
-      // Note: For future use to support multiple-line code comment
-      //
-      // else if (target?.tagName.toLowerCase() === 'span' && target.classList.contains('d2h-code-line-ctn')) {
-      //   // If click happens in the code line and there's some selection it, then show Add Comment
-      //   const tr = target?.closest('tr')
-      //   const trFromSelection = (
-      //     document.getSelection()?.getRangeAt(0).commonAncestorContainer as HTMLElement
-      //   )?.closest('tr')
-
-      //   if (tr && trFromSelection && tr === trFromSelection) {
-      //     target = tr.querySelector('[data-annotation-for-line]') as HTMLDivElement
-      //   }
-      // }
-      // else if (target?.tagName.toLowerCase() === 'tbody' && target.classList.contains('d2h-diff-tbody')) {
-      //   // Select a couple of lines -> add comment for multiple lines
-      //   target = document
-      //     .elementFromPoint(event.x, event.y)
-      //     ?.closest('tr')
-      //     ?.querySelector('[data-annotation-for-line]') as HTMLDivElement
-      // }
 
       const targetButton = target?.closest('[data-annotation-for-line]') as HTMLDivElement
       const annotatedLineRow = targetButton?.closest('tr') as HTMLTableRowElement
 
       if (targetButton && annotatedLineRow) {
+        // If there's a new CommentBox showing, focus on it intead of creating a new one
+        if (
+          (annotatedLineRow.dataset.commentIds || '')
+            .split('/')
+            .map(Number)
+            .find(_id => _id < 0)
+        ) {
+          let row = annotatedLineRow.nextElementSibling
+          let editor: HTMLElement | null = null
+
+          while (row && !editor) {
+            editor = row.querySelector('[data-comment-thread-id=""] [contenteditable]')
+            row = row.nextElementSibling
+          }
+
+          editor?.scrollIntoView({ block: 'center' })
+          editor?.focus?.()
+
+          return
+        }
+
         // Utilize a random negative number as temporary IDs to prevent database entry collisions
         const randID = -(random(1_000_000, false) + random(1_000_000, false))
+        const span = selectedLineNumbers?.length
+          ? selectedLineNumbers[selectedLineNumbers.length - 1] - selectedLineNumbers[0] + 1
+          : 0
         const commentItem: DiffCommentItem<TypesPullReqActivity> = {
           inner: { id: randID } as TypesPullReqActivity,
           left: false,
           right: false,
-          lineNumber: 0,
+          lineNumberStart: 0,
+          lineNumberEnd: 0,
+          span: span > 1 ? span : 0,
           commentItems: [],
           filePath: '',
           destroy: undefined
@@ -540,7 +835,9 @@ export function usePullReqComments({
           const leftParent = targetButton.closest('.d2h-file-side-diff.left')
           commentItem.left = !!leftParent
           commentItem.right = !leftParent
-          commentItem.lineNumber = Number(targetButton.dataset.annotationForLine)
+          commentItem.lineNumberEnd =
+            selectedLineNumbers?.[selectedLineNumbers?.length - 1] || Number(targetButton.dataset.annotationForLine)
+          commentItem.lineNumberStart = selectedLineNumbers?.[0] || commentItem.lineNumberEnd
         } else {
           const lineInfoTD = targetButton.closest('td')
           const lineNum1 = lineInfoTD?.querySelector('.line-num1')
@@ -549,12 +846,15 @@ export function usePullReqComments({
           // Right has priority
           commentItem.right = !!lineNum2?.textContent
           commentItem.left = !commentItem.right
-          commentItem.lineNumber = Number(lineNum2?.textContent || lineNum1?.textContent)
+          commentItem.lineNumberEnd =
+            selectedLineNumbers?.[selectedLineNumbers?.length - 1] ||
+            Number(lineNum2?.textContent || lineNum1?.textContent)
+          commentItem.lineNumberStart = selectedLineNumbers?.[0] || commentItem.lineNumberEnd
         }
 
         comments.set(randID, commentItem)
 
-        attachSingleCommentThread(randID)
+        attachSingleCommentThread(randID, lineElements)
       }
     },
     [viewStyle, readOnly, comments, attachSingleCommentThread]
@@ -578,9 +878,10 @@ export function usePullReqComments({
 
   useEffect(
     function bindClickEventToStartNewCommentThread() {
-      const containerDOM = containerRef.current
       const click = 'click'
+      const containerDOM = containerRef.current
 
+      // Note: Can't use useEventListener() as containerDOM can be null
       if (containerDOM) {
         containerDOM.addEventListener(click, startCommentThread)
         return () => containerDOM.removeEventListener(click, startCommentThread)
@@ -619,3 +920,16 @@ function useCommentAPI(path: string) {
 function isDiffRendered(ref: React.RefObject<HTMLDivElement | null>) {
   return !!ref.current?.querySelector('[data]' || !!ref.current?.querySelector('.d2h-wrapper'))
 }
+
+const CommentThreadTopDecoration: React.FC<{ comment: DiffCommentItem<TypesPullReqActivity> }> = ({ comment }) => {
+  const { getString } = useStrings()
+  const { lineNumberStart: start, lineNumberEnd: end } = comment
+
+  return start !== end ? (
+    <Text color={Color.GREY_500} padding={{ bottom: 'small' }} font={{ variation: FontVariation.BODY }}>
+      {getString('pr.commentLineNumbers', { start, end })}
+    </Text>
+  ) : null
+}
+
+const selected = 'selected'

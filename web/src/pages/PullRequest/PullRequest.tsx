@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useMemo, useRef } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { Container, Layout, PageBody, Tabs, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { Render } from 'react-jsx-match'
@@ -80,6 +80,8 @@ export default function PullRequest() {
         : PullRequestSection.CONVERSATION,
     [pullRequestSection]
   )
+
+  const [pullReqChangesCount, setPullReqChangesCount] = useState(0)
 
   const domRef = useRef<HTMLDivElement>(null)
   useSetPageContainerWidthVar({ domRef })
@@ -182,7 +184,7 @@ export default function PullRequest() {
                       <TabTitleWithCount
                         icon={CodeIcon.File}
                         title={getString('filesChanged')}
-                        count={pullReqStats?.files_changed || 0}
+                        count={pullReqChangesCount || pullReqStats?.files_changed || 0}
                         padding={{ left: 'medium' }}
                       />
                     ),
@@ -200,6 +202,7 @@ export default function PullRequest() {
                             emptyMessage={getString('noChangesPR')}
                             refetchActivities={refetchActivities}
                             refetchCommits={refetchCommits}
+                            setPullReqChangesCount={setPullReqChangesCount}
                             scrollElement={
                               (standalone
                                 ? document.querySelector(`.${css.main}`)?.parentElement || window

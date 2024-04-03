@@ -134,6 +134,12 @@
   :global {
     .d2h-code-linenumber {
       cursor: default;
+      display: flex;
+      flex-direction: row-reverse;
+
+      .annotation-for-line {
+        display: none;
+      }
     }
   }
 

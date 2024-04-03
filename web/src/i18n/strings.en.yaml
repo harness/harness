@@ -241,6 +241,7 @@ diff: Diff
 draft: Draft
 conversation: Conversation
 pr:
+  commentLineNumbers: Comment on line {{start}} to {{end}}
   moreComments: '{num} {count|0:Show more,1:1 more comment,more comments}'
   copyLinkToComment: Copy link to comment
   expandFullFile: Expand all

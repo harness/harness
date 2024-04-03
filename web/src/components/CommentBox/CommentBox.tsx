@@ -194,9 +194,8 @@ const CommentBoxInternal = <T = unknown,>({
       width={width}
       ref={containerRef}
       data-comment-thread-id={comments?.[0]?.id || ''}>
+      {outlets[CommentBoxOutletPosition.TOP]}
       <Container className={cx(boxClassName, css.box)}>
-        {outlets[CommentBoxOutletPosition.TOP]}
-
         <Layout.Vertical>
           {/* CommentsThread is rendered only when comments.length > 0 */}
           <CommentsThread<T>
@@ -221,7 +220,7 @@ const CommentBoxInternal = <T = unknown,>({
           />
           <Match expr={showReplyPlaceHolder && enableReplyPlaceHolderRef.current}>
             <Truthy>
-              <Container>
+              <Container data-reply-placeholder>
                 <Layout.Horizontal
                   spacing="small"
                   className={cx(css.replyPlaceHolder, editorClassName)}
@@ -305,6 +304,7 @@ const CommentBoxInternal = <T = unknown,>({
           </Match>
         </Layout.Vertical>
       </Container>
+      {outlets[CommentBoxOutletPosition.BOTTOM]}
     </Container>
   )
 }
@@ -335,12 +335,12 @@ const CommentsThread = <T = unknown,>({
     },
     [editIndexes]
   )
-  const collapseResolvedComments = useMemo(() => !!get(commentItems[0], 'payload.resolved'), [])
+  const collapseResolvedComments = useMemo(() => !!get(commentItems[0], 'payload.resolved'), [commentItems])
   const shouldCollapsedResolvedComments = useMemo(
     () =>
       collapseResolvedComments &&
       !(commentItems.length === 1 && shorten(commentItems[0].content) === commentItems[0].content),
-    [commentItems]
+    [commentItems, collapseResolvedComments]
   )
   const [collapsed, setCollapsed] = useState(collapseResolvedComments)
 
@@ -504,7 +504,10 @@ const CommentsThread = <T = unknown,>({
           })}
 
         <Render when={shouldCollapsedResolvedComments}>
-          <Container flex={{ justifyContent: 'space-around' }} padding={{ bottom: 'xsmall' }}>
+          <Container
+            flex={{ justifyContent: 'space-around' }}
+            padding={{ bottom: 'xsmall' }}
+            data-comments-collapsed={collapsed}>
             <Layout.Horizontal>
               {collapsed && commentItems.length > 1 && (
                 <AvatarGroup

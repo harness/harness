@@ -189,7 +189,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
       })
     }
     return () => cancelTask(taskId)
-  }, [inView])
+  }, [inView, isMounted])
 
   //
   // Handling custom events sent to DiffViewer from external components/features
@@ -286,7 +286,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
       let taskId = 0
 
       if (!renderCustomContent && !collapsed) {
-        if (isInViewport(containerRef.current as Element)) {
+        if (isInViewport(containerRef.current as Element, 1000)) {
           renderDiffAndComments()
         } else {
           taskId = scheduleLowPriorityTask(renderDiffAndComments)
