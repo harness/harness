@@ -22,7 +22,7 @@ export function useDisableCodeMainLinks(disabled: boolean) {
       const nav = document.querySelectorAll('[data-code-repo-section]')
 
       nav?.forEach(element => {
-        if (element.getAttribute('data-code-repo-section') !== 'files') {
+        if (!['files', 'settings'].includes(<string>element.getAttribute('data-code-repo-section'))) {
           element.setAttribute('aria-disabled', 'true')
         }
       })
