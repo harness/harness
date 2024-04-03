@@ -16,13 +16,23 @@
 
 import { useHistory } from 'react-router-dom'
 import React, { useMemo, useState } from 'react'
-import { Container, Layout, FlexExpander, DropDown, ButtonVariation, Button, SelectOption } from '@harnessio/uicore'
+import {
+  Container,
+  Layout,
+  FlexExpander,
+  DropDown,
+  ButtonVariation,
+  Button,
+  SelectOption,
+  Text
+} from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { sortBy } from 'lodash-es'
 import { getConfig, getUsingFetch } from 'services/config'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import type { TypesPrincipalInfo } from 'services/code'
+import type { TypesPrincipalInfo, TypesUser } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { permissionProps } from 'utils/Utils'
@@ -47,7 +57,6 @@ export function PullRequestsContentHeader({
   repoMetadata
 }: PullRequestsContentHeaderProps) {
   const history = useHistory()
-  const { routes } = useAppContext()
   const { getString } = useStrings()
   const [filterOption, setFilterOption] = useState(activePullRequestFilterOption)
   const [authorFilterOption, setAuthorFilterOption] = useState(activePullRequestAuthorFilterOption)
@@ -55,8 +64,7 @@ export function PullRequestsContentHeader({
   const [query, setQuery] = useState<string>('')
   const [loadingAuthors, setLoadingAuthors] = useState<boolean>(false)
   const space = useGetSpaceParam()
-  const { standalone, routingId } = useAppContext()
-  const { hooks } = useAppContext()
+  const { hooks, currentUser, standalone, routingId, routes } = useAppContext()
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -79,38 +87,70 @@ export function PullRequestsContentHeader({
   )
 
   const bearerToken = hooks?.useGetToken?.() || ''
-  const getAuthorsPromise = (): Promise<SelectOption[]> => {
-    return new Promise((resolve, reject) => {
-      setLoadingAuthors(true)
-      try {
-        getUsingFetch(getConfig('code/api/v1'), `/principals`, bearerToken, {
+  const moveCurrentUserToTop = async (
+    authorsList: TypesPrincipalInfo[],
+    user: Required<TypesUser>,
+    userQuery: string
+  ): Promise<TypesPrincipalInfo[]> => {
+    const sortedList = sortBy(authorsList, item => item.display_name?.toLowerCase())
+    const updateList = (index: number, list: TypesPrincipalInfo[]) => {
+      const currentUserObj = list[index]
+      list.splice(index, 1)
+      list.unshift(currentUserObj)
+    }
+    if (userQuery) return sortedList
+    const targetIndex = sortedList.findIndex(obj => obj.uid === user.uid)
+    if (targetIndex !== -1) {
+      updateList(targetIndex, sortedList)
+    } else {
+      if (user) {
+        const newAuthorsList = await getUsingFetch(getConfig('code/api/v1'), `/principals`, bearerToken, {
+          queryParams: {
+            query: user?.display_name?.trim(),
+            type: 'user',
+            accountIdentifier: routingId
+          }
+        })
+        const mergedList = [...new Set(authorsList.concat(newAuthorsList))]
+        const newSortedList = sortBy(mergedList, item => item.display_name?.toLowerCase())
+        const newIndex = newSortedList.findIndex(obj => obj.uid === user.uid)
+        updateList(newIndex, newSortedList)
+        return newSortedList
+      }
+    }
+    return sortedList
+  }
+
+  const getAuthorsPromise = async (): Promise<SelectOption[]> => {
+    setLoadingAuthors(true)
+    try {
+      const fetchedAuthors: TypesPrincipalInfo[] = await getUsingFetch(
+        getConfig('code/api/v1'),
+        `/principals`,
+        bearerToken,
+        {
           queryParams: {
             query: query?.trim(),
             type: 'user',
             accountIdentifier: routingId
           }
-        })
-          .then((obj: TypesPrincipalInfo[]) => {
-            const updatedAuthorsList = Array.isArray(obj)
-              ? ([
-                  ...(obj || []).map(item => ({
-                    label: String(item?.display_name),
-                    value: String(item?.id)
-                  }))
-                ] as SelectOption[])
-              : ([] as SelectOption[])
-            setLoadingAuthors(false)
-            resolve(sortBy(updatedAuthorsList, item => item.label.toLowerCase()))
-          })
-          .catch(error => {
-            setLoadingAuthors(false)
-            reject(error)
-          })
-      } catch (error) {
-        setLoadingAuthors(false)
-        reject(error)
-      }
-    })
+        }
+      )
+      const authorsList = await moveCurrentUserToTop(fetchedAuthors, currentUser, query)
+      const updatedAuthorsList = Array.isArray(authorsList)
+        ? ([
+            ...(authorsList || []).map(item => ({
+              label: JSON.stringify({ displayName: item?.display_name, email: item?.email }),
+              value: String(item?.id)
+            }))
+          ] as SelectOption[])
+        : ([] as SelectOption[])
+      setLoadingAuthors(false)
+      return updatedAuthorsList
+    } catch (error) {
+      setLoadingAuthors(false)
+      throw error
+    }
   }
 
   return (
@@ -145,6 +185,47 @@ export function PullRequestsContentHeader({
           query={query}
           onQueryChange={newQuery => {
             setQuery(newQuery)
+          }}
+          itemRenderer={(item, { handleClick }) => {
+            const itemObj = JSON.parse(item.label)
+            return (
+              <Layout.Horizontal
+                padding={{ top: 'small', right: 'small', bottom: 'small', left: 'small' }}
+                font={{ variation: FontVariation.BODY }}
+                className={css.authorDropdownItem}
+                onClick={handleClick}>
+                <Text color={Color.GREY_900} className={css.authorName} tooltipProps={{ isDark: true }}>
+                  <span>{itemObj.displayName}</span>
+                </Text>
+                <Text
+                  color={Color.GREY_400}
+                  font={{ variation: FontVariation.BODY }}
+                  lineClamp={1}
+                  tooltip={itemObj.email}>
+                  ({itemObj.email})
+                </Text>
+              </Layout.Horizontal>
+            )
+          }}
+          getCustomLabel={item => {
+            const itemObj = JSON.parse(item.label)
+            return (
+              <Layout.Horizontal spacing="small">
+                <Text
+                  color={Color.GREY_900}
+                  font={{ variation: FontVariation.BODY }}
+                  tooltip={
+                    <Text
+                      padding={{ top: 'medium', right: 'medium', bottom: 'medium', left: 'medium' }}
+                      color={Color.GREY_0}>
+                      {itemObj.email}
+                    </Text>
+                  }
+                  tooltipProps={{ isDark: true }}>
+                  {itemObj.displayName}
+                </Text>
+              </Layout.Horizontal>
+            )
           }}
         />
         <DropDown

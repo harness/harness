@@ -52,19 +52,27 @@ export default function PullRequests() {
   const history = useHistory()
   const { routes } = useAppContext()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
-  const [filter, setFilter] = useState(PullRequestFilterOption.OPEN as string)
+  const browserParams = useQueryParams<PageBrowserProps>()
+  const [filter, setFilter] = useState(browserParams?.state || (PullRequestFilterOption.OPEN as string))
   const [authorFilter, setAuthorFilter] = useState<string>()
   const space = useGetSpaceParam()
-  const { updateQueryParams } = useUpdateQueryParams()
-
-  const pageBrowser = useQueryParams<PageBrowserProps>()
-  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
+  const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
+  const pageInit = browserParams.page ? parseInt(browserParams.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   useEffect(() => {
-    if (page > 1) {
-      updateQueryParams({ page: page.toString() })
+    const params = {
+      ...browserParams,
+      ...(page > 1 && { page: page.toString() }),
+      ...(filter && { state: filter })
     }
-  }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
+    updateQueryParams(params)
+
+    if (page <= 1) {
+      const updateParams = { ...params }
+      delete updateParams.page
+      replaceQueryParams(updateParams)
+    }
+  }, [page, filter]) // eslint-disable-line react-hooks/exhaustive-deps
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
     data,
@@ -76,11 +84,11 @@ export default function PullRequests() {
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`,
     queryParams: {
       limit: String(LIST_FETCHING_LIMIT),
-      page,
+      page: browserParams.page,
       sort: filter == PullRequestFilterOption.MERGED ? 'merged' : 'number',
       order: 'desc',
       query: searchTerm,
-      state: filter == PullRequestFilterOption.ALL ? '' : filter,
+      state: browserParams.state ? browserParams.state : filter == PullRequestFilterOption.ALL ? '' : filter,
       ...(authorFilter && { created_by: Number(authorFilter) })
     },
     debounce: 500,

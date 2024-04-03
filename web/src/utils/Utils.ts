@@ -81,7 +81,8 @@ export const getErrorMessage = (error: Unknown): string | undefined =>
   error ? get(error, 'data.error', get(error, 'data.message', get(error, 'message', error))) : undefined
 
 export interface PageBrowserProps {
-  page: string
+  page?: string
+  state?: string
 }
 
 export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViolations[]) => {

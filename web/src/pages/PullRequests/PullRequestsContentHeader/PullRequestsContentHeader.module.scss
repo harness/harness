@@ -29,4 +29,27 @@
 
 .branchDropdown {
   background-color: var(--white);
+  border: 1px solid var(--grey-200) !important;
+}
+
+.authorDropdownItem {
+  max-width: 350px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  align-items: center;
+  gap: 2px;
+}
+
+.authorDropdownItem:hover {
+  background-color: var(--primary-1);
+  cursor: pointer;
+}
+
+.authorName span {
+  white-space: nowrap !important;
+  :global {
+    .bp3-popover-content p {
+      white-space: nowrap !important;
+    }
+  }
 }
