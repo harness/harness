@@ -16,9 +16,11 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/errors"
@@ -74,9 +76,22 @@ func (c *Controller) RestoreNoAuth(
 	newIdentifier *string,
 	newParentID *int64,
 ) (*types.Repository, error) {
-	repo, err := c.repoStore.Restore(ctx, repo, newIdentifier, newParentID)
+	var err error
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		if err := c.resourceLimiter.RepoCount(ctx, *newParentID, 1); err != nil {
+			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
+		}
+
+		repo, err = c.repoStore.Restore(ctx, repo, newIdentifier, newParentID)
+		if err != nil {
+			return fmt.Errorf("failed to restore the repo: %w", err)
+		}
+
+		return nil
+	}, sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return nil, fmt.Errorf("failed to restore the repo: %w", err)
 	}
+
 	return repo, nil
 }

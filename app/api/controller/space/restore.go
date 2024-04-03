@@ -22,6 +22,7 @@ import (
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
@@ -108,6 +109,19 @@ func (c *Controller) restoreSpaceInnerInTx(
 	newParentID *int64,
 	spacePath string,
 ) (*types.Space, error) {
+	repoCount, err := c.repoStore.Count(
+		ctx,
+		space.ID,
+		&types.RepoFilter{DeletedBeforeOrAt: &deletedAt, Recursive: true},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count repos in space %d recursively: %w", space.ID, err)
+	}
+
+	if err := c.resourceLimiter.RepoCount(ctx, *newParentID, int(repoCount)); err != nil {
+		return nil, fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
+	}
+
 	filter := &types.SpaceFilter{
 		Page:              1,
 		Size:              math.MaxInt,
