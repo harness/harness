@@ -171,7 +171,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
   return (
     <Container className={css.container}>
       <Layout.Horizontal className={css.heading}>
-        <Container style={{ maxWidth: 'calc(100vw - 800px)' }}>
+        <Container style={{ maxWidth: 'calc(var(--page-container-width) - 300px)' }}>
           <Layout.Horizontal spacing="small" className={css.path}>
             <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
               <Icon name="code-folder" padding={{ right: 'xsmall' }} />

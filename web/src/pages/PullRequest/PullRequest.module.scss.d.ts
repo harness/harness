@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const addDesc: string
 export declare const btn: string
 export declare const changes: string
 export declare const checksCount: string

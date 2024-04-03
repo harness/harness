@@ -136,7 +136,7 @@ export const PullRequestTitle: React.FC<PullRequestTitleProps> = ({
             {!(description || '').trim().length && (
               <>
                 <PipeSeparator height={10} />
-                <a {...ButtonRoleProps} onClick={onAddDescriptionClick}>
+                <a className={css.addDesc} {...ButtonRoleProps} onClick={onAddDescriptionClick}>
                   &nbsp;{getString('pr.addDescription')}
                 </a>
               </>

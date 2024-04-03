@@ -61,13 +61,14 @@ const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string })
               <Text
                 className={css.titleText}
                 icon={'code-commit'}
-                iconProps={{ size: 16 }}
+                iconProps={{ size: 16, margin: { right: 'small' } }}
                 padding="medium"
                 color="black">
                 {defaultTo(commitData?.title, '')}
               </Text>
               <FlexExpander />
               <Button
+                className={css.btn}
                 size={ButtonSize.SMALL}
                 variation={ButtonVariation.SECONDARY}
                 text={getString('browseFiles')}

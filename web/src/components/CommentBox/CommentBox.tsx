@@ -447,7 +447,7 @@ const CommentsThread = <T = unknown,>({
                 hideGutter={isLastItem || (collapseResolvedComments && collapsed)}>
                 <Container padding={{ bottom: isLastItem ? undefined : 'xsmall' }} data-comment-id={commentItem.id}>
                   <Render when={index === 0 && outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}>
-                    <Container className={cx(css.outletTopOfFirstOfComment, { [css.standalone]: standalone })}>
+                    <Container className={css.outletTopOfFirstOfComment}>
                       {outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}
                     </Container>
                   </Render>

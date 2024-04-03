@@ -18,14 +18,12 @@ import React from 'react'
 import { Avatar, Container, Layout, StringSubstitute, Text } from '@harnessio/uicore'
 import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { Render } from 'react-jsx-match'
 import { defaultTo } from 'lodash-es'
 import { CodeIcon, GitInfoProps, MergeStrategy } from 'utils/GitUtils'
-import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
-import { formatDate, formatTime, PullRequestSection } from 'utils/Utils'
+import { PullRequestSection } from 'utils/Utils'
 import { CommentType } from 'components/DiffViewer/DiffViewerUtils'
 import { useAppContext } from 'AppContext'
 import { CommitActions } from 'components/CommitActions/CommitActions'
@@ -291,26 +289,6 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
               color={Color.GREY_400}
             />
           </Layout.Horizontal>
-          <Render when={commentItems.length > 1}>
-            <Container
-              margin={{ top: 'medium', left: 'xxxlarge' }}
-              style={{ maxWidth: 'calc(100vw - 450px)', overflow: 'auto' }}>
-              <MarkdownViewer
-                source={[getString('pr.titleChangedTable').replace(/\n$/, '')]
-                  .concat(
-                    commentItems
-                      .filter((_, index) => index > 0)
-                      .map(
-                        item =>
-                          `|${item.author}|<s>${(item.payload?.payload as Unknown)?.old}</s>|${
-                            (item.payload?.payload as Unknown)?.new
-                          }|${formatDate(item.edited)} ${formatTime(item.edited)}|`
-                      )
-                  )
-                  .join('\n')}
-              />
-            </Container>
-          </Render>
         </Container>
       )
     }

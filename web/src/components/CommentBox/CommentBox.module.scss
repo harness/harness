@@ -108,11 +108,6 @@
   .outletTopOfFirstOfComment {
     padding-bottom: var(--spacing-large) !important;
     overflow: auto;
-    max-width: calc(100vw - 660px);
-
-    &.standalone {
-      max-width: calc(100vw - 600px); // TODO: Recalculate this value in standalone version
-    }
   }
 }
 

@@ -18,6 +18,7 @@ import React, { useCallback, useEffect, useRef } from 'react'
 import { PAGE_CONTAINER_WIDTH } from 'utils/Utils'
 import { useEventListener } from 'hooks/useEventListener'
 import { useIsSidebarExpanded } from 'hooks/useIsSidebarExpanded'
+import { useAppContext } from 'AppContext'
 
 /**
  * Hook to calculate page width and set it as `PAGE_CONTAINER_WIDTH` CSS variable.
@@ -33,6 +34,8 @@ export function useSetPageContainerWidthVar({ domRef }: { domRef: React.RefObjec
   // Ref to hold gap between page and viewport. In embedded version, this
   // ref value is the same as the global right bar (AIDA). Zero in standalone version
   const rightGap = useRef(0)
+  const sidebarExpanded = useIsSidebarExpanded()
+  const { standalone } = useAppContext()
 
   const setContainerWidthVar = useCallback(() => {
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
@@ -42,11 +45,18 @@ export function useSetPageContainerWidthVar({ domRef }: { domRef: React.RefObjec
       const rect = dom.getBoundingClientRect()
 
       // Calculate the gap once
-      if (!rightGap.current) {
+      if (!standalone && !rightGap.current) {
         rightGap.current = viewportWidth - rect.right
       }
 
-      const pageWidth = viewportWidth - rightGap.current - rect.left
+      let pageWidth = viewportWidth - rightGap.current - rect.left
+
+      if (!standalone) {
+        pageWidth = Math.max(
+          sidebarExpanded ? ContainerMinWidth.WITH_SIDE_BAR_EXPANDED : ContainerMinWidth.WITH_SIDE_BAR_COLLAPSED,
+          pageWidth
+        )
+      }
 
       dom.style?.setProperty(PAGE_CONTAINER_WIDTH, `${pageWidth}px`)
 
@@ -61,8 +71,13 @@ export function useSetPageContainerWidthVar({ domRef }: { domRef: React.RefObjec
 
       dom.style.maxWidth = 'var(--page-container-width)'
     }
-  }, [domRef])
+  }, [domRef, sidebarExpanded, standalone])
 
-  useEffect(setContainerWidthVar, [setContainerWidthVar, useIsSidebarExpanded()])
+  useEffect(setContainerWidthVar, [setContainerWidthVar, sidebarExpanded])
   useEventListener('resize', setContainerWidthVar)
+}
+
+const ContainerMinWidth = {
+  WITH_SIDE_BAR_EXPANDED: 1008,
+  WITH_SIDE_BAR_COLLAPSED: 1160
 }

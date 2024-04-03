@@ -427,7 +427,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               </Link>
               <CopyButton content={diff.filePath} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
             </Text>
-            <Container style={{ alignSelf: 'center' }} padding={{ left: 'small' }}>
+            <Container style={{ alignSelf: 'center' }} padding={{ left: 'small' }} margin={{ right: 'small' }}>
               <Layout.Horizontal spacing="xsmall">
                 <Render when={diff.addedLines || diff.isNew}>
                   <Text tag="span" className={css.addedLines}>

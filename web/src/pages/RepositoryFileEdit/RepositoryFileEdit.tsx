@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useRef } from 'react'
 import { Container, PageBody } from '@harnessio/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
@@ -22,6 +22,7 @@ import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { voidFn, getErrorMessage } from 'utils/Utils'
 import { normalizeGitRef } from 'utils/GitUtils'
+import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
 import { RepositoryFileEditHeader } from './RepositoryFileEditHeader/RepositoryFileEditHeader'
 import { FileEditor } from './FileEditor/FileEditor'
 import css from './RepositoryFileEdit.module.scss'
@@ -37,8 +38,11 @@ export default function RepositoryFileEdit() {
 
   useDisableCodeMainLinks(!!isRepositoryEmpty)
 
+  const domRef = useRef<HTMLDivElement>(null)
+  useSetPageContainerWidthVar({ domRef })
+
   return (
-    <Container className={css.main}>
+    <Container className={css.main} ref={domRef}>
       <PageBody error={getErrorMessage(error || resourceError)} retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={loading && resourceLoading} withBorder={!!resourceContent && resourceLoading} />
 

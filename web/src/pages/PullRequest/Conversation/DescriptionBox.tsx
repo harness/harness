@@ -75,7 +75,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
 
   return (
     <Container className={cx({ [css.box]: !edit, [css.desc]: !edit })}>
-      <Container padding={!edit ? { left: 'small', bottom: 'small' } : undefined}>
+      <Container>
         {(edit && (
           <MarkdownEditorWithPreview
             routingId={routingId}

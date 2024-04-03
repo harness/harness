@@ -102,7 +102,7 @@ export function ContentHeader({
           }}
           onCreateBranch={openCreateNewBranchModal}
         />
-        <Container style={{ maxWidth: 'calc(100vw - 800px)' }}>
+        <Container style={{ maxWidth: 'calc(var(--page-container-width) - 450px)' }}>
           <Layout.Horizontal spacing="small">
             <Link
               id="repository-ref-root"

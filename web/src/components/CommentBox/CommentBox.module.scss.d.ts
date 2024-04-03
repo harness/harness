@@ -30,5 +30,4 @@ export declare const optionMenuIcon: string
 export declare const outdated: string
 export declare const outletTopOfFirstOfComment: string
 export declare const replyPlaceHolder: string
-export declare const standalone: string
 export declare const viewer: string

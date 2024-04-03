@@ -42,4 +42,11 @@
 .titleText {
   font-size: var(--font-size-normal) !important;
   font-weight: 600 !important;
+  white-space: nowrap;
+  word-break: break-all;
+}
+
+.btn {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
