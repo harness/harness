@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pullreq
+package locker
 
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/harness/gitness/contextutil"
@@ -28,40 +27,50 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (c *Controller) lockPR(
+const namespaceRepo = "repo"
+
+type Locker struct {
+	mtxManager lock.MutexManager
+}
+
+func NewLocker(mtxManager lock.MutexManager) *Locker {
+	return &Locker{
+		mtxManager: mtxManager,
+	}
+}
+
+func (l Locker) lock(
 	ctx context.Context,
-	repoID int64,
-	prNum int64,
+	namespace string,
+	key string,
 	expiry time.Duration,
 ) (func(), error) {
-	key := fmt.Sprintf("%d/pulls", repoID)
-	if prNum != 0 {
-		key += "/" + strconv.FormatInt(prNum, 10)
-	}
-
-	// annotate logs for easier debugging of lock related merge issues
-	// TODO: refactor once common logging annotations are added
-	ctx = logging.NewContext(ctx, func(c zerolog.Context) zerolog.Context {
-		return c.
-			Str("pullreq_lock", key).
-			Int64("repo_id", repoID)
+	// annotate logs for easier debugging of lock related issues
+	ctx = logging.NewContext(ctx, func(zc zerolog.Context) zerolog.Context {
+		return zc.
+			Str("key", key).
+			Str("namespace", namespaceRepo).
+			Str("expiry", expiry.String())
 	})
 
-	mutex, err := c.mtxManager.NewMutex(
+	mutext, err := l.mtxManager.NewMutex(
 		key,
-		lock.WithNamespace("repo"),
+		lock.WithNamespace(namespace),
 		lock.WithExpiry(expiry),
 		lock.WithTimeoutFactor(4/expiry.Seconds()), // 4s
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new mutex for pr %d in repo %d: %w", prNum, repoID, err)
-	}
-	err = mutex.Lock(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to lock mutex for pr %d in repo %d: %w", prNum, repoID, err)
+		return nil, fmt.Errorf("failed to create new mutex: %w", err)
 	}
 
-	log.Ctx(ctx).Debug().Msgf("successfully locked PR (expiry: %s)", expiry)
+	log.Ctx(ctx).Debug().Msg("attempting to acquire lock")
+
+	err = mutext.Lock(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock the mutex: %w", err)
+	}
+
+	log.Ctx(ctx).Debug().Msgf("successfully locked (expiry: %s)", expiry)
 
 	unlockFn := func() {
 		// always unlock independent of whether source context got canceled or not
@@ -71,11 +80,11 @@ func (c *Controller) lockPR(
 		)
 		defer cancel()
 
-		err := mutex.Unlock(ctx)
+		err := mutext.Unlock(ctx)
 		if err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msg("failed to unlock PR")
+			log.Ctx(ctx).Warn().Err(err).Msg("failed to unlock")
 		} else {
-			log.Ctx(ctx).Debug().Msg("successfully unlocked PR")
+			log.Ctx(ctx).Debug().Msg("successfully unlocked")
 		}
 	}
 

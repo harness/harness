@@ -21,14 +21,13 @@ import (
 	"time"
 
 	gitevents "github.com/harness/gitness/app/events/git"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/stream"
 )
 
-const (
-	eventsReaderGroupName = "gitness:keywordsearch"
-)
+const groupGitEvents = "gitness:keywordsearch"
 
 type Config struct {
 	EventReaderName string
@@ -63,6 +62,7 @@ func NewService(
 	ctx context.Context,
 	config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	repoReaderFactory *events.ReaderFactory[*repoevents.Reader],
 	repoStore store.RepoStore,
 	indexer Indexer,
 ) (*Service, error) {
@@ -75,7 +75,7 @@ func NewService(
 		indexer:   indexer,
 	}
 
-	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
+	_, err := gitReaderFactory.Launch(ctx, groupGitEvents, config.EventReaderName,
 		func(r *gitevents.Reader) error {
 			const idleTimeout = 1 * time.Minute
 			r.Configure(
@@ -93,6 +93,23 @@ func NewService(
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch git event reader for webhooks: %w", err)
+	}
+
+	_, err = repoReaderFactory.Launch(ctx, groupGitEvents, config.EventReaderName,
+		func(r *repoevents.Reader) error {
+			const idleTimeout = 1 * time.Minute
+			r.Configure(
+				stream.WithConcurrency(config.Concurrency),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(config.MaxRetries),
+				))
+
+			_ = r.RegisterDefaultBranchUpdated((service.handleUpdateDefaultBranch))
+			return nil
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch reader factory for repo git group: %w", err)
 	}
 
 	return service, nil

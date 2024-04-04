@@ -1,0 +1,1 @@
+ALTER TABLE repositories DROP COLUMN repo_is_empty;

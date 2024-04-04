@@ -20,7 +20,7 @@ import (
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/pullreq"
-	"github.com/harness/gitness/app/services/reposize"
+	"github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/job"
@@ -38,7 +38,8 @@ type Services struct {
 	Trigger            *trigger.Service
 	JobScheduler       *job.Scheduler
 	MetricCollector    *metric.Collector
-	RepoSizeCalculator *reposize.Calculator
+	RepoSizeCalculator *repo.SizeCalculator
+	Repo               *repo.Service
 	Cleanup            *cleanup.Service
 	Notification       *notification.Service
 	Keywordsearch      *keywordsearch.Service
@@ -50,7 +51,8 @@ func ProvideServices(
 	triggerSvc *trigger.Service,
 	jobScheduler *job.Scheduler,
 	metricCollector *metric.Collector,
-	repoSizeCalculator *reposize.Calculator,
+	repoSizeCalculator *repo.SizeCalculator,
+	repo *repo.Service,
 	cleanupSvc *cleanup.Service,
 	notificationSvc *notification.Service,
 	keywordsearchSvc *keywordsearch.Service,
@@ -62,6 +64,7 @@ func ProvideServices(
 		JobScheduler:       jobScheduler,
 		MetricCollector:    metricCollector,
 		RepoSizeCalculator: repoSizeCalculator,
+		Repo:               repo,
 		Cleanup:            cleanupSvc,
 		Notification:       notificationSvc,
 		Keywordsearch:      keywordsearchSvc,

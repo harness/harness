@@ -88,6 +88,7 @@ type repository struct {
 	NumMergedPulls int `db:"repo_num_merged_pulls"`
 
 	Importing bool `db:"repo_importing"`
+	IsEmpty   bool `db:"repo_is_empty"`
 }
 
 const (
@@ -113,7 +114,8 @@ const (
 		,repo_num_closed_pulls
 		,repo_num_open_pulls
 		,repo_num_merged_pulls
-		,repo_importing`
+		,repo_importing
+		,repo_is_empty`
 )
 
 // Find finds the repo by id.
@@ -238,6 +240,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_num_open_pulls
 			,repo_num_merged_pulls
 			,repo_importing
+			,repo_is_empty
 		) values (
 			:repo_version
 			,:repo_parent_id
@@ -260,6 +263,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_num_open_pulls
 			,:repo_num_merged_pulls
 			,:repo_importing
+			,:repo_is_empty
 		) RETURNING repo_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -303,6 +307,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_num_open_pulls = :repo_num_open_pulls
 			,repo_num_merged_pulls = :repo_num_merged_pulls
 			,repo_importing = :repo_importing
+			,repo_is_empty = :repo_is_empty
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
 	dbRepo := mapToInternalRepo(repo)
@@ -746,6 +751,7 @@ func (s *RepoStore) mapToRepo(
 		NumOpenPulls:   in.NumOpenPulls,
 		NumMergedPulls: in.NumMergedPulls,
 		Importing:      in.Importing,
+		IsEmpty:        in.IsEmpty,
 		// Path: is set below
 	}
 
@@ -829,6 +835,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		NumOpenPulls:   in.NumOpenPulls,
 		NumMergedPulls: in.NumMergedPulls,
 		Importing:      in.Importing,
+		IsEmpty:        in.IsEmpty,
 	}
 }
 

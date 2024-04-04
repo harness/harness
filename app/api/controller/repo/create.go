@@ -81,7 +81,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
 
-		gitResp, err := c.createGitRepository(ctx, session, in)
+		gitResp, isEmpty, err := c.createGitRepository(ctx, session, in)
 		if err != nil {
 			return fmt.Errorf("error creating repository on git: %w", err)
 		}
@@ -99,6 +99,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			Updated:       now,
 			ForkID:        in.ForkID,
 			DefaultBranch: in.DefaultBranch,
+			IsEmpty:       isEmpty,
 		}
 		err = c.repoStore.Create(ctx, repo)
 		if err != nil {
@@ -118,7 +119,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
 	// index repository if files are created
-	if in.Readme || in.GitIgnore != "" || (in.License != "" && in.License != "none") {
+	if !repo.IsEmpty {
 		err = c.indexer.Index(ctx, repo)
 		if err != nil {
 			log.Ctx(ctx).Warn().Err(err).Int64("repo_id", repo.ID).Msg("failed to index repo")
@@ -186,7 +187,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 }
 
 func (c *Controller) createGitRepository(ctx context.Context, session *auth.Session,
-	in *CreateInput) (*git.CreateRepositoryOutput, error) {
+	in *CreateInput) (*git.CreateRepositoryOutput, bool, error) {
 	var (
 		err     error
 		content []byte
@@ -202,7 +203,7 @@ func (c *Controller) createGitRepository(ctx context.Context, session *auth.Sess
 	if in.License != "" && in.License != "none" {
 		content, err = resources.ReadLicense(in.License)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read license '%s': %w", in.License, err)
+			return nil, false, fmt.Errorf("failed to read license '%s': %w", in.License, err)
 		}
 		files = append(files, git.File{
 			Path:    "LICENSE",
@@ -212,7 +213,7 @@ func (c *Controller) createGitRepository(ctx context.Context, session *auth.Sess
 	if in.GitIgnore != "" {
 		content, err = resources.ReadGitIgnore(in.GitIgnore)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read git ignore '%s': %w", in.GitIgnore, err)
+			return nil, false, fmt.Errorf("failed to read git ignore '%s': %w", in.GitIgnore, err)
 		}
 		files = append(files, git.File{
 			Path:    ".gitignore",
@@ -230,7 +231,7 @@ func (c *Controller) createGitRepository(ctx context.Context, session *auth.Sess
 		true,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate git hook environment variables: %w", err)
+		return nil, false, fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}
 
 	actor := identityFromPrincipal(session.Principal)
@@ -247,10 +248,10 @@ func (c *Controller) createGitRepository(ctx context.Context, session *auth.Sess
 		CommitterDate: &now,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create repo on: %w", err)
+		return nil, false, fmt.Errorf("failed to create repo on: %w", err)
 	}
 
-	return resp, nil
+	return resp, len(files) == 0, nil
 }
 
 func createReadme(name, description string) []byte {

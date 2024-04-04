@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/keywordsearch"
+	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
@@ -66,6 +67,7 @@ type Controller struct {
 	eventReporter      *repoevents.Reporter
 	indexer            keywordsearch.Indexer
 	resourceLimiter    limiter.ResourceLimiter
+	locker             *locker.Locker
 	mtxManager         lock.MutexManager
 	identifierCheck    check.RepoIdentifier
 	repoCheck          Check
@@ -90,6 +92,7 @@ func NewController(
 	eventReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
 	limiter limiter.ResourceLimiter,
+	locker *locker.Locker,
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoCheck Check,
@@ -114,6 +117,7 @@ func NewController(
 		eventReporter:                 eventReporter,
 		indexer:                       indexer,
 		resourceLimiter:               limiter,
+		locker:                        locker,
 		mtxManager:                    mtxManager,
 		identifierCheck:               identifierCheck,
 		repoCheck:                     repoCheck,

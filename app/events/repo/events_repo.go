@@ -45,3 +45,27 @@ func (r *Reader) RegisterRepoDeleted(fn events.HandlerFunc[*DeletedPayload],
 	opts ...events.HandlerOption) error {
 	return events.ReaderRegisterEvent(r.innerReader, DeletedEvent, fn, opts...)
 }
+
+const DefaultBranchUpdatedEvent events.EventType = "default-branch-updated"
+
+type DefaultBranchUpdatedPayload struct {
+	RepoID      int64  `json:"repo_id"`
+	PrincipalID int64  `json:"principal_id"`
+	OldName     string `json:"old_name"`
+	NewName     string `json:"new_name"`
+}
+
+func (r *Reporter) DefaultBranchUpdated(ctx context.Context, payload *DefaultBranchUpdatedPayload) {
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, DefaultBranchUpdatedEvent, payload)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to send default branch updated event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("reported default branch updated event with id '%s'", eventID)
+}
+
+func (r *Reader) RegisterDefaultBranchUpdated(fn events.HandlerFunc[*DefaultBranchUpdatedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, DefaultBranchUpdatedEvent, fn, opts...)
+}

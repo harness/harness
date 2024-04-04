@@ -50,6 +50,7 @@ type Repository struct {
 	NumMergedPulls int `json:"num_merged_pulls"`
 
 	Importing bool `json:"importing"`
+	IsEmpty   bool `json:"is_empty,omitempty"`
 
 	// git urls
 	GitURL string `json:"git_url"`

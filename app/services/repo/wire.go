@@ -12,10 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package reposize
+package repo
 
 import (
+	"context"
+
+	repoevents "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types"
@@ -25,6 +31,7 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideCalculator,
+	ProvideService,
 )
 
 func ProvideCalculator(
@@ -33,8 +40,8 @@ func ProvideCalculator(
 	repoStore store.RepoStore,
 	scheduler *job.Scheduler,
 	executor *job.Executor,
-) (*Calculator, error) {
-	job := &Calculator{
+) (*SizeCalculator, error) {
+	job := &SizeCalculator{
 		enabled:    config.RepoSize.Enabled,
 		cron:       config.RepoSize.CRON,
 		maxDur:     config.RepoSize.MaxDuration,
@@ -50,4 +57,17 @@ func ProvideCalculator(
 	}
 
 	return job, nil
+}
+
+func ProvideService(ctx context.Context,
+	config *types.Config,
+	repoEvReporter *repoevents.Reporter,
+	repoReaderFactory *events.ReaderFactory[*repoevents.Reader],
+	repoStore store.RepoStore,
+	urlProvider url.Provider,
+	git git.Interface,
+	locker *locker.Locker,
+) (*Service, error) {
+	return NewService(ctx, config, repoEvReporter, repoReaderFactory,
+		repoStore, urlProvider, git, locker)
 }

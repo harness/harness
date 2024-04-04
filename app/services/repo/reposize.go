@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package reposize
+package repo
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 
 const jobType = "repo-size-calculator"
 
-type Calculator struct {
+type SizeCalculator struct {
 	enabled    bool
 	cron       string
 	maxDur     time.Duration
@@ -40,12 +40,12 @@ type Calculator struct {
 	scheduler  *job.Scheduler
 }
 
-func (c *Calculator) Register(ctx context.Context) error {
-	if !c.enabled {
+func (s *SizeCalculator) Register(ctx context.Context) error {
+	if !s.enabled {
 		return nil
 	}
 
-	err := c.scheduler.AddRecurring(ctx, jobType, jobType, c.cron, c.maxDur)
+	err := s.scheduler.AddRecurring(ctx, jobType, jobType, s.cron, s.maxDur)
 	if err != nil {
 		return fmt.Errorf("failed to register recurring job for calculator: %w", err)
 	}
@@ -53,17 +53,17 @@ func (c *Calculator) Register(ctx context.Context) error {
 	return nil
 }
 
-func (c *Calculator) Handle(ctx context.Context, _ string, _ job.ProgressReporter) (string, error) {
-	if !c.enabled {
+func (s *SizeCalculator) Handle(ctx context.Context, _ string, _ job.ProgressReporter) (string, error) {
+	if !s.enabled {
 		return "", nil
 	}
 
-	sizeInfos, err := c.repoStore.ListSizeInfos(ctx)
+	sizeInfos, err := s.repoStore.ListSizeInfos(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to get repository sizes: %w", err)
 	}
 
-	expiredBefore := time.Now().Add(c.maxDur)
+	expiredBefore := time.Now().Add(s.maxDur)
 	log.Ctx(ctx).Info().Msgf(
 		"start repo size calculation (operation timeout: %s)",
 		expiredBefore.Format(time.RFC3339Nano),
@@ -71,9 +71,9 @@ func (c *Calculator) Handle(ctx context.Context, _ string, _ job.ProgressReporte
 
 	var wg sync.WaitGroup
 	taskCh := make(chan *types.RepositorySizeInfo)
-	for i := 0; i < c.numWorkers; i++ {
+	for i := 0; i < s.numWorkers; i++ {
 		wg.Add(1)
-		go worker(ctx, c, &wg, taskCh)
+		go worker(ctx, s, &wg, taskCh)
 	}
 	for _, sizeInfo := range sizeInfos {
 		select {
@@ -88,7 +88,7 @@ func (c *Calculator) Handle(ctx context.Context, _ string, _ job.ProgressReporte
 	return "", nil
 }
 
-func worker(ctx context.Context, c *Calculator, wg *sync.WaitGroup, taskCh <-chan *types.RepositorySizeInfo) {
+func worker(ctx context.Context, s *SizeCalculator, wg *sync.WaitGroup, taskCh <-chan *types.RepositorySizeInfo) {
 	defer wg.Done()
 
 	for sizeInfo := range taskCh {
@@ -96,7 +96,7 @@ func worker(ctx context.Context, c *Calculator, wg *sync.WaitGroup, taskCh <-cha
 
 		log.Debug().Msgf("previous repo size: %d", sizeInfo.Size)
 
-		sizeOut, err := c.git.GetRepositorySize(
+		sizeOut, err := s.git.GetRepositorySize(
 			ctx,
 			&git.GetRepositorySizeParams{ReadParams: git.ReadParams{RepoUID: sizeInfo.GitUID}})
 		if err != nil {
@@ -108,7 +108,7 @@ func worker(ctx context.Context, c *Calculator, wg *sync.WaitGroup, taskCh <-cha
 			continue
 		}
 
-		if err := c.repoStore.UpdateSize(ctx, sizeInfo.ID, sizeOut.Size); err != nil {
+		if err := s.repoStore.UpdateSize(ctx, sizeInfo.ID, sizeOut.Size); err != nil {
 			log.Error().Msgf("failed to update repo size: %s", err.Error())
 			continue
 		}

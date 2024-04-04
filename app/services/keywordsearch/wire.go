@@ -18,6 +18,7 @@ import (
 	"context"
 
 	gitevents "github.com/harness/gitness/app/events/git"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/events"
 
@@ -35,12 +36,14 @@ var WireSet = wire.NewSet(
 func ProvideService(ctx context.Context,
 	config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	repoReaderFactory *events.ReaderFactory[*repoevents.Reader],
 	repoStore store.RepoStore,
 	indexer Indexer,
 ) (*Service, error) {
 	return NewService(ctx,
 		config,
 		gitReaderFactory,
+		repoReaderFactory,
 		repoStore,
 		indexer)
 }

@@ -14,11 +14,76 @@
 
 package githook
 
-import "github.com/google/wire"
+import (
+	"github.com/harness/gitness/app/api/controller/limiter"
+	"github.com/harness/gitness/app/auth/authz"
+	eventsgit "github.com/harness/gitness/app/events/git"
+	eventsrepo "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/hook"
 
-// Due to cyclic injection dependencies, wiring can be found at app/githook/wire.go
+	"github.com/google/wire"
+)
 
 var WireSet = wire.NewSet(
+	ProvideController,
+	ProvideFactory,
+)
+
+func ProvideFactory() hook.ClientFactory {
+	return &ControllerClientFactory{
+		githookCtrl: nil,
+	}
+}
+
+func ProvideController(
+	authorizer authz.Authorizer,
+	principalStore store.PrincipalStore,
+	repoStore store.RepoStore,
+	gitReporter *eventsgit.Reporter,
+	repoReporter *eventsrepo.Reporter,
+	git git.Interface,
+	pullreqStore store.PullReqStore,
+	urlProvider url.Provider,
+	protectionManager *protection.Manager,
+	githookFactory hook.ClientFactory,
+	limiter limiter.ResourceLimiter,
+	settings *settings.Service,
+	preReceiveExtender PreReceiveExtender,
+	updateExtender UpdateExtender,
+	postReceiveExtender PostReceiveExtender,
+) *Controller {
+	ctrl := NewController(
+		authorizer,
+		principalStore,
+		repoStore,
+		gitReporter,
+		repoReporter,
+		git,
+		pullreqStore,
+		urlProvider,
+		protectionManager,
+		limiter,
+		settings,
+		preReceiveExtender,
+		updateExtender,
+		postReceiveExtender,
+	)
+
+	// TODO: improve wiring if possible
+	if fct, ok := githookFactory.(*ControllerClientFactory); ok {
+		fct.githookCtrl = ctrl
+		fct.git = git
+	}
+
+	return ctrl
+}
+
+var ExtenderWireSet = wire.NewSet(
 	ProvidePreReceiveExtender,
 	ProvideUpdateExtender,
 	ProvidePostReceiveExtender,

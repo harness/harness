@@ -19,13 +19,13 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
@@ -43,10 +43,9 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 	repoStore store.RepoStore, principalStore store.PrincipalStore,
 	fileViewStore store.PullReqFileViewStore, membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
-	rpcClient git.Interface, eventReporter *pullreqevents.Reporter,
-	mtxManager lock.MutexManager, codeCommentMigrator *codecomments.Migrator,
+	rpcClient git.Interface, eventReporter *pullreqevents.Reporter, codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service, ruleManager *protection.Manager, sseStreamer sse.Streamer,
-	codeOwners *codeowners.Service,
+	codeOwners *codeowners.Service, locker *locker.Locker,
 ) *Controller {
 	return NewController(tx, urlProvider, authorizer,
 		pullReqStore, pullReqActivityStore,
@@ -56,6 +55,6 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 		fileViewStore, membershipStore,
 		checkStore,
 		rpcClient, eventReporter,
-		mtxManager, codeCommentMigrator,
-		pullreqService, ruleManager, sseStreamer, codeOwners)
+		codeCommentMigrator,
+		pullreqService, ruleManager, sseStreamer, codeOwners, locker)
 }

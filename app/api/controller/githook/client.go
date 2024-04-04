@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/harness/gitness/app/api/controller/githook"
+	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/store"
@@ -33,12 +33,12 @@ var _ hook.Client = (*ControllerClient)(nil)
 
 // ControllerClientFactory creates clients that directly call the controller to execute githooks.
 type ControllerClientFactory struct {
-	githookCtrl *githook.Controller
+	githookCtrl *Controller
 	git         git.Interface
 }
 
 func (f *ControllerClientFactory) NewClient(_ context.Context, envVars map[string]string) (hook.Client, error) {
-	payload, err := hook.LoadPayloadFromMap[Payload](envVars)
+	payload, err := hook.LoadPayloadFromMap[githook.Payload](envVars)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load payload from provided map of environment variables: %w", err)
 	}
@@ -53,7 +53,7 @@ func (f *ControllerClientFactory) NewClient(_ context.Context, envVars map[strin
 	}
 
 	return &ControllerClient{
-		baseInput:   GetInputBaseFromPayload(payload),
+		baseInput:   githook.GetInputBaseFromPayload(payload),
 		githookCtrl: f.githookCtrl,
 		git:         f.git,
 	}, nil
@@ -62,8 +62,8 @@ func (f *ControllerClientFactory) NewClient(_ context.Context, envVars map[strin
 // ControllerClient directly calls the controller to execute githooks.
 type ControllerClient struct {
 	baseInput   types.GithookInputBase
-	githookCtrl *githook.Controller
-	git         githook.RestrictedGIT
+	githookCtrl *Controller
+	git         RestrictedGIT
 }
 
 func (c *ControllerClient) PreReceive(

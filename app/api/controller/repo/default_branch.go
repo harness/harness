@@ -21,12 +21,12 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/bootstrap"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/contextutil"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 type UpdateDefaultBranchInput struct {
@@ -50,11 +50,11 @@ func (c *Controller) UpdateDefaultBranch(
 
 	// lock concurrent requests for updating the default branch of a repo
 	// requests will wait for previous ones to compelete before proceed
-	unlock, err := c.lockDefaultBranch(
+	unlock, err := c.locker.LockDefaultBranch(
 		ctx,
-		repo.GitUID,
-		in.Name, // branch name only used for logging (lock is on repo)
-		timeout+30*time.Second,
+		repo.ID,
+		in.Name,                // branch name only used for logging (lock is on repo)
+		timeout+30*time.Second, // add 30s to the lock to give enough time for updating default branch
 	)
 	if err != nil {
 		return nil, err
@@ -82,6 +82,7 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, fmt.Errorf("failed to update the repo default branch: %w", err)
 	}
 
+	oldName := repo.DefaultBranch
 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
 		r.DefaultBranch = in.Name
 		return nil
@@ -90,11 +91,12 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, fmt.Errorf("failed to update the repo default branch on db:%w", err)
 	}
 
-	err = c.indexer.Index(ctx, repo)
-	if err != nil {
-		log.Ctx(ctx).Warn().Err(err).Int64("repo_id", repo.ID).
-			Msgf("failed to index repo with the updated default branch %s", in.Name)
-	}
+	c.eventReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
+		RepoID:      repo.ID,
+		PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
+		OldName:     oldName,
+		NewName:     repo.DefaultBranch,
+	})
 
 	return repo, nil
 }

@@ -117,7 +117,7 @@ func (c *Controller) Merge(
 	// first one and second one will wait, when first one is done then second one
 	// continue with latest data from db with state merged and return error that
 	// pr is already merged.
-	unlock, err := c.lockPR(
+	unlock, err := c.locker.LockPR(
 		ctx,
 		targetRepo.ID,
 		0,                      // 0 means locks all PRs for this repo

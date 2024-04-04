@@ -19,13 +19,17 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/bootstrap"
 	events "github.com/harness/gitness/app/events/git"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
@@ -51,12 +55,15 @@ func (c *Controller) PostReceive(
 	if err != nil {
 		return hook.Output{}, err
 	}
+	// create output object and have following messages fill its messages
+	out := hook.Output{}
+
+	// update default branch based on ref update info on empty repos.
+	// as the branch could be different than the configured default value.
+	c.handleEmptyRepoPush(ctx, repo, in.PostReceiveInput, &out)
 
 	// report ref events (best effort)
 	c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalID, in.PostReceiveInput)
-
-	// create output object and have following messages fill its messages
-	out := hook.Output{}
 
 	// handle branch updates related to PRs - best effort
 	c.handlePRMessaging(ctx, repo, in.PostReceiveInput, &out)
@@ -249,4 +256,51 @@ func (c *Controller) suggestPullRequest(
 		fmt.Sprintf("Create a pull request for %q by visiting:", branchName),
 		"  "+c.urlProvider.GenerateUICompareURL(repo.Path, repo.DefaultBranch, branchName),
 	)
+}
+
+// handleEmptyRepoPush updates repo default branch on empty repos if push contains branches.
+func (c *Controller) handleEmptyRepoPush(
+	ctx context.Context,
+	repo *types.Repository,
+	in hook.PostReceiveInput,
+	out *hook.Output,
+) {
+	if !repo.IsEmpty {
+		return
+	}
+
+	var branchName string
+	// we only care about one active branch that was pushed.
+	for _, refUpdate := range in.RefUpdates {
+		if strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch) &&
+			refUpdate.New.String() != types.NilSHA {
+			branchName = refUpdate.Ref[len(gitReferenceNamePrefixBranch):]
+			break
+		}
+	}
+	if branchName == "" {
+		out.Error = ptr.String(usererror.ErrEmptyRepoNeedsBranch.Error())
+		return
+	}
+
+	oldName := repo.DefaultBranch
+	var err error
+	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
+		r.IsEmpty = false
+		r.DefaultBranch = branchName
+		return nil
+	})
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to update the repo default branch to %s and is_empty to false", branchName)
+		return
+	}
+
+	if repo.DefaultBranch != oldName {
+		c.repoReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
+			RepoID:      repo.ID,
+			PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
+			OldName:     oldName,
+			NewName:     repo.DefaultBranch,
+		})
+	}
 }

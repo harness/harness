@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	eventsgit "github.com/harness/gitness/app/events/git"
+	eventsrepo "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
@@ -41,6 +42,8 @@ type Controller struct {
 	principalStore      store.PrincipalStore
 	repoStore           store.RepoStore
 	gitReporter         *eventsgit.Reporter
+	repoReporter        *eventsrepo.Reporter
+	git                 git.Interface
 	pullreqStore        store.PullReqStore
 	urlProvider         url.Provider
 	protectionManager   *protection.Manager
@@ -56,6 +59,8 @@ func NewController(
 	principalStore store.PrincipalStore,
 	repoStore store.RepoStore,
 	gitReporter *eventsgit.Reporter,
+	repoReporter *eventsrepo.Reporter,
+	git git.Interface,
 	pullreqStore store.PullReqStore,
 	urlProvider url.Provider,
 	protectionManager *protection.Manager,
@@ -64,13 +69,14 @@ func NewController(
 	preReceiveExtender PreReceiveExtender,
 	updateExtender UpdateExtender,
 	postReceiveExtender PostReceiveExtender,
-
 ) *Controller {
 	return &Controller{
 		authorizer:          authorizer,
 		principalStore:      principalStore,
 		repoStore:           repoStore,
 		gitReporter:         gitReporter,
+		repoReporter:        repoReporter,
+		git:                 git,
 		pullreqStore:        pullreqStore,
 		urlProvider:         urlProvider,
 		protectionManager:   protectionManager,

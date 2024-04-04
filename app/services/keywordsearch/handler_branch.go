@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	gitevents "github.com/harness/gitness/app/events/git"
+	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/events"
 )
 
@@ -31,6 +32,21 @@ func (s *Service) handleEventBranchCreated(ctx context.Context,
 func (s *Service) handleEventBranchUpdated(ctx context.Context,
 	event *events.Event[*gitevents.BranchUpdatedPayload]) error {
 	return s.indexRepo(ctx, event.Payload.RepoID, event.Payload.Ref)
+}
+
+func (s *Service) handleUpdateDefaultBranch(ctx context.Context,
+	event *events.Event[*repoevents.DefaultBranchUpdatedPayload]) error {
+	repo, err := s.repoStore.Find(ctx, event.Payload.RepoID)
+	if err != nil {
+		return fmt.Errorf("failed to find repository in db: %w", err)
+	}
+
+	err = s.indexer.Index(ctx, repo)
+	if err != nil {
+		return fmt.Errorf("index update failed for repo %d: %w", repo.ID, err)
+	}
+
+	return nil
 }
 
 func (s *Service) indexRepo(
@@ -64,6 +80,7 @@ func (s *Service) indexRepo(
 
 func getBranchFromRef(ref string) (string, error) {
 	const refPrefix = "refs/heads/"
+
 	if !strings.HasPrefix(ref, refPrefix) {
 		return "", fmt.Errorf("failed to get branch name from branch ref %s", ref)
 	}
