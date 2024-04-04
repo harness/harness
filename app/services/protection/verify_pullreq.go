@@ -48,12 +48,14 @@ type (
 	}
 
 	MergeVerifyOutput struct {
-		AllowedMethods                []enum.MergeMethod
-		DeleteSourceBranch            bool
-		MinimumRequiredApprovalsCount int
-		RequiresCodeOwnersApproval    bool
-		RequiresCommentResolution     bool
-		RequiresNoChangeRequests      bool
+		AllowedMethods                      []enum.MergeMethod
+		DeleteSourceBranch                  bool
+		MinimumRequiredApprovalsCount       int
+		MinimumRequiredApprovalsCountLatest int
+		RequiresCodeOwnersApproval          bool
+		RequiresCodeOwnersApprovalLatest    bool
+		RequiresCommentResolution           bool
+		RequiresNoChangeRequests            bool
 	}
 
 	RequiredChecksInput struct {
@@ -103,10 +105,17 @@ func (v *DefPullReq) MergeVerify(
 
 	// set static merge verify output that comes from the PR definition
 	out.DeleteSourceBranch = v.Merge.DeleteBranch
-	out.MinimumRequiredApprovalsCount = v.Approvals.RequireMinimumCount
-	out.RequiresCodeOwnersApproval = v.Approvals.RequireCodeOwners
 	out.RequiresCommentResolution = v.Comments.RequireResolveAll
 	out.RequiresNoChangeRequests = v.Approvals.RequireNoChangeRequest
+
+	// output that depends on approval of latest commit
+	if v.Approvals.RequireLatestCommit {
+		out.RequiresCodeOwnersApprovalLatest = v.Approvals.RequireCodeOwners
+		out.MinimumRequiredApprovalsCountLatest = v.Approvals.RequireMinimumCount
+	} else {
+		out.RequiresCodeOwnersApproval = v.Approvals.RequireCodeOwners
+		out.MinimumRequiredApprovalsCount = v.Approvals.RequireMinimumCount
+	}
 
 	// pullreq.approvals
 

@@ -92,7 +92,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqMinCountLatest},
 			expParams: [][]any{{1, 2}},
-			expOut:    MergeVerifyOutput{MinimumRequiredApprovalsCount: 2},
+			expOut:    MergeVerifyOutput{MinimumRequiredApprovalsCountLatest: 2},
 		},
 		{
 			name: codePullReqApprovalReqLatestCommit + "-success",
@@ -106,7 +106,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{MinimumRequiredApprovalsCount: 2},
+			expOut: MergeVerifyOutput{MinimumRequiredApprovalsCountLatest: 2},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoApproval + "-fail",
@@ -226,7 +226,7 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqCodeOwnersNoLatestApproval},
 			expParams: [][]any{{"data"}},
-			expOut:    MergeVerifyOutput{RequiresCodeOwnersApproval: true},
+			expOut:    MergeVerifyOutput{RequiresCodeOwnersApprovalLatest: true},
 		},
 		{
 			name: codePullReqCommentsReqResolveAll + "-fail",

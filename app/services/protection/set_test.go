@@ -189,7 +189,8 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 							"approvals": {
 								"require_code_owners": false,
 								"require_minimum_count": 2,
-								"require_no_change_request": false
+								"require_no_change_request": false,
+								"require_latest_commit": true
 							},
 							"comments":{
 								"require_resolve_all": false
@@ -216,7 +217,8 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 							"approvals": {
 								"require_code_owners": true,
 								"require_minimum_count": 3,
-								"require_no_change_request": true
+								"require_no_change_request": true,
+								"require_latest_commit": true
 							},
 							"comments":{
 								"require_resolve_all": true
@@ -241,9 +243,10 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 					Definition: []byte(`{
 							"pullreq": {
 								"approvals": {
-									"require_code_owners": false,
+									"require_code_owners": true,
 									"require_minimum_count": 2,
-									"require_no_change_request": false
+									"require_no_change_request": false,
+									"require_latest_commit": false
 								},
 								"comments":{
 									"require_resolve_all": false
@@ -264,12 +267,14 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 				Reviewers:  []*types.PullReqReviewer{},
 			},
 			expOut: MergeVerifyOutput{
-				AllowedMethods:                []enum.MergeMethod{enum.MergeMethodRebase},
-				DeleteSourceBranch:            true,
-				MinimumRequiredApprovalsCount: 3,
-				RequiresCodeOwnersApproval:    true,
-				RequiresCommentResolution:     true,
-				RequiresNoChangeRequests:      true,
+				AllowedMethods:                      []enum.MergeMethod{enum.MergeMethodRebase},
+				DeleteSourceBranch:                  true,
+				MinimumRequiredApprovalsCount:       2,
+				MinimumRequiredApprovalsCountLatest: 3,
+				RequiresCodeOwnersApproval:          true,
+				RequiresCodeOwnersApprovalLatest:    true,
+				RequiresCommentResolution:           true,
+				RequiresNoChangeRequests:            true,
 			},
 			expViol: []types.RuleViolations{
 				{
@@ -283,7 +288,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 					},
 					Bypassed: false,
 					Violations: []types.Violation{
-						{Code: codePullReqApprovalReqMinCount},
+						{Code: codePullReqApprovalReqMinCountLatest},
 					},
 				},
 				{
@@ -297,7 +302,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 					},
 					Bypassed: false,
 					Violations: []types.Violation{
-						{Code: codePullReqApprovalReqMinCount},
+						{Code: codePullReqApprovalReqMinCountLatest},
 					},
 				},
 				{

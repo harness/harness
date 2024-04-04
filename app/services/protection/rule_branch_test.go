@@ -161,7 +161,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 			expVs: []types.RuleViolations{},
 		},
 		{
-			name: "definition-values",
+			name: "verify-output",
 			branch: Branch{
 				Bypass: DefBypass{},
 				PullReq: DefPullReq{
@@ -198,6 +198,46 @@ func TestBranch_MergeVerify(t *testing.T) {
 				{
 					Violations: []types.Violation{
 						{Code: codePullReqApprovalReqMinCount},
+					},
+				},
+			},
+		},
+		{
+			name: "verify-output-latest",
+			branch: Branch{
+				Bypass: DefBypass{},
+				PullReq: DefPullReq{
+					StatusChecks: DefStatusChecks{},
+					Comments:     DefComments{},
+					Approvals: DefApprovals{
+						RequireCodeOwners:      true,
+						RequireMinimumCount:    2,
+						RequireNoChangeRequest: true,
+						RequireLatestCommit:    true,
+					},
+					Merge: DefMerge{},
+				},
+			},
+			in: MergeVerifyInput{
+				Actor:      user,
+				CodeOwners: &codeowners.Evaluation{},
+				PullReq:    &types.PullReq{},
+				Reviewers:  []*types.PullReqReviewer{},
+			},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: []enum.MergeMethod{
+					enum.MergeMethodMerge,
+					enum.MergeMethodRebase,
+					enum.MergeMethodSquash,
+				},
+				RequiresCodeOwnersApprovalLatest:    true,
+				RequiresNoChangeRequests:            true,
+				MinimumRequiredApprovalsCountLatest: 2,
+			},
+			expVs: []types.RuleViolations{
+				{
+					Violations: []types.Violation{
+						{Code: codePullReqApprovalReqMinCountLatest},
 					},
 				},
 			},

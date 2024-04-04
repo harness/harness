@@ -279,13 +279,15 @@ func (c *Controller) Merge(
 			RuleViolations: violations,
 
 			// values only retured by dry run
-			DryRun:                        true,
-			ConflictFiles:                 pr.MergeConflicts,
-			AllowedMethods:                ruleOut.AllowedMethods,
-			RequiresCodeOwnersApproval:    ruleOut.RequiresCodeOwnersApproval,
-			RequiresCommentResolution:     ruleOut.RequiresCommentResolution,
-			RequiresNoChangeRequests:      ruleOut.RequiresNoChangeRequests,
-			MinimumRequiredApprovalsCount: ruleOut.MinimumRequiredApprovalsCount,
+			DryRun:                              true,
+			ConflictFiles:                       pr.MergeConflicts,
+			AllowedMethods:                      ruleOut.AllowedMethods,
+			RequiresCodeOwnersApproval:          ruleOut.RequiresCodeOwnersApproval,
+			RequiresCodeOwnersApprovalLatest:    ruleOut.RequiresCodeOwnersApprovalLatest,
+			RequiresCommentResolution:           ruleOut.RequiresCommentResolution,
+			RequiresNoChangeRequests:            ruleOut.RequiresNoChangeRequests,
+			MinimumRequiredApprovalsCount:       ruleOut.MinimumRequiredApprovalsCount,
+			MinimumRequiredApprovalsCountLatest: ruleOut.MinimumRequiredApprovalsCountLatest,
 		}
 
 		return out, nil, nil

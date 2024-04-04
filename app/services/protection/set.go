@@ -55,7 +55,9 @@ func (s ruleSet) MergeVerify(
 			out.AllowedMethods = intersectSorted(out.AllowedMethods, rOut.AllowedMethods)
 			out.DeleteSourceBranch = out.DeleteSourceBranch || rOut.DeleteSourceBranch
 			out.MinimumRequiredApprovalsCount = maxInt(out.MinimumRequiredApprovalsCount, rOut.MinimumRequiredApprovalsCount)
+			out.MinimumRequiredApprovalsCountLatest = maxInt(out.MinimumRequiredApprovalsCountLatest, rOut.MinimumRequiredApprovalsCountLatest) //nolint:lll
 			out.RequiresCodeOwnersApproval = out.RequiresCodeOwnersApproval || rOut.RequiresCodeOwnersApproval
+			out.RequiresCodeOwnersApprovalLatest = out.RequiresCodeOwnersApprovalLatest || rOut.RequiresCodeOwnersApprovalLatest
 			out.RequiresCommentResolution = out.RequiresCommentResolution || rOut.RequiresCommentResolution
 			out.RequiresNoChangeRequests = out.RequiresNoChangeRequests || rOut.RequiresNoChangeRequests
 
