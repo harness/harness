@@ -50,6 +50,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
   const { SEMANTIC_SEARCH_ENABLED } = hooks?.useFeatureFlags()
   const [edit, setEdit] = useState(false)
   const [dirty, setDirty] = useState(false)
+
   const [originalContent, setOriginalContent] = useState(pullReqMetadata.description as string)
   const [content, setContent] = useState(originalContent)
   const { getString } = useStrings()
@@ -66,11 +67,24 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
     if (pullReqMetadata?.description) {
       setContent(pullReqMetadata?.description)
     }
-  }, [pullReqMetadata?.description, pullReqMetadata?.description?.length])
+  }, [pullReqMetadata?.description, pullReqMetadata?.description?.length, content, setContent])
 
   // write the above function handleCopilotClick in a callback
   const handleCopilotClick = useCallback(() => {
     setFlag(true)
+  }, [])
+
+  const handleDescUpdate = useCallback((markdown: string) => {
+    const payload: OpenapiUpdatePullReqRequest = {
+      title: pullReqMetadata.title,
+      description: markdown || ''
+    }
+    setOriginalContent(markdown)
+    mutate(payload)
+      .then(() => {
+        setContent(markdown)
+      })
+      .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdate')))
   }, [])
 
   return (
@@ -161,7 +175,12 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
           />
         )) || (
           <Container className={css.mdWrapper}>
-            <MarkdownViewer source={content} />
+            <MarkdownViewer
+              inDescriptionBox={true}
+              setOriginalContent={setOriginalContent}
+              source={content}
+              handleDescUpdate={handleDescUpdate}
+            />
             <Container className={css.menuWrapper}>
               <OptionsMenuButton
                 isDark={true}

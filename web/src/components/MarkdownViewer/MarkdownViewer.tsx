@@ -15,30 +15,43 @@
  */
 
 import { useHistory } from 'react-router-dom'
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Container } from '@harnessio/uicore'
 import cx from 'classnames'
 import MarkdownPreview from '@uiw/react-markdown-preview'
 import rehypeVideo from 'rehype-video'
-import rehypeExternalLinks from 'rehype-external-links'
-import { INITIAL_ZOOM_LEVEL } from 'utils/Utils'
+import rehypeExternalLinks, { Element } from 'rehype-external-links'
+import { INITIAL_ZOOM_LEVEL, generateAlphaNumericHash } from 'utils/Utils'
 import ImageCarousel from 'components/ImageCarousel/ImageCarousel'
 import css from './MarkdownViewer.module.scss'
 
 interface MarkdownViewerProps {
   source: string
+  inDescriptionBox?: boolean
   className?: string
   maxHeight?: string | number
   darkMode?: boolean
+  handleDescUpdate?: (payload: string) => void
+  setOriginalContent?: React.Dispatch<React.SetStateAction<string>>
 }
 
-export function MarkdownViewer({ source, className, maxHeight, darkMode }: MarkdownViewerProps) {
+export function MarkdownViewer({
+  source,
+  className,
+  maxHeight,
+  darkMode,
+
+  setOriginalContent,
+  handleDescUpdate,
+  inDescriptionBox = false
+}: MarkdownViewerProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const history = useHistory()
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
   const [imgEvent, setImageEvent] = useState<string[]>([])
   const refRootHref = useMemo(() => document.getElementById('repository-ref-root')?.getAttribute('href'), [])
   const ref = useRef<HTMLDivElement>()
+  const [markdown, setMarkdown] = useState(source)
 
   const interceptClickEventOnViewerContainer = useCallback(
     event => {
@@ -79,6 +92,42 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
     },
     [history]
   )
+  const [flag, setFlag] = useState(false)
+  const handleCheckboxChange = useCallback(
+    async (lineNumber: number) => {
+      const newMarkdown = source
+        .split('\n')
+        .map((line, index) => {
+          if (index === lineNumber) {
+            return line.startsWith('- [ ]') ? line.replace('- [ ]', '- [x]') : line.replace('- [x]', '- [ ]')
+          }
+          return line
+        })
+        .join('\n')
+
+      setOriginalContent?.(newMarkdown)
+      setFlag(true)
+      setMarkdown(newMarkdown)
+      handleDescUpdate?.(newMarkdown)
+    },
+    [source]
+  )
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLInputElement
+      if (target.type === 'checkbox') {
+        const lineNumber = parseInt(target.getAttribute('data-line-number') || '0', 10)
+        handleCheckboxChange(lineNumber)
+      }
+    }
+
+    document.addEventListener('click', handleClick)
+    return () => {
+      document.removeEventListener('click', handleClick)
+    }
+  }, [source])
+  const hash = generateAlphaNumericHash(6)
 
   return (
     <Container
@@ -87,7 +136,8 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
       style={{ maxHeight: maxHeight }}
       ref={ref}>
       <MarkdownPreview
-        source={source}
+        key={flag ? hash : 0}
+        source={markdown}
         skipHtml={true}
         warpperElement={{ 'data-color-mode': darkMode ? 'dark' : 'light' }}
         rehypeRewrite={(node, _index, parent) => {
@@ -136,6 +186,16 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
                 }
               }
             }
+          }
+          if (
+            (node as unknown as HTMLDivElement).tagName === 'input' &&
+            (node as Unknown as Element)?.properties?.type === 'checkbox'
+          ) {
+            const lineNumber = parent?.position?.start?.line ? parent?.position?.start?.line - 1 : 0
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const element = node as any
+            element.properties['data-line-number'] = lineNumber.toString()
+            element.properties.disabled = !inDescriptionBox
           }
         }}
         rehypePlugins={[
