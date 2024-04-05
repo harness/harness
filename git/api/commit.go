@@ -431,7 +431,8 @@ func getChangeInfoTypes(
 var insertionsDeletionsRegex = regexp.MustCompile(`(\d+|-)\t(\d+|-)\t(.+)`)
 
 // Will match "0\t0\tREADME.md => README_new.md" and extract README_new.md.
-var renameRegexWithArrow = regexp.MustCompile(`\d+\t\d+\t.+\s=>\s(.+)`)
+// Will match "-\t-\tfile_name.bin => file_name_new.bin" and extract file_name_new.bin.
+var renameRegexWithArrow = regexp.MustCompile(`(?:\d+|-)\t(?:\d+|-)\t.+\s=>\s(.+)`)
 
 func getChangeInfoChanges(
 	ctx context.Context,
