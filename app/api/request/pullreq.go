@@ -15,6 +15,7 @@
 package request
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/harness/gitness/types"
@@ -70,6 +71,11 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	createdAtFilter, err := ParseCreated(r)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing pr created filter: %w", err)
+	}
 	return &types.PullReqFilter{
 		Page:          ParsePage(r),
 		Size:          ParseLimit(r),
@@ -81,6 +87,7 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		States:        parsePullReqStates(r),
 		Sort:          ParseSortPullReq(r),
 		Order:         ParseOrder(r),
+		CreatedFilter: createdAtFilter,
 	}, nil
 }
 

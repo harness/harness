@@ -320,6 +320,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
 		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
 		queryParameterOrder, queryParameterSortPullRequest,
+		queryParameterCreatedLt, queryParameterCreatedGt,
 		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)

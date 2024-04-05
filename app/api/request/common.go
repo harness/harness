@@ -15,6 +15,7 @@
 package request
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,9 @@ const (
 
 	QueryParamDeletedBeforeOrAt = "deleted_before_or_at"
 	QueryParamDeletedAt         = "deleted_at"
+
+	QueryParamCreatedLt = "created_lt"
+	QueryParamCreatedGt = "created_gt"
 
 	QueryParamPage  = "page"
 	QueryParamLimit = "limit"
@@ -116,6 +120,26 @@ func ParseListQueryFilterFromRequest(r *http.Request) types.ListQueryFilter {
 		Query:      ParseQuery(r),
 		Pagination: ParsePaginationFromRequest(r),
 	}
+}
+
+// ParseCreated extracts the created filter from the url query param.
+func ParseCreated(r *http.Request) (types.CreatedFilter, error) {
+	filter := types.CreatedFilter{}
+
+	createdLt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamCreatedLt, 0)
+	if err != nil {
+		return filter, fmt.Errorf("encountered error parsing created lt: %w", err)
+	}
+
+	createdGt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamCreatedGt, 0)
+	if err != nil {
+		return filter, fmt.Errorf("encountered error parsing created gt: %w", err)
+	}
+
+	filter.CreatedGt = createdGt
+	filter.CreatedLt = createdLt
+
+	return filter, nil
 }
 
 // GetContentEncodingFromHeadersOrDefault returns the content encoding from the request headers.

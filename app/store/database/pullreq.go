@@ -490,6 +490,14 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 		stmt = stmt.Where("pullreq_created_by = ?", opts.CreatedBy)
 	}
 
+	if opts.CreatedLt > 0 {
+		stmt = stmt.Where("pullreq_created < ?", opts.CreatedLt)
+	}
+
+	if opts.CreatedGt > 0 {
+		stmt = stmt.Where("pullreq_created > ?", opts.CreatedGt)
+	}
+
 	stmt = stmt.Limit(database.Limit(opts.Size))
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 

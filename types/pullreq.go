@@ -97,6 +97,7 @@ type PullReqFilter struct {
 	States        []enum.PullReqState `json:"state"`
 	Sort          enum.PullReqSort    `json:"sort"`
 	Order         enum.Order          `json:"order"`
+	CreatedFilter
 }
 
 // PullReqReview holds pull request review.

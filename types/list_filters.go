@@ -19,3 +19,8 @@ type ListQueryFilter struct {
 	Pagination
 	Query string `json:"query"`
 }
+
+type CreatedFilter struct {
+	CreatedGt int64 `json:"created_gt"`
+	CreatedLt int64 `json:"created_lt"`
+}
