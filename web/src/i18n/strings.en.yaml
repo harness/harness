@@ -1008,10 +1008,10 @@ aidaGenSummary: 'AIDA is generating a summary...'
 importFailed: Import Failed
 uploadAFileError: There is no image or video uploaded. Please upload an image or video.
 securitySettings:
-  scanningSecret: Scanning of Secret
-  scanningSecretDesc: Secret scanning will always block the push
+  scanningSecret: Secret Scanning
+  scanningSecretDesc: Block commits containing secrets like passwords, API keys, and tokens.
   vulnerabilityScanning: Vulnerability Scanning
-  vulnerabilityScanningDesc: Security scanning should be optional to block the commit
+  vulnerabilityScanningDesc: Scan incoming commits for known vulnerabilities
   failedToUpdate: Failed to update security settings
   updateSuccess: Updated security settings
   detect: Detect

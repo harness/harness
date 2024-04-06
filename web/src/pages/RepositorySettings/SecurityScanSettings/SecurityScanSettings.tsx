@@ -207,22 +207,14 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
                     </Layout.Horizontal>
                   </Container>
                 </Layout.Vertical>
-                {formik.dirty && (
-                  <Layout.Horizontal margin={'medium'} spacing={'medium'}>
-                    <Button
-                      variation={ButtonVariation.PRIMARY}
-                      text={getString('save')}
-                      onClick={() => formik.submitForm()}
-                      disabled={formik.isSubmitting}
-                    />
-                    <Button
-                      variation={ButtonVariation.TERTIARY}
-                      text={getString('cancel')}
-                      onClick={() => formik.resetForm()}
-                      disabled={formik.isSubmitting}
-                    />
-                  </Layout.Horizontal>
-                )}
+                <Layout.Horizontal margin={'medium'} spacing={'medium'}>
+                  <Button
+                    variation={ButtonVariation.PRIMARY}
+                    text={getString('save')}
+                    onClick={() => formik.submitForm()}
+                    disabled={formik.isSubmitting}
+                  />
+                </Layout.Horizontal>
               </FormikForm>
             )
           }}
