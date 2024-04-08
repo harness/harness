@@ -4,14 +4,14 @@ Thank you for your interest in contributing to the Gitness project. Gitnes uses 
 
 * If you are a new contributor see: [Steps to Contribute](#steps-to-contribute)
 
-* If you have a trivial fix or improvement, go ahead and create a pull request. Please provide necessary details in the description of the pull request and a meaningful PR title.
+* If you have a minor fix or improvement, feel free to create a pull request. Please provide necessary details in the pull request description and use a meaningful title.
 
 * If you plan to do something more involved, first discuss your ideas by [raising an issue](https://github.com/harness/gitness/issues). This will avoid unnecessary work and surely give you and us a good deal of inspiration. 
 
 * Relevant coding style guidelines are 
 
-    - For backend: the Go Code Review Comments and the formatting and style section of Peter Bourgon's Go: Best Practices for Production Environments
-    - For frontend: Google TypeScript Style Guide and Best practices for Typescript coding. 
+    - For backend: the [Go Code Review Comments](https://code.google.com/p/go-wiki/wiki/CodeReviewComments) and the formatting and style section of Peter Bourgon's [Go: Best Practices for Production Environments](https://peter.bourgon.org/go-in-production/#formatting-and-style)
+    - For frontend: [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html) and [Best practices for Typescript coding](https://medium.com/@eshagarg1996/best-practices-for-typescript-coding-8b1ea98d02f8). 
 
 * Be sure to sign off on the [CLA](https://cla-assistant.io/harness/gitness).
 
@@ -31,7 +31,7 @@ We have a pre-commit hook to ensure code quality before committing changes. This
 
 ### Lint Check
 
-Our CI Linter pipeline conducts automated checks for code quality, with separate lint checks for Go and TypeScript. These checks help ensure adherence to coding standards and identify potential issues early in the development process. Thank you for contributing to our code quality efforts!
+Our CI Linter pipeline conducts automated checks for code quality, with [separate lint checks for Go and TypeScript](https://github.com/harness/gitness/blob/main/.github/workflows/ci-lint.yml). These checks help ensure adherence to coding standards and identify potential issues early in the development process. Thank you for contributing to our code quality efforts!
 
 ## Pull Request Checklist
 
