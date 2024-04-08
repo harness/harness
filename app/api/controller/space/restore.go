@@ -109,31 +109,41 @@ func (c *Controller) restoreSpaceInnerInTx(
 	newParentID *int64,
 	spacePath string,
 ) (*types.Space, error) {
+	// restore the target space
+	restoredSpace, err := c.restoreNoAuth(ctx, space, newIdentifier, newParentID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to restore space: %w", err)
+	}
+
+	if err = check.PathDepth(restoredSpace.Path, true); err != nil {
+		return nil, fmt.Errorf("path is invalid: %w", err)
+	}
+
 	repoCount, err := c.repoStore.Count(
 		ctx,
 		space.ID,
-		&types.RepoFilter{DeletedBeforeOrAt: &deletedAt, Recursive: true},
+		&types.RepoFilter{DeletedAt: &deletedAt, Recursive: true},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to count repos in space %d recursively: %w", space.ID, err)
+		return nil, fmt.Errorf("failed to count repos in space recursively: %w", err)
 	}
 
-	if err := c.resourceLimiter.RepoCount(ctx, *newParentID, int(repoCount)); err != nil {
+	if err := c.resourceLimiter.RepoCount(ctx, space.ID, int(repoCount)); err != nil {
 		return nil, fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 	}
 
 	filter := &types.SpaceFilter{
-		Page:              1,
-		Size:              math.MaxInt,
-		Query:             "",
-		Order:             enum.OrderDesc,
-		Sort:              enum.SpaceAttrCreated,
-		DeletedBeforeOrAt: &deletedAt,
-		Recursive:         true,
+		Page:      1,
+		Size:      math.MaxInt,
+		Query:     "",
+		Order:     enum.OrderDesc,
+		Sort:      enum.SpaceAttrCreated,
+		DeletedAt: &deletedAt,
+		Recursive: true,
 	}
 	subSpaces, err := c.spaceStore.List(ctx, space.ID, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list space %d sub spaces recursively: %w", space.ID, err)
+		return nil, fmt.Errorf("failed to list space sub spaces recursively: %w", err)
 	}
 
 	var subspacePath string
@@ -153,17 +163,7 @@ func (c *Controller) restoreSpaceInnerInTx(
 	}
 
 	if err := c.restoreRepositoriesNoAuth(ctx, space.ID, deletedAt); err != nil {
-		return nil, fmt.Errorf("failed to restore space %d repositories: %w", space.ID, err)
-	}
-
-	// restore the target space
-	restoredSpace, err := c.restoreNoAuth(ctx, space, newIdentifier, newParentID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to restore space: %w", err)
-	}
-
-	if err = check.PathDepth(restoredSpace.Path, true); err != nil {
-		return nil, fmt.Errorf("path is invalid: %w", err)
+		return nil, fmt.Errorf("failed to restore space repositories: %w", err)
 	}
 
 	return restoredSpace, nil
@@ -208,13 +208,13 @@ func (c *Controller) restoreRepositoriesNoAuth(
 	deletedAt int64,
 ) error {
 	filter := &types.RepoFilter{
-		Page:              1,
-		Size:              int(math.MaxInt),
-		Query:             "",
-		Order:             enum.OrderAsc,
-		Sort:              enum.RepoAttrNone,
-		DeletedBeforeOrAt: &deletedAt,
-		Recursive:         true,
+		Page:      1,
+		Size:      int(math.MaxInt),
+		Query:     "",
+		Order:     enum.OrderAsc,
+		Sort:      enum.RepoAttrNone,
+		DeletedAt: &deletedAt,
+		Recursive: true,
 	}
 	repos, err := c.repoStore.List(ctx, spaceID, filter)
 	if err != nil {
@@ -222,7 +222,7 @@ func (c *Controller) restoreRepositoriesNoAuth(
 	}
 
 	for _, repo := range repos {
-		_, err = c.repoCtrl.RestoreNoAuth(ctx, repo, nil, nil)
+		_, err = c.repoCtrl.RestoreNoAuth(ctx, repo, nil, repo.ParentID)
 		if err != nil {
 			return fmt.Errorf("failed to restore repository: %w", err)
 		}

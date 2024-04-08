@@ -67,22 +67,22 @@ func (c *Controller) Restore(
 		parentID = space.ID
 	}
 
-	return c.RestoreNoAuth(ctx, repo, in.NewIdentifier, &parentID)
+	return c.RestoreNoAuth(ctx, repo, in.NewIdentifier, parentID)
 }
 
 func (c *Controller) RestoreNoAuth(
 	ctx context.Context,
 	repo *types.Repository,
 	newIdentifier *string,
-	newParentID *int64,
+	newParentID int64,
 ) (*types.Repository, error) {
 	var err error
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		if err := c.resourceLimiter.RepoCount(ctx, *newParentID, 1); err != nil {
+		if err := c.resourceLimiter.RepoCount(ctx, newParentID, 1); err != nil {
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
 
-		repo, err = c.repoStore.Restore(ctx, repo, newIdentifier, newParentID)
+		repo, err = c.repoStore.Restore(ctx, repo, newIdentifier, &newParentID)
 		if err != nil {
 			return fmt.Errorf("failed to restore the repo: %w", err)
 		}

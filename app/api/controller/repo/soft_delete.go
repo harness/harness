@@ -48,26 +48,17 @@ func (c *Controller) SoftDelete(
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
+	if repo.Deleted != nil {
+		return nil, usererror.BadRequest("repository has been already deleted")
+	}
+
 	log.Ctx(ctx).Info().
 		Int64("repo.id", repo.ID).
 		Str("repo.path", repo.Path).
 		Msg("soft deleting repository")
 
-	if repo.Deleted != nil {
-		return nil, usererror.BadRequest("repository has been already deleted")
-	}
-
-	if repo.Importing {
-		log.Ctx(ctx).Info().Msg("repository is importing. cancelling the import job and purge the repo.")
-		err = c.importer.Cancel(ctx, repo)
-		if err != nil {
-			return nil, fmt.Errorf("failed to cancel repository import")
-		}
-		return nil, c.PurgeNoAuth(ctx, session, repo)
-	}
-
 	now := time.Now().UnixMilli()
-	if err = c.SoftDeleteNoAuth(ctx, repo, now); err != nil {
+	if err = c.SoftDeleteNoAuth(ctx, session, repo, now); err != nil {
 		return nil, fmt.Errorf("failed to soft delete repo: %w", err)
 	}
 
@@ -76,9 +67,14 @@ func (c *Controller) SoftDelete(
 
 func (c *Controller) SoftDeleteNoAuth(
 	ctx context.Context,
+	session *auth.Session,
 	repo *types.Repository,
 	deletedAt int64,
 ) error {
+	if repo.Importing {
+		return c.PurgeNoAuth(ctx, session, repo)
+	}
+
 	err := c.repoStore.SoftDelete(ctx, repo, deletedAt)
 	if err != nil {
 		return fmt.Errorf("failed to soft delete repo from db: %w", err)

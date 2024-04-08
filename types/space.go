@@ -66,6 +66,7 @@ type SpaceFilter struct {
 	Query             string         `json:"query"`
 	Sort              enum.SpaceAttr `json:"sort"`
 	Order             enum.Order     `json:"order"`
+	DeletedAt         *int64         `json:"deleted_at,omitempty"`
 	DeletedBeforeOrAt *int64         `json:"deleted_before_or_at,omitempty"`
 	Recursive         bool           `json:"recursive"`
 }

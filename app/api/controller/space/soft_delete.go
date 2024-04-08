@@ -52,20 +52,21 @@ func (c *Controller) SoftDelete(
 		return nil, fmt.Errorf("failed to check access: %w", err)
 	}
 
-	return c.SoftDeleteNoAuth(ctx, space)
+	return c.SoftDeleteNoAuth(ctx, session, space)
 }
 
 // SoftDeleteNoAuth soft deletes the space - no authorization is verified.
 // WARNING For internal calls only.
 func (c *Controller) SoftDeleteNoAuth(
 	ctx context.Context,
+	session *auth.Session,
 	space *types.Space,
 ) (*SoftDeleteResponse, error) {
 	var softDelRes *SoftDeleteResponse
 	var err error
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		softDelRes, err = c.softDeleteInnerInTx(ctx, space)
+		softDelRes, err = c.softDeleteInnerInTx(ctx, session, space)
 		return err
 	})
 	if err != nil {
@@ -77,6 +78,7 @@ func (c *Controller) SoftDeleteNoAuth(
 
 func (c *Controller) softDeleteInnerInTx(
 	ctx context.Context,
+	session *auth.Session,
 	space *types.Space,
 ) (*SoftDeleteResponse, error) {
 	filter := &types.SpaceFilter{
@@ -101,7 +103,7 @@ func (c *Controller) softDeleteInnerInTx(
 		}
 	}
 
-	err = c.softDeleteRepositoriesNoAuth(ctx, space.ID, now)
+	err = c.softDeleteRepositoriesNoAuth(ctx, session, space.ID, now)
 	if err != nil {
 		return nil, fmt.Errorf("failed to soft delete repositories of space %d: %w", space.ID, err)
 	}
@@ -122,6 +124,7 @@ func (c *Controller) softDeleteInnerInTx(
 // WARNING For internal calls only.
 func (c *Controller) softDeleteRepositoriesNoAuth(
 	ctx context.Context,
+	session *auth.Session,
 	spaceID int64,
 	deletedAt int64,
 ) error {
@@ -140,7 +143,7 @@ func (c *Controller) softDeleteRepositoriesNoAuth(
 	}
 
 	for _, repo := range repos {
-		err = c.repoCtrl.SoftDeleteNoAuth(ctx, repo, deletedAt)
+		err = c.repoCtrl.SoftDeleteNoAuth(ctx, session, repo, deletedAt)
 		if err != nil {
 			return fmt.Errorf("failed to soft delete repository: %w", err)
 		}

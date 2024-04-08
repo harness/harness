@@ -154,18 +154,15 @@ func ParseRecursiveFromQuery(r *http.Request) (bool, error) {
 
 // GetDeletedAtFromQueryOrError gets the exact resource deletion timestamp from the query.
 func GetDeletedAtFromQueryOrError(r *http.Request) (int64, error) {
-	return QueryParamAsPositiveInt64(r, QueryParamDeletedAt)
+	return QueryParamAsPositiveInt64OrError(r, QueryParamDeletedAt)
 }
 
 // GetDeletedBeforeOrAtFromQuery gets the resource deletion timestamp from the query as an optional parameter.
 func GetDeletedBeforeOrAtFromQuery(r *http.Request) (int64, bool, error) {
-	value, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamDeletedBeforeOrAt, 0)
-	if err != nil {
-		return 0, false, err
-	}
-	if value == 0 {
-		return value, false, nil
-	}
+	return QueryParamAsPositiveInt64(r, QueryParamDeletedBeforeOrAt)
+}
 
-	return value, true, nil
+// GetDeletedAtFromQuery gets the exact resource deletion timestamp from the query as an optional parameter.
+func GetDeletedAtFromQuery(r *http.Request) (int64, bool, error) {
+	return QueryParamAsPositiveInt64(r, QueryParamDeletedAt)
 }

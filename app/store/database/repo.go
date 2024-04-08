@@ -843,7 +843,10 @@ func applyQueryFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squ
 	if filter.Query != "" {
 		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
 	}
-	if filter.DeletedBeforeOrAt != nil {
+	//nolint:gocritic
+	if filter.DeletedAt != nil {
+		stmt = stmt.Where("repo_deleted = ?", filter.DeletedAt)
+	} else if filter.DeletedBeforeOrAt != nil {
 		stmt = stmt.Where("repo_deleted <= ?", filter.DeletedBeforeOrAt)
 	} else {
 		stmt = stmt.Where("repo_deleted IS NULL")

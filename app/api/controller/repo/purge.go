@@ -64,6 +64,14 @@ func (c *Controller) PurgeNoAuth(
 	session *auth.Session,
 	repo *types.Repository,
 ) error {
+	if repo.Importing {
+		log.Ctx(ctx).Info().Msg("repository is importing. cancelling the import job.")
+		err := c.importer.Cancel(ctx, repo)
+		if err != nil {
+			return fmt.Errorf("failed to cancel repository import")
+		}
+	}
+
 	if err := c.repoStore.Purge(ctx, repo.ID, repo.Deleted); err != nil {
 		return fmt.Errorf("failed to delete repo from db: %w", err)
 	}
@@ -86,12 +94,6 @@ func (c *Controller) DeleteGitRepository(
 	session *auth.Session,
 	repo *types.Repository,
 ) error {
-	if repo.Importing {
-		log.Ctx(ctx).Debug().Str("repo.git_uid", repo.GitUID).
-			Msg("skipping removal of git directory for repository being imported")
-		return nil
-	}
-
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return fmt.Errorf("failed to create RPC write params: %w", err)

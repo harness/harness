@@ -620,8 +620,10 @@ func (s *SpaceStore) applyQueryFilter(
 	if opts.Query != "" {
 		stmt = stmt.Where("LOWER(space_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
-
-	if opts.DeletedBeforeOrAt != nil {
+	//nolint:gocritic
+	if opts.DeletedAt != nil {
+		stmt = stmt.Where("space_deleted = ?", opts.DeletedAt)
+	} else if opts.DeletedBeforeOrAt != nil {
 		stmt = stmt.Where("space_deleted <= ?", opts.DeletedBeforeOrAt)
 	} else {
 		stmt = stmt.Where("space_deleted IS NULL")

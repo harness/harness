@@ -52,13 +52,23 @@ func ParseSpaceFilter(r *http.Request) (*types.SpaceFilter, error) {
 	}
 
 	// deletedBeforeOrAt is optional to retrieve spaces deleted before or at the specified timestamp.
-	var deletionTime *int64
-	value, ok, err := GetDeletedBeforeOrAtFromQuery(r)
+	var deletedBeforeOrAt *int64
+	deletionVal, ok, err := GetDeletedBeforeOrAtFromQuery(r)
 	if err != nil {
 		return nil, err
 	}
 	if ok {
-		deletionTime = &value
+		deletedBeforeOrAt = &deletionVal
+	}
+
+	// deletedAt is optional to retrieve spaces deleted at the specified timestamp.
+	var deletedAt *int64
+	deletedAtVal, ok, err := GetDeletedAtFromQuery(r)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		deletedAt = &deletedAtVal
 	}
 
 	return &types.SpaceFilter{
@@ -68,6 +78,7 @@ func ParseSpaceFilter(r *http.Request) (*types.SpaceFilter, error) {
 		Sort:              ParseSortSpace(r),
 		Size:              ParseLimit(r),
 		Recursive:         recursive,
-		DeletedBeforeOrAt: deletionTime,
+		DeletedAt:         deletedAt,
+		DeletedBeforeOrAt: deletedBeforeOrAt,
 	}, nil
 }
