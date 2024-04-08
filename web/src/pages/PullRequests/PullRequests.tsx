@@ -65,12 +65,12 @@ export default function PullRequests() {
       ...(page > 1 && { page: page.toString() }),
       ...(filter && { state: filter })
     }
-    updateQueryParams(params)
+    updateQueryParams(params, undefined, true)
 
     if (page <= 1) {
       const updateParams = { ...params }
       delete updateParams.page
-      replaceQueryParams(updateParams)
+      replaceQueryParams(updateParams, undefined, true)
     }
   }, [page, filter]) // eslint-disable-line react-hooks/exhaustive-deps
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()

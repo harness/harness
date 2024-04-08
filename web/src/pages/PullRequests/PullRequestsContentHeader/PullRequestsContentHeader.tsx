@@ -15,7 +15,7 @@
  */
 
 import { useHistory } from 'react-router-dom'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Container,
   Layout,
@@ -35,7 +35,8 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { TypesPrincipalInfo, TypesUser } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { permissionProps } from 'utils/Utils'
+import { PageBrowserProps, permissionProps } from 'utils/Utils'
+import { useQueryParams } from 'hooks/useQueryParams'
 import css from './PullRequestsContentHeader.module.scss'
 
 interface PullRequestsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -58,6 +59,7 @@ export function PullRequestsContentHeader({
 }: PullRequestsContentHeaderProps) {
   const history = useHistory()
   const { getString } = useStrings()
+  const browserParams = useQueryParams<PageBrowserProps>()
   const [filterOption, setFilterOption] = useState(activePullRequestFilterOption)
   const [authorFilterOption, setAuthorFilterOption] = useState(activePullRequestAuthorFilterOption)
   const [searchTerm, setSearchTerm] = useState('')
@@ -74,6 +76,11 @@ export function PullRequestsContentHeader({
     },
     [space]
   )
+
+  useEffect(() => {
+    setFilterOption(browserParams?.state as string)
+  }, [browserParams])
+
   const items = useMemo(
     () => [
       { label: getString('open'), value: PullRequestFilterOption.OPEN },
