@@ -24,23 +24,29 @@ import (
 type DiffStatus byte
 
 const (
-	DiffStatusModified = 'M'
-	DiffStatusAdded    = 'A'
-	DiffStatusDeleted  = 'D'
-	DiffStatusRenamed  = 'R'
-	DiffStatusCopied   = 'C'
-	DiffStatusType     = 'T'
+	DiffStatusModified DiffStatus = 'M'
+	DiffStatusAdded    DiffStatus = 'A'
+	DiffStatusDeleted  DiffStatus = 'D'
+	DiffStatusRenamed  DiffStatus = 'R'
+	DiffStatusCopied   DiffStatus = 'C'
+	DiffStatusType     DiffStatus = 'T'
 )
 
-type DiffRawFile struct {
-	OldBlobSHA string
-	NewBlobSHA string
-	Status     byte
-	OldPath    string
-	Path       string
+func (s DiffStatus) String() string {
+	return fmt.Sprintf("%c", s)
 }
 
-var regexpDiffRaw = regexp.MustCompile(`:\d{6} \d{6} ([0-9a-f]+) ([0-9a-f]+) (\w)(\d*)`)
+type DiffRawFile struct {
+	OldFileMode string
+	NewFileMode string
+	OldBlobSHA  string
+	NewBlobSHA  string
+	Status      DiffStatus
+	OldPath     string
+	Path        string
+}
+
+var regexpDiffRaw = regexp.MustCompile(`:(\d{6}) (\d{6}) ([0-9a-f]+) ([0-9a-f]+) (\w)(\d*)`)
 
 // DiffRaw parses raw git diff output (git diff --raw). Each entry (a line) is a changed file.
 // The format is:
@@ -72,7 +78,7 @@ func DiffRaw(r io.Reader) ([]DiffRawFile, error) {
 
 		path = scan.Text()
 
-		status := groups[3][0]
+		status := DiffStatus(groups[5][0])
 		switch status {
 		case DiffStatusRenamed, DiffStatusCopied:
 			if !scan.Scan() {
@@ -86,11 +92,13 @@ func DiffRaw(r io.Reader) ([]DiffRawFile, error) {
 		}
 
 		result = append(result, DiffRawFile{
-			OldBlobSHA: groups[1],
-			NewBlobSHA: groups[2],
-			Status:     status,
-			OldPath:    oldPath,
-			Path:       path,
+			OldFileMode: groups[1],
+			NewFileMode: groups[2],
+			OldBlobSHA:  groups[3],
+			NewBlobSHA:  groups[4],
+			Status:      status,
+			OldPath:     oldPath,
+			Path:        path,
 		})
 	}
 	if err := scan.Err(); err != nil {

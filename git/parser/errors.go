@@ -14,9 +14,10 @@
 
 package parser
 
-import "errors"
+import "github.com/harness/gitness/errors"
 
 var (
-	ErrSHADoesNotMatch = errors.New("sha does not match")
-	ErrHunkNotFound    = errors.New("hunk not found")
+	ErrSHADoesNotMatch = errors.InvalidArgument("sha does not match")
+	ErrHunkNotFound    = errors.NotFound("hunk not found")
+	ErrBinaryFile      = errors.InvalidArgument("can't handle a binary file")
 )

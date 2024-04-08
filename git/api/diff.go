@@ -407,14 +407,13 @@ func (g *Git) DiffCut(
 		return parser.HunkHeader{}, parser.Hunk{}, fmt.Errorf("failed to find the list of changed files: %w", err)
 	}
 
-	var (
-		oldSHA, newSHA string
-		filePath       string
-	)
+	var oldSHA, newSHA string
 
 	for _, entry := range diffEntries {
-		switch entry.Status {
-		case parser.DiffStatusRenamed, parser.DiffStatusCopied:
+		if entry.Status == parser.DiffStatusRenamed || entry.Status == parser.DiffStatusCopied {
+			// Entries with the status 'R' and 'C' output two paths: the old path and the new path.
+			// Using the params.LineStartNew flag to match the path with the entry's old or new path.
+
 			if entry.Path != path && entry.OldPath != path {
 				continue
 			}
@@ -427,34 +426,79 @@ func (g *Git) DiffCut(
 				msg := "for renamed files provide the old file name if commenting the old lines"
 				return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument(msg)
 			}
-		default:
-			if entry.Path != path {
-				continue
-			}
+		} else if entry.Path != path {
+			// All other statuses output just one path: If the path doesn't match it, proceed with the next entry.
+			continue
 		}
+
+		rawFileMode := entry.OldFileMode
+		if params.LineStartNew {
+			rawFileMode = entry.NewFileMode
+		}
+
+		fileType, _, err := parseTreeNodeMode(rawFileMode)
+		if err != nil {
+			return parser.HunkHeader{}, parser.Hunk{},
+				fmt.Errorf("failed to parse file mode %s for path %s: %w", rawFileMode, path, err)
+		}
+
+		switch fileType {
+		default:
+			return parser.HunkHeader{}, parser.Hunk{}, errors.Internal(nil, "unrecognized object type")
+		case TreeNodeTypeCommit:
+			msg := "code comment is not allowed on a submodule"
+			return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument(msg)
+		case TreeNodeTypeTree:
+			msg := "code comment is not allowed on a directory"
+			return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument(msg)
+		case TreeNodeTypeBlob:
+			// a blob is what we want
+		}
+
+		var hunkHeader parser.HunkHeader
+		var hunk parser.Hunk
 
 		switch entry.Status {
 		case parser.DiffStatusRenamed, parser.DiffStatusCopied, parser.DiffStatusModified:
-			// For modified and renamed compare file blobs directly.
+			// For modified and renamed compare file blob SHAs directly.
 			oldSHA = entry.OldBlobSHA
 			newSHA = entry.NewBlobSHA
-		case parser.DiffStatusAdded, parser.DiffStatusDeleted:
-			// For added and deleted compare commits, but with the provided path.
-			oldSHA = targetRef
-			newSHA = sourceRef
-			filePath = entry.Path
+			hunkHeader, hunk, err = g.diffCutFromHunk(ctx, repoPath, oldSHA, newSHA, params)
+		case parser.DiffStatusAdded, parser.DiffStatusDeleted, parser.DiffStatusType:
+			// for added and deleted files read the file content directly
+			if params.LineStartNew {
+				hunkHeader, hunk, err = g.diffCutFromBlob(ctx, repoPath, true, entry.NewBlobSHA, params)
+			} else {
+				hunkHeader, hunk, err = g.diffCutFromBlob(ctx, repoPath, false, entry.OldBlobSHA, params)
+			}
+		default:
+			return parser.HunkHeader{}, parser.Hunk{},
+				fmt.Errorf("unrecognized git diff file status=%c for path=%s", entry.Status, path)
+		}
+		if err != nil {
+			return parser.HunkHeader{}, parser.Hunk{},
+				fmt.Errorf("failed to extract hunk for git diff file status=%c path=%s: %w", entry.Status, path, err)
 		}
 
-		break
+		// The returned diff hunk will be stored in the DB and will only be used for display, as a reference.
+		// Therefore, we trim too long lines to protect the system and the DB.
+		const maxLineLen = 200
+		parser.LimitLineLen(&hunk.Lines, maxLineLen)
+
+		return hunkHeader, hunk, nil
 	}
 
-	if newSHA == "" {
-		return parser.HunkHeader{}, parser.Hunk{}, errors.NotFound("file %s not found in the diff", path)
-	}
+	return parser.HunkHeader{}, parser.Hunk{}, errors.NotFound("path not found")
+}
 
-	// next pull the diff cut for the requested file
-
-	pipeRead, pipeWrite = io.Pipe()
+func (g *Git) diffCutFromHunk(
+	ctx context.Context,
+	repoPath string,
+	oldSHA string,
+	newSHA string,
+	params parser.DiffCutParams,
+) (parser.HunkHeader, parser.Hunk, error) {
+	pipeRead, pipeWrite := io.Pipe()
 	stderr := bytes.NewBuffer(nil)
 	go func() {
 		var err error
@@ -470,11 +514,6 @@ func (g *Git) DiffCut(
 			command.WithFlag("--unified=100000000"),
 			command.WithArg(oldSHA),
 			command.WithArg(newSHA))
-		if filePath != "" {
-			cmd.Add(
-				command.WithFlag("--merge-base"),
-				command.WithPostSepArg(filePath))
-		}
 
 		err = cmd.Run(ctx,
 			command.WithDir(repoPath),
@@ -493,6 +532,75 @@ func (g *Git) DiffCut(
 	}
 
 	return diffCutHeader, linesHunk, nil
+}
+
+func (g *Git) diffCutFromBlob(
+	ctx context.Context,
+	repoPath string,
+	asAdded bool,
+	sha string,
+	params parser.DiffCutParams,
+) (parser.HunkHeader, parser.Hunk, error) {
+	pipeRead, pipeWrite := io.Pipe()
+	go func() {
+		var err error
+
+		defer func() {
+			// If running of the command below fails, make the pipe reader also fail with the same error.
+			_ = pipeWrite.CloseWithError(err)
+		}()
+
+		cmd := command.New("cat-file",
+			command.WithFlag("-p"),
+			command.WithArg(sha))
+
+		err = cmd.Run(ctx,
+			command.WithDir(repoPath),
+			command.WithStdout(pipeWrite))
+	}()
+
+	cutHeader, cut, err := parser.BlobCut(pipeRead, params)
+	if err != nil {
+		// Next check if reading the git diff output caused an error
+		return parser.HunkHeader{}, parser.Hunk{}, err
+	}
+
+	// Convert parser.CutHeader to parser.HunkHeader and parser.Cut to parser.Hunk.
+
+	var hunkHeader parser.HunkHeader
+	var hunk parser.Hunk
+
+	if asAdded {
+		for i := range cut.Lines {
+			cut.Lines[i] = "+ " + cut.Lines[i]
+		}
+
+		hunkHeader = parser.HunkHeader{
+			NewLine: cutHeader.Line,
+			NewSpan: cutHeader.Span,
+		}
+
+		hunk = parser.Hunk{
+			HunkHeader: parser.HunkHeader{NewLine: cut.Line, NewSpan: cut.Span},
+			Lines:      cut.Lines,
+		}
+	} else {
+		for i := range cut.Lines {
+			cut.Lines[i] = "- " + cut.Lines[i]
+		}
+
+		hunkHeader = parser.HunkHeader{
+			OldLine: cutHeader.Line,
+			OldSpan: cutHeader.Span,
+		}
+
+		hunk = parser.Hunk{
+			HunkHeader: parser.HunkHeader{OldLine: cut.Line, OldSpan: cut.Span},
+			Lines:      cut.Lines,
+		}
+	}
+
+	return hunkHeader, hunk, nil
 }
 
 func (g *Git) DiffFileName(ctx context.Context,

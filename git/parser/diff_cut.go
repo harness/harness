@@ -17,7 +17,9 @@ package parser
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
+	"unicode/utf8"
 )
 
 type DiffFileHeader struct {
@@ -237,6 +239,97 @@ again:
 	}
 
 	return
+}
+
+// BlobCut parses raw file and returns lines specified with the parameter.
+func BlobCut(r io.Reader, params DiffCutParams) (CutHeader, Cut, error) {
+	scanner := bufio.NewScanner(r)
+
+	var (
+		err               error
+		lineNumber        int
+		inCut             bool
+		cutStart, cutSpan int
+		cutLines          []string
+	)
+
+	extStart := params.LineStart - params.BeforeLines
+	extEnd := params.LineEnd + params.AfterLines
+	linesNeeded := params.LineEnd - params.LineStart + 1
+
+	for {
+		if !scanner.Scan() {
+			err = scanner.Err()
+			break
+		}
+
+		lineNumber++
+		line := scanner.Text()
+
+		if !utf8.ValidString(line) {
+			return CutHeader{}, Cut{}, ErrBinaryFile
+		}
+
+		if lineNumber > extEnd {
+			break // exceeded the requested line range
+		}
+
+		if lineNumber < extStart {
+			// not yet in the requested line range
+			continue
+		}
+
+		if !inCut {
+			cutStart = lineNumber
+			inCut = true
+		}
+		cutLines = append(cutLines, line)
+		cutSpan++
+
+		if lineNumber >= params.LineStart && lineNumber <= params.LineEnd {
+			linesNeeded--
+		}
+
+		if len(cutLines) >= params.LineLimit {
+			break
+		}
+	}
+
+	if errors.Is(err, bufio.ErrTooLong) {
+		// By default, the max token size is 65536 (bufio.MaxScanTokenSize).
+		// If the file contains a line that is longer than this we treat it as a binary file.
+		return CutHeader{}, Cut{}, ErrBinaryFile
+	}
+
+	if err != nil && !errors.Is(err, io.EOF) {
+		return CutHeader{}, Cut{}, fmt.Errorf("failed to parse blob cut: %w", err)
+	}
+
+	if !inCut || linesNeeded > 0 {
+		return CutHeader{}, Cut{}, ErrHunkNotFound
+	}
+
+	// the cut header is hunk-like header (with Line and Span) that describes the requested lines exactly
+	ch := CutHeader{Line: params.LineStart, Span: params.LineEnd - params.LineStart + 1}
+
+	// the cut includes the requested lines and few more lines specified with the BeforeLines and AfterLines.
+	c := Cut{CutHeader: CutHeader{Line: cutStart, Span: cutSpan}, Lines: cutLines}
+
+	return ch, c, nil
+}
+
+func LimitLineLen(lines *[]string, maxLen int) {
+outer:
+	for idxLine, line := range *lines {
+		var l int
+		for idxRune := range line {
+			l++
+			if l > maxLen {
+				(*lines)[idxLine] = line[:idxRune] + "…" // append the ellipsis to indicate that the line was trimmed.
+				continue outer
+			}
+		}
+	}
 }
 
 type strCircBuf struct {

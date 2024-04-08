@@ -33,6 +33,16 @@ type HunkHeader struct {
 	Text    string
 }
 
+type Cut struct {
+	CutHeader
+	Lines []string
+}
+
+type CutHeader struct {
+	Line int
+	Span int
+}
+
 var regExpHunkHeader = regexp.MustCompile(`^@@ -([0-9]+)(,([0-9]+))? \+([0-9]+)(,([0-9]+))? @@( (.+))?$`)
 
 func (h *HunkHeader) IsZero() bool {
