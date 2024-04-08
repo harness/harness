@@ -386,6 +386,32 @@ func (s *SpaceStore) updateDeletedOptLock(
 	)
 }
 
+// FindForUpdate finds the space and locks it for an update (should be called in a tx).
+func (s *SpaceStore) FindForUpdate(ctx context.Context, id int64) (*types.Space, error) {
+	// sqlite allows at most one write to proceed (no need to lock)
+	if strings.HasPrefix(s.db.DriverName(), "sqlite") {
+		return s.find(ctx, id, nil)
+	}
+
+	stmt := database.Builder.Select("space_id").
+		From("spaces").
+		Where("space_id = ? AND space_deleted IS NULL", id).
+		Suffix("FOR UPDATE")
+
+	sqlQuery, params, err := stmt.ToSql()
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to generate lock on spaces")
+	}
+
+	dst := new(space)
+	db := dbtx.GetAccessor(ctx, s.db)
+	if err = db.GetContext(ctx, dst, sqlQuery, params...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find space")
+	}
+
+	return mapToSpace(ctx, s.db, s.spacePathStore, dst)
+}
+
 // SoftDelete deletes a space softly.
 func (s *SpaceStore) SoftDelete(
 	ctx context.Context,

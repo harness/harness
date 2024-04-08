@@ -33,7 +33,7 @@ func (c *Controller) ListRecentChecks(
 ) ([]string, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return nil, fmt.Errorf("failed to acquire access access to repo: %w", err)
+		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
 	if opts.Since == 0 {

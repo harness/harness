@@ -176,6 +176,9 @@ type (
 		UpdateOptLock(ctx context.Context, space *types.Space,
 			mutateFn func(space *types.Space) error) (*types.Space, error)
 
+		// FindForUpdate finds the space and locks it for an update.
+		FindForUpdate(ctx context.Context, id int64) (*types.Space, error)
+
 		// SoftDelete deletes the space.
 		SoftDelete(ctx context.Context, space *types.Space, deletedAt int64) error
 

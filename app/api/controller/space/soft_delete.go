@@ -81,6 +81,10 @@ func (c *Controller) softDeleteInnerInTx(
 	session *auth.Session,
 	space *types.Space,
 ) (*SoftDeleteResponse, error) {
+	_, err := c.spaceStore.FindForUpdate(ctx, space.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to lock the space for update: %w", err)
+	}
 	filter := &types.SpaceFilter{
 		Page:              1,
 		Size:              math.MaxInt,
@@ -98,6 +102,11 @@ func (c *Controller) softDeleteInnerInTx(
 	now := time.Now().UnixMilli()
 
 	for _, space := range subSpaces {
+		_, err := c.spaceStore.FindForUpdate(ctx, space.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to lock the space for update: %w", err)
+		}
+
 		if err := c.spaceStore.SoftDelete(ctx, space, now); err != nil {
 			return nil, fmt.Errorf("failed to soft delete subspace: %w", err)
 		}

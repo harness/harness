@@ -66,6 +66,12 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			c.publicResourceCreationEnabled,
 		)
 
+		// lock the space for update during repo creation to prevent racing conditions with space soft delete.
+		parentSpace, err = c.spaceStore.FindForUpdate(ctx, parentSpace.ID)
+		if err != nil {
+			return fmt.Errorf("failed to find the parent space: %w", err)
+		}
+
 		err = c.repoStore.Create(ctx, repo)
 		if err != nil {
 			return fmt.Errorf("failed to create repository in storage: %w", err)

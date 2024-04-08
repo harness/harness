@@ -33,7 +33,7 @@ func (c *Controller) ListChecks(
 ) ([]types.Check, int, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to acquire access access to repo: %w", err)
+		return nil, 0, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
 	var checks []types.Check

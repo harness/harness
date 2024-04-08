@@ -81,6 +81,12 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
 
+		// lock the space for update during repo creation to prevent racing conditions with space soft delete.
+		parentSpace, err = c.spaceStore.FindForUpdate(ctx, parentSpace.ID)
+		if err != nil {
+			return fmt.Errorf("failed to find the parent space: %w", err)
+		}
+
 		gitResp, isEmpty, err := c.createGitRepository(ctx, session, in)
 		if err != nil {
 			return fmt.Errorf("error creating repository on git: %w", err)

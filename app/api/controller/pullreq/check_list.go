@@ -36,7 +36,7 @@ func (c *Controller) ListChecks(
 ) (types.PullReqChecks, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return types.PullReqChecks{}, fmt.Errorf("failed to acquire access access to repo: %w", err)
+		return types.PullReqChecks{}, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
 	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
