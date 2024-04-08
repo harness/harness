@@ -21,10 +21,14 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type RuleUpdateInput struct {
@@ -96,7 +100,7 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("failed to get a repository rule by its identifier: %w", err)
 	}
-
+	oldRule := r.Clone()
 	if in.isEmpty() {
 		r.Users, err = c.getRuleUsers(ctx, r)
 		if err != nil {
@@ -132,6 +136,18 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 	err = c.ruleStore.Update(ctx, r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update repository-level protection rule: %w", err)
+	}
+
+	err = c.auditService.Log(ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
+		audit.ActionUpdated,
+		paths.Space(repo.Path),
+		audit.WithOldObject(oldRule),
+		audit.WithNewObject(r),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update branch rule operation: %s", err)
 	}
 
 	return r, nil

@@ -74,6 +74,7 @@ import (
 	"github.com/harness/gitness/app/store/database"
 	"github.com/harness/gitness/app/store/logs"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/cli/operations/server"
 	"github.com/harness/gitness/encrypt"
@@ -193,9 +194,10 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	lockerLocker := locker.ProvideLocker(mutexManager)
+	auditService := audit.ProvideAuditService()
 	repoIdentifier := check.ProvideRepoIdentifierCheck()
 	repoCheck := repo.ProvideRepoCheck()
-	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, settingsService, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, lockerLocker, mutexManager, repoIdentifier, repoCheck)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, settingsService, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck)
 	reposettingsController := reposettings.ProvideController(authorizer, repoStore, settingsService)
 	executionStore := database.ProvideExecutionStore(db)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)

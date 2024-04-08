@@ -75,6 +75,7 @@ import (
 	"github.com/harness/gitness/app/store/database"
 	"github.com/harness/gitness/app/store/logs"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/blob"
 	cliserver "github.com/harness/gitness/cli/operations/server"
 	"github.com/harness/gitness/encrypt"
@@ -189,6 +190,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		usergroup.WireSet,
 		openapi.WireSet,
 		repo.ProvideRepoCheck,
+		audit.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

@@ -97,3 +97,8 @@ func IsAncesterOf(path string, other string) bool {
 		path+types.PathSeparator,
 	)
 }
+
+func Space(repoPath string) string {
+	spacePath, _, _ := DisectLeaf(repoPath)
+	return spacePath
+}

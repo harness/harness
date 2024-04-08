@@ -19,7 +19,11 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // RuleDelete deletes a protection rule by identifier.
@@ -41,6 +45,17 @@ func (c *Controller) RuleDelete(ctx context.Context,
 	err = c.ruleStore.Delete(ctx, r.ID)
 	if err != nil {
 		return fmt.Errorf("failed to delete repository-level protection rule: %w", err)
+	}
+
+	err = c.auditService.Log(ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
+		audit.ActionDeleted,
+		paths.Space(repo.Path),
+		audit.WithOldObject(r),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete branch rule operation: %s", err)
 	}
 
 	return nil

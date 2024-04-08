@@ -72,6 +72,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/githook"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -140,6 +141,8 @@ func NewAPIHandler(
 
 	// for now always attempt auth - enforced per operation.
 	r.Use(middlewareauthn.Attempt(authenticator))
+
+	r.Use(audit.Middleware())
 
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,

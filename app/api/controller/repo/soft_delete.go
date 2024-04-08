@@ -22,6 +22,8 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -60,6 +62,17 @@ func (c *Controller) SoftDelete(
 	now := time.Now().UnixMilli()
 	if err = c.SoftDeleteNoAuth(ctx, session, repo, now); err != nil {
 		return nil, fmt.Errorf("failed to soft delete repo: %w", err)
+	}
+
+	err = c.auditService.Log(ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
+		audit.ActionDeleted,
+		paths.Space(repo.Path),
+		audit.WithOldObject(repo),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete repository operation: %s", err)
 	}
 
 	return &SoftDeleteResponse{DeletedAt: now}, nil

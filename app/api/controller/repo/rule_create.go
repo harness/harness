@@ -22,10 +22,14 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type RuleCreateInput struct {
@@ -110,6 +114,17 @@ func (c *Controller) RuleCreate(ctx context.Context,
 	err = c.ruleStore.Create(ctx, r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create repository-level protection rule: %w", err)
+	}
+
+	err = c.auditService.Log(ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
+		audit.ActionCreated,
+		paths.Space(repo.Path),
+		audit.WithNewObject(r),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create branch rule operation: %s", err)
 	}
 
 	r.Users, err = c.getRuleUsers(ctx, r)

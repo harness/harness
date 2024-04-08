@@ -28,6 +28,8 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/githook"
+	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/resources"
 	"github.com/harness/gitness/types"
@@ -119,6 +121,17 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}, sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return nil, err
+	}
+
+	err = c.auditService.Log(ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
+		audit.ActionCreated,
+		paths.Space(repo.Path),
+		audit.WithNewObject(repo),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create repository operation: %s", err)
 	}
 
 	// backfil GitURL

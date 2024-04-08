@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -60,6 +61,7 @@ func ProvideController(
 	indexer keywordsearch.Indexer,
 	limiter limiter.ResourceLimiter,
 	locker *locker.Locker,
+	auditService audit.Service,
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoChecks Check,
@@ -68,7 +70,7 @@ func ProvideController(
 		authorizer, repoStore,
 		spaceStore, pipelineStore,
 		principalStore, ruleStore, settings, principalInfoCache, protectionManager, rpcClient, importer,
-		codeOwners, reporeporter, indexer, limiter, locker, mtxManager, identifierCheck, repoChecks)
+		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck, repoChecks)
 }
 
 func ProvideRepoCheck() Check {

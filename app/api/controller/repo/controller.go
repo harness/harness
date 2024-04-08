@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -68,6 +69,7 @@ type Controller struct {
 	indexer            keywordsearch.Indexer
 	resourceLimiter    limiter.ResourceLimiter
 	locker             *locker.Locker
+	auditService       audit.Service
 	mtxManager         lock.MutexManager
 	identifierCheck    check.RepoIdentifier
 	repoCheck          Check
@@ -93,6 +95,7 @@ func NewController(
 	indexer keywordsearch.Indexer,
 	limiter limiter.ResourceLimiter,
 	locker *locker.Locker,
+	auditService audit.Service,
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoCheck Check,
@@ -118,6 +121,7 @@ func NewController(
 		indexer:                       indexer,
 		resourceLimiter:               limiter,
 		locker:                        locker,
+		auditService:                  auditService,
 		mtxManager:                    mtxManager,
 		identifierCheck:               identifierCheck,
 		repoCheck:                     repoCheck,

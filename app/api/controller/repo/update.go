@@ -20,9 +20,13 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // UpdateInput is used for updating a repo.
@@ -47,6 +51,8 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, err
 	}
 
+	repoClone := repo.Clone()
+
 	if !in.hasChanges(repo) {
 		return repo, nil
 	}
@@ -68,6 +74,18 @@ func (c *Controller) Update(ctx context.Context,
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	err = c.auditService.Log(ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
+		audit.ActionUpdated,
+		paths.Space(repo.Path),
+		audit.WithOldObject(repoClone),
+		audit.WithNewObject(repo),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update repository operation: %s", err)
 	}
 
 	// backfill repo url
