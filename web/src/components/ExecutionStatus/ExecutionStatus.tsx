@@ -80,7 +80,7 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         title: getString('failed').toLocaleUpperCase()
       },
       [ExecutionState.FAILURE]: {
-        icon: 'error-transparent-no-outline',
+        icon: 'warning-icon',
         css: css.failure,
         title: getString('failed').toLocaleUpperCase()
       },

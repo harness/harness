@@ -38,19 +38,13 @@ import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/Exec
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import type { TypesCodeOwnerEvaluation, TypesCodeOwnerEvaluationEntry } from 'services/code'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
-import { findChangeReqDecisions, findWaitingDecisions } from 'utils/Utils'
+import { CodeOwnerReqDecision, findChangeReqDecisions, findWaitingDecisions } from 'utils/Utils'
 import css from './CodeOwnersOverview.module.scss'
 
 interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   prChecksDecisionResult: PRChecksDecisionResult
   codeOwners?: TypesCodeOwnerEvaluation
   standalone: boolean
-}
-
-enum CodeOwnerReqDecision {
-  CHANGEREQ = 'changereq',
-  APPROVED = 'approved',
-  WAIT_FOR_APPROVAL = ''
 }
 
 export function CodeOwnersOverview({
@@ -151,14 +145,14 @@ const CodeOwnerSections: React.FC<CodeOwnerSectionsProps> = ({ repoMetadata, pul
   )
 }
 
-const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
+export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
   const { getString } = useStrings()
   const columns = useMemo(
     () =>
       [
         {
           id: 'CODE',
-          width: '50%',
+          width: '47%',
           sort: true,
           Header: 'CODE',
           accessor: 'CODE',
@@ -233,7 +227,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
         {
           id: 'approvals',
           Header: 'APPROVALS',
-          width: '15%',
+          width: '18%',
           sort: true,
           accessor: 'APPROVALS',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
@@ -247,8 +241,8 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
               return (
                 <Text
                   className={css.approvalText}
-                  icon="warning-sign"
-                  iconProps={{ color: Color.RED_700, size: 13 }}
+                  icon="warning-icon"
+                  iconProps={{ color: Color.RED_700, size: 16 }}
                   color={Color.RED_700}>
                   {getString('requestChanges')}
                 </Text>
@@ -259,7 +253,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
                 <Text
                   className={css.approvalText}
                   icon={'execution-success'}
-                  iconProps={{ color: Color.GREEN_700, size: 13 }}
+                  iconProps={{ color: Color.GREEN_700, size: 16 }}
                   color={Color.GREEN_700}>
                   {getString('approved')}
                 </Text>
@@ -332,10 +326,6 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
     <Render when={data?.evaluation_entries?.length}>
       <Container>
         <Layout.Vertical spacing="small">
-          <Text padding={{ left: 'medium' }} font={{ variation: FontVariation.SMALL_BOLD }}>
-            {getString('codeOwner.title')}
-          </Text>
-
           <TableV2
             className={css.codeOwnerTable}
             sortable

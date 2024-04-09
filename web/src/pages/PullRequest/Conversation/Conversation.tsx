@@ -32,7 +32,13 @@ import { orderBy } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { TypesPullReqActivity, TypesPullReq, TypesPullReqStats, TypesCodeOwnerEvaluation } from 'services/code'
+import type {
+  TypesPullReqActivity,
+  TypesPullReq,
+  TypesPullReqStats,
+  TypesCodeOwnerEvaluation,
+  TypesPullReqReviewer
+} from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage, orderSortDate, ButtonRoleProps, PullRequestSection } from 'utils/Utils'
@@ -46,14 +52,12 @@ import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
-import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
 import PullRequestSideBar from './PullRequestSideBar/PullRequestSideBar'
 import { isCodeComment, isComment, isSystemComment } from '../PullRequestUtils'
-import { ChecksOverview } from '../Checks/ChecksOverview'
 import { usePullReqActivities } from '../useGetPullRequestInfo'
 import { CodeCommentHeader } from './CodeCommentHeader'
 import { SystemComment } from './SystemComment'
-import CodeOwnersOverview from '../CodeOwners/CodeOwnersOverview'
+import PullRequestOverviewPanel from './PullRequestOverviewPanel/PullRequestOverviewPanel'
 import css from './Conversation.module.scss'
 
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
@@ -81,7 +85,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   const { currentUser, routes } = useAppContext()
   const location = useLocation()
   const activities = usePullReqActivities()
-  const { data: reviewers, refetch: refetchReviewers } = useGet<Unknown[]>({
+  const { data: reviewers, refetch: refetchReviewers } = useGet<TypesPullReqReviewer[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/reviewers`,
     debounce: 500
   })
@@ -370,17 +374,17 @@ export const Conversation: React.FC<ConversationProps> = ({
     <PullRequestTabContentWrapper>
       <Container>
         <Layout.Vertical spacing="xlarge">
-          <PullRequestActionsBox
+          {/* <PullRequestActionsBox
             repoMetadata={repoMetadata}
             pullReqMetadata={pullReqMetadata}
             onPRStateChanged={onPRStateChanged}
             refetchReviewers={refetchReviewers}
-          />
+          /> */}
           <Container>
             <Layout.Horizontal width="calc(var(--page-container-width) - 48px)">
               <Container width={`70%`}>
                 <Layout.Vertical spacing="xlarge">
-                  {prChecksDecisionResult && (
+                  {/* {prChecksDecisionResult && (
                     <ChecksOverview
                       repoMetadata={repoMetadata}
                       pullReqMetadata={pullReqMetadata}
@@ -396,8 +400,21 @@ export const Conversation: React.FC<ConversationProps> = ({
                       pullReqMetadata={pullReqMetadata}
                       prChecksDecisionResult={prChecksDecisionResult}
                     />
-                  )}
+                  )} */}
 
+                  {prChecksDecisionResult && codeOwners && (
+                    <Container padding={{ top: 'small', bottom: 'small' }}>
+                      <PullRequestOverviewPanel
+                        repoMetadata={repoMetadata}
+                        pullReqMetadata={pullReqMetadata}
+                        onPRStateChanged={onPRStateChanged}
+                        refetchReviewers={refetchReviewers}
+                        prChecksDecisionResult={prChecksDecisionResult}
+                        codeOwners={codeOwners}
+                        reviewers={reviewers}
+                      />
+                    </Container>
+                  )}
                   {(hasDescription || showEditDescription) && (
                     <DescriptionBox
                       routingId={routingId}

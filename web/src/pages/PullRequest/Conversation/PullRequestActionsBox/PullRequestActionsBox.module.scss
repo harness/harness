@@ -18,10 +18,12 @@
   --bar-height: 60px;
 
   background-color: var(--green-50) !important;
-  margin: -24px -24px 0 !important;
-  position: sticky;
+  // margin: -24px -24px 0 !important;
+  // position: sticky;
   top: 0;
   z-index: 4;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
 
   &.merged {
     border-color: transparent !important;
@@ -72,8 +74,8 @@
 
   .sub {
     font-weight: 600 !important;
-    font-size: 13px !important;
-    line-height: 20px !important;
+    font-size: 16px !important;
+    line-height: 24px !important;
     color: var(--green-800) !important;
 
     &.closed {
@@ -191,5 +193,60 @@
 
 .checkbox {
   padding-top: 8px !important;
+  padding-right: var(--spacing-medium) !important;
+}
+
+.overviewPopover {
+  background: blue;
+  :global {
+    .bp3-icon > svg > g {
+      stroke: white !important;
+    }
+  }
+}
+
+.dialogContentContainer {
+  height: calc(100vh - 125px) !important;
+  .content {
+    height: inherit !important;
+  }
+}
+
+.dialogContainer {
+  transition: transform 0.5s ease-in-out !important;
+  position: absolute;
+  right: 1.25%;
+}
+
+.checkboxLabel {
+  :global(.Tooltip--acenter) {
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 20px;
+    vertical-align: middle;
+  }
+}
+
+.mergeStratText {
+  font-size: 12px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  color: var(--grey-600) !important;
+}
+
+.widthContent {
+  width: 100% !important;
+}
+
+.mergeItemContainer {
+  padding: var(--spacing-small) var(--spacing-medium);
+}
+
+.mergeItemContainer:hover {
+  background: var(--primary-1) !important;
+}
+
+.optionMenuButton {
   padding-right: var(--spacing-medium) !important;
 }

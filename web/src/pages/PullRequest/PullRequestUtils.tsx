@@ -45,3 +45,10 @@ export const processReviewDecision = (
   review_decision === PullReqReviewDecision.approved && reviewedSHA !== sourceSHA
     ? PullReqReviewDecision.outdated
     : review_decision
+
+export enum PanelSectionOutletPosition {
+  CHANGES = 'changes',
+  COMMENTS = 'comments',
+  CHECKS = 'checks',
+  MERGEABILITY = 'mergeability'
+}

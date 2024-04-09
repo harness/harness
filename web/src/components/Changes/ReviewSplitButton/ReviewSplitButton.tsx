@@ -26,7 +26,7 @@ import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import type { EnumPullReqReviewDecision, TypesPullReq } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
-import { getErrorMessage } from 'utils/Utils'
+import { ApproveState, getErrorMessage } from 'utils/Utils'
 import css from '../Changes.module.scss'
 
 interface PrReviewOption {
@@ -37,12 +37,6 @@ interface PrReviewOption {
   color: Color
 }
 
-enum ApproveState {
-  APPROVED = 'approved',
-  CHANGEREQ = 'changereq',
-  APPROVE = 'approve',
-  OUTDATED = 'outdated'
-}
 interface ReviewSplitButtonProps extends Pick<GitInfoProps, 'repoMetadata'> {
   shouldHide: boolean
   pullRequestMetadata?: TypesPullReq

@@ -35,38 +35,33 @@ import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import type { OpenapiMergePullReq, OpenapiStatePullReqRequest, TypesPullReq, TypesRuleViolations } from 'services/code'
+import type { OpenapiStatePullReqRequest, TypesPullReq, TypesRuleViolations } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
-import { Images } from 'images'
 import {
+  dryMerge,
   extractInfoFromRuleViolationArr,
   getErrorMessage,
   MergeCheckStatus,
   permissionProps,
   PRDraftOption,
   PRMergeOption,
-  PullRequestActionsBoxProps,
-  PullRequestSection,
-  Violation
+  PullRequestActionsBoxProps
 } from 'utils/Utils'
+import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
-import RuleViolationAlertModal from 'components/RuleViolationAlertModal/RuleViolationAlertModal'
+import MergeSideDialogBox from './MergeSideDialogBox'
 import css from './PullRequestActionsBox.module.scss'
-
-const codeOwnersNotFoundMessage = 'CODEOWNERS file not found'
-const codeOwnersNotFoundMessage2 = `path "CODEOWNERS" not found`
-const codeOwnersNotFoundMessage3 = `failed to find node 'CODEOWNERS' in 'main': failed to get tree node: failed to ls file: path "CODEOWNERS" not found`
 
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
   pullReqMetadata,
-  onPRStateChanged
+  onPRStateChanged,
+  allowedStrategy
 }) => {
-  const [isActionBoxOpen, setActionBoxOpen] = useState(false)
   const { getString } = useStrings()
   const { showError } = useToaster()
   const { hooks, standalone } = useAppContext()
@@ -78,9 +73,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   })
   const [ruleViolation, setRuleViolation] = useState(false)
   const [ruleViolationArr, setRuleViolationArr] = useState<{ data: { rule_violations: TypesRuleViolations[] } }>()
-  const [length, setLength] = useState(0)
   const [notBypassable, setNotBypassable] = useState(false)
-  const [finalRulesArr, setFinalRulesArr] = useState<Violation[]>()
   const [bypass, setBypass] = useState(false)
   const { mutate: updatePRState, loading: loadingState } = useMutate({
     verb: 'POST',
@@ -95,67 +88,32 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     () => pullReqMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
     [pullReqMetadata, isClosed]
   )
+  const [sideDialogOpen, setSideDialogOpen] = useState(false)
   // Flags to optimize rendering
   const internalFlags = useRef({ dryRun: false })
-
   useEffect(() => {
     if (ruleViolationArr && !isDraft && ruleViolationArr.data.rule_violations) {
-      const { checkIfBypassAllowed, violationArr, uniqueViolations } = extractInfoFromRuleViolationArr(
-        ruleViolationArr.data.rule_violations
-      )
+      const { checkIfBypassAllowed } = extractInfoFromRuleViolationArr(ruleViolationArr.data.rule_violations)
       setNotBypassable(checkIfBypassAllowed)
-      setFinalRulesArr(violationArr)
-      setLength(uniqueViolations.size)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleViolationArr])
-  const dryMerge = () => {
-    if (isMounted.current && !isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
-      // Use an internal flag to prevent flickering during the loading state of buttons
-      internalFlags.current.dryRun = true
-      mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
-        .then(res => {
-          if (isMounted.current) {
-            if (res?.rule_violations?.length > 0) {
-              setRuleViolation(true)
-              setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
-              setAllowedStrats(res.allowed_methods)
-            } else {
-              setRuleViolation(false)
-              setAllowedStrats(res.allowed_methods)
-            }
-          }
-        })
-        .catch(err => {
-          if (isMounted.current) {
-            if (err.status === 422) {
-              setRuleViolation(true)
-              setRuleViolationArr(err)
-              setAllowedStrats(err.allowed_methods)
-            } else if (
-              getErrorMessage(err) === codeOwnersNotFoundMessage ||
-              getErrorMessage(err) === codeOwnersNotFoundMessage2 ||
-              getErrorMessage(err) === codeOwnersNotFoundMessage3 ||
-              err.status === 423 // resource locked (merge / dry-run already ongoing)
-            ) {
-              return
-            } else if (pullRequestSection !== PullRequestSection.CONVERSATION) {
-              return
-            } else {
-              showError(getErrorMessage(err))
-            }
-          }
-        })
-        .finally(() => {
-          internalFlags.current.dryRun = false
-        })
-    }
-  }
 
   useEffect(() => {
     // recheck PR in case source SHA changed or PR was marked as unchecked
     // TODO: optimize call to handle all causes and avoid double calls by keeping track of SHA
-    dryMerge() // eslint-disable-next-line react-hooks/exhaustive-deps
+    dryMerge(
+      isMounted,
+      isClosed,
+      pullReqMetadata,
+      internalFlags,
+      mergePR,
+      setRuleViolation,
+      setRuleViolationArr,
+      setAllowedStrats,
+      pullRequestSection,
+      showError
+    ) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unchecked, pullReqMetadata?.source_sha])
   const [prMerged, setPrMerged] = useState(false)
 
@@ -163,7 +121,18 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     // dryMerge()
     const intervalId = setInterval(async () => {
       if (!prMerged) {
-        dryMerge()
+        dryMerge(
+          isMounted,
+          isClosed,
+          pullReqMetadata,
+          internalFlags,
+          mergePR,
+          setRuleViolation,
+          setRuleViolationArr,
+          setAllowedStrats,
+          pullRequestSection,
+          showError
+        )
       }
     }, POLLING_INTERVAL) // Poll every 20 seconds
     // Cleanup interval on component unmount
@@ -177,24 +146,33 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       method: 'squash',
       title: getString('pr.mergeOptions.squashAndMerge'),
       desc: getString('pr.mergeOptions.squashAndMergeDesc'),
-      disabled: mergeable === false
+      disabled: mergeable === false,
+      label: getString('pr.mergeOptions.squashAndMerge'),
+      value: 'squash'
     },
     {
       method: 'merge',
       title: getString('pr.mergeOptions.createMergeCommit'),
       desc: getString('pr.mergeOptions.createMergeCommitDesc'),
-      disabled: mergeable === false
+      disabled: mergeable === false,
+      label: getString('pr.mergeOptions.createMergeCommit'),
+      value: 'merge'
     },
     {
       method: 'rebase',
       title: getString('pr.mergeOptions.rebaseAndMerge'),
       desc: getString('pr.mergeOptions.rebaseAndMergeDesc'),
-      disabled: mergeable === false
+      disabled: mergeable === false,
+      label: getString('pr.mergeOptions.rebaseAndMerge'),
+      value: 'rebase'
     },
+
     {
       method: 'close',
       title: getString('pr.mergeOptions.close'),
-      desc: getString('pr.mergeOptions.closeDesc')
+      desc: getString('pr.mergeOptions.closeDesc'),
+      label: getString('pr.mergeOptions.close'),
+      value: 'close'
     }
   ]
   const [allowedStrats, setAllowedStrats] = useState<string[]>([
@@ -229,7 +207,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     } else {
       setMergeOption(mergeOptions[3])
     } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allowedStrats])
+  }, [allowedStrats, allowedStrategy])
 
   const [draftOption, setDraftOption] = useState<PRDraftOption>(draftOptions[0])
   const permPushResult = hooks?.usePermissionTranslate?.(
@@ -245,6 +223,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   if (pullReqMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullReqMetadata} />
   }
+
   return (
     <Container
       className={cx(css.main, {
@@ -257,33 +236,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       <Layout.Vertical spacing="xlarge">
         <Container>
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} className={css.layout}>
-            {(unchecked && <img src={Images.PrUnchecked} width={20} height={20} />) || (
-              <Icon
-                name={
-                  isDraft
-                    ? CodeIcon.Draft
-                    : isClosed
-                    ? 'issue'
-                    : mergeable === false
-                    ? 'warning-sign'
-                    : ruleViolation
-                    ? 'warning-sign'
-                    : 'tick-circle'
-                }
-                size={20}
-                color={
-                  isDraft
-                    ? Color.ORANGE_900
-                    : isClosed
-                    ? Color.GREY_500
-                    : mergeable === false
-                    ? Color.RED_500
-                    : ruleViolation
-                    ? Color.RED_500
-                    : Color.GREEN_700
-                }
-              />
-            )}
             <Text
               className={cx(css.sub, {
                 [css.unchecked]: unchecked,
@@ -300,30 +252,11 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                   : unchecked
                   ? 'pr.checkingToMerge'
                   : mergeable === false && isOpen
-                  ? 'pr.cantBeMerged'
+                  ? 'branchProtection.prFailedText'
                   : ruleViolation
                   ? 'branchProtection.prFailedText'
-                  : 'pr.branchHasNoConflicts',
-                ruleViolation ? { ruleCount: length } : { ruleCount: 0 }
+                  : 'pr.branchHasNoConflicts'
               )}
-              {ruleViolation && mergeable && !isDraft ? (
-                <Button
-                  className={css.viewDetailsBtn}
-                  rightIcon={'chevron-right'}
-                  variation={ButtonVariation.LINK}
-                  text={getString('prChecks.viewExternal')}
-                  onClick={() => {
-                    setActionBoxOpen(true)
-                  }}
-                />
-              ) : null}
-              <RuleViolationAlertModal
-                setOpen={setActionBoxOpen}
-                open={isActionBoxOpen}
-                title={getString('branchProtection.mergePrAlertTitle')}
-                text={getString('branchProtection.mergePrAlertText', { ruleCount: length })}
-                rules={finalRulesArr}
-              />
             </Text>
             <FlexExpander />
             <Render when={loading || loadingState}>
@@ -412,8 +345,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                             [css.hasRuleViolated]: ruleViolation,
                             [css.bypass]: bypass
                           })}>
-                          <SplitButton
-                            text={mergeOption.title}
+                          <Button
+                            text={getString('pr.mergePR')}
                             disabled={
                               (loading && !internalFlags.current.dryRun) ||
                               (unchecked && mergeOption.method !== 'close') ||
@@ -428,30 +361,31 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                 ? ButtonVariation.TERTIARY
                                 : ButtonVariation.PRIMARY
                             }
-                            popoverProps={{
-                              interactionKind: 'click',
-                              usePortal: true,
-                              popoverClassName: css.popover,
-                              position: PopoverPosition.BOTTOM_RIGHT,
-                              transitionDuration: 1000
-                            }}
                             {...permissionProps(permPushResult, standalone)}
                             onClick={async () => {
-                              if (mergeOption.method !== 'close') {
-                                const payload: OpenapiMergePullReq = {
-                                  method: mergeOption.method,
-                                  source_sha: pullReqMetadata?.source_sha,
-                                  bypass_rules: bypass,
-                                  dry_run: false
-                                }
-                                mergePR(payload)
-                                  .then(() => {
-                                    setPrMerged(true)
-                                    onPRStateChanged()
-                                    setRuleViolationArr(undefined)
-                                  })
+                              setSideDialogOpen(true)
+                            }}></Button>
+                        </Container>
+                        <OptionsMenuButton
+                          className={css.optionMenuButton}
+                          {...permissionProps(permPushResult, standalone)}
+                          isDark
+                          items={[
+                            {
+                              hasIcon: true,
+                              iconName: CodeIcon.Draft,
+                              text: getString('markAsDraft'),
+                              onClick: () => {
+                                updatePRState({ is_draft: true, state: 'open' })
+                                  .then(onPRStateChanged)
                                   .catch(exception => showError(getErrorMessage(exception)))
-                              } else {
+                              }
+                            },
+                            {
+                              hasIcon: true,
+                              iconName: 'code-rejected',
+                              text: getString('pr.mergeOptions.close'),
+                              onClick: async () => {
                                 updatePRState({ state: 'closed' })
                                   .then(() => {
                                     resetMergeOption()
@@ -460,27 +394,14 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                   })
                                   .catch(exception => showError(getErrorMessage(exception)))
                               }
-                            }}>
-                            {mergeOptions.map(option => {
-                              const mergeCheck = allowedStrats !== undefined && allowedStrats.includes(option.method)
-                              return (
-                                <Menu.Item
-                                  key={option.method}
-                                  className={css.menuItem}
-                                  disabled={option.method !== 'close' ? !mergeCheck : option.disabled}
-                                  text={
-                                    <>
-                                      <BIcon icon={mergeOption.method === option.method ? 'tick' : 'blank'} />
-                                      <strong>{option.title}</strong>
-                                      <p>{option.desc}</p>
-                                    </>
-                                  }
-                                  onClick={() => setMergeOption(option)}
-                                />
-                              )
-                            })}
-                          </SplitButton>
-                        </Container>
+                            }
+                          ]}
+                          tooltipProps={{
+                            isDark: true,
+                            position: PopoverPosition.RIGHT,
+                            popoverClassName: css.overviewPopover
+                          }}
+                        />
                       </Layout.Horizontal>
                     </Case>
                   </Match>
@@ -490,6 +411,24 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
           </Layout.Horizontal>
         </Container>
       </Layout.Vertical>
+      {sideDialogOpen && (
+        <MergeSideDialogBox
+          mergeOption={mergeOption}
+          sideDialogOpen={sideDialogOpen}
+          setSideDialogOpen={setSideDialogOpen}
+          mergeOptions={mergeOptions}
+          allowedStrats={allowedStrats}
+          mergeable={mergeable}
+          ruleViolation={ruleViolation}
+          mergePR={mergePR}
+          setPrMerged={setPrMerged}
+          pullReqMetadata={pullReqMetadata}
+          onPRStateChanged={onPRStateChanged}
+          setRuleViolationArr={setRuleViolationArr}
+          bypass={bypass}
+          setMergeOption={setMergeOption}
+        />
+      )}
     </Container>
   )
 }
