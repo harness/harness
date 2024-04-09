@@ -123,7 +123,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, p
     // Set up the polling with setInterval
     const intervalId = setInterval(fetchAndProcessData, pollingInterval)
     // Clean up the interval on component unmount
-    return () => clearInterval(intervalId)
+    return () => clearInterval(intervalId) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hookData, enqueue, dispatch])
 
   if (!prChecksDecisionResult) {

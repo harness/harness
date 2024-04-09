@@ -1,0 +1,125 @@
+.mainContainer {
+  border-radius: 10px;
+  border-bottom-left-radius: 10px !important;
+  border-bottom-right-radius: 10px !important;
+
+  border: 1px solid var(--grey-100);
+  box-shadow: var(--elevation-2) !important;
+  background: var(--grey-0);
+  margin-top: var(--spacing-large);
+
+  :global {
+    .main {
+      .layout {
+        .bp3-button {
+          padding-right: unset !important;
+        }
+      }
+    }
+  }
+}
+
+.sectionContainer {
+  padding: var(--spacing-large) 2.25rem !important;
+  background: var(--grey-0) !important;
+}
+
+.borderRadius {
+  border-radius: 10px;
+}
+
+.greyContainer {
+  background: #f6f8fa !important;
+}
+
+.buttonPadding {
+  padding-right: unset !important;
+}
+
+.borderContainer {
+  border-bottom: 1px solid rgb(217, 218, 229, 0.6);
+}
+
+.showMore {
+  right: 10px;
+  top: 12px;
+}
+
+.checkName {
+  font-size: 12px !important;
+}
+
+.blueText {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  :global {
+    .bp3-button-text {
+      font-size: 12px !important;
+      font-weight: 400 !important;
+    }
+  }
+}
+
+.requiredText {
+  font-size: 10px !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  line-height: 14px !important; /* 140% */
+  letter-spacing: 0.2px !important;
+}
+
+.requiredContainer {
+  display: inline-flex !important;
+  padding: 0px 6px 0.5px 6px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--grey-200) !important;
+  background: var(--grey-100) !important;
+}
+
+.codeOwnerContainer {
+  background-color: #f6f8fa !important;
+
+  :global {
+    .TableV2--row {
+      background-color: #f6f8fa !important;
+    }
+  }
+}
+
+.sectionTitle {
+  font-size: 15px !important;
+  font-weight: 400 !important;
+}
+
+.sectionSubheader {
+  font-size: 12px !important;
+}
+
+.statusIcon[data-icon='execution-waiting'] {
+  :global {
+    path {
+      fill: var(--grey-0) !important;
+    }
+  }
+}
+
+.textSize {
+  font-size: 13px !important;
+}
+
+.paddingContainer {
+  padding-top: 0.55rem !important;
+  padding-bottom: 0.55rem !important;
+  line-height: 15px;
+}
+
+.executionIcon {
+  padding: 1px !important;
+}
+
+.timeoutIcon {
+  stroke: var(--orange-500);
+}

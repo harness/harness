@@ -340,6 +340,8 @@ export interface OpenapiMergePullReq {
   dry_run?: boolean
   method?: EnumMergeMethod
   source_sha?: string
+  title?: string
+  message?: string
 }
 
 export interface OpenapiMoveRepoRequest {

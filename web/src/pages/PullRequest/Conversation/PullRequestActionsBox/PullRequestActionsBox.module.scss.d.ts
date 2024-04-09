@@ -20,7 +20,11 @@ export declare const btn: string
 export declare const btnWrapper: string
 export declare const bypass: string
 export declare const checkbox: string
+export declare const checkboxLabel: string
 export declare const closed: string
+export declare const content: string
+export declare const dialogContainer: string
+export declare const dialogContentContainer: string
 export declare const disabled: string
 export declare const draft: string
 export declare const error: string
@@ -33,6 +37,10 @@ export declare const menuItem: string
 export declare const menuReviewItem: string
 export declare const mergeContainer: string
 export declare const merged: string
+export declare const mergeItemContainer: string
+export declare const mergeStratText: string
+export declare const optionMenuButton: string
+export declare const overviewPopover: string
 export declare const popover: string
 export declare const ruleViolate: string
 export declare const ruleViolation: string
@@ -41,3 +49,4 @@ export declare const sub: string
 export declare const unchecked: string
 export declare const unmergeable: string
 export declare const viewDetailsBtn: string
+export declare const widthContent: string
