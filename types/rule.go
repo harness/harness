@@ -75,7 +75,6 @@ func (r Rule) MarshalYAML() (interface{}, error) {
 	}
 	return map[string]any{
 		"id":          r.ID,
-		"version":     r.Version,
 		"created":     r.Created,
 		"updated":     r.Updated,
 		"created_by":  r.CreatedBy,

@@ -24,7 +24,7 @@ import (
 type Repository struct {
 	// TODO: int64 ID doesn't match DB
 	ID          int64  `json:"id" yaml:"id"`
-	Version     int64  `json:"-" yaml:"version"`
+	Version     int64  `json:"-" yaml:"-"`
 	ParentID    int64  `json:"parent_id" yaml:"parent_id"`
 	Identifier  string `json:"identifier" yaml:"identifier"`
 	Path        string `json:"path" yaml:"path"`
