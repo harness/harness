@@ -434,8 +434,8 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 		stmt = stmt.Where("LOWER(pullreq_title) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
-	if opts.CreatedBy != 0 {
-		stmt = stmt.Where("pullreq_created_by = ?", opts.CreatedBy)
+	if len(opts.CreatedBy) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"pullreq_created_by": opts.CreatedBy})
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -486,8 +486,8 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 		stmt = stmt.Where("LOWER(pullreq_title) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
-	if opts.CreatedBy != 0 {
-		stmt = stmt.Where("pullreq_created_by = ?", opts.CreatedBy)
+	if len(opts.CreatedBy) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"pullreq_created_by": opts.CreatedBy})
 	}
 
 	if opts.CreatedLt > 0 {

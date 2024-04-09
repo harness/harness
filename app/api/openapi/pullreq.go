@@ -197,13 +197,21 @@ var queryParameterCreatedByPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamCreatedBy,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The principal ID who created pull requests."),
+		Description: ptr.String("List of principal IDs who created pull requests."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
-				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+					},
+				},
 			},
 		},
+		// making it look like created_by=1&created_by=2
+		Style:   ptr.String(string(openapi3.EncodingStyleForm)),
+		Explode: ptr.Bool(true),
 	},
 }
 
@@ -225,6 +233,8 @@ var queryParameterStatePullRequest = openapi3.ParameterOrRef{
 				},
 			},
 		},
+		Style:   ptr.String(string(openapi3.EncodingStyleForm)),
+		Explode: ptr.Bool(true),
 	},
 }
 

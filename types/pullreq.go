@@ -88,7 +88,7 @@ type PullReqFilter struct {
 	Page          int                 `json:"page"`
 	Size          int                 `json:"size"`
 	Query         string              `json:"query"`
-	CreatedBy     int64               `json:"created_by"`
+	CreatedBy     []int64             `json:"created_by"`
 	SourceRepoID  int64               `json:"-"` // caller should use source_repo_ref
 	SourceRepoRef string              `json:"source_repo_ref"`
 	SourceBranch  string              `json:"source_branch"`

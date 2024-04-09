@@ -210,3 +210,21 @@ func QueryParamAsBoolOrDefault(r *http.Request, paramName string, deflt bool) (b
 
 	return boolValue, nil
 }
+
+// QueryParamListAsPositiveInt64 extracts integer parameter slice from the request query.
+func QueryParamListAsPositiveInt64(r *http.Request, paramName string) ([]int64, error) {
+	valuesString, ok := QueryParamList(r, paramName)
+	if !ok {
+		return make([]int64, 0), nil
+	}
+	valuesInt := make([]int64, len(valuesString))
+
+	for i, vs := range valuesString {
+		vi, err := strconv.ParseInt(vs, 10, 64)
+		if err != nil || vi <= 0 {
+			return nil, usererror.BadRequestf("Parameter %q must be a positive integer.", paramName)
+		}
+		valuesInt[i] = vi
+	}
+	return valuesInt, nil
+}
