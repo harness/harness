@@ -14,15 +14,27 @@
  * limitations under the License.
  */
 
-import { Button, Container, FlexExpander, Layout, Text, ButtonSize, ButtonVariation, Avatar } from '@harnessio/uicore'
+import {
+  Button,
+  Container,
+  FlexExpander,
+  Layout,
+  Text,
+  ButtonSize,
+  ButtonVariation,
+  Avatar,
+  StringSubstitute
+} from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import React, { useMemo } from 'react'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { defaultTo } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import type { TypesCommit, TypesRepository } from 'services/code'
+import type { GitInfoProps } from 'utils/GitUtils'
+import type { CODERoutes } from 'RouteDefinitions'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
@@ -50,6 +62,39 @@ const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string })
     () => commits?.commits?.filter(commit => commit.sha === commitRef)?.[0],
     [commitRef, commits?.commits]
   )
+  function renderPullRequestLinkFromCommitMessage(
+    repositoryMetadata: GitInfoProps['repoMetadata'],
+    codeRoutes: CODERoutes,
+    commitMessage = ''
+  ) {
+    let message: string | JSX.Element = commitMessage
+    const match = message.match(/\(#\d+\)$/)
+
+    if (match?.length) {
+      message = message.replace(match[0], '({URL})')
+      const pullRequestId = match[0].replace('(#', '').replace(')', '')
+
+      message = (
+        <StringSubstitute
+          str={message}
+          vars={{
+            URL: (
+              <Link
+                to={codeRoutes.toCODEPullRequest({
+                  repoPath: repositoryMetadata.path as string,
+                  pullRequestId
+                })}>
+                #{pullRequestId}
+              </Link>
+            )
+          }}
+        />
+      )
+    }
+
+    return message
+  }
+
   useDocumentTitle(defaultTo(commitData?.title, getString('commit')))
 
   return (
@@ -64,7 +109,7 @@ const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string })
                 iconProps={{ size: 16, margin: { right: 'small' } }}
                 padding="medium"
                 color="black">
-                {defaultTo(commitData?.title, '')}
+                {defaultTo(renderPullRequestLinkFromCommitMessage(repoMetadata, routes, commitData?.title), '')}
               </Text>
               <FlexExpander />
               <Button
