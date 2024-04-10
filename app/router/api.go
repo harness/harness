@@ -294,6 +294,7 @@ func setupRepos(r chi.Router,
 				r.Get("/*", handlerrepo.HandleGetContent(repoCtrl))
 			})
 
+			r.Get("/paths", handlerrepo.HandleListPaths(repoCtrl))
 			r.Post("/path-details", handlerrepo.HandlePathsDetails(repoCtrl))
 
 			r.Route("/blame", func(r chi.Router) {

@@ -142,7 +142,7 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
 		audit.ActionUpdated,
-		paths.Space(repo.Path),
+		paths.Parent(repo.Path),
 		audit.WithOldObject(oldRule),
 		audit.WithNewObject(r),
 	)

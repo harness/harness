@@ -273,6 +273,21 @@ var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterIncludeDirectories = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamIncludeDirectories,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Indicates whether directories should be included in the response."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 var QueryParamIncludeStats = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamIncludeStats,
@@ -605,6 +620,18 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/content/{path}", opGetContent)
+
+	opListPaths := openapi3.Operation{}
+	opListPaths.WithTags("repository")
+	opListPaths.WithMapOfAnything(map[string]interface{}{"operationId": "listPaths"})
+	opListPaths.WithParameters(queryParameterGitRef, queryParameterIncludeDirectories)
+	_ = reflector.SetRequest(&opListPaths, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListPaths, new(repo.ListPathsOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/paths", opListPaths)
 
 	opPathDetails := openapi3.Operation{}
 	opPathDetails.WithTags("repository")

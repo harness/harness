@@ -98,8 +98,8 @@ func scanSecretsInternal(ctx context.Context,
 		}
 
 		// in case the branch was just created - fallback to compare against latest default branch.
-		baseRev := refUpdate.Old.String() + "^{commit}"
-		rev := refUpdate.New.String() + "^{commit}"
+		baseRev := refUpdate.Old.String() + "^{commit}" //nolint:goconst
+		rev := refUpdate.New.String() + "^{commit}"     //nolint:goconst
 		//nolint:nestif
 		if refUpdate.Old.IsNil() {
 			if baseRevFallBack == nil {

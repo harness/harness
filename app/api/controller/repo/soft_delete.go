@@ -68,7 +68,7 @@ func (c *Controller) SoftDelete(
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionDeleted,
-		paths.Space(repo.Path),
+		paths.Parent(repo.Path),
 		audit.WithOldObject(repo),
 	)
 	if err != nil {

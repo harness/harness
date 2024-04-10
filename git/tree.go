@@ -150,6 +150,42 @@ func (s *Service) ListTreeNodes(ctx context.Context, params *ListTreeNodeParams)
 	}, nil
 }
 
+type ListPathsParams struct {
+	ReadParams
+	// GitREF is a git reference (branch / tag / commit SHA)
+	GitREF             string
+	IncludeDirectories bool
+}
+
+type ListPathsOutput struct {
+	Files       []string
+	Directories []string
+}
+
+func (s *Service) ListPaths(ctx context.Context, params *ListPathsParams) (*ListPathsOutput, error) {
+	if err := params.Validate(); err != nil {
+		return nil, err
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	files, dirs, err := s.git.ListPaths(
+		ctx,
+		repoPath,
+		params.GitREF,
+		params.IncludeDirectories,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list paths: %w", err)
+	}
+
+	return &ListPathsOutput{
+			Files:       files,
+			Directories: dirs,
+		},
+		nil
+}
+
 type PathsDetailsParams struct {
 	ReadParams
 	GitREF string

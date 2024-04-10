@@ -26,6 +26,7 @@ type Interface interface {
 	DeleteRepository(ctx context.Context, params *DeleteRepositoryParams) error
 	GetTreeNode(ctx context.Context, params *GetTreeNodeParams) (*GetTreeNodeOutput, error)
 	ListTreeNodes(ctx context.Context, params *ListTreeNodeParams) (*ListTreeNodeOutput, error)
+	ListPaths(ctx context.Context, params *ListPathsParams) (*ListPathsOutput, error)
 	GetSubmodule(ctx context.Context, params *GetSubmoduleParams) (*GetSubmoduleOutput, error)
 	GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOutput, error)
 	CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error)

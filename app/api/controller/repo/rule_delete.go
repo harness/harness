@@ -51,7 +51,7 @@ func (c *Controller) RuleDelete(ctx context.Context,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
 		audit.ActionDeleted,
-		paths.Space(repo.Path),
+		paths.Parent(repo.Path),
 		audit.WithOldObject(r),
 	)
 	if err != nil {

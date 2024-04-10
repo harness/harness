@@ -144,6 +144,9 @@ func lsTree(
 		command.WithStdout(output),
 	)
 	if err != nil {
+		if strings.Contains(err.Error(), "fatal: not a tree object") {
+			return nil, errors.InvalidArgument("revision %q does not point to a commit", rev)
+		}
 		if strings.Contains(err.Error(), "fatal: Not a valid object name") {
 			return nil, errors.NotFound("revision %q not found", rev)
 		}
@@ -234,40 +237,45 @@ func lsFile(
 
 // GetTreeNode returns the tree node at the given path as found for the provided reference.
 func (g *Git) GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (*TreeNode, error) {
-	// root path (empty path) is a special case
-	if treePath == "" {
-		if repoPath == "" {
-			return nil, ErrRepositoryPathEmpty
-		}
-		cmd := command.New("show",
-			command.WithFlag("--no-patch"),
-			command.WithFlag("--format="+fmtTreeHash),
-			command.WithArg(rev+"^{commit}"),
-		)
-		output := &bytes.Buffer{}
-		err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
+	if repoPath == "" {
+		return nil, ErrRepositoryPathEmpty
+	}
+
+	// anything that's not the root path is a simple call
+	if treePath != "" {
+		treeNode, err := lsFile(ctx, repoPath, rev, treePath)
 		if err != nil {
-			if strings.Contains(err.Error(), "ambiguous argument") {
-				return nil, errors.NotFound("could not resolve git revision: %s", rev)
-			}
-			return nil, fmt.Errorf("failed to get root tree node: %w", err)
+			return nil, fmt.Errorf("failed to get tree node: %w", err)
 		}
 
-		return &TreeNode{
-			NodeType: TreeNodeTypeTree,
-			Mode:     TreeNodeModeTree,
-			SHA:      sha.Must(output.String()),
-			Name:     "",
-			Path:     "",
-		}, err
+		return &treeNode, nil
 	}
 
-	treeNode, err := lsFile(ctx, repoPath, rev, treePath)
+	// root path (empty path) is a special case
+	cmd := command.New("show",
+		command.WithFlag("--no-patch"),
+		command.WithFlag("--format="+fmtTreeHash), //nolint:goconst
+		command.WithArg(rev+"^{commit}"),          //nolint:goconst
+	)
+	output := &bytes.Buffer{}
+	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get tree node: %w", err)
+		if strings.Contains(err.Error(), "expected commit type") {
+			return nil, errors.InvalidArgument("revision %q does not point to a commit", rev)
+		}
+		if strings.Contains(err.Error(), "unknown revision") {
+			return nil, errors.NotFound("revision %q not found", rev)
+		}
+		return nil, fmt.Errorf("failed to get root tree node: %w", err)
 	}
 
-	return &treeNode, nil
+	return &TreeNode{
+		NodeType: TreeNodeTypeTree,
+		Mode:     TreeNodeModeTree,
+		SHA:      sha.Must(output.String()),
+		Name:     "",
+		Path:     "",
+	}, err
 }
 
 // ListTreeNodes lists the child nodes of a tree reachable from ref via the specified path.
@@ -298,4 +306,76 @@ func (g *Git) ReadTree(
 		return fmt.Errorf("unable to read %s in to the index: %w", ref, err)
 	}
 	return nil
+}
+
+// ListPaths lists all the paths in a repo recursively (similar-ish to `ls -lR`).
+// Note: Keep method simple for now to avoid unnecessary corner cases
+// by always listing whole repo content (and not relative to any directory).
+func (g *Git) ListPaths(
+	ctx context.Context,
+	repoPath string,
+	rev string,
+	includeDirs bool,
+) (files []string, dirs []string, err error) {
+	if repoPath == "" {
+		return nil, nil, ErrRepositoryPathEmpty
+	}
+
+	// use custom ls-tree for speed up (file listing is ~10% faster, with dirs roughly the same)
+	cmd := command.New("ls-tree",
+		command.WithConfig("core.quotePath", "false"), // force printing of path in custom format without quoting
+		command.WithFlag("-z"),
+		command.WithFlag("-r"),
+		command.WithFlag("--full-name"),
+		command.WithArg(rev+"^{commit}"), //nolint:goconst enforce commit revs for now (keep it simple)
+	)
+	format := fmtFieldPath
+	if includeDirs {
+		cmd.Add(command.WithFlag("-t"))
+		format += fmtZero + fmtFieldObjectType
+	}
+	cmd.Add(command.WithFlag("--format=" + format)) //nolint:goconst
+
+	output := &bytes.Buffer{}
+	err = cmd.Run(ctx,
+		command.WithDir(repoPath),
+		command.WithStdout(output),
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), "expected commit type") {
+			return nil, nil, errors.InvalidArgument("revision %q does not point to a commit", rev)
+		}
+		if strings.Contains(err.Error(), "fatal: Not a valid object name") {
+			return nil, nil, errors.NotFound("revision %q not found", rev)
+		}
+		return nil, nil, fmt.Errorf("failed to run git ls-tree: %w", err)
+	}
+
+	scanner := bufio.NewScanner(output)
+	scanner.Split(parser.ScanZeroSeparated)
+	for scanner.Scan() {
+		path := scanner.Text()
+
+		isDir := false
+		if includeDirs {
+			// custom format guarantees the object type in the next scan
+			if !scanner.Scan() {
+				return nil, nil, fmt.Errorf("unexpected output from ls-tree when getting object type: %w", scanner.Err())
+			}
+			objectType := scanner.Text()
+			isDir = strings.EqualFold(objectType, string(GitObjectTypeTree))
+		}
+
+		if isDir {
+			dirs = append(dirs, path)
+			continue
+		}
+
+		files = append(files, path)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, nil, fmt.Errorf("error reading ls-tree output: %w", err)
+	}
+
+	return files, dirs, nil
 }

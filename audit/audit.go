@@ -17,6 +17,7 @@ package audit
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/harness/gitness/types"
 )
@@ -102,7 +103,7 @@ type Event struct {
 
 func (e *Event) Validate() error {
 	if err := e.Action.Validate(); err != nil {
-		return err
+		return fmt.Errorf("invalid action: %w", err)
 	}
 	if e.User.UID == "" {
 		return ErrUserIsRequired
@@ -111,7 +112,7 @@ func (e *Event) Validate() error {
 		return ErrSpacePathIsRequired
 	}
 	if err := e.Resource.Validate(); err != nil {
-		return err
+		return fmt.Errorf("invalid resource: %w", err)
 	}
 	return nil
 }

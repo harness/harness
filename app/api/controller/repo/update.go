@@ -80,7 +80,7 @@ func (c *Controller) Update(ctx context.Context,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionUpdated,
-		paths.Space(repo.Path),
+		paths.Parent(repo.Path),
 		audit.WithOldObject(repoClone),
 		audit.WithNewObject(repo),
 	)

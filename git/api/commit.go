@@ -359,7 +359,7 @@ func gitGetRenameDetails(
 func gitLogNameStatus(ctx context.Context, repoPath string, sha sha.SHA) ([]string, error) {
 	cmd := command.New("log",
 		command.WithFlag("--name-status"),
-		command.WithFlag("--format="),
+		command.WithFlag("--format="), //nolint:goconst
 		command.WithFlag("--max-count=1"),
 		command.WithArg(sha.String()),
 	)
@@ -378,7 +378,7 @@ func gitShowNumstat(
 ) ([]string, error) {
 	cmd := command.New("show",
 		command.WithFlag("--numstat"),
-		command.WithFlag("--format="),
+		command.WithFlag("--format="), //nolint:goconst
 		command.WithArg(sha.String()),
 	)
 	output := &bytes.Buffer{}
@@ -682,7 +682,7 @@ func getCommit(
 
 	cmd := command.New("log",
 		command.WithFlag("--max-count", "1"),
-		command.WithFlag("--format="+format),
+		command.WithFlag("--format="+format), //nolint:goconst
 		command.WithArg(rev),
 	)
 	if path != "" {
