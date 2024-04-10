@@ -59,6 +59,7 @@ import { CodeCommentHeader } from './CodeCommentHeader'
 import { SystemComment } from './SystemComment'
 import PullRequestOverviewPanel from './PullRequestOverviewPanel/PullRequestOverviewPanel'
 import css from './Conversation.module.scss'
+import CodeOwnersOverview from '../CodeOwners/CodeOwnersOverview'
 
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   prStats?: TypesPullReqStats
@@ -391,8 +392,8 @@ export const Conversation: React.FC<ConversationProps> = ({
                       prChecksDecisionResult={prChecksDecisionResult}
                       codeOwners={codeOwners as TypesCodeOwnerEvaluation}
                     />
-                  )}
-                  {codeOwners && prChecksDecisionResult && (
+                  )} */}
+                  {/* {codeOwners && prChecksDecisionResult && (
                     <CodeOwnersOverview
                       standalone={standalone}
                       codeOwners={codeOwners}
@@ -402,7 +403,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                     />
                   )} */}
 
-                  {prChecksDecisionResult && codeOwners && (
+                  {prChecksDecisionResult && (
                     <Container padding={{ top: 'small', bottom: 'small' }}>
                       <PullRequestOverviewPanel
                         repoMetadata={repoMetadata}
