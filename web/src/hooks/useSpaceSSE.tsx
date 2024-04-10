@@ -16,6 +16,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { isEqual } from 'lodash-es'
+import { EventSourcePolyfill } from 'event-source-polyfill'
 import { useAppContext } from 'AppContext'
 import { getConfig } from 'services/config'
 
@@ -28,9 +29,10 @@ type UseSpaceSSEProps = {
 }
 
 const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = true }: UseSpaceSSEProps) => {
-  const { standalone, routingId } = useAppContext()
+  const { standalone, routingId, hooks } = useAppContext()
   const [events, setEvents] = useState(_events)
   const eventSourceRef = useRef<EventSource | null>(null)
+  const bearerToken = hooks?.useGetToken?.() || ''
 
   useEffect(() => {
     if (!isEqual(events, _events)) {
@@ -45,8 +47,10 @@ const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = tru
         const pathAndQuery = getConfig(
           `code/api/v1/spaces/${space}/+/events${standalone ? '' : `?routingId=${routingId}`}`
         )
-        eventSourceRef.current = new EventSource(pathAndQuery)
-
+        eventSourceRef.current = new EventSourcePolyfill(pathAndQuery, {
+          headers: { Authorization: `Bearer ${bearerToken}` },
+          heartbeatTimeout: 999999999
+        })
         const handleMessage = (event: MessageEvent) => {
           const data = JSON.parse(event.data)
           onEvent(data, event.type)
