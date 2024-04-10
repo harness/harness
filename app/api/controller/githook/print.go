@@ -69,9 +69,9 @@ func printScanSecretsFindings(
 		output.Messages = append(
 			output.Messages,
 			fmt.Sprintf("  %s", headerTxt),
-			fmt.Sprintf("      Secret:   %s", finding.Secret),
-			fmt.Sprintf("      Commit:   %s", finding.Commit),
-			fmt.Sprintf("      Details:  %s", finding.Description),
+			fmt.Sprintf("      Secret:  %s", finding.Secret),
+			fmt.Sprintf("      Commit:  %s", finding.Commit),
+			fmt.Sprintf("      Details: %s", finding.Description),
 			"", // add empty line for making it visually more consumable
 		)
 	}
