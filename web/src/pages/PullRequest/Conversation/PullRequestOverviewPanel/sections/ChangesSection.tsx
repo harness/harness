@@ -9,7 +9,7 @@ import {
   useToggle,
   stringSubstitute
 } from '@harnessio/uicore'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import cx from 'classnames'
 import { Render } from 'react-jsx-match'
 import { isEmpty } from 'lodash-es'
@@ -94,7 +94,6 @@ const ChangesSection = (props: ChangesSectionProps) => {
     approved => !checkIfOutdatedSha(approved.sha, pullReqMetadata?.source_sha as string)
   )
   const changeReqEvaluations = reviewers?.filter(evaluation => evaluation.review_decision === 'changereq')
-
   const changeReqReviewer =
     changeReqEvaluations && !isEmpty(changeReqEvaluations)
       ? capitalizeFirstLetter(
@@ -323,6 +322,12 @@ const ChangesSection = (props: ChangesSectionProps) => {
       </Layout.Horizontal>
     )
   }
+  const viewBtn =
+    minApproval > minReqLatestApproval ||
+    (approvedEvaluations && minReqLatestApproval === 0) ||
+    minReqLatestApproval > 0 ||
+    !isEmpty(changeReqEvaluations) ||
+    !isEmpty(codeOwners)
 
   return (
     <Render when={!loading && status}>
@@ -356,14 +361,16 @@ const ChangesSection = (props: ChangesSectionProps) => {
               </Text>
             </Layout.Vertical>
           </Layout.Horizontal>
-          <Button
-            padding={{ right: 'unset', bottom: 'medium' }}
-            className={cx(css.showMore, css.blueText, css.buttonPadding)}
-            variation={ButtonVariation.LINK}
-            size={ButtonSize.SMALL}
-            text={getString(isExpanded ? 'showLess' : 'showMore')}
-            onClick={toggleExpanded}
-          />
+          {viewBtn && (
+            <Button
+              padding={{ right: 'unset', bottom: 'medium' }}
+              className={cx(css.showMore, css.blueText, css.buttonPadding)}
+              variation={ButtonVariation.LINK}
+              size={ButtonSize.SMALL}
+              text={getString(isExpanded ? 'showLess' : 'showMore')}
+              onClick={toggleExpanded}
+            />
+          )}
         </Layout.Horizontal>
       </Container>
 
@@ -521,7 +528,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
             </Container>
           )}
         </Container>
-        {codeOwners && (
+        {codeOwners && !isEmpty(codeOwners?.evaluation_entries) && (
           <Container
             className={css.codeOwnerContainer}
             padding={{ top: 'small', bottom: 'small', left: 'xlarge', right: 'small' }}>
