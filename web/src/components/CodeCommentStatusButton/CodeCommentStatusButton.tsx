@@ -26,13 +26,13 @@ import { CodeCommentState, getErrorMessage } from 'utils/Utils'
 import type { CommentItem } from '../CommentBox/CommentBox'
 
 interface CodeCommentStatusButtonProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
-  commentItems: CommentItem<TypesPullReqActivity>[]
+  comment: { commentItems: CommentItem<TypesPullReqActivity>[] }
 }
 
 export const CodeCommentStatusButton: React.FC<CodeCommentStatusButtonProps> = ({
   repoMetadata,
   pullReqMetadata,
-  commentItems
+  comment: { commentItems }
 }) => {
   const isMounted = useIsMounted()
   const { getString } = useStrings()
