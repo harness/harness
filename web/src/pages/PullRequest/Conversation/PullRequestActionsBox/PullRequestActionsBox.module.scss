@@ -250,3 +250,9 @@
 .optionMenuButton {
   padding-right: var(--spacing-medium) !important;
 }
+
+.textArea {
+  :global(.bp3-input) {
+    min-height: 150px !important;
+  }
+}

@@ -41,7 +41,7 @@ import type {
 } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { getErrorMessage, orderSortDate, ButtonRoleProps, PullRequestSection } from 'utils/Utils'
+import { getErrorMessage, orderSortDate, ButtonRoleProps, PullRequestSection, PRCommentFilterType } from 'utils/Utils'
 import { activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
@@ -413,6 +413,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                         prChecksDecisionResult={prChecksDecisionResult}
                         codeOwners={codeOwners}
                         reviewers={reviewers}
+                        setActivityFilter={setActivityFilter}
                       />
                     </Container>
                   )}
@@ -483,14 +484,6 @@ export const Conversation: React.FC<ConversationProps> = ({
       <NavigationCheck when={dirtyCurrentComments || dirtyNewComment} />
     </PullRequestTabContentWrapper>
   )
-}
-
-export enum PRCommentFilterType {
-  SHOW_EVERYTHING = 'showEverything',
-  ALL_COMMENTS = 'allComments',
-  MY_COMMENTS = 'myComments',
-  RESOLVED_COMMENTS = 'resolvedComments',
-  UNRESOLVED_COMMENTS = 'unresolvedComments'
 }
 
 function useActivityFilters() {

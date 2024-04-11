@@ -46,6 +46,7 @@ export declare const ruleViolate: string
 export declare const ruleViolation: string
 export declare const secondaryButton: string
 export declare const sub: string
+export declare const textArea: string
 export declare const unchecked: string
 export declare const unmergeable: string
 export declare const viewDetailsBtn: string
