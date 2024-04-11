@@ -422,6 +422,14 @@ export enum CheckStatus {
   KILLED = 'killed'
 }
 
+export enum PRCommentFilterType {
+  SHOW_EVERYTHING = 'showEverything',
+  ALL_COMMENTS = 'allComments',
+  MY_COMMENTS = 'myComments',
+  RESOLVED_COMMENTS = 'resolvedComments',
+  UNRESOLVED_COMMENTS = 'unresolvedComments'
+}
+
 const MONACO_SUPPORTED_LANGUAGES = [
   'abap',
   'apex',

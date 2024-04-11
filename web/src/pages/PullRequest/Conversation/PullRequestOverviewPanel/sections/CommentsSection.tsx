@@ -1,20 +1,22 @@
 import React from 'react'
 import cx from 'classnames'
 import { Color } from '@harnessio/design-system'
-import { Button, ButtonSize, ButtonVariation, Container, Layout, Text } from '@harnessio/uicore'
+import { Button, ButtonSize, ButtonVariation, Container, Layout, SelectOption, Text } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import type { TypesRepository, TypesPullReq, TypesViolation } from 'services/code'
 import Success from '../../../../../icons/code-success.svg?url'
 import Fail from '../../../../../icons/code-fail.svg?url'
 import css from '../PullRequestOverviewPanel.module.scss'
+import { PRCommentFilterType } from 'utils/Utils'
 interface MergeSectionProps {
   repoMetadata: TypesRepository
   pullReqMetadata: TypesPullReq
   resolvedCommentArr?: TypesViolation
   requiresCommentApproval: boolean
+  setActivityFilter: (val: SelectOption) => void
 }
 const CommentsSection = (props: MergeSectionProps) => {
-  const { resolvedCommentArr, requiresCommentApproval } = props
+  const { resolvedCommentArr, requiresCommentApproval, setActivityFilter } = props
   const resolvedComments = requiresCommentApproval && !resolvedCommentArr?.params ? true : false
   const { getString } = useStrings()
 
@@ -51,6 +53,10 @@ const CommentsSection = (props: MergeSectionProps) => {
           padding={{ bottom: 'medium' }}
           iconProps={{ size: 10, margin: { left: 'xsmall' } }}
           onClick={() => {
+            setActivityFilter({
+              label: getString('unrsolvedComment'),
+              value: PRCommentFilterType.UNRESOLVED_COMMENTS
+            })
             document.querySelectorAll('.bp3-input[value="Active"]')[0].scrollIntoView({ behavior: 'smooth' })
           }}
         />

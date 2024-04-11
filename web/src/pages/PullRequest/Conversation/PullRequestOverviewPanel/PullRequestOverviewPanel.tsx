@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Container, Layout, useIsMounted, useToaster } from '@harnessio/uicore'
+import { Container, Layout, SelectOption, useIsMounted, useToaster } from '@harnessio/uicore'
 import cx from 'classnames'
 import { useGet, useMutate } from 'restful-react'
 import type {
@@ -30,10 +30,19 @@ interface PullRequestOverviewPanelProps {
   prChecksDecisionResult: PRChecksDecisionResult
   codeOwners: TypesCodeOwnerEvaluation | null
   reviewers: TypesPullReqReviewer[] | null
+  setActivityFilter: (val: SelectOption) => void
 }
 
 const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
-  const { codeOwners, repoMetadata, pullReqMetadata, onPRStateChanged, refetchReviewers, reviewers } = props
+  const {
+    setActivityFilter,
+    codeOwners,
+    repoMetadata,
+    pullReqMetadata,
+    onPRStateChanged,
+    refetchReviewers,
+    reviewers
+  } = props
   const { getString } = useStrings()
   const { showError } = useToaster()
 
@@ -176,6 +185,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
                   repoMetadata={repoMetadata}
                   resolvedCommentArr={resolvedCommentArr}
                   requiresCommentApproval={requiresCommentApproval}
+                  setActivityFilter={setActivityFilter}
                 />
               </Container>
             ),

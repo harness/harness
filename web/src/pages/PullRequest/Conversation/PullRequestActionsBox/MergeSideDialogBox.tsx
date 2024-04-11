@@ -191,7 +191,11 @@ const MergeSideDialogBox = (props: MergeSideDialogBoxProps) => {
                         {getString('commitMessage')}
                       </Text>
                       <Container>
-                        <FormInput.TextArea placeholder={getString('writeDownCommit')} name={'commitMessage'} />
+                        <FormInput.TextArea
+                          className={css.textArea}
+                          placeholder={getString('writeDownCommit')}
+                          name={'commitMessage'}
+                        />
                       </Container>
                     </Layout.Vertical>
                   )}
