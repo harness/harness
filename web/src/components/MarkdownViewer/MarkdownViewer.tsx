@@ -17,6 +17,7 @@
 import { useHistory } from 'react-router-dom'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Container } from '@harnessio/uicore'
+import { isEmpty } from 'lodash-es'
 import cx from 'classnames'
 import MarkdownPreview from '@uiw/react-markdown-preview'
 import rehypeVideo from 'rehype-video'
@@ -57,7 +58,7 @@ export function MarkdownViewer({
     event => {
       const imgTags = ref?.current?.querySelector('.wmde-markdown')?.querySelectorAll('img')
       const { target } = event
-      if (imgTags) {
+      if (imgTags && !isEmpty(imgTags)) {
         const imageArray = Array.from(imgTags)
         const imageStringArray = imageArray.filter(object => object.src && !object.className).map(img => img.src)
         setImageEvent(imageStringArray)
