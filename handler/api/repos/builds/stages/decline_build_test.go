@@ -1,4 +1,4 @@
-// Copyright 2019 Drone.IO Inc. All rights reserved.
+// Copyright 2024 Drone.IO Inc. All rights reserved.
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
@@ -26,7 +26,7 @@ import (
 // this test verifies that a 400 bad request status is returned
 // from the http.Handler with a human-readable error message if
 // the build number url parameter fails to parse.
-func TestDecline_InvalidBuildNumberV2(t *testing.T) {
+func TestDeclineBuild_InvalidBuildNumber(t *testing.T) {
 	c := new(chi.Context)
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
@@ -38,7 +38,7 @@ func TestDecline_InvalidBuildNumberV2(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleDeclineV2(nil, nil, nil)(w, r)
+	HandleDeclineBuild(nil, nil, nil)(w, r)
 	if got, want := w.Code, 400; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -53,7 +53,7 @@ func TestDecline_InvalidBuildNumberV2(t *testing.T) {
 // this test verifies that a 404 not found status is returned
 // from the http.Handler with a human-readable error message if
 // the repository is not found in the database.
-func TestDecline_RepoNotFoundV2(t *testing.T) {
+func TestDeclineBuild_RepoNotFound(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
@@ -76,7 +76,7 @@ func TestDecline_RepoNotFoundV2(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleDeclineV2(repos, nil, nil)(w, r)
+	HandleDeclineBuild(repos, nil, nil)(w, r)
 	if got, want := w.Code, 404; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -91,7 +91,7 @@ func TestDecline_RepoNotFoundV2(t *testing.T) {
 // this test verifies that a 404 not found status is returned
 // from the http.Handler with a human-readable error message if
 // the build is not found in the database.
-func TestDecline_BuildNotFoundV2(t *testing.T) {
+func TestDeclineBuild_BuildNotFound(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
@@ -117,7 +117,7 @@ func TestDecline_BuildNotFoundV2(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleDeclineV2(repos, builds, nil)(w, r)
+	HandleDeclineBuild(repos, builds, nil)(w, r)
 	if got, want := w.Code, 404; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -132,7 +132,7 @@ func TestDecline_BuildNotFoundV2(t *testing.T) {
 // this test verifies that a 400 bad request status is returned
 // from the http.Handler with a human-readable error message if
 // the build status is not Blocked.
-func TestDecline_InvalidStatusV2(t *testing.T) {
+func TestDeclineBuild_InvalidStatus(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
@@ -179,12 +179,12 @@ func TestDecline_InvalidStatusV2(t *testing.T) {
 		context.WithValue(context.Background(), chi.RouteCtxKey, c),
 	)
 
-	HandleDeclineV2(repos, builds, stages)(w, r)
+	HandleDeclineBuild(repos, builds, stages)(w, r)
 	if got, want := w.Code, 400; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	got, want := new(errors.Error), errors.New(`cannot decline build with status "pending"`)
+	got, want := new(errors.Error), errors.New(`Cannot decline build with status "pending"`)
 	json.NewDecoder(w.Body).Decode(got)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
 		t.Errorf(diff)

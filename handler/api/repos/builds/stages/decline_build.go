@@ -25,7 +25,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func HandleDeclineV2(
+func HandleDeclineBuild(
 	repos core.RepositoryStore,
 	builds core.BuildStore,
 	stages core.StageStore,
@@ -60,7 +60,7 @@ func HandleDeclineV2(
 
 		for _, stage := range stageList {
 			if stage.Status != core.StatusBlocked {
-				err := fmt.Errorf("cannot decline build with status %q", stage.Status)
+				err := fmt.Errorf("Cannot decline build with status %q", stage.Status)
 				render.BadRequest(w, err)
 				return
 			}
