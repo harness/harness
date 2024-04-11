@@ -31,7 +31,6 @@ func TestDecline_InvalidBuildNumberV2(t *testing.T) {
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
 	c.URLParams.Add("number", "I")
-	c.URLParams.Add("stage", "2")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
@@ -70,7 +69,6 @@ func TestDecline_RepoNotFoundV2(t *testing.T) {
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
 	c.URLParams.Add("number", "1")
-	c.URLParams.Add("stage", "2")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
@@ -112,7 +110,6 @@ func TestDecline_BuildNotFoundV2(t *testing.T) {
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
 	c.URLParams.Add("number", "1")
-	c.URLParams.Add("stage", "2")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
@@ -175,7 +172,6 @@ func TestDecline_InvalidStatusV2(t *testing.T) {
 	c.URLParams.Add("owner", "octocat")
 	c.URLParams.Add("name", "hello-world")
 	c.URLParams.Add("number", "1")
-	c.URLParams.Add("stage", "2")
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/", nil)
