@@ -1,0 +1,13 @@
+{
+  "name": "cypress-tests",
+  "private": "true",
+  "scripts": {
+    "cypress:open": "cypress open",
+    "server": "node server.js"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "cypress": "10.8.0",
+    "wait-on": "^6.0.1"
+  }
+}

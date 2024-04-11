@@ -31,7 +31,8 @@
     "services": "restful-react import --config restful-react.config.js",
     "postservices": "prettier --write src/services/**/*.tsx",
     "strings": "npm-run-all strings:*",
-    "strings:genTypes": "node scripts/strings/generateTypesCli.mjs"
+    "strings:genTypes": "node scripts/strings/generateTypesCli.mjs",
+    "dev:cypress": "NODE_ENV=development TARGET_LOCALHOST=false CYPRESS=true PROJECT_ID=CYPRESS_PROJECT_ID ORG_ID=CYPRESS_ORG_ID ACCOUNT_ID=CYPRESS_ACCOUNT_ID BASE_URL=http://localhost:8080 NODE_OPTIONS=\"--max-old-space-size=6144\" webpack serve --progress --config config/webpack.dev.js"
   },
   "dependencies": {
     "@blueprintjs/core": "3.26.1",
