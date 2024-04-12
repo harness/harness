@@ -21,8 +21,12 @@ import (
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 type ProviderInput struct {
@@ -64,6 +68,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 	repoIDs := make([]int64, len(remoteRepositories))
 	cloneURLs := make([]string, len(remoteRepositories))
+	repos := make([]*types.Repository, 0, len(remoteRepositories))
 
 	var space *types.Space
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
@@ -90,13 +95,19 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			if err != nil {
 				return fmt.Errorf("failed to create repository in storage: %w", err)
 			}
-
+			repos = append(repos, repo)
 			repoIDs[i] = repo.ID
 			cloneURLs[i] = remoteRepository.CloneURL
 		}
 
 		jobGroupID := fmt.Sprintf("space-import-%d", space.ID)
-		err = c.importer.RunMany(ctx, jobGroupID, provider, repoIDs, cloneURLs, in.Pipelines)
+		err = c.importer.RunMany(ctx,
+			jobGroupID,
+			provider,
+			repoIDs,
+			cloneURLs,
+			in.Pipelines,
+		)
 		if err != nil {
 			return fmt.Errorf("failed to start import repository jobs: %w", err)
 		}
@@ -105,6 +116,19 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	for _, repo := range repos {
+		err = c.auditService.Log(ctx,
+			session.Principal,
+			audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
+			audit.ActionCreated,
+			paths.Parent(repo.Path),
+			audit.WithNewObject(repo),
+		)
+		if err != nil {
+			log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)
+		}
 	}
 
 	return space, nil

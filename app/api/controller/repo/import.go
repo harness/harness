@@ -20,8 +20,12 @@ import (
 
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 type ImportInput struct {
@@ -77,7 +81,12 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			return fmt.Errorf("failed to create repository in storage: %w", err)
 		}
 
-		err = c.importer.Run(ctx, provider, repo, remoteRepository.CloneURL, in.Pipelines)
+		err = c.importer.Run(ctx,
+			provider,
+			repo,
+			remoteRepository.CloneURL,
+			in.Pipelines,
+		)
 		if err != nil {
 			return fmt.Errorf("failed to start import repository job: %w", err)
 		}
@@ -89,6 +98,17 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	}
 
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+
+	err = c.auditService.Log(ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
+		audit.ActionCreated,
+		paths.Parent(repo.Path),
+		audit.WithNewObject(repo),
+	)
+	if err != nil {
+		log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)
+	}
 
 	return repo, nil
 }

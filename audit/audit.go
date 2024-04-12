@@ -91,14 +91,16 @@ type DiffObject struct {
 }
 
 type Event struct {
-	ID         string
-	Timestamp  int64
-	Action     Action          // example: ActionCreated
-	User       types.Principal // example: Admin
-	SpacePath  string          // example: /root/projects
-	Resource   Resource
-	DiffObject DiffObject
-	Data       map[string]string // internal data like correlationID/requestID
+	ID            string
+	Timestamp     int64
+	Action        Action          // example: ActionCreated
+	User          types.Principal // example: Admin
+	SpacePath     string          // example: /root/projects
+	Resource      Resource
+	DiffObject    DiffObject
+	ClientIP      string
+	RequestMethod string
+	Data          map[string]string // internal data like correlationID/requestID
 }
 
 func (e *Event) Validate() error {
@@ -160,6 +162,18 @@ func WithNewObject(value any) FuncOption {
 func WithOldObject(value any) FuncOption {
 	return func(e *Event) {
 		e.DiffObject.OldObject = value
+	}
+}
+
+func WithClientIP(value string) FuncOption {
+	return func(e *Event) {
+		e.ClientIP = value
+	}
+}
+
+func WithRequestMethod(value string) FuncOption {
+	return func(e *Event) {
+		e.RequestMethod = value
 	}
 }
 

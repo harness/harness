@@ -225,7 +225,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, auditService)
 	pipelineController := pipeline.ProvideController(repoStore, triggerStore, authorizer, pipelineStore)
 	secretController := secret.ProvideController(encrypter, secretStore, authorizer, spaceStore)
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pipelineStore, repoStore)
