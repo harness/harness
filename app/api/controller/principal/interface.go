@@ -25,4 +25,5 @@ import (
 type Controller interface {
 	// List lists the principals based on the provided filter.
 	List(ctx context.Context, opts *types.PrincipalFilter) ([]*types.PrincipalInfo, error)
+	Find(ctx context.Context, principalID int64) (*types.PrincipalInfo, error)
 }

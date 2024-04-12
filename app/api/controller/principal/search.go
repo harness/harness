@@ -34,3 +34,12 @@ func (c controller) List(ctx context.Context, opts *types.PrincipalFilter) (
 
 	return pInfoUsers, nil
 }
+
+func (c controller) Find(ctx context.Context, principalID int64) (*types.PrincipalInfo, error) {
+	principal, err := c.principalStore.Find(ctx, principalID)
+	if err != nil {
+		return nil, err
+	}
+
+	return principal.ToPrincipalInfo(), nil
+}
