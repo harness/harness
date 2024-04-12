@@ -97,6 +97,9 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
             repoMetadata={repoMetadata}
             value={content}
             flag={flag}
+            targetGitRef={pullReqMetadata?.target_branch}
+            sourceGitRef={pullReqMetadata?.source_branch}
+            handleCopilotClick={handleCopilotClick}
             setFlag={setFlag}
             outlets={{
               [CommentBoxOutletPosition.START_OF_MARKDOWN_EDITOR_TOOLBAR]: (
@@ -125,7 +128,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
                         interactionKind: 'hover',
                         usePortal: true,
                         position: PopoverPosition.BOTTOM_LEFT,
-                        popoverClassName: cx(css.popover)
+                        popoverClassName: cx(css.popoverDescriptionbox)
                       }}
                     />
                   ) : null}

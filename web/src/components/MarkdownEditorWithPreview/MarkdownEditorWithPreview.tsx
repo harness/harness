@@ -270,7 +270,7 @@ export function MarkdownEditorWithPreview({
       }
       setFlag?.(false)
     }
-  }, [handleCopilotClick]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [handleCopilotClick, flag]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isEmpty(data)) {
