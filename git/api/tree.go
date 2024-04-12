@@ -237,6 +237,11 @@ func lsFile(
 
 // GetTreeNode returns the tree node at the given path as found for the provided reference.
 func (g *Git) GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (*TreeNode, error) {
+	return GetTreeNode(ctx, repoPath, rev, treePath)
+}
+
+// GetTreeNode returns the tree node at the given path as found for the provided reference.
+func GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (*TreeNode, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}

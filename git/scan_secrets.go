@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/sharedrepo"
 )
 
 type ScanSecretsParams struct {
@@ -39,20 +40,13 @@ func (s *Service) ScanSecrets(ctx context.Context, params *ScanSecretsParams) (*
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	// Create a directory for the temporary shared repository.
-	shared, err := api.NewSharedRepo(s.git, s.tmpDir, params.RepoUID, repoPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create shared repository: %w", err)
-	}
-	defer shared.Close(ctx)
+	var findings []api.Finding
 
-	// Create bare repository with alternates pointing to the original repository.
-	err = shared.InitAsSharedWithAlternates(ctx, params.AlternateObjectDirs...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create temp repo with alternates: %w", err)
-	}
-
-	findings, err := s.git.ScanSecrets(shared.RepoPath, params.BaseRev, params.Rev)
+	err := sharedrepo.Run(ctx, nil, s.tmpDir, repoPath, func(sharedRepo *sharedrepo.SharedRepo) error {
+		var err error
+		findings, err = s.git.ScanSecrets(sharedRepo.Directory(), params.BaseRev, params.Rev)
+		return err
+	}, params.AlternateObjectDirs...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get leaks on diff: %w", err)
 	}

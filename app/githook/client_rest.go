@@ -44,7 +44,7 @@ const (
 // RestClientFactory creates clients that make rest api calls to gitness to execute githooks.
 type RestClientFactory struct{}
 
-func (f *RestClientFactory) NewClient(_ context.Context, envVars map[string]string) (hook.Client, error) {
+func (f *RestClientFactory) NewClient(envVars map[string]string) (hook.Client, error) {
 	payload, err := hook.LoadPayloadFromMap[Payload](envVars)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load payload from provided map of environment variables: %w", err)

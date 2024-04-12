@@ -150,7 +150,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	storageStore := storage.ProvideLocalStore()
-	gitInterface, err := git.ProvideService(typesConfig, apiGit, storageStore)
+	gitInterface, err := git.ProvideService(typesConfig, apiGit, clientFactory, storageStore)
 	if err != nil {
 		return nil, err
 	}

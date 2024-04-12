@@ -61,30 +61,26 @@ func (c *Controller) PreReceive(
 		return output, nil
 	}
 
-	if in.Internal {
-		// It's an internal call, so no need to verify protection rules.
-		return output, nil
-	}
-
-	if c.blockPullReqRefUpdate(refUpdates) {
+	// For external calls (git pushes) block modification of pullreq references.
+	if !in.Internal && c.blockPullReqRefUpdate(refUpdates) {
 		output.Error = ptr.String(usererror.ErrPullReqRefsCantBeModified.Error())
 		return output, nil
 	}
 
-	// TODO: use store.PrincipalInfoCache once we abstracted principals.
-	principal, err := c.principalStore.Find(ctx, in.PrincipalID)
-	if err != nil {
-		return hook.Output{}, fmt.Errorf("failed to find inner principal with id %d: %w", in.PrincipalID, err)
-	}
+	// For internal calls - through the application interface (API) - no need to verify protection rules.
+	if !in.Internal {
+		// TODO: use store.PrincipalInfoCache once we abstracted principals.
+		principal, err := c.principalStore.Find(ctx, in.PrincipalID)
+		if err != nil {
+			return hook.Output{}, fmt.Errorf("failed to find inner principal with id %d: %w", in.PrincipalID, err)
+		}
 
-	dummySession := &auth.Session{
-		Principal: *principal,
-		Metadata:  nil,
-	}
+		dummySession := &auth.Session{Principal: *principal, Metadata: nil}
 
-	err = c.checkProtectionRules(ctx, dummySession, repo, refUpdates, &output)
-	if err != nil {
-		return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
+		err = c.checkProtectionRules(ctx, dummySession, repo, refUpdates, &output)
+		if err != nil {
+			return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
+		}
 	}
 
 	err = c.scanSecrets(ctx, rgit, repo, in, &output)

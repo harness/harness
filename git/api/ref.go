@@ -26,10 +26,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api/foreachref"
 	"github.com/harness/gitness/git/command"
-	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
-
-	"github.com/rs/zerolog/log"
 )
 
 // GitReferenceField represents the different fields available When listing references.
@@ -249,152 +246,29 @@ func (g *Git) GetRef(
 	return sha.New(output.String())
 }
 
-// UpdateRef allows to update / create / delete references
-// IMPORTANT provide full reference name to limit risk of collisions across reference types
-// (e.g `refs/heads/main` instead of `main`).
-func (g *Git) UpdateRef(
-	ctx context.Context,
-	envVars map[string]string,
-	repoPath string,
-	ref string,
-	oldValue sha.SHA,
-	newValue sha.SHA,
-) error {
-	if repoPath == "" {
-		return ErrRepositoryPathEmpty
-	}
+// GetReferenceFromBranchName assumes the provided value is the branch name (not the ref!)
+// and first sanitizes the branch name (remove any spaces or 'refs/heads/' prefix)
+// It then returns the full form of the branch reference.
+func GetReferenceFromBranchName(branchName string) string {
+	// remove spaces
+	branchName = strings.TrimSpace(branchName)
+	// remove `refs/heads/` prefix (shouldn't be there, but if it is remove it to try to avoid complications)
+	// NOTE: This is used to reduce missconfigurations via api
+	// TODO: block via CLI, too
+	branchName = strings.TrimPrefix(branchName, gitReferenceNamePrefixBranch)
 
-	// don't break existing interface - user calls with empty value to delete the ref.
-	if newValue.IsEmpty() {
-		newValue = sha.Nil
-	}
-
-	// if no old value was provided, use current value (as required for hooks)
-	// TODO: technically a delete could fail if someone updated the ref in the meanwhile.
-	//nolint:gocritic,nestif
-	if oldValue.IsEmpty() {
-		val, err := g.GetRef(ctx, repoPath, ref)
-		if errors.IsNotFound(err) {
-			// fail in case someone tries to delete a reference that doesn't exist.
-			if newValue.IsNil() {
-				return errors.NotFound("reference %q not found", ref)
-			}
-
-			oldValue = sha.Nil
-		} else if err != nil {
-			return fmt.Errorf("failed to get current value of reference: %w", err)
-		} else {
-			oldValue = val
-		}
-	}
-
-	err := g.updateRefWithHooks(
-		ctx,
-		envVars,
-		repoPath,
-		ref,
-		oldValue,
-		newValue,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to update reference with hooks: %w", err)
-	}
-
-	return nil
+	// return reference
+	return gitReferenceNamePrefixBranch + branchName
 }
 
-// updateRefWithHooks performs a git-ref update for the provided reference.
-// Requires both old and new value to be provided explcitly, or the call fails (ensures consistency across operation).
-// pre-receice will be called before the update, post-receive after.
-func (g *Git) updateRefWithHooks(
-	ctx context.Context,
-	envVars map[string]string,
-	repoPath string,
-	ref string,
-	oldValue sha.SHA,
-	newValue sha.SHA,
-) error {
-	if repoPath == "" {
-		return ErrRepositoryPathEmpty
-	}
+func GetReferenceFromTagName(tagName string) string {
+	// remove spaces
+	tagName = strings.TrimSpace(tagName)
+	// remove `refs/heads/` prefix (shouldn't be there, but if it is remove it to try to avoid complications)
+	// NOTE: This is used to reduce missconfigurations via api
+	// TODO: block via CLI, too
+	tagName = strings.TrimPrefix(tagName, gitReferenceNamePrefixTag)
 
-	if oldValue.IsEmpty() {
-		return fmt.Errorf("oldValue can't be empty")
-	}
-	if newValue.IsEmpty() {
-		return fmt.Errorf("newValue can't be empty")
-	}
-	if oldValue.IsNil() && newValue.IsNil() {
-		return fmt.Errorf("provided values cannot be both empty")
-	}
-
-	githookClient, err := g.githookFactory.NewClient(ctx, envVars)
-	if err != nil {
-		return fmt.Errorf("failed to create githook client: %w", err)
-	}
-
-	// call pre-receive before updating the reference
-	out, err := githookClient.PreReceive(ctx, hook.PreReceiveInput{
-		RefUpdates: []hook.ReferenceUpdate{
-			{
-				Ref: ref,
-				Old: oldValue,
-				New: newValue,
-			},
-		},
-		Environment: hook.Environment{
-			// TODO: Update once we properly copy quarantine objects only after pre-receive.
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("pre-receive call failed with: %w", err)
-	}
-	if out.Error != nil {
-		return fmt.Errorf("pre-receive call returned error: %q", *out.Error)
-	}
-
-	if g.traceGit {
-		log.Ctx(ctx).Trace().
-			Str("git", "pre-receive").
-			Msgf("pre-receive call succeeded with output:\n%s", strings.Join(out.Messages, "\n"))
-	}
-
-	cmd := command.New("update-ref")
-	if newValue.IsNil() {
-		cmd.Add(command.WithFlag("-d", ref))
-	} else {
-		cmd.Add(command.WithArg(ref, newValue.String()))
-	}
-
-	cmd.Add(command.WithArg(oldValue.String()))
-	err = cmd.Run(ctx, command.WithDir(repoPath))
-	if err != nil {
-		return processGitErrorf(err, "update of ref %q from %q to %q failed", ref, oldValue, newValue)
-	}
-
-	// call post-receive after updating the reference
-	out, err = githookClient.PostReceive(ctx, hook.PostReceiveInput{
-		RefUpdates: []hook.ReferenceUpdate{
-			{
-				Ref: ref,
-				Old: oldValue,
-				New: newValue,
-			},
-		},
-		Environment: hook.Environment{},
-	})
-	if err != nil {
-		return fmt.Errorf("post-receive call failed with: %w", err)
-	}
-	if out.Error != nil {
-		return fmt.Errorf("post-receive call returned error: %q", *out.Error)
-	}
-
-	if g.traceGit {
-		log.Ctx(ctx).Trace().
-			Str("git", "post-receive").
-			Msgf("post-receive call succeeded with output:\n%s", strings.Join(out.Messages, "\n"))
-	}
-
-	return nil
+	// return reference
+	return gitReferenceNamePrefixTag + tagName
 }

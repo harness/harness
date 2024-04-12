@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/check"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
@@ -101,20 +102,20 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get target commit: %w", err)
 	}
+
 	branchRef := api.GetReferenceFromBranchName(params.BranchName)
-	err = s.git.UpdateRef(
-		ctx,
-		params.EnvVars,
-		repoPath,
-		branchRef,
-		sha.Nil, // we want to make sure we don't overwrite any parallel create
-		targetCommit.SHA,
-	)
+
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, branchRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ref updater to create the branch: %w", err)
+	}
+
+	err = refUpdater.Do(ctx, sha.Nil, targetCommit.SHA)
 	if errors.IsConflict(err) {
 		return nil, errors.Conflict("branch %q already exists", params.BranchName)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to update branch reference: %w", err)
+		return nil, fmt.Errorf("failed to create branch reference: %w", err)
 	}
 
 	commit, err := mapCommit(targetCommit)
@@ -162,14 +163,12 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 	branchRef := api.GetReferenceFromBranchName(params.BranchName)
 
-	err := s.git.UpdateRef(
-		ctx,
-		params.EnvVars,
-		repoPath,
-		branchRef,
-		sha.None, // delete whatever is there
-		sha.Nil,
-	)
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, branchRef)
+	if err != nil {
+		return fmt.Errorf("failed to create ref updater to create the branch: %w", err)
+	}
+
+	err = refUpdater.Do(ctx, sha.None, sha.Nil) // delete whatever is there
 	if errors.IsNotFound(err) {
 		return errors.NotFound("branch %q does not exist", params.BranchName)
 	}

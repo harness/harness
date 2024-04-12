@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -62,7 +63,7 @@ func (r *Repository) processPipelines(ctx context.Context,
 			Action:  git.CreateAction,
 			Path:    file.ConvertedPath,
 			Payload: file.Content,
-			SHA:     "",
+			SHA:     sha.None,
 		}
 	}
 

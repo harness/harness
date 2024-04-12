@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/storage"
 	"github.com/harness/gitness/git/types"
 )
@@ -30,17 +31,19 @@ const (
 )
 
 type Service struct {
-	reposRoot      string
-	tmpDir         string
-	git            *api.Git
-	store          storage.Store
-	gitHookPath    string
-	reposGraveyard string
+	reposRoot         string
+	tmpDir            string
+	git               *api.Git
+	hookClientFactory hook.ClientFactory
+	store             storage.Store
+	gitHookPath       string
+	reposGraveyard    string
 }
 
 func New(
 	config types.Config,
 	adapter *api.Git,
+	hookClientFactory hook.ClientFactory,
 	storage storage.Store,
 ) (*Service, error) {
 	// Create repos folder
@@ -60,11 +63,12 @@ func New(
 		}
 	}
 	return &Service{
-		reposRoot:      reposRoot,
-		tmpDir:         config.TmpDir,
-		reposGraveyard: reposGraveyard,
-		git:            adapter,
-		store:          storage,
-		gitHookPath:    config.HookPath,
+		reposRoot:         reposRoot,
+		tmpDir:            config.TmpDir,
+		reposGraveyard:    reposGraveyard,
+		git:               adapter,
+		hookClientFactory: hookClientFactory,
+		store:             storage,
+		gitHookPath:       config.HookPath,
 	}, nil
 }
