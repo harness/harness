@@ -63,11 +63,10 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
 
   useEffect(() => {
     setEdit(!pullReqMetadata?.description?.length)
-
     if (pullReqMetadata?.description) {
       setContent(pullReqMetadata?.description)
     }
-  }, [pullReqMetadata?.description, pullReqMetadata?.description?.length, content, setContent])
+  }, [pullReqMetadata?.description, pullReqMetadata?.description?.length])
 
   // write the above function handleCopilotClick in a callback
   const handleCopilotClick = useCallback(() => {
