@@ -13,22 +13,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/*
-  NOTE: This file is loaded only in standalone mode. In embedded mode,
-  the shared styles are loaded by Harness Platform already.
-*/
-
-@import '~normalize.css';
-@import '~@blueprintjs/core/lib/css/blueprint.css';
-@import '~@blueprintjs/datetime/lib/css/blueprint-datetime.css';
-
-html,
-body,
-#react-root {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  background-color: var(--white);
-}
+@import '~@harnessio/design-system/dist/style.css';
+@import '~@harnessio/uicore/dist/index.css';

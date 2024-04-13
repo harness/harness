@@ -1630,20 +1630,20 @@
   resolved "https://registry.yarnpkg.com/@exodus/schemasafe/-/schemasafe-1.0.0.tgz#f44e252665b1a6bdef0d686e22af3599a6f0a095"
   integrity sha512-2cyupPIZI69HQxEAPllLXBjQp4njDKkOjYRCYxvMZe3/LY9pp9fBM3Tb1wiFAdP6Emo4v3OEbCLGj6u73Q5KLw==
 
-"@harnessio/design-system@^1.6.0-beta.1":
-  version "1.6.0-beta.1"
-  resolved "https://registry.npmjs.org/@harnessio/design-system/-/design-system-1.6.0-beta.1.tgz#9a0c45607ba3e7f32b61db87d44533a204d1fbaf"
-  integrity sha512-JOsVgj1ecqqWQL/j+WULSxO3GxcrLdBE00cKUUdhLnGjBQ29bO6o1JRLKyJMKfVitgiUVnK9QtqD+4WWfBQHdg==
+"@harnessio/design-system@^2.1.1":
+  version "2.1.1"
+  resolved "https://registry.npmjs.org/@harnessio/design-system/-/design-system-2.1.1.tgz#2da3036602ed9b9446d8139c72009e6dc1e25642"
+  integrity sha512-ZwAGM1srOZ49/6YkwyjkczUv4v91CN0rCecRYnV3/g+xdSV5ycrUvkJjl9nHub6jw2eCGC0GdyNgAtAJnLmGfQ==
 
-"@harnessio/icons@^2.0.0-beta.2":
-  version "2.0.0-beta.2"
-  resolved "https://registry.npmjs.org/@harnessio/icons/-/icons-2.0.0-beta.2.tgz#82c9602e44d3eccadc8b393ba58c4714aa829846"
-  integrity sha512-SAA/gDHdb8gNx2LnGgdFwcmJJETyYL2b7DzUSQL3HRZ9Ha3zfhfwAdpErFETpfF5maxfr2rHr8WbDPF69RchlQ==
+"@harnessio/icons@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.npmjs.org/@harnessio/icons/-/icons-2.1.0.tgz#9d93d5a4080e76d4f1b435ca2d28266d0ba936d0"
+  integrity sha512-9DFu0v+Q0nx2HeJb7lWaWA6lnokSPcAKnjBDi87BWaY6SXbCn8Tk5wqWSnv/V2Xmn05iN89hjnuAjOhTuSpxXA==
 
-"@harnessio/uicore@^4.0.0-beta.1a":
-  version "4.0.0-beta.1a"
-  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.0.0-beta.1a.tgz#530d9b859795f2d4048c20c63fa97b6d244a5211"
-  integrity sha512-243zY+ClWj7/LSvbd+7f1qWOP/OALr6KgH7uqNoeVSHIAqNN/8pX9wkovH4AMnH3CPfcb+VTP4mGOMNSh5m1Vg==
+"@harnessio/uicore@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.1.0.tgz#e7b18ce59ddbde07441b9a5da8250b0cdd35f91e"
+  integrity sha512-NUJt5ZD3PP55QR9mLhvRCn2uUhy18uY+Lv9z5J37Hoc+e5DVtnp6FG/ZNvqPpSXnnvQ3bFGElf8AD4bJmIs9Hg==
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
