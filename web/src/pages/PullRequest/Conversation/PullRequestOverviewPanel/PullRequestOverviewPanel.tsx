@@ -165,7 +165,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
 
         <PullRequestPanelSections
           outlets={{
-            [PanelSectionOutletPosition.CHANGES]: (
+            [PanelSectionOutletPosition.CHANGES]: !pullReqMetadata.merged && (
               <ChangesSection
                 pullReqMetadata={pullReqMetadata}
                 repoMetadata={repoMetadata}
@@ -194,7 +194,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
             ),
             [PanelSectionOutletPosition.MERGEABILITY]: (
               <Container className={cx(css.sectionContainer, css.borderRadius)}>
-                <MergeSection unchecked={unchecked} mergeable={mergeable} />
+                <MergeSection pullReqMetadata={pullReqMetadata} unchecked={unchecked} mergeable={mergeable} />
               </Container>
             )
           }}

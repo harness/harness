@@ -2,6 +2,7 @@ import React from 'react'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Container, Layout, Text } from '@harnessio/uicore'
 import { Images } from 'images'
+import type { TypesPullReq } from 'services/code'
 import { useStrings } from 'framework/strings'
 import Success from '../../../../../icons/code-success.svg?url'
 import Fail from '../../../../../icons/code-fail.svg?url'
@@ -10,10 +11,11 @@ import css from '../PullRequestOverviewPanel.module.scss'
 interface MergeSectionProps {
   mergeable: boolean
   unchecked: boolean
+  pullReqMetadata: TypesPullReq
 }
 
 const MergeSection = (props: MergeSectionProps) => {
-  const { mergeable, unchecked } = props
+  const { mergeable, unchecked, pullReqMetadata } = props
   const { getString } = useStrings()
 
   return (
@@ -48,7 +50,7 @@ const MergeSection = (props: MergeSectionProps) => {
               color={mergeable ? Color.GREEN_800 : Color.GREY_450}
               font={{ variation: FontVariation.BODY }}
               padding={{ left: 'medium' }}>
-              {getString(mergeable ? 'prHasNoConflicts' : 'pr.cantBeMerged')}
+              {getString(mergeable ? 'prHasNoConflicts' : 'pr.cantBeMerged', { name: pullReqMetadata?.target_branch })}
             </Text>
           </Layout.Vertical>
         )}

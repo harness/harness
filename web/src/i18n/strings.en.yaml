@@ -247,7 +247,7 @@ pr:
   expandFullFile: Expand all
   collapseFullFile: Collapse expanded lines
   ableToMerge: Able to merge.
-  cantBeMerged: This branch has conflicts with the base branch.
+  cantBeMerged: This branch has conflicts with the {{name}} branch.
   cantMerge: Can't be merged. You can still create the pull request.
   failedToCreate: Failed to create Pull Request.
   titlePlaceHolder: Enter the pull request title
@@ -976,7 +976,7 @@ codeOwner:
   changesRequested: '{count} {count|1:change,changes} requested'
   waitToApprove: '{count} pending {count|1:approval,approvals} '
   approvalCompleted: '{count}/{total} approvals completed'
-  pendingLatestApprovals: '{count} approvals pending on latest changes'
+  pendingLatestApprovals: '{count} {count|1:approval,approvals} pending on latest changes'
 approved: Approved
 comingSoon: Coming soon...
 enterANumber: Enter a number
@@ -1023,7 +1023,7 @@ customizeMergeCommitMessage: Customize merge commit message
 mergeStrategy: Merge strategy
 selectMergeStrat: Select merge strategy
 writeDownCommit: Write down commit message here
-prHasNoConflicts: This branch has no conflicts with base branch
+prHasNoConflicts: This branch has no conflicts with {{name}} branch
 checkStatus:
   succeeded: Succeeded in {time}
   failed: Failed in {time}
