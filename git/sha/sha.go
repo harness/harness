@@ -23,6 +23,8 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/errors"
+
+	"github.com/swaggest/jsonschema-go"
 )
 
 // EmptyTree is the SHA of an empty tree.
@@ -117,4 +119,13 @@ func Must(value string) SHA {
 		panic("invalid SHA" + err.Error())
 	}
 	return sha
+}
+
+func (s SHA) JSONSchema() (jsonschema.Schema, error) {
+	var schema jsonschema.Schema
+
+	schema.AddType(jsonschema.String)
+	schema.WithDescription("Git object hash")
+
+	return schema, nil
 }
