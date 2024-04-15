@@ -45,6 +45,7 @@ type SHA struct {
 	str string
 }
 
+// New creates and validates SHA from the value.
 func New(value string) (SHA, error) {
 	value = strings.TrimSpace(value)
 	value = strings.ToLower(value)
@@ -54,6 +55,15 @@ func New(value string) (SHA, error) {
 	return SHA{
 		str: value,
 	}, nil
+}
+
+// NewOrEmpty returns None if value is empty otherwise it will try to create
+// and validate new SHA object.
+func NewOrEmpty(value string) (SHA, error) {
+	if value == "" {
+		return None, nil
+	}
+	return New(value)
 }
 
 func (s SHA) GobEncode() ([]byte, error) {
@@ -113,6 +123,7 @@ func (s SHA) Equal(val SHA) bool {
 	return s.str == val.str
 }
 
+// Must returns sha if there is an error it will panic.
 func Must(value string) SHA {
 	sha, err := New(value)
 	if err != nil {
