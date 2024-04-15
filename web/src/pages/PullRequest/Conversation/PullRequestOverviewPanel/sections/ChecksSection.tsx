@@ -351,7 +351,7 @@ const StatusCircle = ({
         <CircleSegment
           radius={radius}
           stroke={stroke}
-          color="blue"
+          color="#0092e4"
           strokeDasharray={`${runningPercentage} ${circumference}`}
           offset={-(failedPercentage + pendingPercentage)}
         />

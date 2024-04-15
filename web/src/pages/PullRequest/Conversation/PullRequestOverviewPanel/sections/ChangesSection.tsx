@@ -324,10 +324,12 @@ const ChangesSection = (props: ChangesSectionProps) => {
   }
   const viewBtn =
     minApproval > minReqLatestApproval ||
-    (approvedEvaluations && minReqLatestApproval === 0) ||
+    (!isEmpty(approvedEvaluations) && minReqLatestApproval === 0) ||
+    (minApproval > 0 && minReqLatestApproval === undefined) ||
     minReqLatestApproval > 0 ||
     !isEmpty(changeReqEvaluations) ||
-    !isEmpty(codeOwners)
+    !isEmpty(codeOwners) ||
+    false
 
   return (
     <Render when={!loading && status}>
@@ -376,58 +378,60 @@ const ChangesSection = (props: ChangesSectionProps) => {
 
       <Render when={isExpanded}>
         <Container className={css.greyContainer}>
-          {(minApproval > minReqLatestApproval || (approvedEvaluations && minReqLatestApproval === 0)) && (
-            <Container padding={{ left: 'xlarge', right: 'small' }} className={css.borderContainer}>
-              <Layout.Horizontal
-                className={css.paddingContainer}
-                flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                {approvedEvaluations && minApproval < approvedEvaluations?.length ? (
-                  <Text
-                    icon="tick-circle"
-                    iconProps={{ size: 16, color: Color.GREEN_700 }}
-                    padding={{
-                      left: 'medium'
-                    }}>
+          {minApproval > minReqLatestApproval ||
+            (!isEmpty(approvedEvaluations) && minReqLatestApproval === 0) ||
+            (minApproval > 0 && minReqLatestApproval === undefined && (
+              <Container padding={{ left: 'xlarge', right: 'small' }} className={css.borderContainer}>
+                <Layout.Horizontal
+                  className={css.paddingContainer}
+                  flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                  {approvedEvaluations && minApproval < approvedEvaluations?.length ? (
                     <Text
-                      className={css.sectionSubheader}
+                      icon="tick-circle"
+                      iconProps={{ size: 16, color: Color.GREEN_700 }}
                       padding={{
                         left: 'medium'
                       }}>
-                      {
-                        stringSubstitute(getString('changesSection.changesApprovedByXReviewers'), {
-                          length: approvedEvaluations?.length || '0'
-                        }) as string
-                      }
+                      <Text
+                        className={css.sectionSubheader}
+                        padding={{
+                          left: 'medium'
+                        }}>
+                        {
+                          stringSubstitute(getString('changesSection.changesApprovedByXReviewers'), {
+                            length: approvedEvaluations?.length || '0'
+                          }) as string
+                        }
+                      </Text>
                     </Text>
-                  </Text>
-                ) : (
-                  <Layout.Horizontal>
-                    <Container padding={{ left: 'medium' }}>
-                      <img alt="emptyStatus" width={16} height={16} src={emptyStatus} />
-                    </Container>
+                  ) : (
+                    <Layout.Horizontal>
+                      <Container padding={{ left: 'medium' }}>
+                        <img alt="emptyStatus" width={16} height={16} src={emptyStatus} />
+                      </Container>
 
-                    <Text
-                      className={css.sectionSubheader}
-                      padding={{
-                        left: 'large'
-                      }}>
-                      {
-                        stringSubstitute(getString('codeOwner.approvalCompleted'), {
-                          count: approvedEvaluations?.length || '0',
-                          total: minApproval
-                        }) as string
-                      }
-                    </Text>
-                  </Layout.Horizontal>
-                )}
-                <Container margin={{ bottom: `2px` }} padding={{ right: 'xlarge' }}>
-                  <Container className={css.requiredContainer}>
-                    <Text className={css.requiredText}>{getString('required')}</Text>
+                      <Text
+                        className={css.sectionSubheader}
+                        padding={{
+                          left: 'large'
+                        }}>
+                        {
+                          stringSubstitute(getString('codeOwner.approvalCompleted'), {
+                            count: approvedEvaluations?.length || '0',
+                            total: minApproval
+                          }) as string
+                        }
+                      </Text>
+                    </Layout.Horizontal>
+                  )}
+                  <Container margin={{ bottom: `2px` }} padding={{ right: 'xlarge' }}>
+                    <Container className={css.requiredContainer}>
+                      <Text className={css.requiredText}>{getString('required')}</Text>
+                    </Container>
                   </Container>
-                </Container>
-              </Layout.Horizontal>
-            </Container>
-          )}
+                </Layout.Horizontal>
+              </Container>
+            ))}
           {minReqLatestApproval > 0 && (
             <Container padding={{ left: 'xlarge', right: 'small' }} className={css.borderContainer}>
               <Layout.Horizontal
