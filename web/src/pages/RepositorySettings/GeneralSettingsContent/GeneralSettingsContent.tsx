@@ -52,10 +52,11 @@ interface GeneralSettingsProps {
   repoMetadata: TypesRepository | undefined
   refetch: () => void
   gitRef: string
+  isRepositoryEmpty: boolean
 }
 
 const GeneralSettingsContent = (props: GeneralSettingsProps) => {
-  const { repoMetadata, refetch, gitRef } = props
+  const { repoMetadata, refetch, gitRef, isRepositoryEmpty } = props
   const { openModal: openDeleteRepoModal } = useDeleteRepoModal()
   const [currentGitRef, setCurrentGitRef] = useState(gitRef)
   const [editDesc, setEditDesc] = useState(ACCESS_MODES.VIEW)
@@ -258,6 +259,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                       <BranchTagSelect
                         forBranchesOnly={true}
                         disableBranchCreation={true}
+                        disableViewAllBranches={isRepositoryEmpty}
                         disabled={defaultBranch !== ACCESS_MODES.EDIT}
                         hidePopoverContent={defaultBranch !== ACCESS_MODES.EDIT}
                         repoMetadata={repoMetadata}
