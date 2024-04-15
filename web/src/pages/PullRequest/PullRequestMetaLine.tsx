@@ -34,7 +34,8 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
   target_branch,
   source_branch,
   author,
-  edited,
+  created,
+  merged,
   state,
   is_draft,
   stats
@@ -42,6 +43,7 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const vars = {
+    state: state,
     user: <strong>{author?.display_name || author?.email || ''}</strong>,
     commits: <strong>{stats?.commits}</strong>,
     commitsCount: stats?.commits,
@@ -60,7 +62,6 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
       />
     )
   }
-
   return (
     <Container padding={{ left: 'xlarge' }} className={css.main}>
       <Layout.Horizontal spacing="small" className={css.layout}>
@@ -71,7 +72,7 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
 
         <PipeSeparator height={9} />
         <TimePopoverWithLocal
-          time={defaultTo(edited, 0)}
+          time={defaultTo(merged ? merged : created, 0)}
           inline={false}
           className={cx(css.metaline, css.time)}
           font={{ variation: FontVariation.TINY }}

@@ -165,7 +165,7 @@ export default function PullRequests() {
                           <StringSubstitute
                             str={getString('pr.statusLine')}
                             vars={{
-                              state: <strong className={css.state}>{row.original.state}</strong>,
+                              state: row.original.state,
                               number: <Text inline>{row.original.number}</Text>,
                               time: (
                                 <strong>
