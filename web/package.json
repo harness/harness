@@ -45,7 +45,7 @@
     "@codemirror/view": "^6.9.6",
     "@harnessio/design-system": "^2.1.1",
     "@harnessio/icons": "^2.1.0",
-    "@harnessio/uicore": "^4.1.0",
+    "@harnessio/uicore": "^4.1.1",
     "@types/dompurify": "^3.0.2",
     "@types/react-monaco-editor": "^0.16.0",
     "@uiw/codemirror-extensions-color": "^4.19.9",

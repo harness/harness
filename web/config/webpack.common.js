@@ -16,12 +16,12 @@
 
 const path = require('path')
 
-const webpack = require('webpack')
 const {
   container: { ModuleFederationPlugin },
   DefinePlugin
 } = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const HTMLWebpackPlugin = require('html-webpack-plugin')
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin')
 const GenerateStringTypesPlugin = require('../scripts/webpack/GenerateStringTypesPlugin').GenerateStringTypesPlugin
 const { RetryChunkLoadPlugin } = require('webpack-retry-chunk-load-plugin')
@@ -42,9 +42,9 @@ module.exports = {
   },
   output: {
     publicPath: 'auto',
-    filename: DEV ? 'static/[name].js' : 'static/[name].[contenthash:6].js',
-    chunkFilename: DEV ? 'static/[name].[id].js' : 'static/[name].[id].[contenthash:6].js',
-    pathinfo: false
+    pathinfo: false,
+    filename: '[name].[contenthash:6].js',
+    chunkFilename: '[name].[id].[contenthash:6].js'
   },
   module: {
     rules: [
@@ -168,6 +168,17 @@ module.exports = {
             loader: 'file-loader'
           }
         ]
+      },
+      {
+        test: /\.md$/,
+        use: [
+          {
+            loader: 'raw-loader',
+            options: {
+              esModule: false
+            }
+          }
+        ]
       }
     ]
   },
@@ -176,6 +187,18 @@ module.exports = {
     plugins: [new TsconfigPathsPlugin()]
   },
   plugins: [
+    new MiniCssExtractPlugin({
+      ignoreOrder: true,
+      filename: '[name].[contenthash:6].css',
+      chunkFilename: '[name].[id].[contenthash:6].css'
+    }),
+    new HTMLWebpackPlugin({
+      template: 'src/index.html',
+      filename: 'index.html',
+      favicon: 'src/favicon.svg',
+      minify: false,
+      templateParameters: {}
+    }),
     new ModuleFederationPlugin(moduleFederationConfig),
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core

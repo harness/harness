@@ -15,7 +15,7 @@
  */
 
 const packageJSON = require('../package.json')
-const { pick, omit, mapValues } = require('lodash')
+const { pick, mapValues } = require('lodash')
 
 /**
  * These packages must be stricly shared with exact versions

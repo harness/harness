@@ -1640,10 +1640,10 @@
   resolved "https://registry.npmjs.org/@harnessio/icons/-/icons-2.1.0.tgz#9d93d5a4080e76d4f1b435ca2d28266d0ba936d0"
   integrity sha512-9DFu0v+Q0nx2HeJb7lWaWA6lnokSPcAKnjBDi87BWaY6SXbCn8Tk5wqWSnv/V2Xmn05iN89hjnuAjOhTuSpxXA==
 
-"@harnessio/uicore@^4.1.0":
-  version "4.1.0"
-  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.1.0.tgz#e7b18ce59ddbde07441b9a5da8250b0cdd35f91e"
-  integrity sha512-NUJt5ZD3PP55QR9mLhvRCn2uUhy18uY+Lv9z5J37Hoc+e5DVtnp6FG/ZNvqPpSXnnvQ3bFGElf8AD4bJmIs9Hg==
+"@harnessio/uicore@^4.1.1":
+  version "4.1.1"
+  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.1.1.tgz#958e7109489d7551fa3b6a01cbd2286479c61701"
+  integrity sha512-uR88UW+ZN8n9yzxTnGp4bmmdR6eJacgsBfW5K3N7WQ3ISAmMB09842w2Y6sFiDUD8+RB4UqlOuBrjVUmrZroVg==
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
