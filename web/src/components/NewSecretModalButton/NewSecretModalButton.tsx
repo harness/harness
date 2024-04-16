@@ -38,6 +38,7 @@ import { useStrings } from 'framework/strings'
 import type { OpenapiCreateSecretRequest, TypesSecret } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import css from './NewSecretModalButton.module.scss'
+import Config from 'Config'
 
 export interface SecretFormData {
   value: string
@@ -144,7 +145,7 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
                       tooltipProps={{
                         dataTooltipId: 'secretDescriptionTextField'
                       }}
-                      maxLength={5000000}
+                      maxLength={Config.SECRET_LIMIT_IN_BYTES}
                       autoComplete="off"
                       className={formik.values.showValue ? css.showValue : css.hideValue}
                     />
