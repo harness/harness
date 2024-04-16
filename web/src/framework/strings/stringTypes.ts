@@ -259,6 +259,8 @@ export interface StringsMap {
   emptyRepoInclude: string
   emptySpaceText: string
   enableAIDAMessage: string
+  enableAIDAPRDescription: string
+  enableAIDAPRMessange: string
   enableAISearch: string
   enableSSLVerification: string
   enableWebhookContent: string
@@ -344,6 +346,7 @@ export interface StringsMap {
   generateCloneCred: string
   generateCloneText: string
   generateHelptext: string
+  generateSummary: string
   getMyCloneTitle: string
   gitIgnore: string
   gitness: string
@@ -411,6 +414,7 @@ export interface StringsMap {
   'importSpace.title': string
   in: string
   inactiveBranches: string
+  invalidResponse: string
   isRequired: string
   key: string
   'keywordSearch.sampleQueries.searchForClass': string

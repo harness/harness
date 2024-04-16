@@ -33,7 +33,7 @@ import {
 import { Color, FontVariation } from '@harnessio/design-system'
 import { PopoverPosition } from '@blueprintjs/core'
 import cx from 'classnames'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory, useParams } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -63,10 +63,21 @@ import { CompareContentHeader, PRCreationType } from './CompareContentHeader/Com
 import { CompareCommits } from './CompareCommits'
 import css from './Compare.module.scss'
 
+interface Identifier {
+  accountId: string
+  orgIdentifier: string
+  projectIdentifier: string
+}
+
 export default function Compare() {
-  const { routes, standalone, hooks, routingId } = useAppContext()
+  const { routes, standalone, hooks, routingId, defaultSettingsURL } = useAppContext()
   const [flag, setFlag] = useState(false)
   const { SEMANTIC_SEARCH_ENABLED } = hooks?.useFeatureFlags()
+  const { orgIdentifier, projectIdentifier } = useParams<Identifier>()
+  const { data: aidaSettingResponse, loading: isAidaSettingLoading } = hooks?.useGetSettingValue({
+    identifier: 'aida',
+    queryParams: { accountIdentifier: routingId, orgIdentifier, projectIdentifier }
+  })
   const { getString } = useStrings()
   const history = useHistory()
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
@@ -304,7 +315,10 @@ export default function Compare() {
                               outlets={{
                                 [CommentBoxOutletPosition.START_OF_MARKDOWN_EDITOR_TOOLBAR]: (
                                   <>
-                                    {SEMANTIC_SEARCH_ENABLED && !standalone ? (
+                                    {!isAidaSettingLoading &&
+                                    aidaSettingResponse?.data?.value == 'true' &&
+                                    SEMANTIC_SEARCH_ENABLED &&
+                                    !standalone ? (
                                       <Button
                                         size={ButtonSize.SMALL}
                                         variation={ButtonVariation.ICON}
@@ -338,6 +352,31 @@ export default function Compare() {
                                 )
                               }}
                             />
+                            {aidaSettingResponse?.data?.value != 'true' &&
+                              SEMANTIC_SEARCH_ENABLED &&
+                              !isAidaSettingLoading && (
+                                <Container
+                                  background={Color.AI_PURPLE_50}
+                                  padding="small"
+                                  margin={{ top: 'xsmall', right: 'small', left: 'xsmall' }}>
+                                  <Text
+                                    font={{ variation: FontVariation.BODY2 }}
+                                    margin={{ bottom: 'small' }}
+                                    icon="info-messaging"
+                                    iconProps={{ size: 15 }}>
+                                    {getString('enableAIDAPRDescription')}
+                                  </Text>
+                                  <Text
+                                    font={{ variation: FontVariation.BODY2_SEMI }}
+                                    margin={{ bottom: 'small' }}
+                                    color={Color.GREY_450}>
+                                    {getString('enableAIDAPRMessange')}
+                                  </Text>
+                                  <Link to={defaultSettingsURL} color={Color.AI_PURPLE_800}>
+                                    {getString('reviewProjectSettings')}
+                                  </Link>
+                                </Container>
+                              )}
                           </Layout.Vertical>
                         </Container>
                       </Layout.Vertical>

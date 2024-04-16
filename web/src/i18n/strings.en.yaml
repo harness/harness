@@ -735,6 +735,8 @@ viewFile: View File
 searchResult: 'Search Result {count}'
 aiSearch: AIDA SEARCH
 enableAISearch: Enable AI Search
+enableAIDAPRDescription: Auto generate PR description
+enableAIDAPRMessange: To generate a PR description using Harness AIDA, you need to enable it in the Project Settings.
 enableAIDAMessage: In order to use Harness AIDA Search, you will need to enable it in the Project Settings
 reviewProjectSettings: Review Project Settings
 turnOnSemanticSearch: Turn on semantic search
@@ -745,7 +747,6 @@ keywordSearch:
     searchForFilesWithCMD: Search for class in files starting with cmd
     searchForPattern: Include only results from file paths matching the given search pattern
     searchForInitialCommit: Search for exact phrase initial commit
-
 keywordSearchPlaceholder: Search for code or files...
 codeSearch: Code Search
 codeSearchModal: Begin search by describing what you are looking for
@@ -1005,6 +1006,8 @@ reqChanges: 'Request changes'
 summary: Summary
 prGenSummary: AIDA generate PR summary, insert at the cursor or replace selected text only.
 aidaGenSummary: 'AIDA is generating a summary...'
+generateSummary: Generate PR Summary
+invalidResponse: Invalid summary response generated
 importFailed: Import Failed
 uploadAFileError: There is no image or video uploaded. Please upload an image or video.
 securitySettings:

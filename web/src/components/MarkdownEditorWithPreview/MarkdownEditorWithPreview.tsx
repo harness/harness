@@ -32,8 +32,9 @@ import cx from 'classnames'
 import { DecorationSet, EditorView, Decoration, keymap } from '@codemirror/view'
 import { undo, redo, history } from '@codemirror/commands'
 import { EditorSelection, StateEffect, StateField } from '@codemirror/state'
-import { isEmpty } from 'lodash-es'
+import { isEmpty, isString } from 'lodash-es'
 import { useMutate } from 'restful-react'
+import { useAppContext } from 'AppContext'
 import { Editor } from 'components/Editor/Editor'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
@@ -46,6 +47,8 @@ import {
   removeSpecificTextOptimized
 } from 'utils/Utils'
 import { decodeGitContent, handleUpload, normalizeGitRef } from 'utils/GitUtils'
+import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
+import { AidaClient } from 'utils/types'
 import type { TypesRepository } from 'services/code'
 import { useEventListener } from 'hooks/useEventListener'
 import css from './MarkdownEditorWithPreview.module.scss'
@@ -179,6 +182,8 @@ export function MarkdownEditorWithPreview({
   const [file, setFile] = useState<File>()
   const { showError } = useToaster()
   const [markdownContent, setMarkdownContent] = useState('')
+  const { customComponents } = useAppContext()
+  const AIDAFeedback = customComponents?.UsefulOrNot ? customComponents.UsefulOrNot : defaultUsefulOrNot
   const { mutate } = useMutate({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata?.path}/+/genai/change-summary`
@@ -224,7 +229,7 @@ export function MarkdownEditorWithPreview({
   )
 
   useEventListener('mousedown', handleMouseDown)
-
+  const [generating, setGenerating] = useState<boolean>(false)
   const dispatchContent = (content: string, userEvent: boolean, decoration = false) => {
     const view = viewRef.current
     const { from, to } = view?.state.selection.main ?? { from: 0, to: 0 }
@@ -256,12 +261,14 @@ export function MarkdownEditorWithPreview({
   useEffect(() => {
     if (flag) {
       if (handleCopilotClick) {
+        setGenerating(true)
         dispatchContent(getString('aidaGenSummary'), false, true)
         mutate({
           head_ref: normalizeGitRef(sourceGitRef),
           base_ref: normalizeGitRef(targetGitRef)
         })
           .then(res => {
+            setGenerating(false)
             setData(res.summary || '')
           })
           .catch(err => {
@@ -634,6 +641,20 @@ export function MarkdownEditorWithPreview({
             {!hideCancel && <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={i18n.cancel} />}
           </Layout.Horizontal>
         </Container>
+      )}
+      {!isEmpty(data) && !generating && !standalone && (
+        <AIDAFeedback
+          className={css.aidaFeedback}
+          allowCreateTicket={true}
+          allowFeedback={true}
+          telemetry={{
+            aidaClient: AidaClient.CODE_PR_SUMMARY,
+            metadata: {
+              query: getString('generateSummary'),
+              generatedResponse: isString(data) ? data : getString('invalidResponse')
+            }
+          }}
+        />
       )}
     </Container>
   )

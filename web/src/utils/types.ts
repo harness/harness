@@ -27,7 +27,8 @@ export interface DiffFileEntry extends DiffFile {
 export type FCWithChildren<T> = React.FC<React.PropsWithChildren<T>>
 
 export enum AidaClient {
-  CODE_SEMANTIC_SEARCH = 'CODE_SEMANTIC_SEARCH'
+  CODE_SEMANTIC_SEARCH = 'CODE_SEMANTIC_SEARCH',
+  CODE_PR_SUMMARY = 'CODE_PR_SUMMARY'
 }
 export interface TelemeteryProps {
   aidaClient: AidaClient
