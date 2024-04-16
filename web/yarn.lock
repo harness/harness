@@ -1643,14 +1643,14 @@
   integrity sha512-ZwAGM1srOZ49/6YkwyjkczUv4v91CN0rCecRYnV3/g+xdSV5ycrUvkJjl9nHub6jw2eCGC0GdyNgAtAJnLmGfQ==
 
 "@harnessio/icons@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.npmjs.org/@harnessio/icons/-/icons-2.1.0.tgz#9d93d5a4080e76d4f1b435ca2d28266d0ba936d0"
-  integrity sha512-9DFu0v+Q0nx2HeJb7lWaWA6lnokSPcAKnjBDi87BWaY6SXbCn8Tk5wqWSnv/V2Xmn05iN89hjnuAjOhTuSpxXA==
+  version "2.1.1"
+  resolved "https://registry.npmjs.org/@harnessio/icons/-/icons-2.1.1.tgz#1cf4fb4ab5f83dd2389ab6669499dfd6ba8c6b7d"
+  integrity sha512-arHZHsqKByvwey9h98HTXQBFrtY+zpTnbGHR5BNqfqg5bSbGJ0mX/2FA0kJpKjxNvywX3K8gqJtZIAyYxpIYyg==
 
-"@harnessio/uicore@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.1.1.tgz#958e7109489d7551fa3b6a01cbd2286479c61701"
-  integrity sha512-uR88UW+ZN8n9yzxTnGp4bmmdR6eJacgsBfW5K3N7WQ3ISAmMB09842w2Y6sFiDUD8+RB4UqlOuBrjVUmrZroVg==
+"@harnessio/uicore@^4.1.2":
+  version "4.1.2"
+  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.1.2.tgz#731c8da3f53531b90f5b5cde4589b248129ef306"
+  integrity sha512-xlV47pFpVd5LHBarMm18xgveUxoss5qpHhHAg8FKnfr6S+gy5OgfAsqWJAIiOCaUmwRbEvT/pAZeAQGh6fFUCA==
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"

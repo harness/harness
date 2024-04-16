@@ -36,6 +36,9 @@ const devConfig = {
   entry: path.resolve(CONTEXT, '/src/index.tsx'),
   devtool: 'cheap-module-source-map',
   cache: { type: 'filesystem' },
+  output: {
+    publicPath: '/'
+  },
   devServer: {
     hot: true,
     host: HOST,
