@@ -17,13 +17,10 @@ package git
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/harness/gitness/git/api"
 
 	"github.com/drone/go-generate/builder"
-	"github.com/drone/go-generate/chroot"
-	"github.com/rs/zerolog/log"
 )
 
 type GeneratePipelineParams struct {
@@ -42,34 +39,20 @@ func (s *Service) GeneratePipeline(ctx context.Context,
 	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	tempDir, err := os.MkdirTemp(s.tmpDir, "*-"+params.RepoUID)
+	sha, err := s.git.ResolveRev(ctx, repoPath, "HEAD")
 	if err != nil {
-		return GeneratePipelinesOutput{}, fmt.Errorf("error creating temp dir for repo %s: %w", params.RepoUID, err)
-	}
-	defer func(path string) {
-		// when repo is successfully created remove temp dir
-		errRm := os.RemoveAll(path)
-		if errRm != nil {
-			log.Err(errRm).Msg("failed to cleanup temporary dir.")
-		}
-	}(tempDir)
-
-	// Clone repository to temp dir
-	if err = s.git.Clone(ctx, repoPath, tempDir, api.CloneRepoOptions{Depth: 1}); err != nil {
-		return GeneratePipelinesOutput{}, fmt.Errorf("failed to clone repo: %w", err)
+		return GeneratePipelinesOutput{}, fmt.Errorf("failed to resolve HEAD revision: %w", err)
 	}
 
-	// create a chroot virtual filesystem that we
-	// pass to the builder for isolation purposes.
-	chroot, err := chroot.New(tempDir)
-	if err != nil {
-		return GeneratePipelinesOutput{}, fmt.Errorf("failed to set the temp directory as active directory: %w", err)
-	}
+	ctxFS, cancelFn := context.WithCancel(ctx)
+	defer cancelFn()
+
+	gitFS := api.NewFS(ctxFS, sha.String(), repoPath)
 
 	// builds the pipeline configuration based on
 	// the contents of the virtual filesystem.
 	builder := builder.New()
-	out, err := builder.Build(chroot)
+	out, err := builder.Build(gitFS)
 	if err != nil {
 		return GeneratePipelinesOutput{}, fmt.Errorf("failed to build pipeline: %w", err)
 	}

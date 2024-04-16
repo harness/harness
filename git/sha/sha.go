@@ -91,7 +91,8 @@ func (s *SHA) UnmarshalJSON(content []byte) error {
 	if err != nil {
 		return err
 	}
-	sha, err := New(str)
+
+	sha, err := NewOrEmpty(str)
 	if err != nil {
 		return err
 	}

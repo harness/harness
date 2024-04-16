@@ -76,10 +76,10 @@ func TestSHA_UnmarshalJSON(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "empty content return error",
+			name:     "empty content returns empty",
 			input:    []byte("\"\""),
 			expected: SHA{},
-			wantErr:  true,
+			wantErr:  false,
 		},
 	}
 	for _, tt := range tests {

@@ -44,6 +44,7 @@ type TreeNode struct {
 	SHA      sha.SHA
 	Name     string
 	Path     string
+	Size     int64
 }
 
 func (n *TreeNode) IsExecutable() bool {
@@ -56,6 +57,10 @@ func (n *TreeNode) IsDir() bool {
 
 func (n *TreeNode) IsLink() bool {
 	return n.Mode == TreeNodeModeSymlink
+}
+
+func (n *TreeNode) IsSubmodule() bool {
+	return n.Mode == TreeNodeModeCommit
 }
 
 // TreeNodeType specifies the different types of nodes in a git tree.
@@ -122,13 +127,14 @@ func parseTreeNodeMode(s string) (TreeNodeType, TreeNodeMode, error) {
 // regexpLsTreeColumns is a regular expression that is used to parse a single line
 // of a "git ls-tree" output (which uses the NULL character as the line break).
 // The single line mode must be used because output might contain the EOL and other control characters.
-var regexpLsTreeColumns = regexp.MustCompile(`(?s)^(\d{6})\s+(\w+)\s+(\w+)\t(.+)`)
+var regexpLsTreeColumns = regexp.MustCompile(`(?s)^(\d{6})\s+(\w+)\s+(\w+)(?:\s+(\d+|-))?\t(.+)`)
 
 func lsTree(
 	ctx context.Context,
 	repoPath string,
 	rev string,
 	treePath string,
+	fetchSizes bool,
 ) ([]TreeNode, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
@@ -138,6 +144,10 @@ func lsTree(
 		command.WithArg(rev),
 		command.WithArg(treePath),
 	)
+	if fetchSizes {
+		cmd.Add(command.WithFlag("-l"))
+	}
+
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx,
 		command.WithDir(repoPath),
@@ -183,7 +193,19 @@ func lsTree(
 		}
 
 		nodeSha := sha.Must(columns[3])
-		nodePath := columns[4]
+
+		var size int64
+		if columns[4] != "" && columns[4] != "-" {
+			size, err = strconv.ParseInt(columns[4], 10, 64)
+			if err != nil {
+				log.Ctx(ctx).Error().
+					Str("line", line).
+					Msg("failed to parse file size")
+				return nil, fmt.Errorf("failed to parse file size in the git directory listing: %q", line)
+			}
+		}
+
+		nodePath := columns[5]
 		nodeName := path.Base(nodePath)
 
 		list = append(list, TreeNode{
@@ -192,6 +214,7 @@ func lsTree(
 			SHA:      nodeSha,
 			Name:     nodeName,
 			Path:     nodePath,
+			Size:     size,
 		})
 	}
 
@@ -204,6 +227,7 @@ func lsDirectory(
 	repoPath string,
 	rev string,
 	treePath string,
+	fetchSizes bool,
 ) ([]TreeNode, error) {
 	treePath = path.Clean(treePath)
 	if treePath == "" {
@@ -212,7 +236,7 @@ func lsDirectory(
 		treePath += "/"
 	}
 
-	return lsTree(ctx, repoPath, rev, treePath)
+	return lsTree(ctx, repoPath, rev, treePath, fetchSizes)
 }
 
 // lsFile returns one tree node entry.
@@ -221,10 +245,11 @@ func lsFile(
 	repoPath string,
 	rev string,
 	treePath string,
+	fetchSize bool,
 ) (TreeNode, error) {
 	treePath = cleanTreePath(treePath)
 
-	list, err := lsTree(ctx, repoPath, rev, treePath)
+	list, err := lsTree(ctx, repoPath, rev, treePath, fetchSize)
 	if err != nil {
 		return TreeNode{}, fmt.Errorf("failed to ls file: %w", err)
 	}
@@ -237,18 +262,18 @@ func lsFile(
 
 // GetTreeNode returns the tree node at the given path as found for the provided reference.
 func (g *Git) GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (*TreeNode, error) {
-	return GetTreeNode(ctx, repoPath, rev, treePath)
+	return GetTreeNode(ctx, repoPath, rev, treePath, false)
 }
 
 // GetTreeNode returns the tree node at the given path as found for the provided reference.
-func GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (*TreeNode, error) {
+func GetTreeNode(ctx context.Context, repoPath, rev, treePath string, fetchSize bool) (*TreeNode, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
 
 	// anything that's not the root path is a simple call
 	if treePath != "" {
-		treeNode, err := lsFile(ctx, repoPath, rev, treePath)
+		treeNode, err := lsFile(ctx, repoPath, rev, treePath, fetchSize)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get tree node: %w", err)
 		}
@@ -285,7 +310,12 @@ func GetTreeNode(ctx context.Context, repoPath, rev, treePath string) (*TreeNode
 
 // ListTreeNodes lists the child nodes of a tree reachable from ref via the specified path.
 func (g *Git) ListTreeNodes(ctx context.Context, repoPath, rev, treePath string) ([]TreeNode, error) {
-	list, err := lsDirectory(ctx, repoPath, rev, treePath)
+	return ListTreeNodes(ctx, repoPath, rev, treePath, false)
+}
+
+// ListTreeNodes lists the child nodes of a tree reachable from ref via the specified path.
+func ListTreeNodes(ctx context.Context, repoPath, rev, treePath string, fetchSizes bool) ([]TreeNode, error) {
+	list, err := lsDirectory(ctx, repoPath, rev, treePath, fetchSizes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tree nodes: %w", err)
 	}

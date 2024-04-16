@@ -581,7 +581,7 @@ func (r *SharedRepo) getFileEntry(
 	objectSHA sha.SHA,
 	path string,
 ) (*api.TreeNode, error) {
-	entry, err := api.GetTreeNode(ctx, r.repoPath, treeishSHA.String(), path)
+	entry, err := api.GetTreeNode(ctx, r.repoPath, treeishSHA.String(), path, false)
 	if errors.IsNotFound(err) {
 		return nil, errors.NotFound("path %s not found", path)
 	}
@@ -615,7 +615,7 @@ func (r *SharedRepo) checkPathAvailability(
 	for index, part := range parts {
 		subTreePath = path.Join(subTreePath, part)
 
-		entry, err := api.GetTreeNode(ctx, r.repoPath, treeishSHA.String(), subTreePath)
+		entry, err := api.GetTreeNode(ctx, r.repoPath, treeishSHA.String(), subTreePath, false)
 		if err != nil {
 			if errors.IsNotFound(err) {
 				// Means there is no item with that name, so we're good
