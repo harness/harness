@@ -24,12 +24,11 @@ const commonConfig = require('./webpack.common')
 const API_URL = process.env.API_URL ?? 'http://localhost:3000'
 const HOST = 'localhost'
 const PORT = process.env.PORT ?? 3020
-const STANDALONE = JSON.parse(process.env.STANDALONE ?? 'true')
 const CONTEXT = process.cwd()
 
 console.info(`Starting development build... http://${HOST}:${PORT}`)
 console.info('Environment variables:')
-console.table({ STANDALONE, HOST, PORT, API_URL })
+console.table({ HOST, PORT, API_URL })
 
 const devConfig = {
   mode: 'development',
@@ -37,13 +36,6 @@ const devConfig = {
   entry: path.resolve(CONTEXT, '/src/index.tsx'),
   devtool: 'cheap-module-source-map',
   cache: { type: 'filesystem' },
-  ...(STANDALONE
-    ? {
-        optimization: {
-          runtimeChunk: 'single'
-        }
-      }
-    : {}),
   devServer: {
     hot: true,
     host: HOST,

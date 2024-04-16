@@ -19,6 +19,8 @@ const commonConfig = require('./webpack.common')
 const CONTEXT = process.cwd()
 const path = require('path')
 
+const groupsOptions = { chunks: 'all', minSize: 0, minChunks: 1, reuseExistingChunk: true, enforce: true }
+
 const prodConfig = {
   context: CONTEXT,
   mode: 'production',
@@ -26,20 +28,86 @@ const prodConfig = {
   devtool: process.env.ENABLE_SOURCE_MAP ? 'source-map' : false,
   optimization: {
     splitChunks: {
-      chunks: 'all',
-      minSize: 51200,
+      minSize: 20_480,
+      automaticNameDelimiter: '-',
+
       cacheGroups: {
-        commons: {
+        common: {
           test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          chunks: 'all',
-          maxSize: 1e7
+          priority: -5,
+          reuseExistingChunk: true,
+          chunks: 'initial',
+          name: 'vendor-common',
+          minSize: 20_480,
+          maxSize: 512_000
         },
+
+        default: {
+          minChunks: 2,
+          priority: -10,
+          reuseExistingChunk: true,
+          minSize: 20_480,
+          maxSize: 512_000
+        },
+
+        // Opting out of defaultVendors, so rest of the node modules will be part of default cacheGroup
+        defaultVendors: false,
+
+        react: {
+          test: /[\\/]node_modules[\\/](react-dom)[\\/]/,
+          name: 'vendor-react',
+          chunks: 'all',
+          priority: 1
+        },
+
+        reactdom: {
+          test: /[\\/]node_modules[\\/](react-dom)[\\/]/,
+          name: 'vendor-react-dom',
+          chunks: 'all',
+          priority: 1
+        },
+
+        reactrouterdom: {
+          test: /[\\/]node_modules[\\/](react-router-dom)[\\/]/,
+          name: 'vendor-react-router-dom',
+          chunks: 'all',
+          priority: 1,
+          minSize: 0
+        },
+
         blueprintjs: {
           test: /[\\/]node_modules[\\/](@blueprintjs)[\\/]/,
           name: 'vendor-blueprintjs',
           chunks: 'all',
-          priority: 10
+          priority: 1
+        },
+
+        restfulreact: {
+          test: /[\\/]node_modules[\\/](restful-react)[\\/]/,
+          name: 'vendor-restful-react',
+          chunks: 'all',
+          priority: 1
+        },
+
+        designsystem: {
+          test: /[\\/]node_modules[\\/](@harnessio\/design-system)[\\/]/,
+          name: 'vendor-harnessio-design-system',
+          chunks: 'all',
+          priority: 1
+        },
+
+        icons: {
+          test: /[\\/]node_modules[\\/](@harnessio\/icons)[\\/]/,
+          name: 'vendor-harnessio-icons',
+          chunks: 'all',
+          priority: 1
+        },
+
+        uicore: {
+          test: /[\\/]node_modules[\\/](@harnessio\/uicore)[\\/]/,
+          name: 'vendor-harnessio-uicore',
+          chunks: 'all',
+          priority: 1
         }
       }
     }
