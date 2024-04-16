@@ -42,7 +42,8 @@ export function WebhooksHeader({ repoMetadata, loading, onSearchTermChanged }: W
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPOSITORY'
+        resourceType: 'CODE_REPOSITORY',
+        resourceIdentifier: repoMetadata?.uid as string
       },
       permissions: ['code_repo_edit']
     },

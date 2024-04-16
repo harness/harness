@@ -59,7 +59,8 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPOSITORY'
+        resourceType: 'CODE_REPOSITORY',
+        resourceIdentifier: repoMetadata?.uid as string
       },
       permissions: ['code_repo_edit']
     },
@@ -213,6 +214,7 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
                     text={getString('save')}
                     onClick={() => formik.submitForm()}
                     disabled={formik.isSubmitting}
+                    {...permissionProps(permPushResult, standalone)}
                   />
                 </Layout.Horizontal>
               </FormikForm>

@@ -80,7 +80,8 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const permEditResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPOSITORY'
+        resourceType: 'CODE_REPOSITORY',
+        resourceIdentifier: repoMetadata?.uid as string
       },
       permissions: ['code_repo_edit']
     },
@@ -89,7 +90,8 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const permDeleteResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPOSITORY'
+        resourceType: 'CODE_REPOSITORY',
+        resourceIdentifier: repoMetadata?.uid as string
       },
       permissions: ['code_repo_delete']
     },
