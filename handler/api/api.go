@@ -244,6 +244,10 @@ func (s Server) Handler() http.Handler {
 
 				r.With(
 					acl.CheckAdminAccess(),
+				).Post("/{number}/decline", stages.HandleDeclineBuild(s.Repos, s.Builds, s.Stages))
+
+				r.With(
+					acl.CheckAdminAccess(),
 				).Post("/{number}/approve/{stage}", stages.HandleApprove(s.Repos, s.Builds, s.Stages, s.Scheduler))
 
 				r.With(
