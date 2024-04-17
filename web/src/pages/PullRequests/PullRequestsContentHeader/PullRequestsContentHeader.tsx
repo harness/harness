@@ -102,9 +102,11 @@ export function PullRequestsContentHeader({
   ): Promise<TypesPrincipalInfo[]> => {
     const sortedList = sortBy(authorsList, item => item.display_name?.toLowerCase())
     const updateList = (index: number, list: TypesPrincipalInfo[]) => {
-      const currentUserObj = list[index]
-      list.splice(index, 1)
-      list.unshift(currentUserObj)
+      if (index !== -1) {
+        const currentUserObj = list[index]
+        list.splice(index, 1)
+        list.unshift(currentUserObj)
+      }
     }
     if (userQuery) return sortedList
     const targetIndex = sortedList.findIndex(obj => obj.uid === user.uid)
