@@ -44,7 +44,7 @@ func CreateRefUpdater(
 	}
 
 	return &RefUpdater{
-		state:      statePre,
+		state:      stateInitOld,
 		hookClient: client,
 		envVars:    envVars,
 		repoPath:   repoPath,
@@ -72,6 +72,10 @@ type refUpdaterState byte
 
 func (t refUpdaterState) String() string {
 	switch t {
+	case stateInitOld:
+		return "INIT_OLD"
+	case stateInitNew:
+		return "INIT_NEW"
 	case statePre:
 		return "PRE"
 	case stateUpdate:
@@ -85,7 +89,9 @@ func (t refUpdaterState) String() string {
 }
 
 const (
-	statePre refUpdaterState = iota
+	stateInitOld refUpdaterState = iota
+	stateInitNew
+	statePre
 	stateUpdate
 	statePost
 	stateDone
@@ -123,26 +129,10 @@ func (u *RefUpdater) Init(ctx context.Context, oldValue, newValue sha.SHA) error
 	return nil
 }
 
-func (u *RefUpdater) InitNew(_ context.Context, newValue sha.SHA) error {
-	if u.state != statePre {
-		return fmt.Errorf("invalid operation order: init requires state=%s, current state=%s",
-			statePre, u.state)
-	}
-
-	if newValue.IsEmpty() {
-		// don't break existing interface - user calls with empty value to delete the ref.
-		newValue = sha.Nil
-	}
-
-	u.newValue = newValue
-
-	return nil
-}
-
 func (u *RefUpdater) InitOld(ctx context.Context, oldValue sha.SHA) error {
-	if u.state != statePre {
-		return fmt.Errorf("invalid operation order: init requires state=%s, current state=%s",
-			statePre, u.state)
+	if u.state != stateInitOld {
+		return fmt.Errorf("invalid operation order: init old requires state=%s, current state=%s",
+			stateInitOld, u.state)
 	}
 
 	if oldValue.IsEmpty() {
@@ -157,7 +147,25 @@ func (u *RefUpdater) InitOld(ctx context.Context, oldValue sha.SHA) error {
 		}
 	}
 
+	u.state = stateInitNew
 	u.oldValue = oldValue
+
+	return nil
+}
+
+func (u *RefUpdater) InitNew(_ context.Context, newValue sha.SHA) error {
+	if u.state != stateInitNew {
+		return fmt.Errorf("invalid operation order: init new requires state=%s, current state=%s",
+			stateInitNew, u.state)
+	}
+
+	if newValue.IsEmpty() {
+		// don't break existing interface - user calls with empty value to delete the ref.
+		newValue = sha.Nil
+	}
+
+	u.state = statePre
+	u.newValue = newValue
 
 	return nil
 }
