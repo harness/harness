@@ -58,10 +58,11 @@ type pullReq struct {
 	Version int64 `db:"pullreq_version"`
 	Number  int64 `db:"pullreq_number"`
 
-	CreatedBy int64 `db:"pullreq_created_by"`
-	Created   int64 `db:"pullreq_created"`
-	Updated   int64 `db:"pullreq_updated"`
-	Edited    int64 `db:"pullreq_edited"`
+	CreatedBy int64    `db:"pullreq_created_by"`
+	Created   int64    `db:"pullreq_created"`
+	Updated   int64    `db:"pullreq_updated"`
+	Edited    int64    `db:"pullreq_edited"`
+	Closed    null.Int `db:"pullreq_closed"`
 
 	State   enum.PullReqState `db:"pullreq_state"`
 	IsDraft bool              `db:"pullreq_is_draft"`
@@ -103,6 +104,7 @@ const (
 		,pullreq_created
 		,pullreq_updated
 		,pullreq_edited
+		,pullreq_closed
 		,pullreq_state
 		,pullreq_is_draft
 		,pullreq_comment_count
@@ -194,6 +196,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_created
 		,pullreq_updated
 		,pullreq_edited
+		,pullreq_closed
 		,pullreq_state
 		,pullreq_is_draft
 		,pullreq_comment_count
@@ -223,6 +226,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_created
 		,:pullreq_updated
 		,:pullreq_edited
+		,:pullreq_closed
 		,:pullreq_state
 		,:pullreq_is_draft
 		,:pullreq_comment_count
@@ -269,6 +273,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 	     pullreq_version = :pullreq_version
 		,pullreq_updated = :pullreq_updated
 		,pullreq_edited = :pullreq_edited
+		,pullreq_closed = :pullreq_closed
 		,pullreq_state = :pullreq_state
 		,pullreq_is_draft = :pullreq_is_draft
 		,pullreq_comment_count = :pullreq_comment_count
@@ -542,6 +547,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		Created:          pr.Created,
 		Updated:          pr.Updated,
 		Edited:           pr.Edited,
+		Closed:           pr.Closed.Ptr(),
 		State:            pr.State,
 		IsDraft:          pr.IsDraft,
 		CommentCount:     pr.CommentCount,
@@ -585,6 +591,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		Created:          pr.Created,
 		Updated:          pr.Updated,
 		Edited:           pr.Edited,
+		Closed:           null.IntFromPtr(pr.Closed),
 		State:            pr.State,
 		IsDraft:          pr.IsDraft,
 		CommentCount:     pr.CommentCount,

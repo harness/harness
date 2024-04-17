@@ -24,10 +24,11 @@ type PullReq struct {
 	Version int64 `json:"-"` // not returned, it's an internal field
 	Number  int64 `json:"number"`
 
-	CreatedBy int64 `json:"-"` // not returned, because the author info is in the Author field
-	Created   int64 `json:"created"`
-	Updated   int64 `json:"-"` // not returned, it's updated by the server internally. Clients should use EditedAt.
-	Edited    int64 `json:"edited"`
+	CreatedBy int64  `json:"-"` // not returned, because the author info is in the Author field
+	Created   int64  `json:"created"`
+	Updated   int64  `json:"-"` // not returned, it's updated by the server internally. Clients should use EditedAt.
+	Edited    int64  `json:"edited"`
+	Closed    *int64 `json:"closed,omitempty"`
 
 	State   enum.PullReqState `json:"state"`
 	IsDraft bool              `json:"is_draft"`
