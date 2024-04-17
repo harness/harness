@@ -34,8 +34,8 @@ module.exports = {
   target: 'web',
   context: CONTEXT,
   stats: {
-    modules: false,
-    children: false
+    modules: true,
+    children: true
   },
   entry: {
     [moduleFederationConfig.name]: './src/public-path'

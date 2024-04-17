@@ -39,6 +39,9 @@ const devConfig = {
   output: {
     publicPath: '/'
   },
+  optimization: {
+    runtimeChunk: 'single'
+  },
   devServer: {
     hot: true,
     host: HOST,
