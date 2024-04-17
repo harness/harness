@@ -214,7 +214,8 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         uid: formData.name,
         provider,
         provider_repo: `${formData.org}/${formData.repo}`.replace(/\.git$/, ''),
-        pipelines: standalone ? ConvertPipelineLabel.CONVERT : ConvertPipelineLabel.IGNORE
+        pipelines:
+          standalone && formData.importPipelineLabel ? ConvertPipelineLabel.CONVERT : ConvertPipelineLabel.IGNORE
       }
       importRepo(importPayload)
         .then(response => {

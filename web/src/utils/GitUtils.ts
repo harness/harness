@@ -58,6 +58,7 @@ export interface ImportFormData {
   password: string
   name: string
   description: string
+  importPipelineLabel: boolean
 }
 
 export interface ExportFormData {

@@ -553,6 +553,7 @@ export interface StringsMap {
   'pipelines.failedToFindPath': string
   'pipelines.failedToGenerate': string
   'pipelines.failedToUpdatePipeline': string
+  'pipelines.import': string
   'pipelines.lastExecution': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
