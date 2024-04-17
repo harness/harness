@@ -37,8 +37,7 @@ import css from './RepositorySettings.module.scss'
 export default function RepositorySettings() {
   const { repoMetadata, error, loading, refetch, settingSection, gitRef, resourcePath } = useGetRepositoryMetadata()
   const history = useHistory()
-  const { routes, hooks, standalone } = useAppContext()
-  const { SEMANTIC_SEARCH_ENABLED } = hooks?.useFeatureFlags()
+  const { routes } = useAppContext()
   const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.general)
   const { getString } = useStrings()
   const { isRepositoryEmpty } = useGetResourceContent({
@@ -67,6 +66,11 @@ export default function RepositorySettings() {
       id: SettingsTab.branchProtection,
       title: getString('branchProtection.title'),
       panel: <BranchProtectionListing activeTab={activeTab} />
+    },
+    {
+      id: SettingsTab.security,
+      title: getString('security'),
+      panel: <SecurityScanSettings repoMetadata={repoMetadata} activeTab={activeTab} />
     }
     // {
     //   id: SettingsTab.webhooks,
@@ -78,13 +82,6 @@ export default function RepositorySettings() {
     //   )
     // }
   ]
-  if (SEMANTIC_SEARCH_ENABLED && !standalone) {
-    tabListArray.push({
-      id: SettingsTab.security,
-      title: getString('security'),
-      panel: <SecurityScanSettings repoMetadata={repoMetadata} activeTab={activeTab} />
-    })
-  }
   return (
     <Container className={css.main}>
       <RepositoryPageHeader

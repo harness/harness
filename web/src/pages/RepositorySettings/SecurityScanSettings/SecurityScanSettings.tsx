@@ -28,6 +28,7 @@ import {
 } from '@harnessio/uicore'
 import cx from 'classnames'
 import { useGet, useMutate } from 'restful-react'
+import { Render } from 'react-jsx-match'
 import type { FormikState } from 'formik'
 import { Color, FontVariation } from '@harnessio/design-system'
 import type { TypesRepository } from 'services/code'
@@ -53,6 +54,7 @@ interface FormData {
 const SecurityScanSettings = (props: SecurityScanProps) => {
   const { repoMetadata, activeTab } = props
   const { hooks, standalone, routingId } = useAppContext()
+  const { CODE_SECURITY_SCANNING_ON_PUSH } = hooks?.useFeatureFlags()
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
   const space = useGetSpaceParam()
@@ -142,71 +144,76 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
                       <Text className={css.text}>{getString('securitySettings.scanningSecretDesc')}</Text>
                     </Layout.Horizontal>
                   </Container>
-                  <Container padding="medium" margin="medium" className={css.generalContainer}>
-                    <Layout.Horizontal
-                      spacing={'medium'}
-                      padding={{ left: 'medium' }}
-                      flex={{ justifyContent: 'flex-start' }}
-                      className={cx(formik.values.vulnerabilityScanEnable ? css.expand : css.collapse)}>
-                      <FormInput.Toggle
-                        {...permissionProps(permPushResult, standalone)}
-                        key={'vulnerabilityScanEnable'}
-                        label=""
-                        style={{ margin: '0px' }}
-                        name="vulnerabilityScanEnable"></FormInput.Toggle>
-                      <Layout.Vertical padding={{ left: 'medium' }}>
-                        <Container className={cx(formik.values.vulnerabilityScanEnable && css.toggle)}>
-                          <Layout.Horizontal spacing={'medium'} flex={{ alignItems: 'center' }}>
-                            <Text className={css.title}>{getString('securitySettings.vulnerabilityScanning')}</Text>
-                            <Text className={css.text}>{getString('securitySettings.vulnerabilityScanningDesc')}</Text>
-                          </Layout.Horizontal>
-                        </Container>
-                        {formik.values.vulnerabilityScanEnable && (
-                          <Container margin={{ top: 'medium' }}>
-                            <FormInput.RadioGroup
-                              {...permissionProps(permPushResult, standalone)}
-                              name="vulnerabilityScanningType"
-                              key={formik.values.vulnerabilityScanningType}
-                              label=""
-                              className={css.radioContainer}
-                              items={[
-                                {
-                                  label: (
-                                    <Container>
-                                      <Layout.Horizontal spacing={'small'}>
-                                        <Text font={{ variation: FontVariation.SMALL_SEMI }}>
-                                          {getString('securitySettings.detect')}
-                                        </Text>
-                                        <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                                          {getString('securitySettings.detectDesc')}
-                                        </Text>
-                                      </Layout.Horizontal>
-                                    </Container>
-                                  ),
-                                  value: VulnerabilityScanningType.DETECT
-                                },
-                                {
-                                  label: (
-                                    <Container>
-                                      <Layout.Horizontal spacing={'small'}>
-                                        <Text font={{ variation: FontVariation.SMALL_SEMI }}>
-                                          {getString('securitySettings.block')}
-                                        </Text>
-                                        <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                                          {getString('securitySettings.blockDesc')}
-                                        </Text>
-                                      </Layout.Horizontal>
-                                    </Container>
-                                  ),
-                                  value: VulnerabilityScanningType.BLOCK
-                                }
-                              ]}
-                            />
+                  <Render when={!standalone && CODE_SECURITY_SCANNING_ON_PUSH}>
+                    <Container padding="medium" margin="medium" className={css.generalContainer}>
+                      <Layout.Horizontal
+                        spacing={'medium'}
+                        padding={{ left: 'medium' }}
+                        flex={{ justifyContent: 'flex-start' }}
+                        className={cx(formik.values.vulnerabilityScanEnable ? css.expand : css.collapse)}>
+                        <FormInput.Toggle
+                          {...permissionProps(permPushResult, standalone)}
+                          key={'vulnerabilityScanEnable'}
+                          label=""
+                          style={{ margin: '0px' }}
+                          name="vulnerabilityScanEnable"></FormInput.Toggle>
+                        <Layout.Vertical padding={{ left: 'medium' }}>
+                          <Container className={cx(formik.values.vulnerabilityScanEnable && css.toggle)}>
+                            <Layout.Horizontal spacing={'medium'} flex={{ alignItems: 'center' }}>
+                              <Text className={css.title}>{getString('securitySettings.vulnerabilityScanning')}</Text>
+                              <Text className={css.text}>
+                                {getString('securitySettings.vulnerabilityScanningDesc')}
+                              </Text>
+                            </Layout.Horizontal>
                           </Container>
-                        )}
-                      </Layout.Vertical>
-                    </Layout.Horizontal>
-                  </Container>
+
+                          {formik.values.vulnerabilityScanEnable && (
+                            <Container margin={{ top: 'medium' }}>
+                              <FormInput.RadioGroup
+                                {...permissionProps(permPushResult, standalone)}
+                                name="vulnerabilityScanningType"
+                                key={formik.values.vulnerabilityScanningType}
+                                label=""
+                                className={css.radioContainer}
+                                items={[
+                                  {
+                                    label: (
+                                      <Container>
+                                        <Layout.Horizontal spacing={'small'}>
+                                          <Text font={{ variation: FontVariation.SMALL_SEMI }}>
+                                            {getString('securitySettings.detect')}
+                                          </Text>
+                                          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+                                            {getString('securitySettings.detectDesc')}
+                                          </Text>
+                                        </Layout.Horizontal>
+                                      </Container>
+                                    ),
+                                    value: VulnerabilityScanningType.DETECT
+                                  },
+                                  {
+                                    label: (
+                                      <Container>
+                                        <Layout.Horizontal spacing={'small'}>
+                                          <Text font={{ variation: FontVariation.SMALL_SEMI }}>
+                                            {getString('securitySettings.block')}
+                                          </Text>
+                                          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+                                            {getString('securitySettings.blockDesc')}
+                                          </Text>
+                                        </Layout.Horizontal>
+                                      </Container>
+                                    ),
+                                    value: VulnerabilityScanningType.BLOCK
+                                  }
+                                ]}
+                              />
+                            </Container>
+                          )}
+                        </Layout.Vertical>
+                      </Layout.Horizontal>
+                    </Container>
+                  </Render>
                 </Layout.Vertical>
                 <Layout.Horizontal margin={'medium'} spacing={'medium'}>
                   <Button
