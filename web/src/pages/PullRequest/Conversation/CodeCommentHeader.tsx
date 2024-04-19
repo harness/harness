@@ -16,7 +16,7 @@
 
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, ButtonVariation, Container, Layout, Text, Utils } from '@harnessio/uicore'
+import { ButtonSize, Container, Layout, Text } from '@harnessio/uicore'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import * as Diff2Html from 'diff2html'
 import { get } from 'lodash-es'
@@ -24,8 +24,9 @@ import type { TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { useAppContext } from 'AppContext'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, type GitInfoProps } from 'utils/GitUtils'
 import { PullRequestSection } from 'utils/Utils'
+import { CopyButton } from 'components/CopyButton/CopyButton'
 import { isCodeComment } from '../PullRequestUtils'
 import css from './Conversation.module.scss'
 
@@ -70,7 +71,7 @@ export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({
     <Container className={css.snapshot}>
       <Layout.Vertical>
         <Container className={css.title}>
-          <Layout.Horizontal flex={{ alignItems: 'center' }}>
+          <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <Text
               inline
               className={css.fname}
@@ -88,17 +89,13 @@ export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({
                 {commentItems[0].payload?.code_comment?.path}
               </Link>
             </Text>
-            <Button
-              variation={ButtonVariation.ICON}
-              icon="code-copy"
-              className={css.copyButton}
-              iconProps={{ size: 14 }}
-              onClick={() => {
-                if (commentItems[0].payload?.code_comment?.path) {
-                  Utils.copy(commentItems[0].payload?.code_comment?.path)
-                }
-              }}
-            />
+            {commentItems[0].payload?.code_comment?.path && (
+              <CopyButton
+                content={commentItems[0].payload?.code_comment?.path}
+                icon={CodeIcon.Copy}
+                size={ButtonSize.MEDIUM}
+              />
+            )}
           </Layout.Horizontal>
         </Container>
         <Container className={css.snapshotContent} id={id} />
