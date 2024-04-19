@@ -53,6 +53,7 @@ export default function RepositoryCommits() {
       return (
         <Container className={css.changesContainer}>
           <Changes
+            showCommitsDropdown={false}
             readOnly={true}
             repoMetadata={repoMetadata}
             commitSHA={commitRef}

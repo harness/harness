@@ -414,6 +414,7 @@ export default function Compare() {
                   panel: (
                     <TabContentWrapper loading={loading} error={error} onRetry={noop} className={css.changesContainer}>
                       <Changes
+                        showCommitsDropdown={false}
                         readOnly={true}
                         repoMetadata={repoMetadata}
                         targetRef={targetGitRef}
