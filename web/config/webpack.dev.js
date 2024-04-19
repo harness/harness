@@ -26,6 +26,7 @@ const HOST = 'localhost'
 const PORT = process.env.PORT ?? 3020
 const STANDALONE = process.env.STANDALONE === 'true'
 const CONTEXT = process.cwd()
+const prodConfig = require('./webpack.prod')
 
 console.info(`Starting development build... http://${HOST}:${PORT}`)
 console.info('Environment variables:')
@@ -33,14 +34,18 @@ console.table({ STANDALONE, HOST, PORT, API_URL })
 
 const devConfig = {
   mode: 'development',
-  context: CONTEXT,
   entry: path.resolve(CONTEXT, '/src/index.tsx'),
   devtool: 'cheap-module-source-map',
   cache: { type: 'filesystem' },
   output: {
     publicPath: STANDALONE ? '/' : 'auto'
   },
-  optimization: STANDALONE ? { runtimeChunk: 'single' } : {},
+  optimization: STANDALONE
+    ? {
+        runtimeChunk: 'single',
+        splitChunks: prodConfig.optimization.splitChunks
+      }
+    : {},
   devServer: {
     hot: true,
     host: HOST,
