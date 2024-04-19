@@ -22,25 +22,29 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type Controller struct {
-	authorizer authz.Authorizer
-	repoStore  store.RepoStore
-	settings   *settings.Service
+	authorizer   authz.Authorizer
+	repoStore    store.RepoStore
+	settings     *settings.Service
+	auditService audit.Service
 }
 
 func NewController(
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	settings *settings.Service,
+	auditService audit.Service,
 ) *Controller {
 	return &Controller{
-		authorizer: authorizer,
-		repoStore:  repoStore,
-		settings:   settings,
+		authorizer:   authorizer,
+		repoStore:    repoStore,
+		settings:     settings,
+		auditService: auditService,
 	}
 }
 

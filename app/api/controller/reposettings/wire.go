@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/audit"
 
 	"github.com/google/wire"
 )
@@ -31,6 +32,7 @@ func ProvideController(
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	settings *settings.Service,
+	auditService audit.Service,
 ) *Controller {
-	return NewController(authorizer, repoStore, settings)
+	return NewController(authorizer, repoStore, settings, auditService)
 }
