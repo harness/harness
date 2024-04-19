@@ -98,9 +98,7 @@ export default function Home() {
                   variation={ButtonVariation.PRIMARY}
                   onClick={() => {
                     // TODO: create a space provider to trigger open modal of space selector
-                    const button = document.body.querySelectorAll(
-                      '.bp3-popover-target>.StyledProps--main'
-                    )[0] as HTMLElement
+                    const button = document.body.querySelectorAll('.bp3-popover-target')[0] as HTMLElement
                     button.click()
                   }}
                 />
