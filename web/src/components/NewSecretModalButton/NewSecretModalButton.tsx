@@ -37,8 +37,8 @@ import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateSecretRequest, TypesSecret } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
-import css from './NewSecretModalButton.module.scss'
 import Config from 'Config'
+import css from './NewSecretModalButton.module.scss'
 
 export interface SecretFormData {
   value: string

@@ -39,8 +39,8 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { OpenapiUpdateSecretRequest, TypesSecret } from 'services/code'
 import type { SecretFormData } from 'components/NewSecretModalButton/NewSecretModalButton'
 import { getErrorMessage, truncateString } from 'utils/Utils'
-import css from './UpdateSecretModal.module.scss'
 import Config from 'Config'
+import css from './UpdateSecretModal.module.scss'
 
 const useUpdateSecretModal = () => {
   const { getString } = useStrings()
