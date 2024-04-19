@@ -34,5 +34,5 @@ export default {
   IN_VIEWPORT_DETECTION_MARGIN: 5_000,
 
   /** Limit for the secret input in bytes */
-  SECRET_LIMIT_IN_BYTES: 5_242_880,
+  SECRET_LIMIT_IN_BYTES: 5_242_880
 } as const
