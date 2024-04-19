@@ -27,7 +27,7 @@
       box-shadow: 0px 0.5px 2px 0px rgba(96, 97, 112, 0.16), 0px 0px 1px 0px rgba(40, 41, 61, 0.08);
 
       :global {
-        .TableV2--row {
+        [class*='TableV2--row'] {
           padding: var(--spacing-4) var(--spacing-medium);
         }
       }
@@ -40,7 +40,7 @@
       min-height: 186px;
 
       :global {
-        .TextInput--main {
+        [class*='TextInput--main'] {
           margin-bottom: 0 !important;
         }
       }

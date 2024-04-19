@@ -19,7 +19,7 @@
 
   .table {
     background-color: var(--white) !important;
-    :global(.TableV2--row:last-child) {
+    :global([class*='TableV2--row']:last-child) {
       border-bottom-left-radius: 4px !important;
       border-bottom-right-radius: 4px !important;
     }
@@ -104,7 +104,7 @@
 .commitContainer {
   :global {
     .bp3-popover-target {
-      .StyledProps--font {
+      [class*='StyledProps--font'] {
         color: var(--grey-600) !important;
       }
     }

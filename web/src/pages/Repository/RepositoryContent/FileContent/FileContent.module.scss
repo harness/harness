@@ -61,10 +61,10 @@
   padding: var(--spacing-xlarge) var(--spacing-xlarge) 0 var(--spacing-xlarge) !important;
 
   :global {
-    .TableV2--row {
+    [class*='TableV2--row'] {
       height: 45px !important;
     }
-    .TableV2--row:last-child {
+    [class*='TableV2--row']:last-child {
       border-bottom-left-radius: 4px !important;
     }
   }

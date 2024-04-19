@@ -37,7 +37,7 @@
 
 .bigButton {
   :global {
-    .SplitButton--splitButton {
+    [class*='SplitButton--splitButton'] {
       > .bp3-button {
         .bp3-button-text {
           font-size: 16px !important;

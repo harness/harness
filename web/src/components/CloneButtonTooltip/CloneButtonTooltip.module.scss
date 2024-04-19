@@ -45,7 +45,8 @@
       margin-left: var(--spacing-small) !important;
     }
   }
-  :global(.StyledProps--font-variation-h4) {
+
+  :global([class*='StyledProps--font-variation-h4']) {
     margin-top: unset !important;
   }
 }

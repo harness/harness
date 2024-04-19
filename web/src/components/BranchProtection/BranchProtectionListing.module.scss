@@ -86,12 +86,13 @@
 
 .hideButtonIcon {
   :global {
-    .ConfirmationDialog--header {
+    [class*='ConfirmationDialog--header'] {
       .bp3-icon {
         display: none !important;
       }
     }
-    .ConfirmationDialog--body {
+
+    [class*='ConfirmationDialog--body'] {
       padding-left: 3px !important;
     }
   }

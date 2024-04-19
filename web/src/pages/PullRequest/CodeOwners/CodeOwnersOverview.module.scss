@@ -112,7 +112,7 @@
   }
 
   :global {
-    .TableV2--header {
+    [class*='TableV2--header'] {
       border-bottom: 1px solid var(--grey-100) !important;
       padding-top: var(--spacing-small) !important;
       padding-left: var(--spacing-medium) !important;
@@ -128,7 +128,7 @@
 
 .ownerContainer {
   :global {
-    .Avatar--Avatar {
+    [class*='Avatar--Avatar'] {
       cursor: unset !important;
       &:first-child {
         margin-left: unset !important;

@@ -37,7 +37,7 @@
   margin-top: 20px !important;
 
   :global {
-    .RadioButton--radio {
+    [class*='RadioButton--radio'] {
       margin-top: 10px;
     }
   }

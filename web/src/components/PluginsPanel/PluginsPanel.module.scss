@@ -40,7 +40,7 @@
   height: calc(100% - var(--spacing-large) - var(--spacing-xxlarge));
   width: 100%;
   :global {
-    .FormikForm--main {
+    [class*='FormikForm--main'] {
       height: 100%;
       & > div {
         height: 100%;

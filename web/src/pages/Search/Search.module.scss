@@ -249,7 +249,7 @@
 }
 
 .noResultContainer {
-  :global(.NoDataCard--message) {
+  :global([class*='NoDataCard--message']) {
     display: none !important;
   }
 }

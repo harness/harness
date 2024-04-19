@@ -50,13 +50,13 @@
       }
     }
 
-    .Dialog--children,
-    .Carousel--carouselItem {
+    [class*='Dialog--children'],
+    [class*='Carousel--carouselItem'] {
       justify-content: center !important;
       align-items: center;
     }
 
-    .Dialog--close {
+    [class*='Dialog--close'] {
       fill: var(--primary-bg) !important;
       --intent-color: var(--primary-bg) !important;
       position: absolute !important;
@@ -71,7 +71,7 @@
   right: 0.75%;
 
   :global {
-    .Button--variation.Button--variation-tertiary {
+    [class*='Button--variation'][class*='Button--variation-tertiary'] {
       --background-color: unset !important;
       .bp3-icon {
         padding-right: unset !important;

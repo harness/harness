@@ -148,7 +148,7 @@
 
 .checkbox {
   :global {
-    .Tooltip--acenter {
+    [class*='Tooltip--acenter'] {
       opacity: 0.7 !important;
     }
     .bp3-control-indicator {
@@ -200,7 +200,7 @@
     .bp3-form-helper-text {
       margin-top: unset !important;
     }
-    .FormError--errorDiv {
+    [class*='FormError--errorDiv'] {
       display: none !important;
     }
   }
