@@ -92,7 +92,7 @@ func scanSecretsInternal(ctx context.Context,
 		ctx := logging.NewContext(ctx, loggingWithRefUpdate(refUpdate))
 		log := log.Ctx(ctx)
 
-		if refUpdate.New.String() == types.NilSHA {
+		if refUpdate.New.IsNil() {
 			log.Debug().Msg("skip deleted reference")
 			continue
 		}

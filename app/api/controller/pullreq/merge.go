@@ -424,10 +424,11 @@ func (c *Controller) Merge(
 
 	pr.ActivitySeq = activitySeqMerge
 	activityPayload := &types.PullRequestActivityPayloadMerge{
-		MergeMethod: in.Method,
-		MergeSHA:    mergeOutput.MergeSHA.String(),
-		TargetSHA:   mergeOutput.BaseSHA.String(),
-		SourceSHA:   mergeOutput.HeadSHA.String(),
+		MergeMethod:   in.Method,
+		MergeSHA:      mergeOutput.MergeSHA.String(),
+		TargetSHA:     mergeOutput.BaseSHA.String(),
+		SourceSHA:     mergeOutput.HeadSHA.String(),
+		RulesBypassed: protection.IsBypassed(violations),
 	}
 	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, activityPayload); errAct != nil {
 		// non-critical error

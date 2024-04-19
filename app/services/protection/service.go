@@ -69,6 +69,15 @@ func IsCritical(violations []types.RuleViolations) bool {
 	return false
 }
 
+func IsBypassed(violations []types.RuleViolations) bool {
+	for i := range violations {
+		if violations[i].IsBypassed() {
+			return true
+		}
+	}
+	return false
+}
+
 // NewManager creates new protection Manager.
 func NewManager(ruleStore store.RuleStore) *Manager {
 	return &Manager{

@@ -50,7 +50,7 @@ func (c *CLICore) PreReceive(ctx context.Context) error {
 		return fmt.Errorf("failed to read updated references from std in: %w", err)
 	}
 
-	alternateObjDirs, err := getAlternateObjectDirsFromEnv()
+	alternateObjDirs, err := getAlternateObjectDirsFromEnv(refUpdates)
 	if err != nil {
 		return fmt.Errorf("failed to read alternate object dirs from env: %w", err)
 	}
@@ -68,8 +68,10 @@ func (c *CLICore) PreReceive(ctx context.Context) error {
 }
 
 // Update executes the update git hook.
-func (c *CLICore) Update(ctx context.Context, ref string, oldSHA string, newSHA string) error {
-	alternateObjDirs, err := getAlternateObjectDirsFromEnv()
+func (c *CLICore) Update(ctx context.Context, ref string, oldSHARaw string, newSHARaw string) error {
+	newSHA := sha.Must(newSHARaw)
+	oldSHA := sha.Must(oldSHARaw)
+	alternateObjDirs, err := getAlternateObjectDirsFromEnv([]ReferenceUpdate{{Ref: ref, Old: oldSHA, New: newSHA}})
 	if err != nil {
 		return fmt.Errorf("failed to read alternate object dirs from env: %w", err)
 	}
@@ -77,8 +79,8 @@ func (c *CLICore) Update(ctx context.Context, ref string, oldSHA string, newSHA 
 	in := UpdateInput{
 		RefUpdate: ReferenceUpdate{
 			Ref: ref,
-			Old: sha.Must(oldSHA),
-			New: sha.Must(newSHA),
+			Old: oldSHA,
+			New: newSHA,
 		},
 		Environment: Environment{
 			AlternateObjectDirs: alternateObjDirs,
@@ -183,7 +185,20 @@ func getUpdatedReferencesFromStdIn() ([]ReferenceUpdate, error) {
 // to be able to preemptively access the quarantined objects created by a write operation.
 // NOTE: The temp dir of a write operation is it's main object dir,
 // which is the one that read operations have to use as alternate object dir.
-func getAlternateObjectDirsFromEnv() ([]string, error) {
+func getAlternateObjectDirsFromEnv(refUpdates []ReferenceUpdate) ([]string, error) {
+	hasCreateOrUpdate := false
+	for i := range refUpdates {
+		if !refUpdates[i].New.IsNil() {
+			hasCreateOrUpdate = true
+			break
+		}
+	}
+
+	// git doesn't create an alternate object dir if there's only delete operations
+	if !hasCreateOrUpdate {
+		return nil, nil
+	}
+
 	tmpDir, err := getRequiredEnvironmentVariable(command.GitObjectDir)
 	if err != nil {
 		return nil, err

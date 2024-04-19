@@ -107,14 +107,14 @@ func (c *Controller) reportBranchEvent(
 	branchUpdate hook.ReferenceUpdate,
 ) {
 	switch {
-	case branchUpdate.Old.String() == types.NilSHA:
+	case branchUpdate.Old.IsNil():
 		c.gitReporter.BranchCreated(ctx, &events.BranchCreatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
 			SHA:         branchUpdate.New.String(),
 		})
-	case branchUpdate.New.String() == types.NilSHA:
+	case branchUpdate.New.IsNil():
 		c.gitReporter.BranchDeleted(ctx, &events.BranchDeletedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
@@ -157,14 +157,14 @@ func (c *Controller) reportTagEvent(
 	tagUpdate hook.ReferenceUpdate,
 ) {
 	switch {
-	case tagUpdate.Old.String() == types.NilSHA:
+	case tagUpdate.Old.IsNil():
 		c.gitReporter.TagCreated(ctx, &events.TagCreatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
 			SHA:         tagUpdate.New.String(),
 		})
-	case tagUpdate.New.String() == types.NilSHA:
+	case tagUpdate.New.IsNil():
 		c.gitReporter.TagDeleted(ctx, &events.TagDeletedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
@@ -195,7 +195,7 @@ func (c *Controller) handlePRMessaging(
 	// skip anything that was a batch push / isn't branch related / isn't updating/creating a branch.
 	if len(in.RefUpdates) != 1 ||
 		!strings.HasPrefix(in.RefUpdates[0].Ref, gitReferenceNamePrefixBranch) ||
-		in.RefUpdates[0].New.String() == types.NilSHA {
+		in.RefUpdates[0].New.IsNil() {
 		return
 	}
 
@@ -273,7 +273,7 @@ func (c *Controller) handleEmptyRepoPush(
 	// we only care about one active branch that was pushed.
 	for _, refUpdate := range in.RefUpdates {
 		if strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch) &&
-			refUpdate.New.String() != types.NilSHA {
+			!refUpdate.New.IsNil() {
 			branchName = refUpdate.Ref[len(gitReferenceNamePrefixBranch):]
 			break
 		}

@@ -39,6 +39,7 @@ interface SystemCommentProps extends Pick<GitInfoProps, 'pullReqMetadata'> {
 interface MergePayload {
   merge_sha: string
   merge_method: string
+  rules_bypassed: boolean
 }
 
 export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, commentItems, repoMetadataPath }) => {
@@ -68,6 +69,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                   user: <strong className={css.rightTextPadding}>{pullReqMetadata.merger?.display_name}</strong>,
                   source: <strong className={css.textPadding}>{pullReqMetadata.source_branch}</strong>,
                   target: <strong className={css.textPadding}>{pullReqMetadata.target_branch}</strong>,
+                  bypassed: (payload?.payload as MergePayload)?.rules_bypassed,
                   mergeSha: (
                     <Container className={css.commitContainer} padding={{ left: 'small', right: 'xsmall' }}>
                       <CommitActions

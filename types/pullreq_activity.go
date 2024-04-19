@@ -220,10 +220,11 @@ func (a *PullRequestActivityPayloadCodeComment) ActivityType() enum.PullReqActiv
 }
 
 type PullRequestActivityPayloadMerge struct {
-	MergeMethod enum.MergeMethod `json:"merge_method"`
-	MergeSHA    string           `json:"merge_sha"`
-	TargetSHA   string           `json:"target_sha"`
-	SourceSHA   string           `json:"source_sha"`
+	MergeMethod   enum.MergeMethod `json:"merge_method"`
+	MergeSHA      string           `json:"merge_sha"`
+	TargetSHA     string           `json:"target_sha"`
+	SourceSHA     string           `json:"source_sha"`
+	RulesBypassed bool             `json:"rules_bypassed,omitempty"`
 }
 
 func (a *PullRequestActivityPayloadMerge) ActivityType() enum.PullReqActivityType {
