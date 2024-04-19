@@ -37,6 +37,7 @@ import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateSecretRequest, TypesSecret } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
+import Config from 'Config'
 import css from './NewSecretModalButton.module.scss'
 
 export interface SecretFormData {
@@ -144,6 +145,7 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
                       tooltipProps={{
                         dataTooltipId: 'secretDescriptionTextField'
                       }}
+                      maxLength={Config.SECRET_LIMIT_IN_BYTES}
                       autoComplete="off"
                       className={formik.values.showValue ? css.showValue : css.hideValue}
                     />

@@ -39,6 +39,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { OpenapiUpdateSecretRequest, TypesSecret } from 'services/code'
 import type { SecretFormData } from 'components/NewSecretModalButton/NewSecretModalButton'
 import { getErrorMessage, truncateString } from 'utils/Utils'
+import Config from 'Config'
 import css from './UpdateSecretModal.module.scss'
 
 const useUpdateSecretModal = () => {
@@ -134,6 +135,7 @@ const useUpdateSecretModal = () => {
                     tooltipProps={{
                       dataTooltipId: 'secretDescriptionTextField'
                     }}
+                    maxLength={Config.SECRET_LIMIT_IN_BYTES}
                     autoComplete="off"
                     className={formik.values.showValue ? css.showValue : css.hideValue}
                   />
