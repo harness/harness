@@ -17,9 +17,11 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const approvedBtn: string
+export declare const approvedContainer: string
 export declare const bp3Disabled: string
 export declare const btnDisabled: string
 export declare const changeReqBtn: string
+export declare const changeReqContainer: string
 export declare const commitsDropdown: string
 export declare const container: string
 export declare const diffStatsLabel: string

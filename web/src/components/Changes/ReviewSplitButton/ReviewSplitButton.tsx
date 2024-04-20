@@ -179,10 +179,23 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
   }
   return (
     <Container
-      className={cx(css.reviewButton, {
-        [css.hide]: shouldHide || loadingReviewers,
-        [css.disabled]: disabled
-      })}>
+      className={cx(
+        css.reviewButton,
+        {
+          [css.approvedContainer]:
+            approveState === ApproveState.APPROVED &&
+            processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) !== ApproveState.OUTDATED
+        },
+        {
+          [css.hide]: shouldHide || loadingReviewers,
+          [css.disabled]: disabled
+        },
+        {
+          [css.changeReqContainer]:
+            approveState === ApproveState.CHANGEREQ &&
+            processReviewDecision(approveState, commitSha, pullRequestMetadata?.source_sha) !== ApproveState.OUTDATED
+        }
+      )}>
       <SplitButton
         className={cx(
           {
