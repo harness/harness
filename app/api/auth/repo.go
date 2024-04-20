@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -37,9 +38,18 @@ func CheckRepo(
 	session *auth.Session,
 	repo *types.Repository,
 	permission enum.Permission,
+	publicaccess *publicaccess.Service,
 	orPublic bool,
 ) error {
-	if orPublic && repo.IsPublic {
+	isPublic, err := publicaccess.Get(ctx, &types.PublicResource{
+		Type:       enum.PublicResourceTypeRepository,
+		ResourceID: repo.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to check public access: %w", err)
+	}
+
+	if isPublic && orPublic {
 		return nil
 	}
 
@@ -62,9 +72,10 @@ func IsRepoOwner(
 	authorizer authz.Authorizer,
 	session *auth.Session,
 	repo *types.Repository,
+	publicaccess *publicaccess.Service,
 ) (bool, error) {
 	// for now we use repoedit as permission to verify if someone is a SpaceOwner and hence a RepoOwner.
-	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit, false)
+	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit, publicaccess, false)
 	if err != nil && !errors.Is(err, ErrNotAuthorized) {
 		return false, fmt.Errorf("failed to check access user access: %w", err)
 	}

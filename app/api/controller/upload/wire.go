@@ -16,6 +16,7 @@ package upload
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/blob"
 
@@ -31,6 +32,7 @@ func ProvideController(
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	blobStore blob.Store,
+	publicAccess *publicaccess.Service,
 ) *Controller {
-	return NewController(authorizer, repoStore, blobStore)
+	return NewController(authorizer, repoStore, blobStore, publicAccess)
 }

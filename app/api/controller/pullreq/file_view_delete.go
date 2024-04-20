@@ -31,7 +31,7 @@ func (c *Controller) FileViewDelete(
 	prNum int64,
 	filePath string,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoReview)
 	if err != nil {
 		return fmt.Errorf("failed to acquire access to repo: %w", err)
 	}

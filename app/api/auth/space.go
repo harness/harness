@@ -16,10 +16,12 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -35,9 +37,18 @@ func CheckSpace(
 	session *auth.Session,
 	space *types.Space,
 	permission enum.Permission,
+	publicaccess *publicaccess.Service,
 	orPublic bool,
 ) error {
-	if orPublic && space.IsPublic {
+	isPublic, err := publicaccess.Get(ctx, &types.PublicResource{
+		Type:       enum.PublicResourceTypeSpace,
+		ResourceID: space.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to check public access: %w", err)
+	}
+
+	if isPublic && orPublic {
 		return nil
 	}
 
@@ -67,7 +78,7 @@ func CheckSpaceScope(
 	permission enum.Permission,
 	orPublic bool,
 ) error {
-	if orPublic && space.IsPublic {
+	if orPublic {
 		return nil
 	}
 

@@ -44,7 +44,7 @@ func (c *Controller) ListChecks(
 		return types.PullReqChecks{}, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo, c.publicAccess)
 	if err != nil {
 		return types.PullReqChecks{}, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}

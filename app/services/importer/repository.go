@@ -53,6 +53,7 @@ var (
 
 type Repository struct {
 	defaultBranch string
+	isPublic      bool
 	urlProvider   gitnessurl.Provider
 	git           git.Interface
 	tx            dbtx.Transactor

@@ -29,7 +29,6 @@ type Repository struct {
 	Identifier  string `json:"identifier" yaml:"identifier"`
 	Path        string `json:"path" yaml:"path"`
 	Description string `json:"description" yaml:"description"`
-	IsPublic    bool   `json:"is_public" yaml:"is_public"`
 	CreatedBy   int64  `json:"created_by" yaml:"created_by"`
 	Created     int64  `json:"created" yaml:"created"`
 	Updated     int64  `json:"updated" yaml:"updated"`

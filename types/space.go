@@ -39,7 +39,6 @@ type Space struct {
 	Path        string `json:"path"`
 	Identifier  string `json:"identifier"`
 	Description string `json:"description"`
-	IsPublic    bool   `json:"is_public"`
 	CreatedBy   int64  `json:"created_by"`
 	Created     int64  `json:"created"`
 	Updated     int64  `json:"updated"`

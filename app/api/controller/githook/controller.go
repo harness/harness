@@ -25,6 +25,7 @@ import (
 	eventsgit "github.com/harness/gitness/app/events/git"
 	eventsrepo "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -52,6 +53,7 @@ type Controller struct {
 	preReceiveExtender  PreReceiveExtender
 	updateExtender      UpdateExtender
 	postReceiveExtender PostReceiveExtender
+	publicAccess        *publicaccess.Service
 }
 
 func NewController(
@@ -69,6 +71,7 @@ func NewController(
 	preReceiveExtender PreReceiveExtender,
 	updateExtender UpdateExtender,
 	postReceiveExtender PostReceiveExtender,
+	publicAccess *publicaccess.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:          authorizer,
@@ -85,6 +88,7 @@ func NewController(
 		preReceiveExtender:  preReceiveExtender,
 		updateExtender:      updateExtender,
 		postReceiveExtender: postReceiveExtender,
+		publicAccess:        publicAccess,
 	}
 }
 

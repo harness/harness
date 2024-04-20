@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/types"
@@ -46,19 +47,22 @@ var supportedFileTypes = map[string]struct{}{
 }
 
 type Controller struct {
-	authorizer authz.Authorizer
-	repoStore  store.RepoStore
-	blobStore  blob.Store
+	authorizer   authz.Authorizer
+	repoStore    store.RepoStore
+	blobStore    blob.Store
+	publicAccess *publicaccess.Service
 }
 
 func NewController(authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	blobStore blob.Store,
+	publicAccess *publicaccess.Service,
 ) *Controller {
 	return &Controller{
-		authorizer: authorizer,
-		repoStore:  repoStore,
-		blobStore:  blobStore,
+		authorizer:   authorizer,
+		repoStore:    repoStore,
+		blobStore:    blobStore,
+		publicAccess: publicAccess,
 	}
 }
 func (c *Controller) getRepoCheckAccess(ctx context.Context,
@@ -76,7 +80,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, orPublic); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, c.publicAccess, orPublic); err != nil {
 		return nil, fmt.Errorf("failed to verify authorization: %w", err)
 	}
 

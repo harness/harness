@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -45,7 +46,7 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 	checkStore store.CheckStore,
 	rpcClient git.Interface, eventReporter *pullreqevents.Reporter, codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service, ruleManager *protection.Manager, sseStreamer sse.Streamer,
-	codeOwners *codeowners.Service, locker *locker.Locker,
+	codeOwners *codeowners.Service, locker *locker.Locker, publicAccess *publicaccess.Service,
 ) *Controller {
 	return NewController(tx, urlProvider, authorizer,
 		pullReqStore, pullReqActivityStore,
@@ -56,5 +57,5 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 		checkStore,
 		rpcClient, eventReporter,
 		codeCommentMigrator,
-		pullreqService, ruleManager, sseStreamer, codeOwners, locker)
+		pullreqService, ruleManager, sseStreamer, codeOwners, locker, publicAccess)
 }

@@ -16,6 +16,7 @@ package reposettings
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 
@@ -31,6 +32,7 @@ func ProvideController(
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	settings *settings.Service,
+	publicAccess *publicaccess.Service,
 ) *Controller {
-	return NewController(authorizer, repoStore, settings)
+	return NewController(authorizer, repoStore, settings, publicAccess)
 }

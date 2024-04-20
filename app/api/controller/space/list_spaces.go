@@ -25,12 +25,17 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+type Space struct {
+	types.Space
+	IsPublic bool `json:"is_public"`
+}
+
 // ListSpaces lists the child spaces of a space.
 func (c *Controller) ListSpaces(ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
 	filter *types.SpaceFilter,
-) ([]*types.Space, int64, error) {
+) ([]*Space, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
@@ -47,6 +52,7 @@ func (c *Controller) ListSpaces(ctx context.Context,
 	); err != nil {
 		return nil, 0, err
 	}
+
 	return c.ListSpacesNoAuth(ctx, space.ID, filter)
 }
 
@@ -55,8 +61,8 @@ func (c *Controller) ListSpacesNoAuth(
 	ctx context.Context,
 	spaceID int64,
 	filter *types.SpaceFilter,
-) ([]*types.Space, int64, error) {
-	var spaces []*types.Space
+) ([]*Space, int64, error) {
+	var spaces []*Space
 	var count int64
 
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
@@ -65,9 +71,25 @@ func (c *Controller) ListSpacesNoAuth(
 			return fmt.Errorf("failed to count child spaces: %w", err)
 		}
 
-		spaces, err = c.spaceStore.List(ctx, spaceID, filter)
+		spacesBase, err := c.spaceStore.List(ctx, spaceID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list child spaces: %w", err)
+		}
+
+		for _, spaceBase := range spacesBase {
+			// backfill public access mode
+			isPublic, err := c.publicAccess.Get(ctx, &types.PublicResource{
+				Type:       enum.PublicResourceTypeSpace,
+				ResourceID: spaceBase.ID,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to get resource public access mode: %w", err)
+			}
+
+			spaces = append(spaces, &Space{
+				Space:    *spaceBase,
+				IsPublic: isPublic,
+			})
 		}
 
 		return nil

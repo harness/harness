@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -31,6 +32,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -46,6 +48,11 @@ import (
 var (
 	errPublicRepoCreationDisabled = usererror.BadRequestf("Public repository creation is disabled.")
 )
+
+type Repository struct {
+	types.Repository
+	IsPublic bool `json:"is_public"`
+}
 
 type Controller struct {
 	defaultBranch                 string
@@ -73,6 +80,7 @@ type Controller struct {
 	mtxManager         lock.MutexManager
 	identifierCheck    check.RepoIdentifier
 	repoCheck          Check
+	publicAccess       *publicaccess.Service
 }
 
 func NewController(
@@ -99,6 +107,7 @@ func NewController(
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoCheck Check,
+	publicAccess *publicaccess.Service,
 ) *Controller {
 	return &Controller{
 		defaultBranch:                 config.Git.DefaultBranch,
@@ -125,6 +134,7 @@ func NewController(
 		mtxManager:                    mtxManager,
 		identifierCheck:               identifierCheck,
 		repoCheck:                     repoCheck,
+		publicAccess:                  publicAccess,
 	}
 }
 
@@ -156,6 +166,7 @@ func (c *Controller) getRepoCheckAccess(
 		session,
 		repoRef,
 		reqPermission,
+		c.publicAccess,
 		orPublic,
 	)
 }
@@ -174,7 +185,7 @@ func (c *Controller) fetchRules(
 	session *auth.Session,
 	repo *types.Repository,
 ) (protection.Protection, bool, error) {
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo, c.publicAccess)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}

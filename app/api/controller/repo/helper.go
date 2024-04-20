@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -58,6 +59,7 @@ func GetRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
+	publicAccess *publicaccess.Service,
 	orPublic bool,
 ) (*types.Repository, error) {
 	repo, err := GetRepo(ctx, repoStore, repoRef)
@@ -65,7 +67,7 @@ func GetRepoCheckAccess(
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, authorizer, session, repo, reqPermission, orPublic); err != nil {
+	if err = apiauth.CheckRepo(ctx, authorizer, session, repo, reqPermission, publicAccess, orPublic); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 

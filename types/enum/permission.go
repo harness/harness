@@ -49,6 +49,7 @@ const (
 	PermissionRepoEdit              Permission = "repo_edit"
 	PermissionRepoDelete            Permission = "repo_delete"
 	PermissionRepoPush              Permission = "repo_push"
+	PermissionRepoReview            Permission = "repo_review"
 	PermissionRepoReportCommitCheck Permission = "repo_reportCommitCheck"
 )
 

@@ -176,7 +176,7 @@ func (c *Controller) Merge(
 		}
 	}
 
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, targetRepo)
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, targetRepo, c.publicAccess)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}

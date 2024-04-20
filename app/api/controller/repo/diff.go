@@ -104,7 +104,7 @@ func (c *Controller) DiffStats(
 		return types.DiffStats{}, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, c.publicAccess, false); err != nil {
 		return types.DiffStats{}, err
 	}
 
@@ -139,7 +139,7 @@ func (c *Controller) Diff(
 		return nil, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, c.publicAccess, false); err != nil {
 		return nil, err
 	}
 

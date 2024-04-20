@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type ImportInput struct {
@@ -49,6 +50,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	}
 
 	var repo *types.Repository
+	var isPublic bool
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		if err := c.resourceLimiter.RepoCount(ctx, parentSpace.ID, 1); err != nil {
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
@@ -58,12 +60,12 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		if err != nil {
 			return err
 		}
-		repo = remoteRepository.ToRepo(
+
+		repo, isPublic = remoteRepository.ToRepo(
 			parentSpace.ID,
 			in.Identifier,
 			in.Description,
 			&session.Principal,
-			c.publicResourceCreationEnabled,
 		)
 
 		// lock the space for update during repo creation to prevent racing conditions with space soft delete.
@@ -75,6 +77,17 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		err = c.repoStore.Create(ctx, repo)
 		if err != nil {
 			return fmt.Errorf("failed to create repository in storage: %w", err)
+		}
+
+		// update public resources
+		if isPublic && c.publicResourceCreationEnabled {
+			err = c.publicAccess.Set(ctx, &types.PublicResource{
+				Type:       enum.PublicResourceTypeRepository,
+				ResourceID: repo.ID,
+			}, isPublic)
+		}
+		if err != nil {
+			return fmt.Errorf("failed to set a public repo: %w", err)
 		}
 
 		err = c.importer.Run(ctx, provider, repo, remoteRepository.CloneURL, in.Pipelines)

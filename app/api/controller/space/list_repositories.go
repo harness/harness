@@ -19,7 +19,9 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -30,7 +32,7 @@ func (c *Controller) ListRepositories(
 	session *auth.Session,
 	spaceRef string,
 	filter *types.RepoFilter,
-) ([]*types.Repository, int64, error) {
+) ([]*repo.Repository, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
@@ -56,20 +58,44 @@ func (c *Controller) ListRepositoriesNoAuth(
 	ctx context.Context,
 	spaceID int64,
 	filter *types.RepoFilter,
-) ([]*types.Repository, int64, error) {
-	count, err := c.repoStore.Count(ctx, spaceID, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count child repos: %w", err)
-	}
+) ([]*repo.Repository, int64, error) {
+	var repos []*repo.Repository
+	var count int64
 
-	repos, err := c.repoStore.List(ctx, spaceID, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list child repos: %w", err)
-	}
+	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
+		count, err = c.repoStore.Count(ctx, spaceID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to count child repos: %w", err)
+		}
 
-	// backfill URLs
-	for _, repo := range repos {
-		repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+		reposBase, err := c.repoStore.List(ctx, spaceID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to list child repos: %w", err)
+		}
+
+		for _, repoBase := range reposBase {
+			// backfill URLs
+			repoBase.GitURL = c.urlProvider.GenerateGITCloneURL(repoBase.Path)
+
+			// backfill public access mode
+			isPublic, err := c.publicAccess.Get(ctx,
+				&types.PublicResource{
+					Type:       enum.PublicResourceTypeRepository,
+					ResourceID: repoBase.ID,
+				})
+			if err != nil {
+				return fmt.Errorf("failed to get resource public access mode: %w", err)
+			}
+
+			repos = append(repos, &repo.Repository{
+				Repository: *repoBase,
+				IsPublic:   isPublic,
+			})
+		}
+		return nil
+	}, dbtx.TxDefaultReadOnly)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	return repos, count, nil

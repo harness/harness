@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type ProviderInput struct {
@@ -78,12 +79,11 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		}
 
 		for i, remoteRepository := range remoteRepositories {
-			repo := remoteRepository.ToRepo(
+			repo, isPublic := remoteRepository.ToRepo(
 				space.ID,
 				remoteRepository.Identifier,
 				"",
 				&session.Principal,
-				c.publicResourceCreationEnabled,
 			)
 
 			err = c.repoStore.Create(ctx, repo)
@@ -93,6 +93,17 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 			repoIDs[i] = repo.ID
 			cloneURLs[i] = remoteRepository.CloneURL
+
+			// update public resources
+			if isPublic && c.publicResourceCreationEnabled {
+				err = c.publicAccess.Set(ctx, &types.PublicResource{
+					Type:       enum.PublicResourceTypeRepository,
+					ResourceID: repo.ID,
+				}, isPublic)
+			}
+			if err != nil {
+				return fmt.Errorf("failed to set a public repo: %w", err)
+			}
 		}
 
 		jobGroupID := fmt.Sprintf("space-import-%d", space.ID)

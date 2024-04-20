@@ -32,7 +32,7 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef s
 		return nil, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, c.publicAccess, true); err != nil {
 		return nil, err
 	}
 

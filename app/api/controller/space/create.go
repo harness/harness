@@ -102,7 +102,6 @@ func (c *Controller) createSpaceInnerInTX(
 		ParentID:    parentID,
 		Identifier:  in.Identifier,
 		Description: in.Description,
-		IsPublic:    in.IsPublic,
 		Path:        spacePath,
 		CreatedBy:   session.Principal.ID,
 		Created:     now,
@@ -144,6 +143,17 @@ func (c *Controller) createSpaceInnerInTX(
 		err = c.membershipStore.Create(ctx, membership)
 		if err != nil {
 			return nil, fmt.Errorf("failed to make user owner of the space: %w", err)
+		}
+	}
+
+	if in.IsPublic {
+		err = c.publicAccess.Set(ctx,
+			&types.PublicResource{
+				Type:       enum.PublicResourceTypeSpace,
+				ResourceID: space.ID,
+			}, in.IsPublic)
+		if err != nil {
+			return nil, fmt.Errorf("failed to insert a public resource: %w", err)
 		}
 	}
 

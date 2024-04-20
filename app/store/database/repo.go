@@ -67,7 +67,6 @@ type repository struct {
 	ParentID    int64    `db:"repo_parent_id"`
 	Identifier  string   `db:"repo_uid"`
 	Description string   `db:"repo_description"`
-	IsPublic    bool     `db:"repo_is_public"`
 	CreatedBy   int64    `db:"repo_created_by"`
 	Created     int64    `db:"repo_created"`
 	Updated     int64    `db:"repo_updated"`
@@ -98,7 +97,6 @@ const (
 		,repo_parent_id
 		,repo_uid
 		,repo_description
-		,repo_is_public
 		,repo_created_by
 		,repo_created
 		,repo_updated
@@ -223,7 +221,6 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_parent_id
 			,repo_uid
 			,repo_description
-			,repo_is_public
 			,repo_created_by
 			,repo_created
 			,repo_updated
@@ -246,7 +243,6 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_parent_id
 			,:repo_uid
 			,:repo_description
-			,:repo_is_public
 			,:repo_created_by
 			,:repo_created
 			,:repo_updated
@@ -298,7 +294,6 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_uid = :repo_uid
 			,repo_git_uid = :repo_git_uid
 			,repo_description = :repo_description
-			,repo_is_public = :repo_is_public
 			,repo_default_branch = :repo_default_branch
 			,repo_pullreq_seq = :repo_pullreq_seq
 			,repo_num_forks = :repo_num_forks
@@ -734,7 +729,6 @@ func (s *RepoStore) mapToRepo(
 		ParentID:       in.ParentID,
 		Identifier:     in.Identifier,
 		Description:    in.Description,
-		IsPublic:       in.IsPublic,
 		Created:        in.Created,
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,
@@ -818,7 +812,6 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		ParentID:       in.ParentID,
 		Identifier:     in.Identifier,
 		Description:    in.Description,
-		IsPublic:       in.IsPublic,
 		Created:        in.Created,
 		CreatedBy:      in.CreatedBy,
 		Updated:        in.Updated,

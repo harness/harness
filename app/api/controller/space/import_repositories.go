@@ -108,12 +108,11 @@ func (c *Controller) ImportRepositories(
 		}
 
 		for _, remoteRepository := range remoteRepositories {
-			repo := remoteRepository.ToRepo(
+			repo, isPublic := remoteRepository.ToRepo(
 				space.ID,
 				remoteRepository.Identifier,
 				"",
 				&session.Principal,
-				c.publicResourceCreationEnabled,
 			)
 
 			err = c.repoStore.Create(ctx, repo)
@@ -124,6 +123,18 @@ func (c *Controller) ImportRepositories(
 			} else if err != nil {
 				return fmt.Errorf("failed to create repository in storage: %w", err)
 			}
+
+			// update public resources
+			if isPublic && c.publicResourceCreationEnabled {
+				err = c.publicAccess.Set(ctx, &types.PublicResource{
+					Type:       enum.PublicResourceTypeRepository,
+					ResourceID: repo.ID,
+				}, isPublic)
+			}
+			if err != nil {
+				return fmt.Errorf("failed to set a public repo: %w", err)
+			}
+
 			repos = append(repos, repo)
 			repoIDs = append(repoIDs, repo.ID)
 			cloneURLs = append(cloneURLs, remoteRepository.CloneURL)

@@ -47,6 +47,7 @@ func (c *Controller) SoftDelete(
 		session,
 		space,
 		enum.PermissionSpaceDelete,
+		c.publicAccess,
 		false,
 	); err != nil {
 		return nil, fmt.Errorf("failed to check access: %w", err)

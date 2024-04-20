@@ -62,7 +62,7 @@ func (c *Controller) FileViewAdd(
 		return nil, err
 	}
 
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoReview)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}

@@ -63,6 +63,7 @@ import (
 	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/notification/mailer"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/publicaccess"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	reposervice "github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/settings"
@@ -114,6 +115,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		url.WireSet,
 		space.WireSet,
 		limiter.WireSet,
+		publicaccess.WireSet,
 		repo.WireSet,
 		reposettings.WireSet,
 		pullreq.WireSet,

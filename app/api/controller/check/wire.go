@@ -17,6 +17,7 @@ package check
 import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -38,6 +39,7 @@ func ProvideController(
 	checkStore store.CheckStore,
 	rpcClient git.Interface,
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
+	publicaccess *publicaccess.Service,
 ) *Controller {
 	return NewController(
 		tx,
@@ -46,5 +48,6 @@ func ProvideController(
 		checkStore,
 		rpcClient,
 		sanitizers,
+		publicaccess,
 	)
 }

@@ -101,7 +101,6 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			Identifier:    in.Identifier,
 			GitUID:        gitResp.UID,
 			Description:   in.Description,
-			IsPublic:      in.IsPublic,
 			CreatedBy:     session.Principal.ID,
 			Created:       now,
 			Updated:       now,
@@ -115,6 +114,16 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 				log.Ctx(ctx).Warn().Err(dErr).Msg("failed to delete repo for cleanup")
 			}
 			return fmt.Errorf("failed to create repository in storage: %w", err)
+		}
+
+		if in.IsPublic && c.publicResourceCreationEnabled {
+			err = c.publicAccess.Set(ctx, &types.PublicResource{
+				Type:       enum.PublicResourceTypeRepository,
+				ResourceID: repo.ID,
+			}, in.IsPublic)
+			if err != nil {
+				return fmt.Errorf("failed to set a public resource: %w", err)
+			}
 		}
 
 		return nil

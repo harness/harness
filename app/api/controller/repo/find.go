@@ -31,7 +31,7 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef st
 		return nil, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, true); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, c.publicAccess, true); err != nil {
 		return nil, err
 	}
 

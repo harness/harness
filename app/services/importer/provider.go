@@ -75,14 +75,13 @@ type RepositoryInfo struct {
 	DefaultBranch string
 }
 
-// ToRepo converts the RepositoryInfo into the types.Repository object marked as being imported.
+// ToRepo converts the RepositoryInfo into the types.Repository object marked as being imported and is public flag.
 func (r *RepositoryInfo) ToRepo(
 	spaceID int64,
 	identifier string,
 	description string,
 	principal *types.Principal,
-	publicResourceCreationEnabled bool,
-) *types.Repository {
+) (*types.Repository, bool) {
 	now := time.Now().UnixMilli()
 	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(fmt.Sprintf("%d:%s", spaceID, identifier)), now)
 	return &types.Repository{
@@ -91,14 +90,13 @@ func (r *RepositoryInfo) ToRepo(
 		Identifier:    identifier,
 		GitUID:        gitTempUID, // the correct git UID will be set by the job handler
 		Description:   description,
-		IsPublic:      publicResourceCreationEnabled && r.IsPublic,
 		CreatedBy:     principal.ID,
 		Created:       now,
 		Updated:       now,
 		ForkID:        0,
 		DefaultBranch: r.DefaultBranch,
 		Importing:     true,
-	}
+	}, r.IsPublic
 }
 
 func hash(s string) string {

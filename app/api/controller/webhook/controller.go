@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/encrypt"
@@ -39,6 +40,7 @@ type Controller struct {
 	repoStore             store.RepoStore
 	webhookService        *webhook.Service
 	encrypter             encrypt.Encrypter
+	publicAccess          *publicaccess.Service
 }
 
 func NewController(
@@ -50,6 +52,7 @@ func NewController(
 	repoStore store.RepoStore,
 	webhookService *webhook.Service,
 	encrypter encrypt.Encrypter,
+	publicAccess *publicaccess.Service,
 ) *Controller {
 	return &Controller{
 		allowLoopback:         allowLoopback,
@@ -60,6 +63,7 @@ func NewController(
 		repoStore:             repoStore,
 		webhookService:        webhookService,
 		encrypter:             encrypter,
+		publicAccess:          publicAccess,
 	}
 }
 
@@ -74,7 +78,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, c.publicAccess, false); err != nil {
 		return nil, fmt.Errorf("failed to verify authorization: %w", err)
 	}
 

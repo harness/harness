@@ -117,7 +117,7 @@ func (c *Controller) checkProtectionRules(
 	refUpdates changedRefs,
 	output *hook.Output,
 ) error {
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo, c.publicAccess)
 	if err != nil {
 		return fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}

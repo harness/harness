@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
@@ -48,12 +49,13 @@ var (
 )
 
 type Repository struct {
-	urlProvider gitnessurl.Provider
-	git         git.Interface
-	repoStore   store.RepoStore
-	scheduler   *job.Scheduler
-	encrypter   encrypt.Encrypter
-	sseStreamer sse.Streamer
+	urlProvider  gitnessurl.Provider
+	git          git.Interface
+	repoStore    store.RepoStore
+	scheduler    *job.Scheduler
+	encrypter    encrypt.Encrypter
+	sseStreamer  sse.Streamer
+	publicAccess *publicaccess.Service
 }
 
 type Input struct {
@@ -114,11 +116,21 @@ func (r *Repository) RunManyForSpace(
 
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
+		// check if repo is public
+		isPublic, err := r.publicAccess.Get(ctx,
+			&types.PublicResource{
+				Type:       enum.PublicResourceTypeRepository,
+				ResourceID: repository.ID,
+			})
+		if err != nil {
+			return fmt.Errorf("failed to check repo public visibility: %w", err)
+		}
+
 		repoJobData := Input{
 			Identifier:      repository.Identifier,
 			ID:              repository.ID,
 			Description:     repository.Description,
-			IsPublic:        repository.IsPublic,
+			IsPublic:        isPublic,
 			HarnessCodeInfo: *harnessCodeInfo,
 		}
 
@@ -188,7 +200,6 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		Identifier:    repository.Identifier,
 		DefaultBranch: repository.DefaultBranch,
 		Description:   repository.Description,
-		IsPublic:      repository.IsPublic,
 		Readme:        false,
 		License:       "",
 		GitIgnore:     "",

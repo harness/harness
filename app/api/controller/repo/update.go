@@ -32,12 +32,10 @@ import (
 // UpdateInput is used for updating a repo.
 type UpdateInput struct {
 	Description *string `json:"description"`
-	IsPublic    *bool   `json:"is_public"`
 }
 
 func (in *UpdateInput) hasChanges(repo *types.Repository) bool {
-	return (in.Description != nil && *in.Description != repo.Description) ||
-		(in.IsPublic != nil && *in.IsPublic != repo.IsPublic)
+	return in.Description != nil && *in.Description != repo.Description
 }
 
 // Update updates a repository.
@@ -66,9 +64,6 @@ func (c *Controller) Update(ctx context.Context,
 		if in.Description != nil {
 			repo.Description = *in.Description
 		}
-		if in.IsPublic != nil {
-			repo.IsPublic = *in.IsPublic
-		}
 
 		return nil
 	})
@@ -95,12 +90,6 @@ func (c *Controller) Update(ctx context.Context,
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
-	if in.IsPublic != nil {
-		if *in.IsPublic && !c.publicResourceCreationEnabled {
-			return errPublicRepoCreationDisabled
-		}
-	}
-
 	if in.Description != nil {
 		*in.Description = strings.TrimSpace(*in.Description)
 		if err := check.Description(*in.Description); err != nil {
