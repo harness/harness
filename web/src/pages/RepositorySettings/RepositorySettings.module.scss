@@ -92,7 +92,6 @@
 
 .radioContainer {
   :global([class*='RadioButton--radio']) {
-    display: flex;
     align-items: center;
   }
 }
