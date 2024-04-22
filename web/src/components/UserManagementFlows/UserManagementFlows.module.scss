@@ -19,7 +19,7 @@
 
   :global {
     .bp3-form-group,
-    .TextInput--main {
+    [class*='TextInput--main'] {
       width: 364px;
     }
   }

@@ -149,7 +149,7 @@
       min-width: 158px;
     }
 
-    .menuItem {
+    [class*='menuItem'] {
       max-width: fit-content;
     }
   }
