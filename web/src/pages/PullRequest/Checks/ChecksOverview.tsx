@@ -146,7 +146,7 @@ const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
             {getString(isPipeline ? 'pageTitle.pipelines' : 'checks')}
           </Text>
           <Container className={css.table}>
-            {data.map(({ uid, status, summary, created, updated, ended }) => (
+            {data.map(({ uid, status, summary, created, ended, started }) => (
               <Container className={css.row} key={uid}>
                 <Layout.Horizontal className={css.rowLayout}>
                   <Container className={css.status}>
@@ -173,7 +173,7 @@ const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
                   <Text className={css.time} font={{ variation: FontVariation.SMALL }}>
                     {!ended
                       ? created && <ReactTimeago date={created} formatter={customFormatter} />
-                      : timeDistance(updated, created)}
+                      : timeDistance(ended, started)}
                   </Text>
                 </Layout.Horizontal>
               </Container>
