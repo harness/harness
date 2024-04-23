@@ -18,14 +18,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/guregu/null"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
-	"github.com/harness/gitness/types/enum"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
+
+	"github.com/guregu/null"
+	"github.com/jmoiron/sqlx"
 )
 
 var _ store.PublicResource = (*PublicResourcesStore)(nil)
@@ -84,8 +84,7 @@ func (p *PublicResourcesStore) Find(
 	db := dbtx.GetAccessor(ctx, p.db)
 
 	dst := &publicResource{}
-	err = db.GetContext(ctx, dst, sql, args...)
-	if err != nil {
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return false, database.ProcessSQLErrorf(ctx, err, "Select query failed")
 	}
 

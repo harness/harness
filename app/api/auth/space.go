@@ -37,10 +37,10 @@ func CheckSpace(
 	session *auth.Session,
 	space *types.Space,
 	permission enum.Permission,
-	publicaccess *publicaccess.Service,
+	publicAccess *publicaccess.Service,
 	orPublic bool,
 ) error {
-	isPublic, err := publicaccess.Get(ctx, &types.PublicResource{
+	isPublic, err := publicAccess.Get(ctx, &types.PublicResource{
 		Type:       enum.PublicResourceTypeSpace,
 		ResourceID: space.ID,
 	})
@@ -76,9 +76,19 @@ func CheckSpaceScope(
 	space *types.Space,
 	resourceType enum.ResourceType,
 	permission enum.Permission,
+	publicAccess *publicaccess.Service,
 	orPublic bool,
 ) error {
-	if orPublic {
+	// TODO ATEFEH check resource id scope
+	isPublic, err := publicAccess.Get(ctx, &types.PublicResource{
+		Type:       enum.PublicResourceTypeSpace,
+		ResourceID: space.ParentID,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to check public access: %w", err)
+	}
+
+	if isPublic && orPublic {
 		return nil
 	}
 

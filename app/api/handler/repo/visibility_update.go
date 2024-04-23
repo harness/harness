@@ -41,12 +41,12 @@ func HandleVisibilityUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		repo, err := repoCtrl.VisibilityUpdate(ctx, session, repoRef, in)
+		res, err := repoCtrl.VisibilityUpdate(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, repo)
+		render.JSON(w, http.StatusOK, res)
 	}
 }

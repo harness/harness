@@ -38,10 +38,10 @@ func CheckRepo(
 	session *auth.Session,
 	repo *types.Repository,
 	permission enum.Permission,
-	publicaccess *publicaccess.Service,
+	publicAccess *publicaccess.Service,
 	orPublic bool,
 ) error {
-	isPublic, err := publicaccess.Get(ctx, &types.PublicResource{
+	isPublic, err := publicAccess.Get(ctx, &types.PublicResource{
 		Type:       enum.PublicResourceTypeRepository,
 		ResourceID: repo.ID,
 	})
@@ -72,10 +72,10 @@ func IsRepoOwner(
 	authorizer authz.Authorizer,
 	session *auth.Session,
 	repo *types.Repository,
-	publicaccess *publicaccess.Service,
+	publicAccess *publicaccess.Service,
 ) (bool, error) {
 	// for now we use repoedit as permission to verify if someone is a SpaceOwner and hence a RepoOwner.
-	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit, publicaccess, false)
+	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit, publicAccess, false)
 	if err != nil && !errors.Is(err, ErrNotAuthorized) {
 		return false, fmt.Errorf("failed to check access user access: %w", err)
 	}

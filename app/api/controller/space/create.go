@@ -187,6 +187,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 		parentSpace,
 		enum.ResourceTypeSpace,
 		enum.PermissionSpaceEdit,
+		c.publicAccess,
 		false,
 	); err != nil {
 		return nil, fmt.Errorf("authorization failed: %w", err)

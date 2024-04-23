@@ -37,7 +37,7 @@ type Controller struct {
 	checkStore   store.CheckStore
 	git          git.Interface
 	sanitizers   map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
-	publicaccess *publicaccess.Service
+	publicAccess *publicaccess.Service
 }
 
 func NewController(
@@ -47,7 +47,7 @@ func NewController(
 	checkStore store.CheckStore,
 	git git.Interface,
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
-	publicaccess *publicaccess.Service,
+	publicAccess *publicaccess.Service,
 ) *Controller {
 	return &Controller{
 		tx:           tx,
@@ -56,7 +56,7 @@ func NewController(
 		checkStore:   checkStore,
 		git:          git,
 		sanitizers:   sanitizers,
-		publicaccess: publicaccess,
+		publicAccess: publicAccess,
 	}
 }
 
@@ -72,7 +72,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, c.publicaccess, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, c.publicAccess, false); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 

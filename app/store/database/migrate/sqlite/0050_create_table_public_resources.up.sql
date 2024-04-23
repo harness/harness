@@ -1,5 +1,5 @@
 CREATE TABLE public_resources (
- public_resource_id SERIAL PRIMARY KEY
+ public_resource_id INTEGER PRIMARY KEY AUTOINCREMENT
 ,public_resource_type TEXT NOT NULL
 ,public_resource_space_id INTEGER
 ,public_resource_repo_id INTEGER

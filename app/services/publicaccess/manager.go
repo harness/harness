@@ -21,7 +21,6 @@ import (
 
 	"github.com/harness/gitness/app/store"
 	gitness_store "github.com/harness/gitness/store"
-
 	"github.com/harness/gitness/types"
 )
 
@@ -55,7 +54,11 @@ func (r *PublicAccessManager) Set(ctx context.Context,
 	resource *types.PublicResource,
 	enable bool) error {
 	if enable {
-		return r.publicResourceStore.Create(ctx, resource)
+		err := r.publicResourceStore.Create(ctx, resource)
+		if errors.Is(err, gitness_store.ErrDuplicate) {
+			return nil
+		}
+		return err
 	} else {
 		return r.publicResourceStore.Delete(ctx, resource)
 	}

@@ -48,6 +48,7 @@ func (c *Controller) ListSpaces(ctx context.Context,
 		space,
 		enum.ResourceTypeSpace,
 		enum.PermissionSpaceView,
+		c.publicAccess,
 		true,
 	); err != nil {
 		return nil, 0, err

@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"

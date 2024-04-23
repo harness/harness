@@ -15,8 +15,9 @@
 package publicaccess
 
 import (
-	"github.com/google/wire"
 	"github.com/harness/gitness/app/store"
+
+	"github.com/google/wire"
 )
 
 var WireSet = wire.NewSet(

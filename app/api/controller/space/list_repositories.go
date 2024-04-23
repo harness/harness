@@ -45,6 +45,7 @@ func (c *Controller) ListRepositories(
 		space,
 		enum.ResourceTypeRepo,
 		enum.PermissionRepoView,
+		c.publicAccess,
 		true,
 	); err != nil {
 		return nil, 0, err

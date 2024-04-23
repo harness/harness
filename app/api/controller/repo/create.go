@@ -175,6 +175,7 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 		space,
 		enum.ResourceTypeRepo,
 		enum.PermissionRepoEdit,
+		c.publicAccess,
 		false,
 	)
 	if err != nil {

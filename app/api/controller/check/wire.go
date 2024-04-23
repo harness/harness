@@ -39,7 +39,7 @@ func ProvideController(
 	checkStore store.CheckStore,
 	rpcClient git.Interface,
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
-	publicaccess *publicaccess.Service,
+	publicAccess *publicaccess.Service,
 ) *Controller {
 	return NewController(
 		tx,
@@ -48,6 +48,6 @@ func ProvideController(
 		checkStore,
 		rpcClient,
 		sanitizers,
-		publicaccess,
+		publicAccess,
 	)
 }
