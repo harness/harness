@@ -292,7 +292,7 @@ type (
 
 	// PublicResource defines the publicly accessible resources data storage.
 	PublicResource interface {
-		Find(ctx context.Context, publicResource *types.PublicResource) (bool, error)
+		Find(ctx context.Context, publicResource *types.PublicResource) error
 		Create(ctx context.Context, publicResource *types.PublicResource) error
 		Delete(ctx context.Context, publicResource *types.PublicResource) error
 	}

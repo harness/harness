@@ -44,7 +44,6 @@ type PublicResourcesStore struct {
 
 type publicResource struct {
 	ID      int64    `db:"public_resource_id"`
-	Type    string   `db:"public_resource_type"`
 	SpaceID null.Int `db:"public_resource_space_id"`
 	RepoID  null.Int `db:"public_resource_repo_id"`
 }
@@ -52,7 +51,6 @@ type publicResource struct {
 const (
 	publicResourceColumns = `
 	 public_resource_id
-	,public_resource_type
 	,public_resource_space_id
 	,public_resource_repo_id
 	`
@@ -61,11 +59,10 @@ const (
 func (p *PublicResourcesStore) Find(
 	ctx context.Context,
 	publicRsc *types.PublicResource,
-) (bool, error) {
+) error {
 	stmt := database.Builder.
 		Select(publicResourceColumns).
-		From("public_resources").
-		Where("public_resource_type = ?", publicRsc.Type)
+		From("public_resources")
 
 	switch publicRsc.Type {
 	case enum.PublicResourceTypeRepository:
@@ -73,22 +70,22 @@ func (p *PublicResourcesStore) Find(
 	case enum.PublicResourceTypeSpace:
 		stmt = stmt.Where("public_resource_space_id = ?", publicRsc.ResourceID)
 	default:
-		return false, fmt.Errorf("public resource type %q is not supported", publicRsc.Type)
+		return fmt.Errorf("public resource type %q is not supported", publicRsc.Type)
 	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return false, fmt.Errorf("failed to convert query to sql: %w", err)
+		return fmt.Errorf("failed to convert query to sql: %w", err)
 	}
 
 	db := dbtx.GetAccessor(ctx, p.db)
 
 	dst := &publicResource{}
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return false, database.ProcessSQLErrorf(ctx, err, "Select query failed")
+		return database.ProcessSQLErrorf(ctx, err, "Select query failed")
 	}
 
-	return true, nil
+	return nil
 }
 
 func (p *PublicResourcesStore) Create(
@@ -98,16 +95,15 @@ func (p *PublicResourcesStore) Create(
 		Insert("").
 		Into("public_resources").
 		Columns(
-			"public_resource_type",
 			"public_resource_space_id",
 			"public_resource_repo_id",
 		)
 
 	switch publicRsc.Type {
 	case enum.PublicResourceTypeRepository:
-		stmt = stmt.Values(enum.PublicResourceTypeRepository, null.Int{}, null.IntFrom(publicRsc.ResourceID))
+		stmt = stmt.Values(null.Int{}, null.IntFrom(publicRsc.ResourceID))
 	case enum.PublicResourceTypeSpace:
-		stmt = stmt.Values(enum.PublicResourceTypeSpace, null.IntFrom(publicRsc.ResourceID), null.Int{})
+		stmt = stmt.Values(null.IntFrom(publicRsc.ResourceID), null.Int{})
 	default:
 		return fmt.Errorf("public resource type %q is not supported", publicRsc.Type)
 	}
@@ -130,8 +126,7 @@ func (p *PublicResourcesStore) Delete(
 	ctx context.Context,
 	publicRsc *types.PublicResource) error {
 	stmt := database.Builder.
-		Delete("public_resources").
-		Where("public_resource_type = ?", publicRsc.Type)
+		Delete("public_resources")
 
 	switch publicRsc.Type {
 	case enum.PublicResourceTypeRepository:

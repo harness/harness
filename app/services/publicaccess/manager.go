@@ -39,7 +39,7 @@ func NewPublicAccessManager(
 func (r *PublicAccessManager) Get(
 	ctx context.Context,
 	resource *types.PublicResource) (bool, error) {
-	_, err := r.publicResourceStore.Find(ctx, resource)
+	err := r.publicResourceStore.Find(ctx, resource)
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
 		return false, nil
 	}

@@ -1,6 +1,5 @@
 CREATE TABLE public_resources (
  public_resource_id SERIAL PRIMARY KEY
-,public_resource_type TEXT NOT NULL
 ,public_resource_space_id INTEGER
 ,public_resource_repo_id INTEGER
 
@@ -24,13 +23,11 @@ CREATE UNIQUE INDEX public_resource_repo_id_key
 
 -- move public repos into public_resource
 INSERT INTO public_resources (
-     public_resource_type
-    ,public_resource_space_id
+     public_resource_space_id
     ,public_resource_repo_id
 )
 SELECT
-     'repository'
-    ,NULL   
+     NULL   
     ,repo_id
 FROM repositories
 WHERE repo_is_public = TRUE;
@@ -40,13 +37,11 @@ ALTER TABLE repositories DROP COLUMN repo_is_public;
 
 -- move public spaces into public_resource
 INSERT INTO public_resources (
-     public_resource_type
-    ,public_resource_space_id
+     public_resource_space_id
     ,public_resource_repo_id
 )
 SELECT
-     'space' 
-    ,space_id
+     space_id
     ,NULL
 FROM spaces
 WHERE space_is_public = TRUE;

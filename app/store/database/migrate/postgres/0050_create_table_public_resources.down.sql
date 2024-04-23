@@ -5,7 +5,7 @@ UPDATE repositories
 WHERE repo_id IN (
     SELECT public_resource_repo_id
     FROM public_resources 
-    WHERE public_resource_type = 'repository' AND public_resource_repo_id IS NOT NULL;
+    WHERE public_resource_repo_id IS NOT NULL;
 ) SET 
 repo_is_public = TRUE;
 
@@ -18,7 +18,7 @@ UPDATE spaces
 WHERE space_id IN (
     SELECT public_resource_space_id
     FROM public_resources 
-    WHERE public_resource_type = 'space' AND public_resource_space_id IS NOT NULL;
+    WHERE public_resource_space_id IS NOT NULL;
 ) SET 
 sapce_is_public = TRUE;
 
