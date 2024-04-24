@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 
 	"github.com/fatih/color"
@@ -52,7 +53,7 @@ func printScanSecretsFindings(
 		output.Messages,
 		colorScanHeader.Sprintf(
 			"Push contains %s:",
-			stringSecretOrSecrets(findingsCnt > 1),
+			singularOrPlural("secret", findingsCnt > 1),
 		),
 		"", // add empty line for making it visually more consumable
 	)
@@ -81,17 +82,10 @@ func printScanSecretsFindings(
 		colorScanSummary.Sprintf(
 			"%d %s found",
 			findingsCnt,
-			stringSecretOrSecrets(findingsCnt > 1),
+			singularOrPlural("secret", findingsCnt > 1),
 		)+fmt.Sprintf(" in %s", FMTDuration(time.Millisecond)),
 		"", "", // add two empty lines for making it visually more consumable
 	)
-}
-
-func stringSecretOrSecrets(plural bool) string {
-	if plural {
-		return "secrets"
-	}
-	return "secret"
 }
 
 func FMTDuration(d time.Duration) string {
@@ -107,4 +101,44 @@ func FMTDuration(d time.Duration) string {
 		d = d.Round(time.Second) // keep rest at second precision
 	}
 	return d.String()
+}
+
+func printOversizeFiles(
+	output *hook.Output,
+	oversizeFiles []git.FileInfo,
+	sizeLimit int64,
+) {
+	output.Messages = append(
+		output.Messages,
+		colorScanHeader.Sprintf(
+			"Push contains files exceeding the size limit:",
+		),
+		"", // add empty line for making it visually more consumable
+	)
+
+	for _, file := range oversizeFiles {
+		output.Messages = append(
+			output.Messages,
+			fmt.Sprintf("  %s", file.SHA),
+			fmt.Sprintf("      Size: %dB", file.Size),
+			"", // add empty line for making it visually more consumable
+		)
+	}
+
+	total := len(oversizeFiles)
+	output.Messages = append(
+		output.Messages,
+		colorScanSummary.Sprintf(
+			"%d %s found exceeding the size limit of %dB",
+			total, singularOrPlural("file", total > 1), sizeLimit,
+		),
+		"", "", // add two empty lines for making it visually more consumable
+	)
+}
+
+func singularOrPlural(noun string, plural bool) string {
+	if plural {
+		return noun + "s"
+	}
+	return noun
 }

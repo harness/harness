@@ -133,6 +133,7 @@ func getCommits(
 func (g *Git) listCommitSHAs(
 	ctx context.Context,
 	repoPath string,
+	alternateObjectDirs []string,
 	ref string,
 	page int,
 	limit int,
@@ -147,6 +148,8 @@ func (g *Git) listCommitSHAs(
 	}
 	// add refCommitSHA as starting point
 	cmd.Add(command.WithArg(ref))
+
+	cmd.Add(command.WithAlternateObjectDirs(alternateObjectDirs...))
 
 	if len(filter.Path) != 0 {
 		cmd.Add(command.WithPostSepArg(filter.Path))
@@ -190,12 +193,13 @@ func (g *Git) listCommitSHAs(
 func (g *Git) ListCommitSHAs(
 	ctx context.Context,
 	repoPath string,
+	alternateObjectDirs []string,
 	ref string,
 	page int,
 	limit int,
 	filter CommitFilter,
 ) ([]string, error) {
-	return g.listCommitSHAs(ctx, repoPath, ref, page, limit, filter)
+	return g.listCommitSHAs(ctx, repoPath, alternateObjectDirs, ref, page, limit, filter)
 }
 
 // ListCommits lists the commits reachable from ref.
@@ -214,7 +218,7 @@ func (g *Git) ListCommits(
 		return nil, nil, ErrRepositoryPathEmpty
 	}
 
-	commitSHAs, err := g.listCommitSHAs(ctx, repoPath, ref, page, limit, filter)
+	commitSHAs, err := g.listCommitSHAs(ctx, repoPath, nil, ref, page, limit, filter)
 	if err != nil {
 		return nil, nil, err
 	}

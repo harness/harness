@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/services/protection"
@@ -197,6 +198,16 @@ type rule struct {
 type restoreRequest struct {
 	repoRequest
 	repo.RestoreInput
+}
+
+type securitySettingsRequest struct {
+	repoRequest
+	reposettings.SecuritySettings
+}
+
+type generalSettingsRequest struct {
+	repoRequest
+	reposettings.GeneralSettings
 }
 
 var queryParameterGitRef = openapi3.ParameterOrRef{
@@ -959,4 +970,62 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/codeowners/validate", opCodeOwnerValidate)
+
+	opSettingsSecurityUpdate := openapi3.Operation{}
+	opSettingsSecurityUpdate.WithTags("repository")
+	opSettingsSecurityUpdate.WithMapOfAnything(
+		map[string]interface{}{"operationId": "updateSecuritySettings"})
+	_ = reflector.SetRequest(
+		&opSettingsSecurityUpdate, new(securitySettingsRequest), http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(reposettings.SecuritySettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodPatch, "/repos/{repo_ref}/settings/security", opSettingsSecurityUpdate)
+
+	opSettingsSecurityFind := openapi3.Operation{}
+	opSettingsSecurityFind.WithTags("repository")
+	opSettingsSecurityFind.WithMapOfAnything(
+		map[string]interface{}{"operationId": "findSecuritySettings"})
+	_ = reflector.SetRequest(&opSettingsSecurityFind, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(reposettings.SecuritySettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodGet, "/repos/{repo_ref}/settings/security", opSettingsSecurityFind)
+
+	opSettingsGeneralUpdate := openapi3.Operation{}
+	opSettingsGeneralUpdate.WithTags("repository")
+	opSettingsGeneralUpdate.WithMapOfAnything(
+		map[string]interface{}{"operationId": "updateGeneralSettings"})
+	_ = reflector.SetRequest(
+		&opSettingsGeneralUpdate, new(generalSettingsRequest), http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(reposettings.GeneralSettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodPatch, "/repos/{repo_ref}/settings/general", opSettingsGeneralUpdate)
+
+	opSettingsGeneralFind := openapi3.Operation{}
+	opSettingsGeneralFind.WithTags("repository")
+	opSettingsGeneralFind.WithMapOfAnything(
+		map[string]interface{}{"operationId": "findGeneralSettings"})
+	_ = reflector.SetRequest(&opSettingsGeneralFind, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(reposettings.GeneralSettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodGet, "/repos/{repo_ref}/settings/general", opSettingsGeneralFind)
 }

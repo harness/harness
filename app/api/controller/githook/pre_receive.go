@@ -93,6 +93,14 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, fmt.Errorf("failed to extend pre-receive hook: %w", err)
 	}
 
+	err = c.checkFileSizeLimit(ctx, rgit, repo, in, &output)
+	if output.Error != nil {
+		return output, nil
+	}
+	if err != nil {
+		return hook.Output{}, err
+	}
+
 	return output, nil
 }
 

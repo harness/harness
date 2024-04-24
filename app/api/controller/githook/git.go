@@ -32,4 +32,8 @@ type RestrictedGIT interface {
 	GetBranch(ctx context.Context, params *git.GetBranchParams) (*git.GetBranchOutput, error)
 	Diff(ctx context.Context, in *git.DiffParams, files ...api.FileDiffRequest) (<-chan *git.FileDiff, <-chan error)
 	GetBlob(ctx context.Context, params *git.GetBlobParams) (*git.GetBlobOutput, error)
+	FindOversizeFiles(
+		ctx context.Context,
+		params *git.FindOversizeFilesParams,
+	) (*git.FindOversizeFilesOutput, error)
 }

@@ -277,8 +277,12 @@ func setupRepos(r chi.Router,
 			r.Post("/purge", handlerrepo.HandlePurge(repoCtrl))
 			r.Post("/restore", handlerrepo.HandleRestore(repoCtrl))
 
-			r.Get("/settings/security", handlerreposettings.HandleSecurityFind(repoSettingsCtrl))
-			r.Patch("/settings/security", handlerreposettings.HandleSecurityUpdate(repoSettingsCtrl))
+			r.Route("/settings", func(r chi.Router) {
+				r.Get("/security", handlerreposettings.HandleSecurityFind(repoSettingsCtrl))
+				r.Patch("/security", handlerreposettings.HandleSecurityUpdate(repoSettingsCtrl))
+				r.Get("/general", handlerreposettings.HandleGeneralFind(repoSettingsCtrl))
+				r.Patch("/general", handlerreposettings.HandleGeneralUpdate(repoSettingsCtrl))
+			})
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
