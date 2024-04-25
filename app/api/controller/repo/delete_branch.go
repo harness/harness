@@ -34,7 +34,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	branchName string,
 	bypassRules bool,
 ) ([]types.RuleViolations, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return nil, usererror.ErrDefaultBranchCantBeDeleted
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, &repo.Repository)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		Actor:       &session.Principal,
 		AllowBypass: bypassRules,
 		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
+		Repo:        &repo.Repository,
 		RefAction:   protection.RefActionDelete,
 		RefType:     protection.RefTypeBranch,
 		RefNames:    []string{branchName},
@@ -68,7 +68,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return violations, nil
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, &repo.Repository)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

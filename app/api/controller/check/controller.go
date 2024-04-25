@@ -22,7 +22,6 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -31,13 +30,12 @@ import (
 )
 
 type Controller struct {
-	tx           dbtx.Transactor
-	authorizer   authz.Authorizer
-	repoStore    store.RepoStore
-	checkStore   store.CheckStore
-	git          git.Interface
-	sanitizers   map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
-	publicAccess *publicaccess.Service
+	tx         dbtx.Transactor
+	authorizer authz.Authorizer
+	repoStore  store.RepoStore
+	checkStore store.CheckStore
+	git        git.Interface
+	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
 }
 
 func NewController(
@@ -47,16 +45,14 @@ func NewController(
 	checkStore store.CheckStore,
 	git git.Interface,
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
-	publicAccess *publicaccess.Service,
 ) *Controller {
 	return &Controller{
-		tx:           tx,
-		authorizer:   authorizer,
-		repoStore:    repoStore,
-		checkStore:   checkStore,
-		git:          git,
-		sanitizers:   sanitizers,
-		publicAccess: publicAccess,
+		tx:         tx,
+		authorizer: authorizer,
+		repoStore:  repoStore,
+		checkStore: checkStore,
+		git:        git,
+		sanitizers: sanitizers,
 	}
 }
 
@@ -72,7 +68,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, c.publicAccess, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 

@@ -32,7 +32,7 @@ func (c *Controller) ListCommits(ctx context.Context,
 	gitRef string,
 	filter *types.CommitFilter,
 ) (types.ListCommitResponse, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return types.ListCommitResponse{}, err
 	}

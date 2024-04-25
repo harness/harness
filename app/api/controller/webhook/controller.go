@@ -40,7 +40,7 @@ type Controller struct {
 	repoStore             store.RepoStore
 	webhookService        *webhook.Service
 	encrypter             encrypt.Encrypter
-	publicAccess          *publicaccess.Service
+	publicAccess          publicaccess.PublicAccess
 }
 
 func NewController(
@@ -52,7 +52,7 @@ func NewController(
 	repoStore store.RepoStore,
 	webhookService *webhook.Service,
 	encrypter encrypt.Encrypter,
-	publicAccess *publicaccess.Service,
+	publicAccess publicaccess.PublicAccess,
 ) *Controller {
 	return &Controller{
 		allowLoopback:         allowLoopback,
@@ -78,7 +78,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, c.publicAccess, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {
 		return nil, fmt.Errorf("failed to verify authorization: %w", err)
 	}
 

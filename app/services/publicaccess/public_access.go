@@ -23,22 +23,28 @@ import (
 // PublicAccess is an abstraction of an entity responsible for managing public access to resources.
 type PublicAccess interface {
 	/*
-	 * Get returns whether resource public access is enabled.
+	 * Get returns whether public access is enabled on the resource.
 	 * Returns
 	 *		(true, nil)   - resource public access is allowed
 	 *		(false, nil)  - resource public access is not allowed
 	 *		(false, err)  - an error occurred while performing the public access check.
 	 */
-	Get(ctx context.Context,
-		resource *types.PublicResource) (bool, error)
+	Get(
+		ctx context.Context,
+		scope *types.Scope,
+		resource *types.Resource,
+	) (bool, error)
 
 	/*
-	 * Sets the resource public access mode with the provided value.
+	 * Sets or deletes public access mode for the resource based on the value of 'enable'.
 	 * Returns
 	 *		err  - resource public access mode has been updated successfully
 	 *		nil  - an error occurred while performing the public access set.
 	 */
-	Set(ctx context.Context,
-		resource *types.PublicResource,
-		enable bool) error
+	Set(
+		ctx context.Context,
+		scope *types.Scope,
+		resource *types.Resource,
+		enable bool,
+	) error
 }

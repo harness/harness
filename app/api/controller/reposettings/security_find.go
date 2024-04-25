@@ -28,7 +28,7 @@ func (c *Controller) SecurityFind(
 	session *auth.Session,
 	repoRef string,
 ) (*SecuritySettings, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}

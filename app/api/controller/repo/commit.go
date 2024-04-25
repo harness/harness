@@ -63,12 +63,12 @@ func (c *Controller) CommitFiles(ctx context.Context,
 ) (types.CommitFilesResponse, []types.RuleViolations, error) {
 	requiredPermission := enum.PermissionRepoPush
 
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, requiredPermission, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, requiredPermission)
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, err
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, &repo.Repository)
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, err
 	}
@@ -87,7 +87,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		Actor:       &session.Principal,
 		AllowBypass: in.BypassRules,
 		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
+		Repo:        &repo.Repository,
 		RefAction:   refAction,
 		RefType:     protection.RefTypeBranch,
 		RefNames:    []string{branchName},
@@ -132,7 +132,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	}
 
 	// Create internal write params. Note: This will skip the pre-commit protection rules check.
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, &repo.Repository)
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

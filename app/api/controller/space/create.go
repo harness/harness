@@ -147,12 +147,7 @@ func (c *Controller) createSpaceInnerInTX(
 	}
 
 	if in.IsPublic {
-		err = c.publicAccess.Set(ctx,
-			&types.PublicResource{
-				Type:       enum.PublicResourceTypeSpace,
-				ResourceID: space.ID,
-			}, in.IsPublic)
-		if err != nil {
+		if err := c.setPublicSpace(ctx, space); err != nil {
 			return nil, fmt.Errorf("failed to insert a public resource: %w", err)
 		}
 	}
@@ -187,13 +182,26 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 		parentSpace,
 		enum.ResourceTypeSpace,
 		enum.PermissionSpaceEdit,
-		c.publicAccess,
-		false,
 	); err != nil {
 		return nil, fmt.Errorf("authorization failed: %w", err)
 	}
 
 	return parentSpace, nil
+}
+
+func (c *Controller) setPublicSpace(ctx context.Context, space *types.Space) error {
+	parentSpace, name, err := paths.DisectLeaf(space.Path)
+	if err != nil {
+		return fmt.Errorf("failed to disect path '%s': %w", space.Path, err)
+	}
+
+	scope := &types.Scope{SpacePath: parentSpace}
+	resource := &types.Resource{
+		Type:       enum.ResourceTypeSpace,
+		Identifier: name,
+	}
+
+	return c.publicAccess.Set(ctx, scope, resource, true)
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {

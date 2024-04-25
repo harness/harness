@@ -41,7 +41,7 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef
 		return err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, c.publicAccess, false); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit); err != nil {
 		return err
 	}
 

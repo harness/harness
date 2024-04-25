@@ -21,23 +21,13 @@ import (
 )
 
 var WireSet = wire.NewSet(
-	ProvidePublicAccessManager,
 	ProvidePublicAccess,
-	ProvideService,
 )
 
-func ProvideService(
-	manager PublicAccess,
-) *Service {
-	return NewService(manager)
-}
-
-func ProvidePublicAccessManager(
+func ProvidePublicAccess(
 	publicResources store.PublicResource,
-) *PublicAccessManager {
-	return NewPublicAccessManager(publicResources)
-}
-
-func ProvidePublicAccess(p *PublicAccessManager) PublicAccess {
-	return p
+	repoStore store.RepoStore,
+	spaceStore store.SpaceStore,
+) PublicAccess {
+	return NewService(publicResources, repoStore, spaceStore)
 }

@@ -46,7 +46,7 @@ func (c *Controller) SoftDelete(
 		return nil, fmt.Errorf("failed to find the repo for soft delete: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoDelete, c.publicAccess, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoDelete); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 

@@ -17,7 +17,6 @@ package repo
 import (
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/auth/authz"
-
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
@@ -67,7 +66,7 @@ func ProvideController(
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoChecks Check,
-	publicAccess *publicaccess.Service,
+	publicAccess publicaccess.PublicAccess,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,

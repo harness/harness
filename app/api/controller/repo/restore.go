@@ -40,13 +40,13 @@ func (c *Controller) Restore(
 	repoRef string,
 	deletedAt int64,
 	in *RestoreInput,
-) (*types.Repository, error) {
+) (*Repository, error) {
 	repo, err := c.repoStore.FindByRefAndDeletedAt(ctx, repoRef, deletedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit, c.publicAccess, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
@@ -75,7 +75,7 @@ func (c *Controller) RestoreNoAuth(
 	repo *types.Repository,
 	newIdentifier *string,
 	newParentID int64,
-) (*types.Repository, error) {
+) (*Repository, error) {
 	var err error
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		if err := c.resourceLimiter.RepoCount(ctx, newParentID, 1); err != nil {
@@ -93,5 +93,13 @@ func (c *Controller) RestoreNoAuth(
 		return nil, fmt.Errorf("failed to restore the repo: %w", err)
 	}
 
-	return repo, nil
+	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
+	}
+
+	return &Repository{
+		Repository: *repo,
+		IsPublic:   isPublic,
+	}, nil
 }

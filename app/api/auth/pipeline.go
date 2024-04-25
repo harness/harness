@@ -16,14 +16,13 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/pkg/errors"
 )
 
 // CheckPipeline checks if a pipeline specific permission is granted for the current auth session
@@ -34,7 +33,7 @@ func CheckPipeline(ctx context.Context, authorizer authz.Authorizer, session *au
 	repoPath string, pipelineIdentifier string, permission enum.Permission) error {
 	spacePath, repoName, err := paths.DisectLeaf(repoPath)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to disect path '%s'", repoPath)
+		return fmt.Errorf("failed to disect path '%s': %w", repoPath, err)
 	}
 	scope := &types.Scope{SpacePath: spacePath, Repo: repoName}
 	resource := &types.Resource{

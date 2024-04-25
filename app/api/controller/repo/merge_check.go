@@ -35,7 +35,7 @@ func (c *Controller) MergeCheck(
 	repoRef string,
 	diffPath string,
 ) (MergeCheck, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return MergeCheck{}, err
 	}
@@ -45,7 +45,7 @@ func (c *Controller) MergeCheck(
 		return MergeCheck{}, err
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, &repo.Repository)
 	if err != nil {
 		return MergeCheck{}, fmt.Errorf("failed to create rpc write params: %w", err)
 	}

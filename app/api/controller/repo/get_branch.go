@@ -29,7 +29,7 @@ func (c *Controller) GetBranch(ctx context.Context,
 	repoRef string,
 	branchName string,
 ) (*Branch, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}

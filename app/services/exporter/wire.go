@@ -38,7 +38,7 @@ func ProvideSpaceExporter(
 	executor *job.Executor,
 	encrypter encrypt.Encrypter,
 	sseStreamer sse.Streamer,
-	publicAccess *publicaccess.Service,
+	publicAccess publicaccess.PublicAccess,
 ) (*Repository, error) {
 	exporter := &Repository{
 		urlProvider:  urlProvider,

@@ -42,7 +42,7 @@ func (c *Controller) ListCommitTags(ctx context.Context,
 	includeCommit bool,
 	filter *types.TagFilter,
 ) ([]CommitTag, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}

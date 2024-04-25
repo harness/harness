@@ -32,7 +32,7 @@ func (c *Controller) RuleDelete(ctx context.Context,
 	repoRef string,
 	identifier string,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return err
 	}

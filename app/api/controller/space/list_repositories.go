@@ -45,8 +45,6 @@ func (c *Controller) ListRepositories(
 		space,
 		enum.ResourceTypeRepo,
 		enum.PermissionRepoView,
-		c.publicAccess,
-		true,
 	); err != nil {
 		return nil, 0, err
 	}
@@ -79,11 +77,7 @@ func (c *Controller) ListRepositoriesNoAuth(
 			repoBase.GitURL = c.urlProvider.GenerateGITCloneURL(repoBase.Path)
 
 			// backfill public access mode
-			isPublic, err := c.publicAccess.Get(ctx,
-				&types.PublicResource{
-					Type:       enum.PublicResourceTypeRepository,
-					ResourceID: repoBase.ID,
-				})
+			isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repoBase)
 			if err != nil {
 				return fmt.Errorf("failed to get resource public access mode: %w", err)
 			}

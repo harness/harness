@@ -55,7 +55,7 @@ func (c *Controller) Move(
 		return nil, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, c.publicAccess, false); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit); err != nil {
 		return nil, err
 	}
 

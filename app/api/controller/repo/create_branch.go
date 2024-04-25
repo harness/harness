@@ -43,7 +43,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 	repoRef string,
 	in *CreateBranchInput,
 ) (*Branch, []types.RuleViolations, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -53,7 +53,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		in.Target = repo.DefaultBranch
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, &repo.Repository)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -62,7 +62,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		Actor:       &session.Principal,
 		AllowBypass: in.BypassRules,
 		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
+		Repo:        &repo.Repository,
 		RefAction:   protection.RefActionCreate,
 		RefType:     protection.RefTypeBranch,
 		RefNames:    []string{in.Name},
@@ -74,7 +74,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		return nil, violations, nil
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, &repo.Repository)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

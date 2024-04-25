@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
 type ProviderInput struct {
@@ -96,13 +95,9 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 			// update public resources
 			if isPublic && c.publicResourceCreationEnabled {
-				err = c.publicAccess.Set(ctx, &types.PublicResource{
-					Type:       enum.PublicResourceTypeRepository,
-					ResourceID: repo.ID,
-				}, isPublic)
-			}
-			if err != nil {
-				return fmt.Errorf("failed to set a public repo: %w", err)
+				if err := c.repoCtrl.SetPublicRepo(ctx, repo); err != nil {
+					return fmt.Errorf("failed to set a public repo: %w", err)
+				}
 			}
 		}
 

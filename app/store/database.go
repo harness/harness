@@ -292,9 +292,9 @@ type (
 
 	// PublicResource defines the publicly accessible resources data storage.
 	PublicResource interface {
-		Find(ctx context.Context, publicResource *types.PublicResource) error
-		Create(ctx context.Context, publicResource *types.PublicResource) error
-		Delete(ctx context.Context, publicResource *types.PublicResource) error
+		Find(ctx context.Context, pubRes *types.PublicResource) error
+		Create(ctx context.Context, pubRes *types.PublicResource) error
+		Delete(ctx context.Context, pubRes *types.PublicResource) error
 	}
 
 	// TokenStore defines the token data storage.

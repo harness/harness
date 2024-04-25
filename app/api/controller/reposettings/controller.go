@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -31,14 +30,14 @@ type Controller struct {
 	authorizer   authz.Authorizer
 	repoStore    store.RepoStore
 	settings     *settings.Service
-	publicAccess *publicaccess.Service
+	publicAccess publicaccess.PublicAccess
 }
 
 func NewController(
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	settings *settings.Service,
-	publicAccess *publicaccess.Service,
+	publicAccess publicaccess.PublicAccess,
 ) *Controller {
 	return &Controller{
 		authorizer:   authorizer,
@@ -55,16 +54,14 @@ func (c *Controller) getRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
-	orPublic bool,
-) (*types.Repository, error) {
+) (*repo.Repository, error) {
 	return repo.GetRepoCheckAccess(
 		ctx,
 		c.repoStore,
 		c.authorizer,
+		c.publicAccess,
 		session,
 		repoRef,
 		reqPermission,
-		c.publicAccess,
-		orPublic,
 	)
 }

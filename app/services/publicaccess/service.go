@@ -16,33 +16,71 @@ package publicaccess
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
+	"github.com/harness/gitness/app/store"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 )
 
 type Service struct {
-	manager PublicAccess
+	publicResourceStore store.PublicResource
+	repoStore           store.RepoStore
+	spaceStore          store.SpaceStore
 }
 
 func NewService(
-	manager PublicAccess,
-) *Service {
+	publicResourceStore store.PublicResource,
+	repoStore store.RepoStore,
+	spaceStore store.SpaceStore,
+) PublicAccess {
 	return &Service{
-		manager: manager,
+		publicResourceStore: publicResourceStore,
+		repoStore:           repoStore,
+		spaceStore:          spaceStore,
 	}
 }
 
 func (s *Service) Get(
 	ctx context.Context,
-	resource *types.PublicResource,
+	scope *types.Scope,
+	resource *types.Resource,
 ) (bool, error) {
-	return s.manager.Get(ctx, resource)
+	pubRes, err := s.getPublicResource(ctx, scope, resource)
+	if err != nil {
+		return false, err
+	}
+
+	err = s.publicResourceStore.Find(ctx, pubRes)
+	if errors.Is(err, gitness_store.ErrResourceNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("failed to get public access resource: %w", err)
+	}
+
+	return true, nil
 }
 
 func (s *Service) Set(
 	ctx context.Context,
-	resource *types.PublicResource,
+	scope *types.Scope,
+	resource *types.Resource,
 	enable bool,
 ) error {
-	return s.manager.Set(ctx, resource, enable)
+	pubRes, err := s.getPublicResource(ctx, scope, resource)
+	if err != nil {
+		return err
+	}
+
+	if enable {
+		err := s.publicResourceStore.Create(ctx, pubRes)
+		if errors.Is(err, gitness_store.ErrDuplicate) {
+			return nil
+		}
+		return err
+	} else {
+		return s.publicResourceStore.Delete(ctx, pubRes)
+	}
 }

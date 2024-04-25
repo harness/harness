@@ -30,7 +30,7 @@ func (c *Controller) RuleList(ctx context.Context,
 	repoRef string,
 	filter *types.RuleFilter,
 ) ([]types.Rule, int64, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -29,7 +29,7 @@ func (c *Controller) RuleFind(ctx context.Context,
 	repoRef string,
 	identifier string,
 ) (*types.Rule, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}

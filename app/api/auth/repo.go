@@ -38,24 +38,10 @@ func CheckRepo(
 	session *auth.Session,
 	repo *types.Repository,
 	permission enum.Permission,
-	publicAccess *publicaccess.Service,
-	orPublic bool,
 ) error {
-	isPublic, err := publicAccess.Get(ctx, &types.PublicResource{
-		Type:       enum.PublicResourceTypeRepository,
-		ResourceID: repo.ID,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to check public access: %w", err)
-	}
-
-	if isPublic && orPublic {
-		return nil
-	}
-
 	parentSpace, name, err := paths.DisectLeaf(repo.Path)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to disect path '%s'", repo.Path)
+		return fmt.Errorf("failed to disect path '%s': %w", repo.Path, err)
 	}
 
 	scope := &types.Scope{SpacePath: parentSpace}
@@ -67,15 +53,33 @@ func CheckRepo(
 	return Check(ctx, authorizer, session, scope, resource, permission)
 }
 
+func CheckRepoIsPublic(
+	ctx context.Context,
+	publicAccess publicaccess.PublicAccess,
+	repo *types.Repository,
+) (bool, error) {
+	parentSpace, name, err := paths.DisectLeaf(repo.Path)
+	if err != nil {
+		return false, fmt.Errorf("failed to disect path '%s': %w", repo.Path, err)
+	}
+
+	scope := &types.Scope{SpacePath: parentSpace}
+	resource := &types.Resource{
+		Type:       enum.ResourceTypeRepo,
+		Identifier: name,
+	}
+
+	return publicAccess.Get(ctx, scope, resource)
+}
+
 func IsRepoOwner(
 	ctx context.Context,
 	authorizer authz.Authorizer,
 	session *auth.Session,
 	repo *types.Repository,
-	publicAccess *publicaccess.Service,
 ) (bool, error) {
 	// for now we use repoedit as permission to verify if someone is a SpaceOwner and hence a RepoOwner.
-	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit, publicAccess, false)
+	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit)
 	if err != nil && !errors.Is(err, ErrNotAuthorized) {
 		return false, fmt.Errorf("failed to check access user access: %w", err)
 	}

@@ -24,16 +24,16 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 // GetRepo fetches an active repo (not one that is currently being imported).
 func GetRepo(
 	ctx context.Context,
+	publicAccess publicaccess.PublicAccess,
 	repoStore store.RepoStore,
 	repoRef string,
-) (*types.Repository, error) {
+) (*Repository, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
@@ -47,7 +47,15 @@ func GetRepo(
 		return nil, usererror.BadRequest("Repository import is in progress.")
 	}
 
-	return repo, nil
+	isPublic, err := apiauth.CheckRepoIsPublic(ctx, publicAccess, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check if repo is public: %w", err)
+	}
+
+	return &Repository{
+		Repository: *repo,
+		IsPublic:   isPublic,
+	}, nil
 }
 
 // GetRepoCheckAccess fetches an active repo (not one that is currently being imported)
@@ -56,18 +64,17 @@ func GetRepoCheckAccess(
 	ctx context.Context,
 	repoStore store.RepoStore,
 	authorizer authz.Authorizer,
+	publicAccess publicaccess.PublicAccess,
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
-	publicAccess *publicaccess.Service,
-	orPublic bool,
-) (*types.Repository, error) {
-	repo, err := GetRepo(ctx, repoStore, repoRef)
+) (*Repository, error) {
+	repo, err := GetRepo(ctx, publicAccess, repoStore, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, authorizer, session, repo, reqPermission, publicAccess, orPublic); err != nil {
+	if err = apiauth.CheckRepo(ctx, authorizer, session, &repo.Repository, reqPermission); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 

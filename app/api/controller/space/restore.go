@@ -56,7 +56,7 @@ func (c *Controller) Restore(
 	}
 
 	// check view permission on the original ref.
-	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, c.publicAccess, false)
+	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize on space restore: %w", err)
 	}
@@ -74,8 +74,6 @@ func (c *Controller) Restore(
 		parentSpace,
 		enum.ResourceTypeSpace,
 		enum.PermissionSpaceEdit,
-		c.publicAccess,
-		false,
 	); err != nil {
 		return nil, fmt.Errorf("authorization failed on space restore: %w", err)
 	}

@@ -27,7 +27,6 @@ import (
 	"github.com/harness/gitness/app/services/codeowners"
 	locker "github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
-	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -62,7 +61,6 @@ type Controller struct {
 	sseStreamer         sse.Streamer
 	codeOwners          *codeowners.Service
 	locker              *locker.Locker
-	publicAccess        *publicaccess.Service
 }
 
 func NewController(
@@ -87,7 +85,6 @@ func NewController(
 	sseStreamer sse.Streamer,
 	codeowners *codeowners.Service,
 	locker *locker.Locker,
-	publicAccess *publicaccess.Service,
 ) *Controller {
 	return &Controller{
 		tx:                  tx,
@@ -111,7 +108,6 @@ func NewController(
 		sseStreamer:         sseStreamer,
 		codeOwners:          codeowners,
 		locker:              locker,
-		publicAccess:        publicAccess,
 	}
 }
 
@@ -157,7 +153,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, usererror.BadRequest("Repository import is in progress.")
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, c.publicAccess, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 

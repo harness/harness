@@ -43,8 +43,8 @@ func (c *Controller) UpdateDefaultBranch(
 	session *auth.Session,
 	repoRef string,
 	in *UpdateDefaultBranchInput,
-) (*types.Repository, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
+) (*Repository, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c *Controller) UpdateDefaultBranch(
 	}
 	defer unlock()
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, &repo.Repository)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
@@ -87,7 +87,7 @@ func (c *Controller) UpdateDefaultBranch(
 	}
 
 	oldName := repo.DefaultBranch
-	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
+	repoBase, err := c.repoStore.UpdateOptLock(ctx, &repo.Repository, func(r *types.Repository) error {
 		r.DefaultBranch = in.Name
 		return nil
 	})
@@ -114,5 +114,8 @@ func (c *Controller) UpdateDefaultBranch(
 		NewName:     repo.DefaultBranch,
 	})
 
-	return repo, nil
+	return &Repository{
+		Repository: *repoBase,
+		IsPublic:   repo.IsPublic,
+	}, nil
 }

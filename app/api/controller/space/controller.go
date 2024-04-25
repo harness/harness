@@ -58,7 +58,7 @@ type Controller struct {
 	importer        *importer.Repository
 	exporter        *exporter.Repository
 	resourceLimiter limiter.ResourceLimiter
-	publicAccess    *publicaccess.Service
+	publicAccess    publicaccess.PublicAccess
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
@@ -67,7 +67,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
-	limiter limiter.ResourceLimiter, publicAccess *publicaccess.Service,
+	limiter limiter.ResourceLimiter, publicAccess publicaccess.PublicAccess,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled:           config.NestedSpacesEnabled,

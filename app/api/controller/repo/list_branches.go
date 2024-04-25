@@ -38,7 +38,7 @@ func (c *Controller) ListBranches(ctx context.Context,
 	includeCommit bool,
 	filter *types.BranchFilter,
 ) ([]Branch, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}

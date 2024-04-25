@@ -39,7 +39,7 @@ func (c *Controller) PathsDetails(ctx context.Context,
 	gitRef string,
 	input PathsDetailsInput,
 ) (PathsDetailsOutput, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return PathsDetailsOutput{}, err
 	}

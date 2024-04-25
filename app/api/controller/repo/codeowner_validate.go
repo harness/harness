@@ -28,7 +28,7 @@ func (c *Controller) CodeOwnersValidate(
 	repoRef string,
 	ref string,
 ) (*types.CodeOwnersValidation, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (c *Controller) CodeOwnersValidate(
 		ref = repo.DefaultBranch
 	}
 
-	violations, err := c.codeOwners.Validate(ctx, repo, ref)
+	violations, err := c.codeOwners.Validate(ctx, &repo.Repository, ref)
 	if err != nil {
 		return nil, err
 	}

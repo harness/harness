@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -36,7 +37,7 @@ func (c *Controller) VisibilityUpdate(ctx context.Context,
 	repoRef string,
 	in *VisibilityInput,
 ) (*VisibilityOutput, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
@@ -45,22 +46,20 @@ func (c *Controller) VisibilityUpdate(ctx context.Context,
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	err = c.publicAccess.Set(
-		ctx,
-		&types.PublicResource{
-			Type:       enum.PublicResourceTypeRepository,
-			ResourceID: repo.ID,
-		},
-		in.EnablePublic,
-	)
+	parentSpace, name, err := paths.DisectLeaf(repo.Path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to set public access: %w", err)
+		return nil, fmt.Errorf("Failed to disect path '%s': %w", repo.Path, err)
 	}
 
-	// TODO log for the audit service
+	scope := &types.Scope{SpacePath: parentSpace}
+	resource := &types.Resource{
+		Type:       enum.ResourceTypeRepo,
+		Identifier: name,
+	}
 
-	// backfill repo url
-	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+	if err = c.publicAccess.Set(ctx, scope, resource, in.EnablePublic); err != nil {
+		return nil, fmt.Errorf("failed to set public access: %w", err)
+	}
 
 	return &VisibilityOutput{
 		in.EnablePublic,

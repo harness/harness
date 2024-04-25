@@ -126,13 +126,9 @@ func (c *Controller) ImportRepositories(
 
 			// update public resources
 			if isPublic && c.publicResourceCreationEnabled {
-				err = c.publicAccess.Set(ctx, &types.PublicResource{
-					Type:       enum.PublicResourceTypeRepository,
-					ResourceID: repo.ID,
-				}, isPublic)
-			}
-			if err != nil {
-				return fmt.Errorf("failed to set a public repo: %w", err)
+				if err := c.repoCtrl.SetPublicRepo(ctx, repo); err != nil {
+					return fmt.Errorf("failed to set a public repo: %w", err)
+				}
 			}
 
 			repos = append(repos, repo)

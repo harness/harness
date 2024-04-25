@@ -42,7 +42,7 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore,
 	spaceStore store.SpaceStore, repoStore store.RepoStore, principalStore store.PrincipalStore,
 	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository,
-	exporter *exporter.Repository, limiter limiter.ResourceLimiter, publicAccess *publicaccess.Service,
+	exporter *exporter.Repository, limiter limiter.ResourceLimiter, publicAccess publicaccess.PublicAccess,
 ) *Controller {
 	return NewController(config, tx, urlProvider, sseStreamer, identifierCheck, authorizer,
 		spacePathStore, pipelineStore, secretStore,

@@ -24,8 +24,6 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/pkg/errors"
 )
 
 // CheckSpace checks if a space specific permission is granted for the current auth session
@@ -37,24 +35,10 @@ func CheckSpace(
 	session *auth.Session,
 	space *types.Space,
 	permission enum.Permission,
-	publicAccess *publicaccess.Service,
-	orPublic bool,
 ) error {
-	isPublic, err := publicAccess.Get(ctx, &types.PublicResource{
-		Type:       enum.PublicResourceTypeSpace,
-		ResourceID: space.ID,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to check public access: %w", err)
-	}
-
-	if isPublic && orPublic {
-		return nil
-	}
-
 	parentSpace, name, err := paths.DisectLeaf(space.Path)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to disect path '%s'", space.Path)
+		return fmt.Errorf("failed to disect path '%s': %w", space.Path, err)
 	}
 
 	scope := &types.Scope{SpacePath: parentSpace}
@@ -76,22 +60,7 @@ func CheckSpaceScope(
 	space *types.Space,
 	resourceType enum.ResourceType,
 	permission enum.Permission,
-	publicAccess *publicaccess.Service,
-	orPublic bool,
 ) error {
-	// TODO ATEFEH check resource id scope
-	isPublic, err := publicAccess.Get(ctx, &types.PublicResource{
-		Type:       enum.PublicResourceTypeSpace,
-		ResourceID: space.ParentID,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to check public access: %w", err)
-	}
-
-	if isPublic && orPublic {
-		return nil
-	}
-
 	scope := &types.Scope{SpacePath: space.Path}
 	resource := &types.Resource{
 		Type:       resourceType,
@@ -99,4 +68,23 @@ func CheckSpaceScope(
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)
+}
+
+func CheckSpaceIsPublic(
+	ctx context.Context,
+	publicAccess publicaccess.PublicAccess,
+	space *types.Space,
+) (bool, error) {
+	parentSpace, name, err := paths.DisectLeaf(space.Path)
+	if err != nil {
+		return false, fmt.Errorf("failed to disect path '%s': %w", space.Path, err)
+	}
+
+	scope := &types.Scope{SpacePath: parentSpace}
+	resource := &types.Resource{
+		Type:       enum.ResourceTypeSpace,
+		Identifier: name,
+	}
+
+	return publicAccess.Get(ctx, scope, resource)
 }

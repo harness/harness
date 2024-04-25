@@ -58,19 +58,19 @@ const (
 
 func (p *PublicResourcesStore) Find(
 	ctx context.Context,
-	publicRsc *types.PublicResource,
+	pubRes *types.PublicResource,
 ) error {
 	stmt := database.Builder.
 		Select(publicResourceColumns).
 		From("public_resources")
 
-	switch publicRsc.Type {
-	case enum.PublicResourceTypeRepository:
-		stmt = stmt.Where("public_resource_repo_id = ?", publicRsc.ResourceID)
+	switch pubRes.Type {
+	case enum.PublicResourceTypeRepo:
+		stmt = stmt.Where("public_resource_repo_id = ?", pubRes.ID)
 	case enum.PublicResourceTypeSpace:
-		stmt = stmt.Where("public_resource_space_id = ?", publicRsc.ResourceID)
+		stmt = stmt.Where("public_resource_space_id = ?", pubRes.ID)
 	default:
-		return fmt.Errorf("public resource type %q is not supported", publicRsc.Type)
+		return fmt.Errorf("public resource type %q is not supported", pubRes.Type)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -90,7 +90,8 @@ func (p *PublicResourcesStore) Find(
 
 func (p *PublicResourcesStore) Create(
 	ctx context.Context,
-	publicRsc *types.PublicResource) error {
+	pubRes *types.PublicResource,
+) error {
 	stmt := database.Builder.
 		Insert("").
 		Into("public_resources").
@@ -99,13 +100,13 @@ func (p *PublicResourcesStore) Create(
 			"public_resource_repo_id",
 		)
 
-	switch publicRsc.Type {
-	case enum.PublicResourceTypeRepository:
-		stmt = stmt.Values(null.Int{}, null.IntFrom(publicRsc.ResourceID))
+	switch pubRes.Type {
+	case enum.PublicResourceTypeRepo:
+		stmt = stmt.Values(null.Int{}, null.IntFrom(pubRes.ID))
 	case enum.PublicResourceTypeSpace:
-		stmt = stmt.Values(null.IntFrom(publicRsc.ResourceID), null.Int{})
+		stmt = stmt.Values(null.IntFrom(pubRes.ID), null.Int{})
 	default:
-		return fmt.Errorf("public resource type %q is not supported", publicRsc.Type)
+		return fmt.Errorf("public resource type %q is not supported", pubRes.Type)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -124,17 +125,18 @@ func (p *PublicResourcesStore) Create(
 
 func (p *PublicResourcesStore) Delete(
 	ctx context.Context,
-	publicRsc *types.PublicResource) error {
+	pubRes *types.PublicResource,
+) error {
 	stmt := database.Builder.
 		Delete("public_resources")
 
-	switch publicRsc.Type {
-	case enum.PublicResourceTypeRepository:
-		stmt = stmt.Where("public_resource_repo_id = ?", publicRsc.ResourceID)
+	switch pubRes.Type {
+	case enum.PublicResourceTypeRepo:
+		stmt = stmt.Where("public_resource_repo_id = ?", pubRes.ID)
 	case enum.PublicResourceTypeSpace:
-		stmt = stmt.Where("public_resource_space_id = ?", publicRsc.ResourceID)
+		stmt = stmt.Where("public_resource_space_id = ?", pubRes.ID)
 	default:
-		return fmt.Errorf("public resource type %q is not supported", publicRsc.Type)
+		return fmt.Errorf("public resource type %q is not supported", pubRes.Type)
 	}
 
 	sql, args, err := stmt.ToSql()

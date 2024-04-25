@@ -74,7 +74,7 @@ func (c *Controller) Update(ctx context.Context,
 		}
 
 		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo,
-			enum.PermissionRepoReview, c.publicAccess, false); err != nil {
+			enum.PermissionRepoReview); err != nil {
 			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
 		}
 	}

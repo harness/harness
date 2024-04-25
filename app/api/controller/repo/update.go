@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
@@ -43,15 +44,15 @@ func (c *Controller) Update(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *UpdateInput,
-) (*types.Repository, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
+) (*Repository, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
 
 	repoClone := repo.Clone()
 
-	if !in.hasChanges(repo) {
+	if !in.hasChanges(&repo.Repository) {
 		return repo, nil
 	}
 
@@ -59,7 +60,7 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
+	repoBase, err := c.repoStore.UpdateOptLock(ctx, &repo.Repository, func(repo *types.Repository) error {
 		// update values only if provided
 		if in.Description != nil {
 			repo.Description = *in.Description
@@ -85,8 +86,15 @@ func (c *Controller) Update(ctx context.Context,
 
 	// backfill repo url
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repoBase)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
+	}
 
-	return repo, nil
+	return &Repository{
+		Repository: *repoBase,
+		IsPublic:   isPublic,
+	}, nil
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {

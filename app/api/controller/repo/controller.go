@@ -79,7 +79,7 @@ type Controller struct {
 	mtxManager         lock.MutexManager
 	identifierCheck    check.RepoIdentifier
 	repoCheck          Check
-	publicAccess       *publicaccess.Service
+	publicAccess       publicaccess.PublicAccess
 }
 
 func NewController(
@@ -106,7 +106,7 @@ func NewController(
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoCheck Check,
-	publicAccess *publicaccess.Service,
+	publicAccess publicaccess.PublicAccess,
 ) *Controller {
 	return &Controller{
 		defaultBranch:                 config.Git.DefaultBranch,
@@ -141,9 +141,10 @@ func NewController(
 func (c *Controller) getRepo(
 	ctx context.Context,
 	repoRef string,
-) (*types.Repository, error) {
+) (*Repository, error) {
 	return GetRepo(
 		ctx,
+		c.publicAccess,
 		c.repoStore,
 		repoRef,
 	)
@@ -156,17 +157,15 @@ func (c *Controller) getRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
-	orPublic bool,
-) (*types.Repository, error) {
+) (*Repository, error) {
 	return GetRepoCheckAccess(
 		ctx,
 		c.repoStore,
 		c.authorizer,
+		c.publicAccess,
 		session,
 		repoRef,
 		reqPermission,
-		c.publicAccess,
-		orPublic,
 	)
 }
 
@@ -184,7 +183,7 @@ func (c *Controller) fetchRules(
 	session *auth.Session,
 	repo *types.Repository,
 ) (protection.Protection, bool, error) {
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo, c.publicAccess)
+	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to determine if user is repo owner: %w", err)
 	}

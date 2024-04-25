@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+	"github.com/pkg/errors"
 
 	"github.com/rs/zerolog/log"
 )
@@ -62,7 +63,7 @@ type CreateInput struct {
 // Create creates a new repository.
 //
 //nolint:gocognit
-func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Repository, error) {
+func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*Repository, error) {
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -117,11 +118,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		}
 
 		if in.IsPublic && c.publicResourceCreationEnabled {
-			err = c.publicAccess.Set(ctx, &types.PublicResource{
-				Type:       enum.PublicResourceTypeRepository,
-				ResourceID: repo.ID,
-			}, in.IsPublic)
-			if err != nil {
+			if err = c.SetPublicRepo(ctx, repo); err != nil {
 				return fmt.Errorf("failed to set a public resource: %w", err)
 			}
 		}
@@ -154,7 +151,10 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		}
 	}
 
-	return repo, nil
+	return &Repository{
+		Repository: *repo,
+		IsPublic:   in.IsPublic,
+	}, nil
 }
 
 func (c *Controller) getSpaceCheckAuthRepoCreation(
@@ -175,8 +175,6 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 		space,
 		enum.ResourceTypeRepo,
 		enum.PermissionRepoEdit,
-		c.publicAccess,
-		false,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("auth check failed: %w", err)
@@ -281,6 +279,21 @@ func (c *Controller) createGitRepository(ctx context.Context, session *auth.Sess
 	}
 
 	return resp, len(files) == 0, nil
+}
+
+func (c *Controller) SetPublicRepo(ctx context.Context, repo *types.Repository) error {
+	parentSpace, name, err := paths.DisectLeaf(repo.Path)
+	if err != nil {
+		return fmt.Errorf("failed to disect path '%s': %w", repo.Path, err)
+	}
+
+	scope := &types.Scope{SpacePath: parentSpace}
+	resource := &types.Resource{
+		Type:       enum.ResourceTypeRepo,
+		Identifier: name,
+	}
+
+	return c.publicAccess.Set(ctx, scope, resource, true)
 }
 
 func createReadme(name, description string) []byte {

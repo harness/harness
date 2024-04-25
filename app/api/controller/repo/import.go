@@ -22,7 +22,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
 type ImportInput struct {
@@ -39,7 +38,7 @@ type ImportInput struct {
 }
 
 // Import creates a new empty repository and starts git import to it from a remote repository.
-func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*types.Repository, error) {
+func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*Repository, error) {
 	if err := c.sanitizeImportInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -81,13 +80,9 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 		// update public resources
 		if isPublic && c.publicResourceCreationEnabled {
-			err = c.publicAccess.Set(ctx, &types.PublicResource{
-				Type:       enum.PublicResourceTypeRepository,
-				ResourceID: repo.ID,
-			}, isPublic)
-		}
-		if err != nil {
-			return fmt.Errorf("failed to set a public repo: %w", err)
+			if err = c.SetPublicRepo(ctx, repo); err != nil {
+				return fmt.Errorf("failed to set a public repo: %w", err)
+			}
 		}
 
 		err = c.importer.Run(ctx, provider, repo, remoteRepository.CloneURL, in.Pipelines)
@@ -103,7 +98,9 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
-	return repo, nil
+	return &Repository{
+		Repository: *repo,
+		IsPublic:   isPublic}, nil
 }
 
 func (c *Controller) sanitizeImportInput(in *ImportInput) error {

@@ -31,7 +31,7 @@ var WireSet = wire.NewSet(
 
 func ProvideController(config webhook.Config, authorizer authz.Authorizer,
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore, webhookService *webhook.Service, encrypter encrypt.Encrypter, publicAccess *publicaccess.Service,
+	repoStore store.RepoStore, webhookService *webhook.Service, encrypter encrypt.Encrypter, publicAccess publicaccess.PublicAccess,
 ) *Controller {
 	return NewController(
 		config.AllowLoopback, config.AllowPrivateNetwork, authorizer,

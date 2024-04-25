@@ -48,8 +48,6 @@ func (c *Controller) ListSpaces(ctx context.Context,
 		space,
 		enum.ResourceTypeSpace,
 		enum.PermissionSpaceView,
-		c.publicAccess,
-		true,
 	); err != nil {
 		return nil, 0, err
 	}
@@ -79,10 +77,7 @@ func (c *Controller) ListSpacesNoAuth(
 
 		for _, spaceBase := range spacesBase {
 			// backfill public access mode
-			isPublic, err := c.publicAccess.Get(ctx, &types.PublicResource{
-				Type:       enum.PublicResourceTypeSpace,
-				ResourceID: spaceBase.ID,
-			})
+			isPublic, err := apiauth.CheckSpaceIsPublic(ctx, c.publicAccess, spaceBase)
 			if err != nil {
 				return fmt.Errorf("failed to get resource public access mode: %w", err)
 			}

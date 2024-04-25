@@ -18,6 +18,6 @@ import "github.com/harness/gitness/types/enum"
 
 // PublicResource defines a public resource info.
 type PublicResource struct {
-	Type       enum.PublicResourceType
-	ResourceID int64
+	Type enum.PublicResourceType
+	ID   int64
 }

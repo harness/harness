@@ -54,7 +54,7 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 	repoRef string,
 	in *GetCommitDivergencesInput,
 ) ([]CommitDivergence, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}

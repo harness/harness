@@ -12,31 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package authz
 
 import (
 	"context"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-// Find finds a repo.
-func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef string) (*types.Repository, error) {
-	// note: can't use c.getRepoCheckAccess because even repositories that are currently being imported can be fetched.
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
-	if err != nil {
-		return nil, err
+func (a *MembershipAuthorizer) CheckPublicAccess(
+	ctx context.Context,
+	scope *types.Scope,
+	resource *types.Resource,
+	permission enum.Permission,
+) (bool, error) {
+	// public access only permits view.
+	if permission != enum.PermissionRepoView &&
+		permission != enum.PermissionSpaceView {
+		return false, nil
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView); err != nil {
-		return nil, err
+	// public access is enabled on these resource types.
+	if resource.Type != enum.ResourceTypeRepo &&
+		resource.Type != enum.ResourceTypeSpace {
+		return false, nil
 	}
 
-	// backfill clone url
-	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
-
-	return repo, nil
+	return a.publicAccess.Get(ctx, scope, resource)
 }

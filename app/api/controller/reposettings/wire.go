@@ -32,7 +32,7 @@ func ProvideController(
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	settings *settings.Service,
-	publicAccess *publicaccess.Service,
+	publicAccess publicaccess.PublicAccess,
 ) *Controller {
 	return NewController(authorizer, repoStore, settings, publicAccess)
 }
