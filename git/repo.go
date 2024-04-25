@@ -97,6 +97,7 @@ type GetRepositorySizeParams struct {
 }
 
 type GetRepositorySizeOutput struct {
+	// Total size of the repository in KiB.
 	Size int64
 }
 

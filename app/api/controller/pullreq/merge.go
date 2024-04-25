@@ -257,7 +257,7 @@ func (c *Controller) Merge(
 					pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
 					pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
 					pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
-					pr.MergeSHA = ptr.String(mergeOutput.MergeSHA.String())
+					pr.MergeSHA = nil // dry-run doesn't create a merge commit so output is empty.
 					pr.MergeConflicts = nil
 				}
 				pr.Stats.DiffStats = types.NewDiffStats(mergeOutput.CommitCount, mergeOutput.ChangedFileCount)

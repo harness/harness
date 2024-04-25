@@ -337,10 +337,25 @@ func (r *SharedRepo) MergeTree(
 			log.Ctx(ctx).Err(err).Str("output", output).Msg("unexpected output of merge-tree in shared repo")
 			return sha.None, nil, fmt.Errorf("unexpected output of merge-tree in shared repo: %w", err)
 		}
-		return sha.Must(lines[0]), lines[1:], nil
+
+		treeSHA := sha.Must(lines[0])
+		conflicts := CleanupMergeConflicts(lines[1:])
+
+		return treeSHA, conflicts, nil
 	}
 
 	return sha.None, nil, fmt.Errorf("failed to merge-tree in shared repo: %w", err)
+}
+
+func CleanupMergeConflicts(conflicts []string) []string {
+	out := make([]string, 0, len(conflicts))
+	for _, conflict := range conflicts {
+		conflict = strings.TrimSpace(conflict)
+		if conflict != "" {
+			out = append(out, conflict)
+		}
+	}
+	return out
 }
 
 // CommitTree creates a commit from a given tree for the user with provided message.

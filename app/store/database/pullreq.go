@@ -290,7 +290,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_merge_base_sha = :pullreq_merge_base_sha
 		,pullreq_merge_sha = :pullreq_merge_sha
 		,pullreq_merge_conflicts = :pullreq_merge_conflicts
-		,pullreq_commit_count = :pullreq_commit_count 
+		,pullreq_commit_count = :pullreq_commit_count
 		,pullreq_file_count = :pullreq_file_count
 	WHERE pullreq_id = :pullreq_id AND pullreq_version = :pullreq_version - 1`
 
@@ -361,20 +361,23 @@ func (s *PullReqStore) UpdateActivitySeq(ctx context.Context, pr *types.PullReq)
 	})
 }
 
-// UpdateMergeCheckStatus updates the pull request's mergeability status
+// ResetMergeCheckStatus resets the pull request's mergeability status to unchecked
 // for all pr which target branch points to targetBranch.
-func (s *PullReqStore) UpdateMergeCheckStatus(
+func (s *PullReqStore) ResetMergeCheckStatus(
 	ctx context.Context,
 	targetRepo int64,
 	targetBranch string,
-	status enum.MergeCheckStatus,
 ) error {
+	// NOTE: keep pullreq_merge_base_sha on old value as it's a required field.
 	const query = `
 	UPDATE pullreqs
 	SET
 		 pullreq_updated = $1
-		,pullreq_merge_check_status = $2
 		,pullreq_version = pullreq_version + 1
+		,pullreq_merge_check_status = $2
+		,pullreq_merge_target_sha = NULL
+		,pullreq_merge_sha = NULL
+		,pullreq_merge_conflicts = NULL
 		,pullreq_commit_count = NULL
 		,pullreq_file_count = NULL
 	WHERE pullreq_target_repo_id = $3 AND
@@ -385,10 +388,10 @@ func (s *PullReqStore) UpdateMergeCheckStatus(
 
 	now := time.Now().UnixMilli()
 
-	_, err := db.ExecContext(ctx, query, now, status, targetRepo, targetBranch,
+	_, err := db.ExecContext(ctx, query, now, enum.MergeCheckStatusUnchecked, targetRepo, targetBranch,
 		enum.PullReqStateClosed, enum.PullReqStateMerged)
 	if err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed to update mergeable status check %s in pull requests", status)
+		return database.ProcessSQLErrorf(ctx, err, "Failed to reset mergeable status check in pull requests")
 	}
 
 	return nil

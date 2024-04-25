@@ -147,6 +147,7 @@ func (c *Controller) State(ctx context.Context,
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
 			pr.MergeSHA = nil
 			pr.MergeConflicts = nil
+			pr.MergeTargetSHA = nil
 			pr.Closed = &pr.Edited
 		case changeReopen:
 			pr.SourceSHA = sourceSHA

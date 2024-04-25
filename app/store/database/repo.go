@@ -349,11 +349,11 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	return nil
 }
 
-// UpdateSize updates the size of a specific repository in the database.
-func (s *RepoStore) UpdateSize(ctx context.Context, id int64, size int64) error {
+// UpdateSize updates the size of a specific repository in the database (size is in KiB).
+func (s *RepoStore) UpdateSize(ctx context.Context, id int64, sizeInKiB int64) error {
 	stmt := database.Builder.
 		Update("repositories").
-		Set("repo_size", size).
+		Set("repo_size", sizeInKiB).
 		Set("repo_size_updated", time.Now().UnixMilli()).
 		Where("repo_id = ? AND repo_deleted IS NULL", id)
 

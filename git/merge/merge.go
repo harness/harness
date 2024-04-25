@@ -16,6 +16,7 @@ package merge
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/git/api"
@@ -24,6 +25,11 @@ import (
 	"github.com/harness/gitness/git/sharedrepo"
 
 	"github.com/rs/zerolog/log"
+)
+
+var (
+	// errConflict is used to error out of sharedrepo Run method without erroring out of merge in case of conflicts.
+	errConflict = errors.New("conflict")
 )
 
 // Func represents a merge method function. The concrete merge implementation functions must have this signature.
@@ -93,7 +99,7 @@ func mergeInternal(
 		}
 
 		if len(conflicts) > 0 {
-			return nil
+			return errConflict
 		}
 
 		parents := make([]sha.SHA, 0, 2)
@@ -113,7 +119,7 @@ func mergeInternal(
 
 		return nil
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, errConflict) {
 		return sha.None, nil, fmt.Errorf("merge method=merge squash=%t: %w", squash, err)
 	}
 
@@ -173,7 +179,7 @@ func Rebase(
 				return fmt.Errorf("failed to merge tree in rebase merge: %w", err)
 			}
 			if len(conflicts) > 0 {
-				return nil
+				return errConflict
 			}
 
 			// Drop any commit which after being rebased would be empty.
@@ -203,7 +209,7 @@ func Rebase(
 
 		return nil
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, errConflict) {
 		return sha.None, nil, fmt.Errorf("merge method=rebase: %w", err)
 	}
 

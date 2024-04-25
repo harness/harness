@@ -293,10 +293,10 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		mergeMsg,
 		mergeBaseCommitSHA, baseCommitSHA, headCommitSHA)
 	if err != nil {
-		return MergeOutput{}, errors.Internal(err, "failed to merge %q to %q in %q using the %q merge method.",
+		return MergeOutput{}, errors.Internal(err, "failed to merge %q to %q in %q using the %q merge method",
 			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod)
 	}
-	if len(conflicts) != 0 {
+	if len(conflicts) > 0 {
 		return MergeOutput{
 			BaseSHA:          baseCommitSHA,
 			HeadSHA:          headCommitSHA,

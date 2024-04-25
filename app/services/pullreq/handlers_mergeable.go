@@ -36,7 +36,6 @@ import (
 
 const (
 	cancelMergeCheckKey = "cancel_merge_check_for_sha"
-	nilSHA              = "0000000000000000000000000000000000000000"
 )
 
 // mergeCheckOnCreated handles pull request Created events.
@@ -48,7 +47,7 @@ func (s *Service) mergeCheckOnCreated(ctx context.Context,
 		ctx,
 		event.Payload.TargetRepoID,
 		event.Payload.Number,
-		nilSHA,
+		sha.Nil.String(),
 		event.Payload.SourceSHA,
 	)
 }
@@ -76,7 +75,7 @@ func (s *Service) mergeCheckOnReopen(ctx context.Context,
 		ctx,
 		event.Payload.TargetRepoID,
 		event.Payload.Number,
-		"",
+		sha.None.String(),
 		event.Payload.SourceSHA,
 	)
 }
@@ -134,16 +133,6 @@ func (s *Service) updateMergeData(
 		return fmt.Errorf("failed to get pull request number %d: %w", prNum, err)
 	}
 
-	return s.updateMergeDataInner(ctx, pr, oldSHA, newSHA)
-}
-
-//nolint:funlen // refactor if required.
-func (s *Service) updateMergeDataInner(
-	ctx context.Context,
-	pr *types.PullReq,
-	oldSHA string,
-	newSHA string,
-) error {
 	// TODO: Merge check should not update the merge base.
 	// TODO: Instead it should accept it as an argument and fail if it doesn't match.
 	// Then is would not longer be necessary to cancel already active mergeability checks.
@@ -214,8 +203,11 @@ func (s *Service) updateMergeDataInner(
 		CommitterDate: &now,
 	})
 	if errors.AsStatus(err) == errors.StatusPreconditionFailed {
-		return events.NewDiscardEventErrorf("Source branch '%s' is not on SHA '%s' anymore.",
+		return events.NewDiscardEventErrorf("Source branch %q is not on SHA %q anymore.",
 			pr.SourceBranch, newSHA)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to run git merge with base %q and head %q: %w", pr.TargetBranch, pr.SourceBranch, err)
 	}
 
 	// Update DB in both cases (failure or success)
@@ -224,7 +216,7 @@ func (s *Service) updateMergeDataInner(
 			return events.NewDiscardEventErrorf("PR SHA %s is newer than %s", pr.SourceSHA, newSHA)
 		}
 
-		if mergeOutput.MergeSHA.IsEmpty() || len(mergeOutput.ConflictFiles) > 0 {
+		if len(mergeOutput.ConflictFiles) > 0 {
 			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
 			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
 			pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())

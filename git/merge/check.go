@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/sharedrepo"
 
 	"github.com/rs/zerolog/log"
 )
@@ -72,11 +73,14 @@ func FindConflicts(
 			"Failed to find conflicts between %s and %s: Operation blocked. Status=%d", base, head, status)
 	}
 
+	treeSHA = lines[1]
 	if status == 1 {
-		return true, lines[1], nil, nil // all good, merge possible, no conflicts found
+		return true, treeSHA, nil, nil // all good, merge possible, no conflicts found
 	}
 
-	return false, lines[1], lines[2:], nil // conflict found, list of conflicted files returned
+	conflicts = sharedrepo.CleanupMergeConflicts(lines[2:])
+
+	return false, treeSHA, conflicts, nil // conflict found, list of conflicted files returned
 }
 
 // CommitCount returns number of commits between the two git revisions.
