@@ -664,6 +664,7 @@ func setupResources(r chi.Router) {
 func setupPrincipals(r chi.Router, principalCtrl principal.Controller) {
 	r.Route("/principals", func(r chi.Router) {
 		r.Get("/", handlerprincipal.HandleList(principalCtrl))
+		r.Get(fmt.Sprintf("/{%s}", request.PathParamPrincipalID), handlerprincipal.HandleFind(principalCtrl))
 	})
 }
 

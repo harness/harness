@@ -20,17 +20,11 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-func (c controller) List(ctx context.Context, opts *types.PrincipalFilter) (
-	[]*types.PrincipalInfo, error) {
-	principals, err := c.principalStore.List(ctx, opts)
+func (c controller) Find(ctx context.Context, principalID int64) (*types.PrincipalInfo, error) {
+	principal, err := c.principalStore.Find(ctx, principalID)
 	if err != nil {
 		return nil, err
 	}
 
-	pInfoUsers := make([]*types.PrincipalInfo, len(principals))
-	for i := range principals {
-		pInfoUsers[i] = principals[i].ToPrincipalInfo()
-	}
-
-	return pInfoUsers, nil
+	return principal.ToPrincipalInfo(), nil
 }
