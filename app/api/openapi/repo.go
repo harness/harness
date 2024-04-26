@@ -210,6 +210,12 @@ type generalSettingsRequest struct {
 	reposettings.GeneralSettings
 }
 
+type archiveRequest struct {
+	repoRequest
+	GitRef string `path:"git_ref" required:"true"`
+	Format string `path:"format" required:"true"`
+}
+
 var queryParameterGitRef = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name: request.QueryParamGitRef,
@@ -505,6 +511,86 @@ var queryParameterDeletedAt = openapi3.ParameterOrRef{
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("The exact time the resource was delete at in epoch format."),
 		Required:    ptr.Bool(true),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
+var queryParamArchivePaths = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamArchivePaths,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("Without an optional path parameter, all files and subdirectories of the " +
+			"current working directory are included in the archive. If one or more paths are specified," +
+			" only these are included."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+					},
+				},
+			},
+		},
+	},
+}
+
+var queryParamArchivePrefix = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamArchivePrefix,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("Prepend <prefix>/ to paths in the archive. Can be repeated; its rightmost value" +
+			" is used for all tracked files."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParamArchiveAttributes = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamArchiveAttributes,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Look for attributes in .gitattributes files in the working tree as well"),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParamArchiveTime = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamArchiveTime,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("Set modification time of archive entries. Without this option the committer " +
+			"time is used if <tree-ish> is a commit or tag, and the current time if it is a tree."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParamArchiveCompression = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamArchiveCompression,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("Specify compression level. Larger values allow the command to spend more" +
+			" time to compress to smaller size."),
+		Required: ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
@@ -1028,4 +1114,25 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(
 		http.MethodGet, "/repos/{repo_ref}/settings/general", opSettingsGeneralFind)
+
+	opArchive := openapi3.Operation{}
+	opArchive.WithTags("repository")
+	opArchive.WithMapOfAnything(map[string]interface{}{"operationId": "archive"})
+	opArchive.WithParameters(
+		queryParamArchivePaths,
+		queryParamArchivePrefix,
+		queryParamArchiveAttributes,
+		queryParamArchiveTime,
+		queryParamArchiveCompression,
+	)
+	_ = reflector.SetRequest(&opArchive, new(archiveRequest), http.MethodGet)
+	_ = reflector.SetStringResponse(&opArchive, http.StatusOK, "application/zip")
+	_ = reflector.SetStringResponse(&opArchive, http.StatusOK, "application/tar")
+	_ = reflector.SetStringResponse(&opArchive, http.StatusOK, "application/gzip")
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusUnprocessableEntity)
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/archive/{git_ref}.{format}", opArchive)
 }

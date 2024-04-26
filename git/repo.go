@@ -536,3 +536,21 @@ func (s *Service) UpdateDefaultBranch(
 	}
 	return nil
 }
+
+type ArchiveParams struct {
+	ReadParams
+	api.ArchiveParams
+}
+
+func (s *Service) Archive(ctx context.Context, params ArchiveParams, w io.Writer) error {
+	if err := params.ReadParams.Validate(); err != nil {
+		return err
+	}
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	err := s.git.Archive(ctx, repoPath, params.ArchiveParams, w)
+	if err != nil {
+		return fmt.Errorf("failed to run git archive: %w", err)
+	}
+
+	return nil
+}

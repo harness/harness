@@ -354,6 +354,8 @@ func setupRepos(r chi.Router,
 
 			r.Get("/codeowners/validate", handlerrepo.HandleCodeOwnersValidate(repoCtrl))
 
+			r.Get(fmt.Sprintf("/archive/%s", request.PathParamArchiveRefs), handlerrepo.HandleArchive(repoCtrl))
+
 			SetupPullReq(r, pullreqCtrl)
 
 			SetupWebhook(r, webhookCtrl)
