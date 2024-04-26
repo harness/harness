@@ -57,6 +57,6 @@ func HandleCommentApplySuggestions(pullreqCtrl *pullreq.Controller) http.Handler
 			return
 		}
 
-		render.JSON(w, http.StatusCreated, out)
+		render.JSON(w, http.StatusOK, out)
 	}
 }
