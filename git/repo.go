@@ -542,8 +542,19 @@ type ArchiveParams struct {
 	api.ArchiveParams
 }
 
+func (p *ArchiveParams) Validate() error {
+	if err := p.ReadParams.Validate(); err != nil {
+		return err
+	}
+
+	if err := p.ArchiveParams.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Service) Archive(ctx context.Context, params ArchiveParams, w io.Writer) error {
-	if err := params.ReadParams.Validate(); err != nil {
+	if err := params.Validate(); err != nil {
 		return err
 	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
