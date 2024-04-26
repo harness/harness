@@ -71,10 +71,28 @@ func (c *Controller) CommentUpdate(
 		return act, nil
 	}
 
+	// fetch parent activity
+	var parentAct *types.PullReqActivity
+	if act.IsReply() {
+		parentAct, err = c.activityStore.Find(ctx, *act.ParentID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find parent pull request activity: %w", err)
+		}
+	}
+
+	// generate all metadata updates
+	var metadataUpdates []types.PullReqActivityMetadataUpdate
+
+	// suggestion metadata in case of code comments or code comment replies (don't restrict to either side for now).
+	if act.IsValidCodeComment() || (act.IsReply() && parentAct.IsValidCodeComment()) {
+		metadataUpdates = appendMetadataUpdateForSuggestions(metadataUpdates, in.Text)
+	}
+
 	act, err = c.activityStore.UpdateOptLock(ctx, act, func(act *types.PullReqActivity) error {
 		now := time.Now().UnixMilli()
 		act.Edited = now
 		act.Text = in.Text
+		act.UpdateMetadata(metadataUpdates...)
 		return nil
 	})
 	if err != nil {

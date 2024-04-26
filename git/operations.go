@@ -34,14 +34,15 @@ const (
 type FileAction string
 
 const (
-	CreateAction FileAction = "CREATE"
-	UpdateAction FileAction = "UPDATE"
-	DeleteAction            = "DELETE"
-	MoveAction              = "MOVE"
+	CreateAction    FileAction = "CREATE"
+	UpdateAction    FileAction = "UPDATE"
+	DeleteAction    FileAction = "DELETE"
+	MoveAction      FileAction = "MOVE"
+	PatchTextAction FileAction = "PATCH_TEXT"
 )
 
 func (FileAction) Enum() []interface{} {
-	return []interface{}{CreateAction, UpdateAction, DeleteAction, MoveAction}
+	return []interface{}{CreateAction, UpdateAction, DeleteAction, MoveAction, PatchTextAction}
 }
 
 // CommitFileAction holds file operation data.
@@ -83,7 +84,7 @@ type CommitFilesResponse struct {
 	CommitID sha.SHA
 }
 
-//nolint:gocognit
+//nolint:gocognit,nestif
 func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (CommitFilesResponse, error) {
 	if err := params.Validate(); err != nil {
 		return CommitFilesResponse{}, err
@@ -124,23 +125,22 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 
 	// ensure input data is valid
 	// the commit will be nil for empty repositories
-	commit, err := s.validateAndPrepareHeader(ctx, repoPath, isEmpty, params)
+	commit, err := s.validateAndPrepareCommitFilesHeader(ctx, repoPath, isEmpty, params)
 	if err != nil {
 		return CommitFilesResponse{}, err
 	}
 
 	// ref updater
-
-	var oldCommitSHA sha.SHA
-	var newCommitSHA sha.SHA
+	var refOldSHA sha.SHA
+	var refNewSHA sha.SHA
 
 	branchRef := api.GetReferenceFromBranchName(params.Branch)
 	if params.Branch != params.NewBranch {
 		// we are creating a new branch, rather than updating the existing one
-		oldCommitSHA = sha.Nil
+		refOldSHA = sha.Nil
 		branchRef = api.GetReferenceFromBranchName(params.NewBranch)
 	} else if commit != nil {
-		oldCommitSHA = commit.SHA
+		refOldSHA = commit.SHA
 	}
 
 	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, branchRef)
@@ -149,11 +149,23 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 
 	err = sharedrepo.Run(ctx, refUpdater, s.tmpDir, repoPath, func(r *sharedrepo.SharedRepo) error {
 		var parentCommits []sha.SHA
+		var oldTreeSHA sha.SHA
 
 		if isEmpty {
+			oldTreeSHA = sha.EmptyTree
 			err = s.prepareTreeEmptyRepo(ctx, r, params.Actions)
+			if err != nil {
+				return fmt.Errorf("failed to prepare empty tree: %w", err)
+			}
 		} else {
 			parentCommits = append(parentCommits, commit.SHA)
+
+			// get tree sha
+			rootNode, err := s.git.GetTreeNode(ctx, repoPath, commit.SHA.String(), "")
+			if err != nil {
+				return fmt.Errorf("CommitFiles: failed to get original node: %w", err)
+			}
+			oldTreeSHA = rootNode.SHA
 
 			err = r.SetIndex(ctx, commit.SHA)
 			if err != nil {
@@ -161,14 +173,18 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 			}
 
 			err = s.prepareTree(ctx, r, commit.SHA, params.Actions)
-		}
-		if err != nil {
-			return fmt.Errorf("failed to prepare tree: %w", err)
+			if err != nil {
+				return fmt.Errorf("failed to prepare tree: %w", err)
+			}
 		}
 
-		treeHash, err := r.WriteTree(ctx)
+		treeSHA, err := r.WriteTree(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to write tree object: %w", err)
+		}
+
+		if oldTreeSHA.Equal(treeSHA) {
+			return errors.InvalidArgument("No effective changes.")
 		}
 
 		message := strings.TrimSpace(params.Title)
@@ -192,15 +208,15 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 			When: committerDate,
 		}
 
-		commitSHA, err := r.CommitTree(ctx, authorSig, committerSig, treeHash, message, false, parentCommits...)
+		commitSHA, err := r.CommitTree(ctx, authorSig, committerSig, treeSHA, message, false, parentCommits...)
 		if err != nil {
 			return fmt.Errorf("failed to commit the tree: %w", err)
 		}
 
-		newCommitSHA = commitSHA
+		refNewSHA = commitSHA
 
-		if err := refUpdater.Init(ctx, oldCommitSHA, newCommitSHA); err != nil {
-			return fmt.Errorf("failed to init ref updater old=%s new=%s: %w", oldCommitSHA, newCommitSHA, err)
+		if err := refUpdater.Init(ctx, refOldSHA, refNewSHA); err != nil {
+			return fmt.Errorf("failed to init ref updater old=%s new=%s: %w", refOldSHA, refNewSHA, err)
 		}
 
 		return nil
@@ -211,10 +227,10 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 
 	// get commit
 
-	commit, err = s.git.GetCommit(ctx, repoPath, newCommitSHA.String())
+	commit, err = s.git.GetCommit(ctx, repoPath, refNewSHA.String())
 	if err != nil {
 		return CommitFilesResponse{}, fmt.Errorf("failed to get commit for SHA %s: %w",
-			newCommitSHA.String(), err)
+			refNewSHA.String(), err)
 	}
 
 	return CommitFilesResponse{
@@ -225,14 +241,65 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 func (s *Service) prepareTree(
 	ctx context.Context,
 	r *sharedrepo.SharedRepo,
-	treeish sha.SHA,
+	treeishSHA sha.SHA,
 	actions []CommitFileAction,
 ) error {
-	// execute all actions
+	// patch file actions are executed in batch for a single file
+	patchMap := map[string][]*CommitFileAction{}
+
+	// keep track of what paths have been written to detect conflicting actions
+	modifiedPaths := map[string]bool{}
+
 	for i := range actions {
-		if err := s.processAction(ctx, r, treeish, &actions[i]); err != nil {
-			return err
+		act := &actions[i]
+
+		// patch text actions are executed in per-file batches.
+		if act.Action == PatchTextAction {
+			patchMap[act.Path] = append(patchMap[act.Path], act)
+			continue
 		}
+		// anything else is executed as is
+		modifiedPath, err := s.processAction(ctx, r, treeishSHA, act)
+		if err != nil {
+			return fmt.Errorf("failed to process action %s on %q: %w", act.Action, act.Path, err)
+		}
+
+		if modifiedPaths[modifiedPath] {
+			return errors.InvalidArgument("More than one conflicting actions are modifying file %q.", modifiedPath)
+		}
+		modifiedPaths[modifiedPath] = true
+	}
+
+	for filePath, patchActions := range patchMap {
+		// combine input across actions
+		var fileSHA sha.SHA
+		var payloads [][]byte
+		for _, act := range patchActions {
+			payloads = append(payloads, act.Payload)
+			if fileSHA.IsEmpty() {
+				fileSHA = act.SHA
+				continue
+			}
+
+			// there can only be one file sha for a given path and commit.
+			if !act.SHA.IsEmpty() && !fileSHA.Equal(act.SHA) {
+				return errors.InvalidArgument(
+					"patch text actions for %q contain different SHAs %q and %q",
+					filePath,
+					act.SHA,
+					fileSHA,
+				)
+			}
+		}
+
+		if err := r.PatchTextFile(ctx, treeishSHA, filePath, fileSHA, payloads); err != nil {
+			return fmt.Errorf("failed to process action %s on %q: %w", PatchTextAction, filePath, err)
+		}
+
+		if modifiedPaths[filePath] {
+			return errors.InvalidArgument("More than one conflicting action are modifying file %q.", filePath)
+		}
+		modifiedPaths[filePath] = true
 	}
 
 	return nil
@@ -261,7 +328,7 @@ func (s *Service) prepareTreeEmptyRepo(
 	return nil
 }
 
-func (s *Service) validateAndPrepareHeader(
+func (s *Service) validateAndPrepareCommitFilesHeader(
 	ctx context.Context,
 	repoPath string,
 	isEmpty bool,
@@ -313,24 +380,28 @@ func (s *Service) processAction(
 	r *sharedrepo.SharedRepo,
 	treeishSHA sha.SHA,
 	action *CommitFileAction,
-) (err error) {
+) (modifiedPath string, err error) {
 	filePath := api.CleanUploadFileName(action.Path)
 	if filePath == "" {
-		return errors.InvalidArgument("path cannot be empty")
+		return "", errors.InvalidArgument("path cannot be empty")
 	}
-
+	modifiedPath = filePath
 	switch action.Action {
 	case CreateAction:
 		err = r.CreateFile(ctx, treeishSHA, filePath, filePermissionDefault, action.Payload)
 	case UpdateAction:
 		err = r.UpdateFile(ctx, treeishSHA, filePath, action.SHA, filePermissionDefault, action.Payload)
 	case MoveAction:
-		err = r.MoveFile(ctx, treeishSHA, filePath, action.SHA, filePermissionDefault, action.Payload)
+		modifiedPath, err = r.MoveFile(ctx, treeishSHA, filePath, action.SHA, filePermissionDefault, action.Payload)
 	case DeleteAction:
 		err = r.DeleteFile(ctx, filePath)
+	case PatchTextAction:
+		return "", fmt.Errorf("action %s not supported by this method", action.Action)
+	default:
+		err = fmt.Errorf("unknown file action %q", action.Action)
 	}
 
-	return err
+	return modifiedPath, err
 }
 
 /*

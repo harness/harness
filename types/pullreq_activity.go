@@ -17,18 +17,9 @@ package types
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/types/enum"
-)
-
-var (
-	// jsonRawMessageNullBytes represents the byte array that's equivalent to a nil json.RawMessage.
-	jsonRawMessageNullBytes = []byte("null")
-
-	// ErrNoPayload is returned in case the activity doesn't have any payload set.
-	ErrNoPayload = errors.New("activity has no payload")
 )
 
 // PullReqActivity represents a pull request activity.
@@ -53,9 +44,9 @@ type PullReqActivity struct {
 	Type enum.PullReqActivityType `json:"type"`
 	Kind enum.PullReqActivityKind `json:"kind"`
 
-	Text       string                 `json:"text"`
-	PayloadRaw json.RawMessage        `json:"payload"`
-	Metadata   map[string]interface{} `json:"metadata"`
+	Text       string                   `json:"text"`
+	PayloadRaw json.RawMessage          `json:"payload"`
+	Metadata   *PullReqActivityMetadata `json:"metadata"`
 
 	ResolvedBy *int64 `json:"-"` // not returned, because the resolver info is in the Resolver field
 	Resolved   *int64 `json:"resolved,omitempty"`
@@ -149,6 +140,21 @@ func (a *PullReqActivity) GetPayload() (PullReqActivityPayload, error) {
 	return payload, nil
 }
 
+// UpdateMetadata updates the metadata with the provided options.
+func (a *PullReqActivity) UpdateMetadata(updates ...PullReqActivityMetadataUpdate) {
+	if a.Metadata == nil {
+		a.Metadata = &PullReqActivityMetadata{}
+	}
+
+	for _, update := range updates {
+		update.apply(a.Metadata)
+	}
+
+	if a.Metadata.IsEmpty() {
+		a.Metadata = nil
+	}
+}
+
 // PullReqActivityFilter stores pull request activity query parameters.
 type PullReqActivityFilter struct {
 	After  int64 `json:"after"`
@@ -157,122 +163,4 @@ type PullReqActivityFilter struct {
 
 	Types []enum.PullReqActivityType `json:"type"`
 	Kinds []enum.PullReqActivityKind `json:"kind"`
-}
-
-// PullReqActivityPayload is an interface used to identify PR activity payload types.
-// The approach is inspired by what protobuf is doing for oneof.
-type PullReqActivityPayload interface {
-	// ActivityType returns the pr activity type the payload is meant for.
-	// NOTE: this allows us to do easy payload type verification without any kind of reflection.
-	ActivityType() enum.PullReqActivityType
-}
-
-// activityPayloadFactoryMethod is an alias for a function that creates a new PullReqActivityPayload.
-// NOTE: this is used to create new instances for activities on the fly (to avoid reflection)
-// NOTE: we could add new() to PullReqActivityPayload interface, but it shouldn't be the payloads' responsibility.
-type activityPayloadFactoryMethod func() PullReqActivityPayload
-
-// allPullReqActivityPayloads is a map that contains the payload factory methods for all activity types with payload.
-var allPullReqActivityPayloads = func(
-	factoryMethods []activityPayloadFactoryMethod,
-) map[enum.PullReqActivityType]activityPayloadFactoryMethod {
-	payloadMap := make(map[enum.PullReqActivityType]activityPayloadFactoryMethod)
-	for _, factoryMethod := range factoryMethods {
-		payloadMap[factoryMethod().ActivityType()] = factoryMethod
-	}
-	return payloadMap
-}([]activityPayloadFactoryMethod{
-	func() PullReqActivityPayload { return PullRequestActivityPayloadComment{} },
-	func() PullReqActivityPayload { return &PullRequestActivityPayloadCodeComment{} },
-	func() PullReqActivityPayload { return &PullRequestActivityPayloadMerge{} },
-	func() PullReqActivityPayload { return &PullRequestActivityPayloadStateChange{} },
-	func() PullReqActivityPayload { return &PullRequestActivityPayloadTitleChange{} },
-	func() PullReqActivityPayload { return &PullRequestActivityPayloadReviewSubmit{} },
-	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchUpdate{} },
-	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchDelete{} },
-})
-
-// newPayloadForActivity returns a new payload instance for the requested activity type.
-func newPayloadForActivity(t enum.PullReqActivityType) (PullReqActivityPayload, error) {
-	payloadFactoryMethod, ok := allPullReqActivityPayloads[t]
-	if !ok {
-		return nil, fmt.Errorf("pr activity type '%s' doesn't have a payload", t)
-	}
-
-	return payloadFactoryMethod(), nil
-}
-
-type PullRequestActivityPayloadComment struct{}
-
-func (a PullRequestActivityPayloadComment) ActivityType() enum.PullReqActivityType {
-	return enum.PullReqActivityTypeComment
-}
-
-type PullRequestActivityPayloadCodeComment struct {
-	Title        string   `json:"title"`
-	Lines        []string `json:"lines"`
-	LineStartNew bool     `json:"line_start_new"`
-	LineEndNew   bool     `json:"line_end_new"`
-}
-
-func (a *PullRequestActivityPayloadCodeComment) ActivityType() enum.PullReqActivityType {
-	return enum.PullReqActivityTypeCodeComment
-}
-
-type PullRequestActivityPayloadMerge struct {
-	MergeMethod   enum.MergeMethod `json:"merge_method"`
-	MergeSHA      string           `json:"merge_sha"`
-	TargetSHA     string           `json:"target_sha"`
-	SourceSHA     string           `json:"source_sha"`
-	RulesBypassed bool             `json:"rules_bypassed,omitempty"`
-}
-
-func (a *PullRequestActivityPayloadMerge) ActivityType() enum.PullReqActivityType {
-	return enum.PullReqActivityTypeMerge
-}
-
-type PullRequestActivityPayloadStateChange struct {
-	Old      enum.PullReqState `json:"old"`
-	New      enum.PullReqState `json:"new"`
-	OldDraft bool              `json:"old_draft"`
-	NewDraft bool              `json:"new_draft"`
-}
-
-func (a *PullRequestActivityPayloadStateChange) ActivityType() enum.PullReqActivityType {
-	return enum.PullReqActivityTypeStateChange
-}
-
-type PullRequestActivityPayloadTitleChange struct {
-	Old string `json:"old"`
-	New string `json:"new"`
-}
-
-func (a *PullRequestActivityPayloadTitleChange) ActivityType() enum.PullReqActivityType {
-	return enum.PullReqActivityTypeTitleChange
-}
-
-type PullRequestActivityPayloadReviewSubmit struct {
-	CommitSHA string                     `json:"commit_sha"`
-	Decision  enum.PullReqReviewDecision `json:"decision"`
-}
-
-func (a *PullRequestActivityPayloadReviewSubmit) ActivityType() enum.PullReqActivityType {
-	return enum.PullReqActivityTypeReviewSubmit
-}
-
-type PullRequestActivityPayloadBranchUpdate struct {
-	Old string `json:"old"`
-	New string `json:"new"`
-}
-
-func (a *PullRequestActivityPayloadBranchUpdate) ActivityType() enum.PullReqActivityType {
-	return enum.PullReqActivityTypeBranchUpdate
-}
-
-type PullRequestActivityPayloadBranchDelete struct {
-	SHA string `json:"sha"`
-}
-
-func (a *PullRequestActivityPayloadBranchDelete) ActivityType() enum.PullReqActivityType {
-	return enum.PullReqActivityTypeBranchDelete
 }

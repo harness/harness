@@ -71,6 +71,11 @@ type commentCreatePullReqRequest struct {
 	pullreq.CommentCreateInput
 }
 
+type commentApplySuggestionstRequest struct {
+	pullReqRequest
+	pullreq.CommentApplySuggestionsInput
+}
+
 type pullReqCommentRequest struct {
 	pullReqRequest
 	ID int64 `path:"pullreq_comment_id"`
@@ -435,6 +440,19 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&commentStatusPullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPut,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/status", commentStatusPullReq)
+
+	commentApplySuggestions := openapi3.Operation{}
+	commentApplySuggestions.WithTags("pullreq")
+	commentApplySuggestions.WithMapOfAnything(map[string]interface{}{"operationId": "commentApplySuggestions"})
+	_ = reflector.SetRequest(&commentApplySuggestions, new(commentApplySuggestionstRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&commentApplySuggestions, new(pullreq.CommentApplySuggestionsOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&commentApplySuggestions, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&commentApplySuggestions, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&commentApplySuggestions, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&commentApplySuggestions, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&commentApplySuggestions, new(types.RulesViolations), http.StatusUnprocessableEntity)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/apply-suggestions", commentApplySuggestions)
 
 	reviewerAdd := openapi3.Operation{}
 	reviewerAdd.WithTags("pullreq")

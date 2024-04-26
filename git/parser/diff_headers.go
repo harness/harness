@@ -18,8 +18,6 @@ import (
 	"bufio"
 	"io"
 	"regexp"
-
-	"github.com/harness/gitness/git/enum"
 )
 
 type DiffFileHunkHeaders struct {
@@ -40,30 +38,6 @@ func ParseDiffFileHeader(line string) (DiffFileHeader, bool) {
 		NewFileName: groups[2],
 		Extensions:  map[string]string{},
 	}, true
-}
-
-var regExpDiffExtHeader = regexp.MustCompile(
-	"^(" +
-		enum.DiffExtHeaderOldMode + "|" +
-		enum.DiffExtHeaderNewMode + "|" +
-		enum.DiffExtHeaderDeletedFileMode + "|" +
-		enum.DiffExtHeaderNewFileMode + "|" +
-		enum.DiffExtHeaderCopyFrom + "|" +
-		enum.DiffExtHeaderCopyTo + "|" +
-		enum.DiffExtHeaderRenameFrom + "|" +
-		enum.DiffExtHeaderRenameTo + "|" +
-		enum.DiffExtHeaderSimilarity + "|" +
-		enum.DiffExtHeaderDissimilarity + "|" +
-		enum.DiffExtHeaderIndex +
-		") (.+)$")
-
-func ParseDiffFileExtendedHeader(line string) (string, string) {
-	groups := regExpDiffExtHeader.FindStringSubmatch(line)
-	if groups == nil {
-		return "", ""
-	}
-
-	return groups[1], groups[2]
 }
 
 // GetHunkHeaders parses git diff output and returns all diff headers for all files.

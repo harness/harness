@@ -515,6 +515,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Get("/activities", handlerpullreq.HandleListActivities(pullreqCtrl))
 			r.Route("/comments", func(r chi.Router) {
 				r.Post("/", handlerpullreq.HandleCommentCreate(pullreqCtrl))
+				r.Post("/apply-suggestions", handlerpullreq.HandleCommentApplySuggestions(pullreqCtrl))
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqCommentID), func(r chi.Router) {
 					r.Patch("/", handlerpullreq.HandleCommentUpdate(pullreqCtrl))
 					r.Delete("/", handlerpullreq.HandleCommentDelete(pullreqCtrl))

@@ -106,7 +106,7 @@ func TestDiffCut(t *testing.T) {
 				LineStart: 7, LineStartNew: false,
 				LineEnd: 7, LineEndNew: true,
 				BeforeLines: 0, AfterLines: 0,
-				LineLimit: 1000,
+				LineLimit: 0,
 			},
 			expCutHeader: "@@ -7,2 +7 @@",
 			expCut:       []string{"-7", "-8", "+6,7,8"},
@@ -297,6 +297,12 @@ func TestBlobCut(t *testing.T) {
 			params:       DiffCutParams{LineStart: 3, LineEnd: 4, BeforeLines: 1, AfterLines: 1, LineLimit: 3},
 			expCutHeader: CutHeader{Line: 3, Span: 2},
 			expCut:       Cut{CutHeader: CutHeader{Line: 2, Span: 3}, Lines: []string{"2", "3", "4"}},
+		},
+		{
+			name:         "unlimited",
+			params:       DiffCutParams{LineStart: 1, LineEnd: 6, BeforeLines: 1, AfterLines: 1, LineLimit: 0},
+			expCutHeader: CutHeader{Line: 1, Span: 6},
+			expCut:       Cut{CutHeader: CutHeader{Line: 1, Span: 6}, Lines: []string{"1", "2", "3", "4", "5", "6"}},
 		},
 	}
 

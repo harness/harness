@@ -70,12 +70,12 @@ func testParseSignatureFromCatFileLineFor(t *testing.T, name string, email strin
 
 func TestParseTagDataFromCatFile(t *testing.T) {
 	when, _ := time.Parse(defaultGitTimeLayout, "Fri Sep 23 10:57:49 2022 -0700")
-	testParseTagDataFromCatFileFor(t, sha.EmptyTree, GitObjectTypeTag, "name1",
+	testParseTagDataFromCatFileFor(t, sha.EmptyTree.String(), GitObjectTypeTag, "name1",
 		Signature{Identity: Identity{Name: "max", Email: "max@mail.com"}, When: when},
 		"some message", "some message")
 
 	// test with signature
-	testParseTagDataFromCatFileFor(t, sha.EmptyTree, GitObjectTypeCommit, "name2",
+	testParseTagDataFromCatFileFor(t, sha.EmptyTree.String(), GitObjectTypeCommit, "name2",
 		Signature{Identity: Identity{Name: "max", Email: "max@mail.com"}, When: when},
 		"gpgsig -----BEGIN PGP SIGNATURE-----\n\nw...B\n-----END PGP SIGNATURE-----\n\nsome message",
 		"some message")

@@ -141,7 +141,12 @@ func (s *PullReqActivityStore) Find(ctx context.Context, id int64) (*types.PullR
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find pull request activity")
 	}
 
-	return s.mapPullReqActivity(ctx, dst), nil
+	act, err := s.mapPullReqActivity(ctx, dst)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map pull request activity: %w", err)
+	}
+
+	return act, nil
 }
 
 // Create creates a new pull request.
@@ -207,7 +212,12 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReqActivity(act))
+	dbAct, err := mapInternalPullReqActivity(act)
+	if err != nil {
+		return fmt.Errorf("failed to map pull request activity: %w", err)
+	}
+
+	query, arg, err := db.BindNamed(sqlQuery, dbAct)
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "Failed to bind pull request activity object")
 	}
@@ -278,7 +288,10 @@ func (s *PullReqActivityStore) Update(ctx context.Context, act *types.PullReqAct
 
 	updatedAt := time.Now()
 
-	dbAct := mapInternalPullReqActivity(act)
+	dbAct, err := mapInternalPullReqActivity(act)
+	if err != nil {
+		return fmt.Errorf("failed to map pull request activity: %w", err)
+	}
 	dbAct.Version++
 	dbAct.Updated = updatedAt.UnixMilli()
 
@@ -301,7 +314,11 @@ func (s *PullReqActivityStore) Update(ctx context.Context, act *types.PullReqAct
 		return gitness_store.ErrVersionConflict
 	}
 
-	*act = *s.mapPullReqActivity(ctx, dbAct)
+	updatedAct, err := s.mapPullReqActivity(ctx, dbAct)
+	if err != nil {
+		return fmt.Errorf("failed to map db pull request activity: %w", err)
+	}
+	*act = *updatedAct
 
 	return nil
 }
@@ -465,7 +482,13 @@ func (s *PullReqActivityStore) CountUnresolved(ctx context.Context, prID int64) 
 	return count, nil
 }
 
-func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
+func mapPullReqActivity(act *pullReqActivity) (*types.PullReqActivity, error) {
+	metadata := &types.PullReqActivityMetadata{}
+	err := json.Unmarshal(act.Metadata, &metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to deserialize metadata: %w", err)
+	}
+
 	m := &types.PullReqActivity{
 		ID:         act.ID,
 		Version:    act.Version,
@@ -484,7 +507,7 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 		Kind:       act.Kind,
 		Text:       act.Text,
 		PayloadRaw: act.Payload,
-		Metadata:   make(map[string]interface{}),
+		Metadata:   metadata,
 		ResolvedBy: act.ResolvedBy.Ptr(),
 		Resolved:   act.Resolved.Ptr(),
 		Author:     types.PrincipalInfo{},
@@ -503,12 +526,10 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 		}
 	}
 
-	_ = json.Unmarshal(act.Metadata, &m.Metadata)
-
-	return m
+	return m, nil
 }
 
-func mapInternalPullReqActivity(act *types.PullReqActivity) *pullReqActivity {
+func mapInternalPullReqActivity(act *types.PullReqActivity) (*pullReqActivity, error) {
 	m := &pullReqActivity{
 		ID:         act.ID,
 		Version:    act.Version,
@@ -542,16 +563,25 @@ func mapInternalPullReqActivity(act *types.PullReqActivity) *pullReqActivity {
 		m.CodeCommentSpanOld = null.IntFrom(int64(act.CodeComment.SpanOld))
 	}
 
-	m.Metadata, _ = json.Marshal(act.Metadata)
+	var err error
+	m.Metadata, err = json.Marshal(act.Metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize metadata: %w", err)
+	}
 
-	return m
+	return m, nil
 }
 
-func (s *PullReqActivityStore) mapPullReqActivity(ctx context.Context, act *pullReqActivity) *types.PullReqActivity {
-	m := mapPullReqActivity(act)
+func (s *PullReqActivityStore) mapPullReqActivity(
+	ctx context.Context,
+	act *pullReqActivity,
+) (*types.PullReqActivity, error) {
+	m, err := mapPullReqActivity(act)
+	if err != nil {
+		return nil, err
+	}
 
 	var author, resolver *types.PrincipalInfo
-	var err error
 
 	author, err = s.pCache.Get(ctx, act.CreatedBy)
 	if err != nil {
@@ -569,7 +599,7 @@ func (s *PullReqActivityStore) mapPullReqActivity(ctx context.Context, act *pull
 		m.Resolver = resolver
 	}
 
-	return m
+	return m, nil
 }
 
 func (s *PullReqActivityStore) mapSlicePullReqActivity(
@@ -594,7 +624,10 @@ func (s *PullReqActivityStore) mapSlicePullReqActivity(
 	// attach the principal infos back to the slice items
 	m := make([]*types.PullReqActivity, len(activities))
 	for i, act := range activities {
-		m[i] = mapPullReqActivity(act)
+		m[i], err = mapPullReqActivity(act)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map pull request activity %d: %w", act.ID, err)
+		}
 		if author, ok := infoMap[act.CreatedBy]; ok {
 			m[i].Author = *author
 		}

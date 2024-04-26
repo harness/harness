@@ -27,9 +27,6 @@ import (
 	"github.com/swaggest/jsonschema-go"
 )
 
-// EmptyTree is the SHA of an empty tree.
-const EmptyTree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-
 var (
 	Nil  = Must("0000000000000000000000000000000000000000")
 	None = SHA{}
@@ -38,6 +35,9 @@ var (
 	// which is 64 chars - keep this forward-compatible.
 	regex    = regexp.MustCompile("^[0-9a-f]{4,64}$")
 	nilRegex = regexp.MustCompile("^0{4,64}$")
+
+	// EmptyTree is the SHA of an empty tree.
+	EmptyTree = Must("4b825dc642cb6eb9a060e54bf8d69288fbee4904")
 )
 
 // SHA represents a git sha.

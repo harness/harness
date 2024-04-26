@@ -252,6 +252,7 @@ type DiffCutParams struct {
 	LineStartNew    bool
 	LineEnd         int
 	LineEndNew      bool
+	LineLimit       int
 }
 
 // DiffCut extracts diff snippet from a git diff hunk.
@@ -265,7 +266,7 @@ func (s *Service) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOu
 
 	mergeBaseSHA, _, err := s.git.GetMergeBase(ctx, repoPath, "", params.TargetCommitSHA, params.SourceCommitSHA)
 	if err != nil {
-		return DiffCutOutput{}, fmt.Errorf("DiffCut: failed to find merge base: %w", err)
+		return DiffCutOutput{}, fmt.Errorf("failed to find merge base: %w", err)
 	}
 
 	header, linesHunk, err := s.git.DiffCut(ctx,
@@ -280,7 +281,7 @@ func (s *Service) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOu
 			LineEndNew:   params.LineEndNew,
 			BeforeLines:  2,
 			AfterLines:   2,
-			LineLimit:    40,
+			LineLimit:    params.LineLimit,
 		})
 	if err != nil {
 		return DiffCutOutput{}, fmt.Errorf("DiffCut: failed to get diff hunk: %w", err)

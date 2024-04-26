@@ -44,7 +44,7 @@ const (
 type TreeNode struct {
 	Type TreeNodeType
 	Mode TreeNodeMode
-	SHA  string
+	SHA  string // TODO: make sha.SHA
 	Name string
 	Path string
 }

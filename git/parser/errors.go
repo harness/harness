@@ -17,7 +17,8 @@ package parser
 import "github.com/harness/gitness/errors"
 
 var (
-	ErrSHADoesNotMatch = errors.InvalidArgument("sha does not match")
-	ErrHunkNotFound    = errors.NotFound("hunk not found")
-	ErrBinaryFile      = errors.InvalidArgument("can't handle a binary file")
+	ErrSHADoesNotMatch    = errors.InvalidArgument("sha does not match")
+	ErrHunkNotFound       = errors.NotFound("hunk not found")
+	ErrBinaryFile         = errors.InvalidArgument("can't handle a binary file")
+	ErrPeekedMoreThanOnce = errors.PreconditionFailed("peeking more than once in a row is not supported")
 )

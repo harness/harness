@@ -34,7 +34,7 @@ type BlobReader struct {
 }
 
 // GetBlob returns the blob for the given object sha.
-func (g *Git) GetBlob(
+func GetBlob(
 	ctx context.Context,
 	repoPath string,
 	alternateObjectDirs []string,

@@ -50,7 +50,7 @@ func (g *Git) GetSubmodule(
 			ref, commit)
 	}
 
-	reader, err := g.GetBlob(ctx, repoPath, nil, node.SHA, 0)
+	reader, err := GetBlob(ctx, repoPath, nil, node.SHA, 0)
 	if err != nil {
 		return nil, processGitErrorf(err, "error reading  commit for ref '%s'", ref)
 	}

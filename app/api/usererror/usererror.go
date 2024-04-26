@@ -165,6 +165,11 @@ func NotFound(message string) *Error {
 	return New(http.StatusNotFound, message)
 }
 
+// NotFoundf returns a new user facing not found error.
+func NotFoundf(format string, args ...any) *Error {
+	return Newf(http.StatusNotFound, format, args...)
+}
+
 // ConflictWithPayload returns a new user facing conflict error with payload.
 func ConflictWithPayload(message string, values ...map[string]any) *Error {
 	return NewWithPayload(http.StatusConflict, message, values...)
