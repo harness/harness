@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	PathParamArchiveRefs         = "*"
+	PathParamArchiveGitRef       = "*"
 	QueryParamArchivePaths       = "path"
 	QueryParamArchivePrefix      = "prefix"
 	QueryParamArchiveAttributes  = "attributes"
@@ -37,7 +37,7 @@ func ParseArchiveParams(r *http.Request) (api.ArchiveParams, string) {
 	// separate rev and ref part from url, for example:
 	// api/v1/repos/root/demo/+/archive/refs/heads/main.zip
 	// will produce rev=refs/heads and ref=main.zip
-	rev, filename := filepath.Split(PathParamOrEmpty(r, PathParamArchiveRefs))
+	rev, filename := filepath.Split(PathParamOrEmpty(r, PathParamArchiveGitRef))
 	// use ext as format specifier
 	ext := filepath.Ext(filename)
 	// get name of the ref from filename

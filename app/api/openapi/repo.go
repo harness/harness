@@ -542,11 +542,10 @@ var queryParamArchivePaths = openapi3.ParameterOrRef{
 
 var queryParamArchivePrefix = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name: request.QueryParamArchivePrefix,
-		In:   openapi3.ParameterInQuery,
-		Description: ptr.String("Prepend <prefix>/ to paths in the archive. Can be repeated; its rightmost value" +
-			" is used for all tracked files."),
-		Required: ptr.Bool(false),
+		Name:        request.QueryParamArchivePrefix,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Prepend <prefix>/ to paths in the archive."),
+		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type: ptrSchemaType(openapi3.SchemaTypeString),
