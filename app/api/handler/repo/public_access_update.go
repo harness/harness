@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-func HandleVisibilityUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
+func HandlePublicAccessUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -34,14 +34,14 @@ func HandleVisibilityUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		in := new(repo.VisibilityInput)
+		in := new(repo.PublicAccessUpdateInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		res, err := repoCtrl.VisibilityUpdate(ctx, session, repoRef, in)
+		res, err := repoCtrl.PublicAccessUpdate(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

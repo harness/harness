@@ -48,7 +48,9 @@ func (c *Controller) UpdateDefaultBranch(
 	if err != nil {
 		return nil, err
 	}
+
 	repoClone := repo.Clone()
+
 	// the max time we give an update default branch to succeed
 	const timeout = 2 * time.Minute
 
@@ -56,7 +58,7 @@ func (c *Controller) UpdateDefaultBranch(
 	// requests will wait for previous ones to compelete before proceed
 	unlock, err := c.locker.LockDefaultBranch(
 		ctx,
-		repo.ID,
+		repo.Repository.ID,
 		in.Name,                // branch name only used for logging (lock is on repo)
 		timeout+30*time.Second, // add 30s to the lock to give enough time for updating default branch
 	)
@@ -86,7 +88,7 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, fmt.Errorf("failed to update the repo default branch: %w", err)
 	}
 
-	oldName := repo.DefaultBranch
+	oldName := repo.Repository.DefaultBranch
 	repoBase, err := c.repoStore.UpdateOptLock(ctx, &repo.Repository, func(r *types.Repository) error {
 		r.DefaultBranch = in.Name
 		return nil
@@ -95,11 +97,16 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, fmt.Errorf("failed to update the repo default branch on db:%w", err)
 	}
 
+	repo = &Repository{
+		Repository: *repoBase,
+		IsPublic:   repo.IsPublic,
+	}
+
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
+		audit.NewResource(audit.ResourceTypeRepository, repo.Repository.Identifier),
 		audit.ActionUpdated,
-		paths.Space(repo.Path),
+		paths.Space(repo.Repository.Path),
 		audit.WithOldObject(repoClone),
 		audit.WithNewObject(repo),
 	)
@@ -108,14 +115,11 @@ func (c *Controller) UpdateDefaultBranch(
 	}
 
 	c.eventReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
-		RepoID:      repo.ID,
+		RepoID:      repoBase.ID,
 		PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
 		OldName:     oldName,
-		NewName:     repo.DefaultBranch,
+		NewName:     repoBase.DefaultBranch,
 	})
 
-	return &Repository{
-		Repository: *repoBase,
-		IsPublic:   repo.IsPublic,
-	}, nil
+	return repo, nil
 }

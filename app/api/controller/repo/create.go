@@ -35,7 +35,6 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
-	"github.com/pkg/errors"
 
 	"github.com/rs/zerolog/log"
 )
@@ -129,19 +128,24 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
+	// backfil GitURL
+	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+
+	repoData := &Repository{
+		Repository: *repo,
+		IsPublic:   in.IsPublic,
+	}
+
 	err = c.auditService.Log(ctx,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionCreated,
 		paths.Space(repo.Path),
-		audit.WithNewObject(repo),
+		audit.WithNewObject(repoData),
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create repository operation: %s", err)
 	}
-
-	// backfil GitURL
-	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
 	// index repository if files are created
 	if !repo.IsEmpty {
@@ -151,10 +155,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		}
 	}
 
-	return &Repository{
-		Repository: *repo,
-		IsPublic:   in.IsPublic,
-	}, nil
+	return repoData, nil
 }
 
 func (c *Controller) getSpaceCheckAuthRepoCreation(

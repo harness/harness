@@ -276,7 +276,7 @@ func setupRepos(r chi.Router,
 			r.Delete("/", handlerrepo.HandleSoftDelete(repoCtrl))
 			r.Post("/purge", handlerrepo.HandlePurge(repoCtrl))
 			r.Post("/restore", handlerrepo.HandleRestore(repoCtrl))
-			r.Patch("/visibility", handlerrepo.HandleVisibilityUpdate(repoCtrl))
+			r.Post("/public-access", handlerrepo.HandlePublicAccessUpdate(repoCtrl))
 
 			r.Get("/settings/security", handlerreposettings.HandleSecurityFind(repoSettingsCtrl))
 			r.Patch("/settings/security", handlerreposettings.HandleSecurityUpdate(repoSettingsCtrl))

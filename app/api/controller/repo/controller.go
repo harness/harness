@@ -53,6 +53,18 @@ type Repository struct {
 	IsPublic bool `json:"is_public"`
 }
 
+// Clone makes deep copy of repository object.
+func (r Repository) Clone() Repository {
+	var deleted *int64
+	if r.Repository.Deleted != nil {
+		id := *r.Repository.Deleted
+		deleted = &id
+	}
+	r.Repository.Deleted = deleted
+	
+	return r
+}
+
 type Controller struct {
 	defaultBranch                 string
 	publicResourceCreationEnabled bool

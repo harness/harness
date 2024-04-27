@@ -37,7 +37,7 @@ func (c *Controller) RuleDelete(ctx context.Context,
 		return err
 	}
 
-	r, err := c.ruleStore.FindByIdentifier(ctx, nil, &repo.ID, identifier)
+	r, err := c.ruleStore.FindByIdentifier(ctx, nil, &repo.Repository.ID, identifier)
 	if err != nil {
 		return fmt.Errorf("failed to find repository-level protection rule by identifier: %w", err)
 	}
@@ -51,7 +51,7 @@ func (c *Controller) RuleDelete(ctx context.Context,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
 		audit.ActionDeleted,
-		paths.Space(repo.Path),
+		paths.Space(repo.Repository.Path),
 		audit.WithOldObject(r),
 	)
 	if err != nil {

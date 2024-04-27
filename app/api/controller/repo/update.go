@@ -72,11 +72,23 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, err
 	}
 
+	// backfill repo url
+	repo.Repository.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Repository.Path)
+	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repoBase)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
+	}
+
+	repo = &Repository{
+		Repository: *repoBase,
+		IsPublic:   isPublic,
+	}
+
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
+		audit.NewResource(audit.ResourceTypeRepository, repo.Repository.Identifier),
 		audit.ActionUpdated,
-		paths.Space(repo.Path),
+		paths.Space(repo.Repository.Path),
 		audit.WithOldObject(repoClone),
 		audit.WithNewObject(repo),
 	)
@@ -84,17 +96,7 @@ func (c *Controller) Update(ctx context.Context,
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update repository operation: %s", err)
 	}
 
-	// backfill repo url
-	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
-	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repoBase)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
-	}
-
-	return &Repository{
-		Repository: *repoBase,
-		IsPublic:   isPublic,
-	}, nil
+	return repo, nil
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {

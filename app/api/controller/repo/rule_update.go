@@ -96,7 +96,7 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 		return nil, err
 	}
 
-	r, err := c.ruleStore.FindByIdentifier(ctx, nil, &repo.ID, identifier)
+	r, err := c.ruleStore.FindByIdentifier(ctx, nil, &repo.Repository.ID, identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get a repository rule by its identifier: %w", err)
 	}
@@ -142,7 +142,7 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
 		audit.ActionUpdated,
-		paths.Space(repo.Path),
+		paths.Space(repo.Repository.Path),
 		audit.WithOldObject(oldRule),
 		audit.WithNewObject(r),
 	)

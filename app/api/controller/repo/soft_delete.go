@@ -64,12 +64,20 @@ func (c *Controller) SoftDelete(
 		return nil, fmt.Errorf("failed to soft delete repo: %w", err)
 	}
 
+	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repo)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to check repo public access for audit logs: %s", err)
+	}
+
 	err = c.auditService.Log(ctx,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionDeleted,
 		paths.Space(repo.Path),
-		audit.WithOldObject(repo),
+		audit.WithOldObject(&Repository{
+			Repository: *repo,
+			IsPublic: isPublic,
+		}),
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete repository operation: %s", err)

@@ -20,35 +20,39 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
 )
 
-type VisibilityInput struct {
+type PublicAccessUpdateInput struct {
 	EnablePublic bool `json:"enable_public"`
 }
 
-type VisibilityOutput struct {
+type PublicAccessUpdateOutput struct {
 	IsPublic bool `json:"is_public"`
 }
 
-func (c *Controller) VisibilityUpdate(ctx context.Context,
+func (c *Controller) PublicAccessUpdate(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	in *VisibilityInput,
-) (*VisibilityOutput, error) {
+	in *PublicAccessUpdateInput,
+) (*PublicAccessUpdateOutput, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
 
+	repoClone := repo.Clone()
+
 	if err = c.sanitizeVisibilityInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	parentSpace, name, err := paths.DisectLeaf(repo.Path)
+	parentSpace, name, err := paths.DisectLeaf(repo.Repository.Path)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to disect path '%s': %w", repo.Path, err)
+		return nil, fmt.Errorf("failed to disect path '%s': %w", repo.Repository.Path, err)
 	}
 
 	scope := &types.Scope{SpacePath: parentSpace}
@@ -61,13 +65,28 @@ func (c *Controller) VisibilityUpdate(ctx context.Context,
 		return nil, fmt.Errorf("failed to set public access: %w", err)
 	}
 
-	return &VisibilityOutput{
+	err = c.auditService.Log(ctx,
+		session.Principal,
+		audit.NewResource(audit.ResourceTypeRepository, repo.Repository.Identifier),
+		audit.ActionUpdated,
+		paths.Space(repo.Repository.Path),
+		audit.WithOldObject(repoClone),
+		audit.WithNewObject(&Repository{
+			Repository: repo.Repository,
+			IsPublic:   in.EnablePublic,
+		}),
+	)
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update repository operation: %s", err)
+	}
+
+	return &PublicAccessUpdateOutput{
 		in.EnablePublic,
 	}, nil
 
 }
 
-func (c *Controller) sanitizeVisibilityInput(in *VisibilityInput) error {
+func (c *Controller) sanitizeVisibilityInput(in *PublicAccessUpdateInput) error {
 	if in.EnablePublic && !c.publicResourceCreationEnabled {
 		return errPublicRepoCreationDisabled
 	}
