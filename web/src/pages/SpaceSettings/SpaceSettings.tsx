@@ -27,7 +27,8 @@ import {
   FlexExpander,
   useToaster,
   Heading,
-  TextInput
+  TextInput,
+  stringSubstitute
 } from '@harnessio/uicore'
 import cx from 'classnames'
 import { noop } from 'lodash-es'
@@ -36,6 +37,7 @@ import { Intent, Color, FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { Dialog } from '@blueprintjs/core'
 import { ProgressBar, Intent as IntentCore } from '@blueprintjs/core'
+import { Icon } from '@harnessio/icons'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { JobProgress, useGetSpace } from 'services/code'
 import { useAppContext } from 'AppContext'
@@ -97,6 +99,7 @@ export default function SpaceSettings() {
     if (exportProgressSpace?.repos && checkExportIsRunning()) {
       setUpgrading(true)
       setRepoCount(exportProgressSpace?.repos.length)
+      setExportDone(false)
     } else if (exportProgressSpace?.repos && checkReposState()) {
       setRepoCount(countFinishedRepos)
       setExportDone(true)
@@ -114,6 +117,10 @@ export default function SpaceSettings() {
       if (exportProgressSpace && checkReposState()) {
         setRepoCount(countFinishedRepos)
         setExportDone(true)
+      } else if (exportProgressSpace?.repos && checkExportIsRunning()) {
+        setUpgrading(true)
+        setRepoCount(exportProgressSpace?.repos.length)
+        setExportDone(false)
       }
     }
   })
@@ -139,6 +146,7 @@ export default function SpaceSettings() {
           .then(_ => {
             hideModal()
             setUpgrading(true)
+            refetchExport()
           })
           .catch(_error => {
             showError(getErrorMessage(_error), 0, getString('failedToImportSpace'))
@@ -238,23 +246,34 @@ export default function SpaceSettings() {
                           padding={{ left: 'small' }}
                           font={{ variation: FontVariation.CARD_TITLE, size: 'medium' }}>
                           {exportDone
-                            ? getString('exportSpace.exportCompleted')
+                            ? repoCount
+                              ? getString('exportSpace.exportCompleted')
+                              : getString('exportSpace.exportFailed')
                             : getString('exportSpace.upgradeProgress')}
                         </Text>
                       </Layout.Horizontal>
                       <Container padding={'xxlarge'}>
                         <Layout.Vertical spacing="large">
                           {exportDone ? null : <ProgressBar intent={IntentCore.PRIMARY} className={css.progressBar} />}
-                          <Container padding={{ top: 'medium' }}>
+                          <Container padding={{ top: 'small' }}>
                             {exportDone ? (
                               <Text
-                                icon={'execution-success'}
+                                icon={repoCount ? 'execution-success' : 'cross'}
                                 iconProps={{
                                   size: 16,
-                                  color: Color.GREEN_500
+                                  color: repoCount ? Color.GREEN_500 : Color.RED_500
                                 }}>
-                                <Text padding={{ left: 'large' }}>
-                                  {getString('exportSpace.exportRepoCompleted', { repoCount })}
+                                <Text padding={{ left: 'small' }}>
+                                  {repoCount
+                                    ? (stringSubstitute(getString('exportSpace.exportRepoCompleted'), {
+                                        repoCount
+                                      }) as string)
+                                    : getString('exportSpace.upgradeFailed')}
+                                  {!repoCount && (
+                                    <a target="_blank" rel="noreferrer" href="https://docs.gitness.com/support">
+                                      <Icon className={css.icon} name="code-info" size={16} />
+                                    </a>
+                                  )}
                                 </Text>
                               </Text>
                             ) : (
@@ -264,8 +283,12 @@ export default function SpaceSettings() {
                                   size: 16,
                                   color: Color.GREY_300
                                 }}>
-                                <Text padding={{ left: 'large' }}>
-                                  {getString('exportSpace.exportRepo', { repoCount })}
+                                <Text padding={{ left: 'small' }}>
+                                  {
+                                    stringSubstitute(getString('exportSpace.exportRepo'), {
+                                      repoCount
+                                    }) as string
+                                  }
                                 </Text>
                               </Text>
                             )}
@@ -292,7 +315,6 @@ export default function SpaceSettings() {
                         <Button
                           className={css.button}
                           variation={ButtonVariation.PRIMARY}
-                          disabled
                           onClick={() => {
                             openModal()
                           }}
@@ -308,12 +330,15 @@ export default function SpaceSettings() {
                               </Text>
                             </Layout.Horizontal>
                           }
-                          // intent="success"
+                          intent="success"
                           size={ButtonSize.MEDIUM}
                         />
                       </Layout.Horizontal>
                       <Text padding={{ top: 'large', left: 'xlarge' }} color={Color.GREY_500} font={{ size: 'small' }}>
                         {getString('exportSpace.upgradeContent')}
+                        <a target="_blank" rel="noreferrer" href="https://developer.harness.io/docs/code-repository">
+                          <Icon className={css.icon} name="code-info" size={16} />
+                        </a>
                       </Text>
                     </Container>
                   )}

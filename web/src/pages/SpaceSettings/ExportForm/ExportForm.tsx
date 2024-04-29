@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React from 'react'
 import { Intent } from '@blueprintjs/core'
 import * as yup from 'yup'
 import { useGet } from 'restful-react'
@@ -24,7 +24,6 @@ import { Color } from '@harnessio/design-system'
 import {
   Button,
   Container,
-  Label,
   Layout,
   FlexExpander,
   Formik,
@@ -32,7 +31,8 @@ import {
   FormInput,
   Text,
   ButtonSize,
-  ButtonVariation
+  ButtonVariation,
+  stringSubstitute
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import type { TypesRepository } from 'services/code'
@@ -55,7 +55,7 @@ interface ExportFormProps {
 const ExportForm = (props: ExportFormProps) => {
   const { handleSubmit, loading, hideModal, step, setStep, space } = props
   const { getString } = useStrings()
-  const [auth, setAuth] = useState(false)
+  // const [auth, setAuth] = useState(false)
   const formInitialValues: ExportFormDataExtended = {
     accountId: '',
     token: '',
@@ -129,7 +129,17 @@ const ExportForm = (props: ExportFormProps) => {
                     ) : null}
                     <FormInput.Text
                       name="token"
-                      label={getString('exportSpace.tokenLabel')}
+                      label={
+                        <>
+                          {getString('exportSpace.tokenLabel')}
+                          <a
+                            target="_blank"
+                            rel="noreferrer"
+                            href="https://developer.harness.io/docs/platform/automation/api/add-and-manage-api-keys/">
+                            <Icon padding={{ left: 'small' }} className={css.icon} name="code-info" size={16} />
+                          </a>
+                        </>
+                      }
                       placeholder={getString('exportSpace.tokenPlaceholder')}
                       tooltipProps={{
                         dataTooltipId: 'tokenTextField'
@@ -154,7 +164,7 @@ const ExportForm = (props: ExportFormProps) => {
                     <FormInput.Text
                       name="organization"
                       label={getString('exportSpace.organization')}
-                      placeholder={getString('importSpace.orgNamePlaceholder')}
+                      placeholder={getString('exportSpace.orgIdPlaceholder')}
                       tooltipProps={{
                         dataTooltipId: 'importSpaceOrgName'
                       }}
@@ -172,7 +182,7 @@ const ExportForm = (props: ExportFormProps) => {
                       <FormInput.Text
                         name="name"
                         label={getString('exportSpace.projectName')}
-                        placeholder={getString('enterName')}
+                        placeholder={getString('exportSpace.projectIdPlaceholder')}
                         tooltipProps={{
                           dataTooltipId: 'exportProjectName'
                         }}
@@ -187,12 +197,14 @@ const ExportForm = (props: ExportFormProps) => {
                         </Text>
                       ) : null}
                     </Container>
-                    <Layout.Horizontal>
+                    {/* <Layout.Horizontal>
                       <Label>{getString('exportSpace.entitiesLabel')}</Label>
-                      <Icon padding={{ left: 'small' }} className={css.icon} name="code-info" size={16} />
-                    </Layout.Horizontal>
+                      <a href="">
+                        <Icon padding={{ left: 'small' }} className={css.icon} name="code-info" size={16} />
+                      </a>
+                    </Layout.Horizontal> */}
 
-                    <Container className={css.importContainer} padding={'medium'}>
+                    {/* <Container className={css.importContainer} padding={'medium'}>
                       <Layout.Horizontal>
                         <FormInput.CheckBox
                           name="repositories"
@@ -221,7 +233,7 @@ const ExportForm = (props: ExportFormProps) => {
                           />
                         </Container>
                       </Layout.Horizontal>
-                    </Container>
+                    </Container> */}
                   </Container>
                 </>
               ) : null}
@@ -266,7 +278,11 @@ const ExportForm = (props: ExportFormProps) => {
                         font={{
                           variation: FontVariation.BODY2
                         }}>
-                        {getString('exportSpace.repoToConvert', { length: repositories?.length })}
+                        {
+                          stringSubstitute(getString('exportSpace.repoToConvert'), {
+                            length: repositories?.length
+                          }) as string
+                        }
                       </Text>
                     </Container>
                   </Container>

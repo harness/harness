@@ -303,11 +303,14 @@ export interface StringsMap {
   'exportSpace.accesstokenReq': string
   'exportSpace.entitiesLabel': string
   'exportSpace.exportCompleted': string
+  'exportSpace.exportFailed': string
   'exportSpace.exportRepo': string
   'exportSpace.exportRepoCompleted': string
   'exportSpace.harness': string
   'exportSpace.newProject': string
+  'exportSpace.orgIdPlaceholder': string
   'exportSpace.organization': string
+  'exportSpace.projectIdPlaceholder': string
   'exportSpace.projectName': string
   'exportSpace.projectOrg': string
   'exportSpace.repoToConvert': string
@@ -317,6 +320,7 @@ export interface StringsMap {
   'exportSpace.upgrade': string
   'exportSpace.upgradeConfirmation': string
   'exportSpace.upgradeContent': string
+  'exportSpace.upgradeFailed': string
   'exportSpace.upgradeHarness': string
   'exportSpace.upgradeProgress': string
   'exportSpace.upgradeTitle': string
