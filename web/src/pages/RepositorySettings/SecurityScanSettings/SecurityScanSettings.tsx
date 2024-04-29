@@ -37,6 +37,7 @@ import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { VulnerabilityScanningType } from 'utils/GitUtils'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
+import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import css from './SecurityScanSettings.module.scss'
 
@@ -224,6 +225,7 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
                     {...permissionProps(permPushResult, standalone)}
                   />
                 </Layout.Horizontal>
+                <NavigationCheck when={formik.dirty} />
               </FormikForm>
             )
           }}
