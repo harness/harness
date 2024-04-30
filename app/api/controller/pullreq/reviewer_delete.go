@@ -25,7 +25,7 @@ import (
 // ReviewerDelete deletes reviewer from the reviewerlist for the given PR.
 func (c *Controller) ReviewerDelete(ctx context.Context, session *auth.Session,
 	repoRef string, prNum, reviewerID int64) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return fmt.Errorf("failed to acquire access to repo: %w", err)
 	}

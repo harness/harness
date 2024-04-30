@@ -100,7 +100,8 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 	return &Repository{
 		Repository: *repo,
-		IsPublic:   isPublic}, nil
+		IsPublic:   isPublic,
+	}, nil
 }
 
 func (c *Controller) sanitizeImportInput(in *ImportInput) error {

@@ -45,12 +45,12 @@ func (c *Controller) Blame(ctx context.Context,
 	}
 
 	if gitRef == "" {
-		gitRef = repo.DefaultBranch
+		gitRef = repo.Repository.DefaultBranch
 	}
 
 	reader := git.NewStreamReader(
 		c.git.Blame(ctx, &git.BlameParams{
-			ReadParams: git.CreateReadParams(repo),
+			ReadParams: git.CreateReadParams(&repo.Repository),
 			GitRef:     gitRef,
 			Path:       path,
 			LineFrom:   lineFrom,

@@ -37,7 +37,7 @@ func (c *Controller) ListPipelines(
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find repo: %w", err)
 	}
-	if err := apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, "", enum.PermissionPipelineView); err != nil {
+	if err := apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Repository.Path, "", enum.PermissionPipelineView); err != nil {
 		return nil, 0, fmt.Errorf("access check failed: %w", err)
 	}
 
@@ -45,18 +45,18 @@ func (c *Controller) ListPipelines(
 	var pipelines []*types.Pipeline
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
-		count, err = c.pipelineStore.Count(ctx, repo.ID, filter)
+		count, err = c.pipelineStore.Count(ctx, repo.Repository.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to count child executions: %w", err)
 		}
 
 		if !latest {
-			pipelines, err = c.pipelineStore.List(ctx, repo.ID, filter)
+			pipelines, err = c.pipelineStore.List(ctx, repo.Repository.ID, filter)
 			if err != nil {
 				return fmt.Errorf("failed to list pipelines: %w", err)
 			}
 		} else {
-			pipelines, err = c.pipelineStore.ListLatest(ctx, repo.ID, filter)
+			pipelines, err = c.pipelineStore.ListLatest(ctx, repo.Repository.ID, filter)
 			if err != nil {
 				return fmt.Errorf("failed to list latest pipelines: %w", err)
 			}

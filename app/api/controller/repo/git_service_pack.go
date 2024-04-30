@@ -65,7 +65,7 @@ func (c *Controller) GitServicePack(
 		}
 		params.WriteParams = &writeParams
 	} else {
-		readParams := git.CreateReadParams(repo)
+		readParams := git.CreateReadParams(&repo.Repository)
 		params.ReadParams = &readParams
 	}
 

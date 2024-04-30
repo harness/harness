@@ -50,7 +50,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 
 	// set target to default branch in case no target was provided
 	if in.Target == "" {
-		in.Target = repo.DefaultBranch
+		in.Target = repo.Repository.DefaultBranch
 	}
 
 	rules, isRepoOwner, err := c.fetchRules(ctx, session, &repo.Repository)

@@ -48,7 +48,7 @@ func (c *Controller) CommentUpdate(
 	commentID int64,
 	in *CommentUpdateInput,
 ) (*types.PullReqActivity, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoReview)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}

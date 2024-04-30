@@ -22,11 +22,14 @@ import (
 	"net/url"
 	"time"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/jwt"
 	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/scheduler"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
@@ -80,12 +83,12 @@ type (
 	// ExecutionContext represents the minimum amount of information
 	// required by the runner to execute a build.
 	ExecutionContext struct {
-		Repo      *types.Repository `json:"repository"`
-		Execution *types.Execution  `json:"build"`
-		Stage     *types.Stage      `json:"stage"`
-		Secrets   []*types.Secret   `json:"secrets"`
-		Config    *file.File        `json:"config"`
-		Netrc     *Netrc            `json:"netrc"`
+		Repo      *repo.Repository `json:"repository"`
+		Execution *types.Execution `json:"build"`
+		Stage     *types.Stage     `json:"stage"`
+		Secrets   []*types.Secret  `json:"secrets"`
+		Config    *file.File       `json:"config"`
+		Netrc     *Netrc           `json:"netrc"`
 	}
 
 	// ExecutionManager encapsulates complex build operations and provides
@@ -148,6 +151,8 @@ type Manager struct {
 	// System  *store.System
 	Users store.PrincipalStore
 	// Webhook store.WebhookSender
+
+	publicAccess publicaccess.PublicAccess
 }
 
 func New(
@@ -167,6 +172,7 @@ func New(
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	userStore store.PrincipalStore,
+	publicAccess publicaccess.PublicAccess,
 ) *Manager {
 	return &Manager{
 		Config:           config,
@@ -185,6 +191,7 @@ func New(
 		Stages:           stageStore,
 		Steps:            stepStore,
 		Users:            userStore,
+		publicAccess:     publicAccess,
 	}
 }
 
@@ -295,13 +302,24 @@ func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, 
 		log.Warn().Err(err).Msg("manager: cannot find pipeline")
 		return nil, err
 	}
-	repo, err := m.Repos.Find(noContext, execution.RepoID)
+	repoBase, err := m.Repos.Find(noContext, execution.RepoID)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot find repo")
 		return nil, err
 	}
+
+	isPublic, err := apiauth.CheckRepoIsPublic(noContext, m.publicAccess, repoBase)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check if repo is public: %w", err)
+	}
+
+	repo := &repo.Repository{
+		Repository: *repoBase,
+		IsPublic:   isPublic,
+	}
+
 	// Backfill clone URL
-	repo.GitURL = m.urlProvider.GenerateContainerGITCloneURL(repo.Path)
+	repo.Repository.GitURL = m.urlProvider.GenerateContainerGITCloneURL(repo.Repository.Path)
 
 	stages, err := m.Stages.List(noContext, stage.ExecutionID)
 	if err != nil {
@@ -311,12 +329,12 @@ func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, 
 	execution.Stages = stages
 	log = log.With().
 		Int64("build", execution.Number).
-		Str("repo", repo.GetGitUID()).
+		Str("repo", repo.Repository.GetGitUID()).
 		Logger()
 
 	// TODO: Currently we fetch all the secrets from the same space.
 	// This logic can be updated when needed.
-	secrets, err := m.Secrets.ListAll(noContext, repo.ParentID)
+	secrets, err := m.Secrets.ListAll(noContext, repo.Repository.ParentID)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot list secrets")
 		return nil, err
@@ -358,11 +376,11 @@ func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, 
 	}, nil
 }
 
-func (m *Manager) createNetrc(repo *types.Repository) (*Netrc, error) {
+func (m *Manager) createNetrc(repo *repo.Repository) (*Netrc, error) {
 	pipelinePrincipal := bootstrap.NewPipelineServiceSession().Principal
 	jwt, err := jwt.GenerateWithMembership(
 		pipelinePrincipal.ID,
-		repo.ParentID,
+		repo.Repository.ParentID,
 		pipelineJWTRole,
 		pipelineJWTLifetime,
 		pipelinePrincipal.Salt,
@@ -371,7 +389,7 @@ func (m *Manager) createNetrc(repo *types.Repository) (*Netrc, error) {
 		return nil, fmt.Errorf("failed to create jwt: %w", err)
 	}
 
-	cloneURL, err := url.Parse(repo.GitURL)
+	cloneURL, err := url.Parse(repo.Repository.GitURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse clone url '%s': %w", cloneURL, err)
 	}

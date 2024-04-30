@@ -47,7 +47,7 @@ func (c *Controller) RawDiff(
 	}
 
 	return c.git.RawDiff(ctx, w, &git.DiffParams{
-		ReadParams: git.CreateReadParams(repo),
+		ReadParams: git.CreateReadParams(&repo.Repository),
 		BaseRef:    info.BaseRef,
 		HeadRef:    info.HeadRef,
 		MergeBase:  info.MergeBase,
@@ -67,7 +67,7 @@ func (c *Controller) CommitDiff(
 	}
 
 	return c.git.CommitDiff(ctx, &git.GetCommitParams{
-		ReadParams: git.CreateReadParams(repo),
+		ReadParams: git.CreateReadParams(&repo.Repository),
 		Revision:   rev,
 	}, w)
 }

@@ -43,7 +43,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	// ASSUMPTION: lower layer calls explicit branch api
 	// and 'refs/heads/branch1' would fail if 'branch1' exists.
 	// TODO: Add functional test to ensure the scenario is covered!
-	if branchName == repo.DefaultBranch {
+	if branchName == repo.Repository.DefaultBranch {
 		return nil, usererror.ErrDefaultBranchCantBeDeleted
 	}
 

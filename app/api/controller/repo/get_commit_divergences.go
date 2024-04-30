@@ -71,7 +71,7 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 
 	// map to rpc params
 	options := &git.GetCommitDivergencesParams{
-		ReadParams: git.CreateReadParams(repo),
+		ReadParams: git.CreateReadParams(&repo.Repository),
 		MaxCount:   in.MaxCount,
 		Requests:   make([]git.CommitDivergenceRequest, len(in.Requests)),
 	}
@@ -80,7 +80,7 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 		options.Requests[i].To = in.Requests[i].To
 		// backfil default branch if no 'to' was provided
 		if len(options.Requests[i].To) == 0 {
-			options.Requests[i].To = repo.DefaultBranch
+			options.Requests[i].To = repo.Repository.DefaultBranch
 		}
 	}
 

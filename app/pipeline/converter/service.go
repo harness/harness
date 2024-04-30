@@ -17,6 +17,7 @@ package converter
 import (
 	"context"
 
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/types"
 )
@@ -25,10 +26,10 @@ type (
 	// ConvertArgs represents a request to the pipeline
 	// conversion service.
 	ConvertArgs struct {
-		Repo      *types.Repository `json:"repository,omitempty"`
-		Pipeline  *types.Pipeline   `json:"pipeline,omitempty"`
-		Execution *types.Execution  `json:"execution,omitempty"`
-		File      *file.File        `json:"config,omitempty"`
+		Repo      *repo.Repository `json:"repository,omitempty"`
+		Pipeline  *types.Pipeline  `json:"pipeline,omitempty"`
+		Execution *types.Execution `json:"execution,omitempty"`
+		File      *file.File       `json:"config,omitempty"`
 	}
 
 	// Service converts a file which is in starlark/jsonnet form by looking

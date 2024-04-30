@@ -35,7 +35,7 @@ func (c *Controller) PipelineGenerate(
 	}
 
 	result, err := c.git.GeneratePipeline(ctx, &git.GeneratePipelineParams{
-		ReadParams: git.CreateReadParams(repo),
+		ReadParams: git.CreateReadParams(&repo.Repository),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate pipeline: %w", err)

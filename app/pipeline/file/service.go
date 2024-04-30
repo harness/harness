@@ -17,7 +17,7 @@ package file
 import (
 	"context"
 
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/app/api/controller/repo"
 )
 
 type (
@@ -36,6 +36,6 @@ type (
 	Service interface {
 		// path is the path in the repo to read
 		// ref is the git ref for the repository e.g. refs/heads/master
-		Get(ctx context.Context, repo *types.Repository, path, ref string) (*File, error)
+		Get(ctx context.Context, repo *repo.Repository, path, ref string) (*File, error)
 	}
 )

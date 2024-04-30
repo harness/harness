@@ -34,7 +34,7 @@ func (c *Controller) RuleFind(ctx context.Context,
 		return nil, err
 	}
 
-	r, err := c.ruleStore.FindByIdentifier(ctx, nil, &repo.ID, identifier)
+	r, err := c.ruleStore.FindByIdentifier(ctx, nil, &repo.Repository.ID, identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository-level protection rule by identifier: %w", err)
 	}

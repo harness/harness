@@ -120,7 +120,7 @@ func (r *Repository) RunManyForSpace(
 		// check if repo is public
 		parentSpace, name, err := paths.DisectLeaf(repository.Path)
 		if err != nil {
-			return fmt.Errorf("Failed to disect path '%s': %w", repository.Path, err)
+			return fmt.Errorf("failed to disect path '%s': %w", repository.Path, err)
 		}
 
 		scope := &types.Scope{SpacePath: parentSpace}
@@ -217,7 +217,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", err
 	}
 
-	urlWithToken, err := modifyURL(remoteRepo.GitURL, harnessCodeInfo.Token)
+	urlWithToken, err := modifyURL(remoteRepo.Repository.GitURL, harnessCodeInfo.Token)
 	if err != nil {
 		return "", err
 	}
@@ -227,9 +227,9 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		RemoteURL:  urlWithToken,
 	})
 	if err != nil && !strings.Contains(err.Error(), "empty") {
-		errDelete := client.DeleteRepo(ctx, remoteRepo.Identifier)
+		errDelete := client.DeleteRepo(ctx, remoteRepo.Repository.Identifier)
 		if errDelete != nil {
-			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete repo '%s' on harness", remoteRepo.Identifier)
+			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete repo '%s' on harness", remoteRepo.Repository.Identifier)
 		}
 		r.publishSSE(ctx, repository)
 		return "", err

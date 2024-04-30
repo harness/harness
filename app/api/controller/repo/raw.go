@@ -40,11 +40,11 @@ func (c *Controller) Raw(ctx context.Context,
 
 	// set gitRef to default branch in case an empty reference was provided
 	if gitRef == "" {
-		gitRef = repo.DefaultBranch
+		gitRef = repo.Repository.DefaultBranch
 	}
 
 	// create read params once
-	readParams := git.CreateReadParams(repo)
+	readParams := git.CreateReadParams(&repo.Repository)
 	treeNodeOutput, err := c.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
 		ReadParams:          readParams,
 		GitREF:              gitRef,

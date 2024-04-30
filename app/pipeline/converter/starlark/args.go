@@ -17,6 +17,7 @@ package starlark
 import (
 	"strings"
 
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/types"
 
 	"go.starlark.net/starlark"
@@ -24,7 +25,7 @@ import (
 )
 
 func createArgs(
-	repo *types.Repository,
+	repo *repo.Repository,
 	pipeline *types.Pipeline,
 	execution *types.Execution,
 ) []starlark.Value {
@@ -66,23 +67,24 @@ func fromBuild(v *types.Execution) starlark.StringDict {
 	}
 }
 
-func fromRepo(v *types.Repository, p *types.Pipeline) starlark.StringDict {
+func fromRepo(v *repo.Repository, p *types.Pipeline) starlark.StringDict {
 	namespace := v.Path
 	idx := strings.LastIndex(v.Path, "/")
 	if idx != -1 {
 		namespace = v.Path[:idx]
 	}
+
 	return starlark.StringDict{
 		// TODO [CODE-1363]: remove after identifier migration?
-		"uid":                  starlark.String(v.Identifier),
-		"identifier":           starlark.String(v.Identifier),
-		"name":                 starlark.String(v.Identifier),
+		"uid":                  starlark.String(v.Repository.Identifier),
+		"identifier":           starlark.String(v.Repository.Identifier),
+		"name":                 starlark.String(v.Repository.Identifier),
 		"namespace":            starlark.String(namespace),
-		"slug":                 starlark.String(v.Path),
-		"git_http_url":         starlark.String(v.GitURL),
-		"git_ssh_url":          starlark.String(v.GitURL),
-		"link":                 starlark.String(v.GitURL),
-		"branch":               starlark.String(v.DefaultBranch),
+		"slug":                 starlark.String(v.Repository.Path),
+		"git_http_url":         starlark.String(v.Repository.GitURL),
+		"git_ssh_url":          starlark.String(v.Repository.GitURL),
+		"link":                 starlark.String(v.Repository.GitURL),
+		"branch":               starlark.String(v.Repository.DefaultBranch),
 		"config":               starlark.String(p.ConfigPath),
 		"private":              !starlark.Bool(v.IsPublic),
 		"visibility":           starlark.String("internal"),

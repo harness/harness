@@ -39,7 +39,7 @@ func (c *Controller) RuleList(ctx context.Context,
 	var count int64
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		list, err = c.ruleStore.List(ctx, nil, &repo.ID, filter)
+		list, err = c.ruleStore.List(ctx, nil, &repo.Repository.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list repository-level protection rules: %w", err)
 		}
@@ -49,7 +49,7 @@ func (c *Controller) RuleList(ctx context.Context,
 			return nil
 		}
 
-		count, err = c.ruleStore.Count(ctx, nil, &repo.ID, filter)
+		count, err = c.ruleStore.Count(ctx, nil, &repo.Repository.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to count repository-level protection rules: %w", err)
 		}

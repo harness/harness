@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"errors"
 
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/types"
 
@@ -56,7 +57,7 @@ var (
 )
 
 func Parse(
-	repo *types.Repository,
+	repo *repo.Repository,
 	pipeline *types.Pipeline,
 	execution *types.Execution,
 	file *file.File,
@@ -68,8 +69,8 @@ func Parse(
 		Load: noLoad,
 		Print: func(_ *starlark.Thread, msg string) {
 			logrus.WithFields(logrus.Fields{
-				"namespace": repo.Path, // TODO: update to just be the space
-				"name":      repo.Identifier,
+				"namespace": repo.Repository.Path, // TODO: update to just be the space
+				"name":      repo.Repository.Identifier,
 			}).Traceln(msg)
 		},
 	}

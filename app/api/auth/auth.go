@@ -42,10 +42,6 @@ var (
 func Check(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
 	scope *types.Scope, resource *types.Resource, permission enum.Permission,
 ) error {
-	if session == nil {
-		return ErrNotAuthenticated
-	}
-
 	authorized, err := authorizer.Check(
 		ctx,
 		session,

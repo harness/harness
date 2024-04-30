@@ -28,11 +28,15 @@ import (
 	"github.com/harness/gitness/app/pipeline/resolver"
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/pipeline/triggerer/dag"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/repo"
 
 	"github.com/drone-runners/drone-runner-docker/engine2/inputs"
 	"github.com/drone-runners/drone-runner-docker/engine2/script"
@@ -92,6 +96,7 @@ type triggerer struct {
 	repoStore        store.RepoStore
 	templateStore    store.TemplateStore
 	pluginStore      store.PluginStore
+	publicAccess     publicaccess.PublicAccess
 }
 
 func New(
@@ -107,6 +112,7 @@ func New(
 	converterService converter.Service,
 	templateStore store.TemplateStore,
 	pluginStore store.PluginStore,
+	publicAccess publicaccess.PublicAccess,
 ) Triggerer {
 	return &triggerer{
 		executionStore:   executionStore,
@@ -121,6 +127,7 @@ func New(
 		repoStore:        repoStore,
 		templateStore:    templateStore,
 		pluginStore:      pluginStore,
+		publicAccess:     publicAccess,
 	}
 }
 
@@ -148,10 +155,19 @@ func (t *triggerer) Trigger(
 
 	event := string(base.Action.GetTriggerEvent())
 
-	repo, err := t.repoStore.Find(ctx, pipeline.RepoID)
+	repoBase, err := t.repoStore.Find(ctx, pipeline.RepoID)
 	if err != nil {
 		log.Error().Err(err).Msg("could not find repo")
 		return nil, err
+	}
+	isPublic, err := apiauth.CheckRepoIsPublic(ctx, t.publicAccess, repoBase)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check if repo is public: %w", err)
+	}
+
+	repo := &repo.Repository{
+		Repository: *repoBase,
+		IsPublic:   isPublic,
 	}
 
 	file, err := t.fileService.Get(ctx, repo, pipeline.ConfigPath, base.After)
@@ -162,7 +178,7 @@ func (t *triggerer) Trigger(
 
 	now := time.Now().UnixMilli()
 	execution := &types.Execution{
-		RepoID:     repo.ID,
+		RepoID:     repo.Repository.ID,
 		PipelineID: pipeline.ID,
 		Trigger:    base.Trigger,
 		CreatedBy:  base.TriggeredBy,
@@ -250,7 +266,7 @@ func (t *triggerer) Trigger(
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match action")
 			case skipRef(pipeline, base.Ref):
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match ref")
-			case skipRepo(pipeline, repo.Path):
+			case skipRepo(pipeline, repo.Repository.Path):
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match repo")
 			case skipCron(pipeline, base.Cron):
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match cron job")
@@ -278,7 +294,7 @@ func (t *triggerer) Trigger(
 			}
 
 			stage := &types.Stage{
-				RepoID:    repo.ID,
+				RepoID:    repo.Repository.ID,
 				Number:    int64(i + 1),
 				Name:      match.Name,
 				Kind:      match.Kind,
@@ -391,7 +407,7 @@ func trunc(s string, i int) string {
 func parseV1Stages(
 	ctx context.Context,
 	data []byte,
-	repo *types.Repository,
+	repo *repo.Repository,
 	execution *types.Execution,
 	templateStore store.TemplateStore,
 	pluginStore store.PluginStore,
@@ -461,7 +477,7 @@ func parseV1Stages(
 					status = enum.CIStatusPending
 				}
 				temp := &types.Stage{
-					RepoID:    repo.ID,
+					RepoID:    repo.Repository.ID,
 					Number:    int64(idx + 1),
 					Name:      stage.Id, // for v1, ID is the unique identifier per stage
 					Created:   now,

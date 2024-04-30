@@ -34,7 +34,7 @@ func (c *Controller) CodeOwnersValidate(
 	}
 
 	if ref == "" {
-		ref = repo.DefaultBranch
+		ref = repo.Repository.DefaultBranch
 	}
 
 	violations, err := c.codeOwners.Validate(ctx, &repo.Repository, ref)
