@@ -254,7 +254,7 @@ pr:
   descriptionPlaceHolder: Add Pull Request description here.
   modalTitle: Open a pull request
   createDraftPR: Create draft pull request
-  metaLine: '{user} wants to merge {commits} {commitsCount|1:commit,commits} into {target} from {source}'
+  metaLine: '{user} {state|merged:merged,wants to merge} {commits} {commitsCount|1:commit,commits} into {target} from {source}'
   executionState: '{state|success:Success,failed:Failed}'
   state: '{state|closed:Closed,merged:Merged,rejected:Rejected,draft:Draft,Open}'
   statusLine: '#{number} {state|merged:merged,closed:closed,rejected:rejected,opened} {time} by {user}'
@@ -286,8 +286,8 @@ pr:
   requestSubmitted: Request for changes submitted.
   prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} this pull request.  {time}'
   prMergedBannerInfo: '{user} merged branch {source} into {target} {time}.'
-  prMergedInfo: '{user} merged changes from {source} into {target} as {mergeSha} {time}'
-  prRebasedInfo: '{user} rebased changes from branch {source} onto {target}, now at {mergeSha} {time}'
+  prMergedInfo: '{user}{bypassed|true: bypassed rules and , }merged changes from {source} into {target} as {mergeSha} {time}'
+  prRebasedInfo: '{user}{bypassed|true: bypassed rules and , }rebased changes from branch {source} onto {target}, now at {mergeSha} {time}'
   prBranchPushInfo: '{user} pushed a new commit {commit}'
   prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
@@ -670,6 +670,7 @@ repoDelete:
   deleteConfirmButton2: Delete this repository
 pipelines:
   noData: There are no pipelines
+  import: Import Pipelines
   newPipelineButton: New Pipeline
   name: Pipeline Name
   createNewPipeline: Create New Pipeline
@@ -735,6 +736,8 @@ viewFile: View File
 searchResult: 'Search Result {count}'
 aiSearch: AIDA SEARCH
 enableAISearch: Enable AI Search
+enableAIDAPRDescription: Auto generate PR description
+enableAIDAPRMessange: To generate a PR description using Harness AIDA, you need to enable it in the Project Settings.
 enableAIDAMessage: In order to use Harness AIDA Search, you will need to enable it in the Project Settings
 reviewProjectSettings: Review Project Settings
 turnOnSemanticSearch: Turn on semantic search
@@ -745,7 +748,6 @@ keywordSearch:
     searchForFilesWithCMD: Search for class in files starting with cmd
     searchForPattern: Include only results from file paths matching the given search pattern
     searchForInitialCommit: Search for exact phrase initial commit
-
 keywordSearchPlaceholder: Search for code or files...
 codeSearch: Code Search
 codeSearchModal: Begin search by describing what you are looking for
@@ -859,26 +861,30 @@ exportSpace:
   harness: Harness
   accIdRequired: Account ID is required
   accesstokenReq: Access token is required
-  accIdLabel: 'Harness Account Id'
+  accIdLabel: 'Harness Account ID'
   accIdPlaceholder: 'Enter the Harness Account ID'
-  tokenLabel: 'Account Token'
+  tokenLabel: 'Harness Account Token'
   tokenPlaceholder: 'Enter the access token here'
-  organization: Organization
-  projectName: Project Name
+  organization: Organization ID
+  orgIdPlaceholder: Enter the organization ID here
+  projectName: Project ID
+  projectIdPlaceholder: Enter the project ID here
   entitiesLabel: Entities to upgrade
   projectOrg: Project Organization
-  repoToConvert: '{{length}} repositories to be upgraded'
+  repoToConvert: '{length} {length|1:repository,repositories} to be upgraded'
   startUpgrade: Start Upgrade
   upgradeHarness: Upgrade to Harness
-  newProject: New Project Details
+  newProject: Harness Project Details
   upgradeConfirmation: Upgrade Confirmation
   upgradeTitle: Upgrade this project to the Harness Software Delivery platform
-  upgrade: Upgrade (Coming Soon)
-  upgradeContent: Upgrade this project to Harness. By upgrading to Harness, you will create a new project in your Harness account and migrate all repositories to the new project. Learn more about Harness.
+  upgrade: Upgrade to Harness
+  upgradeContent: The upgrade will import all repositories into an existing organization and project in Harness Code. Learn more about Harness Code here.
   upgradeProgress: 'Upgrading in progress'
+  upgradeFailed: 'Upgrade Failed! Please validate your credentials and try again.'
   exportCompleted: Upgrade Completed
-  exportRepoCompleted: Upgraded {{repoCount}} repositories
-  exportRepo: Upgrading {{repoCount}} repositories
+  exportFailed: Upgrade Failed
+  exportRepoCompleted: Upgraded {repoCount} {repoCount|1:repository,repositories}
+  exportRepo: Upgrading {repoCount} {repoCount|1:repository,repositories}
 spaceUpdate: Project Updated
 generate: Generate
 generateHelptext: Let Gitness build your Pipeline for you.
@@ -1005,6 +1011,8 @@ reqChanges: 'Request changes'
 summary: Summary
 prGenSummary: AIDA generate PR summary, insert at the cursor or replace selected text only.
 aidaGenSummary: 'AIDA is generating a summary...'
+generateSummary: Generate PR Summary
+invalidResponse: Invalid summary response generated
 importFailed: Import Failed
 uploadAFileError: There is no image or video uploaded. Please upload an image or video.
 securitySettings:

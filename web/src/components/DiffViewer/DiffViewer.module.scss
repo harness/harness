@@ -119,11 +119,6 @@
       .d2h-code-line,
       .d2h-code-side-line {
         .d2h-code-line-ctn {
-          > del:first-child,
-          > ins:first-child {
-            background-color: transparent;
-          }
-
           ins {
             background-color: var(--bg-change-added);
           }
@@ -239,7 +234,12 @@
             }
 
             &:last-of-type,
-            *:not(span[data-annotation-for-line], span[data-selected-indicator]) {
+            *:not(
+                span[data-annotation-for-line],
+                span[data-selected-indicator],
+                [data-comment-thread-id],
+                [data-comment-thread-id] *
+              ) {
               background-color: var(--bg-selected-line-content) !important;
             }
 

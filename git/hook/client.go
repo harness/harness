@@ -34,7 +34,7 @@ type Client interface {
 
 // ClientFactory is an abstraction of a factory that creates a new client based on the provided environment variables.
 type ClientFactory interface {
-	NewClient(ctx context.Context, envVars map[string]string) (Client, error)
+	NewClient(envVars map[string]string) (Client, error)
 }
 
 // TODO: move to single representation once we have our custom Git CLI wrapper.

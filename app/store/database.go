@@ -213,8 +213,8 @@ type (
 		// Update the repo details.
 		Update(ctx context.Context, repo *types.Repository) error
 
-		// Update the repo size.
-		UpdateSize(ctx context.Context, id int64, repoSize int64) error
+		// UpdateSize updates the size of a specific repository in the database (size is in KiB).
+		UpdateSize(ctx context.Context, id int64, sizeInKiB int64) error
 
 		// Get the repo size.
 		GetSize(ctx context.Context, id int64) (int64, error)
@@ -348,8 +348,9 @@ type (
 		// It will set new values to the ActivitySeq, Version and Updated fields.
 		UpdateActivitySeq(ctx context.Context, pr *types.PullReq) (*types.PullReq, error)
 
-		// Update all PR where target branch points to new SHA
-		UpdateMergeCheckStatus(ctx context.Context, targetRepo int64, targetBranch string, status enum.MergeCheckStatus) error
+		// ResetMergeCheckStatus resets the pull request's mergeability status to unchecked
+		// for all prs with target branch pointing to targetBranch.
+		ResetMergeCheckStatus(ctx context.Context, targetRepo int64, targetBranch string) error
 
 		// Delete the pull request.
 		Delete(ctx context.Context, id int64) error

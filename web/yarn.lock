@@ -1174,6 +1174,13 @@
   dependencies:
     regenerator-runtime "^0.13.11"
 
+"@babel/runtime@^7.12.1":
+  version "7.24.4"
+  resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.24.4.tgz#de795accd698007a66ba44add6cc86542aff1edd"
+  integrity sha512-dkxf7+hn8mFBwKjs9bvBlArzLVxVbS8usaPUDd5p2a9JCL9tB8OaOVN1isD4+Xyk4ns89/xeOmbQvgdK7IIVdA==
+  dependencies:
+    regenerator-runtime "^0.14.0"
+
 "@babel/runtime@^7.8.4":
   version "7.24.0"
   resolved "https://registry.npmjs.org/@babel/runtime/-/runtime-7.24.0.tgz#584c450063ffda59697021430cb47101b085951e"
@@ -1630,20 +1637,20 @@
   resolved "https://registry.yarnpkg.com/@exodus/schemasafe/-/schemasafe-1.0.0.tgz#f44e252665b1a6bdef0d686e22af3599a6f0a095"
   integrity sha512-2cyupPIZI69HQxEAPllLXBjQp4njDKkOjYRCYxvMZe3/LY9pp9fBM3Tb1wiFAdP6Emo4v3OEbCLGj6u73Q5KLw==
 
-"@harnessio/design-system@^1.6.0-beta.1":
-  version "1.6.0-beta.1"
-  resolved "https://registry.npmjs.org/@harnessio/design-system/-/design-system-1.6.0-beta.1.tgz#9a0c45607ba3e7f32b61db87d44533a204d1fbaf"
-  integrity sha512-JOsVgj1ecqqWQL/j+WULSxO3GxcrLdBE00cKUUdhLnGjBQ29bO6o1JRLKyJMKfVitgiUVnK9QtqD+4WWfBQHdg==
+"@harnessio/design-system@^2.1.1":
+  version "2.1.1"
+  resolved "https://registry.npmjs.org/@harnessio/design-system/-/design-system-2.1.1.tgz#2da3036602ed9b9446d8139c72009e6dc1e25642"
+  integrity sha512-ZwAGM1srOZ49/6YkwyjkczUv4v91CN0rCecRYnV3/g+xdSV5ycrUvkJjl9nHub6jw2eCGC0GdyNgAtAJnLmGfQ==
 
-"@harnessio/icons@^2.0.0-beta.2":
-  version "2.0.0-beta.2"
-  resolved "https://registry.npmjs.org/@harnessio/icons/-/icons-2.0.0-beta.2.tgz#82c9602e44d3eccadc8b393ba58c4714aa829846"
-  integrity sha512-SAA/gDHdb8gNx2LnGgdFwcmJJETyYL2b7DzUSQL3HRZ9Ha3zfhfwAdpErFETpfF5maxfr2rHr8WbDPF69RchlQ==
+"@harnessio/icons@^2.1.0":
+  version "2.1.1"
+  resolved "https://registry.npmjs.org/@harnessio/icons/-/icons-2.1.1.tgz#1cf4fb4ab5f83dd2389ab6669499dfd6ba8c6b7d"
+  integrity sha512-arHZHsqKByvwey9h98HTXQBFrtY+zpTnbGHR5BNqfqg5bSbGJ0mX/2FA0kJpKjxNvywX3K8gqJtZIAyYxpIYyg==
 
-"@harnessio/uicore@^4.0.0-beta.1a":
-  version "4.0.0-beta.1a"
-  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.0.0-beta.1a.tgz#530d9b859795f2d4048c20c63fa97b6d244a5211"
-  integrity sha512-243zY+ClWj7/LSvbd+7f1qWOP/OALr6KgH7uqNoeVSHIAqNN/8pX9wkovH4AMnH3CPfcb+VTP4mGOMNSh5m1Vg==
+"@harnessio/uicore@^4.1.2":
+  version "4.1.2"
+  resolved "https://registry.npmjs.org/@harnessio/uicore/-/uicore-4.1.2.tgz#731c8da3f53531b90f5b5cde4589b248129ef306"
+  integrity sha512-xlV47pFpVd5LHBarMm18xgveUxoss5qpHhHAg8FKnfr6S+gy5OgfAsqWJAIiOCaUmwRbEvT/pAZeAQGh6fFUCA==
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
@@ -9003,6 +9010,14 @@ min-indent@^1.0.0:
   resolved "https://registry.yarnpkg.com/min-indent/-/min-indent-1.0.1.tgz#a63f681673b30571fbe8bc25686ae746eefa9869"
   integrity sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==
 
+mini-create-react-context@^0.4.0:
+  version "0.4.1"
+  resolved "https://registry.npmjs.org/mini-create-react-context/-/mini-create-react-context-0.4.1.tgz#072171561bfdc922da08a60c2197a497cc2d1d5e"
+  integrity sha512-YWCYEmd5CQeHGSAKrYvXgmzzkrvssZcuuQDDeqkT+PziKGMgE+0MCCtcKbROzocGBG1meBLl2FotlRwf4gAzbQ==
+  dependencies:
+    "@babel/runtime" "^7.12.1"
+    tiny-warning "^1.0.3"
+
 mini-css-extract-plugin@^2.4.2:
   version "2.7.5"
   resolved "https://registry.yarnpkg.com/mini-css-extract-plugin/-/mini-css-extract-plugin-2.7.5.tgz#afbb344977659ec0f1f6e050c7aea456b121cfc5"
@@ -10294,27 +10309,28 @@ react-popper@^1.3.7:
     warning "^4.0.2"
 
 react-router-dom@^5.2.1:
-  version "5.3.4"
-  resolved "https://registry.npmjs.org/react-router-dom/-/react-router-dom-5.3.4.tgz#2ed62ffd88cae6db134445f4a0c0ae8b91d2e5e6"
-  integrity sha512-m4EqFMHv/Ih4kpcBCONHbkT68KoAeHN4p3lAGoNryfHi0dMy0kCzEZakiKRsvg5wHZ/JLrLW8o8KomWiz/qbYQ==
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-5.3.0.tgz#da1bfb535a0e89a712a93b97dd76f47ad1f32363"
+  integrity sha512-ObVBLjUZsphUUMVycibxgMdh5jJ1e3o+KpAZBVeHcNQZ4W+uUGGWsokurzlF4YOldQYRQL4y6yFRWM4m3svmuQ==
   dependencies:
     "@babel/runtime" "^7.12.13"
     history "^4.9.0"
     loose-envify "^1.3.1"
     prop-types "^15.6.2"
-    react-router "5.3.4"
+    react-router "5.2.1"
     tiny-invariant "^1.0.2"
     tiny-warning "^1.0.0"
 
-react-router@5.3.4:
-  version "5.3.4"
-  resolved "https://registry.yarnpkg.com/react-router/-/react-router-5.3.4.tgz#8ca252d70fcc37841e31473c7a151cf777887bb5"
-  integrity sha512-Ys9K+ppnJah3QuaRiLxk+jDWOR1MekYQrlytiXxC1RyfbdsZkS5pvKAzCCr031xHixZwpnsYNT5xysdFHQaYsA==
+react-router@5.2.1:
+  version "5.2.1"
+  resolved "https://registry.npmjs.org/react-router/-/react-router-5.2.1.tgz#4d2e4e9d5ae9425091845b8dbc6d9d276239774d"
+  integrity sha512-lIboRiOtDLFdg1VTemMwud9vRVuOCZmUIT/7lUoZiSpPODiiH1UQlfXy+vPLC/7IWdFYnhRwAyNqA/+I7wnvKQ==
   dependencies:
     "@babel/runtime" "^7.12.13"
     history "^4.9.0"
     hoist-non-react-statics "^3.1.0"
     loose-envify "^1.3.1"
+    mini-create-react-context "^0.4.0"
     path-to-regexp "^1.7.0"
     prop-types "^15.6.2"
     react-is "^16.6.0"
@@ -11863,7 +11879,7 @@ tiny-invariant@^1.0.0, tiny-invariant@^1.0.2:
   resolved "https://registry.yarnpkg.com/tiny-invariant/-/tiny-invariant-1.3.1.tgz#8560808c916ef02ecfd55e66090df23a4b7aa642"
   integrity sha512-AD5ih2NlSssTCwsMznbvwMZpJ1cbhkGd2uueNxzv2jDlEeZdU04JQfRnggJQ8DrcVBGjAsCKwFBbDlVNtEMlzw==
 
-tiny-warning@^1.0.0, tiny-warning@^1.0.2:
+tiny-warning@^1.0.0, tiny-warning@^1.0.2, tiny-warning@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/tiny-warning/-/tiny-warning-1.0.3.tgz#94a30db453df4c643d0fd566060d60a875d84754"
   integrity sha512-lBN9zLN/oAf68o3zNXYrdCt1kP8WsiGW8Oo2ka41b2IM5JL/S1CTyX1rW0mb/zSuJun0ZUrDxx4sqvYS2FWzPA==

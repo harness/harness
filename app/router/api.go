@@ -278,8 +278,12 @@ func setupRepos(r chi.Router,
 			r.Post("/restore", handlerrepo.HandleRestore(repoCtrl))
 			r.Post("/public-access", handlerrepo.HandlePublicAccessUpdate(repoCtrl))
 
-			r.Get("/settings/security", handlerreposettings.HandleSecurityFind(repoSettingsCtrl))
-			r.Patch("/settings/security", handlerreposettings.HandleSecurityUpdate(repoSettingsCtrl))
+			r.Route("/settings", func(r chi.Router) {
+				r.Get("/security", handlerreposettings.HandleSecurityFind(repoSettingsCtrl))
+				r.Patch("/security", handlerreposettings.HandleSecurityUpdate(repoSettingsCtrl))
+				r.Get("/general", handlerreposettings.HandleGeneralFind(repoSettingsCtrl))
+				r.Patch("/general", handlerreposettings.HandleGeneralUpdate(repoSettingsCtrl))
+			})
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
@@ -295,6 +299,7 @@ func setupRepos(r chi.Router,
 				r.Get("/*", handlerrepo.HandleGetContent(repoCtrl))
 			})
 
+			r.Get("/paths", handlerrepo.HandleListPaths(repoCtrl))
 			r.Post("/path-details", handlerrepo.HandlePathsDetails(repoCtrl))
 
 			r.Route("/blame", func(r chi.Router) {
@@ -349,6 +354,8 @@ func setupRepos(r chi.Router,
 			})
 
 			r.Get("/codeowners/validate", handlerrepo.HandleCodeOwnersValidate(repoCtrl))
+
+			r.Get(fmt.Sprintf("/archive/%s", request.PathParamArchiveGitRef), handlerrepo.HandleArchive(repoCtrl))
 
 			SetupPullReq(r, pullreqCtrl)
 
@@ -511,6 +518,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Get("/activities", handlerpullreq.HandleListActivities(pullreqCtrl))
 			r.Route("/comments", func(r chi.Router) {
 				r.Post("/", handlerpullreq.HandleCommentCreate(pullreqCtrl))
+				r.Post("/apply-suggestions", handlerpullreq.HandleCommentApplySuggestions(pullreqCtrl))
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqCommentID), func(r chi.Router) {
 					r.Patch("/", handlerpullreq.HandleCommentUpdate(pullreqCtrl))
 					r.Delete("/", handlerpullreq.HandleCommentDelete(pullreqCtrl))
@@ -660,6 +668,7 @@ func setupResources(r chi.Router) {
 func setupPrincipals(r chi.Router, principalCtrl principal.Controller) {
 	r.Route("/principals", func(r chi.Router) {
 		r.Get("/", handlerprincipal.HandleList(principalCtrl))
+		r.Get(fmt.Sprintf("/{%s}", request.PathParamPrincipalID), handlerprincipal.HandleFind(principalCtrl))
 	})
 }
 

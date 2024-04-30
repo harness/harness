@@ -20,33 +20,45 @@ import cx from 'classnames'
 import { PageBody, Container, Tabs } from '@harnessio/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
+import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { useStrings } from 'framework/strings'
-
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { getErrorMessage, voidFn } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 // import Webhooks from 'pages/Webhooks/Webhooks'
 import { useAppContext } from 'AppContext'
 import BranchProtectionListing from 'components/BranchProtection/BranchProtectionListing'
-import { SettingsTab } from 'utils/GitUtils'
+import { SettingsTab, normalizeGitRef } from 'utils/GitUtils'
 import SecurityScanSettings from 'pages/RepositorySettings/SecurityScanSettings/SecurityScanSettings'
 import GeneralSettingsContent from './GeneralSettingsContent/GeneralSettingsContent'
 import css from './RepositorySettings.module.scss'
 
 export default function RepositorySettings() {
-  const { repoMetadata, error, loading, refetch, settingSection, gitRef } = useGetRepositoryMetadata()
+  const { repoMetadata, error, loading, refetch, settingSection, gitRef, resourcePath } = useGetRepositoryMetadata()
   const history = useHistory()
-  const { routes, hooks, standalone } = useAppContext()
-  const { SEMANTIC_SEARCH_ENABLED } = hooks?.useFeatureFlags()
+  const { routes } = useAppContext()
   const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.general)
   const { getString } = useStrings()
+  const { isRepositoryEmpty } = useGetResourceContent({
+    repoMetadata,
+    gitRef: normalizeGitRef(gitRef) as string,
+    resourcePath
+  })
+
+  useDisableCodeMainLinks(!!isRepositoryEmpty)
   const tabListArray = [
     {
       id: SettingsTab.general,
       title: getString('settings'),
       panel: (
         <Container padding={'large'}>
-          <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} gitRef={gitRef} />
+          <GeneralSettingsContent
+            repoMetadata={repoMetadata}
+            refetch={refetch}
+            gitRef={gitRef}
+            isRepositoryEmpty={isRepositoryEmpty}
+          />
         </Container>
       )
     },
@@ -54,6 +66,11 @@ export default function RepositorySettings() {
       id: SettingsTab.branchProtection,
       title: getString('branchProtection.title'),
       panel: <BranchProtectionListing activeTab={activeTab} />
+    },
+    {
+      id: SettingsTab.security,
+      title: getString('security'),
+      panel: <SecurityScanSettings repoMetadata={repoMetadata} activeTab={activeTab} />
     }
     // {
     //   id: SettingsTab.webhooks,
@@ -65,13 +82,6 @@ export default function RepositorySettings() {
     //   )
     // }
   ]
-  if (SEMANTIC_SEARCH_ENABLED && !standalone) {
-    tabListArray.push({
-      id: SettingsTab.security,
-      title: getString('security'),
-      panel: <SecurityScanSettings repoMetadata={repoMetadata} activeTab={activeTab} />
-    })
-  }
   return (
     <Container className={css.main}>
       <RepositoryPageHeader

@@ -51,7 +51,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 	// and need to run mergeable check even nothing was changed on feature1, same applies to main if someone
 	// push new commit to main then develop should merge status should be unchecked.
 	if branch, err := getBranchFromRef(event.Payload.Ref); err == nil {
-		err = s.pullreqStore.UpdateMergeCheckStatus(ctx, event.Payload.RepoID, branch, enum.MergeCheckStatusUnchecked)
+		err = s.pullreqStore.ResetMergeCheckStatus(ctx, event.Payload.RepoID, branch)
 		if err != nil {
 			return err
 		}

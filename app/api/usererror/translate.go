@@ -33,12 +33,13 @@ import (
 
 func Translate(ctx context.Context, err error) *Error {
 	var (
-		rError                  *Error
-		checkError              *check.ValidationError
-		appError                *errors.Error
-		maxBytesErr             *http.MaxBytesError
-		codeOwnersTooLargeError *codeowners.TooLargeError
-		lockError               *lock.Error
+		rError                   *Error
+		checkError               *check.ValidationError
+		appError                 *errors.Error
+		maxBytesErr              *http.MaxBytesError
+		codeOwnersTooLargeError  *codeowners.TooLargeError
+		codeOwnersFileParseError *codeowners.FileParseError
+		lockError                *lock.Error
 	)
 
 	// print original error for debugging purposes
@@ -106,7 +107,8 @@ func Translate(ctx context.Context, err error) *Error {
 		return ErrCodeOwnersNotFound
 	case errors.As(err, &codeOwnersTooLargeError):
 		return UnprocessableEntityf(codeOwnersTooLargeError.Error())
-
+	case errors.As(err, &codeOwnersFileParseError):
+		return UnprocessableEntityf(codeOwnersFileParseError.Error())
 	// lock errors
 	case errors.As(err, &lockError):
 		return errorFromLockError(lockError)

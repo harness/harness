@@ -33,6 +33,7 @@ import type { LanguageRecord } from './framework/strings/languageLoader'
 import { StringsContextProvider } from './framework/strings/StringsContextProvider'
 import 'highlight.js/styles/github.css'
 import 'diff2html/bundles/css/diff2html.min.css'
+import './App.scss'
 import css from './App.module.scss'
 
 FocusStyleManager.onlyShowFocusOnTabs()

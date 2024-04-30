@@ -106,7 +106,7 @@ func (c *Controller) UpdateDefaultBranch(
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeRepository, repo.Repository.Identifier),
 		audit.ActionUpdated,
-		paths.Space(repo.Repository.Path),
+		paths.Parent(repo.Repository.Path),
 		audit.WithOldObject(repoClone),
 		audit.WithNewObject(repo),
 	)

@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -31,6 +32,7 @@ type Controller struct {
 	repoStore    store.RepoStore
 	settings     *settings.Service
 	publicAccess publicaccess.PublicAccess
+	auditService audit.Service
 }
 
 func NewController(
@@ -38,12 +40,14 @@ func NewController(
 	repoStore store.RepoStore,
 	settings *settings.Service,
 	publicAccess publicaccess.PublicAccess,
+	auditService audit.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:   authorizer,
 		repoStore:    repoStore,
 		settings:     settings,
 		publicAccess: publicAccess,
+		auditService: auditService,
 	}
 }
 

@@ -50,7 +50,7 @@ func (c *Controller) Blame(ctx context.Context,
 
 	reader := git.NewStreamReader(
 		c.git.Blame(ctx, &git.BlameParams{
-			ReadParams: git.CreateReadParams(&repo.Repository),
+			ReadParams: git.CreateReadParams(repo.Repository),
 			GitRef:     gitRef,
 			Path:       path,
 			LineFrom:   lineFrom,

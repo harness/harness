@@ -16,18 +16,26 @@ package merge
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/git/sharedrepo"
 
 	"github.com/rs/zerolog/log"
 )
 
+var (
+	// errConflict is used to error out of sharedrepo Run method without erroring out of merge in case of conflicts.
+	errConflict = errors.New("conflict")
+)
+
 // Func represents a merge method function. The concrete merge implementation functions must have this signature.
 type Func func(
 	ctx context.Context,
+	refUpdater *hook.RefUpdater,
 	repoPath, tmpDir string,
 	author, committer *api.Signature,
 	message string,
@@ -37,12 +45,14 @@ type Func func(
 // Merge merges two the commits (targetSHA and sourceSHA) using the Merge method.
 func Merge(
 	ctx context.Context,
+	refUpdater *hook.RefUpdater,
 	repoPath, tmpDir string,
 	author, committer *api.Signature,
 	message string,
 	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
 ) (mergeSHA sha.SHA, conflicts []string, err error) {
 	return mergeInternal(ctx,
+		refUpdater,
 		repoPath, tmpDir,
 		author, committer,
 		message,
@@ -53,12 +63,14 @@ func Merge(
 // Squash merges two the commits (targetSHA and sourceSHA) using the Squash method.
 func Squash(
 	ctx context.Context,
+	refUpdater *hook.RefUpdater,
 	repoPath, tmpDir string,
 	author, committer *api.Signature,
 	message string,
 	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
 ) (mergeSHA sha.SHA, conflicts []string, err error) {
 	return mergeInternal(ctx,
+		refUpdater,
 		repoPath, tmpDir,
 		author, committer,
 		message,
@@ -69,13 +81,14 @@ func Squash(
 // mergeInternal is internal implementation of merge used for Merge and Squash methods.
 func mergeInternal(
 	ctx context.Context,
+	refUpdater *hook.RefUpdater,
 	repoPath, tmpDir string,
 	author, committer *api.Signature,
 	message string,
 	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
 	squash bool,
 ) (mergeSHA sha.SHA, conflicts []string, err error) {
-	err = runInSharedRepo(ctx, tmpDir, repoPath, func(s *sharedrepo.SharedRepo) error {
+	err = sharedrepo.Run(ctx, refUpdater, tmpDir, repoPath, func(s *sharedrepo.SharedRepo) error {
 		var err error
 
 		var treeSHA sha.SHA
@@ -86,7 +99,7 @@ func mergeInternal(
 		}
 
 		if len(conflicts) > 0 {
-			return nil
+			return errConflict
 		}
 
 		parents := make([]sha.SHA, 0, 2)
@@ -100,9 +113,13 @@ func mergeInternal(
 			return fmt.Errorf("commit tree failed: %w", err)
 		}
 
+		if err := refUpdater.InitNew(ctx, mergeSHA); err != nil {
+			return fmt.Errorf("refUpdater.InitNew failed: %w", err)
+		}
+
 		return nil
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, errConflict) {
 		return sha.None, nil, fmt.Errorf("merge method=merge squash=%t: %w", squash, err)
 	}
 
@@ -114,12 +131,13 @@ func mergeInternal(
 //nolint:gocognit // refactor if needed.
 func Rebase(
 	ctx context.Context,
+	refUpdater *hook.RefUpdater,
 	repoPath, tmpDir string,
 	_, committer *api.Signature, // commit author isn't used here - it's copied from every commit
 	_ string, // commit message isn't used here
 	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
 ) (mergeSHA sha.SHA, conflicts []string, err error) {
-	err = runInSharedRepo(ctx, tmpDir, repoPath, func(s *sharedrepo.SharedRepo) error {
+	err = sharedrepo.Run(ctx, refUpdater, tmpDir, repoPath, func(s *sharedrepo.SharedRepo) error {
 		sourceSHAs, err := s.CommitSHAsForRebase(ctx, mergeBaseSHA, sourceSHA)
 		if err != nil {
 			return fmt.Errorf("failed to find commit list in rebase merge: %w", err)
@@ -161,7 +179,7 @@ func Rebase(
 				return fmt.Errorf("failed to merge tree in rebase merge: %w", err)
 			}
 			if len(conflicts) > 0 {
-				return nil
+				return errConflict
 			}
 
 			// Drop any commit which after being rebased would be empty.
@@ -183,44 +201,17 @@ func Rebase(
 			lastTreeSHA = treeSHA
 		}
 
+		if err := refUpdater.InitNew(ctx, lastCommitSHA); err != nil {
+			return fmt.Errorf("refUpdater.InitNew failed: %w", err)
+		}
+
 		mergeSHA = lastCommitSHA
 
 		return nil
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, errConflict) {
 		return sha.None, nil, fmt.Errorf("merge method=rebase: %w", err)
 	}
 
 	return mergeSHA, conflicts, nil
-}
-
-// runInSharedRepo is helper function used to run the provided function inside a shared repository.
-func runInSharedRepo(
-	ctx context.Context,
-	tmpDir, repoPath string,
-	fn func(s *sharedrepo.SharedRepo) error,
-) error {
-	s, err := sharedrepo.NewSharedRepo(tmpDir, repoPath)
-	if err != nil {
-		return err
-	}
-
-	defer s.Close(ctx)
-
-	err = s.InitAsBare(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = fn(s)
-	if err != nil {
-		return err
-	}
-
-	err = s.MoveObjects(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

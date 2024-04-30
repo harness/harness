@@ -15,13 +15,16 @@
 package git
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"time"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
 )
 
@@ -247,4 +250,83 @@ func (s *Service) GetCommitDivergences(
 	return &GetCommitDivergencesOutput{
 		Divergences: divergences,
 	}, nil
+}
+
+type FindOversizeFilesParams struct {
+	RepoUID       string
+	GitObjectDirs []string
+	SizeLimit     int64
+}
+
+type FindOversizeFilesOutput struct {
+	FileInfos []FileInfo
+}
+
+type FileInfo struct {
+	SHA  sha.SHA
+	Size int64
+}
+
+//nolint:gocognit
+func (s *Service) FindOversizeFiles(
+	ctx context.Context,
+	params *FindOversizeFilesParams,
+) (*FindOversizeFilesOutput, error) {
+	if params.RepoUID == "" {
+		return nil, api.ErrRepositoryPathEmpty
+	}
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	var fileInfos []FileInfo
+	for _, gitObjDir := range params.GitObjectDirs {
+		objects, err := catFileBatchCheckAllObjects(ctx, repoPath, gitObjDir)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, obj := range objects {
+			if obj.Type == string(TreeNodeTypeBlob) {
+				if obj.Size > params.SizeLimit {
+					fileInfos = append(fileInfos, FileInfo{
+						SHA:  obj.SHA,
+						Size: obj.Size,
+					})
+				}
+			}
+		}
+	}
+
+	return &FindOversizeFilesOutput{
+		FileInfos: fileInfos,
+	}, nil
+}
+
+func catFileBatchCheckAllObjects(
+	ctx context.Context,
+	repoPath string,
+	gitObjDir string,
+) ([]parser.BatchCheckObject, error) {
+	cmd := command.New("cat-file",
+		command.WithFlag("--batch-check"),
+		command.WithFlag("--batch-all-objects"),
+		command.WithFlag("--unordered"),
+		command.WithFlag("-Z"),
+		command.WithEnv(command.GitObjectDir, gitObjDir),
+	)
+	buffer := bytes.NewBuffer(nil)
+	err := cmd.Run(
+		ctx,
+		command.WithDir(repoPath),
+		command.WithStdout(buffer),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to cat-file batch check all objects: %w", err)
+	}
+
+	objects, err := parser.CatFileBatchCheckAllObjects(buffer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse output of cat-file batch check all objects: %w", err)
+	}
+
+	return objects, nil
 }

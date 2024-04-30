@@ -38,10 +38,7 @@
 
 .radioContainer {
   margin-top: var(--spacing-medium) !important;
-  :global(.RadioButton--radio) {
-    display: flex;
-    flex-direction: row !important;
-    align-items: center;
-    margin-top: var(--spacing-small) !important;
+  label[class*='RadioButton'] {
+    margin-top: 10px !important;
   }
 }

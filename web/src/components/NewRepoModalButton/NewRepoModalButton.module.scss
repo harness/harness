@@ -43,7 +43,7 @@
     .bp3-form-helper-text {
       margin-top: unset !important;
     }
-    .FormError--errorDiv {
+    [class*='FormError--errorDiv'] {
       display: none !important;
     }
   }

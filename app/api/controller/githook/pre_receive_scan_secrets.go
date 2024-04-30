@@ -92,14 +92,14 @@ func scanSecretsInternal(ctx context.Context,
 		ctx := logging.NewContext(ctx, loggingWithRefUpdate(refUpdate))
 		log := log.Ctx(ctx)
 
-		if refUpdate.New.String() == types.NilSHA {
+		if refUpdate.New.IsNil() {
 			log.Debug().Msg("skip deleted reference")
 			continue
 		}
 
 		// in case the branch was just created - fallback to compare against latest default branch.
-		baseRev := refUpdate.Old.String() + "^{commit}"
-		rev := refUpdate.New.String() + "^{commit}"
+		baseRev := refUpdate.Old.String() + "^{commit}" //nolint:goconst
+		rev := refUpdate.New.String() + "^{commit}"     //nolint:goconst
 		//nolint:nestif
 		if refUpdate.Old.IsNil() {
 			if baseRevFallBack == nil {

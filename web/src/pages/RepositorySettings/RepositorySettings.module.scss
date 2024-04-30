@@ -91,8 +91,7 @@
 }
 
 .radioContainer {
-  :global(.RadioButton--radio) {
-    display: flex;
+  :global([class*='RadioButton--radio']) {
     align-items: center;
   }
 }
@@ -139,7 +138,7 @@
 }
 
 .editContainer {
-  :global(.TextInput--main) {
+  :global([class*='TextInput--main']) {
     margin-bottom: unset !important;
     font-size: 20px;
   }

@@ -28,13 +28,13 @@ import type { CommentItem } from 'components/CommentBox/CommentBox'
 import css from './CodeCommentStatusSelect.module.scss'
 
 interface CodeCommentStatusSelectProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
-  commentItems: CommentItem<TypesPullReqActivity>[]
+  comment: { commentItems: CommentItem<TypesPullReqActivity>[] }
 }
 
 export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = ({
   repoMetadata,
   pullReqMetadata,
-  commentItems
+  comment: { commentItems }
 }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
@@ -85,7 +85,7 @@ export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = (
         } as CommentItem<TypesPullReqActivity>)
       }
     }
-  }, [parentComment?.id])
+  }, [parentComment?.id, randomClass])
 
   return parentComment?.deleted ? null : (
     <Select

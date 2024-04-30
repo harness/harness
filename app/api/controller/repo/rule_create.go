@@ -120,7 +120,7 @@ func (c *Controller) RuleCreate(ctx context.Context,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
 		audit.ActionCreated,
-		paths.Space(repo.Repository.Path),
+		paths.Parent(repo.Repository.Path),
 		audit.WithNewObject(r),
 	)
 	if err != nil {

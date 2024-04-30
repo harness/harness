@@ -45,11 +45,13 @@ func ProvideGITAdapter(
 func ProvideService(
 	config types.Config,
 	adapter *api.Git,
+	hookClientFactory hook.ClientFactory,
 	storage storage.Store,
 ) (Interface, error) {
 	return New(
 		config,
 		adapter,
+		hookClientFactory,
 		storage,
 	)
 }

@@ -37,7 +37,7 @@ type ControllerClientFactory struct {
 	git         git.Interface
 }
 
-func (f *ControllerClientFactory) NewClient(_ context.Context, envVars map[string]string) (hook.Client, error) {
+func (f *ControllerClientFactory) NewClient(envVars map[string]string) (hook.Client, error) {
 	payload, err := hook.LoadPayloadFromMap[githook.Payload](envVars)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load payload from provided map of environment variables: %w", err)

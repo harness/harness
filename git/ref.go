@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
 )
 
@@ -60,12 +61,12 @@ func (s *Service) GetRef(ctx context.Context, params GetRefParams) (GetRefRespon
 		return GetRefResponse{}, fmt.Errorf("GetRef: failed to fetch reference '%s': %w", params.Name, err)
 	}
 
-	sha, err := s.git.GetRef(ctx, repoPath, reference)
+	refSHA, err := s.git.GetRef(ctx, repoPath, reference)
 	if err != nil {
 		return GetRefResponse{}, err
 	}
 
-	return GetRefResponse{SHA: sha}, nil
+	return GetRefResponse{SHA: refSHA}, nil
 }
 
 type UpdateRefParams struct {
@@ -91,15 +92,12 @@ func (s *Service) UpdateRef(ctx context.Context, params UpdateRefParams) error {
 		return fmt.Errorf("UpdateRef: failed to fetch reference '%s': %w", params.Name, err)
 	}
 
-	err = s.git.UpdateRef(
-		ctx,
-		params.EnvVars,
-		repoPath,
-		reference,
-		params.OldValue,
-		params.NewValue,
-	)
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, reference)
 	if err != nil {
+		return fmt.Errorf("UpdateRef: failed to create ref updater: %w", err)
+	}
+
+	if err := refUpdater.Do(ctx, params.OldValue, params.NewValue); err != nil {
 		return fmt.Errorf("failed to update ref: %w", err)
 	}
 

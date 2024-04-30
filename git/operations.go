@@ -15,36 +15,34 @@
 package git
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"path"
 	"strings"
 	"time"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
-
-	"github.com/rs/zerolog/log"
-	"golang.org/x/exp/slices"
+	"github.com/harness/gitness/git/sharedrepo"
 )
 
 const (
-	defaultFilePermission = "100644" // 0o644 default file permission
+	filePermissionDefault = "100644"
 )
 
 type FileAction string
 
 const (
-	CreateAction FileAction = "CREATE"
-	UpdateAction FileAction = "UPDATE"
-	DeleteAction            = "DELETE"
-	MoveAction              = "MOVE"
+	CreateAction    FileAction = "CREATE"
+	UpdateAction    FileAction = "UPDATE"
+	DeleteAction    FileAction = "DELETE"
+	MoveAction      FileAction = "MOVE"
+	PatchTextAction FileAction = "PATCH_TEXT"
 )
 
 func (FileAction) Enum() []interface{} {
-	return []interface{}{CreateAction, UpdateAction, DeleteAction, MoveAction}
+	return []interface{}{CreateAction, UpdateAction, DeleteAction, MoveAction, PatchTextAction}
 }
 
 // CommitFileAction holds file operation data.
@@ -52,7 +50,7 @@ type CommitFileAction struct {
 	Action  FileAction
 	Path    string
 	Payload []byte
-	SHA     string
+	SHA     sha.SHA
 }
 
 // CommitFilesParams holds the data for file operations.
@@ -86,13 +84,11 @@ type CommitFilesResponse struct {
 	CommitID sha.SHA
 }
 
-//nolint:gocognit
+//nolint:gocognit,nestif
 func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (CommitFilesResponse, error) {
 	if err := params.Validate(); err != nil {
 		return CommitFilesResponse{}, err
 	}
-
-	log := log.Ctx(ctx).With().Str("repo_uid", params.RepoUID).Logger()
 
 	committer := params.Actor
 	if params.Committer != nil {
@@ -114,9 +110,8 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	log.Debug().Msg("check if empty")
-
 	// check if repo is empty
+
 	// IMPORTANT: we don't use gitea's repo.IsEmpty() as that only checks whether the default branch exists (in HEAD).
 	// This can be an issue in case someone created a branch already in the repo (just default branch is missing).
 	// In that case the user can accidentally create separate git histories (which most likely is unintended).
@@ -126,59 +121,70 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		return CommitFilesResponse{}, fmt.Errorf("CommitFiles: failed to determine if repository is empty: %w", err)
 	}
 
-	log.Debug().Msg("validate and prepare input")
+	// validate and prepare input
 
 	// ensure input data is valid
 	// the commit will be nil for empty repositories
-	commit, err := s.validateAndPrepareHeader(ctx, repoPath, isEmpty, params)
+	commit, err := s.validateAndPrepareCommitFilesHeader(ctx, repoPath, isEmpty, params)
 	if err != nil {
 		return CommitFilesResponse{}, err
 	}
 
-	var oldCommitSHA sha.SHA
-	if commit != nil {
-		oldCommitSHA = commit.SHA
+	// ref updater
+	var refOldSHA sha.SHA
+	var refNewSHA sha.SHA
+
+	branchRef := api.GetReferenceFromBranchName(params.Branch)
+	if params.Branch != params.NewBranch {
+		// we are creating a new branch, rather than updating the existing one
+		refOldSHA = sha.Nil
+		branchRef = api.GetReferenceFromBranchName(params.NewBranch)
+	} else if commit != nil {
+		refOldSHA = commit.SHA
 	}
 
-	log.Debug().Msg("create shared repo")
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, branchRef)
 
-	newCommitSHA, err := func() (sha.SHA, error) {
-		// Create a directory for the temporary shared repository.
-		shared, err := api.NewSharedRepo(s.git, s.tmpDir, params.RepoUID, repoPath)
-		if err != nil {
-			return sha.None, fmt.Errorf("failed to create shared repository: %w", err)
-		}
-		defer shared.Close(ctx)
+	// run the actions in a shared repo
 
-		// Create bare repository with alternates pointing to the original repository.
-		err = shared.InitAsShared(ctx)
-		if err != nil {
-			return sha.None, fmt.Errorf("failed to create temp repo with alternates: %w", err)
-		}
+	err = sharedrepo.Run(ctx, refUpdater, s.tmpDir, repoPath, func(r *sharedrepo.SharedRepo) error {
+		var parentCommits []sha.SHA
+		var oldTreeSHA sha.SHA
 
-		log.Debug().Msgf("prepare tree (empty: %t)", isEmpty)
-
-		// handle empty repo separately (as branch doesn't exist, no commit exists, ...)
 		if isEmpty {
-			err = s.prepareTreeEmptyRepo(ctx, shared, params.Actions)
-		} else {
-			err = shared.SetIndex(ctx, oldCommitSHA.String())
+			oldTreeSHA = sha.EmptyTree
+			err = s.prepareTreeEmptyRepo(ctx, r, params.Actions)
 			if err != nil {
-				return sha.None, fmt.Errorf("failed to set index to temp repo: %w", err)
+				return fmt.Errorf("failed to prepare empty tree: %w", err)
+			}
+		} else {
+			parentCommits = append(parentCommits, commit.SHA)
+
+			// get tree sha
+			rootNode, err := s.git.GetTreeNode(ctx, repoPath, commit.SHA.String(), "")
+			if err != nil {
+				return fmt.Errorf("CommitFiles: failed to get original node: %w", err)
+			}
+			oldTreeSHA = rootNode.SHA
+
+			err = r.SetIndex(ctx, commit.SHA)
+			if err != nil {
+				return fmt.Errorf("failed to set index in shared repository: %w", err)
 			}
 
-			err = s.prepareTree(ctx, shared, params.Actions, commit)
-		}
-		if err != nil {
-			return sha.None, fmt.Errorf("failed to prepare tree: %w", err)
+			err = s.prepareTree(ctx, r, commit.SHA, params.Actions)
+			if err != nil {
+				return fmt.Errorf("failed to prepare tree: %w", err)
+			}
 		}
 
-		log.Debug().Msg("write tree")
-
-		// Now write the tree
-		treeHash, err := shared.WriteTree(ctx)
+		treeSHA, err := r.WriteTree(ctx)
 		if err != nil {
-			return sha.None, fmt.Errorf("failed to write tree object: %w", err)
+			return fmt.Errorf("failed to write tree object: %w", err)
+		}
+
+		if oldTreeSHA.Equal(treeSHA) {
+			return errors.InvalidArgument("No effective changes.")
 		}
 
 		message := strings.TrimSpace(params.Title)
@@ -186,70 +192,46 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 			message += "\n\n" + strings.TrimSpace(params.Message)
 		}
 
-		log.Debug().Msg("commit tree")
-
-		// Now commit the tree
-		commitSHA, err := shared.CommitTreeWithDate(
-			ctx,
-			oldCommitSHA,
-			&api.Identity{
+		authorSig := &api.Signature{
+			Identity: api.Identity{
 				Name:  author.Name,
 				Email: author.Email,
 			},
-			&api.Identity{
+			When: authorDate,
+		}
+
+		committerSig := &api.Signature{
+			Identity: api.Identity{
 				Name:  committer.Name,
 				Email: committer.Email,
 			},
-			treeHash,
-			message,
-			false,
-			authorDate,
-			committerDate,
-		)
-		if err != nil {
-			return sha.None, fmt.Errorf("failed to commit the tree: %w", err)
+			When: committerDate,
 		}
 
-		err = shared.MoveObjects(ctx)
+		commitSHA, err := r.CommitTree(ctx, authorSig, committerSig, treeSHA, message, false, parentCommits...)
 		if err != nil {
-			return sha.None, fmt.Errorf("failed to move git objects: %w", err)
+			return fmt.Errorf("failed to commit the tree: %w", err)
 		}
 
-		return commitSHA, nil
-	}()
+		refNewSHA = commitSHA
+
+		if err := refUpdater.Init(ctx, refOldSHA, refNewSHA); err != nil {
+			return fmt.Errorf("failed to init ref updater old=%s new=%s: %w", refOldSHA, refNewSHA, err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		return CommitFilesResponse{}, fmt.Errorf("CommitFiles: failed to create commit in shared repository: %w", err)
 	}
 
-	log.Debug().Msg("update ref")
+	// get commit
 
-	branchRef := api.GetReferenceFromBranchName(params.Branch)
-	if params.Branch != params.NewBranch {
-		// we are creating a new branch, rather than updating the existing one
-		oldCommitSHA = sha.Nil
-		branchRef = api.GetReferenceFromBranchName(params.NewBranch)
-	}
-	err = s.git.UpdateRef(
-		ctx,
-		params.EnvVars,
-		repoPath,
-		branchRef,
-		oldCommitSHA,
-		newCommitSHA,
-	)
-	if err != nil {
-		return CommitFilesResponse{}, fmt.Errorf("CommitFiles: failed to update ref %s: %w", branchRef, err)
-	}
-
-	log.Debug().Msg("get commit")
-
-	commit, err = s.git.GetCommit(ctx, repoPath, newCommitSHA.String())
+	commit, err = s.git.GetCommit(ctx, repoPath, refNewSHA.String())
 	if err != nil {
 		return CommitFilesResponse{}, fmt.Errorf("failed to get commit for SHA %s: %w",
-			newCommitSHA.String(), err)
+			refNewSHA.String(), err)
 	}
-
-	log.Debug().Msg("done")
 
 	return CommitFilesResponse{
 		CommitID: commit.SHA,
@@ -258,15 +240,66 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 
 func (s *Service) prepareTree(
 	ctx context.Context,
-	shared *api.SharedRepo,
+	r *sharedrepo.SharedRepo,
+	treeishSHA sha.SHA,
 	actions []CommitFileAction,
-	commit *api.Commit,
 ) error {
-	// execute all actions
+	// patch file actions are executed in batch for a single file
+	patchMap := map[string][]*CommitFileAction{}
+
+	// keep track of what paths have been written to detect conflicting actions
+	modifiedPaths := map[string]bool{}
+
 	for i := range actions {
-		if err := s.processAction(ctx, shared, &actions[i], commit); err != nil {
-			return err
+		act := &actions[i]
+
+		// patch text actions are executed in per-file batches.
+		if act.Action == PatchTextAction {
+			patchMap[act.Path] = append(patchMap[act.Path], act)
+			continue
 		}
+		// anything else is executed as is
+		modifiedPath, err := s.processAction(ctx, r, treeishSHA, act)
+		if err != nil {
+			return fmt.Errorf("failed to process action %s on %q: %w", act.Action, act.Path, err)
+		}
+
+		if modifiedPaths[modifiedPath] {
+			return errors.InvalidArgument("More than one conflicting actions are modifying file %q.", modifiedPath)
+		}
+		modifiedPaths[modifiedPath] = true
+	}
+
+	for filePath, patchActions := range patchMap {
+		// combine input across actions
+		var fileSHA sha.SHA
+		var payloads [][]byte
+		for _, act := range patchActions {
+			payloads = append(payloads, act.Payload)
+			if fileSHA.IsEmpty() {
+				fileSHA = act.SHA
+				continue
+			}
+
+			// there can only be one file sha for a given path and commit.
+			if !act.SHA.IsEmpty() && !fileSHA.Equal(act.SHA) {
+				return errors.InvalidArgument(
+					"patch text actions for %q contain different SHAs %q and %q",
+					filePath,
+					act.SHA,
+					fileSHA,
+				)
+			}
+		}
+
+		if err := r.PatchTextFile(ctx, treeishSHA, filePath, fileSHA, payloads); err != nil {
+			return fmt.Errorf("failed to process action %s on %q: %w", PatchTextAction, filePath, err)
+		}
+
+		if modifiedPaths[filePath] {
+			return errors.InvalidArgument("More than one conflicting action are modifying file %q.", filePath)
+		}
+		modifiedPaths[filePath] = true
 	}
 
 	return nil
@@ -274,7 +307,7 @@ func (s *Service) prepareTree(
 
 func (s *Service) prepareTreeEmptyRepo(
 	ctx context.Context,
-	shared *api.SharedRepo,
+	r *sharedrepo.SharedRepo,
 	actions []CommitFileAction,
 ) error {
 	for _, action := range actions {
@@ -287,7 +320,7 @@ func (s *Service) prepareTreeEmptyRepo(
 			return errors.InvalidArgument("invalid path")
 		}
 
-		if err := createFile(ctx, shared, nil, filePath, defaultFilePermission, action.Payload); err != nil {
+		if err := r.CreateFile(ctx, sha.None, filePath, filePermissionDefault, action.Payload); err != nil {
 			return errors.Internal(err, "failed to create file '%s'", action.Path)
 		}
 	}
@@ -295,7 +328,7 @@ func (s *Service) prepareTreeEmptyRepo(
 	return nil
 }
 
-func (s *Service) validateAndPrepareHeader(
+func (s *Service) validateAndPrepareCommitFilesHeader(
 	ctx context.Context,
 	repoPath string,
 	isEmpty bool,
@@ -340,6 +373,75 @@ func (s *Service) validateAndPrepareHeader(
 	}
 
 	return branch.Commit, nil
+}
+
+func (s *Service) processAction(
+	ctx context.Context,
+	r *sharedrepo.SharedRepo,
+	treeishSHA sha.SHA,
+	action *CommitFileAction,
+) (modifiedPath string, err error) {
+	filePath := api.CleanUploadFileName(action.Path)
+	if filePath == "" {
+		return "", errors.InvalidArgument("path cannot be empty")
+	}
+	modifiedPath = filePath
+	switch action.Action {
+	case CreateAction:
+		err = r.CreateFile(ctx, treeishSHA, filePath, filePermissionDefault, action.Payload)
+	case UpdateAction:
+		err = r.UpdateFile(ctx, treeishSHA, filePath, action.SHA, filePermissionDefault, action.Payload)
+	case MoveAction:
+		modifiedPath, err = r.MoveFile(ctx, treeishSHA, filePath, action.SHA, filePermissionDefault, action.Payload)
+	case DeleteAction:
+		err = r.DeleteFile(ctx, filePath)
+	case PatchTextAction:
+		return "", fmt.Errorf("action %s not supported by this method", action.Action)
+	default:
+		err = fmt.Errorf("unknown file action %q", action.Action)
+	}
+
+	return modifiedPath, err
+}
+
+/*
+func (s *Service) prepareTree(
+	ctx context.Context,
+	shared *api.SharedRepo,
+	actions []CommitFileAction,
+	commit *api.Commit,
+) error {
+	// execute all actions
+	for i := range actions {
+		if err := s.processAction(ctx, shared, &actions[i], commit); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func prepareTreeEmptyRepo(
+	ctx context.Context,
+	shared *api.SharedRepo,
+	actions []CommitFileAction,
+) error {
+	for _, action := range actions {
+		if action.Action != CreateAction {
+			return errors.PreconditionFailed("action not allowed on empty repository")
+		}
+
+		filePath := api.CleanUploadFileName(action.Path)
+		if filePath == "" {
+			return errors.InvalidArgument("invalid path")
+		}
+
+		if err := createFile(ctx, shared, nil, filePath, defaultFilePermission, action.Payload); err != nil {
+			return errors.Internal(err, "failed to create file '%s'", action.Path)
+		}
+	}
+
+	return nil
 }
 
 func (s *Service) processAction(
@@ -571,3 +673,4 @@ func parseMovePayload(payload []byte) (string, []byte, error) {
 
 	return newPath, newContent, nil
 }
+*/

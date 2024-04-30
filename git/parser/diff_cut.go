@@ -104,7 +104,7 @@ func DiffCut(r io.Reader, params DiffCutParams) (HunkHeader, Hunk, error) {
 			}
 
 			diffCut = append(diffCut, line)
-			if len(diffCut) > params.LineLimit {
+			if params.LineLimit > 0 && len(diffCut) >= params.LineLimit {
 				break // safety break
 			}
 		}
@@ -290,7 +290,7 @@ func BlobCut(r io.Reader, params DiffCutParams) (CutHeader, Cut, error) {
 			linesNeeded--
 		}
 
-		if len(cutLines) >= params.LineLimit {
+		if params.LineLimit > 0 && len(cutLines) >= params.LineLimit {
 			break
 		}
 	}

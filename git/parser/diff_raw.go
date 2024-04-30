@@ -19,6 +19,9 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strconv"
+
+	"github.com/harness/gitness/git/sha"
 )
 
 type DiffStatus byte
@@ -103,6 +106,53 @@ func DiffRaw(r io.Reader) ([]DiffRawFile, error) {
 	}
 	if err := scan.Err(); err != nil {
 		return nil, fmt.Errorf("failed to scan raw diff: %w", scan.Err())
+	}
+
+	return result, nil
+}
+
+type BatchCheckObject struct {
+	SHA sha.SHA
+	// TODO: Use proper TreeNodeType
+	Type string
+	Size int64
+}
+
+var regexpBatchCheckObject = regexp.MustCompile(`^([0-9a-f]{40,64}) (\w+) (\d+)$`)
+
+func CatFileBatchCheckAllObjects(r io.Reader) ([]BatchCheckObject, error) {
+	var result []BatchCheckObject
+
+	scan := bufio.NewScanner(r)
+	scan.Split(ScanZeroSeparated)
+
+	for scan.Scan() {
+		line := scan.Text()
+		matches := regexpBatchCheckObject.FindStringSubmatch(line)
+
+		if len(matches) != 4 {
+			return nil, fmt.Errorf("failed to parse line: %q", line)
+		}
+
+		sha, err := sha.New(matches[1])
+		if err != nil {
+			return nil, fmt.Errorf("failed to create sha.SHA for %q: %w", matches[1], err)
+		}
+
+		sizeStr := matches[3]
+		size, err := strconv.ParseInt(sizeStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert size %q to int64: %w", sizeStr, err)
+		}
+
+		result = append(result, BatchCheckObject{
+			SHA:  sha,
+			Type: matches[2],
+			Size: size,
+		})
+	}
+	if err := scan.Err(); err != nil {
+		return nil, fmt.Errorf("failed to scan cat file batch check all objects: %w", scan.Err())
 	}
 
 	return result, nil

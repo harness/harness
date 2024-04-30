@@ -71,7 +71,7 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 
 	// map to rpc params
 	options := &git.GetCommitDivergencesParams{
-		ReadParams: git.CreateReadParams(&repo.Repository),
+		ReadParams: git.CreateReadParams(repo.Repository),
 		MaxCount:   in.MaxCount,
 		Requests:   make([]git.CommitDivergenceRequest, len(in.Requests)),
 	}

@@ -97,6 +97,7 @@ type GetRepositorySizeParams struct {
 }
 
 type GetRepositorySizeOutput struct {
+	// Total size of the repository in KiB.
 	Size int64
 }
 
@@ -533,5 +534,34 @@ func (s *Service) UpdateDefaultBranch(
 		return fmt.Errorf("UpdateDefaultBranch: failed to update repo default branch %q: %w",
 			params.BranchName, err)
 	}
+	return nil
+}
+
+type ArchiveParams struct {
+	ReadParams
+	api.ArchiveParams
+}
+
+func (p *ArchiveParams) Validate() error {
+	if err := p.ReadParams.Validate(); err != nil {
+		return err
+	}
+
+	if err := p.ArchiveParams.Validate(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Service) Archive(ctx context.Context, params ArchiveParams, w io.Writer) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+	err := s.git.Archive(ctx, repoPath, params.ArchiveParams, w)
+	if err != nil {
+		return fmt.Errorf("failed to run git archive: %w", err)
+	}
+
 	return nil
 }

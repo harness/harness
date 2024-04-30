@@ -20,6 +20,7 @@ import * as yup from 'yup'
 import { Color } from '@harnessio/design-system'
 import { Button, Layout, FlexExpander, Formik, FormikForm, FormInput, Text } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
+import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { REGEX_VALID_REPO_NAME } from 'utils/Utils'
 import { ImportFormData, GitProviders, getProviders, getOrgLabel, getOrgPlaceholder } from 'utils/GitUtils'
@@ -32,6 +33,7 @@ interface ImportFormProps {
 }
 
 const ImportForm = (props: ImportFormProps) => {
+  const { standalone } = useAppContext()
   const { handleSubmit, loading, hideModal } = props
   const { getString } = useStrings()
   const [auth, setAuth] = useState(false)
@@ -47,7 +49,8 @@ const ImportForm = (props: ImportFormProps) => {
     username: '',
     password: '',
     name: '',
-    description: ''
+    description: '',
+    importPipelineLabel: false
   }
 
   const validationSchemaStepOne = yup.object().shape({
@@ -161,16 +164,29 @@ const ImportForm = (props: ImportFormProps) => {
                 {formik.errors.repo}
               </Text>
             ) : null}
-            <FormInput.CheckBox
-              name="authorization"
-              label={getString('importRepo.reqAuth')}
-              tooltipProps={{
-                dataTooltipId: 'authorization'
-              }}
-              onClick={() => {
-                setAuth(!auth)
-              }}
-            />
+            <Layout.Horizontal spacing="medium">
+              <FormInput.CheckBox
+                name="authorization"
+                label={getString('importRepo.reqAuth')}
+                tooltipProps={{
+                  dataTooltipId: 'authorization'
+                }}
+                onClick={() => {
+                  setAuth(!auth)
+                }}
+                style={auth ? {} : { margin: 0 }}
+              />
+              {standalone && (
+                <FormInput.CheckBox
+                  name="importPipelineLabel"
+                  label={getString('pipelines.import')}
+                  tooltipProps={{
+                    dataTooltipId: 'pipelines'
+                  }}
+                  style={auth ? {} : { margin: 0 }}
+                />
+              )}
+            </Layout.Horizontal>
 
             {auth ? (
               <>

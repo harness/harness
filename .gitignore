@@ -14,6 +14,7 @@ release
 .vscode/settings.json
 coverage.out
 gitness.session.sql
+web/cypress/node_modules
 
 # ignore any executables we build
 /gitness

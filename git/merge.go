@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/merge"
 	"github.com/harness/gitness/git/sha"
 
@@ -275,17 +276,27 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	// merge
 
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, refPath)
+	if err != nil {
+		return MergeOutput{}, errors.Internal(err, "failed to create ref updater object")
+	}
+
+	if err := refUpdater.InitOld(ctx, refOldValue); err != nil {
+		return MergeOutput{}, errors.Internal(err, "failed to set old reference value for ref updater")
+	}
+
 	mergeCommitSHA, conflicts, err := mergeFunc(
 		ctx,
+		refUpdater,
 		repoPath, s.tmpDir,
 		&author, &committer,
 		mergeMsg,
 		mergeBaseCommitSHA, baseCommitSHA, headCommitSHA)
 	if err != nil {
-		return MergeOutput{}, errors.Internal(err, "failed to merge %q to %q in %q using the %q merge method.",
+		return MergeOutput{}, errors.Internal(err, "failed to merge %q to %q in %q using the %q merge method",
 			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod)
 	}
-	if len(conflicts) != 0 {
+	if len(conflicts) > 0 {
 		return MergeOutput{
 			BaseSHA:          baseCommitSHA,
 			HeadSHA:          headCommitSHA,
@@ -296,25 +307,6 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 			ConflictFiles:    conflicts,
 		}, nil
 	}
-
-	// git reference update
-
-	log.Trace().Msg("merge completed - updating git reference")
-
-	err = s.git.UpdateRef(
-		ctx,
-		params.EnvVars,
-		repoPath,
-		refPath,
-		refOldValue,
-		mergeCommitSHA,
-	)
-	if err != nil {
-		return MergeOutput{},
-			errors.Internal(err, "failed to update branch %q after merging commits", params.HeadBranch)
-	}
-
-	log.Trace().Msg("merge completed - git reference updated")
 
 	return MergeOutput{
 		BaseSHA:          baseCommitSHA,

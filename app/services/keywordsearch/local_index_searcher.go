@@ -16,7 +16,6 @@ package keywordsearch
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/types"
 )
@@ -35,9 +34,9 @@ func (s *LocalIndexSearcher) Search(
 	_ bool,
 	_ int,
 ) (types.SearchResult, error) {
-	return types.SearchResult{}, fmt.Errorf("not implemented")
+	return types.SearchResult{}, nil
 }
 
 func (s *LocalIndexSearcher) Index(_ context.Context, _ *types.Repository) error {
-	return fmt.Errorf("not implemented")
+	return nil
 }

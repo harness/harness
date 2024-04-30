@@ -44,7 +44,7 @@ func (c *Controller) Raw(ctx context.Context,
 	}
 
 	// create read params once
-	readParams := git.CreateReadParams(&repo.Repository)
+	readParams := git.CreateReadParams(repo.Repository)
 	treeNodeOutput, err := c.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
 		ReadParams:          readParams,
 		GitREF:              gitRef,

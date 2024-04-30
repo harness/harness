@@ -94,7 +94,7 @@ func worker(ctx context.Context, s *SizeCalculator, wg *sync.WaitGroup, taskCh <
 	for sizeInfo := range taskCh {
 		log := log.Ctx(ctx).With().Str("repo_git_uid", sizeInfo.GitUID).Int64("repo_id", sizeInfo.ID).Logger()
 
-		log.Debug().Msgf("previous repo size: %d", sizeInfo.Size)
+		log.Debug().Msgf("previous repo size: %d KiB", sizeInfo.Size)
 
 		sizeOut, err := s.git.GetRepositorySize(
 			ctx,
@@ -113,6 +113,6 @@ func worker(ctx context.Context, s *SizeCalculator, wg *sync.WaitGroup, taskCh <
 			continue
 		}
 
-		log.Debug().Msgf("new repo size: %d", sizeOut.Size)
+		log.Debug().Msgf("new repo size: %d KiB", sizeOut.Size)
 	}
 }

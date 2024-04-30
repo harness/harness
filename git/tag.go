@@ -21,7 +21,9 @@ import (
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
+	"github.com/harness/gitness/git/sharedrepo"
 
 	"github.com/rs/zerolog/log"
 )
@@ -252,76 +254,58 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 		return nil, errors.Conflict("tag '%s' already exists", tagName)
 	}
 
-	err = func() error {
-		// Create a directory for the temporary shared repository.
-		sharedRepo, err := api.NewSharedRepo(s.git, s.tmpDir, params.RepoUID, repoPath)
-		if err != nil {
-			return fmt.Errorf("failed to create new shared repo: %w", err)
-		}
-		defer sharedRepo.Close(ctx)
+	// create tag request
 
-		// Create bare repository with alternates pointing to the original repository.
-		err = sharedRepo.InitAsShared(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to create temp repo with alternates: %w", err)
-		}
+	tagger := params.Actor
+	if params.Tagger != nil {
+		tagger = *params.Tagger
+	}
+	taggerDate := time.Now().UTC()
+	if params.TaggerDate != nil {
+		taggerDate = *params.TaggerDate
+	}
 
-		tagger := params.Actor
-		if params.Tagger != nil {
-			tagger = *params.Tagger
-		}
-		taggerDate := time.Now().UTC()
-		if params.TaggerDate != nil {
-			taggerDate = *params.TaggerDate
-		}
-
-		createTagRequest := &api.CreateTagOptions{
-			Message: params.Message,
-			Tagger: api.Signature{
-				Identity: api.Identity{
-					Name:  tagger.Name,
-					Email: tagger.Email,
-				},
-				When: taggerDate,
+	createTagRequest := &api.CreateTagOptions{
+		Message: params.Message,
+		Tagger: api.Signature{
+			Identity: api.Identity{
+				Name:  tagger.Name,
+				Email: tagger.Email,
 			},
-		}
-		err = s.git.CreateTag(
-			ctx,
-			sharedRepo.RepoPath,
-			tagName,
-			targetCommit.SHA,
-			createTagRequest)
-		if err != nil {
+			When: taggerDate,
+		},
+	}
+
+	// ref updater
+
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, tagRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ref updater to create the tag: %w", err)
+	}
+
+	// create the tag
+
+	err = sharedrepo.Run(ctx, refUpdater, s.tmpDir, repoPath, func(r *sharedrepo.SharedRepo) error {
+		if err := s.git.CreateTag(ctx, r.Directory(), tagName, targetCommit.SHA, createTagRequest); err != nil {
 			return fmt.Errorf("failed to create tag '%s': %w", tagName, err)
 		}
 
-		tag, err = s.git.GetAnnotatedTag(ctx, sharedRepo.RepoPath, tagName)
+		tag, err = s.git.GetAnnotatedTag(ctx, r.Directory(), tagName)
 		if err != nil {
 			return fmt.Errorf("failed to read annotated tag after creation: %w", err)
 		}
 
-		err = sharedRepo.MoveObjects(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to move git objects: %w", err)
+		if err := refUpdater.Init(ctx, sha.Nil, tag.Sha); err != nil {
+			return fmt.Errorf("failed to init ref updater: %w", err)
 		}
 
 		return nil
-	}()
+	})
 	if err != nil {
 		return nil, fmt.Errorf("CreateCommitTag: failed to create tag in shared repository: %w", err)
 	}
 
-	err = s.git.UpdateRef(
-		ctx,
-		params.EnvVars,
-		repoPath,
-		tagRef,
-		sha.Nil,
-		tag.Sha,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create tag reference: %w", err)
-	}
+	// prepare response
 
 	var commitTag *CommitTag
 	if params.Message != "" {
@@ -355,19 +339,17 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 	tagRef := api.GetReferenceFromTagName(params.Name)
 
-	err := s.git.UpdateRef(
-		ctx,
-		params.EnvVars,
-		repoPath,
-		tagRef,
-		sha.None, // delete whatever is there
-		sha.Nil,
-	)
+	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, tagRef)
+	if err != nil {
+		return fmt.Errorf("failed to create ref updater to delete the tag: %w", err)
+	}
+
+	err = refUpdater.Do(ctx, sha.None, sha.Nil) // delete whatever is there
 	if errors.IsNotFound(err) {
 		return errors.NotFound("tag %q does not exist", params.Name)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to delete tag reference: %w", err)
+		return fmt.Errorf("failed to init ref updater: %w", err)
 	}
 
 	return nil

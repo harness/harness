@@ -16,6 +16,7 @@ package command
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -47,6 +48,20 @@ var descriptions = map[string]builder{
 	"archive": {
 		// git-archive(1) does not support disambiguating options from paths from revisions.
 		flags: NoRefUpdates | NoEndOfOptions,
+		validatePositionalArgs: func(args []string) error {
+			for _, arg := range args {
+				if strings.HasPrefix(arg, "-") {
+					// check if the argument is a level of compression
+					if _, err := strconv.Atoi(arg[1:]); err == nil {
+						return nil
+					}
+				}
+				if err := validatePositionalArg(arg); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
 	},
 	"blame": {
 		// git-blame(1) does not support disambiguating options from paths from revisions.
@@ -275,7 +290,7 @@ func (b builder) args(flags []string, args []string, postSepArgs []string) ([]st
 	}
 	cmdArgs = append(cmdArgs, args...)
 
-	if len(postSepArgs) > 0 {
+	if len(postSepArgs) > 0 && len(cmdArgs) > 0 && cmdArgs[len(cmdArgs)-1] != "--end-of-options" {
 		cmdArgs = append(cmdArgs, "--")
 	}
 

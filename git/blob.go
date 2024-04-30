@@ -18,6 +18,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/sha"
 )
 
@@ -45,7 +46,7 @@ func (s *Service) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobO
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	// TODO: do we need to validate request for nil?
-	reader, err := s.git.GetBlob(
+	reader, err := api.GetBlob(
 		ctx,
 		repoPath,
 		params.AlternateObjectDirs,

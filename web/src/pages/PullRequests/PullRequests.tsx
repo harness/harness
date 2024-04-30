@@ -117,7 +117,8 @@ export default function PullRequests() {
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPOSITORY'
+        resourceType: 'CODE_REPOSITORY',
+        resourceIdentifier: repoMetadata?.uid as string
       },
       permissions: ['code_repo_push']
     },
@@ -165,7 +166,7 @@ export default function PullRequests() {
                           <StringSubstitute
                             str={getString('pr.statusLine')}
                             vars={{
-                              state: <strong className={css.state}>{row.original.state}</strong>,
+                              state: row.original.state,
                               number: <Text inline>{row.original.number}</Text>,
                               time: (
                                 <strong>

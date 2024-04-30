@@ -23,7 +23,7 @@
       width: 100px !important;
       min-width: 103px !important;
 
-      .Select--menuItem {
+      [class*='Select--menuItem'] {
         width: 100px !important;
       }
     }

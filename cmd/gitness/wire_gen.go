@@ -153,7 +153,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	storageStore := storage.ProvideLocalStore()
-	gitInterface, err := git.ProvideService(typesConfig, apiGit, storageStore)
+	gitInterface, err := git.ProvideService(typesConfig, apiGit, clientFactory, storageStore)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	repoIdentifier := check.ProvideRepoIdentifierCheck()
 	repoCheck := repo.ProvideRepoCheck()
 	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, settingsService, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicAccess)
-	reposettingsController := reposettings.ProvideController(authorizer, repoStore, settingsService, publicAccess)
+	reposettingsController := reposettings.ProvideController(authorizer, repoStore, settingsService, publicAccess, auditService)
 	executionStore := database.ProvideExecutionStore(db)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	stageStore := database.ProvideStageStore(db)
@@ -228,7 +228,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, publicAccess)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, publicAccess, auditService)
 	pipelineController := pipeline.ProvideController(repoStore, triggerStore, authorizer, pipelineStore)
 	secretController := secret.ProvideController(encrypter, secretStore, authorizer, spaceStore)
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pipelineStore, repoStore)

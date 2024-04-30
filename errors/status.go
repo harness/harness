@@ -63,6 +63,10 @@ func (e *Error) Unwrap() error {
 
 // Error implements the error interface.
 func (e *Error) Error() string {
+	if e.Err != nil {
+		return fmt.Sprintf("%s: %s", e.Message, e.Err)
+	}
+
 	return e.Message
 }
 

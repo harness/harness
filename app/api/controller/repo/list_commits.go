@@ -43,7 +43,7 @@ func (c *Controller) ListCommits(ctx context.Context,
 	}
 
 	rpcOut, err := c.git.ListCommits(ctx, &git.ListCommitsParams{
-		ReadParams:   git.CreateReadParams(&repo.Repository),
+		ReadParams:   git.CreateReadParams(repo.Repository),
 		GitREF:       gitRef,
 		After:        filter.After,
 		Page:         int32(filter.Page),

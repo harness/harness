@@ -26,6 +26,7 @@ type Interface interface {
 	DeleteRepository(ctx context.Context, params *DeleteRepositoryParams) error
 	GetTreeNode(ctx context.Context, params *GetTreeNodeParams) (*GetTreeNodeOutput, error)
 	ListTreeNodes(ctx context.Context, params *ListTreeNodeParams) (*ListTreeNodeOutput, error)
+	ListPaths(ctx context.Context, params *ListPathsParams) (*ListPathsOutput, error)
 	GetSubmodule(ctx context.Context, params *GetSubmoduleParams) (*GetSubmoduleOutput, error)
 	GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOutput, error)
 	CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error)
@@ -38,6 +39,7 @@ type Interface interface {
 	GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error)
 	PathsDetails(ctx context.Context, params PathsDetailsParams) (PathsDetailsOutput, error)
 
+	// GetRepositorySize calculates the size of a repo in KiB.
 	GetRepositorySize(ctx context.Context, params *GetRepositorySizeParams) (*GetRepositorySizeOutput, error)
 	// UpdateRef creates, updates or deletes a git ref. If the OldValue is defined it must match the reference value
 	// prior to the call. To remove a ref use the zero ref as the NewValue. To require the creation of a new one and
@@ -58,6 +60,10 @@ type Interface interface {
 	CommitFiles(ctx context.Context, params *CommitFilesParams) (CommitFilesResponse, error)
 	MergeBase(ctx context.Context, params MergeBaseParams) (MergeBaseOutput, error)
 	IsAncestor(ctx context.Context, params IsAncestorParams) (IsAncestorOutput, error)
+	FindOversizeFiles(
+		ctx context.Context,
+		params *FindOversizeFilesParams,
+	) (*FindOversizeFilesOutput, error)
 
 	/*
 	 * Git Cli Service
@@ -95,4 +101,5 @@ type Interface interface {
 	 * Secret Scanning service
 	 */
 	ScanSecrets(ctx context.Context, param *ScanSecretsParams) (*ScanSecretsOutput, error)
+	Archive(ctx context.Context, params ArchiveParams, w io.Writer) error
 }

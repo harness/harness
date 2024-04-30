@@ -36,10 +36,8 @@
 .eventRadioGroup {
   margin-top: 20px !important;
 
-  :global {
-    .RadioButton--radio {
-      margin-top: 10px;
-    }
+  label[class*='RadioButton'] {
+    margin-top: 10px !important;
   }
 }
 

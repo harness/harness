@@ -339,21 +339,21 @@ export const Conversation: React.FC<ConversationProps> = ({
                     <CodeCommentStatusSelect
                       repoMetadata={repoMetadata}
                       pullReqMetadata={pullReqMetadata}
-                      commentItems={commentItems}
+                      comment={{ commentItems }}
                     />
                   ),
                   [CommentBoxOutletPosition.RIGHT_OF_REPLY_PLACEHOLDER]: (
                     <CodeCommentStatusButton
                       repoMetadata={repoMetadata}
                       pullReqMetadata={pullReqMetadata}
-                      commentItems={commentItems}
+                      comment={{ commentItems }}
                     />
                   ),
                   [CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS]: (props: ButtonProps) => (
                     <CodeCommentSecondarySaveButton
                       repoMetadata={repoMetadata}
                       pullReqMetadata={pullReqMetadata as TypesPullReq}
-                      commentItems={commentItems}
+                      comment={{ commentItems }}
                       {...props}
                     />
                   )

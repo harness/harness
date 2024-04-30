@@ -280,3 +280,11 @@
   background: var(--ai-purple-800) !important;
   font-weight: bold !important;
 }
+
+.aidaFeedback {
+  position: absolute !important;
+  width: 100%;
+  right: -4.5px;
+  padding: 5px 10px !important;
+  margin: 10px 5px !important;
+}

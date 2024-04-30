@@ -98,7 +98,9 @@ func IsAncesterOf(path string, other string) bool {
 	)
 }
 
-func Space(repoPath string) string {
-	spacePath, _, _ := DisectLeaf(repoPath)
+// Parent returns the parent path of the provided path.
+// if the path doesn't have a parent an empty string is returned.
+func Parent(path string) string {
+	spacePath, _, _ := DisectLeaf(path)
 	return spacePath
 }

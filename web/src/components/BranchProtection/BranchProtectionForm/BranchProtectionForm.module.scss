@@ -138,7 +138,7 @@
 }
 
 .checkboxLabel {
-  :global(.Tooltip--acenter) {
+  :global([class*='Tooltip--acenter']) {
     font-size: 14px;
     font-style: normal;
     font-weight: 600;

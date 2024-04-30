@@ -131,3 +131,11 @@ For a full list of supported operations, please see
 ```bash
 $ ./gitness --help
 ```
+
+## Contributing
+
+Refer to [CONTRIBUTING.md](https://github.com/harness/gitness/blob/main/CONTRIBUTING.md)
+
+## License
+
+Apache License 2.0, see [LICENSE](https://github.com/harness/gitness/blob/main/LICENSE).

@@ -83,6 +83,7 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   refetchActivities?: UseGetPullRequestInfoResult['refetchActivities']
   refetchCommits?: UseGetPullRequestInfoResult['refetchCommits']
   setPullReqChangesCount?: React.Dispatch<React.SetStateAction<number>>
+  showCommitsDropdown?: boolean
 }
 
 const ChangesInternal: React.FC<ChangesProps> = ({
@@ -100,7 +101,8 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   scrollElement,
   refetchActivities,
   refetchCommits,
-  setPullReqChangesCount
+  setPullReqChangesCount,
+  showCommitsDropdown = true
 }) => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
@@ -428,7 +430,6 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   }, [diffs, setPullReqChangesCount])
 
   useShowRequestError(errorFileViews, 0)
-
   return (
     <Container className={cx(css.container, className)} {...(!!loadingRawDiff || !!error ? { flex: true } : {})}>
       <LoadingSpinner visible={loading} withBorder={true} />
@@ -439,12 +440,13 @@ const ChangesInternal: React.FC<ChangesProps> = ({
         <Container className={css.header} ref={headerRef}>
           <Layout.Horizontal>
             <Container flex={{ alignItems: 'center' }} style={{ visibility: diffs ? 'visible' : 'hidden' }}>
-              <CommitRangeDropdown
-                allCommits={pullReqCommits?.commits || []}
-                selectedCommits={commitRange}
-                setSelectedCommits={setCommitRange}
-              />
-
+              {showCommitsDropdown && (
+                <CommitRangeDropdown
+                  allCommits={pullReqCommits?.commits || []}
+                  selectedCommits={commitRange}
+                  setSelectedCommits={setCommitRange}
+                />
+              )}
               {/* Files Changed stats */}
               <Text flex className={css.diffStatsLabel}>
                 <StringSubstitute

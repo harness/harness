@@ -60,7 +60,7 @@ func (c *Controller) PathsDetails(ctx context.Context,
 	}
 
 	result, err := c.git.PathsDetails(ctx, git.PathsDetailsParams{
-		ReadParams: git.CreateReadParams(&repo.Repository),
+		ReadParams: git.CreateReadParams(repo.Repository),
 		GitREF:     gitRef,
 		Paths:      input.Paths,
 	})

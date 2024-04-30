@@ -27,11 +27,9 @@ func TestSHA_MarshalJSON(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "happy path",
-			input: SHA{
-				str: EmptyTree,
-			},
-			want: []byte("\"" + EmptyTree + "\""),
+			name:  "happy path",
+			input: EmptyTree,
+			want:  []byte("\"" + EmptyTree.String() + "\""),
 		},
 		{
 			name: "happy path - quotes",
@@ -68,18 +66,16 @@ func TestSHA_UnmarshalJSON(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name:  "happy path",
-			input: []byte("\"" + EmptyTree + "\""),
-			expected: SHA{
-				str: EmptyTree,
-			},
-			wantErr: false,
+			name:     "happy path",
+			input:    []byte("\"" + EmptyTree.String() + "\""),
+			expected: EmptyTree,
+			wantErr:  false,
 		},
 		{
-			name:     "empty content return error",
+			name:     "empty content returns empty",
 			input:    []byte("\"\""),
 			expected: SHA{},
-			wantErr:  true,
+			wantErr:  false,
 		},
 	}
 	for _, tt := range tests {

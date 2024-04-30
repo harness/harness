@@ -26,7 +26,7 @@ import { currentUserAtom } from 'atoms/currentUser'
 import { newCacheStrategy } from 'utils/CacheStrategy'
 import { useGetSettingValue } from 'hooks/useGetSettingValue'
 import { useFeatureFlags } from 'hooks/useFeatureFlag'
-import { defaultUsefulOrNot } from 'utils/componentMocks/UsefulOrNot'
+import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 
 interface AppContextProps extends AppProps {
   setAppContext: (value: Partial<AppProps>) => void

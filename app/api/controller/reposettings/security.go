@@ -22,7 +22,7 @@ import (
 
 // SecuritySettings represents the security related part of repository settings as exposed externally.
 type SecuritySettings struct {
-	SecretScanningEnabled *bool `json:"secret_scanning_enabled"`
+	SecretScanningEnabled *bool `json:"secret_scanning_enabled" yaml:"secret_scanning_enabled"`
 }
 
 func GetDefaultSecuritySettings() *SecuritySettings {

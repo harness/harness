@@ -140,7 +140,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionCreated,
-		paths.Space(repo.Path),
+		paths.Parent(repo.Path),
 		audit.WithNewObject(repoData),
 	)
 	if err != nil {

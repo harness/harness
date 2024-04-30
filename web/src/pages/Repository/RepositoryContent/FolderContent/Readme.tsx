@@ -27,6 +27,7 @@ import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useShowRequestError } from 'hooks/useShowRequestError'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { normalizeGitRef, decodeGitContent, isRefATag } from 'utils/GitUtils'
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -45,6 +46,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
   const { getString } = useStrings()
   const history = useHistory()
   const { routes, standalone, hooks } = useAppContext()
+  const { repoMetadata } = useGetRepositoryMetadata()
   const space = useGetSpaceParam()
   const { data, error, loading, refetch } = useGet<OpenapiGetContentOutput>({
     path: `/api/v1/repos/${metadata.path}/+/content/${readmeInfo?.path}`,
@@ -73,7 +75,8 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPOSITORY'
+        resourceType: 'CODE_REPOSITORY',
+        resourceIdentifier: repoMetadata?.uid as string
       },
       permissions: ['code_repo_push']
     },

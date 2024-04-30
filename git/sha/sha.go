@@ -23,10 +23,9 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/errors"
-)
 
-// EmptyTree is the SHA of an empty tree.
-const EmptyTree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+	"github.com/swaggest/jsonschema-go"
+)
 
 var (
 	Nil  = Must("0000000000000000000000000000000000000000")
@@ -36,6 +35,9 @@ var (
 	// which is 64 chars - keep this forward-compatible.
 	regex    = regexp.MustCompile("^[0-9a-f]{4,64}$")
 	nilRegex = regexp.MustCompile("^0{4,64}$")
+
+	// EmptyTree is the SHA of an empty tree.
+	EmptyTree = Must("4b825dc642cb6eb9a060e54bf8d69288fbee4904")
 )
 
 // SHA represents a git sha.
@@ -43,6 +45,7 @@ type SHA struct {
 	str string
 }
 
+// New creates and validates SHA from the value.
 func New(value string) (SHA, error) {
 	value = strings.TrimSpace(value)
 	value = strings.ToLower(value)
@@ -52,6 +55,15 @@ func New(value string) (SHA, error) {
 	return SHA{
 		str: value,
 	}, nil
+}
+
+// NewOrEmpty returns None if value is empty otherwise it will try to create
+// and validate new SHA object.
+func NewOrEmpty(value string) (SHA, error) {
+	if value == "" {
+		return None, nil
+	}
+	return New(value)
 }
 
 func (s SHA) GobEncode() ([]byte, error) {
@@ -79,7 +91,8 @@ func (s *SHA) UnmarshalJSON(content []byte) error {
 	if err != nil {
 		return err
 	}
-	sha, err := New(str)
+
+	sha, err := NewOrEmpty(str)
 	if err != nil {
 		return err
 	}
@@ -111,10 +124,20 @@ func (s SHA) Equal(val SHA) bool {
 	return s.str == val.str
 }
 
+// Must returns sha if there is an error it will panic.
 func Must(value string) SHA {
 	sha, err := New(value)
 	if err != nil {
 		panic("invalid SHA" + err.Error())
 	}
 	return sha
+}
+
+func (s SHA) JSONSchema() (jsonschema.Schema, error) {
+	var schema jsonschema.Schema
+
+	schema.AddType(jsonschema.String)
+	schema.WithDescription("Git object hash")
+
+	return schema, nil
 }

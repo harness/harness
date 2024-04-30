@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/services/protection"
@@ -199,6 +200,22 @@ type restoreRequest struct {
 	repo.RestoreInput
 }
 
+type securitySettingsRequest struct {
+	repoRequest
+	reposettings.SecuritySettings
+}
+
+type generalSettingsRequest struct {
+	repoRequest
+	reposettings.GeneralSettings
+}
+
+type archiveRequest struct {
+	repoRequest
+	GitRef string `path:"git_ref" required:"true"`
+	Format string `path:"format" required:"true"`
+}
+
 var queryParameterGitRef = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name: request.QueryParamGitRef,
@@ -263,6 +280,21 @@ var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 		Name:        request.QueryParamIncludeCommit,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Indicates whether optional commit information should be included in the response."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
+var queryParameterIncludeDirectories = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamIncludeDirectories,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Indicates whether directories should be included in the response."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
@@ -487,6 +519,85 @@ var queryParameterDeletedAt = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParamArchivePaths = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamArchivePaths,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("Without an optional path parameter, all files and subdirectories of the " +
+			"current working directory are included in the archive. If one or more paths are specified," +
+			" only these are included."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+					},
+				},
+			},
+		},
+	},
+}
+
+var queryParamArchivePrefix = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamArchivePrefix,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Prepend <prefix>/ to paths in the archive."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParamArchiveAttributes = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamArchiveAttributes,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Look for attributes in .gitattributes files in the working tree as well"),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParamArchiveTime = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamArchiveTime,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("Set modification time of archive entries. Without this option the committer " +
+			"time is used if <tree-ish> is a commit or tag, and the current time if it is a tree."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParamArchiveCompression = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamArchiveCompression,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("Specify compression level. Larger values allow the command to spend more" +
+			" time to compress to smaller size."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func repoOperations(reflector *openapi3.Reflector) {
 	createRepository := openapi3.Operation{}
@@ -605,6 +716,18 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/content/{path}", opGetContent)
+
+	opListPaths := openapi3.Operation{}
+	opListPaths.WithTags("repository")
+	opListPaths.WithMapOfAnything(map[string]interface{}{"operationId": "listPaths"})
+	opListPaths.WithParameters(queryParameterGitRef, queryParameterIncludeDirectories)
+	_ = reflector.SetRequest(&opListPaths, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListPaths, new(repo.ListPathsOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/paths", opListPaths)
 
 	opPathDetails := openapi3.Operation{}
 	opPathDetails.WithTags("repository")
@@ -932,4 +1055,83 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opCodeOwnerValidate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/codeowners/validate", opCodeOwnerValidate)
+
+	opSettingsSecurityUpdate := openapi3.Operation{}
+	opSettingsSecurityUpdate.WithTags("repository")
+	opSettingsSecurityUpdate.WithMapOfAnything(
+		map[string]interface{}{"operationId": "updateSecuritySettings"})
+	_ = reflector.SetRequest(
+		&opSettingsSecurityUpdate, new(securitySettingsRequest), http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(reposettings.SecuritySettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodPatch, "/repos/{repo_ref}/settings/security", opSettingsSecurityUpdate)
+
+	opSettingsSecurityFind := openapi3.Operation{}
+	opSettingsSecurityFind.WithTags("repository")
+	opSettingsSecurityFind.WithMapOfAnything(
+		map[string]interface{}{"operationId": "findSecuritySettings"})
+	_ = reflector.SetRequest(&opSettingsSecurityFind, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(reposettings.SecuritySettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsSecurityFind, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodGet, "/repos/{repo_ref}/settings/security", opSettingsSecurityFind)
+
+	opSettingsGeneralUpdate := openapi3.Operation{}
+	opSettingsGeneralUpdate.WithTags("repository")
+	opSettingsGeneralUpdate.WithMapOfAnything(
+		map[string]interface{}{"operationId": "updateGeneralSettings"})
+	_ = reflector.SetRequest(
+		&opSettingsGeneralUpdate, new(generalSettingsRequest), http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(reposettings.GeneralSettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodPatch, "/repos/{repo_ref}/settings/general", opSettingsGeneralUpdate)
+
+	opSettingsGeneralFind := openapi3.Operation{}
+	opSettingsGeneralFind.WithTags("repository")
+	opSettingsGeneralFind.WithMapOfAnything(
+		map[string]interface{}{"operationId": "findGeneralSettings"})
+	_ = reflector.SetRequest(&opSettingsGeneralFind, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(reposettings.GeneralSettings), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSettingsGeneralFind, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodGet, "/repos/{repo_ref}/settings/general", opSettingsGeneralFind)
+
+	opArchive := openapi3.Operation{}
+	opArchive.WithTags("repository")
+	opArchive.WithMapOfAnything(map[string]interface{}{"operationId": "archive"})
+	opArchive.WithParameters(
+		queryParamArchivePaths,
+		queryParamArchivePrefix,
+		queryParamArchiveAttributes,
+		queryParamArchiveTime,
+		queryParamArchiveCompression,
+	)
+	_ = reflector.SetRequest(&opArchive, new(archiveRequest), http.MethodGet)
+	_ = reflector.SetStringResponse(&opArchive, http.StatusOK, "application/zip")
+	_ = reflector.SetStringResponse(&opArchive, http.StatusOK, "application/tar")
+	_ = reflector.SetStringResponse(&opArchive, http.StatusOK, "application/gzip")
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusUnprocessableEntity)
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/archive/{git_ref}.{format}", opArchive)
 }

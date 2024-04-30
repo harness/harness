@@ -34,7 +34,9 @@ type Repository struct {
 	Updated     int64  `json:"updated" yaml:"updated"`
 	Deleted     *int64 `json:"deleted,omitempty" yaml:"deleted"`
 
-	Size        int64 `json:"size" yaml:"size"`
+	// Size of the repository in KiB.
+	Size int64 `json:"size" yaml:"size"`
+	// SizeUpdated is the time when the Size was last updated.
 	SizeUpdated int64 `json:"size_updated" yaml:"size_updated"`
 
 	GitUID        string `json:"-" yaml:"-"`
@@ -69,10 +71,12 @@ func (r Repository) MarshalJSON() ([]byte, error) {
 }
 
 type RepositorySizeInfo struct {
-	ID          int64  `json:"id"`
-	GitUID      string `json:"git_uid"`
-	Size        int64  `json:"size"`
-	SizeUpdated int64  `json:"size_updated"`
+	ID     int64  `json:"id"`
+	GitUID string `json:"git_uid"`
+	// Size of the repository in KiB.
+	Size int64 `json:"size"`
+	// SizeUpdated is the time when the Size was last updated.
+	SizeUpdated int64 `json:"size_updated"`
 }
 
 func (r Repository) GetGitUID() string {

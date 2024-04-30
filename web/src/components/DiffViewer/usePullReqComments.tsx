@@ -420,21 +420,21 @@ export function usePullReqComments({
                 <CodeCommentStatusSelect
                   repoMetadata={repoMetadata}
                   pullReqMetadata={pullReqMetadata as TypesPullReq}
-                  commentItems={comment._commentItems as CommentItem<TypesPullReqActivity>[]}
+                  comment={comment}
                 />
               ),
               [CommentBoxOutletPosition.RIGHT_OF_REPLY_PLACEHOLDER]: (
                 <CodeCommentStatusButton
                   repoMetadata={repoMetadata}
                   pullReqMetadata={pullReqMetadata as TypesPullReq}
-                  commentItems={comment._commentItems as CommentItem<TypesPullReqActivity>[]}
+                  comment={comment}
                 />
               ),
               [CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS]: (props: ButtonProps) => (
                 <CodeCommentSecondarySaveButton
                   repoMetadata={repoMetadata}
                   pullReqMetadata={pullReqMetadata as TypesPullReq}
-                  commentItems={comment._commentItems as CommentItem<TypesPullReqActivity>[]}
+                  comment={comment}
                   {...props}
                 />
               )

@@ -303,7 +303,7 @@ func (g *Git) DiffShortStat(
 
 	shortstatArgs := []string{baseRef + separator + headRef}
 	if len(baseRef) == 0 || baseRef == types.NilSHA {
-		shortstatArgs = []string{sha.EmptyTree, headRef}
+		shortstatArgs = []string{sha.EmptyTree.String(), headRef}
 	}
 	stat, err := GetDiffShortStat(ctx, repoPath, shortstatArgs...)
 	if err != nil {
@@ -338,6 +338,7 @@ func (g *Git) GetDiffHunkHeaders(
 
 		cmd := command.New("diff",
 			command.WithFlag("--patch"),
+			command.WithFlag("--full-index"),
 			command.WithFlag("--no-color"),
 			command.WithFlag("--unified=0"),
 			command.WithArg(sourceRef),
@@ -510,6 +511,7 @@ func (g *Git) diffCutFromHunk(
 
 		cmd := command.New("diff",
 			command.WithFlag("--patch"),
+			command.WithFlag("--full-index"),
 			command.WithFlag("--no-color"),
 			command.WithFlag("--unified=100000000"),
 			command.WithArg(oldSHA),

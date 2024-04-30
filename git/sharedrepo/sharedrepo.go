@@ -33,66 +33,78 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/git/tempdir"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 )
 
 type SharedRepo struct {
-	temporaryPath  string
-	repositoryPath string
+	repoPath       string
+	sourceRepoPath string
 }
 
 // NewSharedRepo creates a new temporary bare repository.
 func NewSharedRepo(
 	baseTmpDir string,
-	repositoryPath string,
+	sourceRepoPath string,
 ) (*SharedRepo, error) {
+	if sourceRepoPath == "" {
+		return nil, errors.New("repository path can't be empty")
+	}
+
 	var buf [5]byte
 	_, _ = rand.Read(buf[:])
 	id := base32.StdEncoding.EncodeToString(buf[:])
 
-	temporaryPath, err := tempdir.CreateTemporaryPath(baseTmpDir, id)
+	repoPath, err := tempdir.CreateTemporaryPath(baseTmpDir, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create shared repository directory: %w", err)
 	}
 
 	t := &SharedRepo{
-		temporaryPath:  temporaryPath,
-		repositoryPath: repositoryPath,
+		repoPath:       repoPath,
+		sourceRepoPath: sourceRepoPath,
 	}
 
 	return t, nil
 }
 
 func (r *SharedRepo) Close(ctx context.Context) {
-	if err := tempdir.RemoveTemporaryPath(r.temporaryPath); err != nil {
+	if err := tempdir.RemoveTemporaryPath(r.repoPath); err != nil {
 		log.Ctx(ctx).Err(err).
-			Str("path", r.temporaryPath).
+			Str("path", r.repoPath).
 			Msg("Failed to remove temporary shared directory")
 	}
 }
 
-func (r *SharedRepo) InitAsBare(ctx context.Context) error {
+func (r *SharedRepo) Init(ctx context.Context, alternates ...string) error {
 	cmd := command.New("init", command.WithFlag("--bare"))
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath)); err != nil {
 		return fmt.Errorf("failed to initialize bare git repository directory: %w", err)
 	}
 
 	if err := func() error {
-		alternates := filepath.Join(r.temporaryPath, "objects", "info", "alternates")
-		f, err := os.OpenFile(alternates, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+		alternatesFilePath := filepath.Join(r.repoPath, "objects", "info", "alternates")
+		f, err := os.OpenFile(alternatesFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
 		if err != nil {
 			return fmt.Errorf("failed to create alternates file: %w", err)
 		}
 
 		defer func() { _ = f.Close() }()
 
-		data := filepath.Join(r.repositoryPath, "objects")
+		data := filepath.Join(r.sourceRepoPath, "objects")
 		if _, err = fmt.Fprintln(f, data); err != nil {
 			return fmt.Errorf("failed to write alternates file: %w", err)
+		}
+
+		for _, alternate := range alternates {
+			if _, err = fmt.Fprintln(f, alternate); err != nil {
+				return fmt.Errorf("failed to write alternates file: %w", err)
+			}
 		}
 
 		return nil
@@ -104,14 +116,14 @@ func (r *SharedRepo) InitAsBare(ctx context.Context) error {
 }
 
 func (r *SharedRepo) Directory() string {
-	return r.temporaryPath
+	return r.repoPath
 }
 
 // SetDefaultIndex sets the git index to our HEAD.
 func (r *SharedRepo) SetDefaultIndex(ctx context.Context) error {
 	cmd := command.New("read-tree", command.WithArg("HEAD"))
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath)); err != nil {
 		return fmt.Errorf("failed to initialize shared repository index to HEAD: %w", err)
 	}
 
@@ -119,10 +131,10 @@ func (r *SharedRepo) SetDefaultIndex(ctx context.Context) error {
 }
 
 // SetIndex sets the git index to the provided treeish.
-func (r *SharedRepo) SetIndex(ctx context.Context, treeish string) error {
-	cmd := command.New("read-tree", command.WithArg(treeish))
+func (r *SharedRepo) SetIndex(ctx context.Context, treeish sha.SHA) error {
+	cmd := command.New("read-tree", command.WithArg(treeish.String()))
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath)); err != nil {
 		return fmt.Errorf("failed to initialize shared repository index to %q: %w", treeish, err)
 	}
 
@@ -133,7 +145,7 @@ func (r *SharedRepo) SetIndex(ctx context.Context, treeish string) error {
 func (r *SharedRepo) ClearIndex(ctx context.Context) error {
 	cmd := command.New("read-tree", command.WithFlag("--empty"))
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath)); err != nil {
 		return fmt.Errorf("failed to clear shared repository index: %w", err)
 	}
 
@@ -152,7 +164,7 @@ func (r *SharedRepo) LsFiles(
 
 	stdout := bytes.NewBuffer(nil)
 
-	err := cmd.Run(ctx, command.WithDir(r.temporaryPath), command.WithStdout(stdout))
+	err := cmd.Run(ctx, command.WithDir(r.repoPath), command.WithStdout(stdout))
 	if err != nil {
 		return nil, fmt.Errorf("failed to list files in shared repository's git index: %w", err)
 	}
@@ -184,7 +196,7 @@ func (r *SharedRepo) RemoveFilesFromIndex(
 		}
 	}
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath), command.WithStdin(stdin)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath), command.WithStdin(stdin)); err != nil {
 		return fmt.Errorf("failed to update-index in shared repo: %w", err)
 	}
 
@@ -195,7 +207,7 @@ func (r *SharedRepo) RemoveFilesFromIndex(
 func (r *SharedRepo) WriteGitObject(
 	ctx context.Context,
 	content io.Reader,
-) (string, error) {
+) (sha.SHA, error) {
 	cmd := command.New("hash-object",
 		command.WithFlag("-w"),
 		command.WithFlag("--stdin"))
@@ -203,14 +215,14 @@ func (r *SharedRepo) WriteGitObject(
 	stdout := bytes.NewBuffer(nil)
 
 	err := cmd.Run(ctx,
-		command.WithDir(r.temporaryPath),
+		command.WithDir(r.repoPath),
 		command.WithStdin(content),
 		command.WithStdout(stdout))
 	if err != nil {
-		return "", fmt.Errorf("failed to hash-object in shared repo: %w", err)
+		return sha.None, fmt.Errorf("failed to hash-object in shared repo: %w", err)
 	}
 
-	return strings.TrimSpace(stdout.String()), nil
+	return sha.New(stdout.String())
 }
 
 // GetTreeSHA returns the tree SHA of the rev.
@@ -225,7 +237,7 @@ func (r *SharedRepo) GetTreeSHA(
 	)
 	stdout := &bytes.Buffer{}
 	err := cmd.Run(ctx,
-		command.WithDir(r.temporaryPath),
+		command.WithDir(r.repoPath),
 		command.WithStdout(stdout),
 	)
 	if err != nil {
@@ -249,7 +261,7 @@ func (r *SharedRepo) ShowFile(
 
 	cmd := command.New("show", command.WithArg(file))
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath), command.WithStdout(writer)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath), command.WithStdout(writer)); err != nil {
 		return fmt.Errorf("failed to show file in shared repo: %w", err)
 	}
 
@@ -260,15 +272,15 @@ func (r *SharedRepo) ShowFile(
 func (r *SharedRepo) AddObjectToIndex(
 	ctx context.Context,
 	mode string,
-	objectHash string,
+	objectHash sha.SHA,
 	objectPath string,
 ) error {
 	cmd := command.New("update-index",
 		command.WithFlag("--add"),
 		command.WithFlag("--replace"),
-		command.WithFlag("--cacheinfo", mode, objectHash, objectPath))
+		command.WithFlag("--cacheinfo", mode, objectHash.String(), objectPath))
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath)); err != nil {
 		if matched, _ := regexp.MatchString(".*Invalid path '.*", err.Error()); matched {
 			return errors.InvalidArgument("invalid path '%s'", objectPath)
 		}
@@ -279,16 +291,16 @@ func (r *SharedRepo) AddObjectToIndex(
 }
 
 // WriteTree writes the current index as a tree to the object db and returns its hash.
-func (r *SharedRepo) WriteTree(ctx context.Context) (string, error) {
+func (r *SharedRepo) WriteTree(ctx context.Context) (sha.SHA, error) {
 	cmd := command.New("write-tree")
 
 	stdout := bytes.NewBuffer(nil)
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath), command.WithStdout(stdout)); err != nil {
-		return "", fmt.Errorf("failed to write-tree in shared repo: %w", err)
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath), command.WithStdout(stdout)); err != nil {
+		return sha.None, fmt.Errorf("failed to write-tree in shared repo: %w", err)
 	}
 
-	return strings.TrimSpace(stdout.String()), nil
+	return sha.New(stdout.String())
 }
 
 // MergeTree merges commits in git index.
@@ -310,7 +322,7 @@ func (r *SharedRepo) MergeTree(
 	stdout := bytes.NewBuffer(nil)
 
 	err := cmd.Run(ctx,
-		command.WithDir(r.temporaryPath),
+		command.WithDir(r.repoPath),
 		command.WithStdout(stdout))
 
 	// no error: the output is just the tree object SHA
@@ -326,10 +338,25 @@ func (r *SharedRepo) MergeTree(
 			log.Ctx(ctx).Err(err).Str("output", output).Msg("unexpected output of merge-tree in shared repo")
 			return sha.None, nil, fmt.Errorf("unexpected output of merge-tree in shared repo: %w", err)
 		}
-		return sha.Must(lines[0]), lines[1:], nil
+
+		treeSHA := sha.Must(lines[0])
+		conflicts := CleanupMergeConflicts(lines[1:])
+
+		return treeSHA, conflicts, nil
 	}
 
 	return sha.None, nil, fmt.Errorf("failed to merge-tree in shared repo: %w", err)
+}
+
+func CleanupMergeConflicts(conflicts []string) []string {
+	out := make([]string, 0, len(conflicts))
+	for _, conflict := range conflicts {
+		conflict = strings.TrimSpace(conflict)
+		if conflict != "" {
+			out = append(out, conflict)
+		}
+	}
+	return out
 }
 
 // CommitTree creates a commit from a given tree for the user with provided message.
@@ -376,7 +403,7 @@ func (r *SharedRepo) CommitTree(
 	stdout := bytes.NewBuffer(nil)
 
 	err := cmd.Run(ctx,
-		command.WithDir(r.temporaryPath),
+		command.WithDir(r.repoPath),
 		command.WithStdout(stdout),
 		command.WithStdin(messageBytes))
 	if err != nil {
@@ -405,7 +432,7 @@ func (r *SharedRepo) CommitSHAsForRebase(
 
 	stdout := bytes.NewBuffer(nil)
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath), command.WithStdout(stdout)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath), command.WithStdout(stdout)); err != nil {
 		return nil, fmt.Errorf("failed to rev-list in shared repo: %w", err)
 	}
 
@@ -432,17 +459,432 @@ func (r *SharedRepo) MergeBase(
 
 	stdout := bytes.NewBuffer(nil)
 
-	if err := cmd.Run(ctx, command.WithDir(r.temporaryPath), command.WithStdout(stdout)); err != nil {
+	if err := cmd.Run(ctx, command.WithDir(r.repoPath), command.WithStdout(stdout)); err != nil {
 		return "", fmt.Errorf("failed to merge-base in shared repo: %w", err)
 	}
 
 	return strings.TrimSpace(stdout.String()), nil
 }
 
+func (r *SharedRepo) CreateFile(
+	ctx context.Context,
+	treeishSHA sha.SHA,
+	filePath, mode string,
+	payload []byte,
+) error {
+	// only check path availability if a source commit is available (empty repo won't have such a commit)
+	if !treeishSHA.IsEmpty() {
+		if err := r.checkPathAvailability(ctx, treeishSHA, filePath, true); err != nil {
+			return err
+		}
+	}
+
+	objectSHA, err := r.WriteGitObject(ctx, bytes.NewReader(payload))
+	if err != nil {
+		return fmt.Errorf("createFile: error hashing object: %w", err)
+	}
+
+	// Add the object to the index
+	if err = r.AddObjectToIndex(ctx, mode, objectSHA, filePath); err != nil {
+		return fmt.Errorf("createFile: error creating object: %w", err)
+	}
+
+	return nil
+}
+
+func (r *SharedRepo) UpdateFile(
+	ctx context.Context,
+	treeishSHA sha.SHA,
+	filePath string,
+	objectSHA sha.SHA,
+	mode string,
+	payload []byte,
+) error {
+	// get file mode from existing file (default unless executable)
+	entry, err := r.getFileEntry(ctx, treeishSHA, objectSHA, filePath)
+	if err != nil {
+		return err
+	}
+
+	if entry.IsExecutable() {
+		mode = "100755"
+	}
+
+	objectSHA, err = r.WriteGitObject(ctx, bytes.NewReader(payload))
+	if err != nil {
+		return fmt.Errorf("updateFile: error hashing object: %w", err)
+	}
+
+	if err = r.AddObjectToIndex(ctx, mode, objectSHA, filePath); err != nil {
+		return fmt.Errorf("updateFile: error updating object: %w", err)
+	}
+
+	return nil
+}
+
+func (r *SharedRepo) MoveFile(
+	ctx context.Context,
+	treeishSHA sha.SHA,
+	filePath string,
+	objectSHA sha.SHA,
+	mode string,
+	payload []byte,
+) (string, error) {
+	newPath, newContent, err := parseMovePayload(payload)
+	if err != nil {
+		return "", err
+	}
+
+	// ensure file exists and matches SHA
+	entry, err := r.getFileEntry(ctx, treeishSHA, objectSHA, filePath)
+	if err != nil {
+		return "", err
+	}
+
+	// ensure new path is available
+	if err = r.checkPathAvailability(ctx, treeishSHA, newPath, false); err != nil {
+		return "", err
+	}
+
+	var fileHash sha.SHA
+	var fileMode string
+	if newContent != nil {
+		hash, err := r.WriteGitObject(ctx, bytes.NewReader(newContent))
+		if err != nil {
+			return "", fmt.Errorf("moveFile: error hashing object: %w", err)
+		}
+
+		fileHash = hash
+		fileMode = mode
+		if entry.IsExecutable() {
+			const filePermissionExec = "100755"
+			fileMode = filePermissionExec
+		}
+	} else {
+		fileHash = entry.SHA
+		fileMode = entry.Mode.String()
+	}
+
+	if err = r.AddObjectToIndex(ctx, fileMode, fileHash, newPath); err != nil {
+		return "", fmt.Errorf("moveFile: add object error: %w", err)
+	}
+
+	if err = r.RemoveFilesFromIndex(ctx, filePath); err != nil {
+		return "", fmt.Errorf("moveFile: remove object error: %w", err)
+	}
+
+	return newPath, nil
+}
+
+func (r *SharedRepo) DeleteFile(ctx context.Context, filePath string) error {
+	filesInIndex, err := r.LsFiles(ctx, filePath)
+	if err != nil {
+		return fmt.Errorf("deleteFile: listing files error: %w", err)
+	}
+	if !slices.Contains(filesInIndex, filePath) {
+		return errors.NotFound("file path %s not found", filePath)
+	}
+
+	if err = r.RemoveFilesFromIndex(ctx, filePath); err != nil {
+		return fmt.Errorf("deleteFile: remove object error: %w", err)
+	}
+	return nil
+}
+
+func (r *SharedRepo) PatchTextFile(
+	ctx context.Context,
+	treeishSHA sha.SHA,
+	filePath string,
+	objectSHA sha.SHA,
+	payloadsRaw [][]byte,
+) error {
+	payloads, err := parsePatchTextFilePayloads(payloadsRaw)
+	if err != nil {
+		return err
+	}
+
+	entry, err := r.getFileEntry(ctx, treeishSHA, objectSHA, filePath)
+	if err != nil {
+		return err
+	}
+
+	blob, err := api.GetBlob(ctx, r.repoPath, nil, entry.SHA, 0)
+	if err != nil {
+		return fmt.Errorf("error reading blob: %w", err)
+	}
+
+	scanner, lineEnding, err := parser.ReadTextFile(blob.Content, nil)
+	if err != nil {
+		return fmt.Errorf("error reading blob as text file: %w", err)
+	}
+
+	pipeReader, pipeWriter := io.Pipe()
+	go func() {
+		err := patchTextFileWritePatchedFile(scanner, payloads, lineEnding, pipeWriter)
+		pipErr := pipeWriter.CloseWithError(err)
+		if pipErr != nil {
+			log.Ctx(ctx).Warn().Err(pipErr).Msgf("failed to close pipe writer with error: %s", err)
+		}
+	}()
+
+	objectSHA, err = r.WriteGitObject(ctx, pipeReader)
+	if err != nil {
+		return fmt.Errorf("error writing patched file to git store: %w", err)
+	}
+
+	if err = r.AddObjectToIndex(ctx, entry.Mode.String(), objectSHA, filePath); err != nil {
+		return fmt.Errorf("error updating object: %w", err)
+	}
+
+	return nil
+}
+
+// nolint: gocognit, gocyclo, cyclop
+func patchTextFileWritePatchedFile(
+	fileScanner parser.Scanner,
+	replacements []patchTextFileReplacement,
+	lineEnding string,
+	writer io.Writer,
+) error {
+	// sort replacements by `start ASC end ASC` to ensure proper processing (DO NOT CHANGE!)
+	// Use stable sort to ensure ordering of `[1,1)[1,1)` is maintained
+	sort.SliceStable(replacements, func(i, j int) bool {
+		if replacements[i].OmitFrom == replacements[j].OmitFrom {
+			return replacements[i].ContinueFrom < replacements[j].ContinueFrom
+		}
+		return replacements[i].OmitFrom < replacements[j].OmitFrom
+	})
+
+	// ensure replacements aren't overlapping
+	for i := 1; i < len(replacements); i++ {
+		// Stop prevalidation at EOF as we don't know the line count of the file (NOTE: start=EOF => end=EOF).
+		// Remaining overlaps are handled once EOF of the file is reached and we know the line number
+		if replacements[i-1].ContinueFrom.IsEOF() {
+			break
+		}
+		if replacements[i].OmitFrom < replacements[i-1].ContinueFrom {
+			return errors.InvalidArgument(
+				"Patch actions have conflicting ranges [%s,%s)x[%s,%s)",
+				replacements[i-1].OmitFrom, replacements[i-1].ContinueFrom,
+				replacements[i].OmitFrom, replacements[i].ContinueFrom,
+			)
+		}
+	}
+
+	// helper function to write output (helps to ensure that we always have line endings between lines)
+	previousWriteHadLineEndings := true
+	write := func(line []byte) error {
+		// skip lines without data - should never happen as an empty line still has line endings.
+		if len(line) == 0 {
+			return nil
+		}
+
+		// if the previous line didn't have line endings and there's another line coming, inject a line ending.
+		// NOTE: this can for example happen when a suggestion doesn't have line endings
+		if !previousWriteHadLineEndings {
+			_, err := writer.Write([]byte(lineEnding))
+			if err != nil {
+				return fmt.Errorf("failed to write forced injected line ending: %w", err)
+			}
+		}
+
+		_, err := writer.Write(line)
+		if err != nil {
+			return fmt.Errorf("failed to write line: %w", err)
+		}
+
+		previousWriteHadLineEndings = parser.HasLineEnding(line)
+
+		return nil
+	}
+
+	ri := 0 // replacement index
+	var processReplacements func(ln lineNumber) (skipLine bool, err error)
+	processReplacements = func(ln lineNumber) (bool, error) {
+		// no replacements left
+		if ri >= len(replacements) {
+			return false, nil
+		}
+
+		// Assumption: replacements are sorted `start ASC end ASC`
+		if ln < replacements[ri].OmitFrom {
+			return false, nil
+		}
+
+		// write replacement immediately once we hit its range to ensure we maintain proper order.
+		if ln == replacements[ri].OmitFrom {
+			rScanner, _, err := parser.ReadTextFile(bytes.NewReader(replacements[ri].Content), &lineEnding)
+			if err != nil {
+				return false, fmt.Errorf("error to start reading replacement as text file: %w", err)
+			}
+			for rScanner.Scan() {
+				if err := write(rScanner.Bytes()); err != nil {
+					return false, fmt.Errorf("failed to inject replacement line: %w", err)
+				}
+			}
+			if err := rScanner.Err(); err != nil {
+				return false, fmt.Errorf("failed to read replacement line: %w", err)
+			}
+		}
+
+		// if we reached the end of the replacement - move to next and reetrigger (to handle things like [1,2)+[2,2)+...)
+		if ln >= replacements[ri].ContinueFrom {
+			ri++
+			return processReplacements(ln)
+		}
+
+		// otherwise we are in the middle of the replacement - skip line
+		return true, nil
+	}
+
+	var ln lineNumber
+	for fileScanner.Scan() {
+		ln++
+
+		skipLine, err := processReplacements(ln)
+		if err != nil {
+			return fmt.Errorf("failed processing replacements for line %d: %w", ln, err)
+		}
+		if skipLine {
+			continue
+		}
+
+		line := fileScanner.Bytes()
+		if err := write(line); err != nil {
+			return fmt.Errorf("failed to copy line %d from original file: %w", ln, err)
+		}
+	}
+
+	// move ln at end of file (e.g. after last line)
+	ln++
+
+	// backfill EOF line numbers and finish overlap validation for remaining entries.
+	// If any replacement entries are left, we know the current one has ContinueFrom >= ln or is EOF.
+	for i := ri; i < len(replacements); i++ {
+		// copy original input for error messages
+		originalOmitFrom := replacements[i].OmitFrom
+		originalContinueFrom := replacements[i].ContinueFrom
+
+		// backfil EOF line numbers
+		if replacements[i].OmitFrom.IsEOF() {
+			replacements[i].OmitFrom = ln
+		}
+		if replacements[i].ContinueFrom.IsEOF() {
+			replacements[i].ContinueFrom = ln
+		}
+
+		// ensure replacement range isn't out of bounds
+		if replacements[i].OmitFrom > ln || replacements[i].ContinueFrom > ln {
+			return errors.InvalidArgument(
+				"Patch action for [%s,%s) is exceeding end of file with %d line(s).",
+				originalOmitFrom, originalContinueFrom, ln-1,
+			)
+		}
+
+		// ensure no overlap with next element
+		if i+1 < len(replacements) &&
+			replacements[i+1].OmitFrom < replacements[i].ContinueFrom {
+			return errors.InvalidArgument(
+				"Patch actions have conflicting ranges [%s,%s)x[%s,%s) for file with %d line(s).",
+				originalOmitFrom, originalContinueFrom,
+				replacements[i+1].OmitFrom, replacements[i+1].ContinueFrom,
+				ln-1,
+			)
+		}
+	}
+
+	skipLine, err := processReplacements(ln)
+	if err != nil {
+		return fmt.Errorf("failed processing replacements for EOF: %w", err)
+	}
+
+	// this should never happen! (as after full validation no remaining start/end is greater than line number at eof!)
+	if skipLine || ri < len(replacements) {
+		return fmt.Errorf(
+			"unexpected status reached at end of file ri=%d (cnt=%d) and skipLine=%t",
+			ri, len(replacements), skipLine,
+		)
+	}
+
+	return nil
+}
+
+func (r *SharedRepo) getFileEntry(
+	ctx context.Context,
+	treeishSHA sha.SHA,
+	objectSHA sha.SHA,
+	path string,
+) (*api.TreeNode, error) {
+	entry, err := api.GetTreeNode(ctx, r.repoPath, treeishSHA.String(), path, false)
+	if errors.IsNotFound(err) {
+		return nil, errors.NotFound("path %s not found", path)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("getFileEntry: failed to get tree for path %s: %w", path, err)
+	}
+
+	// If a SHA was given and the SHA given doesn't match the SHA of the fromTreePath, throw error
+	if !objectSHA.IsEmpty() && !objectSHA.Equal(entry.SHA) {
+		return nil, errors.InvalidArgument("sha does not match for path %s [given: %s, expected: %s]",
+			path, objectSHA, entry.SHA)
+	}
+
+	return entry, nil
+}
+
+// checkPathAvailability ensures that the path is available for the requested operation.
+// For the path where this file will be created/updated, we need to make
+// sure no parts of the path are existing files or links except for the last
+// item in the path which is the file name, and that shouldn't exist IF it is
+// a new file OR is being moved to a new path.
+func (r *SharedRepo) checkPathAvailability(
+	ctx context.Context,
+	treeishSHA sha.SHA,
+	filePath string,
+	isNewFile bool,
+) error {
+	parts := strings.Split(filePath, "/")
+	subTreePath := ""
+
+	for index, part := range parts {
+		subTreePath = path.Join(subTreePath, part)
+
+		entry, err := api.GetTreeNode(ctx, r.repoPath, treeishSHA.String(), subTreePath, false)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				// Means there is no item with that name, so we're good
+				break
+			}
+			return fmt.Errorf("checkPathAvailability: failed to get tree entry for path %s: %w", subTreePath, err)
+		}
+
+		switch {
+		case index < len(parts)-1:
+			if !entry.IsDir() {
+				return errors.Conflict("a file already exists where you're trying to create a subdirectory [path: %s]",
+					subTreePath)
+			}
+		case entry.IsLink():
+			return errors.Conflict("a symbolic link already exist where you're trying to create a subdirectory [path: %s]",
+				subTreePath)
+		case entry.IsDir():
+			return errors.Conflict("a directory already exists where you're trying to create a subdirectory [path: %s]",
+				subTreePath)
+		case filePath != "" || isNewFile:
+			return errors.Conflict("file path %s already exists", filePath)
+		}
+	}
+	return nil
+}
+
 // MoveObjects moves git object from the shared repository to the original repository.
 func (r *SharedRepo) MoveObjects(ctx context.Context) error {
-	srcDir := path.Join(r.temporaryPath, "objects")
-	dstDir := path.Join(r.repositoryPath, "objects")
+	if r.sourceRepoPath == "" {
+		return errors.New("shared repo not initialized with a repository")
+	}
+
+	srcDir := path.Join(r.repoPath, "objects")
+	dstDir := path.Join(r.sourceRepoPath, "objects")
 
 	var files []fileEntry
 
@@ -564,4 +1006,84 @@ type fileEntry struct {
 	fullPath string
 	relPath  string
 	priority int
+}
+
+func parseMovePayload(payload []byte) (string, []byte, error) {
+	var newContent []byte
+	var newPath string
+	filePathEnd := bytes.IndexByte(payload, 0)
+	if filePathEnd < 0 {
+		newPath = string(payload)
+		newContent = nil
+	} else {
+		newPath = string(payload[:filePathEnd])
+		newContent = payload[filePathEnd+1:]
+	}
+
+	newPath = api.CleanUploadFileName(newPath)
+	if newPath == "" {
+		return "", nil, api.ErrInvalidPath
+	}
+
+	return newPath, newContent, nil
+}
+
+type patchTextFileReplacement struct {
+	OmitFrom     lineNumber
+	ContinueFrom lineNumber
+	Content      []byte
+}
+
+func parsePatchTextFilePayloads(payloadsRaw [][]byte) ([]patchTextFileReplacement, error) {
+	replacements := []patchTextFileReplacement{}
+	for i := range payloadsRaw {
+		replacement, err := parsePatchTextFilePayload(payloadsRaw[i])
+		if err != nil {
+			return nil, err
+		}
+		replacements = append(replacements, replacement)
+	}
+
+	return replacements, nil
+}
+
+// parsePatchTextFilePayload parses the payload for a PATCH_TEXT_FILE action:
+//
+//	<First Line to omit>:<First line to include again>\0<Replacement>
+//
+// Examples:
+//
+//	`1:2\0some new line`
+//	`1:eof\0some new line\n`
+//	`1:1\0some new line\nsome other line`
+func parsePatchTextFilePayload(payloadRaw []byte) (patchTextFileReplacement, error) {
+	lineInfo, replacement, ok := bytes.Cut(payloadRaw, []byte{0})
+	if !ok {
+		return patchTextFileReplacement{}, errors.InvalidArgument("Payload format is missing the content separator.")
+	}
+
+	startBytes, endBytes, ok := bytes.Cut(lineInfo, []byte{':'})
+	if !ok {
+		return patchTextFileReplacement{}, errors.InvalidArgument(
+			"Payload is missing the line number separator.")
+	}
+
+	start, err := parseLineNumber(startBytes)
+	if err != nil {
+		return patchTextFileReplacement{}, errors.InvalidArgument("Payload start line number is invalid: %s", err)
+	}
+	end, err := parseLineNumber(endBytes)
+	if err != nil {
+		return patchTextFileReplacement{}, errors.InvalidArgument("Payload end line number is invalid: %s", err)
+	}
+
+	if end < start {
+		return patchTextFileReplacement{}, errors.InvalidArgument("Payload end line has to be at least as big as start line.")
+	}
+
+	return patchTextFileReplacement{
+		OmitFrom:     start,
+		ContinueFrom: end,
+		Content:      replacement,
+	}, nil
 }

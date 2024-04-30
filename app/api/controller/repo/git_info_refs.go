@@ -39,7 +39,7 @@ func (c *Controller) GitInfoRefs(
 	}
 
 	if err = c.git.GetInfoRefs(ctx, w, &git.InfoRefsParams{
-		ReadParams: git.CreateReadParams(&repo.Repository),
+		ReadParams: git.CreateReadParams(repo.Repository),
 		// TODO: git shouldn't take a random string here, but instead have accepted enum values.
 		Service:     string(service),
 		Options:     nil,

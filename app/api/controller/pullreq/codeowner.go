@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/types"
@@ -46,9 +45,7 @@ func (c *Controller) CodeOwners(
 	}
 
 	ownerEvaluation, err := c.codeOwners.Evaluate(ctx, repo, pr, reviewers)
-	if codeowners.IsTooLargeError(err) {
-		return types.CodeOwnerEvaluation{}, usererror.UnprocessableEntityf(err.Error())
-	}
+
 	if err != nil {
 		return types.CodeOwnerEvaluation{}, err
 	}

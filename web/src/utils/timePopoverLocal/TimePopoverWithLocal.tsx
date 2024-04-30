@@ -15,14 +15,18 @@ import moment from 'moment'
 import { useStrings } from 'framework/strings'
 import css from './TimePopoverWithLocal.module.scss'
 
-export type TimePopoverProps = TextProps &
-  Omit<ReactTimeagoProps, 'date'> & {
-    date?: ReactTimeagoProps['date']
-    time: number
-    popoverProps?: IPopoverProps
-    icon?: IconName
-    className?: string
-  }
+type ReactTimeagoPropsWithoutDate = Omit<ReactTimeagoProps, 'date'>
+type CommonTextProps = Omit<TextProps, 'title'>
+type CommonReactTimeagoProps = Omit<ReactTimeagoPropsWithoutDate, 'title'>
+
+interface TimePopoverProps extends CommonTextProps, CommonReactTimeagoProps {
+  date?: ReactTimeagoProps['date']
+  popoverProps?: IPopoverProps
+  icon?: IconName
+  className?: string
+  title?: string | undefined
+  time: number
+}
 
 export const DATE_TIME_PARSE_FORMAT = 'MMM DD, YYYY hh:mm:ss A'
 export const DATE_PARSE_FORMAT = 'MMM DD, YYYY'

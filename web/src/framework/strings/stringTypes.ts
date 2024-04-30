@@ -259,6 +259,8 @@ export interface StringsMap {
   emptyRepoInclude: string
   emptySpaceText: string
   enableAIDAMessage: string
+  enableAIDAPRDescription: string
+  enableAIDAPRMessange: string
   enableAISearch: string
   enableSSLVerification: string
   enableWebhookContent: string
@@ -301,11 +303,14 @@ export interface StringsMap {
   'exportSpace.accesstokenReq': string
   'exportSpace.entitiesLabel': string
   'exportSpace.exportCompleted': string
+  'exportSpace.exportFailed': string
   'exportSpace.exportRepo': string
   'exportSpace.exportRepoCompleted': string
   'exportSpace.harness': string
   'exportSpace.newProject': string
+  'exportSpace.orgIdPlaceholder': string
   'exportSpace.organization': string
+  'exportSpace.projectIdPlaceholder': string
   'exportSpace.projectName': string
   'exportSpace.projectOrg': string
   'exportSpace.repoToConvert': string
@@ -315,6 +320,7 @@ export interface StringsMap {
   'exportSpace.upgrade': string
   'exportSpace.upgradeConfirmation': string
   'exportSpace.upgradeContent': string
+  'exportSpace.upgradeFailed': string
   'exportSpace.upgradeHarness': string
   'exportSpace.upgradeProgress': string
   'exportSpace.upgradeTitle': string
@@ -344,6 +350,7 @@ export interface StringsMap {
   generateCloneCred: string
   generateCloneText: string
   generateHelptext: string
+  generateSummary: string
   getMyCloneTitle: string
   gitIgnore: string
   gitness: string
@@ -411,6 +418,7 @@ export interface StringsMap {
   'importSpace.title': string
   in: string
   inactiveBranches: string
+  invalidResponse: string
   isRequired: string
   key: string
   'keywordSearch.sampleQueries.searchForClass': string
@@ -549,6 +557,7 @@ export interface StringsMap {
   'pipelines.failedToFindPath': string
   'pipelines.failedToGenerate': string
   'pipelines.failedToUpdatePipeline': string
+  'pipelines.import': string
   'pipelines.lastExecution': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string

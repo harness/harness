@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { random } from 'lodash-es'
 import { useMutate } from 'restful-react'
 import { useToaster, Button, ButtonVariation, ButtonSize, ButtonProps, useIsMounted } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
@@ -27,13 +28,13 @@ import type { CommentItem } from '../CommentBox/CommentBox'
 interface CodeCommentSecondarySaveButtonProps
   extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'>,
     ButtonProps {
-  commentItems: CommentItem<TypesPullReqActivity>[]
+  comment: { commentItems: CommentItem<TypesPullReqActivity>[] }
 }
 
 export const CodeCommentSecondarySaveButton: React.FC<CodeCommentSecondarySaveButtonProps> = ({
   repoMetadata,
   pullReqMetadata,
-  commentItems,
+  comment: { commentItems },
   onClick,
   ...props
 }) => {
@@ -45,37 +46,64 @@ export const CodeCommentSecondarySaveButton: React.FC<CodeCommentSecondarySaveBu
     [repoMetadata.path, pullReqMetadata?.number]
   )
   const { mutate: updateCodeCommentStatus } = useMutate({ verb: 'PUT', path: ({ id }) => `${path}/${id}/status` })
-  const [resolved, setResolved] = useState(commentItems[0]?.payload?.resolved ? true : false)
-  const emitCodeCommentStatus = useEmitCodeCommentStatus({
-    id: commentItems[0]?.payload?.id,
-    onMatch: status => {
+  const [parentComment, setParentComment] = useState(commentItems[0])
+  const randomClass = useMemo(() => `CodeCommentSecondarySaveButton-${random(1_000_000, false)}`, [])
+  const [resolved, setResolved] = useState(parentComment?.payload?.resolved ? true : false)
+
+  const onMatch = useCallback(
+    status => {
       if (isMounted.current) {
-        setResolved(status === CodeCommentState.RESOLVED)
+        const isResolved = status === CodeCommentState.RESOLVED
+        setResolved(isResolved)
+
+        if (parentComment?.payload) {
+          parentComment.payload.resolved = isResolved ? Date.now() : 0
+        }
+      }
+    },
+    [isMounted, parentComment?.payload]
+  )
+
+  const emitCodeCommentStatus = useEmitCodeCommentStatus({ id: parentComment?.id, onMatch })
+
+  useEffect(() => {
+    // Comment thread has been just created, check if parentComment is
+    // not set up properly, then query the comment id from DOM and construct
+    // it from scratch (this is a workaround).
+    if (!parentComment?.id) {
+      const id = document
+        .querySelector(`.${randomClass}`)
+        ?.closest('[data-comment-thread-id]')
+        ?.getAttribute('data-comment-thread-id')
+
+      if (id) {
+        setParentComment({
+          id: Number(id),
+          payload: { resolved: 0 }
+        } as CommentItem<TypesPullReqActivity>)
       }
     }
-  })
+  }, [parentComment?.id, randomClass])
 
-  return commentItems[0]?.payload?.deleted ? null : (
+  return parentComment?.deleted ? null : (
     <Button
+      className={randomClass}
       text={getString(resolved ? 'replyAndReactivate' : 'replyAndResolve')}
       variation={ButtonVariation.TERTIARY}
       size={ButtonSize.MEDIUM}
       onClick={async () => {
         const status = resolved ? CodeCommentState.ACTIVE : CodeCommentState.RESOLVED
         const payload = { status }
-        const id = commentItems[0]?.payload?.id
+        const id = parentComment?.id
 
         await updateCodeCommentStatus(payload, { pathParams: { id } })
           .then(async () => {
-            if (commentItems[0]?.payload) {
-              if (resolved) {
-                commentItems[0].payload.resolved = 0
-              } else {
-                commentItems[0].payload.resolved = Date.now()
-              }
+            emitCodeCommentStatus(status)
+
+            if (parentComment?.payload) {
+              parentComment.payload.resolved = resolved ? 0 : Date.now()
             }
 
-            emitCodeCommentStatus(status)
             await (onClick as () => void)()
 
             if (isMounted.current) setResolved(!resolved)

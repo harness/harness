@@ -27,19 +27,20 @@ import (
 )
 
 const (
-	QueryParamGitRef        = "git_ref"
-	QueryParamIncludeCommit = "include_commit"
-	PathParamCommitSHA      = "commit_sha"
-	QueryParamLineFrom      = "line_from"
-	QueryParamLineTo        = "line_to"
-	QueryParamPath          = "path"
-	QueryParamSince         = "since"
-	QueryParamUntil         = "until"
-	QueryParamCommitter     = "committer"
-	QueryParamIncludeStats  = "include_stats"
-	QueryParamInternal      = "internal"
-	QueryParamService       = "service"
-	HeaderParamGitProtocol  = "Git-Protocol"
+	QueryParamGitRef             = "git_ref"
+	QueryParamIncludeCommit      = "include_commit"
+	QueryParamIncludeDirectories = "include_directories"
+	PathParamCommitSHA           = "commit_sha"
+	QueryParamLineFrom           = "line_from"
+	QueryParamLineTo             = "line_to"
+	QueryParamPath               = "path"
+	QueryParamSince              = "since"
+	QueryParamUntil              = "until"
+	QueryParamCommitter          = "committer"
+	QueryParamIncludeStats       = "include_stats"
+	QueryParamInternal           = "internal"
+	QueryParamService            = "service"
+	HeaderParamGitProtocol       = "Git-Protocol"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -48,6 +49,10 @@ func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
 
 func GetIncludeCommitFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamIncludeCommit, deflt)
+}
+
+func GetIncludeDirectoriesFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamIncludeDirectories, deflt)
 }
 
 func GetCommitSHAFromPath(r *http.Request) (string, error) {

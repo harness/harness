@@ -35,4 +35,7 @@ const (
 
 	fmtSubject = "%s"
 	fmtBody    = "%B"
+
+	fmtFieldObjectType = "%(objecttype)"
+	fmtFieldPath       = "%(path)"
 )

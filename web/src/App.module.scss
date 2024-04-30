@@ -31,7 +31,7 @@
       height: 70vh !important;
     }
 
-    .PageBody--pageBody {
+    [class*='PageBody--pageBody'] {
       min-height: calc(var(--page-height) - var(--page-header-height, 64px));
       overflow: visible;
     }

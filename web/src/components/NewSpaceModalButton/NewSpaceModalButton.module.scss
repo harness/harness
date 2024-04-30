@@ -30,7 +30,7 @@
       min-width: 214px;
     }
 
-    .menuItem {
+    [class*='menuItem'] {
       max-width: fit-content;
     }
   }
@@ -125,7 +125,7 @@
 
 .checkbox {
   :global {
-    .Tooltip--acenter {
+    [class*='Tooltip--acenter'] {
       opacity: 0.7 !important;
     }
     .bp3-control-indicator {
@@ -149,7 +149,7 @@
       min-width: 158px;
     }
 
-    .menuItem {
+    [class*='menuItem'] {
       max-width: fit-content;
     }
   }
@@ -163,7 +163,7 @@
     .bp3-form-helper-text {
       margin-top: unset !important;
     }
-    .FormError--errorDiv {
+    [class*='FormError--errorDiv'] {
       display: none !important;
     }
   }
