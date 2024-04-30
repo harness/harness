@@ -301,7 +301,7 @@ type (
 	}
 
 	// Webhook provides the webhook configuration.
-	Webhook struct { //This seems to be outbound
+	Webhook struct {
 		Events     []string `envconfig:"DRONE_WEBHOOK_EVENTS"`
 		Endpoint   []string `envconfig:"DRONE_WEBHOOK_ENDPOINT"`
 		Secret     string   `envconfig:"DRONE_WEBHOOK_SECRET"`
