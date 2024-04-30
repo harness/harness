@@ -188,7 +188,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		Identifier:    repository.Identifier,
 		DefaultBranch: repository.DefaultBranch,
 		Description:   repository.Description,
-		IsPublic:      repository.IsPublic,
+		IsPublic:      false, // todo: use repository.IsPublic once public is available.
 		Readme:        false,
 		License:       "",
 		GitIgnore:     "",
