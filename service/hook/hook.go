@@ -23,14 +23,15 @@ import (
 )
 
 // New returns a new HookService.
-func New(client *scm.Client, addr string, renew core.Renewer) core.HookService {
-	return &service{client: client, addr: addr, renew: renew}
+func New(client *scm.Client, addr string, renew core.Renewer, events []string) core.HookService {
+	return &service{client: client, addr: addr, renew: renew, events: events}
 }
 
 type service struct {
 	renew  core.Renewer
 	client *scm.Client
 	addr   string
+	events []string
 }
 
 func (s *service) Create(ctx context.Context, user *core.User, repo *core.Repository) error {
@@ -38,6 +39,13 @@ func (s *service) Create(ctx context.Context, user *core.User, repo *core.Reposi
 	if err != nil {
 		return err
 	}
+
+	var eventsMap map[string]bool
+	eventsMap = make(map[string]bool)
+	for _, event := range s.events {
+		eventsMap[event] = true
+	}
+
 	ctx = context.WithValue(ctx, scm.TokenKey{}, &scm.Token{
 		Token:   user.Token,
 		Refresh: user.Refresh,
@@ -48,11 +56,11 @@ func (s *service) Create(ctx context.Context, user *core.User, repo *core.Reposi
 		Target: s.addr + "/hook",
 		Secret: repo.Signer,
 		Events: scm.HookEvents{
-			Branch:      true,
-			Deployment:  true,
-			PullRequest: true,
-			Push:        true,
-			Tag:         true,
+			Branch:      eventsMap["branch"],
+			Deployment:  eventsMap["deployment"],
+			PullRequest: eventsMap["pull_request"],
+			Push:        eventsMap["push"],
+			Tag:         eventsMap["tag"],
 		},
 	}
 	return replaceHook(ctx, s.client, repo.Slug, hook)

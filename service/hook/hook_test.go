@@ -54,7 +54,7 @@ func TestCreate(t *testing.T) {
 	client := new(scm.Client)
 	client.Repositories = mockRepos
 
-	service := New(client, "https://drone.company.com", mockRenewer)
+	service := New(client, "https://drone.company.com", mockRenewer, []string{})
 	err := service.Create(noContext, mockUser, mockRepo)
 	if err != nil {
 		t.Error(err)
@@ -70,7 +70,7 @@ func TestCreate_RenewErr(t *testing.T) {
 	mockRenewer := mock.NewMockRenewer(controller)
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false).Return(scm.ErrNotAuthorized)
 
-	service := New(nil, "https://drone.company.com", mockRenewer)
+	service := New(nil, "https://drone.company.com", mockRenewer, []string{})
 	err := service.Create(noContext, mockUser, nil)
 	if err != scm.ErrNotAuthorized {
 		t.Errorf("Want not authorized error, got %v", err)
@@ -106,7 +106,7 @@ func TestDelete(t *testing.T) {
 	client := new(scm.Client)
 	client.Repositories = mockRepos
 
-	service := New(client, "https://drone.company.com", mockRenewer)
+	service := New(client, "https://drone.company.com", mockRenewer, []string{})
 	err := service.Delete(noContext, mockUser, mockRepo)
 	if err != nil {
 		t.Error(err)
@@ -122,7 +122,7 @@ func TestDelete_RenewErr(t *testing.T) {
 	mockRenewer := mock.NewMockRenewer(controller)
 	mockRenewer.EXPECT().Renew(gomock.Any(), mockUser, false).Return(scm.ErrNotAuthorized)
 
-	service := New(nil, "https://drone.company.com", mockRenewer)
+	service := New(nil, "https://drone.company.com", mockRenewer, []string{})
 	err := service.Delete(noContext, mockUser, nil)
 	if err != scm.ErrNotAuthorized {
 		t.Errorf("Want not authorized error, got %v", err)
