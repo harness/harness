@@ -145,7 +145,7 @@ func NewAPIHandler(
 	r.Use(audit.Middleware())
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
+		setupRoutesV1(r, appCtx, config, authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
 			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 			webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl,
 			searchCtrl)
@@ -172,6 +172,7 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 func setupRoutesV1(r chi.Router,
 	appCtx context.Context,
 	config *types.Config,
+	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
 	repoSettingsCtrl *reposettings.Controller,
 	executionCtrl *execution.Controller,
@@ -203,7 +204,7 @@ func setupRoutesV1(r chi.Router,
 	setupSecrets(r, secretCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
-	setupPrincipals(r, principalCtrl)
+	setupPrincipals(r, authenticator, principalCtrl)
 	setupInternal(r, githookCtrl, git)
 	setupAdmin(r, userCtrl)
 	setupAccount(r, userCtrl, sysCtrl, config)
@@ -665,8 +666,9 @@ func setupResources(r chi.Router) {
 	})
 }
 
-func setupPrincipals(r chi.Router, principalCtrl principal.Controller) {
+func setupPrincipals(r chi.Router, authenticator authn.Authenticator, principalCtrl principal.Controller) {
 	r.Route("/principals", func(r chi.Router) {
+		r.Use(middlewareauthn.Required(authenticator))
 		r.Get("/", handlerprincipal.HandleList(principalCtrl))
 		r.Get(fmt.Sprintf("/{%s}", request.PathParamPrincipalID), handlerprincipal.HandleFind(principalCtrl))
 	})
