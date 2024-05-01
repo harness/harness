@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/rs/zerolog/log"
 )
 
@@ -204,10 +205,17 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	if err != nil {
 		return "", err
 	}
+
+	isPublic, err := apiauth.CheckRepoIsPublic(ctx, r.publicAccess, repository)
+	if err != nil {
+		return "", fmt.Errorf("failed to check if repo is public: %w", err)
+	}
+
 	remoteRepo, err := client.CreateRepo(ctx, repo.CreateInput{
 		Identifier:    repository.Identifier,
 		DefaultBranch: repository.DefaultBranch,
 		Description:   repository.Description,
+		IsPublic:      isPublic,
 		Readme:        false,
 		License:       "",
 		GitIgnore:     "",
