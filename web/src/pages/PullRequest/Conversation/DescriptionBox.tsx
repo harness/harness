@@ -17,6 +17,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Button, ButtonSize, ButtonVariation, Container, Layout, useToaster, Text } from '@harnessio/uicore'
 import cx from 'classnames'
+import { useParams } from 'react-router-dom'
 import { useMutate } from 'restful-react'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { PopoverPosition } from '@blueprintjs/core'
@@ -26,7 +27,9 @@ import type { OpenapiUpdatePullReqRequest } from 'services/code'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
+import EnableAidaBanner from 'components/Aida/EnableAidaBanner'
 import { CommentBoxOutletPosition, getErrorMessage } from 'utils/Utils'
+import type { Identifier } from 'utils/types'
 import Config from 'Config'
 import { useAppContext } from 'AppContext'
 import type { ConversationProps } from './Conversation'
@@ -47,7 +50,6 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
   const { hooks } = useAppContext()
 
   const [flag, setFlag] = useState(false)
-  const { SEMANTIC_SEARCH_ENABLED } = hooks?.useFeatureFlags()
   const [edit, setEdit] = useState(false)
   const [dirty, setDirty] = useState(false)
 
@@ -55,6 +57,11 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
   const [content, setContent] = useState(originalContent)
   const { getString } = useStrings()
   const { showError } = useToaster()
+  const { orgIdentifier, projectIdentifier } = useParams<Identifier>()
+  const { data: aidaSettingResponse, loading: isAidaSettingLoading } = hooks?.useGetSettingValue({
+    identifier: 'aida',
+    queryParams: { accountIdentifier: routingId, orgIdentifier, projectIdentifier }
+  })
 
   const { mutate } = useMutate({
     verb: 'PATCH',
@@ -103,7 +110,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
             outlets={{
               [CommentBoxOutletPosition.START_OF_MARKDOWN_EDITOR_TOOLBAR]: (
                 <>
-                  {SEMANTIC_SEARCH_ENABLED && !standalone ? (
+                  {!isAidaSettingLoading && aidaSettingResponse?.data?.value == 'true' && !standalone ? (
                     <Button
                       size={ButtonSize.SMALL}
                       variation={ButtonVariation.ICON}
@@ -132,7 +139,8 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
                     />
                   ) : null}
                 </>
-              )
+              ),
+              [CommentBoxOutletPosition.ENABLE_AIDA_PR_DESC_BANNER]: <EnableAidaBanner />
             }}
             onSave={value => {
               if (value?.split('\n').some(line => line.length > Config.MAX_TEXT_LINE_SIZE_LIMIT)) {

@@ -33,7 +33,7 @@ import {
 import { Color, FontVariation } from '@harnessio/design-system'
 import { PopoverPosition } from '@blueprintjs/core'
 import cx from 'classnames'
-import { Link, useHistory, useParams } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -59,20 +59,15 @@ import Config from 'Config'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { TabContentWrapper } from 'components/TabContentWrapper/TabContentWrapper'
 import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
+import type { Identifier } from 'utils/types'
+import EnableAidaBanner from 'components/Aida/EnableAidaBanner'
 import { CompareContentHeader, PRCreationType } from './CompareContentHeader/CompareContentHeader'
 import { CompareCommits } from './CompareCommits'
 import css from './Compare.module.scss'
 
-interface Identifier {
-  accountId: string
-  orgIdentifier: string
-  projectIdentifier: string
-}
-
 export default function Compare() {
-  const { routes, standalone, hooks, routingId, defaultSettingsURL } = useAppContext()
+  const { routes, standalone, hooks, routingId } = useAppContext()
   const [flag, setFlag] = useState(false)
-  const { SEMANTIC_SEARCH_ENABLED } = hooks?.useFeatureFlags()
   const { orgIdentifier, projectIdentifier } = useParams<Identifier>()
   const { data: aidaSettingResponse, loading: isAidaSettingLoading } = hooks?.useGetSettingValue({
     identifier: 'aida',
@@ -317,7 +312,6 @@ export default function Compare() {
                                   <>
                                     {!isAidaSettingLoading &&
                                     aidaSettingResponse?.data?.value == 'true' &&
-                                    SEMANTIC_SEARCH_ENABLED &&
                                     !standalone ? (
                                       <Button
                                         size={ButtonSize.SMALL}
@@ -349,34 +343,10 @@ export default function Compare() {
                                       />
                                     ) : null}
                                   </>
-                                )
+                                ),
+                                [CommentBoxOutletPosition.ENABLE_AIDA_PR_DESC_BANNER]: <EnableAidaBanner />
                               }}
                             />
-                            {aidaSettingResponse?.data?.value != 'true' &&
-                              SEMANTIC_SEARCH_ENABLED &&
-                              !isAidaSettingLoading && (
-                                <Container
-                                  background={Color.AI_PURPLE_50}
-                                  padding="small"
-                                  margin={{ top: 'xsmall', right: 'small', left: 'xsmall' }}>
-                                  <Text
-                                    font={{ variation: FontVariation.BODY2 }}
-                                    margin={{ bottom: 'small' }}
-                                    icon="info-messaging"
-                                    iconProps={{ size: 15 }}>
-                                    {getString('enableAIDAPRDescription')}
-                                  </Text>
-                                  <Text
-                                    font={{ variation: FontVariation.BODY2_SEMI }}
-                                    margin={{ bottom: 'small' }}
-                                    color={Color.GREY_450}>
-                                    {getString('enableAIDAPRMessange')}
-                                  </Text>
-                                  <Link to={defaultSettingsURL} color={Color.AI_PURPLE_800}>
-                                    {getString('reviewProjectSettings')}
-                                  </Link>
-                                </Container>
-                              )}
                           </Layout.Vertical>
                         </Container>
                       </Layout.Vertical>

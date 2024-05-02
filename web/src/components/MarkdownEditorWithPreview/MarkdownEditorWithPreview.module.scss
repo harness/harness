@@ -281,10 +281,30 @@
   font-weight: bold !important;
 }
 
-.aidaFeedback {
-  position: absolute !important;
-  width: 100%;
-  right: -4.5px;
-  padding: 5px 10px !important;
-  margin: 10px 5px !important;
+.feedbackContainer {
+  position: relative;
+  //  overwriting the extra close button in feedback form UsefulOrNot
+  > div {
+    > div {
+      > button {
+        span[data-icon='main-close'] {
+          display: none !important;
+        }
+      }
+    }
+  }
+
+  .aidaFeedback {
+    margin: 0 0 9px 0 !important;
+    padding: 7px 10px !important;
+    width: 100%;
+    background-color: var(--ai-purple-100) !important;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .closeButton {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+  }
 }

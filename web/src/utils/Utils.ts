@@ -650,7 +650,8 @@ export const PAGE_CONTAINER_WIDTH = '--page-container-width'
 
 // Outlets are used to insert additional components into CommentBox
 export enum CommentBoxOutletPosition {
-  START_OF_MARKDOWN_EDITOR_TOOLBAR = 'start_of_markdown_editor_toolbar'
+  START_OF_MARKDOWN_EDITOR_TOOLBAR = 'start_of_markdown_editor_toolbar',
+  ENABLE_AIDA_PR_DESC_BANNER = 'enable_aida_pr_desc_banner'
 }
 
 // Helper function to escape special characters for use in regex
