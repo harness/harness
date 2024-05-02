@@ -48,3 +48,9 @@ enum Vote {
   Up,
   Down
 }
+
+export interface Identifier {
+  accountId: string
+  orgIdentifier: string
+  projectIdentifier: string
+}

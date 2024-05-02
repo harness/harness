@@ -176,10 +176,12 @@ export function MarkdownEditorWithPreview({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedTab, setSelectedTab] = useState(MarkdownEditorTab.WRITE)
   const viewRef = useRef<EditorView>()
+  const feedbackRef = useRef<HTMLDivElement>()
   const containerRef = useRef<HTMLDivElement>(null)
   const [dirty, setDirty] = useState(false)
   const [open, setOpen] = useState(false)
   const [file, setFile] = useState<File>()
+  const [showFeedback, setShowFeedback] = useState<boolean>(false)
   const { showError } = useToaster()
   const [markdownContent, setMarkdownContent] = useState('')
   const { customComponents } = useAppContext()
@@ -218,18 +220,19 @@ export function MarkdownEditorWithPreview({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       const editorDom = viewRef?.current?.dom
-      if (!editorDom?.contains(event.target)) {
+      if (!editorDom?.contains(event.target) && !feedbackRef?.current?.contains(event.target)) {
         // Clicked outside the editor
         viewRef?.current?.dispatch({
           effects: removeDecorationEffect.of({})
         })
+        setShowFeedback(false)
       }
     },
     [viewRef]
   )
 
   useEventListener('mousedown', handleMouseDown)
-  const [generating, setGenerating] = useState<boolean>(false)
+
   const dispatchContent = (content: string, userEvent: boolean, decoration = false) => {
     const view = viewRef.current
     const { from, to } = view?.state.selection.main ?? { from: 0, to: 0 }
@@ -256,19 +259,20 @@ export function MarkdownEditorWithPreview({
       })
       removeSpecificTextOptimized(viewRef, getString('aidaGenSummary'))
     }
+    setData({})
   }
 
   useEffect(() => {
     if (flag) {
       if (handleCopilotClick) {
-        setGenerating(true)
         dispatchContent(getString('aidaGenSummary'), false, true)
+        setShowFeedback(false)
         mutate({
           head_ref: normalizeGitRef(sourceGitRef),
           base_ref: normalizeGitRef(targetGitRef)
         })
           .then(res => {
-            setGenerating(false)
+            res.summary && setShowFeedback(true)
             setData(res.summary || '')
           })
           .catch(err => {
@@ -284,6 +288,7 @@ export function MarkdownEditorWithPreview({
       dispatchContent(`${data}`, true)
     }
   }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const onToolbarAction = useCallback((action: ToolbarAction) => {
     const view = viewRef.current
 
@@ -630,7 +635,42 @@ export function MarkdownEditorWithPreview({
         {selectedTab === MarkdownEditorTab.PREVIEW && (
           <MarkdownViewer source={viewRef.current?.state.doc.toString() || ''} maxHeight={800} />
         )}
+        {!standalone && showFeedback && (
+          <Container
+            ref={feedbackRef}
+            className={cx(css.feedbackContainer, { [css.hidden]: selectedTab === MarkdownEditorTab.PREVIEW })}>
+            <AIDAFeedback
+              className={css.aidaFeedback}
+              allowCreateTicket={true}
+              allowFeedback={true}
+              telemetry={{
+                aidaClient: AidaClient.CODE_PR_SUMMARY,
+                metadata: {
+                  query: getString('generateSummary'),
+                  generatedResponse: isString(data) ? data : getString('invalidResponse')
+                }
+              }}
+            />
+            <Button
+              variation={ButtonVariation.ICON}
+              minimal
+              icon="main-close"
+              role="close"
+              iconProps={{ size: 12 }}
+              size={ButtonSize.SMALL}
+              className={css.closeButton}
+              onClick={() => {
+                viewRef?.current?.dispatch({
+                  effects: removeDecorationEffect.of({})
+                })
+                setShowFeedback(false)
+              }}
+            />
+          </Container>
+        )}
+        {selectedTab === MarkdownEditorTab.WRITE && outlets[CommentBoxOutletPosition.ENABLE_AIDA_PR_DESC_BANNER]}
       </Container>
+
       {!hideButtons && (
         <Container className={css.buttonsBar}>
           <Layout.Horizontal spacing="small">
@@ -641,20 +681,6 @@ export function MarkdownEditorWithPreview({
             {!hideCancel && <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={i18n.cancel} />}
           </Layout.Horizontal>
         </Container>
-      )}
-      {!isEmpty(data) && !generating && !standalone && (
-        <AIDAFeedback
-          className={css.aidaFeedback}
-          allowCreateTicket={true}
-          allowFeedback={true}
-          telemetry={{
-            aidaClient: AidaClient.CODE_PR_SUMMARY,
-            metadata: {
-              query: getString('generateSummary'),
-              generatedResponse: isString(data) ? data : getString('invalidResponse')
-            }
-          }}
-        />
       )}
     </Container>
   )
