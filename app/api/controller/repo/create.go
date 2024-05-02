@@ -77,6 +77,11 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
+	gitResp, isEmpty, err := c.createGitRepository(ctx, session, in)
+	if err != nil {
+		return nil, fmt.Errorf("error creating repository on git: %w", err)
+	}
+
 	var repo *types.Repository
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		if err := c.resourceLimiter.RepoCount(ctx, parentSpace.ID, 1); err != nil {
@@ -87,11 +92,6 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		parentSpace, err = c.spaceStore.FindForUpdate(ctx, parentSpace.ID)
 		if err != nil {
 			return fmt.Errorf("failed to find the parent space: %w", err)
-		}
-
-		gitResp, isEmpty, err := c.createGitRepository(ctx, session, in)
-		if err != nil {
-			return fmt.Errorf("error creating repository on git: %w", err)
 		}
 
 		now := time.Now().UnixMilli()
@@ -108,6 +108,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			DefaultBranch: in.DefaultBranch,
 			IsEmpty:       isEmpty,
 		}
+
 		err = c.repoStore.Create(ctx, repo)
 		if err != nil {
 			if dErr := c.DeleteGitRepository(ctx, session, repo); dErr != nil {
@@ -116,16 +117,19 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			return fmt.Errorf("failed to create repository in storage: %w", err)
 		}
 
-		if in.IsPublic && c.publicResourceCreationEnabled {
-			if err = c.SetPublicRepo(ctx, repo); err != nil {
-				return fmt.Errorf("failed to set a public resource: %w", err)
-			}
-		}
-
 		return nil
 	}, sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return nil, err
+	}
+
+	if in.IsPublic && c.publicResourceCreationEnabled {
+		if err = c.SetPublicRepo(ctx, repo); err != nil {
+			if dErr := c.PurgeNoAuth(ctx, session, repo); dErr != nil {
+				log.Ctx(ctx).Warn().Err(dErr).Msg("failed to purge repo for cleanup")
+			}
+			return nil, fmt.Errorf("failed to set a public resource: %w", err)
+		}
 	}
 
 	// backfil GitURL

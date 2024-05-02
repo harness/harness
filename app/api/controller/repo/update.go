@@ -72,8 +72,6 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, err
 	}
 
-	// backfill repo url
-	repo.Repository.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Repository.Path)
 	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repoBase)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
@@ -95,6 +93,9 @@ func (c *Controller) Update(ctx context.Context,
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update repository operation: %s", err)
 	}
+
+	// backfill repo url
+	repo.Repository.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Repository.Path)
 
 	return repo, nil
 }
