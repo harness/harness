@@ -15,7 +15,6 @@
 package authn
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/render"
@@ -52,11 +51,6 @@ func performAuthentication(
 
 			session, err := authenticator.Authenticate(r)
 			if err != nil {
-				if !errors.Is(err, authn.ErrNoAuthData) {
-					// log error to help with investigating any auth related errors
-					log.Warn().Err(err).Msg("authentication failed")
-				}
-
 				if required {
 					render.Unauthorized(ctx, w)
 					return

@@ -56,7 +56,9 @@ func (a *JWTAuthenticator) Authenticate(r *http.Request) (*auth.Session, error) 
 	str := extractToken(r, a.cookieName)
 
 	if len(str) == 0 {
-		return nil, ErrNoAuthData
+		return &auth.Session{
+			Principal: *auth.Anonymouse(),
+		}, nil
 	}
 
 	var principal *types.Principal

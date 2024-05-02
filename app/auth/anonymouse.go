@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package authn
+package auth
 
 import (
-	"net/http"
-
-	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-// Authenticator is an abstraction of an entity that's responsible for authenticating principals
-// that are making calls via HTTP.
-type Authenticator interface {
-	/*
-	 * Tries to authenticate the acting principal if credentials are available.
-	 * Returns:
-	 *		(session, nil) 		    - request contains auth data and principal was verified or is anonymouse
-	 *		(nil, err)  			- request contains auth data but verification failed
-	 */
-	Authenticate(r *http.Request) (*auth.Session, error)
+// Anonymouse is an in-memory principal for users with no auth data.
+// Authorizer is in charge of handling public access.
+func Anonymouse() *types.Principal {
+	return &types.Principal{
+		ID:   -1,
+		UID:  "ALL_USERS",
+		Type: enum.PrincipalTypeUser,
+	}
 }
