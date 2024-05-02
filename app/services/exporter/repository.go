@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/controller/repo"
-	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -118,19 +117,7 @@ func (r *Repository) RunManyForSpace(
 
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
-		// check if repo is public
-		parentSpace, name, err := paths.DisectLeaf(repository.Path)
-		if err != nil {
-			return fmt.Errorf("failed to disect path '%s': %w", repository.Path, err)
-		}
-
-		scope := &types.Scope{SpacePath: parentSpace}
-		resource := &types.Resource{
-			Type:       enum.ResourceTypeRepo,
-			Identifier: name,
-		}
-
-		isPublic, err := r.publicAccess.Get(ctx, scope, resource)
+		isPublic, err := apiauth.CheckRepoIsPublic(ctx, r.publicAccess, repository)
 		if err != nil {
 			return fmt.Errorf("failed to check repo public visibility: %w", err)
 		}
