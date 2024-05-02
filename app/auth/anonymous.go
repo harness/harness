@@ -19,9 +19,9 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// Anonymouse is an in-memory principal for users with no auth data.
+// Anonymous is an in-memory principal for users with no auth data.
 // Authorizer is in charge of handling public access.
-func Anonymouse() *types.Principal {
+func Anonymous() *types.Principal {
 	return &types.Principal{
 		ID:   -1,
 		UID:  "ALL_USERS",

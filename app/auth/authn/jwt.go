@@ -57,7 +57,7 @@ func (a *JWTAuthenticator) Authenticate(r *http.Request) (*auth.Session, error) 
 
 	if len(str) == 0 {
 		return &auth.Session{
-			Principal: *auth.Anonymouse(),
+			Principal: *auth.Anonymous(),
 		}, nil
 	}
 

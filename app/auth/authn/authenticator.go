@@ -26,7 +26,7 @@ type Authenticator interface {
 	/*
 	 * Tries to authenticate the acting principal if credentials are available.
 	 * Returns:
-	 *		(session, nil) 		    - request contains auth data and principal was verified or is anonymouse
+	 *		(session, nil) 		    - request contains auth data and principal was verified or is anonymous
 	 *		(nil, err)  			- request contains auth data but verification failed
 	 */
 	Authenticate(r *http.Request) (*auth.Session, error)
