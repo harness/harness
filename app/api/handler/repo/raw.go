@@ -41,7 +41,7 @@ func HandleRaw(repoCtrl *repo.Controller) http.HandlerFunc {
 		gitRef := request.GetGitRefFromQueryOrDefault(r, "")
 		path := request.GetOptionalRemainderFromPath(r)
 
-		dataReader, dataLength, err := repoCtrl.Raw(ctx, session, repoRef, gitRef, path)
+		dataReader, dataLength, sha, err := repoCtrl.Raw(ctx, session, repoRef, gitRef, path)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -53,8 +53,14 @@ func HandleRaw(repoCtrl *repo.Controller) http.HandlerFunc {
 			}
 		}()
 
-		w.Header().Add("Content-Length", fmt.Sprint(dataLength))
+		ifNoneMatch, ok := request.GetIfNoneMatchFromHeader(r)
+		if ok && ifNoneMatch == sha.String() {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
 
+		w.Header().Add("Content-Length", fmt.Sprint(dataLength))
+		w.Header().Add(request.HeaderETag, sha.String())
 		render.Reader(ctx, w, http.StatusOK, dataReader)
 	}
 }

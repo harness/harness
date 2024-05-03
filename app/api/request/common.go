@@ -55,6 +55,9 @@ const (
 	HeaderUserAgent       = "User-Agent"
 	HeaderAuthorization   = "Authorization"
 	HeaderContentEncoding = "Content-Encoding"
+
+	HeaderIfNoneMatch = "If-None-Match"
+	HeaderETag        = "ETag"
 )
 
 // GetOptionalRemainderFromPath returns the remainder ("*") from the path or an empty string if it doesn't exist.
@@ -165,4 +168,8 @@ func GetDeletedBeforeOrAtFromQuery(r *http.Request) (int64, bool, error) {
 // GetDeletedAtFromQuery gets the exact resource deletion timestamp from the query as an optional parameter.
 func GetDeletedAtFromQuery(r *http.Request) (int64, bool, error) {
 	return QueryParamAsPositiveInt64(r, QueryParamDeletedAt)
+}
+
+func GetIfNoneMatchFromHeader(r *http.Request) (string, bool) {
+	return GetHeader(r, HeaderIfNoneMatch)
 }
