@@ -124,7 +124,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	if in.IsPublic && c.publicResourceCreationEnabled {
-		if err = c.SetPublicRepo(ctx, repo); err != nil {
+		err = c.SetPublicRepo(ctx, repo)
+		if err != nil {
 			if dErr := c.PurgeNoAuth(ctx, session, repo); dErr != nil {
 				log.Ctx(ctx).Warn().Err(dErr).Msg("failed to purge repo for cleanup")
 			}

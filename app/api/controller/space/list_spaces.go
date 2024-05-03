@@ -25,11 +25,6 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-type Space struct {
-	types.Space
-	IsPublic bool `json:"is_public"`
-}
-
 // ListSpaces lists the child spaces of a space.
 func (c *Controller) ListSpaces(ctx context.Context,
 	session *auth.Session,

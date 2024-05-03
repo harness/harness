@@ -50,7 +50,6 @@ func (c *Controller) UpdateDefaultBranch(
 	}
 
 	repoClone := repo.Clone()
-
 	// the max time we give an update default branch to succeed
 	const timeout = 2 * time.Minute
 

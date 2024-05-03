@@ -50,7 +50,7 @@ var (
 
 type Repository struct {
 	types.Repository
-	IsPublic bool `json:"is_public"`
+	IsPublic bool `json:"is_public" yaml:"is_public"`
 }
 
 // Clone makes deep copy of repository object.
@@ -61,7 +61,7 @@ func (r Repository) Clone() Repository {
 		deleted = &id
 	}
 	r.Repository.Deleted = deleted
-	
+
 	return r
 }
 

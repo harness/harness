@@ -75,7 +75,7 @@ type RepositoryInfo struct {
 	DefaultBranch string
 }
 
-// ToRepo converts the RepositoryInfo into the types.Repository object marked as being imported and is public flag.
+// ToRepo converts the RepositoryInfo into the types.Repository object marked as being imported and is-public flag.
 func (r *RepositoryInfo) ToRepo(
 	spaceID int64,
 	identifier string,

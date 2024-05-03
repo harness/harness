@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -62,7 +63,7 @@ func (c *Controller) PublicAccessUpdate(ctx context.Context,
 	}
 
 	if err = c.publicAccess.Set(ctx, scope, resource, in.EnablePublic); err != nil {
-		return nil, fmt.Errorf("failed to set public access: %w", err)
+		return nil, fmt.Errorf("failed to update repo public access: %w", err)
 	}
 
 	err = c.auditService.Log(ctx,

@@ -23,10 +23,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-jsonnet"
 	repoCtrl "github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/types"
+
+	"github.com/google/go-jsonnet"
 )
 
 const repo = "repo."

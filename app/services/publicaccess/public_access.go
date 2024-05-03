@@ -25,9 +25,9 @@ type PublicAccess interface {
 	/*
 	 * Get returns whether public access is enabled on the resource.
 	 * Returns
-	 *		(true, nil)   - resource public access is allowed
-	 *		(false, nil)  - resource public access is not allowed
-	 *		(false, err)  - an error occurred while performing the public access check.
+	 *		(true, nil)   - public access to the resource is allowed
+	 *		(false, nil)  - public access to the resource is not allowed
+	 *		(false, err)  - an error occurred while performing public access check.
 	 */
 	Get(
 		ctx context.Context,
@@ -39,7 +39,7 @@ type PublicAccess interface {
 	 * Sets or deletes public access mode for the resource based on the value of 'enable'.
 	 * Returns
 	 *		err  - resource public access mode has been updated successfully
-	 *		nil  - an error occurred while performing the public access set.
+	 *		nil  - an error occurred while performing public access set.
 	 */
 	Set(
 		ctx context.Context,

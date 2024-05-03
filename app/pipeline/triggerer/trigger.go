@@ -21,6 +21,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/pipeline/checks"
 	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
@@ -34,9 +36,6 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/api/controller/repo"
 
 	"github.com/drone-runners/drone-runner-docker/engine2/inputs"
 	"github.com/drone-runners/drone-runner-docker/engine2/script"

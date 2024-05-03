@@ -37,7 +37,7 @@ func (in *UpdateInput) hasChanges(space *types.Space) bool {
 
 // Update updates a space.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
-	spaceRef string, in *UpdateInput) (*types.Space, error) {
+	spaceRef string, in *UpdateInput) (*Space, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
@@ -47,8 +47,18 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
+	isPublic, err := apiauth.CheckSpaceIsPublic(ctx, c.publicAccess, space)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
+	}
+
+	spaceData := &Space{
+		Space:    *space,
+		IsPublic: isPublic,
+	}
+
 	if !in.hasChanges(space) {
-		return space, nil
+		return spaceData, nil
 	}
 
 	if err = c.sanitizeUpdateInput(in); err != nil {
@@ -67,7 +77,10 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	return space, nil
+	return &Space{
+		Space:    *space,
+		IsPublic: isPublic,
+	}, nil
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {

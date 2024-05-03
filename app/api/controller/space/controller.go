@@ -37,6 +37,11 @@ var (
 	errPublicSpaceCreationDisabled = usererror.BadRequestf("Public space creation is disabled.")
 )
 
+type Space struct {
+	types.Space
+	IsPublic bool `json:"is_public" yaml:"is_public"`
+}
+
 type Controller struct {
 	nestedSpacesEnabled           bool
 	publicResourceCreationEnabled bool
