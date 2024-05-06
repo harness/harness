@@ -120,6 +120,7 @@ type PullReqInfo struct {
 	State         enum.PullReqState `json:"state"`
 	IsDraft       bool              `json:"is_draft"`
 	Title         string            `json:"title"`
+	Description   string            `json:"description"`
 	SourceRepoID  int64             `json:"source_repo_id"`
 	SourceBranch  string            `json:"source_branch"`
 	TargetRepoID  int64             `json:"target_repo_id"`
@@ -136,6 +137,7 @@ func pullReqInfoFrom(pr *types.PullReq, repo *types.Repository, urlProvider url.
 		State:         pr.State,
 		IsDraft:       pr.IsDraft,
 		Title:         pr.Title,
+		Description:   pr.Description,
 		SourceRepoID:  pr.SourceRepoID,
 		SourceBranch:  pr.SourceBranch,
 		TargetRepoID:  pr.TargetRepoID,
