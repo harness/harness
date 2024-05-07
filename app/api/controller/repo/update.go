@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
@@ -52,15 +51,15 @@ func (c *Controller) Update(ctx context.Context,
 
 	repoClone := repo.Clone()
 
-	if !in.hasChanges(&repo.Repository) {
-		return repo, nil
+	if !in.hasChanges(repo) {
+		return GetRepoOutput(ctx, c.publicAccess, repo)
 	}
 
 	if err = c.sanitizeUpdateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	repoBase, err := c.repoStore.UpdateOptLock(ctx, &repo.Repository, func(repo *types.Repository) error {
+	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
 		// update values only if provided
 		if in.Description != nil {
 			repo.Description = *in.Description
@@ -72,21 +71,11 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, err
 	}
 
-	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repoBase)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
-	}
-
-	repo = &Repository{
-		Repository: *repoBase,
-		IsPublic:   isPublic,
-	}
-
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeRepository, repo.Repository.Identifier),
+		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionUpdated,
-		paths.Parent(repo.Repository.Path),
+		paths.Parent(repo.Path),
 		audit.WithOldObject(repoClone),
 		audit.WithNewObject(repo),
 	)
@@ -95,9 +84,9 @@ func (c *Controller) Update(ctx context.Context,
 	}
 
 	// backfill repo url
-	repo.Repository.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Repository.Path)
+	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
-	return repo, nil
+	return GetRepoOutput(ctx, c.publicAccess, repo)
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {

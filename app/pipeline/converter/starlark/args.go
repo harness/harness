@@ -17,7 +17,6 @@ package starlark
 import (
 	"strings"
 
-	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/types"
 
 	"go.starlark.net/starlark"
@@ -25,15 +24,16 @@ import (
 )
 
 func createArgs(
-	repo *repo.Repository,
+	repo *types.Repository,
 	pipeline *types.Pipeline,
 	execution *types.Execution,
+	repoIsPublic bool,
 ) []starlark.Value {
 	args := []starlark.Value{
 		starlarkstruct.FromStringDict(
 			starlark.String("context"),
 			starlark.StringDict{
-				"repo":  starlarkstruct.FromStringDict(starlark.String("repo"), fromRepo(repo, pipeline)),
+				"repo":  starlarkstruct.FromStringDict(starlark.String("repo"), fromRepo(repo, pipeline, repoIsPublic)),
 				"build": starlarkstruct.FromStringDict(starlark.String("build"), fromBuild(execution)),
 			},
 		),
@@ -67,7 +67,7 @@ func fromBuild(v *types.Execution) starlark.StringDict {
 	}
 }
 
-func fromRepo(v *repo.Repository, p *types.Pipeline) starlark.StringDict {
+func fromRepo(v *types.Repository, p *types.Pipeline, publicRepo bool) starlark.StringDict {
 	namespace := v.Path
 	idx := strings.LastIndex(v.Path, "/")
 	if idx != -1 {
@@ -76,17 +76,17 @@ func fromRepo(v *repo.Repository, p *types.Pipeline) starlark.StringDict {
 
 	return starlark.StringDict{
 		// TODO [CODE-1363]: remove after identifier migration?
-		"uid":                  starlark.String(v.Repository.Identifier),
-		"identifier":           starlark.String(v.Repository.Identifier),
-		"name":                 starlark.String(v.Repository.Identifier),
+		"uid":                  starlark.String(v.Identifier),
+		"identifier":           starlark.String(v.Identifier),
+		"name":                 starlark.String(v.Identifier),
 		"namespace":            starlark.String(namespace),
-		"slug":                 starlark.String(v.Repository.Path),
-		"git_http_url":         starlark.String(v.Repository.GitURL),
-		"git_ssh_url":          starlark.String(v.Repository.GitURL),
-		"link":                 starlark.String(v.Repository.GitURL),
-		"branch":               starlark.String(v.Repository.DefaultBranch),
+		"slug":                 starlark.String(v.Path),
+		"git_http_url":         starlark.String(v.GitURL),
+		"git_ssh_url":          starlark.String(v.GitURL),
+		"link":                 starlark.String(v.GitURL),
+		"branch":               starlark.String(v.DefaultBranch),
 		"config":               starlark.String(p.ConfigPath),
-		"private":              !starlark.Bool(v.IsPublic),
+		"private":              !starlark.Bool(publicRepo),
 		"visibility":           starlark.String("internal"),
 		"active":               starlark.Bool(true),
 		"trusted":              starlark.Bool(true),

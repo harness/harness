@@ -35,7 +35,7 @@ func (c *Controller) GeneralFind(
 
 	out := GetDefaultGeneralSettings()
 	mappings := GetGeneralSettingsMappings(out)
-	err = c.settings.RepoMap(ctx, repo.Repository.ID, mappings...)
+	err = c.settings.RepoMap(ctx, repo.ID, mappings...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to map settings: %w", err)
 	}

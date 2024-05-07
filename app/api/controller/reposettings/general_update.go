@@ -41,12 +41,12 @@ func (c *Controller) GeneralUpdate(
 	// read old settings values
 	old := GetDefaultGeneralSettings()
 	oldMappings := GetGeneralSettingsMappings(old)
-	err = c.settings.RepoMap(ctx, repo.Repository.ID, oldMappings...)
+	err = c.settings.RepoMap(ctx, repo.ID, oldMappings...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to map settings (old): %w", err)
 	}
 
-	err = c.settings.RepoSetMany(ctx, repo.Repository.ID, GetGeneralSettingsAsKeyValues(in)...)
+	err = c.settings.RepoSetMany(ctx, repo.ID, GetGeneralSettingsAsKeyValues(in)...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set settings: %w", err)
 	}
@@ -54,16 +54,16 @@ func (c *Controller) GeneralUpdate(
 	// read all settings and return complete config
 	out := GetDefaultGeneralSettings()
 	mappings := GetGeneralSettingsMappings(out)
-	err = c.settings.RepoMap(ctx, repo.Repository.ID, mappings...)
+	err = c.settings.RepoMap(ctx, repo.ID, mappings...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to map settings: %w", err)
 	}
 
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeRepositorySettings, repo.Repository.Identifier),
+		audit.NewResource(audit.ResourceTypeRepositorySettings, repo.Identifier),
 		audit.ActionUpdated,
-		paths.Parent(repo.Repository.Path),
+		paths.Parent(repo.Path),
 		audit.WithOldObject(old),
 		audit.WithNewObject(out),
 	)

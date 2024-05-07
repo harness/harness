@@ -25,9 +25,9 @@ var WireSet = wire.NewSet(
 )
 
 func ProvidePublicAccess(
-	publicResources store.PublicResource,
+	publicAccessStore store.PublicAccessStore,
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
 ) PublicAccess {
-	return NewService(publicResources, repoStore, spaceStore)
+	return NewService(publicAccessStore, repoStore, spaceStore)
 }

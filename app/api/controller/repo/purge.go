@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	repoevents "github.com/harness/gitness/app/events/repo"
-	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
@@ -79,7 +78,7 @@ func (c *Controller) PurgeNoAuth(
 	}
 
 	if isPublic {
-		if err := c.disablePublicRepo(ctx, repo); err != nil {
+		if err := c.SetRepoPublicAccess(ctx, repo, false); err != nil {
 			log.Ctx(ctx).Err(err).Msg("failed to disable repo public access")
 		}
 	}
@@ -123,19 +122,4 @@ func (c *Controller) DeleteGitRepository(
 		return fmt.Errorf("failed to remove git repository %s: %w", repo.GitUID, err)
 	}
 	return nil
-}
-
-func (c *Controller) disablePublicRepo(ctx context.Context, repo *types.Repository) error {
-	parentSpace, name, err := paths.DisectLeaf(repo.Path)
-	if err != nil {
-		return fmt.Errorf("failed to disect path '%s': %w", repo.Path, err)
-	}
-
-	scope := &types.Scope{SpacePath: parentSpace}
-	resource := &types.Resource{
-		Type:       enum.ResourceTypeRepo,
-		Identifier: name,
-	}
-
-	return c.publicAccess.Set(ctx, scope, resource, false)
 }

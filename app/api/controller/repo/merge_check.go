@@ -45,7 +45,7 @@ func (c *Controller) MergeCheck(
 		return MergeCheck{}, err
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, &repo.Repository)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return MergeCheck{}, fmt.Errorf("failed to create rpc write params: %w", err)
 	}

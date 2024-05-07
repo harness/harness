@@ -53,18 +53,6 @@ type Repository struct {
 	IsPublic bool `json:"is_public" yaml:"is_public"`
 }
 
-// Clone makes deep copy of repository object.
-func (r Repository) Clone() Repository {
-	var deleted *int64
-	if r.Repository.Deleted != nil {
-		id := *r.Repository.Deleted
-		deleted = &id
-	}
-	r.Repository.Deleted = deleted
-
-	return r
-}
-
 type Controller struct {
 	defaultBranch                 string
 	publicResourceCreationEnabled bool
@@ -153,10 +141,9 @@ func NewController(
 func (c *Controller) getRepo(
 	ctx context.Context,
 	repoRef string,
-) (*Repository, error) {
+) (*types.Repository, error) {
 	return GetRepo(
 		ctx,
-		c.publicAccess,
 		c.repoStore,
 		repoRef,
 	)
@@ -169,12 +156,11 @@ func (c *Controller) getRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
-) (*Repository, error) {
+) (*types.Repository, error) {
 	return GetRepoCheckAccess(
 		ctx,
 		c.repoStore,
 		c.authorizer,
-		c.publicAccess,
 		session,
 		repoRef,
 		reqPermission,

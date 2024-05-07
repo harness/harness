@@ -37,7 +37,7 @@ func (c *Controller) Archive(
 	}
 
 	return c.git.Archive(ctx, git.ArchiveParams{
-		ReadParams:    git.CreateReadParams(repo.Repository),
+		ReadParams:    git.CreateReadParams(repo),
 		ArchiveParams: params,
 	}, w)
 }

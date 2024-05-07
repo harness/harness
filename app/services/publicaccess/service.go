@@ -21,38 +21,38 @@ import (
 
 	"github.com/harness/gitness/app/store"
 	gitness_store "github.com/harness/gitness/store"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type Service struct {
-	publicResourceStore store.PublicResource
-	repoStore           store.RepoStore
-	spaceStore          store.SpaceStore
+	publicAccessStore store.PublicAccessStore
+	repoStore         store.RepoStore
+	spaceStore        store.SpaceStore
 }
 
 func NewService(
-	publicResourceStore store.PublicResource,
+	publicAccessStore store.PublicAccessStore,
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
 ) PublicAccess {
 	return &Service{
-		publicResourceStore: publicResourceStore,
-		repoStore:           repoStore,
-		spaceStore:          spaceStore,
+		publicAccessStore: publicAccessStore,
+		repoStore:         repoStore,
+		spaceStore:        spaceStore,
 	}
 }
 
 func (s *Service) Get(
 	ctx context.Context,
-	scope *types.Scope,
-	resource *types.Resource,
+	resourceType enum.PublicResourceType,
+	resourcePath string,
 ) (bool, error) {
-	pubRes, err := s.getPublicResource(ctx, scope, resource)
+	pubResID, err := s.getPublicResource(ctx, resourceType, resourcePath)
 	if err != nil {
 		return false, err
 	}
 
-	err = s.publicResourceStore.Find(ctx, pubRes)
+	err = s.publicAccessStore.Find(ctx, resourceType, pubResID)
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
 		return false, nil
 	}
@@ -65,22 +65,22 @@ func (s *Service) Get(
 
 func (s *Service) Set(
 	ctx context.Context,
-	scope *types.Scope,
-	resource *types.Resource,
+	resourceType enum.PublicResourceType,
+	resourcePath string,
 	enable bool,
 ) error {
-	pubRes, err := s.getPublicResource(ctx, scope, resource)
+	pubResID, err := s.getPublicResource(ctx, resourceType, resourcePath)
 	if err != nil {
 		return err
 	}
 
 	if enable {
-		err := s.publicResourceStore.Create(ctx, pubRes)
+		err := s.publicAccessStore.Create(ctx, resourceType, pubResID)
 		if errors.Is(err, gitness_store.ErrDuplicate) {
 			return nil
 		}
 		return err
 	} else {
-		return s.publicResourceStore.Delete(ctx, pubRes)
+		return s.publicAccessStore.Delete(ctx, resourceType, pubResID)
 	}
 }

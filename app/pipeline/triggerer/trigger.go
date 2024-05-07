@@ -22,7 +22,6 @@ import (
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/pipeline/checks"
 	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
@@ -154,19 +153,15 @@ func (t *triggerer) Trigger(
 
 	event := string(base.Action.GetTriggerEvent())
 
-	repoBase, err := t.repoStore.Find(ctx, pipeline.RepoID)
+	repo, err := t.repoStore.Find(ctx, pipeline.RepoID)
 	if err != nil {
 		log.Error().Err(err).Msg("could not find repo")
 		return nil, err
 	}
-	isPublic, err := apiauth.CheckRepoIsPublic(ctx, t.publicAccess, repoBase)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check if repo is public: %w", err)
-	}
 
-	repo := &repo.Repository{
-		Repository: *repoBase,
-		IsPublic:   isPublic,
+	repoIsPublic, err := apiauth.CheckRepoIsPublic(ctx, t.publicAccess, repo)
+	if err != nil {
+		return nil, fmt.Errorf("could not check if repo is public: %w", err)
 	}
 
 	file, err := t.fileService.Get(ctx, repo, pipeline.ConfigPath, base.After)
@@ -177,7 +172,7 @@ func (t *triggerer) Trigger(
 
 	now := time.Now().UnixMilli()
 	execution := &types.Execution{
-		RepoID:     repo.Repository.ID,
+		RepoID:     repo.ID,
 		PipelineID: pipeline.ID,
 		Trigger:    base.Trigger,
 		CreatedBy:  base.TriggeredBy,
@@ -215,10 +210,11 @@ func (t *triggerer) Trigger(
 	if !isV1Yaml(file.Data) {
 		// Convert from jsonnet/starlark to drone yaml
 		args := &converter.ConvertArgs{
-			Repo:      repo,
-			Pipeline:  pipeline,
-			Execution: execution,
-			File:      file,
+			Repo:         repo,
+			Pipeline:     pipeline,
+			Execution:    execution,
+			File:         file,
+			RepoIsPublic: repoIsPublic,
 		}
 		file, err = t.converterService.Convert(ctx, args)
 		if err != nil {
@@ -265,7 +261,7 @@ func (t *triggerer) Trigger(
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match action")
 			case skipRef(pipeline, base.Ref):
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match ref")
-			case skipRepo(pipeline, repo.Repository.Path):
+			case skipRepo(pipeline, repo.Path):
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match repo")
 			case skipCron(pipeline, base.Cron):
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match cron job")
@@ -293,7 +289,7 @@ func (t *triggerer) Trigger(
 			}
 
 			stage := &types.Stage{
-				RepoID:    repo.Repository.ID,
+				RepoID:    repo.ID,
 				Number:    int64(i + 1),
 				Name:      match.Name,
 				Kind:      match.Kind,
@@ -346,7 +342,7 @@ func (t *triggerer) Trigger(
 		}
 	} else {
 		stages, err = parseV1Stages(
-			ctx, file.Data, repo, execution, t.templateStore, t.pluginStore)
+			ctx, file.Data, repo, execution, t.templateStore, t.pluginStore, t.publicAccess)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse v1 YAML into stages: %w", err)
 		}
@@ -406,10 +402,11 @@ func trunc(s string, i int) string {
 func parseV1Stages(
 	ctx context.Context,
 	data []byte,
-	repo *repo.Repository,
+	repo *types.Repository,
 	execution *types.Execution,
 	templateStore store.TemplateStore,
 	pluginStore store.PluginStore,
+	publicaccess publicaccess.PublicAccess,
 ) ([]*types.Stage, error) {
 	stages := []*types.Stage{}
 	// For V1 YAML, just go through the YAML and create stages serially for now
@@ -428,8 +425,14 @@ func parseV1Stages(
 		return nil, fmt.Errorf("cannot support non-pipeline kinds in v1 at the moment: %w", err)
 	}
 
+	// get repo public access
+	repoIsPublic, err := publicaccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
+	if err != nil {
+		return nil, fmt.Errorf("could not check repo public access: %w", err)
+	}
+
 	inputParams := map[string]interface{}{}
-	inputParams["repo"] = inputs.Repo(manager.ConvertToDroneRepo(repo))
+	inputParams["repo"] = inputs.Repo(manager.ConvertToDroneRepo(repo, repoIsPublic))
 	inputParams["build"] = inputs.Build(manager.ConvertToDroneBuild(execution))
 
 	var prevStage string
@@ -476,7 +479,7 @@ func parseV1Stages(
 					status = enum.CIStatusPending
 				}
 				temp := &types.Stage{
-					RepoID:    repo.Repository.ID,
+					RepoID:    repo.ID,
 					Number:    int64(idx + 1),
 					Name:      stage.Id, // for v1, ID is the unique identifier per stage
 					Created:   now,

@@ -1,28 +1,28 @@
 -- copy public repositories
-ALTER TABLE repositories ADD COLUMN repo_is_public;
+ALTER TABLE repositories ADD COLUMN repo_is_public BOOLEAN;
 
 UPDATE repositories
 WHERE repo_id IN (
-    SELECT public_resource_repo_id
-    FROM public_resources 
-    WHERE public_resource_repo_id IS NOT NULL;
+    SELECT public_access_repo_id
+    FROM public_access
+    WHERE public_access_repo_id IS NOT NULL;
 ) SET 
 repo_is_public = TRUE;
 
 
 -- copy public spaces
-ALTER TABLE spaces ADD COLUMN space_is_public;
+ALTER TABLE spaces ADD COLUMN space_is_public BOOLEAN;
 
--- update public resources
+-- update public access
 UPDATE spaces
 WHERE space_id IN (
-    SELECT public_resource_space_id
-    FROM public_resources 
-    WHERE public_resource_space_id IS NOT NULL;
+    SELECT public_access_space_id
+    FROM public_access
+    WHERE public_access_space_id IS NOT NULL;
 ) SET 
-sapce_is_public = TRUE;
+space_is_public = TRUE;
 
--- clear public_resoureces
-DROP INDEX public_resource_space_id_key;
-DROP INDEX public_resource_repo_id_key;
-DROP TABLE public_resources;
+-- clear public access
+DROP INDEX public_access_space_id_key;
+DROP INDEX public_access_repo_id_key;
+DROP TABLE public_access;

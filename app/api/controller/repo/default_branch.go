@@ -57,7 +57,7 @@ func (c *Controller) UpdateDefaultBranch(
 	// requests will wait for previous ones to compelete before proceed
 	unlock, err := c.locker.LockDefaultBranch(
 		ctx,
-		repo.Repository.ID,
+		repo.ID,
 		in.Name,                // branch name only used for logging (lock is on repo)
 		timeout+30*time.Second, // add 30s to the lock to give enough time for updating default branch
 	)
@@ -66,7 +66,7 @@ func (c *Controller) UpdateDefaultBranch(
 	}
 	defer unlock()
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, &repo.Repository)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
@@ -87,8 +87,8 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, fmt.Errorf("failed to update the repo default branch: %w", err)
 	}
 
-	oldName := repo.Repository.DefaultBranch
-	repoBase, err := c.repoStore.UpdateOptLock(ctx, &repo.Repository, func(r *types.Repository) error {
+	oldName := repo.DefaultBranch
+	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
 		r.DefaultBranch = in.Name
 		return nil
 	})
@@ -96,16 +96,11 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, fmt.Errorf("failed to update the repo default branch on db:%w", err)
 	}
 
-	repo = &Repository{
-		Repository: *repoBase,
-		IsPublic:   repo.IsPublic,
-	}
-
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeRepository, repo.Repository.Identifier),
+		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionUpdated,
-		paths.Parent(repo.Repository.Path),
+		paths.Parent(repo.Path),
 		audit.WithOldObject(repoClone),
 		audit.WithNewObject(repo),
 	)
@@ -114,11 +109,11 @@ func (c *Controller) UpdateDefaultBranch(
 	}
 
 	c.eventReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
-		RepoID:      repoBase.ID,
+		RepoID:      repo.ID,
 		PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
 		OldName:     oldName,
-		NewName:     repoBase.DefaultBranch,
+		NewName:     repo.DefaultBranch,
 	})
 
-	return repo, nil
+	return GetRepoOutput(ctx, c.publicAccess, repo)
 }

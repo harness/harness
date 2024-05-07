@@ -12,19 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package auth
+package space
 
 import (
+	"context"
+	"fmt"
+
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
-// Anonymous is an in-memory principal for users with no auth data.
-// Authorizer is in charge of handling public access.
-func Anonymous() *types.Principal {
-	return &types.Principal{
-		ID:   -1,
-		UID:  "ALL_USERS",
-		Type: enum.PrincipalTypeUser,
+func GetSpaceOutput(
+	ctx context.Context,
+	publicAccess publicaccess.PublicAccess,
+	space *types.Space,
+) (*Space, error) {
+	isPublic, err := apiauth.CheckSpaceIsPublic(ctx, publicAccess, space)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
 	}
+
+	return &Space{
+		Space:    *space,
+		IsPublic: isPublic,
+	}, nil
 }

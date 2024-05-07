@@ -50,10 +50,10 @@ func (c *Controller) CreateBranch(ctx context.Context,
 
 	// set target to default branch in case no target was provided
 	if in.Target == "" {
-		in.Target = repo.Repository.DefaultBranch
+		in.Target = repo.DefaultBranch
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, &repo.Repository)
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -62,7 +62,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		Actor:       &session.Principal,
 		AllowBypass: in.BypassRules,
 		IsRepoOwner: isRepoOwner,
-		Repo:        &repo.Repository,
+		Repo:        repo,
 		RefAction:   protection.RefActionCreate,
 		RefType:     protection.RefTypeBranch,
 		RefNames:    []string{in.Name},
@@ -74,7 +74,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		return nil, violations, nil
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, &repo.Repository)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

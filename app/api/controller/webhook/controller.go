@@ -22,7 +22,6 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/encrypt"
@@ -40,7 +39,6 @@ type Controller struct {
 	repoStore             store.RepoStore
 	webhookService        *webhook.Service
 	encrypter             encrypt.Encrypter
-	publicAccess          publicaccess.PublicAccess
 }
 
 func NewController(
@@ -52,7 +50,6 @@ func NewController(
 	repoStore store.RepoStore,
 	webhookService *webhook.Service,
 	encrypter encrypt.Encrypter,
-	publicAccess publicaccess.PublicAccess,
 ) *Controller {
 	return &Controller{
 		allowLoopback:         allowLoopback,
@@ -63,7 +60,6 @@ func NewController(
 		repoStore:             repoStore,
 		webhookService:        webhookService,
 		encrypter:             encrypter,
-		publicAccess:          publicAccess,
 	}
 }
 

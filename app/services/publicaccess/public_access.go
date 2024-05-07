@@ -17,7 +17,7 @@ package publicaccess
 import (
 	"context"
 
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // PublicAccess is an abstraction of an entity responsible for managing public access to resources.
@@ -31,8 +31,8 @@ type PublicAccess interface {
 	 */
 	Get(
 		ctx context.Context,
-		scope *types.Scope,
-		resource *types.Resource,
+		resourceType enum.PublicResourceType,
+		resourcePath string,
 	) (bool, error)
 
 	/*
@@ -43,8 +43,8 @@ type PublicAccess interface {
 	 */
 	Set(
 		ctx context.Context,
-		scope *types.Scope,
-		resource *types.Resource,
+		resourceType enum.PublicResourceType,
+		resourcePath string,
 		enable bool,
 	) error
 }

@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"strings"
 
-	repoCtrl "github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/types"
 
@@ -37,7 +36,7 @@ const param = "param."
 var noContext = context.Background()
 
 type importer struct {
-	repo      *repoCtrl.Repository
+	repo      *types.Repository
 	execution *types.Execution
 
 	// jsonnet does not cache file imports and may request
@@ -104,7 +103,8 @@ func (i *importer) Import(importedFrom, importedPath string) (contents jsonnet.C
 }
 
 func Parse(
-	repo *repoCtrl.Repository,
+	repo *types.Repository,
+	repoIsPublic bool,
 	pipeline *types.Pipeline,
 	execution *types.Execution,
 	file *file.File,
@@ -131,7 +131,7 @@ func Parse(
 		mapBuild(execution, vm)
 	}
 	if repo != nil {
-		mapRepo(repo, pipeline, vm)
+		mapRepo(repo, pipeline, vm, repoIsPublic)
 	}
 
 	jsonnetFile := file
@@ -189,24 +189,24 @@ func mapBuild(v *types.Execution, vm *jsonnet.VM) {
 // mapBuild populates repo level variables available to jsonnet templates.
 // Since we want to maintain compatibility with drone 2.x, the older format
 // needs to be maintained (even if the variables do not exist in gitness).
-func mapRepo(v *repoCtrl.Repository, p *types.Pipeline, vm *jsonnet.VM) {
+func mapRepo(v *types.Repository, p *types.Pipeline, vm *jsonnet.VM, publicRepo bool) {
 	namespace := v.Path
 	idx := strings.LastIndex(v.Path, "/")
 	if idx != -1 {
 		namespace = v.Path[:idx]
 	}
 	// TODO [CODE-1363]: remove after identifier migration.
-	vm.ExtVar(repo+"uid", v.Repository.Identifier)
-	vm.ExtVar(repo+"identifier", v.Repository.Identifier)
-	vm.ExtVar(repo+"name", v.Repository.Identifier)
+	vm.ExtVar(repo+"uid", v.Identifier)
+	vm.ExtVar(repo+"identifier", v.Identifier)
+	vm.ExtVar(repo+"name", v.Identifier)
 	vm.ExtVar(repo+"namespace", namespace)
-	vm.ExtVar(repo+"slug", v.Repository.Path)
-	vm.ExtVar(repo+"git_http_url", v.Repository.GitURL)
-	vm.ExtVar(repo+"git_ssh_url", v.Repository.GitURL)
-	vm.ExtVar(repo+"link", v.Repository.GitURL)
-	vm.ExtVar(repo+"branch", v.Repository.DefaultBranch)
+	vm.ExtVar(repo+"slug", v.Path)
+	vm.ExtVar(repo+"git_http_url", v.GitURL)
+	vm.ExtVar(repo+"git_ssh_url", v.GitURL)
+	vm.ExtVar(repo+"link", v.GitURL)
+	vm.ExtVar(repo+"branch", v.DefaultBranch)
 	vm.ExtVar(repo+"config", p.ConfigPath)
-	vm.ExtVar(repo+"private", strconv.FormatBool(!v.IsPublic))
+	vm.ExtVar(repo+"private", strconv.FormatBool(!publicRepo))
 	vm.ExtVar(repo+"visibility", "internal")
 	vm.ExtVar(repo+"active", strconv.FormatBool(true))
 	vm.ExtVar(repo+"trusted", strconv.FormatBool(true))

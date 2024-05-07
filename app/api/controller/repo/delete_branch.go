@@ -43,11 +43,11 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	// ASSUMPTION: lower layer calls explicit branch api
 	// and 'refs/heads/branch1' would fail if 'branch1' exists.
 	// TODO: Add functional test to ensure the scenario is covered!
-	if branchName == repo.Repository.DefaultBranch {
+	if branchName == repo.DefaultBranch {
 		return nil, usererror.ErrDefaultBranchCantBeDeleted
 	}
 
-	rules, isRepoOwner, err := c.fetchRules(ctx, session, &repo.Repository)
+	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		Actor:       &session.Principal,
 		AllowBypass: bypassRules,
 		IsRepoOwner: isRepoOwner,
-		Repo:        &repo.Repository,
+		Repo:        repo,
 		RefAction:   protection.RefActionDelete,
 		RefType:     protection.RefTypeBranch,
 		RefNames:    []string{branchName},
@@ -68,7 +68,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return violations, nil
 	}
 
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, &repo.Repository)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

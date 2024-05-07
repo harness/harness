@@ -103,7 +103,7 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 
 	return &client.Context{
 		Build:   ConvertToDroneBuild(details.Execution),
-		Repo:    ConvertToDroneRepo(details.Repo),
+		Repo:    ConvertToDroneRepo(details.Repo, details.RepoIsPublic),
 		Stage:   ConvertToDroneStage(details.Stage),
 		Secrets: ConvertToDroneSecrets(details.Secrets),
 		Config:  ConvertToDroneFile(details.Config),

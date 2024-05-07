@@ -75,16 +75,5 @@ func CheckSpaceIsPublic(
 	publicAccess publicaccess.PublicAccess,
 	space *types.Space,
 ) (bool, error) {
-	parentSpace, name, err := paths.DisectLeaf(space.Path)
-	if err != nil {
-		return false, fmt.Errorf("failed to disect path '%s': %w", space.Path, err)
-	}
-
-	scope := &types.Scope{SpacePath: parentSpace}
-	resource := &types.Resource{
-		Type:       enum.ResourceTypeSpace,
-		Identifier: name,
-	}
-
-	return publicAccess.Get(ctx, scope, resource)
+	return publicAccess.Get(ctx, enum.PublicResourceTypeSpace, space.Path)
 }

@@ -98,12 +98,10 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			repoIDs[i] = repo.ID
 			cloneURLs[i] = remoteRepository.CloneURL
 
-			// update public resources
-			if isPublic && c.publicResourceCreationEnabled {
-				if err := c.repoCtrl.SetPublicRepo(ctx, repo); err != nil {
-					return fmt.Errorf("failed to set a public repo: %w", err)
-				}
+			if err := c.repoCtrl.SetRepoPublicAccess(ctx, repo, isPublic); err != nil {
+				return fmt.Errorf("failed to set repo public access: %w", err)
 			}
+
 		}
 
 		jobGroupID := fmt.Sprintf("space-import-%d", space.ID)

@@ -42,11 +42,11 @@ func (c *Controller) ListPaths(ctx context.Context,
 
 	// set gitRef to default branch in case an empty reference was provided
 	if gitRef == "" {
-		gitRef = repo.Repository.DefaultBranch
+		gitRef = repo.DefaultBranch
 	}
 
 	rpcOut, err := c.git.ListPaths(ctx, &git.ListPathsParams{
-		ReadParams:         git.CreateReadParams(repo.Repository),
+		ReadParams:         git.CreateReadParams(repo),
 		GitREF:             gitRef,
 		IncludeDirectories: includeDirectories,
 	})

@@ -20,7 +20,7 @@ func (PublicResourceType) Enum() []interface{} {
 	return toInterfaceSlice(GetAllPublicResourceTypes())
 }
 
-var (
+const (
 	PublicResourceTypeRepo  PublicResourceType = "repository"
 	PublicResourceTypeSpace PublicResourceType = "space"
 )

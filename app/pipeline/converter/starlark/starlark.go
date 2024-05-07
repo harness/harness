@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/types"
 
@@ -57,7 +56,8 @@ var (
 )
 
 func Parse(
-	repo *repo.Repository,
+	repo *types.Repository,
+	repoIsPublic bool,
 	pipeline *types.Pipeline,
 	execution *types.Execution,
 	file *file.File,
@@ -69,8 +69,8 @@ func Parse(
 		Load: noLoad,
 		Print: func(_ *starlark.Thread, msg string) {
 			logrus.WithFields(logrus.Fields{
-				"namespace": repo.Repository.Path, // TODO: update to just be the space
-				"name":      repo.Repository.Identifier,
+				"namespace": repo.Path, // TODO: update to just be the space
+				"name":      repo.Identifier,
 			}).Traceln(msg)
 		},
 	}
@@ -96,7 +96,7 @@ func Parse(
 
 	// create the input args and invoke the main method
 	// using the input args.
-	args := createArgs(repo, pipeline, execution)
+	args := createArgs(repo, pipeline, execution, repoIsPublic)
 
 	// set the maximum number of operations in the script. this
 	// mitigates long running scripts.

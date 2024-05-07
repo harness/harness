@@ -109,28 +109,21 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			IsEmpty:       isEmpty,
 		}
 
-		err = c.repoStore.Create(ctx, repo)
-		if err != nil {
-			if dErr := c.DeleteGitRepository(ctx, session, repo); dErr != nil {
-				log.Ctx(ctx).Warn().Err(dErr).Msg("failed to delete repo for cleanup")
-			}
-			return fmt.Errorf("failed to create repository in storage: %w", err)
-		}
-
-		return nil
+		return c.repoStore.Create(ctx, repo)
 	}, sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
+		// best effort cleanup
+		if dErr := c.DeleteGitRepository(ctx, session, repo); dErr != nil {
+			log.Ctx(ctx).Warn().Err(dErr).Msg("failed to delete repo for cleanup")
+		}
 		return nil, err
 	}
 
-	if in.IsPublic && c.publicResourceCreationEnabled {
-		err = c.SetPublicRepo(ctx, repo)
-		if err != nil {
-			if dErr := c.PurgeNoAuth(ctx, session, repo); dErr != nil {
-				log.Ctx(ctx).Warn().Err(dErr).Msg("failed to purge repo for cleanup")
-			}
-			return nil, fmt.Errorf("failed to set a public resource: %w", err)
+	if err = c.SetRepoPublicAccess(ctx, repo, in.IsPublic); err != nil {
+		if dErr := c.PurgeNoAuth(ctx, session, repo); dErr != nil {
+			log.Ctx(ctx).Warn().Err(dErr).Msg("failed to purge repo for cleanup")
 		}
+		return nil, fmt.Errorf("failed to set repo public access: %w", err)
 	}
 
 	// backfil GitURL
@@ -287,19 +280,16 @@ func (c *Controller) createGitRepository(ctx context.Context, session *auth.Sess
 	return resp, len(files) == 0, nil
 }
 
-func (c *Controller) SetPublicRepo(ctx context.Context, repo *types.Repository) error {
-	parentSpace, name, err := paths.DisectLeaf(repo.Path)
-	if err != nil {
-		return fmt.Errorf("failed to disect path '%s': %w", repo.Path, err)
+func (c *Controller) SetRepoPublicAccess(
+	ctx context.Context,
+	repo *types.Repository,
+	isPublic bool,
+) error {
+	if isPublic && !c.publicResourceCreationEnabled {
+		return errPublicRepoCreationDisabled
 	}
 
-	scope := &types.Scope{SpacePath: parentSpace}
-	resource := &types.Resource{
-		Type:       enum.ResourceTypeRepo,
-		Identifier: name,
-	}
-
-	return c.publicAccess.Set(ctx, scope, resource, true)
+	return c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic)
 }
 
 func createReadme(name, description string) []byte {

@@ -39,11 +39,11 @@ func (c *Controller) ListCommits(ctx context.Context,
 
 	// set gitRef to default branch in case an empty reference was provided
 	if gitRef == "" {
-		gitRef = repo.Repository.DefaultBranch
+		gitRef = repo.DefaultBranch
 	}
 
 	rpcOut, err := c.git.ListCommits(ctx, &git.ListCommitsParams{
-		ReadParams:   git.CreateReadParams(repo.Repository),
+		ReadParams:   git.CreateReadParams(repo),
 		GitREF:       gitRef,
 		After:        filter.After,
 		Page:         int32(filter.Page),

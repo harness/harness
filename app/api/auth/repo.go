@@ -58,18 +58,7 @@ func CheckRepoIsPublic(
 	publicAccess publicaccess.PublicAccess,
 	repo *types.Repository,
 ) (bool, error) {
-	parentSpace, name, err := paths.DisectLeaf(repo.Path)
-	if err != nil {
-		return false, fmt.Errorf("failed to disect path '%s': %w", repo.Path, err)
-	}
-
-	scope := &types.Scope{SpacePath: parentSpace}
-	resource := &types.Resource{
-		Type:       enum.ResourceTypeRepo,
-		Identifier: name,
-	}
-
-	return publicAccess.Get(ctx, scope, resource)
+	return publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
 }
 
 func IsRepoOwner(

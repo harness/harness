@@ -17,6 +17,7 @@ package authz
 import (
 	"context"
 
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -33,11 +34,19 @@ func (a *MembershipAuthorizer) CheckPublicAccess(
 		return false, nil
 	}
 
-	// public access is enabled on these resource types.
-	if resource.Type != enum.ResourceTypeRepo &&
-		resource.Type != enum.ResourceTypeSpace {
-		return false, nil
+	pubResType, pubResPath := mapResource(scope, resource)
+
+	return a.publicAccess.Get(ctx, pubResType, pubResPath)
+}
+
+func mapResource(scope *types.Scope, resource *types.Resource,
+) (enum.PublicResourceType, string) {
+	pubResType := enum.PublicResourceTypeSpace
+
+	if resource.Type == enum.ResourceTypeRepo &&
+		resource.Identifier != "" {
+		pubResType = enum.PublicResourceTypeRepo
 	}
 
-	return a.publicAccess.Get(ctx, scope, resource)
+	return pubResType, paths.Concatenate(scope.SpacePath, resource.Identifier)
 }

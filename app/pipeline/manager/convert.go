@@ -17,7 +17,6 @@ package manager
 import (
 	"time"
 
-	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
@@ -208,21 +207,21 @@ func ConvertToDroneBuild(execution *types.Execution) *drone.Build {
 	}
 }
 
-func ConvertToDroneRepo(repo *repo.Repository) *drone.Repo {
+func ConvertToDroneRepo(repo *types.Repository, repoIsPublic bool) *drone.Repo {
 	return &drone.Repo{
-		ID:        repo.Repository.ID,
+		ID:        repo.ID,
 		Trusted:   true, // as builds are running on user machines, the repo is marked trusted.
-		UID:       repo.Repository.Identifier,
-		UserID:    repo.Repository.CreatedBy,
-		Namespace: repo.Repository.Path,
-		Name:      repo.Repository.Identifier,
-		HTTPURL:   repo.Repository.GitURL,
-		Link:      repo.Repository.GitURL,
-		Private:   !repo.IsPublic,
-		Created:   repo.Repository.Created,
-		Updated:   repo.Repository.Updated,
-		Version:   repo.Repository.Version,
-		Branch:    repo.Repository.DefaultBranch,
+		UID:       repo.Identifier,
+		UserID:    repo.CreatedBy,
+		Namespace: repo.Path,
+		Name:      repo.Identifier,
+		HTTPURL:   repo.GitURL,
+		Link:      repo.GitURL,
+		Private:   !repoIsPublic,
+		Created:   repo.Created,
+		Updated:   repo.Updated,
+		Version:   repo.Version,
+		Branch:    repo.DefaultBranch,
 		// TODO: We can get this from configuration once we start populating it.
 		// If this is not set drone runner cancels the build.
 		Timeout: int64((10 * time.Hour).Seconds()),

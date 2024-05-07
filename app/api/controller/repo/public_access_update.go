@@ -18,10 +18,10 @@ import (
 	"context"
 	"fmt"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -31,49 +31,48 @@ type PublicAccessUpdateInput struct {
 	EnablePublic bool `json:"enable_public"`
 }
 
-type PublicAccessUpdateOutput struct {
-	IsPublic bool `json:"is_public"`
-}
-
 func (c *Controller) PublicAccessUpdate(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *PublicAccessUpdateInput,
-) (*PublicAccessUpdateOutput, error) {
+) (*Repository, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
 
-	repoClone := repo.Clone()
-
 	if err = c.sanitizeVisibilityInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	parentSpace, name, err := paths.DisectLeaf(repo.Repository.Path)
+	repoClone := repo.Clone()
+
+	// get current public access vale for audit
+	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to disect path '%s': %w", repo.Repository.Path, err)
+		return nil, fmt.Errorf("failed to check current public access status: %w", err)
 	}
 
-	scope := &types.Scope{SpacePath: parentSpace}
-	resource := &types.Resource{
-		Type:       enum.ResourceTypeRepo,
-		Identifier: name,
+	// no op
+	if isPublic == in.EnablePublic {
+		return GetRepoOutput(ctx, c.publicAccess, repo)
 	}
 
-	if err = c.publicAccess.Set(ctx, scope, resource, in.EnablePublic); err != nil {
+	if err = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, in.EnablePublic); err != nil {
 		return nil, fmt.Errorf("failed to update repo public access: %w", err)
 	}
 
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeRepository, repo.Repository.Identifier),
+		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionUpdated,
-		paths.Parent(repo.Repository.Path),
-		audit.WithOldObject(repoClone),
+		paths.Parent(repo.Path),
+		audit.WithOldObject(&Repository{
+			Repository: repoClone,
+			IsPublic:   isPublic,
+		}),
 		audit.WithNewObject(&Repository{
-			Repository: repo.Repository,
+			Repository: *repo,
 			IsPublic:   in.EnablePublic,
 		}),
 	)
@@ -81,9 +80,7 @@ func (c *Controller) PublicAccessUpdate(ctx context.Context,
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update repository operation: %s", err)
 	}
 
-	return &PublicAccessUpdateOutput{
-		in.EnablePublic,
-	}, nil
+	return GetRepoOutput(ctx, c.publicAccess, repo)
 
 }
 

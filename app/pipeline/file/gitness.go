@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -35,12 +35,12 @@ func newService(git git.Interface) Service {
 
 func (f *service) Get(
 	ctx context.Context,
-	repo *repo.Repository,
+	repo *types.Repository,
 	path string,
 	ref string,
 ) (*File, error) {
 	readParams := git.ReadParams{
-		RepoUID: repo.Repository.GitUID,
+		RepoUID: repo.GitUID,
 	}
 	treeNodeOutput, err := f.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
 		ReadParams:          readParams,

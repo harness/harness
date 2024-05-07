@@ -115,9 +115,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalInfoCache := cache.ProvidePrincipalInfoCache(principalInfoView)
 	membershipStore := database.ProvideMembershipStore(db, principalInfoCache, spacePathStore, spaceStore)
 	permissionCache := authz.ProvidePermissionCache(spaceStore, membershipStore)
-	publicResource := database.ProvidePublicResourcesStore(db)
+	publicAccessStore := database.ProvidePublicPublicAccessStore(db)
 	repoStore := database.ProvideRepoStore(db, spacePathCache, spacePathStore, spaceStore)
-	publicAccess := publicaccess.ProvidePublicAccess(publicResource, repoStore, spaceStore)
+	publicAccess := publicaccess.ProvidePublicAccess(publicAccessStore, repoStore, spaceStore)
 	authorizer := authz.ProvideAuthorizer(permissionCache, spaceStore, publicAccess)
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
@@ -201,7 +201,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	repoIdentifier := check.ProvideRepoIdentifierCheck()
 	repoCheck := repo.ProvideRepoCheck()
 	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, settingsService, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicAccess)
-	reposettingsController := reposettings.ProvideController(authorizer, repoStore, settingsService, publicAccess, auditService)
+	reposettingsController := reposettings.ProvideController(authorizer, repoStore, settingsService, auditService)
 	executionStore := database.ProvideExecutionStore(db)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	stageStore := database.ProvideStageStore(db)
@@ -268,7 +268,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	webhookController := webhook2.ProvideController(webhookConfig, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService, encrypter, publicAccess)
+	webhookController := webhook2.ProvideController(webhookConfig, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService, encrypter)
 	reporter2, err := events4.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err

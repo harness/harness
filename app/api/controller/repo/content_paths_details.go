@@ -56,11 +56,11 @@ func (c *Controller) PathsDetails(ctx context.Context,
 
 	// set gitRef to default branch in case an empty reference was provided
 	if gitRef == "" {
-		gitRef = repo.Repository.DefaultBranch
+		gitRef = repo.DefaultBranch
 	}
 
 	result, err := c.git.PathsDetails(ctx, git.PathsDetailsParams{
-		ReadParams: git.CreateReadParams(repo.Repository),
+		ReadParams: git.CreateReadParams(repo),
 		GitREF:     gitRef,
 		Paths:      input.Paths,
 	})

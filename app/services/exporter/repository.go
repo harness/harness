@@ -35,7 +35,6 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/rs/zerolog/log"
 )
 
@@ -117,16 +116,11 @@ func (r *Repository) RunManyForSpace(
 
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
-		isPublic, err := apiauth.CheckRepoIsPublic(ctx, r.publicAccess, repository)
-		if err != nil {
-			return fmt.Errorf("failed to check repo public visibility: %w", err)
-		}
-
 		repoJobData := Input{
 			Identifier:      repository.Identifier,
 			ID:              repository.ID,
 			Description:     repository.Description,
-			IsPublic:        isPublic,
+			IsPublic:        false, // todo: use repository.IsPublic once public is available.
 			HarnessCodeInfo: *harnessCodeInfo,
 		}
 
@@ -193,16 +187,11 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", err
 	}
 
-	isPublic, err := apiauth.CheckRepoIsPublic(ctx, r.publicAccess, repository)
-	if err != nil {
-		return "", fmt.Errorf("failed to check if repo is public: %w", err)
-	}
-
 	remoteRepo, err := client.CreateRepo(ctx, repo.CreateInput{
 		Identifier:    repository.Identifier,
 		DefaultBranch: repository.DefaultBranch,
 		Description:   repository.Description,
-		IsPublic:      isPublic,
+		IsPublic:      false, // TODO: use apiauth.CheckRepoIsPublic once public access is deployed on HC.
 		Readme:        false,
 		License:       "",
 		GitIgnore:     "",

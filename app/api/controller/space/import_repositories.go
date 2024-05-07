@@ -126,11 +126,8 @@ func (c *Controller) ImportRepositories(
 				return fmt.Errorf("failed to create repository in storage: %w", err)
 			}
 
-			// update public resources
-			if isPublic && c.publicResourceCreationEnabled {
-				if err := c.repoCtrl.SetPublicRepo(ctx, repo); err != nil {
-					return fmt.Errorf("failed to set a public repo: %w", err)
-				}
+			if err := c.repoCtrl.SetRepoPublicAccess(ctx, repo, isPublic); err != nil {
+				return fmt.Errorf("failed to set repo public access: %w", err)
 			}
 
 			repos = append(repos, repo)

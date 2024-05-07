@@ -82,11 +82,8 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			return fmt.Errorf("failed to create repository in storage: %w", err)
 		}
 
-		// update public resources
-		if isPublic && c.publicResourceCreationEnabled {
-			if err = c.SetPublicRepo(ctx, repo); err != nil {
-				return fmt.Errorf("failed to set a public repo: %w", err)
-			}
+		if err = c.SetRepoPublicAccess(ctx, repo, isPublic); err != nil {
+			return fmt.Errorf("failed to set repo public access: %w", err)
 		}
 
 		err = c.importer.Run(ctx,

@@ -21,56 +21,56 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 )
 
-var _ store.PublicResource = (*PublicResourcesStore)(nil)
+var _ store.PublicAccessStore = (*PublicAccessStore)(nil)
 
-// NewPublicResourcesStore returns a new PublicResourcesStore.
-func NewPublicResourcesStore(db *sqlx.DB) *PublicResourcesStore {
-	return &PublicResourcesStore{
+// NewPublicAccessStore returns a new PublicAccessStore.
+func NewPublicAccessStore(db *sqlx.DB) *PublicAccessStore {
+	return &PublicAccessStore{
 		db: db,
 	}
 }
 
-// PublicResourcesStore implements store.SettingsStore backed by a relational database.
-type PublicResourcesStore struct {
+// PublicAccessStore implements store.PublicAccessStore backed by a relational database.
+type PublicAccessStore struct {
 	db *sqlx.DB
 }
 
-type publicResource struct {
-	ID      int64    `db:"public_resource_id"`
-	SpaceID null.Int `db:"public_resource_space_id"`
-	RepoID  null.Int `db:"public_resource_repo_id"`
+type publicAccess struct {
+	ID      int64    `db:"public_access_id"`
+	SpaceID null.Int `db:"public_access_space_id"`
+	RepoID  null.Int `db:"public_access_repo_id"`
 }
 
 const (
-	publicResourceColumns = `
-	 public_resource_id
-	,public_resource_space_id
-	,public_resource_repo_id
+	publicAccessColumns = `
+	 public_access_id
+	,public_access_space_id
+	,public_access_repo_id
 	`
 )
 
-func (p *PublicResourcesStore) Find(
+func (p *PublicAccessStore) Find(
 	ctx context.Context,
-	pubRes *types.PublicResource,
+	typ enum.PublicResourceType,
+	id int64,
 ) error {
 	stmt := database.Builder.
-		Select(publicResourceColumns).
-		From("public_resources")
+		Select(publicAccessColumns).
+		From("public_access")
 
-	switch pubRes.Type {
+	switch typ {
 	case enum.PublicResourceTypeRepo:
-		stmt = stmt.Where("public_resource_repo_id = ?", pubRes.ID)
+		stmt = stmt.Where("public_access_repo_id = ?", id)
 	case enum.PublicResourceTypeSpace:
-		stmt = stmt.Where("public_resource_space_id = ?", pubRes.ID)
+		stmt = stmt.Where("public_access_space_id = ?", id)
 	default:
-		return fmt.Errorf("public resource type %q is not supported", pubRes.Type)
+		return fmt.Errorf("public resource type %q is not supported", typ)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -80,7 +80,7 @@ func (p *PublicResourcesStore) Find(
 
 	db := dbtx.GetAccessor(ctx, p.db)
 
-	dst := &publicResource{}
+	dst := &publicAccess{}
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "Select query failed")
 	}
@@ -88,25 +88,26 @@ func (p *PublicResourcesStore) Find(
 	return nil
 }
 
-func (p *PublicResourcesStore) Create(
+func (p *PublicAccessStore) Create(
 	ctx context.Context,
-	pubRes *types.PublicResource,
+	typ enum.PublicResourceType,
+	id int64,
 ) error {
 	stmt := database.Builder.
 		Insert("").
-		Into("public_resources").
+		Into("public_access").
 		Columns(
-			"public_resource_space_id",
-			"public_resource_repo_id",
+			"public_access_space_id",
+			"public_access_repo_id",
 		)
 
-	switch pubRes.Type {
+	switch typ {
 	case enum.PublicResourceTypeRepo:
-		stmt = stmt.Values(null.Int{}, null.IntFrom(pubRes.ID))
+		stmt = stmt.Values(null.Int{}, null.IntFrom(id))
 	case enum.PublicResourceTypeSpace:
-		stmt = stmt.Values(null.IntFrom(pubRes.ID), null.Int{})
+		stmt = stmt.Values(null.IntFrom(id), null.Int{})
 	default:
-		return fmt.Errorf("public resource type %q is not supported", pubRes.Type)
+		return fmt.Errorf("public resource type %q is not supported", typ)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -123,20 +124,21 @@ func (p *PublicResourcesStore) Create(
 	return nil
 }
 
-func (p *PublicResourcesStore) Delete(
+func (p *PublicAccessStore) Delete(
 	ctx context.Context,
-	pubRes *types.PublicResource,
+	typ enum.PublicResourceType,
+	id int64,
 ) error {
 	stmt := database.Builder.
-		Delete("public_resources")
+		Delete("public_access")
 
-	switch pubRes.Type {
+	switch typ {
 	case enum.PublicResourceTypeRepo:
-		stmt = stmt.Where("public_resource_repo_id = ?", pubRes.ID)
+		stmt = stmt.Where("public_access_repo_id = ?", id)
 	case enum.PublicResourceTypeSpace:
-		stmt = stmt.Where("public_resource_space_id = ?", pubRes.ID)
+		stmt = stmt.Where("public_access_space_id = ?", id)
 	default:
-		return fmt.Errorf("public resource type %q is not supported", pubRes.Type)
+		return fmt.Errorf("public resource type %q is not supported", typ)
 	}
 
 	sql, args, err := stmt.ToSql()

@@ -18,70 +18,52 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/paths"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 func (s *Service) getPublicResource(
 	ctx context.Context,
-	scope *types.Scope,
-	resource *types.Resource,
-) (*types.PublicResource, error) {
-	resType := resource.Type
-
-	// set scope type to space for checks within space scope.
-	if resource.Identifier == "" {
-		resType = enum.ResourceTypeSpace
-	}
-	var pubRes *types.PublicResource
+	resourceType enum.PublicResourceType,
+	resourcePath string,
+) (int64, error) {
+	var id int64
 	var err error
-	switch resType {
-	case enum.ResourceTypeRepo:
-		pubRes, err = s.getResourceRepo(ctx, scope, resource)
-	case enum.ResourceTypeSpace:
-		pubRes, err = s.getResourceSpace(ctx, scope, resource)
+	switch resourceType {
+	case enum.PublicResourceTypeRepo:
+		id, err = s.getResourceRepo(ctx, resourcePath)
+	case enum.PublicResourceTypeSpace:
+		id, err = s.getResourceSpace(ctx, resourcePath)
 	default:
-		return nil, fmt.Errorf("invalid public resource type")
+		return 0, fmt.Errorf("invalid public resource type")
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get public resource: %w", err)
+		return 0, fmt.Errorf("failed to get public resource: %w", err)
 	}
 
-	return pubRes, nil
+	return id, nil
 }
 
 func (s *Service) getResourceRepo(
 	ctx context.Context,
-	scope *types.Scope,
-	resource *types.Resource,
-) (*types.PublicResource, error) {
-	repoRef := paths.Concatenate(scope.SpacePath, resource.Identifier)
-	repo, err := s.repoStore.FindByRef(ctx, repoRef)
+	path string,
+) (int64, error) {
+	repo, err := s.repoStore.FindByRef(ctx, path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find repo: %w", err)
+		return 0, fmt.Errorf("failed to find repo: %w", err)
 	}
 
-	return &types.PublicResource{
-		Type: enum.PublicResourceTypeRepo,
-		ID:   repo.ID,
-	}, nil
+	return repo.ID, nil
 }
 
 func (s *Service) getResourceSpace(
 	ctx context.Context,
-	scope *types.Scope,
-	resource *types.Resource,
-) (*types.PublicResource, error) {
-	spaceRef := paths.Concatenate(scope.SpacePath, resource.Identifier)
-	space, err := s.spaceStore.FindByRef(ctx, spaceRef)
+	path string,
+) (int64, error) {
+	space, err := s.spaceStore.FindByRef(ctx, path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find space: %w", err)
+		return 0, fmt.Errorf("failed to find space: %w", err)
 	}
 
-	return &types.PublicResource{
-		Type: enum.PublicResourceTypeSpace,
-		ID:   space.ID,
-	}, nil
+	return space.ID, nil
 }

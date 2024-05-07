@@ -70,6 +70,18 @@ func (r Repository) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// Clone makes deep copy of repository object.
+func (r Repository) Clone() Repository {
+	var deleted *int64
+	if r.Deleted != nil {
+		id := *r.Deleted
+		deleted = &id
+	}
+	r.Deleted = deleted
+
+	return r
+}
+
 type RepositorySizeInfo struct {
 	ID     int64  `json:"id"`
 	GitUID string `json:"git_uid"`

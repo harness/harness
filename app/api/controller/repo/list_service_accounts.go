@@ -42,12 +42,12 @@ func (c *Controller) ListServiceAccounts(
 		c.spaceStore,
 		c.repoStore,
 		enum.ParentResourceTypeRepo,
-		repo.Repository.ID,
+		repo.ID,
 		"",
 		enum.PermissionServiceAccountView,
 	); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
-	return c.principalStore.ListServiceAccounts(ctx, enum.ParentResourceTypeRepo, repo.Repository.ID)
+	return c.principalStore.ListServiceAccounts(ctx, enum.ParentResourceTypeRepo, repo.ID)
 }
