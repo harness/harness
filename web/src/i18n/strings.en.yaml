@@ -122,6 +122,7 @@ createRepoModal:
   branch: ' branch.'
   publicLabel: Anyone with access to the Gitness environment can clone this repo.
   privateLabel: You choose who can see and commit to this repository.
+  publicWarning: Please note that anyone with access to the Gitness environment can clone this repo.
 validation:
   repoNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
   gitBranchNameInvalid: Branch name is invalid.
@@ -893,7 +894,8 @@ enterGitlabPlaceholder: https://gitlab.com/
 enterGithubPlaceholder: https://api.github.com/
 enterBitbucketPlaceholder: https://bitbucket.org/
 changeRepoVis: Change repository visibility
-changeRepoVisContent: Are you sure you want to make this repository {repoVis}? {repoText}
+changeRepoVisContent: Are you sure you want to make this repository {repoVis}?
+confirmRepoVisButton: Yes, make the Repository {repoVis}
 repoVisibility: Repository visibility
 visibility: Visibility
 attachText: Attach images & videos by dragging & dropping, selecting or pasting them.
