@@ -27,21 +27,21 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type PublicAccessUpdateInput struct {
+type UpdatePublicAccessInput struct {
 	EnablePublic bool `json:"enable_public"`
 }
 
-func (c *Controller) PublicAccessUpdate(ctx context.Context,
+func (c *Controller) UpdatePublicAccess(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	in *PublicAccessUpdateInput,
+	in *UpdatePublicAccessInput,
 ) (*Repository, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = c.sanitizeVisibilityInput(in); err != nil {
+	if err = c.sanitizeUpdatePublicAccessInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
@@ -84,7 +84,7 @@ func (c *Controller) PublicAccessUpdate(ctx context.Context,
 
 }
 
-func (c *Controller) sanitizeVisibilityInput(in *PublicAccessUpdateInput) error {
+func (c *Controller) sanitizeUpdatePublicAccessInput(in *UpdatePublicAccessInput) error {
 	if in.EnablePublic && !c.publicResourceCreationEnabled {
 		return errPublicRepoCreationDisabled
 	}

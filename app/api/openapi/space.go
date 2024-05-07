@@ -40,6 +40,10 @@ type updateSpaceRequest struct {
 	space.UpdateInput
 }
 
+type updateSpacePublicAccessRequest struct {
+	spaceRequest
+	space.UpdatePublicAccessInput
+}
 type moveSpaceRequest struct {
 	spaceRequest
 	space.MoveInput
@@ -246,6 +250,21 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/spaces/{space_ref}", opUpdate)
+
+	opUpdatePublicAccess := openapi3.Operation{}
+	opUpdatePublicAccess.WithTags("space")
+	opUpdatePublicAccess.WithMapOfAnything(
+		map[string]interface{}{"operationId": "updatePublicAccess"})
+	_ = reflector.SetRequest(
+		&opUpdatePublicAccess, new(updateSpacePublicAccessRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(space.Space), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodPatch, "/spaces/{space_ref}/public-access", opUpdatePublicAccess)
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("space")

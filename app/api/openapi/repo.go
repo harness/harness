@@ -200,9 +200,9 @@ type restoreRequest struct {
 	repo.RestoreInput
 }
 
-type UpdatePublicAccessRequest struct {
+type updateRepoPublicAccessRequest struct {
 	repoRequest
-	repo.PublicAccessUpdateInput
+	repo.UpdatePublicAccessInput
 }
 
 type securitySettingsRequest struct {
@@ -704,7 +704,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opUpdatePublicAccess.WithMapOfAnything(
 		map[string]interface{}{"operationId": "updatePublicAccess"})
 	_ = reflector.SetRequest(
-		&opUpdatePublicAccess, new(UpdatePublicAccessRequest), http.MethodPost)
+		&opUpdatePublicAccess, new(updateRepoPublicAccessRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(repo.Repository), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusInternalServerError)
