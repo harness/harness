@@ -56,7 +56,7 @@ func (c *Controller) ListSpacesNoAuth(
 	spaceID int64,
 	filter *types.SpaceFilter,
 ) ([]*Space, int64, error) {
-	var spaces []*Space
+	var spacesOutput []*Space
 	var count int64
 
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
@@ -65,20 +65,20 @@ func (c *Controller) ListSpacesNoAuth(
 			return fmt.Errorf("failed to count child spaces: %w", err)
 		}
 
-		spacesBase, err := c.spaceStore.List(ctx, spaceID, filter)
+		spaces, err := c.spaceStore.List(ctx, spaceID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list child spaces: %w", err)
 		}
 
-		for _, spaceBase := range spacesBase {
+		for _, space := range spaces {
 			// backfill public access mode
-			isPublic, err := apiauth.CheckSpaceIsPublic(ctx, c.publicAccess, spaceBase)
+			isPublic, err := apiauth.CheckSpaceIsPublic(ctx, c.publicAccess, space)
 			if err != nil {
 				return fmt.Errorf("failed to get resource public access mode: %w", err)
 			}
 
-			spaces = append(spaces, &Space{
-				Space:    *spaceBase,
+			spacesOutput = append(spacesOutput, &Space{
+				Space:    *space,
 				IsPublic: isPublic,
 			})
 		}
@@ -89,5 +89,5 @@ func (c *Controller) ListSpacesNoAuth(
 		return nil, 0, err
 	}
 
-	return spaces, count, nil
+	return spacesOutput, count, nil
 }

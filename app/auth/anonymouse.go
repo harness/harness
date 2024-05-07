@@ -19,7 +19,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// anonymousPrincipal is an in-memory principal for users with no auth data.
+// AnonymousPrincipal is an in-memory principal for users with no auth data.
 // Authorizer is in charge of handling anonymouse access.
 var AnonymousPrincipal = types.Principal{
 	ID:   -1,

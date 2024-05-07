@@ -20,6 +20,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/repo"
+	repoCtrl "github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -58,7 +59,7 @@ func (c *Controller) ListRepositoriesNoAuth(
 	spaceID int64,
 	filter *types.RepoFilter,
 ) ([]*repo.Repository, int64, error) {
-	var repos []*repo.Repository
+	var reposOutput []*repo.Repository
 	var count int64
 
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
@@ -67,23 +68,23 @@ func (c *Controller) ListRepositoriesNoAuth(
 			return fmt.Errorf("failed to count child repos: %w", err)
 		}
 
-		reposBase, err := c.repoStore.List(ctx, spaceID, filter)
+		repos, err := c.repoStore.List(ctx, spaceID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list child repos: %w", err)
 		}
 
-		for _, repoBase := range reposBase {
+		for _, repo := range repos {
 			// backfill URLs
-			repoBase.GitURL = c.urlProvider.GenerateGITCloneURL(repoBase.Path)
+			repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
 			// backfill public access mode
-			isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repoBase)
+			isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repo)
 			if err != nil {
 				return fmt.Errorf("failed to get resource public access mode: %w", err)
 			}
 
-			repos = append(repos, &repo.Repository{
-				Repository: *repoBase,
+			reposOutput = append(reposOutput, &repoCtrl.Repository{
+				Repository: *repo,
 				IsPublic:   isPublic,
 			})
 		}
@@ -93,5 +94,5 @@ func (c *Controller) ListRepositoriesNoAuth(
 		return nil, 0, err
 	}
 
-	return repos, count, nil
+	return reposOutput, count, nil
 }

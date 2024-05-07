@@ -57,6 +57,18 @@ type Repository struct {
 	GitURL string `json:"git_url" yaml:"git_url"`
 }
 
+// Clone makes deep copy of repository object.
+func (r Repository) Clone() Repository {
+	var deleted *int64
+	if r.Deleted != nil {
+		id := *r.Deleted
+		deleted = &id
+	}
+	r.Deleted = deleted
+
+	return r
+}
+
 // TODO [CODE-1363]: remove after identifier migration.
 func (r Repository) MarshalJSON() ([]byte, error) {
 	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
@@ -68,18 +80,6 @@ func (r Repository) MarshalJSON() ([]byte, error) {
 		alias: (alias)(r),
 		UID:   r.Identifier,
 	})
-}
-
-// Clone makes deep copy of repository object.
-func (r Repository) Clone() Repository {
-	var deleted *int64
-	if r.Deleted != nil {
-		id := *r.Deleted
-		deleted = &id
-	}
-	r.Deleted = deleted
-
-	return r
 }
 
 type RepositorySizeInfo struct {

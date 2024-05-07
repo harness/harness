@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
 )
 
 type Service struct {
@@ -77,6 +78,7 @@ func (s *Service) Set(
 	if enable {
 		err := s.publicAccessStore.Create(ctx, resourceType, pubResID)
 		if errors.Is(err, gitness_store.ErrDuplicate) {
+			log.Ctx(ctx).Warn().Msgf("repo %d is already set for public access", pubResID)
 			return nil
 		}
 		return err

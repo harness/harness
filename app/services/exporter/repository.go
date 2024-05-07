@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
@@ -116,11 +117,16 @@ func (r *Repository) RunManyForSpace(
 
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
+		isPublic, err := auth.CheckRepoIsPublic(ctx, r.publicAccess, repository)
+		if err != nil {
+			return fmt.Errorf("failed to check repo public access: %w", err)
+		}
+
 		repoJobData := Input{
 			Identifier:      repository.Identifier,
 			ID:              repository.ID,
 			Description:     repository.Description,
-			IsPublic:        false, // todo: use repository.IsPublic once public is available.
+			IsPublic:        isPublic,
 			HarnessCodeInfo: *harnessCodeInfo,
 		}
 
