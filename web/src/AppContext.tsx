@@ -53,7 +53,8 @@ const AppContext = React.createContext<AppContextProps>({
   },
   currentUserProfileURL: '',
   routingId: '',
-  defaultSettingsURL: ''
+  defaultSettingsURL: '',
+  isPublicAccessEnabledOnResources: false
 })
 
 export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(function AppContextProvider({

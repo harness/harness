@@ -65,8 +65,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const { showError, showSuccess } = useToaster()
 
   const space = useGetSpaceParam()
-  const { standalone } = useAppContext()
-  const { hooks } = useAppContext()
+  const { standalone, hooks, isPublicAccessEnabledOnResources } = useAppContext()
   const { getString } = useStrings()
   const currRepoVisibility = repoMetadata?.is_public === true ? RepoVisibility.PUBLIC : RepoVisibility.PRIVATE
 
@@ -75,6 +74,11 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const { mutate } = useMutate({
     verb: 'PATCH',
     path: `/api/v1/repos/${repoMetadata?.path}/+/`
+  })
+
+  const { mutate: changeVisibility } = useMutate({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata?.path}/+/public-access`
   })
 
   const permEditResult = hooks?.usePermissionTranslate?.(
@@ -109,50 +113,71 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
     return (
       <Dialog
         className={css.dialogContainer}
-        style={{ width: 610, maxHeight: '95vh', overflow: 'auto' }}
-        title={getString('changeRepoVis')}
+        style={{ width: 585, maxHeight: '95vh', overflow: 'auto' }}
+        title={<Text font={{ variation: FontVariation.H4 }}>{getString('changeRepoVis')}</Text>}
         isOpen
         onClose={hideModal}>
-        <Text>
-          <StringSubstitute
-            str={getString('changeRepoVisContent')}
-            vars={{
-              repoVis: <span className={css.text}>{repoVis}</span>,
-              repoText:
-                repoVis === RepoVisibility.PUBLIC
-                  ? getString('createRepoModal.publicLabel')
-                  : getString('createRepoModal.privateLabel')
+        <Layout.Vertical spacing="xlarge">
+          <Text>
+            <StringSubstitute
+              str={getString('changeRepoVisContent')}
+              vars={{
+                repoVis: <span className={css.text}>{repoVis}</span>
+              }}
+            />
+          </Text>
+          <Container
+            intent="warning"
+            background="yellow100"
+            border={{
+              color: 'orange500'
             }}
-          />
-        </Text>
-        <hr className={css.dividerContainer} />
-        <Layout.Horizontal className={css.buttonContainer}>
-          <Button
-            margin={{ right: 'medium' }}
-            type="submit"
-            text={getString('confirm')}
-            variation={ButtonVariation.PRIMARY}
-            onClick={() => {
-              mutate({ is_public: repoVis === RepoVisibility.PUBLIC ? true : false })
-                .then(() => {
-                  showSuccess(getString('repoUpdate'))
-                  hideModal()
-                  refetch()
-                })
-                .catch(err => {
-                  showError(getErrorMessage(err))
-                })
-              refetch()
-            }}
-          />
-          <Button
-            text={getString('cancel')}
-            variation={ButtonVariation.TERTIARY}
-            onClick={() => {
-              hideModal()
-            }}
-          />
-        </Layout.Horizontal>
+            margin={{ top: 'medium', bottom: 'medium' }}>
+            <Text
+              icon="warning-outline"
+              iconProps={{ size: 16, margin: { right: 'small' } }}
+              padding={{ left: 'large', right: 'large', top: 'small', bottom: 'small' }}
+              color={Color.WARNING}>
+              {repoVis === RepoVisibility.PUBLIC
+                ? getString('createRepoModal.publicWarning')
+                : getString('createRepoModal.privateLabel')}
+            </Text>
+          </Container>
+          <Layout.Horizontal className={css.buttonContainer}>
+            <Button
+              margin={{ right: 'medium' }}
+              type="submit"
+              text={
+                <StringSubstitute
+                  str={getString('confirmRepoVisButton')}
+                  vars={{
+                    repoVis: <span className={css.text}>{repoVis}</span>
+                  }}
+                />
+              }
+              variation={ButtonVariation.PRIMARY}
+              onClick={() => {
+                changeVisibility({ enable: repoVis === RepoVisibility.PUBLIC ? true : false })
+                  .then(() => {
+                    showSuccess(getString('repoUpdate'))
+                    hideModal()
+                    refetch()
+                  })
+                  .catch(err => {
+                    showError(getErrorMessage(err))
+                  })
+                refetch()
+              }}
+            />
+            <Button
+              text={getString('cancel')}
+              variation={ButtonVariation.TERTIARY}
+              onClick={() => {
+                hideModal()
+              }}
+            />
+          </Layout.Horizontal>
+        </Layout.Vertical>
       </Dialog>
     )
   }
@@ -315,7 +340,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 </Container>
               </Layout.Horizontal>
             </Container>
-            <Render when={enablePublicRepo}>
+            <Render when={enablePublicRepo && isPublicAccessEnabledOnResources}>
               <Container padding="large" margin={{ bottom: 'medium' }} className={css.generalContainer}>
                 <Layout.Horizontal padding={{ bottom: 'medium' }}>
                   <Container className={css.label}>
@@ -330,6 +355,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                       onChange={evt => {
                         setRepoVis((evt.target as HTMLInputElement).value as RepoVisibility)
                       }}
+                      {...permissionProps(permEditResult, standalone)}
                       className={css.radioContainer}
                       items={[
                         {
@@ -391,6 +417,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                             setRepoVis(formik.values.isPublic)
                             openModal()
                           }}
+                          {...permissionProps(permEditResult, standalone)}
                         />
                       ) : null}
                     </Layout.Horizontal>
