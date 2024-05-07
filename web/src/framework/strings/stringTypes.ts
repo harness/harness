@@ -179,6 +179,7 @@ export interface StringsMap {
   confirmNewPassword: string
   confirmPassRequired: string
   confirmPassword: string
+  confirmRepoVisButton: string
   confirmation: string
   content: string
   contents: string
@@ -206,6 +207,7 @@ export interface StringsMap {
   'createRepoModal.branchLabel': string
   'createRepoModal.privateLabel': string
   'createRepoModal.publicLabel': string
+  'createRepoModal.publicWarning': string
   createRepoPerms: string
   createSpace: string
   createTag: string
