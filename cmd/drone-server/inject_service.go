@@ -85,7 +85,7 @@ func provideContentService(client *scm.Client, renewer core.Renewer) core.FileSe
 // provideHookService is a Wire provider function that returns a
 // hook service based on the environment configuration.
 func provideHookService(client *scm.Client, renewer core.Renewer, config config.Config) core.HookService {
-	return hook.New(client, config.Proxy.Addr, renewer)
+	return hook.New(client, config.Proxy.Addr, renewer, config.IncomingWebhook.Events)
 }
 
 // provideNetrcService is a Wire provider function that returns
