@@ -80,14 +80,14 @@ type (
 		Yaml         Yaml
 
 		// Remote configurations
-		Bitbucket            Bitbucket
-		Gitea                Gitea
-		Github               Github
-		GitLab               GitLab
-		Gogs                 Gogs
-		Stash                Stash
-		Gitee                Gitee
-		InboundWebhookEvents InboundWebhookEvents
+		Bitbucket       Bitbucket
+		Gitea           Gitea
+		Github          Github
+		GitLab          GitLab
+		Gogs            Gogs
+		Stash           Stash
+		Gitee           Gitee
+		IncomingWebhook IncomingWebhook
 	}
 
 	// Cloning provides the cloning configuration.
@@ -445,7 +445,7 @@ type (
 		ReferrerPolicy        string            `envconfig:"DRONE_HTTP_REFERRER_POLICY"`
 	}
 
-	InboundWebhookEvents struct {
+	IncomingWebhook struct {
 		Events []string `envconfig:"DRONE_INCOMING_WEBHOOK_EVENTS" default:"branch,deployment,push,tag,pull_request"`
 	}
 )

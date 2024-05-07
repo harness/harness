@@ -40,8 +40,7 @@ func (s *service) Create(ctx context.Context, user *core.User, repo *core.Reposi
 		return err
 	}
 
-	var eventsMap map[string]bool
-	eventsMap = make(map[string]bool)
+	eventsMap := make(map[string]bool)
 	for _, event := range s.events {
 		eventsMap[event] = true
 	}
