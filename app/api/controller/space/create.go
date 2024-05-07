@@ -157,7 +157,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 	ctx context.Context,
 	session *auth.Session,
 	parentRef string,
-) (*types.Space, error) {
+) (*Space, error) {
 	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
 	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
 		// TODO: Restrict top level space creation - should be move to authorizer?
@@ -165,7 +165,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 			return nil, fmt.Errorf("anonymous user not allowed to create top level spaces: %w", usererror.ErrUnauthorized)
 		}
 
-		return &types.Space{}, nil
+		return &Space{}, nil
 	}
 
 	parentSpace, err := c.spaceStore.FindByRef(ctx, parentRef)
@@ -184,7 +184,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 		return nil, fmt.Errorf("authorization failed: %w", err)
 	}
 
-	return parentSpace, nil
+	return GetSpaceOutput(ctx, c.publicAccess, parentSpace)
 }
 
 func (c *Controller) setSpacePublicAccess(

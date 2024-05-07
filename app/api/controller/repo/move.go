@@ -48,7 +48,7 @@ func (c *Controller) Move(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *MoveInput,
-) (*types.Repository, error) {
+) (*Repository, error) {
 	if err := c.sanitizeMoveInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -67,7 +67,7 @@ func (c *Controller) Move(ctx context.Context,
 	}
 
 	if !in.hasChanges(repo) {
-		return repo, nil
+		return GetRepoOutput(ctx, c.publicAccess, repo)
 	}
 
 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
@@ -82,7 +82,7 @@ func (c *Controller) Move(ctx context.Context,
 
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
-	return repo, nil
+	return GetRepoOutput(ctx, c.publicAccess, repo)
 }
 
 func (c *Controller) sanitizeMoveInput(in *MoveInput) error {
