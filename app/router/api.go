@@ -68,6 +68,7 @@ import (
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
 	"github.com/harness/gitness/app/api/middleware/encode"
 	"github.com/harness/gitness/app/api/middleware/logging"
+	"github.com/harness/gitness/app/api/middleware/nocache"
 	middlewareprincipal "github.com/harness/gitness/app/api/middleware/principal"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authn"
@@ -126,7 +127,7 @@ func NewAPIHandler(
 	r := chi.NewRouter()
 
 	// Apply common api middleware.
-	r.Use(middleware.NoCache)
+	r.Use(nocache.NoCache)
 	r.Use(middleware.Recoverer)
 
 	// configure logging middleware.

@@ -23,6 +23,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import { Link, useParams } from 'react-router-dom'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useAppContext } from 'AppContext'
+import type { Identifier } from 'utils/types'
 import { useStrings } from 'framework/strings'
 import { SEARCH_MODE } from 'components/CodeSearch/CodeSearch'
 import svg from '../CodeSearch/search-background.svg?url'
@@ -35,12 +36,6 @@ interface CodeSearchBarProps {
   onKeyDown?: (e: React.KeyboardEvent<HTMLElement>) => void
   setSearchMode: Dispatch<SetStateAction<SEARCH_MODE>>
   searchMode: SEARCH_MODE
-}
-
-interface Identifier {
-  accountId: string
-  orgIdentifier: string
-  projectIdentifier: string
 }
 
 const KEYWORD_REGEX = /((?:(?:-{0,1})(?:repo|lang|file|case|count)):\S*|(?: or|and ))/gi
