@@ -39,6 +39,10 @@ var (
 	// illegalRootSpaceIdentifiers is the list of space identifier we are blocking for root spaces
 	// as they might cause issues with routing.
 	illegalRootSpaceIdentifiers = []string{"api", "git"}
+
+	// illegalPrincipalUID is the UID we are blocking for principals
+	// as they might cause issues with system generated values.
+	illegalPrincipalUID = "anonymous"
 )
 
 var (
@@ -73,6 +77,10 @@ var (
 
 	ErrIllegalRepoSpaceIdentifierSuffix = &ValidationError{
 		fmt.Sprintf("Space and repository identifiers cannot end with %q.", illegalRepoSpaceIdentifierSuffix),
+	}
+
+	ErrIllegalPrincipalUID = &ValidationError{
+		fmt.Sprintf("Principal UID is not allowed to be %q.", illegalPrincipalUID),
 	}
 )
 
@@ -143,7 +151,15 @@ type PrincipalUID func(uid string) error
 
 // PrincipalUIDDefault performs the default Principal UID check.
 func PrincipalUIDDefault(uid string) error {
-	return Identifier(uid)
+	if err := Identifier(uid); err != nil {
+		return err
+	}
+
+	if uid == illegalPrincipalUID {
+		return ErrIllegalPrincipalUID
+	}
+
+	return nil
 }
 
 // SpaceIdentifier is an abstraction of a validation method that returns true
