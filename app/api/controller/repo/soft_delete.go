@@ -64,20 +64,12 @@ func (c *Controller) SoftDelete(
 		return nil, fmt.Errorf("failed to soft delete repo: %w", err)
 	}
 
-	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repo)
-	if err != nil {
-		log.Ctx(ctx).Warn().Msgf("failed to check repo public access for audit logs: %s", err)
-	}
-
 	err = c.auditService.Log(ctx,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionDeleted,
 		paths.Parent(repo.Path),
-		audit.WithOldObject(&Repository{
-			Repository: *repo,
-			IsPublic:   isPublic,
-		}),
+		audit.WithOldObject(repo),
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete repository operation: %s", err)
@@ -96,8 +88,18 @@ func (c *Controller) SoftDeleteNoAuth(
 		return c.PurgeNoAuth(ctx, session, repo)
 	}
 
-	err := c.repoStore.SoftDelete(ctx, repo, deletedAt)
+	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repo)
 	if err != nil {
+		return fmt.Errorf("failed to check repo public access: %w", err)
+	}
+
+	if isPublic {
+		if err := c.SetRepoPublicAccess(ctx, repo, false); err != nil {
+			return fmt.Errorf("failed to disable repo public access: %w", err)
+		}
+	}
+
+	if err := c.repoStore.SoftDelete(ctx, repo, deletedAt); err != nil {
 		return fmt.Errorf("failed to soft delete repo from db: %w", err)
 	}
 

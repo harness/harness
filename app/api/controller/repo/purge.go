@@ -72,17 +72,6 @@ func (c *Controller) PurgeNoAuth(
 		}
 	}
 
-	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repo)
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to check repo public access")
-	}
-
-	if isPublic {
-		if err := c.SetRepoPublicAccess(ctx, repo, false); err != nil {
-			log.Ctx(ctx).Err(err).Msg("failed to disable repo public access")
-		}
-	}
-
 	if err := c.repoStore.Purge(ctx, repo.ID, repo.Deleted); err != nil {
 		return fmt.Errorf("failed to delete repo from db: %w", err)
 	}

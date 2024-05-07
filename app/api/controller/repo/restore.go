@@ -93,13 +93,9 @@ func (c *Controller) RestoreNoAuth(
 		return nil, fmt.Errorf("failed to restore the repo: %w", err)
 	}
 
-	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repo)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
-	}
-
+	// Repos restored as private since public access data is deleted upon deletion.
 	return &Repository{
 		Repository: *repo,
-		IsPublic:   isPublic,
+		IsPublic:   false,
 	}, nil
 }
