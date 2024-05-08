@@ -15,6 +15,7 @@
  */
 
 import React, { Fragment } from 'react'
+import cx from 'classnames'
 import { Container, Layout, Text, PageHeader, PageHeaderProps } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -50,7 +51,7 @@ export function RepositoryPageHeader({
   const { gitRef } = useParams<CODEProps>()
   const { getString } = useStrings()
   const space = useGetSpaceParam()
-  const { routes } = useAppContext()
+  const { routes, isCurrentSessionPublic } = useAppContext()
 
   return (
     <PageHeader
@@ -59,7 +60,9 @@ export function RepositoryPageHeader({
       title=""
       breadcrumbs={
         <Container className={css.header}>
-          <Layout.Horizontal spacing="small" className={css.breadcrumb}>
+          <Layout.Horizontal
+            spacing="small"
+            className={cx(css.breadcrumb, { [css.hideBreadcrumbs]: isCurrentSessionPublic })}>
             <Link to={routes.toCODERepositories({ space })}>{getString('repositories')}</Link>
             <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
             <Link to={routes.toCODERepository({ repoPath: (repoMetadata?.path as string) || '', gitRef })}>
