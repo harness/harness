@@ -34,6 +34,12 @@
   min-height: 36px;
 
   :global {
+    th,
+    td {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+
     .d2h-wrapper > div {
       margin-bottom: 0;
     }
