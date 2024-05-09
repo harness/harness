@@ -546,7 +546,7 @@ func (p *ArchiveParams) Validate() error {
 	if err := p.ReadParams.Validate(); err != nil {
 		return err
 	}
-
+	//nolint:revive
 	if err := p.ArchiveParams.Validate(); err != nil {
 		return err
 	}

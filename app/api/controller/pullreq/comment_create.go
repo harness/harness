@@ -417,10 +417,6 @@ func appendMetadataUpdateForSuggestions(
 	comment string,
 ) []types.PullReqActivityMetadataUpdate {
 	suggestions := parseSuggestions(comment)
-	if len(suggestions) == 0 {
-		return updates
-	}
-
 	return append(
 		updates,
 		types.WithPullReqActivitySuggestionsMetadataUpdate(

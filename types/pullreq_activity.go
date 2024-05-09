@@ -46,7 +46,7 @@ type PullReqActivity struct {
 
 	Text       string                   `json:"text"`
 	PayloadRaw json.RawMessage          `json:"payload"`
-	Metadata   *PullReqActivityMetadata `json:"metadata"`
+	Metadata   *PullReqActivityMetadata `json:"metadata,omitempty"`
 
 	ResolvedBy *int64 `json:"-"` // not returned, because the resolver info is in the Resolver field
 	Resolved   *int64 `json:"resolved,omitempty"`

@@ -103,6 +103,7 @@ func (p *ArchiveParams) Validate() error {
 	if p.Treeish == "" {
 		return errors.InvalidArgument("treeish field cannot be empty")
 	}
+	//nolint:revive
 	if err := p.Format.Validate(); err != nil {
 		return err
 	}
