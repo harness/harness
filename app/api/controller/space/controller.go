@@ -37,7 +37,7 @@ var (
 	errPublicSpaceCreationDisabled = usererror.BadRequestf("Public space creation is disabled.")
 )
 
-type Space struct {
+type SpaceOutput struct {
 	types.Space
 	IsPublic bool `json:"is_public" yaml:"is_public"`
 }
@@ -64,7 +64,7 @@ type Controller struct {
 	importer        *importer.Repository
 	exporter        *exporter.Repository
 	resourceLimiter limiter.ResourceLimiter
-	publicAccess    publicaccess.PublicAccess
+	publicAccess    publicaccess.Service
 	auditService    audit.Service
 }
 
@@ -74,7 +74,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
-	limiter limiter.ResourceLimiter, publicAccess publicaccess.PublicAccess, auditService audit.Service,
+	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled:           config.NestedSpacesEnabled,

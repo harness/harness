@@ -15,15 +15,18 @@
 package principal
 
 import (
+	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 )
 
 type controller struct {
 	principalStore store.PrincipalStore
+	authorizer     authz.Authorizer
 }
 
-func newController(principalStore store.PrincipalStore) *controller {
+func newController(principalStore store.PrincipalStore, authorizer authz.Authorizer) *controller {
 	return &controller{
 		principalStore: principalStore,
+		authorizer:     authorizer,
 	}
 }

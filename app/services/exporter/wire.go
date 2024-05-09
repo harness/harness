@@ -15,7 +15,6 @@
 package exporter
 
 import (
-	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -38,16 +37,14 @@ func ProvideSpaceExporter(
 	executor *job.Executor,
 	encrypter encrypt.Encrypter,
 	sseStreamer sse.Streamer,
-	publicAccess publicaccess.PublicAccess,
 ) (*Repository, error) {
 	exporter := &Repository{
-		urlProvider:  urlProvider,
-		git:          git,
-		repoStore:    repoStore,
-		scheduler:    scheduler,
-		encrypter:    encrypter,
-		sseStreamer:  sseStreamer,
-		publicAccess: publicAccess,
+		urlProvider: urlProvider,
+		git:         git,
+		repoStore:   repoStore,
+		scheduler:   scheduler,
+		encrypter:   encrypter,
+		sseStreamer: sseStreamer,
 	}
 
 	err := executor.Register(jobType, exporter)

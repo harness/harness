@@ -22,7 +22,6 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/limiter"
-	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	repoevents "github.com/harness/gitness/app/events/repo"
@@ -44,13 +43,9 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-var (
-	errPublicRepoCreationDisabled = usererror.BadRequestf("Public repository creation is disabled.")
-)
-
-type Repository struct {
-	types.Repository
-	IsPublic bool `json:"is_public" yaml:"is_public"`
+type RepositoryOutput struct {
+	types.Repository `json:",inline"`
+	IsPublic         bool `json:"is_public" yaml:"is_public"`
 }
 
 type Controller struct {
@@ -79,7 +74,7 @@ type Controller struct {
 	mtxManager         lock.MutexManager
 	identifierCheck    check.RepoIdentifier
 	repoCheck          Check
-	publicAccess       publicaccess.PublicAccess
+	publicAccess       publicaccess.Service
 }
 
 func NewController(
@@ -106,7 +101,7 @@ func NewController(
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoCheck Check,
-	publicAccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 ) *Controller {
 	return &Controller{
 		defaultBranch:                 config.Git.DefaultBranch,

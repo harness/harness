@@ -41,7 +41,7 @@ type ImportInput struct {
 }
 
 // Import creates new space and starts import of all repositories from the remote provider's space into it.
-func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*Space, error) {
+func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*SpaceOutput, error) {
 	parentSpace, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
 	if err != nil {
 		return nil, err

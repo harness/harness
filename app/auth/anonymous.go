@@ -23,6 +23,6 @@ import (
 // Authorizer is in charge of handling anonymouse access.
 var AnonymousPrincipal = types.Principal{
 	ID:   -1,
-	UID:  "anonymous",
+	UID:  types.AnonymousPrincipalUID,
 	Type: enum.PrincipalTypeUser,
 }

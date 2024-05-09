@@ -43,7 +43,7 @@ func (c *Controller) Update(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *UpdateInput,
-) (*Repository, error) {
+) (*RepositoryOutput, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err

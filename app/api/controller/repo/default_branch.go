@@ -43,7 +43,7 @@ func (c *Controller) UpdateDefaultBranch(
 	session *auth.Session,
 	repoRef string,
 	in *UpdateDefaultBranchInput,
-) (*Repository, error) {
+) (*RepositoryOutput, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err

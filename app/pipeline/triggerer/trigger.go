@@ -21,7 +21,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/pipeline/checks"
 	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
@@ -94,7 +93,7 @@ type triggerer struct {
 	repoStore        store.RepoStore
 	templateStore    store.TemplateStore
 	pluginStore      store.PluginStore
-	publicAccess     publicaccess.PublicAccess
+	publicAccess     publicaccess.Service
 }
 
 func New(
@@ -110,7 +109,7 @@ func New(
 	converterService converter.Service,
 	templateStore store.TemplateStore,
 	pluginStore store.PluginStore,
-	publicAccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 ) Triggerer {
 	return &triggerer{
 		executionStore:   executionStore,
@@ -159,7 +158,7 @@ func (t *triggerer) Trigger(
 		return nil, err
 	}
 
-	repoIsPublic, err := apiauth.CheckRepoIsPublic(ctx, t.publicAccess, repo)
+	repoIsPublic, err := t.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
 	if err != nil {
 		return nil, fmt.Errorf("could not check if repo is public: %w", err)
 	}
@@ -406,7 +405,7 @@ func parseV1Stages(
 	execution *types.Execution,
 	templateStore store.TemplateStore,
 	pluginStore store.PluginStore,
-	publicaccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 ) ([]*types.Stage, error) {
 	stages := []*types.Stage{}
 	// For V1 YAML, just go through the YAML and create stages serially for now
@@ -426,7 +425,7 @@ func parseV1Stages(
 	}
 
 	// get repo public access
-	repoIsPublic, err := publicaccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
+	repoIsPublic, err := publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
 	if err != nil {
 		return nil, fmt.Errorf("could not check repo public access: %w", err)
 	}

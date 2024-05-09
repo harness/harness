@@ -16,6 +16,7 @@ package publicaccess
 
 import (
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -25,9 +26,10 @@ var WireSet = wire.NewSet(
 )
 
 func ProvidePublicAccess(
+	config *types.Config,
 	publicAccessStore store.PublicAccessStore,
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
-) PublicAccess {
-	return NewService(publicAccessStore, repoStore, spaceStore)
+) Service {
+	return NewService(config, publicAccessStore, repoStore, spaceStore)
 }

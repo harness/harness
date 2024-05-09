@@ -33,13 +33,13 @@ var _ Authorizer = (*MembershipAuthorizer)(nil)
 type MembershipAuthorizer struct {
 	permissionCache PermissionCache
 	spaceStore      store.SpaceStore
-	publicAccess    publicaccess.PublicAccess
+	publicAccess    publicaccess.Service
 }
 
 func NewMembershipAuthorizer(
 	permissionCache PermissionCache,
 	spaceStore store.SpaceStore,
-	publicAccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 ) *MembershipAuthorizer {
 	return &MembershipAuthorizer{
 		permissionCache: permissionCache,

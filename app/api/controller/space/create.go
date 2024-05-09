@@ -52,7 +52,7 @@ func (c *Controller) Create(
 	ctx context.Context,
 	session *auth.Session,
 	in *CreateInput,
-) (*types.Space, error) {
+) (*SpaceOutput, error) {
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -71,7 +71,7 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	return space, nil
+	return GetSpaceOutput(ctx, c.publicAccess, space)
 }
 
 func (c *Controller) createSpaceInnerInTX(
@@ -157,7 +157,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 	ctx context.Context,
 	session *auth.Session,
 	parentRef string,
-) (*Space, error) {
+) (*types.Space, error) {
 	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
 	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
 		// TODO: Restrict top level space creation - should be move to authorizer?
@@ -165,7 +165,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 			return nil, fmt.Errorf("anonymous user not allowed to create top level spaces: %w", usererror.ErrUnauthorized)
 		}
 
-		return &Space{}, nil
+		return &types.Space{}, nil
 	}
 
 	parentSpace, err := c.spaceStore.FindByRef(ctx, parentRef)
@@ -184,7 +184,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 		return nil, fmt.Errorf("authorization failed: %w", err)
 	}
 
-	return GetSpaceOutput(ctx, c.publicAccess, parentSpace)
+	return parentSpace, nil
 }
 
 func (c *Controller) setSpacePublicAccess(
@@ -192,10 +192,6 @@ func (c *Controller) setSpacePublicAccess(
 	space *types.Space,
 	isPublic bool,
 ) error {
-	if isPublic && !c.publicResourceCreationEnabled {
-		return errPublicSpaceCreationDisabled
-	}
-
 	return c.publicAccess.Set(ctx, enum.PublicResourceTypeSpace, space.Path, isPublic)
 }
 

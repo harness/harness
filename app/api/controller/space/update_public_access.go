@@ -24,14 +24,14 @@ import (
 )
 
 type UpdatePublicAccessInput struct {
-	EnablePublic bool `json:"enable_public"`
+	IsPublic bool `json:"is_public"`
 }
 
 func (c *Controller) UpdatePublicAccess(ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
 	in *UpdatePublicAccessInput,
-) (*Space, error) {
+) (*SpaceOutput, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
@@ -41,21 +41,9 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 		return nil, err
 	}
 
-	if err = c.sanitizeUpdatePublicAccessInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
-	}
-
-	if err = c.publicAccess.Set(ctx, enum.PublicResourceTypeSpace, space.Path, in.EnablePublic); err != nil {
+	if err = c.publicAccess.Set(ctx, enum.PublicResourceTypeSpace, space.Path, in.IsPublic); err != nil {
 		return nil, fmt.Errorf("failed to update space public access: %w", err)
 	}
 
 	return GetSpaceOutput(ctx, c.publicAccess, space)
-}
-
-func (c *Controller) sanitizeUpdatePublicAccessInput(in *UpdatePublicAccessInput) error {
-	if in.EnablePublic && !c.publicResourceCreationEnabled {
-		return errPublicSpaceCreationDisabled
-	}
-
-	return nil
 }

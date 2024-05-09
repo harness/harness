@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
@@ -56,7 +55,7 @@ type Repository struct {
 	scheduler    *job.Scheduler
 	encrypter    encrypt.Encrypter
 	sseStreamer  sse.Streamer
-	publicAccess publicaccess.PublicAccess
+	publicAccess publicaccess.Service
 }
 
 type Input struct {
@@ -117,7 +116,7 @@ func (r *Repository) RunManyForSpace(
 
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
-		isPublic, err := auth.CheckRepoIsPublic(ctx, r.publicAccess, repository)
+		isPublic, err := r.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repository.Path)
 		if err != nil {
 			return fmt.Errorf("failed to check repo public access: %w", err)
 		}
@@ -197,7 +196,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		Identifier:    repository.Identifier,
 		DefaultBranch: repository.DefaultBranch,
 		Description:   repository.Description,
-		IsPublic:      false, // TODO: use apiauth.CheckRepoIsPublic once public access is deployed on HC.
+		IsPublic:      false, // TODO: replace with publicaccess service response once deployed on HC.
 		Readme:        false,
 		License:       "",
 		GitIgnore:     "",
@@ -207,7 +206,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", err
 	}
 
-	urlWithToken, err := modifyURL(remoteRepo.Repository.GitURL, harnessCodeInfo.Token)
+	urlWithToken, err := modifyURL(remoteRepo.GitURL, harnessCodeInfo.Token)
 	if err != nil {
 		return "", err
 	}
@@ -217,9 +216,9 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		RemoteURL:  urlWithToken,
 	})
 	if err != nil && !strings.Contains(err.Error(), "empty") {
-		errDelete := client.DeleteRepo(ctx, remoteRepo.Repository.Identifier)
+		errDelete := client.DeleteRepo(ctx, remoteRepo.Identifier)
 		if errDelete != nil {
-			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete repo '%s' on harness", remoteRepo.Repository.Identifier)
+			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete repo '%s' on harness", remoteRepo.Identifier)
 		}
 		r.publishSSE(ctx, repository)
 		return "", err

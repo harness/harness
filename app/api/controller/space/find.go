@@ -25,7 +25,7 @@ import (
 /*
 * Find finds a space.
  */
-func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string) (*Space, error) {
+func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string) (*SpaceOutput, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err

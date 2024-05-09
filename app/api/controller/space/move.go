@@ -49,7 +49,7 @@ func (c *Controller) Move(
 	session *auth.Session,
 	spaceRef string,
 	in *MoveInput,
-) (*Space, error) {
+) (*SpaceOutput, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err

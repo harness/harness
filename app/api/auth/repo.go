@@ -21,7 +21,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/paths"
-	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -51,14 +50,6 @@ func CheckRepo(
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)
-}
-
-func CheckRepoIsPublic(
-	ctx context.Context,
-	publicAccess publicaccess.PublicAccess,
-	repo *types.Repository,
-) (bool, error) {
-	return publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
 }
 
 func IsRepoOwner(
