@@ -45,7 +45,7 @@ func ProvideTriggerer(
 	urlProvider url.Provider,
 	templateStore store.TemplateStore,
 	pluginStore store.PluginStore,
-	publicAccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 ) Triggerer {
 	return New(executionStore, checkStore, stageStore, pipelineStore,
 		tx, repoStore, urlProvider, scheduler, fileService, converterService,

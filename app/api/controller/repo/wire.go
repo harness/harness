@@ -66,7 +66,7 @@ func ProvideController(
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoChecks Check,
-	publicAccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,

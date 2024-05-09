@@ -20,8 +20,8 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// PublicAccess is an abstraction of an entity responsible for managing public access to resources.
-type PublicAccess interface {
+// Service is an abstraction of an entity responsible for managing public access to resources.
+type Service interface {
 	/*
 	 * Get returns whether public access is enabled on the resource.
 	 * Returns
@@ -38,8 +38,8 @@ type PublicAccess interface {
 	/*
 	 * Sets or deletes public access mode for the resource based on the value of 'enable'.
 	 * Returns
-	 *		err  - resource public access mode has been updated successfully
-	 *		nil  - an error occurred while performing public access set.
+	 *		nil  - resource public access mode has been updated successfully
+	 *		err  - an error occurred while performing public access set.
 	 */
 	Set(
 		ctx context.Context,

@@ -53,7 +53,7 @@ func ProvideExecutionManager(
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	userStore store.PrincipalStore,
-	PublicAccess publicaccess.PublicAccess,
+	PublicAccess publicaccess.Service,
 ) ExecutionManager {
 	return New(config, executionStore, pipelineStore, urlProvider, sseStreamer, fileService, converterService,
 		logStore, logStream, checkStore, repoStore, scheduler, secretStore, stageStore, stepStore, userStore, PublicAccess)

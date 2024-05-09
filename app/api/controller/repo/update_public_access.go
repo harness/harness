@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/audit"
@@ -28,37 +27,33 @@ import (
 )
 
 type UpdatePublicAccessInput struct {
-	EnablePublic bool `json:"enable_public"`
+	IsPublic bool `json:"is_public"`
 }
 
 func (c *Controller) UpdatePublicAccess(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *UpdatePublicAccessInput,
-) (*Repository, error) {
+) (*RepositoryOutput, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = c.sanitizeUpdatePublicAccessInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
-	}
-
 	repoClone := repo.Clone()
 
 	// get current public access vale for audit
-	isPublic, err := apiauth.CheckRepoIsPublic(ctx, c.publicAccess, repo)
+	isPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check current public access status: %w", err)
 	}
 
 	// no op
-	if isPublic == in.EnablePublic {
+	if isPublic == in.IsPublic {
 		return GetRepoOutput(ctx, c.publicAccess, repo)
 	}
 
-	if err = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, in.EnablePublic); err != nil {
+	if err = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, in.IsPublic); err != nil {
 		return nil, fmt.Errorf("failed to update repo public access: %w", err)
 	}
 
@@ -67,13 +62,13 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionUpdated,
 		paths.Parent(repo.Path),
-		audit.WithOldObject(&Repository{
+		audit.WithOldObject(&RepositoryOutput{
 			Repository: repoClone,
 			IsPublic:   isPublic,
 		}),
-		audit.WithNewObject(&Repository{
+		audit.WithNewObject(&RepositoryOutput{
 			Repository: *repo,
-			IsPublic:   in.EnablePublic,
+			IsPublic:   in.IsPublic,
 		}),
 	)
 	if err != nil {
@@ -81,13 +76,4 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 	}
 
 	return GetRepoOutput(ctx, c.publicAccess, repo)
-
-}
-
-func (c *Controller) sanitizeUpdatePublicAccessInput(in *UpdatePublicAccessInput) error {
-	if in.EnablePublic && !c.publicResourceCreationEnabled {
-		return errPublicRepoCreationDisabled
-	}
-
-	return nil
 }

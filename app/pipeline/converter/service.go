@@ -26,10 +26,10 @@ type (
 	// conversion service.
 	ConvertArgs struct {
 		Repo         *types.Repository `json:"repository,omitempty"`
+		RepoIsPublic bool              `json:"repo_is_public,omitempty"`
 		Pipeline     *types.Pipeline   `json:"pipeline,omitempty"`
 		Execution    *types.Execution  `json:"execution,omitempty"`
 		File         *file.File        `json:"config,omitempty"`
-		RepoIsPublic bool              `json:"repo_is_public,omitempty"`
 	}
 
 	// Service converts a file which is in starlark/jsonnet form by looking

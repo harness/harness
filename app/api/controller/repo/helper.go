@@ -74,15 +74,15 @@ func GetRepoCheckAccess(
 
 func GetRepoOutput(
 	ctx context.Context,
-	publicAccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 	repo *types.Repository,
-) (*Repository, error) {
-	isPublic, err := apiauth.CheckRepoIsPublic(ctx, publicAccess, repo)
+) (*RepositoryOutput, error) {
+	isPublic, err := publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if repo is public: %w", err)
 	}
 
-	return &Repository{
+	return &RepositoryOutput{
 		Repository: *repo,
 		IsPublic:   isPublic,
 	}, nil

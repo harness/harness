@@ -17,10 +17,11 @@ package principal
 import (
 	"context"
 
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 )
 
-func (c controller) Find(ctx context.Context, principalID int64) (*types.PrincipalInfo, error) {
+func (c controller) Find(ctx context.Context, session *auth.Session, principalID int64) (*types.PrincipalInfo, error) {
 	principal, err := c.principalStore.Find(ctx, principalID)
 	if err != nil {
 		return nil, err

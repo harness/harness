@@ -33,7 +33,7 @@ const (
 
 type converter struct {
 	fileService  file.Service
-	publicaccess publicaccess.PublicAccess
+	publicAccess publicaccess.Service
 }
 
 func newConverter(fileService file.Service) Service {
@@ -44,7 +44,7 @@ func (c *converter) Convert(_ context.Context, args *ConvertArgs) (*file.File, e
 	path := args.Pipeline.ConfigPath
 
 	// get public access visibility of the repo
-	repoIsPublic, err := c.publicaccess.Get(context.Background(), enum.PublicResourceTypeRepo, args.Repo.Path)
+	repoIsPublic, err := c.publicAccess.Get(context.Background(), enum.PublicResourceTypeRepo, args.Repo.Path)
 	if err != nil {
 		return nil, err
 	}

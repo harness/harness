@@ -42,7 +42,7 @@ type ImportInput struct {
 }
 
 // Import creates a new empty repository and starts git import to it from a remote repository.
-func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*Repository, error) {
+func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*RepositoryOutput, error) {
 	if err := c.sanitizeImportInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -104,7 +104,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
-	repoData := &Repository{
+	repoData := &RepositoryOutput{
 		Repository: *repo,
 		IsPublic:   isPublic && c.publicResourceCreationEnabled,
 	}

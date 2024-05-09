@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/types"
 )
 
 const (
@@ -108,7 +109,7 @@ func newHarnessCodeClient(
 	}, nil
 }
 
-func (c *harnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInput) (*repo.Repository, error) {
+func (c *harnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInput) (*types.Repository, error) {
 	path := fmt.Sprintf(pathCreateRepo, c.client.accountID, c.client.orgID, c.client.projectID)
 	bodyBytes, err := json.Marshal(input)
 	if err != nil {
@@ -138,7 +139,7 @@ func (c *harnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInp
 		defer func() { _ = resp.Body.Close() }()
 	}
 
-	repository := new(repo.Repository)
+	repository := new(types.Repository)
 	err = mapStatusCodeToError(resp.StatusCode)
 	if err != nil {
 		return nil, err

@@ -22,7 +22,6 @@ import (
 	"net/url"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/jwt"
 	"github.com/harness/gitness/app/pipeline/converter"
@@ -152,7 +151,7 @@ type Manager struct {
 	Users store.PrincipalStore
 	// Webhook store.WebhookSender
 
-	publicAccess publicaccess.PublicAccess
+	publicAccess publicaccess.Service
 }
 
 func New(
@@ -172,7 +171,7 @@ func New(
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	userStore store.PrincipalStore,
-	publicAccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 ) *Manager {
 	return &Manager{
 		Config:           config,
@@ -338,7 +337,7 @@ func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, 
 	}
 
 	// Get public access settings of the repo
-	repoIsPublic, err := apiauth.CheckRepoIsPublic(noContext, m.publicAccess, repo)
+	repoIsPublic, err := m.publicAccess.Get(noContext, enum.PublicResourceTypeRepo, repo.Path)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot check if repo is public")
 		return nil, err

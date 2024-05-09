@@ -21,7 +21,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/paths"
-	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -68,12 +67,4 @@ func CheckSpaceScope(
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)
-}
-
-func CheckSpaceIsPublic(
-	ctx context.Context,
-	publicAccess publicaccess.PublicAccess,
-	space *types.Space,
-) (bool, error) {
-	return publicAccess.Get(ctx, enum.PublicResourceTypeSpace, space.Path)
 }

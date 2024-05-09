@@ -18,22 +18,22 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 func GetSpaceOutput(
 	ctx context.Context,
-	publicAccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 	space *types.Space,
-) (*Space, error) {
-	isPublic, err := apiauth.CheckSpaceIsPublic(ctx, publicAccess, space)
+) (*SpaceOutput, error) {
+	isPublic, err := publicAccess.Get(ctx, enum.PublicResourceTypeSpace, space.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get resource public access mode: %w", err)
 	}
 
-	return &Space{
+	return &SpaceOutput{
 		Space:    *space,
 		IsPublic: isPublic,
 	}, nil

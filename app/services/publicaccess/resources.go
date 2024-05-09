@@ -21,7 +21,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (s *Service) getPublicResource(
+func (s *service) getPublicResource(
 	ctx context.Context,
 	resourceType enum.PublicResourceType,
 	resourcePath string,
@@ -44,7 +44,7 @@ func (s *Service) getPublicResource(
 	return id, nil
 }
 
-func (s *Service) getResourceRepo(
+func (s *service) getResourceRepo(
 	ctx context.Context,
 	path string,
 ) (int64, error) {
@@ -56,7 +56,7 @@ func (s *Service) getResourceRepo(
 	return repo.ID, nil
 }
 
-func (s *Service) getResourceSpace(
+func (s *service) getResourceSpace(
 	ctx context.Context,
 	path string,
 ) (int64, error) {

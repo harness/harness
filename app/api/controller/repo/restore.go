@@ -40,7 +40,7 @@ func (c *Controller) Restore(
 	repoRef string,
 	deletedAt int64,
 	in *RestoreInput,
-) (*Repository, error) {
+) (*RepositoryOutput, error) {
 	repo, err := c.repoStore.FindByRefAndDeletedAt(ctx, repoRef, deletedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
@@ -75,7 +75,7 @@ func (c *Controller) RestoreNoAuth(
 	repo *types.Repository,
 	newIdentifier *string,
 	newParentID int64,
-) (*Repository, error) {
+) (*RepositoryOutput, error) {
 	var err error
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		if err := c.resourceLimiter.RepoCount(ctx, newParentID, 1); err != nil {
@@ -94,7 +94,7 @@ func (c *Controller) RestoreNoAuth(
 	}
 
 	// Repos restored as private since public access data is deleted upon deletion.
-	return &Repository{
+	return &RepositoryOutput{
 		Repository: *repo,
 		IsPublic:   false,
 	}, nil

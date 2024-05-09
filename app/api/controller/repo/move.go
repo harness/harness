@@ -48,7 +48,7 @@ func (c *Controller) Move(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *MoveInput,
-) (*Repository, error) {
+) (*RepositoryOutput, error) {
 	if err := c.sanitizeMoveInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}

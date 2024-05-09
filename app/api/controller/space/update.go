@@ -36,8 +36,12 @@ func (in *UpdateInput) hasChanges(space *types.Space) bool {
 }
 
 // Update updates a space.
-func (c *Controller) Update(ctx context.Context, session *auth.Session,
-	spaceRef string, in *UpdateInput) (*Space, error) {
+func (c *Controller) Update(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	in *UpdateInput,
+) (*SpaceOutput, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err

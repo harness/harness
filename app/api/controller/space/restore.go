@@ -45,7 +45,7 @@ func (c *Controller) Restore(
 	spaceRef string,
 	deletedAt int64,
 	in *RestoreInput,
-) (*Space, error) {
+) (*SpaceOutput, error) {
 	if err := c.sanitizeRestoreInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize restore input: %w", err)
 	}

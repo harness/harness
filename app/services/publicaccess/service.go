@@ -21,29 +21,35 @@ import (
 
 	"github.com/harness/gitness/app/store"
 	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/log"
 )
 
-type Service struct {
-	publicAccessStore store.PublicAccessStore
-	repoStore         store.RepoStore
-	spaceStore        store.SpaceStore
+var errPublicResourceCreationDisabled = errors.New("public resource creation is disabled")
+
+type service struct {
+	publicResourceCreationEnabled bool
+	publicAccessStore             store.PublicAccessStore
+	repoStore                     store.RepoStore
+	spaceStore                    store.SpaceStore
 }
 
 func NewService(
+	config *types.Config,
 	publicAccessStore store.PublicAccessStore,
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
-) PublicAccess {
-	return &Service{
-		publicAccessStore: publicAccessStore,
-		repoStore:         repoStore,
-		spaceStore:        spaceStore,
+) Service {
+	return &service{
+		publicResourceCreationEnabled: config.PublicResourceCreationEnabled,
+		publicAccessStore:             publicAccessStore,
+		repoStore:                     repoStore,
+		spaceStore:                    spaceStore,
 	}
 }
 
-func (s *Service) Get(
+func (s *service) Get(
 	ctx context.Context,
 	resourceType enum.PublicResourceType,
 	resourcePath string,
@@ -64,12 +70,16 @@ func (s *Service) Get(
 	return true, nil
 }
 
-func (s *Service) Set(
+func (s *service) Set(
 	ctx context.Context,
 	resourceType enum.PublicResourceType,
 	resourcePath string,
 	enable bool,
 ) error {
+	if enable && !s.publicResourceCreationEnabled {
+		return errPublicResourceCreationDisabled
+	}
+
 	pubResID, err := s.getPublicResource(ctx, resourceType, resourcePath)
 	if err != nil {
 		return err

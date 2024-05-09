@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/harness/gitness/types"
 )
 
 const (
@@ -39,10 +41,6 @@ var (
 	// illegalRootSpaceIdentifiers is the list of space identifier we are blocking for root spaces
 	// as they might cause issues with routing.
 	illegalRootSpaceIdentifiers = []string{"api", "git"}
-
-	// illegalPrincipalUID is the UID we are blocking for principals
-	// as they might cause issues with system generated values.
-	illegalPrincipalUID = "anonymous"
 )
 
 var (
@@ -80,7 +78,7 @@ var (
 	}
 
 	ErrIllegalPrincipalUID = &ValidationError{
-		fmt.Sprintf("Principal UID is not allowed to be %q.", illegalPrincipalUID),
+		fmt.Sprintf("Principal UID is not allowed to be %q.", types.AnonymousPrincipalUID),
 	}
 )
 
@@ -155,7 +153,7 @@ func PrincipalUIDDefault(uid string) error {
 		return err
 	}
 
-	if uid == illegalPrincipalUID {
+	if uid == types.AnonymousPrincipalUID {
 		return ErrIllegalPrincipalUID
 	}
 

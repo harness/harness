@@ -32,7 +32,7 @@ var WireSet = wire.NewSet(
 func ProvideAuthorizer(
 	pCache PermissionCache,
 	spaceStore store.SpaceStore,
-	publicAccess publicaccess.PublicAccess,
+	publicAccess publicaccess.Service,
 ) Authorizer {
 	return NewMembershipAuthorizer(pCache, spaceStore, publicAccess)
 }

@@ -15,6 +15,7 @@
 package principal
 
 import (
+	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -25,6 +26,6 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(principalStore store.PrincipalStore) Controller {
-	return newController(principalStore)
+func ProvideController(principalStore store.PrincipalStore, authorizer authz.Authorizer) Controller {
+	return newController(principalStore, authorizer)
 }
