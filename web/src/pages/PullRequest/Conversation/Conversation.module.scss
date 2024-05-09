@@ -273,7 +273,7 @@
     .bp3-popover-content {
       padding: var(--spacing-small);
       max-width: 700px;
-      word-break: break-all;
+      word-break: break-word;
     }
   }
 }
