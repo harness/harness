@@ -21,7 +21,6 @@ import (
 
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/logging"
 	"github.com/harness/gitness/types"
@@ -31,7 +30,7 @@ import (
 )
 
 type secretFinding struct {
-	api.Finding
+	git.ScanSecretsFinding
 	Ref string
 }
 
@@ -136,8 +135,9 @@ func scanSecretsInternal(ctx context.Context,
 				RepoUID:             repo.GitUID,
 				AlternateObjectDirs: in.Environment.AlternateObjectDirs,
 			},
-			BaseRev: baseRev,
-			Rev:     rev,
+			BaseRev:            baseRev,
+			Rev:                rev,
+			GitleaksIgnorePath: git.DefaultGitleaksIgnorePath,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to detect secret leaks: %w", err)
@@ -152,8 +152,8 @@ func scanSecretsInternal(ctx context.Context,
 
 		for _, finding := range scanSecretsOut.Findings {
 			findings = append(findings, secretFinding{
-				Finding: finding,
-				Ref:     refUpdate.Ref,
+				ScanSecretsFinding: finding,
+				Ref:                refUpdate.Ref,
 			})
 		}
 	}
