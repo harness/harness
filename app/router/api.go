@@ -146,7 +146,7 @@ func NewAPIHandler(
 	r.Use(audit.Middleware())
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, appCtx, config, authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
+		setupRoutesV1(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
 			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 			webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl,
 			searchCtrl)
@@ -173,7 +173,6 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 func setupRoutesV1(r chi.Router,
 	appCtx context.Context,
 	config *types.Config,
-	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
 	repoSettingsCtrl *reposettings.Controller,
 	executionCtrl *execution.Controller,
