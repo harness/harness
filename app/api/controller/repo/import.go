@@ -52,6 +52,11 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, err
 	}
 
+	// cleanUpPublicAccess := func() {
+	// 	for ...c
+	// 		cleanup
+	// }
+
 	var repo *types.Repository
 	var isPublic bool
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
