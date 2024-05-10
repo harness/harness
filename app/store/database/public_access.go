@@ -95,17 +95,13 @@ func (p *PublicAccessStore) Create(
 ) error {
 	stmt := database.Builder.
 		Insert("").
-		Into("public_access").
-		Columns(
-			"public_access_space_id",
-			"public_access_repo_id",
-		)
+		Into("public_access")
 
 	switch typ {
 	case enum.PublicResourceTypeRepo:
-		stmt = stmt.Values(null.Int{}, null.IntFrom(id))
+		stmt = stmt.Columns("public_access_repo_id").Values(null.IntFrom(id))
 	case enum.PublicResourceTypeSpace:
-		stmt = stmt.Values(null.IntFrom(id), null.Int{})
+		stmt = stmt.Columns("public_access_space_id").Values(null.IntFrom(id))
 	default:
 		return fmt.Errorf("public resource type %q is not supported", typ)
 	}

@@ -17,11 +17,27 @@ package principal
 import (
 	"context"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-func (c controller) List(ctx context.Context, opts *types.PrincipalFilter) (
+func (c controller) List(ctx context.Context, session *auth.Session, opts *types.PrincipalFilter) (
 	[]*types.PrincipalInfo, error) {
+	if err := apiauth.Check(
+		ctx,
+		c.authorizer,
+		session,
+		&types.Scope{},
+		&types.Resource{
+			Type: enum.ResourceTypeUser,
+		},
+		enum.PermissionUserView,
+	); err != nil {
+		return nil, err
+	}
+
 	principals, err := c.principalStore.List(ctx, opts)
 	if err != nil {
 		return nil, err

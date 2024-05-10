@@ -17,6 +17,7 @@ package principal
 import (
 	"context"
 
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 )
 
@@ -24,6 +25,6 @@ import (
 // principal related information.
 type Controller interface {
 	// List lists the principals based on the provided filter.
-	List(ctx context.Context, opts *types.PrincipalFilter) ([]*types.PrincipalInfo, error)
-	Find(ctx context.Context, principalID int64) (*types.PrincipalInfo, error)
+	List(ctx context.Context, session *auth.Session, opts *types.PrincipalFilter) ([]*types.PrincipalInfo, error)
+	Find(ctx context.Context, session *auth.Session, principalID int64) (*types.PrincipalInfo, error)
 }

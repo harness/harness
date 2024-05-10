@@ -62,7 +62,7 @@ type CreateInput struct {
 // Create creates a new repository.
 //
 //nolint:gocognit
-func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*Repository, error) {
+func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*RepositoryOutput, error) {
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -119,7 +119,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
-	if err = c.SetRepoPublicAccess(ctx, repo, in.IsPublic); err != nil {
+	err = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, in.IsPublic)
+	if err != nil {
 		if dErr := c.PurgeNoAuth(ctx, session, repo); dErr != nil {
 			log.Ctx(ctx).Warn().Err(dErr).Msg("failed to purge repo for cleanup")
 		}
@@ -129,7 +130,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	// backfil GitURL
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
-	repoData := &Repository{
+	repoData := &RepositoryOutput{
 		Repository: *repo,
 		IsPublic:   in.IsPublic,
 	}
@@ -186,10 +187,6 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	// TODO [CODE-1363]: remove after identifier migration.
 	if in.Identifier == "" {
 		in.Identifier = in.UID
-	}
-
-	if in.IsPublic && !c.publicResourceCreationEnabled {
-		return errPublicRepoCreationDisabled
 	}
 
 	if err := c.validateParentRef(in.ParentRef); err != nil {
@@ -278,18 +275,6 @@ func (c *Controller) createGitRepository(ctx context.Context, session *auth.Sess
 	}
 
 	return resp, len(files) == 0, nil
-}
-
-func (c *Controller) SetRepoPublicAccess(
-	ctx context.Context,
-	repo *types.Repository,
-	isPublic bool,
-) error {
-	if isPublic && !c.publicResourceCreationEnabled {
-		return errPublicRepoCreationDisabled
-	}
-
-	return c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic)
 }
 
 func createReadme(name, description string) []byte {

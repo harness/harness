@@ -81,6 +81,7 @@ func (r *RepositoryInfo) ToRepo(
 	identifier string,
 	description string,
 	principal *types.Principal,
+	publicResourceCreationEnabled bool,
 ) (*types.Repository, bool) {
 	now := time.Now().UnixMilli()
 	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(fmt.Sprintf("%d:%s", spaceID, identifier)), now)
@@ -96,7 +97,7 @@ func (r *RepositoryInfo) ToRepo(
 		ForkID:        0,
 		DefaultBranch: r.DefaultBranch,
 		Importing:     true,
-	}, r.IsPublic
+	}, (r.IsPublic && publicResourceCreationEnabled)
 }
 
 func hash(s string) string {

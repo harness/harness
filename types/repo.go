@@ -15,8 +15,6 @@
 package types
 
 import (
-	"encoding/json"
-
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -67,19 +65,6 @@ func (r Repository) Clone() Repository {
 	r.Deleted = deleted
 
 	return r
-}
-
-// TODO [CODE-1363]: remove after identifier migration.
-func (r Repository) MarshalJSON() ([]byte, error) {
-	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
-	type alias Repository
-	return json.Marshal(&struct {
-		alias
-		UID string `json:"uid"`
-	}{
-		alias: (alias)(r),
-		UID:   r.Identifier,
-	})
 }
 
 type RepositorySizeInfo struct {

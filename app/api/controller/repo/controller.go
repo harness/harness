@@ -16,6 +16,7 @@ package repo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -44,8 +45,21 @@ import (
 )
 
 type RepositoryOutput struct {
-	types.Repository `json:",inline"`
-	IsPublic         bool `json:"is_public" yaml:"is_public"`
+	types.Repository
+	IsPublic bool `json:"is_public" yaml:"is_public"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (r RepositoryOutput) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias RepositoryOutput
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(r),
+		UID:   r.Identifier,
+	})
 }
 
 type Controller struct {
