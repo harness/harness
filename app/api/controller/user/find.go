@@ -28,6 +28,11 @@ import (
  */
 func (c *Controller) Find(ctx context.Context, session *auth.Session,
 	userUID string) (*types.User, error) {
+	if session.Principal.UID == auth.AnonymousPrincipal.UID {
+		return &types.User{
+			UID: auth.AnonymousPrincipal.UID,
+		}, nil
+	}
 	user, err := c.FindNoAuth(ctx, userUID)
 	if err != nil {
 		return nil, err
