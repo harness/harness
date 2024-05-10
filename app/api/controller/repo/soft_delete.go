@@ -88,8 +88,9 @@ func (c *Controller) SoftDeleteNoAuth(
 		return c.PurgeNoAuth(ctx, session, repo)
 	}
 
-	// unset repo public access regardless if it's public/private
-	if err := c.SetRepoPublicAccess(ctx, repo, false); err != nil {
+	// unset repo public access regardless if it's public/private for simplicity.
+	err := c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, false)
+	if err != nil {
 		return fmt.Errorf("failed to disable repo public access: %w", err)
 	}
 

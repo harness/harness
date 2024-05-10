@@ -69,6 +69,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			in.Identifier,
 			in.Description,
 			&session.Principal,
+			c.publicResourceCreationEnabled,
 		)
 
 		// lock the space for update during repo creation to prevent racing conditions with space soft delete.
@@ -82,14 +83,11 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			return fmt.Errorf("failed to create repository in storage: %w", err)
 		}
 
-		if err = c.SetRepoPublicAccess(ctx, repo, isPublic); err != nil {
-			return fmt.Errorf("failed to set repo public access: %w", err)
-		}
-
 		err = c.importer.Run(ctx,
 			provider,
 			repo,
 			remoteRepository.CloneURL,
+			isPublic,
 			in.Pipelines,
 		)
 		if err != nil {

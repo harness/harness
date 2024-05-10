@@ -31,12 +31,6 @@ func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler 
 	return performAuthentication(authenticator, false)
 }
 
-// Required returns an http.HandlerFunc middleware that authenticates
-// the http.Request and fails the request if no auth data was available.
-func Required(authenticator authn.Authenticator) func(http.Handler) http.Handler {
-	return performAuthentication(authenticator, true)
-}
-
 // performAuthentication returns an http.HandlerFunc middleware that authenticates
 // the http.Request if authentication payload is available.
 // Depending on whether it is required or not, the request will be failed.

@@ -205,7 +205,7 @@ func setupRoutesV1(r chi.Router,
 	setupSecrets(r, secretCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
-	setupPrincipals(r, authenticator, principalCtrl)
+	setupPrincipals(r, principalCtrl)
 	setupInternal(r, githookCtrl, git)
 	setupAdmin(r, userCtrl)
 	setupAccount(r, userCtrl, sysCtrl, config)
@@ -668,9 +668,8 @@ func setupResources(r chi.Router) {
 	})
 }
 
-func setupPrincipals(r chi.Router, authenticator authn.Authenticator, principalCtrl principal.Controller) {
+func setupPrincipals(r chi.Router, principalCtrl principal.Controller) {
 	r.Route("/principals", func(r chi.Router) {
-		r.Use(middlewareauthn.Required(authenticator))
 		r.Get("/", handlerprincipal.HandleList(principalCtrl))
 		r.Get(fmt.Sprintf("/{%s}", request.PathParamPrincipalID), handlerprincipal.HandleFind(principalCtrl))
 	})

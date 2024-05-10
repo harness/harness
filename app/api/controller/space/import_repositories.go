@@ -93,6 +93,7 @@ func (c *Controller) ImportRepositories(
 	}
 
 	repoIDs := make([]int64, 0, len(remoteRepositories))
+	repoIsPublicVals := make([]bool, 0, len(remoteRepositories))
 	cloneURLs := make([]string, 0, len(remoteRepositories))
 	repos := make([]*types.Repository, 0, len(remoteRepositories))
 	duplicateRepos := make([]*types.Repository, 0, len(remoteRepositories))
@@ -115,6 +116,7 @@ func (c *Controller) ImportRepositories(
 				remoteRepository.Identifier,
 				"",
 				&session.Principal,
+				c.publicResourceCreationEnabled,
 			)
 
 			err = c.repoStore.Create(ctx, repo)
@@ -126,13 +128,10 @@ func (c *Controller) ImportRepositories(
 				return fmt.Errorf("failed to create repository in storage: %w", err)
 			}
 
-			if err := c.repoCtrl.SetRepoPublicAccess(ctx, repo, isPublic); err != nil {
-				return fmt.Errorf("failed to set repo public access: %w", err)
-			}
-
 			repos = append(repos, repo)
 			repoIDs = append(repoIDs, repo.ID)
 			cloneURLs = append(cloneURLs, remoteRepository.CloneURL)
+			repoIsPublicVals = append(repoIsPublicVals, isPublic)
 		}
 		if len(repoIDs) == 0 {
 			return nil
@@ -143,6 +142,7 @@ func (c *Controller) ImportRepositories(
 			jobGroupID,
 			provider,
 			repoIDs,
+			repoIsPublicVals,
 			cloneURLs,
 			in.Pipelines,
 		)

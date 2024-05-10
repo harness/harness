@@ -28,25 +28,28 @@ func (a *MembershipAuthorizer) CheckPublicAccess(
 	resource *types.Resource,
 	permission enum.Permission,
 ) (bool, error) {
-	// public access only permits view.
-	if permission != enum.PermissionRepoView &&
-		permission != enum.PermissionSpaceView {
+	var pubResType enum.PublicResourceType
+
+	//nolint:exhaustive
+	switch resource.Type {
+	case enum.ResourceTypeSpace:
+		pubResType = enum.PublicResourceTypeSpace
+
+	case enum.ResourceTypeRepo:
+		if resource.Identifier != "" {
+			pubResType = enum.PublicResourceTypeRepo
+		} else { // for spaceScope checks
+			pubResType = enum.PublicResourceTypeSpace
+		}
+
+	case enum.ResourceTypePipeline:
+		pubResType = enum.PublicResourceTypeRepo
+
+	default:
 		return false, nil
 	}
 
-	pubResType, pubResPath := mapResource(scope, resource)
+	pubResPath := paths.Concatenate(scope.SpacePath, resource.Identifier)
 
 	return a.publicAccess.Get(ctx, pubResType, pubResPath)
-}
-
-func mapResource(scope *types.Scope, resource *types.Resource,
-) (enum.PublicResourceType, string) {
-	pubResType := enum.PublicResourceTypeSpace
-
-	if resource.Type == enum.ResourceTypeRepo &&
-		resource.Identifier != "" {
-		pubResType = enum.PublicResourceTypeRepo
-	}
-
-	return pubResType, paths.Concatenate(scope.SpacePath, resource.Identifier)
 }

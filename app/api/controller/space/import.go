@@ -67,6 +67,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	}
 
 	repoIDs := make([]int64, len(remoteRepositories))
+	repoIsPublicVals := make([]bool, len(remoteRepositories))
 	cloneURLs := make([]string, len(remoteRepositories))
 	repos := make([]*types.Repository, 0, len(remoteRepositories))
 
@@ -88,6 +89,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 				remoteRepository.Identifier,
 				"",
 				&session.Principal,
+				c.publicResourceCreationEnabled,
 			)
 
 			err = c.repoStore.Create(ctx, repo)
@@ -97,11 +99,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			repos = append(repos, repo)
 			repoIDs[i] = repo.ID
 			cloneURLs[i] = remoteRepository.CloneURL
-
-			if err := c.repoCtrl.SetRepoPublicAccess(ctx, repo, isPublic); err != nil {
-				return fmt.Errorf("failed to set repo public access: %w", err)
-			}
-
+			repoIsPublicVals[i] = isPublic
 		}
 
 		jobGroupID := fmt.Sprintf("space-import-%d", space.ID)
@@ -109,6 +107,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			jobGroupID,
 			provider,
 			repoIDs,
+			repoIsPublicVals,
 			cloneURLs,
 			in.Pipelines,
 		)

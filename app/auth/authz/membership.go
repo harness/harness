@@ -114,9 +114,14 @@ func (a *MembershipAuthorizer) Check(
 		spacePath = scope.SpacePath
 
 	case enum.ResourceTypeUser:
-		// a user is allowed to view / edit themselves
+		// a user is allowed to edit themselves
 		if resource.Identifier == session.Principal.UID &&
-			(permission == enum.PermissionUserView || permission == enum.PermissionUserEdit) {
+			permission == enum.PermissionUserEdit {
+			return true, nil
+		}
+
+		// user can see all other users in the system.
+		if permission == enum.PermissionUserView {
 			return true, nil
 		}
 

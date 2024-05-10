@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -69,6 +70,14 @@ func (c *Controller) Create(
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	err = c.publicAccess.Set(ctx, enum.PublicResourceTypeSpace, space.Path, in.IsPublic)
+	if err != nil {
+		if dErr := c.PurgeNoAuth(ctx, session, space); dErr != nil {
+			log.Ctx(ctx).Warn().Err(dErr).Msg("failed to set a space public")
+		}
+		return nil, fmt.Errorf("failed to set space public access: %w", err)
 	}
 
 	return GetSpaceOutput(ctx, c.publicAccess, space)
@@ -146,10 +155,6 @@ func (c *Controller) createSpaceInnerInTX(
 		}
 	}
 
-	if err := c.setSpacePublicAccess(ctx, space, in.IsPublic); err != nil {
-		return nil, fmt.Errorf("failed to set a space public: %w", err)
-	}
-
 	return space, nil
 }
 
@@ -185,14 +190,6 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 	}
 
 	return parentSpace, nil
-}
-
-func (c *Controller) setSpacePublicAccess(
-	ctx context.Context,
-	space *types.Space,
-	isPublic bool,
-) error {
-	return c.publicAccess.Set(ctx, enum.PublicResourceTypeSpace, space.Path, isPublic)
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {

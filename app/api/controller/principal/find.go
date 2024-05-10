@@ -17,11 +17,26 @@ package principal
 import (
 	"context"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 func (c controller) Find(ctx context.Context, session *auth.Session, principalID int64) (*types.PrincipalInfo, error) {
+	if err := apiauth.Check(
+		ctx,
+		c.authorizer,
+		session,
+		&types.Scope{},
+		&types.Resource{
+			Type: enum.ResourceTypeUser,
+		},
+		enum.PermissionUserView,
+	); err != nil {
+		return nil, err
+	}
+
 	principal, err := c.principalStore.Find(ctx, principalID)
 	if err != nil {
 		return nil, err
