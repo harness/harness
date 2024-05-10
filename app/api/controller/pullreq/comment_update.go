@@ -83,6 +83,13 @@ func (c *Controller) CommentUpdate(
 	// generate all metadata updates
 	var metadataUpdates []types.PullReqActivityMetadataUpdate
 
+	metadataUpdates, principalInfos, err := c.appendMetadataUpdateForMentions(
+		ctx, metadataUpdates, in.Text,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update metadata for mentions: %w", err)
+	}
+
 	// suggestion metadata in case of code comments or code comment replies (don't restrict to either side for now).
 	if act.IsValidCodeComment() || (act.IsReply() && parentAct.IsValidCodeComment()) {
 		metadataUpdates = appendMetadataUpdateForSuggestions(metadataUpdates, in.Text)
@@ -98,6 +105,9 @@ func (c *Controller) CommentUpdate(
 	if err != nil {
 		return nil, fmt.Errorf("failed to update comment: %w", err)
 	}
+
+	// Populate activity mentions (used only for response purposes).
+	act.Mentions = principalInfos
 
 	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")

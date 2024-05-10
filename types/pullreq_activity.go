@@ -55,6 +55,8 @@ type PullReqActivity struct {
 	Resolver *PrincipalInfo `json:"resolver,omitempty"`
 
 	CodeComment *CodeCommentFields `json:"code_comment,omitempty"`
+
+	Mentions map[int64]*PrincipalInfo `json:"mentions,omitempty"` // used only in response
 }
 
 func (a *PullReqActivity) IsValidCodeComment() bool {

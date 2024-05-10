@@ -17,14 +17,10 @@ package notification
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strconv"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
-
-	"github.com/rs/zerolog/log"
 )
 
 type CommentPayload struct {
@@ -125,7 +121,7 @@ func (s *Service) processCommentCreatedEvent(
 	seen[commenter.ID] = true
 
 	// process mentions
-	mentions, err = s.processMentions(ctx, activity.Text, seen)
+	mentions, err = s.processMentions(ctx, activity.Metadata, seen)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -147,29 +143,27 @@ func (s *Service) processCommentCreatedEvent(
 
 func (s *Service) processMentions(
 	ctx context.Context,
-	text string,
+	metadata *types.PullReqActivityMetadata,
 	seen map[int64]bool,
 ) ([]*types.PrincipalInfo, error) {
-	var mentions []*types.PrincipalInfo
-
-	commentMentions := parseMentions(ctx, text)
-	if len(commentMentions) == 0 {
+	if metadata == nil || metadata.Mentions == nil {
 		return []*types.PrincipalInfo{}, nil
 	}
 
-	var mentionIDs []int64
-	for _, mentionID := range commentMentions {
-		if !seen[mentionID] {
-			mentionIDs = append(mentionIDs, mentionID)
-			seen[mentionID] = true
+	var ids []int64
+	for _, id := range metadata.Mentions.IDs {
+		if !seen[id] {
+			ids = append(ids, id)
+			seen[id] = true
 		}
 	}
-	if len(mentionIDs) > 0 {
-		var err error
-		mentions, err = s.principalInfoView.FindMany(ctx, mentionIDs)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch thread mentions from principalInfoView: %w", err)
-		}
+	if len(ids) == 0 {
+		return []*types.PrincipalInfo{}, nil
+	}
+
+	mentions, err := s.principalInfoView.FindMany(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch thread mentions from principalInfoView: %w", err)
 	}
 
 	return mentions, nil
@@ -212,24 +206,4 @@ func (s *Service) processParticipants(
 	}
 
 	return participants, nil
-}
-
-var mentionRegex = regexp.MustCompile(`@\[(\d+)\]`)
-
-func parseMentions(ctx context.Context, text string) []int64 {
-	matches := mentionRegex.FindAllStringSubmatch(text, -1)
-
-	var mentions []int64
-	for _, match := range matches {
-		if len(match) < 2 {
-			continue
-		}
-		if mention, err := strconv.ParseInt(match[1], 10, 64); err == nil {
-			mentions = append(mentions, mention)
-		} else {
-			log.Ctx(ctx).Warn().Err(err).Msgf("failed to parse mention %q", match[1])
-		}
-	}
-
-	return mentions
 }

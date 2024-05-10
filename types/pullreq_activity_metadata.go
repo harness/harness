@@ -17,6 +17,7 @@ package types
 // PullReqActivityMetadata contains metadata related to pull request activity.
 type PullReqActivityMetadata struct {
 	Suggestions *PullReqActivitySuggestionsMetadata `json:"suggestions,omitempty"`
+	Mentions    *PullReqActivityMentionsMetadata    `json:"mentions,omitempty"`
 }
 
 func (m *PullReqActivityMetadata) IsEmpty() bool {
@@ -61,6 +62,31 @@ func WithPullReqActivitySuggestionsMetadataUpdate(
 
 		if m.Suggestions.IsEmpty() {
 			m.Suggestions = nil
+		}
+	})
+}
+
+// PullReqActivityMentionsMetadata contains metadata for code comment mentions.
+type PullReqActivityMentionsMetadata struct {
+	IDs []int64 `json:"ids,omitempty"`
+}
+
+func (m *PullReqActivityMentionsMetadata) IsEmpty() bool {
+	return len(m.IDs) == 0
+}
+
+func WithPullReqActivityMentionsMetadataUpdate(
+	f func(m *PullReqActivityMentionsMetadata),
+) PullReqActivityMetadataUpdate {
+	return pullReqActivityMetadataUpdateFunc(func(m *PullReqActivityMetadata) {
+		if m.Mentions == nil {
+			m.Mentions = &PullReqActivityMentionsMetadata{}
+		}
+
+		f(m.Mentions)
+
+		if m.Mentions.IsEmpty() {
+			m.Mentions = nil
 		}
 	})
 }

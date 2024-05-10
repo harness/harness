@@ -50,6 +50,7 @@ type Controller struct {
 	reviewerStore       store.PullReqReviewerStore
 	repoStore           store.RepoStore
 	principalStore      store.PrincipalStore
+	principalInfoCache  store.PrincipalInfoCache
 	fileViewStore       store.PullReqFileViewStore
 	membershipStore     store.MembershipStore
 	checkStore          store.CheckStore
@@ -74,6 +75,7 @@ func NewController(
 	pullreqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
+	principalInfoCache store.PrincipalInfoCache,
 	fileViewStore store.PullReqFileViewStore,
 	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
@@ -97,6 +99,7 @@ func NewController(
 		reviewerStore:       pullreqReviewerStore,
 		repoStore:           repoStore,
 		principalStore:      principalStore,
+		principalInfoCache:  principalInfoCache,
 		fileViewStore:       fileViewStore,
 		membershipStore:     membershipStore,
 		checkStore:          checkStore,

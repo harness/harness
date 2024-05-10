@@ -47,6 +47,16 @@ func (c *Controller) ActivityList(
 		return nil, fmt.Errorf("failed to list pull requests activities: %w", err)
 	}
 
+	for _, act := range list {
+		if act.Metadata != nil && act.Metadata.Mentions != nil {
+			mentions, err := c.principalInfoCache.Map(ctx, act.Metadata.Mentions.IDs)
+			if err != nil {
+				return nil, fmt.Errorf("failed to fetch activity mentions from principalInfoView: %w", err)
+			}
+			act.Mentions = mentions
+		}
+	}
+
 	list = removeDeletedComments(list)
 
 	return list, nil

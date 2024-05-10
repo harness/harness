@@ -127,6 +127,12 @@ func (c *Controller) CommentCreate(
 	// generate all metadata updates
 	var metadataUpdates []types.PullReqActivityMetadataUpdate
 
+	metadataUpdates, principalInfos, err := c.appendMetadataUpdateForMentions(
+		ctx, metadataUpdates, in.Text)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update metadata for mentions: %w", err)
+	}
+
 	// suggestion metadata in case of code comments or code comment replies (don't restrict to either side for now).
 	if in.IsCodeComment() || (in.IsReply() && parentAct.IsValidCodeComment()) {
 		metadataUpdates = appendMetadataUpdateForSuggestions(metadataUpdates, in.Text)
@@ -191,6 +197,9 @@ func (c *Controller) CommentCreate(
 	if err != nil {
 		return nil, err
 	}
+
+	// Populate activity mentions (used only for response purposes).
+	act.Mentions = principalInfos
 
 	if in.IsCodeComment() {
 		// Migrate the comment if necessary... Note: we still need to return the code comment as is.
@@ -427,4 +436,30 @@ func appendMetadataUpdateForSuggestions(
 				}
 			}),
 	)
+}
+
+func (c *Controller) appendMetadataUpdateForMentions(
+	ctx context.Context,
+	updates []types.PullReqActivityMetadataUpdate,
+	comment string,
+) ([]types.PullReqActivityMetadataUpdate, map[int64]*types.PrincipalInfo, error) {
+	principalInfos, err := c.processMentions(ctx, comment)
+	if err != nil {
+		return nil, map[int64]*types.PrincipalInfo{}, err
+	}
+
+	ids := make([]int64, len(principalInfos))
+	i := 0
+	for id := range principalInfos {
+		ids[i] = id
+		i++
+	}
+
+	return append(
+		updates,
+		types.WithPullReqActivityMentionsMetadataUpdate(
+			func(m *types.PullReqActivityMentionsMetadata) {
+				m.IDs = ids
+			}),
+	), principalInfos, nil
 }
