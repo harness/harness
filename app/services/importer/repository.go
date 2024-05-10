@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/services/keywordsearch"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	gitnessurl "github.com/harness/gitness/app/url"
@@ -53,7 +54,6 @@ var (
 
 type Repository struct {
 	defaultBranch string
-	isPublic      bool
 	urlProvider   gitnessurl.Provider
 	git           git.Interface
 	tx            dbtx.Transactor
@@ -64,6 +64,7 @@ type Repository struct {
 	scheduler     *job.Scheduler
 	sseStreamer   sse.Streamer
 	indexer       keywordsearch.Indexer
+	publicAccess  publicaccess.Service
 }
 
 var _ job.Handler = (*Repository)(nil)
@@ -81,11 +82,12 @@ const (
 )
 
 type Input struct {
-	RepoID    int64          `json:"repo_id"`
-	GitUser   string         `json:"git_user"`
-	GitPass   string         `json:"git_pass"`
-	CloneURL  string         `json:"clone_url"`
-	Pipelines PipelineOption `json:"pipelines"`
+	RepoID       int64          `json:"repo_id"`
+	RepoIsPublic bool           `json:"is_public"`
+	GitUser      string         `json:"git_user"`
+	GitPass      string         `json:"git_pass"`
+	CloneURL     string         `json:"clone_url"`
+	Pipelines    PipelineOption `json:"pipelines"`
 }
 
 const jobType = "repository_import"
@@ -100,14 +102,16 @@ func (r *Repository) Run(
 	provider Provider,
 	repo *types.Repository,
 	cloneURL string,
+	isPublic bool,
 	pipelines PipelineOption,
 ) error {
 	jobDef, err := r.getJobDef(JobIDFromRepoID(repo.ID), Input{
-		RepoID:    repo.ID,
-		GitUser:   provider.Username,
-		GitPass:   provider.Password,
-		CloneURL:  cloneURL,
-		Pipelines: pipelines,
+		RepoID:       repo.ID,
+		RepoIsPublic: isPublic,
+		GitUser:      provider.Username,
+		GitPass:      provider.Password,
+		CloneURL:     cloneURL,
+		Pipelines:    pipelines,
 	})
 	if err != nil {
 		return err
@@ -121,6 +125,7 @@ func (r *Repository) RunMany(ctx context.Context,
 	groupID string,
 	provider Provider,
 	repoIDs []int64,
+	repoIsPublicVals []bool,
 	cloneURLs []string,
 	pipelines PipelineOption,
 ) error {
@@ -135,13 +140,15 @@ func (r *Repository) RunMany(ctx context.Context,
 	for k := 0; k < n; k++ {
 		repoID := repoIDs[k]
 		cloneURL := cloneURLs[k]
+		isPublic := repoIsPublicVals[k]
 
 		jobDef, err := r.getJobDef(JobIDFromRepoID(repoID), Input{
-			RepoID:    repoID,
-			GitUser:   provider.Username,
-			GitPass:   provider.Password,
-			CloneURL:  cloneURL,
-			Pipelines: pipelines,
+			RepoID:       repoID,
+			RepoIsPublic: isPublic,
+			GitUser:      provider.Username,
+			GitPass:      provider.Password,
+			CloneURL:     cloneURL,
+			Pipelines:    pipelines,
 		})
 		if err != nil {
 			return err
@@ -257,6 +264,15 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		})
 		if err != nil {
 			return fmt.Errorf("failed to update repository prior to the import: %w", err)
+		}
+
+		log.Info().Msg("setting repository public access")
+		// setup public access
+		// Note: if a repository with the same reference had its public access not cleaned up
+		// it might retain its public status until this job sets the actual is-public value for the importing repo.
+		err = r.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, input.RepoIsPublic)
+		if err != nil {
+			return fmt.Errorf("failed to set repo public access: %w", err)
 		}
 
 		log.Info().Msg("sync repository")
