@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/audit"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -52,30 +52,36 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, err
 	}
 
-	// cleanUpPublicAccess := func() {
-	// 	for ...c
-	// 		cleanup
-	// }
+	remoteRepository, provider, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
+	if err != nil {
+		return nil, err
+	}
 
-	var repo *types.Repository
-	var isPublic bool
+	repo, isPublic := remoteRepository.ToRepo(
+		parentSpace.ID,
+		in.Identifier,
+		in.Description,
+		&session.Principal,
+		c.publicResourceCreationEnabled,
+	)
+
+	cleanUpPublicAccess := func() {
+		err := c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, false)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msg("failed to cleanup repo public access")
+		}
+	}
+
+	err = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, isPublic)
+	if err != nil {
+		cleanUpPublicAccess()
+		return nil, fmt.Errorf("failed to set repo public access: %w", err)
+	}
+
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		if err := c.resourceLimiter.RepoCount(ctx, parentSpace.ID, 1); err != nil {
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
-
-		remoteRepository, provider, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
-		if err != nil {
-			return err
-		}
-
-		repo, isPublic = remoteRepository.ToRepo(
-			parentSpace.ID,
-			in.Identifier,
-			in.Description,
-			&session.Principal,
-			c.publicResourceCreationEnabled,
-		)
 
 		// lock the space for update during repo creation to prevent racing conditions with space soft delete.
 		parentSpace, err = c.spaceStore.FindForUpdate(ctx, parentSpace.ID)
@@ -102,6 +108,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil
 	})
 	if err != nil {
+		cleanUpPublicAccess()
 		return nil, err
 	}
 
