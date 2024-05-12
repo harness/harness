@@ -157,7 +157,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
               }
               variation={ButtonVariation.PRIMARY}
               onClick={() => {
-                changeVisibility({ enable_public: repoVis === RepoVisibility.PUBLIC ? true : false })
+                changeVisibility({ is_public: repoVis === RepoVisibility.PUBLIC ? true : false })
                   .then(() => {
                     showSuccess(getString('repoUpdate'))
                     hideModal()
