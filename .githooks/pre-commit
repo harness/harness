@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-echo Running pre-commit hook
+echo Running pre-commit hook 
 
 # Check for required binaries, otherwise don't run
 if ! command -v grep &> /dev/null
