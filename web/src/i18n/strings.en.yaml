@@ -242,6 +242,13 @@ diff: Diff
 draft: Draft
 conversation: Conversation
 pr:
+  suggestedChange: Suggested change
+  addSuggestion: Add suggestion to batch
+  removeSuggestion: Remove suggestion from batch
+  commitSuggestions: 'Commit {count|1:suggestion,suggestions}'
+  commitSuggestion: Commit suggestion
+  applySuggestions: 'Apply {count|1:suggestion,suggestions} from code review'
+  suggestionApplied: Suggestion applied
   commentLineNumbers: Comment on line {{start}} to {{end}}
   moreComments: '{num} {count|0:Show more,1:1 more comment,more comments}'
   copyLinkToComment: Copy link to comment
@@ -287,8 +294,8 @@ pr:
   requestSubmitted: Request for changes submitted.
   prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} this pull request.  {time}'
   prMergedBannerInfo: '{user} merged branch {source} into {target} {time}.'
-  prMergedInfo: '{user}{bypassed|true: bypassed rules and , }merged changes from {source} into {target} as {mergeSha} {time}'
-  prRebasedInfo: '{user}{bypassed|true: bypassed rules and , }rebased changes from branch {source} onto {target}, now at {mergeSha} {time}'
+  prMergedInfo: '{user} merged changes from {source} into {target} as {mergeSha} {time}'
+  prRebasedInfo: '{user} rebased changes from branch {source} onto {target}, now at {mergeSha} {time}'
   prBranchPushInfo: '{user} pushed a new commit {commit}'
   prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
@@ -1028,3 +1035,11 @@ securitySettings:
   detectDesc: passive vulnerability will report errors but not block
   block: Block
   blockDesc: active vulnerability blocks commit if any vulnerability is found
+suggestion: 'Add a suggestion, <Ctrl-g>'
+heading: Heading
+bold: Bold
+italic: Italic
+upload: Upload
+unorderedList: Unordered list
+checklist: Check list
+code: Code

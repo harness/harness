@@ -17,6 +17,7 @@
 import type { EnumPullReqReviewDecision, TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import { CommentType } from 'components/DiffViewer/DiffViewerUtils'
+import type { PullRequestSection } from 'utils/Utils'
 
 export function isCodeComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
   return commentItems[0]?.payload?.type === CommentType.CODE_COMMENT
@@ -45,3 +46,12 @@ export const processReviewDecision = (
   review_decision === PullReqReviewDecision.approved && reviewedSHA !== sourceSHA
     ? PullReqReviewDecision.outdated
     : review_decision
+
+export function getActivePullReqPageSection(): PullRequestSection | undefined {
+  return (document.querySelector('[data-page-section]') as HTMLElement)?.dataset?.pageSection as PullRequestSection
+}
+
+export enum PullReqCustomEvent {
+  REFETCH_DIFF = 'PullReqCustomEvent_REFETCH',
+  REFETCH_ACTIVITIES = 'PullReqCustomEvent_REFETCH_ACTIVITIES'
+}

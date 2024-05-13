@@ -22,7 +22,7 @@ import { useHistory } from 'react-router-dom'
 import { Container, Layout, Text, FlexExpander, Button, ButtonVariation, ButtonSize } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { LogViewer } from 'components/LogViewer/LogViewer'
-import { PullRequestCheckType } from 'utils/Utils'
+import { PullRequestCheckType, PullRequestSection } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { Split } from 'components/Split/Split'
@@ -176,7 +176,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, p
   }
 
   return (
-    <Container className={css.main}>
+    <Container className={css.main} data-page-section={PullRequestSection.CHECKS}>
       <Match expr={prChecksDecisionResult?.overallStatus}>
         <Truthy>
           <Split split="vertical" size={400} minSize={300} maxSize={700} primary="first">

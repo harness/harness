@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Text,
   Button,
@@ -51,6 +51,7 @@ import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import { AidaClient } from 'utils/types'
 import type { TypesRepository } from 'services/code'
 import { useEventListener } from 'hooks/useEventListener'
+import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
 import css from './MarkdownEditorWithPreview.module.scss'
 
 enum MarkdownEditorTab {
@@ -65,24 +66,16 @@ enum ToolbarAction {
   UPLOAD = 'UPLOAD',
   UNORDER_LIST = 'UNORDER_LIST',
   CHECK_LIST = 'CHECK_LIST',
-  CODE_BLOCK = 'CODE_BLOCK'
+  CODE_BLOCK = 'CODE_BLOCK',
+  SUGGESTION = 'SUGGESTION'
 }
 
 interface ToolbarItem {
   icon: IconName
   action: ToolbarAction
+  title?: string
+  size?: number
 }
-
-const toolbar: ToolbarItem[] = [
-  { icon: 'header', action: ToolbarAction.HEADER },
-  { icon: 'bold', action: ToolbarAction.BOLD },
-  { icon: 'italic', action: ToolbarAction.ITALIC },
-  { icon: 'paperclip', action: ToolbarAction.UPLOAD },
-
-  { icon: 'properties', action: ToolbarAction.UNORDER_LIST },
-  { icon: 'form', action: ToolbarAction.CHECK_LIST },
-  { icon: 'main-code-yaml', action: ToolbarAction.CODE_BLOCK }
-]
 
 // Define a unique effect to update decorations
 const addDecorationEffect = StateEffect.define<{ decoration: Decoration; from: number; to: number }[]>()
@@ -144,6 +137,7 @@ interface MarkdownEditorWithPreviewProps {
   repoMetadata: TypesRepository | undefined
   standalone: boolean
   routingId: string
+  suggestionBlock?: SuggestionBlock
 }
 
 export function MarkdownEditorWithPreview({
@@ -170,7 +164,8 @@ export function MarkdownEditorWithPreview({
   setFlag,
   flag,
   sourceGitRef,
-  targetGitRef
+  targetGitRef,
+  suggestionBlock
 }: MarkdownEditorWithPreviewProps) {
   const { getString } = useStrings()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -192,6 +187,22 @@ export function MarkdownEditorWithPreview({
   })
   const isDirty = useRef(dirty)
   const [data, setData] = useState({})
+  const toolbar: ToolbarItem[] = useMemo(() => {
+    const initial: ToolbarItem[] = suggestionBlock
+      ? [{ icon: 'suggestion', action: ToolbarAction.SUGGESTION, title: getString('suggestion'), size: 20 }]
+      : []
+
+    return [
+      ...initial,
+      { icon: 'header', action: ToolbarAction.HEADER, title: getString('heading') },
+      { icon: 'bold', action: ToolbarAction.BOLD, title: getString('bold') },
+      { icon: 'italic', action: ToolbarAction.ITALIC, title: getString('italic') },
+      { icon: 'paperclip', action: ToolbarAction.UPLOAD, title: getString('upload') },
+      { icon: 'properties', action: ToolbarAction.UNORDER_LIST, title: getString('unorderedList') },
+      { icon: 'form', action: ToolbarAction.CHECK_LIST, title: getString('checklist') },
+      { icon: 'main-code-yaml', action: ToolbarAction.CODE_BLOCK, title: getString('code') }
+    ]
+  }, [getString, suggestionBlock])
 
   useEffect(
     function setDirtyRef() {
@@ -200,7 +211,7 @@ export function MarkdownEditorWithPreview({
     [dirty]
   )
 
-  const myKeymap = keymap.of([
+  const shortcuts = keymap.of([
     {
       key: 'Mod-z',
       run: undo,
@@ -214,8 +225,19 @@ export function MarkdownEditorWithPreview({
         return true
       },
       preventDefault: true
+    },
+    {
+      key: 'Ctrl-g',
+      run: () => {
+        if (suggestionBlock) {
+          onToolbarAction(ToolbarAction.SUGGESTION)
+        }
+        return true
+      },
+      preventDefault: !!suggestionBlock
     }
   ])
+
   const handleMouseDown = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
@@ -289,128 +311,146 @@ export function MarkdownEditorWithPreview({
     }
   }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const onToolbarAction = useCallback((action: ToolbarAction) => {
-    const view = viewRef.current
+  const onToolbarAction = useCallback(
+    (action: ToolbarAction) => {
+      const view = viewRef.current
 
-    if (!view?.state) {
-      return
-    }
+      if (!view?.state) {
+        return
+      }
 
-    // Note: Part of this code is copied from @uiwjs/react-markdown-editor
-    // MIT License, Copyright (c) 2020 uiw
-    // @see https://github.dev/uiwjs/react-markdown-editor/blob/2d3f45079c79616b867ef03681a8ba9799169921/src/commands/header.tsx
-    switch (action) {
-      case ToolbarAction.HEADER: {
-        const lineInfo = view.state.doc.lineAt(view.state.selection.main.from)
-        let mark = '#'
-        const matchMark = lineInfo.text.match(/^#+/)
-        if (matchMark && matchMark[0]) {
-          const txt = matchMark[0]
-          if (txt.length < 6) {
-            mark = txt + '#'
+      // Note: Part of this code is copied from @uiwjs/react-markdown-editor
+      // MIT License, Copyright (c) 2020 uiw
+      // @see https://github.dev/uiwjs/react-markdown-editor/blob/2d3f45079c79616b867ef03681a8ba9799169921/src/commands/header.tsx
+      switch (action) {
+        case ToolbarAction.HEADER: {
+          const lineInfo = view.state.doc.lineAt(view.state.selection.main.from)
+          let mark = '#'
+          const matchMark = lineInfo.text.match(/^#+/)
+          if (matchMark && matchMark[0]) {
+            const txt = matchMark[0]
+            if (txt.length < 6) {
+              mark = txt + '#'
+            }
           }
+          if (mark.length > 6) {
+            mark = '#'
+          }
+          const title = lineInfo.text.replace(/^#+/, '')
+          view.dispatch({
+            changes: {
+              from: lineInfo.from,
+              to: lineInfo.to,
+              insert: `${mark} ${title}`
+            },
+            // selection: EditorSelection.range(lineInfo.from + mark.length, lineInfo.to),
+            selection: { anchor: lineInfo.from + mark.length + 1 }
+          })
+          break
         }
-        if (mark.length > 6) {
-          mark = '#'
+
+        case ToolbarAction.UPLOAD: {
+          setFile(undefined)
+          setOpen(true)
+          break
         }
-        const title = lineInfo.text.replace(/^#+/, '')
-        view.dispatch({
-          changes: {
-            from: lineInfo.from,
-            to: lineInfo.to,
-            insert: `${mark} ${title}`
-          },
-          // selection: EditorSelection.range(lineInfo.from + mark.length, lineInfo.to),
-          selection: { anchor: lineInfo.from + mark.length + 1 }
-        })
-        break
-      }
 
-      case ToolbarAction.UPLOAD: {
-        setFile(undefined)
-        setOpen(true)
-        break
-      }
-
-      case ToolbarAction.BOLD: {
-        view.dispatch(
-          view.state.changeByRange(range => ({
-            changes: [
-              { from: range.from, insert: '**' },
-              { from: range.to, insert: '**' }
-            ],
-            range: EditorSelection.range(range.from + 2, range.to + 2)
-          }))
-        )
-        break
-      }
-
-      case ToolbarAction.ITALIC: {
-        view.dispatch(
-          view.state.changeByRange(range => ({
-            changes: [
-              { from: range.from, insert: '*' },
-              { from: range.to, insert: '*' }
-            ],
-            range: EditorSelection.range(range.from + 1, range.to + 1)
-          }))
-        )
-        break
-      }
-
-      case ToolbarAction.UNORDER_LIST: {
-        const lineInfo = view.state.doc.lineAt(view.state.selection.main.from)
-        let mark = '- '
-        const matchMark = lineInfo.text.match(/^-/)
-        if (matchMark && matchMark[0]) {
-          mark = ''
+        case ToolbarAction.BOLD: {
+          view.dispatch(
+            view.state.changeByRange(range => ({
+              changes: [
+                { from: range.from, insert: '**' },
+                { from: range.to, insert: '**' }
+              ],
+              range: EditorSelection.range(range.from + 2, range.to + 2)
+            }))
+          )
+          break
         }
-        view.dispatch({
-          changes: {
-            from: lineInfo.from,
-            to: lineInfo.to,
-            insert: `${mark}${lineInfo.text}`
-          },
-          // selection: EditorSelection.range(lineInfo.from + mark.length, lineInfo.to),
-          selection: { anchor: view.state.selection.main.from + mark.length }
-        })
-        break
-      }
 
-      case ToolbarAction.CHECK_LIST: {
-        const lineInfo = view.state.doc.lineAt(view.state.selection.main.from)
-        let mark = '- [ ]  '
-        const matchMark = lineInfo.text.match(/^-\s\[\s\]\s/)
-        if (matchMark && matchMark[0]) {
-          mark = ''
+        case ToolbarAction.ITALIC: {
+          view.dispatch(
+            view.state.changeByRange(range => ({
+              changes: [
+                { from: range.from, insert: '*' },
+                { from: range.to, insert: '*' }
+              ],
+              range: EditorSelection.range(range.from + 1, range.to + 1)
+            }))
+          )
+          break
         }
-        view.dispatch({
-          changes: {
-            from: lineInfo.from,
-            to: lineInfo.to,
-            insert: `${mark}${lineInfo.text}`
-          },
-          // selection: EditorSelection.range(lineInfo.from + mark.length, lineInfo.to),
-          selection: { anchor: view.state.selection.main.from + mark.length }
-        })
-        break
-      }
 
-      case ToolbarAction.CODE_BLOCK: {
-        const main = view.state.selection.main
-        const txt = view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to)
-        view.dispatch({
-          changes: {
-            from: main.from,
-            to: main.to,
-            insert: `\`\`\`tsx\n${txt}\n\`\`\``
-          },
-          selection: EditorSelection.range(main.from + 3, main.from + 6)
-        })
-        break
+        case ToolbarAction.UNORDER_LIST: {
+          const lineInfo = view.state.doc.lineAt(view.state.selection.main.from)
+          let mark = '- '
+          const matchMark = lineInfo.text.match(/^-/)
+          if (matchMark && matchMark[0]) {
+            mark = ''
+          }
+          view.dispatch({
+            changes: {
+              from: lineInfo.from,
+              to: lineInfo.to,
+              insert: `${mark}${lineInfo.text}`
+            },
+            // selection: EditorSelection.range(lineInfo.from + mark.length, lineInfo.to),
+            selection: { anchor: view.state.selection.main.from + mark.length }
+          })
+          break
+        }
+
+        case ToolbarAction.CHECK_LIST: {
+          const lineInfo = view.state.doc.lineAt(view.state.selection.main.from)
+          let mark = '- [ ]  '
+          const matchMark = lineInfo.text.match(/^-\s\[\s\]\s/)
+          if (matchMark && matchMark[0]) {
+            mark = ''
+          }
+          view.dispatch({
+            changes: {
+              from: lineInfo.from,
+              to: lineInfo.to,
+              insert: `${mark}${lineInfo.text}`
+            },
+            // selection: EditorSelection.range(lineInfo.from + mark.length, lineInfo.to),
+            selection: { anchor: view.state.selection.main.from + mark.length }
+          })
+          break
+        }
+
+        case ToolbarAction.CODE_BLOCK: {
+          const main = view.state.selection.main
+          const txt = view.state.sliceDoc(view.state.selection.main.from, view.state.selection.main.to)
+
+          view.dispatch({
+            changes: {
+              from: main.from,
+              to: main.to,
+              insert: `\`\`\`tsx\n${txt}\n\`\`\``
+            },
+            selection: EditorSelection.range(main.from + 3, main.from + 6)
+          })
+          break
+        }
+
+        case ToolbarAction.SUGGESTION: {
+          const main = view.state.selection.main
+          const txt = suggestionBlock?.source || ''
+
+          view.dispatch({
+            changes: {
+              from: main.from,
+              to: main.to,
+              insert: `\`\`\`suggestion\n${txt}\n\`\`\``
+            }
+          })
+          break
+        }
       }
-    }
-  }, [])
+    },
+    [suggestionBlock]
+  )
 
   useEffect(() => {
     setDirtyProp?.(dirty)
@@ -605,8 +645,9 @@ export function MarkdownEditorWithPreview({
               size={ButtonSize.SMALL}
               variation={ButtonVariation.ICON}
               icon={item.icon}
+              title={item.title}
               withoutCurrentColor
-              iconProps={{ color: Color.PRIMARY_10, size: 14 }}
+              iconProps={{ color: Color.PRIMARY_10, size: item.size || 14 }}
               onClick={() => onToolbarAction(item.action)}
             />
           )
@@ -614,7 +655,7 @@ export function MarkdownEditorWithPreview({
       </Container>
       <Container className={css.tabContent}>
         <Editor
-          extensions={[myKeymap, decorationField, history()]}
+          extensions={[shortcuts, decorationField, history()]}
           routingId={routingId}
           standalone={standalone}
           repoMetadata={repoMetadata}
@@ -633,7 +674,11 @@ export function MarkdownEditorWithPreview({
           }}
         />
         {selectedTab === MarkdownEditorTab.PREVIEW && (
-          <MarkdownViewer source={viewRef.current?.state.doc.toString() || ''} maxHeight={800} />
+          <MarkdownViewer
+            source={viewRef.current?.state.doc.toString() || ''}
+            maxHeight={800}
+            suggestionBlock={suggestionBlock}
+          />
         )}
         {!standalone && showFeedback && (
           <Container

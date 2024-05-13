@@ -19,6 +19,7 @@ import type { TypesListCommitResponse } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { CommitsView } from 'components/CommitsView/CommitsView'
+import { PullRequestSection } from 'utils/Utils'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 
 interface PullRequestCommitsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
@@ -33,7 +34,7 @@ export const PullRequestCommits: React.FC<PullRequestCommitsProps> = ({
   const { getString } = useStrings()
 
   return (
-    <PullRequestTabContentWrapper>
+    <PullRequestTabContentWrapper section={PullRequestSection.COMMITS}>
       <CommitsView
         commits={pullReqCommits?.commits || []}
         repoMetadata={repoMetadata}

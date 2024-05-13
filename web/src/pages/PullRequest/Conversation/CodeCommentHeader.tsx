@@ -53,8 +53,8 @@ export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({
         `diff --git a/src b/dest`,
         `new file mode 100644`,
         'index 0000000..0000000',
-        '--- a/src',
-        '+++ b/dest',
+        `--- a/src/${get(commentItems[0], 'payload.code_comment.path')}`,
+        `+++ b/dest/${get(commentItems[0], 'payload.code_comment.path')}`,
         get(commentItems[0], 'payload.payload.title', ''),
         ...get(commentItems[0], 'payload.payload.lines', [])
       ].join('\n')

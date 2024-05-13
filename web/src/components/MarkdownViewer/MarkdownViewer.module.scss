@@ -66,3 +66,32 @@
     }
   }
 }
+
+.suggestion {
+  background-color: var(--white) !important;
+  border: 1px solid var(--grey-200);
+  border-radius: 4px;
+
+  pre {
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .removed pre {
+    background-color: var(--red-100) !important;
+  }
+
+  .added pre {
+    background-color: var(--green-100) !important;
+  }
+
+  .text {
+    color: var(--grey-500);
+    font-size: 11px !important;
+    padding: var(--spacing-small) !important;
+  }
+}
+
+.suggestion + [data-code] {
+  display: none !important;
+}

@@ -15,15 +15,18 @@
  */
 
 import { useHistory } from 'react-router-dom'
+import { Container, Utils } from '@harnessio/uicore'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Container } from '@harnessio/uicore'
 import { isEmpty } from 'lodash-es'
 import cx from 'classnames'
+import { getCodeString } from 'rehype-rewrite'
 import MarkdownPreview from '@uiw/react-markdown-preview'
 import rehypeVideo from 'rehype-video'
 import rehypeExternalLinks, { Element } from 'rehype-external-links'
 import { INITIAL_ZOOM_LEVEL, generateAlphaNumericHash } from 'utils/Utils'
 import ImageCarousel from 'components/ImageCarousel/ImageCarousel'
+import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
+import { CodeSuggestionBlock } from './CodeSuggestionBlock'
 import css from './MarkdownViewer.module.scss'
 
 interface MarkdownViewerProps {
@@ -34,6 +37,8 @@ interface MarkdownViewerProps {
   darkMode?: boolean
   handleDescUpdate?: (payload: string) => void
   setOriginalContent?: React.Dispatch<React.SetStateAction<string>>
+  suggestionBlock?: SuggestionBlock
+  suggestionCheckSums?: string[]
 }
 
 export function MarkdownViewer({
@@ -41,10 +46,11 @@ export function MarkdownViewer({
   className,
   maxHeight,
   darkMode,
-
   setOriginalContent,
   handleDescUpdate,
-  inDescriptionBox = false
+  inDescriptionBox = false,
+  suggestionBlock,
+  suggestionCheckSums
 }: MarkdownViewerProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const history = useHistory()
@@ -203,6 +209,32 @@ export function MarkdownViewer({
           [rehypeVideo, { test: /\/(.*)(.mp4|.mov|.webm|.mkv|.flv)$/, details: null }],
           [rehypeExternalLinks, { rel: ['nofollow noreferrer noopener'], target: '_blank' }]
         ]}
+        components={{
+          // Rewriting the code component to support code suggestions
+          code: ({ children = [], className: _className, ...props }) => {
+            const code = props.node && props.node.children ? getCodeString(props.node.children) : children
+
+            if (
+              typeof code === 'string' &&
+              typeof _className === 'string' &&
+              /^language-suggestion/.test(_className.toLocaleLowerCase())
+            ) {
+              return (
+                <CodeSuggestionBlock
+                  code={code}
+                  suggestionBlock={suggestionBlock}
+                  suggestionCheckSums={suggestionCheckSums}
+                />
+              )
+            }
+
+            return (
+              <code onClick={Utils.stopEvent} className={String(_className)}>
+                {children}
+              </code>
+            )
+          }
+        }}
       />
       <ImageCarousel
         isOpen={isOpen}

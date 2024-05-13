@@ -39,6 +39,7 @@ export interface StringsMap {
   blame: string
   blameCommitLine: string
   blameEmpty: string
+  bold: string
   botAlerts: string
   bottom: string
   branch: string
@@ -140,6 +141,7 @@ export interface StringsMap {
   characterLimit: string
   checkRuns: string
   checkSuites: string
+  checklist: string
   checks: string
   clear: string
   clickHereToDownload: string
@@ -148,6 +150,7 @@ export interface StringsMap {
   cloneText: string
   close: string
   closed: string
+  code: string
   'codeOwner.approvalCompleted': string
   'codeOwner.changesRequested': string
   'codeOwner.title': string
@@ -356,6 +359,7 @@ export interface StringsMap {
   getMyCloneTitle: string
   gitIgnore: string
   gitness: string
+  heading: string
   help: string
   hideCommitHistory: string
   history: string
@@ -422,6 +426,7 @@ export interface StringsMap {
   inactiveBranches: string
   invalidResponse: string
   isRequired: string
+  italic: string
   key: string
   'keywordSearch.sampleQueries.searchForClass': string
   'keywordSearch.sampleQueries.searchForFilesWithCMD': string
@@ -598,6 +603,8 @@ export interface StringsMap {
   poweredByAI: string
   'pr.ableToMerge': string
   'pr.addDescription': string
+  'pr.addSuggestion': string
+  'pr.applySuggestions': string
   'pr.authorCommentedPR': string
   'pr.branchHasNoConflicts': string
   'pr.cantBeMerged': string
@@ -607,6 +614,8 @@ export interface StringsMap {
   'pr.checksFailure': string
   'pr.collapseFullFile': string
   'pr.commentLineNumbers': string
+  'pr.commitSuggestion': string
+  'pr.commitSuggestions': string
   'pr.copyLinkToComment': string
   'pr.createDraftPR': string
   'pr.descHasTooLongLine': string
@@ -657,6 +666,7 @@ export interface StringsMap {
   'pr.prStateChanged': string
   'pr.prStateChangedDraft': string
   'pr.readyForReview': string
+  'pr.removeSuggestion': string
   'pr.requestSubmitted': string
   'pr.reviewChanges': string
   'pr.reviewSubmitted': string
@@ -666,6 +676,8 @@ export interface StringsMap {
   'pr.state': string
   'pr.status': string
   'pr.statusLine': string
+  'pr.suggestedChange': string
+  'pr.suggestionApplied': string
   'pr.titleChanged': string
   'pr.titleChangedTable': string
   'pr.titleIsRequired': string
@@ -837,6 +849,7 @@ export interface StringsMap {
   'stepCategory.select': string
   submitReview: string
   success: string
+  suggestion: string
   summary: string
   switchBranch: string
   switchBranchesTags: string
@@ -867,6 +880,7 @@ export interface StringsMap {
   'triggers.newTrigger': string
   'triggers.updateSuccess': string
   turnOnSemanticSearch: string
+  unorderedList: string
   unrsolvedComment: string
   'unsavedChanges.leave': string
   'unsavedChanges.message': string
@@ -877,6 +891,7 @@ export interface StringsMap {
   updateUser: string
   updateWebhook: string
   updated: string
+  upload: string
   uploadAFileError: string
   user: string
   userCreated: string

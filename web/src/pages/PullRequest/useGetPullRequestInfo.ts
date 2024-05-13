@@ -218,9 +218,9 @@ export function usePullReqActivities() {
   return activities
 }
 
-const pullReqAtom = atom<TypesPullReq | undefined>(undefined)
+export const pullReqAtom = atom<TypesPullReq | undefined>(undefined)
 const pullReqStatsAtom = atom<TypesPullReqStats | undefined>(undefined)
-const pullReqActivitiesAtom = atom<TypesPullReqActivity[] | undefined>(undefined)
+export const pullReqActivitiesAtom = atom<TypesPullReqActivity[] | undefined>(undefined)
 const pullReqCommitsAtom = atom<TypesListCommitResponse | undefined>(undefined)
 
 // Note: We just list COMMITS_LIMIT commits in PR page

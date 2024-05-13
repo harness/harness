@@ -1,0 +1,11 @@
+.count {
+  display: inline-block;
+  margin-left: var(--spacing-small);
+  display: inline-block;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: var(--font-size-small);
+  color: var(--white) !important;
+  background-color: var(--primary-7) !important;
+  padding: 3px 6px !important;
+}

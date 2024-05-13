@@ -55,6 +55,7 @@ import {
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import RuleViolationAlertModal from 'components/RuleViolationAlertModal/RuleViolationAlertModal'
+import { PullReqSuggestionsBatch } from 'components/PullReqSuggestionsBatch/PullReqSuggestionsBatch'
 import css from './PullRequestActionsBox.module.scss'
 
 const codeOwnersNotFoundMessage = 'CODEOWNERS file not found'
@@ -330,6 +331,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
             <Render when={loading || loadingState}>
               <Icon name={CodeIcon.InputSpinner} size={16} margin={{ right: 'xsmall' }} />
             </Render>
+            <PullReqSuggestionsBatch />
             <Match expr={isDraft}>
               <Truthy>
                 <SplitButton

@@ -14,26 +14,13 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import type { EditorView } from '@codemirror/view'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
-import {
-  Container,
-  Layout,
-  Avatar,
-  TextInput,
-  Text,
-  FlexExpander,
-  Button,
-  useIsMounted,
-  ButtonVariation,
-  ButtonSize,
-  StringSubstitute,
-  AvatarGroup
-} from '@harnessio/uicore'
+import { Container, Layout, Avatar, TextInput, Text, FlexExpander, Button, useIsMounted } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
-import { isEqual, noop, defaultTo, get, uniq } from 'lodash-es'
+import { isEqual, noop, defaultTo, get } from 'lodash-es'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { useStrings } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
@@ -46,6 +33,7 @@ import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { ButtonRoleProps } from 'utils/Utils'
 import { useResizeObserver } from 'hooks/useResizeObserver'
 import { useCustomEventListener } from 'hooks/useEventListener'
+import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
 import css from './CommentBox.module.scss'
 
 export interface CommentItem<T = unknown> {
@@ -108,6 +96,7 @@ interface CommentBoxProps<T> {
   standalone: boolean
   routingId: string
   copyLinkToComment: (commentId: number, commentItem: CommentItem<T>) => void
+  suggestionBlock?: SuggestionBlock
 }
 
 const CommentBoxInternal = <T = unknown,>({
@@ -131,7 +120,8 @@ const CommentBoxInternal = <T = unknown,>({
   repoMetadata,
   standalone,
   routingId,
-  copyLinkToComment
+  copyLinkToComment,
+  suggestionBlock
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
@@ -217,6 +207,7 @@ const CommentBoxInternal = <T = unknown,>({
             }}
             outlets={outlets}
             copyLinkToComment={copyLinkToComment}
+            suggestionBlock={suggestionBlock}
           />
           <Match expr={showReplyPlaceHolder && enableReplyPlaceHolderRef.current}>
             <Truthy>
@@ -298,6 +289,7 @@ const CommentBoxInternal = <T = unknown,>({
                     setDirties({ ...dirties, ['new']: _dirty })
                   }}
                   autoFocusAndPosition={autoFocusAndPosition ? !showReplyPlaceHolder : false}
+                  suggestionBlock={suggestionBlock}
                 />
               </Container>
             </Falsy>
@@ -310,7 +302,10 @@ const CommentBoxInternal = <T = unknown,>({
 }
 
 interface CommentsThreadProps<T>
-  extends Pick<CommentBoxProps<T>, 'commentItems' | 'handleAction' | 'outlets' | 'copyLinkToComment'> {
+  extends Pick<
+    CommentBoxProps<T>,
+    'commentItems' | 'handleAction' | 'outlets' | 'copyLinkToComment' | 'suggestionBlock'
+  > {
   onQuote: (content: string) => void
   setDirty: (index: number, dirty: boolean) => void
   repoMetadata: TypesRepository | undefined
@@ -323,7 +318,8 @@ const CommentsThread = <T = unknown,>({
   setDirty,
   outlets = {},
   repoMetadata,
-  copyLinkToComment
+  copyLinkToComment,
+  suggestionBlock
 }: CommentsThreadProps<T>) => {
   const { getString } = useStrings()
   const { standalone, routingId } = useAppContext()
@@ -335,22 +331,22 @@ const CommentsThread = <T = unknown,>({
     },
     [editIndexes]
   )
-  const collapseResolvedComments = useMemo(() => !!get(commentItems[0], 'payload.resolved'), [commentItems])
-  const shouldCollapsedResolvedComments = useMemo(
-    () =>
-      collapseResolvedComments &&
-      !(commentItems.length === 1 && shorten(commentItems[0].content) === commentItems[0].content),
-    [commentItems, collapseResolvedComments]
-  )
-  const [collapsed, setCollapsed] = useState(collapseResolvedComments)
+  // const collapseResolvedComments = useMemo(() => !!get(commentItems[0], 'payload.resolved'), [commentItems])
+  // const shouldCollapsedResolvedComments = useMemo(
+  //   () =>
+  //     collapseResolvedComments &&
+  //     !(commentItems.length === 1 && shorten(commentItems[0].content) === commentItems[0].content),
+  //   [commentItems, collapseResolvedComments]
+  // )
+  // const [collapsed, setCollapsed] = useState(collapseResolvedComments)
 
   return (
     <Render when={commentItems.length}>
       <Container className={css.viewer} padding="xlarge">
         {commentItems
-          .filter((_commentItem, index) => {
-            return collapseResolvedComments && collapsed ? index === 0 : true
-          })
+          // .filter((_commentItem, index) => {
+          //   return collapseResolvedComments && collapsed ? index === 0 : true
+          // })
           .map((commentItem, index) => {
             const isLastItem = index === commentItems.length - 1
 
@@ -358,7 +354,10 @@ const CommentsThread = <T = unknown,>({
               <ThreadSection
                 key={index}
                 title={
-                  <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+                  <Layout.Horizontal
+                    spacing="small"
+                    style={{ alignItems: 'center' }}
+                    data-outdated={commentItem?.outdated}>
                     <Text inline icon="code-chat"></Text>
                     <Avatar name={commentItem?.author} size="small" hoverCard={false} />
                     <Text inline>
@@ -444,7 +443,7 @@ const CommentsThread = <T = unknown,>({
                     </Layout.Horizontal>
                   </Layout.Horizontal>
                 }
-                hideGutter={isLastItem || (collapseResolvedComments && collapsed)}>
+                hideGutter={isLastItem /*|| (collapseResolvedComments && collapsed)*/}>
                 <Container padding={{ bottom: isLastItem ? undefined : 'xsmall' }} data-comment-id={commentItem.id}>
                   <Render when={index === 0 && outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}>
                     <Container className={css.outletTopOfFirstOfComment}>
@@ -478,6 +477,7 @@ const CommentsThread = <T = unknown,>({
                             cancel: getString('cancel')
                           }}
                           autoFocusAndPosition
+                          suggestionBlock={suggestionBlock}
                         />
                       </Container>
                     </Truthy>
@@ -489,10 +489,23 @@ const CommentsThread = <T = unknown,>({
                         <Else>
                           <MarkdownViewer
                             source={
-                              collapseResolvedComments && collapsed
-                                ? shorten(commentItem?.content)
-                                : commentItem?.content
+                              /* collapseResolvedComments && collapsed
+                                ? shorten(commentItem?.content) 
+                                :*/ commentItem?.content
                             }
+                            suggestionBlock={Object.assign(
+                              {
+                                commentId: commentItem.id,
+                                appliedCheckSum: get(commentItem, 'payload.metadata.suggestions.applied_check_sum', ''),
+                                appliedCommitSha: get(
+                                  commentItem,
+                                  'payload.metadata.suggestions.applied_commit_sha',
+                                  ''
+                                )
+                              },
+                              suggestionBlock
+                            )}
+                            suggestionCheckSums={get(commentItem, 'payload.metadata.suggestions.check_sums', [])}
                           />
                         </Else>
                       </Match>
@@ -503,7 +516,7 @@ const CommentsThread = <T = unknown,>({
             )
           })}
 
-        <Render when={shouldCollapsedResolvedComments}>
+        {/* <Render when={shouldCollapsedResolvedComments}>
           <Container
             flex={{ justifyContent: 'space-around' }}
             padding={{ bottom: 'xsmall' }}
@@ -538,7 +551,7 @@ const CommentsThread = <T = unknown,>({
               </Button>
             </Layout.Horizontal>
           </Container>
-        </Render>
+        </Render> */}
       </Container>
     </Render>
   )
@@ -548,11 +561,11 @@ export const CommentBox = React.memo(CommentBoxInternal)
 
 export const customEventForCommentWithId = (id: number) => `CommentBoxCustomEvent-${id}`
 
-const shorten = (str = '', maxLen = 140, separator = ' ') => {
-  const s = str.split('\n')[0]
-  const sub = s.length <= maxLen ? s : s.substr(0, s.lastIndexOf(separator, maxLen))
+// const shorten = (str = '', maxLen = 140, separator = ' ') => {
+//   const s = str.split('\n')[0]
+//   const sub = s.length <= maxLen ? s : s.substr(0, s.lastIndexOf(separator, maxLen))
 
-  return sub.length < str.length ? sub + '...' : sub
-}
+//   return sub.length < str.length ? sub + '...' : sub
+// }
 
 const CRLF = '\n'

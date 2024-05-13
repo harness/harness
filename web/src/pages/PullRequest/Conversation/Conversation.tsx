@@ -28,15 +28,15 @@ import {
 } from '@harnessio/uicore'
 import { useLocation } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
-import { orderBy } from 'lodash-es'
+import { get, orderBy } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { TypesPullReqActivity, TypesPullReq, TypesPullReqStats, TypesCodeOwnerEvaluation } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { getErrorMessage, orderSortDate, ButtonRoleProps, PullRequestSection } from 'utils/Utils'
-import { activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
+import { getErrorMessage, orderSortDate, ButtonRoleProps, PullRequestSection, filenameToLanguage } from 'utils/Utils'
+import { activitiesToDiffCommentItems, activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/CodeCommentStatusSelect'
@@ -44,6 +44,7 @@ import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/Code
 import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
+import { CommentThreadTopDecoration } from 'components/CommentThreadTopDecoration/CommentThreadTopDecoration'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
 import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
@@ -254,9 +255,24 @@ export const Conversation: React.FC<ConversationProps> = ({
               }></ThreadSection>
           )
         }
+
+        const activity = commentItems[0].payload
+        const right = get(activity?.payload, 'line_start_new', false)
+        const span = right ? activity?.code_comment?.span_new || 0 : activity?.code_comment?.span_old || 0
+        const startLine = (right ? activity?.code_comment?.line_new : activity?.code_comment?.line_old) as number
+        const endLine = startLine + span - 1
+
+        const comment = activitiesToDiffCommentItems(activity?.code_comment?.path as string, [
+          activity as TypesPullReqActivity
+        ])[0]
+        const suggestionBlock = {
+          source: comment.codeBlockContent as string,
+          lang: filenameToLanguage(activity?.code_comment?.path?.split('/').pop())
+        }
+
         return (
           <ThreadSection
-            key={`comment-${threadId}`}
+            key={`comment-${threadId}-${activity?.created}-${activity?.edited}-${activity?.resolved}-${activity?.code_comment?.outdated}`}
             onlyTitle={
               activityBlocks[index + 1] !== undefined && isSystemComment(activityBlocks[index + 1]) ? true : false
             }
@@ -278,6 +294,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                 enableReplyPlaceHolder={true}
                 autoFocusAndPosition={true}
                 copyLinkToComment={copyLinkToComment}
+                suggestionBlock={suggestionBlock}
                 handleAction={async (action, value, commentItem) => {
                   let result = true
                   let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
@@ -328,12 +345,15 @@ export const Conversation: React.FC<ConversationProps> = ({
                 }}
                 outlets={{
                   [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: isCodeComment(commentItems) && (
-                    <CodeCommentHeader
-                      commentItems={commentItems}
-                      threadId={threadId}
-                      repoMetadata={repoMetadata}
-                      pullReqMetadata={pullReqMetadata}
-                    />
+                    <>
+                      <CommentThreadTopDecoration startLine={startLine} endLine={endLine} />
+                      <CodeCommentHeader
+                        commentItems={commentItems}
+                        threadId={threadId}
+                        repoMetadata={repoMetadata}
+                        pullReqMetadata={pullReqMetadata}
+                      />
+                    </>
                   ),
                   [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
                     <CodeCommentStatusSelect
@@ -363,11 +383,11 @@ export const Conversation: React.FC<ConversationProps> = ({
         )
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activityBlocks, currentUser, pullReqMetadata]
+    [activityBlocks, currentUser, pullReqMetadata, activities]
   )
 
   return (
-    <PullRequestTabContentWrapper>
+    <PullRequestTabContentWrapper section={PullRequestSection.CONVERSATION}>
       <Container>
         <Layout.Vertical spacing="xlarge">
           <PullRequestActionsBox

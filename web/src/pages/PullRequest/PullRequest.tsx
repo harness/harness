@@ -189,7 +189,7 @@ export default function PullRequest() {
                       />
                     ),
                     panel: (
-                      <Container className={css.changes}>
+                      <Container className={css.changes} data-page-section={PullRequestSection.FILES_CHANGED}>
                         {!!repoMetadata && !!pullReqMetadata && !!pullReqStats && (
                           <Changes
                             repoMetadata={repoMetadata}

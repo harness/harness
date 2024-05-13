@@ -58,6 +58,7 @@
     "diff2html": "3.4.22",
     "dompurify": "^3.0.5",
     "formik": "2.2.9",
+    "hast-util-to-html": "^9.0.1",
     "highlight.js": "^11.8.0",
     "iconoir-react": "^6.11.0",
     "jotai": "^2.6.3",

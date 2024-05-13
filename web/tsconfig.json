@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./src",
     "target": "es2018",
-    "lib": ["dom"],
+    "lib": ["dom", "es2021"],
     "module": "esnext",
     "moduleResolution": "node",
     "allowJs": true,

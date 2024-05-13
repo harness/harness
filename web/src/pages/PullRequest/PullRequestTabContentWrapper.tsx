@@ -16,10 +16,11 @@
 
 import React from 'react'
 import { Container, PageError } from '@harnessio/uicore'
-import { getErrorMessage } from 'utils/Utils'
+import { PullRequestSection, getErrorMessage } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 
 interface PullRequestTabContentWrapperProps {
+  section: PullRequestSection
   className?: string
   loading?: boolean
   error?: Unknown
@@ -27,6 +28,7 @@ interface PullRequestTabContentWrapperProps {
 }
 
 export const PullRequestTabContentWrapper: React.FC<PullRequestTabContentWrapperProps> = ({
+  section,
   className,
   loading,
   error,
@@ -34,7 +36,7 @@ export const PullRequestTabContentWrapper: React.FC<PullRequestTabContentWrapper
   children
 }) => {
   return (
-    <Container className={className} padding="xlarge">
+    <Container className={className} padding="xlarge" data-page-section={section}>
       <LoadingSpinner visible={loading} withBorder={true} />
       {error && <PageError message={getErrorMessage(error)} onClick={onRetry} />}
       {!error && children}

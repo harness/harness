@@ -54,10 +54,12 @@ import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { createRequestIdleCallbackTaskPool } from 'utils/Task'
 import { PlainButton } from 'components/PlainButton/PlainButton'
-import { dispatchCustomEvent, useEventListener } from 'hooks/useEventListener'
+import { dispatchCustomEvent, useCustomEventListener, useEventListener } from 'hooks/useEventListener'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
 import { InViewDiffBlockRenderer } from 'components/DiffViewer/InViewDiffBlockRenderer'
 import Config from 'Config'
+import { PullReqSuggestionsBatch } from 'components/PullReqSuggestionsBatch/PullReqSuggestionsBatch'
+import { PullReqCustomEvent } from 'pages/PullRequest/PullRequestUtils'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import ReviewSplitButton from './ReviewSplitButton/ReviewSplitButton'
@@ -406,6 +408,16 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     [diffBlocks, isMounted]
   )
 
+  const refreshPullReq = useCallback(() => {
+    setCachedDiff({})
+    setTargetRef(_targetRef)
+    setSourceRef(_sourceRef)
+    setPrHasChanged(false)
+    refetchCommits?.()
+  }, [_sourceRef, _targetRef, refetchCommits, setCachedDiff])
+
+  useCustomEventListener(PullReqCustomEvent.REFETCH_DIFF, refreshPullReq)
+
   /*
    * Jump to file and comment if they are specified in URL. When path and commentId
    * are specified in URL, leverage onJumpToFile() to jump to file, then comment.
@@ -430,6 +442,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   }, [diffs, setPullReqChangesCount])
 
   useShowRequestError(errorFileViews, 0)
+
   return (
     <Container className={cx(css.container, className)} {...(!!loadingRawDiff || !!error ? { flex: true } : {})}>
       <LoadingSpinner visible={loading} withBorder={true} />
@@ -471,13 +484,8 @@ const ChangesInternal: React.FC<ChangesProps> = ({
                 <PlainButton
                   text={getString('refresh')}
                   className={css.refreshBtn}
-                  onClick={() => {
-                    setCachedDiff({})
-                    setTargetRef(_targetRef)
-                    setSourceRef(_sourceRef)
-                    setPrHasChanged(false)
-                    refetchCommits?.()
-                  }}
+                  onClick={refreshPullReq}
+                  data-button-name="refresh-pr"
                 />
               </Render>
 
@@ -497,13 +505,19 @@ const ChangesInternal: React.FC<ChangesProps> = ({
 
             <FlexExpander />
 
-            <ReviewSplitButton
-              shouldHide={shouldHideReviewButton}
-              repoMetadata={repoMetadata}
-              pullRequestMetadata={pullRequestMetadata}
-              refreshPr={voidFn(noop)}
-              disabled={isActiveUserPROwner}
-            />
+            <Container flex={{ alignItems: 'center' }}>
+              <Layout.Horizontal spacing="medium">
+                <PullReqSuggestionsBatch />
+
+                <ReviewSplitButton
+                  shouldHide={shouldHideReviewButton}
+                  repoMetadata={repoMetadata}
+                  pullRequestMetadata={pullRequestMetadata}
+                  refreshPr={voidFn(noop)}
+                  disabled={isActiveUserPROwner}
+                />
+              </Layout.Horizontal>
+            </Container>
           </Layout.Horizontal>
         </Container>
       </Render>

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-/* eslint-disable */
-// This is an auto-generated file
-export declare const added: string
-export declare const main: string
-export declare const removed: string
-export declare const suggestion: string
-export declare const text: string
-export declare const withMaxHeight: string
+import { atom } from 'jotai'
+
+export interface Suggestion {
+  check_sum: string
+  comment_id: number
+}
+
+export const pullReqSuggestionsAtom = atom<Suggestion[]>([])
