@@ -15,11 +15,13 @@
  */
 
 import React, { useState } from 'react'
+import { Render } from 'react-jsx-match'
 import cx from 'classnames'
 import { Button, ButtonVariation, Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Classes } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
+import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { CodeIcon } from 'utils/GitUtils'
@@ -33,7 +35,7 @@ interface CloneButtonTooltipProps {
 export function CloneButtonTooltip({ httpsURL }: CloneButtonTooltipProps) {
   const { getString } = useStrings()
   const [flag, setFlag] = useState(false)
-
+  const { isCurrentSessionPublic } = useAppContext()
   return (
     <Container className={css.container} padding="xlarge">
       <Layout.Vertical spacing="small">
@@ -58,24 +60,27 @@ export function CloneButtonTooltip({ httpsURL }: CloneButtonTooltipProps) {
             <CopyButton content={httpsURL} id={css.cloneCopyButton} icon={CodeIcon.Copy} iconProps={{ size: 14 }} />
           </Layout.Horizontal>
         </Container>
-        <Button
-          width={300}
-          onClick={() => {
-            setFlag(true)
-          }}
-          variation={ButtonVariation.SECONDARY}>
-          {getString('generateCloneCred')}
-        </Button>
-        <Text
-          padding={{ top: 'small' }}
-          width={300}
-          icon={'code-info'}
-          className={css.codeText}
-          iconProps={{ size: 16 }}
-          color={Color.GREY_700}
-          font={{ variation: FontVariation.BODY2_SEMI, size: 'xsmall' }}>
-          {getString('generateCloneText')}
-        </Text>
+
+        <Render when={!isCurrentSessionPublic}>
+          <Button
+            width={300}
+            onClick={() => {
+              setFlag(true)
+            }}
+            variation={ButtonVariation.SECONDARY}>
+            {getString('generateCloneCred')}
+          </Button>
+          <Text
+            padding={{ top: 'small' }}
+            width={300}
+            icon={'code-info'}
+            className={css.codeText}
+            iconProps={{ size: 16 }}
+            color={Color.GREY_700}
+            font={{ variation: FontVariation.BODY2_SEMI, size: 'xsmall' }}>
+            {getString('generateCloneText')}
+          </Text>
+        </Render>
       </Layout.Vertical>
       <CloneCredentialDialog flag={flag} setFlag={setFlag} />
     </Container>

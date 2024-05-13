@@ -42,7 +42,7 @@ const KEYWORD_REGEX = /((?:(?:-{0,1})(?:repo|lang|file|case|count)):\S*|(?: or|a
 
 const CodeSearchBar: FC<CodeSearchBarProps> = ({ value, onChange, onSearch, onKeyDown, searchMode, setSearchMode }) => {
   const { getString } = useStrings()
-  const { hooks, routingId, defaultSettingsURL } = useAppContext()
+  const { hooks, routingId, defaultSettingsURL, isCurrentSessionPublic } = useAppContext()
   const { SEMANTIC_SEARCH_ENABLED: isSemanticSearchFFEnabled } = hooks?.useFeatureFlags()
   const { orgIdentifier, projectIdentifier } = useParams<Identifier>()
   const { data: aidaSettingResponse, loading: isAidaSettingLoading } = hooks?.useGetSettingValue({
@@ -51,7 +51,9 @@ const CodeSearchBar: FC<CodeSearchBarProps> = ({ value, onChange, onSearch, onKe
   })
   const [enableSemanticSearch, setEnableSemanticSearch] = useState<boolean>(false)
   useEffect(() => {
-    setEnableSemanticSearch(isSemanticSearchFFEnabled && aidaSettingResponse?.data?.value == 'true')
+    setEnableSemanticSearch(
+      isSemanticSearchFFEnabled && aidaSettingResponse?.data?.value == 'true' && !isCurrentSessionPublic
+    )
   }, [isAidaSettingLoading, isSemanticSearchFFEnabled])
   const isSemanticMode = enableSemanticSearch && searchMode === SEARCH_MODE.SEMANTIC
   return (

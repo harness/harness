@@ -50,6 +50,8 @@ ReactDOM.render(
     currentUserProfileURL=""
     routingId=""
     defaultSettingsURL=""
+    isPublicAccessEnabledOnResources
+    isCurrentSessionPublic={false}
   />,
   document.getElementById('react-root')
 )

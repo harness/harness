@@ -48,7 +48,9 @@ const App: React.FC<AppProps> = React.memo(function App({
   hooks,
   customComponents,
   currentUserProfileURL = '',
-  defaultSettingsURL = ''
+  defaultSettingsURL = '',
+  isPublicAccessEnabledOnResources = false,
+  isCurrentSessionPublic = false
 }: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
   const getRequestOptions = useCallback(
@@ -90,7 +92,9 @@ const App: React.FC<AppProps> = React.memo(function App({
                     currentUser: defaultCurrentUser,
                     customComponents,
                     currentUserProfileURL,
-                    defaultSettingsURL
+                    defaultSettingsURL,
+                    isPublicAccessEnabledOnResources,
+                    isCurrentSessionPublic
                   }}>
                   <IconoirProvider
                     iconProps={{
