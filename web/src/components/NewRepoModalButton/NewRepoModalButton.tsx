@@ -47,7 +47,7 @@ import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useGet, useMutate } from 'restful-react'
 import { Render } from 'react-jsx-match'
-import { get } from 'lodash-es'
+import { compact, get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import {
@@ -204,7 +204,11 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         host: ''
       }
 
-      if (![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(formData.gitProvider)) {
+      if (
+        ![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET, GitProviders.AZURE].includes(
+          formData.gitProvider
+        )
+      ) {
         provider.host = formData.hostUrl
       }
 
@@ -213,7 +217,13 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         parent_ref: space,
         uid: formData.name,
         provider,
-        provider_repo: `${formData.org}/${formData.repo}`.replace(/\.git$/, ''),
+        provider_repo: compact([
+          formData.org,
+          formData.gitProvider === GitProviders.AZURE ? formData.project : '',
+          formData.repo
+        ])
+          .join('/')
+          .replace(/\.git$/, ''),
         pipelines:
           standalone && formData.importPipelineLabel ? ConvertPipelineLabel.CONVERT : ConvertPipelineLabel.IGNORE
       }
@@ -237,7 +247,11 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         host: ''
       }
 
-      if (![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(formData.gitProvider)) {
+      if (
+        ![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET, GitProviders.AZURE].includes(
+          formData.gitProvider
+        )
+      ) {
         provider.host = formData.host
       }
 
@@ -247,7 +261,10 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           parent_ref: space,
           uid: formData.name.trim(),
           provider,
-          provider_space: formData.organization,
+          provider_space: compact([
+            formData.organization,
+            formData.gitProvider === GitProviders.AZURE ? formData.project : ''
+          ]).join('/'),
           pipelines:
             standalone && formData.importPipelineLabel ? ConvertPipelineLabel.CONVERT : ConvertPipelineLabel.IGNORE
         }

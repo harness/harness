@@ -53,6 +53,7 @@ export interface ImportFormData {
   gitProvider: GitProviders
   hostUrl: string
   org: string
+  project: string
   repo: string
   username: string
   password: string
@@ -79,6 +80,7 @@ export interface ImportSpaceFormData {
   name: string
   description: string
   organization: string
+  project: string
   host: string
   importPipelineLabel: boolean
 }
@@ -182,7 +184,8 @@ export enum GitProviders {
   BITBUCKET = 'Bitbucket',
   BITBUCKET_SERVER = 'Bitbucket Server',
   GITEA = 'Gitea',
-  GOGS = 'Gogs'
+  GOGS = 'Gogs',
+  AZURE = 'Azure'
 }
 
 export enum ConvertPipelineLabel {

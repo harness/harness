@@ -45,6 +45,7 @@ const ImportForm = (props: ImportFormProps) => {
     gitProvider: GitProviders.GITHUB,
     hostUrl: '',
     org: '',
+    project: '',
     repo: '',
     username: '',
     password: '',
@@ -59,9 +60,24 @@ const ImportForm = (props: ImportFormProps) => {
       .string()
       // .matches(MATCH_REPOURL_REGEX, getString('importSpace.invalidUrl'))
       .when('gitProvider', {
-        is: gitProvider => ![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(gitProvider),
+        is: gitProvider =>
+          ![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET, GitProviders.AZURE].includes(gitProvider),
         then: yup.string().required(getString('importRepo.required')),
         otherwise: yup.string().notRequired() // Optional based on your needs
+      }),
+    org: yup
+      .string()
+      .trim()
+      .when('gitProvider', {
+        is: GitProviders.AZURE,
+        then: yup.string().required(getString('importSpace.orgRequired'))
+      }),
+    project: yup
+      .string()
+      .trim()
+      .when('gitProvider', {
+        is: GitProviders.AZURE,
+        then: yup.string().required(getString('importSpace.spaceNameRequired'))
       }),
     name: yup
       .string()
@@ -106,7 +122,9 @@ const ImportForm = (props: ImportFormProps) => {
                 {formik.errors.gitProvider}
               </Text>
             ) : null}
-            {![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(values.gitProvider) && (
+            {![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET, GitProviders.AZURE].includes(
+              values.gitProvider
+            ) && (
               <FormInput.Text
                 className={css.hideContainer}
                 name="hostUrl"
@@ -139,6 +157,23 @@ const ImportForm = (props: ImportFormProps) => {
                 icon="circle-cross"
                 iconProps={{ color: Color.RED_500 }}>
                 {formik.errors.org}
+              </Text>
+            ) : null}
+            {values.gitProvider === GitProviders.AZURE && (
+              <FormInput.Text
+                className={css.hideContainer}
+                name="project"
+                label={getString('importRepo.project')}
+                placeholder={getString('importRepo.projectPlaceholder')}
+              />
+            )}
+            {formik.errors.project ? (
+              <Text
+                margin={{ top: 'small', bottom: 'small' }}
+                color={Color.RED_500}
+                icon="circle-cross"
+                iconProps={{ color: Color.RED_500 }}>
+                {formik.errors.project}
               </Text>
             ) : null}
             <FormInput.Text
@@ -190,7 +225,7 @@ const ImportForm = (props: ImportFormProps) => {
 
             {auth ? (
               <>
-                {formik.values.gitProvider === GitProviders.BITBUCKET && (
+                {[GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider) && (
                   <FormInput.Text
                     name="username"
                     label={getString('userName')}
@@ -204,12 +239,12 @@ const ImportForm = (props: ImportFormProps) => {
                   inputGroup={{ type: 'password' }}
                   name="password"
                   label={
-                    formik.values.gitProvider === GitProviders.BITBUCKET
+                    [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
                       ? getString('importRepo.appPassword')
                       : getString('importRepo.passToken')
                   }
                   placeholder={
-                    formik.values.gitProvider === GitProviders.BITBUCKET
+                    [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
                       ? getString('importRepo.appPasswordPlaceholder')
                       : getString('importRepo.passTokenPlaceholder')
                   }

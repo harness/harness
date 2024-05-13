@@ -64,6 +64,7 @@ const ImportReposForm = (props: ImportReposProps) => {
     name: spaceRef,
     description: '',
     organization: '',
+    project: '',
     host: '',
     importPipelineLabel: false
   }
@@ -73,7 +74,14 @@ const ImportReposForm = (props: ImportReposProps) => {
   })
 
   const validationSchemaStepTwo = yup.object().shape({
-    organization: yup.string().trim().required(getString('importSpace.orgRequired'))
+    organization: yup.string().trim().required(getString('importSpace.orgRequired')),
+    project: yup
+      .string()
+      .trim()
+      .when('gitProvider', {
+        is: GitProviders.AZURE,
+        then: yup.string().required(getString('importSpace.spaceNameRequired'))
+      })
   })
 
   return (
@@ -138,7 +146,7 @@ const ImportReposForm = (props: ImportReposProps) => {
                         {formik.errors.gitProvider}
                       </Text>
                     ) : null}
-                    {![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(
+                    {![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET, GitProviders.AZURE].includes(
                       values.gitProvider
                     ) && (
                       <FormInput.Text
@@ -166,7 +174,7 @@ const ImportReposForm = (props: ImportReposProps) => {
                         <hr className={css.dividerContainer} />
                       </Container>
                     </Layout.Horizontal>
-                    {formik.values.gitProvider === GitProviders.BITBUCKET && (
+                    {[GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider) && (
                       <FormInput.Text
                         name="username"
                         label={getString('userName')}
@@ -188,12 +196,12 @@ const ImportReposForm = (props: ImportReposProps) => {
                     <FormInput.Text
                       name="password"
                       label={
-                        formik.values.gitProvider === GitProviders.BITBUCKET
+                        [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
                           ? getString('importRepo.appPassword')
                           : getString('importRepo.passToken')
                       }
                       placeholder={
-                        formik.values.gitProvider === GitProviders.BITBUCKET
+                        [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
                           ? getString('importRepo.appPasswordPlaceholder')
                           : getString('importRepo.passTokenPlaceholder')
                       }
@@ -234,7 +242,6 @@ const ImportReposForm = (props: ImportReposProps) => {
                       }}
                       onChange={event => {
                         const target = event.target as HTMLInputElement
-                        formik.setFieldValue('organization', target.value)
                         if (target.value) {
                           formik.validateField('organization')
                         }
@@ -247,6 +254,25 @@ const ImportReposForm = (props: ImportReposProps) => {
                         icon="circle-cross"
                         iconProps={{ color: Color.RED_500 }}>
                         {formik.errors.organization}
+                      </Text>
+                    ) : null}
+                    {values.gitProvider === GitProviders.AZURE && (
+                      <FormInput.Text
+                        name="project"
+                        label={getString('importRepo.project')}
+                        placeholder={getString('importRepo.projectPlaceholder')}
+                        tooltipProps={{
+                          dataTooltipId: 'importSpaceProjectName'
+                        }}
+                      />
+                    )}
+                    {formik.errors.project ? (
+                      <Text
+                        margin={{ top: 'small', bottom: 'small' }}
+                        color={Color.RED_500}
+                        icon="circle-cross"
+                        iconProps={{ color: Color.RED_500 }}>
+                        {formik.errors.project}
                       </Text>
                     ) : null}
                     {standalone && (

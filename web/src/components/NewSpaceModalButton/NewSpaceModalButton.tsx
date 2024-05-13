@@ -36,7 +36,7 @@ import {
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
-import { get } from 'lodash-es'
+import { compact, get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps, REGEX_VALID_REPO_NAME } from 'utils/Utils'
@@ -145,7 +145,11 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
         host: ''
       }
 
-      if (![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(formData.gitProvider)) {
+      if (
+        ![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET, GitProviders.AZURE].includes(
+          formData.gitProvider
+        )
+      ) {
         provider.host = formData.host
       }
 
@@ -154,7 +158,10 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
           description: (formData.description || '').trim(),
           uid: formData.name.trim(),
           provider,
-          provider_space: formData.organization,
+          provider_space: compact([
+            formData.organization,
+            formData.gitProvider === GitProviders.AZURE ? formData.project : ''
+          ]).join('/'),
           pipelines:
             standalone && formData.importPipelineLabel ? ConvertPipelineLabel.CONVERT : ConvertPipelineLabel.IGNORE
         }

@@ -61,6 +61,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
     name: '',
     description: '',
     organization: '',
+    project: '',
     host: '',
     importPipelineLabel: false
   }
@@ -71,6 +72,13 @@ const ImportSpaceForm = (props: ImportFormProps) => {
 
   const validationSchemaStepTwo = yup.object().shape({
     organization: yup.string().trim().required(getString('importSpace.orgRequired')),
+    project: yup
+      .string()
+      .trim()
+      .when('gitProvider', {
+        is: GitProviders.AZURE,
+        then: yup.string().required(getString('importSpace.spaceNameRequired'))
+      }),
     name: yup
       .string()
       .trim()
@@ -141,7 +149,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                         {formik.errors.gitProvider}
                       </Text>
                     ) : null}
-                    {![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(
+                    {![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET, GitProviders.AZURE].includes(
                       values.gitProvider
                     ) && (
                       <FormInput.Text
@@ -169,7 +177,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                         <hr className={css.dividerContainer} />
                       </Container>
                     </Layout.Horizontal>
-                    {formik.values.gitProvider === GitProviders.BITBUCKET && (
+                    {[GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider) && (
                       <FormInput.Text
                         name="username"
                         label={getString('userName')}
@@ -191,12 +199,12 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                     <FormInput.Text
                       name="password"
                       label={
-                        formik.values.gitProvider === GitProviders.BITBUCKET
+                        [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
                           ? getString('importRepo.appPassword')
                           : getString('importRepo.passToken')
                       }
                       placeholder={
-                        formik.values.gitProvider === GitProviders.BITBUCKET
+                        [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
                           ? getString('importRepo.appPasswordPlaceholder')
                           : getString('importRepo.passTokenPlaceholder')
                       }
@@ -253,6 +261,31 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                         icon="circle-cross"
                         iconProps={{ color: Color.RED_500 }}>
                         {formik.errors.organization}
+                      </Text>
+                    ) : null}
+                    {values.gitProvider === GitProviders.AZURE && (
+                      <FormInput.Text
+                        name="project"
+                        label={getString('importRepo.project')}
+                        placeholder={getString('importRepo.projectPlaceholder')}
+                        tooltipProps={{
+                          dataTooltipId: 'importSpaceProjectName'
+                        }}
+                        onChange={event => {
+                          const target = event.target as HTMLInputElement
+                          if (target.value) {
+                            formik.setFieldValue('name', values.organization + '-' + target.value)
+                          }
+                        }}
+                      />
+                    )}
+                    {formik.errors.project ? (
+                      <Text
+                        margin={{ top: 'small', bottom: 'small' }}
+                        color={Color.RED_500}
+                        icon="circle-cross"
+                        iconProps={{ color: Color.RED_500 }}>
+                        {formik.errors.project}
                       </Text>
                     ) : null}
                     <Layout.Horizontal>
