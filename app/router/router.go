@@ -128,18 +128,16 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // stripPrefix removes the prefix from the request path (or noop if it's not there).
 func stripPrefix(prefix string, req *http.Request) error {
-	p := req.URL.Path
-	if !strings.HasPrefix(p, prefix) {
+	if !strings.HasPrefix(req.URL.Path, prefix) {
 		return nil
 	}
-	return request.ReplacePrefix(req, req.URL.Path[:len(prefix)], "")
+	return request.ReplacePrefix(req, prefix, "")
 }
 
 // isGitTraffic returns true iff the request is identified as part of the git http protocol.
 func (r *Router) isGitTraffic(req *http.Request) bool {
 	// git traffic is always reachable via the git mounting path.
-	p := req.URL.Path
-	if strings.HasPrefix(p, GitMount) {
+	if strings.HasPrefix(req.URL.Path, GitMount+"/") {
 		return true
 	}
 
@@ -160,6 +158,5 @@ func (r *Router) isGitTraffic(req *http.Request) bool {
 
 // isAPITraffic returns true iff the request is identified as part of our rest API.
 func (r *Router) isAPITraffic(req *http.Request) bool {
-	p := req.URL.Path
-	return strings.HasPrefix(p, APIMount)
+	return strings.HasPrefix(req.URL.Path, APIMount+"/")
 }
