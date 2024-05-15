@@ -86,6 +86,7 @@
     "react-table": "^7.1.0",
     "react-timeago": "^4.4.0",
     "rehype-external-links": "^2.0.1",
+    "rehype-sanitize": "^6.0.0",
     "rehype-video": "^1.2.2",
     "restful-react": "15.6.0",
     "selecto": "^1.26.3",

@@ -16,6 +16,7 @@
 
 import { useHistory } from 'react-router-dom'
 import { Container, Utils } from '@harnessio/uicore'
+import rehypeSanitize from 'rehype-sanitize'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { isEmpty } from 'lodash-es'
 import cx from 'classnames'
@@ -145,7 +146,7 @@ export function MarkdownViewer({
       <MarkdownPreview
         key={flag ? hash : 0}
         source={markdown}
-        skipHtml={true}
+        skipHtml={false}
         warpperElement={{ 'data-color-mode': darkMode ? 'dark' : 'light' }}
         rehypeRewrite={(node, _index, parent) => {
           if ((node as unknown as HTMLDivElement).tagName === 'a') {
@@ -206,6 +207,7 @@ export function MarkdownViewer({
           }
         }}
         rehypePlugins={[
+          [rehypeSanitize],
           [rehypeVideo, { test: /\/(.*)(.mp4|.mov|.webm|.mkv|.flv)$/, details: null }],
           [rehypeExternalLinks, { rel: ['nofollow noreferrer noopener'], target: '_blank' }]
         ]}

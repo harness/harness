@@ -3162,7 +3162,7 @@
     remark-gfm "~3.0.1"
     unist-util-visit "^4.1.0"
 
-"@ungap/structured-clone@^1.0.0":
+"@ungap/structured-clone@^1.0.0", "@ungap/structured-clone@^1.2.0":
   version "1.2.0"
   resolved "https://registry.npmjs.org/@ungap/structured-clone/-/structured-clone-1.2.0.tgz#756641adb587851b5ccb3e095daf27ae581c8406"
   integrity sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==
@@ -6650,6 +6650,15 @@ hast-util-raw@^9.0.0:
     vfile "^6.0.0"
     web-namespaces "^2.0.0"
     zwitch "^2.0.0"
+
+hast-util-sanitize@^5.0.0:
+  version "5.0.1"
+  resolved "https://registry.npmjs.org/hast-util-sanitize/-/hast-util-sanitize-5.0.1.tgz#8e90068cd68e651c569960b77a1b25076579b4cf"
+  integrity sha512-IGrgWLuip4O2nq5CugXy4GI2V8kx4sFVy5Hd4vF7AR2gxS0N9s7nEAVUyeMtZKZvzrxVsHt73XdTsno1tClIkQ==
+  dependencies:
+    "@types/hast" "^3.0.0"
+    "@ungap/structured-clone" "^1.2.0"
+    unist-util-position "^5.0.0"
 
 hast-util-select@^5.0.5, hast-util-select@~5.0.1:
   version "5.0.5"
@@ -10836,6 +10845,14 @@ rehype-rewrite@~3.0.6:
     hast-util-select "~5.0.1"
     unified "~10.1.1"
     unist-util-visit "~4.1.0"
+
+rehype-sanitize@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.npmjs.org/rehype-sanitize/-/rehype-sanitize-6.0.0.tgz#16e95f4a67a69cbf0f79e113c8e0df48203db73c"
+  integrity sha512-CsnhKNsyI8Tub6L4sm5ZFsme4puGfc6pYylvXo1AeqaGbjOYyzNv3qZPwvs0oMJ39eryyeOdmxwUIo94IpEhqg==
+  dependencies:
+    "@types/hast" "^3.0.0"
+    hast-util-sanitize "^5.0.0"
 
 rehype-slug@~5.1.0:
   version "5.1.0"
