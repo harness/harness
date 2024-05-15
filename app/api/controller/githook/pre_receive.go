@@ -93,13 +93,18 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, fmt.Errorf("failed to extend pre-receive hook: %w", err)
 	}
 
-	err = c.checkFileSizeLimit(ctx, rgit, repo, in, &output)
-	if output.Error != nil {
-		return output, nil
-	}
-	if err != nil {
-		return hook.Output{}, err
-	}
+	// File size check currently checks all the blobs in alternate as well in the original repo dirs.
+	// We want to check file size only in alternate dirs.
+	// Temporarily comment out file size check until the solution is found.
+	// TODO: find the way to check the blob size only in alternate dirs.
+
+	// err = c.checkFileSizeLimit(ctx, rgit, repo, in, &output)
+	// if output.Error != nil {
+	// 	return output, nil
+	// }
+	// if err != nil {
+	// 	return hook.Output{}, err
+	// }
 
 	return output, nil
 }
