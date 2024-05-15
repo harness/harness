@@ -51,6 +51,7 @@ import { useShowRequestError } from 'hooks/useShowRequestError'
 import { getErrorMessage, isInViewport } from 'utils/Utils'
 import { createRequestIdleCallbackTaskPool } from 'utils/Task'
 import { useResizeObserver } from 'hooks/useResizeObserver'
+import { useFindGitBranch } from 'hooks/useFindGitBranch'
 import Config from 'Config'
 import {
   DIFF2HTML_CONFIG,
@@ -313,6 +314,8 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     lazy: !useFullDiff || !!memorizedState.get(diff.filePath)?.fullDiff
   })
 
+  const branchInfo = useFindGitBranch(pullReqMetadata?.source_branch)
+
   useShowRequestError(fullDiffError, 0)
 
   useEffect(
@@ -420,7 +423,11 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
               <Link
                 to={routes.toCODERepository({
                   repoPath: repoMetadata.path as string,
-                  gitRef: pullReqMetadata?.source_branch || commitSHA || '',
+                  gitRef: pullReqMetadata?.source_branch
+                    ? branchInfo
+                      ? pullReqMetadata?.source_branch
+                      : pullReqMetadata?.source_sha
+                    : commitSHA || '',
                   resourcePath: diff.isRename ? diff.newName : diff.filePath
                 })}>
                 {diff.isRename ? `${diff.oldName} -> ${diff.newName}` : diff.filePath}
