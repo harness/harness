@@ -222,7 +222,7 @@ func getScmClientWithTransport(provider Provider, slug string, authReq bool) (*s
 	case ProviderTypeAzure:
 		org, project, err := extractOrgAndProjectFromSlug(slug)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("invalid slug format: %w", err)
 		}
 		if provider.Host != "" {
 			c, err = azure.New(provider.Host, org, project)
@@ -272,7 +272,7 @@ func LoadRepositoryFromProvider(
 	if provider.Type == ProviderTypeAzure {
 		repoSlug, err = extractRepoFromSlug(repoSlug)
 		if err != nil {
-			return RepositoryInfo{}, provider, err
+			return RepositoryInfo{}, provider, usererror.BadRequestf("invalid slug format: %s", err)
 		}
 	}
 	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, repoSlug)
@@ -357,8 +357,7 @@ func LoadRepositoriesFromProviderSpace(
 
 		for _, scmRepo := range scmRepos {
 			// in some cases the namespace filter isn't working (e.g. Gitlab)
-			// in some cases the namespace doesn't get generated (e.g. Azure)
-			if provider.Type != ProviderTypeAzure && !strings.EqualFold(scmRepo.Namespace, spaceSlug) {
+			if !strings.EqualFold(scmRepo.Namespace, spaceSlug) {
 				continue
 			}
 
@@ -388,9 +387,10 @@ func LoadRepositoriesFromProviderSpace(
 func extractOrgAndProjectFromSlug(slug string) (string, string, error) {
 	res := strings.Split(slug, "/")
 	if len(res) < 2 {
-		return "", "", usererror.BadRequest("invalid slug format: organization or project info missing")
-	} else if len(res) > 3 {
-		return "", "", usererror.BadRequest("invalid slug format: too many parts")
+		return "", "", fmt.Errorf("organization or project info missing")
+	}
+	if len(res) > 3 {
+		return "", "", fmt.Errorf("too many parts")
 	}
 	return res[0], res[1], nil
 }
@@ -400,7 +400,7 @@ func extractRepoFromSlug(slug string) (string, error) {
 	if len(res) == 3 {
 		return res[2], nil
 	}
-	return "", usererror.BadRequest("invalid slug format: repo name missing")
+	return "", fmt.Errorf("repo name missing")
 }
 
 func convertSCMError(provider Provider, slug string, r *scm.Response, err error) error {

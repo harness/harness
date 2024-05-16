@@ -185,7 +185,7 @@ export enum GitProviders {
   BITBUCKET_SERVER = 'Bitbucket Server',
   GITEA = 'Gitea',
   GOGS = 'Gogs',
-  AZURE = 'Azure'
+  AZURE = 'Azure DevOps'
 }
 
 export enum ConvertPipelineLabel {
@@ -405,6 +405,8 @@ export const getProviderTypeMapping = (provider: GitProviders): string => {
       return 'github'
     case GitProviders.GITLAB_SELF_HOSTED:
       return 'gitlab'
+    case GitProviders.AZURE:
+      return 'azure'
     default:
       return provider.toLowerCase()
   }
