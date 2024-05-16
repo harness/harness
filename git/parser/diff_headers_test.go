@@ -15,6 +15,8 @@
 package parser
 
 import (
+	"bufio"
+	"io"
 	"strings"
 	"testing"
 
@@ -104,5 +106,122 @@ index f043b93..0000000
 
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf(diff)
+	}
+}
+
+func TestReadLinePrefix(t *testing.T) {
+	const maxLen = 256
+	tests := []struct {
+		name    string
+		wf      func(w io.Writer)
+		expLens []int
+	}{
+		{
+			name:    "empty",
+			wf:      func(io.Writer) {},
+			expLens: nil,
+		},
+		{
+			name: "single",
+			wf: func(w io.Writer) {
+				_, _ = w.Write([]byte("aaa"))
+			},
+			expLens: []int{3},
+		},
+		{
+			name: "single-eol",
+			wf: func(w io.Writer) {
+				_, _ = w.Write([]byte("aaa\n"))
+			},
+			expLens: []int{3},
+		},
+		{
+			name: "two-lines",
+			wf: func(w io.Writer) {
+				_, _ = w.Write([]byte("aa\nbb"))
+			},
+			expLens: []int{2, 2},
+		},
+		{
+			name: "two-lines-crlf",
+			wf: func(w io.Writer) {
+				_, _ = w.Write([]byte("aa\r\nbb\r\n"))
+			},
+			expLens: []int{2, 2},
+		},
+		{
+			name: "empty-line",
+			wf: func(w io.Writer) {
+				_, _ = w.Write([]byte("aa\n\ncc"))
+			},
+			expLens: []int{2, 0, 2},
+		},
+		{
+			name: "too-long",
+			wf: func(w io.Writer) {
+				for i := 0; i < maxLen; i++ {
+					_, _ = w.Write([]byte("a"))
+				}
+				_, _ = w.Write([]byte("\n"))
+				for i := 0; i < maxLen*2; i++ {
+					_, _ = w.Write([]byte("b"))
+				}
+				_, _ = w.Write([]byte("\n"))
+				for i := 0; i < maxLen/2; i++ {
+					_, _ = w.Write([]byte("c"))
+				}
+				_, _ = w.Write([]byte("\n"))
+			},
+			expLens: []int{maxLen, maxLen, maxLen / 2},
+		},
+		{
+			name: "overflow-buffer",
+			wf: func(w io.Writer) {
+				for i := 0; i < bufio.MaxScanTokenSize+1; i++ {
+					_, _ = w.Write([]byte("a"))
+				}
+				_, _ = w.Write([]byte("\n"))
+				for i := 0; i < bufio.MaxScanTokenSize*2; i++ {
+					_, _ = w.Write([]byte("b"))
+				}
+				_, _ = w.Write([]byte("\n"))
+				for i := 0; i < bufio.MaxScanTokenSize; i++ {
+					_, _ = w.Write([]byte("c"))
+				}
+			},
+			expLens: []int{maxLen, maxLen, maxLen},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			pr, pw := io.Pipe()
+			defer pr.Close()
+
+			go func() {
+				test.wf(pw)
+				_ = pw.Close()
+			}()
+
+			br := bufio.NewReader(pr)
+
+			for i, expLen := range test.expLens {
+				expLine := strings.Repeat(string(rune('a'+i)), expLen)
+				line, err := readLinePrefix(br, maxLen)
+				if err != nil && err != io.EOF { //nolint:errorlint
+					t.Errorf("got error: %s", err.Error())
+					return
+				}
+				if want, got := expLine, line; want != got {
+					t.Errorf("line %d mismatch want=%s got=%s", i, want, got)
+					return
+				}
+			}
+
+			line, err := readLinePrefix(br, maxLen)
+			if line != "" || err != io.EOF { //nolint:errorlint
+				t.Errorf("expected empty line and EOF but got: line=%s err=%v", line, err)
+			}
+		})
 	}
 }

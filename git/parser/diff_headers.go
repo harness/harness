@@ -43,13 +43,22 @@ func ParseDiffFileHeader(line string) (DiffFileHeader, bool) {
 // GetHunkHeaders parses git diff output and returns all diff headers for all files.
 // See for documentation: https://git-scm.com/docs/git-diff#generate_patch_text_with_p
 func GetHunkHeaders(r io.Reader) ([]*DiffFileHunkHeaders, error) {
-	scanner := bufio.NewScanner(r)
+	bufrd := bufio.NewReader(r)
 
 	var currentFile *DiffFileHunkHeaders
 	var result []*DiffFileHunkHeaders
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	for {
+		// Consume the line but get only the first 4K of it...
+		// We're interested only in the hunk headers anyway, and they are never longer than this.
+		line, err := readLinePrefix(bufrd, 4096)
+		if err != nil && err != io.EOF { //nolint:errorlint
+			return nil, err
+		}
+
+		if len(line) == 0 {
+			break
+		}
 
 		if h, ok := ParseDiffFileHeader(line); ok {
 			if currentFile != nil {
@@ -79,13 +88,38 @@ func GetHunkHeaders(r io.Reader) ([]*DiffFileHunkHeaders, error) {
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
 	if currentFile != nil {
 		result = append(result, currentFile)
 	}
 
 	return result, nil
+}
+
+// readLinePrefix will consume the entire line from the reader,
+// but will return only the first maxLen bytes from it - the rest is discarded.
+// Returns io.EOF when the end of the input has been reached.
+func readLinePrefix(br *bufio.Reader, maxLen int) (line string, err error) {
+	for {
+		var raw []byte
+		var isPrefix bool
+
+		raw, isPrefix, err = br.ReadLine()
+		if err != nil && err != io.EOF { //nolint:errorlint
+			return "", err
+		}
+
+		if needMore := maxLen - len(line); needMore > 0 {
+			if len(raw) > needMore {
+				line += string(raw[:needMore])
+			} else {
+				line += string(raw)
+			}
+		}
+
+		if !isPrefix || len(raw) == 0 {
+			break
+		}
+	}
+
+	return line, err
 }
