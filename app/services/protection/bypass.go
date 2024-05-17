@@ -29,8 +29,7 @@ type DefBypass struct {
 
 func (v DefBypass) matches(actor *types.Principal, isRepoOwner bool) bool {
 	return actor != nil &&
-		(actor.Admin ||
-			v.RepoOwners && isRepoOwner ||
+		(v.RepoOwners && isRepoOwner ||
 			slices.Contains(v.UserIDs, actor.ID))
 }
 

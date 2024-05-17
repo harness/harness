@@ -47,7 +47,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 			expVs: []types.RuleViolations{},
 		},
 		{
-			name: "admin-no-bypass",
+			name: "admin-no-owner",
 			branch: Branch{
 				Bypass: DefBypass{},
 				PullReq: DefPullReq{
@@ -58,7 +58,8 @@ func TestBranch_MergeVerify(t *testing.T) {
 			},
 			in: MergeVerifyInput{
 				Actor:       admin,
-				AllowBypass: false,
+				IsRepoOwner: false,
+				AllowBypass: true,
 				PullReq:     &types.PullReq{UnresolvedCount: 1},
 			},
 			expOut: MergeVerifyOutput{
@@ -68,7 +69,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 			},
 			expVs: []types.RuleViolations{
 				{
-					Bypassable: true,
+					Bypassable: false,
 					Bypassed:   false,
 					Violations: []types.Violation{
 						{Code: codePullReqCommentsReqResolveAll},
@@ -314,7 +315,7 @@ func TestBranch_RequiredChecks(t *testing.T) {
 			},
 		},
 		{
-			name: "admin-bypassable",
+			name: "admin-no-owner",
 			branch: Branch{
 				Bypass: DefBypass{},
 				PullReq: DefPullReq{
@@ -322,11 +323,12 @@ func TestBranch_RequiredChecks(t *testing.T) {
 				},
 			},
 			in: RequiredChecksInput{
-				Actor: admin,
+				Actor:       admin,
+				IsRepoOwner: false,
 			},
 			expOut: RequiredChecksOutput{
-				RequiredIdentifiers:   nil,
-				BypassableIdentifiers: map[string]struct{}{"abc": {}},
+				RequiredIdentifiers:   map[string]struct{}{"abc": {}},
+				BypassableIdentifiers: nil,
 			},
 		},
 		{
@@ -407,21 +409,22 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 			expVs: []types.RuleViolations{},
 		},
 		{
-			name: "admin-no-bypass",
+			name: "admin-no-owner",
 			branch: Branch{
 				Bypass:    DefBypass{},
 				Lifecycle: DefLifecycle{DeleteForbidden: true},
 			},
 			in: RefChangeVerifyInput{
 				Actor:       admin,
-				AllowBypass: false,
+				IsRepoOwner: false,
+				AllowBypass: true,
 				RefAction:   RefActionDelete,
 				RefType:     RefTypeBranch,
 				RefNames:    []string{"abc"},
 			},
 			expVs: []types.RuleViolations{
 				{
-					Bypassable: true,
+					Bypassable: false,
 					Bypassed:   false,
 					Violations: []types.Violation{
 						{Code: codeLifecycleDelete},

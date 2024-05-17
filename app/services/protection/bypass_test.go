@@ -38,10 +38,11 @@ func TestBranch_matches(t *testing.T) {
 			exp:    false,
 		},
 		{
-			name:   "admin",
-			bypass: DefBypass{UserIDs: nil, RepoOwners: false},
+			name:   "admin-no-owner",
+			bypass: DefBypass{UserIDs: nil, RepoOwners: true},
 			actor:  admin,
-			exp:    true,
+			owner:  false,
+			exp:    false,
 		},
 		{
 			name:   "repo-owners-false",
