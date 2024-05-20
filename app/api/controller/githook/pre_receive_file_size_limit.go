@@ -26,7 +26,6 @@ import (
 	"github.com/gotidy/ptr"
 )
 
-// nolint:unused
 func (c *Controller) checkFileSizeLimit(
 	ctx context.Context,
 	rgit RestrictedGIT,

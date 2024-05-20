@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/harness/gitness/errors"
@@ -306,6 +307,16 @@ func catFileBatchCheckAllObjects(
 	repoPath string,
 	gitObjDir string,
 ) ([]parser.BatchCheckObject, error) {
+	// "info/alternates" points to the original repository.
+	const oldFilename = "/info/alternates"
+	const newFilename = "/info/alternates.bkp"
+
+	// --batch-all-objects reports objects in the current repository and in all alternate directories.
+	// We want to report objects in the current repository only.
+	if err := os.Rename(gitObjDir+oldFilename, gitObjDir+newFilename); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("failed to rename %s to %s: %w", oldFilename, newFilename, err)
+	}
+
 	cmd := command.New("cat-file",
 		command.WithFlag("--batch-check"),
 		command.WithFlag("--batch-all-objects"),
@@ -326,6 +337,10 @@ func catFileBatchCheckAllObjects(
 	objects, err := parser.CatFileBatchCheckAllObjects(buffer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse output of cat-file batch check all objects: %w", err)
+	}
+
+	if err := os.Rename(gitObjDir+newFilename, gitObjDir+oldFilename); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("failed to rename %s to %s: %w", newFilename, oldFilename, err)
 	}
 
 	return objects, nil

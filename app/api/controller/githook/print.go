@@ -104,7 +104,6 @@ func FMTDuration(d time.Duration) string {
 	return d.String()
 }
 
-// nolint:unused
 func printOversizeFiles(
 	output *hook.Output,
 	oversizeFiles []git.FileInfo,
