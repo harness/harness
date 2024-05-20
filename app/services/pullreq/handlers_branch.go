@@ -83,7 +83,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 
 		// Update the database with the latest source commit SHA and the merge base SHA.
 		pr, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
-			// to avoid racing conditions
+			// to avoid racing conditions with merge
 			if pr.State != enum.PullReqStateOpen {
 				return errPRNotOpen
 			}
@@ -163,7 +163,7 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 
 		var activitySeqBranchDeleted, activitySeqPRClosed int64
 		pr, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
-			// to avoid racing conditions
+			// to avoid racing conditions with merge
 			if pr.State != enum.PullReqStateOpen {
 				return errPRNotOpen
 			}

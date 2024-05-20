@@ -212,6 +212,11 @@ func (s *Service) updateMergeData(
 
 	// Update DB in both cases (failure or success)
 	_, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		// to avoid racing conditions with merge
+		if pr.State != enum.PullReqStateOpen {
+			return errPRNotOpen
+		}
+
 		if pr.SourceSHA != newSHA {
 			return events.NewDiscardEventErrorf("PR SHA %s is newer than %s", pr.SourceSHA, newSHA)
 		}

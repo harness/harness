@@ -113,6 +113,11 @@ func (c *Controller) Merge(
 	// the max time we give a merge to succeed
 	const timeout = 3 * time.Minute
 
+	var lockID int64 // 0 means locking repo level for prs (for actual merging)
+	if in.DryRun {
+		lockID = pullreqNum // dryrun doesn't need repo level lock
+	}
+
 	// if two requests for merging comes at the same time then unlock will lock
 	// first one and second one will wait, when first one is done then second one
 	// continue with latest data from db with state merged and return error that
@@ -120,7 +125,7 @@ func (c *Controller) Merge(
 	unlock, err := c.locker.LockPR(
 		ctx,
 		targetRepo.ID,
-		0,                      // 0 means locks all PRs for this repo
+		lockID,
 		timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
 	)
 	if err != nil {
@@ -247,6 +252,11 @@ func (c *Controller) Merge(
 				if pr.SourceSHA != mergeOutput.HeadSHA.String() {
 					return errors.New("source SHA has changed")
 				}
+				// actual merge is using a different lock - ensure we don't overwrite any merge results.
+				if pr.State != enum.PullReqStateOpen {
+					return usererror.BadRequest("Pull request must be open")
+				}
+
 				if len(mergeOutput.ConflictFiles) > 0 {
 					pr.MergeCheckStatus = enum.MergeCheckStatusConflict
 					pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
