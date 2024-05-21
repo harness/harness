@@ -46,7 +46,7 @@ func (c *Controller) Search(
 		return types.SearchResult{}, fmt.Errorf("failed to search repos by path: %w", err)
 	}
 
-	spaceRepoIDToPathMap, err := c.getReposBySpacePaths(ctx, session, in.SpacePaths)
+	spaceRepoIDToPathMap, err := c.getReposBySpacePaths(ctx, session, in.SpacePaths, in.Recursive)
 	if err != nil {
 		return types.SearchResult{}, fmt.Errorf("failed to search repos by space path: %w", err)
 	}
@@ -110,10 +110,11 @@ func (c *Controller) getReposBySpacePaths(
 	ctx context.Context,
 	session *auth.Session,
 	spacePaths []string,
+	recursive bool,
 ) (map[int64]string, error) {
 	repoIDToPathMap := make(map[int64]string)
 	for _, spacePath := range spacePaths {
-		m, err := c.getReposBySpacePath(ctx, session, spacePath)
+		m, err := c.getReposBySpacePath(ctx, session, spacePath, recursive)
 		if err != nil {
 			return nil, fmt.Errorf("failed to search repos by space path: %w", err)
 		}
@@ -129,6 +130,7 @@ func (c *Controller) getReposBySpacePath(
 	ctx context.Context,
 	session *auth.Session,
 	spacePath string,
+	recursive bool,
 ) (map[int64]string, error) {
 	repoIDToPathMap := make(map[int64]string)
 	if spacePath == "" {
@@ -136,11 +138,12 @@ func (c *Controller) getReposBySpacePath(
 	}
 
 	filter := &types.RepoFilter{
-		Page:  1,
-		Size:  int(math.MaxInt),
-		Query: "",
-		Order: enum.OrderAsc,
-		Sort:  enum.RepoAttrNone,
+		Page:      1,
+		Size:      int(math.MaxInt),
+		Query:     "",
+		Order:     enum.OrderAsc,
+		Sort:      enum.RepoAttrNone,
+		Recursive: recursive,
 	}
 	repos, _, err := c.spaceCtrl.ListRepositories(ctx, session, spacePath, filter)
 	if err != nil {

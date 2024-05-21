@@ -29,6 +29,10 @@ type (
 
 		// EnableRegex enables regex search on the query
 		EnableRegex bool `json:"enable_regex"`
+
+		// Search all the repos in a space and its subspaces recursively.
+		// Valid only when spacePaths is set.
+		Recursive bool `json:"recursive"`
 	}
 
 	SearchResult struct {
