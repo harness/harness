@@ -154,3 +154,24 @@
     padding-top: 2px !important;
   }
 }
+
+.toggleComment {
+  all: unset;
+  border: none !important;
+  width: 14px;
+  height: 14px;
+  position: absolute;
+  top: 3px;
+  left: 5px;
+
+  &::after {
+    content: attr(data-threads-count);
+    position: absolute;
+    left: 15px;
+    top: -2px;
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 1;
+    color: var(--black);
+  }
+}

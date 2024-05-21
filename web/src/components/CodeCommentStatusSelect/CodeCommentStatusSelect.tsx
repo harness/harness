@@ -29,12 +29,14 @@ import css from './CodeCommentStatusSelect.module.scss'
 
 interface CodeCommentStatusSelectProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   comment: { commentItems: CommentItem<TypesPullReqActivity>[] }
+  rowElement?: HTMLTableRowElement
 }
 
 export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = ({
   repoMetadata,
   pullReqMetadata,
-  comment: { commentItems }
+  comment: { commentItems },
+  rowElement
 }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
@@ -86,6 +88,15 @@ export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = (
       }
     }
   }, [parentComment?.id, randomClass])
+
+  useEffect(
+    function updateRowElement() {
+      if (rowElement) {
+        rowElement.dataset.commentThreadStatus = codeCommentStatus.value
+      }
+    },
+    [rowElement, codeCommentStatus]
+  )
 
   return parentComment?.deleted ? null : (
     <Select

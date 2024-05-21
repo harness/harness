@@ -682,6 +682,7 @@ export interface StringsMap {
   'pr.titleChangedTable': string
   'pr.titleIsRequired': string
   'pr.titlePlaceHolder': string
+  'pr.toggleComments': string
   'pr.unified': string
   'prChecks.error': string
   'prChecks.failure': string

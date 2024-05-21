@@ -242,6 +242,7 @@ diff: Diff
 draft: Draft
 conversation: Conversation
 pr:
+  toggleComments: Toggle comments
   suggestedChange: Suggested change
   addSuggestion: Add suggestion to batch
   removeSuggestion: Remove suggestion from batch

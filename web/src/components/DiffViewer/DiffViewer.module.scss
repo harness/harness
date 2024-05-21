@@ -77,7 +77,8 @@
           &[data-annotated-line] {
             background-color: var(--white);
 
-            & + [data-annotated-line] {
+            & + [data-annotated-line][hidden] + [data-annotated-line],
+            &:not([hidden]) + [data-annotated-line] {
               [data-comment-thread-id] {
                 padding-top: 0;
               }

@@ -20,14 +20,14 @@ import Selecto from 'selecto'
 import ReactDOM from 'react-dom'
 import { useLocation } from 'react-router-dom'
 import { useToaster, ButtonProps, Utils } from '@harnessio/uicore'
-import { findLastIndex, isEqual, max, noop, random, uniq } from 'lodash-es'
+import { findLastIndex, get, isEqual, max, noop, random, uniq } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { DiffFileEntry } from 'utils/types'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import type { OpenapiCommentCreatePullReqRequest, TypesPullReq, TypesPullReqActivity } from 'services/code'
-import { PullRequestSection, filenameToLanguage, getErrorMessage } from 'utils/Utils'
+import { CodeCommentState, PullRequestSection, filenameToLanguage, getErrorMessage } from 'utils/Utils'
 import { AppWrapper } from 'App'
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
 import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
@@ -231,8 +231,12 @@ export function usePullReqComments({
       // Add `selected` class into selected lines / rows (only if selected lines count > 1)
       markSelectedLines(comment, lineInfo.rowElement, true)
 
+      lineInfo.rowElement.dataset.sourceLineNumber = String(comment.lineNumberEnd)
+
       // Annotate that the row is taken. We only support one thread per line as now
       updateDataCommentIds(lineInfo.rowElement, comment.inner.id as number, true)
+
+      const isCommentThreadResolved = !!get(comment.commentItems[0], 'payload.resolved', false)
 
       // Create placeholder for opposite row (id < 0 means this is a new thread). This placeholder
       // expands itself when CommentBox's height is changed (in split view)
@@ -248,6 +252,16 @@ export function usePullReqComments({
       commentRowElement.dataset.annotatedLine = String(comment.lineNumberEnd)
       commentRowElement.innerHTML = `<td colspan="2"></td>`
       lineInfo.rowElement.after(commentRowElement)
+
+      // Set both place-holder and comment box hidden when comment thread is resolved
+      if (isCommentThreadResolved) {
+        oppositeRowPlaceHolder.setAttribute('hidden', '')
+        commentRowElement.setAttribute('hidden', '')
+      }
+
+      commentRowElement.dataset.commentThreadStatus = isCommentThreadResolved
+        ? CodeCommentState.RESOLVED
+        : CodeCommentState.ACTIVE
 
       // `element` is where CommentBox will be mounted
       const element = commentRowElement.firstElementChild as HTMLTableCellElement
@@ -434,6 +448,7 @@ export function usePullReqComments({
                   repoMetadata={repoMetadata}
                   pullReqMetadata={pullReqMetadata as TypesPullReq}
                   comment={comment}
+                  rowElement={commentRowElement}
                 />
               ),
               [CommentBoxOutletPosition.RIGHT_OF_REPLY_PLACEHOLDER]: (
