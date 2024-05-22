@@ -78,6 +78,10 @@ func (in *CommentCreateInput) Validate() error {
 		return usererror.BadRequest("code comments require line numbers")
 	}
 
+	if in.LineStartNew && !in.LineEndNew || !in.LineStartNew && in.LineEndNew {
+		return usererror.BadRequest("code block must start and end on the same side")
+	}
+
 	return nil
 }
 
