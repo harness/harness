@@ -34,7 +34,7 @@ const (
 func GitPathBefore(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		_, err := pathTerminatedWithMarker(r, "", ".git", false)
+		_, err := pathTerminatedWithMarker(r, "", ".git/", "/")
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -51,7 +51,7 @@ func TerminatedPathBefore(prefixes []string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		for _, p := range prefixes {
-			changed, err := pathTerminatedWithMarker(r, p, "/+", false)
+			changed, err := pathTerminatedWithMarker(r, p, "/+", "")
 			if err != nil {
 				render.TranslatedUserError(ctx, w, err)
 				return
@@ -74,9 +74,9 @@ func TerminatedPathBefore(prefixes []string, next http.Handler) http.Handler {
 //
 // Examples:
 // Prefix: "" Path: "/space1/space2/+" => "/space1%2Fspace2"
-// Prefix: "" Path: "/space1/space2.git" => "/space1%2Fspace2"
+// Prefix: "" Path: "/space1/.gitness.git" => "/space1%2F.gitness"
 // Prefix: "/spaces" Path: "/spaces/space1/space2/+/authToken" => "/spaces/space1%2Fspace2/authToken".
-func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, keepMarker bool) (bool, error) {
+func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, markerReplacement string) (bool, error) {
 	// In case path doesn't start with prefix - nothing to encode
 	if len(r.URL.Path) < len(prefix) || r.URL.Path[0:len(prefix)] != prefix {
 		return false, nil
@@ -93,12 +93,9 @@ func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, kee
 	// if marker was found - convert to escaped version (skip first character in case path starts with '/').
 	// Since replacePrefix unescapes the strings, we have to double escape.
 	escapedPath := path[0:1] + strings.ReplaceAll(path[1:], types.PathSeparator, EncodedPathSeparator)
-	if keepMarker {
-		escapedPath += marker
-	}
 
 	prefixWithPath := prefix + path + marker
-	prefixWithEscapedPath := prefix + escapedPath
+	prefixWithEscapedPath := prefix + escapedPath + markerReplacement
 
 	hlog.FromRequest(r).Trace().Msgf(
 		"[Encode] prefix: '%s', marker: '%s', original: '%s', escaped: '%s'.\n",
