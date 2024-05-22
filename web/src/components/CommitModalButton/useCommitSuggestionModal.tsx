@@ -89,7 +89,7 @@ export function useCommitSuggestionsModal({
             {title || getString('commitChanges')}
           </Heading>
 
-          <Container margin={{ right: 'xxlarge' }}>
+          <Container margin={{ right: 'xxlarge' }} className={css.formContainer}>
             <Formik<FormData>
               initialValues={{
                 commitMessage,
@@ -113,7 +113,7 @@ export function useCommitSuggestionsModal({
                   placeholder={extendedDescription || getString('optionalExtendedDescription')}
                 />
 
-                <Layout.Horizontal spacing="small" padding={{ right: 'xxlarge', top: 'xxlarge', bottom: 'large' }}>
+                <Layout.Horizontal spacing="small" padding={{ top: 'xxlarge', bottom: 'large' }}>
                   <Button
                     type="submit"
                     variation={ButtonVariation.PRIMARY}

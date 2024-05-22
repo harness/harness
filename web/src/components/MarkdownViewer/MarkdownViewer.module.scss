@@ -75,6 +75,10 @@
   pre {
     margin-bottom: 0 !important;
     border-radius: 0 !important;
+
+    code {
+      padding: var(--spacing-small) !important;
+    }
   }
 
   .removed pre {

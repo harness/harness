@@ -84,3 +84,9 @@
     }
   }
 }
+
+.formContainer {
+  form + div {
+    display: none !important;
+  }
+}

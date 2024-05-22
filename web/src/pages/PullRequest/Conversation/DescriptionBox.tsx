@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, ButtonSize, ButtonVariation, Container, Layout, useToaster, Text } from '@harnessio/uicore'
 import cx from 'classnames'
 import { useParams } from 'react-router-dom'
@@ -80,18 +80,78 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
     setFlag(true)
   }, [])
 
-  const handleDescUpdate = useCallback((markdown: string) => {
-    const payload: OpenapiUpdatePullReqRequest = {
-      title: pullReqMetadata.title,
-      description: markdown || ''
-    }
-    setOriginalContent(markdown)
-    mutate(payload)
-      .then(() => {
-        setContent(markdown)
-      })
-      .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdate')))
-  }, [])
+  const handleDescUpdate = useCallback(
+    (markdown: string) => {
+      const payload: OpenapiUpdatePullReqRequest = {
+        title: pullReqMetadata.title,
+        description: markdown || ''
+      }
+      setOriginalContent(markdown)
+      mutate(payload)
+        .then(() => {
+          setContent(markdown)
+        })
+        .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdate')))
+    },
+    [getString, mutate, pullReqMetadata.title, showError]
+  )
+
+  const viewerDOMRef = useRef<HTMLElement>()
+
+  useEffect(
+    function toggleTodoCheck() {
+      const dom = viewerDOMRef.current
+      const TODO_LIST_MARKER = 'data-todo-index'
+      const TODO_LIST_ITEM_CLASS = 'task-list-item'
+
+      if (dom && !edit) {
+        const handleClick = (e: MouseEvent) => {
+          const targetIsListItem = (e.target as HTMLElement).classList.contains(TODO_LIST_ITEM_CLASS)
+          const target = (e.target as HTMLElement)?.closest?.(`.${TODO_LIST_ITEM_CLASS}`)
+          const input = target?.firstElementChild as HTMLInputElement
+          const checked = targetIsListItem ? !input?.checked : input?.checked
+          let sourceIndex = -1
+
+          if (!input) return
+
+          const index = Number(target?.getAttribute(TODO_LIST_MARKER))
+
+          const newContent = originalContent
+            .split('\n')
+            .map(line => {
+              if (line.startsWith('- [ ]') || line.startsWith('- [x]')) {
+                sourceIndex++
+
+                if (index === sourceIndex) {
+                  return checked ? line.replace('- [ ]', '- [x]') : line.replace('- [x]', '- [ ]')
+                }
+              }
+              return line
+            })
+            .join('\n')
+
+          setContent(newContent)
+          setOriginalContent(newContent)
+
+          e.preventDefault()
+          e.stopPropagation()
+
+          handleDescUpdate(newContent)
+        }
+
+        // Enable all check inputs to allow clicking
+        dom.querySelectorAll(`.${TODO_LIST_ITEM_CLASS} input`)?.forEach((input, index) => {
+          input.removeAttribute('disabled')
+          input.parentElement?.setAttribute(TODO_LIST_MARKER, String(index))
+        })
+
+        dom.addEventListener('click', handleClick)
+
+        return () => dom.removeEventListener('click', handleClick)
+      }
+    },
+    [edit, handleDescUpdate, originalContent]
+  )
 
   return (
     <Container className={cx({ [css.box]: !edit, [css.desc]: !edit })}>
@@ -184,31 +244,28 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
             autoFocusAndPosition={true}
           />
         )) || (
-          <Container className={css.mdWrapper}>
-            <MarkdownViewer
-              inDescriptionBox={true}
-              setOriginalContent={setOriginalContent}
-              source={content}
-              handleDescUpdate={handleDescUpdate}
-            />
-            <Container className={css.menuWrapper}>
-              <OptionsMenuButton
-                isDark={true}
-                icon="Options"
-                iconProps={{ size: 14 }}
-                style={{ padding: '5px' }}
-                items={[
-                  {
-                    text: getString('edit'),
-                    className: css.optionMenuIcon,
-                    hasIcon: true,
-                    iconName: 'Edit',
-                    onClick: () => setEdit(true)
-                  }
-                ]}
-              />
+          <React.Fragment key={originalContent}>
+            <Container className={css.mdWrapper} ref={viewerDOMRef}>
+              <MarkdownViewer source={content} />
+              <Container className={css.menuWrapper}>
+                <OptionsMenuButton
+                  isDark={true}
+                  icon="Options"
+                  iconProps={{ size: 14 }}
+                  style={{ padding: '5px' }}
+                  items={[
+                    {
+                      text: getString('edit'),
+                      className: css.optionMenuIcon,
+                      hasIcon: true,
+                      iconName: 'Edit',
+                      onClick: () => setEdit(true)
+                    }
+                  ]}
+                />
+              </Container>
             </Container>
-          </Container>
+          </React.Fragment>
         )}
       </Container>
       <NavigationCheck when={dirty} />

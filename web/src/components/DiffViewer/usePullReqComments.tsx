@@ -35,7 +35,6 @@ import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/Code
 import { dispatchCustomEvent } from 'hooks/useEventListener'
 import { UseGetPullRequestInfoResult, usePullReqActivities } from 'pages/PullRequest/useGetPullRequestInfo'
 import { CommentThreadTopDecoration } from 'components/CommentThreadTopDecoration/CommentThreadTopDecoration'
-import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
@@ -288,14 +287,18 @@ export function usePullReqComments({
       // update to the latest data
       comment._commentItems = structuredClone(comment.commentItems)
 
-      const suggestionBlock: SuggestionBlock = {
-        source:
-          comment.codeBlockContent ||
-          (lineElements?.length
-            ? lineElements.map(td => td.nextElementSibling?.querySelector('.d2h-code-line-ctn')?.textContent).join('\n')
-            : lineInfo.rowElement?.lastElementChild?.querySelector('.d2h-code-line-ctn')?.textContent || ''),
-        lang: filenameToLanguage(diff.filePath.split('/').pop())
-      }
+      const suggestionBlock = comment.left
+        ? undefined
+        : {
+            source:
+              comment.codeBlockContent ||
+              (lineElements?.length
+                ? lineElements
+                    .map(td => td.nextElementSibling?.querySelector('.d2h-code-line-ctn')?.textContent)
+                    .join('\n')
+                : lineInfo.rowElement?.lastElementChild?.querySelector('.d2h-code-line-ctn')?.textContent || ''),
+            lang: filenameToLanguage(diff.filePath.split('/').pop())
+          }
 
       // Note: CommentBox is rendered as an independent React component.
       //       Everything passed to it must be either values, or refs.

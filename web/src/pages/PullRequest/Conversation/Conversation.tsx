@@ -265,10 +265,13 @@ export const Conversation: React.FC<ConversationProps> = ({
         const comment = activitiesToDiffCommentItems(activity?.code_comment?.path as string, [
           activity as TypesPullReqActivity
         ])[0]
-        const suggestionBlock = {
-          source: comment.codeBlockContent as string,
-          lang: filenameToLanguage(activity?.code_comment?.path?.split('/').pop())
-        }
+
+        const suggestionBlock = comment.left
+          ? undefined
+          : {
+              source: comment.codeBlockContent as string,
+              lang: filenameToLanguage(activity?.code_comment?.path?.split('/').pop())
+            }
 
         return (
           <ThreadSection

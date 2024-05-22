@@ -60,6 +60,7 @@ import { InViewDiffBlockRenderer } from 'components/DiffViewer/InViewDiffBlockRe
 import Config from 'Config'
 import { PullReqSuggestionsBatch } from 'components/PullReqSuggestionsBatch/PullReqSuggestionsBatch'
 import { PullReqCustomEvent } from 'pages/PullRequest/PullRequestUtils'
+import { useCollapseHarnessNav } from 'hooks/useIsSidebarExpanded'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import ReviewSplitButton from './ReviewSplitButton/ReviewSplitButton'
@@ -442,6 +443,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
   }, [diffs, setPullReqChangesCount])
 
   useShowRequestError(errorFileViews, 0)
+  useCollapseHarnessNav()
 
   return (
     <Container className={cx(css.container, className)} {...(!!loadingRawDiff || !!error ? { flex: true } : {})}>

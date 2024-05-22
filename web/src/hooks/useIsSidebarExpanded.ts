@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { CustomEventName } from 'utils/Utils'
+import { useAppContext } from 'AppContext'
 import { useCustomEventListener } from './useEventListener'
 
 /**
@@ -34,4 +35,48 @@ export function useIsSidebarExpanded() {
   )
 
   return isSidebarExpanded
+}
+
+export function useCollapseHarnessNav() {
+  const { standalone } = useAppContext()
+  const isSidebarExpanded = useIsSidebarExpanded()
+  const handled = useRef(!standalone && isSidebarExpanded)
+  const internalFlags = useRef({
+    initialized: false
+  })
+
+  useEffect(() => {
+    if (handled.current) {
+      const nav = document.getElementById('main-side-nav')
+      const pullReqNavItem = nav?.querySelector('[data-code-repo-section="pull-requests"]')
+      const toggleNavButton = nav?.querySelector('span[icon][class*="SideNavToggleButton"]') as HTMLElement
+
+      if (pullReqNavItem && toggleNavButton) {
+        const isCollapsed = pullReqNavItem.clientWidth <= 64
+
+        if (!isCollapsed) {
+          setTimeout(() => {
+            toggleNavButton.click()
+            internalFlags.current.initialized = true
+          }, 0)
+        }
+      }
+
+      return () => {
+        if (handled.current) {
+          toggleNavButton.click()
+        }
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (internalFlags.current.initialized && !isSidebarExpanded) {
+      internalFlags.current.initialized = false
+
+      if (handled.current) {
+        handled.current = false
+      }
+    }
+  }, [isSidebarExpanded])
 }
