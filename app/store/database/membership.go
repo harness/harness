@@ -297,7 +297,7 @@ func (s *MembershipStore) CountSpaces(ctx context.Context,
 		Select("count(*)").
 		From("memberships").
 		InnerJoin("spaces ON spaces.space_id = membership_space_id").
-		Where("membership_principal_id = ?", userID)
+		Where("membership_principal_id = ? AND spaces.space_deleted IS NULL", userID)
 
 	stmt = applyMembershipSpaceFilter(stmt, filter)
 
@@ -327,7 +327,7 @@ func (s *MembershipStore) ListSpaces(ctx context.Context,
 		Select(columns).
 		From("memberships").
 		InnerJoin("spaces ON spaces.space_id = membership_space_id").
-		Where("membership_principal_id = ?", userID)
+		Where("membership_principal_id = ? AND spaces.space_deleted IS NULL", userID)
 
 	stmt = applyMembershipSpaceFilter(stmt, filter)
 	stmt = stmt.Limit(database.Limit(filter.Size))
