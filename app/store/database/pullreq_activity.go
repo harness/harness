@@ -409,7 +409,7 @@ func (s *PullReqActivityStore) List(ctx context.Context,
 
 	stmt = applyFilter(filter, stmt)
 
-	stmt.OrderBy("pullreq_activity_order asc", "pullreq_activity_sub_order asc")
+	stmt = stmt.OrderBy("pullreq_activity_order asc", "pullreq_activity_sub_order asc")
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
