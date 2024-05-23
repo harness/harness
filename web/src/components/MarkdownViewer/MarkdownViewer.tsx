@@ -164,7 +164,7 @@ export function MarkdownViewer({
             if (
               typeof code === 'string' &&
               typeof _className === 'string' &&
-              'language-suggestion' === _className.toLocaleLowerCase()
+              'language-suggestion' === _className.split(' ')[0].toLocaleLowerCase()
             ) {
               return (
                 <CodeSuggestionBlock
