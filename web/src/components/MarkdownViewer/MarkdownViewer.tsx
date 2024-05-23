@@ -102,7 +102,6 @@ export function MarkdownViewer({
       ref={ref}>
       <MarkdownPreview
         source={source}
-        skipHtml={false}
         warpperElement={{ 'data-color-mode': darkMode ? 'dark' : 'light' }}
         rehypeRewrite={(node, _index, parent) => {
           if ((node as unknown as HTMLDivElement).tagName === 'a') {

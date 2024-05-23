@@ -184,7 +184,11 @@ module.exports = {
   },
   resolve: {
     extensions: ['.mjs', '.js', '.ts', '.tsx', '.json', '.ttf', '.scss'],
-    plugins: [new TsconfigPathsPlugin()]
+    plugins: [new TsconfigPathsPlugin()],
+    alias: {
+      'react/jsx-dev-runtime': 'react/jsx-dev-runtime.js',
+      'react/jsx-runtime': 'react/jsx-runtime.js'
+    }
   },
   plugins: [
     new MiniCssExtractPlugin({
