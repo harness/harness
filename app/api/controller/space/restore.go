@@ -45,7 +45,7 @@ func (c *Controller) Restore(
 	spaceRef string,
 	deletedAt int64,
 	in *RestoreInput,
-) (*types.Space, error) {
+) (*SpaceOutput, error) {
 	if err := c.sanitizeRestoreInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize restore input: %w", err)
 	}
@@ -56,7 +56,7 @@ func (c *Controller) Restore(
 	}
 
 	// check view permission on the original ref.
-	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, false)
+	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize on space restore: %w", err)
 	}
@@ -74,7 +74,6 @@ func (c *Controller) Restore(
 		parentSpace,
 		enum.ResourceTypeSpace,
 		enum.PermissionSpaceEdit,
-		false,
 	); err != nil {
 		return nil, fmt.Errorf("authorization failed on space restore: %w", err)
 	}
@@ -98,7 +97,11 @@ func (c *Controller) Restore(
 		return nil, fmt.Errorf("failed to restore space in a tnx: %w", err)
 	}
 
-	return space, nil
+	// restored spaces will be private since public access data has deleted upon deletion.
+	return &SpaceOutput{
+		Space:    *space,
+		IsPublic: false,
+	}, nil
 }
 
 func (c *Controller) restoreSpaceInnerInTx(

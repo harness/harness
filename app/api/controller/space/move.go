@@ -49,13 +49,13 @@ func (c *Controller) Move(
 	session *auth.Session,
 	spaceRef string,
 	in *MoveInput,
-) (*types.Space, error) {
+) (*SpaceOutput, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, false); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit); err != nil {
 		return nil, err
 	}
 
@@ -65,7 +65,7 @@ func (c *Controller) Move(
 
 	// exit early if there are no changes
 	if !in.hasChanges(space) {
-		return space, nil
+		return GetSpaceOutput(ctx, c.publicAccess, space)
 	}
 
 	if err = c.moveInner(
@@ -77,7 +77,7 @@ func (c *Controller) Move(
 		return nil, err
 	}
 
-	return space, nil
+	return GetSpaceOutput(ctx, c.publicAccess, space)
 }
 
 func (c *Controller) sanitizeMoveInput(in *MoveInput, isRoot bool) error {

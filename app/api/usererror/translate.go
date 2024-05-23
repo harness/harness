@@ -21,6 +21,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/errors"
@@ -53,8 +54,6 @@ func Translate(ctx context.Context, err error) *Error {
 		return rError
 
 	// api auth errors
-	case errors.Is(err, apiauth.ErrNotAuthenticated):
-		return ErrUnauthorized
 	case errors.Is(err, apiauth.ErrNotAuthorized):
 		return ErrForbidden
 
@@ -112,6 +111,10 @@ func Translate(ctx context.Context, err error) *Error {
 	// lock errors
 	case errors.As(err, &lockError):
 		return errorFromLockError(lockError)
+
+	// public access errors
+	case errors.Is(err, publicaccess.ErrPublicAccessNotAllowed):
+		return BadRequestf("Public access on resources is not allowed.")
 
 	// unknown error
 	default:

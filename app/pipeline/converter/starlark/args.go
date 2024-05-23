@@ -27,12 +27,13 @@ func createArgs(
 	repo *types.Repository,
 	pipeline *types.Pipeline,
 	execution *types.Execution,
+	repoIsPublic bool,
 ) []starlark.Value {
 	args := []starlark.Value{
 		starlarkstruct.FromStringDict(
 			starlark.String("context"),
 			starlark.StringDict{
-				"repo":  starlarkstruct.FromStringDict(starlark.String("repo"), fromRepo(repo, pipeline)),
+				"repo":  starlarkstruct.FromStringDict(starlark.String("repo"), fromRepo(repo, pipeline, repoIsPublic)),
 				"build": starlarkstruct.FromStringDict(starlark.String("build"), fromBuild(execution)),
 			},
 		),
@@ -66,12 +67,13 @@ func fromBuild(v *types.Execution) starlark.StringDict {
 	}
 }
 
-func fromRepo(v *types.Repository, p *types.Pipeline) starlark.StringDict {
+func fromRepo(v *types.Repository, p *types.Pipeline, publicRepo bool) starlark.StringDict {
 	namespace := v.Path
 	idx := strings.LastIndex(v.Path, "/")
 	if idx != -1 {
 		namespace = v.Path[:idx]
 	}
+
 	return starlark.StringDict{
 		// TODO [CODE-1363]: remove after identifier migration?
 		"uid":                  starlark.String(v.Identifier),
@@ -84,7 +86,7 @@ func fromRepo(v *types.Repository, p *types.Pipeline) starlark.StringDict {
 		"link":                 starlark.String(v.GitURL),
 		"branch":               starlark.String(v.DefaultBranch),
 		"config":               starlark.String(p.ConfigPath),
-		"private":              !starlark.Bool(v.IsPublic),
+		"private":              !starlark.Bool(publicRepo),
 		"visibility":           starlark.String("internal"),
 		"active":               starlark.Bool(true),
 		"trusted":              starlark.Bool(true),

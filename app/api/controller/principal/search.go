@@ -16,12 +16,44 @@ package principal
 
 import (
 	"context"
+	"net/http"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-func (c controller) List(ctx context.Context, opts *types.PrincipalFilter) (
-	[]*types.PrincipalInfo, error) {
+func (c controller) List(
+	ctx context.Context,
+	session *auth.Session,
+	opts *types.PrincipalFilter,
+) ([]*types.PrincipalInfo, error) {
+	// only user search is supported right now!
+	if len(opts.Types) != 1 || opts.Types[0] != enum.PrincipalTypeUser {
+		return nil, usererror.Newf(
+			http.StatusNotImplemented,
+			"Only listing of users is supported at this moment (use query '%s=%s').",
+			request.QueryParamType,
+			enum.PrincipalTypeUser,
+		)
+	}
+
+	if err := apiauth.Check(
+		ctx,
+		c.authorizer,
+		session,
+		&types.Scope{},
+		&types.Resource{
+			Type: enum.ResourceTypeUser,
+		},
+		enum.PermissionUserView,
+	); err != nil {
+		return nil, err
+	}
+
 	principals, err := c.principalStore.List(ctx, opts)
 	if err != nil {
 		return nil, err

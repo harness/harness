@@ -290,6 +290,13 @@ type (
 		ListSpaces(ctx context.Context, userID int64, filter types.MembershipSpaceFilter) ([]types.MembershipSpace, error)
 	}
 
+	// PublicAccessStore defines the publicly accessible resources data storage.
+	PublicAccessStore interface {
+		Find(ctx context.Context, typ enum.PublicResourceType, id int64) (bool, error)
+		Create(ctx context.Context, typ enum.PublicResourceType, id int64) error
+		Delete(ctx context.Context, typ enum.PublicResourceType, id int64) error
+	}
+
 	// TokenStore defines the token data storage.
 	TokenStore interface {
 		// Find finds the token by id

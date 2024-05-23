@@ -16,14 +16,13 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/pkg/errors"
 )
 
 // CheckSpace checks if a space specific permission is granted for the current auth session
@@ -35,15 +34,10 @@ func CheckSpace(
 	session *auth.Session,
 	space *types.Space,
 	permission enum.Permission,
-	orPublic bool,
 ) error {
-	if orPublic && space.IsPublic {
-		return nil
-	}
-
 	parentSpace, name, err := paths.DisectLeaf(space.Path)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to disect path '%s'", space.Path)
+		return fmt.Errorf("failed to disect path '%s': %w", space.Path, err)
 	}
 
 	scope := &types.Scope{SpacePath: parentSpace}
@@ -65,12 +59,7 @@ func CheckSpaceScope(
 	space *types.Space,
 	resourceType enum.ResourceType,
 	permission enum.Permission,
-	orPublic bool,
 ) error {
-	if orPublic && space.IsPublic {
-		return nil
-	}
-
 	scope := &types.Scope{SpacePath: space.Path}
 	resource := &types.Resource{
 		Type:       resourceType,

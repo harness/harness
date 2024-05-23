@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/scheduler"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -44,8 +45,9 @@ func ProvideTriggerer(
 	urlProvider url.Provider,
 	templateStore store.TemplateStore,
 	pluginStore store.PluginStore,
+	publicAccess publicaccess.Service,
 ) Triggerer {
 	return New(executionStore, checkStore, stageStore, pipelineStore,
 		tx, repoStore, urlProvider, scheduler, fileService, converterService,
-		templateStore, pluginStore)
+		templateStore, pluginStore, publicAccess)
 }

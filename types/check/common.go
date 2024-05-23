@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/harness/gitness/types"
 )
 
 const (
@@ -73,6 +75,10 @@ var (
 
 	ErrIllegalRepoSpaceIdentifierSuffix = &ValidationError{
 		fmt.Sprintf("Space and repository identifiers cannot end with %q.", illegalRepoSpaceIdentifierSuffix),
+	}
+
+	ErrIllegalPrincipalUID = &ValidationError{
+		fmt.Sprintf("Principal UID is not allowed to be %q.", types.AnonymousPrincipalUID),
 	}
 )
 
@@ -143,7 +149,15 @@ type PrincipalUID func(uid string) error
 
 // PrincipalUIDDefault performs the default Principal UID check.
 func PrincipalUIDDefault(uid string) error {
-	return Identifier(uid)
+	if err := Identifier(uid); err != nil {
+		return err
+	}
+
+	if strings.EqualFold(uid, types.AnonymousPrincipalUID) {
+		return ErrIllegalPrincipalUID
+	}
+
+	return nil
 }
 
 // SpaceIdentifier is an abstraction of a validation method that returns true

@@ -30,7 +30,6 @@ import (
 )
 
 var (
-	ErrNotAuthenticated          = errors.New("not authenticated")
 	ErrNotAuthorized             = errors.New("not authorized")
 	ErrParentResourceTypeUnknown = errors.New("Unknown parent resource type")
 	ErrPrincipalTypeUnknown      = errors.New("Unknown principal type")
@@ -42,10 +41,6 @@ var (
 func Check(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
 	scope *types.Scope, resource *types.Resource, permission enum.Permission,
 ) error {
-	if session == nil {
-		return ErrNotAuthenticated
-	}
-
 	authorized, err := authorizer.Check(
 		ctx,
 		session,
@@ -104,7 +99,7 @@ func getScopeForParent(ctx context.Context, spaceStore store.SpaceStore, repoSto
 
 		spacePath, repoName, err := paths.DisectLeaf(repo.Path)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Failed to disect path '%s'", repo.Path)
+			return nil, fmt.Errorf("failed to disect path '%s': %w", repo.Path, err)
 		}
 
 		return &types.Scope{SpacePath: spacePath, Repo: repoName}, nil

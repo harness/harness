@@ -29,28 +29,30 @@ import (
 // UpdateInput is used for updating a space.
 type UpdateInput struct {
 	Description *string `json:"description"`
-	IsPublic    *bool   `json:"is_public"`
 }
 
 func (in *UpdateInput) hasChanges(space *types.Space) bool {
-	return (in.Description != nil && *in.Description != space.Description) ||
-		(in.IsPublic != nil && *in.IsPublic != space.IsPublic)
+	return in.Description != nil && *in.Description != space.Description
 }
 
 // Update updates a space.
-func (c *Controller) Update(ctx context.Context, session *auth.Session,
-	spaceRef string, in *UpdateInput) (*types.Space, error) {
+func (c *Controller) Update(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	in *UpdateInput,
+) (*SpaceOutput, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, false); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit); err != nil {
 		return nil, err
 	}
 
 	if !in.hasChanges(space) {
-		return space, nil
+		return GetSpaceOutput(ctx, c.publicAccess, space)
 	}
 
 	if err = c.sanitizeUpdateInput(in); err != nil {
@@ -62,9 +64,6 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		if in.Description != nil {
 			space.Description = *in.Description
 		}
-		if in.IsPublic != nil {
-			space.IsPublic = *in.IsPublic
-		}
 
 		return nil
 	})
@@ -72,16 +71,10 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	return space, nil
+	return GetSpaceOutput(ctx, c.publicAccess, space)
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
-	if in.IsPublic != nil {
-		if *in.IsPublic && !c.publicResourceCreationEnabled {
-			return errPublicSpaceCreationDisabled
-		}
-	}
-
 	if in.Description != nil {
 		*in.Description = strings.TrimSpace(*in.Description)
 		if err := check.Description(*in.Description); err != nil {

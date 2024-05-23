@@ -104,6 +104,7 @@ func (i *importer) Import(importedFrom, importedPath string) (contents jsonnet.C
 
 func Parse(
 	repo *types.Repository,
+	repoIsPublic bool,
 	pipeline *types.Pipeline,
 	execution *types.Execution,
 	file *file.File,
@@ -130,7 +131,7 @@ func Parse(
 		mapBuild(execution, vm)
 	}
 	if repo != nil {
-		mapRepo(repo, pipeline, vm)
+		mapRepo(repo, pipeline, vm, repoIsPublic)
 	}
 
 	jsonnetFile := file
@@ -188,7 +189,7 @@ func mapBuild(v *types.Execution, vm *jsonnet.VM) {
 // mapBuild populates repo level variables available to jsonnet templates.
 // Since we want to maintain compatibility with drone 2.x, the older format
 // needs to be maintained (even if the variables do not exist in gitness).
-func mapRepo(v *types.Repository, p *types.Pipeline, vm *jsonnet.VM) {
+func mapRepo(v *types.Repository, p *types.Pipeline, vm *jsonnet.VM, publicRepo bool) {
 	namespace := v.Path
 	idx := strings.LastIndex(v.Path, "/")
 	if idx != -1 {
@@ -205,7 +206,7 @@ func mapRepo(v *types.Repository, p *types.Pipeline, vm *jsonnet.VM) {
 	vm.ExtVar(repo+"link", v.GitURL)
 	vm.ExtVar(repo+"branch", v.DefaultBranch)
 	vm.ExtVar(repo+"config", p.ConfigPath)
-	vm.ExtVar(repo+"private", strconv.FormatBool(!v.IsPublic))
+	vm.ExtVar(repo+"private", strconv.FormatBool(!publicRepo))
 	vm.ExtVar(repo+"visibility", "internal")
 	vm.ExtVar(repo+"active", strconv.FormatBool(true))
 	vm.ExtVar(repo+"trusted", strconv.FormatBool(true))

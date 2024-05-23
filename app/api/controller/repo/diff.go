@@ -36,7 +36,7 @@ func (c *Controller) RawDiff(
 	path string,
 	files ...gittypes.FileDiffRequest,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (c *Controller) CommitDiff(
 	rev string,
 	w io.Writer,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (c *Controller) DiffStats(
 		return types.DiffStats{}, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView); err != nil {
 		return types.DiffStats{}, err
 	}
 
@@ -139,7 +139,7 @@ func (c *Controller) Diff(
 		return nil, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView); err != nil {
 		return nil, err
 	}
 

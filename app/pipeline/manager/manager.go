@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/scheduler"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
@@ -80,12 +81,13 @@ type (
 	// ExecutionContext represents the minimum amount of information
 	// required by the runner to execute a build.
 	ExecutionContext struct {
-		Repo      *types.Repository `json:"repository"`
-		Execution *types.Execution  `json:"build"`
-		Stage     *types.Stage      `json:"stage"`
-		Secrets   []*types.Secret   `json:"secrets"`
-		Config    *file.File        `json:"config"`
-		Netrc     *Netrc            `json:"netrc"`
+		Repo         *types.Repository `json:"repository"`
+		RepoIsPublic bool              `json:"repository_is_public,omitempty"`
+		Execution    *types.Execution  `json:"build"`
+		Stage        *types.Stage      `json:"stage"`
+		Secrets      []*types.Secret   `json:"secrets"`
+		Config       *file.File        `json:"config"`
+		Netrc        *Netrc            `json:"netrc"`
 	}
 
 	// ExecutionManager encapsulates complex build operations and provides
@@ -148,6 +150,8 @@ type Manager struct {
 	// System  *store.System
 	Users store.PrincipalStore
 	// Webhook store.WebhookSender
+
+	publicAccess publicaccess.Service
 }
 
 func New(
@@ -167,6 +171,7 @@ func New(
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	userStore store.PrincipalStore,
+	publicAccess publicaccess.Service,
 ) *Manager {
 	return &Manager{
 		Config:           config,
@@ -185,6 +190,7 @@ func New(
 		Stages:           stageStore,
 		Steps:            stepStore,
 		Users:            userStore,
+		publicAccess:     publicAccess,
 	}
 }
 
@@ -300,6 +306,7 @@ func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, 
 		log.Warn().Err(err).Msg("manager: cannot find repo")
 		return nil, err
 	}
+
 	// Backfill clone URL
 	repo.GitURL = m.urlProvider.GenerateContainerGITCloneURL(repo.Path)
 
@@ -329,12 +336,20 @@ func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, 
 		return nil, err
 	}
 
+	// Get public access settings of the repo
+	repoIsPublic, err := m.publicAccess.Get(noContext, enum.PublicResourceTypeRepo, repo.Path)
+	if err != nil {
+		log.Warn().Err(err).Msg("manager: cannot check if repo is public")
+		return nil, err
+	}
+
 	// Convert file contents in case templates are being used.
 	args := &converter.ConvertArgs{
-		Repo:      repo,
-		Pipeline:  pipeline,
-		Execution: execution,
-		File:      file,
+		Repo:         repo,
+		Pipeline:     pipeline,
+		Execution:    execution,
+		File:         file,
+		RepoIsPublic: repoIsPublic,
 	}
 	file, err = m.ConverterService.Convert(noContext, args)
 	if err != nil {
@@ -349,12 +364,13 @@ func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, 
 	}
 
 	return &ExecutionContext{
-		Repo:      repo,
-		Execution: execution,
-		Stage:     stage,
-		Secrets:   secrets,
-		Config:    file,
-		Netrc:     netrc,
+		Repo:         repo,
+		RepoIsPublic: repoIsPublic,
+		Execution:    execution,
+		Stage:        stage,
+		Secrets:      secrets,
+		Config:       file,
+		Netrc:        netrc,
 	}, nil
 }
 

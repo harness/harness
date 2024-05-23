@@ -46,12 +46,17 @@ func (c *Controller) SoftDelete(
 		return nil, fmt.Errorf("failed to find the repo for soft delete: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoDelete, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoDelete); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
 	if repo.Deleted != nil {
 		return nil, usererror.BadRequest("repository has been already deleted")
+	}
+
+	isPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check current public access status: %w", err)
 	}
 
 	log.Ctx(ctx).Info().
@@ -69,7 +74,10 @@ func (c *Controller) SoftDelete(
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionDeleted,
 		paths.Parent(repo.Path),
-		audit.WithOldObject(repo),
+		audit.WithOldObject(audit.RepositoryObject{
+			Repository: *repo,
+			IsPublic:   isPublic,
+		}),
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete repository operation: %s", err)
@@ -84,12 +92,16 @@ func (c *Controller) SoftDeleteNoAuth(
 	repo *types.Repository,
 	deletedAt int64,
 ) error {
+	err := c.publicAccess.Delete(ctx, enum.PublicResourceTypeRepo, repo.Path)
+	if err != nil {
+		return fmt.Errorf("failed to delete public access for repo: %w", err)
+	}
+
 	if repo.Importing {
 		return c.PurgeNoAuth(ctx, session, repo)
 	}
 
-	err := c.repoStore.SoftDelete(ctx, repo, deletedAt)
-	if err != nil {
+	if err := c.repoStore.SoftDelete(ctx, repo, deletedAt); err != nil {
 		return fmt.Errorf("failed to soft delete repo from db: %w", err)
 	}
 

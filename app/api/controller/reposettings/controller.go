@@ -55,7 +55,6 @@ func (c *Controller) getRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
-	orPublic bool,
 ) (*types.Repository, error) {
 	return repo.GetRepoCheckAccess(
 		ctx,
@@ -64,6 +63,5 @@ func (c *Controller) getRepoCheckAccess(
 		session,
 		repoRef,
 		reqPermission,
-		orPublic,
 	)
 }

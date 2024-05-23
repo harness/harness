@@ -241,6 +241,7 @@ func setupSpaces(r chi.Router, appCtx context.Context, spaceCtrl *space.Controll
 			r.Get("/templates", handlerspace.HandleListTemplates(spaceCtrl))
 			r.Post("/export", handlerspace.HandleExport(spaceCtrl))
 			r.Get("/export-progress", handlerspace.HandleExportProgress(spaceCtrl))
+			r.Post("/public-access", handlerspace.HandleUpdatePublicAccess(spaceCtrl))
 
 			r.Route("/members", func(r chi.Router) {
 				r.Get("/", handlerspace.HandleMembershipList(spaceCtrl))
@@ -277,6 +278,7 @@ func setupRepos(r chi.Router,
 			r.Delete("/", handlerrepo.HandleSoftDelete(repoCtrl))
 			r.Post("/purge", handlerrepo.HandlePurge(repoCtrl))
 			r.Post("/restore", handlerrepo.HandleRestore(repoCtrl))
+			r.Post("/public-access", handlerrepo.HandleUpdatePublicAccess(repoCtrl))
 
 			r.Route("/settings", func(r chi.Router) {
 				r.Get("/security", handlerreposettings.HandleSecurityFind(repoSettingsCtrl))

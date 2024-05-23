@@ -25,14 +25,14 @@ import (
 func HandleFind(principalCtrl principal.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
+		session, _ := request.AuthSessionFrom(ctx)
 		principalID, err := request.GetPrincipalIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		principalInfo, err := principalCtrl.Find(ctx, principalID)
+		principalInfo, err := principalCtrl.Find(ctx, session, principalID)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

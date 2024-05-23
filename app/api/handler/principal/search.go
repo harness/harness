@@ -26,8 +26,9 @@ func HandleList(principalCtrl principal.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
+		session, _ := request.AuthSessionFrom(ctx)
 		principalFilter := request.ParsePrincipalFilter(r)
-		principalInfos, err := principalCtrl.List(ctx, principalFilter)
+		principalInfos, err := principalCtrl.List(ctx, session, principalFilter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

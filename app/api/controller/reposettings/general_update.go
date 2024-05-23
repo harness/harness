@@ -33,7 +33,7 @@ func (c *Controller) GeneralUpdate(
 	repoRef string,
 	in *GeneralSettings,
 ) (*GeneralSettings, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}

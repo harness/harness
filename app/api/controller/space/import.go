@@ -41,7 +41,9 @@ type ImportInput struct {
 }
 
 // Import creates new space and starts import of all repositories from the remote provider's space into it.
-func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*types.Space, error) {
+//
+//nolint:gocognit
+func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*SpaceOutput, error) {
 	parentSpace, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
 	if err != nil {
 		return nil, err
@@ -67,6 +69,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	}
 
 	repoIDs := make([]int64, len(remoteRepositories))
+	repoIsPublicVals := make([]bool, len(remoteRepositories))
 	cloneURLs := make([]string, len(remoteRepositories))
 	repos := make([]*types.Repository, 0, len(remoteRepositories))
 
@@ -83,12 +86,12 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		}
 
 		for i, remoteRepository := range remoteRepositories {
-			repo := remoteRepository.ToRepo(
+			repo, isPublic := remoteRepository.ToRepo(
 				space.ID,
+				space.Path,
 				remoteRepository.Identifier,
 				"",
 				&session.Principal,
-				c.publicResourceCreationEnabled,
 			)
 
 			err = c.repoStore.Create(ctx, repo)
@@ -98,6 +101,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			repos = append(repos, repo)
 			repoIDs[i] = repo.ID
 			cloneURLs[i] = remoteRepository.CloneURL
+			repoIsPublicVals[i] = isPublic
 		}
 
 		jobGroupID := fmt.Sprintf("space-import-%d", space.ID)
@@ -105,6 +109,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			jobGroupID,
 			provider,
 			repoIDs,
+			repoIsPublicVals,
 			cloneURLs,
 			in.Pipelines,
 		)
@@ -124,14 +129,17 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 			audit.ActionCreated,
 			paths.Parent(repo.Path),
-			audit.WithNewObject(repo),
+			audit.WithNewObject(audit.RepositoryObject{
+				Repository: *repo,
+				IsPublic:   false, // in import we configure public access and create a new audit log.
+			}),
 		)
 		if err != nil {
 			log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)
 		}
 	}
 
-	return space, nil
+	return GetSpaceOutput(ctx, c.publicAccess, space)
 }
 
 func (c *Controller) sanitizeImportInput(in *ImportInput) error {

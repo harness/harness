@@ -16,9 +16,11 @@ package importer
 
 import (
 	"github.com/harness/gitness/app/services/keywordsearch"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/job"
@@ -45,6 +47,8 @@ func ProvideRepoImporter(
 	executor *job.Executor,
 	sseStreamer sse.Streamer,
 	indexer keywordsearch.Indexer,
+	publicAccess publicaccess.Service,
+	auditService audit.Service,
 ) (*Repository, error) {
 	importer := &Repository{
 		defaultBranch: config.Git.DefaultBranch,
@@ -58,6 +62,8 @@ func ProvideRepoImporter(
 		scheduler:     scheduler,
 		sseStreamer:   sseStreamer,
 		indexer:       indexer,
+		publicAccess:  publicAccess,
+		auditService:  auditService,
 	}
 
 	err := executor.Register(jobType, importer)

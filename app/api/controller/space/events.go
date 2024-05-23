@@ -34,7 +34,7 @@ func (c *Controller) Events(
 		return nil, nil, nil, fmt.Errorf("failed to find space ref: %w", err)
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView); err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to authorize stream: %w", err)
 	}
 

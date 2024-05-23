@@ -39,7 +39,7 @@ func (c *Controller) Blame(ctx context.Context,
 		return nil, usererror.BadRequest("Line range must be valid.")
 	}
 
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}

@@ -43,12 +43,12 @@ func (c *Controller) Purge(
 
 	// authz will check the permission within the first existing parent since space was deleted.
 	// purge top level space is limited to admin only.
-	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceDelete, false)
+	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceDelete)
 	if err != nil {
 		return fmt.Errorf("failed to authorize on space purge: %w", err)
 	}
 
-	return c.PurgeNoAuth(ctx, session, space.ID, deletedAt)
+	return c.PurgeNoAuth(ctx, session, space)
 }
 
 // PurgeNoAuth purges the space - no authorization is verified.
@@ -56,8 +56,7 @@ func (c *Controller) Purge(
 func (c *Controller) PurgeNoAuth(
 	ctx context.Context,
 	session *auth.Session,
-	spaceID int64,
-	deletedAt int64,
+	space *types.Space,
 ) error {
 	// the max time we give a purge space to succeed
 	const timeout = 15 * time.Minute
@@ -71,11 +70,11 @@ func (c *Controller) PurgeNoAuth(
 	var toBeDeletedRepos []*types.Repository
 	var err error
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		toBeDeletedRepos, err = c.purgeSpaceInnerInTx(ctx, spaceID, deletedAt)
+		toBeDeletedRepos, err = c.purgeSpaceInnerInTx(ctx, space.ID, *space.Deleted)
 		return err
 	})
 	if err != nil {
-		return fmt.Errorf("failed to purge space %d in a tnx: %w", spaceID, err)
+		return fmt.Errorf("failed to purge space %d in a tnx: %w", space.ID, err)
 	}
 
 	// permanently purge all repositories in the space and its subspaces after successful space purge tnx.

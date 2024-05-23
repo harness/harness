@@ -35,7 +35,7 @@ func (c *Controller) MergeCheck(
 	repoRef string,
 	diffPath string,
 ) (MergeCheck, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return MergeCheck{}, err
 	}

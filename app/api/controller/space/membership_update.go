@@ -58,7 +58,7 @@ func (c *Controller) MembershipUpdate(ctx context.Context,
 		return nil, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, false); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit); err != nil {
 		return nil, err
 	}
 

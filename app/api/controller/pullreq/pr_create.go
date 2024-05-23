@@ -60,7 +60,7 @@ func (c *Controller) Create(
 
 	sourceRepo := targetRepo
 	if in.SourceRepoRef != "" {
-		sourceRepo, err = c.getRepoCheckAccess(ctx, session, in.SourceRepoRef, enum.PermissionRepoView)
+		sourceRepo, err = c.getRepoCheckAccess(ctx, session, in.SourceRepoRef, enum.PermissionRepoPush)
 		if err != nil {
 			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
 		}

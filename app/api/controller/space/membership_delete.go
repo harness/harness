@@ -35,7 +35,7 @@ func (c *Controller) MembershipDelete(ctx context.Context,
 		return err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, false); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit); err != nil {
 		return err
 	}
 

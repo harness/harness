@@ -17,6 +17,7 @@ package authz
 import (
 	"time"
 
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -28,8 +29,12 @@ var WireSet = wire.NewSet(
 	ProvidePermissionCache,
 )
 
-func ProvideAuthorizer(pCache PermissionCache, spaceStore store.SpaceStore) Authorizer {
-	return NewMembershipAuthorizer(pCache, spaceStore)
+func ProvideAuthorizer(
+	pCache PermissionCache,
+	spaceStore store.SpaceStore,
+	publicAccess publicaccess.Service,
+) Authorizer {
+	return NewMembershipAuthorizer(pCache, spaceStore, publicAccess)
 }
 
 func ProvidePermissionCache(

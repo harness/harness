@@ -47,7 +47,6 @@ func (c *Controller) SoftDelete(
 		session,
 		space,
 		enum.PermissionSpaceDelete,
-		false,
 	); err != nil {
 		return nil, fmt.Errorf("failed to check access: %w", err)
 	}
@@ -62,9 +61,12 @@ func (c *Controller) SoftDeleteNoAuth(
 	session *auth.Session,
 	space *types.Space,
 ) (*SoftDeleteResponse, error) {
-	var softDelRes *SoftDeleteResponse
-	var err error
+	err := c.publicAccess.Delete(ctx, enum.PublicResourceTypeSpace, space.Path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete public access for space: %w", err)
+	}
 
+	var softDelRes *SoftDeleteResponse
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		softDelRes, err = c.softDeleteInnerInTx(ctx, session, space)
 		return err

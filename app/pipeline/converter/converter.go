@@ -21,6 +21,8 @@ import (
 	"github.com/harness/gitness/app/pipeline/converter/jsonnet"
 	"github.com/harness/gitness/app/pipeline/converter/starlark"
 	"github.com/harness/gitness/app/pipeline/file"
+	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/types/enum"
 )
 
 const (
@@ -30,24 +32,47 @@ const (
 )
 
 type converter struct {
-	fileService file.Service
+	fileService  file.Service
+	publicAccess publicaccess.Service
 }
 
 func newConverter(fileService file.Service) Service {
 	return &converter{fileService: fileService}
 }
 
-func (c *converter) Convert(_ context.Context, args *ConvertArgs) (*file.File, error) {
+func (c *converter) Convert(ctx context.Context, args *ConvertArgs) (*file.File, error) {
 	path := args.Pipeline.ConfigPath
 
+	// get public access visibility of the repo
+	repoIsPublic, err := c.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, args.Repo.Path)
+	if err != nil {
+		return nil, err
+	}
+
 	if isJSONNet(path) {
-		str, err := jsonnet.Parse(args.Repo, args.Pipeline, args.Execution, args.File, c.fileService, jsonnetImportLimit)
+		str, err := jsonnet.Parse(
+			args.Repo,
+			repoIsPublic,
+			args.Pipeline,
+			args.Execution,
+			args.File,
+			c.fileService,
+			jsonnetImportLimit,
+		)
 		if err != nil {
 			return nil, err
 		}
 		return &file.File{Data: []byte(str)}, nil
 	} else if isStarlark(path) {
-		str, err := starlark.Parse(args.Repo, args.Pipeline, args.Execution, args.File, starlarkStepLimit, starlarkSizeLimit)
+		str, err := starlark.Parse(
+			args.Repo,
+			repoIsPublic,
+			args.Pipeline,
+			args.Execution,
+			args.File,
+			starlarkStepLimit,
+			starlarkSizeLimit,
+		)
 		if err != nil {
 			return nil, err
 		}

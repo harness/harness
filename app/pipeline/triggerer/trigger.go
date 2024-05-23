@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/resolver"
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/pipeline/triggerer/dag"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -92,6 +93,7 @@ type triggerer struct {
 	repoStore        store.RepoStore
 	templateStore    store.TemplateStore
 	pluginStore      store.PluginStore
+	publicAccess     publicaccess.Service
 }
 
 func New(
@@ -107,6 +109,7 @@ func New(
 	converterService converter.Service,
 	templateStore store.TemplateStore,
 	pluginStore store.PluginStore,
+	publicAccess publicaccess.Service,
 ) Triggerer {
 	return &triggerer{
 		executionStore:   executionStore,
@@ -121,6 +124,7 @@ func New(
 		repoStore:        repoStore,
 		templateStore:    templateStore,
 		pluginStore:      pluginStore,
+		publicAccess:     publicAccess,
 	}
 }
 
@@ -152,6 +156,11 @@ func (t *triggerer) Trigger(
 	if err != nil {
 		log.Error().Err(err).Msg("could not find repo")
 		return nil, err
+	}
+
+	repoIsPublic, err := t.publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
+	if err != nil {
+		return nil, fmt.Errorf("could not check if repo is public: %w", err)
 	}
 
 	file, err := t.fileService.Get(ctx, repo, pipeline.ConfigPath, base.After)
@@ -200,10 +209,11 @@ func (t *triggerer) Trigger(
 	if !isV1Yaml(file.Data) {
 		// Convert from jsonnet/starlark to drone yaml
 		args := &converter.ConvertArgs{
-			Repo:      repo,
-			Pipeline:  pipeline,
-			Execution: execution,
-			File:      file,
+			Repo:         repo,
+			Pipeline:     pipeline,
+			Execution:    execution,
+			File:         file,
+			RepoIsPublic: repoIsPublic,
 		}
 		file, err = t.converterService.Convert(ctx, args)
 		if err != nil {
@@ -331,7 +341,7 @@ func (t *triggerer) Trigger(
 		}
 	} else {
 		stages, err = parseV1Stages(
-			ctx, file.Data, repo, execution, t.templateStore, t.pluginStore)
+			ctx, file.Data, repo, execution, t.templateStore, t.pluginStore, t.publicAccess)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse v1 YAML into stages: %w", err)
 		}
@@ -395,6 +405,7 @@ func parseV1Stages(
 	execution *types.Execution,
 	templateStore store.TemplateStore,
 	pluginStore store.PluginStore,
+	publicAccess publicaccess.Service,
 ) ([]*types.Stage, error) {
 	stages := []*types.Stage{}
 	// For V1 YAML, just go through the YAML and create stages serially for now
@@ -413,8 +424,14 @@ func parseV1Stages(
 		return nil, fmt.Errorf("cannot support non-pipeline kinds in v1 at the moment: %w", err)
 	}
 
+	// get repo public access
+	repoIsPublic, err := publicAccess.Get(ctx, enum.PublicResourceTypeRepo, repo.Path)
+	if err != nil {
+		return nil, fmt.Errorf("could not check repo public access: %w", err)
+	}
+
 	inputParams := map[string]interface{}{}
-	inputParams["repo"] = inputs.Repo(manager.ConvertToDroneRepo(repo))
+	inputParams["repo"] = inputs.Repo(manager.ConvertToDroneRepo(repo, repoIsPublic))
 	inputParams["build"] = inputs.Build(manager.ConvertToDroneBuild(execution))
 
 	var prevStage string

@@ -15,8 +15,6 @@
 package types
 
 import (
-	"encoding/json"
-
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -29,7 +27,6 @@ type Repository struct {
 	Identifier  string `json:"identifier" yaml:"identifier"`
 	Path        string `json:"path" yaml:"path"`
 	Description string `json:"description" yaml:"description"`
-	IsPublic    bool   `json:"is_public" yaml:"is_public"`
 	CreatedBy   int64  `json:"created_by" yaml:"created_by"`
 	Created     int64  `json:"created" yaml:"created"`
 	Updated     int64  `json:"updated" yaml:"updated"`
@@ -55,7 +52,7 @@ type Repository struct {
 	IsEmpty   bool `json:"is_empty,omitempty" yaml:"is_empty"`
 
 	// git urls
-	GitURL string `json:"git_url" yaml:"git_url"`
+	GitURL string `json:"git_url" yaml:"-"`
 }
 
 // Clone makes deep copy of repository object.
@@ -66,20 +63,8 @@ func (r Repository) Clone() Repository {
 		deleted = &id
 	}
 	r.Deleted = deleted
-	return r
-}
 
-// TODO [CODE-1363]: remove after identifier migration.
-func (r Repository) MarshalJSON() ([]byte, error) {
-	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
-	type alias Repository
-	return json.Marshal(&struct {
-		alias
-		UID string `json:"uid"`
-	}{
-		alias: (alias)(r),
-		UID:   r.Identifier,
-	})
+	return r
 }
 
 type RepositorySizeInfo struct {

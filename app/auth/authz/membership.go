@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -32,15 +33,18 @@ var _ Authorizer = (*MembershipAuthorizer)(nil)
 type MembershipAuthorizer struct {
 	permissionCache PermissionCache
 	spaceStore      store.SpaceStore
+	publicAccess    publicaccess.Service
 }
 
 func NewMembershipAuthorizer(
 	permissionCache PermissionCache,
 	spaceStore store.SpaceStore,
+	publicAccess publicaccess.Service,
 ) *MembershipAuthorizer {
 	return &MembershipAuthorizer{
 		permissionCache: permissionCache,
 		spaceStore:      spaceStore,
+		publicAccess:    publicAccess,
 	}
 }
 
@@ -51,7 +55,15 @@ func (a *MembershipAuthorizer) Check(
 	resource *types.Resource,
 	permission enum.Permission,
 ) (bool, error) {
-	// public access - not expected to come here as of now (have to refactor that part)
+	publicAccessAllowed, err := a.CheckPublicAccess(ctx, scope, resource, permission)
+	if err != nil {
+		return false, fmt.Errorf("failed to check public access: %w", err)
+	}
+
+	if publicAccessAllowed {
+		return true, nil
+	}
+
 	if session == nil {
 		log.Ctx(ctx).Warn().Msgf(
 			"public access request for %s in scope %#v got to authorizer",
@@ -102,9 +114,14 @@ func (a *MembershipAuthorizer) Check(
 		spacePath = scope.SpacePath
 
 	case enum.ResourceTypeUser:
-		// a user is allowed to view / edit themselves
+		// a user is allowed to edit themselves
 		if resource.Identifier == session.Principal.UID &&
-			(permission == enum.PermissionUserView || permission == enum.PermissionUserEdit) {
+			permission == enum.PermissionUserEdit {
+			return true, nil
+		}
+
+		// user can see all other users in the system.
+		if permission == enum.PermissionUserView {
 			return true, nil
 		}
 

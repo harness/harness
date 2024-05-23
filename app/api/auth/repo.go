@@ -37,15 +37,10 @@ func CheckRepo(
 	session *auth.Session,
 	repo *types.Repository,
 	permission enum.Permission,
-	orPublic bool,
 ) error {
-	if orPublic && repo.IsPublic {
-		return nil
-	}
-
 	parentSpace, name, err := paths.DisectLeaf(repo.Path)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to disect path '%s'", repo.Path)
+		return fmt.Errorf("failed to disect path '%s': %w", repo.Path, err)
 	}
 
 	scope := &types.Scope{SpacePath: parentSpace}
@@ -64,7 +59,7 @@ func IsRepoOwner(
 	repo *types.Repository,
 ) (bool, error) {
 	// for now we use repoedit as permission to verify if someone is a SpaceOwner and hence a RepoOwner.
-	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit, false)
+	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit)
 	if err != nil && !errors.Is(err, ErrNotAuthorized) {
 		return false, fmt.Errorf("failed to check access user access: %w", err)
 	}

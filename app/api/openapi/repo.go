@@ -200,6 +200,11 @@ type restoreRequest struct {
 	repo.RestoreInput
 }
 
+type updateRepoPublicAccessRequest struct {
+	repoRequest
+	repo.UpdatePublicAccessInput
+}
+
 type securitySettingsRequest struct {
 	repoRequest
 	reposettings.SecuritySettings
@@ -605,7 +610,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	createRepository.WithMapOfAnything(map[string]interface{}{"operationId": "createRepository"})
 	createRepository.WithParameters(queryParameterSpacePath)
 	_ = reflector.SetRequest(&createRepository, new(createRepositoryRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&createRepository, new(types.Repository), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&createRepository, new(repo.RepositoryOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&createRepository, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&createRepository, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&createRepository, new(usererror.Error), http.StatusUnauthorized)
@@ -617,7 +622,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	importRepository.WithMapOfAnything(map[string]interface{}{"operationId": "importRepository"})
 	importRepository.WithParameters(queryParameterSpacePath)
 	_ = reflector.SetRequest(&importRepository, &struct{ repo.ImportInput }{}, http.MethodPost)
-	_ = reflector.SetJSONResponse(&importRepository, new(types.Repository), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&importRepository, new(repo.RepositoryOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&importRepository, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&importRepository, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&importRepository, new(usererror.Error), http.StatusUnauthorized)
@@ -628,7 +633,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opFind.WithTags("repository")
 	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "findRepository"})
 	_ = reflector.SetRequest(&opFind, new(repoRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opFind, new(types.Repository), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opFind, new(repo.RepositoryOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusForbidden)
@@ -639,7 +644,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opUpdate.WithTags("repository")
 	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateRepository"})
 	_ = reflector.SetRequest(&opUpdate, new(updateRepoRequest), http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opUpdate, new(types.Repository), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUpdate, new(repo.RepositoryOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusUnauthorized)
@@ -675,7 +680,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opRestore.WithMapOfAnything(map[string]interface{}{"operationId": "restoreRepository"})
 	opRestore.WithParameters(queryParameterDeletedAt)
 	_ = reflector.SetRequest(&opRestore, new(restoreRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opRestore, new(types.Repository), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRestore, new(repo.RepositoryOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusUnauthorized)
@@ -687,12 +692,27 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opMove.WithTags("repository")
 	opMove.WithMapOfAnything(map[string]interface{}{"operationId": "moveRepository"})
 	_ = reflector.SetRequest(&opMove, new(moveRepoRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opMove, new(types.Repository), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMove, new(repo.RepositoryOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/move", opMove)
+
+	opUpdatePublicAccess := openapi3.Operation{}
+	opUpdatePublicAccess.WithTags("repository")
+	opUpdatePublicAccess.WithMapOfAnything(
+		map[string]interface{}{"operationId": "updatePublicAccess"})
+	_ = reflector.SetRequest(
+		&opUpdatePublicAccess, new(updateRepoPublicAccessRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(repo.RepositoryOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodPost, "/repos/{repo_ref}/public-access", opUpdatePublicAccess)
 
 	opServiceAccounts := openapi3.Operation{}
 	opServiceAccounts.WithTags("repository")

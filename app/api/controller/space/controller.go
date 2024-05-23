@@ -15,12 +15,15 @@
 package space
 
 import (
+	"encoding/json"
+
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -36,9 +39,27 @@ var (
 	errPublicSpaceCreationDisabled = usererror.BadRequestf("Public space creation is disabled.")
 )
 
+//nolint:revive
+type SpaceOutput struct {
+	types.Space
+	IsPublic bool `json:"is_public" yaml:"is_public"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (s SpaceOutput) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias SpaceOutput
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(s),
+		UID:   s.Identifier,
+	})
+}
+
 type Controller struct {
-	nestedSpacesEnabled           bool
-	publicResourceCreationEnabled bool
+	nestedSpacesEnabled bool
 
 	tx              dbtx.Transactor
 	urlProvider     url.Provider
@@ -58,6 +79,7 @@ type Controller struct {
 	importer        *importer.Repository
 	exporter        *exporter.Repository
 	resourceLimiter limiter.ResourceLimiter
+	publicAccess    publicaccess.Service
 	auditService    audit.Service
 }
 
@@ -67,29 +89,29 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
-	limiter limiter.ResourceLimiter, auditService audit.Service,
+	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 ) *Controller {
 	return &Controller{
-		nestedSpacesEnabled:           config.NestedSpacesEnabled,
-		publicResourceCreationEnabled: config.PublicResourceCreationEnabled,
-		tx:                            tx,
-		urlProvider:                   urlProvider,
-		sseStreamer:                   sseStreamer,
-		identifierCheck:               identifierCheck,
-		authorizer:                    authorizer,
-		spacePathStore:                spacePathStore,
-		pipelineStore:                 pipelineStore,
-		secretStore:                   secretStore,
-		connectorStore:                connectorStore,
-		templateStore:                 templateStore,
-		spaceStore:                    spaceStore,
-		repoStore:                     repoStore,
-		principalStore:                principalStore,
-		repoCtrl:                      repoCtrl,
-		membershipStore:               membershipStore,
-		importer:                      importer,
-		exporter:                      exporter,
-		resourceLimiter:               limiter,
-		auditService:                  auditService,
+		nestedSpacesEnabled: config.NestedSpacesEnabled,
+		tx:                  tx,
+		urlProvider:         urlProvider,
+		sseStreamer:         sseStreamer,
+		identifierCheck:     identifierCheck,
+		authorizer:          authorizer,
+		spacePathStore:      spacePathStore,
+		pipelineStore:       pipelineStore,
+		secretStore:         secretStore,
+		connectorStore:      connectorStore,
+		templateStore:       templateStore,
+		spaceStore:          spaceStore,
+		repoStore:           repoStore,
+		principalStore:      principalStore,
+		repoCtrl:            repoCtrl,
+		membershipStore:     membershipStore,
+		importer:            importer,
+		exporter:            exporter,
+		resourceLimiter:     limiter,
+		publicAccess:        publicAccess,
+		auditService:        auditService,
 	}
 }

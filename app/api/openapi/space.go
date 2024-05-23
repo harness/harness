@@ -40,6 +40,10 @@ type updateSpaceRequest struct {
 	space.UpdateInput
 }
 
+type updateSpacePublicAccessRequest struct {
+	spaceRequest
+	space.UpdatePublicAccessInput
+}
 type moveSpaceRequest struct {
 	spaceRequest
 	space.MoveInput
@@ -173,7 +177,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opCreate.WithTags("space")
 	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createSpace"})
 	_ = reflector.SetRequest(&opCreate, new(createSpaceRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCreate, new(types.Space), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opCreate, new(space.SpaceOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusUnauthorized)
@@ -184,7 +188,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opImport.WithTags("space")
 	opImport.WithMapOfAnything(map[string]interface{}{"operationId": "importSpace"})
 	_ = reflector.SetRequest(&opImport, &struct{ space.ImportInput }{}, http.MethodPost)
-	_ = reflector.SetJSONResponse(&opImport, new(types.Space), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opImport, new(space.SpaceOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusUnauthorized)
@@ -228,7 +232,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opGet.WithTags("space")
 	opGet.WithMapOfAnything(map[string]interface{}{"operationId": "getSpace"})
 	_ = reflector.SetRequest(&opGet, new(spaceRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opGet, new(types.Space), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opGet, new(space.SpaceOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opGet, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opGet, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opGet, new(usererror.Error), http.StatusForbidden)
@@ -239,13 +243,28 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opUpdate.WithTags("space")
 	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateSpace"})
 	_ = reflector.SetRequest(&opUpdate, new(updateSpaceRequest), http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opUpdate, new(types.Space), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUpdate, new(space.SpaceOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/spaces/{space_ref}", opUpdate)
+
+	opUpdatePublicAccess := openapi3.Operation{}
+	opUpdatePublicAccess.WithTags("space")
+	opUpdatePublicAccess.WithMapOfAnything(
+		map[string]interface{}{"operationId": "updatePublicAccess"})
+	_ = reflector.SetRequest(
+		&opUpdatePublicAccess, new(updateSpacePublicAccessRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(space.SpaceOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodPost, "/spaces/{space_ref}/public-access", opUpdatePublicAccess)
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("space")
@@ -275,7 +294,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opRestore.WithMapOfAnything(map[string]interface{}{"operationId": "restoreSpace"})
 	opRestore.WithParameters(queryParameterDeletedAt)
 	_ = reflector.SetRequest(&opRestore, new(restoreSpaceRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opRestore, new(types.Space), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRestore, new(space.SpaceOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRestore, new(usererror.Error), http.StatusUnauthorized)
@@ -287,7 +306,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opMove.WithTags("space")
 	opMove.WithMapOfAnything(map[string]interface{}{"operationId": "moveSpace"})
 	_ = reflector.SetRequest(&opMove, new(moveSpaceRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opMove, new(types.Space), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMove, new(space.SpaceOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusUnauthorized)
@@ -301,7 +320,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opSpaces.WithParameters(queryParameterQuerySpace, queryParameterSortSpace, queryParameterOrder,
 		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opSpaces, new(spaceRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opSpaces, []types.Space{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSpaces, []space.SpaceOutput{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSpaces, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSpaces, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opSpaces, new(usererror.Error), http.StatusForbidden)

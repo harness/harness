@@ -31,7 +31,7 @@ func (c *Controller) Archive(
 	params api.ArchiveParams,
 	w io.Writer,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return err
 	}

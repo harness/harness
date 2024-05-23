@@ -62,7 +62,7 @@ type CreateInput struct {
 // Create creates a new repository.
 //
 //nolint:gocognit
-func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Repository, error) {
+func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*RepositoryOutput, error) {
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -72,9 +72,26 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
+	isPublicAccessSupported, err := c.publicAccess.IsPublicAccessSupported(ctx, parentSpace.Path)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to check if public access is supported for parent space %q: %w",
+			parentSpace.Path,
+			err,
+		)
+	}
+	if in.IsPublic && !isPublicAccessSupported {
+		return nil, errPublicRepoCreationDisabled
+	}
+
 	err = c.repoCheck.Create(ctx, session, in)
 	if err != nil {
 		return nil, err
+	}
+
+	gitResp, isEmpty, err := c.createGitRepository(ctx, session, in)
+	if err != nil {
+		return nil, fmt.Errorf("error creating repository on git: %w", err)
 	}
 
 	var repo *types.Repository
@@ -89,11 +106,6 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			return fmt.Errorf("failed to find the parent space: %w", err)
 		}
 
-		gitResp, isEmpty, err := c.createGitRepository(ctx, session, in)
-		if err != nil {
-			return fmt.Errorf("error creating repository on git: %w", err)
-		}
-
 		now := time.Now().UnixMilli()
 		repo = &types.Repository{
 			Version:       0,
@@ -101,7 +113,6 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			Identifier:    in.Identifier,
 			GitUID:        gitResp.UID,
 			Description:   in.Description,
-			IsPublic:      in.IsPublic,
 			CreatedBy:     session.Principal.ID,
 			Created:       now,
 			Updated:       now,
@@ -109,18 +120,37 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			DefaultBranch: in.DefaultBranch,
 			IsEmpty:       isEmpty,
 		}
-		err = c.repoStore.Create(ctx, repo)
-		if err != nil {
-			if dErr := c.DeleteGitRepository(ctx, session, repo); dErr != nil {
-				log.Ctx(ctx).Warn().Err(dErr).Msg("failed to delete repo for cleanup")
-			}
-			return fmt.Errorf("failed to create repository in storage: %w", err)
-		}
 
-		return nil
+		return c.repoStore.Create(ctx, repo)
 	}, sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
+		// best effort cleanup
+		if dErr := c.DeleteGitRepository(ctx, session, repo); dErr != nil {
+			log.Ctx(ctx).Warn().Err(dErr).Msg("failed to delete repo for cleanup")
+		}
 		return nil, err
+	}
+
+	err = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, in.IsPublic)
+	if err != nil {
+		if dErr := c.publicAccess.Delete(ctx, enum.PublicResourceTypeRepo, repo.Path); dErr != nil {
+			return nil, fmt.Errorf("failed to set repo public access (and public access cleanup: %w): %w", dErr, err)
+		}
+
+		// only cleanup repo itself if cleanup of public access succeeded (to avoid leaking public access)
+		if dErr := c.PurgeNoAuth(ctx, session, repo); dErr != nil {
+			return nil, fmt.Errorf("failed to set repo public access (and repo purge: %w): %w", dErr, err)
+		}
+
+		return nil, fmt.Errorf("failed to set repo public access (succesfull cleanup): %w", err)
+	}
+
+	// backfil GitURL
+	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+
+	repoOutput := &RepositoryOutput{
+		Repository: *repo,
+		IsPublic:   in.IsPublic,
 	}
 
 	err = c.auditService.Log(ctx,
@@ -128,14 +158,14 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionCreated,
 		paths.Parent(repo.Path),
-		audit.WithNewObject(repo),
+		audit.WithNewObject(audit.RepositoryObject{
+			Repository: repoOutput.Repository,
+			IsPublic:   repoOutput.IsPublic,
+		}),
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create repository operation: %s", err)
 	}
-
-	// backfil GitURL
-	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
 	// index repository if files are created
 	if !repo.IsEmpty {
@@ -145,7 +175,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		}
 	}
 
-	return repo, nil
+	return repoOutput, nil
 }
 
 func (c *Controller) getSpaceCheckAuthRepoCreation(
@@ -166,7 +196,6 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 		space,
 		enum.ResourceTypeRepo,
 		enum.PermissionRepoEdit,
-		false,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("auth check failed: %w", err)
@@ -179,10 +208,6 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	// TODO [CODE-1363]: remove after identifier migration.
 	if in.Identifier == "" {
 		in.Identifier = in.UID
-	}
-
-	if in.IsPublic && !c.publicResourceCreationEnabled {
-		return errPublicRepoCreationDisabled
 	}
 
 	if err := c.validateParentRef(in.ParentRef); err != nil {

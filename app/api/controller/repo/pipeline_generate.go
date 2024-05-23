@@ -29,7 +29,7 @@ func (c *Controller) PipelineGenerate(
 	session *auth.Session,
 	repoRef string,
 ) ([]byte, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}

@@ -16,13 +16,42 @@ package principal
 
 import (
 	"context"
+	"net/http"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-func (c controller) Find(ctx context.Context, principalID int64) (*types.PrincipalInfo, error) {
+func (c controller) Find(
+	ctx context.Context,
+	session *auth.Session,
+	principalID int64,
+) (*types.PrincipalInfo, error) {
 	principal, err := c.principalStore.Find(ctx, principalID)
 	if err != nil {
+		return nil, err
+	}
+
+	if principal.Type != enum.PrincipalTypeUser {
+		return nil, usererror.Newf(
+			http.StatusNotImplemented,
+			"only user principals are supported currently.",
+		)
+	}
+
+	if err := apiauth.Check(
+		ctx,
+		c.authorizer,
+		session,
+		&types.Scope{},
+		&types.Resource{
+			Type: enum.ResourceTypeUser,
+		},
+		enum.PermissionUserView,
+	); err != nil {
 		return nil, err
 	}
 

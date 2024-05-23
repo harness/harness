@@ -19,22 +19,21 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 /*
 * Find finds a space.
  */
-func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string) (*types.Space, error) {
+func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string) (*SpaceOutput, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView); err != nil {
 		return nil, err
 	}
 
-	return space, nil
+	return GetSpaceOutput(ctx, c.publicAccess, space)
 }

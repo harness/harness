@@ -42,7 +42,7 @@ func (c *Controller) Upload(ctx context.Context,
 	file io.Reader,
 ) (*Result, error) {
 	// Permission check to see if the user in request has access to the repo.
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}

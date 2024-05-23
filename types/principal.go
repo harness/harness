@@ -19,6 +19,9 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+// AnonymousPrincipalUID is an internal UID for anonymous principals.
+const AnonymousPrincipalUID = "anonymous"
+
 // Principal represents the identity of an acting entity (User, ServiceAccount, Service).
 type Principal struct {
 	// TODO: int64 ID doesn't match DB

@@ -35,7 +35,7 @@ func (c *Controller) ListPaths(ctx context.Context,
 	gitRef string,
 	includeDirectories bool,
 ) (ListPathsOutput, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return ListPathsOutput{}, err
 	}

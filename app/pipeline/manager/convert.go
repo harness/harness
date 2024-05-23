@@ -207,7 +207,7 @@ func ConvertToDroneBuild(execution *types.Execution) *drone.Build {
 	}
 }
 
-func ConvertToDroneRepo(repo *types.Repository) *drone.Repo {
+func ConvertToDroneRepo(repo *types.Repository, repoIsPublic bool) *drone.Repo {
 	return &drone.Repo{
 		ID:        repo.ID,
 		Trusted:   true, // as builds are running on user machines, the repo is marked trusted.
@@ -217,7 +217,7 @@ func ConvertToDroneRepo(repo *types.Repository) *drone.Repo {
 		Name:      repo.Identifier,
 		HTTPURL:   repo.GitURL,
 		Link:      repo.GitURL,
-		Private:   !repo.IsPublic,
+		Private:   !repoIsPublic,
 		Created:   repo.Created,
 		Updated:   repo.Updated,
 		Version:   repo.Version,

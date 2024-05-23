@@ -57,6 +57,7 @@ var (
 
 func Parse(
 	repo *types.Repository,
+	repoIsPublic bool,
 	pipeline *types.Pipeline,
 	execution *types.Execution,
 	file *file.File,
@@ -95,7 +96,7 @@ func Parse(
 
 	// create the input args and invoke the main method
 	// using the input args.
-	args := createArgs(repo, pipeline, execution)
+	args := createArgs(repo, pipeline, execution, repoIsPublic)
 
 	// set the maximum number of operations in the script. this
 	// mitigates long running scripts.

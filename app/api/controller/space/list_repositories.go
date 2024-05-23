@@ -19,7 +19,9 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	repoCtrl "github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -30,7 +32,7 @@ func (c *Controller) ListRepositories(
 	session *auth.Session,
 	spaceRef string,
 	filter *types.RepoFilter,
-) ([]*types.Repository, int64, error) {
+) ([]*repoCtrl.RepositoryOutput, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
@@ -43,7 +45,6 @@ func (c *Controller) ListRepositories(
 		space,
 		enum.ResourceTypeRepo,
 		enum.PermissionRepoView,
-		true,
 	); err != nil {
 		return nil, 0, err
 	}
@@ -56,21 +57,39 @@ func (c *Controller) ListRepositoriesNoAuth(
 	ctx context.Context,
 	spaceID int64,
 	filter *types.RepoFilter,
-) ([]*types.Repository, int64, error) {
-	count, err := c.repoStore.Count(ctx, spaceID, filter)
+) ([]*repoCtrl.RepositoryOutput, int64, error) {
+	var repos []*types.Repository
+	var count int64
+
+	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
+		count, err = c.repoStore.Count(ctx, spaceID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to count child repos: %w", err)
+		}
+
+		repos, err = c.repoStore.List(ctx, spaceID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to list child repos: %w", err)
+		}
+
+		return nil
+	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count child repos: %w", err)
+		return nil, 0, err
 	}
 
-	repos, err := c.repoStore.List(ctx, spaceID, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list child repos: %w", err)
-	}
-
-	// backfill URLs
+	var reposOut []*repoCtrl.RepositoryOutput
 	for _, repo := range repos {
+		// backfill URLs
 		repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+
+		repoOut, err := repoCtrl.GetRepoOutput(ctx, c.publicAccess, repo)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to get repo %q output: %w", repo.Path, err)
+		}
+
+		reposOut = append(reposOut, repoOut)
 	}
 
-	return repos, count, nil
+	return reposOut, count, nil
 }

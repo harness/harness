@@ -87,7 +87,7 @@ func (c *Controller) ReviewerAdd(
 		if err = apiauth.CheckRepo(ctx, c.authorizer, &auth.Session{
 			Principal: *reviewerPrincipal,
 			Metadata:  nil,
-		}, repo, enum.PermissionRepoView, false); err != nil {
+		}, repo, enum.PermissionRepoView); err != nil {
 			log.Ctx(ctx).Info().Msgf("Reviewer principal: %s access error: %s", reviewerInfo.UID, err)
 			return nil, usererror.BadRequest("The reviewer doesn't have enough permissions for the repository.")
 		}

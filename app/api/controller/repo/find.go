@@ -19,24 +19,23 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 // Find finds a repo.
-func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef string) (*types.Repository, error) {
+func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef string) (*RepositoryOutput, error) {
 	// note: can't use c.getRepoCheckAccess because even repositories that are currently being imported can be fetched.
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, true); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView); err != nil {
 		return nil, err
 	}
 
 	// backfill clone url
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
-	return repo, nil
+	return GetRepoOutput(ctx, c.publicAccess, repo)
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -65,12 +66,14 @@ func ProvideController(
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoChecks Check,
+	publicAccess publicaccess.Service,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
-		authorizer, repoStore,
-		spaceStore, pipelineStore,
+		authorizer,
+		repoStore, spaceStore, pipelineStore,
 		principalStore, ruleStore, settings, principalInfoCache, protectionManager, rpcClient, importer,
-		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck, repoChecks)
+		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
+		repoChecks, publicAccess)
 }
 
 func ProvideRepoCheck() Check {

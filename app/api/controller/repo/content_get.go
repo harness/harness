@@ -101,7 +101,7 @@ func (c *Controller) GetContent(ctx context.Context,
 	repoPath string,
 	includeLatestCommit bool,
 ) (*GetContentOutput, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}

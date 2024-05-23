@@ -36,7 +36,7 @@ func (c *Controller) MembershipList(ctx context.Context,
 		return nil, 0, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, false); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView); err != nil {
 		return nil, 0, err
 	}
 

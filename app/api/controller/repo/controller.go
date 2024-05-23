@@ -16,6 +16,7 @@ package repo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -31,6 +32,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -43,13 +45,28 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-var (
-	errPublicRepoCreationDisabled = usererror.BadRequestf("Public repository creation is disabled.")
-)
+var errPublicRepoCreationDisabled = usererror.BadRequestf("Public repository creation is disabled.")
+
+type RepositoryOutput struct {
+	types.Repository
+	IsPublic bool `json:"is_public" yaml:"is_public"`
+}
+
+// TODO [CODE-1363]: remove after identifier migration.
+func (r RepositoryOutput) MarshalJSON() ([]byte, error) {
+	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
+	type alias RepositoryOutput
+	return json.Marshal(&struct {
+		alias
+		UID string `json:"uid"`
+	}{
+		alias: (alias)(r),
+		UID:   r.Identifier,
+	})
+}
 
 type Controller struct {
-	defaultBranch                 string
-	publicResourceCreationEnabled bool
+	defaultBranch string
 
 	tx                 dbtx.Transactor
 	urlProvider        url.Provider
@@ -73,6 +90,7 @@ type Controller struct {
 	mtxManager         lock.MutexManager
 	identifierCheck    check.RepoIdentifier
 	repoCheck          Check
+	publicAccess       publicaccess.Service
 }
 
 func NewController(
@@ -99,32 +117,33 @@ func NewController(
 	mtxManager lock.MutexManager,
 	identifierCheck check.RepoIdentifier,
 	repoCheck Check,
+	publicAccess publicaccess.Service,
 ) *Controller {
 	return &Controller{
-		defaultBranch:                 config.Git.DefaultBranch,
-		publicResourceCreationEnabled: config.PublicResourceCreationEnabled,
-		tx:                            tx,
-		urlProvider:                   urlProvider,
-		authorizer:                    authorizer,
-		repoStore:                     repoStore,
-		spaceStore:                    spaceStore,
-		pipelineStore:                 pipelineStore,
-		principalStore:                principalStore,
-		ruleStore:                     ruleStore,
-		settings:                      settings,
-		principalInfoCache:            principalInfoCache,
-		protectionManager:             protectionManager,
-		git:                           git,
-		importer:                      importer,
-		codeOwners:                    codeOwners,
-		eventReporter:                 eventReporter,
-		indexer:                       indexer,
-		resourceLimiter:               limiter,
-		locker:                        locker,
-		auditService:                  auditService,
-		mtxManager:                    mtxManager,
-		identifierCheck:               identifierCheck,
-		repoCheck:                     repoCheck,
+		defaultBranch:      config.Git.DefaultBranch,
+		tx:                 tx,
+		urlProvider:        urlProvider,
+		authorizer:         authorizer,
+		repoStore:          repoStore,
+		spaceStore:         spaceStore,
+		pipelineStore:      pipelineStore,
+		principalStore:     principalStore,
+		ruleStore:          ruleStore,
+		settings:           settings,
+		principalInfoCache: principalInfoCache,
+		protectionManager:  protectionManager,
+		git:                git,
+		importer:           importer,
+		codeOwners:         codeOwners,
+		eventReporter:      eventReporter,
+		indexer:            indexer,
+		resourceLimiter:    limiter,
+		locker:             locker,
+		auditService:       auditService,
+		mtxManager:         mtxManager,
+		identifierCheck:    identifierCheck,
+		repoCheck:          repoCheck,
+		publicAccess:       publicAccess,
 	}
 }
 
@@ -147,7 +166,6 @@ func (c *Controller) getRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
-	orPublic bool,
 ) (*types.Repository, error) {
 	return GetRepoCheckAccess(
 		ctx,
@@ -156,7 +174,6 @@ func (c *Controller) getRepoCheckAccess(
 		session,
 		repoRef,
 		reqPermission,
-		orPublic,
 	)
 }
 

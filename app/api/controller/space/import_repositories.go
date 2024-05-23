@@ -71,6 +71,8 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 
 // ImportRepositories imports repositories into an existing space. It ignores and continues on
 // repo naming conflicts.
+//
+//nolint:gocognit
 func (c *Controller) ImportRepositories(
 	ctx context.Context,
 	session *auth.Session,
@@ -92,10 +94,25 @@ func (c *Controller) ImportRepositories(
 		return ImportRepositoriesOutput{}, usererror.BadRequestf("found no repositories at %s", in.ProviderSpace)
 	}
 
-	repoIDs := make([]int64, 0, len(remoteRepositories))
-	cloneURLs := make([]string, 0, len(remoteRepositories))
 	repos := make([]*types.Repository, 0, len(remoteRepositories))
 	duplicateRepos := make([]*types.Repository, 0, len(remoteRepositories))
+	repoIDs := make([]int64, 0, len(remoteRepositories))
+	repoIsPublicVals := make([]bool, 0, len(remoteRepositories))
+	cloneURLs := make([]string, 0, len(remoteRepositories))
+
+	for _, remoteRepository := range remoteRepositories {
+		repo, isPublic := remoteRepository.ToRepo(
+			space.ID,
+			space.Path,
+			remoteRepository.Identifier,
+			"",
+			&session.Principal,
+		)
+
+		repos = append(repos, repo)
+		repoIsPublicVals = append(repoIsPublicVals, isPublic)
+		cloneURLs = append(cloneURLs, remoteRepository.CloneURL)
+	}
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		// lock the space for update during repo creation to prevent racing conditions with space soft delete.
@@ -109,26 +126,20 @@ func (c *Controller) ImportRepositories(
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
 
-		for _, remoteRepository := range remoteRepositories {
-			repo := remoteRepository.ToRepo(
-				space.ID,
-				remoteRepository.Identifier,
-				"",
-				&session.Principal,
-				c.publicResourceCreationEnabled,
-			)
-
+		for _, repo := range repos {
 			err = c.repoStore.Create(ctx, repo)
 			if errors.Is(err, store.ErrDuplicate) {
 				log.Ctx(ctx).Warn().Err(err).Msg("skipping duplicate repo")
 				duplicateRepos = append(duplicateRepos, repo)
+				l := len(repoIDs)
+				repoIsPublicVals = append(repoIsPublicVals[:l], repoIsPublicVals[l+1:]...)
+				cloneURLs = append(cloneURLs[:l], cloneURLs[l+1:]...)
 				continue
 			} else if err != nil {
 				return fmt.Errorf("failed to create repository in storage: %w", err)
 			}
-			repos = append(repos, repo)
+
 			repoIDs = append(repoIDs, repo.ID)
-			cloneURLs = append(cloneURLs, remoteRepository.CloneURL)
 		}
 		if len(repoIDs) == 0 {
 			return nil
@@ -139,6 +150,7 @@ func (c *Controller) ImportRepositories(
 			jobGroupID,
 			provider,
 			repoIDs,
+			repoIsPublicVals,
 			cloneURLs,
 			in.Pipelines,
 		)
@@ -158,7 +170,10 @@ func (c *Controller) ImportRepositories(
 			audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 			audit.ActionCreated,
 			paths.Parent(repo.Path),
-			audit.WithNewObject(repo),
+			audit.WithNewObject(audit.RepositoryObject{
+				Repository: *repo,
+				IsPublic:   false, // in import we configure public access and create a new audit log.
+			}),
 		)
 		if err != nil {
 			log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)

@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/audit"
-	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -42,7 +41,7 @@ type ImportInput struct {
 }
 
 // Import creates a new empty repository and starts git import to it from a remote repository.
-func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*types.Repository, error) {
+func (c *Controller) Import(ctx context.Context, session *auth.Session, in *ImportInput) (*RepositoryOutput, error) {
 	if err := c.sanitizeImportInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -52,23 +51,23 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, err
 	}
 
-	var repo *types.Repository
+	remoteRepository, provider, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
+	if err != nil {
+		return nil, err
+	}
+
+	repo, isPublic := remoteRepository.ToRepo(
+		parentSpace.ID,
+		parentSpace.Path,
+		in.Identifier,
+		in.Description,
+		&session.Principal,
+	)
+
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		if err := c.resourceLimiter.RepoCount(ctx, parentSpace.ID, 1); err != nil {
 			return fmt.Errorf("resource limit exceeded: %w", limiter.ErrMaxNumReposReached)
 		}
-
-		remoteRepository, provider, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
-		if err != nil {
-			return err
-		}
-		repo = remoteRepository.ToRepo(
-			parentSpace.ID,
-			in.Identifier,
-			in.Description,
-			&session.Principal,
-			c.publicResourceCreationEnabled,
-		)
 
 		// lock the space for update during repo creation to prevent racing conditions with space soft delete.
 		parentSpace, err = c.spaceStore.FindForUpdate(ctx, parentSpace.ID)
@@ -84,6 +83,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		err = c.importer.Run(ctx,
 			provider,
 			repo,
+			isPublic,
 			remoteRepository.CloneURL,
 			in.Pipelines,
 		)
@@ -104,13 +104,19 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionCreated,
 		paths.Parent(repo.Path),
-		audit.WithNewObject(repo),
+		audit.WithNewObject(audit.RepositoryObject{
+			Repository: *repo,
+			IsPublic:   false,
+		}),
 	)
 	if err != nil {
 		log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)
 	}
 
-	return repo, nil
+	return &RepositoryOutput{
+		Repository: *repo,
+		IsPublic:   false,
+	}, nil
 }
 
 func (c *Controller) sanitizeImportInput(in *ImportInput) error {

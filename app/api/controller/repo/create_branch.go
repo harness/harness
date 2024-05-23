@@ -43,7 +43,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 	repoRef string,
 	in *CreateBranchInput,
 ) (*Branch, []types.RuleViolations, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, nil, err
 	}

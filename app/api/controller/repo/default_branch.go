@@ -43,11 +43,12 @@ func (c *Controller) UpdateDefaultBranch(
 	session *auth.Session,
 	repoRef string,
 	in *UpdateDefaultBranchInput,
-) (*types.Repository, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
+) (*RepositoryOutput, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}
+
 	repoClone := repo.Clone()
 	// the max time we give an update default branch to succeed
 	const timeout = 2 * time.Minute
@@ -95,13 +96,24 @@ func (c *Controller) UpdateDefaultBranch(
 		return nil, fmt.Errorf("failed to update the repo default branch on db:%w", err)
 	}
 
+	repoOutput, err := GetRepoOutput(ctx, c.publicAccess, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo output: %w", err)
+	}
+
 	err = c.auditService.Log(ctx,
 		session.Principal,
 		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 		audit.ActionUpdated,
 		paths.Parent(repo.Path),
-		audit.WithOldObject(repoClone),
-		audit.WithNewObject(repo),
+		audit.WithOldObject(audit.RepositoryObject{
+			Repository: repoClone,
+			IsPublic:   repoOutput.IsPublic,
+		}),
+		audit.WithNewObject(audit.RepositoryObject{
+			Repository: *repo,
+			IsPublic:   repoOutput.IsPublic,
+		}),
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update default branch operation: %s", err)
@@ -114,5 +126,5 @@ func (c *Controller) UpdateDefaultBranch(
 		NewName:     repo.DefaultBranch,
 	})
 
-	return repo, nil
+	return repoOutput, nil
 }

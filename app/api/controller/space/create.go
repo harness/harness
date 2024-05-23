@@ -52,7 +52,7 @@ func (c *Controller) Create(
 	ctx context.Context,
 	session *auth.Session,
 	in *CreateInput,
-) (*types.Space, error) {
+) (*SpaceOutput, error) {
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -60,6 +60,18 @@ func (c *Controller) Create(
 	parentSpace, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
 	if err != nil {
 		return nil, err
+	}
+
+	isPublicAccessSupported, err := c.publicAccess.IsPublicAccessSupported(ctx, parentSpace.Path)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to check if public access is supported for parent space %q: %w",
+			parentSpace.Path,
+			err,
+		)
+	}
+	if in.IsPublic && !isPublicAccessSupported {
+		return nil, errPublicSpaceCreationDisabled
 	}
 
 	var space *types.Space
@@ -71,7 +83,21 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	return space, nil
+	err = c.publicAccess.Set(ctx, enum.PublicResourceTypeSpace, space.Path, in.IsPublic)
+	if err != nil {
+		if dErr := c.publicAccess.Delete(ctx, enum.PublicResourceTypeSpace, space.Path); dErr != nil {
+			return nil, fmt.Errorf("failed to set space public access (and public access cleanup: %w): %w", dErr, err)
+		}
+
+		// only cleanup space itself if cleanup of public access succeeded or we risk leaking public access
+		if dErr := c.PurgeNoAuth(ctx, session, space); dErr != nil {
+			return nil, fmt.Errorf("failed to set space public access (and space purge: %w): %w", dErr, err)
+		}
+
+		return nil, fmt.Errorf("failed to set space public access (succesfull cleanup): %w", err)
+	}
+
+	return GetSpaceOutput(ctx, c.publicAccess, space)
 }
 
 func (c *Controller) createSpaceInnerInTX(
@@ -102,7 +128,6 @@ func (c *Controller) createSpaceInnerInTX(
 		ParentID:    parentID,
 		Identifier:  in.Identifier,
 		Description: in.Description,
-		IsPublic:    in.IsPublic,
 		Path:        spacePath,
 		CreatedBy:   session.Principal.ID,
 		Created:     now,
@@ -158,7 +183,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
 	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
 		// TODO: Restrict top level space creation - should be move to authorizer?
-		if session == nil {
+		if auth.IsAnonymousSession(session) {
 			return nil, fmt.Errorf("anonymous user not allowed to create top level spaces: %w", usererror.ErrUnauthorized)
 		}
 
@@ -177,7 +202,6 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 		parentSpace,
 		enum.ResourceTypeSpace,
 		enum.PermissionSpaceEdit,
-		false,
 	); err != nil {
 		return nil, fmt.Errorf("authorization failed: %w", err)
 	}
@@ -194,10 +218,6 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	if len(in.ParentRef) > 0 && !c.nestedSpacesEnabled {
 		// TODO (Nested Spaces): Remove once support is added
 		return errNestedSpacesNotSupported
-	}
-
-	if in.IsPublic && !c.publicResourceCreationEnabled {
-		return errPublicSpaceCreationDisabled
 	}
 
 	parentRefAsID, err := strconv.ParseInt(in.ParentRef, 10, 64)

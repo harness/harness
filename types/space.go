@@ -15,8 +15,6 @@
 package types
 
 import (
-	"encoding/json"
-
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -39,24 +37,10 @@ type Space struct {
 	Path        string `json:"path"`
 	Identifier  string `json:"identifier"`
 	Description string `json:"description"`
-	IsPublic    bool   `json:"is_public"`
 	CreatedBy   int64  `json:"created_by"`
 	Created     int64  `json:"created"`
 	Updated     int64  `json:"updated"`
 	Deleted     *int64 `json:"deleted,omitempty"`
-}
-
-// TODO [CODE-1363]: remove after identifier migration.
-func (s Space) MarshalJSON() ([]byte, error) {
-	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
-	type alias Space
-	return json.Marshal(&struct {
-		alias
-		UID string `json:"uid"`
-	}{
-		alias: (alias)(s),
-		UID:   s.Identifier,
-	})
 }
 
 // Stores spaces query parameters.

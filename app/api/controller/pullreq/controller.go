@@ -156,7 +156,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, usererror.BadRequest("Repository import is in progress.")
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 

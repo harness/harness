@@ -31,7 +31,7 @@ func (c *Controller) GetCommit(ctx context.Context,
 	repoRef string,
 	sha string,
 ) (*types.Commit, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
 	}

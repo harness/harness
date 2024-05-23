@@ -42,7 +42,7 @@ func (c *Controller) ExportProgress(ctx context.Context,
 		return ExportProgressOutput{}, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, false); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView); err != nil {
 		return ExportProgressOutput{}, err
 	}
 

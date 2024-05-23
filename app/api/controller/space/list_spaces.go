@@ -30,7 +30,7 @@ func (c *Controller) ListSpaces(ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
 	filter *types.SpaceFilter,
-) ([]*types.Space, int64, error) {
+) ([]*SpaceOutput, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
@@ -43,10 +43,10 @@ func (c *Controller) ListSpaces(ctx context.Context,
 		space,
 		enum.ResourceTypeSpace,
 		enum.PermissionSpaceView,
-		true,
 	); err != nil {
 		return nil, 0, err
 	}
+
 	return c.ListSpacesNoAuth(ctx, space.ID, filter)
 }
 
@@ -55,7 +55,7 @@ func (c *Controller) ListSpacesNoAuth(
 	ctx context.Context,
 	spaceID int64,
 	filter *types.SpaceFilter,
-) ([]*types.Space, int64, error) {
+) ([]*SpaceOutput, int64, error) {
 	var spaces []*types.Space
 	var count int64
 
@@ -76,5 +76,16 @@ func (c *Controller) ListSpacesNoAuth(
 		return nil, 0, err
 	}
 
-	return spaces, count, nil
+	// backfill public access mode
+	var spacesOut []*SpaceOutput
+	for _, space := range spaces {
+		spaceOut, err := GetSpaceOutput(ctx, c.publicAccess, space)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to get space %q output: %w", space.Path, err)
+		}
+
+		spacesOut = append(spacesOut, spaceOut)
+	}
+
+	return spacesOut, count, nil
 }

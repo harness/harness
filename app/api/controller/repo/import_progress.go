@@ -38,7 +38,7 @@ func (c *Controller) ImportProgress(ctx context.Context,
 		return job.Progress{}, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView); err != nil {
 		return job.Progress{}, err
 	}
 

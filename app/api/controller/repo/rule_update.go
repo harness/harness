@@ -91,7 +91,7 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 		return nil, err
 	}
 
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
 	}

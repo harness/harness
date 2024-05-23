@@ -47,7 +47,7 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 	repoRef string,
 	in *CreateCommitTagInput,
 ) (*CommitTag, []types.RuleViolations, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, nil, err
 	}
