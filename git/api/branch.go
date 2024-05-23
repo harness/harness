@@ -15,9 +15,11 @@
 package api
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/harness/gitness/git/command"
@@ -103,4 +105,43 @@ func (g *Git) IsBranchExist(ctx context.Context, repoPath, name string) (bool, e
 		return false, fmt.Errorf("failed to check if branch '%s' exist: %w", name, err)
 	}
 	return true, nil
+}
+
+func (g *Git) GetBranchCount(
+	ctx context.Context,
+	repoPath string,
+) (int, error) {
+	if repoPath == "" {
+		return 0, ErrRepositoryPathEmpty
+	}
+
+	pipeOut, pipeIn := io.Pipe()
+	defer pipeOut.Close()
+
+	cmd := command.New("branch",
+		command.WithFlag("--list"),
+		command.WithFlag("--format=%(refname:short)"),
+	)
+
+	var err error
+	go func() {
+		defer pipeIn.Close()
+		err = cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(pipeIn))
+	}()
+	if err != nil {
+		return 0, processGitErrorf(err, "failed to trigger branch command")
+	}
+
+	return countLines(pipeOut), nil
+}
+
+func countLines(pipe io.Reader) int {
+	scanner := bufio.NewScanner(pipe)
+	count := 0
+
+	for scanner.Scan() {
+		count++
+	}
+
+	return count
 }

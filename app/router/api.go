@@ -287,6 +287,8 @@ func setupRepos(r chi.Router,
 				r.Patch("/general", handlerreposettings.HandleGeneralUpdate(repoSettingsCtrl))
 			})
 
+			r.Get("/summary", handlerrepo.HandleSummary(repoCtrl))
+
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
 

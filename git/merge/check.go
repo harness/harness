@@ -89,7 +89,11 @@ func CommitCount(
 	repoPath string,
 	start, end string,
 ) (int, error) {
-	cmd := command.New("rev-list", command.WithFlag("--count"), command.WithArg(start+".."+end))
+	arg := command.WithArg(end)
+	if len(start) > 0 {
+		arg = command.WithArg(start + ".." + end)
+	}
+	cmd := command.New("rev-list", command.WithFlag("--count"), arg)
 
 	stdout := bytes.NewBuffer(nil)
 

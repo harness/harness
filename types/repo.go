@@ -98,3 +98,16 @@ type RepositoryGitInfo struct {
 	ParentID int64
 	GitUID   string
 }
+
+type RepositoryPullReqSummary struct {
+	OpenCount   int `json:"open_count"`
+	ClosedCount int `json:"closed_count"`
+	MergedCount int `json:"merged_count"`
+}
+
+type RepositorySummary struct {
+	DefaultBranchCommitCount int                      `json:"default_branch_commit_count"`
+	BranchCount              int                      `json:"branch_count"`
+	TagCount                 int                      `json:"tag_count"`
+	PullReqSummary           RepositoryPullReqSummary `json:"pull_req_summary"`
+}

@@ -1154,4 +1154,17 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opArchive, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/archive/{git_ref}.{format}", opArchive)
+
+	opSummary := openapi3.Operation{}
+	opSummary.WithTags("repository")
+	opSummary.WithMapOfAnything(
+		map[string]interface{}{"operationId": "summary"})
+	_ = reflector.SetRequest(&opSummary, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opSummary, new(types.RepositorySummary), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSummary, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSummary, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSummary, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSummary, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSummary, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/summary", opSummary)
 }

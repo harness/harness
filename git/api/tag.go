@@ -398,3 +398,28 @@ l:
 	}
 	return tag, nil
 }
+
+func (g *Git) GetTagCount(
+	ctx context.Context,
+	repoPath string,
+) (int, error) {
+	if repoPath == "" {
+		return 0, ErrRepositoryPathEmpty
+	}
+
+	pipeOut, pipeIn := io.Pipe()
+	defer pipeOut.Close()
+
+	cmd := command.New("tag")
+
+	var err error
+	go func() {
+		defer pipeIn.Close()
+		err = cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(pipeIn))
+	}()
+	if err != nil {
+		return 0, processGitErrorf(err, "failed to trigger branch command")
+	}
+
+	return countLines(pipeOut), nil
+}

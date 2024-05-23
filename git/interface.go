@@ -102,4 +102,9 @@ type Interface interface {
 	 */
 	ScanSecrets(ctx context.Context, param *ScanSecretsParams) (*ScanSecretsOutput, error)
 	Archive(ctx context.Context, params ArchiveParams, w io.Writer) error
+
+	/*
+	 * Repo Summary service
+	 */
+	Summary(ctx context.Context, params *ReadParams) (*SummaryOutput, error)
 }

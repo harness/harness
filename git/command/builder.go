@@ -67,6 +67,7 @@ var descriptions = map[string]builder{
 		// git-blame(1) does not support disambiguating options from paths from revisions.
 		flags: NoRefUpdates | NoEndOfOptions,
 	},
+	"branch": {},
 	"bundle": {
 		flags: NoRefUpdates,
 	},
