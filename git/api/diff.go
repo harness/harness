@@ -574,7 +574,7 @@ func (g *Git) diffCutFromBlob(
 
 	if asAdded {
 		for i := range cut.Lines {
-			cut.Lines[i] = "+ " + cut.Lines[i]
+			cut.Lines[i] = "+" + cut.Lines[i]
 		}
 
 		hunkHeader = parser.HunkHeader{
@@ -588,7 +588,7 @@ func (g *Git) diffCutFromBlob(
 		}
 	} else {
 		for i := range cut.Lines {
-			cut.Lines[i] = "- " + cut.Lines[i]
+			cut.Lines[i] = "-" + cut.Lines[i]
 		}
 
 		hunkHeader = parser.HunkHeader{
