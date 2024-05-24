@@ -925,6 +925,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusPreconditionFailed)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(types.RulesViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/commits", opCommitFiles)
 
