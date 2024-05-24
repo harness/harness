@@ -125,7 +125,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}, sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		// best effort cleanup
-		if dErr := c.DeleteGitRepository(ctx, session, repo); dErr != nil {
+		if dErr := c.DeleteGitRepository(ctx, session, gitResp.UID); dErr != nil {
 			log.Ctx(ctx).Warn().Err(dErr).Msg("failed to delete repo for cleanup")
 		}
 		return nil, err

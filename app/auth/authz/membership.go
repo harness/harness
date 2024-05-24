@@ -55,22 +55,13 @@ func (a *MembershipAuthorizer) Check(
 	resource *types.Resource,
 	permission enum.Permission,
 ) (bool, error) {
-	publicAccessAllowed, err := a.CheckPublicAccess(ctx, scope, resource, permission)
+	publicAccessAllowed, err := CheckPublicAccess(ctx, a.publicAccess, scope, resource, permission)
 	if err != nil {
 		return false, fmt.Errorf("failed to check public access: %w", err)
 	}
 
 	if publicAccessAllowed {
 		return true, nil
-	}
-
-	if session == nil {
-		log.Ctx(ctx).Warn().Msgf(
-			"public access request for %s in scope %#v got to authorizer",
-			permission,
-			scope,
-		)
-		return false, nil
 	}
 
 	log.Ctx(ctx).Debug().Msgf(

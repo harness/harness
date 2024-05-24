@@ -36,8 +36,11 @@ type converter struct {
 	publicAccess publicaccess.Service
 }
 
-func newConverter(fileService file.Service) Service {
-	return &converter{fileService: fileService}
+func newConverter(fileService file.Service, publicAccess publicaccess.Service) Service {
+	return &converter{
+		fileService:  fileService,
+		publicAccess: publicAccess,
+	}
 }
 
 func (c *converter) Convert(ctx context.Context, args *ConvertArgs) (*file.File, error) {

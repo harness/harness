@@ -16,34 +16,43 @@ package authz
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-func (a *MembershipAuthorizer) CheckPublicAccess(
+// CheckPublicAccess checks if the requested permission is public for the provided scope and resource.
+func CheckPublicAccess(
 	ctx context.Context,
+	publicAccess publicaccess.Service,
 	scope *types.Scope,
 	resource *types.Resource,
 	permission enum.Permission,
 ) (bool, error) {
 	var pubResType enum.PublicResourceType
+	var pubResPath string
 
 	//nolint:exhaustive
 	switch resource.Type {
 	case enum.ResourceTypeSpace:
 		pubResType = enum.PublicResourceTypeSpace
+		pubResPath = paths.Concatenate(scope.SpacePath, resource.Identifier)
 
 	case enum.ResourceTypeRepo:
 		if resource.Identifier != "" {
 			pubResType = enum.PublicResourceTypeRepo
+			pubResPath = paths.Concatenate(scope.SpacePath, resource.Identifier)
 		} else { // for spaceScope checks
 			pubResType = enum.PublicResourceTypeSpace
+			pubResPath = scope.SpacePath
 		}
 
 	case enum.ResourceTypePipeline:
 		pubResType = enum.PublicResourceTypeRepo
+		pubResPath = paths.Concatenate(scope.SpacePath, scope.Repo)
 
 	default:
 		return false, nil
@@ -61,7 +70,10 @@ func (a *MembershipAuthorizer) CheckPublicAccess(
 		return false, nil
 	}
 
-	pubResPath := paths.Concatenate(scope.SpacePath, resource.Identifier)
+	resourceIsPublic, err := publicAccess.Get(ctx, pubResType, pubResPath)
+	if err != nil {
+		return false, fmt.Errorf("failed to check public accessabillity of %s %q: %w", pubResType, pubResPath, err)
+	}
 
-	return a.publicAccess.Get(ctx, pubResType, pubResPath)
+	return resourceIsPublic, nil
 }

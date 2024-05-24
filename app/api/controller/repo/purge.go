@@ -19,10 +19,10 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	repoevents "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
@@ -76,7 +76,7 @@ func (c *Controller) PurgeNoAuth(
 		return fmt.Errorf("failed to delete repo from db: %w", err)
 	}
 
-	if err := c.DeleteGitRepository(ctx, session, repo); err != nil {
+	if err := c.DeleteGitRepository(ctx, session, repo.GitUID); err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to remove git repository")
 	}
 
@@ -92,11 +92,27 @@ func (c *Controller) PurgeNoAuth(
 func (c *Controller) DeleteGitRepository(
 	ctx context.Context,
 	session *auth.Session,
-	repo *types.Repository,
+	gitUID string,
 ) error {
-	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	// create custom write params for delete as repo might or might not exist in db (similar to create).
+	envVars, err := githook.GenerateEnvironmentVariables(
+		ctx,
+		c.urlProvider.GetInternalAPIURL(),
+		0, // no repoID
+		session.Principal.ID,
+		true,
+		true,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to create RPC write params: %w", err)
+		return fmt.Errorf("failed to generate git hook environment variables: %w", err)
+	}
+	writeParams := git.WriteParams{
+		Actor: git.Identity{
+			Name:  session.Principal.DisplayName,
+			Email: session.Principal.Email,
+		},
+		RepoUID: gitUID,
+		EnvVars: envVars,
 	}
 
 	err = c.git.DeleteRepository(ctx, &git.DeleteRepositoryParams{
@@ -105,10 +121,10 @@ func (c *Controller) DeleteGitRepository(
 
 	// deletion should not fail if repo dir does not exist.
 	if errors.IsNotFound(err) {
-		log.Ctx(ctx).Warn().Str("repo.git_uid", repo.GitUID).
+		log.Ctx(ctx).Warn().Str("repo.git_uid", gitUID).
 			Msg("git repository directory does not exist")
 	} else if err != nil {
-		return fmt.Errorf("failed to remove git repository %s: %w", repo.GitUID, err)
+		return fmt.Errorf("failed to remove git repository %s: %w", gitUID, err)
 	}
 	return nil
 }

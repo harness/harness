@@ -80,7 +80,7 @@ func (c *Controller) PurgeNoAuth(
 	// permanently purge all repositories in the space and its subspaces after successful space purge tnx.
 	// cleanup will handle failed repository deletions.
 	for _, repo := range toBeDeletedRepos {
-		err := c.repoCtrl.DeleteGitRepository(ctx, session, repo)
+		err := c.repoCtrl.DeleteGitRepository(ctx, session, repo.GitUID)
 		if err != nil {
 			log.Ctx(ctx).Warn().Err(err).
 				Str("repo_identifier", repo.Identifier).

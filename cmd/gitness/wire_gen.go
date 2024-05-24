@@ -213,7 +213,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	cancelerCanceler := canceler.ProvideCanceler(executionStore, streamer, repoStore, schedulerScheduler, stageStore, stepStore)
 	commitService := commit.ProvideService(gitInterface)
 	fileService := file.ProvideService(gitInterface)
-	converterService := converter.ProvideService(fileService)
+	converterService := converter.ProvideService(fileService, publicaccessService)
 	templateStore := database.ProvideTemplateStore(db)
 	pluginStore := database.ProvidePluginStore(db)
 	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, transactor, pipelineStore, fileService, converterService, schedulerScheduler, repoStore, provider, templateStore, pluginStore, publicaccessService)

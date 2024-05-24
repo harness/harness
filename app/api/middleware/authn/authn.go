@@ -29,6 +29,7 @@ import (
 
 // Attempt returns an http.HandlerFunc middleware that authenticates
 // the http.Request if authentication payload is available.
+// Otherwise, an anonymous user session is used instead.
 func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

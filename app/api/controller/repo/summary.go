@@ -35,7 +35,7 @@ func (c *Controller) Summary(
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
-	summary, err := c.git.Summary(ctx, &git.ReadParams{RepoUID: repo.GitUID})
+	summary, err := c.git.Summary(ctx, git.SummaryParams{ReadParams: git.CreateReadParams(repo)})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repo summary: %w", err)
 	}

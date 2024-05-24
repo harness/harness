@@ -38,6 +38,7 @@ type Interface interface {
 	UpdateDefaultBranch(ctx context.Context, params *UpdateDefaultBranchParams) error
 	GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error)
 	PathsDetails(ctx context.Context, params PathsDetailsParams) (PathsDetailsOutput, error)
+	Summary(ctx context.Context, params SummaryParams) (SummaryOutput, error)
 
 	// GetRepositorySize calculates the size of a repo in KiB.
 	GetRepositorySize(ctx context.Context, params *GetRepositorySizeParams) (*GetRepositorySizeOutput, error)
@@ -102,9 +103,4 @@ type Interface interface {
 	 */
 	ScanSecrets(ctx context.Context, param *ScanSecretsParams) (*ScanSecretsOutput, error)
 	Archive(ctx context.Context, params ArchiveParams, w io.Writer) error
-
-	/*
-	 * Repo Summary service
-	 */
-	Summary(ctx context.Context, params *ReadParams) (*SummaryOutput, error)
 }

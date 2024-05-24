@@ -16,6 +16,7 @@ package converter
 
 import (
 	"github.com/harness/gitness/app/pipeline/file"
+	"github.com/harness/gitness/app/services/publicaccess"
 
 	"github.com/google/wire"
 )
@@ -26,6 +27,6 @@ var WireSet = wire.NewSet(
 )
 
 // ProvideService provides a service which can convert templates.
-func ProvideService(fileService file.Service) Service {
-	return newConverter(fileService)
+func ProvideService(fileService file.Service, publicAccess publicaccess.Service) Service {
+	return newConverter(fileService, publicAccess)
 }

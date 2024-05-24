@@ -24,6 +24,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+type SummaryParams struct {
+	ReadParams
+}
+
 type SummaryOutput struct {
 	CommitCount int
 	BranchCount int
@@ -32,13 +36,13 @@ type SummaryOutput struct {
 
 func (s *Service) Summary(
 	ctx context.Context,
-	params *ReadParams,
-) (*SummaryOutput, error) {
+	params SummaryParams,
+) (SummaryOutput, error) {
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	defaultBranch, err := s.git.GetDefaultBranch(ctx, repoPath)
 	if err != nil {
-		return nil, err
+		return SummaryOutput{}, err
 	}
 	defaultBranch = strings.TrimSpace(defaultBranch)
 
@@ -65,10 +69,10 @@ func (s *Service) Summary(
 	})
 
 	if err := g.Wait(); err != nil {
-		return nil, fmt.Errorf("failed to get repo summary: %w", err)
+		return SummaryOutput{}, fmt.Errorf("failed to get repo summary: %w", err)
 	}
 
-	return &SummaryOutput{
+	return SummaryOutput{
 		CommitCount: commitCount,
 		BranchCount: branchCount,
 		TagCount:    tagCount,
