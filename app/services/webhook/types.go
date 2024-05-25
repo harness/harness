@@ -188,9 +188,9 @@ type CommitInfo struct {
 
 // commitInfoFrom gets the CommitInfo from a git.Commit.
 func commitInfoFrom(commit git.Commit) CommitInfo {
-	var added []string
-	var removed []string
-	var modified []string
+	added := []string{}
+	removed := []string{}
+	modified := []string{}
 
 	for _, stat := range commit.FileStats {
 		switch {
