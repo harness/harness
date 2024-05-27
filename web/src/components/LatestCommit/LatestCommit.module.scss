@@ -16,9 +16,8 @@
 
 .latestCommit {
   display: flex;
-  align-items: center;
   background-color: var(--primary-1) !important;
-  align-items: center;
+  justify-items: center;
   padding: var(--spacing-small) var(--spacing-large) var(--spacing-small) var(--spacing-medium) !important;
   box-shadow: var(--elevation-3);
   border-top-left-radius: 4px;
@@ -42,18 +41,38 @@
     font-size: 13px !important;
   }
 
-  .commitLink {
+  .link {
     font-weight: 500 !important;
     font-size: 13px !important;
-    color: var(--primary-8);
+    color: var(--primary-7);
+  }
+
+  .tag {
+    padding: 3px 6px !important;
+    font-weight: 400 !important;
+    font-size: 12px !important;
+    font-family: var(--font-family-inter) !important;
+    background-color: #c6eefa !important;
+    color: var(--primary-7) !important;
+    border: none;
   }
 
   .noWrap {
     white-space: nowrap !important;
   }
 
+  .border {
+    border-bottom: 1px solid #d0f4fe;
+  }
+
   .time {
     flex-shrink: inherit;
+  }
+
+  .commitIcon {
+    width: 24px;
+    height: 24px;
+    margin: 0px 5px;
   }
 }
 

@@ -24,7 +24,6 @@ import {
   Formik,
   useToaster,
   ButtonSize,
-  TextInput,
   FormInput,
   Dialog,
   StringSubstitute
@@ -217,19 +216,14 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 </Container>
                 <Container className={css.content}>
                   {editDesc === ACCESS_MODES.EDIT ? (
-                    <Layout.Horizontal className={css.editContainer}>
-                      <TextInput
+                    <Layout.Vertical className={css.editContainer} margin={{ top: 'xlarge', bottom: 'xlarge' }}>
+                      <FormInput.TextArea
                         className={cx(css.textContainer, css.textSize)}
-                        onChange={evt => {
-                          formik.setFieldValue('desc', (evt.currentTarget as HTMLInputElement)?.value)
-                        }}
-                        value={formik.values.desc || repoMetadata?.description}
+                        placeholder={getString('enterRepoDescription')}
                         name="desc"
                       />
                       <Layout.Horizontal className={css.buttonContainer}>
                         <Button
-                          className={css.saveBtn}
-                          margin={{ right: 'medium' }}
                           type="submit"
                           text={getString('save')}
                           variation={ButtonVariation.SECONDARY}
@@ -256,7 +250,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                           }}
                         />
                       </Layout.Horizontal>
-                    </Layout.Horizontal>
+                    </Layout.Vertical>
                   ) : (
                     <Text color={Color.GREY_800} className={css.textSize}>
                       {formik?.values?.desc || repoMetadata?.description}
@@ -301,7 +295,6 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                     {defaultBranch === ACCESS_MODES.EDIT ? (
                       <>
                         <Button
-                          className={css.saveBtn}
                           margin={{ right: 'small' }}
                           text={getString('save')}
                           disabled={currentGitRef === repoMetadata?.default_branch}

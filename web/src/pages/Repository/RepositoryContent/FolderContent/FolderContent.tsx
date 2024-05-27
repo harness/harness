@@ -32,15 +32,25 @@ import { Page } from 'iconoir-react'
 
 import { Render } from 'react-jsx-match'
 import { chunk, sortBy, throttle } from 'lodash-es'
-import { useMutate } from 'restful-react'
+import { useGet, useMutate } from 'restful-react'
 import { Link, useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiDirContent, TypesCommit } from 'services/code'
 import { formatDate, isInViewport, LIST_FETCHING_LIMIT, PAGE_CONTAINER_WIDTH } from 'utils/Utils'
-import { findReadmeInfo, GitInfoProps, isFile, isSymlink, isSubmodule, normalizeGitRef } from 'utils/GitUtils'
+import {
+  findReadmeInfo,
+  GitInfoProps,
+  isFile,
+  isSymlink,
+  isSubmodule,
+  normalizeGitRef,
+  RepositorySummaryData
+} from 'utils/GitUtils'
 import { LatestCommitForFolder } from 'components/LatestCommit/LatestCommit'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useEventListener } from 'hooks/useEventListener'
+import { useShowRequestError } from 'hooks/useShowRequestError'
+import RepositorySummary from './RepositorySummary/RepositorySummary'
 import { Readme } from './Readme'
 import CodeFolder from '../../../../icons/CodeFileFill.svg?url'
 import Submodule from '../../../../icons/Submodules.svg?url'
@@ -48,7 +58,7 @@ import Symlink from '../../../../icons/Symlink.svg?url'
 import repositoryCSS from '../../Repository.module.scss'
 import css from './FolderContent.module.scss'
 
-type FolderContentProps = Pick<GitInfoProps, 'repoMetadata' | 'resourceContent' | 'gitRef'>
+type FolderContentProps = Pick<GitInfoProps, 'repoMetadata' | 'resourceContent' | 'resourcePath' | 'gitRef'>
 
 const checkIcon = (row: OpenapiContentInfo): React.ReactElement => {
   if (isFile(row)) {
@@ -61,7 +71,7 @@ const checkIcon = (row: OpenapiContentInfo): React.ReactElement => {
     return <img width={14} height={14} src={CodeFolder} />
   }
 }
-export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderContentProps) {
+export function FolderContent({ repoMetadata, resourceContent, gitRef, resourcePath }: FolderContentProps) {
   const history = useHistory()
   const { routes, standalone } = useAppContext()
   const columns: Column<OpenapiContentInfo>[] = useMemo(
@@ -142,6 +152,15 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
     [resourceEntries, pathsChunks] // eslint-disable-line react-hooks/exhaustive-deps
   )
   const isMounted = useIsMounted()
+  const {
+    data: repoSummaryData,
+    error: repoSummaryError,
+    loading: loadingSummaryData
+  } = useGet<RepositorySummaryData>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/summary`
+  })
+
+  useShowRequestError(repoSummaryError)
 
   // The idea is to fetch last commit details for chunks that has atleast one path which is
   // rendered in the viewport
@@ -223,34 +242,49 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
   }, [scrollCallback])
 
   return (
-    <Container className={css.folderContent}>
-      <LatestCommitForFolder repoMetadata={repoMetadata} latestCommit={resourceContent?.latest_commit} />
-
-      <Table<OpenapiContentInfo>
-        className={css.table}
-        columns={columns}
-        data={mergedContentEntries}
-        onRowClick={entry => {
-          history.push(
-            routes.toCODERepository({
-              repoPath: repoMetadata.path as string,
-              gitRef,
-              resourcePath: entry.path
-            })
-          )
-        }}
-        getRowClassName={() => css.row}
-      />
-
-      <Render when={readmeInfo}>
-        <Readme
-          metadata={repoMetadata}
-          readmeInfo={readmeInfo as OpenapiContentInfo}
+    <Layout.Horizontal>
+      <Container className={css.folderContent}>
+        <LatestCommitForFolder
+          repoMetadata={repoMetadata}
+          latestCommit={resourceContent?.latest_commit}
           gitRef={gitRef}
-          maxWidth={`calc(var(${PAGE_CONTAINER_WIDTH}) - 48px)`}
+          repoSummaryData={repoSummaryData}
+          loadingSummaryData={loadingSummaryData}
+        />
+        <Table<OpenapiContentInfo>
+          className={css.table}
+          columns={columns}
+          data={mergedContentEntries}
+          onRowClick={entry => {
+            history.push(
+              routes.toCODERepository({
+                repoPath: repoMetadata.path as string,
+                gitRef,
+                resourcePath: entry.path
+              })
+            )
+          }}
+          getRowClassName={() => css.row}
+        />
+
+        <Render when={readmeInfo}>
+          <Readme
+            metadata={repoMetadata}
+            readmeInfo={readmeInfo as OpenapiContentInfo}
+            gitRef={gitRef}
+            maxWidth={`calc(var(${PAGE_CONTAINER_WIDTH}) - 48px)`}
+          />
+        </Render>
+      </Container>
+      <Render when={!resourcePath}>
+        <RepositorySummary
+          metadata={repoMetadata}
+          gitRef={gitRef}
+          repoSummaryData={repoSummaryData}
+          loadingSummaryData={loadingSummaryData}
         />
       </Render>
-    </Container>
+    </Layout.Horizontal>
   )
 }
 

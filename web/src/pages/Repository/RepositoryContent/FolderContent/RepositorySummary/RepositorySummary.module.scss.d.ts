@@ -16,14 +16,11 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const border: string
-export declare const commitIcon: string
-export declare const forFile: string
-export declare const latestCommit: string
+export declare const align: string
+export declare const content: string
+export declare const heading: string
 export declare const link: string
-export declare const noWrap: string
-export declare const popover: string
-export declare const shaBtn: string
-export declare const standalone: string
+export declare const metaData: string
+export declare const summaryContainer: string
 export declare const tag: string
-export declare const time: string
+export declare const tags: string

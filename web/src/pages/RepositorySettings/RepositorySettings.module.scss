@@ -132,19 +132,21 @@
 }
 
 .textContainer {
-  width: 80%;
+  width: 100%;
 }
 
 .editContainer {
-  :global([class*='TextInput--main']) {
-    margin-bottom: unset !important;
-    font-size: 20px;
+  width: 60% !important;
+  textarea {
+    min-height: 100px !important;
   }
 }
 
 .buttonContainer {
   width: 20%;
   padding-top: var(--spacing-xsmall) !important;
+  gap: 10px;
+  margin-left: auto !important;
 }
 
 .textSize {

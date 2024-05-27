@@ -12,6 +12,7 @@ export interface StringsMap {
   activeBranches: string
   add: string
   addComment: string
+  addDescription: string
   addGitIgnore: string
   addLabel: string
   addLicense: string
@@ -20,6 +21,7 @@ export interface StringsMap {
   addReadMe: string
   addUserToSpace2: string
   admin: string
+  aheadDivergence: string
   aiSearch: string
   aidaGenSummary: string
   all: string
@@ -36,6 +38,7 @@ export interface StringsMap {
   at: string
   attachText: string
   basedOn: string
+  behindDivergence: string
   blame: string
   blameCommitLine: string
   blameEmpty: string
@@ -43,6 +46,7 @@ export interface StringsMap {
   botAlerts: string
   bottom: string
   branch: string
+  branchCommitCount: string
   branchCreated: string
   branchDeleted: string
   branchDivergenceAhead: string
@@ -123,6 +127,7 @@ export interface StringsMap {
   branchTagCreation: string
   branchTagDeletion: string
   branchUpToDate: string
+  branchUpToDateWith: string
   branches: string
   browse: string
   browseFiles: string
@@ -281,6 +286,7 @@ export interface StringsMap {
   enterName: string
   enterNewBranchName: string
   enterNewPassword: string
+  enterRepoDescription: string
   enterRepoName: string
   enterSecret: string
   enterTagPlaceholder: string
@@ -863,6 +869,7 @@ export interface StringsMap {
   tagger: string
   tags: string
   termsOfUse: string
+  thisRefHas: string
   title: string
   token: string
   tooltipRepoEdit: string
@@ -881,6 +888,7 @@ export interface StringsMap {
   'triggers.newTrigger': string
   'triggers.updateSuccess': string
   turnOnSemanticSearch: string
+  unableToGetDivergence: string
   unorderedList: string
   unrsolvedComment: string
   'unsavedChanges.leave': string

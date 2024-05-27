@@ -42,6 +42,7 @@ export function RepositoryContent({
       {(isDir(resourceContent) && (
         <FolderContent
           resourceContent={resourceContent}
+          resourcePath={resourcePath}
           repoMetadata={repoMetadata}
           gitRef={gitRef || (repoMetadata.default_branch as string)}
         />

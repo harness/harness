@@ -16,8 +16,10 @@
 
 .folderContent {
   padding: 0 var(--spacing-xlarge) var(--spacing-xlarge) var(--spacing-xlarge) !important;
+  width: 100%;
 
   .table {
+    height: auto;
     background-color: var(--white) !important;
     :global([class*='TableV2--row']:last-child) {
       border-bottom-left-radius: 4px !important;

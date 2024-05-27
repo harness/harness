@@ -85,6 +85,17 @@ export interface ImportSpaceFormData {
   importPipelineLabel: boolean
 }
 
+export interface RepositorySummaryData {
+  default_branch_commit_count: number
+  branch_count: number
+  tag_count: number
+  pull_req_summary: {
+    open_count: number
+    closed_count: number
+    merged_count: number
+  }
+}
+
 export enum RepoVisibility {
   PUBLIC = 'public',
   PRIVATE = 'private'

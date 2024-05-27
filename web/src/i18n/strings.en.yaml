@@ -39,6 +39,8 @@ createARepo: Create a repository
 createRepo: Create Repository
 enterRepoName: Enter Repository Name
 enterDescription: Enter a description (optional)
+enterRepoDescription: Enter repository description
+addDescription: Add a description
 addLicense: Add License
 none: None
 create: Create
@@ -195,6 +197,11 @@ createBranchFromTag: "<strong>Create branch: {{newBranch}}</strong> from tag '{{
 tagNotFound: 'Tag <strong>{{tag}}</strong> not found.'
 branchNotFound: 'Branch <strong>{{branch}}</strong> not found.'
 branchUpToDate: Up to date with {{defaultBranch}}
+branchUpToDateWith: Branch is up to date with
+unableToGetDivergence: Unable to get divergence
+branchCommitCount: '{count} {count|1:commit,commits}'
+behindDivergence: '{behindCommits} {behindCommits|1:commit,commits} behind '
+aheadDivergence: '{aheadCommits} {aheadCommits|1:commit,commits} ahead'
 branchDivergenceBehind: '{behind} {behindCommits|1:commit,commits} behind {defaultBranch}'
 branchDivergenceAhead: '{ahead} {aheadCommits|1:commit,commits} ahead {defaultBranch}'
 branchDivergenceAheadBehind: '{ahead} {aheadCommits|1:commit,commits} ahead, {behind} {behindCommits|1:commit,commits} behind {defaultBranch}'
@@ -583,6 +590,7 @@ token: Token
 expired: Expired
 expirationDate: Expiration Date
 created: Created
+thisRefHas: 'This {isTag|true:tag,branch} has'
 changePasswordSuccesfully: Password changed successfully
 applyChanges: Apply Changes
 showMore: View more
