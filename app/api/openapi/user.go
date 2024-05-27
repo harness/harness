@@ -61,6 +61,36 @@ var queryParameterSortMembershipSpaces = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterQueryPublicKey = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter the public keys by their path identifier."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSortPublicKey = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The data by which the public keys are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.PublicKeySortCreated),
+				Enum:    enum.PublicKeySort("").Enum(),
+			},
+		},
+	},
+}
+
 // helper function that constructs the openapi specification
 // for user account resources.
 func buildUser(reflector *openapi3.Reflector) {
@@ -99,4 +129,35 @@ func buildUser(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMemberSpaces, new([]types.MembershipSpace), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMemberSpaces, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/user/memberships", opMemberSpaces)
+
+	opKeyCreate := openapi3.Operation{}
+	opKeyCreate.WithTags("user")
+	opKeyCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createPublicKey"})
+	_ = reflector.SetRequest(&opKeyCreate, new(user.CreatePublicKeyInput), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opKeyCreate, new(types.PublicKey), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opKeyCreate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opKeyCreate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/keys", opKeyCreate)
+
+	opKeyDelete := openapi3.Operation{}
+	opKeyDelete.WithTags("user")
+	opKeyDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deletePublicKey"})
+	_ = reflector.SetRequest(&opKeyDelete, struct {
+		ID string `path:"public_key_identifier"`
+	}{}, http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opKeyDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opKeyDelete, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opKeyDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/user/keys/{public_key_identifier}", opKeyDelete)
+
+	opKeyList := openapi3.Operation{}
+	opKeyList.WithTags("user")
+	opKeyList.WithMapOfAnything(map[string]interface{}{"operationId": "listPublicKey"})
+	opKeyList.WithParameters(queryParameterPage, queryParameterLimit,
+		queryParameterQueryPublicKey, queryParameterSortPublicKey, queryParameterOrder)
+	_ = reflector.SetRequest(&opKeyList, struct{}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opKeyList, new([]types.PublicKey), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opKeyList, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opKeyList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/user/keys", opKeyList)
 }

@@ -59,6 +59,7 @@ var WireSet = wire.NewSet(
 	ProvideTemplateStore,
 	ProvideTriggerStore,
 	ProvidePluginStore,
+	ProvidePublicKeyStore,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -252,4 +253,9 @@ func ProvideSettingsStore(db *sqlx.DB) store.SettingsStore {
 // ProvidePublicAccessStore provides a public access store.
 func ProvidePublicAccessStore(db *sqlx.DB) store.PublicAccessStore {
 	return NewPublicAccessStore(db)
+}
+
+// ProvidePublicKeyStore provides a public key store.
+func ProvidePublicKeyStore(db *sqlx.DB) store.PublicKeyStore {
+	return NewPublicKeyStore(db)
 }

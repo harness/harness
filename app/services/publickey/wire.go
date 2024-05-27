@@ -12,37 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package user
+package publickey
 
 import (
-	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/store/database/dbtx"
-	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
 )
 
-// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideController,
+	ProvidePublicKey,
 )
 
-func ProvideController(
-	tx dbtx.Transactor,
-	principalUIDCheck check.PrincipalUID,
-	authorizer authz.Authorizer,
-	principalStore store.PrincipalStore,
-	tokenStore store.TokenStore,
-	membershipStore store.MembershipStore,
+func ProvidePublicKey(
 	publicKeyStore store.PublicKeyStore,
-) *Controller {
-	return NewController(
-		tx,
-		principalUIDCheck,
-		authorizer,
-		principalStore,
-		tokenStore,
-		membershipStore,
-		publicKeyStore)
+	pCache store.PrincipalInfoCache,
+) Service {
+	return NewService(publicKeyStore, pCache)
 }

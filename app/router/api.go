@@ -628,6 +628,14 @@ func setupUser(r chi.Router, userCtrl *user.Controller) {
 				r.Delete("/", handleruser.HandleDeleteToken(userCtrl, enum.TokenTypeSession))
 			})
 		})
+
+		// Private keys
+		r.Route("/keys", func(r chi.Router) {
+			r.Get("/", handleruser.HandleListPublicKeys(userCtrl))
+			r.Post("/", handleruser.HandleCreatePublicKey(userCtrl))
+			r.Delete(fmt.Sprintf("/{%s}", request.PathParamPublicKeyIdentifier),
+				handleruser.HandleDeletePublicKey(userCtrl))
+		})
 	})
 }
 

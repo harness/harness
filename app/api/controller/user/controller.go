@@ -34,6 +34,7 @@ type Controller struct {
 	principalStore    store.PrincipalStore
 	tokenStore        store.TokenStore
 	membershipStore   store.MembershipStore
+	publicKeyStore    store.PublicKeyStore
 }
 
 func NewController(
@@ -43,6 +44,7 @@ func NewController(
 	principalStore store.PrincipalStore,
 	tokenStore store.TokenStore,
 	membershipStore store.MembershipStore,
+	publicKeyStore store.PublicKeyStore,
 ) *Controller {
 	return &Controller{
 		tx:                tx,
@@ -51,6 +53,7 @@ func NewController(
 		principalStore:    principalStore,
 		tokenStore:        tokenStore,
 		membershipStore:   membershipStore,
+		publicKeyStore:    publicKeyStore,
 	}
 }
 

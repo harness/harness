@@ -806,4 +806,30 @@ type (
 		// FindByIdentifier returns a types.UserGroup given a space ID and identifier.
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.UserGroup, error)
 	}
+
+	PublicKeyStore interface {
+		// Find returns a public key given an ID.
+		Find(ctx context.Context, id int64) (*types.PublicKey, error)
+
+		// FindByIdentifier returns a public key given a principal ID and an identifier.
+		FindByIdentifier(ctx context.Context, principalID int64, identifier string) (*types.PublicKey, error)
+
+		// Create creates a new public key.
+		Create(ctx context.Context, publicKey *types.PublicKey) error
+
+		// DeleteByIdentifier deletes a public key.
+		DeleteByIdentifier(ctx context.Context, principalID int64, identifier string) error
+
+		// MarkAsVerified updates the public key to mark it as verified.
+		MarkAsVerified(ctx context.Context, id int64, verified int64) error
+
+		// Count returns the number of public keys for the principal that match provided the filter.
+		Count(ctx context.Context, principalID int64, filter *types.PublicKeyFilter) (int, error)
+
+		// List returns the public keys for the principal that match provided the filter.
+		List(ctx context.Context, principalID int64, filter *types.PublicKeyFilter) ([]types.PublicKey, error)
+
+		// ListByFingerprint returns public keys given a fingerprint and key usage.
+		ListByFingerprint(ctx context.Context, fingerprint string) ([]types.PublicKey, error)
+	}
 )
