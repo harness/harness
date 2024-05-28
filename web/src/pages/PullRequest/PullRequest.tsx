@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import ChildAppMounter from 'framework/microfrontends/ChildAppMounter'
+import React, { lazy, useCallback, useMemo, useRef, useState } from 'react'
 import { Container, Layout, PageBody, Tabs, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
+import type { STOAppCustomProps } from '@harness/microfrontends'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { compact } from 'lodash-es'
@@ -40,10 +42,14 @@ import { PullRequestTitle } from './PullRequestTitle'
 import { useGetPullRequestInfo } from './useGetPullRequestInfo'
 import css from './PullRequest.module.scss'
 
+const RemoteSTOApp = lazy(() => import(`stoV2/App`))
+const RemotePipelineSecurityView = lazy(() => import(`stoV2/PipelineSecurityView`))
+
 export default function PullRequest() {
   const history = useHistory()
   const { getString } = useStrings()
   const { routes, standalone, routingId } = useAppContext()
+  const { parentContextObj } = useAppContext()
   const {
     repoMetadata,
     loading,
@@ -252,6 +258,52 @@ export default function PullRequest() {
                         pullReqMetadata={pullReqMetadata as TypesPullReq}
                         prChecksDecisionResult={pullReqChecksDecision}
                       />
+                    )
+                  },
+                  {
+                    id: PullRequestSection.SECURITY_ISSUES,
+                    title: (
+                      <TabTitleWithCount
+                        icon="security-stage"
+                        iconSize={14}
+                        title="New Security Issues"
+                        countElement={
+                          pullReqChecksDecision?.overallStatus ? (
+                            <Container className={css.checksCount}>
+                              <Layout.Horizontal className={css.checksCountLayout}>
+                                <ExecutionStatus
+                                  status={pullReqChecksDecision?.overallStatus}
+                                  noBackground
+                                  iconOnly
+                                  iconSize={15}
+                                />
+
+                                <Text
+                                  color={pullReqChecksDecision?.color}
+                                  padding={{ left: 'xsmall' }}
+                                  tag="span"
+                                  font={{ variation: FontVariation.FORM_MESSAGE_WARNING }}>
+                                  {pullReqChecksDecision?.count[pullReqChecksDecision?.overallStatus]}
+                                </Text>
+                              </Layout.Horizontal>
+                            </Container>
+                          ) : null
+                        }
+                        count={undefined}
+                        padding={{ left: 'medium' }}
+                      />
+                    ),
+                    panel: (
+                      <Container width="100%" height="100%">
+                        <ChildAppMounter<STOAppCustomProps>
+                          ChildApp={RemoteSTOApp}
+                          customComponents={{ /*UserLabel, UsefulOrNot*/ }}
+                          customHooks={{ /*useGetSettingValue, useGetPipelineSummary*/ }}
+                          parentContextObj={parentContextObj}
+                        >
+                          <RemotePipelineSecurityView pipelineExecutionDetail={{}} />
+                        </ChildAppMounter>
+                      </Container>
                     )
                   }
                 ]}

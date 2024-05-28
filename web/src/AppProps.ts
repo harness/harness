@@ -19,6 +19,7 @@ import type { CODERoutes } from 'RouteDefinitions'
 import type { TypesUser } from 'services/code'
 import type { UsefulOrNotProps } from 'utils/types'
 import type { LangLocale } from './framework/strings/languageLoader'
+import type { Hooks, CommonComponents, ParentContext } from '@harness/microfrontends'
 
 /**
  * AppProps defines an interface for host (parent) and
@@ -58,12 +59,18 @@ export interface AppProps {
 
   /** 401 handler. Used in parent app to override 401 handling from child app */
   on401?: () => void
+
+  parentContextObj: ParentContext
+
+  components: CommonComponents
+
   /** React Components which are passed down from the Parent that are needed by the child app */
   customComponents: {
     UsefulOrNot: (props: UsefulOrNotProps) => React.ReactElement
   }
+
   /** React Hooks that Harness Platform passes down. Note: Pass only hooks that your app need */
-  hooks: Partial<{
+  hooks: Hooks & Partial<{
     useGetToken: Unknown
     usePermissionTranslate: Unknown
     useGenerateToken: Unknown

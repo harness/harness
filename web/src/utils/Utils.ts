@@ -33,7 +33,8 @@ export enum PullRequestSection {
   CONVERSATION = 'conversation',
   COMMITS = 'commits',
   FILES_CHANGED = 'changes',
-  CHECKS = 'checks'
+  CHECKS = 'checks',
+  SECURITY_ISSUES = 'security_issues'
 }
 
 export enum FeatureType {

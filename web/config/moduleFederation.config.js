@@ -61,5 +61,8 @@ module.exports = {
       singleton: true,
       requiredVersion: version
     }))
+  },
+  remotes: {
+    stoV2: "stoV2@[window.getApiBaseUrl('sto/v2/remoteEntry.js')]",
   }
 }

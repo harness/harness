@@ -1644,6 +1644,11 @@
   resolved "https://registry.yarnpkg.com/@exodus/schemasafe/-/schemasafe-1.0.0.tgz#f44e252665b1a6bdef0d686e22af3599a6f0a095"
   integrity sha512-2cyupPIZI69HQxEAPllLXBjQp4njDKkOjYRCYxvMZe3/LY9pp9fBM3Tb1wiFAdP6Emo4v3OEbCLGj6u73Q5KLw==
 
+"@harness/microfrontends@^2.57.0":
+  version "2.57.0"
+  resolved "https://npm.pkg.github.com/download/@harness/microfrontends/2.57.0/9f265b908656579684e4943f1d14e05fa0ec94b6#9f265b908656579684e4943f1d14e05fa0ec94b6"
+  integrity sha512-t7CaUI5VEO21s5VQ4aacl30Oo2fbrUsfb0sgREyMzFSrlX5xj+EOQ3FT0v5AGn5108NIK8ebrsKgyf5N4yf0jw==
+
 "@harnessio/design-system@^2.1.1":
   version "2.1.1"
   resolved "https://registry.npmjs.org/@harnessio/design-system/-/design-system-2.1.1.tgz#2da3036602ed9b9446d8139c72009e6dc1e25642"
