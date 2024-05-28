@@ -19,6 +19,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/harness/gitness/app/api/controller/webhook"
 	"strings"
 	"time"
 
@@ -173,6 +174,24 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		if err != nil {
 			log.Ctx(ctx).Warn().Err(err).Int64("repo_id", repo.ID).Msg("failed to index repo")
 		}
+	}
+
+	_, err = c.webhook.Create(ctx, session, repo.Path, &webhook.CreateInput{
+		UID:         repo.Identifier + "-Hackweek2024",
+		Identifier:  repo.Identifier + "-Hackweek2024",
+		DisplayName: "Hackweek2024",
+		Description: "",
+		URL:         "https://chrishamper.pr2.harness.io/gateway/pipeline/api/webhook/custom/gsJe3wvATxCX7eRcaiop1w/v3?accountIdentifier=dhGJDx_-S_yOsLtQmoO96Q&orgIdentifier=default&projectIdentifier=Hack_Week_2024&pipelineIdentifier=sastprcheck&triggerIdentifier=prcheck",
+		Secret:      "",
+		Enabled:     true,
+		Insecure:    true,
+		Triggers: []enum.WebhookTrigger{
+			enum.WebhookTriggerPullReqCreated,
+			enum.WebhookTriggerPullReqBranchUpdated,
+		},
+	}, false)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Int64("repo_id", repo.ID).Msg("failed to create webhook")
 	}
 
 	return repoOutput, nil

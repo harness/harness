@@ -36,8 +36,8 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
-	events4 "github.com/harness/gitness/app/events/git"
-	events3 "github.com/harness/gitness/app/events/pullreq"
+	events3 "github.com/harness/gitness/app/events/git"
+	events4 "github.com/harness/gitness/app/events/pullreq"
 	events2 "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
@@ -200,7 +200,25 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	lockerLocker := locker.ProvideLocker(mutexManager)
 	repoIdentifier := check.ProvideRepoIdentifierCheck()
 	repoCheck := repo.ProvideRepoCheck()
-	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, settingsService, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService)
+	webhookConfig := server.ProvideWebhookConfig(config)
+	webhookStore := database.ProvideWebhookStore(db)
+	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
+	readerFactory, err := events3.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	eventsReaderFactory, err := events4.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
+	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
+	webhookService, err := webhook.ProvideService(ctx, webhookConfig, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter)
+	if err != nil {
+		return nil, err
+	}
+	webhookController := webhook2.ProvideController(webhookConfig, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService, encrypter)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, ruleStore, settingsService, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, webhookController)
 	reposettingsController := reposettings.ProvideController(authorizer, repoStore, settingsService, auditService)
 	executionStore := database.ProvideExecutionStore(db)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
@@ -235,25 +253,15 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	connectorController := connector.ProvideController(connectorStore, authorizer, spaceStore)
 	templateController := template.ProvideController(templateStore, authorizer, spaceStore)
 	pluginController := plugin.ProvideController(pluginStore)
-	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
-	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	codeCommentView := database.ProvideCodeCommentView(db)
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
 	pullReqFileViewStore := database.ProvidePullReqFileViewStore(db)
-	eventsReporter, err := events3.ProvideReporter(eventsSystem)
+	eventsReporter, err := events4.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
 	migrator := codecomments.ProvideMigrator(gitInterface)
-	readerFactory, err := events4.ProvideReaderFactory(eventsSystem)
-	if err != nil {
-		return nil, err
-	}
-	eventsReaderFactory, err := events3.ProvideReaderFactory(eventsSystem)
-	if err != nil {
-		return nil, err
-	}
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
 	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, eventsReporter, gitInterface, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
@@ -261,15 +269,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, eventsReporter, migrator, pullreqService, protectionManager, streamer, codeownersService, lockerLocker)
-	webhookConfig := server.ProvideWebhookConfig(config)
-	webhookStore := database.ProvideWebhookStore(db)
-	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
-	webhookService, err := webhook.ProvideService(ctx, webhookConfig, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter)
-	if err != nil {
-		return nil, err
-	}
-	webhookController := webhook2.ProvideController(webhookConfig, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService, encrypter)
-	reporter2, err := events4.ProvideReporter(eventsSystem)
+	reporter2, err := events3.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}

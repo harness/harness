@@ -16,6 +16,7 @@ package repo
 
 import (
 	"github.com/harness/gitness/app/api/controller/limiter"
+	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/auth/authz"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/codeowners"
@@ -67,13 +68,14 @@ func ProvideController(
 	identifierCheck check.RepoIdentifier,
 	repoChecks Check,
 	publicAccess publicaccess.Service,
+	webhookCtrl *webhook.Controller,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
 		repoStore, spaceStore, pipelineStore,
 		principalStore, ruleStore, settings, principalInfoCache, protectionManager, rpcClient, importer,
 		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
-		repoChecks, publicAccess)
+		repoChecks, publicAccess, webhookCtrl)
 }
 
 func ProvideRepoCheck() Check {

@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/harness/gitness/app/api/controller/webhook"
 	"strconv"
 	"strings"
 
@@ -91,6 +92,7 @@ type Controller struct {
 	identifierCheck    check.RepoIdentifier
 	repoCheck          Check
 	publicAccess       publicaccess.Service
+	webhook            *webhook.Controller
 }
 
 func NewController(
@@ -118,6 +120,7 @@ func NewController(
 	identifierCheck check.RepoIdentifier,
 	repoCheck Check,
 	publicAccess publicaccess.Service,
+	webhook *webhook.Controller,
 ) *Controller {
 	return &Controller{
 		defaultBranch:      config.Git.DefaultBranch,
@@ -144,6 +147,7 @@ func NewController(
 		identifierCheck:    identifierCheck,
 		repoCheck:          repoCheck,
 		publicAccess:       publicAccess,
+		webhook:            webhook,
 	}
 }
 
