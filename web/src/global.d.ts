@@ -67,6 +67,7 @@ declare interface Window {
   apiUrl: string
   harnessNameSpace: string
   bugsnagClient?: any
+  STRIP_CDE_PREFIX?: boolean
   STRIP_CODE_PREFIX?: boolean
   Sanitizer: any
 }

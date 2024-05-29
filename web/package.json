@@ -16,8 +16,10 @@
   "keywords": [],
   "scripts": {
     "webpack": "NODE_ENV=development webpack serve --config config/webpack.dev.js",
+    "webpack:cde": "NODE_ENV=development MODULE=cde webpack serve --config config/webpack.dev.js",
     "typed-scss": "typed-scss-modules src --watch",
     "dev": "run-p webpack typed-scss",
+    "dev:cde": "MODULE=cde run-p webpack:cde typed-scss",
     "test": "jest src --silent",
     "test:watch": "jest --watch",
     "build": "rm -rf dist && webpack --config config/webpack.prod.js",

@@ -1052,3 +1052,59 @@ upload: Upload
 unorderedList: Unordered list
 checklist: Check list
 code: Code
+cde:
+  branchPlaceholder: Branch
+  introText1: Get ready to code in seconds
+  introText2: Isolated cloud development environments with your favorite editor
+  introText3: Connect in seconds with a repository
+  cloudDeveloperExperience: Cloud Developer Experience
+  createGitspace: Create Gitspace
+  gitspaces: Gitspaces
+  noRepo: Don’t have a Git repo?
+  createRepo: Create a repo in Harness
+  newGitspace: + New Gitspace
+  manageGitspaces: Manage Gitspaces
+  noGitspaces: You have not created any Gitspace yet
+  gitpsaceDetail: Gitpsace Detail
+  machine: Machine
+  region: Region
+  or: OR
+  logs: Logs
+  noData: No Data
+  noChange: No Change
+  used: Used
+  hours: Hours
+  na: NA
+  details:
+    actions: More Actions
+    openEditor: Open VS Code Editor
+    openBrowser: Open VS Code Online
+    goToDashboard: Go To Dashboard
+    startGitspace: Start Gitspace
+    stopProvising: Stop Provising
+    noData: No Data for Gitspace
+    provisioningGitspace: Provisioning the Gitspace...
+    gitspaceStopped: Gitspace is stopped
+    gitspaceRunning: Gitspace is running
+    stopGitspace: Stop Gitspace
+    fetchingGitspace: Fetching Gitspace Details
+    fetchingLogs: Fetching gitspace logs
+    logsFailed: Gitspace logs api failed
+    noLogsFound: No gitspace logs found
+  repository:
+    repo: Repository
+    selectRepository: Select Repository
+    pasteRepo: Paste a Git URL to create Gitspace
+    pasterRepoSubtext: You can use any public Git repository to create a Gitspace
+    privateRepoWarning: Repo URL is of Private repository
+    publicRepo: You can use any public Git repository to create a Gitspace
+    continueWith: Continue with
+    repositoryURL: Repository URL
+  ide:
+    browser: Browser
+    desktop: Desktop
+    ide: IDE
+    selectIDE: Select IDE
+    vsCode: VS Code
+    openVSCode: Open in VS Code Desktop
+    openBrowser: Open in Browser

@@ -1,0 +1,58 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.formContainer {
+  :global {
+    .OverlaySpinner--overlaySpinner {
+      width: 100% !important;
+    }
+  }
+
+  [class*='OverlaySpinner--overlaySpinner'] {
+    width: 100% !important;
+  }
+}
+
+.urlInput {
+  width: 100%;
+  margin-bottom: 0 !important;
+}
+
+.repometadataCard {
+  width: 100%;
+  padding: 0 !important;
+}
+
+.repometadata {
+  min-height: 50px;
+  background: var(--primary-1);
+}
+
+.metadataItem {
+  min-height: 50px;
+  align-items: center;
+}
+
+.privateCard {
+  padding: var(--spacing-small) !important;
+}
+
+.publicTag {
+  padding: 3px 5px !important;
+  border-radius: 5px;
+  color: var(--green-700) !important;
+  background: var(--green-100) !important;
+}

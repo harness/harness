@@ -233,7 +233,7 @@ const LogTerminal: React.FC<LogViewerProps> = ({
   )
 }
 
-const lineElement = (line = '') => {
+export const lineElement = (line = '') => {
   const element = document.createElement('pre')
   element.className = css.line
 

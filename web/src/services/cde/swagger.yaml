@@ -1,0 +1,883 @@
+openapi: 3.0.0
+info:
+  title: API Specification
+  version: 0.0.0
+servers:
+- url: gateway/cde/api/v1
+security:
+- bearerAuth: []
+  x-api-key: []
+paths:
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/coderepository:
+    post:
+      operationId: getCodeRepository
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiGetCodeRepositoryRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiGetCodeRepositoryResponse'
+          description: OK
+      summary: Get Code Repository
+      tags:
+      - coderepositories
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}:
+    delete:
+      operationId: deleteGitspace
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      - description: gitspace identifier.
+        in: path
+        name: gitspaceIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+      summary: Delete gitspace
+      tags:
+      - gitspaces
+    get:
+      operationId: getGitspace
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      - description: gitspace identifier.
+        in: path
+        name: gitspaceIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiGetGitspaceResponse'
+          description: OK
+      summary: Get gitspace
+      tags:
+      - gitspaces
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}/action:
+    post:
+      operationId: gitspaceAction
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      - description: gitspace identifier.
+        in: path
+        name: gitspaceIdentifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiGitspaceActionRequest'
+      responses:
+        "200":
+          description: OK
+      summary: Gitspace action
+      tags:
+      - gitspaces
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}/events:
+    post:
+      operationId: createGitspaceEvent
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      - description: gitspace identifier.
+        in: path
+        name: gitspaceIdentifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateGitspaceInstanceEventRequest'
+      responses:
+        "200":
+          description: OK
+      summary: Create gitspace instance event
+      tags:
+      - gitspaces
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}/logs:
+    get:
+      operationId: getGitspaceInstanceLogs
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      - description: gitspace identifier.
+        in: path
+        name: gitspaceIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiGetGitspaceLogsResponse'
+          description: OK
+      summary: Get gitspace instance logs
+      tags:
+      - gitspaces
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders:
+    get:
+      operationId: listInfraProviders
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OpenapiCreateInfraProviderResponse'
+                type: array
+          description: OK
+      summary: List infraproviders
+      tags:
+      - infraproviders
+    post:
+      operationId: createInfraProvider
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateInfraProviderRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiCreateInfraProviderResponse'
+          description: Created
+      summary: Create InfraProvider
+      tags:
+      - infraproviders
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraProviderConfigIdentifier}:
+    delete:
+      operationId: deleteInfraProvider
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      - description: infra Provider Config Identifier.
+        in: path
+        name: infraProviderConfigIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+      summary: Delete infraprovider
+      tags:
+      - infraproviders
+  ? /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraProviderConfigIdentifier}/resources
+  : get:
+      operationId: listInfraProviderResources
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      - description: infra Provider Config Identifier.
+        in: path
+        name: infraProviderConfigIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiListInfraProviderResourceResponse'
+          description: OK
+      summary: List infraProvider Resources
+      tags:
+      - infraproviders
+    post:
+      operationId: createInfraProviderResource
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      - description: infra Provider Config Identifier.
+        in: path
+        name: infraProviderConfigIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiCreateInfraProviderResourceResponse'
+          description: Created
+      summary: Create InfraProvider Resource
+      tags:
+      - infraproviders
+  ? /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraProviderConfigIdentifier}/template
+  : post:
+      operationId: createInfraProviderTemplate
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      - description: infra Provider Config Identifier.
+        in: path
+        name: infraProviderConfigIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiCreateInfraProviderTemplateResponse'
+          description: Created
+      summary: Create InfraProvider Template
+      tags:
+      - infraproviders
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}gitspaces:
+    get:
+      operationId: listGitspaces
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OpenapiGetGitspaceResponse'
+                type: array
+          description: OK
+      summary: List gitspaces
+      tags:
+      - gitspaces
+    post:
+      operationId: createGitspace
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      - description: org identifier.
+        in: path
+        name: orgIdentifier
+        required: true
+        schema:
+          type: string
+      - description: project identifier.
+        in: path
+        name: projectIdentifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateGitspaceRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiCreateGitspaceResponse'
+          description: Created
+      summary: Create gitspace
+      tags:
+      - gitspaces
+  /accounts/{accountIdentifier}gitspaces:
+    get:
+      operationId: listGitspacesForAccount
+      parameters:
+      - description: account identifier.
+        in: path
+        name: accountIdentifier
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OpenapiGetGitspaceResponse'
+                type: array
+          description: OK
+      summary: List gitspaces for account
+      tags:
+      - gitspaces
+components:
+  schemas:
+    EnumCodeRepoAccessType:
+      enum:
+      - PRIVATE
+      - PUBLIC
+      type: string
+    EnumCodeRepoType:
+      enum:
+      - GITHUB
+      - GITLAB
+      - HARNESS_CODE
+      - BITBUCKET
+      - UNKNOWN
+      type: string
+    EnumGitspaceAccessType:
+      enum:
+      - JWT_TOKEN
+      - PASSWORD
+      type: string
+    EnumGitspaceActionType:
+      enum:
+      - START
+      - STOP
+      type: string
+    EnumGitspaceStateType:
+      enum:
+      - RUNNING
+      - STOPPED
+      - UNKNOWN
+      - ERROR
+      type: string
+    EnumIDEType:
+      enum:
+      - VSCODE
+      - VSCODEWEB
+      type: string
+    EnumProviderType:
+      enum:
+      - HARNESS_GCP
+      - K8S
+      - HARNESS_OVHCLOUD
+      - DOCKER
+      type: string
+    OpenapiCreateGitspaceInstanceEventRequest:
+      properties:
+        state:
+          $ref: '#/components/schemas/EnumGitspaceStateType'
+      type: object
+    OpenapiCreateGitspaceRequest:
+      properties:
+        branch:
+          type: string
+        code_repo_id:
+          type: string
+        code_repo_type:
+          $ref: '#/components/schemas/EnumCodeRepoType'
+        code_repo_url:
+          type: string
+        devcontainer_path:
+          type: string
+        id:
+          type: string
+        ide:
+          $ref: '#/components/schemas/EnumIDEType'
+        infra_provider_resource_id:
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        prebuild_repo_id:
+          type: string
+      type: object
+    OpenapiCreateGitspaceResponse:
+      properties:
+        access_key:
+          type: string
+        access_type:
+          $ref: '#/components/schemas/EnumGitspaceAccessType'
+        code_server_password:
+          type: string
+        config:
+          $ref: '#/components/schemas/TypesGitspaceConfigResponse'
+        created:
+          type: integer
+        id:
+          type: string
+        last_used:
+          type: integer
+        machine_user:
+          type: string
+        resource_usage:
+          type: string
+        ssh_key:
+          type: string
+        status:
+          $ref: '#/components/schemas/EnumGitspaceStateType'
+        total_time_used:
+          type: integer
+        tracked_changes:
+          type: string
+        url:
+          type: string
+      type: object
+    OpenapiCreateInfraProviderRequest:
+      properties:
+        id:
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/EnumProviderType'
+      type: object
+    OpenapiCreateInfraProviderResourceResponse:
+      properties:
+        resources:
+          items:
+            $ref: '#/components/schemas/TypesInfraProviderResourceRequest'
+          nullable: true
+          type: array
+      type: object
+    OpenapiCreateInfraProviderResponse:
+      properties:
+        created:
+          type: integer
+        id:
+          type: string
+        metadata:
+          type: string
+        name:
+          type: string
+        scope:
+          type: string
+        type:
+          $ref: '#/components/schemas/EnumProviderType'
+        updated:
+          type: integer
+      type: object
+    OpenapiCreateInfraProviderTemplateResponse:
+      properties:
+        created:
+          type: integer
+        data:
+          type: string
+        description:
+          type: string
+        identifier:
+          type: string
+        space_id:
+          type: integer
+        updated:
+          type: integer
+      type: object
+    OpenapiGetCodeRepositoryRequest:
+      properties:
+        connector_ref:
+          type: string
+        url:
+          type: string
+      type: object
+    OpenapiGetCodeRepositoryResponse:
+      properties:
+        access_type:
+          $ref: '#/components/schemas/EnumCodeRepoAccessType'
+        branch:
+          type: string
+        repo_type:
+          $ref: '#/components/schemas/EnumCodeRepoType'
+        url:
+          type: string
+      type: object
+    OpenapiGetGitspaceLogsResponse:
+      nullable: true
+      type: string
+    OpenapiGetGitspaceResponse:
+      properties:
+        access_key:
+          type: string
+        access_type:
+          $ref: '#/components/schemas/EnumGitspaceAccessType'
+        code_server_password:
+          type: string
+        config:
+          $ref: '#/components/schemas/TypesGitspaceConfigResponse'
+        created:
+          type: integer
+        id:
+          type: string
+        last_used:
+          type: integer
+        machine_user:
+          type: string
+        resource_usage:
+          type: string
+        ssh_key:
+          type: string
+        status:
+          $ref: '#/components/schemas/EnumGitspaceStateType'
+        total_time_used:
+          type: integer
+        tracked_changes:
+          type: string
+        url:
+          type: string
+      type: object
+    OpenapiGitspaceActionRequest:
+      properties:
+        action:
+          $ref: '#/components/schemas/EnumGitspaceActionType'
+      type: object
+    OpenapiListInfraProviderResourceResponse:
+      items:
+        $ref: '#/components/schemas/TypesInfraProviderResourceResponse'
+      nullable: true
+      type: array
+    TypesGitspaceConfigResponse:
+      properties:
+        branch:
+          type: string
+        code_repo_id:
+          type: string
+        code_repo_type:
+          $ref: '#/components/schemas/EnumCodeRepoType'
+        code_repo_url:
+          type: string
+        created:
+          type: integer
+        devcontainer_path:
+          type: string
+        id:
+          type: string
+        ide:
+          $ref: '#/components/schemas/EnumIDEType'
+        infra_provider_resource_id:
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        prebuild_repo_id:
+          type: string
+        scope:
+          type: string
+        status_code:
+          type: string
+        updated:
+          type: integer
+        user_id:
+          type: string
+      type: object
+    TypesInfraProviderResourceRequest:
+      properties:
+        cpu:
+          type: string
+        disk:
+          type: string
+        gateway_host:
+          type: string
+        gateway_port:
+          type: string
+        id:
+          type: string
+        infra_provider_type:
+          $ref: '#/components/schemas/EnumProviderType'
+        memory:
+          type: string
+        name:
+          type: string
+        network:
+          type: string
+        opentofu_params:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        region:
+          items:
+            type: string
+          nullable: true
+          type: array
+        scope:
+          type: string
+        template_id:
+          type: integer
+      type: object
+    TypesInfraProviderResourceResponse:
+      properties:
+        cpu:
+          type: string
+        created:
+          type: integer
+        disk:
+          type: string
+        gateway_host:
+          type: string
+        gateway_port:
+          type: string
+        id:
+          type: string
+        infra_provider_config_id:
+          type: string
+        infra_provider_type:
+          $ref: '#/components/schemas/EnumProviderType'
+        memory:
+          type: string
+        name:
+          type: string
+        network:
+          type: string
+        opentofu_params:
+          type: string
+        region:
+          type: string
+        scope:
+          type: string
+        template_id:
+          type: integer
+        updated:
+          type: integer
+      type: object
+  securitySchemes:
+    bearerAuth:
+      scheme: bearer
+      type: http
+    x-api-key:
+      in: header
+      name: x-api-key
+      type: apiKey

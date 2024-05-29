@@ -21,9 +21,18 @@ require('dotenv').config()
 const { merge } = require('webpack-merge')
 const commonConfig = require('./webpack.common')
 
+const getPortByModule = () => {
+  const module = process.env.MODULE
+  if (module === 'cde') {
+    return process.env.CDE_PORT ?? 3021
+  } else {
+    return process.env.PORT ?? 3020
+  }
+}
+
 const API_URL = process.env.API_URL ?? 'http://localhost:3000'
 const HOST = 'localhost'
-const PORT = process.env.PORT ?? 3020
+const PORT = getPortByModule()
 const STANDALONE = process.env.STANDALONE === 'true'
 const CONTEXT = process.cwd()
 const prodConfig = require('./webpack.prod')

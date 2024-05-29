@@ -51,6 +51,9 @@ import CodeSearchPage from 'pages/Search/CodeSearchPage'
 import AddUpdatePipeline from 'pages/AddUpdatePipeline/AddUpdatePipeline'
 import { useAppContext } from 'AppContext'
 import PipelineSettings from 'components/PipelineSettings/PipelineSettings'
+import GitspaceDetail from 'cde/pages/GitspaceDetail/GitspaceDetail'
+import Gitspaces from 'cde/pages/Gitspaces/Gitspaces'
+import GitspacesListing from 'cde/pages/GitspacesListing/GitspacesListing'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
@@ -257,6 +260,30 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           <Route path={routes.toCODESecrets({ space: pathProps.space })} exact>
             <LayoutWithSideNav title={getString('pageTitle.secrets')}>
               <SecretList />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {standalone && (
+          <Route path={routes.toCDEGitspaceDetail({ space: pathProps.space, gitspaceId: pathProps.gitspaceId })}>
+            <LayoutWithSideNav title={getString('cde.gitspaces')}>
+              <GitspaceDetail />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {standalone && (
+          <Route path={routes.toCDEGitspaces({ space: pathProps.space })}>
+            <LayoutWithSideNav title={getString('cde.gitspaces')}>
+              <Gitspaces />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {standalone && (
+          <Route path={routes.toCDEGitspacesCreate({ space: pathProps.space })}>
+            <LayoutWithSideNav title={getString('cde.gitspaces')}>
+              <GitspacesListing />
             </LayoutWithSideNav>
           </Route>
         )}

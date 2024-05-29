@@ -136,6 +136,58 @@ export interface StringsMap {
   cancelImport: string
   cancelImportConfirm: string
   cancelledImport: string
+  'cde.branchPlaceholder': string
+  'cde.cloudDeveloperExperience': string
+  'cde.createGitspace': string
+  'cde.createRepo': string
+  'cde.details.actions': string
+  'cde.details.fetchingGitspace': string
+  'cde.details.fetchingLogs': string
+  'cde.details.gitspaceRunning': string
+  'cde.details.gitspaceStopped': string
+  'cde.details.goToDashboard': string
+  'cde.details.logsFailed': string
+  'cde.details.noData': string
+  'cde.details.noLogsFound': string
+  'cde.details.openBrowser': string
+  'cde.details.openEditor': string
+  'cde.details.provisioningGitspace': string
+  'cde.details.startGitspace': string
+  'cde.details.stopGitspace': string
+  'cde.details.stopProvising': string
+  'cde.gitpsaceDetail': string
+  'cde.gitspaces': string
+  'cde.hours': string
+  'cde.ide.browser': string
+  'cde.ide.desktop': string
+  'cde.ide.ide': string
+  'cde.ide.openBrowser': string
+  'cde.ide.openVSCode': string
+  'cde.ide.selectIDE': string
+  'cde.ide.vsCode': string
+  'cde.introText1': string
+  'cde.introText2': string
+  'cde.introText3': string
+  'cde.logs': string
+  'cde.machine': string
+  'cde.manageGitspaces': string
+  'cde.na': string
+  'cde.newGitspace': string
+  'cde.noChange': string
+  'cde.noData': string
+  'cde.noGitspaces': string
+  'cde.noRepo': string
+  'cde.or': string
+  'cde.region': string
+  'cde.repository.continueWith': string
+  'cde.repository.pasteRepo': string
+  'cde.repository.pasterRepoSubtext': string
+  'cde.repository.privateRepoWarning': string
+  'cde.repository.publicRepo': string
+  'cde.repository.repo': string
+  'cde.repository.repositoryURL': string
+  'cde.repository.selectRepository': string
+  'cde.used': string
   changePassword: string
   changePasswordSuccesfully: string
   changeRepoVis: string

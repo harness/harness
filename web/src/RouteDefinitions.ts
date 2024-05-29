@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { CDERoutes, routes as cdeRoutes } from 'cde/RouteDefinitions'
+
 export interface CODEProps {
   space?: string
   repoName?: string
@@ -34,6 +36,7 @@ export interface CODEProps {
   settingSection?: string
   ruleId?: string
   settingSectionMode?: string
+  gitspaceId?: string
 }
 
 export interface CODEQueryProps {
@@ -56,10 +59,11 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   secret: ':secret',
   settingSection: ':settingSection',
   ruleId: ':ruleId',
-  settingSectionMode: ':settingSectionMode'
+  settingSectionMode: ':settingSectionMode',
+  gitspaceId: ':gitspaceId'
 }
 
-export interface CODERoutes {
+export interface CODERoutes extends CDERoutes {
   toSignIn: () => string
   toRegister: () => string
 
@@ -166,5 +170,6 @@ export const routes: CODERoutes = {
 
   toCODEExecutions: ({ repoPath, pipeline }) => `/${repoPath}/pipelines/${pipeline}`,
   toCODEExecution: ({ repoPath, pipeline, execution }) => `/${repoPath}/pipelines/${pipeline}/execution/${execution}`,
-  toCODESecret: ({ space, secret }) => `/secrets/${space}/secret/${secret}`
+  toCODESecret: ({ space, secret }) => `/secrets/${space}/secret/${secret}`,
+  ...cdeRoutes
 }

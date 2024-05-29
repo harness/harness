@@ -24,6 +24,10 @@ export const getConfig = (str: string): string => {
     str = str.replace(/^code\//, '')
   }
 
+  if (window.STRIP_CDE_PREFIX) {
+    str = str.replace(/^cde\//, '')
+  }
+
   return window.apiUrl ? `${window.apiUrl}/${str}` : `${window.harnessNameSpace || ''}/${str}`
 }
 
