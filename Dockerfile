@@ -7,13 +7,15 @@ WORKDIR /usr/src/app
 
 COPY web/package.json ./
 COPY web/yarn.lock ./
+COPY web/.yarnrc.yml ./
 
 # If you are building your code for production
 # RUN npm ci --omit=dev
 
 COPY ./web .
 
-RUN yarn && yarn build && yarn cache clean
+RUN sed -i.bak "s/HARNESSTOKEN/$NPM_TOKEN/g" .yarnrc.yml \
+    yarn && yarn build && yarn cache clean
 
 # ---------------------------------------------------------#
 #                   Build gitness image                    #
