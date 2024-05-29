@@ -18,3 +18,5 @@ web/cypress/node_modules
 
 # ignore any executables we build
 /gitness
+
+node_modules/

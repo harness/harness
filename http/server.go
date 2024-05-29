@@ -17,8 +17,10 @@ package http
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -68,7 +70,7 @@ func (s *Server) ListenAndServe() (*errgroup.Group, ShutdownFunction) {
 	if s.config.Acme {
 		return s.listenAndServeAcme()
 	} else if s.config.Key != "" {
-		return s.listenAndServeTLS()
+		return s.listenAndServeTLS(false)
 	}
 	return s.listenAndServe()
 }
@@ -87,17 +89,38 @@ func (s *Server) listenAndServe() (*errgroup.Group, ShutdownFunction) {
 	return &g, s1.Shutdown
 }
 
-func (s *Server) listenAndServeTLS() (*errgroup.Group, ShutdownFunction) {
+func (s *Server) ListenAndServeMTLS() (*errgroup.Group, ShutdownFunction) {
+	return s.listenAndServeTLS(true)
+}
+
+func (s *Server) listenAndServeTLS(enableMtls bool) (*errgroup.Group, ShutdownFunction) {
 	var g errgroup.Group
 	s1 := &http.Server{
 		Addr:              ":http",
 		ReadHeaderTimeout: s.config.ReadHeaderTimeout,
 		Handler:           http.HandlerFunc(redirect),
 	}
+	var tlsConfig *tls.Config
+	if enableMtls {
+		caCert, err := os.ReadFile(s.config.Cert)
+		if err != nil {
+			panic(err)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		// Create the TLS Config with the CA pool and enable Client certificate validation
+		tlsConfig = &tls.Config{
+			ClientCAs:  caCertPool,
+			ClientAuth: tls.RequireAndVerifyClientCert,
+			MinVersion: tls.VersionTLS13,
+		}
+	}
 	s2 := &http.Server{
 		Addr:              ":https",
 		ReadHeaderTimeout: s.config.ReadHeaderTimeout,
 		Handler:           s.handler,
+		TLSConfig:         tlsConfig,
 	}
 	g.Go(func() error {
 		return s1.ListenAndServe()
