@@ -63,7 +63,8 @@
       color: var(--grey-900);
       background: none;
       text-align: center;
-      height: 100%;
+      height: 100% !important;
+      padding-top: 2px !important;
     }
 
     .bp3-breadcrumbs-collapsed {
