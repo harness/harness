@@ -100,7 +100,7 @@ export default function PullRequest() {
     { enabled: data?.executionId !== undefined }
   )
   const counts = countData && data?.executionId !== undefined && countData[data?.executionId] ? countData[data?.executionId] : undefined
-  const issueCount = counts ? (counts.newCritical || 0) + (counts.newHigh || 0) + (counts.newMedium || 0) + (counts.newLow || 0) : undefined
+  const issueCount = counts ? counts.critical + counts.high + counts.medium + counts.low : undefined
 
   const onAddDescriptionClick = useCallback(() => {
     setShowEditDescription(true)
