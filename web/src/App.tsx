@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { RestfulProvider } from 'restful-react'
 import { IconoirProvider } from 'iconoir-react'
@@ -37,6 +38,8 @@ import './App.scss'
 import css from './App.module.scss'
 
 FocusStyleManager.onlyShowFocusOnTabs()
+
+const queryClient = new QueryClient()
 
 const App: React.FC<AppProps> = React.memo(function App({
   standalone = false,
@@ -82,33 +85,35 @@ const App: React.FC<AppProps> = React.memo(function App({
                     on401()
                   }
                 }}>
-                <AppContextProvider
-                  value={{
-                    standalone,
-                    routingId,
-                    space,
-                    routes,
-                    lang,
-                    on401,
-                    parentContextObj,
-                    hooks,
-                    currentUser: defaultCurrentUser,
-                    components,
-                    customComponents,
-                    currentUserProfileURL,
-                    defaultSettingsURL,
-                    isPublicAccessEnabledOnResources,
-                    isCurrentSessionPublic
-                  }}>
-                  <IconoirProvider
-                    iconProps={{
-                      strokeWidth: 1.5,
-                      width: '16px',
-                      height: '16px'
+                <QueryClientProvider client={queryClient}>
+                  <AppContextProvider
+                    value={{
+                      standalone,
+                      routingId,
+                      space,
+                      routes,
+                      lang,
+                      on401,
+                      parentContextObj,
+                      hooks,
+                      currentUser: defaultCurrentUser,
+                      components,
+                      customComponents,
+                      currentUserProfileURL,
+                      defaultSettingsURL,
+                      isPublicAccessEnabledOnResources,
+                      isCurrentSessionPublic
                     }}>
-                    <ModalProvider>{props.children ? props.children : <RouteDestinations />}</ModalProvider>
-                  </IconoirProvider>
-                </AppContextProvider>
+                    <IconoirProvider
+                      iconProps={{
+                        strokeWidth: 1.5,
+                        width: '16px',
+                        height: '16px'
+                      }}>
+                      <ModalProvider>{props.children ? props.children : <RouteDestinations />}</ModalProvider>
+                    </IconoirProvider>
+                  </AppContextProvider>
+                </QueryClientProvider>
               </RestfulProvider>
             </AppErrorBoundary>
           </StringsContextProvider>
