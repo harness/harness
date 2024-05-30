@@ -16,15 +16,17 @@
 
 import ChildAppMounter from 'framework/microfrontends/ChildAppMounter'
 import React, { lazy, useCallback, useMemo, useRef, useState } from 'react'
-import { Container, Layout, PageBody, Tabs, Text } from '@harnessio/uicore'
+import { Container, Layout, PageBody, PageSpinner, Tabs, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
-import type { STOAppCustomProps } from '@harness/microfrontends'
+import type { ParentContext, STOAppCustomProps } from '@harness/microfrontends'
 import { Render } from 'react-jsx-match'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import { compact } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { useFrontendExecutionForRepo } from 'services/sto/stoComponents'
+import type { Identifier } from 'utils/types'
 import { getErrorMessage, PullRequestSection } from 'utils/Utils'
 import { CodeIcon } from 'utils/GitUtils'
 import type { TypesPullReq, TypesRepository } from 'services/code'
@@ -42,7 +44,9 @@ import { PullRequestTitle } from './PullRequestTitle'
 import { useGetPullRequestInfo } from './useGetPullRequestInfo'
 import css from './PullRequest.module.scss'
 
+// @ts-ignore
 const RemoteSTOApp = lazy(() => import(`stoV2/App`))
+// @ts-ignore
 const RemotePipelineSecurityView = lazy(() => import(`stoV2/PipelineSecurityView`))
 
 export default function PullRequest() {
@@ -293,18 +297,7 @@ export default function PullRequest() {
                         padding={{ left: 'medium' }}
                       />
                     ),
-                    panel: (
-                      <Container width="100%" height="100%">
-                        <ChildAppMounter<STOAppCustomProps>
-                          ChildApp={RemoteSTOApp}
-                          customComponents={{ /*UserLabel, UsefulOrNot*/ }}
-                          customHooks={{ /*useGetSettingValue, useGetPipelineSummary*/ }}
-                          parentContextObj={parentContextObj}
-                        >
-                          <RemotePipelineSecurityView pipelineExecutionDetail={{}} />
-                        </ChildAppMounter>
-                      </Container>
-                    )
+                    panel: <PullRequestSecurityView parentContextObj={parentContextObj} gitUrl={repoMetadata?.git_url} prNumber={pullReqMetadata?.number} />
                   }
                 ]}
               />
@@ -313,6 +306,38 @@ export default function PullRequest() {
         </Render>
       </PageBody>
     </Container>
+  )
+}
+
+const PullRequestSecurityView: React.FC<{ parentContextObj: ParentContext, gitUrl?: string, prNumber?: number }> = ({ parentContextObj, gitUrl, prNumber }) => {
+  const { accountId, orgIdentifier = '', projectIdentifier = '' } = useParams<Identifier>()
+
+  const { data } = useFrontendExecutionForRepo(
+    {
+      queryParams: {
+        accountId,
+        orgId: orgIdentifier,
+        projectId: projectIdentifier,
+        gitUrl: gitUrl || '',
+        prNumber,
+      },
+    },
+    { enabled: gitUrl !== undefined }
+  )
+
+  return data?.executionId ? (
+    <Container width="100%" height="100%">
+      <ChildAppMounter<STOAppCustomProps>
+        ChildApp={RemoteSTOApp}
+        customComponents={{ /*UserLabel, UsefulOrNot*/ }}
+        customHooks={{ /*useGetSettingValue, useGetPipelineSummary*/ }}
+        parentContextObj={parentContextObj}
+      >
+        <RemotePipelineSecurityView pipelineExecutionDetail={{ pipelineExecutionSummary: { planExecutionId: data?.executionId } }} isPullRequest={true} />
+      </ChildAppMounter>
+    </Container>
+  ) : (
+    <PageSpinner />
   )
 }
 
