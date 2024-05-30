@@ -14,35 +14,35 @@
  * limitations under the License.
  */
 
-import ChildAppMounter from 'framework/microfrontends/ChildAppMounter'
-import React, { lazy, useCallback, useMemo, useRef, useState } from 'react'
-import { Container, Layout, PageBody, PageSpinner, Tabs, Text } from '@harnessio/uicore'
+import type { STOAppCustomProps } from '@harness/microfrontends'
 import { FontVariation } from '@harnessio/design-system'
-import type { ParentContext, STOAppCustomProps } from '@harness/microfrontends'
+import { Container, Layout, PageBody, PageSpinner, Tabs, Text } from '@harnessio/uicore'
+import { useAppContext } from 'AppContext'
+import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { tabContainerCSS, TabTitleWithCount } from 'components/TabTitleWithCount/TabTitleWithCount'
+import ChildAppMounter from 'framework/microfrontends/ChildAppMounter'
+import { useStrings } from 'framework/strings'
+import { useScrollTop } from 'hooks/useScrollTop'
+import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
+import { compact } from 'lodash-es'
+import React, { lazy, useCallback, useMemo, useRef, useState } from 'react'
 import { Render } from 'react-jsx-match'
 import { useHistory, useParams } from 'react-router-dom'
-import { compact } from 'lodash-es'
-import { useAppContext } from 'AppContext'
-import { useStrings } from 'framework/strings'
-import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { useFrontendExecutionForRepo } from 'services/sto/stoComponents'
+import type { TypesPullReq, TypesRepository } from 'services/code'
+import { useFrontendExecutionForRepo, useFrontendExecutionIssueCounts } from 'services/sto/stoComponents'
+import { CodeIcon } from 'utils/GitUtils'
 import type { Identifier } from 'utils/types'
 import { getErrorMessage, PullRequestSection } from 'utils/Utils'
-import { CodeIcon } from 'utils/GitUtils'
-import type { TypesPullReq, TypesRepository } from 'services/code'
-import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
-import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
-import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
-import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
-import { useScrollTop } from 'hooks/useScrollTop'
-import { PullRequestMetaLine } from './PullRequestMetaLine'
-import { Conversation } from './Conversation/Conversation'
-import { Checks } from './Checks/Checks'
 import { Changes } from '../../components/Changes/Changes'
+import { Checks } from './Checks/Checks'
+import { Conversation } from './Conversation/Conversation'
+import css from './PullRequest.module.scss'
 import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
+import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { PullRequestTitle } from './PullRequestTitle'
 import { useGetPullRequestInfo } from './useGetPullRequestInfo'
-import css from './PullRequest.module.scss'
 
 // @ts-ignore
 const RemoteSTOApp = lazy(() => import(`stoV2/App`))
@@ -51,6 +51,7 @@ const RemotePipelineSecurityView = lazy(() => import(`stoV2/PipelineSecurityView
 
 export default function PullRequest() {
   const history = useHistory()
+  const { accountId, orgIdentifier = '', projectIdentifier = '' } = useParams<Identifier>()
   const { getString } = useStrings()
   const { routes, standalone, routingId } = useAppContext()
   const { parentContextObj } = useAppContext()
@@ -71,6 +72,35 @@ export default function PullRequest() {
     refetchCommits,
     retryOnErrorFunc
   } = useGetPullRequestInfo()
+
+  const gitUrl = repoMetadata?.git_url
+  const prNumber = pullReqMetadata?.number
+  const { data } = useFrontendExecutionForRepo(
+    {
+      queryParams: {
+        accountId,
+        orgId: orgIdentifier,
+        projectId: projectIdentifier,
+        gitUrl: gitUrl || '',
+        prNumber,
+      },
+    },
+    { enabled: gitUrl !== undefined && prNumber !== undefined }
+  )
+
+  const { data: countData } = useFrontendExecutionIssueCounts(
+    {
+      queryParams: {
+        accountId,
+        orgId: orgIdentifier,
+        projectId: projectIdentifier,
+        executionIds: data?.executionId || ''
+      },
+    },
+    { enabled: data?.executionId !== undefined }
+  )
+  const counts = countData && data?.executionId !== undefined && countData[data?.executionId] ? countData[data?.executionId] : undefined
+  const issueCount = counts ? (counts.newCritical || 0) + (counts.newHigh || 0) + (counts.newMedium || 0) + (counts.newLow || 0) : undefined
 
   const onAddDescriptionClick = useCallback(() => {
     setShowEditDescription(true)
@@ -268,36 +298,45 @@ export default function PullRequest() {
                     id: PullRequestSection.SECURITY_ISSUES,
                     title: (
                       <TabTitleWithCount
-                        icon="security-stage"
+                        icon="shield-gears"
                         iconSize={14}
                         title="New Security Issues"
                         countElement={
                           pullReqChecksDecision?.overallStatus ? (
                             <Container className={css.checksCount}>
                               <Layout.Horizontal className={css.checksCountLayout}>
-                                <ExecutionStatus
-                                  status={pullReqChecksDecision?.overallStatus}
-                                  noBackground
-                                  iconOnly
-                                  iconSize={15}
-                                />
-
-                                <Text
-                                  color={pullReqChecksDecision?.color}
-                                  padding={{ left: 'xsmall' }}
-                                  tag="span"
-                                  font={{ variation: FontVariation.FORM_MESSAGE_WARNING }}>
-                                  {pullReqChecksDecision?.count[pullReqChecksDecision?.overallStatus]}
-                                </Text>
+                                {(pullReqChecksDecision?.overallStatus === ExecutionState.RUNNING
+                                  || pullReqChecksDecision?.overallStatus === ExecutionState.ERROR)
+                                  && (
+                                  <ExecutionStatus
+                                    status={pullReqChecksDecision?.overallStatus}
+                                    noBackground
+                                    iconOnly
+                                    iconSize={20}
+                                  />
+                                )}
                               </Layout.Horizontal>
                             </Container>
                           ) : null
                         }
-                        count={undefined}
+                        count={pullReqChecksDecision?.overallStatus !== ExecutionState.RUNNING ? issueCount : undefined}
                         padding={{ left: 'medium' }}
                       />
                     ),
-                    panel: <PullRequestSecurityView parentContextObj={parentContextObj} gitUrl={repoMetadata?.git_url} prNumber={pullReqMetadata?.number} />
+                    panel: data?.executionId ? (
+                      <Container width="100%" height="100%">
+                        <ChildAppMounter<STOAppCustomProps>
+                          ChildApp={RemoteSTOApp}
+                          customComponents={{ /*UserLabel, UsefulOrNot*/ }}
+                          customHooks={{ /*useGetSettingValue, useGetPipelineSummary*/ }}
+                          parentContextObj={parentContextObj}
+                        >
+                          <RemotePipelineSecurityView pipelineExecutionDetail={{ pipelineExecutionSummary: { planExecutionId: data?.executionId } }} isPullRequest={true} />
+                        </ChildAppMounter>
+                      </Container>
+                    ) : (
+                      <PageSpinner />
+                    )
                   }
                 ]}
               />
@@ -306,38 +345,6 @@ export default function PullRequest() {
         </Render>
       </PageBody>
     </Container>
-  )
-}
-
-const PullRequestSecurityView: React.FC<{ parentContextObj: ParentContext, gitUrl?: string, prNumber?: number }> = ({ parentContextObj, gitUrl, prNumber }) => {
-  const { accountId, orgIdentifier = '', projectIdentifier = '' } = useParams<Identifier>()
-
-  const { data } = useFrontendExecutionForRepo(
-    {
-      queryParams: {
-        accountId,
-        orgId: orgIdentifier,
-        projectId: projectIdentifier,
-        gitUrl: gitUrl || '',
-        prNumber,
-      },
-    },
-    { enabled: gitUrl !== undefined }
-  )
-
-  return data?.executionId ? (
-    <Container width="100%" height="100%">
-      <ChildAppMounter<STOAppCustomProps>
-        ChildApp={RemoteSTOApp}
-        customComponents={{ /*UserLabel, UsefulOrNot*/ }}
-        customHooks={{ /*useGetSettingValue, useGetPipelineSummary*/ }}
-        parentContextObj={parentContextObj}
-      >
-        <RemotePipelineSecurityView pipelineExecutionDetail={{ pipelineExecutionSummary: { planExecutionId: data?.executionId } }} isPullRequest={true} />
-      </ChildAppMounter>
-    </Container>
-  ) : (
-    <PageSpinner />
   )
 }
 
