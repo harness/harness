@@ -73,6 +73,8 @@ export default function PullRequest() {
     retryOnErrorFunc
   } = useGetPullRequestInfo()
 
+  console.debug('overallStatus:', pullReqChecksDecision?.overallStatus)
+
   const gitUrl = repoMetadata?.git_url
   const prNumber = pullReqMetadata?.number
   const { data } = useFrontendExecutionForRepo(
@@ -99,7 +101,9 @@ export default function PullRequest() {
     },
     { enabled: data?.executionId !== undefined }
   )
+  console.debug('countData:', countData)
   const counts = countData && data?.executionId !== undefined && countData[data?.executionId] ? countData[data?.executionId] : undefined
+  console.debug('counts:', counts)
   const issueCount = counts ? counts.critical + counts.high + counts.medium + counts.low : undefined
 
   const onAddDescriptionClick = useCallback(() => {
