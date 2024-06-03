@@ -92,7 +92,7 @@ func (key KeyInfo) MatchesKey(otherKey gossh.PublicKey) bool {
 func (key KeyInfo) Fingerprint() string {
 	sum := sha256.New()
 	sum.Write(key.Key.Marshal())
-	return base64.StdEncoding.EncodeToString(sum.Sum(nil))
+	return "SHA256:" + base64.RawStdEncoding.EncodeToString(sum.Sum(nil))
 }
 
 func (key KeyInfo) Type() string {
