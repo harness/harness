@@ -22,6 +22,8 @@ import (
 	gitenum "github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
+
+	gossh "golang.org/x/crypto/ssh"
 )
 
 // Config stores the system configuration.
@@ -62,6 +64,9 @@ type Config struct {
 		// (this could be after proxy path / header rewrite).
 		// Value is derived from Base unless explicitly specified (e.g. http://localhost:3000/git).
 		Git string `envconfig:"GITNESS_URL_GIT"`
+
+		// GitSSH defines the external URL via which the GIT SSH server is reachable.
+		GitSSH string `envconfig:"GITNESS_URL_GIT_SSH" default:"localhost"`
 
 		// API defines the external URL via which the rest API is reachable.
 		// NOTE: for routing to work properly, the request path reaching gitness has to end with `/api`
@@ -130,6 +135,24 @@ type Config struct {
 			Email   bool   `envconfig:"GITNESS_ACME_EMAIL"`
 			Host    string `envconfig:"GITNESS_ACME_HOST"`
 		}
+	}
+
+	SSH struct {
+		Enable bool   `envconfig:"GITNESS_SSH_ENABLE" default:"true"`
+		Host   string `envconfig:"GITNESS_SSH_HOST"`
+		Port   int    `envconfig:"GITNESS_SSH_PORT" default:"22"`
+		// DefaultUser holds value for generating urls {user}@host:path and force check
+		// no other user can authenticate unless it is empty then any username is allowed
+		DefaultUser             string   `envconfig:"GITNESS_SSH_DEFAULT_USER" default:"git"`
+		Ciphers                 []string `envconfig:"GITNESS_SSH_CIPHERS"`
+		KeyExchanges            []string `envconfig:"GITNESS_SSH_KEY_EXCHANGES"`
+		MACs                    []string `envconfig:"GITNESS_SSH_MACS"`
+		ServerHostKeys          []string `envconfig:"GITNESS_SSH_HOST_KEYS"`
+		KeygenPath              string   `envconfig:"GITNESS_SSH_KEYGEN_PATH"`
+		TrustedUserCAKeys       []string `envconfig:"GITNESS_SSH_TRUSTED_USER_CA_KEYS"`
+		TrustedUserCAKeysFile   string   `envconfig:"GITNESS_SSH_TRUSTED_USER_CA_KEYS_FILENAME"`
+		TrustedUserCAKeysParsed []gossh.PublicKey
+		KeepAliveInterval       int `envconfig:"GITNESS_SSH_KEEP_ALIVE_INTERVAL" default:"5000"`
 	}
 
 	// CI defines configuration related to build executions.

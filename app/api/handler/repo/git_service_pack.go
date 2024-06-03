@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -71,7 +72,13 @@ func HandleGitServicePack(
 		render.NoCache(w)
 		w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", service))
 
-		err = repoCtrl.GitServicePack(ctx, session, repoRef, service, gitProtocol, dataReader, w)
+		err = repoCtrl.GitServicePack(ctx, session, repoRef, api.ServicePackOptions{
+			Service:      service,
+			StatelessRPC: true,
+			Stdout:       w,
+			Stdin:        dataReader,
+			Protocol:     gitProtocol,
+		})
 		if errors.Is(err, apiauth.ErrNotAuthorized) && auth.IsAnonymousSession(session) {
 			renderBasicAuth(w, urlProvider)
 			return

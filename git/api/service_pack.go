@@ -18,14 +18,18 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
+
+var safeGitProtocolHeader = regexp.MustCompile(`^[0-9a-zA-Z]+=[0-9a-zA-Z]+(:[0-9a-zA-Z]+=[0-9a-zA-Z]+)*$`)
 
 func (g *Git) InfoRefs(
 	ctx context.Context,
@@ -61,27 +65,44 @@ func (g *Git) InfoRefs(
 	return nil
 }
 
+type ServicePackOptions struct {
+	Service      enum.GitServiceType
+	Timeout      int // seconds
+	StatelessRPC bool
+	Stdout       io.Writer
+	Stdin        io.Reader
+	Stderr       io.Writer
+	Env          []string
+	Protocol     string
+}
+
 func (g *Git) ServicePack(
 	ctx context.Context,
 	repoPath string,
-	service string,
-	stdin io.Reader,
-	stdout io.Writer,
-	env ...string,
+	options ServicePackOptions,
 ) error {
-	cmd := command.New(service,
-		command.WithFlag("--stateless-rpc"),
+	cmd := command.New(string(options.Service),
 		command.WithArg(repoPath),
-		command.WithEnv("SSH_ORIGINAL_COMMAND", service),
+		command.WithEnv("SSH_ORIGINAL_COMMAND", string(options.Service)),
 	)
+
+	if options.StatelessRPC {
+		cmd.Add(command.WithFlag("--stateless-rpc"))
+	}
+
+	if options.Protocol != "" && safeGitProtocolHeader.MatchString(options.Protocol) {
+		cmd.Add(command.WithEnv("GIT_PROTOCOL", options.Protocol))
+	}
+
 	err := cmd.Run(ctx,
 		command.WithDir(repoPath),
-		command.WithStdout(stdout),
-		command.WithStdin(stdin),
-		command.WithEnvs(env...),
+		command.WithStdout(options.Stdout),
+		command.WithStdin(options.Stdin),
+		command.WithStderr(options.Stderr),
+		command.WithEnvs(options.Env...),
 	)
 	if err != nil && err.Error() != "signal: killed" {
-		log.Ctx(ctx).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v", service, repoPath, err)
+		log.Ctx(ctx).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v", options.Service, repoPath, err)
 	}
 	return err
 }

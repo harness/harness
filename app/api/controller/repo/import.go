@@ -98,6 +98,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	}
 
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(repo.Path)
 
 	err = c.auditService.Log(ctx,
 		session.Principal,

@@ -52,7 +52,8 @@ type Repository struct {
 	IsEmpty   bool `json:"is_empty,omitempty" yaml:"is_empty"`
 
 	// git urls
-	GitURL string `json:"git_url" yaml:"-"`
+	GitURL    string `json:"git_url" yaml:"-"`
+	GitSSHURL string `json:"git_ssh_url" yaml:"-"`
 }
 
 // Clone makes deep copy of repository object.

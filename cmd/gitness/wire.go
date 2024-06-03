@@ -64,6 +64,7 @@ import (
 	"github.com/harness/gitness/app/services/notification/mailer"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/publickey"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	reposervice "github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/settings"
@@ -88,6 +89,7 @@ import (
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/ssh"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -193,6 +195,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		openapi.WireSet,
 		repo.ProvideRepoCheck,
 		audit.WireSet,
+		ssh.WireSet,
+		publickey.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

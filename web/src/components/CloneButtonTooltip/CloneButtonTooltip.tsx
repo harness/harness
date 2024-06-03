@@ -30,9 +30,10 @@ import css from './CloneButtonTooltip.module.scss'
 
 interface CloneButtonTooltipProps {
   httpsURL: string
+  sshURL: string
 }
 
-export function CloneButtonTooltip({ httpsURL }: CloneButtonTooltipProps) {
+export function CloneButtonTooltip({ httpsURL, sshURL }: CloneButtonTooltipProps) {
   const { getString } = useStrings()
   const [flag, setFlag] = useState(false)
   const { isCurrentSessionPublic } = useAppContext()
@@ -54,10 +55,20 @@ export function CloneButtonTooltip({ httpsURL }: CloneButtonTooltipProps) {
         <Text font={{ variation: FontVariation.H4 }}>{getString('cloneHTTPS')}</Text>
 
         <Container padding={{ top: 'small' }}>
+          <Text font={{ variation: FontVariation.BODY2_SEMI }}>HTTP</Text>
           <Layout.Horizontal className={css.layout}>
             <Text className={css.url}>{httpsURL}</Text>
 
             <CopyButton content={httpsURL} id={css.cloneCopyButton} icon={CodeIcon.Copy} iconProps={{ size: 14 }} />
+          </Layout.Horizontal>
+        </Container>
+
+        <Container padding={{ top: 'small' }}>
+          <Text font={{ variation: FontVariation.BODY2_SEMI }}>SSH</Text>
+          <Layout.Horizontal className={css.layout}>
+            <Text className={css.url}>{sshURL}</Text>
+
+            <CopyButton content={sshURL} id={css.cloneCopyButton} icon={CodeIcon.Copy} iconProps={{ size: 14 }} />
           </Layout.Horizontal>
         </Container>
 

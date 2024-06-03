@@ -96,6 +96,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
         </Text>
         <Layout.Horizontal>
           <Container padding={{ bottom: 'medium' }} width={400} margin={{ right: 'small' }}>
+            <Text>HTTP</Text>
             <Layout.Horizontal className={css.layout}>
               <Text className={css.url}>{repoMetadata.git_url}</Text>
               <FlexExpander />
@@ -106,16 +107,26 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
                 iconProps={{ size: 14 }}
               />
             </Layout.Horizontal>
+            <Text>SSH</Text>
+            <Layout.Horizontal className={css.layout}>
+              <Text className={css.url}>{repoMetadata.git_ssh_url}</Text>
+              <FlexExpander />
+              <CopyButton
+                content={repoMetadata?.git_ssh_url as string}
+                id={css.cloneCopyButton}
+                icon={CodeIcon.Copy}
+                iconProps={{ size: 14 }}
+              />
+            </Layout.Horizontal>
           </Container>
-
-          <Button
-            onClick={() => {
-              setFlag(true)
-            }}
-            variation={ButtonVariation.SECONDARY}>
-            {getString('generateCloneCred')}
-          </Button>
         </Layout.Horizontal>
+        <Button
+          onClick={() => {
+            setFlag(true)
+          }}
+          variation={ButtonVariation.SECONDARY}>
+          {getString('generateCloneCred')}
+        </Button>
         <Text font={{ variation: FontVariation.BODY, size: 'small' }}>
           <StringSubstitute
             str={getString('manageCredText')}

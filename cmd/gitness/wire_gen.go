@@ -63,6 +63,7 @@ import (
 	"github.com/harness/gitness/app/services/notification/mailer"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/app/services/pullreq"
 	repo2 "github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/settings"
@@ -87,6 +88,7 @@ import (
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/ssh"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -309,6 +311,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	webHandler := router.ProvideWebHandler(config, openapiService)
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler, provider)
 	serverServer := server2.ProvideServer(config, routerRouter)
+	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)
+	sshServer := ssh.ProvideServer(config, publickeyService, repoController)
 	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, converterService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore, publicaccessService)
 	client := manager.ProvideExecutionClient(executionManager, provider, config)
 	resolverManager := resolver.ProvideResolver(config, pluginStore, templateStore, executionStore, repoStore)
@@ -356,6 +360,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService)
-	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, resolverManager, servicesServices)
+	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

@@ -70,7 +70,7 @@ type Interface interface {
 	 * Git Cli Service
 	 */
 	GetInfoRefs(ctx context.Context, w io.Writer, params *InfoRefsParams) error
-	ServicePack(ctx context.Context, w io.Writer, params *ServicePackParams) error
+	ServicePack(ctx context.Context, params *ServicePackParams) error
 
 	/*
 	 * Diff services

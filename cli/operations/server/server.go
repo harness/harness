@@ -130,6 +130,13 @@ func (c *command) run(*kingpin.ParseContext) error {
 		})
 	}
 
+	if config.SSH.Enable {
+		g.Go(func() error {
+			log.Err(system.sshServer.ListenAndServe()).Send()
+			return nil
+		})
+	}
+
 	log.Info().
 		Int("port", config.Server.HTTP.Port).
 		Str("revision", version.GitCommit).
@@ -150,6 +157,12 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	if sErr := shutdownHTTP(shutdownCtx); sErr != nil {
 		log.Err(sErr).Msg("failed to shutdown http server gracefully")
+	}
+
+	if config.SSH.Enable {
+		if err := system.sshServer.Shutdown(shutdownCtx); err != nil {
+			log.Err(err).Msg("failed to shutdown ssh server gracefully")
+		}
 	}
 
 	system.services.JobScheduler.WaitJobsDone(shutdownCtx)

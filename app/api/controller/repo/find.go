@@ -36,6 +36,7 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef st
 
 	// backfill clone url
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(repo.Path)
 
 	return GetRepoOutput(ctx, c.publicAccess, repo)
 }

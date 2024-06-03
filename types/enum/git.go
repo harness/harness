@@ -111,6 +111,6 @@ func ParseGitServiceType(s string) (GitServiceType, error) {
 	case string(GitServiceTypeUploadPack):
 		return GitServiceTypeUploadPack, nil
 	default:
-		return GitServiceType(""), fmt.Errorf("unknown git service type provided: %q", s)
+		return "", fmt.Errorf("unknown git service type provided: %q", s)
 	}
 }

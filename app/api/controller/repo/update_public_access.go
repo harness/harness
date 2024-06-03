@@ -75,6 +75,7 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 
 	// backfill GitURL
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(repo.Path)
 
 	err = c.auditService.Log(ctx,
 		session.Principal,

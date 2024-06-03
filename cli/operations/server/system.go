@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/resolver"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/ssh"
 
 	"github.com/drone/runner-go/poller"
 )
@@ -27,17 +28,25 @@ import (
 type System struct {
 	bootstrap       bootstrap.Bootstrap
 	server          *server.Server
+	sshServer       *ssh.Server
 	resolverManager *resolver.Manager
 	poller          *poller.Poller
 	services        services.Services
 }
 
 // NewSystem returns a new system structure.
-func NewSystem(bootstrap bootstrap.Bootstrap, server *server.Server, poller *poller.Poller,
-	resolverManager *resolver.Manager, services services.Services) *System {
+func NewSystem(
+	bootstrap bootstrap.Bootstrap,
+	server *server.Server,
+	sshServer *ssh.Server,
+	poller *poller.Poller,
+	resolverManager *resolver.Manager,
+	services services.Services,
+) *System {
 	return &System{
 		bootstrap:       bootstrap,
 		server:          server,
+		sshServer:       sshServer,
 		poller:          poller,
 		resolverManager: resolverManager,
 		services:        services,

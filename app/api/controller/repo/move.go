@@ -131,6 +131,7 @@ func (c *Controller) Move(ctx context.Context,
 	}
 
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(repo.Path)
 
 	return GetRepoOutput(ctx, c.publicAccess, repo)
 }

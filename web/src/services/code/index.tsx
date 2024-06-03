@@ -894,6 +894,7 @@ export interface TypesRepository {
   description?: string
   fork_id?: number
   git_url?: string
+  git_ssh_url?: string
   id?: number
   importing?: boolean
   is_public?: boolean

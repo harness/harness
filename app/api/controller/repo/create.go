@@ -147,6 +147,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 
 	// backfil GitURL
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
+	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(repo.Path)
 
 	repoOutput := &RepositoryOutput{
 		Repository: *repo,

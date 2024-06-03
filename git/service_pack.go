@@ -18,12 +18,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"regexp"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
+	"github.com/harness/gitness/types/enum"
 )
-
-var safeGitProtocolHeader = regexp.MustCompile(`^[0-9a-zA-Z]+=[0-9a-zA-Z]+(:[0-9a-zA-Z]+=[0-9a-zA-Z]+)*$`)
 
 type InfoRefsParams struct {
 	ReadParams
@@ -53,10 +52,7 @@ func (s *Service) GetInfoRefs(ctx context.Context, w io.Writer, params *InfoRefs
 type ServicePackParams struct {
 	*ReadParams
 	*WriteParams
-	Service     string
-	GitProtocol string
-	Data        io.Reader
-	Options     []string // (key, value) pair
+	api.ServicePackOptions
 }
 
 func (p *ServicePackParams) Validate() error {
@@ -66,37 +62,28 @@ func (p *ServicePackParams) Validate() error {
 	return nil
 }
 
-func (s *Service) ServicePack(ctx context.Context, w io.Writer, params *ServicePackParams) error {
+func (s *Service) ServicePack(ctx context.Context, params *ServicePackParams) error {
 	if err := params.Validate(); err != nil {
 		return err
 	}
-
-	var (
-		repoPath string
-		env      []string
-	)
-
+	var repoPath string
 	switch params.Service {
-	case "upload-pack":
+	case enum.GitServiceTypeUploadPack:
 		if err := params.ReadParams.Validate(); err != nil {
 			return errors.InvalidArgument("upload-pack requires ReadParams")
 		}
 		repoPath = getFullPathForRepo(s.reposRoot, params.ReadParams.RepoUID)
-	case "receive-pack":
+	case enum.GitServiceTypeReceivePack:
 		if err := params.WriteParams.Validate(); err != nil {
 			return errors.InvalidArgument("receive-pack requires WriteParams")
 		}
-		env = CreateEnvironmentForPush(ctx, *params.WriteParams)
+		params.Env = append(params.Env, CreateEnvironmentForPush(ctx, *params.WriteParams)...)
 		repoPath = getFullPathForRepo(s.reposRoot, params.WriteParams.RepoUID)
 	default:
 		return errors.InvalidArgument("unsupported service provided: %s", params.Service)
 	}
 
-	if params.GitProtocol != "" && safeGitProtocolHeader.MatchString(params.GitProtocol) {
-		env = append(env, "GIT_PROTOCOL="+params.GitProtocol)
-	}
-
-	err := s.git.ServicePack(ctx, repoPath, params.Service, params.Data, w, env...)
+	err := s.git.ServicePack(ctx, repoPath, params.ServicePackOptions)
 	if err != nil {
 		return fmt.Errorf("failed to execute git %s: %w", params.Service, err)
 	}

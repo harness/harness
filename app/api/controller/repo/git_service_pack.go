@@ -17,11 +17,11 @@ package repo
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -30,15 +30,12 @@ func (c *Controller) GitServicePack(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	service enum.GitServiceType,
-	gitProtocol string,
-	r io.Reader,
-	w io.Writer,
+	options api.ServicePackOptions,
 ) error {
 	isWriteOperation := false
 	permission := enum.PermissionRepoView
 	// receive-pack is the server receiving data - aka the client pushing data.
-	if service == enum.GitServiceTypeReceivePack {
+	if options.Service == enum.GitServiceTypeReceivePack {
 		isWriteOperation = true
 		permission = enum.PermissionRepoPush
 	}
@@ -50,10 +47,7 @@ func (c *Controller) GitServicePack(
 
 	params := &git.ServicePackParams{
 		// TODO: git shouldn't take a random string here, but instead have accepted enum values.
-		Service:     string(service),
-		Data:        r,
-		Options:     nil,
-		GitProtocol: gitProtocol,
+		ServicePackOptions: options,
 	}
 
 	// setup read/writeparams depending on whether it's a write operation
@@ -69,8 +63,8 @@ func (c *Controller) GitServicePack(
 		params.ReadParams = &readParams
 	}
 
-	if err = c.git.ServicePack(ctx, w, params); err != nil {
-		return fmt.Errorf("failed service pack operation %q  on git: %w", service, err)
+	if err = c.git.ServicePack(ctx, params); err != nil {
+		return fmt.Errorf("failed service pack operation %q  on git: %w", options.Service, err)
 	}
 
 	return nil

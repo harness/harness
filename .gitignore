@@ -20,3 +20,6 @@ web/cypress/node_modules
 /gitness
 
 node_modules/
+
+ssh/gitness.rsa
+ssh/gitness.rsa.pub

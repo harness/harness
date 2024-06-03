@@ -135,7 +135,12 @@ export function ContentHeader({
               variation={ButtonVariation.SECONDARY}
               icon={CodeIcon.Clone}
               className={css.btnColorFix}
-              tooltip={<CloneButtonTooltip httpsURL={repoMetadata.git_url as string} />}
+              tooltip={
+                <CloneButtonTooltip
+                  httpsURL={repoMetadata.git_url as string}
+                  sshURL={repoMetadata.git_ssh_url as string}
+                />
+              }
               tooltipProps={{
                 interactionKind: 'click',
                 minimal: true,
