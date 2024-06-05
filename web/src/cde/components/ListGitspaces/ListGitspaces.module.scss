@@ -25,7 +25,7 @@
   div[class*='TableV2--header'] {
     display: grid !important;
 
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 50px;
+    grid-template-columns: 1fr 1.5fr 0.75fr 0.75fr 1fr 50px;
   }
 }
 
@@ -43,4 +43,10 @@
       }
     }
   }
+}
+
+.gitspaceURL {
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

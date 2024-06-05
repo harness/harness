@@ -1065,7 +1065,7 @@ cde:
   newGitspace: + New Gitspace
   manageGitspaces: Manage Gitspaces
   noGitspaces: You have not created any Gitspace yet
-  gitpsaceDetail: Gitpsace Detail
+  gitpsaceDetail: Gitspace Detail
   machine: Machine
   region: Region
   or: OR
@@ -1075,6 +1075,7 @@ cde:
   used: Used
   hours: Hours
   na: NA
+  retry: Retry
   details:
     actions: More Actions
     openEditor: Open VS Code Editor
@@ -1091,6 +1092,8 @@ cde:
     fetchingLogs: Fetching gitspace logs
     logsFailed: Gitspace logs api failed
     noLogsFound: No gitspace logs found
+    wrongIdentifier: Invalid gitspace id or project params
+    fetchingDetails: Fetching Gitspace Details ....
   repository:
     repo: Repository
     selectRepository: Select Repository

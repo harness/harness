@@ -14,22 +14,83 @@
  * limitations under the License.
  */
 
-import React from 'react'
-import { Breadcrumbs, Layout, Page } from '@harnessio/uicore'
+import React, { useEffect, useState } from 'react'
+import { Breadcrumbs, Layout, Page, useToaster } from '@harnessio/uicore'
 import { useParams } from 'react-router-dom'
 import { GitspaceDetails } from 'cde/components/GitspaceDetails/GitspaceDetails'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import { GitspaceLogs } from 'cde/components/GitspaceLogs/GitspaceLogs'
 import { useStrings } from 'framework/strings'
+import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
+import { useQueryParams } from 'hooks/useQueryParams'
+import { useGetGitspace, useGetGitspaceInstanceLogs, useGitspaceAction } from 'services/cde'
+import { getErrorMessage } from 'utils/Utils'
+import { GitspaceActionType, GitspaceStatus } from 'cde/constants'
 import Gitspace from '../../icons/Gitspace.svg?url'
 import css from './GitspaceDetail.module.scss'
 
 const GitspaceDetail = () => {
+  const { showError } = useToaster()
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
+  const { accountIdentifier, orgIdentifier, projectIdentifier } = useGetCDEAPIParams() as CDEPathParams
+  const { redirectFrom = '' } = useQueryParams<{ redirectFrom?: string }>()
+  const [startTriggred, setStartTriggred] = useState(false)
+
+  const { data, loading, error, refetch } = useGetGitspace({
+    accountIdentifier,
+    orgIdentifier,
+    projectIdentifier,
+    gitspaceIdentifier: gitspaceId || ''
+  })
+
+  const {
+    data: logsData,
+    loading: logsLoading,
+    error: logsError,
+    refetch: refetchLogs
+  } = useGetGitspaceInstanceLogs({
+    lazy: !!redirectFrom,
+    accountIdentifier,
+    orgIdentifier,
+    projectIdentifier,
+    gitspaceIdentifier: gitspaceId
+  })
+
+  const { status } = data || {}
+
+  const {
+    mutate,
+    loading: mutateLoading,
+    error: startError
+  } = useGitspaceAction({
+    accountIdentifier,
+    orgIdentifier,
+    projectIdentifier,
+    gitspaceIdentifier: gitspaceId || ''
+  })
+
+  useEffect(() => {
+    const startTrigger = async () => {
+      if (redirectFrom && !startTriggred && !mutateLoading) {
+        try {
+          setStartTriggred(true)
+          await mutate({ action: GitspaceActionType.START })
+          await refetch()
+          await refetchLogs()
+        } catch (err) {
+          showError(getErrorMessage(err))
+        }
+      }
+    }
+
+    startTrigger()
+  }, [redirectFrom, mutateLoading, startTriggred])
+
+  const isfetchingInProgress = (startTriggred && status === GitspaceStatus.STOPPED && !startError) || mutateLoading
 
   return (
     <>
@@ -53,10 +114,24 @@ const GitspaceDetail = () => {
           </Layout.Horizontal>
         }
       />
-      <Page.Body>
+      <Page.Body
+        loading={loading}
+        loadingMessage="Fetching Gitspace Details ...."
+        error={getErrorMessage(error)}
+        retryOnError={() => refetch()}>
         <Layout.Horizontal className={css.main} spacing="medium">
-          <GitspaceDetails />
-          <GitspaceLogs />
+          <GitspaceDetails
+            data={data}
+            error={error}
+            loading={loading}
+            refetch={refetch}
+            refetchLogs={refetchLogs}
+            mutate={mutate}
+            actionError={startError}
+            mutateLoading={mutateLoading}
+            isfetchingInProgress={isfetchingInProgress}
+          />
+          <GitspaceLogs data={logsData} refetch={refetchLogs} loading={logsLoading} error={logsError} />
         </Layout.Horizontal>
       </Page.Body>
     </>

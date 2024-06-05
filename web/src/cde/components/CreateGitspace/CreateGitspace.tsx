@@ -16,12 +16,15 @@
 
 import React from 'react'
 import * as yup from 'yup'
-import { Button, ButtonVariation, Card, Formik, FormikForm, Layout, Text } from '@harnessio/uicore'
+import { Button, ButtonVariation, Card, Formik, FormikForm, Layout, Text, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
-import { useCreateGitspace, type EnumCodeRepoType, type EnumIDEType } from 'services/cde'
+import { useHistory } from 'react-router-dom'
+import { useCreateGitspace, OpenapiCreateGitspaceRequest } from 'services/cde'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useStrings } from 'framework/strings'
 import { IDEType } from 'cde/constants'
+import { useAppContext } from 'AppContext'
+import { getErrorMessage } from 'utils/Utils'
 import { SelectIDE } from './components/SelectIDE/SelectIDE'
 import { SelectRepository } from './components/SelectRepository/SelectRepository'
 import { BranchInput } from './components/BranchInput/BranchInput'
@@ -32,33 +35,53 @@ const initData = {
   ide: IDEType.VSCODE
 }
 
-export interface GitspaceFormInterface {
-  ide?: EnumIDEType
-  branch?: string
-  codeRepoId?: string
-  codeRepoUrl?: string
-  codeRepoType?: EnumCodeRepoType
-  region?: string
-  infra_provider_resource_id?: string
-}
-
-interface GitspaceFormProps {
-  onSubmit: (data: GitspaceFormInterface) => void
-}
-
-const GitspaceForm = ({ onSubmit }: GitspaceFormProps) => {
+const GitspaceForm = () => {
   const { getString } = useStrings()
+  const { routes } = useAppContext()
+  const space = useGetSpaceParam()
+  const { showError } = useToaster()
+  const history = useHistory()
+
+  const { mutate, loading, error } = useCreateGitspace({
+    accountIdentifier: space?.split('/')[0],
+    orgIdentifier: space?.split('/')[1],
+    projectIdentifier: space?.split('/')[2]
+  })
+
+  if (error) {
+    showError(getErrorMessage(error))
+  }
+
   return (
-    <Formik<GitspaceFormInterface>
-      onSubmit={async data => await onSubmit(data)}
+    <Formik<OpenapiCreateGitspaceRequest>
+      onSubmit={async data => {
+        try {
+          const createdGitspace = await mutate(data)
+          history.push(
+            `${routes.toCDEGitspaceDetail({
+              space,
+              gitspaceId: createdGitspace?.id || ''
+            })}?redirectFrom=login`
+          )
+        } catch (err) {
+          showError(getErrorMessage(err))
+        }
+      }}
       formName={'createGitSpace'}
       initialValues={initData}
+      validateOnMount={false}
       validationSchema={yup.object().shape({
-        codeRepoId: yup.string().trim().required(),
         branch: yup.string().trim().required(),
+        code_repo_id: yup.string().trim().required(),
+        code_repo_type: yup.string().trim().required(),
+        code_repo_url: yup.string().trim().required(),
+        id: yup.string().trim().required(),
         ide: yup.string().trim().required(),
-        region: yup.string().trim().required(),
-        infra_provider_resource_id: yup.string().trim().required()
+        infra_provider_resource_id: yup.string().trim().required(),
+        name: yup.string().trim().required(),
+        metadata: yup.object().shape({
+          region: yup.string().trim().required()
+        })
       })}>
       {_ => {
         return (
@@ -70,7 +93,7 @@ const GitspaceForm = ({ onSubmit }: GitspaceFormProps) => {
               </Layout.Horizontal>
               <SelectIDE />
               <SelectInfraProvider />
-              <Button variation={ButtonVariation.PRIMARY} height={50} type="submit">
+              <Button variation={ButtonVariation.PRIMARY} height={50} type="submit" loading={loading}>
                 {getString('cde.createGitspace')}
               </Button>
             </Layout.Vertical>
@@ -82,20 +105,14 @@ const GitspaceForm = ({ onSubmit }: GitspaceFormProps) => {
 }
 
 export const CreateGitspace = () => {
-  const space = useGetSpaceParam()
   const { getString } = useStrings()
-  const { mutate } = useCreateGitspace({
-    accountIdentifier: space?.split('/')[0],
-    orgIdentifier: space?.split('/')[1],
-    projectIdentifier: space?.split('/')[2]
-  })
 
   return (
     <Card className={css.main}>
       <Text className={css.cardTitle} font={{ variation: FontVariation.CARD_TITLE }}>
         {getString('cde.createGitspace')}
       </Text>
-      <GitspaceForm onSubmit={mutate} />
+      <GitspaceForm />
     </Card>
   )
 }

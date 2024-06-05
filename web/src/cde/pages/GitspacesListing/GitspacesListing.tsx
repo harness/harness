@@ -42,7 +42,13 @@ const GitspacesListing = () => {
   const history = useHistory()
   const { getString } = useStrings()
   const { routes } = useAppContext()
-  const { data, loading, error, refetch } = useListGitspaces({
+
+  const {
+    data = '',
+    loading = false,
+    error = undefined,
+    refetch
+  } = useListGitspaces({
     accountIdentifier: space?.split('/')[0],
     orgIdentifier: space?.split('/')[1],
     projectIdentifier: space?.split('/')[2]
@@ -74,31 +80,32 @@ const GitspacesListing = () => {
         <Layout.Vertical spacing={'large'}>
           <Layout.Horizontal flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
             <Text font={{ variation: FontVariation.H3 }}>{getString('cde.manageGitspaces')}</Text>
-            <Button onClick={() => history.push(routes.toCDEGitspaces({ space }))} variation={ButtonVariation.PRIMARY}>
+            <Button
+              onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
+              variation={ButtonVariation.PRIMARY}>
               {getString('cde.newGitspace')}
             </Button>
           </Layout.Horizontal>
           <Page.Body
             loading={loading}
             error={
-              <Layout.Vertical spacing={'large'}>
-                <Text font={{ variation: FontVariation.FORM_MESSAGE_DANGER }}>{getErrorMessage(error)}</Text>
-                <Button onClick={() => refetch()} variation={ButtonVariation.PRIMARY} text={'Retry'} />
-              </Layout.Vertical>
+              error ? (
+                <Layout.Vertical spacing={'large'}>
+                  <Text font={{ variation: FontVariation.FORM_MESSAGE_DANGER }}>{getErrorMessage(error)}</Text>
+                  <Button
+                    onClick={() => refetch?.()}
+                    variation={ButtonVariation.PRIMARY}
+                    text={getString('cde.retry')}
+                  />
+                </Layout.Vertical>
+              ) : null
             }
             noData={{
               when: () => data?.length === 0,
               image: noSpace,
-              message: getString('cde.noGitspaces'),
-              button: (
-                <Button
-                  onClick={() => history.push(routes.toCDEGitspaces({ space }))}
-                  variation={ButtonVariation.PRIMARY}
-                  text={getString('cde.newGitspace')}
-                />
-              )
+              message: getString('cde.noGitspaces')
             }}>
-            <ExpandingSearchInput width={'50%'} alwaysExpanded />
+            {Boolean(data) && <ExpandingSearchInput width={'50%'} alwaysExpanded autoFocus={false} />}
             <ListGitspaces data={data as OpenapiGetGitspaceResponse[]} />
           </Page.Body>
         </Layout.Vertical>

@@ -21,8 +21,8 @@ import { useFormikContext } from 'formik'
 import { GitspaceSelect } from 'cde/components/GitspaceSelect/GitspaceSelect'
 import { useStrings, type UseStringsReturn } from 'framework/strings'
 import { IDEType } from 'cde/constants'
+import type { OpenapiCreateGitspaceRequest } from 'services/cde'
 import VSCode from '../../../../icons/VSCode.svg?url'
-import type { GitspaceFormInterface } from '../../CreateGitspace'
 
 export const getIDESelectItems = (getString: UseStringsReturn['getString']) => [
   { label: getString('cde.ide.desktop'), value: IDEType.VSCODE },
@@ -30,7 +30,7 @@ export const getIDESelectItems = (getString: UseStringsReturn['getString']) => [
 ]
 
 export const SelectIDE = () => {
-  const { values, errors, setFieldValue: onChange } = useFormikContext<GitspaceFormInterface>()
+  const { values, errors, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { ide } = values
   const { getString } = useStrings()
   const IDESelectItems = getIDESelectItems(getString)

@@ -18,7 +18,7 @@
 
 .consoleContainer {
   min-height: 500px !important;
-  max-height: 500px !important;
+  max-height: 70vh !important;
   overflow: scroll;
   align-items: start !important;
   padding-top: var(--spacing-large) !important;
@@ -86,4 +86,9 @@
       min-height: 20px;
     }
   }
+}
+
+.logContainer {
+  width: 60%;
+  max-width: 800px !important;
 }

@@ -79,6 +79,15 @@ export interface OpenapiCreateInfraProviderResponse {
   updated?: number
 }
 
+export interface OpenapiCreateInfraProviderTemplateRequest {
+  created?: number
+  data?: string
+  description?: string
+  identifier?: string
+  space_id?: number
+  updated?: number
+}
+
 export interface OpenapiCreateInfraProviderTemplateResponse {
   created?: number
   data?: string
@@ -161,7 +170,7 @@ export interface TypesInfraProviderResourceRequest {
   } | null
   region?: string[] | null
   scope?: string
-  template_id?: number
+  template_id?: string
 }
 
 export interface TypesInfraProviderResourceResponse {
@@ -176,10 +185,12 @@ export interface TypesInfraProviderResourceResponse {
   memory?: string
   name?: string
   network?: string
-  opentofu_params?: string
+  opentofu_params?: {
+    [key: string]: string
+  } | null
   region?: string
   scope?: string
-  template_id?: number
+  template_id?: string
   updated?: number
 }
 
@@ -283,7 +294,7 @@ export type DeleteGitspaceProps = Omit<
   DeleteGitspacePathParams
 
 /**
- * Delete gitspace
+ * Delete gitspace config
  */
 export const DeleteGitspace = ({
   accountIdentifier,
@@ -306,7 +317,7 @@ export type UseDeleteGitspaceProps = Omit<
   DeleteGitspacePathParams
 
 /**
- * Delete gitspace
+ * Delete gitspace config
  */
 export const useDeleteGitspace = ({
   accountIdentifier,
@@ -963,7 +974,13 @@ export interface CreateInfraProviderTemplatePathParams {
 }
 
 export type CreateInfraProviderTemplateProps = Omit<
-  MutateProps<OpenapiCreateInfraProviderTemplateResponse, unknown, void, void, CreateInfraProviderTemplatePathParams>,
+  MutateProps<
+    OpenapiCreateInfraProviderTemplateResponse,
+    unknown,
+    void,
+    OpenapiCreateInfraProviderTemplateRequest,
+    CreateInfraProviderTemplatePathParams
+  >,
   'path' | 'verb'
 > &
   CreateInfraProviderTemplatePathParams
@@ -978,9 +995,15 @@ export const CreateInfraProviderTemplate = ({
   infraProviderConfigIdentifier,
   ...props
 }: CreateInfraProviderTemplateProps) => (
-  <Mutate<OpenapiCreateInfraProviderTemplateResponse, unknown, void, void, CreateInfraProviderTemplatePathParams>
+  <Mutate<
+    OpenapiCreateInfraProviderTemplateResponse,
+    unknown,
+    void,
+    OpenapiCreateInfraProviderTemplateRequest,
+    CreateInfraProviderTemplatePathParams
+  >
     verb="POST"
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraProviderConfigIdentifier}/template`}
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraProviderConfigIdentifier}/templates`}
     base={getConfig('cde/api/v1')}
     {...props}
   />
@@ -991,7 +1014,7 @@ export type UseCreateInfraProviderTemplateProps = Omit<
     OpenapiCreateInfraProviderTemplateResponse,
     unknown,
     void,
-    void,
+    OpenapiCreateInfraProviderTemplateRequest,
     CreateInfraProviderTemplatePathParams
   >,
   'path' | 'verb'
@@ -1008,10 +1031,16 @@ export const useCreateInfraProviderTemplate = ({
   infraProviderConfigIdentifier,
   ...props
 }: UseCreateInfraProviderTemplateProps) =>
-  useMutate<OpenapiCreateInfraProviderTemplateResponse, unknown, void, void, CreateInfraProviderTemplatePathParams>(
+  useMutate<
+    OpenapiCreateInfraProviderTemplateResponse,
+    unknown,
+    void,
+    OpenapiCreateInfraProviderTemplateRequest,
+    CreateInfraProviderTemplatePathParams
+  >(
     'POST',
     (paramsInPath: CreateInfraProviderTemplatePathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraProviderConfigIdentifier}/template`,
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraProviderConfigIdentifier}/templates`,
     {
       base: getConfig('cde/api/v1'),
       pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraProviderConfigIdentifier },
@@ -1073,7 +1102,7 @@ export const useListGitspaces = ({
 }: UseListGitspacesProps) =>
   useGet<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesPathParams>(
     (paramsInPath: ListGitspacesPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}gitspaces`,
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
   )
 
@@ -1099,7 +1128,7 @@ export type CreateGitspaceProps = Omit<
   CreateGitspacePathParams
 
 /**
- * Create gitspace
+ * Create gitspace config
  */
 export const CreateGitspace = ({
   accountIdentifier,
@@ -1122,7 +1151,7 @@ export type UseCreateGitspaceProps = Omit<
   CreateGitspacePathParams
 
 /**
- * Create gitspace
+ * Create gitspace config
  */
 export const useCreateGitspace = ({
   accountIdentifier,
@@ -1133,7 +1162,7 @@ export const useCreateGitspace = ({
   useMutate<OpenapiCreateGitspaceResponse, unknown, void, OpenapiCreateGitspaceRequest, CreateGitspacePathParams>(
     'POST',
     (paramsInPath: CreateGitspacePathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}gitspaces`,
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
   )
 

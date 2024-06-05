@@ -141,6 +141,7 @@ export interface StringsMap {
   'cde.createGitspace': string
   'cde.createRepo': string
   'cde.details.actions': string
+  'cde.details.fetchingDetails': string
   'cde.details.fetchingGitspace': string
   'cde.details.fetchingLogs': string
   'cde.details.gitspaceRunning': string
@@ -155,6 +156,7 @@ export interface StringsMap {
   'cde.details.startGitspace': string
   'cde.details.stopGitspace': string
   'cde.details.stopProvising': string
+  'cde.details.wrongIdentifier': string
   'cde.gitpsaceDetail': string
   'cde.gitspaces': string
   'cde.hours': string
@@ -187,6 +189,7 @@ export interface StringsMap {
   'cde.repository.repo': string
   'cde.repository.repositoryURL': string
   'cde.repository.selectRepository': string
+  'cde.retry': string
   'cde.used': string
   changePassword: string
   changePasswordSuccesfully: string

@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import { Container, Layout, TableV2, Text } from '@harnessio/uicore'
+import { Container, Layout, TableV2, Text, useToaster } from '@harnessio/uicore'
 import React from 'react'
 import { Color } from '@harnessio/design-system'
 import type { Renderer, CellProps } from 'react-table'
 import ReactTimeago from 'react-timeago'
 import { Circle, GithubCircle, GitBranch, Cpu, Clock, Play, Square, Db, ModernTv, OpenInBrowser } from 'iconoir-react'
 import { Menu, MenuItem, PopoverInteractionKind, Position } from '@blueprintjs/core'
+import { useHistory } from 'react-router-dom'
 import {
   useGitspaceAction,
   type EnumGitspaceStateType,
@@ -30,6 +31,7 @@ import {
 import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
 import { GitspaceActionType, GitspaceStatus, IDEType } from 'cde/constants'
 import { UseStringsReturn, useStrings } from 'framework/strings'
+import { useAppContext } from 'AppContext'
 import VSCode from '../../icons/VSCode.svg?url'
 import css from './ListGitspaces.module.scss'
 
@@ -93,7 +95,7 @@ export const RenderRepository: Renderer<CellProps<OpenapiGetGitspaceResponse>> =
     <Layout.Vertical spacing={'small'}>
       <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
         <GithubCircle />
-        <Text color={Color.GREY_500} title={name} font={{ align: 'left', size: 'normal' }}>
+        <Text className={css.gitspaceUrl} color={Color.GREY_500} title={name} font={{ align: 'left', size: 'normal' }}>
           {name}
         </Text>
         <Text>:</Text>
@@ -152,19 +154,30 @@ const StartStopButton = ({
 }) => {
   const { getString } = useStrings()
   const { accountIdentifier, projectIdentifier, orgIdentifier } = useGetCDEAPIParams() as CDEPathParams
-  const { mutate } = useGitspaceAction({ accountIdentifier, projectIdentifier, orgIdentifier, gitspaceIdentifier })
+  const { mutate, loading } = useGitspaceAction({
+    accountIdentifier,
+    projectIdentifier,
+    orgIdentifier,
+    gitspaceIdentifier
+  })
 
-  const handleClick = () => {
-    mutate({ action: status === GitspaceStatus.RUNNING ? GitspaceActionType.STOP : GitspaceActionType.START })
+  const handleClick = async () => {
+    await mutate({ action: status === GitspaceStatus.RUNNING ? GitspaceActionType.STOP : GitspaceActionType.START })
   }
 
   return (
-    <Layout.Horizontal
-      onClick={handleClick}
-      spacing="small"
-      flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+    <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+      {loading}
       {status === GitspaceStatus.RUNNING ? <Square /> : <Play />}
-      <Text>
+      <Text
+        icon={loading ? 'loading' : undefined}
+        onClick={e => {
+          if (!loading) {
+            e.preventDefault()
+            e.stopPropagation()
+            handleClick()
+          }
+        }}>
         {status === GitspaceStatus.RUNNING
           ? getString('cde.details.stopGitspace')
           : getString('cde.details.startGitspace')}
@@ -173,25 +186,41 @@ const StartStopButton = ({
   )
 }
 
-const OpenGitspaceButton = ({ ide, url }: { ide?: EnumIDEType; url: string }) => {
+const OpenGitspaceButton = ({
+  ide,
+  url,
+  id = '',
+  projectIdentifier = ''
+}: {
+  id: string
+  url: string
+  ide?: EnumIDEType
+  projectIdentifier?: string
+}) => {
   const { getString } = useStrings()
-  const handleClick = () => {
-    window.open(url, '_blank')
-  }
 
   return (
-    <Layout.Horizontal
-      onClick={handleClick}
-      spacing="small"
-      flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+    <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       {ide === IDEType.VSCODE ? <ModernTv /> : <OpenInBrowser />}
-      <Text>{ide === IDEType.VSCODE ? getString('cde.ide.openVSCode') : getString('cde.ide.openBrowser')}</Text>
+      <Text
+        onClick={e => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (ide === IDEType.VSCODE) {
+            window.open(url, '_blank')
+          } else {
+            window.open(`vscode://harness-inc.gitspaces/${projectIdentifier}/${id}`, '_blank')
+          }
+        }}>
+        {ide === IDEType.VSCODE ? getString('cde.ide.openVSCode') : getString('cde.ide.openBrowser')}
+      </Text>
     </Layout.Horizontal>
   )
 }
 
 const ActionMenu = ({ data }: { data: OpenapiGetGitspaceResponse }) => {
   const { status, id, config, url = '' } = data
+  const projectIdentifier = config?.scope?.split('/')[1] || ''
   return (
     <Container className={css.listContainer}>
       <Menu>
@@ -206,7 +235,12 @@ const ActionMenu = ({ data }: { data: OpenapiGetGitspaceResponse }) => {
           <MenuItem
             text={
               <Layout.Horizontal spacing="small">
-                <OpenGitspaceButton ide={config?.ide} url={url} />
+                <OpenGitspaceButton
+                  ide={config?.ide}
+                  url={url}
+                  id={config?.id || ''}
+                  projectIdentifier={projectIdentifier}
+                />
               </Layout.Horizontal>
             }
           />
@@ -226,7 +260,7 @@ export const RenderActions: Renderer<CellProps<OpenapiGetGitspaceResponse>> = ({
       tooltipProps={{
         interactionKind: PopoverInteractionKind.HOVER,
         position: Position.BOTTOM_RIGHT,
-        usePortal: false,
+        usePortal: true,
         popoverClassName: css.popover
       }}
     />
@@ -234,11 +268,27 @@ export const RenderActions: Renderer<CellProps<OpenapiGetGitspaceResponse>> = ({
 }
 
 export const ListGitspaces = ({ data }: { data: OpenapiGetGitspaceResponse[] }) => {
+  const history = useHistory()
+  const { getString } = useStrings()
+  const { routes } = useAppContext()
+  const { showError } = useToaster()
   return (
     <Container>
       {data && (
         <TableV2<OpenapiGetGitspaceResponse>
           className={css.table}
+          onRowClick={row => {
+            if (row?.config?.scope && row?.config?.id) {
+              history.push(
+                routes.toCDEGitspaceDetail({
+                  space: row?.config?.scope,
+                  gitspaceId: row?.config?.id
+                })
+              )
+            } else {
+              showError(getString('cde.details.wrongIdentifier'))
+            }
+          }}
           columns={[
             {
               id: 'gitspaces',

@@ -19,16 +19,11 @@ import { Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Cpu } from 'iconoir-react'
 import { useFormikContext } from 'formik'
+import { FontVariation } from '@harnessio/design-system'
 import { GitspaceSelect } from 'cde/components/GitspaceSelect/GitspaceSelect'
-import type { TypesInfraProviderResourceResponse } from 'services/cde'
+import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResourceResponse } from 'services/cde'
 import { useStrings } from 'framework/strings'
-import RAM8 from './assests/RAM8.svg?url'
-import RAM16 from './assests/RAM16.svg?url'
-import Storage32 from './assests/Storage32.svg?url'
-import Storage64 from './assests/Storage64.svg?url'
-import CPU4Cores from './assests/CPU4Cores.svg?url'
-import CPU8Cores from './assests/CPU8Cores.svg?url'
-import type { GitspaceFormInterface } from '../../CreateGitspace'
+import css from './SelectMachine.module.scss'
 
 export const machineIdToLabel = {
   '4core_8gb_32gb': 'Standard',
@@ -46,18 +41,22 @@ interface SelectMachineInterface {
 
 export const SelectMachine = ({ options }: SelectMachineInterface) => {
   const { getString } = useStrings()
-  const { values, errors, setFieldValue: onChange } = useFormikContext<GitspaceFormInterface>()
+  const { values, errors, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { infra_provider_resource_id: machine } = values
   const [machineState, setMachineState] = useState<string>(machine || '')
 
   const machineTypes = options.map(item => {
-    const { cpu, disk, memory, infra_provider_config_id } = item
+    const { cpu, disk, memory, id, name } = item
     return {
-      infra_provider_config_id,
-      id: `${cpu}_${disk}_${memory}`,
-      label: machineIdToLabel[`${cpu}_${disk}_${memory}` as keyof typeof machineIdToLabel]
+      id,
+      label: name,
+      cpu,
+      disk,
+      memory
     }
   })
+
+  const data = (machineTypes?.find(item => item.id === machine) || {}) as (typeof machineTypes)[0]
 
   return (
     <GitspaceSelect
@@ -65,7 +64,7 @@ export const SelectMachine = ({ options }: SelectMachineInterface) => {
       text={
         <Layout.Horizontal spacing={'small'}>
           <Cpu />
-          <Text font={'normal'}>{machine || getString('cde.machine')}</Text>
+          <Text font={'normal'}>{data.label || getString('cde.machine')}</Text>
         </Layout.Horizontal>
       }
       errorMessage={errors.infra_provider_resource_id}
@@ -76,15 +75,26 @@ export const SelectMachine = ({ options }: SelectMachineInterface) => {
             {machineTypes.map(item => {
               return (
                 <MenuItem
-                  key={item.infra_provider_config_id}
+                  key={item.id}
                   active={machineState === item.id}
                   text={
-                    <Text font={{ size: 'normal', weight: 'bold' }}>
-                      {machineIdToLabel[item.id as keyof typeof machineIdToLabel]}
-                    </Text>
+                    <Layout.Vertical>
+                      <Text font={{ size: 'normal', weight: 'bold' }}>{item.label?.toUpperCase()}</Text>
+                      <Layout.Horizontal spacing={'small'}>
+                        <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
+                          Cpu: {item.cpu}
+                        </Text>
+                        <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
+                          Disk: {item.disk}
+                        </Text>
+                        <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
+                          Memory: {item.memory}
+                        </Text>
+                      </Layout.Horizontal>
+                    </Layout.Vertical>
                   }
                   onClick={() => {
-                    onChange('infra_provider_resource_id', item.infra_provider_config_id || '')
+                    onChange('infra_provider_resource_id', item.id || '')
                   }}
                   onMouseOver={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
                     const dd = e.currentTarget.innerText as keyof typeof labelToMachineId
@@ -93,26 +103,6 @@ export const SelectMachine = ({ options }: SelectMachineInterface) => {
                 />
               )
             })}
-          </Menu>
-          <Menu>
-            {machineState === labelToMachineId.Standard && (
-              <Layout.Vertical>
-                <Layout.Horizontal>
-                  <img src={CPU4Cores} />
-                  <img src={RAM8} />
-                </Layout.Horizontal>
-                <img src={Storage32} />
-              </Layout.Vertical>
-            )}
-            {machineState === labelToMachineId.Large && (
-              <Layout.Vertical>
-                <Layout.Horizontal>
-                  <img src={CPU8Cores} />
-                  <img src={RAM16} />
-                </Layout.Horizontal>
-                <img src={Storage64} />
-              </Layout.Vertical>
-            )}
           </Menu>
         </Layout.Horizontal>
       }

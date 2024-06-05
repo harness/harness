@@ -19,13 +19,12 @@ import { defaultTo, isObject } from 'lodash-es'
 import { Layout } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
-import { useListInfraProviderResources } from 'services/cde'
-import type { GitspaceFormInterface } from 'cde/components/CreateGitspace/CreateGitspace'
+import { OpenapiCreateGitspaceRequest, useListInfraProviderResources } from 'services/cde'
 import { SelectRegion } from '../SelectRegion/SelectRegion'
 import { SelectMachine } from '../SelectMachine/SelectMachine'
 
 export const SelectInfraProvider = () => {
-  const { values } = useFormikContext<GitspaceFormInterface>()
+  const { values } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { accountIdentifier, orgIdentifier, projectIdentifier } = useGetCDEAPIParams() as CDEPathParams
   const { data } = useListInfraProviderResources({
     accountIdentifier,
@@ -44,7 +43,7 @@ export const SelectInfraProvider = () => {
 
   const machineOptions =
     optionsList
-      ?.filter(item => item?.region === values?.region)
+      ?.filter(item => item?.region === values?.metadata?.region)
       ?.map(item => {
         return { ...item }
       }) || []

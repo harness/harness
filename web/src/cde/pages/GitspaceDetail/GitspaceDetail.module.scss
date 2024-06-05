@@ -16,8 +16,8 @@
 
 .main {
   display: flex !important;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
   text-align: center;
-  height: 80vh;
+  margin-top: 5% !important;
 }

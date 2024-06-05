@@ -16,10 +16,4 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const consoleContainer: string
-export declare const consoleLine: string
-export declare const line: string
-export declare const logContainer: string
-export declare const logTitle: string
-export declare const mainLog: string
-export declare const stepLogContainer: string
+export declare const tags: string

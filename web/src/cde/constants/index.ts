@@ -48,8 +48,8 @@ export enum GitspaceActionType {
 }
 
 export enum GitspaceRegion {
-  USEast = 'US East',
-  USWest = 'US West',
+  USEast = 'us-east',
+  USWest = 'us-west',
   Europe = 'Europe',
   Australia = 'Australia'
 }

@@ -23,17 +23,32 @@ import { noop } from 'lodash-es'
 import { Icon } from '@harnessio/icons'
 import { useFormikContext } from 'formik'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { OpenapiGetCodeRepositoryResponse, useGetCodeRepository } from 'services/cde'
+import { OpenapiCreateGitspaceRequest, OpenapiGetCodeRepositoryResponse, useGetCodeRepository } from 'services/cde'
 import { GitspaceSelect } from 'cde/components/GitspaceSelect/GitspaceSelect'
 import { useStrings } from 'framework/strings'
 import { CodeRepoAccessType } from 'cde/constants'
 import { getErrorMessage } from 'utils/Utils'
-import type { GitspaceFormInterface } from '../../CreateGitspace'
 import css from './SelectRepository.module.scss'
 
 export const getRepoNameFromURL = (repoURL?: string) => {
   const repoURLSplit = repoURL?.split('/')
   return repoURLSplit?.[repoURLSplit?.length - 1]
+    ?.replace(/-/g, '')
+    ?.replace(/_/g, '')
+    .replace(/\./g, '')
+    ?.toLowerCase()
+}
+
+export function generateAlphaNumericHash(length: number) {
+  let result = ''
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const charactersLength = characters.length
+
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength))
+  }
+
+  return result
 }
 
 const RepositoryText = ({ repoURL }: { repoURL?: string }) => {
@@ -53,9 +68,9 @@ const RepositoryText = ({ repoURL }: { repoURL?: string }) => {
 
 export const SelectRepository = () => {
   const { getString } = useStrings()
-  const { values, errors, setFieldValue: onChange } = useFormikContext<GitspaceFormInterface>()
+  const { values, errors, setFormikState } = useFormikContext<OpenapiCreateGitspaceRequest>()
 
-  const { codeRepoUrl } = values
+  const { code_repo_url } = values
   const space = useGetSpaceParam()
 
   const [validatedOnce, setValidatedOnce] = useState(false)
@@ -69,10 +84,10 @@ export const SelectRepository = () => {
 
   return (
     <GitspaceSelect
-      text={<RepositoryText repoURL={codeRepoUrl} />}
+      text={<RepositoryText repoURL={code_repo_url} />}
       icon={'code'}
-      errorMessage={errors.codeRepoId}
-      formikName="codeRepoId"
+      errorMessage={errors.code_repo_url}
+      formikName="code_repo_url"
       renderMenu={
         <Menu>
           <Layout.Vertical
@@ -88,9 +103,9 @@ export const SelectRepository = () => {
               formLoading={loading}
               onSubmit={() => noop()}
               formName={'publicURL'}
-              initialValues={{ url: codeRepoUrl }}
+              initialValues={{ url: code_repo_url }}
               validate={async ({ url }) => {
-                if (!url) {
+                if (!url || loading) {
                   return {}
                 }
                 let errorMessages = undefined
@@ -109,6 +124,7 @@ export const SelectRepository = () => {
               {formikProps => {
                 if (!formikProps.touched.url && validatedOnce) {
                   formikProps.setFieldTouched('url', true)
+                  setRepoMetadata(undefined)
                 }
                 return (
                   <FormikForm>
@@ -135,9 +151,22 @@ export const SelectRepository = () => {
                             <MenuItem
                               className={css.metadataItem}
                               onClick={() => {
-                                onChange('codeRepoUrl', repoMetadata?.url || '')
-                                onChange('codeRepoType', repoMetadata?.repo_type || '')
-                                onChange('codeRepoId', repoMetadata?.url || '')
+                                setFormikState((prv: any) => {
+                                  const repoId = getRepoNameFromURL(repoMetadata?.url)
+                                  const hash = generateAlphaNumericHash(5)?.toLowerCase()
+                                  return {
+                                    ...prv,
+                                    values: {
+                                      ...prv.values,
+                                      id: `${repoId}${hash}`,
+                                      name: `${repoId} ${hash}`?.toLowerCase(),
+                                      code_repo_url: repoMetadata?.url || '',
+                                      code_repo_type: repoMetadata?.repo_type || '',
+                                      code_repo_id: repoId,
+                                      branch: repoMetadata?.branch
+                                    }
+                                  }
+                                })
                               }}
                               text={
                                 <Layout.Horizontal

@@ -22,21 +22,37 @@ import { useFormikContext } from 'formik'
 import { GitspaceSelect } from 'cde/components/GitspaceSelect/GitspaceSelect'
 import { useStrings } from 'framework/strings'
 import { GitspaceRegion } from 'cde/constants'
+import type { OpenapiCreateGitspaceRequest } from 'services/cde'
 import USWest from './assests/USWest.png'
 import USEast from './assests/USEast.png'
 import Australia from './assests/Aus.png'
 import Europe from './assests/Europe.png'
-import type { GitspaceFormInterface } from '../../CreateGitspace'
+import Empty from './assests/Empty.png'
 
 interface SelectRegionInterface {
   options: SelectOption[]
 }
 
+export const getMapFromRegion = (region: string) => {
+  switch (region) {
+    case GitspaceRegion.USEast:
+      return USEast
+    case GitspaceRegion.USWest:
+      return USWest
+    case GitspaceRegion.Europe:
+      return Europe
+    case GitspaceRegion.Australia:
+      return Australia
+    default:
+      return Empty
+  }
+}
+
 export const SelectRegion = ({ options }: SelectRegionInterface) => {
   const { getString } = useStrings()
-  const { values, errors, setFieldValue: onChange } = useFormikContext<GitspaceFormInterface>()
-  const { region = '' } = values
-  const [regionState, setRegionState] = useState<string>(region)
+  const { values, errors, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
+  const { metadata } = values
+  const [regionState, setRegionState] = useState<string | undefined>(metadata?.region)
 
   return (
     <GitspaceSelect
@@ -44,11 +60,17 @@ export const SelectRegion = ({ options }: SelectRegionInterface) => {
       text={
         <Layout.Horizontal spacing={'small'}>
           <Map />
-          <Text font={'normal'}>{region || getString('cde.region')}</Text>
+          <Text font={'normal'}>{metadata?.region || getString('cde.region')}</Text>
         </Layout.Horizontal>
       }
-      formikName="region"
-      errorMessage={errors.region}
+      formikName="metadata.region"
+      errorMessage={
+        (
+          errors['metadata'] as unknown as {
+            [key: string]: string
+          }
+        )?.region as unknown as string
+      }
       renderMenu={
         <Layout.Horizontal padding={{ top: 'small', bottom: 'small' }}>
           <Menu>
@@ -57,9 +79,9 @@ export const SelectRegion = ({ options }: SelectRegionInterface) => {
                 <MenuItem
                   key={label}
                   active={label === regionState}
-                  text={<Text font={{ size: 'normal', weight: 'bold' }}>{label}</Text>}
+                  text={<Text font={{ size: 'normal', weight: 'bold' }}>{label.toUpperCase()}</Text>}
                   onClick={() => {
-                    onChange('region', label)
+                    onChange('metadata.region', label.toLowerCase())
                   }}
                   onMouseOver={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
                     setRegionState(e.currentTarget.innerText)
@@ -69,10 +91,7 @@ export const SelectRegion = ({ options }: SelectRegionInterface) => {
             })}
           </Menu>
           <Menu>
-            {regionState === GitspaceRegion.USEast && <img src={USEast} />}
-            {regionState === GitspaceRegion.USWest && <img src={USWest} />}
-            {regionState === GitspaceRegion.Europe && <img src={Europe} />}
-            {regionState === GitspaceRegion.Australia && <img src={Australia} />}
+            <img src={getMapFromRegion(regionState?.toLowerCase() || '')} />
           </Menu>
         </Layout.Horizontal>
       }
