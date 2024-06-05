@@ -142,7 +142,7 @@ CREATE TABLE gitspaces
     gits_updated              BIGINT  NOT NULL,
     gits_last_used            BIGINT  NOT NULL,
     gits_total_time_used      BIGINT  NOT NULL,
-    gits_infra_provisioned_id INTEGER NOT NULL,
+    gits_infra_provisioned_id INTEGER,
     gits_tracked_changes      TEXT,
     UNIQUE (gits_gitspace_config_id, gits_space_id),
     CONSTRAINT fk_gits_gitspace_config_id FOREIGN KEY (gits_gitspace_config_id)
