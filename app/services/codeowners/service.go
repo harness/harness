@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/harness/gitness/app/services/usergroup"
@@ -31,6 +32,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -44,6 +46,19 @@ const (
 
 var (
 	ErrNotFound = errors.New("file not found")
+
+	// escapableControlCharactersInPattern are control characters that are used to
+	// control the parsing of the codeowners file.
+	escapableControlCharactersInPattern = []rune{' ', '\t', '#'}
+	// escapableSpecialCharactersInPattern are special characters that are available in the pattern syntax
+	// to allow for more complex pattern matching.
+	escapableSpecialCharactersInPattern  = []rune{'*', '?', '[', ']', '{', '}', '-', '!', '^'}
+	ErrFileParseInvalidEscapingInPattern = errors.New(
+		"a pattern requires '\\' to be escaped with another '\\', or used to escape control characters " +
+			"[space, tab, '#'] or any of the available special characters " +
+			"['*', '?', '[', ']', '{', '}', '-', '!', '^']",
+	)
+	ErrFileParseTrailingBackslashInPattern = errors.New("a pattern can't end with a trailing '\\'")
 )
 
 // TooLargeError represents an error if codeowners file is too large.
@@ -67,13 +82,19 @@ func (e *TooLargeError) Is(target error) bool {
 
 // FileParseError represents an error if codeowners file is not parsable.
 type FileParseError struct {
-	line string
+	LineNumber int64
+	Line       string
+	Err        error
 }
 
 func (e *FileParseError) Error() string {
 	return fmt.Sprintf(
-		"The repository's CODEOWNERS file has an invalid line: %s", e.line,
+		"The repository's CODEOWNERS file has an error at line %d: %s", e.LineNumber, e.Err,
 	)
+}
+
+func (e *FileParseError) Unwrap() error {
+	return e.Err
 }
 
 func (e *FileParseError) Is(target error) bool {
@@ -105,8 +126,19 @@ type CodeOwners struct {
 }
 
 type Entry struct {
+	// LineNumber is the line number of the code owners entry.
+	LineNumber int64
+
+	// Pattern is a glob star pattern used to match the entry against a given file path.
 	Pattern string
-	Owners  []string
+	// Owners is the list of owners for the given pattern.
+	// NOTE: Could be empty in case of an entry that clears previously defined ownerships.
+	Owners []string
+}
+
+// IsOwnershipReset returns true iff the entry resets any previously defined ownerships.
+func (e *Entry) IsOwnershipReset() bool {
+	return len(e.Owners) == 0
 }
 
 type Evaluation struct {
@@ -115,6 +147,7 @@ type Evaluation struct {
 }
 
 type EvaluationEntry struct {
+	LineNumber                int64
 	Pattern                   string
 	OwnerEvaluations          []OwnerEvaluation
 	UserGroupOwnerEvaluations []UserGroupOwnerEvaluation
@@ -174,29 +207,72 @@ func (s *Service) get(
 }
 
 func (s *Service) parseCodeOwner(codeOwnersContent string) ([]Entry, error) {
+	var lineNumber int64
 	var codeOwners []Entry
 	scanner := bufio.NewScanner(strings.NewReader(codeOwnersContent))
 	for scanner.Scan() {
-		line := scanner.Text()
-		line = strings.TrimSpace(line)
+		lineNumber++
+		originalLine := scanner.Text()
+
+		line := strings.TrimSpace(originalLine)
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
 
-		parts := strings.Split(line, " ")
-		if len(parts) < 2 {
-			return nil, &FileParseError{line}
+		isSeparator := func(r rune) bool { return r == ' ' || r == '\t' }
+		lineAsRunes := []rune(line)
+		pattern := strings.Builder{}
+
+		// important to iterate over runes and not bytes to support utf-8 encoding.
+		for len(lineAsRunes) > 0 {
+			if isSeparator(lineAsRunes[0]) || lineAsRunes[0] == '#' {
+				break
+			}
+
+			if lineAsRunes[0] == '\\' {
+				// ensure pattern doesn't end with trailing backslash.
+				if len(lineAsRunes) == 1 {
+					return nil, &FileParseError{
+						LineNumber: lineNumber,
+						Line:       originalLine,
+						Err:        ErrFileParseTrailingBackslashInPattern,
+					}
+				}
+
+				switch {
+				// escape character and special characters need to stay escaped ("\\", "\*", ...)
+				case lineAsRunes[1] == '\\' || slices.Contains(escapableSpecialCharactersInPattern, lineAsRunes[1]):
+					pattern.WriteRune('\\')
+					lineAsRunes = lineAsRunes[1:]
+
+				// control characters aren't special characters in pattern syntax, so escaping should be removed.
+				case slices.Contains(escapableControlCharactersInPattern, lineAsRunes[1]):
+					lineAsRunes = lineAsRunes[1:]
+
+				default:
+					return nil, &FileParseError{
+						LineNumber: lineNumber,
+						Line:       originalLine,
+						Err:        ErrFileParseInvalidEscapingInPattern,
+					}
+				}
+			}
+
+			pattern.WriteRune(lineAsRunes[0])
+			lineAsRunes = lineAsRunes[1:]
 		}
 
-		pattern := parts[0]
-		owners := parts[1:]
-
-		codeOwner := Entry{
-			Pattern: pattern,
-			Owners:  owners,
+		// remove inline comment (can't be escaped in owners, only pattern supports escaping)
+		if i := slices.Index(lineAsRunes, '#'); i >= 0 {
+			lineAsRunes = lineAsRunes[:i]
 		}
 
-		codeOwners = append(codeOwners, codeOwner)
+		codeOwners = append(codeOwners, Entry{
+			LineNumber: lineNumber,
+			Pattern:    pattern.String(),
+			// could be empty list in case of removing ownership
+			Owners: strings.FieldsFunc(string(lineAsRunes), isSeparator),
+		})
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("error reading input: %w", err)
@@ -290,7 +366,6 @@ func (s *Service) getApplicableCodeOwnersForPR(
 		return nil, err
 	}
 
-	var filteredEntries []Entry
 	diffFileStats, err := s.git.DiffFileNames(ctx, &git.DiffParams{
 		ReadParams: git.CreateReadParams(repo),
 		BaseRef:    pr.MergeBaseSHA,
@@ -300,15 +375,33 @@ func (s *Service) getApplicableCodeOwnersForPR(
 		return nil, fmt.Errorf("failed to get diff file stat: %w", err)
 	}
 
-	for _, entry := range codeOwners.Entries {
-		ok, err := contains(entry.Pattern, diffFileStats.Files)
-		if err != nil {
-			return nil, err
-		}
-		if ok {
-			filteredEntries = append(filteredEntries, entry)
+	entryIDs := map[int]struct{}{}
+	for _, file := range diffFileStats.Files {
+		// last rule that matches wins (hence simply go in reverse order)
+		for i := len(codeOwners.Entries) - 1; i >= 0; i-- {
+			pattern := codeOwners.Entries[i].Pattern
+			if ok, err := match(pattern, file); err != nil {
+				return nil, fmt.Errorf("failed to match pattern %q for file %q: %w", pattern, file, err)
+			} else if ok {
+				entryIDs[i] = struct{}{}
+				break
+			}
 		}
 	}
+
+	filteredEntries := make([]Entry, 0, len(entryIDs))
+	for i := range entryIDs {
+		if !codeOwners.Entries[i].IsOwnershipReset() {
+			filteredEntries = append(filteredEntries, codeOwners.Entries[i])
+		}
+	}
+
+	// sort output to match order of occurrence in source CODEOWNERS file
+	sort.Slice(
+		filteredEntries,
+		func(i, j int) bool { return filteredEntries[i].LineNumber <= filteredEntries[j].LineNumber },
+	)
+
 	return &CodeOwners{
 		FileSHA: codeOwners.FileSHA,
 		Entries: filteredEntries,
@@ -367,6 +460,7 @@ func (s *Service) Evaluate(
 		}
 		if len(ownerEvaluations) != 0 || len(userGroupOwnerEvaluations) != 0 {
 			evaluationEntries = append(evaluationEntries, EvaluationEntry{
+				LineNumber:                entry.LineNumber,
 				Pattern:                   entry.Pattern,
 				OwnerEvaluations:          ownerEvaluations,
 				UserGroupOwnerEvaluations: userGroupOwnerEvaluations,
@@ -493,24 +587,64 @@ func findReviewerInList(email string, uid string, reviewers []*types.PullReqRevi
 	return nil
 }
 
-// We match a pattern list against a target
-// doubleStar match allows to match / separated path wisely.
-// A path foo/bar will match against pattern ** or foo/*
-// Also, for a directory ending with / we have to return true for all files in that directory,
-// hence we append ** for it.
-func contains(pattern string, targets []string) (bool, error) {
-	for _, target := range targets {
-		// in case of / ending rule, owner owns the whole directory hence append **
-		if strings.HasSuffix(pattern, "/") {
-			pattern += "**"
-		}
-		match, err := doublestar.PathMatch(pattern, target)
-		if err != nil {
-			return false, fmt.Errorf("failed to match pattern due to error: %w", err)
-		}
-		if match {
-			return true, nil
-		}
+// Match matches a file path against the provided CODEOWNERS pattern.
+// The code follows the .gitignore syntax closely (similar to github):
+// https://git-scm.com/docs/gitignore#_pattern_format
+//
+// IMPORTANT: It seems that doublestar has a bug, as `*k/**` matches `k` but `k*/**` doesnt (incorrect)'.
+// Because of that, we currently match patterns like `test*` only partially:
+// - `test2`, `test/abc`, `test2/abc` are matching
+// - `test` is not matching
+// As a workaround, the user will have to add the same rule without a trailing `*` for now.
+func match(pattern string, path string) (bool, error) {
+	if pattern == "" {
+		return false, fmt.Errorf("empty pattern not allowed")
 	}
-	return false, nil
+	if path == "" {
+		return false, fmt.Errorf("empty path not allowed")
+	}
+
+	// catch easy cases immediately to simplify code
+	if pattern == "/" || pattern == "*" || pattern == "**" {
+		return true, nil
+	}
+
+	// cleanup path to simplify matching (always start with "/" and remove trailing "/")
+	if path[0] != '/' {
+		path = "/" + path
+	}
+	if path[len(path)-1] == '/' {
+		path = path[0 : len(path)-1]
+	}
+
+	// if the pattern contains a slash anywhere but at the end, it's treated as an absolute path.
+	// Otherwise, the pattern can match on any level.
+	if !strings.Contains(pattern[:len(pattern)-1], "/") {
+		pattern = "**/" + pattern
+	} else if pattern[0] != '/' {
+		pattern = "/" + pattern
+	}
+
+	// if the pattern ends with "/**", then it matches everything inside.
+	// Since doublestar matches pattern "x/**" with target "x", we replace it with "x/*/**".
+	if strings.HasSuffix(pattern, "/**") {
+		pattern = pattern[:len(pattern)-3] + "/*/**"
+	}
+
+	// If CODEOWNERS matches a file, it also matches a folder with the same name, and anything inside that folder.
+	// Special case is a rule ending with "/", it only matches files inside the folder, not the folder itself.
+	// Since doublestar matches pattern "x/**" with target "x", we extend the pattern with "*/**" in such a case.
+	// Another special case is "/*", where the user explicitly stops nested matching.
+	if pattern[len(pattern)-1] == '/' {
+		pattern += "*/**"
+	} else if !strings.HasSuffix(pattern, "/**") && !strings.HasSuffix(pattern, "/*") {
+		pattern += "/**"
+	}
+
+	match, err := doublestar.PathMatch(pattern, path)
+	if err != nil {
+		return false, fmt.Errorf("failed doublestar path match: %w", err)
+	}
+
+	return match, nil
 }

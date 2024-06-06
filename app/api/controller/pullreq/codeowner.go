@@ -76,6 +76,7 @@ func mapCodeOwnerEvaluation(ownerEvaluation *codeowners.Evaluation) []types.Code
 			}
 		}
 		codeOwnerEvaluationEntries[i] = types.CodeOwnerEvaluationEntry{
+			LineNumber:                entry.LineNumber,
 			Pattern:                   entry.Pattern,
 			OwnerEvaluations:          ownerEvaluations,
 			UserGroupOwnerEvaluations: userGroupOwnerEvaluations,

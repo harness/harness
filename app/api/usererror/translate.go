@@ -107,7 +107,15 @@ func Translate(ctx context.Context, err error) *Error {
 	case errors.As(err, &codeOwnersTooLargeError):
 		return UnprocessableEntityf(codeOwnersTooLargeError.Error())
 	case errors.As(err, &codeOwnersFileParseError):
-		return UnprocessableEntityf(codeOwnersFileParseError.Error())
+		return NewWithPayload(
+			http.StatusUnprocessableEntity,
+			codeOwnersFileParseError.Error(),
+			map[string]any{
+				"line_number": codeOwnersFileParseError.LineNumber,
+				"line":        codeOwnersFileParseError.Line,
+				"err":         codeOwnersFileParseError.Err.Error(),
+			},
+		)
 	// lock errors
 	case errors.As(err, &lockError):
 		return errorFromLockError(lockError)

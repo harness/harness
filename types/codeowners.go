@@ -26,6 +26,7 @@ type CodeOwnerEvaluation struct {
 }
 
 type CodeOwnerEvaluationEntry struct {
+	LineNumber                int64                      `json:"line_number"`
 	Pattern                   string                     `json:"pattern"`
 	OwnerEvaluations          []OwnerEvaluation          `json:"owner_evaluations"`
 	UserGroupOwnerEvaluations []UserGroupOwnerEvaluation `json:"user_group_owner_evaluations"`
