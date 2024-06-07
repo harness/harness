@@ -530,9 +530,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
             <Container
               ref={diffsContainerRef}
               className={cx(css.main, {
-                // TODO: Line break barely works. Disable until we find a complete solution for it
-                // https://harness.atlassian.net/browse/CODE-1452
-                // [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
+                [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
               })}>
               {diffBlocks?.map((diffsBlock, blockIndex) => {
                 const key = viewStyle + diffApiPath + blockIndex + lineBreaks

@@ -89,14 +89,16 @@
   &.enableDiffLineBreaks {
     :global {
       .d2h-code-line,
-      .d2h-code-line-ctn {
-        white-space: pre-wrap !important;
+      .d2h-code-side-line {
+        .d2h-code-line-ctn {
+          white-space: break-spaces;
+          word-break: break-word;
+        }
       }
 
       .d2h-code-line,
-      .d2h-code-side-line,
-      .d2h-code-line-ctn {
-        width: revert !important;
+      .d2h-code-side-line {
+        max-width: calc(100% - 12px);
       }
     }
   }

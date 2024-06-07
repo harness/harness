@@ -36,8 +36,7 @@
   :global {
     th,
     td {
-      padding-top: 0;
-      padding-bottom: 0;
+      padding: 0;
     }
 
     .d2h-wrapper > div {
@@ -186,6 +185,7 @@
         z-index: 2;
         overflow: visible;
         line-height: 20px;
+        padding-right: 7px;
       }
 
       .d2h-code-side-line {
