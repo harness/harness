@@ -55,7 +55,6 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getUsingFetch, getConfig } from 'services/config'
 import noRepoImage from './no-repo.svg?url'
-import FeatureMap from './FeatureMap/FeatureMap'
 import css from './RepositoriesListing.module.scss'
 
 interface TypesRepoExtended extends TypesRepository {
@@ -356,7 +355,6 @@ export default function RepositoriesListing() {
             </Container>
             <ResourceListingPagination response={response} page={page} setPage={setPage} />
           </Container>
-          <FeatureMap />
         </Layout.Horizontal>
       </PageBody>
     </Container>
