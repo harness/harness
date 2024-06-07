@@ -118,10 +118,6 @@ CREATE TABLE infra_provisioned
         REFERENCES infra_provider_resources (ipreso_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION,
-    CONSTRAINT fk_iprov_gitspace_id FOREIGN KEY (iprov_gitspace_id)
-        REFERENCES gitspaces (gits_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
     CONSTRAINT fk_iprov_space_id FOREIGN KEY (iprov_space_id)
         REFERENCES spaces (space_id) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -175,3 +171,9 @@ CREATE TABLE gitspace_events
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
+
+ALTER TABLE infra_provisioned
+    ADD CONSTRAINT fk_iprov_gitspace_id FOREIGN KEY (iprov_gitspace_id)
+        REFERENCES gitspaces (gits_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION;
