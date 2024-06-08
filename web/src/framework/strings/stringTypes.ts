@@ -18,6 +18,7 @@ export interface StringsMap {
   addLicense: string
   addMember: string
   addNewFile: string
+  addOptionalCommitMessage: string
   addReadMe: string
   addUserToSpace2: string
   admin: string
@@ -27,7 +28,9 @@ export interface StringsMap {
   all: string
   allBranches: string
   allComments: string
+  allCommentsResolved: string
   allCommits: string
+  allConflictsNeedToBeResolved: string
   alreadyHaveAccount: string
   and: string
   applyChanges: string
@@ -198,8 +201,45 @@ export interface StringsMap {
   changeRole: string
   changedSinceLastView: string
   changes: string
+  changesRequestedBy: string
+  'changesSection.approvalPending': string
+  'changesSection.changesAppByRev': string
+  'changesSection.changesApproved': string
+  'changesSection.changesApprovedByXReviewers': string
+  'changesSection.changesWereAppByCodeOwner': string
+  'changesSection.changesWereAppByLatestReqRev': string
+  'changesSection.codeOwnerReqChanges': string
+  'changesSection.codeOwnerReqChangesToPr': string
+  'changesSection.latestChangesApprovedByXReviewers': string
+  'changesSection.latestChangesPendingReqRev': string
+  'changesSection.latestChangesWereAppByCodeOwner': string
+  'changesSection.latestChangesWereApprovedByReq': string
+  'changesSection.noCodeOwnerReviewsReq': string
+  'changesSection.noReviewsReq': string
+  'changesSection.pendingAppFromCodeOwners': string
+  'changesSection.pendingLatestApprovalCodeOwners': string
+  'changesSection.pullReqWithoutAnyReviews': string
+  'changesSection.reqChangeFromCodeOwners': string
+  'changesSection.someChangesWereAppByCodeOwner': string
+  'changesSection.waitingOnCodeOwner': string
+  'changesSection.waitingOnLatestCodeOwner': string
+  'changesSection.waitingOnReviewers': string
+  'changesSection.xApprovalsArePending': string
   characterLimit: string
   checkRuns: string
+  'checkSection.allChecksSucceeded': string
+  'checkSection.allReqChecksPassed': string
+  'checkSection.someChecksFailed': string
+  'checkSection.someChecksNotComplete': string
+  'checkSection.someChecksRunning': string
+  'checkSection.someReqChecksFailed': string
+  'checkSection.someReqChecksPending': string
+  'checkSection.someReqChecksRunning': string
+  'checkStatus.error': string
+  'checkStatus.failed': string
+  'checkStatus.pending': string
+  'checkStatus.running': string
+  'checkStatus.succeeded': string
   checkSuites: string
   checklist: string
   checks: string
@@ -213,6 +253,7 @@ export interface StringsMap {
   code: string
   'codeOwner.approvalCompleted': string
   'codeOwner.changesRequested': string
+  'codeOwner.pendingLatestApprovals': string
   'codeOwner.title': string
   'codeOwner.waitToApprove': string
   codeSearch: string
@@ -243,6 +284,7 @@ export interface StringsMap {
   confirmPassRequired: string
   confirmPassword: string
   confirmRepoVisButton: string
+  confirmStrat: string
   confirmation: string
   content: string
   contents: string
@@ -283,12 +325,14 @@ export interface StringsMap {
   customMin: string
   customSecond: string
   customTime: string
+  customizeMergeCommitMessage: string
   dangerDeleteRepo: string
   defaultBranch: string
   defaultBranchTitle: string
   delete: string
   deleteBranch: string
   deleteBranchConfirm: string
+  deleteBranchText: string
   deleteCommentConfirm: string
   deleteFile: string
   deleteNotAllowed: string
@@ -304,6 +348,7 @@ export interface StringsMap {
   deployKeys: string
   descending: string
   description: string
+  details: string
   diff: string
   disableWebhookContent: string
   disableWebhookTitle: string
@@ -506,8 +551,12 @@ export interface StringsMap {
   makeRequired: string
   manageApiToken: string
   manageCredText: string
+  markAsDraft: string
   matchPassword: string
+  mergeCheckInProgress: string
   mergeCommit: string
+  mergeSetting: string
+  mergeStrategy: string
   merged: string
   minPassLimit: string
   missingPerms: string
@@ -703,6 +752,7 @@ export interface StringsMap {
   'pr.fileUnchanged': string
   'pr.mergeOptions.close': string
   'pr.mergeOptions.closeDesc': string
+  'pr.mergeOptions.createAMergeCommit': string
   'pr.mergeOptions.createMergeCommit': string
   'pr.mergeOptions.createMergeCommitDesc': string
   'pr.mergeOptions.rebaseAndMerge': string
@@ -729,6 +779,7 @@ export interface StringsMap {
   'pr.readyForReview': string
   'pr.removeSuggestion': string
   'pr.requestSubmitted': string
+  'pr.requestedChanges': string
   'pr.reviewChanges': string
   'pr.reviewSubmitted': string
   'pr.showDiff': string
@@ -755,6 +806,7 @@ export interface StringsMap {
   'prChecks.success': string
   'prChecks.viewExternal': string
   prGenSummary: string
+  prHasNoConflicts: string
   prMustSelectSourceAndTargetBranches: string
   prSourceAndTargetMustBeDifferent: string
   'prState.draftDesc': string
@@ -815,6 +867,7 @@ export interface StringsMap {
   required: string
   resetZoom: string
   resolve: string
+  resolveComments: string
   resolved: string
   resolvedComments: string
   results: string
@@ -865,6 +918,7 @@ export interface StringsMap {
   seeNMoreMatches: string
   selectBranchPlaceHolder: string
   selectLanguagePlaceholder: string
+  selectMergeStrat: string
   selectRange: string
   selectRepositoryPlaceholder: string
   selectSpace: string
@@ -876,11 +930,14 @@ export interface StringsMap {
   setAsAdmin: string
   setting: string
   settings: string
+  showCheckAll: string
   showCommitHistory: string
   showEverything: string
   showLess: string
+  showLessCheck: string
   showLessMatches: string
   showMore: string
+  showMoreText: string
   showNMoreMatches: string
   signIn: string
   signUp: string
@@ -991,6 +1048,7 @@ export interface StringsMap {
   'validation.uidInvalid': string
   'validation.uidRequired': string
   value: string
+  view: string
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string
@@ -1001,6 +1059,7 @@ export interface StringsMap {
   viewRepo: string
   viewed: string
   visibility: string
+  waiting: string
   webhook: string
   webhookAllEventsSelected: string
   webhookBranchCreated: string
@@ -1030,6 +1089,7 @@ export interface StringsMap {
   webhooks: string
   whatsNew: string
   write: string
+  writeDownCommit: string
   yourBranches: string
   yours: string
   zoomIn: string

@@ -164,3 +164,11 @@
 .codeOwner {
   --layout-spacing: 1px !important;
 }
+
+.redIcon {
+  :global {
+    path {
+      fill: var(--red-700) !important;
+    }
+  }
+}

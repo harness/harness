@@ -62,6 +62,13 @@
       }
     }
   }
+  &.prWaiting {
+    svg {
+      > circle {
+        fill: var(--orange-500);
+      }
+    }
+  }
 
   &.pending {
     --fgColor: var(--grey-600);

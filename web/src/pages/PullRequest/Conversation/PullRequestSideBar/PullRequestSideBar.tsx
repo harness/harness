@@ -18,6 +18,7 @@ import React from 'react'
 import { PopoverInteractionKind } from '@blueprintjs/core'
 import { useMutate } from 'restful-react'
 import { omit } from 'lodash-es'
+import cx from 'classnames'
 import { Container, Layout, Text, Avatar, FlexExpander, useToaster, Utils } from '@harnessio/uicore'
 import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -52,6 +53,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
     color?: Color
     size?: number
     icon: IconName
+    className?: string
     iconProps?: { color?: Color }
     message: string
   } => {
@@ -59,6 +61,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
       name: IconName
       color?: Color
       size?: number
+      className?: string
       icon: IconName
       iconProps?: { color?: Color }
       message: string
@@ -67,10 +70,11 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
     switch (reviewDecision) {
       case PullReqReviewDecision.changeReq:
         info = {
-          name: 'circle-cross',
+          name: 'error-transparent-no-outline',
           color: Color.RED_700,
-          size: 16,
-          icon: 'circle-cross',
+          size: 18,
+          className: css.redIcon,
+          icon: 'error-transparent-no-outline',
           iconProps: { color: Color.RED_700 },
           message: 'requested changes'
         }
@@ -248,7 +252,9 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                         )}
                       </Utils.WrapOptionalTooltip>
                       <Avatar
-                        className={css.reviewerAvatar}
+                        className={cx(css.reviewerAvatar, {
+                          [css.iconPadding]: updatedReviewDecision !== PullReqReviewDecision.changeReq
+                        })}
                         name={reviewer.reviewer.display_name}
                         size="small"
                         hoverCard={false}

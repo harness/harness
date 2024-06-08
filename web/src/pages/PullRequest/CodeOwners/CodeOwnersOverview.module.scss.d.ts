@@ -27,6 +27,7 @@ export declare const main: string
 export declare const name: string
 export declare const ownerContainer: string
 export declare const ownerTooltip: string
+export declare const redIcon: string
 export declare const row: string
 export declare const rowLayout: string
 export declare const showMore: string

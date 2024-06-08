@@ -39,6 +39,7 @@ interface ExecutionStatusProps {
   className?: string
   isCi?: boolean
   inExecution?: boolean
+  inPr?: boolean
 }
 
 export enum ExecutionStateExtended {
@@ -54,14 +55,15 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
   noBackground = false,
   className,
   isCi = false,
-  inExecution = false
+  inExecution = false,
+  inPr = false
 }) => {
   const { getString } = useStrings()
   const maps = useMemo(
     () => ({
       [ExecutionState.PENDING]: {
         icon: isCi ? (inExecution ? 'execution-waiting' : 'running-filled') : 'ci-pending-build',
-        css: isCi ? (inExecution ? css.waiting : css.executionWaiting) : css.pending,
+        css: isCi ? (inExecution ? css.waiting : inPr ? css.prWaiting : css.executionWaiting) : css.pending,
         title: getString('pending').toLocaleUpperCase()
       },
       [ExecutionState.RUNNING]: {
@@ -80,7 +82,7 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         title: getString('failed').toLocaleUpperCase()
       },
       [ExecutionState.FAILURE]: {
-        icon: 'error-transparent-no-outline',
+        icon: inPr ? 'error-transparent-no-outline' : 'warning-icon',
         css: css.failure,
         title: getString('failed').toLocaleUpperCase()
       },

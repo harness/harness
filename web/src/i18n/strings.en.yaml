@@ -263,7 +263,7 @@ pr:
   expandFullFile: Expand all
   collapseFullFile: Collapse expanded lines
   ableToMerge: Able to merge.
-  cantBeMerged: This branch has conflicts with the base branch.
+  cantBeMerged: This branch has conflicts with the {{name}} branch.
   cantMerge: Can't be merged. You can still create the pull request.
   failedToCreate: Failed to create Pull Request.
   titlePlaceHolder: Enter the pull request title
@@ -287,7 +287,7 @@ pr:
   unified: Unified
   reviewChanges: Review changes
   mergePR: Merge pull request
-  branchHasNoConflicts: This branch has no conflicts with the base branch
+  branchHasNoConflicts: Pull request can be merged
   checkingToMerge: Checking for ability to merge automatically...
   prCanBeMerged: Mergeing can be performed automatically.
   enterDesc: Enter description here
@@ -300,8 +300,9 @@ pr:
   prClosed: This Pull Request was closed.
   reviewSubmitted: Review submitted.
   requestSubmitted: Request for changes submitted.
+  requestedChanges: '{{user}} requested changes to the pull request'
   prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} this pull request.  {time}'
-  prMergedBannerInfo: '{user} merged branch {source} into {target} {time}.'
+  prMergedBannerInfo: '{user} merged branch {source} into {target} {time}'
   prMergedInfo: '{user} merged changes from {source} into {target} as {mergeSha} {time}'
   prRebasedInfo: '{user} rebased changes from branch {source} onto {target}, now at {mergeSha} {time}'
   prBranchPushInfo: '{user} pushed a new commit {commit}'
@@ -325,6 +326,7 @@ pr:
     rebaseAndMergeDesc: All commits from this branch will be rebased and added to the base branch.
     close: Close pull request
     closeDesc: Close this pull request. You can still re-open the request after closing.
+    createAMergeCommit: Create a merge commit
   outdated: Outdated
   titleIsRequired: Pull Request title is required.
   descIsRequired: Pull Request description is required.
@@ -977,10 +979,10 @@ branchProtection:
   ruleCreated: Rule Created
   requirePr: Require pull request
   requirePrText: Do not allow any changes to matching branches without a pull request
-  prFailedText: 'This branch has no conflicts with the base branch. {{ruleCount}} branch rules failed'
+  prFailedText: 'Cannot merge pull request'
   mergePrAlertTitle: Merge pull request alert
   mergePrAlertText: 'Merge cannot be completed. {{ruleCount}} branch rules failed: '
-  mergeCheckboxAlert: Bypass branch rules and merge
+  mergeCheckboxAlert: Bypass and merge anyway
   createBranchAlertBtn: Bypass rules and create branch
   createBranchAlertText: Some rules will be bypassed by creating branch
   createBranchBlockText: Some rules don't allow you to create branch
@@ -998,6 +1000,7 @@ codeOwner:
   changesRequested: '{count} {count|1:change,changes} requested'
   waitToApprove: '{count} pending {count|1:approval,approvals} '
   approvalCompleted: '{count}/{total} approvals completed'
+  pendingLatestApprovals: '{count} {count|1:approval,approvals} pending on latest changes'
 approved: Approved
 comingSoon: Coming soon...
 enterANumber: Enter a number
@@ -1031,6 +1034,61 @@ prGenSummary: AIDA generate PR summary, insert at the cursor or replace selected
 aidaGenSummary: 'AIDA is generating a summary...'
 generateSummary: Generate PR Summary
 invalidResponse: Invalid summary response generated
+allCommentsResolved: All comments resolved
+resolveComments: There are {{n}} unresolved comments
+view: View
+mergeCheckInProgress: Merge check in progress...
+allConflictsNeedToBeResolved: All conflicts have to be resolved before merging
+details: Details
+showCheckAll: Show all checks
+showLessCheck: Show less checks
+markAsDraft: Mark as draft
+mergeSetting: Merge setting
+deleteBranchText: Delete the branch after merging
+customizeMergeCommitMessage: Customize merge commit message
+mergeStrategy: Merge strategy
+selectMergeStrat: Select merge strategy
+writeDownCommit: Write down commit message here
+prHasNoConflicts: This branch has no conflicts with {{name}} branch
+checkStatus:
+  succeeded: Succeeded in {time}
+  failed: Failed in {time}
+  running: Running...
+  pending: Pending...
+  error: Errored in {time}
+changesSection:
+  reqChangeFromCodeOwners: Changes requested by code owner
+  codeOwnerReqChanges: Code owner requested changes
+  pendingAppFromCodeOwners: Approvals pending from code owners
+  pendingLatestApprovalCodeOwners: Latest changes are pending approval from code owners
+  waitingOnCodeOwner: Changes are pending approval from code owners
+  waitingOnReviewers: Changes are pending approval from required reviewers
+  waitingOnLatestCodeOwner: Waiting on code owner reviews of latest changes
+  approvalPending: Approvals pending
+  changesApproved: Changes approved
+  noReviewsReq: No reviews required
+  noCodeOwnerReviewsReq: No codeowner reviews
+  pullReqWithoutAnyReviews: Pull request can be merged without any reviews
+  changesAppByRev: Changes were approved by reviewers
+  changesApprovedByXReviewers: Changes were approved by {length} {length|1:reviewer,reviewers}
+  latestChangesApprovedByXReviewers: Latest changes were approved by {length} {length|1:reviewer,reviewers}
+  latestChangesWereAppByCodeOwner: Latest changes were approved by code owners
+  latestChangesPendingReqRev: Latest changes are pending approval from required reviewers
+  changesWereAppByCodeOwner: Changes were approved by code owners
+  changesWereAppByLatestReqRev: Changes were approved by required reviewers
+  latestChangesWereApprovedByReq: Latest changes were approved by required reviewers
+  someChangesWereAppByCodeOwner: Some changes were approved by code owners
+  xApprovalsArePending: '{approved}/{min} approvals are pending'
+  codeOwnerReqChangesToPr: Code owners requested changes to the pull request
+checkSection:
+  someReqChecksFailed: Some required checks have failed
+  someReqChecksPending: Some required checks are pending
+  someReqChecksRunning: Some required checks are running
+  someChecksNotComplete: Some checks haven’t been completed yet
+  allChecksSucceeded: All checks have succeeded
+  allReqChecksPassed: All required checks passed
+  someChecksFailed: Some checks have failed
+  someChecksRunning: Some checks are running
 importFailed: Import Failed
 uploadAFileError: There is no image or video uploaded. Please upload an image or video.
 securitySettings:
@@ -1111,3 +1169,8 @@ cde:
     vsCode: VS Code
     openVSCode: Open in VS Code Desktop
     openBrowser: Open in Browser
+showMoreText: Show More
+addOptionalCommitMessage: Add (optional) commit message
+confirmStrat: 'Confirm {{strat}}'
+waiting: Waiting
+changesRequestedBy: CHANGES REQUESTED BY

@@ -32,10 +32,24 @@ import { get, orderBy } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { TypesPullReqActivity, TypesPullReq, TypesPullReqStats, TypesCodeOwnerEvaluation } from 'services/code'
+import type {
+  TypesPullReqActivity,
+  TypesPullReq,
+  TypesPullReqStats,
+  TypesCodeOwnerEvaluation,
+  TypesPullReqReviewer,
+  TypesListCommitResponse
+} from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { getErrorMessage, orderSortDate, ButtonRoleProps, PullRequestSection, filenameToLanguage } from 'utils/Utils'
+import {
+  getErrorMessage,
+  orderSortDate,
+  ButtonRoleProps,
+  PullRequestSection,
+  filenameToLanguage,
+  PRCommentFilterType
+} from 'utils/Utils'
 import { activitiesToDiffCommentItems, activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
@@ -47,14 +61,12 @@ import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { CommentThreadTopDecoration } from 'components/CommentThreadTopDecoration/CommentThreadTopDecoration'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
-import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
 import PullRequestSideBar from './PullRequestSideBar/PullRequestSideBar'
 import { isCodeComment, isComment, isSystemComment } from '../PullRequestUtils'
-import { ChecksOverview } from '../Checks/ChecksOverview'
 import { usePullReqActivities } from '../useGetPullRequestInfo'
 import { CodeCommentHeader } from './CodeCommentHeader'
 import { SystemComment } from './SystemComment'
-import CodeOwnersOverview from '../CodeOwners/CodeOwnersOverview'
+import PullRequestOverviewPanel from './PullRequestOverviewPanel/PullRequestOverviewPanel'
 import css from './Conversation.module.scss'
 
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
@@ -65,6 +77,7 @@ export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | '
   prChecksDecisionResult?: PRChecksDecisionResult
   standalone: boolean
   routingId: string
+  pullReqCommits: TypesListCommitResponse | undefined
 }
 
 export const Conversation: React.FC<ConversationProps> = ({
@@ -76,13 +89,18 @@ export const Conversation: React.FC<ConversationProps> = ({
   onCancelEditDescription,
   prChecksDecisionResult,
   standalone,
-  routingId
+  routingId,
+  pullReqCommits
 }) => {
   const { getString } = useStrings()
   const { currentUser, routes } = useAppContext()
   const location = useLocation()
   const activities = usePullReqActivities()
-  const { data: reviewers, refetch: refetchReviewers } = useGet<Unknown[]>({
+  const {
+    data: reviewers,
+    refetch: refetchReviewers,
+    loading: loadingReviewers
+  } = useGet<TypesPullReqReviewer[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/reviewers`,
     debounce: 500
   })
@@ -393,34 +411,28 @@ export const Conversation: React.FC<ConversationProps> = ({
     <PullRequestTabContentWrapper section={PullRequestSection.CONVERSATION}>
       <Container>
         <Layout.Vertical spacing="xlarge">
-          <PullRequestActionsBox
-            repoMetadata={repoMetadata}
-            pullReqMetadata={pullReqMetadata}
-            onPRStateChanged={onPRStateChanged}
-            refetchReviewers={refetchReviewers}
-          />
           <Container>
             <Layout.Horizontal width="calc(var(--page-container-width) - 48px)">
               <Container width={`70%`}>
                 <Layout.Vertical spacing="xlarge">
                   {prChecksDecisionResult && (
-                    <ChecksOverview
-                      repoMetadata={repoMetadata}
-                      pullReqMetadata={pullReqMetadata}
-                      prChecksDecisionResult={prChecksDecisionResult}
-                      codeOwners={codeOwners as TypesCodeOwnerEvaluation}
-                    />
+                    <Container padding={{ bottom: 'small' }}>
+                      <PullRequestOverviewPanel
+                        repoMetadata={repoMetadata}
+                        pullReqMetadata={pullReqMetadata}
+                        onPRStateChanged={onPRStateChanged}
+                        refetchReviewers={refetchReviewers}
+                        prChecksDecisionResult={prChecksDecisionResult}
+                        codeOwners={codeOwners}
+                        reviewers={reviewers}
+                        pullReqCommits={pullReqCommits}
+                        setActivityFilter={setActivityFilter}
+                        loadingReviewers={loadingReviewers}
+                        refetchCodeOwners={refetchCodeOwners}
+                        activities={activities}
+                      />
+                    </Container>
                   )}
-                  {codeOwners && prChecksDecisionResult && (
-                    <CodeOwnersOverview
-                      standalone={standalone}
-                      codeOwners={codeOwners}
-                      repoMetadata={repoMetadata}
-                      pullReqMetadata={pullReqMetadata}
-                      prChecksDecisionResult={prChecksDecisionResult}
-                    />
-                  )}
-
                   {(hasDescription || showEditDescription) && (
                     <DescriptionBox
                       routingId={routingId}
@@ -430,6 +442,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                       onDescriptionSaved={onDescriptionSaved}
                       onCancelEditDescription={onCancelEditDescription}
                       prStats={prStats}
+                      pullReqCommits={pullReqCommits}
                     />
                   )}
 
@@ -488,14 +501,6 @@ export const Conversation: React.FC<ConversationProps> = ({
       <NavigationCheck when={dirtyCurrentComments || dirtyNewComment} />
     </PullRequestTabContentWrapper>
   )
-}
-
-export enum PRCommentFilterType {
-  SHOW_EVERYTHING = 'showEverything',
-  ALL_COMMENTS = 'allComments',
-  MY_COMMENTS = 'myComments',
-  RESOLVED_COMMENTS = 'resolvedComments',
-  UNRESOLVED_COMMENTS = 'unresolvedComments'
 }
 
 function useActivityFilters() {

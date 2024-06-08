@@ -16,12 +16,14 @@
 
 .main {
   --bar-height: 60px;
-
-  background-color: var(--green-50) !important;
-  margin: -24px -24px 0 !important;
-  position: sticky;
   top: 0;
   z-index: 4;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+
+  &.primary {
+    background-color: var(--green-50) !important;
+  }
 
   &.merged {
     border-color: transparent !important;
@@ -51,10 +53,14 @@
   .layout {
     height: var(--bar-height);
     padding: 0 var(--spacing-xlarge) !important;
-
+    padding-right: var(--spacing-large) !important;
     .secondaryButton,
     [class*='Button--variation-tertiary'] {
       --box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.04), 0px 2px 4px rgba(96, 97, 112, 0.16) !important;
+    }
+
+    &.shimmer {
+      background-color: var(--grey-100) !important;
     }
   }
 
@@ -72,8 +78,8 @@
 
   .sub {
     font-weight: 600 !important;
-    font-size: 13px !important;
-    line-height: 20px !important;
+    font-size: 16px !important;
+    line-height: 24px !important;
     color: var(--green-800) !important;
 
     &.closed {
@@ -81,6 +87,7 @@
     }
 
     &.merged {
+      font-weight: unset !important;
       color: var(--purple-700) !important;
     }
 
@@ -97,6 +104,29 @@
     }
     &.ruleViolate {
       color: var(--red-500) !important;
+    }
+    .boldText {
+      color: var(--purple-700) !important;
+      font-weight: 600 !important;
+      font-size: 16px !important;
+      line-height: 24px !important;
+    }
+    .dateText {
+      font-size: 12px !important;
+      line-height: 18px !important;
+      font-weight: 500 !important;
+      padding-left: var(--spacing-small) !important;
+      color: var(--grey-700) !important;
+      padding-top: 2px !important;
+    }
+    .purpleContainer {
+      background: #cccbff !important;
+      padding: 2px 7px;
+      gap: 3px;
+      border-radius: 4px;
+      opacity: 0px;
+      display: flex;
+      align-items: center;
     }
   }
 }
@@ -136,17 +166,8 @@
 }
 
 .btnWrapper {
-  &.hasRuleViolated.bypass button {
-    --background-color: var(--red-500) !important;
-    --background-color-hover: var(--red-600) !important;
-    --background-color-active: var(--red-800) !important;
-    --text-color: var(--white) !important;
-  }
-
   &.hasRuleViolated button {
-    --background-color: var(--grey-50) !important;
     --background-color-hover: var(--white) !important;
-    --background-color-active: var(--grey-100) !important;
   }
 
   &.hasRuleViolated a {
@@ -170,19 +191,11 @@
     pointer-events: none;
     opacity: 0.5;
   }
-
-  a,
-  button {
-    --background-color: var(--green-800) !important;
-    --background-color-hover: var(--green-900) !important;
-    --background-color-active: var(--green-900) !important;
-  }
 }
 
 .mergeContainer {
   border-radius: 4px;
   background: #e8e8ff !important;
-  padding: 2px 5px !important;
 }
 
 .viewDetailsBtn {
@@ -192,4 +205,94 @@
 .checkbox {
   padding-top: 8px !important;
   padding-right: var(--spacing-medium) !important;
+}
+
+.overviewPopover {
+  background: blue;
+  :global {
+    .bp3-icon > svg > g {
+      stroke: white !important;
+    }
+  }
+}
+
+.dialogContentContainer {
+  height: calc(100vh - 125px) !important;
+  .content {
+    height: inherit !important;
+  }
+}
+
+.dialogContainer {
+  transition: transform 0.5s ease-in-out !important;
+  position: absolute;
+  right: 1.25%;
+}
+
+.checkboxLabel {
+  :global(.Tooltip--acenter) {
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 20px;
+    vertical-align: middle;
+  }
+}
+
+.mergeStratText {
+  font-size: 12px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  color: var(--grey-600) !important;
+}
+
+.widthContent {
+  width: 100% !important;
+}
+
+.mergeItemContainer {
+  padding: var(--spacing-small) var(--spacing-medium);
+}
+
+.mergeItemContainer:hover {
+  background: var(--primary-1) !important;
+}
+
+.optionMenuButton {
+  padding-right: var(--spacing-medium) !important;
+}
+
+.textArea {
+  :global(.bp3-input) {
+    min-height: 150px !important;
+  }
+}
+
+.verticalContainer {
+  .mergeStratContainer {
+    margin-top: unset !important;
+    padding-left: var(--spacing-xxxlarge) !important;
+    padding-right: 4.05rem !important;
+    padding-top: unset !important;
+
+    .divider {
+      border-left: 1px solid var(--grey-100) !important;
+    }
+    .innerContainer {
+      border-radius: 4px !important ;
+    }
+  }
+}
+
+.btnContainer {
+  float: right !important;
+}
+
+.disableBtn {
+  :global {
+    [class*='SplitButton--splitButton'] > .bp3-button {
+      --text-color: var(--grey-250) !important;
+      cursor: pointer;
+    }
+  }
 }

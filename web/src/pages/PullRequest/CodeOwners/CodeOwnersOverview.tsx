@@ -38,19 +38,13 @@ import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/Exec
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import type { TypesCodeOwnerEvaluation, TypesCodeOwnerEvaluationEntry } from 'services/code'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
-import { findChangeReqDecisions, findWaitingDecisions } from 'utils/Utils'
+import { CodeOwnerReqDecision, findChangeReqDecisions, findWaitingDecisions } from 'utils/Utils'
 import css from './CodeOwnersOverview.module.scss'
 
 interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   prChecksDecisionResult: PRChecksDecisionResult
   codeOwners?: TypesCodeOwnerEvaluation
   standalone: boolean
-}
-
-enum CodeOwnerReqDecision {
-  CHANGEREQ = 'changereq',
-  APPROVED = 'approved',
-  WAIT_FOR_APPROVAL = ''
 }
 
 export function CodeOwnersOverview({
@@ -151,14 +145,15 @@ const CodeOwnerSections: React.FC<CodeOwnerSectionsProps> = ({ repoMetadata, pul
   )
 }
 
-const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
+export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
   const { getString } = useStrings()
+
   const columns = useMemo(
     () =>
       [
         {
           id: 'CODE',
-          width: '50%',
+          width: '45%',
           sort: true,
           Header: 'CODE',
           accessor: 'CODE',
@@ -172,7 +167,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
         },
         {
           id: 'Owners',
-          width: '20%',
+          width: '13%',
           sort: true,
           Header: 'OWNERS',
           accessor: 'OWNERS',
@@ -183,7 +178,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
                 className={css.ownerContainer}
                 spacing="tiny">
                 {row.original.owner_evaluations?.map(({ owner }, idx) => {
-                  if (idx < 4) {
+                  if (idx < 2) {
                     return (
                       <Avatar
                         key={`text-${owner?.display_name}-${idx}-avatar`}
@@ -195,9 +190,9 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
                     )
                   }
                   if (
-                    idx === 4 &&
+                    idx === 2 &&
                     row.original.owner_evaluations?.length &&
-                    row.original.owner_evaluations?.length > 4
+                    row.original.owner_evaluations?.length > 2
                   ) {
                     return (
                       <Text
@@ -221,7 +216,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
                             </Layout.Horizontal>
                           </Container>
                         }
-                        flex={{ alignItems: 'center' }}>{`+${row.original.owner_evaluations?.length - 4}`}</Text>
+                        flex={{ alignItems: 'center' }}>{`+${row.original.owner_evaluations?.length - 2}`}</Text>
                     )
                   }
                   return null
@@ -231,45 +226,54 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
           }
         },
         {
-          id: 'approvals',
-          Header: 'APPROVALS',
-          width: '15%',
+          id: 'changesRequested',
+          Header: getString('changesRequestedBy'),
+          width: '24%',
           sort: true,
-          accessor: 'APPROVALS',
+          accessor: 'ChangesRequested',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
-            const approvedEvaluations = row?.original?.owner_evaluations?.filter(
-              evaluation => evaluation.review_decision === 'approved'
-            )
             const changeReqEvaluations = row?.original?.owner_evaluations?.filter(
               evaluation => evaluation.review_decision === 'changereq'
             )
-            if (changeReqEvaluations && changeReqEvaluations.length !== 0) {
-              return (
-                <Text
-                  className={css.approvalText}
-                  icon="warning-sign"
-                  iconProps={{ color: Color.RED_700, size: 13 }}
-                  color={Color.RED_700}>
-                  {getString('requestChanges')}
-                </Text>
-              )
-            }
-            if (approvedEvaluations && approvedEvaluations.length !== 0) {
-              return (
-                <Text
-                  className={css.approvalText}
-                  icon={'execution-success'}
-                  iconProps={{ color: Color.GREEN_700, size: 13 }}
-                  color={Color.GREEN_700}>
-                  {getString('approved')}
-                </Text>
-              )
-            }
             return (
-              <Text flex className={cx(css.approvalText, css.waitingContainer)} color={Color.ORANGE_700}>
-                <Container className={css.circle}></Container>
-                {getString('pending')}
-              </Text>
+              <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
+                {changeReqEvaluations?.map(({ owner }, idx) => {
+                  if (idx < 2) {
+                    return (
+                      <Avatar
+                        key={`approved-${owner?.display_name}-avatar`}
+                        hoverCard={true}
+                        email={owner?.email || ' '}
+                        size="small"
+                        name={owner?.display_name || ''}
+                      />
+                    )
+                  }
+                  if (idx === 2 && changeReqEvaluations.length && changeReqEvaluations.length > 2) {
+                    return (
+                      <Text
+                        key={`approved-${owner?.display_name}-text`}
+                        padding={{ top: 'xsmall' }}
+                        tooltipProps={{ isDark: true }}
+                        tooltip={
+                          <Container width={215} padding={'small'}>
+                            <Layout.Horizontal className={css.ownerTooltip}>
+                              {changeReqEvaluations?.map(entry => (
+                                <Text
+                                  key={`approved-${entry.owner?.display_name}`}
+                                  lineClamp={1}
+                                  color={Color.GREY_0}
+                                  padding={{ right: 'small' }}>{`${entry.owner?.display_name}, `}</Text>
+                              ))}
+                            </Layout.Horizontal>
+                          </Container>
+                        }
+                        flex={{ alignItems: 'center' }}>{`+${changeReqEvaluations.length - 2}`}</Text>
+                    )
+                  }
+                  return null
+                })}
+              </Layout.Horizontal>
             )
           }
         },
@@ -286,7 +290,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
             return (
               <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
                 {approvedEvaluations?.map(({ owner }, idx) => {
-                  if (idx < 4) {
+                  if (idx < 2) {
                     return (
                       <Avatar
                         key={`approved-${owner?.display_name}-avatar`}
@@ -297,7 +301,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
                       />
                     )
                   }
-                  if (idx === 4 && approvedEvaluations.length && approvedEvaluations.length > 4) {
+                  if (idx === 2 && approvedEvaluations.length && approvedEvaluations.length > 2) {
                     return (
                       <Text
                         key={`approved-${owner?.display_name}-text`}
@@ -316,7 +320,7 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
                             </Layout.Horizontal>
                           </Container>
                         }
-                        flex={{ alignItems: 'center' }}>{`+${approvedEvaluations.length - 4}`}</Text>
+                        flex={{ alignItems: 'center' }}>{`+${approvedEvaluations.length - 2}`}</Text>
                     )
                   }
                   return null
@@ -332,10 +336,6 @@ const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
     <Render when={data?.evaluation_entries?.length}>
       <Container>
         <Layout.Vertical spacing="small">
-          <Text padding={{ left: 'medium' }} font={{ variation: FontVariation.SMALL_BOLD }}>
-            {getString('codeOwner.title')}
-          </Text>
-
           <TableV2
             className={css.codeOwnerTable}
             sortable

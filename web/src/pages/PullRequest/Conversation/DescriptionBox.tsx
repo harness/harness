@@ -23,7 +23,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import { PopoverPosition } from '@blueprintjs/core'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
-import type { OpenapiUpdatePullReqRequest } from 'services/code'
+import type { OpenapiUpdatePullReqRequest, TypesListCommitResponse } from 'services/code'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
@@ -35,8 +35,9 @@ import { useAppContext } from 'AppContext'
 import type { ConversationProps } from './Conversation'
 import css from './Conversation.module.scss'
 
-interface DescriptionBoxProps extends Omit<ConversationProps, 'onCancelEditDescription'> {
+interface DescriptionBoxProps extends Omit<ConversationProps, 'onCancelEditDescription' | 'pullReqCommits'> {
   onCancelEditDescription: () => void
+  pullReqCommits: TypesListCommitResponse | undefined
 }
 
 export const DescriptionBox: React.FC<DescriptionBoxProps> = ({

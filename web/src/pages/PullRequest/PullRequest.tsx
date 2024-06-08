@@ -154,6 +154,7 @@ export default function PullRequest() {
                         onDescriptionSaved={() => {
                           setShowEditDescription(false)
                         }}
+                        pullReqCommits={pullReqCommits}
                         prStats={pullReqStats}
                         showEditDescription={showEditDescription}
                         onCancelEditDescription={() => setShowEditDescription(false)}
@@ -228,7 +229,8 @@ export default function PullRequest() {
                                   status={pullReqChecksDecision?.overallStatus}
                                   noBackground
                                   iconOnly
-                                  iconSize={15}
+                                  inPr
+                                  iconSize={pullReqChecksDecision?.overallStatus === 'failure' ? 17 : 15}
                                 />
 
                                 <Text

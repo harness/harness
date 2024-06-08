@@ -28,6 +28,8 @@ import Subtract from 'images/Subtract.png'
 import EmptySpace from 'images/no-space.svg?url'
 import GitLogo from 'images/gitLogo.png'
 import HarnessDarkLogo from 'images/logo-dark.png'
+import MergeStrat from 'images/mergeStrat.png'
+import MergeRebase from 'images/mergeRebase.png'
 
 export const Images = {
   HarnessDarkLogo,
@@ -43,5 +45,7 @@ export const Images = {
   DarkBackground,
   Signup,
   Subtract,
-  EmptySpace
+  EmptySpace,
+  MergeStrat,
+  MergeRebase
 }

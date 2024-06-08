@@ -21,8 +21,18 @@ import langMap from 'lang-map'
 import type { EditorDidMount } from 'react-monaco-editor'
 import type { editor } from 'monaco-editor'
 import type { EditorView } from '@codemirror/view'
-import type { EnumMergeMethod, TypesRuleViolations, TypesViolation, TypesCodeOwnerEvaluationEntry } from 'services/code'
-import type { GitInfoProps } from './GitUtils'
+import type { FormikProps } from 'formik'
+import type { SelectOption } from '@harnessio/uicore'
+import type { MutateRequestOptions } from 'restful-react/dist/Mutate'
+import type {
+  EnumMergeMethod,
+  TypesRuleViolations,
+  TypesViolation,
+  TypesCodeOwnerEvaluationEntry,
+  TypesPullReq,
+  TypesListCommitResponse
+} from 'services/code'
+import { PullRequestState, type GitInfoProps } from './GitUtils'
 
 export enum ACCESS_MODES {
   VIEW,
@@ -147,9 +157,12 @@ export interface SourceCodeEditorProps {
 export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   onPRStateChanged: () => void
   refetchReviewers: () => void
+  allowedStrategy: string[]
+  pullReqCommits: TypesListCommitResponse | undefined
+  PRStateLoading: boolean
 }
 
-export interface PRMergeOption {
+export interface PRMergeOption extends SelectOption {
   method: EnumMergeMethod | 'close'
   title: string
   desc: string
@@ -395,6 +408,31 @@ export enum FileSection {
   HISTORY = 'history'
 }
 
+export enum ApproveState {
+  APPROVED = 'approved',
+  CHANGEREQ = 'changereq',
+  APPROVE = 'approve',
+  OUTDATED = 'outdated'
+}
+
+export enum CheckStatus {
+  PENDING = 'pending',
+  RUNNING = 'running',
+  SUCCESS = 'success',
+  FAILURE = 'failure',
+  ERROR = 'error',
+  SKIPPED = 'skipped',
+  KILLED = 'killed'
+}
+
+export enum PRCommentFilterType {
+  SHOW_EVERYTHING = 'showEverything',
+  ALL_COMMENTS = 'allComments',
+  MY_COMMENTS = 'myComments',
+  RESOLVED_COMMENTS = 'resolvedComments',
+  UNRESOLVED_COMMENTS = 'unresolvedComments'
+}
+
 const MONACO_SUPPORTED_LANGUAGES = [
   'abap',
   'apex',
@@ -526,6 +564,13 @@ interface WaitUtilParams<T> {
   interval?: number
 }
 
+export interface inlineMergeFormValues {
+  commitMessage: string
+  commitTitle: string
+}
+
+export type inlineMergeFormRefType = FormikProps<inlineMergeFormValues>
+
 export function waitUntil<T>({ test, onMatched, onExpired, duration = 5000, interval = 50 }: WaitUtilParams<T>) {
   const result = test()
 
@@ -558,6 +603,11 @@ export enum MergeCheckStatus {
   CONFLICT = 'conflict'
 }
 
+export enum CodeOwnerReqDecision {
+  CHANGEREQ = 'changereq',
+  APPROVED = 'approved',
+  WAIT_FOR_APPROVAL = ''
+}
 /**
  * Convert number of bytes into human readable format
  *
@@ -679,5 +729,111 @@ export function removeSpecificTextOptimized(
   // Dispatch a single transaction with all changes if any matches were found
   if (changes.length > 0) {
     viewRef?.current?.dispatch({ changes })
+  }
+}
+export const codeOwnersNotFoundMessage = 'CODEOWNERS file not found'
+export const codeOwnersNotFoundMessage2 = `path "CODEOWNERS" not found`
+export const codeOwnersNotFoundMessage3 = `failed to find node 'CODEOWNERS' in 'main': failed to get tree node: failed to ls file: path "CODEOWNERS" not found`
+
+export const dryMerge = (
+  isMounted: React.MutableRefObject<boolean>,
+  isClosed: boolean,
+  pullReqMetadata: TypesPullReq,
+  internalFlags: React.MutableRefObject<{
+    dryRun: boolean
+  }>,
+  mergePR: (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any,
+    mutateRequestOptions?:
+      | MutateRequestOptions<
+          {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            [key: string]: any
+          },
+          unknown
+        >
+      | undefined // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ) => Promise<any>,
+  setRuleViolation: (value: React.SetStateAction<boolean>) => void,
+  setRuleViolationArr: (
+    value: React.SetStateAction<
+      | {
+          data: {
+            rule_violations: TypesRuleViolations[]
+          }
+        }
+      | undefined
+    >
+  ) => void,
+  setAllowedStrats: (value: React.SetStateAction<string[]>) => void,
+  pullRequestSection: string | undefined,
+  showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void,
+  setRequiresCommentApproval?: (value: React.SetStateAction<boolean>) => void,
+  setAtLeastOneReviewerRule?: (value: React.SetStateAction<boolean>) => void,
+  setReqCodeOwnerApproval?: (value: React.SetStateAction<boolean>) => void,
+  setMinApproval?: (value: React.SetStateAction<number>) => void,
+  setReqCodeOwnerLatestApproval?: (value: React.SetStateAction<boolean>) => void,
+  setMinReqLatestApproval?: (value: React.SetStateAction<number>) => void,
+  setPRStateLoading?: (value: React.SetStateAction<boolean>) => void
+) => {
+  if (isMounted.current && !isClosed && pullReqMetadata.state !== PullRequestState.MERGED) {
+    // Use an internal flag to prevent flickering during the loading state of buttons
+    internalFlags.current.dryRun = true
+    mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
+      .then(res => {
+        if (isMounted.current) {
+          if (res?.rule_violations?.length > 0) {
+            setRuleViolation(true)
+            setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
+            setAllowedStrats(res.allowed_methods)
+            setRequiresCommentApproval?.(res.requires_comment_resolution)
+            setAtLeastOneReviewerRule?.(res.requires_no_change_requests)
+            setReqCodeOwnerApproval?.(res.requires_code_owners_approval)
+            setMinApproval?.(res.minimum_required_approvals_count)
+            setReqCodeOwnerLatestApproval?.(res.requires_code_owners_approval_latest)
+            setMinReqLatestApproval?.(res.minimum_required_approvals_count_latest)
+          } else {
+            setRuleViolation(false)
+            setAllowedStrats(res.allowed_methods)
+            setRequiresCommentApproval?.(res.requires_comment_resolution)
+            setAtLeastOneReviewerRule?.(res.requires_no_change_requests)
+            setReqCodeOwnerApproval?.(res.requires_code_owners_approval)
+            setMinApproval?.(res.minimum_required_approvals_count)
+            setReqCodeOwnerLatestApproval?.(res.requires_code_owners_approval_latest)
+            setMinReqLatestApproval?.(res.minimum_required_approvals_count_latest)
+          }
+        }
+      })
+      .catch(err => {
+        if (isMounted.current) {
+          if (err.status === 422) {
+            setRuleViolation(true)
+            setRuleViolationArr(err)
+            setAllowedStrats(err.allowed_methods)
+            setRequiresCommentApproval?.(err.requires_comment_resolution)
+            setAtLeastOneReviewerRule?.(err.requires_no_change_requests)
+            setReqCodeOwnerApproval?.(err.requires_code_owners_approval)
+            setMinApproval?.(err.minimum_required_approvals_count)
+            setReqCodeOwnerLatestApproval?.(err.requires_code_owners_approval_latest)
+            setMinReqLatestApproval?.(err.minimum_required_approvals_count_latest)
+          } else if (
+            getErrorMessage(err) === codeOwnersNotFoundMessage ||
+            getErrorMessage(err) === codeOwnersNotFoundMessage2 ||
+            getErrorMessage(err) === codeOwnersNotFoundMessage3 ||
+            err.status === 423 // resource locked (merge / dry-run already ongoing)
+          ) {
+            return
+          } else if (pullRequestSection !== PullRequestSection.CONVERSATION) {
+            return
+          } else {
+            showError(getErrorMessage(err))
+          }
+        }
+      })
+      .finally(() => {
+        internalFlags.current.dryRun = false
+        setPRStateLoading?.(false)
+      })
   }
 }

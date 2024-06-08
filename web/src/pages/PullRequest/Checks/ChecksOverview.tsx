@@ -96,7 +96,7 @@ const CheckSections: React.FC<CheckSectionsProps> = ({ repoMetadata, pullReqMeta
           return [_checks, _pipelines]
         },
         [[], []] as [TypesCheck[], TypesCheck[]]
-      ),
+      ), // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, repoMetadata]
   )
 

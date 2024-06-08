@@ -16,21 +16,24 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { isEqual } from 'lodash-es'
+import { EventSourcePolyfill } from 'event-source-polyfill'
 import { useAppContext } from 'AppContext'
 import { getConfig } from 'services/config'
 
 type UseSpaceSSEProps = {
   space: string
   events: string[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onEvent: (data: any, type: string) => void
   onError?: (event: Event) => void
   shouldRun?: boolean
 }
 
 const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = true }: UseSpaceSSEProps) => {
-  const { standalone, routingId } = useAppContext()
+  const { standalone, routingId, hooks } = useAppContext()
   const [events, setEvents] = useState(_events)
   const eventSourceRef = useRef<EventSource | null>(null)
+  const bearerToken = hooks?.useGetToken?.() || ''
 
   useEffect(() => {
     if (!isEqual(events, _events)) {
@@ -45,8 +48,15 @@ const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = tru
         const pathAndQuery = getConfig(
           `code/api/v1/spaces/${space}/+/events${standalone ? '' : `?routingId=${routingId}`}`
         )
-        eventSourceRef.current = new EventSource(pathAndQuery)
+        const options: { heartbeatTimeout: number; headers?: { Authorization?: string } } = {
+          heartbeatTimeout: 999999999
+        }
 
+        if (!standalone) {
+          options.headers = { Authorization: `Bearer ${bearerToken}` }
+        }
+
+        eventSourceRef.current = new EventSourcePolyfill(pathAndQuery, options)
         const handleMessage = (event: MessageEvent) => {
           const data = JSON.parse(event.data)
           onEvent(data, event.type)
@@ -83,7 +93,7 @@ const useSpaceSSE = ({ space, events: _events, onEvent, onError, shouldRun = tru
         eventSourceRef.current = null
       }
     }
-  }, [space, events, shouldRun, onEvent, onError, routingId, standalone])
+  }, [space, events, shouldRun, onEvent, onError, routingId, standalone, bearerToken])
 }
 
 export enum SSEEvents {

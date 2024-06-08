@@ -55,3 +55,9 @@ export enum PullReqCustomEvent {
   REFETCH_DIFF = 'PullReqCustomEvent_REFETCH',
   REFETCH_ACTIVITIES = 'PullReqCustomEvent_REFETCH_ACTIVITIES'
 }
+export enum PanelSectionOutletPosition {
+  CHANGES = 'changes',
+  COMMENTS = 'comments',
+  CHECKS = 'checks',
+  MERGEABILITY = 'mergeability'
+}

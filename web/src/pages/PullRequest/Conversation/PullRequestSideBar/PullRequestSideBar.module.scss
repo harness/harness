@@ -54,3 +54,15 @@
   display: flex !important;
   align-items: center !important;
 }
+
+.redIcon {
+  :global {
+    path {
+      fill: var(--red-500) !important;
+    }
+  }
+}
+
+.iconPadding {
+  padding-left: 0.6rem !important;
+}
