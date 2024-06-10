@@ -121,7 +121,7 @@ export function PullRequestsContentHeader({
             accountIdentifier: routingId
           }
         })
-        const mergedList = [...new Set(authorsList.concat(newAuthorsList))]
+        const mergedList = [...new Set(authorsList?.concat(newAuthorsList))]
         const newSortedList = sortBy(mergedList, item => item.display_name?.toLowerCase())
         const newIndex = newSortedList.findIndex(obj => obj.uid === user.uid)
         updateList(newIndex, newSortedList)
