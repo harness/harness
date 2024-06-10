@@ -144,6 +144,9 @@ CREATE TABLE gitspaces
     gits_total_time_used      BIGINT  NOT NULL,
     gits_infra_provisioned_id INTEGER,
     gits_tracked_changes      TEXT,
+    gits_access_key           TEXT,
+    gits_access_type          TEXT,
+    gits_machine_user         TEXT,
     UNIQUE (gits_gitspace_config_id, gits_space_id),
     CONSTRAINT fk_gits_gitspace_config_id FOREIGN KEY (gits_gitspace_config_id)
         REFERENCES gitspace_configs (gconf_id) MATCH SIMPLE
@@ -163,15 +166,10 @@ CREATE TABLE gitspace_events
 (
     geven_id                 INTEGER PRIMARY KEY AUTOINCREMENT,
     geven_gitspace_config_id INTEGER NOT NULL,
-    geven_state              TEXT    NOT NULL,
+    geven_event              TEXT    NOT NULL,
     geven_created            BIGINT  NOT NULL,
-    geven_space_id           INTEGER NOT NULL,
     CONSTRAINT fk_geven_gitspace_config_id FOREIGN KEY (geven_gitspace_config_id)
         REFERENCES gitspace_configs (gconf_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE CASCADE,
-    CONSTRAINT fk_geven_space_id FOREIGN KEY (geven_space_id)
-        REFERENCES spaces (space_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
