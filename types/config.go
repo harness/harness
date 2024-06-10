@@ -138,7 +138,7 @@ type Config struct {
 	}
 
 	SSH struct {
-		Enable bool   `envconfig:"GITNESS_SSH_ENABLE" default:"true"`
+		Enable bool   `envconfig:"GITNESS_SSH_ENABLE" default:"false"`
 		Host   string `envconfig:"GITNESS_SSH_HOST"`
 		Port   int    `envconfig:"GITNESS_SSH_PORT" default:"22"`
 		// DefaultUser holds value for generating urls {user}@host:path and force check
@@ -152,7 +152,7 @@ type Config struct {
 		TrustedUserCAKeys       []string `envconfig:"GITNESS_SSH_TRUSTED_USER_CA_KEYS"`
 		TrustedUserCAKeysFile   string   `envconfig:"GITNESS_SSH_TRUSTED_USER_CA_KEYS_FILENAME"`
 		TrustedUserCAKeysParsed []gossh.PublicKey
-		KeepAliveInterval       int `envconfig:"GITNESS_SSH_KEEP_ALIVE_INTERVAL" default:"5000"`
+		KeepAliveInterval       time.Duration `envconfig:"GITNESS_SSH_KEEP_ALIVE_INTERVAL" default:"5s"`
 	}
 
 	// CI defines configuration related to build executions.

@@ -75,12 +75,8 @@ var (
 		"hmac-sha2-256",
 		"hmac-sha2-512",
 	}
-	defaultServerKeys = []string{"ssh/gitness.rsa"}
-	KeepAliveMsg      = "keepalive@openssh.com"
-)
-
-var (
-	ErrHostKeysAreRequired = errors.New("host keys are required")
+	defaultServerKeyPath = "ssh/gitness.rsa"
+	KeepAliveMsg         = "keepalive@openssh.com"
 )
 
 type Server struct {
@@ -96,7 +92,7 @@ type Server struct {
 	KeyExchanges            []string
 	MACs                    []string
 	HostKeys                []string
-	KeepAliveInterval       int
+	KeepAliveInterval       time.Duration
 
 	Verifier publickey.Service
 	RepoCtrl *repo.Controller
@@ -117,10 +113,6 @@ func (s *Server) sanitize() error {
 
 	if len(s.MACs) == 0 {
 		s.MACs = defaultMACs
-	}
-
-	if len(s.HostKeys) == 0 {
-		s.HostKeys = defaultServerKeys
 	}
 
 	if s.KeepAliveInterval == 0 {
@@ -169,34 +161,22 @@ func (s *Server) ListenAndServe() error {
 }
 
 func (s *Server) setupHostKeys() error {
-	if len(s.HostKeys) == 0 {
-		return ErrHostKeysAreRequired
-	}
 	keys := make([]string, 0, len(s.HostKeys))
-	// check if file exists and append to slice keys
 	for _, key := range s.HostKeys {
 		_, err := os.Stat(key)
 		if err != nil {
-			log.Err(err).Msgf("unable to check if %s exists", key)
-			continue
+			return fmt.Errorf("failed to read provided host key %q: %w", key, err)
 		}
 		keys = append(keys, key)
 	}
 
-	// if there is no keys found then create one from HostKeys field
 	if len(keys) == 0 {
-		fullpath := s.HostKeys[0]
-		filePath := filepath.Dir(fullpath)
-
-		if err := os.MkdirAll(filePath, os.ModePerm); err != nil {
-			return fmt.Errorf("failed to create dir %s: %w", filePath, err)
-		}
-
-		err := GenerateKeyPair(fullpath)
+		log.Debug().Msg("no host key provided - setup default key if it doesn't exist yet")
+		err := createKeyIfNotExists(defaultServerKeyPath)
 		if err != nil {
-			return fmt.Errorf("failed to generate private key: %w", err)
+			return fmt.Errorf("failed to setup default key %q: %w", defaultServerKeyPath, err)
 		}
-		keys = append(keys, fullpath)
+		keys = append(keys, defaultServerKeyPath)
 	}
 
 	// set keys to internal ssh server
@@ -206,6 +186,7 @@ func (s *Server) setupHostKeys() error {
 			log.Err(err).Msg("failed to set host key to ssh server")
 		}
 	}
+
 	return nil
 }
 
@@ -268,7 +249,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 
 	// set keep alive connection
 	if s.KeepAliveInterval > 0 {
-		go s.sendKeepAliveMsg(ctx, session)
+		go sendKeepAliveMsg(ctx, session, s.KeepAliveInterval)
 	}
 
 	err = s.RepoCtrl.GitServicePack(
@@ -302,8 +283,8 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	}
 }
 
-func (s *Server) sendKeepAliveMsg(ctx context.Context, session ssh.Session) {
-	ticker := time.NewTicker(time.Duration(s.KeepAliveInterval))
+func sendKeepAliveMsg(ctx context.Context, session ssh.Session, interval time.Duration) {
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	log.Ctx(ctx).Debug().Str("remote_addr", session.RemoteAddr().String()).Msgf("sendKeepAliveMsg")
 
@@ -312,8 +293,11 @@ func (s *Server) sendKeepAliveMsg(ctx context.Context, session ssh.Session) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			log.Ctx(ctx).Debug().Msg("connection: sendKeepAliveMsg: send keepalive message to a client")
-			_, _ = session.SendRequest(KeepAliveMsg, true, nil)
+			log.Ctx(ctx).Debug().Msg("send keepalive message to ssh client")
+			_, err := session.SendRequest(KeepAliveMsg, true, nil)
+			if err != nil {
+				log.Ctx(ctx).Debug().Err(err).Msg("failed to send keepalive message to ssh client")
+			}
 		}
 	}
 }
@@ -332,8 +316,12 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	}
 
 	principal, err := s.Verifier.ValidateKey(ctx, key, enum.PublicKeyUsageAuth)
+	if errors.IsNotFound(err) {
+		log.Debug().Err(err).Msg("public key is unknown")
+		return false
+	}
 	if err != nil {
-		log.Error().Err(err).Msg("failed to validate public key")
+		log.Warn().Err(err).Msg("failed to validate public key")
 		return false
 	}
 
@@ -363,6 +351,31 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 
 func sshConnectionFailed(conn net.Conn, err error) {
 	log.Err(err).Msgf("failed connection from %s with error: %v", conn.RemoteAddr(), err)
+}
+
+func createKeyIfNotExists(path string) error {
+	_, err := os.Stat(path)
+	if err == nil {
+		// if the path already exists there's nothing we have to do
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return fmt.Errorf("failed to check for for existence of key: %w", err)
+	}
+
+	log.Debug().Msgf("generate new key at %q", path)
+
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create dir %q for key: %w", dir, err)
+	}
+
+	err = GenerateKeyPair(path)
+	if err != nil {
+		return fmt.Errorf("failed to generate key pair: %w", err)
+	}
+
+	return nil
 }
 
 // GenerateKeyPair make a pair of public and private keys for SSH access.

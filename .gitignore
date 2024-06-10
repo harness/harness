@@ -15,11 +15,9 @@ release
 coverage.out
 gitness.session.sql
 web/cypress/node_modules
+*.rsa
+*.rsa.pub
+node_modules/
 
 # ignore any executables we build
 /gitness
-
-node_modules/
-
-ssh/gitness.rsa
-ssh/gitness.rsa.pub
