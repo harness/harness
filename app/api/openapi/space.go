@@ -254,7 +254,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opUpdatePublicAccess := openapi3.Operation{}
 	opUpdatePublicAccess.WithTags("space")
 	opUpdatePublicAccess.WithMapOfAnything(
-		map[string]interface{}{"operationId": "updatePublicAccess"})
+		map[string]interface{}{"operationId": "updateSpacePublicAccess"})
 	_ = reflector.SetRequest(
 		&opUpdatePublicAccess, new(updateSpacePublicAccessRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opUpdatePublicAccess, new(space.SpaceOutput), http.StatusOK)
