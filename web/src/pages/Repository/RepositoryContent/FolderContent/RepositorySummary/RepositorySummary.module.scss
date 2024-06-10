@@ -10,7 +10,7 @@
   }
 
   .content {
-    margin: var(--spacing-xlarge) 0;
+    margin: var(--spacing-small) 0;
     gap: var(--spacing-xlarge);
     font-size: 13px !important;
     .tags {
@@ -35,7 +35,7 @@
     }
 
     .metaData {
-      padding: var(--spacing-small) 0;
+      padding: 1.5px 0;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--grey-100);
@@ -47,6 +47,9 @@
         gap: 8px;
         align-items: center;
       }
+    }
+    .metaData:last-child {
+      border-bottom: none;
     }
   }
 }

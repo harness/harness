@@ -135,7 +135,7 @@ export function LatestCommitForFolder({
               <StringSubstitute str={getString('aheadDivergence')} vars={{ aheadCommits: commitDivergence.ahead }} />
             </Text>
           </Link>
-          <Text className={css.link} lineClamp={1}>
+          <Text className={css.link} color={Color.GREY_500} lineClamp={1}>
             {getString('and')}
           </Text>
           <Link to={compareCommits(currentGitRef, metadata.default_branch as string)}>
@@ -187,7 +187,7 @@ export function LatestCommitForFolder({
                 color={Utils.getRealCSSColor(Color.GREY_500)}
                 className={css.commitIcon}
               />
-              <Text className={css.noWrap} font={{ variation: FontVariation.SMALL_SEMI }}>
+              <Text className={css.noWrap} font={{ variation: FontVariation.SMALL_SEMI }} color={Color.GREY_500}>
                 <StringSubstitute str={getString('thisRefHas')} vars={{ isTag: isRefATag(gitRef) }} />
               </Text>
               <Link to={commitPage}>
