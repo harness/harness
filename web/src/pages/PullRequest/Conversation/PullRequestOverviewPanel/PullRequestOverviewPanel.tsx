@@ -89,7 +89,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
   const [minReqLatestApproval, setMinReqLatestApproval] = useState(0)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [resolvedCommentArr, setResolvedCommentArr] = useState<any>()
-  const [PRStateLoading, setPRStateLoading] = useState(true)
+  const [PRStateLoading, setPRStateLoading] = useState(isClosed ? false : true)
   const { pullRequestSection } = useGetRepositoryMetadata()
   const mergeable = useMemo(() => pullReqMetadata.merge_check_status === MergeCheckStatus.MERGEABLE, [pullReqMetadata])
   const mergeOptions: PRMergeOption[] = [
