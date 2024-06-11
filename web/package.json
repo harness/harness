@@ -23,6 +23,7 @@
     "test": "jest src --silent",
     "test:watch": "jest --watch",
     "build": "rm -rf dist && webpack --config config/webpack.prod.js",
+    "build:cde": "rm -rf dist && MODULE=cde webpack --config config/webpack.prod.js",
     "lint": "eslint  --rulesdir ./scripts/eslint-rules --ext .ts --ext .tsx src",
     "prettier": "prettier --check \"./src/**/*.{ts,tsx,css,scss}\"",
     "coverage": "npm test --coverage",
