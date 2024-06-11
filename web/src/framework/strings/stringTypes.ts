@@ -553,6 +553,7 @@ export interface StringsMap {
   manageCredText: string
   markAsDraft: string
   matchPassword: string
+  mergeBranchTitle: string
   mergeCheckInProgress: string
   mergeCommit: string
   mergeSetting: string

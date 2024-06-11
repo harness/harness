@@ -9,7 +9,7 @@ import { getErrorMessage, inlineMergeFormValues, type PRMergeOption } from 'util
 import { MergeStrategy } from 'utils/GitUtils'
 import mergeVideo from '../../../../videos/merge.mp4'
 import squashVideo from '../../../../videos/squash.mp4'
-import rebaseVideo from '../../../../videos/squash.mp4'
+import rebaseVideo from '../../../../videos/rebase.mp4'
 import css from './PullRequestActionsBox.module.scss'
 interface InlineMergeBoxProps {
   inlineMergeRef: React.RefObject<FormikProps<inlineMergeFormValues>>

@@ -230,7 +230,14 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     if (pullReqCommits?.commits) {
       pullReqCommits?.commits.map(commit => {
         messageString += `* ${commit.message}\n`
-        messageTitle = `${commit.title}`
+        messageTitle =
+          mergeOption.method === MergeStrategy.SQUASH
+            ? `${commit.title} (#${pullReqMetadata?.number})`
+            : getString('mergeBranchTitle', {
+                branchName: pullReqMetadata?.source_branch,
+                repoPath: repoMetadata?.path,
+                prNum: pullReqMetadata?.number
+              })
       })
     }
     return {
@@ -521,12 +528,12 @@ const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullReques
             str={getString('pr.prMergedBannerInfo')}
             vars={{
               user: (
-                <Container padding={{ right: 'xsmall' }}>
+                <Container padding={{ right: 'small' }}>
                   <strong className={css.boldText}>{pullRequestMetadata.merger?.display_name}</strong>
                 </Container>
               ),
               source: (
-                <Container padding={{ left: 'xsmall', right: 'xsmall' }}>
+                <Container padding={{ left: 'small', right: 'small' }}>
                   <strong className={cx(css.boldText, css.purpleContainer)}>
                     <Icon name={CodeIcon.Merged} size={16} color={Color.PURPLE_700} />
                     {pullRequestMetadata.source_branch}
@@ -534,7 +541,7 @@ const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullReques
                 </Container>
               ),
               target: (
-                <Container padding={{ left: 'xsmall', right: 'xsmall' }}>
+                <Container padding={{ left: 'small', right: 'small' }}>
                   <strong className={cx(css.boldText, css.purpleContainer)}>
                     <Icon name={CodeIcon.Merged} size={16} color={Color.PURPLE_700} />
                     {pullRequestMetadata.target_branch}
