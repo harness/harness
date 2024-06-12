@@ -151,7 +151,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
                 />
                 <Layout.Vertical flex className={css.name}>
                   <Text className={css.repoName} lineClamp={2}>
-                    <Keywords value={searchTerm}>{record.space.uid}</Keywords>
+                    <Keywords value={searchTerm}>{(record.space as any).identifier}</Keywords>
                   </Text>
                   {record.space.description && (
                     <Text className={css.desc} lineClamp={1}>
