@@ -16,14 +16,14 @@
 
 .main {
   --border-color: var(--grey-200);
-  --line-height: 17.3438px;
+  --line-height: 20px;
 
   // TODO: Restyle DiffView to match latest design
   // https://www.figma.com/file/PgBvi804VdQNyLS8fD9K0p/Code?node-id=9391%3A118114&mode=dev
   --bg-selected-line-number: #ccf8a5;
   --bg-selected-line-content: #e7f8b5fc;
 
-  --bg-line-added: var(--green-100);
+  --bg-line-added: #dfd;
   --bg-change-added: var(--green-300);
   --bg-line-deleted: var(--red-100);
   --bg-change-deleted: var(--red-200);
@@ -55,11 +55,11 @@
           // Ref:
           //  - https://web.dev/articles/content-visibility
           //  - https://web.dev/articles/dom-size-and-interactivity
-          &,
-          .d2h-code-line-ctn > * {
-            content-visibility: auto;
-            contain-intrinsic-size: auto var(--line-height);
-          }
+          // &,
+          // .d2h-code-line-ctn > * {
+          //   content-visibility: auto;
+          //   contain-intrinsic-size: auto var(--line-height);
+          // }
 
           // Reduce pointer events on diff line DOM elements to avoid
           // browser hit test. When the number of DOM elements is huge,
@@ -180,12 +180,14 @@
 
       .d2h-code-side-linenumber,
       .d2h-code-linenumber {
+        display: table-cell;
         position: sticky;
         left: 0;
         z-index: 2;
         overflow: visible;
         line-height: 20px;
         padding-right: 7px;
+        border: none;
       }
 
       .d2h-code-side-line {
@@ -240,14 +242,28 @@
               border-color: var(--primary-7) !important;
             }
 
-            &:last-of-type,
-            *:not(
-                span[data-annotation-for-line],
-                span[data-selected-indicator],
-                [data-comment-thread-id],
-                [data-comment-thread-id] *
-              ) {
-              background-color: var(--bg-selected-line-content) !important;
+            &:not(.d2h-ins, .d2h-del) {
+              &:last-of-type,
+              *:not(
+                  span[data-annotation-for-line],
+                  span[data-selected-indicator],
+                  [data-comment-thread-id],
+                  [data-comment-thread-id] *
+                ) {
+                // position: relative;
+
+                // &::before {
+                //   content: '';
+                //   position: absolute;
+                //   top: 0;
+                //   left: 0;
+                //   width: 100%;
+                //   height: 100%;
+                //   opacity: 0.3;
+                //   background-color: var(--bg-selected-line-content);
+                // }
+                background-color: var(--bg-selected-line-content);
+              }
             }
 
             [data-selected-indicator] {
@@ -301,7 +317,7 @@
     }
 
     .d2h-code-side-linenumber {
-      width: 64px;
+      min-width: 64px;
     }
   }
 
@@ -465,15 +481,15 @@
     border-bottom-right-radius: 4px;
     max-width: calc(var(--page-container-width) - 48px);
 
-    &.hidden {
-      height: var(--block-height);
-      content-visibility: auto;
-      contain-intrinsic-size: auto var(--line-height);
+    // &.hidden {
+    //   height: var(--block-height);
+    //   content-visibility: auto;
+    //   contain-intrinsic-size: auto var(--block-height);
 
-      * {
-        display: none !important;
-      }
-    }
+    //   * {
+    //     display: none !important;
+    //   }
+    // }
   }
 }
 

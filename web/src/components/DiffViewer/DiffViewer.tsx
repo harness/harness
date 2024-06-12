@@ -49,7 +49,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { useCustomEventListener } from 'hooks/useEventListener'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { getErrorMessage, isInViewport } from 'utils/Utils'
-import { createRequestIdleCallbackTaskPool } from 'utils/Task'
+import { createRequestAnimationFrameTaskPool } from 'utils/Task'
 import { useResizeObserver } from 'hooks/useResizeObserver'
 import { useFindGitBranch } from 'hooks/useFindGitBranch'
 import Config from 'Config'
@@ -165,6 +165,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     },
     [ref]
   )
+  const contentHTML = useRef<string | null>(null)
 
   useResizeObserver(
     contentRef,
@@ -179,17 +180,30 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   )
 
   useEffect(() => {
-    let taskId = 0
+    const dom = contentRef.current
+
     if (inView) {
-      taskId = scheduleLowPriorityTask(() => {
-        if (isMounted.current && contentRef.current) contentRef.current.classList.remove(css.hidden)
-      })
+      if (isMounted.current && dom && contentHTML.current) {
+        dom.innerHTML = contentHTML.current
+        contentHTML.current = null
+      }
     } else {
-      taskId = scheduleLowPriorityTask(() => {
-        if (isMounted.current && contentRef.current) contentRef.current.classList.add(css.hidden)
-      })
+      if (isMounted.current && dom && !contentHTML.current) {
+        contentHTML.current = dom.innerHTML
+
+        const pre = document.createElement('pre')
+        pre.style.fontSize = '12px'
+        pre.style.whiteSpace = 'normal'
+        pre.style.lineHeight = '20px'
+        pre.style.margin = '0'
+        pre.style.height = dom.clientHeight + 'px'
+        pre.textContent = dom.textContent
+        pre.style.color = 'transparent'
+
+        dom.textContent = ''
+        dom.appendChild(pre)
+      }
     }
-    return () => cancelTask(taskId)
   }, [inView, isMounted])
 
   //
@@ -290,7 +304,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
         if (isInViewport(containerRef.current as Element, 1000)) {
           renderDiffAndComments()
         } else {
-          taskId = scheduleLowPriorityTask(renderDiffAndComments)
+          taskId = scheduleTask(renderDiffAndComments)
         }
       }
 
@@ -551,6 +565,6 @@ export interface DiffViewerExchangeState {
   fullDiff?: DiffFileEntry
 }
 
-const { scheduleTask: scheduleLowPriorityTask, cancelTask } = createRequestIdleCallbackTaskPool()
+const { scheduleTask, cancelTask } = createRequestAnimationFrameTaskPool()
 
 export const DiffViewer = React.memo(DiffViewerInternal)
