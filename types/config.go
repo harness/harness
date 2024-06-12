@@ -148,7 +148,6 @@ type Config struct {
 		KeyExchanges            []string `envconfig:"GITNESS_SSH_KEY_EXCHANGES"`
 		MACs                    []string `envconfig:"GITNESS_SSH_MACS"`
 		ServerHostKeys          []string `envconfig:"GITNESS_SSH_HOST_KEYS"`
-		KeygenPath              string   `envconfig:"GITNESS_SSH_KEYGEN_PATH"`
 		TrustedUserCAKeys       []string `envconfig:"GITNESS_SSH_TRUSTED_USER_CA_KEYS"`
 		TrustedUserCAKeysFile   string   `envconfig:"GITNESS_SSH_TRUSTED_USER_CA_KEYS_FILENAME"`
 		TrustedUserCAKeysParsed []gossh.PublicKey
