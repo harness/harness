@@ -96,7 +96,10 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
         </Text>
         <Layout.Horizontal>
           <Container padding={{ bottom: 'medium' }} width={400} margin={{ right: 'small' }}>
-            <Text>HTTP</Text>
+            {
+              // TODO: replace with data from config api
+              repoMetadata.git_ssh_url && <Text>HTTP</Text>
+            }
             <Layout.Horizontal className={css.layout}>
               <Text className={css.url}>{repoMetadata.git_url}</Text>
               <FlexExpander />
@@ -107,17 +110,24 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
                 iconProps={{ size: 14 }}
               />
             </Layout.Horizontal>
-            <Text>SSH</Text>
-            <Layout.Horizontal className={css.layout}>
-              <Text className={css.url}>{repoMetadata.git_ssh_url}</Text>
-              <FlexExpander />
-              <CopyButton
-                content={repoMetadata?.git_ssh_url as string}
-                id={css.cloneCopyButton}
-                icon={CodeIcon.Copy}
-                iconProps={{ size: 14 }}
-              />
-            </Layout.Horizontal>
+            {
+              // TODO: replace with data from config api
+              repoMetadata.git_ssh_url && (
+                <>
+                  <Text>SSH</Text>
+                  <Layout.Horizontal className={css.layout}>
+                    <Text className={css.url}>{repoMetadata.git_ssh_url}</Text>
+                    <FlexExpander />
+                    <CopyButton
+                      content={repoMetadata?.git_ssh_url as string}
+                      id={css.cloneCopyButton}
+                      icon={CodeIcon.Copy}
+                      iconProps={{ size: 14 }}
+                    />
+                  </Layout.Horizontal>
+                </>
+              )
+            }
           </Container>
         </Layout.Horizontal>
         <Button

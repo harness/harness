@@ -91,6 +91,7 @@ type provider struct {
 	// NOTE: we store it as url.URL so we can derive clone URLS without errors.
 	gitURL *url.URL
 
+	SSHEnabled     bool
 	SSHDefaultUser string
 	gitSSHURL      *url.URL
 
@@ -105,6 +106,7 @@ func NewProvider(
 	gitURLRaw,
 	gitSSHURLRaw string,
 	sshDefaultUser string,
+	sshEnabled bool,
 	uiURLRaw string,
 ) (Provider, error) {
 	// remove trailing '/' to make usage easier
@@ -136,7 +138,7 @@ func NewProvider(
 	}
 
 	gitSSHURL, err := url.Parse(gitSSHURLRaw)
-	if err != nil {
+	if sshEnabled && err != nil {
 		return nil, fmt.Errorf("provided gitSSHURLRaw '%s' is invalid: %w", gitSSHURLRaw, err)
 	}
 
@@ -152,6 +154,7 @@ func NewProvider(
 		gitURL:         gitURL,
 		gitSSHURL:      gitSSHURL,
 		SSHDefaultUser: sshDefaultUser,
+		SSHEnabled:     sshEnabled,
 		uiURL:          uiURL,
 	}, nil
 }
@@ -179,6 +182,9 @@ func (p *provider) GenerateGITCloneURL(repoPath string) string {
 }
 
 func (p *provider) GenerateGITCloneSSHURL(repoPath string) string {
+	if !p.SSHEnabled {
+		return ""
+	}
 	repoPath = path.Clean(repoPath)
 	if !strings.HasSuffix(repoPath, GITSuffix) {
 		repoPath += GITSuffix
