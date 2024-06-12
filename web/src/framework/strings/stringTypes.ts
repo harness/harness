@@ -334,7 +334,9 @@ export interface StringsMap {
   deleteBranchConfirm: string
   deleteBranchText: string
   deleteCommentConfirm: string
+  deleteFailedImport: string
   deleteFile: string
+  deleteImport: string
   deleteNotAllowed: string
   deleteRepoText: string
   deleteRepoTitle: string
@@ -345,6 +347,7 @@ export interface StringsMap {
   deleteTokenMsg: string
   deleteUser: string
   deleted: string
+  deletedImport: string
   deployKeys: string
   descending: string
   description: string
@@ -442,6 +445,7 @@ export interface StringsMap {
   failedToCreateRepo: string
   failedToCreateSpace: string
   failedToDeleteBranch: string
+  failedToDeleteImport: string
   failedToDeleteWebhook: string
   failedToFetchFileContent: string
   failedToImportSpace: string
