@@ -53,7 +53,7 @@ type Repository struct {
 
 	// git urls
 	GitURL    string `json:"git_url" yaml:"-"`
-	GitSSHURL string `json:"git_ssh_url" yaml:"-"`
+	GitSSHURL string `json:"git_ssh_url,omitempty" yaml:"-"`
 }
 
 // Clone makes deep copy of repository object.
