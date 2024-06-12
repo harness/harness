@@ -24,6 +24,7 @@ export declare const historyBtnLayout: string
 export declare const label: string
 export declare const layout: string
 export declare const noCopy: string
+export declare const popover: string
 export declare const refreshIcon: string
 export declare const row: string
 export declare const rowText: string

@@ -119,7 +119,11 @@ export function CommitsView({
         width: 'calc(60% - 100px)',
         Cell: ({ row }: CellProps<TypesCommit>) => {
           return (
-            <Text color={Color.BLACK} lineClamp={1} className={css.rowText}>
+            <Text
+              tooltipProps={{ popoverClassName: css.popover }}
+              color={Color.BLACK}
+              lineClamp={1}
+              className={css.rowText}>
               {renderPullRequestLinkFromCommitMessage(repoMetadata, routes, row.original.message)}
             </Text>
           )
@@ -286,12 +290,10 @@ function renderPullRequestLinkFromCommitMessage(
   commitMessage = ''
 ) {
   let message: string | JSX.Element = commitMessage
-  const match = message.match(/\(#\d+\)$/)
-
+  const match = message.match(/\(#\d+\)(\n|$)/)
   if (match?.length) {
     message = message.replace(match[0], '({URL})')
     const pullRequestId = match[0].replace('(#', '').replace(')', '')
-
     message = (
       <StringSubstitute
         str={message}

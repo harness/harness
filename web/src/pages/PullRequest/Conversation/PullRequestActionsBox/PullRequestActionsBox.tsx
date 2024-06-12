@@ -98,6 +98,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   const handleSubmit = useMemo(() => {
     return () => {
       if (inlineMergeRef.current) {
+        setPrMerged(true)
         inlineMergeRef.current.handleSubmit()
       }
     }
@@ -233,7 +234,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
         messageTitle =
           mergeOption.method === MergeStrategy.SQUASH
             ? `${commit.title} (#${pullReqMetadata?.number})`
-            : `Merge branch ${pullReqMetadata?.source_branch} of ${repoMetadata?.path} (#${pullReqMetadata?.number}})`
+            : `Merge branch ${pullReqMetadata?.source_branch} of ${repoMetadata?.path} (#${pullReqMetadata?.number})`
       })
     }
     return {
@@ -442,6 +443,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                               <Button
                                 type="submit"
                                 onClick={handleSubmit}
+                                disabled={prMerged}
                                 variation={ButtonVariation.PRIMARY}
                                 text={getString('confirmStrat', { strat: mergeOption.title })}
                               />

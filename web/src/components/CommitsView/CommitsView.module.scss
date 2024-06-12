@@ -113,3 +113,9 @@
   padding: 0 var(--spacing-xsmall) !important;
   margin-left: var(--spacing-small) !important;
 }
+
+.popover {
+  z-index: 99999;
+  padding: var(--spacing-small) !important;
+  background: var(--primary-bg);
+}
