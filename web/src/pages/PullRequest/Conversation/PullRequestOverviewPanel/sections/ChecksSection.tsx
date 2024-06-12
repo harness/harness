@@ -283,7 +283,7 @@ const ChecksSection = (props: ChecksSectionProps) => {
                     />
                   </Text>
                 </Layout.Horizontal>
-                <Container className={css.checkContainerPadding}>
+                <Container className={check.required ? css.checkContainerPadding : css.paddingWithOutReq}>
                   <Layout.Horizontal className={css.gridContainer} flex={{ justifyContent: 'center' }}>
                     {check.check.status !== CheckStatus.PENDING && (
                       <Link

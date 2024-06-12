@@ -176,7 +176,7 @@
   line-height: 10px !important;
   color: var(--fgColor) !important;
   background-color: var(--bgColor) !important;
-  padding-left: 8px !important;
+  padding-left: 4px !important;
   padding-right: 4px !important;
 }
 
@@ -186,6 +186,10 @@
 
 .checkContainerPadding {
   padding-right: 4.05rem !important;
+}
+
+.paddingWithOutReq {
+  padding-right: 4.55rem !important;
 }
 
 .changeContainerPadding {
@@ -200,7 +204,7 @@
 
 .gridContainer {
   display: grid !important;
-  grid-template-columns: 1fr 1fr !important; /* Two equal columns */
+  grid-template-columns: 1fr 0.75fr !important;
   position: relative !important;
 }
 
@@ -227,6 +231,7 @@
   content: '';
   display: block !important;
   height: 0 !important; /* Ensures it doesn't take up additional vertical space */
+  visibility: hidden !important; /* Ensures it doesn't appear visually */
   background-color: transparent !important;
   border: none !important;
 }

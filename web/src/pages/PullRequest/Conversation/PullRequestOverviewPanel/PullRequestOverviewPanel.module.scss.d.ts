@@ -34,6 +34,7 @@ export declare const iconStatus: string
 export declare const mainContainer: string
 export declare const mergedContainer: string
 export declare const paddingContainer: string
+export declare const paddingWithOutReq: string
 export declare const pendingIcon: string
 export declare const redIcon: string
 export declare const required: string
