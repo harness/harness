@@ -478,6 +478,7 @@ export interface StringsMap {
   'homepage.selectSpaceContent': string
   'homepage.selectSpaceTitle': string
   'homepage.welcomeText': string
+  http: string
   'imageUpload.readyToUpload': string
   'imageUpload.text': string
   'imageUpload.title': string
@@ -966,6 +967,7 @@ export interface StringsMap {
   spaceUpdate: string
   spaces: string
   squashMerge: string
+  ssh: string
   sslVerificationLabel: string
   startSearching: string
   status: string

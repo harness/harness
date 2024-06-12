@@ -98,7 +98,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
           <Container padding={{ bottom: 'medium' }} width={400} margin={{ right: 'small' }}>
             {
               // TODO: replace with data from config api
-              repoMetadata.git_ssh_url && <Text>HTTP</Text>
+              repoMetadata.git_ssh_url && <Text>{getString('http')}</Text>
             }
             <Layout.Horizontal className={css.layout}>
               <Text className={css.url}>{repoMetadata.git_url}</Text>
@@ -114,7 +114,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
               // TODO: replace with data from config api
               repoMetadata.git_ssh_url && (
                 <>
-                  <Text>SSH</Text>
+                  <Text>{getString('ssh')}</Text>
                   <Layout.Horizontal className={css.layout}>
                     <Text className={css.url}>{repoMetadata.git_ssh_url}</Text>
                     <FlexExpander />

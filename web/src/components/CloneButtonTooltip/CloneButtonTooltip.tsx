@@ -56,7 +56,7 @@ export function CloneButtonTooltip({ httpsURL, sshURL }: CloneButtonTooltipProps
         <Container padding={{ top: 'small' }}>
           {
             // TODO: replace with data from config api
-            sshURL && <Text font={{ variation: FontVariation.BODY2_SEMI }}>HTTP</Text>
+            sshURL && <Text font={{ variation: FontVariation.BODY2_SEMI }}>{getString('http')}</Text>
           }
           <Layout.Horizontal className={css.layout}>
             <Text className={css.url}>{httpsURL}</Text>
@@ -68,7 +68,7 @@ export function CloneButtonTooltip({ httpsURL, sshURL }: CloneButtonTooltipProps
           // TODO: replace with data from config api
           sshURL && (
             <Container padding={{ top: 'small' }}>
-              <Text font={{ variation: FontVariation.BODY2_SEMI }}>SSH</Text>
+              <Text font={{ variation: FontVariation.BODY2_SEMI }}>{getString('ssh')}</Text>
               <Layout.Horizontal className={css.layout}>
                 <Text className={css.url}>{sshURL}</Text>
 

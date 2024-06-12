@@ -1179,3 +1179,5 @@ confirmStrat: 'Confirm {{strat}}'
 waiting: Waiting
 changesRequestedBy: CHANGES REQUESTED BY
 mergeBranchTitle: Merge branch {{branchName}} of {{repoPath}} (#{{prNum}})
+http: HTTP
+ssh: SSH

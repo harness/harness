@@ -148,22 +148,22 @@ export const Conversation: React.FC<ConversationProps> = ({
 
     switch (activityFilter.value) {
       case PRCommentFilterType.ALL_COMMENTS:
-        return blocks.filter(_activities => !isSystemComment(_activities))
+        return blocks?.filter(_activities => !isSystemComment(_activities))
 
       case PRCommentFilterType.RESOLVED_COMMENTS:
-        return blocks.filter(
+        return blocks?.filter(
           _activities => _activities[0].payload?.resolved && (isCodeComment(_activities) || isComment(_activities))
         )
 
       case PRCommentFilterType.UNRESOLVED_COMMENTS:
-        return blocks.filter(
+        return blocks?.filter(
           _activities => !_activities[0].payload?.resolved && (isComment(_activities) || isCodeComment(_activities))
         )
 
       case PRCommentFilterType.MY_COMMENTS: {
-        const allCommentBlock = blocks.filter(_activities => !isSystemComment(_activities))
-        const userCommentsOnly = allCommentBlock.filter(_activities => {
-          const userCommentReply = _activities.filter(
+        const allCommentBlock = blocks?.filter(_activities => !isSystemComment(_activities))
+        const userCommentsOnly = allCommentBlock?.filter(_activities => {
+          const userCommentReply = _activities?.filter(
             authorIsUser => currentUser?.uid && authorIsUser.payload?.author?.uid === currentUser?.uid
           )
           return userCommentReply.length !== 0
