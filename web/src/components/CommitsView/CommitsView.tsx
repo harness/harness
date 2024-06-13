@@ -293,7 +293,7 @@ function renderPullRequestLinkFromCommitMessage(
   const match = message.match(/\(#\d+\)(\n|$)/)
   if (match?.length) {
     message = message.replace(match[0], '({URL})')
-    const pullRequestId = match[0].replace('(#', '').replace(')', '')
+    const pullRequestId = match[0].replace('(#', '').replace(')', '').replace('\n', '')
     message = (
       <StringSubstitute
         str={message}
@@ -311,6 +311,5 @@ function renderPullRequestLinkFromCommitMessage(
       />
     )
   }
-
   return message
 }
