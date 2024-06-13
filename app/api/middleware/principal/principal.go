@@ -19,6 +19,7 @@ import (
 
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -35,7 +36,20 @@ func RestrictTo(pType enum.PrincipalType) func(http.Handler) http.Handler {
 			ctx := r.Context()
 
 			p, ok := request.PrincipalFrom(ctx)
-			if !ok || p.Type != pType {
+			if !ok {
+				log.Ctx(ctx).Debug().Msgf("Failed to get principal from session")
+
+				render.Forbidden(ctx, w)
+				return
+			}
+			if p.UID == types.AnonymousPrincipalUID {
+				log.Ctx(ctx).Debug().Msgf("Valid principal is required, received an Anonymous.")
+
+				render.Unauthorized(ctx, w)
+				return
+			}
+
+			if p.Type != pType {
 				log.Ctx(ctx).Debug().Msgf("Principal of type '%s' required.", pType)
 
 				render.Forbidden(ctx, w)
