@@ -77,13 +77,13 @@ type CommitStats struct {
 }
 
 type Commit struct {
-	SHA        string      `json:"sha"`
-	ParentSHAs []string    `json:"parent_shas,omitempty"`
-	Title      string      `json:"title"`
-	Message    string      `json:"message"`
-	Author     Signature   `json:"author"`
-	Committer  Signature   `json:"committer"`
-	Stats      CommitStats `json:"stats,omitempty"`
+	SHA        string       `json:"sha"`
+	ParentSHAs []string     `json:"parent_shas,omitempty"`
+	Title      string       `json:"title"`
+	Message    string       `json:"message"`
+	Author     Signature    `json:"author"`
+	Committer  Signature    `json:"committer"`
+	Stats      *CommitStats `json:"stats,omitempty"`
 }
 
 type Signature struct {

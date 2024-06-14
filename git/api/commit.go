@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/git/sha"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 )
 
 // CommitGPGSignature represents a git commit signature part.
@@ -255,15 +256,28 @@ func getCommitFileStats(
 	repoPath string,
 	sha sha.SHA,
 ) ([]CommitFileStats, error) {
+	g, ctx := errgroup.WithContext(ctx)
+	var changeInfoChanges map[string]changeInfoChange
 	var changeInfoTypes map[string]changeInfoType
-	changeInfoTypes, err := getChangeInfoTypes(ctx, repoPath, sha)
-	if err != nil {
+
+	g.Go(func() error {
+		var err error
+		changeInfoChanges, err = getChangeInfoChanges(ctx, repoPath, sha)
+		return err
+	})
+
+	g.Go(func() error {
+		var err error
+		changeInfoTypes, err = getChangeInfoTypes(ctx, repoPath, sha)
+		return err
+	})
+
+	if err := g.Wait(); err != nil {
 		return nil, fmt.Errorf("failed to get change infos: %w", err)
 	}
 
-	changeInfoChanges, err := getChangeInfoChanges(ctx, repoPath, sha)
-	if err != nil {
-		return []CommitFileStats{}, fmt.Errorf("failed to get change infos: %w", err)
+	if len(changeInfoTypes) == 0 {
+		return []CommitFileStats{}, nil
 	}
 
 	fileStats := make([]CommitFileStats, len(changeInfoChanges))

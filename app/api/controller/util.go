@@ -94,6 +94,28 @@ func MapCommit(c *git.Commit) (*types.Commit, error) {
 		return nil, fmt.Errorf("failed to map committer: %w", err)
 	}
 
+	parentSHAs := make([]string, len(c.ParentSHAs))
+	for i, sha := range c.ParentSHAs {
+		parentSHAs[i] = sha.String()
+	}
+
+	return &types.Commit{
+			SHA:        c.SHA.String(),
+			ParentSHAs: parentSHAs,
+			Title:      c.Title,
+			Message:    c.Message,
+			Author:     *author,
+			Committer:  *committer,
+			Stats:      mapStats(c),
+		},
+		nil
+}
+
+func mapStats(c *git.Commit) *types.CommitStats {
+	if len(c.FileStats) == 0 {
+		return nil
+	}
+
 	var insertions int64
 	var deletions int64
 	for _, stat := range c.FileStats {
@@ -101,27 +123,14 @@ func MapCommit(c *git.Commit) (*types.Commit, error) {
 		deletions += stat.Deletions
 	}
 
-	parentSHAs := make([]string, len(c.ParentSHAs))
-	for i, sha := range c.ParentSHAs {
-		parentSHAs[i] = sha.String()
-	}
-
-	return &types.Commit{
-		SHA:        c.SHA.String(),
-		ParentSHAs: parentSHAs,
-		Title:      c.Title,
-		Message:    c.Message,
-		Author:     *author,
-		Committer:  *committer,
-		Stats: types.CommitStats{
-			Total: types.ChangeStats{
-				Insertions: insertions,
-				Deletions:  deletions,
-				Changes:    insertions + deletions,
-			},
-			Files: mapFileStats(c),
+	return &types.CommitStats{
+		Total: types.ChangeStats{
+			Insertions: insertions,
+			Deletions:  deletions,
+			Changes:    insertions + deletions,
 		},
-	}, nil
+		Files: mapFileStats(c),
+	}
 }
 
 func mapFileStats(c *git.Commit) []types.CommitFileStats {
