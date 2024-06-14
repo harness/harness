@@ -135,6 +135,7 @@ func (s *PrincipalStore) UpdateServiceAccount(ctx context.Context, sa *types.Ser
 		UPDATE principals
 		SET
 			 principal_uid	          = :principal_uid
+			,principal_uid_unique     = :principal_uid_unique
 			,principal_email          = :principal_email
 			,principal_display_name   = :principal_display_name
 			,principal_blocked        = :principal_blocked

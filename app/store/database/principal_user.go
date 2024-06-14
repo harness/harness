@@ -150,6 +150,7 @@ func (s *PrincipalStore) UpdateUser(ctx context.Context, user *types.User) error
 		UPDATE principals
 		SET
 			 principal_uid	          = :principal_uid
+			,principal_uid_unique     = :principal_uid_unique
 			,principal_email          = :principal_email
 			,principal_display_name   = :principal_display_name
 			,principal_admin          = :principal_admin
