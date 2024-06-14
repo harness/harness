@@ -134,7 +134,8 @@ func (s *PrincipalStore) UpdateServiceAccount(ctx context.Context, sa *types.Ser
 	const sqlQuery = `
 		UPDATE principals
 		SET
-			principal_email     	  = :principal_email
+			 principal_uid	          = :principal_uid
+			,principal_email          = :principal_email
 			,principal_display_name   = :principal_display_name
 			,principal_blocked        = :principal_blocked
 			,principal_salt           = :principal_salt
