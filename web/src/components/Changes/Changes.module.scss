@@ -100,6 +100,20 @@
       .d2h-code-side-line {
         max-width: calc(100% - 12px);
       }
+
+      .d2h-info {
+        max-width: calc(100% - 128px);
+        height: 26px;
+
+        .d2h-code-side-line {
+          display: flex;
+          max-width: calc(100% - 128px);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          height: 26px;
+          white-space: normal;
+        }
+      }
     }
   }
 }

@@ -16,6 +16,7 @@
 
 .main {
   --border-color: var(--grey-200);
+  --panel-background: #f1f1f1;
   --line-height: 20px;
 
   // TODO: Restyle DiffView to match latest design
@@ -95,7 +96,7 @@
           }
 
           &:has(.d2h-emptyplaceholder) {
-            background-color: #f1f1f1;
+            background-color: var(--panel-background);
           }
         }
 
@@ -131,6 +132,16 @@
 
           del {
             background-color: var(--bg-change-deleted);
+          }
+        }
+      }
+
+      .d2h-file-diff,
+      .d2h-file-side-diff {
+        .d2h-code-wrapper {
+          &,
+          .d2h-diff-table {
+            height: 100%;
           }
         }
       }
