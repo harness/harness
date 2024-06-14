@@ -250,7 +250,8 @@ export const CodeIcon = {
   InputSearch: 'search' as IconName,
   Chat: 'code-chat' as IconName,
   Checks: 'main-tick' as IconName,
-  ChecksSuccess: 'success-tick' as IconName
+  ChecksSuccess: 'success-tick' as IconName,
+  CheckIcon: 'code-checks' as IconName
 }
 
 export const normalizeGitRef = (gitRef: string | undefined) => {

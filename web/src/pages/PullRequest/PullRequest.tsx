@@ -218,8 +218,8 @@ export default function PullRequest() {
                     id: PullRequestSection.CHECKS,
                     title: (
                       <TabTitleWithCount
-                        icon="main-search"
-                        iconSize={14}
+                        icon={CodeIcon.CheckIcon}
+                        iconSize={16}
                         title={getString('checks')}
                         countElement={
                           pullReqChecksDecision?.overallStatus ? (

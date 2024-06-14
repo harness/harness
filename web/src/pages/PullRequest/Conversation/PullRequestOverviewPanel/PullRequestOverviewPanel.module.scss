@@ -189,7 +189,7 @@
 }
 
 .paddingWithOutReq {
-  padding-right: 4.55rem !important;
+  padding-right: 4rem !important;
 }
 
 .changeContainerPadding {
@@ -204,7 +204,7 @@
 
 .gridContainer {
   display: grid !important;
-  grid-template-columns: 1fr 0.75fr !important;
+  grid-template-columns: 1fr 1fr !important;
   position: relative !important;
 }
 
@@ -218,11 +218,13 @@
 .details {
   grid-column: 1 !important;
   padding-right: var(--spacing-small) !important;
+  text-align: left;
 }
 
 .required {
   margin-left: var(--spacing-small) !important;
   grid-column: 2 !important;
+  text-align: right !important;
 }
 
 /* Pseudo-elements for placeholders to maintain grid structure */
