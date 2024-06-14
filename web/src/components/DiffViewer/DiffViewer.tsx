@@ -179,33 +179,6 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     )
   )
 
-  useEffect(() => {
-    const dom = contentRef.current
-
-    if (inView) {
-      if (isMounted.current && dom && contentHTML.current) {
-        dom.innerHTML = contentHTML.current
-        contentHTML.current = null
-      }
-    } else {
-      if (isMounted.current && dom && !contentHTML.current) {
-        contentHTML.current = dom.innerHTML
-
-        const pre = document.createElement('pre')
-        pre.style.fontSize = '12px'
-        pre.style.whiteSpace = 'normal'
-        pre.style.lineHeight = '20px'
-        pre.style.margin = '0'
-        pre.style.height = dom.clientHeight + 'px'
-        pre.textContent = dom.textContent
-        pre.style.color = 'transparent'
-
-        dom.textContent = ''
-        dom.appendChild(pre)
-      }
-    }
-  }, [inView, isMounted])
-
   //
   // Handling custom events sent to DiffViewer from external components/features
   // such as "jump to file", "jump to comment", etc...
@@ -329,6 +302,56 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
   })
 
   const branchInfo = useFindGitBranch(pullReqMetadata?.source_branch)
+
+  useEffect(
+    function serializeDeserializeContent() {
+      const dom = contentRef.current
+
+      if (inView) {
+        if (isMounted.current && dom && contentHTML.current) {
+          dom.innerHTML = contentHTML.current
+          contentHTML.current = null
+
+          // Remove all signs from the raw HTML that CommentBox was mounted so
+          // it can be mounted/re-rendered again freshly
+          dom.querySelectorAll('tr[data-source-line-number]').forEach(row => {
+            row.removeAttribute('data-source-line-number')
+            row.removeAttribute('data-comment-ids')
+            row.querySelector('button[data-toggle-comment="true"]')?.remove?.()
+          })
+          dom.querySelectorAll('tr[data-annotated-line],tr[data-place-holder-for-line]').forEach(row => {
+            row.remove?.()
+          })
+
+          // Attach comments again
+          commentsHook.current.attachAllCommentThreads()
+        }
+      } else {
+        if (isMounted.current && dom && !contentHTML.current) {
+          const { clientHeight, textContent, innerHTML } = dom
+
+          // Detach comments since they are no longer in sync in DOM as
+          // all DOMs are removed (reduce some wasted CPU cycle from React)
+          commentsHook.current.detachAllCommentThreads()
+
+          contentHTML.current = innerHTML
+
+          const pre = document.createElement('pre')
+          pre.style.fontSize = '12px'
+          pre.style.whiteSpace = 'normal'
+          pre.style.lineHeight = '20px'
+          pre.style.margin = '0'
+          pre.style.height = clientHeight + 'px'
+          pre.textContent = textContent
+          pre.style.color = 'transparent'
+
+          dom.textContent = ''
+          dom.appendChild(pre)
+        }
+      }
+    },
+    [inView, isMounted, commentsHook]
+  )
 
   useShowRequestError(fullDiffError, 0)
 
