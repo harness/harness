@@ -491,16 +491,6 @@
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
     max-width: calc(var(--page-container-width) - 48px);
-
-    // &.hidden {
-    //   height: var(--block-height);
-    //   content-visibility: auto;
-    //   contain-intrinsic-size: auto var(--block-height);
-
-    //   * {
-    //     display: none !important;
-    //   }
-    // }
   }
 }
 

@@ -46,7 +46,7 @@ import { CopyButton } from 'components/CopyButton/CopyButton'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
 import { useQueryParams } from 'hooks/useQueryParams'
-import { useCustomEventListener } from 'hooks/useEventListener'
+import { useCustomEventListener, useEventListener } from 'hooks/useEventListener'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { getErrorMessage, isInViewport } from 'utils/Utils'
 import { createRequestAnimationFrameTaskPool } from 'utils/Task'
@@ -393,6 +393,19 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
 
   const ToggleFullDiffIcon = useMemo(() => (useFullDiff ? Collapse : Expand), [useFullDiff])
 
+  // Add click event listener from contentRef to handle click event on "Show Diff" button
+  // This can't be done from the button itself because it got serialized / deserialized from
+  // text during off-screen optimization (handler will be gone/destroyed)
+  useEventListener(
+    'click',
+    useCallback(event => {
+      if (((event.target as HTMLElement)?.closest('button') as HTMLElement)?.dataset?.action === ACTION_SHOW_DIFF) {
+        setRenderCustomContent(false)
+      }
+    }, []),
+    contentRef.current as HTMLDivElement
+  )
+
   return (
     <Container
       ref={setContainerRef}
@@ -519,28 +532,32 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
         </Container>
 
         <Container id={diff.contentId} data-path={diff.filePath} className={css.diffContent} ref={contentRef}>
-          <Render when={renderCustomContent && !collapsed}>
-            <Container height={200} flex={{ align: 'center-center' }}>
-              <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
-                <Render when={fileDeleted || isDiffTooLarge || diffHasVeryLongLine}>
-                  <Button variation={ButtonVariation.LINK} onClick={() => setRenderCustomContent(false)}>
-                    {getString('pr.showDiff')}
-                  </Button>
-                </Render>
-                <Text>
-                  {getString(
-                    fileDeleted
-                      ? 'pr.fileDeleted'
-                      : isDiffTooLarge || diffHasVeryLongLine
-                      ? 'pr.diffTooLarge'
-                      : isBinary
-                      ? 'pr.fileBinary'
-                      : 'pr.fileUnchanged'
-                  )}
-                </Text>
-              </Layout.Vertical>
-            </Container>
-          </Render>
+          {/* Note: This parent container is needed to make sure "Show Diff" work correctly 
+            with content converted between textContent and innerHTML */}
+          <Container>
+            <Render when={renderCustomContent && !collapsed}>
+              <Container height={200} flex={{ align: 'center-center' }}>
+                <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
+                  <Render when={fileDeleted || isDiffTooLarge || diffHasVeryLongLine}>
+                    <Button data-action={ACTION_SHOW_DIFF} variation={ButtonVariation.LINK}>
+                      {getString('pr.showDiff')}
+                    </Button>
+                  </Render>
+                  <Text>
+                    {getString(
+                      fileDeleted
+                        ? 'pr.fileDeleted'
+                        : isDiffTooLarge || diffHasVeryLongLine
+                        ? 'pr.diffTooLarge'
+                        : isBinary
+                        ? 'pr.fileBinary'
+                        : 'pr.fileUnchanged'
+                    )}
+                  </Text>
+                </Layout.Vertical>
+              </Container>
+            </Render>
+          </Container>
         </Container>
       </Layout.Vertical>
       <NavigationCheck when={dirty} />
@@ -549,6 +566,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
 }
 
 const BLOCK_HEIGHT = '--block-height'
+const ACTION_SHOW_DIFF = 'showDiff'
 
 export enum DiffViewerEvent {
   SCROLL_INTO_VIEW = 'scrollIntoView'
