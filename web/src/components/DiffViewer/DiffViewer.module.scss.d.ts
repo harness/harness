@@ -26,8 +26,8 @@ export declare const expandCollapseDiffBtn: string
 export declare const fileChanged: string
 export declare const fname: string
 export declare const fnamePopover: string
-export declare const hidden: string
 export declare const main: string
+export declare const offscreenText: string
 export declare const popover: string
 export declare const readOnly: string
 export declare const selectoSelection: string

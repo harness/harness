@@ -363,8 +363,6 @@ const CommentsThread = <T = unknown,>({
             let commentRow = annotatedRow.nextElementSibling as HTMLElement
 
             while (commentRow?.dataset?.annotatedLine) {
-              toggleHidden(commentRow)
-
               // Toggle opposite place-holder as well
               const diffParent = commentRow.closest('.d2h-code-wrapper')?.parentElement
               const oppositeDiv = diffParent?.classList.contains('right')
@@ -376,6 +374,7 @@ const CommentsThread = <T = unknown,>({
 
               oppositePlaceHolders?.forEach(dom => toggleHidden(dom))
 
+              toggleHidden(commentRow)
               commentRow = commentRow.nextElementSibling as HTMLElement
             }
             show.current = !show.current
@@ -388,6 +387,7 @@ const CommentsThread = <T = unknown,>({
 
           button.classList.add(css.toggleComment)
           button.title = getString('pr.toggleComments')
+          button.dataset.toggleComment = 'true'
 
           button.addEventListener('keydown', e => {
             if (e.key === 'Enter') toggleComments(e)

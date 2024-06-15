@@ -465,14 +465,12 @@
     border-bottom-right-radius: 4px;
     max-width: calc(var(--page-container-width) - 48px);
 
-    &.hidden {
-      height: var(--block-height);
-      content-visibility: auto;
-      contain-intrinsic-size: auto var(--line-height);
-
-      * {
-        display: none !important;
-      }
+    .offscreenText {
+      font-size: 12px;
+      white-space: normal;
+      line-height: 20px;
+      margin: 0;
+      color: transparent;
     }
   }
 }
