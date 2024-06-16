@@ -124,7 +124,7 @@ func buildUser(reflector *openapi3.Reflector) {
 	opMemberSpaces.WithParameters(
 		queryParameterMembershipSpaces,
 		queryParameterOrder, queryParameterSortMembershipSpaces,
-		queryParameterPage, queryParameterLimit)
+		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opMemberSpaces, struct{}{}, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opMemberSpaces, new([]types.MembershipSpace), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMemberSpaces, new(usererror.Error), http.StatusInternalServerError)
@@ -153,7 +153,7 @@ func buildUser(reflector *openapi3.Reflector) {
 	opKeyList := openapi3.Operation{}
 	opKeyList.WithTags("user")
 	opKeyList.WithMapOfAnything(map[string]interface{}{"operationId": "listPublicKey"})
-	opKeyList.WithParameters(queryParameterPage, queryParameterLimit,
+	opKeyList.WithParameters(QueryParameterPage, QueryParameterLimit,
 		queryParameterQueryPublicKey, queryParameterSortPublicKey, queryParameterOrder)
 	_ = reflector.SetRequest(&opKeyList, struct{}{}, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opKeyList, new([]types.PublicKey), http.StatusOK)

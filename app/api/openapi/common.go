@@ -30,7 +30,7 @@ func ptrptr(i interface{}) *interface{} {
 	return &i
 }
 
-var queryParameterPage = openapi3.ParameterOrRef{
+var QueryParameterPage = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamPage,
 		In:          openapi3.ParameterInQuery,
@@ -65,7 +65,7 @@ var queryParameterOrder = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterLimit = openapi3.ParameterOrRef{
+var QueryParameterLimit = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamLimit,
 		In:          openapi3.ParameterInQuery,

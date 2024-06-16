@@ -792,7 +792,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listCommits"})
 	opListCommits.WithParameters(queryParameterGitRef, queryParameterAfterCommits, queryParameterPath,
 		queryParameterSince, queryParameterUntil, queryParameterCommitter,
-		queryParameterPage, queryParameterLimit, QueryParamIncludeStats)
+		QueryParameterPage, QueryParameterLimit, QueryParamIncludeStats)
 	_ = reflector.SetRequest(&opListCommits, new(listCommitsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommits, []types.ListCommitResponse{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusInternalServerError)
@@ -865,7 +865,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListBranches.WithMapOfAnything(map[string]interface{}{"operationId": "listBranches"})
 	opListBranches.WithParameters(queryParameterIncludeCommit,
 		queryParameterQueryBranches, queryParameterOrder, queryParameterSortBranch,
-		queryParameterPage, queryParameterLimit)
+		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opListBranches, new(listBranchesRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListBranches, []repo.Branch{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusInternalServerError)
@@ -879,7 +879,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListTags.WithMapOfAnything(map[string]interface{}{"operationId": "listTags"})
 	opListTags.WithParameters(queryParameterIncludeCommit,
 		queryParameterQueryTags, queryParameterOrder, queryParameterSortTags,
-		queryParameterPage, queryParameterLimit)
+		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opListTags, new(listTagsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListTags, []repo.CommitTag{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusInternalServerError)
@@ -1039,7 +1039,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opRuleList.WithParameters(
 		queryParameterQueryRuleList,
 		queryParameterOrder, queryParameterSortRuleList,
-		queryParameterPage, queryParameterLimit)
+		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opRuleList, &struct {
 		repoRequest
 	}{}, http.MethodGet)

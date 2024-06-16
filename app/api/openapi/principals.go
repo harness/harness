@@ -69,8 +69,8 @@ func buildPrincipals(reflector *openapi3.Reflector) {
 	opList := openapi3.Operation{}
 	opList.WithTags("principals")
 	opList.WithMapOfAnything(map[string]interface{}{"operationId": "listPrincipals"})
-	opList.WithParameters(queryParameterQueryPrincipals, queryParameterPage,
-		queryParameterLimit, queryParameterPrincipalTypes)
+	opList.WithParameters(queryParameterQueryPrincipals, QueryParameterPage,
+		QueryParameterLimit, queryParameterPrincipalTypes)
 	_ = reflector.SetRequest(&opList, new(principalRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opList, new([]types.PrincipalInfo), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusBadRequest)

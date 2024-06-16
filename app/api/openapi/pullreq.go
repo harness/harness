@@ -336,7 +336,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
 		queryParameterOrder, queryParameterSortPullRequest,
 		queryParameterCreatedLt, queryParameterCreatedGt,
-		queryParameterPage, queryParameterLimit)
+		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
@@ -383,7 +383,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	listPullReqActivities.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReqActivities"})
 	listPullReqActivities.WithParameters(
 		queryParameterKindPullRequestActivity, queryParameterTypePullRequestActivity,
-		queryParameterAfter, queryParameterBeforePullRequestActivity, queryParameterLimit)
+		queryParameterAfter, queryParameterBeforePullRequestActivity, QueryParameterLimit)
 	_ = reflector.SetRequest(&listPullReqActivities, new(listPullReqActivitiesRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReqActivities, new([]types.PullReqActivity), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusBadRequest)
@@ -520,7 +520,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	opListCommits := openapi3.Operation{}
 	opListCommits.WithTags("pullreq")
 	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReqCommits"})
-	opListCommits.WithParameters(queryParameterPage, queryParameterLimit)
+	opListCommits.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opListCommits, new(pullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommits, []types.Commit{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusInternalServerError)

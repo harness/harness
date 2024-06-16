@@ -128,7 +128,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	opPipelines := openapi3.Operation{}
 	opPipelines.WithTags("pipeline")
 	opPipelines.WithMapOfAnything(map[string]interface{}{"operationId": "listPipelines"})
-	opPipelines.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit, queryParameterLatest)
+	opPipelines.WithParameters(queryParameterQueryRepo, QueryParameterPage, QueryParameterLimit, queryParameterLatest)
 	_ = reflector.SetRequest(&opPipelines, new(repoRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opPipelines, []types.Pipeline{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusInternalServerError)
@@ -224,7 +224,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	executionList := openapi3.Operation{}
 	executionList.WithTags("pipeline")
 	executionList.WithMapOfAnything(map[string]interface{}{"operationId": "listExecutions"})
-	executionList.WithParameters(queryParameterPage, queryParameterLimit)
+	executionList.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&executionList, new(pipelineRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&executionList, []types.Execution{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&executionList, new(usererror.Error), http.StatusInternalServerError)
@@ -286,7 +286,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	triggerList := openapi3.Operation{}
 	triggerList.WithTags("pipeline")
 	triggerList.WithMapOfAnything(map[string]interface{}{"operationId": "listTriggers"})
-	triggerList.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
+	triggerList.WithParameters(queryParameterQueryRepo, QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&triggerList, new(pipelineRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&triggerList, []types.Trigger{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&triggerList, new(usererror.Error), http.StatusInternalServerError)

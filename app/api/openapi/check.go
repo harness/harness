@@ -76,7 +76,7 @@ func checkOperations(reflector *openapi3.Reflector) {
 	listStatusCheckResults := openapi3.Operation{}
 	listStatusCheckResults.WithTags(tag)
 	listStatusCheckResults.WithParameters(
-		queryParameterPage, queryParameterLimit, queryParameterStatusCheckQuery)
+		QueryParameterPage, QueryParameterLimit, queryParameterStatusCheckQuery)
 	listStatusCheckResults.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckResults"})
 	_ = reflector.SetRequest(&listStatusCheckResults, struct {
 		repoRequest

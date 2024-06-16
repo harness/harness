@@ -128,7 +128,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	listWebhooks.WithTags("webhook")
 	listWebhooks.WithMapOfAnything(map[string]interface{}{"operationId": "listWebhooks"})
 	listWebhooks.WithParameters(queryParameterQueryWebhook, queryParameterSortWebhook, queryParameterOrder,
-		queryParameterPage, queryParameterLimit)
+		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&listWebhooks, new(listWebhooksRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listWebhooks, new([]webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listWebhooks, new(usererror.Error), http.StatusBadRequest)
@@ -173,7 +173,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	listWebhookExecutions := openapi3.Operation{}
 	listWebhookExecutions.WithTags("webhook")
 	listWebhookExecutions.WithMapOfAnything(map[string]interface{}{"operationId": "listWebhookExecutions"})
-	listWebhookExecutions.WithParameters(queryParameterPage, queryParameterLimit)
+	listWebhookExecutions.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&listWebhookExecutions, new(listWebhookExecutionsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listWebhookExecutions, new([]types.WebhookExecution), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listWebhookExecutions, new(usererror.Error), http.StatusBadRequest)
@@ -186,7 +186,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	getWebhookExecution := openapi3.Operation{}
 	getWebhookExecution.WithTags("webhook")
 	getWebhookExecution.WithMapOfAnything(map[string]interface{}{"operationId": "getWebhookExecution"})
-	getWebhookExecution.WithParameters(queryParameterPage, queryParameterLimit)
+	getWebhookExecution.WithParameters(QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&getWebhookExecution, new(getWebhookExecutionRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&getWebhookExecution, new(types.WebhookExecution), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getWebhookExecution, new(usererror.Error), http.StatusBadRequest)
