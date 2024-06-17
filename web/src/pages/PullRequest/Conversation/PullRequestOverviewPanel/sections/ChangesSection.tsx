@@ -492,7 +492,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
                   </Text>
                 ) : (
                   <Layout.Horizontal>
-                    <Container padding={{ left: 'medium' }}>
+                    <Container padding={{ left: 'large' }}>
                       <img alt="emptyStatus" width={16} height={16} src={emptyStatus} />
                     </Container>
 

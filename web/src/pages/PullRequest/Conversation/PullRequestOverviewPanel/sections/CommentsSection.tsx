@@ -71,7 +71,9 @@ const CommentsSection = (props: MergeSectionProps) => {
               label: getString('unrsolvedComment'),
               value: PRCommentFilterType.UNRESOLVED_COMMENTS
             })
-            document.querySelectorAll('.bp3-input[value="Active"]')[0].scrollIntoView({ behavior: 'smooth' })
+            setTimeout(() => {
+              document.querySelectorAll('.bp3-input[value="Active"]')[0]?.scrollIntoView({ behavior: 'smooth' })
+            }, 0)
           }}
         />
       ) : null}
