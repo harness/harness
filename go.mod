@@ -55,7 +55,7 @@ require (
 	github.com/swaggest/openapi-go v0.2.23
 	github.com/swaggest/swgui v1.8.0
 	github.com/unrolled/secure v1.0.8
-	github.com/zricethezav/gitleaks/v8 v8.18.2
+	github.com/zricethezav/gitleaks/v8 v8.18.5-0.20240614204812-26f34692fac6
 	go.starlark.net v0.0.0-20231121155337-90ade8b19d09
 	go.uber.org/multierr v1.8.0
 	golang.org/x/crypto v0.17.0

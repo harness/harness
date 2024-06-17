@@ -812,8 +812,8 @@ github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.4.13 h1:fVcFKWvrslecOb/tg+Cc05dkeYx540o0FuFt3nUVDoE=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
-github.com/zricethezav/gitleaks/v8 v8.18.2 h1:slo/sMmgs3qA+6Vv6iqVhsCv+gsl3RekQXqDN0M4g5M=
-github.com/zricethezav/gitleaks/v8 v8.18.2/go.mod h1:8F5GrdCpEtyN5R+0MKPubbOPqIHptNckH3F7bYrhT+Y=
+github.com/zricethezav/gitleaks/v8 v8.18.5-0.20240614204812-26f34692fac6 h1:UL8vBvxILAVsruyxIGMskACYzOk57nR8aq6dpZLR3KQ=
+github.com/zricethezav/gitleaks/v8 v8.18.5-0.20240614204812-26f34692fac6/go.mod h1:3EFYK+ZNDHPNQinyZTVGHG7/sFsApEZ9DrCGA1AP63M=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738/go.mod h1:dnLIgRNXwCJa5e+c6mIZCrds/GIG4ncV9HhK5PX7jPg=
 go.etcd.io/etcd/api/v3 v3.5.0/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
