@@ -34,7 +34,7 @@ const (
 func GitPathBefore(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		_, err := pathTerminatedWithMarker(r, "", ".git/", "/")
+		_, err := pathTerminatedWithMarker(r, "", ".git", "")
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -83,10 +83,9 @@ func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, mar
 	}
 
 	originalSubPath := r.URL.Path[len(prefix):]
-	path, _, found := strings.Cut(originalSubPath, marker)
-
-	// If we don't find a marker - nothing to encode
+	path, found := cutOutTerminatedPath(originalSubPath, marker)
 	if !found {
+		// If we don't find a marker - nothing to encode
 		return false, nil
 	}
 
@@ -110,4 +109,25 @@ func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, mar
 	}
 
 	return true, nil
+}
+
+// cutOutTerminatedPath cuts out the resource path terminated with the provided marker (path segment suffix).
+// e.g. subPath: "/space1/space2/+/authToken", marker: "/+" => "/space1/space2"
+// e.g. subPath: "/space1/space2.git", marker: ".git" => "/space1/space2"
+// e.g. subPath: "/space1/space2.git/", marker: ".git" => "/space1/space2".
+func cutOutTerminatedPath(subPath string, marker string) (string, bool) {
+	// if subpath ends with the marker, just remove the marker.
+	if strings.HasSuffix(subPath, marker) {
+		return subPath[:len(subPath)-len(marker)], true
+	}
+
+	// ensure we only look for path segment suffixes when looking for the marker.
+	if !strings.HasSuffix(marker, "/") {
+		marker += "/"
+	}
+	if path, _, found := strings.Cut(subPath, marker); found {
+		return path, true
+	}
+
+	return "", false
 }
