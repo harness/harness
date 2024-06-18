@@ -29,6 +29,10 @@ const StatusCircle = ({
   summary: {
     message: string
     summary: {
+      failedReq: number
+      pendingReq: number
+      runningReq: number
+      successReq: number
       failed: number
       pending: number
       running: number
@@ -40,7 +44,15 @@ const StatusCircle = ({
   const { getString } = useStrings()
   const data = summary.summary
   const status =
-    data.failed > 0
+    data.failedReq > 0
+      ? ExecutionState.FAILURE
+      : data.pendingReq > 0
+      ? ExecutionState.PENDING
+      : data.runningReq > 0
+      ? ExecutionState.RUNNING
+      : data.successReq > 0
+      ? ExecutionState.SUCCESS
+      : data.failed > 0
       ? ExecutionState.FAILURE
       : data.pending > 0
       ? ExecutionState.PENDING

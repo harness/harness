@@ -66,7 +66,17 @@ const ChecksSection = (props: ChecksSectionProps) => {
 
   function generateStatusSummary(checks: TypeCheckData[]) {
     // Initialize counts for each status
-    const statusCounts = { failed: 0, pending: 0, running: 0, succeeded: 0, total: checks?.length || 0 }
+    const statusCounts = {
+      failedReq: 0,
+      pendingReq: 0,
+      runningReq: 0,
+      successReq: 0,
+      failed: 0,
+      pending: 0,
+      running: 0,
+      succeeded: 0,
+      total: checks?.length || 0
+    }
     if (isEmpty(checks)) {
       return { message: '', summary: statusCounts }
     }
@@ -74,30 +84,51 @@ const ChecksSection = (props: ChecksSectionProps) => {
     // Count occurrences of each status
     checks.forEach(check => {
       const status = check.check.status
+      const required = check.required
       if (status === CheckStatus.FAILURE || status === CheckStatus.ERROR) {
-        statusCounts.failed += 1
+        if (required) {
+          statusCounts.failedReq += 1
+        } else {
+          statusCounts.failed += 1
+        }
       } else if (status === CheckStatus.PENDING) {
-        statusCounts.pending += 1
+        if (required) {
+          statusCounts.pendingReq += 1
+        } else {
+          statusCounts.pending += 1
+        }
       } else if (status === CheckStatus.RUNNING) {
-        statusCounts.running += 1
+        if (required) {
+          statusCounts.runningReq += 1
+        } else {
+          statusCounts.running += 1
+        }
       } else if (status === CheckStatus.SUCCESS) {
-        statusCounts.succeeded += 1
+        if (required) {
+          statusCounts.successReq += 1
+        } else {
+          statusCounts.succeeded += 1
+        }
       }
     })
 
     // Format the summary string
     const summaryParts = []
-    if (statusCounts.failed > 0) {
-      summaryParts.push(`${statusCounts.failed} failed`)
+    if (statusCounts.failed > 0 || statusCounts.failedReq) {
+      const num = statusCounts.failed + statusCounts.failedReq
+      summaryParts.push(`${num} failed`)
     }
-    if (statusCounts.pending > 0) {
-      summaryParts.push(`${statusCounts.pending} pending`)
+    if (statusCounts.pending > 0 || statusCounts.pendingReq > 0) {
+      const num = statusCounts.pending + statusCounts.pendingReq
+      summaryParts.push(`${num} pending`)
     }
-    if (statusCounts.running > 0) {
-      summaryParts.push(`${statusCounts.running} running`)
+    if (statusCounts.running > 0 || statusCounts.runningReq) {
+      const num = statusCounts.running + statusCounts.runningReq
+      summaryParts.push(`${num} running`)
     }
-    if (statusCounts.succeeded > 0) {
-      summaryParts.push(`${statusCounts.succeeded} succeeded`)
+    if (statusCounts.succeeded > 0 || statusCounts.successReq) {
+      const num = statusCounts.succeeded + statusCounts.successReq
+      summaryParts.push(`${num} succeeded`)
     }
 
     return { message: summaryParts.join(', '), summary: statusCounts }
