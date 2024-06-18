@@ -48,5 +48,6 @@ export declare const sectionTitle: string
 export declare const showMore: string
 export declare const statusCircleContainer: string
 export declare const statusIcon: string
+export declare const successIcon: string
 export declare const textSize: string
 export declare const timeoutIcon: string

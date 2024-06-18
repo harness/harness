@@ -158,7 +158,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
         statusIcon = 'warning-icon'
       } else if (
         (codeOwnerPendingEntries && codeOwnerPendingEntries?.length > 0 && reqCodeOwnerLatestApproval) ||
-        (latestCodeOwnerApprovalArr?.length <= minReqLatestApproval && reqCodeOwnerLatestApproval)
+        (latestCodeOwnerApprovalArr?.length < minReqLatestApproval && reqCodeOwnerLatestApproval)
       ) {
         title = getString('changesSection.pendingAppFromCodeOwners')
         statusMessage = getString('changesSection.pendingLatestApprovalCodeOwners')
@@ -474,6 +474,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
                 {latestApprovalArr && minReqLatestApproval <= latestApprovalArr?.length ? (
                   <Text
                     icon="tick-circle"
+                    className={css.successIcon}
                     iconProps={{ size: 16, color: Color.GREEN_700 }}
                     padding={{
                       left: 'large'
@@ -499,7 +500,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
                     <Text
                       className={css.sectionSubheader}
                       padding={{
-                        left: 'large'
+                        left: 'medium'
                       }}>
                       {
                         stringSubstitute(getString('codeOwner.pendingLatestApprovals'), {

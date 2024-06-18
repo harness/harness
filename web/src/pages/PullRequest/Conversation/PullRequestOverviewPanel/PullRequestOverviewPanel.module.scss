@@ -245,3 +245,9 @@
 .gridContainer::after {
   grid-column: 2 !important;
 }
+
+.successIcon {
+  :global(.bp3-icon) {
+    padding-right: unset !important;
+  }
+}
