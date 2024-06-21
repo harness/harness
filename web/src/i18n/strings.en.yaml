@@ -252,6 +252,7 @@ webhook: Webhook
 diff: Diff
 draft: Draft
 conversation: Conversation
+commandLine: command line
 pr:
   toggleComments: Toggle comments
   suggestedChange: Suggested change
@@ -267,6 +268,7 @@ pr:
   expandFullFile: Expand all
   collapseFullFile: Collapse expanded lines
   ableToMerge: Able to merge.
+  useCmdLineToResolveConflicts: Use the {cmd} to resolve conflicts
   cantBeMerged: This branch has conflicts with the {{name}} branch.
   cantMerge: Can't be merged. You can still create the pull request.
   failedToCreate: Failed to create Pull Request.
@@ -1043,6 +1045,7 @@ resolveComments: There are {{n}} unresolved comments
 view: View
 mergeCheckInProgress: Merge check in progress...
 allConflictsNeedToBeResolved: All conflicts have to be resolved before merging
+conflictsFoundInThisBranch: Conflicts found in this branch
 details: Details
 showCheckAll: Show all checks
 showLessCheck: Show less checks
@@ -1053,7 +1056,7 @@ customizeMergeCommitMessage: Customize merge commit message
 mergeStrategy: Merge strategy
 selectMergeStrat: Select merge strategy
 writeDownCommit: Write down commit message here
-prHasNoConflicts: This branch has no conflicts with {{name}} branch
+prHasNoConflicts: This branch has no conflicts with {name} branch
 checkStatus:
   succeeded: Succeeded in {time}
   failed: Failed in {time}
@@ -1181,3 +1184,17 @@ changesRequestedBy: CHANGES REQUESTED BY
 mergeBranchTitle: Merge branch {{branchName}} of {{repoPath}} (#{{prNum}})
 http: HTTP
 ssh: SSH
+stepNum: STEP {{num}}
+cmdlineInfo:
+  title: Resolve conflicts via command line
+  content: If the conflicts on this branch are too complex to resolve in the web editor, you can check it out via command line to resolve the conflicts
+  stepOne: Clone the repository or update your local repository with the latest changes
+  stepOneSub: git pull origin {target}
+  stepTwo: Switch to the head branch of the pull request
+  stepTwoSub: git checkout {source}
+  stepThree: Merge the base branch into the head branch
+  stepThreeSub: git merge {target}
+  stepFour: Fix the conflicts and commit the result
+  stepFourSub: See Resolving a merge conflict using the command line for step-by-step instruction on resolving merge conflicts
+  stepFive: Push the changes
+  stepFiveSub: git push -u origin {source}

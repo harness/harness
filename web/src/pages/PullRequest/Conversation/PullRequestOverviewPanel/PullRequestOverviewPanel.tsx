@@ -28,8 +28,8 @@ import type {
   TypesRuleViolations
 } from 'services/code'
 import { PanelSectionOutletPosition } from 'pages/PullRequest/PullRequestUtils'
-import { MergeCheckStatus, PRMergeOption, dryMerge } from 'utils/Utils'
-import { PullRequestState } from 'utils/GitUtils'
+import { MergeCheckStatus, PRMergeOption } from 'utils/Utils'
+import { PullRequestState, dryMerge } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -79,6 +79,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     () => pullReqMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
     [pullReqMetadata, isClosed]
   )
+  const [conflictingFiles, setConflictingFiles] = useState<string[]>()
   const [ruleViolation, setRuleViolation] = useState(false)
   const [ruleViolationArr, setRuleViolationArr] = useState<{ data: { rule_violations: TypesRuleViolations[] } }>()
   const [requiresCommentApproval, setRequiresCommentApproval] = useState(false)
@@ -172,6 +173,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
       setAllowedStrats,
       pullRequestSection,
       showError,
+      setConflictingFiles,
       setRequiresCommentApproval,
       setAtLeastOneReviewerRule,
       setReqCodeOwnerApproval,
@@ -186,6 +188,8 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     <Container margin={{ bottom: 'medium' }} className={css.mainContainer}>
       <Layout.Vertical>
         <PullRequestActionsBox
+          conflictingFiles={conflictingFiles}
+          setConflictingFiles={setConflictingFiles}
           repoMetadata={repoMetadata}
           pullReqMetadata={pullReqMetadata}
           onPRStateChanged={onPRStateChanged}
@@ -231,9 +235,12 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
                 <ChecksSection pullReqMetadata={pullReqMetadata} repoMetadata={repoMetadata} />
               ),
               [PanelSectionOutletPosition.MERGEABILITY]: !pullReqMetadata.merged && (
-                <Container className={cx(css.sectionContainer, css.borderRadius)}>
-                  <MergeSection pullReqMetadata={pullReqMetadata} unchecked={unchecked} mergeable={mergeable} />
-                </Container>
+                <MergeSection
+                  pullReqMetadata={pullReqMetadata}
+                  unchecked={unchecked}
+                  mergeable={mergeable}
+                  conflictingFiles={conflictingFiles}
+                />
               )
             }}
           />

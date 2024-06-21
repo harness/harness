@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const blueCopyContainer: string
 export declare const blueText: string
 export declare const borderContainer: string
 export declare const borderRadius: string
@@ -23,7 +24,14 @@ export declare const buttonPadding: string
 export declare const changeContainerPadding: string
 export declare const checkContainerPadding: string
 export declare const checkName: string
+export declare const cmdInfoContainer: string
+export declare const cmdText: string
+export declare const cmdTextTitleContainer: string
 export declare const codeOwnerContainer: string
+export declare const conflictingContainer: string
+export declare const conflictingFileName: string
+export declare const conflictingFilesTable: string
+export declare const copyIconContainer: string
 export declare const details: string
 export declare const executionIcon: string
 export declare const greyContainer: string
@@ -48,6 +56,8 @@ export declare const sectionTitle: string
 export declare const showMore: string
 export declare const statusCircleContainer: string
 export declare const statusIcon: string
+export declare const stepFont: string
+export declare const stepText: string
 export declare const successIcon: string
 export declare const textSize: string
 export declare const timeoutIcon: string

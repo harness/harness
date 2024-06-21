@@ -38,11 +38,10 @@ import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
 import type { OpenapiStatePullReqRequest, TypesPullReq, TypesRuleViolations } from 'services/code'
 import { useStrings } from 'framework/strings'
-import { CodeIcon, MergeStrategy, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
+import { CodeIcon, MergeStrategy, PullRequestFilterOption, PullRequestState, dryMerge } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import {
-  dryMerge,
   extractInfoFromRuleViolationArr,
   getErrorMessage,
   inlineMergeFormRefType,
@@ -65,7 +64,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   onPRStateChanged,
   allowedStrategy,
   pullReqCommits,
-  PRStateLoading
+  PRStateLoading,
+  setConflictingFiles
 }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
@@ -126,7 +126,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       setRuleViolationArr,
       setAllowedStrats,
       pullRequestSection,
-      showError
+      showError,
+      setConflictingFiles
     ) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unchecked, pullReqMetadata?.source_sha])
   const [prMerged, setPrMerged] = useState(false)
@@ -144,7 +145,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
           setRuleViolationArr,
           setAllowedStrats,
           pullRequestSection,
-          showError
+          showError,
+          setConflictingFiles
         )
       }
     }, POLLING_INTERVAL) // Poll every 20 seconds

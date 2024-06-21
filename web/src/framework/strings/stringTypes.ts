@@ -250,6 +250,18 @@ export interface StringsMap {
   cloneText: string
   close: string
   closed: string
+  'cmdlineInfo.content': string
+  'cmdlineInfo.stepFive': string
+  'cmdlineInfo.stepFiveSub': string
+  'cmdlineInfo.stepFour': string
+  'cmdlineInfo.stepFourSub': string
+  'cmdlineInfo.stepOne': string
+  'cmdlineInfo.stepOneSub': string
+  'cmdlineInfo.stepThree': string
+  'cmdlineInfo.stepThreeSub': string
+  'cmdlineInfo.stepTwo': string
+  'cmdlineInfo.stepTwoSub': string
+  'cmdlineInfo.title': string
   code: string
   'codeOwner.approvalCompleted': string
   'codeOwner.changesRequested': string
@@ -259,6 +271,7 @@ export interface StringsMap {
   codeSearch: string
   codeSearchModal: string
   comingSoon: string
+  commandLine: string
   comment: string
   commentDeleted: string
   commit: string
@@ -286,6 +299,7 @@ export interface StringsMap {
   confirmRepoVisButton: string
   confirmStrat: string
   confirmation: string
+  conflictsFoundInThisBranch: string
   content: string
   contents: string
   contributor: string
@@ -802,6 +816,7 @@ export interface StringsMap {
   'pr.titlePlaceHolder': string
   'pr.toggleComments': string
   'pr.unified': string
+  'pr.useCmdLineToResolveConflicts': string
   'prChecks.error': string
   'prChecks.failure': string
   'prChecks.killed': string
@@ -973,6 +988,7 @@ export interface StringsMap {
   status: string
   'step.select': string
   'stepCategory.select': string
+  stepNum: string
   submitReview: string
   success: string
   suggestion: string

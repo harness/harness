@@ -204,8 +204,9 @@
 
 .gridContainer {
   display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
+  grid-template-columns: 1fr minmax(0, 1fr) !important;
   position: relative !important;
+  min-width: 0;
 }
 
 .row {
@@ -225,6 +226,7 @@
   margin-left: var(--spacing-small) !important;
   grid-column: 2 !important;
   text-align: right !important;
+  min-width: 0;
 }
 
 /* Pseudo-elements for placeholders to maintain grid structure */
@@ -250,4 +252,108 @@
   :global(.bp3-icon) {
     padding-right: unset !important;
   }
+}
+.conflictingFilesTable {
+  .row {
+    font-size: 12px !important;
+    box-shadow: unset !important;
+    border-bottom: 1px solid rgb(217, 218, 229, 0.6) !important;
+    padding: var(--spacing-small) !important;
+    margin-bottom: unset !important;
+    background: #f6f8fa !important;
+
+    &:last-child {
+      border-bottom: none !important;
+    }
+  }
+
+  :global {
+    [class*='TableV2--header'] {
+      border-bottom: 1px solid rgb(217, 218, 229, 0.6) !important;
+      padding-top: var(--spacing-small) !important;
+      padding-left: var(--spacing-medium) !important;
+      padding-right: var(--spacing-medium) !important;
+      padding-bottom: var(--spacing-xsmall) !important;
+      font-size: 12px !important;
+    }
+    .conflictingFileName {
+      font-family: 'Roboto Mono' !important;
+    }
+    [class*='TableV2--cell'] {
+      p {
+        font-size: 12px !important;
+      }
+    }
+
+    .bp3-icon-double-caret-vertical {
+      fill: var(--grey-200) !important;
+    }
+  }
+}
+
+.conflictingContainer {
+  border-top: 1px solid var(--grey-100) !important;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  padding: var(--spacing-5) 2rem !important;
+  padding-right: 4.05rem !important;
+  background: #f6f8fa !important;
+  max-height: 150px;
+  overflow: auto !important;
+}
+
+.cmdText {
+  color: var(--primary-7) !important;
+  &:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.cmdInfoContainer {
+  background: var(--primary-bg) !important;
+  border: 1px solid var(--grey-100) !important;
+
+  .cmdTextTitleContainer {
+    border-bottom: 1px solid var(--grey-100) !important;
+    > p {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+    }
+  }
+}
+
+.copyIconContainer {
+  background-color: var(--primary-1) !important;
+  color: var(--primary-7) !important;
+  border-radius: 4px !important;
+  --button-height: unset !important;
+  padding: unset !important ;
+  --padding-right: 2px !important;
+  padding-left: 4px !important;
+  min-width: unset !important;
+  padding-bottom: 1px !important;
+  --background-color: var(--primary-7);
+  --text-color: var(--primary-7) !important;
+}
+
+.blueCopyContainer {
+  border: 0.5px solid var(--primary-3) !important;
+  background: var(--primary-1) !important;
+  width: 70% !important;
+}
+
+.stepFont {
+  font-size: 12px !important;
+  color: var(--black) !important;
+  font-family: 'Courier New', Courier, monospace !important;
+}
+
+.stepText {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+}
+.conflictingFileName {
+  font-family: 'Roboto Mono' !important;
+  font-weight: 600 !important;
 }
