@@ -17,9 +17,11 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const formContainer: string
+export declare const loadingIcon: string
 export declare const metadataItem: string
 export declare const privateCard: string
 export declare const publicTag: string
+export declare const repoDetail: string
 export declare const repometadata: string
 export declare const repometadataCard: string
 export declare const urlInput: string

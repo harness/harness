@@ -60,7 +60,7 @@ const GitspaceDetail = () => {
     gitspaceIdentifier: gitspaceId
   })
 
-  const { status } = data || {}
+  const { state } = data || {}
 
   const {
     mutate,
@@ -90,7 +90,7 @@ const GitspaceDetail = () => {
     startTrigger()
   }, [redirectFrom, mutateLoading, startTriggred])
 
-  const isfetchingInProgress = (startTriggred && status === GitspaceStatus.STOPPED && !startError) || mutateLoading
+  const isfetchingInProgress = (startTriggred && state === GitspaceStatus.STOPPED && !startError) || mutateLoading
 
   return (
     <>

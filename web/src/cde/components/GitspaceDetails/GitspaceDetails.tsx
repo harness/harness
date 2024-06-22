@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Text, Layout, Container, Button, ButtonVariation, PageError, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import type { PopoverProps } from '@harnessio/uicore/dist/components/Popover/Popover'
@@ -23,12 +23,12 @@ import { useHistory, useParams } from 'react-router-dom'
 import { Cpu, Circle, GitFork, Repository } from 'iconoir-react'
 import { isUndefined } from 'lodash-es'
 import type { GetDataError, MutateMethod, UseGetProps } from 'restful-react'
-import type {
-  EnumGitspaceStateType,
-  GitspaceActionPathParams,
-  OpenapiGetGitspaceLogsResponse,
-  OpenapiGetGitspaceResponse,
-  OpenapiGitspaceActionRequest
+import {
+  useGetGitspaceEvents,
+  type EnumGitspaceStateType,
+  type GitspaceActionPathParams,
+  type OpenapiGetGitspaceResponse,
+  type OpenapiGitspaceActionRequest
 } from 'services/cde'
 import { UseStringsReturn, useStrings } from 'framework/strings'
 import { GitspaceActionType, GitspaceStatus, IDEType } from 'cde/constants'
@@ -39,6 +39,9 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
 import Gitspace from '../../icons/Gitspace.svg?url'
 import { getStatusColor } from '../ListGitspaces/ListGitspaces'
+import { usePolling } from './usePolling'
+import EventsTimeline from './EventsTimeline/EventsTimeline'
+import { GitspaceEventType, pollEventsList } from './GitspaceDetails.constants'
 import css from './GitspaceDetails.module.scss'
 
 interface QueryGitspace {
@@ -47,29 +50,26 @@ interface QueryGitspace {
 
 export const getGitspaceDetailTitle = ({
   getString,
-  status,
+  state,
   loading,
   redirectFrom,
   actionError
 }: {
   getString: UseStringsReturn['getString']
-  status?: EnumGitspaceStateType
+  state?: EnumGitspaceStateType
   loading?: boolean
   redirectFrom?: string
   actionError?: GetDataError<unknown> | null
 }) => {
   if (loading) {
     return getString('cde.details.fetchingGitspace')
-  } else if (
-    status === GitspaceStatus.UNKNOWN ||
-    (status === GitspaceStatus.STOPPED && !!redirectFrom && !actionError)
-  ) {
+  } else if (state === GitspaceStatus.UNKNOWN || (state === GitspaceStatus.STOPPED && !!redirectFrom && !actionError)) {
     return getString('cde.details.provisioningGitspace')
-  } else if (status === GitspaceStatus.STOPPED) {
+  } else if (state === GitspaceStatus.STOPPED) {
     return getString('cde.details.gitspaceStopped')
-  } else if (status === GitspaceStatus.RUNNING) {
+  } else if (state === GitspaceStatus.RUNNING) {
     return getString('cde.details.gitspaceRunning')
-  } else if (!loading && isUndefined(status)) {
+  } else if (!loading && isUndefined(state)) {
     getString('cde.details.noData')
   }
 }
@@ -93,27 +93,54 @@ export const GitspaceDetails = ({
   refetch: (
     options?: Partial<Omit<UseGetProps<OpenapiGetGitspaceResponse, unknown, void, unknown>, 'lazy'>> | undefined
   ) => Promise<void>
-  refetchLogs?: (
-    options?: Partial<Omit<UseGetProps<OpenapiGetGitspaceLogsResponse, unknown, void, unknown>, 'lazy'>> | undefined
-  ) => Promise<void>
+  refetchLogs?: () => Promise<void>
   mutate: MutateMethod<void, OpenapiGitspaceActionRequest, void, GitspaceActionPathParams>
   actionError?: GetDataError<unknown> | null
 }) => {
   const { getString } = useStrings()
-  const { gitspaceId } = useParams<QueryGitspace>()
+  const { gitspaceId = '' } = useParams<QueryGitspace>()
   const { routes } = useAppContext()
   const space = useGetSpaceParam()
   const { showError } = useToaster()
   const history = useHistory()
-  const { projectIdentifier } = useGetCDEAPIParams() as CDEPathParams
+  const { projectIdentifier, orgIdentifier, accountIdentifier } = useGetCDEAPIParams() as CDEPathParams
   const { redirectFrom = '' } = useQueryParams<{ redirectFrom?: string }>()
 
-  const { config, status, url } = data || {}
+  const [startPolling, setstartPolling] = useState(false)
+
+  const { config, state, url } = data || {}
 
   const openEditorLabel =
     config?.ide === IDEType.VSCODE ? getString('cde.details.openEditor') : getString('cde.details.openBrowser')
 
-  const color = getStatusColor(status as EnumGitspaceStateType)
+  const color = getStatusColor(state as EnumGitspaceStateType)
+
+  const {
+    data: eventData,
+    refetch: refetchEventData,
+    loading: loadingEvents
+  } = useGetGitspaceEvents({
+    accountIdentifier,
+    orgIdentifier,
+    projectIdentifier,
+    gitspaceIdentifier: gitspaceId
+  })
+
+  const pollingCondition = pollEventsList.includes(
+    (eventData?.[eventData?.length - 1]?.event || '') as unknown as GitspaceEventType
+  )
+
+  const isPolling = usePolling(refetchEventData, {
+    pollingInterval: 10000,
+    startCondition: startPolling || !pollingCondition
+  })
+
+  usePolling(refetchLogs!, {
+    pollingInterval: 10000,
+    startCondition:
+      (eventData?.[eventData?.length - 1]?.event as string) === GitspaceEventType.AgentGitspaceCreationStart,
+    stopCondition: pollingCondition
+  })
 
   return (
     <Layout.Vertical width={'30%'} spacing="large">
@@ -123,12 +150,15 @@ export const GitspaceDetails = ({
           <PageError onClick={() => refetch()} message={getErrorMessage(error)} />
         ) : (
           <Text
-            icon={isfetchingInProgress ? 'loading' : undefined}
+            icon={loadingEvents || loading || mutateLoading ? 'loading' : undefined}
             className={css.subText}
             font={{ variation: FontVariation.CARD_TITLE }}>
-            {getGitspaceDetailTitle({ getString, status, loading, redirectFrom, actionError })}
+            {redirectFrom || isPolling || startPolling
+              ? eventData?.[eventData?.length - 1]?.message || 'Fetching events'
+              : getGitspaceDetailTitle({ getString, state, loading, redirectFrom, actionError })}
           </Text>
         )}
+        <EventsTimeline events={eventData} />
       </Layout.Vertical>
       <Container className={css.detailsBar}>
         {error ? (
@@ -142,11 +172,13 @@ export const GitspaceDetails = ({
                 <Layout.Vertical spacing="small">
                   <Layout.Horizontal spacing="small">
                     <Circle color={color} fill={color} />
-                    <Text font={'small'}>{config?.code_repo_id?.toUpperCase()}</Text>
+                    <Text font={'small'}>{config?.name}</Text>
                   </Layout.Horizontal>
                   <Layout.Horizontal spacing="small">
                     <Repository />
-                    <Text font={'small'}>{config?.code_repo_id}</Text>
+                    <Text width={100} lineClamp={1} font={'small'}>
+                      {config?.id}
+                    </Text>
                     <Text> / </Text>
                     <GitFork />
                     <Text font={'small'}>{config?.branch}</Text>
@@ -164,7 +196,7 @@ export const GitspaceDetails = ({
         )}
       </Container>
       <Layout.Horizontal spacing={'medium'}>
-        {status === GitspaceStatus.UNKNOWN && (
+        {state === GitspaceStatus.UNKNOWN && (
           <>
             <Button
               onClick={() => {
@@ -180,10 +212,14 @@ export const GitspaceDetails = ({
             </Button>
             <Button
               variation={ButtonVariation.PRIMARY}
-              onClick={async () => {
+              onClick={() => {
                 try {
-                  await mutate({ action: GitspaceActionType.STOP })
+                  setstartPolling(true)
+                  mutate({ action: GitspaceActionType.STOP }).then(() => {
+                    setstartPolling(false)
+                  })
                 } catch (err) {
+                  setstartPolling(false)
                   showError(getErrorMessage(err))
                 }
               }}>
@@ -192,16 +228,20 @@ export const GitspaceDetails = ({
           </>
         )}
 
-        {status === GitspaceStatus.STOPPED && (
+        {state === GitspaceStatus.STOPPED && (
           <>
             <Button
               disabled={isfetchingInProgress}
               variation={ButtonVariation.PRIMARY}
-              onClick={async () => {
+              onClick={() => {
                 try {
-                  await mutate({ action: GitspaceActionType.START })
+                  setstartPolling(true)
+                  mutate({ action: GitspaceActionType.START }).then(() => {
+                    setstartPolling(false)
+                  })
                 } catch (err) {
                   showError(getErrorMessage(err))
+                  setstartPolling(false)
                 }
               }}>
               {getString('cde.details.startGitspace')}
@@ -218,7 +258,7 @@ export const GitspaceDetails = ({
           </>
         )}
 
-        {status === GitspaceStatus.RUNNING && (
+        {state === GitspaceStatus.RUNNING && (
           <>
             <Button
               onClick={() => {
@@ -247,13 +287,18 @@ export const GitspaceDetails = ({
                 <Menu>
                   <MenuItem
                     text={getString('cde.details.stopGitspace')}
-                    onClick={async () => {
+                    onClick={() => {
                       try {
-                        await mutate({ action: GitspaceActionType.STOP })
-                        await refetch()
-                        await refetchLogs?.()
+                        setstartPolling(true)
+                        mutate({ action: GitspaceActionType.STOP }).then(() => {
+                          setstartPolling(false)
+                          refetch().then(() => {
+                            refetchLogs?.()
+                          })
+                        })
                       } catch (err) {
                         showError(getErrorMessage(err))
+                        setstartPolling(false)
                       }
                     }}
                   />

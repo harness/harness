@@ -15,14 +15,14 @@
  */
 
 import React, { useState } from 'react'
-import { Layout, SelectOption, Text } from '@harnessio/uicore'
+import { Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Map } from 'iconoir-react'
 import { useFormikContext } from 'formik'
 import { GitspaceSelect } from 'cde/components/GitspaceSelect/GitspaceSelect'
 import { useStrings } from 'framework/strings'
 import { GitspaceRegion } from 'cde/constants'
-import type { OpenapiCreateGitspaceRequest } from 'services/cde'
+import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResourceResponse } from 'services/cde'
 import USWest from './assests/USWest.png'
 import USEast from './assests/USEast.png'
 import Australia from './assests/Aus.png'
@@ -30,7 +30,8 @@ import Europe from './assests/Europe.png'
 import Empty from './assests/Empty.png'
 
 interface SelectRegionInterface {
-  options: SelectOption[]
+  disabled?: boolean
+  options: { label: string; value: TypesInfraProviderResourceResponse[] }[]
 }
 
 export const getMapFromRegion = (region: string) => {
@@ -48,7 +49,7 @@ export const getMapFromRegion = (region: string) => {
   }
 }
 
-export const SelectRegion = ({ options }: SelectRegionInterface) => {
+export const SelectRegion = ({ options, disabled }: SelectRegionInterface) => {
   const { getString } = useStrings()
   const { values, errors, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { metadata } = values
@@ -56,6 +57,7 @@ export const SelectRegion = ({ options }: SelectRegionInterface) => {
 
   return (
     <GitspaceSelect
+      disabled={disabled}
       overridePopOverWidth
       text={
         <Layout.Horizontal spacing={'small'}>
@@ -78,7 +80,7 @@ export const SelectRegion = ({ options }: SelectRegionInterface) => {
               return (
                 <MenuItem
                   key={label}
-                  active={label === regionState}
+                  active={label === regionState?.toLowerCase()}
                   text={<Text font={{ size: 'normal', weight: 'bold' }}>{label.toUpperCase()}</Text>}
                   onClick={() => {
                     onChange('metadata.region', label.toLowerCase())

@@ -14,31 +14,14 @@
  * limitations under the License.
  */
 
-.branchInput {
-  span[icon='git-branch'] {
-    top: 20%;
-    left: 2% !important;
-    color: var(--grey-500) !important;
-  }
-
-  input {
-    height: 50px !important;
-    border-radius: 7px !important;
-    border: 1px solid var(--grey-200) !important;
-    box-shadow: none !important;
-    background: var(--grey-100);
-    padding-left: 15% !important;
-
-    &:active {
-      background: white;
-    }
-    &:focus {
-      background: white;
-    }
-  }
-}
-
-.branchDropdown {
-  width: 65% !important;
-  margin: 0 !important;
-}
+/* eslint-disable */
+// This is an auto-generated file
+export declare const comingSoonContainer: string
+export declare const featureContainer: string
+export declare const featureContent: string
+export declare const featureText: string
+export declare const featureTitle: string
+export declare const iconContainer: string
+export declare const releasedContainer: string
+export declare const tagBackground: string
+export declare const tagText: string

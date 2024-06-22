@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-import React from 'react'
-import { defaultTo, isObject } from 'lodash-es'
+import React, { useEffect } from 'react'
+import { isObject, groupBy } from 'lodash-es'
 import { Layout } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
+import { useParams } from 'react-router-dom'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
 import { OpenapiCreateGitspaceRequest, useListInfraProviderResources } from 'services/cde'
 import { SelectRegion } from '../SelectRegion/SelectRegion'
 import { SelectMachine } from '../SelectMachine/SelectMachine'
 
 export const SelectInfraProvider = () => {
-  const { values } = useFormikContext<OpenapiCreateGitspaceRequest>()
+  const { values, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { accountIdentifier, orgIdentifier, projectIdentifier } = useGetCDEAPIParams() as CDEPathParams
   const { data } = useListInfraProviderResources({
     accountIdentifier,
@@ -33,13 +34,22 @@ export const SelectInfraProvider = () => {
     infraProviderConfigIdentifier: 'HARNESS_GCP'
   })
 
+  const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
+
   const optionsList = data && isObject(data) ? data : []
 
-  const regionOptions = optionsList
-    ? optionsList.map(item => {
-        return { label: defaultTo(item?.region, ''), value: defaultTo(item?.region, '') }
-      })
-    : []
+  useEffect(() => {
+    if (gitspaceId && values.infra_provider_resource_id && optionsList.length) {
+      const match = optionsList.find(item => item.id === values.infra_provider_resource_id)
+      if (values?.metadata?.region !== values.infra_provider_resource_id) {
+        onChange('metadata.region', match?.region?.toLowerCase())
+      }
+    }
+  }, [gitspaceId, values.infra_provider_resource_id, values?.metadata?.region, optionsList.map(i => i.name).join('')])
+
+  const regionOptions = Object.entries(groupBy(optionsList, 'region')).map(i => {
+    return { label: i[0], value: i[1] }
+  })
 
   const machineOptions =
     optionsList
@@ -50,7 +60,7 @@ export const SelectInfraProvider = () => {
 
   return (
     <Layout.Horizontal spacing="medium">
-      <SelectRegion options={regionOptions} />
+      <SelectRegion options={regionOptions} disabled={!!gitspaceId} />
       <SelectMachine options={machineOptions} />
     </Layout.Horizontal>
   )

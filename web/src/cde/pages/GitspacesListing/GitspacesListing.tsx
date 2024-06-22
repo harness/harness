@@ -30,9 +30,12 @@ import { useHistory } from 'react-router-dom'
 import { ListGitspaces } from 'cde/components/ListGitspaces/ListGitspaces'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { OpenapiGetGitspaceResponse, useListGitspaces } from 'services/cde'
-import { getErrorMessage } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, PageBrowserProps, getErrorMessage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
+import { usePageIndex } from 'hooks/usePageIndex'
+import { useQueryParams } from 'hooks/useQueryParams'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import Gitspace from '../../icons/Gitspace.svg?url'
 import noSpace from '../../images/no-gitspace.svg?url'
 import css from './GitspacesListing.module.scss'
@@ -43,12 +46,18 @@ const GitspacesListing = () => {
   const { getString } = useStrings()
   const { routes } = useAppContext()
 
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
+  const [page, setPage] = usePageIndex(pageInit)
+
   const {
     data = '',
     loading = false,
     error = undefined,
-    refetch
+    refetch,
+    response
   } = useListGitspaces({
+    queryParams: { page, limit: LIST_FETCHING_LIMIT },
     accountIdentifier: space?.split('/')[0],
     orgIdentifier: space?.split('/')[1],
     projectIdentifier: space?.split('/')[2]
@@ -106,7 +115,8 @@ const GitspacesListing = () => {
               message: getString('cde.noGitspaces')
             }}>
             {Boolean(data) && <ExpandingSearchInput width={'50%'} alwaysExpanded autoFocus={false} />}
-            <ListGitspaces data={data as OpenapiGetGitspaceResponse[]} />
+            <ListGitspaces data={data as OpenapiGetGitspaceResponse[]} refreshList={refetch} />
+            <ResourceListingPagination response={response} page={page} setPage={setPage} />
           </Page.Body>
         </Layout.Vertical>
       </Container>

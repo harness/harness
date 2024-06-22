@@ -28,10 +28,12 @@ export interface CDERoutes {
   toCDEGitspaces: (args: Required<Pick<CDEProps, 'space'>>) => string
   toCDEGitspaceDetail: (args: Required<Pick<CDEProps, 'space' | 'gitspaceId'>>) => string
   toCDEGitspacesCreate: (args: Required<Pick<CDEProps, 'space'>>) => string
+  toCDEGitspacesEdit: (args: Required<Pick<CDEProps, 'space' | 'gitspaceId'>>) => string
 }
 
 export const routes: CDERoutes = {
   toCDEGitspaces: ({ space }) => `/${space}/gitspaces`,
   toCDEGitspaceDetail: ({ space, gitspaceId }) => `/${space}/gitspaces/${gitspaceId}`,
-  toCDEGitspacesCreate: ({ space }) => `/${space}/gitspaces/create`
+  toCDEGitspacesCreate: ({ space }) => `/${space}/gitspaces/create`,
+  toCDEGitspacesEdit: ({ space, gitspaceId }) => `/${space}/gitspaces/edit/${gitspaceId}`
 }

@@ -5,23 +5,38 @@ import { Get, GetProps, useGet, UseGetProps, Mutate, MutateProps, useMutate, Use
 
 import { getConfig } from '../config'
 export const SPEC_VERSION = '0.0.0'
-export type EnumCodeRepoAccessType = 'PRIVATE' | 'PUBLIC'
+export type EnumCodeRepoAccessType = 'private' | 'public'
 
-export type EnumCodeRepoType = 'GITHUB' | 'GITLAB' | 'HARNESS_CODE' | 'BITBUCKET' | 'UNKNOWN'
+export type EnumCodeRepoType = 'github' | 'gitlab' | 'harnessCode' | 'bitbucket' | 'unknown'
 
-export type EnumGitspaceAccessType = 'JWT_TOKEN' | 'PASSWORD'
+export type EnumGitspaceAccessType = 'jwtToken' | 'password' | 'sshKey'
 
-export type EnumGitspaceActionType = 'START' | 'STOP'
+export type EnumGitspaceActionType = 'start' | 'stop'
 
-export type EnumGitspaceStateType = 'RUNNING' | 'STOPPED' | 'UNKNOWN' | 'ERROR'
+export type EnumGitspaceEntityType = 'gitspaceConfig' | 'gitspaceInstance'
 
-export type EnumIDEType = 'VSCODE' | 'VSCODEWEB'
+export type EnumGitspaceEventType =
+  | 'gitspaceActionStart'
+  | 'infraProvisioningStart'
+  | 'infraProvisioningCompleted'
+  | 'agentConnectStart'
+  | 'agentConnectCompleted'
+  | 'gitspaceActionStartCompleted'
+  | 'gitspaceActionStop'
+  | 'gitspaceActionStopCompleted'
+  | 'infraUnprovisioningStart'
+  | 'infraUnprovisioningCompleted'
+  | 'infraProvisioningFailed'
+  | 'agentGitspaceStateReportRunning'
+  | 'agentGitspaceStateReportError'
+  | 'agentGitspaceStateReportStopped'
+  | 'agentGitspaceStateReportUnknown'
 
-export type EnumProviderType = 'HARNESS_GCP' | 'K8S' | 'HARNESS_OVHCLOUD' | 'DOCKER'
+export type EnumGitspaceStateType = 'running' | 'stopped' | 'unknown' | 'error'
 
-export interface OpenapiCreateGitspaceInstanceEventRequest {
-  state?: EnumGitspaceStateType
-}
+export type EnumIDEType = 'vsCode' | 'vsCodeWeb'
+
+export type EnumProviderType = 'harnessGCP' | 'k8s' | 'harnessOVHCloud' | 'docker'
 
 export interface OpenapiCreateGitspaceRequest {
   branch?: string
@@ -42,17 +57,17 @@ export interface OpenapiCreateGitspaceRequest {
 export interface OpenapiCreateGitspaceResponse {
   access_key?: string
   access_type?: EnumGitspaceAccessType
-  code_server_password?: string
   config?: TypesGitspaceConfigResponse
   created?: number
   id?: string
   last_used?: number
   machine_user?: string
   resource_usage?: string
-  ssh_key?: string
-  status?: EnumGitspaceStateType
+  space_path?: string
+  state?: EnumGitspaceStateType
   total_time_used?: number
   tracked_changes?: string
+  updated?: number
   url?: string
 }
 
@@ -74,7 +89,7 @@ export interface OpenapiCreateInfraProviderResponse {
   id?: string
   metadata?: string
   name?: string
-  scope?: string
+  space_path?: string
   type?: EnumProviderType
   updated?: number
 }
@@ -85,6 +100,7 @@ export interface OpenapiCreateInfraProviderTemplateRequest {
   description?: string
   identifier?: string
   space_id?: number
+  space_path?: string
   updated?: number
 }
 
@@ -94,6 +110,7 @@ export interface OpenapiCreateInfraProviderTemplateResponse {
   description?: string
   identifier?: string
   space_id?: number
+  space_path?: string
   updated?: number
 }
 
@@ -109,22 +126,31 @@ export interface OpenapiGetCodeRepositoryResponse {
   url?: string
 }
 
+export interface OpenapiGetGitspaceEventResponse {
+  entity_type?: EnumGitspaceEntityType
+  entity_uid?: string
+  event?: EnumGitspaceEventType
+  event_time?: string
+  message?: string
+  timestamp?: number
+}
+
 export type OpenapiGetGitspaceLogsResponse = string | null
 
 export interface OpenapiGetGitspaceResponse {
   access_key?: string
   access_type?: EnumGitspaceAccessType
-  code_server_password?: string
   config?: TypesGitspaceConfigResponse
   created?: number
   id?: string
   last_used?: number
   machine_user?: string
   resource_usage?: string
-  ssh_key?: string
-  status?: EnumGitspaceStateType
+  space_path?: string
+  state?: EnumGitspaceStateType
   total_time_used?: number
   tracked_changes?: string
+  updated?: number
   url?: string
 }
 
@@ -133,6 +159,22 @@ export interface OpenapiGitspaceActionRequest {
 }
 
 export type OpenapiListInfraProviderResourceResponse = TypesInfraProviderResourceResponse[] | null
+
+export interface OpenapiUpdateGitspaceRequest {
+  branch?: string
+  code_repo_id?: string
+  code_repo_type?: EnumCodeRepoType
+  code_repo_url?: string
+  devcontainer_path?: string
+  id?: string
+  ide?: EnumIDEType
+  infra_provider_resource_id?: string
+  metadata?: {
+    [key: string]: string
+  } | null
+  name?: string
+  prebuild_repo_id?: string
+}
 
 export interface TypesGitspaceConfigResponse {
   branch?: string
@@ -144,12 +186,9 @@ export interface TypesGitspaceConfigResponse {
   id?: string
   ide?: EnumIDEType
   infra_provider_resource_id?: string
-  metadata?: {
-    [key: string]: string
-  } | null
   name?: string
   prebuild_repo_id?: string
-  scope?: string
+  space_path?: string
   status_code?: string
   updated?: number
   user_id?: string
@@ -169,7 +208,6 @@ export interface TypesInfraProviderResourceRequest {
     [key: string]: string
   } | null
   region?: string[] | null
-  scope?: string
   template_id?: string
 }
 
@@ -189,10 +227,49 @@ export interface TypesInfraProviderResourceResponse {
     [key: string]: string
   } | null
   region?: string
-  scope?: string
+  space_path?: string
   template_id?: string
   updated?: number
 }
+
+export interface ListGitspacesForAccountPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+}
+
+export type ListGitspacesForAccountProps = Omit<
+  GetProps<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesForAccountPathParams>,
+  'path'
+> &
+  ListGitspacesForAccountPathParams
+
+/**
+ * List gitspaces for account
+ */
+export const ListGitspacesForAccount = ({ accountIdentifier, ...props }: ListGitspacesForAccountProps) => (
+  <Get<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesForAccountPathParams>
+    path={`/accounts/${accountIdentifier}/gitspaces`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListGitspacesForAccountProps = Omit<
+  UseGetProps<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesForAccountPathParams>,
+  'path'
+> &
+  ListGitspacesForAccountPathParams
+
+/**
+ * List gitspaces for account
+ */
+export const useListGitspacesForAccount = ({ accountIdentifier, ...props }: UseListGitspacesForAccountProps) =>
+  useGet<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesForAccountPathParams>(
+    (paramsInPath: ListGitspacesForAccountPathParams) => `/accounts/${paramsInPath.accountIdentifier}/gitspaces`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier }, ...props }
+  )
 
 export interface GetCodeRepositoryPathParams {
   /**
@@ -269,6 +346,135 @@ export const useGetCodeRepository = ({
     'POST',
     (paramsInPath: GetCodeRepositoryPathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/coderepository`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
+  )
+
+export interface ListGitspacesQueryParams {
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export interface ListGitspacesPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+}
+
+export type ListGitspacesProps = Omit<
+  GetProps<OpenapiGetGitspaceResponse[], unknown, ListGitspacesQueryParams, ListGitspacesPathParams>,
+  'path'
+> &
+  ListGitspacesPathParams
+
+/**
+ * List gitspaces
+ */
+export const ListGitspaces = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  ...props
+}: ListGitspacesProps) => (
+  <Get<OpenapiGetGitspaceResponse[], unknown, ListGitspacesQueryParams, ListGitspacesPathParams>
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListGitspacesProps = Omit<
+  UseGetProps<OpenapiGetGitspaceResponse[], unknown, ListGitspacesQueryParams, ListGitspacesPathParams>,
+  'path'
+> &
+  ListGitspacesPathParams
+
+/**
+ * List gitspaces
+ */
+export const useListGitspaces = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  ...props
+}: UseListGitspacesProps) =>
+  useGet<OpenapiGetGitspaceResponse[], unknown, ListGitspacesQueryParams, ListGitspacesPathParams>(
+    (paramsInPath: ListGitspacesPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
+  )
+
+export interface CreateGitspacePathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+}
+
+export type CreateGitspaceProps = Omit<
+  MutateProps<OpenapiCreateGitspaceResponse, unknown, void, OpenapiCreateGitspaceRequest, CreateGitspacePathParams>,
+  'path' | 'verb'
+> &
+  CreateGitspacePathParams
+
+/**
+ * Create gitspace config
+ */
+export const CreateGitspace = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  ...props
+}: CreateGitspaceProps) => (
+  <Mutate<OpenapiCreateGitspaceResponse, unknown, void, OpenapiCreateGitspaceRequest, CreateGitspacePathParams>
+    verb="POST"
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreateGitspaceProps = Omit<
+  UseMutateProps<OpenapiCreateGitspaceResponse, unknown, void, OpenapiCreateGitspaceRequest, CreateGitspacePathParams>,
+  'path' | 'verb'
+> &
+  CreateGitspacePathParams
+
+/**
+ * Create gitspace config
+ */
+export const useCreateGitspace = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  ...props
+}: UseCreateGitspaceProps) =>
+  useMutate<OpenapiCreateGitspaceResponse, unknown, void, OpenapiCreateGitspaceRequest, CreateGitspacePathParams>(
+    'POST',
+    (paramsInPath: CreateGitspacePathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
   )
 
@@ -400,6 +606,76 @@ export const useGetGitspace = ({
     }
   )
 
+export interface UpdateGitspacePathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+  /**
+   * gitspace identifier.
+   */
+  gitspaceIdentifier: string
+}
+
+export type UpdateGitspaceProps = Omit<
+  MutateProps<void, unknown, void, OpenapiUpdateGitspaceRequest, UpdateGitspacePathParams>,
+  'path' | 'verb'
+> &
+  UpdateGitspacePathParams
+
+/**
+ * Update gitspace config
+ */
+export const UpdateGitspace = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  gitspaceIdentifier,
+  ...props
+}: UpdateGitspaceProps) => (
+  <Mutate<void, unknown, void, OpenapiUpdateGitspaceRequest, UpdateGitspacePathParams>
+    verb="PUT"
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces/${gitspaceIdentifier}`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateGitspaceProps = Omit<
+  UseMutateProps<void, unknown, void, OpenapiUpdateGitspaceRequest, UpdateGitspacePathParams>,
+  'path' | 'verb'
+> &
+  UpdateGitspacePathParams
+
+/**
+ * Update gitspace config
+ */
+export const useUpdateGitspace = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  gitspaceIdentifier,
+  ...props
+}: UseUpdateGitspaceProps) =>
+  useMutate<void, unknown, void, OpenapiUpdateGitspaceRequest, UpdateGitspacePathParams>(
+    'PUT',
+    (paramsInPath: UpdateGitspacePathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/${paramsInPath.gitspaceIdentifier}`,
+    {
+      base: getConfig('cde/api/v1'),
+      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, gitspaceIdentifier },
+      ...props
+    }
+  )
+
 export interface GitspaceActionPathParams {
   /**
    * account identifier.
@@ -437,7 +713,7 @@ export const GitspaceAction = ({
 }: GitspaceActionProps) => (
   <Mutate<void, unknown, void, OpenapiGitspaceActionRequest, GitspaceActionPathParams>
     verb="POST"
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces/${gitspaceIdentifier}/action`}
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces/${gitspaceIdentifier}/actions`}
     base={getConfig('cde/api/v1')}
     {...props}
   />
@@ -462,7 +738,7 @@ export const useGitspaceAction = ({
   useMutate<void, unknown, void, OpenapiGitspaceActionRequest, GitspaceActionPathParams>(
     'POST',
     (paramsInPath: GitspaceActionPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/${paramsInPath.gitspaceIdentifier}/action`,
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/${paramsInPath.gitspaceIdentifier}/actions`,
     {
       base: getConfig('cde/api/v1'),
       pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, gitspaceIdentifier },
@@ -470,7 +746,7 @@ export const useGitspaceAction = ({
     }
   )
 
-export interface CreateGitspaceEventPathParams {
+export interface GetGitspaceEventsPathParams {
   /**
    * account identifier.
    */
@@ -489,49 +765,47 @@ export interface CreateGitspaceEventPathParams {
   gitspaceIdentifier: string
 }
 
-export type CreateGitspaceEventProps = Omit<
-  MutateProps<void, unknown, void, OpenapiCreateGitspaceInstanceEventRequest, CreateGitspaceEventPathParams>,
-  'path' | 'verb'
+export type GetGitspaceEventsProps = Omit<
+  GetProps<OpenapiGetGitspaceEventResponse[], unknown, void, GetGitspaceEventsPathParams>,
+  'path'
 > &
-  CreateGitspaceEventPathParams
+  GetGitspaceEventsPathParams
 
 /**
- * Create gitspace instance event
+ * Get gitspace events
  */
-export const CreateGitspaceEvent = ({
+export const GetGitspaceEvents = ({
   accountIdentifier,
   orgIdentifier,
   projectIdentifier,
   gitspaceIdentifier,
   ...props
-}: CreateGitspaceEventProps) => (
-  <Mutate<void, unknown, void, OpenapiCreateGitspaceInstanceEventRequest, CreateGitspaceEventPathParams>
-    verb="POST"
+}: GetGitspaceEventsProps) => (
+  <Get<OpenapiGetGitspaceEventResponse[], unknown, void, GetGitspaceEventsPathParams>
     path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces/${gitspaceIdentifier}/events`}
     base={getConfig('cde/api/v1')}
     {...props}
   />
 )
 
-export type UseCreateGitspaceEventProps = Omit<
-  UseMutateProps<void, unknown, void, OpenapiCreateGitspaceInstanceEventRequest, CreateGitspaceEventPathParams>,
-  'path' | 'verb'
+export type UseGetGitspaceEventsProps = Omit<
+  UseGetProps<OpenapiGetGitspaceEventResponse[], unknown, void, GetGitspaceEventsPathParams>,
+  'path'
 > &
-  CreateGitspaceEventPathParams
+  GetGitspaceEventsPathParams
 
 /**
- * Create gitspace instance event
+ * Get gitspace events
  */
-export const useCreateGitspaceEvent = ({
+export const useGetGitspaceEvents = ({
   accountIdentifier,
   orgIdentifier,
   projectIdentifier,
   gitspaceIdentifier,
   ...props
-}: UseCreateGitspaceEventProps) =>
-  useMutate<void, unknown, void, OpenapiCreateGitspaceInstanceEventRequest, CreateGitspaceEventPathParams>(
-    'POST',
-    (paramsInPath: CreateGitspaceEventPathParams) =>
+}: UseGetGitspaceEventsProps) =>
+  useGet<OpenapiGetGitspaceEventResponse[], unknown, void, GetGitspaceEventsPathParams>(
+    (paramsInPath: GetGitspaceEventsPathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/${paramsInPath.gitspaceIdentifier}/events`,
     {
       base: getConfig('cde/api/v1'),
@@ -1046,161 +1320,4 @@ export const useCreateInfraProviderTemplate = ({
       pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, infraProviderConfigIdentifier },
       ...props
     }
-  )
-
-export interface ListGitspacesPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-}
-
-export type ListGitspacesProps = Omit<
-  GetProps<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesPathParams>,
-  'path'
-> &
-  ListGitspacesPathParams
-
-/**
- * List gitspaces
- */
-export const ListGitspaces = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: ListGitspacesProps) => (
-  <Get<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesPathParams>
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}gitspaces`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseListGitspacesProps = Omit<
-  UseGetProps<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesPathParams>,
-  'path'
-> &
-  ListGitspacesPathParams
-
-/**
- * List gitspaces
- */
-export const useListGitspaces = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: UseListGitspacesProps) =>
-  useGet<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesPathParams>(
-    (paramsInPath: ListGitspacesPathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces`,
-    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
-  )
-
-export interface CreateGitspacePathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-  /**
-   * org identifier.
-   */
-  orgIdentifier: string
-  /**
-   * project identifier.
-   */
-  projectIdentifier: string
-}
-
-export type CreateGitspaceProps = Omit<
-  MutateProps<OpenapiCreateGitspaceResponse, unknown, void, OpenapiCreateGitspaceRequest, CreateGitspacePathParams>,
-  'path' | 'verb'
-> &
-  CreateGitspacePathParams
-
-/**
- * Create gitspace config
- */
-export const CreateGitspace = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: CreateGitspaceProps) => (
-  <Mutate<OpenapiCreateGitspaceResponse, unknown, void, OpenapiCreateGitspaceRequest, CreateGitspacePathParams>
-    verb="POST"
-    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}gitspaces`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseCreateGitspaceProps = Omit<
-  UseMutateProps<OpenapiCreateGitspaceResponse, unknown, void, OpenapiCreateGitspaceRequest, CreateGitspacePathParams>,
-  'path' | 'verb'
-> &
-  CreateGitspacePathParams
-
-/**
- * Create gitspace config
- */
-export const useCreateGitspace = ({
-  accountIdentifier,
-  orgIdentifier,
-  projectIdentifier,
-  ...props
-}: UseCreateGitspaceProps) =>
-  useMutate<OpenapiCreateGitspaceResponse, unknown, void, OpenapiCreateGitspaceRequest, CreateGitspacePathParams>(
-    'POST',
-    (paramsInPath: CreateGitspacePathParams) =>
-      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces`,
-    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
-  )
-
-export interface ListGitspacesForAccountPathParams {
-  /**
-   * account identifier.
-   */
-  accountIdentifier: string
-}
-
-export type ListGitspacesForAccountProps = Omit<
-  GetProps<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesForAccountPathParams>,
-  'path'
-> &
-  ListGitspacesForAccountPathParams
-
-/**
- * List gitspaces for account
- */
-export const ListGitspacesForAccount = ({ accountIdentifier, ...props }: ListGitspacesForAccountProps) => (
-  <Get<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesForAccountPathParams>
-    path={`/accounts/${accountIdentifier}gitspaces`}
-    base={getConfig('cde/api/v1')}
-    {...props}
-  />
-)
-
-export type UseListGitspacesForAccountProps = Omit<
-  UseGetProps<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesForAccountPathParams>,
-  'path'
-> &
-  ListGitspacesForAccountPathParams
-
-/**
- * List gitspaces for account
- */
-export const useListGitspacesForAccount = ({ accountIdentifier, ...props }: UseListGitspacesForAccountProps) =>
-  useGet<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesForAccountPathParams>(
-    (paramsInPath: ListGitspacesForAccountPathParams) => `/accounts/${paramsInPath.accountIdentifier}gitspaces`,
-    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier }, ...props }
   )

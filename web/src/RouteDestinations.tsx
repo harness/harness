@@ -265,6 +265,14 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         )}
 
         {standalone && (
+          <Route exact path={routes.toCDEGitspacesEdit({ space: pathProps.space, gitspaceId: pathProps.gitspaceId })}>
+            <LayoutWithSideNav title={getString('cde.gitspaces')}>
+              <Gitspaces />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {standalone && (
           <Route path={routes.toCDEGitspaceDetail({ space: pathProps.space, gitspaceId: pathProps.gitspaceId })}>
             <LayoutWithSideNav title={getString('cde.gitspaces')}>
               <GitspaceDetail />

@@ -31,18 +31,28 @@
   margin-bottom: 0 !important;
 }
 
+.loadingIcon {
+  margin: var(--spacing-small) !important;
+}
+
 .repometadataCard {
   width: 100%;
   padding: 0 !important;
 }
 
 .repometadata {
-  min-height: 50px;
   background: var(--primary-1);
+
+  :global {
+    .bp3-menu {
+      li {
+        padding: var(--spacing-small) !important;
+      }
+    }
+  }
 }
 
 .metadataItem {
-  min-height: 50px;
   align-items: center;
 }
 
@@ -50,9 +60,15 @@
   padding: var(--spacing-small) !important;
 }
 
+.repoDetail {
+  font-size: 13px !important;
+}
+
 .publicTag {
-  padding: 3px 5px !important;
-  border-radius: 5px;
-  color: var(--green-700) !important;
+  border-radius: 20px;
+  text-transform: capitalize;
+  font-weight: bold !important;
+  color: var(--green-900) !important;
   background: var(--green-100) !important;
+  padding: var(--spacing-xsmall) var(--spacing-small) !important;
 }

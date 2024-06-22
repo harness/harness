@@ -30,6 +30,7 @@ interface GitspaceSelectProps {
   overridePopOverWidth?: boolean
   errorMessage?: string
   formikName?: string
+  tooltipProps?: { [key: string]: any }
 }
 
 export const GitspaceSelect = ({
@@ -39,13 +40,14 @@ export const GitspaceSelect = ({
   disabled,
   overridePopOverWidth,
   errorMessage,
-  formikName
+  formikName,
+  tooltipProps
 }: GitspaceSelectProps) => {
   const { getString } = useStrings()
   const buttonRef = useRef<HTMLDivElement | null>(null)
   const [popoverWidth, setPopoverWidth] = useState(0)
 
-  const tooltipProps = {
+  const defaultTooltipProps = {
     tooltip: (
       <Container className={css.listContainer} width={overridePopOverWidth ? '100%' : popoverWidth}>
         {renderMenu ? (
@@ -61,7 +63,8 @@ export const GitspaceSelect = ({
       fill: true,
       interactionKind: PopoverInteractionKind.CLICK,
       position: PopoverPosition.BOTTOM_LEFT,
-      popoverClassName: cx(css.popover)
+      popoverClassName: cx(css.popover),
+      ...tooltipProps
     }
   }
 
@@ -76,6 +79,8 @@ export const GitspaceSelect = ({
 
   const iconProp = icon ? { icon: icon as IconName } : {}
 
+  const addTooltipProps = disabled ? {} : { ...defaultTooltipProps }
+
   return (
     <div className={css.buttonDiv} ref={buttonRef}>
       <Button
@@ -85,7 +90,7 @@ export const GitspaceSelect = ({
         variation={ButtonVariation.TERTIARY}
         iconProps={{ size: 14 }}
         {...iconProp}
-        {...tooltipProps}
+        {...addTooltipProps}
         disabled={disabled}
       />
       <FormError errorMessage={errorMessage} name={formikName || ''} />

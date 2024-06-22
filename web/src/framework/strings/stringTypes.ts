@@ -141,8 +141,10 @@ export interface StringsMap {
   cancelledImport: string
   'cde.branchPlaceholder': string
   'cde.cloudDeveloperExperience': string
+  'cde.cpu': string
   'cde.createGitspace': string
   'cde.createRepo': string
+  'cde.deleteGitspace': string
   'cde.details.actions': string
   'cde.details.fetchingDetails': string
   'cde.details.fetchingGitspace': string
@@ -160,7 +162,11 @@ export interface StringsMap {
   'cde.details.stopGitspace': string
   'cde.details.stopProvising': string
   'cde.details.wrongIdentifier': string
+  'cde.disk': string
+  'cde.editGitspace': string
+  'cde.eventTimeline': string
   'cde.gitpsaceDetail': string
+  'cde.gitspaceUpdateSuccess': string
   'cde.gitspaces': string
   'cde.hours': string
   'cde.ide.browser': string
@@ -176,6 +182,7 @@ export interface StringsMap {
   'cde.logs': string
   'cde.machine': string
   'cde.manageGitspaces': string
+  'cde.memory': string
   'cde.na': string
   'cde.newGitspace': string
   'cde.noChange': string
@@ -184,6 +191,7 @@ export interface StringsMap {
   'cde.noRepo': string
   'cde.or': string
   'cde.region': string
+  'cde.regionSelectWarning': string
   'cde.repository.continueWith': string
   'cde.repository.pasteRepo': string
   'cde.repository.pasterRepoSubtext': string
@@ -193,6 +201,7 @@ export interface StringsMap {
   'cde.repository.repositoryURL': string
   'cde.repository.selectRepository': string
   'cde.retry': string
+  'cde.updateGitspace': string
   'cde.used': string
   changePassword: string
   changePasswordSuccesfully: string

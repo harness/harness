@@ -31,20 +31,20 @@
  */
 
 export enum GitspaceStatus {
-  RUNNING = 'RUNNING',
-  STOPPED = 'STOPPED',
-  UNKNOWN = 'UNKNOWN',
-  ERROR = 'ERROR'
+  RUNNING = 'running',
+  STOPPED = 'stopped',
+  UNKNOWN = 'unknown',
+  ERROR = 'error'
 }
 
 export enum IDEType {
-  VSCODE = 'VSCODE',
-  VSCODEWEB = 'VSCODEWEB'
+  VSCODE = 'vsCode',
+  VSCODEWEB = 'vsCodeWeb'
 }
 
 export enum GitspaceActionType {
-  START = 'START',
-  STOP = 'STOP'
+  START = 'start',
+  STOP = 'stop'
 }
 
 export enum GitspaceRegion {
@@ -55,6 +55,6 @@ export enum GitspaceRegion {
 }
 
 export enum CodeRepoAccessType {
-  PRIVATE = 'PRIVATE',
-  PUBLIC = 'PUBLIC'
+  PRIVATE = 'private',
+  PUBLIC = 'public'
 }

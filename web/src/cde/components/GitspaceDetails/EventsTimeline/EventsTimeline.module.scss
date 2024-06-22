@@ -1,0 +1,60 @@
+.featureContainer {
+  --srm-background: #f6f1ff;
+  background-color: var(--grey-0) !important;
+  border-left: 1px solid var(--grey-200) !important;
+  min-height: 250px !important;
+  max-height: 50vh !important;
+  overflow: scroll;
+  .featureText {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+  .iconContainer {
+    padding-top: var(--spacing-small) !important;
+    padding-bottom: var(--spacing-small) !important;
+    padding-right: var(--spacing-tiny) !important;
+    padding-left: 2px !important;
+  }
+  .featureTitle {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding-bottom: var(--spacing-small) !important;
+    display: flex !important;
+  }
+  .featureContent {
+    font-size: 10px !important;
+    font-weight: 400 !important;
+    color: var(--grey-400) !important;
+  }
+  .tagText {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    max-height: 19px !important;
+  }
+  .comingSoonContainer {
+    .iconContainer {
+      color: var(--purple-600) !important;
+    }
+    .tagBackground {
+      background: var(--srm-background) !important;
+      border-radius: 4px !important;
+
+      .tagText {
+        color: var(--purple-600) !important;
+      }
+    }
+  }
+  .releasedContainer {
+    .iconContainer {
+      color: var(--green-800) !important;
+    }
+    .tagBackground {
+      background: var(--green-50) !important;
+      border-radius: 4px !important;
+
+      .tagText {
+        color: var(--green-800) !important;
+      }
+    }
+  }
+}

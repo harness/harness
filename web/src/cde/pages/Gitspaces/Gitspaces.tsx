@@ -15,6 +15,7 @@
  */
 
 import React from 'react'
+import { useParams } from 'react-router-dom'
 import { Breadcrumbs, Container, Heading, Layout, Page, Text } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import { CreateGitspace } from 'cde/components/CreateGitspace/CreateGitspace'
@@ -44,17 +45,22 @@ const Gitspaces = () => {
   const space = useGetSpaceParam()
   const { getString } = useStrings()
   const { routes } = useAppContext()
+  const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
+  const createEditLabel = gitspaceId ? getString('cde.editGitspace') : getString('cde.createGitspace')
   return (
     <>
       <Page.Header
-        title=""
+        title={createEditLabel}
         breadcrumbs={
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }}>
             <img src={Gitspace} height={20} width={20} style={{ marginRight: '5px' }} />
             <Breadcrumbs
               links={[
                 { url: routes.toCDEGitspaces({ space }), label: getString('cde.cloudDeveloperExperience') },
-                { url: routes.toCDEGitspaces({ space }), label: getString('cde.createGitspace') }
+                {
+                  url: gitspaceId ? routes.toCDEGitspacesEdit({ space, gitspaceId }) : routes.toCDEGitspaces({ space }),
+                  label: createEditLabel
+                }
               ]}
             />
           </Layout.Horizontal>

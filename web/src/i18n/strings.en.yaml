@@ -1122,8 +1122,11 @@ cde:
   introText1: Get ready to code in seconds
   introText2: Isolated cloud development environments with your favorite editor
   introText3: Connect in seconds with a repository
-  cloudDeveloperExperience: Cloud Developer Experience
+  cloudDeveloperExperience: Cloud Developer Environments
   createGitspace: Create Gitspace
+  deleteGitspace: Delete Gitspace
+  editGitspace: Edit Gitspace
+  updateGitspace: Update Gitspace
   gitspaces: Gitspaces
   noRepo: Don’t have a Git repo?
   createRepo: Create a repo in Harness
@@ -1141,6 +1144,12 @@ cde:
   hours: Hours
   na: NA
   retry: Retry
+  eventTimeline: Event Timeline
+  cpu: Cpu
+  memory: Memory
+  disk: Disk
+  regionSelectWarning: Select a region first
+  gitspaceUpdateSuccess: Gitspace updated successfully
   details:
     actions: More Actions
     openEditor: Open VS Code Editor

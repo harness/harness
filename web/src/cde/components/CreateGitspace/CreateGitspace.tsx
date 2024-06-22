@@ -18,8 +18,9 @@ import React from 'react'
 import * as yup from 'yup'
 import { Button, ButtonVariation, Card, Formik, FormikForm, Layout, Text, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
-import { useHistory } from 'react-router-dom'
-import { useCreateGitspace, OpenapiCreateGitspaceRequest } from 'services/cde'
+import { useHistory, useParams } from 'react-router-dom'
+import { omit } from 'lodash-es'
+import { useCreateGitspace, OpenapiCreateGitspaceRequest, useGetGitspace, useUpdateGitspace } from 'services/cde'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useStrings } from 'framework/strings'
 import { IDEType } from 'cde/constants'
@@ -39,8 +40,10 @@ const GitspaceForm = () => {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const space = useGetSpaceParam()
-  const { showError } = useToaster()
+  const { showError, showSuccess } = useToaster()
   const history = useHistory()
+
+  const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
 
   const { mutate, loading, error } = useCreateGitspace({
     accountIdentifier: space?.split('/')[0],
@@ -48,70 +51,95 @@ const GitspaceForm = () => {
     projectIdentifier: space?.split('/')[2]
   })
 
+  const { data: gitspaceData, loading: loadingGitspace } = useGetGitspace({
+    gitspaceIdentifier: gitspaceId,
+    accountIdentifier: space?.split('/')[0],
+    orgIdentifier: space?.split('/')[1],
+    projectIdentifier: space?.split('/')[2]
+  })
+
+  const { mutate: updateGitspace, loading: updatingGitspace } = useUpdateGitspace({
+    gitspaceIdentifier: gitspaceId,
+    accountIdentifier: space?.split('/')[0],
+    orgIdentifier: space?.split('/')[1],
+    projectIdentifier: space?.split('/')[2]
+  })
+
+  const formInitialData = gitspaceId ? { ...gitspaceData?.config } : initData
+
   if (error) {
     showError(getErrorMessage(error))
   }
 
   return (
-    <Formik<OpenapiCreateGitspaceRequest>
-      onSubmit={async data => {
-        try {
-          const createdGitspace = await mutate(data)
-          history.push(
-            `${routes.toCDEGitspaceDetail({
-              space,
-              gitspaceId: createdGitspace?.id || ''
-            })}?redirectFrom=login`
+    <>
+      <Text className={css.cardTitle} font={{ variation: FontVariation.CARD_TITLE }}>
+        {gitspaceId
+          ? `${getString('cde.editGitspace')}  ${gitspaceData?.config?.name}`
+          : getString('cde.createGitspace')}
+      </Text>
+      <Formik<OpenapiCreateGitspaceRequest>
+        onSubmit={async data => {
+          try {
+            if (gitspaceId) {
+              await updateGitspace(omit(data, 'metadata'))
+              showSuccess(getString('cde.gitspaceUpdateSuccess'))
+              history.push(`${routes.toCDEGitspaces({ space })}`)
+            } else {
+              const createdGitspace = await mutate(omit(data, 'metadata'))
+              history.push(
+                `${routes.toCDEGitspaceDetail({
+                  space,
+                  gitspaceId: createdGitspace?.config?.id || ''
+                })}?redirectFrom=login`
+              )
+            }
+          } catch (err) {
+            showError(getErrorMessage(err))
+          }
+        }}
+        formLoading={loadingGitspace || updatingGitspace}
+        enableReinitialize
+        formName={'createGitSpace'}
+        initialValues={formInitialData}
+        validateOnMount={false}
+        validationSchema={yup.object().shape({
+          branch: yup.string().trim().required(),
+          code_repo_type: yup.string().trim().required(),
+          code_repo_url: yup.string().trim().required(),
+          id: yup.string().trim().required(),
+          ide: yup.string().trim().required(),
+          infra_provider_resource_id: yup.string().trim().required(),
+          name: yup.string().trim().required(),
+          metadata: yup.object().shape({
+            region: yup.string().trim().required()
+          })
+        })}>
+        {_ => {
+          return (
+            <FormikForm>
+              <Layout.Vertical spacing="medium">
+                <Layout.Horizontal spacing="medium">
+                  <SelectRepository disabled={!!gitspaceId} />
+                  <BranchInput disabled={!!gitspaceId} />
+                </Layout.Horizontal>
+                <SelectIDE />
+                <SelectInfraProvider />
+                <Button variation={ButtonVariation.PRIMARY} height={50} type="submit" loading={loading}>
+                  {gitspaceId ? getString('cde.updateGitspace') : getString('cde.createGitspace')}
+                </Button>
+              </Layout.Vertical>
+            </FormikForm>
           )
-        } catch (err) {
-          showError(getErrorMessage(err))
-        }
-      }}
-      formName={'createGitSpace'}
-      initialValues={initData}
-      validateOnMount={false}
-      validationSchema={yup.object().shape({
-        branch: yup.string().trim().required(),
-        code_repo_id: yup.string().trim().required(),
-        code_repo_type: yup.string().trim().required(),
-        code_repo_url: yup.string().trim().required(),
-        id: yup.string().trim().required(),
-        ide: yup.string().trim().required(),
-        infra_provider_resource_id: yup.string().trim().required(),
-        name: yup.string().trim().required(),
-        metadata: yup.object().shape({
-          region: yup.string().trim().required()
-        })
-      })}>
-      {_ => {
-        return (
-          <FormikForm>
-            <Layout.Vertical spacing="medium">
-              <Layout.Horizontal spacing="medium">
-                <SelectRepository />
-                <BranchInput />
-              </Layout.Horizontal>
-              <SelectIDE />
-              <SelectInfraProvider />
-              <Button variation={ButtonVariation.PRIMARY} height={50} type="submit" loading={loading}>
-                {getString('cde.createGitspace')}
-              </Button>
-            </Layout.Vertical>
-          </FormikForm>
-        )
-      }}
-    </Formik>
+        }}
+      </Formik>
+    </>
   )
 }
 
 export const CreateGitspace = () => {
-  const { getString } = useStrings()
-
   return (
     <Card className={css.main}>
-      <Text className={css.cardTitle} font={{ variation: FontVariation.CARD_TITLE }}>
-        {getString('cde.createGitspace')}
-      </Text>
       <GitspaceForm />
     </Card>
   )

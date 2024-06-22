@@ -21,11 +21,12 @@ import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import css from './BranchInput.module.scss'
 
-export const BranchInput = () => {
+export const BranchInput = ({ disabled }: { disabled?: boolean }) => {
   const { getString } = useStrings()
   return (
     <FormInput.Text
       name="branch"
+      disabled={disabled}
       inputGroup={{ leftIcon: 'git-branch', color: Color.GREY_500 }}
       placeholder={getString('cde.branchPlaceholder')}
       className={cx(css.branchDropdown, css.branchInput)}

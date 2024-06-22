@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React from 'react'
 import { Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Cpu } from 'iconoir-react'
@@ -43,7 +43,6 @@ export const SelectMachine = ({ options }: SelectMachineInterface) => {
   const { getString } = useStrings()
   const { values, errors, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { infra_provider_resource_id: machine } = values
-  const [machineState, setMachineState] = useState<string>(machine || '')
 
   const machineTypes = options.map(item => {
     const { cpu, disk, memory, id, name } = item
@@ -72,37 +71,41 @@ export const SelectMachine = ({ options }: SelectMachineInterface) => {
       renderMenu={
         <Layout.Horizontal padding={{ top: 'small', bottom: 'small' }}>
           <Menu>
-            {machineTypes.map(item => {
-              return (
-                <MenuItem
-                  key={item.id}
-                  active={machineState === item.id}
-                  text={
-                    <Layout.Vertical>
-                      <Text font={{ size: 'normal', weight: 'bold' }}>{item.label?.toUpperCase()}</Text>
-                      <Layout.Horizontal spacing={'small'}>
-                        <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
-                          Cpu: {item.cpu}
-                        </Text>
-                        <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
-                          Disk: {item.disk}
-                        </Text>
-                        <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
-                          Memory: {item.memory}
-                        </Text>
-                      </Layout.Horizontal>
-                    </Layout.Vertical>
-                  }
-                  onClick={() => {
-                    onChange('infra_provider_resource_id', item.id || '')
-                  }}
-                  onMouseOver={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-                    const dd = e.currentTarget.innerText as keyof typeof labelToMachineId
-                    setMachineState(labelToMachineId[dd])
-                  }}
-                />
-              )
-            })}
+            {machineTypes.length ? (
+              <>
+                {machineTypes.map(item => {
+                  return (
+                    <MenuItem
+                      key={item.id}
+                      active={values.infra_provider_resource_id === item.id}
+                      text={
+                        <Layout.Vertical>
+                          <Text font={{ size: 'normal', weight: 'bold' }}>{item.label?.toUpperCase()}</Text>
+                          <Layout.Horizontal spacing={'small'}>
+                            <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
+                              {getString('cde.cpu')}: {item.cpu?.toUpperCase()}
+                            </Text>
+                            <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
+                              {getString('cde.memory')}: {item.memory?.toUpperCase()}
+                            </Text>
+                            <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
+                              {getString('cde.disk')}: {item.disk?.toUpperCase()}
+                            </Text>
+                          </Layout.Horizontal>
+                        </Layout.Vertical>
+                      }
+                      onClick={() => {
+                        onChange('infra_provider_resource_id', item.id || '')
+                      }}
+                    />
+                  )
+                })}
+              </>
+            ) : (
+              <>
+                <Text font={{ size: 'normal', weight: 'bold' }}>{getString('cde.regionSelectWarning')}</Text>
+              </>
+            )}
           </Menu>
         </Layout.Horizontal>
       }
