@@ -158,7 +158,9 @@ const ChangesSection = (props: ChangesSectionProps) => {
         statusIcon = 'warning-icon'
       } else if (
         (codeOwnerPendingEntries && codeOwnerPendingEntries?.length > 0 && reqCodeOwnerLatestApproval) ||
-        (latestCodeOwnerApprovalArr?.length < minReqLatestApproval && reqCodeOwnerLatestApproval)
+        (!isEmpty(latestCodeOwnerApprovalArr) &&
+          latestCodeOwnerApprovalArr?.length < minReqLatestApproval &&
+          reqCodeOwnerLatestApproval)
       ) {
         title = getString('changesSection.pendingAppFromCodeOwners')
         statusMessage = getString('changesSection.pendingLatestApprovalCodeOwners')
@@ -333,6 +335,19 @@ const ChangesSection = (props: ChangesSectionProps) => {
       )
     }
     if (codeOwnerApprovalEntries?.length > 0) {
+      if (reqCodeOwnerLatestApproval && latestCodeOwnerApprovalArr.length < minReqLatestApproval) {
+        return (
+          <Layout.Horizontal>
+            <Container padding={{ left: 'large' }}>
+              <img alt="emptyStatus" width={16} height={16} src={emptyStatus} />
+            </Container>
+
+            <Text padding={{ left: 'medium' }} className={css.sectionSubheader}>
+              {getString('changesSection.latestChangesPendingReqRev')}
+            </Text>
+          </Layout.Horizontal>
+        )
+      }
       return (
         <Text
           icon={'tick-circle'}

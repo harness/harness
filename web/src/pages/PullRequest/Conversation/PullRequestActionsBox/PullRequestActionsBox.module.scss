@@ -111,6 +111,10 @@
       font-size: 16px !important;
       line-height: 24px !important;
     }
+    .widthContainer {
+      max-width: 220px !important;
+      min-width: min-content !important;
+    }
     .dateText {
       font-size: 12px !important;
       line-height: 18px !important;

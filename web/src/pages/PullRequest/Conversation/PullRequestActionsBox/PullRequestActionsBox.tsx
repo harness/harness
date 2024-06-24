@@ -536,7 +536,9 @@ const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullReques
                 <Container padding={{ left: 'small', right: 'small' }}>
                   <strong className={cx(css.boldText, css.purpleContainer)}>
                     <Icon name={CodeIcon.Merged} size={16} color={Color.PURPLE_700} />
-                    {pullRequestMetadata.source_branch}
+                    <Text className={cx(css.boldText, css.widthContainer)} lineClamp={1}>
+                      {pullRequestMetadata?.source_branch}
+                    </Text>
                   </strong>
                 </Container>
               ),
@@ -544,7 +546,9 @@ const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullReques
                 <Container padding={{ left: 'small', right: 'small' }}>
                   <strong className={cx(css.boldText, css.purpleContainer)}>
                     <Icon name={CodeIcon.Merged} size={16} color={Color.PURPLE_700} />
-                    {pullRequestMetadata.target_branch}
+                    <Text className={cx(css.boldText, css.widthContainer)} lineClamp={1}>
+                      {pullRequestMetadata?.target_branch}
+                    </Text>
                   </strong>
                 </Container>
               ),

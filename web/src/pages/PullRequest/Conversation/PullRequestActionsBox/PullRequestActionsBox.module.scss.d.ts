@@ -60,4 +60,5 @@ export declare const unchecked: string
 export declare const unmergeable: string
 export declare const verticalContainer: string
 export declare const viewDetailsBtn: string
+export declare const widthContainer: string
 export declare const widthContent: string
