@@ -41,7 +41,7 @@ import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { DiffFileEntry } from 'utils/types'
 import { useAppContext } from 'AppContext'
-import type { GitFileDiff, TypesPullReq } from 'services/code'
+import type { GitFileDiff, TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
@@ -58,7 +58,8 @@ import {
   DIFF_VIEWER_HEADER_HEIGHT,
   ViewStyle,
   getFileViewedState,
-  FileViewedState
+  FileViewedState,
+  DiffCommentItem
 } from './DiffViewerUtils'
 import { usePullReqComments } from './usePullReqComments'
 import Collapse from '../../icons/collapse.svg'
@@ -234,7 +235,8 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     containerRef,
     contentRef,
     refetchActivities,
-    setDirty
+    setDirty,
+    memorizedState
   })
 
   useEffect(
@@ -337,14 +339,16 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
           // Save current innerHTML
           contentHTML.current = innerHTML
 
+          const pre = document.createElement('pre')
+          pre.style.height = clientHeight + 'px'
+          pre.textContent = textContent
+          pre.classList.add(css.offscreenText)
+
+          dom.textContent = ''
+          dom.appendChild(pre)
+
           // TODO: Might be good to clean textContent a bit to not include
           // diff header info, line numbers, hunk headers, etc...
-
-          // Set innerHTML to a pre tag with the same height to avoid reflow
-          // The pre textContent allows Cmd/Ctrl-F to work
-          dom.innerHTML = `<pre style="height: ${clientHeight + 'px'}" class="${
-            css.offscreenText
-          }">${textContent}</pre>`
         }
       }
     },
@@ -384,7 +388,10 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
 
           if (memorizedState.get(diff.filePath)?.collapsed) {
             setCollapsed(false)
-            memorizedState.set(diff.filePath, { ...memorizedState.get(diff.filePath), collapsed: false })
+            memorizedState.set(diff.filePath, {
+              ...memorizedState.get(diff.filePath),
+              collapsed: false
+            })
           }
         } catch (exception) {
           showError(getErrorMessage(exception), 0)
@@ -602,6 +609,14 @@ export interface DiffViewerExchangeState {
   collapsed?: boolean
   useFullDiff?: boolean
   fullDiff?: DiffFileEntry
+  comments?: Map<number, CommentRestorationTrackingState>
+  commentsVisibilityAtLineNumber?: Map<number, boolean>
+}
+
+export interface CommentRestorationTrackingState extends DiffCommentItem<TypesPullReqActivity> {
+  uncommittedText?: string
+  showReplyPlaceHolder?: boolean
+  uncommittedEditComments?: Map<number, string>
 }
 
 const { scheduleTask, cancelTask } = createRequestAnimationFrameTaskPool()
