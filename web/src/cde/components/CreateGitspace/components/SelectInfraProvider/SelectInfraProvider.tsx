@@ -20,17 +20,15 @@ import { Layout } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
 import { useParams } from 'react-router-dom'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
-import { OpenapiCreateGitspaceRequest, useListInfraProviderResources } from 'services/cde'
+import { OpenapiCreateGitspaceRequest, useListInfraProviderResourcesForAccount } from 'services/cde'
 import { SelectRegion } from '../SelectRegion/SelectRegion'
 import { SelectMachine } from '../SelectMachine/SelectMachine'
 
 export const SelectInfraProvider = () => {
   const { values, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
-  const { accountIdentifier, orgIdentifier, projectIdentifier } = useGetCDEAPIParams() as CDEPathParams
-  const { data } = useListInfraProviderResources({
+  const { accountIdentifier } = useGetCDEAPIParams() as CDEPathParams
+  const { data } = useListInfraProviderResourcesForAccount({
     accountIdentifier,
-    orgIdentifier,
-    projectIdentifier,
     infraProviderConfigIdentifier: 'HARNESS_GCP'
   })
 
@@ -41,7 +39,7 @@ export const SelectInfraProvider = () => {
   useEffect(() => {
     if (gitspaceId && values.infra_provider_resource_id && optionsList.length) {
       const match = optionsList.find(item => item.id === values.infra_provider_resource_id)
-      if (values?.metadata?.region !== values.infra_provider_resource_id) {
+      if (values?.metadata?.region !== match?.region) {
         onChange('metadata.region', match?.region?.toLowerCase())
       }
     }
@@ -60,8 +58,8 @@ export const SelectInfraProvider = () => {
 
   return (
     <Layout.Horizontal spacing="medium">
-      <SelectRegion options={regionOptions} disabled={!!gitspaceId} />
-      <SelectMachine options={machineOptions} />
+      <SelectRegion defaultValue={regionOptions?.[0]} options={regionOptions} disabled={!!gitspaceId} />
+      <SelectMachine options={machineOptions} defaultValue={machineOptions?.[0]} />
     </Layout.Horizontal>
   )
 }

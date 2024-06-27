@@ -19,4 +19,5 @@
 export declare const gitspaceUrl: string
 export declare const listContainer: string
 export declare const popover: string
+export declare const repositoryCell: string
 export declare const table: string

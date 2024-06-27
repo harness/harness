@@ -15,13 +15,18 @@ export const isValidUrl = (url: string) => {
   return !!urlPattern.test(url)
 }
 
-export const getRepoNameFromURL = (repoURL?: string) => {
+export const getRepoIdFromURL = (repoURL?: string) => {
   const repoURLSplit = repoURL?.split('/')
   return repoURLSplit?.[repoURLSplit?.length - 1]
     ?.replace(/-/g, '')
     ?.replace(/_/g, '')
     .replace(/\./g, '')
     ?.toLowerCase()
+}
+
+export const getRepoNameFromURL = (repoURL?: string) => {
+  const repoURLSplit = repoURL?.split('/')
+  return repoURLSplit?.[repoURLSplit?.length - 1]
 }
 
 export enum CodeRepoType {

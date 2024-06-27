@@ -21,7 +21,6 @@ import type { Renderer, CellProps } from 'react-table'
 import ReactTimeago from 'react-timeago'
 import {
   Circle,
-  GithubCircle,
   GitBranch,
   Cpu,
   Clock,
@@ -31,25 +30,26 @@ import {
   ModernTv,
   OpenInBrowser,
   DeleteCircle,
-  EditPencil
+  EditPencil,
+  ViewColumns2
 } from 'iconoir-react'
 import { Menu, MenuItem, PopoverInteractionKind, Position } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
-import type { MutateMethod } from 'restful-react'
 import {
   useGitspaceAction,
   type EnumGitspaceStateType,
   type OpenapiGetGitspaceResponse,
   EnumIDEType,
-  useDeleteGitspace,
-  DeleteGitspacePathParams
+  useDeleteGitspace
 } from 'services/cde'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
 import { GitspaceActionType, GitspaceStatus, IDEType } from 'cde/constants'
 import { UseStringsReturn, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
+import { useConfirmAct } from 'hooks/useConfirmAction'
 import VSCode from '../../icons/VSCode.svg?url'
+import { getIconByRepoType } from '../CreateGitspace/components/SelectRepository/SelectRepository.utils'
 import css from './ListGitspaces.module.scss'
 
 export const getStatusColor = (status?: EnumGitspaceStateType) => {
@@ -59,8 +59,6 @@ export const getStatusColor = (status?: EnumGitspaceStateType) => {
     case GitspaceStatus.STOPPED:
     case GitspaceStatus.ERROR:
       return '#FF0000'
-    case GitspaceStatus.UNKNOWN:
-      return '#808080'
     default:
       return '#000000'
   }
@@ -112,27 +110,31 @@ export const RenderGitspaceName: Renderer<CellProps<OpenapiGetGitspaceResponse>>
 }
 
 export const RenderRepository: Renderer<CellProps<OpenapiGetGitspaceResponse>> = ({ row }) => {
-  const { getString } = useStrings()
   const details = row.original
-  const { config, tracked_changes } = details
-  const { name, branch } = config || {}
+  const { config } = details
+  const { name, branch, code_repo_url, code_repo_type } = config || {}
 
   return (
     <Layout.Vertical spacing={'small'}>
-      <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-        <GithubCircle />
-        <Text className={css.gitspaceUrl} color={Color.GREY_500} title={name} font={{ align: 'left', size: 'normal' }}>
+      <Layout.Horizontal
+        spacing={'small'}
+        className={css.repositoryCell}
+        flex={{ alignItems: 'center', justifyContent: 'start' }}
+        onClick={e => {
+          e.preventDefault()
+          e.stopPropagation()
+          window.open(code_repo_url, '_blank')
+        }}>
+        {getIconByRepoType({ repoType: code_repo_type })}
+        <Text className={css.gitspaceUrl} color={Color.PRIMARY_7} title={name} font={{ align: 'left', size: 'normal' }}>
           {name}
         </Text>
-        <Text>:</Text>
+        <Text color={Color.PRIMARY_7}>:</Text>
         <GitBranch />
-        <Text color={Color.GREY_500} title={name} font={{ align: 'left', size: 'normal' }}>
+        <Text color={Color.PRIMARY_7} title={name} font={{ align: 'left', size: 'normal' }}>
           {branch}
         </Text>
       </Layout.Horizontal>
-      <Text color={Color.GREY_500} font={{ align: 'left', size: 'small' }}>
-        {tracked_changes || getString('cde.noChange')}
-      </Text>
     </Layout.Vertical>
   )
 }
@@ -171,7 +173,7 @@ export const RenderLastActivity: Renderer<CellProps<OpenapiGetGitspaceResponse>>
   )
 }
 
-const StartStopButton = ({ state, loading }: { state?: EnumGitspaceStateType; loading?: boolean }) => {
+export const StartStopButton = ({ state, loading }: { state?: EnumGitspaceStateType; loading?: boolean }) => {
   const { getString } = useStrings()
   return (
     <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
@@ -185,7 +187,7 @@ const StartStopButton = ({ state, loading }: { state?: EnumGitspaceStateType; lo
   )
 }
 
-const OpenGitspaceButton = ({ ide }: { ide?: EnumIDEType }) => {
+export const OpenGitspaceButton = ({ ide }: { ide?: EnumIDEType }) => {
   const { getString } = useStrings()
 
   return (
@@ -203,7 +205,7 @@ interface ActionMenuProps {
   loading?: boolean
   actionLoading?: boolean
   deleteLoading?: boolean
-  deleteGitspace: MutateMethod<void, string, void, DeleteGitspacePathParams>
+  deleteGitspace: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => Promise<void>
 }
 
 const ActionMenu = ({
@@ -221,6 +223,7 @@ const ActionMenu = ({
   const { routes } = useAppContext()
   const pathparamsList = config?.space_path?.split('/') || []
   const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
+
   return (
     <Container
       className={css.listContainer}
@@ -230,39 +233,18 @@ const ActionMenu = ({
       }}>
       <Menu>
         <MenuItem
-          onClick={async e => {
-            try {
-              if (!actionLoading) {
-                e.preventDefault()
-                e.stopPropagation()
-                await handleStartStop()
-                await refreshList()
-              }
-            } catch (error) {
-              showError(getErrorMessage(error))
-            }
-          }}
-          text={
-            <Layout.Horizontal spacing="small">
-              <StartStopButton state={state} loading={actionLoading} />
-            </Layout.Horizontal>
-          }
-        />
-        <MenuItem
-          onClick={async e => {
-            try {
-              e.preventDefault()
-              e.stopPropagation()
-              await deleteGitspace(config?.id || '')
-              await refreshList()
-            } catch (error) {
-              showError(getErrorMessage(error))
-            }
+          onClick={() => {
+            history.push(
+              routes.toCDEGitspaceDetail({
+                space: config?.space_path || '',
+                gitspaceId: config?.id || ''
+              })
+            )
           }}
           text={
             <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-              {deleteLoading ? <></> : <DeleteCircle />}
-              <Text icon={deleteLoading ? 'loading' : undefined}>{getString('cde.deleteGitspace')}</Text>
+              <ViewColumns2 />
+              <Text>{getString('cde.viewGitspace')}</Text>
             </Layout.Horizontal>
           }
         />
@@ -282,7 +264,26 @@ const ActionMenu = ({
             </Layout.Horizontal>
           }
         />
-        {config?.ide && (
+        <MenuItem
+          onClick={async e => {
+            try {
+              if (!actionLoading) {
+                e.preventDefault()
+                e.stopPropagation()
+                await handleStartStop()
+                await refreshList()
+              }
+            } catch (error) {
+              showError(getErrorMessage(error))
+            }
+          }}
+          text={
+            <Layout.Horizontal spacing="small">
+              <StartStopButton state={state} loading={actionLoading} />
+            </Layout.Horizontal>
+          }
+        />
+        {config?.ide && state == GitspaceStatus.RUNNING && (
           <MenuItem
             onClick={e => {
               e.preventDefault()
@@ -300,6 +301,15 @@ const ActionMenu = ({
             }
           />
         )}
+        <MenuItem
+          onClick={deleteGitspace as Unknown as () => void}
+          text={
+            <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+              {deleteLoading ? <></> : <DeleteCircle />}
+              <Text icon={deleteLoading ? 'loading' : undefined}>{getString('cde.deleteGitspace')}</Text>
+            </Layout.Horizontal>
+          }
+        />
       </Menu>
     </Container>
   )
@@ -310,7 +320,10 @@ interface RenderActionsProps extends CellProps<OpenapiGetGitspaceResponse> {
 }
 
 export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
+  const { getString } = useStrings()
+  const { showError, showSuccess } = useToaster()
   const details = row.original
+  const { config } = details
   const { projectIdentifier, orgIdentifier, accountIdentifier } = useGetCDEAPIParams() as CDEPathParams
   const { mutate: deleteGitspace, loading: deleteLoading } = useDeleteGitspace({
     projectIdentifier,
@@ -329,6 +342,27 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
       action: details?.state === GitspaceStatus.RUNNING ? GitspaceActionType.STOP : GitspaceActionType.START
     })
   }
+
+  const confirmDelete = useConfirmAct()
+
+  const handleDelete = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    confirmDelete({
+      title: getString('cde.deleteGitspaceTitle'),
+      message: getString('cde.deleteGitspaceText', { name: config?.name }),
+      action: async () => {
+        try {
+          e.preventDefault()
+          e.stopPropagation()
+          await deleteGitspace(config?.id || '')
+          showSuccess(getString('cde.deleteSuccess'))
+          await refreshList()
+        } catch (exception) {
+          showError(getErrorMessage(exception))
+        }
+      }
+    })
+  }
+
   return (
     <Text
       onClick={e => {
@@ -342,7 +376,7 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
           data={details}
           actionLoading={actionLoading}
           deleteLoading={deleteLoading}
-          deleteGitspace={deleteGitspace}
+          deleteGitspace={handleDelete}
           refreshList={refreshList}
           handleStartStop={handleStartStop}
         />
@@ -367,7 +401,6 @@ export const ListGitspaces = ({
   const history = useHistory()
   const { getString } = useStrings()
   const { routes } = useAppContext()
-  const { showError } = useToaster()
 
   return (
     <Container>
@@ -375,31 +408,38 @@ export const ListGitspaces = ({
         <TableV2<OpenapiGetGitspaceResponse>
           className={css.table}
           onRowClick={row => {
-            if (row?.config?.space_path && row?.config?.id) {
+            const pathparamsList = row?.config?.space_path?.split('/') || []
+            const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
+
+            if (row?.state === GitspaceStatus.RUNNING) {
+              if (row?.config?.ide === IDEType.VSCODE) {
+                window.open(`vscode://harness-inc.gitspaces/${projectIdentifier}/${row?.config?.id}`, '_blank')
+              } else {
+                window.open(row?.url, '_blank')
+              }
+            } else {
               history.push(
                 routes.toCDEGitspaceDetail({
-                  space: row?.config?.space_path,
-                  gitspaceId: row?.config?.id
+                  space: row?.config?.space_path as string,
+                  gitspaceId: row?.config?.id as string
                 })
               )
-            } else {
-              showError(getString('cde.details.wrongIdentifier'))
             }
           }}
           columns={[
             {
               id: 'gitspaces',
-              Header: 'Gitspaces',
+              Header: getString('cde.gitspaces'),
               Cell: RenderGitspaceName
             },
             {
               id: 'repository',
-              Header: 'REPOSITORY & BRANCH',
+              Header: getString('cde.repositoryAndBranch'),
               Cell: RenderRepository
             },
             {
               id: 'lastactivity',
-              Header: 'Last Active',
+              Header: getString('cde.sessionDuration'),
               Cell: RenderLastActivity
             },
             {

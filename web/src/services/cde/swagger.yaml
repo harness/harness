@@ -30,6 +30,32 @@ paths:
       summary: List gitspaces for account
       tags:
         - gitspaces
+  /accounts/{accountIdentifier}/infraproviders/{infraProviderConfigIdentifier}/resources:
+    get:
+      operationId: listInfraProviderResourcesForAccount
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: infra Provider Config Identifier.
+          in: path
+          name: infraProviderConfigIdentifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiListInfraProviderResourceResponse'
+          description: OK
+      summary: List infraProvider Resources
+      tags:
+        - infraproviderresources
   /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/coderepository:
     post:
       operationId: getCodeRepository
@@ -655,7 +681,6 @@ components:
       enum:
         - running
         - stopped
-        - unknown
         - error
       type: string
     EnumIDEType:

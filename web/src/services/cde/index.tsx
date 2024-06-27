@@ -32,7 +32,7 @@ export type EnumGitspaceEventType =
   | 'agentGitspaceStateReportStopped'
   | 'agentGitspaceStateReportUnknown'
 
-export type EnumGitspaceStateType = 'running' | 'stopped' | 'unknown' | 'error'
+export type EnumGitspaceStateType = 'running' | 'stopped' | 'error'
 
 export type EnumIDEType = 'vsCode' | 'vsCodeWeb'
 
@@ -269,6 +269,58 @@ export const useListGitspacesForAccount = ({ accountIdentifier, ...props }: UseL
   useGet<OpenapiGetGitspaceResponse[], unknown, void, ListGitspacesForAccountPathParams>(
     (paramsInPath: ListGitspacesForAccountPathParams) => `/accounts/${paramsInPath.accountIdentifier}/gitspaces`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier }, ...props }
+  )
+
+export interface ListInfraProviderResourcesForAccountPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * infra Provider Config Identifier.
+   */
+  infraProviderConfigIdentifier: string
+}
+
+export type ListInfraProviderResourcesForAccountProps = Omit<
+  GetProps<OpenapiListInfraProviderResourceResponse, unknown, void, ListInfraProviderResourcesForAccountPathParams>,
+  'path'
+> &
+  ListInfraProviderResourcesForAccountPathParams
+
+/**
+ * List infraProvider Resources
+ */
+export const ListInfraProviderResourcesForAccount = ({
+  accountIdentifier,
+  infraProviderConfigIdentifier,
+  ...props
+}: ListInfraProviderResourcesForAccountProps) => (
+  <Get<OpenapiListInfraProviderResourceResponse, unknown, void, ListInfraProviderResourcesForAccountPathParams>
+    path={`/accounts/${accountIdentifier}/infraproviders/${infraProviderConfigIdentifier}/resources`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListInfraProviderResourcesForAccountProps = Omit<
+  UseGetProps<OpenapiListInfraProviderResourceResponse, unknown, void, ListInfraProviderResourcesForAccountPathParams>,
+  'path'
+> &
+  ListInfraProviderResourcesForAccountPathParams
+
+/**
+ * List infraProvider Resources
+ */
+export const useListInfraProviderResourcesForAccount = ({
+  accountIdentifier,
+  infraProviderConfigIdentifier,
+  ...props
+}: UseListInfraProviderResourcesForAccountProps) =>
+  useGet<OpenapiListInfraProviderResourceResponse, unknown, void, ListInfraProviderResourcesForAccountPathParams>(
+    (paramsInPath: ListInfraProviderResourcesForAccountPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/infraproviders/${paramsInPath.infraProviderConfigIdentifier}/resources`,
+    { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, infraProviderConfigIdentifier }, ...props }
   )
 
 export interface GetCodeRepositoryPathParams {

@@ -19,6 +19,7 @@ import cx from 'classnames'
 import { Menu, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Text, Button, Container, ButtonVariation, FormError } from '@harnessio/uicore'
 import type { IconName } from '@harnessio/icons'
+import { useFormikContext } from 'formik'
 import { useStrings } from 'framework/strings'
 import css from './GitspaceSelect.module.scss'
 
@@ -46,6 +47,8 @@ export const GitspaceSelect = ({
   const { getString } = useStrings()
   const buttonRef = useRef<HTMLDivElement | null>(null)
   const [popoverWidth, setPopoverWidth] = useState(0)
+
+  const { touched } = useFormikContext<{ validated?: boolean }>()
 
   const defaultTooltipProps = {
     tooltip: (
@@ -93,7 +96,7 @@ export const GitspaceSelect = ({
         {...addTooltipProps}
         disabled={disabled}
       />
-      <FormError errorMessage={errorMessage} name={formikName || ''} />
+      {touched.validated && <FormError errorMessage={errorMessage} name={formikName || ''} />}
     </div>
   )
 }

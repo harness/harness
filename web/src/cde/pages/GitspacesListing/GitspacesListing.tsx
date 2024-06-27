@@ -15,16 +15,7 @@
  */
 
 import React, { useEffect } from 'react'
-import {
-  Breadcrumbs,
-  Text,
-  Button,
-  ButtonVariation,
-  ExpandingSearchInput,
-  Layout,
-  Page,
-  Container
-} from '@harnessio/uicore'
+import { Breadcrumbs, Text, Button, ButtonVariation, Layout, Page, Container } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { ListGitspaces } from 'cde/components/ListGitspaces/ListGitspaces'
@@ -72,29 +63,28 @@ const GitspacesListing = () => {
   return (
     <>
       <Page.Header
-        title=""
+        title={getString('cde.manageGitspaces')}
         breadcrumbs={
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }}>
             <img src={Gitspace} height={20} width={20} style={{ marginRight: '5px' }} />
             <Breadcrumbs
               links={[
                 { url: routes.toCDEGitspaces({ space }), label: getString('cde.cloudDeveloperExperience') },
-                { url: routes.toCDEGitspaces({ space }), label: getString('cde.createGitspace') }
+                { url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') }
               ]}
             />
           </Layout.Horizontal>
         }
       />
+      <Page.SubHeader>
+        <Button
+          onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
+          variation={ButtonVariation.PRIMARY}>
+          {getString('cde.newGitspace')}
+        </Button>
+      </Page.SubHeader>
       <Container className={css.main}>
         <Layout.Vertical spacing={'large'}>
-          <Layout.Horizontal flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text font={{ variation: FontVariation.H3 }}>{getString('cde.manageGitspaces')}</Text>
-            <Button
-              onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
-              variation={ButtonVariation.PRIMARY}>
-              {getString('cde.newGitspace')}
-            </Button>
-          </Layout.Horizontal>
           <Page.Body
             loading={loading}
             error={
@@ -114,7 +104,6 @@ const GitspacesListing = () => {
               image: noSpace,
               message: getString('cde.noGitspaces')
             }}>
-            {Boolean(data) && <ExpandingSearchInput width={'50%'} alwaysExpanded autoFocus={false} />}
             <ListGitspaces data={data as OpenapiGetGitspaceResponse[]} refreshList={refetch} />
             <ResourceListingPagination response={response} page={page} setPage={setPage} />
           </Page.Body>

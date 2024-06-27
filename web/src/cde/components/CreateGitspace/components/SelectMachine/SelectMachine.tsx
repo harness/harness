@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Cpu } from 'iconoir-react'
 import { useFormikContext } from 'formik'
 import { FontVariation } from '@harnessio/design-system'
+import { useParams } from 'react-router-dom'
 import { GitspaceSelect } from 'cde/components/GitspaceSelect/GitspaceSelect'
 import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResourceResponse } from 'services/cde'
 import { useStrings } from 'framework/strings'
@@ -37,12 +38,14 @@ export const labelToMachineId = {
 
 interface SelectMachineInterface {
   options: TypesInfraProviderResourceResponse[]
+  defaultValue: TypesInfraProviderResourceResponse
 }
 
-export const SelectMachine = ({ options }: SelectMachineInterface) => {
+export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface) => {
   const { getString } = useStrings()
   const { values, errors, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { infra_provider_resource_id: machine } = values
+  const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
 
   const machineTypes = options.map(item => {
     const { cpu, disk, memory, id, name } = item
@@ -55,15 +58,24 @@ export const SelectMachine = ({ options }: SelectMachineInterface) => {
     }
   })
 
+  useEffect(() => {
+    if (defaultValue && gitspaceId) {
+      onChange('infra_provider_resource_id', defaultValue.id)
+    }
+  }, [defaultValue?.id, gitspaceId])
+
   const data = (machineTypes?.find(item => item.id === machine) || {}) as (typeof machineTypes)[0]
 
   return (
     <GitspaceSelect
       overridePopOverWidth
       text={
-        <Layout.Horizontal spacing={'small'}>
-          <Cpu />
-          <Text font={'normal'}>{data.label || getString('cde.machine')}</Text>
+        <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+          <Cpu height={20} width={20} style={{ marginRight: '12px', alignItems: 'center' }} />
+          <Layout.Vertical>
+            <Text font={'normal'}>{getString('cde.machine')}</Text>
+            <Text font={'normal'}>{data.label || getString('cde.machine')}</Text>
+          </Layout.Vertical>
         </Layout.Horizontal>
       }
       errorMessage={errors.infra_provider_resource_id}

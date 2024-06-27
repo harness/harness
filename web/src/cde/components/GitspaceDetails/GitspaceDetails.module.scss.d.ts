@@ -18,4 +18,5 @@
 // This is an auto-generated file
 export declare const detailsBar: string
 export declare const popover: string
+export declare const repository: string
 export declare const subText: string

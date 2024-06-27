@@ -15,8 +15,9 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { Breadcrumbs, Layout, Page, useToaster } from '@harnessio/uicore'
+import { Breadcrumbs, Layout, Page, useToaster, Text } from '@harnessio/uicore'
 import { useParams } from 'react-router-dom'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { GitspaceDetails } from 'cde/components/GitspaceDetails/GitspaceDetails'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
@@ -24,6 +25,7 @@ import { GitspaceLogs } from 'cde/components/GitspaceLogs/GitspaceLogs'
 import { useStrings } from 'framework/strings'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
 import { useQueryParams } from 'hooks/useQueryParams'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useGetGitspace, useGetGitspaceInstanceLogs, useGitspaceAction } from 'services/cde'
 import { getErrorMessage } from 'utils/Utils'
 import { GitspaceActionType, GitspaceStatus } from 'cde/constants'
@@ -36,6 +38,7 @@ const GitspaceDetail = () => {
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
+  const { updateQueryParams } = useUpdateQueryParams<{ redirectFrom?: string }>()
   const { accountIdentifier, orgIdentifier, projectIdentifier } = useGetCDEAPIParams() as CDEPathParams
   const { redirectFrom = '' } = useQueryParams<{ redirectFrom?: string }>()
   const [startTriggred, setStartTriggred] = useState(false)
@@ -81,21 +84,31 @@ const GitspaceDetail = () => {
           await mutate({ action: GitspaceActionType.START })
           await refetch()
           await refetchLogs()
+          updateQueryParams({ redirectFrom: undefined })
         } catch (err) {
           showError(getErrorMessage(err))
         }
       }
     }
 
-    startTrigger()
-  }, [redirectFrom, mutateLoading, startTriggred])
-
-  const isfetchingInProgress = (startTriggred && state === GitspaceStatus.STOPPED && !startError) || mutateLoading
+    if (state && state !== GitspaceStatus.RUNNING && redirectFrom) {
+      startTrigger()
+    }
+  }, [state, redirectFrom, mutateLoading, startTriggred])
 
   return (
     <>
       <Page.Header
-        title=""
+        title={
+          <Layout.Vertical>
+            <Text font={{ variation: FontVariation.CARD_TITLE }}>
+              {` ${getString('cde.gitspaceDetail')} ${data?.config?.name}`}
+            </Text>
+            <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
+              {data?.config?.id}
+            </Text>
+          </Layout.Vertical>
+        }
         breadcrumbs={
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }}>
             <img src={Gitspace} height={20} width={20} style={{ marginRight: '5px' }} />
@@ -107,7 +120,7 @@ const GitspaceDetail = () => {
                 },
                 {
                   url: routes.toCDEGitspaceDetail({ space, gitspaceId }),
-                  label: `${getString('cde.gitpsaceDetail')} ${gitspaceId}`
+                  label: getString('cde.gitspaceDetail')
                 }
               ]}
             />
@@ -129,7 +142,6 @@ const GitspaceDetail = () => {
             mutate={mutate}
             actionError={startError}
             mutateLoading={mutateLoading}
-            isfetchingInProgress={isfetchingInProgress}
           />
           <GitspaceLogs data={logsData} refetch={refetchLogs} loading={logsLoading} error={logsError} />
         </Layout.Horizontal>

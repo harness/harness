@@ -1122,10 +1122,11 @@ cde:
   introText1: Get ready to code in seconds
   introText2: Isolated cloud development environments with your favorite editor
   introText3: Connect in seconds with a repository
-  cloudDeveloperExperience: Cloud Developer Environments
+  cloudDeveloperExperience: Cloud Development Environments
   createGitspace: Create Gitspace
   deleteGitspace: Delete Gitspace
   editGitspace: Edit Gitspace
+  viewGitspace: View Gitspace Detail
   updateGitspace: Update Gitspace
   gitspaces: Gitspaces
   noRepo: Don’t have a Git repo?
@@ -1133,7 +1134,7 @@ cde:
   newGitspace: + New Gitspace
   manageGitspaces: Manage Gitspaces
   noGitspaces: You have not created any Gitspace yet
-  gitpsaceDetail: Gitspace Detail
+  gitspaceDetail: Gitspace Detail
   machine: Machine
   region: Region
   or: OR
@@ -1150,6 +1151,17 @@ cde:
   disk: Disk
   regionSelectWarning: Select a region first
   gitspaceUpdateSuccess: Gitspace updated successfully
+  regionValidationMessage: Region is required
+  repoValidationMessage: Repository is required
+  branchValidationMessage: Branch is required
+  machineValidationMessage: Machine Type is required
+  startingGitspace: Starting Gitspace
+  stopingGitspace: Stopping Gitspace
+  sessionDuration: Last Started
+  deleteGitspaceTitle: Delete Gitspace
+  deleteGitspaceText: "Are you sure to delete the gitspace, '{{name}}'?"
+  deleteSuccess: Gitspace deleted succesfully
+  repositoryAndBranch: Repository & Branch
   details:
     actions: More Actions
     openEditor: Open VS Code Editor
@@ -1178,9 +1190,9 @@ cde:
     continueWith: Continue with
     repositoryURL: Repository URL
   ide:
-    browser: Browser
-    desktop: Desktop
-    ide: IDE
+    browser: VS Code Browser
+    desktop: VS Code Desktop
+    title: IDE
     selectIDE: Select IDE
     vsCode: VS Code
     openVSCode: Open in VS Code Desktop

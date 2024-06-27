@@ -42,12 +42,10 @@ export const SelectIDE = () => {
           <img src={VSCode} height={20} width={20} style={{ marginRight: '12px' }} />
           <Layout.Vertical>
             <Text font={ide ? 'small' : 'normal'}>
-              {ide ? getString('cde.ide.ide') : getString('cde.ide.selectIDE')}
+              {ide ? getString('cde.ide.title') : getString('cde.ide.selectIDE')}
             </Text>
             {ide && (
-              <Text font={{ size: 'normal', weight: 'bold' }}>
-                {`${getString('cde.ide.vsCode')} ${IDELabel}` || getString('cde.ide.ide')}
-              </Text>
+              <Text font={{ size: 'normal', weight: 'bold' }}>{`${IDELabel}` || getString('cde.ide.title')}</Text>
             )}
           </Layout.Vertical>
         </Layout.Horizontal>

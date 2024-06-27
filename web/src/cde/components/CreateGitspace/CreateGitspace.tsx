@@ -33,7 +33,7 @@ import { SelectInfraProvider } from './components/SelectInfraProvider/SelectInfr
 import css from './CreateGitspace.module.scss'
 
 const initData = {
-  ide: IDEType.VSCODE
+  ide: IDEType.VSCODEWEB
 }
 
 const GitspaceForm = () => {
@@ -78,7 +78,7 @@ const GitspaceForm = () => {
           ? `${getString('cde.editGitspace')}  ${gitspaceData?.config?.name}`
           : getString('cde.createGitspace')}
       </Text>
-      <Formik<OpenapiCreateGitspaceRequest>
+      <Formik<OpenapiCreateGitspaceRequest & { validated?: boolean }>
         onSubmit={async data => {
           try {
             if (gitspaceId) {
@@ -101,18 +101,18 @@ const GitspaceForm = () => {
         formLoading={loadingGitspace || updatingGitspace}
         enableReinitialize
         formName={'createGitSpace'}
-        initialValues={formInitialData}
+        initialValues={{ ...formInitialData, validated: false }}
         validateOnMount={false}
         validationSchema={yup.object().shape({
-          branch: yup.string().trim().required(),
-          code_repo_type: yup.string().trim().required(),
-          code_repo_url: yup.string().trim().required(),
+          branch: yup.string().trim().required(getString('cde.branchValidationMessage')),
+          code_repo_type: yup.string().trim().required(getString('cde.repoValidationMessage')),
+          code_repo_url: yup.string().trim().required(getString('cde.repoValidationMessage')),
           id: yup.string().trim().required(),
           ide: yup.string().trim().required(),
-          infra_provider_resource_id: yup.string().trim().required(),
+          infra_provider_resource_id: yup.string().trim().required(getString('cde.machineValidationMessage')),
           name: yup.string().trim().required(),
           metadata: yup.object().shape({
-            region: yup.string().trim().required()
+            region: yup.string().trim().required(getString('cde.regionValidationMessage'))
           })
         })}>
         {_ => {

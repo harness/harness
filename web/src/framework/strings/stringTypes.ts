@@ -140,11 +140,15 @@ export interface StringsMap {
   cancelImportConfirm: string
   cancelledImport: string
   'cde.branchPlaceholder': string
+  'cde.branchValidationMessage': string
   'cde.cloudDeveloperExperience': string
   'cde.cpu': string
   'cde.createGitspace': string
   'cde.createRepo': string
   'cde.deleteGitspace': string
+  'cde.deleteGitspaceText': string
+  'cde.deleteGitspaceTitle': string
+  'cde.deleteSuccess': string
   'cde.details.actions': string
   'cde.details.fetchingDetails': string
   'cde.details.fetchingGitspace': string
@@ -165,22 +169,23 @@ export interface StringsMap {
   'cde.disk': string
   'cde.editGitspace': string
   'cde.eventTimeline': string
-  'cde.gitpsaceDetail': string
+  'cde.gitspaceDetail': string
   'cde.gitspaceUpdateSuccess': string
   'cde.gitspaces': string
   'cde.hours': string
   'cde.ide.browser': string
   'cde.ide.desktop': string
-  'cde.ide.ide': string
   'cde.ide.openBrowser': string
   'cde.ide.openVSCode': string
   'cde.ide.selectIDE': string
+  'cde.ide.title': string
   'cde.ide.vsCode': string
   'cde.introText1': string
   'cde.introText2': string
   'cde.introText3': string
   'cde.logs': string
   'cde.machine': string
+  'cde.machineValidationMessage': string
   'cde.manageGitspaces': string
   'cde.memory': string
   'cde.na': string
@@ -192,6 +197,8 @@ export interface StringsMap {
   'cde.or': string
   'cde.region': string
   'cde.regionSelectWarning': string
+  'cde.regionValidationMessage': string
+  'cde.repoValidationMessage': string
   'cde.repository.continueWith': string
   'cde.repository.pasteRepo': string
   'cde.repository.pasterRepoSubtext': string
@@ -200,9 +207,14 @@ export interface StringsMap {
   'cde.repository.repo': string
   'cde.repository.repositoryURL': string
   'cde.repository.selectRepository': string
+  'cde.repositoryAndBranch': string
   'cde.retry': string
+  'cde.sessionDuration': string
+  'cde.startingGitspace': string
+  'cde.stopingGitspace': string
   'cde.updateGitspace': string
   'cde.used': string
+  'cde.viewGitspace': string
   changePassword: string
   changePasswordSuccesfully: string
   changeRepoVis: string

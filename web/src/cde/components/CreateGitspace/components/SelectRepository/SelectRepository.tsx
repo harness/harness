@@ -27,7 +27,7 @@ import { OpenapiCreateGitspaceRequest, OpenapiGetCodeRepositoryResponse, useGetC
 import { GitspaceSelect } from 'cde/components/GitspaceSelect/GitspaceSelect'
 import { useStrings } from 'framework/strings'
 import { CodeRepoAccessType } from 'cde/constants'
-import { getIconByRepoType, getRepoNameFromURL, isValidUrl } from './SelectRepository.utils'
+import { getIconByRepoType, getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from './SelectRepository.utils'
 import css from './SelectRepository.module.scss'
 
 const RepositoryText = ({ repoURL }: { repoURL?: string }) => {
@@ -75,13 +75,13 @@ const SelectRepositoryCard = ({
             className={css.metadataItem}
             onClick={() => {
               onChange((prv: any) => {
-                const repoId = getRepoNameFromURL(data?.url)
+                const repoId = getRepoIdFromURL(data?.url)
                 return {
                   ...prv,
                   values: {
                     ...prv.values,
                     id: `${repoId}`,
-                    name: `${repoId}`?.toLowerCase(),
+                    name: getRepoNameFromURL(data?.url),
                     code_repo_url: data?.url || '',
                     code_repo_type: data?.repo_type || '',
                     code_repo_id: repoId,
@@ -178,7 +178,7 @@ export const SelectRepository = ({ disabled }: { disabled?: boolean }) => {
                 rightElementProps={{ size: 16, className: css.loadingIcon }}
                 rightElement={loading ? 'loading' : undefined}
                 className={css.urlInput}
-                placeholder="e.g https://github.com/orkohunter/idp"
+                placeholder="e.g https://github.com/microsoft/vscode-remote-try-python.git"
                 onChange={async event => {
                   const target = event.target as HTMLInputElement
                   await onChange(target.value)
