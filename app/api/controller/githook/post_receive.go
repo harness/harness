@@ -269,16 +269,22 @@ func (c *Controller) handleEmptyRepoPush(
 		return
 	}
 
-	var branchName string
-	// we only care about one active branch that was pushed.
+	var newDefaultBranch string
+	// update default branch if corresponding branch does not exist
 	for _, refUpdate := range in.RefUpdates {
-		if strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch) &&
-			!refUpdate.New.IsNil() {
-			branchName = refUpdate.Ref[len(gitReferenceNamePrefixBranch):]
-			break
+		if strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch) && !refUpdate.New.IsNil() {
+			branchName := refUpdate.Ref[len(gitReferenceNamePrefixBranch):]
+			if branchName == repo.DefaultBranch {
+				newDefaultBranch = branchName
+				break
+			}
+			// use the first pushed branch if default branch is not present.
+			if newDefaultBranch == "" {
+				newDefaultBranch = branchName
+			}
 		}
 	}
-	if branchName == "" {
+	if newDefaultBranch == "" {
 		out.Error = ptr.String(usererror.ErrEmptyRepoNeedsBranch.Error())
 		return
 	}
@@ -287,11 +293,12 @@ func (c *Controller) handleEmptyRepoPush(
 	var err error
 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
 		r.IsEmpty = false
-		r.DefaultBranch = branchName
+		r.DefaultBranch = newDefaultBranch
 		return nil
 	})
 	if err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msgf("failed to update the repo default branch to %s and is_empty to false", branchName)
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to update the repo default branch to %s and is_empty to false",
+			newDefaultBranch)
 		return
 	}
 
