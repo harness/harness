@@ -28,7 +28,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var _ InfraProvider = (*dockerProvider)(nil)
+var _ InfraProvider = (*DockerProvider)(nil)
 
 type Config struct {
 	DockerHost       string
@@ -37,19 +37,19 @@ type Config struct {
 	DockerTLSVerify  string
 }
 
-type dockerProvider struct {
+type DockerProvider struct {
 	config *Config
 }
 
-func NewDockerProvider(config *Config) InfraProvider {
-	return &dockerProvider{
+func NewDockerProvider(config *Config) *DockerProvider {
+	return &DockerProvider{
 		config: config,
 	}
 }
 
 // Provision assumes a docker engine is already running on the Gitness host machine and re-uses that as infra.
 // It does not start docker engine.
-func (d dockerProvider) Provision(ctx context.Context, _ string, params []Parameter) (Infrastructure, error) {
+func (d DockerProvider) Provision(ctx context.Context, _ string, params []Parameter) (Infrastructure, error) {
 	dockerClient, closeFunc, err := d.getClient(params)
 	if err != nil {
 		return Infrastructure{}, err
@@ -66,53 +66,53 @@ func (d dockerProvider) Provision(ctx context.Context, _ string, params []Parame
 	}, nil
 }
 
-func (d dockerProvider) Find(_ context.Context, _ string, _ []Parameter) (Infrastructure, error) {
+func (d DockerProvider) Find(_ context.Context, _ string, _ []Parameter) (Infrastructure, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
 // Stop is NOOP as this provider uses already running docker engine. It does not stop the docker engine.
-func (d dockerProvider) Stop(_ context.Context, infra Infrastructure) (Infrastructure, error) {
+func (d DockerProvider) Stop(_ context.Context, infra Infrastructure) (Infrastructure, error) {
 	return infra, nil
 }
 
 // Destroy is NOOP as this provider uses already running docker engine. It does not stop the docker engine.
-func (d dockerProvider) Destroy(_ context.Context, infra Infrastructure) (Infrastructure, error) {
+func (d DockerProvider) Destroy(_ context.Context, infra Infrastructure) (Infrastructure, error) {
 	return infra, nil
 }
 
-func (d dockerProvider) Status(_ context.Context, _ Infrastructure) (enum.InfraStatus, error) {
+func (d DockerProvider) Status(_ context.Context, _ Infrastructure) (enum.InfraStatus, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
 // AvailableParams returns empty slice as no params are defined.
-func (d dockerProvider) AvailableParams() []ParameterSchema {
+func (d DockerProvider) AvailableParams() []ParameterSchema {
 	return []ParameterSchema{}
 }
 
 // ValidateParams returns nil as no params are defined.
-func (d dockerProvider) ValidateParams(_ []Parameter) error {
+func (d DockerProvider) ValidateParams(_ []Parameter) error {
 	return nil
 }
 
 // TemplateParams returns nil as no template params are used.
-func (d dockerProvider) TemplateParams() []ParameterSchema {
+func (d DockerProvider) TemplateParams() []ParameterSchema {
 	return nil
 }
 
 // ProvisioningType returns existing as docker provider doesn't create new resources.
-func (d dockerProvider) ProvisioningType() enum.InfraProvisioningType {
+func (d DockerProvider) ProvisioningType() enum.InfraProvisioningType {
 	return enum.InfraProvisioningTypeExisting
 }
 
-func (d dockerProvider) Exec(_ context.Context, _ Infrastructure, _ []string) (io.Reader, io.Reader, error) {
+func (d DockerProvider) Exec(_ context.Context, _ Infrastructure, _ []string) (io.Reader, io.Reader, error) {
 	// TODO implement me
 	panic("implement me")
 }
 
 // Client returns a new docker client created using params.
-func (d dockerProvider) Client(_ context.Context, infra Infrastructure) (Client, error) {
+func (d DockerProvider) Client(_ context.Context, infra Infrastructure) (Client, error) {
 	dockerClient, closeFunc, err := d.getClient(infra.Parameters)
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func (d dockerProvider) Client(_ context.Context, infra Infrastructure) (Client,
 }
 
 // getClient returns a new docker client created using values from gitness docker config.
-func (d dockerProvider) getClient(_ []Parameter) (*client.Client, func(context.Context), error) {
+func (d DockerProvider) getClient(_ []Parameter) (*client.Client, func(context.Context), error) {
 	var opts []client.Opt
 
 	opts = append(opts, client.WithHost(d.config.DockerHost))
@@ -154,7 +154,7 @@ func (d dockerProvider) getClient(_ []Parameter) (*client.Client, func(context.C
 	return dockerClient, closeFunc, nil
 }
 
-func (d dockerProvider) getHTTPSClient() (*http.Client, error) {
+func (d DockerProvider) getHTTPSClient() (*http.Client, error) {
 	options := tlsconfig.Options{
 		CAFile:             filepath.Join(d.config.DockerCertPath, "ca.pem"),
 		CertFile:           filepath.Join(d.config.DockerCertPath, "cert.pem"),

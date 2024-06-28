@@ -15,27 +15,25 @@
 package infraprovider
 
 import (
-	"github.com/harness/gitness/types"
+	"fmt"
 
-	"github.com/google/wire"
+	"github.com/harness/gitness/infraprovider/enum"
 )
 
-// WireSet provides a wire set for this package.
-var WireSet = wire.NewSet(
-	ProvideDockerProvider,
-	ProvideFactory,
-)
-
-func ProvideDockerProvider(config *types.Config) *DockerProvider {
-	dockerConfig := Config{
-		DockerHost:       config.Docker.Host,
-		DockerAPIVersion: config.Docker.APIVersion,
-		DockerCertPath:   config.Docker.CertPath,
-		DockerTLSVerify:  config.Docker.TLSVerify,
-	}
-	return NewDockerProvider(&dockerConfig)
+type Factory struct {
+	providers map[enum.InfraProviderType]InfraProvider
 }
 
-func ProvideFactory(dockerProvider *DockerProvider) Factory {
-	return NewFactory(dockerProvider)
+func NewFactory(dockerProvider *DockerProvider) Factory {
+	providers := make(map[enum.InfraProviderType]InfraProvider)
+	providers[enum.InfraProviderTypeDocker] = dockerProvider
+	return Factory{providers: providers}
+}
+
+func (f *Factory) GetInfraProvider(providerType enum.InfraProviderType) (InfraProvider, error) {
+	val := f.providers[providerType]
+	if val == nil {
+		return nil, fmt.Errorf("unknown infra provider type: %s", providerType)
+	}
+	return val, nil
 }
