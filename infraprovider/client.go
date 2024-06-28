@@ -14,28 +14,9 @@
 
 package infraprovider
 
-import "github.com/harness/gitness/infraprovider/enum"
+import "context"
 
-type ParameterSchema struct {
-	Name         string
-	Description  string
-	DefaultValue string
-	Required     bool
-	Secret       bool
-	Editable     bool
-}
-
-type Parameter struct {
-	Name  string
-	Value string
-}
-
-type Infrastructure struct {
-	Identifier   string
-	ResourceKey  string
-	ProviderType enum.InfraProviderType
-	Parameters   []Parameter
-	Status       enum.InfraStatus
-	Host         string
-	Port         int
+type Client interface {
+	// Close closes the underlying client.
+	Close(ctx context.Context)
 }

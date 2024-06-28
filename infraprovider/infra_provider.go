@@ -36,6 +36,13 @@ type InfraProvider interface {
 	AvailableParams() []ParameterSchema
 	// ValidateParams validates the supplied params before defining the infrastructure resource .
 	ValidateParams(parameters []Parameter) error
+	// TemplateParams provides a list of params which are of type template.
+	TemplateParams() []ParameterSchema
+	// ProvisioningType specifies whether the provider will provision new infra resources or it will reuse existing.
+	ProvisioningType() enum.InfraProvisioningType
 	// Exec executes a shell command in the infrastructure.
 	Exec(ctx context.Context, infra Infrastructure, cmd []string) (io.Reader, io.Reader, error)
+	// Client returns a client which can be used to connect the provided infra.
+	// The responsibility of calling the close func lies with the user.
+	Client(ctx context.Context, infra Infrastructure) (Client, error)
 }

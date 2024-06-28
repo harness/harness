@@ -14,28 +14,19 @@
 
 package infraprovider
 
-import "github.com/harness/gitness/infraprovider/enum"
+import (
+	"context"
 
-type ParameterSchema struct {
-	Name         string
-	Description  string
-	DefaultValue string
-	Required     bool
-	Secret       bool
-	Editable     bool
+	"github.com/docker/docker/client"
+)
+
+var _ Client = (*DockerClient)(nil)
+
+type DockerClient struct {
+	dockerClient *client.Client
+	closeFunc    func(ctx context.Context)
 }
 
-type Parameter struct {
-	Name  string
-	Value string
-}
-
-type Infrastructure struct {
-	Identifier   string
-	ResourceKey  string
-	ProviderType enum.InfraProviderType
-	Parameters   []Parameter
-	Status       enum.InfraStatus
-	Host         string
-	Port         int
+func (d DockerClient) Close(ctx context.Context) {
+	d.closeFunc(ctx)
 }

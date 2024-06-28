@@ -375,4 +375,15 @@ type Config struct {
 		// DeletedRetentionTime is the duration after which deleted repositories will be purged.
 		DeletedRetentionTime time.Duration `envconfig:"GITNESS_REPOS_DELETED_RETENTION_TIME" default:"2160h"` // 90 days
 	}
+
+	Docker struct {
+		// Host sets the url to the docker server.
+		Host string `envconfig:"GITNESS_DOCKER_HOST"`
+		// APIVersion sets the version of the API to reach, leave empty for latest.
+		APIVersion string `envconfig:"GITNESS_DOCKER_API_VERSION"`
+		// CertPath sets the path to load the TLS certificates from.
+		CertPath string `envconfig:"GITNESS_DOCKER_CERT_PATH"`
+		// TLSVerify enables or disables TLS verification, off by default.
+		TLSVerify string `envconfig:"GITNESS_DOCKER_TLS_VERIFY"`
+	}
 }

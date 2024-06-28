@@ -12,30 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infraprovider
+package enum
 
-import "github.com/harness/gitness/infraprovider/enum"
+type InfraProvisioningType string
 
-type ParameterSchema struct {
-	Name         string
-	Description  string
-	DefaultValue string
-	Required     bool
-	Secret       bool
-	Editable     bool
+func (InfraProvisioningType) Enum() []interface{} { return toInterfaceSlice(provisioningTypes) }
+
+var provisioningTypes = []InfraProvisioningType{
+	InfraProvisioningTypeExisting, InfraProvisioningTypeNew,
 }
 
-type Parameter struct {
-	Name  string
-	Value string
-}
-
-type Infrastructure struct {
-	Identifier   string
-	ResourceKey  string
-	ProviderType enum.InfraProviderType
-	Parameters   []Parameter
-	Status       enum.InfraStatus
-	Host         string
-	Port         int
-}
+const (
+	InfraProvisioningTypeExisting InfraProvisioningType = "existing"
+	InfraProvisioningTypeNew      InfraProvisioningType = "new"
+)

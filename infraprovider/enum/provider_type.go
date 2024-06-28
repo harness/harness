@@ -14,14 +14,14 @@
 
 package enum
 
-type ProviderType string
+type InfraProviderType string
 
-func (ProviderType) Enum() []interface{} { return toInterfaceSlice(providerTypes) }
+func (InfraProviderType) Enum() []interface{} { return toInterfaceSlice(providerTypes) }
 
-var providerTypes = []ProviderType{
-	ProviderTypeDocker,
+var providerTypes = []InfraProviderType{
+	InfraProviderTypeDocker,
 }
 
 const (
-	ProviderTypeDocker ProviderType = "docker"
+	InfraProviderTypeDocker InfraProviderType = "docker"
 )
