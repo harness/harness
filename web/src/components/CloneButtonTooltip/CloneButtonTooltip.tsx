@@ -17,7 +17,7 @@
 import React, { useState } from 'react'
 import { Render } from 'react-jsx-match'
 import cx from 'classnames'
-import { Button, ButtonVariation, Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
+import { Button, ButtonVariation, Container, FlexExpander, Layout, PillToggle, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Classes } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
@@ -32,11 +32,16 @@ interface CloneButtonTooltipProps {
   httpsURL: string
   sshURL: string
 }
+enum CloneType {
+  HTTPS = 'https',
+  SSH = 'ssh'
+}
 
 export function CloneButtonTooltip({ httpsURL, sshURL }: CloneButtonTooltipProps) {
   const { getString } = useStrings()
   const [flag, setFlag] = useState(false)
   const { isCurrentSessionPublic } = useAppContext()
+  const [type, setType] = useState(CloneType.HTTPS)
   return (
     <Container className={css.container} padding="xlarge">
       <Layout.Vertical spacing="small">
@@ -53,30 +58,51 @@ export function CloneButtonTooltip({ httpsURL, sshURL }: CloneButtonTooltipProps
           />
         </Container>
         <Text font={{ variation: FontVariation.H4 }}>{getString('cloneHTTPS')}</Text>
-        <Container padding={{ top: 'small' }}>
-          {
-            // TODO: replace with data from config api
-            sshURL && <Text font={{ variation: FontVariation.BODY2_SEMI }}>{getString('http')}</Text>
-          }
-          <Layout.Horizontal className={css.layout}>
-            <Text className={css.url}>{httpsURL}</Text>
+        {sshURL ? (
+          <Container padding={{ top: 'small' }}>
+            <Layout.Vertical>
+              <Container padding={{ bottom: 'medium' }}>
+                <PillToggle
+                  selectedView={type}
+                  onChange={typeClicked => {
+                    setType(typeClicked as CloneType)
+                  }}
+                  options={[
+                    { label: CloneType.HTTPS.toUpperCase(), value: 'https' },
+                    { label: CloneType.SSH.toUpperCase(), value: 'ssh' }
+                  ]}
+                />
+              </Container>
+              {type === CloneType.HTTPS ? (
+                <Layout.Horizontal className={css.layout}>
+                  <Text className={css.url}>{httpsURL}</Text>
 
-            <CopyButton content={httpsURL} id={css.cloneCopyButton} icon={CodeIcon.Copy} iconProps={{ size: 14 }} />
-          </Layout.Horizontal>
-        </Container>
-        {
-          // TODO: replace with data from config api
-          sshURL && (
-            <Container padding={{ top: 'small' }}>
-              <Text font={{ variation: FontVariation.BODY2_SEMI }}>{getString('ssh')}</Text>
-              <Layout.Horizontal className={css.layout}>
-                <Text className={css.url}>{sshURL}</Text>
+                  <CopyButton
+                    content={httpsURL}
+                    id={css.cloneCopyButton}
+                    icon={CodeIcon.Copy}
+                    iconProps={{ size: 14 }}
+                  />
+                </Layout.Horizontal>
+              ) : (
+                <Layout.Horizontal className={css.layout}>
+                  <Text className={css.url}>{sshURL}</Text>
 
-                <CopyButton content={sshURL} id={css.cloneCopyButton} icon={CodeIcon.Copy} iconProps={{ size: 14 }} />
-              </Layout.Horizontal>
-            </Container>
-          )
-        }
+                  <CopyButton content={sshURL} id={css.cloneCopyButton} icon={CodeIcon.Copy} iconProps={{ size: 14 }} />
+                </Layout.Horizontal>
+              )}
+            </Layout.Vertical>
+          </Container>
+        ) : (
+          <Container padding={{ top: 'small' }}>
+            <Layout.Horizontal className={css.layout}>
+              <Text className={css.url}>{httpsURL}</Text>
+
+              <CopyButton content={httpsURL} id={css.cloneCopyButton} icon={CodeIcon.Copy} iconProps={{ size: 14 }} />
+            </Layout.Horizontal>
+          </Container>
+        )}
+
         <Render when={!isCurrentSessionPublic}>
           <Button
             width={300}

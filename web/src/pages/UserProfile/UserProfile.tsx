@@ -35,9 +35,10 @@ import { useGet, useMutate } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import ReactTimeago from 'react-timeago'
 import moment from 'moment'
+import { isEmpty } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { TypesToken, TypesUser, useGetUser, useOpLogout, useUpdateUser } from 'services/code'
-import { ButtonRoleProps, getErrorMessage } from 'utils/Utils'
+import { ButtonRoleProps, TypeKeys, getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -45,6 +46,9 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { currentUserAtom } from 'atoms/currentUser'
 import useNewToken from './NewToken/NewToken'
 import EditableTextField from './EditableTextField'
+import SshKey from '../../icons/sshKey.svg?url'
+
+import useNewSshKey from './NewSshKey/NewSshKey'
 import css from './UserProfile.module.scss'
 
 const USER_TOKENS_API_PATH = '/api/v1/user/tokens'
@@ -60,6 +64,9 @@ const UserProfile = () => {
   const { mutate: logoutUser } = useOpLogout({})
 
   const { data: userTokens, loading: tokensLoading, refetch: refetchTokens } = useGet({ path: USER_TOKENS_API_PATH })
+  const { data: sshKeys, loading: sshKeysLoading, refetch: refetchSshKeys } = useGet({ path: '/api/v1/user/keys' })
+  const { mutate: deleteSshKey } = useMutate({ path: `/api/v1/user/keys`, verb: 'DELETE' })
+
   const { mutate: deleteToken } = useMutate({ path: USER_TOKENS_API_PATH, verb: 'DELETE' })
   const [, setCurrentUser] = useAtom(currentUserAtom)
 
@@ -69,9 +76,28 @@ const UserProfile = () => {
     setCurrentUser(undefined)
   }
 
+  const { data: systemConfig, loading: systemConfigLoading } = useGet({ path: 'api/v1/system/config' })
+
   const { openModal } = useNewToken({ onClose: refetchTokens })
+  const { openSshKeyModal } = useNewSshKey({ onClose: refetchSshKeys })
 
   const onConfirmAct = useConfirmAct()
+  const handleDeleteSshKey = async (sshKeyId: string) =>
+    await onConfirmAct({
+      action: async () => {
+        try {
+          await deleteSshKey(sshKeyId)
+          refetchSshKeys()
+          showSuccess(getString('sshCard.successSshKeyMsg'))
+        } catch (error) {
+          showError(getErrorMessage(error))
+        }
+      },
+      message: getString('sshCard.deleteSshMsg'),
+      intent: 'danger',
+      title: getString('sshCard.deleteSshTitle')
+    })
+
   const handleDeleteToken = async (tokenId: string) =>
     await onConfirmAct({
       action: async () => {
@@ -88,6 +114,64 @@ const UserProfile = () => {
       title: getString('deleteToken')
     })
 
+  // useEffect(()=>{},[refetchSshKeys])
+  const sshkeysColumns: Column<TypeKeys>[] = useMemo(
+    () => [
+      {
+        Header: getString('name'),
+        width: '65%',
+        Cell: ({ row }: CellProps<TypeKeys>) => {
+          return (
+            <Layout.Horizontal flex={{ justifyContent: 'flex-start' }}>
+              <Container className={css.iconContainer} padding="small">
+                <img src={SshKey} width={16} height={16} />
+              </Container>
+              <Layout.Vertical>
+                <Text font={{ variation: FontVariation.CARD_TITLE }} lineClamp={1}>
+                  {row.original.identifier}
+                </Text>
+
+                <Text font={{ variation: FontVariation.BODY2_SEMI }} lineClamp={1}>
+                  {row.original.fingerprint}
+                </Text>
+              </Layout.Vertical>
+            </Layout.Horizontal>
+          )
+        }
+      },
+      {
+        Header: getString('sshCard.addedOn'),
+        width: '30%',
+        Cell: ({ row }: CellProps<TypeKeys>) => (
+          <Text font={{ variation: FontVariation.SMALL_SEMI }} lineClamp={1}>
+            <ReactTimeago date={row.original.created || ''} />
+          </Text>
+        )
+      },
+      {
+        accessor: 'identifier',
+        Header: '',
+        width: '5%',
+        Cell: ({ row }: CellProps<TypeKeys>) => {
+          return (
+            <OptionsMenuButton
+              tooltipProps={{ isDark: true }}
+              items={[
+                {
+                  text: getString('sshCard.deleteSshTitle'),
+                  onClick: () => {
+                    handleDeleteSshKey(row.original.identifier as string)
+                    refetchSshKeys()
+                  }
+                }
+              ]}
+            />
+          )
+        }
+      }
+    ],
+    [sshKeys] // eslint-disable-line react-hooks/exhaustive-deps
+  )
   const columns: Column<TypesToken>[] = useMemo(
     () => [
       {
@@ -160,7 +244,7 @@ const UserProfile = () => {
         }
       }
     ],
-    [] // eslint-disable-line react-hooks/exhaustive-deps
+    [userTokens] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const onEditField = async (field: keyof TypesUser, value: string) => {
@@ -174,7 +258,7 @@ const UserProfile = () => {
 
   return (
     <Container className={css.mainCtn}>
-      <LoadingSpinner visible={currentUserLoading || tokensLoading} />
+      <LoadingSpinner visible={currentUserLoading || tokensLoading || sshKeysLoading || systemConfigLoading} />
       <Page.Header title={getString('accountSetting')} />
       <Page.Body>
         <Container className={css.pageCtn}>
@@ -239,17 +323,77 @@ const UserProfile = () => {
             </Layout.Horizontal>
           </Card>
           <Container margin={{ top: 'xxxlarge' }}>
-            <Layout.Horizontal>
-              <Button
-                icon="plus"
-                text={getString('newToken.text')}
-                variation={ButtonVariation.PRIMARY}
-                margin={{ bottom: 'medium' }}
-                onClick={() => openModal()}
-              />
-            </Layout.Horizontal>
-            <TableV2 minimal data={userTokens || []} columns={columns} className={css.table} />
+            <Container className={css.containerCard}>
+              <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
+                <Text font={{ variation: FontVariation.CARD_TITLE }}>{getString('sshCard.personalAccessToken')}</Text>
+                {isEmpty(userTokens) ? null : (
+                  <Button
+                    icon="plus"
+                    text={getString('newToken.text')}
+                    variation={ButtonVariation.LINK}
+                    onClick={() => openModal()}
+                  />
+                )}
+              </Layout.Horizontal>
+              {isEmpty(userTokens) ? (
+                <Container flex={{ justifyContent: 'center' }}>
+                  <Layout.Vertical>
+                    <Text padding={{ bottom: 'medium' }} font={{ variation: FontVariation.BODY2_SEMI }}>
+                      {getString('sshCard.noTokensText')}
+                    </Text>
+                    <Button
+                      icon="plus"
+                      text={getString('newToken.text')}
+                      variation={ButtonVariation.LINK}
+                      onClick={() => openModal()}
+                    />
+                  </Layout.Vertical>
+                </Container>
+              ) : (
+                <TableV2 data={userTokens || []} columns={columns} />
+              )}
+            </Container>
           </Container>
+          {systemConfig?.ssh_enabled && (
+            <Container className={css.containerCard} margin={{ top: 'medium' }}>
+              <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
+                <Text padding={{ bottom: 'medium' }} font={{ variation: FontVariation.CARD_TITLE }}>
+                  {getString('sshCard.mySshKeys')}
+                </Text>
+                {isEmpty(sshKeys) ? null : (
+                  <Button
+                    padding={{ bottom: 'medium' }}
+                    icon="small-plus"
+                    variation={ButtonVariation.LINK}
+                    onClick={() => {
+                      openSshKeyModal()
+                    }}
+                    text={getString('sshCard.newSshKey')}
+                  />
+                )}
+              </Layout.Horizontal>
+              <Text font={{ variation: FontVariation.BODY2_SEMI }}>{getString('sshCard.sshContent')}</Text>
+              {isEmpty(sshKeys) ? (
+                <Container flex={{ justifyContent: 'center' }}>
+                  <Layout.Vertical>
+                    <Text font={{ variation: FontVariation.BODY2_SEMI }} padding={{ top: 'medium', bottom: 'small' }}>
+                      {getString('sshCard.noSshKeyText')}
+                    </Text>
+                    <Button
+                      icon="small-plus"
+                      variation={ButtonVariation.LINK}
+                      onClick={() => {
+                        openSshKeyModal()
+                      }}
+                      text={getString('sshCard.newSshKey')}
+                    />
+                  </Layout.Vertical>
+                </Container>
+              ) : (
+                <TableV2 columns={sshkeysColumns} data={sshKeys || []} />
+              )}
+            </Container>
+          )}
         </Container>
       </Page.Body>
     </Container>

@@ -1004,6 +1004,19 @@ export interface StringsMap {
   spaces: string
   squashMerge: string
   ssh: string
+  'sshCard.addedOn': string
+  'sshCard.beginsWithContent': string
+  'sshCard.deleteSshMsg': string
+  'sshCard.deleteSshTitle': string
+  'sshCard.mySshKeys': string
+  'sshCard.newSshKey': string
+  'sshCard.noSshKeyText': string
+  'sshCard.noTokensText': string
+  'sshCard.personalAccessToken': string
+  'sshCard.publicKey': string
+  'sshCard.sshContent': string
+  'sshCard.sshkey': string
+  'sshCard.successSshKeyMsg': string
   sslVerificationLabel: string
   startSearching: string
   status: string

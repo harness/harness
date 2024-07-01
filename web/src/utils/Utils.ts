@@ -556,6 +556,18 @@ export const filenameToLanguage = (name?: string): string | undefined => {
   return PLAIN_TEXT
 }
 
+export type EnumPublicKeyUsage = 'auth'
+
+export interface TypeKeys {
+  created: number
+  verified: number | undefined
+  identifier: string
+  usage: EnumPublicKeyUsage
+  fingerprint: string
+  comment: string
+  type: string
+}
+
 interface WaitUtilParams<T> {
   test: () => T
   onMatched: (result: T) => void
