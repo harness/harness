@@ -40,9 +40,9 @@ export function CopyButton({ content, icon, iconProps, ...props }: CopyButtonPro
       variation={ButtonVariation.ICON}
       icon={copied ? 'tick' : icon || 'copy-alt'}
       iconProps={{ color: copied ? Color.GREEN_500 : undefined, ...iconProps }}
-      onClick={() => {
+      onClick={async () => {
         setCopied(true)
-        Utils.copy(content)
+        await Utils.copy(content)
       }}
       {...props}
     />

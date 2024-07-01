@@ -103,26 +103,28 @@ export function CloneButtonTooltip({ httpsURL, sshURL }: CloneButtonTooltipProps
           </Container>
         )}
 
-        <Render when={!isCurrentSessionPublic}>
-          <Button
-            width={300}
-            onClick={() => {
-              setFlag(true)
-            }}
-            variation={ButtonVariation.SECONDARY}>
-            {getString('generateCloneCred')}
-          </Button>
-          <Text
-            padding={{ top: 'small' }}
-            width={300}
-            icon={'code-info'}
-            className={css.codeText}
-            iconProps={{ size: 16 }}
-            color={Color.GREY_700}
-            font={{ variation: FontVariation.BODY2_SEMI, size: 'xsmall' }}>
-            {getString('generateCloneText')}
-          </Text>
-        </Render>
+        {type === CloneType.HTTPS ? (
+          <Render when={!isCurrentSessionPublic}>
+            <Button
+              width={300}
+              onClick={() => {
+                setFlag(true)
+              }}
+              variation={ButtonVariation.SECONDARY}>
+              {getString('generateCloneCred')}
+            </Button>
+            <Text
+              padding={{ top: 'small' }}
+              width={300}
+              icon={'code-info'}
+              className={css.codeText}
+              iconProps={{ size: 16 }}
+              color={Color.GREY_700}
+              font={{ variation: FontVariation.BODY2_SEMI, size: 'xsmall' }}>
+              {getString('generateCloneText')}
+            </Text>
+          </Render>
+        ) : null}
       </Layout.Vertical>
       <CloneCredentialDialog flag={flag} setFlag={setFlag} />
     </Container>
