@@ -27,4 +27,5 @@ type Controller interface {
 	// List lists the principals based on the provided filter.
 	List(ctx context.Context, session *auth.Session, opts *types.PrincipalFilter) ([]*types.PrincipalInfo, error)
 	Find(ctx context.Context, session *auth.Session, principalID int64) (*types.PrincipalInfo, error)
+	CheckExistenceByEmails(ctx context.Context, session *auth.Session, input *CheckUsersInput) (*CheckUsersOutput, error)
 }
