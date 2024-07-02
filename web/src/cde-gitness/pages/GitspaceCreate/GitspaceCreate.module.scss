@@ -1,0 +1,49 @@
+.main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .cardMain {
+    width: 50%;
+  }
+
+  .cardTitle {
+    font-size: 16px !important;
+  }
+}
+
+.subContainers {
+  margin: var(--spacing-xlarge) 0 !important;
+  margin-bottom: 0px !important;
+}
+
+.formDivider {
+  height: 2px !important;
+  border-top: 1px solid var(--grey-200) !important;
+}
+
+.formTitleContainer {
+  padding: var(--spacing-medium) var(--spacing-large) !important;
+  border: 1px solid var(--grey-200);
+  border-radius: 5px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.formContainer {
+  border: 1px solid var(--grey-200);
+  border-radius: 5px;
+  padding: var(--spacing-medium) var(--spacing-large) !important;
+  border-top-right-radius: 0px;
+  border-top-left-radius: 0px;
+  border-top: none;
+}
+
+.formOuterContainer {
+  padding: var(--spacing-medium) 0 !important;
+  padding-bottom: 0px !important;
+
+  button {
+    margin-bottom: none;
+  }
+}

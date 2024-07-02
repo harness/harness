@@ -49,7 +49,7 @@ import { useGet, useMutate } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { compact, get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
-import { useStrings } from 'framework/strings'
+import { String, useStrings } from 'framework/strings'
 import {
   DEFAULT_BRANCH_NAME,
   getErrorMessage,
@@ -96,6 +96,8 @@ export interface NewRepoModalButtonProps extends Omit<ButtonProps, 'onClick' | '
   submitButtonTitle?: string
   cancelButtonTitle?: string
   onSubmit: (data: TypesRepository & SpaceImportRepositoriesOutput) => void
+  newRepoModalOnly?: boolean
+  notFoundRepoName?: string
 }
 
 export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
@@ -478,7 +480,19 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     },
     [space]
   )
-  return (
+
+  return props?.newRepoModalOnly ? (
+    <MenuItem
+      icon="plus"
+      text={<String stringID="cde.create.repoNotFound" vars={{ repo: props?.notFoundRepoName }} useRichText />}
+      onClick={e => {
+        e.preventDefault()
+        e.stopPropagation()
+        setRepoOption(repoCreateOptions[0])
+        setTimeout(() => openModal(), 0)
+      }}
+    />
+  ) : (
     <SplitButton
       {...props}
       loading={false}

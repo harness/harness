@@ -1,0 +1,30 @@
+.split-button {
+  display: flex;
+  border: 1px solid var(--grey-200);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.split-button p {
+  flex-wrap: wrap;
+  padding: 4px 8px !important;
+  border: none;
+  align-self: center;
+  color: #1f2937 !important;
+  cursor: pointer;
+  font-size: 12px !important;
+  transition: background-color 0.3s;
+
+  &:first-child {
+    border-right: 1px solid var(--grey-200);
+  }
+}
+
+.split-button p.active {
+  background-color: var(--primary-1) !important;
+  color: var(--primary-8) !important;
+}
+
+.split-button p:hover {
+  background-color: var(--white);
+}

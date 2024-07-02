@@ -52,8 +52,8 @@ import AddUpdatePipeline from 'pages/AddUpdatePipeline/AddUpdatePipeline'
 import { useAppContext } from 'AppContext'
 import PipelineSettings from 'components/PipelineSettings/PipelineSettings'
 import GitspaceDetail from 'cde/pages/GitspaceDetail/GitspaceDetail'
-import Gitspaces from 'cde/pages/Gitspaces/Gitspaces'
-import GitspacesListing from 'cde/pages/GitspacesListing/GitspacesListing'
+import { GitspaceListing } from 'cde-gitness/pages/GitspaceListing/GitspaceListing'
+import { GitspaceCreate } from 'cde-gitness/pages/GitspaceCreate/GitspaceCreate'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
@@ -267,7 +267,15 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         {standalone && (
           <Route exact path={routes.toCDEGitspacesEdit({ space: pathProps.space, gitspaceId: pathProps.gitspaceId })}>
             <LayoutWithSideNav title={getString('cde.gitspaces')}>
-              <Gitspaces />
+              <GitspaceCreate />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {standalone && (
+          <Route path={routes.toCDEGitspacesCreate({ space: pathProps.space })}>
+            <LayoutWithSideNav title={getString('cde.gitspaces')}>
+              <GitspaceCreate />
             </LayoutWithSideNav>
           </Route>
         )}
@@ -283,15 +291,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         {standalone && (
           <Route path={routes.toCDEGitspaces({ space: pathProps.space })}>
             <LayoutWithSideNav title={getString('cde.gitspaces')}>
-              <Gitspaces />
-            </LayoutWithSideNav>
-          </Route>
-        )}
-
-        {standalone && (
-          <Route path={routes.toCDEGitspacesCreate({ space: pathProps.space })}>
-            <LayoutWithSideNav title={getString('cde.gitspaces')}>
-              <GitspacesListing />
+              <GitspaceListing />
             </LayoutWithSideNav>
           </Route>
         )}

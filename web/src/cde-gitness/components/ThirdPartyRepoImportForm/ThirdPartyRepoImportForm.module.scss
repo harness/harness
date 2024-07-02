@@ -1,0 +1,12 @@
+.hideContainer {
+  :global {
+    --bp3-intent-color: unset !important;
+    .bp3-form-helper-text {
+      margin-top: unset !important;
+    }
+  }
+}
+
+.repoAndBranch {
+  width: 47% !important;
+}

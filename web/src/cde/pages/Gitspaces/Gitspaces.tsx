@@ -25,7 +25,7 @@ import { useStrings } from 'framework/strings'
 import Gitspace from '../../icons/Gitspace.svg?url'
 import css from './Gitspaces.module.scss'
 
-const CreateGitspaceTitle = () => {
+export const CreateGitspaceTitle = () => {
   const { getString } = useStrings()
   return (
     <Container className={css.gitspaceTitle}>

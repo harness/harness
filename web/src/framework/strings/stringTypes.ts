@@ -143,6 +143,18 @@ export interface StringsMap {
   'cde.branchValidationMessage': string
   'cde.cloudDeveloperExperience': string
   'cde.cpu': string
+  'cde.create.branchPlaceholder': string
+  'cde.create.gitnessRepositories': string
+  'cde.create.gitspaceCreateFailed': string
+  'cde.create.gitspaceCreateSuccess': string
+  'cde.create.repoNotFound': string
+  'cde.create.repositoryDetails': string
+  'cde.create.searchBranchPlaceholder': string
+  'cde.create.searchRepositoryPlaceholder': string
+  'cde.create.selectBranchPlaceholder': string
+  'cde.create.thirdPartyGitRepositories': string
+  'cde.create.unsaved.message': string
+  'cde.create.unsaved.title': string
   'cde.createGitspace': string
   'cde.createRepo': string
   'cde.deleteGitspace': string
@@ -183,6 +195,9 @@ export interface StringsMap {
   'cde.introText1': string
   'cde.introText2': string
   'cde.introText3': string
+  'cde.listing.error': string
+  'cde.listing.offline': string
+  'cde.listing.online': string
   'cde.logs': string
   'cde.machine': string
   'cde.machineValidationMessage': string
@@ -211,6 +226,7 @@ export interface StringsMap {
   'cde.retry': string
   'cde.sessionDuration': string
   'cde.startingGitspace': string
+  'cde.status': string
   'cde.stopingGitspace': string
   'cde.updateGitspace': string
   'cde.used': string

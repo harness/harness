@@ -17,9 +17,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import cx from 'classnames'
 import { Menu, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
-import { Text, Button, Container, ButtonVariation, FormError } from '@harnessio/uicore'
+import { Text, Button, Container, ButtonVariation, FormInput } from '@harnessio/uicore'
 import type { IconName } from '@harnessio/icons'
-import { useFormikContext } from 'formik'
 import { useStrings } from 'framework/strings'
 import css from './GitspaceSelect.module.scss'
 
@@ -32,23 +31,24 @@ interface GitspaceSelectProps {
   errorMessage?: string
   formikName?: string
   tooltipProps?: { [key: string]: any }
+  formInputClassName?: string
+  loading?: boolean
 }
 
 export const GitspaceSelect = ({
   text,
   icon,
+  loading,
   renderMenu,
   disabled,
   overridePopOverWidth,
-  errorMessage,
   formikName,
-  tooltipProps
+  tooltipProps,
+  formInputClassName
 }: GitspaceSelectProps) => {
   const { getString } = useStrings()
   const buttonRef = useRef<HTMLDivElement | null>(null)
   const [popoverWidth, setPopoverWidth] = useState(0)
-
-  const { touched } = useFormikContext<{ validated?: boolean }>()
 
   const defaultTooltipProps = {
     tooltip: (
@@ -85,18 +85,25 @@ export const GitspaceSelect = ({
   const addTooltipProps = disabled ? {} : { ...defaultTooltipProps }
 
   return (
-    <div className={css.buttonDiv} ref={buttonRef}>
-      <Button
-        className={cx(css.button, { [css.buttonWithoutIcon]: !icon })}
-        text={text}
-        rightIcon="chevron-down"
-        variation={ButtonVariation.TERTIARY}
-        iconProps={{ size: 14 }}
-        {...iconProp}
-        {...addTooltipProps}
-        disabled={disabled}
-      />
-      {touched.validated && <FormError errorMessage={errorMessage} name={formikName || ''} />}
-    </div>
+    <FormInput.CustomRender
+      name={formikName || ''}
+      className={cx(formInputClassName)}
+      render={() => {
+        return (
+          <div className={css.buttonDiv} ref={buttonRef}>
+            <Button
+              className={cx(css.button, { [css.buttonWithoutIcon]: !icon })}
+              text={text}
+              rightIcon={loading ? 'loading' : 'chevron-down'}
+              variation={ButtonVariation.TERTIARY}
+              iconProps={{ size: 14 }}
+              {...iconProp}
+              {...addTooltipProps}
+              disabled={disabled}
+            />
+          </div>
+        )
+      }}
+    />
   )
 }

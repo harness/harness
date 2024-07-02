@@ -1162,6 +1162,25 @@ cde:
   deleteGitspaceText: "Are you sure to delete the gitspace, '{{name}}'?"
   deleteSuccess: Gitspace deleted succesfully
   repositoryAndBranch: Repository & Branch
+  status: Status
+  listing:
+    online: Online
+    offline: Offline
+    error: Error
+  create:
+    repositoryDetails: Repository Details
+    gitnessRepositories: Gitness Repositories
+    thirdPartyGitRepositories: Third Party Git Repositories
+    branchPlaceholder: Enter the Branch name
+    selectBranchPlaceholder: Select branch
+    searchRepositoryPlaceholder: Search for a repository
+    searchBranchPlaceholder: Search for a branch
+    repoNotFound: 'Create a repo <strong>{{repo}}</strong> in Gitness'
+    gitspaceCreateSuccess: Gitspace created successfully
+    gitspaceCreateFailed: Gitspace creation failed
+    unsaved:
+      title: Unsaved Changes
+      message: 'You have unsaved changes, On switching all unsaved changes will be lost'
   details:
     actions: More Actions
     openEditor: Open VS Code Editor
