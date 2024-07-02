@@ -1226,7 +1226,6 @@ sshCard:
   noSshKeyText: There are no SSH Keys associated with this account
   mySshKeys: My SSH Keys
   sshContent: SSH keys allow you to establish a secure connection to your code repository.
-    verify if the client is connecting to the correct host. {{learnMore}}
   beginsWithContent: Begins with 'ssh-rsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521', 'ssh-ed25519', 'sk-ecdsa-sha2-nistp256@openssh.com', or 'sk-ssh-ed25519@openssh.com'.
   deleteSshTitle: Delete SSH Key
   deleteSshMsg: Are you sure you want to delete this SSH Key?
