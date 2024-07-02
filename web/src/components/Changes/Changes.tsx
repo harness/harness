@@ -31,7 +31,7 @@ import { Match, Case, Render } from 'react-jsx-match'
 import * as Diff2Html from 'diff2html'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
-import { chunk, isEqual, noop, throttle } from 'lodash-es'
+import { chunk, isEqual, throttle } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { normalizeGitRef, type GitInfoProps, FILE_VIEWED_OBSOLETE_SHA } from 'utils/GitUtils'
@@ -515,7 +515,9 @@ const ChangesInternal: React.FC<ChangesProps> = ({
                   shouldHide={shouldHideReviewButton}
                   repoMetadata={repoMetadata}
                   pullRequestMetadata={pullRequestMetadata}
-                  refreshPr={voidFn(noop)}
+                  refreshPr={() => {
+                    refetchActivities?.()
+                  }}
                   disabled={isActiveUserPROwner}
                 />
               </Layout.Horizontal>
