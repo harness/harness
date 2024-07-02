@@ -118,11 +118,7 @@ const useNewSshKey = ({ onClose }: { onClose: () => void }) => {
                 />
 
                 <Layout.Horizontal margin={{ top: 'xxxlarge' }} spacing="medium">
-                  <Button
-                    text={getString('newToken.generateToken')}
-                    type="submit"
-                    variation={ButtonVariation.PRIMARY}
-                  />
+                  <Button text={getString('save')} type="submit" variation={ButtonVariation.PRIMARY} />
                   <Button text={getString('cancel')} onClick={hideSshKeyModal} variation={ButtonVariation.TERTIARY} />
                 </Layout.Horizontal>
               </FormikForm>
