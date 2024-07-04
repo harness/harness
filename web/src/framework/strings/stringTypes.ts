@@ -1024,6 +1024,7 @@ export interface StringsMap {
   'sshCard.beginsWithContent': string
   'sshCard.deleteSshMsg': string
   'sshCard.deleteSshTitle': string
+  'sshCard.lastUsed': string
   'sshCard.mySshKeys': string
   'sshCard.newSshKey': string
   'sshCard.noSshKeyText': string

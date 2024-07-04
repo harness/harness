@@ -35,7 +35,7 @@ import { useGet, useMutate } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import ReactTimeago from 'react-timeago'
 import moment from 'moment'
-import { isEmpty } from 'lodash-es'
+import { defaultTo, isEmpty } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { TypesToken, TypesUser, useGetUser, useOpLogout, useUpdateUser } from 'services/code'
 import { ButtonRoleProps, TypeKeys, getErrorMessage } from 'utils/Utils'
@@ -44,6 +44,7 @@ import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { currentUserAtom } from 'atoms/currentUser'
+import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import useNewToken from './NewToken/NewToken'
 import EditableTextField from './EditableTextField'
 import SshKey from '../../icons/sshKey.svg?url'
@@ -141,10 +142,19 @@ const UserProfile = () => {
       },
       {
         Header: getString('sshCard.addedOn'),
-        width: '30%',
+        width: '15%',
         Cell: ({ row }: CellProps<TypeKeys>) => (
           <Text font={{ variation: FontVariation.SMALL_SEMI }} lineClamp={1}>
-            <ReactTimeago date={row.original.created || ''} />
+            <TimePopoverWithLocal time={defaultTo(row.original?.created, 0)} />
+          </Text>
+        )
+      },
+      {
+        Header: getString('sshCard.lastUsed'),
+        width: '15%',
+        Cell: ({ row }: CellProps<TypeKeys>) => (
+          <Text font={{ variation: FontVariation.SMALL_SEMI }} lineClamp={1}>
+            <TimePopoverWithLocal time={defaultTo(row.original?.verified, 0)} />
           </Text>
         )
       },

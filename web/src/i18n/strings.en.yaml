@@ -1252,3 +1252,4 @@ sshCard:
   addedOn: Added On
   personalAccessToken: Personal Access Token
   noTokensText: There are no personal access tokens associated with this account
+  lastUsed: Last Used
