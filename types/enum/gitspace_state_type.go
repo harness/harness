@@ -14,14 +14,19 @@
 
 package enum
 
-type InfraProviderType string
+type GitspaceStateType string
 
-func (InfraProviderType) Enum() []interface{} { return toInterfaceSlice(providerTypes) }
+func (GitspaceStateType) Enum() []interface{} {
+	return toInterfaceSlice(gitspaceStateTypes)
+}
 
-var providerTypes = []InfraProviderType{
-	InfraProviderTypeDocker,
+var gitspaceStateTypes = []GitspaceStateType{
+	GitspaceStateRunning, GitspaceStateStopped, GitspaceStateError, GitspaceStateUninitialized,
 }
 
 const (
-	InfraProviderTypeDocker InfraProviderType = "docker"
+	GitspaceStateRunning       GitspaceStateType = "running"
+	GitspaceStateStopped       GitspaceStateType = "stopped"
+	GitspaceStateError         GitspaceStateType = "error"
+	GitspaceStateUninitialized GitspaceStateType = "uninitialized"
 )

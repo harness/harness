@@ -12,10 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package enum
 
-// TODO: These are placeholders to enable SCM dev. These are to be replaced with complete structs in upcoming PRs.
-type GitspaceConfig struct {
-	CodeRepoURL string
-	Branch      string
+type GitspaceActionType string
+
+func (GitspaceActionType) Enum() []interface{} { return toInterfaceSlice(gitspaceActionTypes) }
+
+var gitspaceActionTypes = []GitspaceActionType{
+	GitspaceActionTypeStart, GitspaceActionTypeStop,
 }
+
+const (
+	GitspaceActionTypeStart GitspaceActionType = "start"
+	GitspaceActionTypeStop  GitspaceActionType = "stop"
+)

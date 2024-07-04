@@ -33,7 +33,7 @@ const (
 	InfraStatusPending          InfraStatus = "pending"
 	InfraStatusProvisioned      InfraStatus = "provisioned"
 	InfraStatusDestroyed        InfraStatus = "destroyed"
-	InfraStatusMarkedForDestroy InfraStatus = "markedForDestroy"
+	InfraStatusMarkedForDestroy InfraStatus = "marked_for_destroy"
 	InfraStatusUnknown          InfraStatus = "unknown"
 	InfraStatusSuspended        InfraStatus = "suspended"
 )
