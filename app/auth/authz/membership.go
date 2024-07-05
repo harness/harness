@@ -104,6 +104,9 @@ func (a *MembershipAuthorizer) Check(
 	case enum.ResourceTypeTemplate:
 		spacePath = scope.SpacePath
 
+	case enum.ResourceTypeGitspace:
+		spacePath = scope.SpacePath
+
 	case enum.ResourceTypeUser:
 		// a user is allowed to edit themselves
 		if resource.Identifier == session.Principal.UID &&

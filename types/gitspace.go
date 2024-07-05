@@ -45,22 +45,27 @@ type GitspaceConfig struct {
 }
 
 type GitspaceInstance struct {
-	ID             int64                   `json:"-"`
-	Identifier     string                  `json:"identifier"`
-	URL            null.String             `json:"url,omitempty"`
-	State          enum.GitspaceStateType  `json:"state"`
-	ResourceUsage  null.String             `json:"resource_usage"`
-	LastUsed       int64                   `json:"last_used,omitempty"`
-	TotalTimeUsed  int64                   `json:"total_time_used"`
-	TrackedChanges string                  `json:"tracked_changes"`
-	AccessKey      null.String             `json:"access_key,omitempty"`
-	AccessType     enum.GitspaceAccessType `json:"access_type"`
-	MachineUser    null.String             `json:"machine_user,omitempty"`
-	SpacePath      string                  `json:"space_path"`
-	SpaceID        int64                   `json:"-"`
-	Created        int64                   `json:"created"`
-	Updated        int64                   `json:"updated"`
+	ID               int64                   `json:"-"`
+	GitSpaceConfigID int64                   `json:"-"`
+	Identifier       string                  `json:"identifier"`
+	URL              null.String             `json:"url,omitempty"`
+	State            enum.GitspaceStateType  `json:"state"`
+	UserID           string                  `json:"-"`
+	ResourceUsage    null.String             `json:"resource_usage"`
+	LastUsed         int64                   `json:"last_used,omitempty"`
+	TotalTimeUsed    int64                   `json:"total_time_used"`
+	TrackedChanges   string                  `json:"tracked_changes"`
+	AccessKey        null.String             `json:"access_key,omitempty"`
+	AccessType       enum.GitspaceAccessType `json:"access_type"`
+	MachineUser      null.String             `json:"machine_user,omitempty"`
+	SpacePath        string                  `json:"space_path"`
+	SpaceID          int64                   `json:"-"`
+	Created          int64                   `json:"created"`
+	Updated          int64                   `json:"updated"`
 }
 
-type GitspaceInstanceFilter struct {
+type GitspaceFilter struct {
+	QueryFilter ListQueryFilter
+	UserID      string
+	SpaceIDs    []int64
 }

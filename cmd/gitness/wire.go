@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
 	githookCtrl "github.com/harness/gitness/app/api/controller/githook"
+	gitspacecontroller "github.com/harness/gitness/app/api/controller/gitspace"
 	controllerkeywordsearch "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	controllerlogs "github.com/harness/gitness/app/api/controller/logs"
@@ -199,6 +200,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		ssh.WireSet,
 		publickey.WireSet,
 		migrate.WireSet,
+		gitspacecontroller.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

@@ -81,6 +81,7 @@ type Controller struct {
 	resourceLimiter limiter.ResourceLimiter
 	publicAccess    publicaccess.Service
 	auditService    audit.Service
+	gitspaceStore   store.GitspaceConfigStore
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
@@ -90,6 +91,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
+	gitspaceStore store.GitspaceConfigStore,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled: config.NestedSpacesEnabled,
@@ -113,5 +115,6 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		resourceLimiter:     limiter,
 		publicAccess:        publicAccess,
 		auditService:        auditService,
+		gitspaceStore:       gitspaceStore,
 	}
 }

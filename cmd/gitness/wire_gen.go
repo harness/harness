@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
 	"github.com/harness/gitness/app/api/controller/githook"
+	"github.com/harness/gitness/app/api/controller/gitspace"
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	logs2 "github.com/harness/gitness/app/api/controller/logs"
@@ -232,7 +233,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, publicaccessService, auditService)
+	gitspaceConfigStore := database.ProvideGitspaceConfigStore(db)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceConfigStore)
 	pipelineController := pipeline.ProvideController(repoStore, triggerStore, authorizer, pipelineStore)
 	secretController := secret.ProvideController(encrypter, secretStore, authorizer, spaceStore)
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pipelineStore, repoStore)
@@ -306,8 +308,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	uploadController := upload.ProvideController(authorizer, repoStore, blobStore)
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, searcher, repoController, spaceController)
+	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db)
+	gitspaceInstanceStore := database.ProvideGitspaceInstanceStore(db)
+	gitspaceController := gitspace.ProvideController(authorizer, infraProviderResourceStore, gitspaceConfigStore, gitspaceInstanceStore, spaceStore)
 	migrateController := migrate.ProvideController(authorizer, principalStore)
-	apiHandler := router.ProvideAPIHandler(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, migrateController)
+	apiHandler := router.ProvideAPIHandler(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, gitspaceController, migrateController)
 	gitHandler := router.ProvideGitHandler(provider, authenticator, repoController)
 	openapiService := openapi.ProvideOpenAPIService()
 	webHandler := router.ProvideWebHandler(config, openapiService)

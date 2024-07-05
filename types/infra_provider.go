@@ -34,35 +34,38 @@ type InfraProviderConfig struct {
 }
 
 type InfraProviderResource struct {
-	ID                    int64                  `json:"-"`
-	Identifier            string                 `json:"identifier"`
-	Name                  string                 `json:"name"`
-	InfraProviderConfigID string                 `json:"infra_provider_config_id"`
-	CPU                   null.String            `json:"cpu"`
-	Memory                null.String            `json:"memory"`
-	Disk                  null.String            `json:"disk"`
-	Network               null.String            `json:"network"`
-	Region                string                 `json:"region"`
-	Metadata              map[string]string      `json:"metadata"`
-	GatewayHost           null.String            `json:"gateway_host"`
-	GatewayPort           null.String            `json:"gateway_port"`
-	TemplateID            null.Int               `json:"template_id"`
-	SpaceID               int64                  `json:"-"`
-	SpacePath             string                 `json:"space_path"`
-	InfraProviderType     enum.InfraProviderType `json:"infra_provider_type"`
-	Created               int64                  `json:"created"`
-	Updated               int64                  `json:"updated"`
+	ID                            int64                  `json:"-"`
+	Identifier                    string                 `json:"identifier"`
+	Name                          string                 `json:"name"`
+	InfraProviderConfigID         int64                  `json:"-"`
+	InfraProviderConfigIdentifier string                 `json:"config_identifier"`
+	CPU                           null.String            `json:"cpu"`
+	Memory                        null.String            `json:"memory"`
+	Disk                          null.String            `json:"disk"`
+	Network                       null.String            `json:"network"`
+	Region                        string                 `json:"region"`
+	Metadata                      map[string]string      `json:"metadata"`
+	GatewayHost                   null.String            `json:"gateway_host"`
+	GatewayPort                   null.String            `json:"gateway_port"`
+	TemplateID                    null.Int               `json:"-"`
+	TemplateIdentifier            null.String            `json:"template_identifier"`
+	SpaceID                       int64                  `json:"-"`
+	SpacePath                     string                 `json:"space_path"`
+	InfraProviderType             enum.InfraProviderType `json:"infra_provider_type"`
+	Created                       int64                  `json:"created"`
+	Updated                       int64                  `json:"updated"`
 }
 
 type InfraProviderTemplate struct {
-	ID                    int64  `json:"-"`
-	Identifier            string `json:"identifier"`
-	InfraProviderConfigID string `json:"-"`
-	Description           string `json:"description"`
-	Data                  string `json:"data"`
-	Version               int64  `json:"-"`
-	SpaceID               int64  `json:"space_id"`
-	SpacePath             string `json:"space_path"`
-	Created               int64  `json:"created"`
-	Updated               int64  `json:"updated"`
+	ID                            int64  `json:"-"`
+	Identifier                    string `json:"identifier"`
+	InfraProviderConfigID         string `json:"-"`
+	InfraProviderConfigIdentifier string `json:"config_identifier"`
+	Description                   string `json:"description"`
+	Data                          string `json:"data"`
+	Version                       int64  `json:"-"`
+	SpaceID                       int64  `json:"space_id"`
+	SpacePath                     string `json:"space_path"`
+	Created                       int64  `json:"created"`
+	Updated                       int64  `json:"updated"`
 }
