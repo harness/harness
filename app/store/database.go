@@ -832,4 +832,18 @@ type (
 		// ListByFingerprint returns public keys given a fingerprint and key usage.
 		ListByFingerprint(ctx context.Context, fingerprint string) ([]types.PublicKey, error)
 	}
+
+	GitspaceEventStore interface {
+		// Create creates a new record for the given gitspace event.
+		Create(ctx context.Context, gitspaceEvent *types.GitspaceEvent) error
+		// List returns all events for the given query filter.
+		List(ctx context.Context, filter *types.GitspaceEventFilter) ([]*types.GitspaceEvent, error)
+		// FindLatestByTypeAndGitspaceConfigID returns the latest gitspace event for the given config ID and event type
+		// where the entity type is gitspace config.
+		FindLatestByTypeAndGitspaceConfigID(
+			ctx context.Context,
+			eventType enum.GitspaceEventType,
+			gitspaceConfigID int64,
+		) (*types.GitspaceEvent, error)
+	}
 )

@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/trigger"
@@ -414,4 +415,13 @@ func ProvideGitspaceContainerOrchestratorConfig(config *types.Config) (*containe
 		DefaultBindMountTargetPath:     config.Gitspace.DefaultBindMountTargetPath,
 		DefaultBindMountSourceBasePath: bindMountSourceBasePath,
 	}, nil
+}
+
+// ProvideGitspaceEventConfig loads the gitspace event service config from the main config.
+func ProvideGitspaceEventConfig(config *types.Config) gitspaceevent.Config {
+	return gitspaceevent.Config{
+		EventReaderName: config.InstanceID,
+		Concurrency:     config.Gitspace.Events.Concurrency,
+		MaxRetries:      config.Gitspace.Events.MaxRetries,
+	}
 }
