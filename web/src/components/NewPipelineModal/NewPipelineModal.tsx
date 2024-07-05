@@ -33,7 +33,7 @@ import {
 } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { useModalHook } from 'hooks/useModalHook'
-import type { OpenapiCreatePipelineRequest, TypesPipeline, TypesRepository } from 'services/code'
+import type { OpenapiCreatePipelineRequest, TypesPipeline, RepoRepositoryOutput } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useAppContext } from 'AppContext'
@@ -53,7 +53,7 @@ const useNewPipelineModal = () => {
   const { getString } = useStrings()
   const history = useHistory()
   const { showError } = useToaster()
-  const [repo, setRepo] = useState<TypesRepository | undefined>()
+  const [repo, setRepo] = useState<RepoRepositoryOutput | undefined>()
   const repoPath = useMemo(() => repo?.path || '', [repo])
 
   const { mutate: savePipeline } = useMutate<TypesPipeline>({
@@ -67,7 +67,7 @@ const useNewPipelineModal = () => {
       const payload: OpenapiCreatePipelineRequest = {
         config_path: yamlPath,
         default_branch: branch,
-        uid: name
+        identifier: name
       }
       savePipeline(payload, { pathParams: { path: `/api/v1/repos/${repoPath}/+/pipelines` } })
         .then(() => {
@@ -167,7 +167,7 @@ const useNewPipelineModal = () => {
   }, [repo])
 
   return {
-    openModal: ({ repoMetadata }: { repoMetadata?: TypesRepository }) => {
+    openModal: ({ repoMetadata }: { repoMetadata?: RepoRepositoryOutput }) => {
       setRepo(repoMetadata)
       openModal()
     },

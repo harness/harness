@@ -222,7 +222,7 @@ export default function SpaceSettings() {
           <Formik
             formName="spaceGeneralSettings"
             initialValues={{
-              name: data?.uid,
+              name: data?.identifier,
               desc: data?.description
             }}
             onSubmit={voidFn(() => {
@@ -354,7 +354,7 @@ export default function SpaceSettings() {
                           <Layout.Horizontal>
                             <TextInput
                               name="name"
-                              value={formik.values.name || data?.uid}
+                              value={formik.values.name || data?.identifier}
                               className={cx(css.textContainer, css.textSize)}
                               onChange={evt => {
                                 formik.setFieldValue('name', (evt.currentTarget as HTMLInputElement)?.value)
@@ -385,7 +385,7 @@ export default function SpaceSettings() {
                                 variation={ButtonVariation.TERTIARY}
                                 size={ButtonSize.SMALL}
                                 onClick={() => {
-                                  formik.setFieldValue('name', data?.uid)
+                                  formik.setFieldValue('name', data?.identifier)
                                   setEditName(ACCESS_MODES.VIEW)
                                 }}
                               />
@@ -393,7 +393,7 @@ export default function SpaceSettings() {
                           </Layout.Horizontal>
                         ) : (
                           <Text color={Color.GREY_800} className={css.textSize}>
-                            {formik?.values?.name || data?.uid}
+                            {formik?.values?.name || data?.identifier}
                             <Button
                               className={css.textSize}
                               text={getString('edit')}
@@ -490,7 +490,7 @@ export default function SpaceSettings() {
                               padding={{ left: 'large', right: 'large', top: 'small', bottom: 'small' }}
                               color={Color.WARNING}>
                               {getString('spaceSetting.intentText', {
-                                space: data?.uid
+                                space: data?.identifier
                               })}
                             </Text>
                           </Container>

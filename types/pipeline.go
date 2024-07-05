@@ -17,7 +17,7 @@ package types
 import "encoding/json"
 
 type Pipeline struct {
-	ID          int64  `db:"pipeline_id"              json:"-"`
+	ID          int64  `db:"pipeline_id"              json:"id"`
 	Description string `db:"pipeline_description"     json:"description"`
 	Identifier  string `db:"pipeline_uid"             json:"identifier"`
 	Disabled    bool   `db:"pipeline_disabled"        json:"disabled"`

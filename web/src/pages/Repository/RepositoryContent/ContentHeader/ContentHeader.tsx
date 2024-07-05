@@ -47,14 +47,14 @@ export function ContentHeader({
   const history = useHistory()
   const _isDir = isDir(resourceContent)
   const space = useGetSpaceParam()
-  const repoPath = compact([repoMetadata.uid, resourceContent?.path])
+  const repoPath = compact([repoMetadata.identifier, resourceContent?.path])
   useDocumentTitle(isEmpty(resourceContent?.path) ? getString('pageTitle.repository') : repoPath.join('/'))
 
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_push']
     },

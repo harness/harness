@@ -18,13 +18,13 @@ import cx from 'classnames'
 import { Color } from '@harnessio/design-system'
 import { Button, ButtonSize, ButtonVariation, Container, Layout, SelectOption, Text } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
-import type { TypesRepository, TypesPullReq, TypesViolation } from 'services/code'
+import type { RepoRepositoryOutput, TypesPullReq, TypesViolation } from 'services/code'
 import { PRCommentFilterType } from 'utils/Utils'
 import Success from '../../../../../icons/code-success.svg?url'
 import Fail from '../../../../../icons/code-fail.svg?url'
 import css from '../PullRequestOverviewPanel.module.scss'
 interface MergeSectionProps {
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   pullReqMetadata: TypesPullReq
   resolvedCommentArr?: TypesViolation
   requiresCommentApproval: boolean

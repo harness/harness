@@ -24,7 +24,7 @@ import { useGet } from 'restful-react'
 import cx from 'classnames'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useAppContext } from 'AppContext'
-import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/code'
+import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, RepoRepositoryOutput } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -35,7 +35,7 @@ import { permissionProps } from 'utils/Utils'
 import css from './Readme.module.scss'
 
 interface FolderContentProps {
-  metadata: TypesRepository
+  metadata: RepoRepositoryOutput
   gitRef?: string
   readmeInfo: OpenapiContentInfo
   contentOnly?: boolean
@@ -76,7 +76,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_push']
     },

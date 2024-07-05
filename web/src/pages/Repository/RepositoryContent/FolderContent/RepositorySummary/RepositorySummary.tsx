@@ -22,13 +22,13 @@ import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, RepositorySummaryData } from 'utils/GitUtils'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 import { permissionProps, formatDate } from 'utils/Utils'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import css from './RepositorySummary.module.scss'
 
 interface RepositorySummaryProps {
-  metadata: TypesRepository
+  metadata: RepoRepositoryOutput
   gitRef?: string
   repoSummaryData: RepositorySummaryData | null
   loadingSummaryData: boolean
@@ -108,7 +108,7 @@ const RepositorySummary = (props: RepositorySummaryProps) => {
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: metadata?.uid as string
+        resourceIdentifier: metadata?.identifier as string
       },
       permissions: ['code_repo_edit']
     },

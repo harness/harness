@@ -45,7 +45,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { voidFn, getErrorMessage, ButtonRoleProps } from 'utils/Utils'
-import type { RepoFileContent, TypesRepository } from 'services/code'
+import type { RepoFileContent, RepoRepositoryOutput } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
@@ -291,7 +291,7 @@ export default function Search() {
 interface SearchResultsProps {
   data: SearchResultType[]
   onSelect: (fileName: string, filePath: string, content: string, highlightedLines: number[]) => void
-  repoMetadata: TypesRepository | undefined
+  repoMetadata: RepoRepositoryOutput | undefined
   standalone: boolean
 }
 

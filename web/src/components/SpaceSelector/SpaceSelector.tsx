@@ -37,7 +37,7 @@ import { Classes, Popover, Position } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps, voidFn } from 'utils/Utils'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-import { TypesSpace, useGetSpace } from 'services/code'
+import { SpaceSpaceOutput, useGetSpace } from 'services/code'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { NewSpaceModalButton } from 'components/NewSpaceModalButton/NewSpaceModalButton'
@@ -45,14 +45,14 @@ import { useAppContext } from 'AppContext'
 import css from './SpaceSelector.module.scss'
 
 interface SpaceSelectorProps {
-  onSelect: (space: TypesSpace, isUserAction: boolean) => void
+  onSelect: (space: SpaceSpaceOutput, isUserAction: boolean) => void
 }
 
 export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const history = useHistory()
-  const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
+  const [selectedSpace, setSelectedSpace] = useState<SpaceSpaceOutput | undefined>()
   const space = useGetSpaceParam()
   const [opened, setOpened] = React.useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -70,7 +70,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
   })
 
   const selectSpace = useCallback(
-    (_space: TypesSpace, isUserAction: boolean) => {
+    (_space: SpaceSpaceOutput, isUserAction: boolean) => {
       setSelectedSpace(_space)
       onSelect(_space, isUserAction)
     },
@@ -98,7 +98,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
           is_public: false,
           parent_id: 0,
           path: '',
-          uid: getString('selectSpace'),
+          identifier: getString('selectSpace'),
           updated: 0
         },
         false
@@ -133,12 +133,12 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
     />
   )
 
-  const columns: Column<{ space: TypesSpace }>[] = useMemo(
+  const columns: Column<{ space: SpaceSpaceOutput }>[] = useMemo(
     () => [
       {
         Header: getString('spaces'),
         width: 'calc(100% - 180px)',
-        Cell: ({ row }: CellProps<{ space: TypesSpace }>) => {
+        Cell: ({ row }: CellProps<{ space: SpaceSpaceOutput }>) => {
           const record = row.original
           return (
             <Container className={css.nameContainer}>
@@ -193,7 +193,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
               </Container>
             </Layout.Vertical> */}
             <Text className={css.spaceName} lineClamp={1}>
-              {selectedSpace ? selectedSpace.uid : getString('selectSpace')}
+              {selectedSpace ? selectedSpace.identifier : getString('selectSpace')}
             </Text>
           </Container>
           <Container className={css.icon}>
@@ -224,14 +224,14 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
         <Container padding={{ left: 'small' }}>
           <Layout.Vertical padding={{ top: 'xxlarge' }} spacing="small">
             {!!spaces?.length && (
-              <Table<{ space: TypesSpace }>
+              <Table<{ space: SpaceSpaceOutput }>
                 hideHeaders
                 className={cx(css.table, css.tableContainer)}
                 columns={columns}
                 data={spaces || []}
                 onRowClick={spaceData => {
                   setOpened(false)
-                  selectSpace({ uid: spaceData?.space?.uid, path: spaceData?.space?.path }, true)
+                  selectSpace({ identifier: spaceData?.space?.identifier, path: spaceData?.space?.path }, true)
                 }}
                 getRowClassName={row => cx(css.row, !row.original.space.description && css.noDesc)}
               />

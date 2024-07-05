@@ -40,7 +40,7 @@ import { compact, get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps, REGEX_VALID_REPO_NAME } from 'utils/Utils'
-import type { TypesSpace, OpenapiCreateSpaceRequest } from 'services/code'
+import type { SpaceSpaceOutput, OpenapiCreateSpaceRequest } from 'services/code'
 import { useAppContext } from 'AppContext'
 import {
   ImportSpaceFormData,
@@ -84,7 +84,7 @@ export interface NewSpaceModalButtonProps extends Omit<ButtonProps, 'onClick' | 
   cancelButtonTitle?: string
   onRefetch: () => void
   handleNavigation?: (value: string) => void
-  onSubmit: (data: TypesSpace) => void
+  onSubmit: (data: SpaceSpaceOutput) => void
   fromSpace?: boolean
 }
 export interface OpenapiCreateSpaceRequestExtended extends OpenapiCreateSpaceRequest {
@@ -107,11 +107,11 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
     const { getString } = useStrings()
     const { showError } = useToaster()
 
-    const { mutate: createSpace, loading: submitLoading } = useMutate<TypesSpace>({
+    const { mutate: createSpace, loading: submitLoading } = useMutate<SpaceSpaceOutput>({
       verb: 'POST',
       path: `/api/v1/spaces`
     })
-    const { mutate: importSpace, loading: submitImportLoading } = useMutate<TypesSpace>({
+    const { mutate: importSpace, loading: submitImportLoading } = useMutate<SpaceSpaceOutput>({
       verb: 'POST',
       path: `/api/v1/spaces/import`
     })
@@ -123,7 +123,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
         const payload: OpenapiCreateSpaceRequestExtended = {
           description: get(formData, 'description', '').trim(),
           is_public: get(formData, 'isPublic') === RepoVisibility.PUBLIC,
-          uid: get(formData, 'name', '').trim(),
+          identifier: get(formData, 'name', '').trim(),
           parent_id: standalone ? Number(space) : 0 // TODO: Backend needs to fix parentID: accept string or number
         }
         await createSpace(payload)
@@ -156,7 +156,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
       try {
         const importPayload = {
           description: (formData.description || '').trim(),
-          uid: formData.name.trim(),
+          identifier: formData.name.trim(),
           provider,
           provider_space: compact([
             formData.organization,

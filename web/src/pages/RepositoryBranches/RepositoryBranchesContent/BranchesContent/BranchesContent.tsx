@@ -41,7 +41,7 @@ import type {
   OpenapiCalculateCommitDivergenceRequest,
   RepoBranch,
   RepoCommitDivergence,
-  TypesRepository
+  RepoRepositoryOutput
 } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { formatDate, getErrorMessage } from 'utils/Utils'
@@ -54,7 +54,7 @@ import css from './BranchesContent.module.scss'
 
 interface BranchesContentProps {
   searchTerm?: string
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   branches: RepoBranch[]
   onDeleteSuccess: () => void
 }

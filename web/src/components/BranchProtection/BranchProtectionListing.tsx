@@ -99,12 +99,12 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
 
           const { mutate } = useMutate<OpenapiRule>({
             verb: 'PATCH',
-            path: `/api/v1/repos/${repoMetadata?.path}/+/rules/${row.original?.uid}`
+            path: `/api/v1/repos/${repoMetadata?.path}/+/rules/${row.original?.identifier}`
           })
           const [popoverDialogOpen, setPopoverDialogOpen] = useState(false)
           const { mutate: deleteRule } = useMutate({
             verb: 'DELETE',
-            path: `/api/v1/repos/${repoMetadata?.path}/+/rules/${row.original.uid}`
+            path: `/api/v1/repos/${repoMetadata?.path}/+/rules/${row.original.identifier}`
           })
           const confirmDelete = useConfirmAct()
           const includeElements = (row.original?.pattern as ProtectionPattern)?.include?.map(
@@ -149,7 +149,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
             'pullreq.approvals.require_latest_commit': getString('branchProtection.reqNewChangesTitle'),
             'pullreq.comments.require_resolve_all': getString('branchProtection.reqCommentResolutionTitle'),
             'pullreq.status_checks.all_must_succeed': getString('branchProtection.reqStatusChecksTitle'),
-            'pullreq.status_checks.require_uids': getString('branchProtection.reqStatusChecksTitle'),
+            'pullreq.status_checks.require_identifiers': getString('branchProtection.reqStatusChecksTitle'),
             'pullreq.merge.strategies_allowed': getString('branchProtection.limitMergeStrategies'),
             'pullreq.merge.delete_branch': getString('branchProtection.autoDeleteTitle'),
             'lifecycle.create_forbidden': getString('branchProtection.blockBranchCreation'),
@@ -187,7 +187,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
             {
               resource: {
                 resourceType: 'CODE_REPOSITORY',
-                resourceIdentifier: repoMetadata?.uid as string
+                resourceIdentifier: repoMetadata?.identifier as string
               },
               permissions: ['code_repo_edit']
             },
@@ -215,7 +215,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                           <StringSubstitute
                             str={checked ? getString('disableWebhookContent') : getString('enableWebhookContent')}
                             vars={{
-                              name: <strong>{row.original?.uid}</strong>
+                              name: <strong>{row.original?.identifier}</strong>
                             }}
                           />
                         </Text>
@@ -251,7 +251,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                   <Toggle
                     {...permissionProps(permPushResult, standalone)}
                     padding={{ top: 'xsmall' }}
-                    key={`${row.original.uid}-toggle`}
+                    key={`${row.original.identifier}-toggle`}
                     // className={cx(css.toggle, checked ? css.toggleEnable : css.toggleDisable)}
                     checked={checked}></Toggle>
                 </Popover>
@@ -259,7 +259,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
               <Container padding={{ left: 'small' }} style={{ flexGrow: 1 }}>
                 <Layout.Horizontal spacing="small">
                   <Text padding={{ right: 'small', top: 'xsmall' }} lineClamp={1} width={150} className={css.title}>
-                    {row.original.uid}
+                    {row.original.identifier}
                   </Text>
 
                   {!!row.original.description && (
@@ -284,7 +284,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                                 repoPath: repoMetadata?.path as string,
                                 settingSection: settingSection,
                                 settingSectionMode: SettingTypeMode.EDIT,
-                                ruleId: String(row.original.uid)
+                                ruleId: String(row.original.identifier)
                               })
                             )
                           }
@@ -297,7 +297,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                             confirmDelete({
                               className: css.hideButtonIcon,
                               title: getString('branchProtection.deleteProtectionRule'),
-                              message: getString('branchProtection.deleteText', { rule: row.original.uid }),
+                              message: getString('branchProtection.deleteText', { rule: row.original.identifier }),
                               action: async () => {
                                 try {
                                   await deleteRule({})
@@ -337,7 +337,9 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                           <>
                             {nonEmptyRules.map((rule: { value: string }) => {
                               return (
-                                <Text key={`${row.original.uid}-${rule}`} className={css.appliedRulesTextContainer}>
+                                <Text
+                                  key={`${row.original.identifier}-${rule}`}
+                                  className={css.appliedRulesTextContainer}>
                                   {rule.value}
                                 </Text>
                               )
@@ -368,7 +370,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_edit']
     },
@@ -405,13 +407,13 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                 data={rules}
                 getRowClassName={() => css.row}
                 onRowClick={row => {
-                  setCurRuleName(row.uid as string)
+                  setCurRuleName(row.identifier as string)
                   history.push(
                     routes.toCODESettings({
                       repoPath: repoMetadata?.path as string,
                       settingSection: settingSection,
                       settingSectionMode: SettingTypeMode.EDIT,
-                      ruleId: String(row.uid)
+                      ruleId: String(row.identifier)
                     })
                   )
                 }}

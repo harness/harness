@@ -38,7 +38,7 @@ import type {
   TypesCodeOwnerEvaluationEntry,
   TypesPullReq,
   TypesPullReqReviewer,
-  TypesRepository
+  RepoRepositoryOutput
 } from 'services/code'
 import { capitalizeFirstLetter } from 'pages/PullRequest/Checks/ChecksUtils'
 import greyCircle from '../../../../../icons/greyCircle.svg?url'
@@ -50,7 +50,7 @@ import Timeout from '../../../../../icons/code-timeout.svg?url'
 import css from '../PullRequestOverviewPanel.module.scss'
 
 interface ChangesSectionProps {
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   pullReqMetadata: TypesPullReq
   codeOwners: TypesCodeOwnerEvaluation | null
   atLeastOneReviewerRule: boolean

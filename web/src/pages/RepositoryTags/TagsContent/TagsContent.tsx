@@ -26,7 +26,7 @@ import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 
-import type { RepoBranch, RepoCommitTag, TypesRepository } from 'services/code'
+import type { RepoBranch, RepoCommitTag, RepoRepositoryOutput } from 'services/code'
 import { formatDate, getErrorMessage, voidFn } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -37,7 +37,7 @@ import css from './TagsContent.module.scss'
 
 interface TagsContentProps {
   searchTerm?: string
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   branches: RepoBranch[]
   onDeleteSuccess: () => void
 }

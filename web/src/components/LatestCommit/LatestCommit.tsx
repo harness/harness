@@ -39,7 +39,7 @@ import type {
   OpenapiCalculateCommitDivergenceRequest,
   RepoCommitDivergence,
   TypesCommit,
-  TypesRepository
+  RepoRepositoryOutput
 } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useAppContext } from 'AppContext'
@@ -60,7 +60,7 @@ interface LatestCommitProps extends Pick<GitInfoProps, 'repoMetadata' | 'gitRef'
 
 interface DivergenceInfoProps {
   commitDivergence: RepoCommitDivergence
-  metadata: TypesRepository
+  metadata: RepoRepositoryOutput
   currentGitRef: string
 }
 

@@ -92,7 +92,7 @@ const SecretList = () => {
               <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
                 <Layout.Vertical flex className={css.name}>
                   <Text className={css.repoName} lineClamp={1}>
-                    <Keywords value={searchTerm}>{record.uid}</Keywords>
+                    <Keywords value={searchTerm}>{record.identifier}</Keywords>
                   </Text>
                   {record.description && (
                     <Text className={css.desc} lineClamp={1}>
@@ -125,7 +125,7 @@ const SecretList = () => {
         Cell: ({ row }: CellProps<TypesSecret>) => {
           const { mutate: deleteSecret } = useMutate({
             verb: 'DELETE',
-            path: `/api/v1/secrets/${space}/${row.original.uid}/+`
+            path: `/api/v1/secrets/${space}/${row.original.identifier}/+`
           })
           const { showSuccess, showError } = useToaster()
           const confirmDeleteSecret = useConfirmAct()
@@ -150,7 +150,11 @@ const SecretList = () => {
                       confirmText: getString('delete'),
                       intent: Intent.DANGER,
                       message: (
-                        <String useRichText stringID="secrets.deleteSecretConfirm" vars={{ uid: row.original.uid }} />
+                        <String
+                          useRichText
+                          stringID="secrets.deleteSecretConfirm"
+                          vars={{ uid: row.original.identifier }}
+                        />
                       ),
                       action: async () => {
                         deleteSecret({})
@@ -159,7 +163,7 @@ const SecretList = () => {
                               <StringSubstitute
                                 str={getString('secrets.secretDeleted')}
                                 vars={{
-                                  uid: truncateString(row.original.uid as string, 20)
+                                  uid: truncateString(row.original.identifier as string, 20)
                                 }}
                               />,
                               5000

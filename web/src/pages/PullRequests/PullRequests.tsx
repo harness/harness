@@ -33,7 +33,7 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useQueryParams } from 'hooks/useQueryParams'
-import type { TypesPullReq, TypesRepository } from 'services/code'
+import type { TypesPullReq, RepoRepositoryOutput } from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
@@ -118,7 +118,7 @@ export default function PullRequests() {
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_push']
     },
@@ -245,7 +245,7 @@ export default function PullRequests() {
           <Layout.Vertical>
             <PullRequestsContentHeader
               loading={prLoading && searchTerm !== undefined}
-              repoMetadata={repoMetadata as TypesRepository}
+              repoMetadata={repoMetadata as RepoRepositoryOutput}
               activePullRequestFilterOption={filter}
               onPullRequestFilterChanged={_filter => {
                 setFilter(_filter)

@@ -48,7 +48,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_push']
     },
@@ -159,7 +159,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
         className={css.divContainer}>
         <MarkdownViewer
           source={getString('repoEmptyMarkdownClonePush')
-            .replace(/REPO_NAME/g, repoMetadata.uid || '')
+            .replace(/REPO_NAME/g, repoMetadata.identifier || '')
             .replace(/DEFAULT_BRANCH/g, repoMetadata.default_branch || '')}
         />
       </Container>
@@ -170,7 +170,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
         <MarkdownViewer
           source={getString('repoEmptyMarkdownExisting')
             .replace(/REPO_URL/g, repoMetadata.git_url || '')
-            .replace(/REPO_NAME/g, repoMetadata.uid || '')
+            .replace(/REPO_NAME/g, repoMetadata.identifier || '')
             .replace(/CREATE_API_TOKEN_URL/g, standalone ? routes.toCODEUserProfile() : currentUserProfileURL || '')
             .replace(/DEFAULT_BRANCH/g, repoMetadata.default_branch || '')}
         />

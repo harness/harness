@@ -24,7 +24,7 @@ import type {
   TypesPullReq,
   TypesPullReqActivity,
   TypesPullReqReviewer,
-  TypesRepository,
+  RepoRepositoryOutput,
   TypesRuleViolations
 } from 'services/code'
 import { PanelSectionOutletPosition } from 'pages/PullRequest/PullRequestUtils'
@@ -41,7 +41,7 @@ import CommentsSection from './sections/CommentsSection'
 import ChangesSection from './sections/ChangesSection'
 import css from './PullRequestOverviewPanel.module.scss'
 interface PullRequestOverviewPanelProps {
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   pullReqMetadata: TypesPullReq
   onPRStateChanged: () => void
   refetchReviewers: () => void

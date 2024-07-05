@@ -145,7 +145,7 @@ const TriggerDetails = ({
   const handleSubmit = async (formData: TriggerFormData) => {
     try {
       const payload: OpenapiUpdateTriggerRequest = {
-        uid: formData.name,
+        identifier: formData.name,
         actions: formData.actions,
         disabled: formData.disabled
       }
@@ -324,8 +324,8 @@ const PipelineTriggersTabs = ({ repoPath, pipeline }: PipelineTriggersTabsProps)
           <Layout.Vertical spacing={'large'} className={css.triggerList}>
             {data?.map((trigger, index) => (
               <TriggerMenuItem
-                key={trigger.id}
-                name={trigger.uid as string}
+                key={trigger.identifier}
+                name={trigger.identifier as string}
                 lastUpdated={trigger.updated as number}
                 setSelectedTrigger={setSelectedTrigger}
                 index={index}
@@ -339,7 +339,7 @@ const PipelineTriggersTabs = ({ repoPath, pipeline }: PipelineTriggersTabsProps)
             <div className={css.separator} />
             <Layout.Vertical padding={'large'}>
               <TriggerDetails
-                name={data?.[selectedTrigger]?.uid as string}
+                name={data?.[selectedTrigger]?.identifier as string}
                 repoPath={repoPath}
                 pipeline={pipeline}
                 refetchTriggers={refetch}

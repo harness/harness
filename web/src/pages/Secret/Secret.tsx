@@ -39,7 +39,7 @@ const Execution = () => {
 
   return (
     <Container className={css.main}>
-      <PageHeader title={`THIS IS A SECRET = ${secret?.uid}`} />
+      <PageHeader title={`THIS IS A SECRET = ${secret?.identifier}`} />
     </Container>
   )
 }

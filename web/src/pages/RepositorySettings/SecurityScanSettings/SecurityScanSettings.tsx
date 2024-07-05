@@ -31,7 +31,7 @@ import { useGet, useMutate } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import type { FormikState } from 'formik'
 import { Color, FontVariation } from '@harnessio/design-system'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -42,7 +42,7 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import css from './SecurityScanSettings.module.scss'
 
 interface SecurityScanProps {
-  repoMetadata: TypesRepository | undefined
+  repoMetadata: RepoRepositoryOutput | undefined
   activeTab: string
 }
 
@@ -63,7 +63,7 @@ const SecurityScanSettings = (props: SecurityScanProps) => {
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_edit']
     },

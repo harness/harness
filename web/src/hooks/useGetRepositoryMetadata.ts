@@ -18,7 +18,7 @@ import { useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CODEProps } from 'RouteDefinitions'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 import { diffRefsToRefs, makeDiffRefs } from 'utils/GitUtils'
 import { getErrorMessage } from 'utils/Utils'
 import { newCacheStrategy } from 'utils/CacheStrategy'
@@ -41,7 +41,7 @@ export function useGetRepositoryMetadata() {
     ...otherPathParams
   } = useParams<CODEProps>()
   const repoPath = useMemo(() => `${space}/${repoName}`, [space, repoName])
-  const { data, error, loading, refetch, response } = useGet<TypesRepository>({
+  const { data, error, loading, refetch, response } = useGet<RepoRepositoryOutput>({
     path: `/api/v1/repos/${repoPath}/+/`,
     lazy: true
   })

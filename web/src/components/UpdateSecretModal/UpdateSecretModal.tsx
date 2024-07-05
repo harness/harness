@@ -51,7 +51,7 @@ const useUpdateSecretModal = () => {
 
   const { mutate: updateSecret, loading } = useMutate<TypesSecret>({
     verb: 'PATCH',
-    path: `/api/v1/secrets/${space}/${secret?.uid}/+`
+    path: `/api/v1/secrets/${space}/${secret?.identifier}/+`
   })
 
   const handleSubmit = async (formData: SecretFormData) => {
@@ -59,7 +59,7 @@ const useUpdateSecretModal = () => {
       const payload: OpenapiUpdateSecretRequest = {
         data: formData.value,
         description: formData.description,
-        uid: formData.name
+        identifier: formData.name
       }
       await updateSecret(payload)
       hideModal()
@@ -97,7 +97,7 @@ const useUpdateSecretModal = () => {
           <Container>
             <Formik
               initialValues={{
-                name: secret?.uid || '',
+                name: secret?.identifier || '',
                 description: secret?.description || '',
                 value: '',
                 showValue: false

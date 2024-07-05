@@ -22,10 +22,10 @@ import { FontVariation } from '@harnessio/design-system'
 import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 import css from './RepositoryHeader.module.scss'
 interface RepositoryHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   className?: string
   isFile: boolean
 }
@@ -43,7 +43,7 @@ export function RepositoryHeader(props: RepositoryHeaderProps) {
           </span>
           {/* <Icon name={CodeIcon.Repo} size={20} /> */}
           <Text inline className={css.repoDropdown} font={{ variation: FontVariation.H4 }}>
-            {repoMetadata.uid}
+            {repoMetadata.identifier}
           </Text>
           <RepoPublicLabel isPublic={repoMetadata.is_public} />
         </Layout.Horizontal>

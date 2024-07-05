@@ -146,8 +146,8 @@ const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
             {getString(isPipeline ? 'pageTitle.pipelines' : 'checks')}
           </Text>
           <Container className={css.table}>
-            {data.map(({ uid, status, summary, created, ended, started }) => (
-              <Container className={css.row} key={uid}>
+            {data.map(({ identifier, status, summary, created, ended, started }) => (
+              <Container className={css.row} key={identifier}>
                 <Layout.Horizontal className={css.rowLayout}>
                   <Container className={css.status}>
                     <ExecutionStatus status={status as ExecutionState} />
@@ -159,10 +159,10 @@ const CheckSection: React.FC<CheckSectionsProps & { isPipeline?: boolean }> = ({
                         repoPath: repoMetadata.path as string,
                         pullRequestId: String(pullReqMetadata.number),
                         pullRequestSection: PullRequestSection.CHECKS
-                      }) + `?uid=${uid}`
+                      }) + `?uid=${identifier}`
                     }>
                     <Text font={{ variation: FontVariation.SMALL_BOLD }} className={css.name} lineClamp={1}>
-                      {uid}
+                      {identifier}
                     </Text>
                   </Link>
 

@@ -21,7 +21,7 @@ import { useHistory, useRouteMatch } from 'react-router-dom'
 import { FingerprintLockCircle, BookmarkBook, UserSquare, Settings } from 'iconoir-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
-import type { TypesSpace } from 'services/code'
+import type { SpaceSpaceOutput } from 'services/code'
 import { SpaceSelector } from 'components/SpaceSelector/SpaceSelector'
 import { useAppContext } from 'AppContext'
 import { isGitRev } from 'utils/GitUtils'
@@ -31,7 +31,7 @@ import css from './DefaultMenu.module.scss'
 export const DefaultMenu: React.FC = () => {
   const history = useHistory()
   const { routes, standalone } = useAppContext()
-  const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
+  const [selectedSpace, setSelectedSpace] = useState<SpaceSpaceOutput | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
   const { getString } = useStrings()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])

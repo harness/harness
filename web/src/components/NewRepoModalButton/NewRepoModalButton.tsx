@@ -69,8 +69,8 @@ import {
   getProviderTypeMapping
 } from 'utils/GitUtils'
 import type {
-  TypesSpace,
-  TypesRepository,
+  SpaceSpaceOutput,
+  RepoRepositoryOutput,
   SpaceImportRepositoriesOutput,
   OpenapiCreateRepositoryRequest
 } from 'services/code'
@@ -95,7 +95,7 @@ export interface NewRepoModalButtonProps extends Omit<ButtonProps, 'onClick' | '
   modalTitle: string
   submitButtonTitle?: string
   cancelButtonTitle?: string
-  onSubmit: (data: TypesRepository & SpaceImportRepositoriesOutput) => void
+  onSubmit: (data: RepoRepositoryOutput & SpaceImportRepositoriesOutput) => void
   newRepoModalOnly?: boolean
   notFoundRepoName?: string
 }
@@ -114,7 +114,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     const [enablePublicRepo, setEnablePublicRepo] = useState(false)
     const { showError } = useToaster()
 
-    const { mutate: createRepo, loading: submitLoading } = useMutate<TypesRepository>({
+    const { mutate: createRepo, loading: submitLoading } = useMutate<RepoRepositoryOutput>({
       verb: 'POST',
       path: `/api/v1/repos`,
       queryParams: standalone
@@ -123,7 +123,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
             space_path: space
           }
     })
-    const { mutate: importRepo, loading: importRepoLoading } = useMutate<TypesRepository>({
+    const { mutate: importRepo, loading: importRepoLoading } = useMutate<RepoRepositoryOutput>({
       verb: 'POST',
       path: `/api/v1/repos/import`,
       queryParams: standalone
@@ -132,7 +132,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
             space_path: space
           }
     })
-    const { mutate: importMultipleRepositories, loading: submitImportLoading } = useMutate<TypesSpace>({
+    const { mutate: importMultipleRepositories, loading: submitImportLoading } = useMutate<SpaceSpaceOutput>({
       verb: 'POST',
       path: `/api/v1/spaces/${space}/+/import`
     })
@@ -179,7 +179,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           git_ignore: get(formData, 'gitignore', 'none'),
           is_public: get(formData, 'isPublic') === RepoVisibility.PUBLIC,
           license: get(formData, 'license', 'none'),
-          uid: get(formData, 'name', '').trim(),
+          identifier: get(formData, 'name', '').trim(),
           readme: get(formData, 'addReadme', false),
           parent_ref: space
         }
@@ -217,7 +217,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       const importPayload = {
         description: formData.description || '',
         parent_ref: space,
-        uid: formData.name,
+        identifier: formData.name,
         provider,
         provider_repo: compact([
           formData.org,
@@ -261,7 +261,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         const importPayload = {
           description: (formData.description || '').trim(),
           parent_ref: space,
-          uid: formData.name.trim(),
+          identifier: formData.name.trim(),
           provider,
           provider_space: compact([
             formData.organization,

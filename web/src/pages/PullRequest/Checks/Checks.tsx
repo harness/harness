@@ -74,7 +74,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, p
     if (selectedStage) {
       return routes.toCODEExecution({
         repoPath: repoMetadata?.path as string,
-        pipeline: selectedItemData?.uid as string,
+        pipeline: selectedItemData?.identifier as string,
         execution: get(selectedItemData, 'payload.data.execution_number', '')
       })
     } else {
@@ -211,7 +211,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, p
                       color={Color.WHITE}
                       lineClamp={1}
                       tooltipProps={{ portalClassName: css.popover }}>
-                      {selectedItemData?.uid}
+                      {selectedItemData?.identifier}
                       {selectedStage ? ` / ${selectedStage.name}` : ''}
                     </Text>
                     <FlexExpander />
@@ -246,7 +246,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullReqMetadata, p
                       <CheckPipelineSteps
                         repoMetadata={repoMetadata}
                         pullReqMetadata={pullReqMetadata}
-                        pipelineName={selectedItemData?.uid as string}
+                        pipelineName={selectedItemData?.identifier as string}
                         stage={selectedStage as TypesStage}
                         executionNumber={get(selectedItemData, 'payload.data.execution_number', '')}
                       />

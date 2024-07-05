@@ -23,7 +23,7 @@ import { getErrorMessage } from 'utils/Utils'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useStrings } from 'framework/strings'
-import type { OpenapiGetContentOutput, TypesRepository } from 'services/code'
+import type { OpenapiGetContentOutput, RepoRepositoryOutput } from 'services/code'
 import { Images } from 'images'
 import { useSetPageContainerWidthVar } from 'hooks/useSetPageContainerWidthVar'
 import { normalizeGitRef, isDir } from 'utils/GitUtils'
@@ -58,14 +58,14 @@ export default function Repository() {
     <Container className={cx(css.main, !!resourceContent && css.withFileViewer)} ref={domRef}>
       <Match expr={fileNotExist}>
         <Truthy>
-          <RepositoryHeader isFile={false} repoMetadata={repoMetadata as TypesRepository} />
+          <RepositoryHeader isFile={false} repoMetadata={repoMetadata as RepoRepositoryOutput} />
           <Layout.Vertical>
             <Container className={css.bannerContainer} padding={{ left: 'xlarge' }}>
               <Text font={'small'} padding={{ left: 'large' }}>
                 <StringSubstitute
                   str={getString('branchDoesNotHaveFile')}
                   vars={{
-                    repoName: repoMetadata?.uid,
+                    repoName: repoMetadata?.identifier,
                     fileName: resourcePath,
                     branchName: gitRef
                   }}
@@ -74,7 +74,7 @@ export default function Repository() {
             </Container>
             <Container padding={{ left: 'xlarge' }}>
               <ContentHeader
-                repoMetadata={repoMetadata as TypesRepository}
+                repoMetadata={repoMetadata as RepoRepositoryOutput}
                 gitRef={gitRef}
                 resourcePath={resourcePath}
                 resourceContent={resourceContent as OpenapiGetContentOutput}

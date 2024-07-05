@@ -49,7 +49,7 @@ import {
 import { decodeGitContent, handleUpload, normalizeGitRef } from 'utils/GitUtils'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import { AidaClient } from 'utils/types'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 import { useEventListener } from 'hooks/useEventListener'
 import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
 import css from './MarkdownEditorWithPreview.module.scss'
@@ -134,7 +134,7 @@ interface MarkdownEditorWithPreviewProps {
   sourceGitRef?: string
   targetGitRef?: string
   setFlag?: React.Dispatch<React.SetStateAction<boolean>>
-  repoMetadata: TypesRepository | undefined
+  repoMetadata: RepoRepositoryOutput | undefined
   standalone: boolean
   routingId: string
   suggestionBlock?: SuggestionBlock

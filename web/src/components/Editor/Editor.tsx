@@ -29,7 +29,7 @@ import { Compartment, EditorState, Extension } from '@codemirror/state'
 import { color } from '@uiw/codemirror-extensions-color'
 import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
 import { githubLight, githubDark } from '@uiw/codemirror-themes-all'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { handleUpload } from 'utils/GitUtils'
 import { handleFileDrop, handlePaste } from 'utils/Utils'
@@ -50,7 +50,7 @@ export interface EditorProps {
   onChange?: (doc: Text, viewUpdate: ViewUpdate, isDirty: boolean) => void
   onViewUpdate?: (viewUpdate: ViewUpdate) => void
   darkTheme?: boolean
-  repoMetadata: TypesRepository | undefined
+  repoMetadata: RepoRepositoryOutput | undefined
   inGitBlame?: boolean
   standalone: boolean
   routingId?: string

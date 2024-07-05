@@ -26,7 +26,7 @@ import { useStrings } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { useAppContext } from 'AppContext'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
@@ -94,7 +94,7 @@ interface CommentBoxProps<T> {
   outlets?: Partial<Record<CommentBoxOutletPosition, React.ReactNode>>
   autoFocusAndPosition?: boolean
   enableReplyPlaceHolder?: boolean
-  repoMetadata: TypesRepository | undefined
+  repoMetadata: RepoRepositoryOutput | undefined
   standalone: boolean
   routingId: string
   copyLinkToComment: (commentId: number, commentItem: CommentItem<T>) => void
@@ -310,7 +310,7 @@ interface CommentsThreadProps<T>
   > {
   onQuote: (content: string) => void
   setDirty: (index: number, dirty: boolean) => void
-  repoMetadata: TypesRepository | undefined
+  repoMetadata: RepoRepositoryOutput | undefined
 }
 
 const CommentsThread = <T = unknown,>({

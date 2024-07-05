@@ -50,7 +50,7 @@ import type {
   TypesCommit,
   TypesDiffStats,
   TypesPullReq,
-  TypesRepository
+  RepoRepositoryOutput
 } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
@@ -365,7 +365,7 @@ export default function Compare() {
                   ),
                   panel: (
                     <CompareCommits
-                      repoMetadata={repoMetadata as TypesRepository}
+                      repoMetadata={repoMetadata as RepoRepositoryOutput}
                       sourceSha={sourceGitRef}
                       targetSha={targetGitRef}
                     />

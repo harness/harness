@@ -33,7 +33,7 @@ import {
 } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { useModalHook } from 'hooks/useModalHook'
-import type { CreateExecutionQueryParams, TypesExecution, TypesRepository } from 'services/code'
+import type { CreateExecutionQueryParams, TypesExecution, RepoRepositoryOutput } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
@@ -49,7 +49,7 @@ const useRunPipelineModal = () => {
   const { getString } = useStrings()
   const { showSuccess, showError, clear: clearToaster } = useToaster()
   const history = useHistory()
-  const [repo, setRepo] = useState<TypesRepository>()
+  const [repo, setRepo] = useState<RepoRepositoryOutput>()
   const [pipeline, setPipeline] = useState<string>('')
   const repoPath = useMemo(() => repo?.path || '', [repo])
 
@@ -133,7 +133,7 @@ const useRunPipelineModal = () => {
   }, [repo?.default_branch, pipeline])
 
   return {
-    openModal: ({ repoMetadata, pipeline: pipelineUid }: { repoMetadata: TypesRepository; pipeline: string }) => {
+    openModal: ({ repoMetadata, pipeline: pipelineUid }: { repoMetadata: RepoRepositoryOutput; pipeline: string }) => {
       setRepo(repoMetadata)
       setPipeline(pipelineUid)
       openModal()

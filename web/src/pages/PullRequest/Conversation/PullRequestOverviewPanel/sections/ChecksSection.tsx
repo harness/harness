@@ -32,7 +32,7 @@ import { isEmpty } from 'lodash-es'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { useAppContext } from 'AppContext'
-import type { TypesRepository, TypesPullReq, TypesCheck } from 'services/code'
+import type { RepoRepositoryOutput, TypesPullReq, TypesCheck } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { CheckStatus, PullRequestSection, timeDistance } from 'utils/Utils'
 import { usePRChecksDecision } from 'hooks/usePRChecksDecision3'
@@ -41,7 +41,7 @@ import Timeout from '../../../../../icons/code-timeout.svg?url'
 import css from '../PullRequestOverviewPanel.module.scss'
 
 interface ChecksSectionProps {
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   pullReqMetadata: TypesPullReq
 }
 
@@ -287,7 +287,7 @@ const ChecksSection = (props: ChecksSectionProps) => {
                     color={Color.GREY_700}
                     className={cx(css.checkName, css.textSize)}
                     font={{ variation: FontVariation.BODY }}>
-                    {check.check.uid}
+                    {check.check.identifier}
                   </Text>
                   <Text
                     padding={{ left: 'small' }}
@@ -324,7 +324,7 @@ const ChecksSection = (props: ChecksSectionProps) => {
                             repoPath: repoMetadata.path as string,
                             pullRequestId: String(pullReqMetadata.number),
                             pullRequestSection: PullRequestSection.CHECKS
-                          }) + `?uid=${check.check.uid}`
+                          }) + `?uid=${check.check.identifier}`
                         }>
                         <Text padding={{ left: 'medium' }} color={Color.PRIMARY_7} className={css.blueText}>
                           {getString('details')}

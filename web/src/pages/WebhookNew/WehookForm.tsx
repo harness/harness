@@ -97,7 +97,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
   const { routes } = useAppContext()
   const { mutate, loading } = useMutate<OpenapiWebhookType>({
     verb: isEdit ? 'PATCH' : 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/webhooks${isEdit ? `/${webhook?.id}` : ''}`
+    path: `/api/v1/repos/${repoMetadata.path}/+/webhooks${isEdit ? `/${webhook?.identifier}` : ''}`
   })
   const { hooks, standalone } = useAppContext()
   const space = useGetSpaceParam()
@@ -105,7 +105,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_edit']
     },
@@ -116,7 +116,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
       <Layout.Vertical className={css.form}>
         <Formik<FormData>
           initialValues={{
-            name: webhook?.display_name || '',
+            name: webhook?.identifier || '',
             description: webhook?.description || '',
             url: webhook?.url || '',
             secret: isEdit && webhook?.has_secret ? SECRET_MASK : '',
@@ -194,7 +194,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             const secret = (formData.secret || '').trim()
 
             const data: OpenapiUpdateWebhookRequest = {
-              display_name: formData.name,
+              identifier: formData.name,
               description: formData.description,
               url: formData.url,
               secret: secret !== SECRET_MASK ? secret : undefined,

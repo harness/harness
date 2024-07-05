@@ -67,7 +67,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
   const checksData = useMemo(() => sortBy(prChecksDecisionResult?.data || [], ['uid']), [prChecksDecisionResult?.data])
   useMemo(() => {
     if (selectedUID) {
-      const selectedDataItem = checksData.find(item => item.uid === selectedUID)
+      const selectedDataItem = checksData.find(item => item.identifier === selectedUID)
       if (selectedDataItem) {
         onDataItemChanged(selectedDataItem)
       }
@@ -76,7 +76,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
 
   useEffect(() => {
     if (uid) {
-      if (uid !== selectedUID && checksData.find(item => item.uid === uid)) {
+      if (uid !== selectedUID && checksData.find(item => item.identifier === uid)) {
         setSelectedUID(uid)
       }
     } else {
@@ -84,13 +84,13 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
 
       if (defaultSelectedItem) {
         onDataItemChanged(defaultSelectedItem)
-        setSelectedUID(defaultSelectedItem.uid)
+        setSelectedUID(defaultSelectedItem.identifier)
         history.replace(
           routes.toCODEPullRequest({
             repoPath: repoMetadata.path as string,
             pullRequestId: String(pullReqMetadata.number),
             pullRequestSection: PullRequestSection.CHECKS
-          }) + `?uid=${defaultSelectedItem.uid}${selectedStage ? `&stageId=${selectedStage.name}` : ''}`
+          }) + `?uid=${defaultSelectedItem.identifier}${selectedStage ? `&stageId=${selectedStage.name}` : ''}`
         )
       }
     }
@@ -238,18 +238,18 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
             </Layout.Horizontal>
           )}
           {(checks as TypesCheck[]).map((itemData: TypesCheck) => (
-            <Container key={`container_${itemData.uid}`} className={css.checkMenuItemContainer}>
+            <Container key={`container_${itemData.identifier}`} className={css.checkMenuItemContainer}>
               <CheckMenuItem
                 repoMetadata={repoMetadata}
                 pullReqMetadata={pullReqMetadata}
                 prChecksDecisionResult={prChecksDecisionResult}
-                key={itemData.uid}
+                key={itemData.identifier}
                 itemData={itemData}
                 customFormatter={customFormatter}
                 isPipeline={itemData.payload?.kind === PullRequestCheckType.PIPELINE}
-                isSelected={itemData.uid === selectedUID}
+                isSelected={itemData.identifier === selectedUID}
                 onClick={stage => {
-                  setSelectedUID(itemData.uid)
+                  setSelectedUID(itemData.identifier)
                   setSelectedStage(stage || null)
                   setSelectedStageFromProps(stage || null)
 
@@ -258,7 +258,7 @@ export const ChecksMenu: React.FC<ChecksMenuProps> = ({
                       repoPath: repoMetadata.path as string,
                       pullRequestId: String(pullReqMetadata.number),
                       pullRequestSection: PullRequestSection.CHECKS
-                    }) + `?uid=${itemData.uid}${stage ? `&stageId=${stage.name}` : ''}`
+                    }) + `?uid=${itemData.identifier}${stage ? `&stageId=${stage.name}` : ''}`
                   )
                 }}
                 setSelectedStage={stage => {
@@ -301,11 +301,11 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
     }
   }, [isSelected])
   const name =
-    itemData?.uid &&
-    itemData?.uid.includes('-') &&
+    itemData?.identifier &&
+    itemData?.identifier.includes('-') &&
     (itemData.payload?.kind as TypesCheckPayloadExtended) === CheckKindPayload.HARNESS_STAGE
-      ? itemData.uid.split('-')[1]
-      : itemData.uid
+      ? itemData.identifier.split('-')[1]
+      : itemData.identifier
   return (
     <Container className={css.menuItem}>
       <Layout.Horizontal
@@ -356,7 +356,7 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
 
       <Render when={isPipeline}>
         <CheckPipelineStages
-          pipelineName={itemData.uid as string}
+          pipelineName={itemData.identifier as string}
           executionNumber={get(itemData, 'payload.data.execution_number', '')}
           expanded={expanded}
           repoMetadata={repoMetadata}

@@ -89,7 +89,7 @@ const PipelineSettingsTab = ({ pipeline, repoPath, yamlPath }: SettingsContentPr
             try {
               const payload: OpenapiUpdatePipelineRequest = {
                 config_path: newYamlPath,
-                uid: name
+                identifier: name
               }
               await updatePipeline(payload, {
                 pathParams: { path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}` }

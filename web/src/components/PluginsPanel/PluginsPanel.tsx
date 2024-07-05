@@ -107,7 +107,7 @@ const PluginSpecInputPath = `${PluginSpecPath}.${PluginsInputPath}`
 const LIST_FETCHING_LIMIT = 100
 
 const RunStepSpec: TypesPlugin = {
-  uid: 'run'
+  identifier: 'run'
 }
 
 export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
@@ -180,7 +180,7 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
     if (panelView !== PluginPanelView.Listing) return
 
     if (query) {
-      setPlugins(existingPlugins => existingPlugins.filter((item: TypesPlugin) => item.uid?.includes(query)))
+      setPlugins(existingPlugins => existingPlugins.filter((item: TypesPlugin) => item.identifier?.includes(query)))
     } else {
       fetchAllPlugins().then(response => setPlugins(response))
     }
@@ -215,7 +215,9 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
       } else {
         setPluginCategory(PluginCategory.Drone)
         fetchAllPlugins().then(response => {
-          const matchingPlugin = response?.find((_plugin: TypesPlugin) => _plugin?.uid === get(formData, 'spec.name'))
+          const matchingPlugin = response?.find(
+            (_plugin: TypesPlugin) => _plugin?.identifier === get(formData, 'spec.name')
+          )
           if (matchingPlugin) {
             setPlugin(matchingPlugin)
             setPanelView(PluginPanelView.Configuration)
@@ -314,7 +316,7 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
         </Layout.Horizontal>
         <Container className={css.plugins}>
           {plugins?.map((pluginItem: TypesPlugin) => {
-            const { uid, description } = pluginItem
+            const { identifier, description } = pluginItem
             return (
               <Layout.Horizontal
                 flex={{ justifyContent: 'flex-start' }}
@@ -326,7 +328,7 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
                   setPanelView(PluginPanelView.Configuration)
                   setPlugin(pluginItem)
                 }}
-                key={uid}
+                key={identifier}
                 width="100%">
                 <Icon name={'plugin-ci-step'} size={25} />
                 <Layout.Vertical padding={{ left: 'small' }} spacing="xsmall" className={css.pluginInfo}>
@@ -334,7 +336,7 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
                     color={Color.GREY_900}
                     className={css.fontWeight600}
                     font={{ variation: FontVariation.BODY2_SEMI }}>
-                    {uid}
+                    {identifier}
                   </Text>
                   <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }} className={css.pluginDesc}>
                     {description}
@@ -619,9 +621,9 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
             }}
             className={css.arrow}
           />
-          {plugin?.uid && (
+          {plugin?.identifier && (
             <Text font={{ variation: FontVariation.H4 }}>
-              {getString(isUpdate ? 'updateLabel' : 'addLabel')} {plugin.uid} {getString('plugins.stepLabel')}
+              {getString(isUpdate ? 'updateLabel' : 'addLabel')} {plugin.identifier} {getString('plugins.stepLabel')}
             </Text>
           )}
         </Layout.Horizontal>
@@ -639,7 +641,7 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
               }
               const updatedYAMLPayload = set({}, PluginSpecInputPath, payloadForYAMLUpdate)
               set(updatedYAMLPayload, 'type', pluginCategory)
-              set(updatedYAMLPayload, `${PluginSpecPath}.name`, plugin?.uid)
+              set(updatedYAMLPayload, `${PluginSpecPath}.name`, plugin?.identifier)
               onPluginAddUpdate({
                 pathToField,
                 isUpdate,

@@ -47,7 +47,7 @@ export const RepositoryFileEditHeader: React.FC<RepositoryFileEditHeaderProps> =
         <Layout.Horizontal spacing="small" className={css.breadcrumb}>
           <Link to={routes.toCODERepositories({ space })}>{getString('repositories')}</Link>
           <Icon name="main-chevron-right" size={10} color={Color.GREY_500} />
-          <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.uid}</Link>
+          <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.identifier}</Link>
         </Layout.Horizontal>
         <Container padding={{ top: 'medium', bottom: 'medium' }}>
           <Text font={{ variation: FontVariation.H4 }}>

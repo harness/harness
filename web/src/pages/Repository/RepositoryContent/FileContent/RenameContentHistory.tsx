@@ -22,7 +22,7 @@ import cx from 'classnames'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { LIST_FETCHING_LIMIT, RenameDetails } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
-import type { TypesCommit, TypesRepository } from 'services/code'
+import type { TypesCommit, RepoRepositoryOutput } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -33,7 +33,7 @@ const SingleFileRenameHistory = (props: {
   details: RenameDetails
   fileVisibility: { [key: string]: boolean }
   setFileVisibility: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   page: number
   /* eslint-disable @typescript-eslint/no-explicit-any */
   response: any
@@ -122,7 +122,7 @@ const SingleFileRenameHistory = (props: {
 
 const AllFilesRenameHistory = (props: {
   rename_details: RenameDetails[]
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   fileVisibility: { [key: string]: boolean }
   setFileVisibility: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
   setActiveTab: React.Dispatch<React.SetStateAction<string>>
@@ -155,7 +155,7 @@ const AllFilesRenameHistory = (props: {
 
 const RenameContentHistory = (props: {
   rename_details: RenameDetails[]
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   setActiveTab: React.Dispatch<React.SetStateAction<string>>
 }) => {
   const { rename_details, repoMetadata, setActiveTab } = props

@@ -85,7 +85,7 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
           space_ref: space,
           data: formData.value,
           description: formData.description,
-          uid: formData.name
+          identifier: formData.name
         }
         await createSecret(payload)
         hideModal()

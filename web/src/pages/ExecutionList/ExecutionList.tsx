@@ -92,7 +92,7 @@ const ExecutionList = () => {
 
   const onEvent = useCallback(
     data => {
-      // ideally this would include number - so we only check for executions on the page - but what if new executions are kicked off? - could check for ids that are higher than the lowest id on the page?
+      // ideally this would include number - so we only check for executions on the page - but what if new executions are kicked off? - could check for ids that are higher than the lowest ids on the page?
       if (repoMetadata?.id === data?.repo_id && pipelineData?.id === data?.pipeline_id) {
         //TODO - revisit full refresh - can I use the message to update the execution?
         executionsRefetch()

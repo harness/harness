@@ -148,7 +148,7 @@ const PipelineList = () => {
                 inExecution
               />
               <Text className={css.repoName}>
-                <Keywords value={searchTerm}>{record.uid}</Keywords>
+                <Keywords value={searchTerm}>{record.identifier}</Keywords>
               </Text>
             </Layout.Horizontal>
           )
@@ -243,14 +243,14 @@ const PipelineList = () => {
         Cell: ({ row }: CellProps<TypesPipeline>) => {
           const [menuOpen, setMenuOpen] = useState(false)
           const record = row.original
-          const { uid } = record
+          const { identifier } = record
           const repoPath = repoMetadata?.path || ''
 
           const confirmDeletePipeline = useConfirmAct()
           const { showSuccess, showError } = useToaster()
           const { mutate: deletePipeline } = useMutate<TypesPipeline>({
             verb: 'DELETE',
-            path: `/api/v1/repos/${repoPath}/+/pipelines/${uid}`
+            path: `/api/v1/repos/${repoPath}/+/pipelines/${identifier}`
           })
 
           return (
@@ -264,7 +264,7 @@ const PipelineList = () => {
               <Button
                 variation={ButtonVariation.ICON}
                 icon="Options"
-                data-testid={`menu-${record.uid}`}
+                data-testid={`menu-${record.identifier}`}
                 onClick={e => {
                   e.stopPropagation()
                   setMenuOpen(true)
@@ -276,7 +276,7 @@ const PipelineList = () => {
                   text={getString('edit')}
                   onClick={e => {
                     e.stopPropagation()
-                    history.push(routes.toCODEPipelineEdit({ repoPath, pipeline: uid as string }))
+                    history.push(routes.toCODEPipelineEdit({ repoPath, pipeline: identifier as string }))
                   }}
                 />
                 <MenuItem
@@ -292,7 +292,7 @@ const PipelineList = () => {
                         <String
                           useRichText
                           stringID="pipelines.deletePipelineConfirm"
-                          vars={{ pipeline: row.original.uid }}
+                          vars={{ pipeline: row.original.identifier }}
                         />
                       ),
                       action: async () => {
@@ -302,7 +302,7 @@ const PipelineList = () => {
                               <StringSubstitute
                                 str={getString('pipelines.deletePipelineSuccess')}
                                 vars={{
-                                  pipeline: row.original.uid
+                                  pipeline: row.original.identifier
                                 }}
                               />,
                               5000
@@ -322,7 +322,10 @@ const PipelineList = () => {
                   onClick={e => {
                     e.stopPropagation()
                     history.push(
-                      routes.toCODEPipelineSettings({ repoPath: repoMetadata?.path || '', pipeline: uid as string })
+                      routes.toCODEPipelineSettings({
+                        repoPath: repoMetadata?.path || '',
+                        pipeline: identifier as string
+                      })
                     )
                   }}
                 />
@@ -371,7 +374,7 @@ const PipelineList = () => {
                   history.push(
                     routes.toCODEExecutions({
                       repoPath: repoMetadata?.path as string,
-                      pipeline: pipelineInfo.uid as string
+                      pipeline: pipelineInfo.identifier as string
                     })
                   )
                 }

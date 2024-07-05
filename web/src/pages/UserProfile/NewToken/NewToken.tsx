@@ -75,10 +75,10 @@ const useNewToken = ({ onClose }: { onClose: () => void }) => {
       <Dialog isOpen enforceFocus={false} onClose={onModalClose} title={getString('createNewToken')}>
         <Formik<OpenapiCreateTokenRequest>
           initialValues={{
-            uid: ''
+            identifier: ''
           }}
           validationSchema={Yup.object().shape({
-            uid: Yup.string()
+            identifier: Yup.string()
               .required(getString('validation.nameIsRequired'))
               .matches(REGEX_VALID_REPO_NAME, getString('validation.nameInvalid')),
             lifetime: Yup.number().required(getString('validation.expirationDateRequired'))
@@ -102,7 +102,7 @@ const useNewToken = ({ onClose }: { onClose: () => void }) => {
             return (
               <FormikForm>
                 <FormInputWithCopyButton
-                  name="uid"
+                  name="identifier"
                   label={getString('name')}
                   placeholder={getString('newToken.namePlaceholder')}
                   disabled={isTokenGenerated}

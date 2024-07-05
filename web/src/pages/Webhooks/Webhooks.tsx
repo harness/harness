@@ -101,7 +101,7 @@ export default function Webhooks() {
 
           const { mutate } = useMutate<OpenapiWebhookType>({
             verb: 'PATCH',
-            path: `/api/v1/repos/${repoMetadata?.path}/+/webhooks/${row.original?.id}`
+            path: `/api/v1/repos/${repoMetadata?.path}/+/webhooks/${row.original?.identifier}`
           })
           const [popoverDialogOpen, setPopoverDialogOpen] = useState(false)
 
@@ -127,7 +127,7 @@ export default function Webhooks() {
                           <StringSubstitute
                             str={checked ? getString('disableWebhookContent') : getString('enableWebhookContent')}
                             vars={{
-                              name: <strong>{row.original?.display_name}</strong>
+                              name: <strong>{row.original?.identifier}</strong>
                             }}
                           />
                         </Text>
@@ -163,7 +163,7 @@ export default function Webhooks() {
                   interactionKind="click">
                   <Toggle
                     {...permissionProps(permPushResult, standalone)}
-                    key={row.original.id}
+                    key={row.original.identifier}
                     className={cx(css.toggle, checked ? css.toggleEnable : css.toggleDisable)}
                     checked={checked}></Toggle>
                 </Popover>
@@ -176,7 +176,7 @@ export default function Webhooks() {
                     lineClamp={1}
                     width={300}
                     className={css.title}>
-                    {row.original.display_name}
+                    {row.original.identifier}
                   </Text>
                   {!!row.original.triggers?.length && (
                     <Text padding={{ left: 'small', right: 'small' }} color={Color.GREY_500}>
@@ -212,7 +212,7 @@ export default function Webhooks() {
         Cell: ({ row }: CellProps<OpenapiWebhookType>) => {
           const { mutate: deleteWebhook } = useMutate({
             verb: 'DELETE',
-            path: `/api/v1/repos/${repoMetadata?.path}/+/webhooks/${row.original.id}`
+            path: `/api/v1/repos/${repoMetadata?.path}/+/webhooks/${row.original.identifier}`
           })
           const confirmDelete = useConfirmAct()
 
@@ -231,7 +231,7 @@ export default function Webhooks() {
                       history.push(
                         routes.toCODEWebhookDetails({
                           repoPath: repoMetadata?.path as string,
-                          webhookId: String(row.original?.id)
+                          webhookId: String(row.original?.identifier)
                         })
                       )
                     }
@@ -272,7 +272,7 @@ export default function Webhooks() {
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_edit']
     },
@@ -307,7 +307,7 @@ export default function Webhooks() {
                       history.push(
                         routes.toCODEWebhookDetails({
                           repoPath: repoMetadata.path as string,
-                          webhookId: String(row.id)
+                          webhookId: String(row.identifier)
                         })
                       )
                     }}

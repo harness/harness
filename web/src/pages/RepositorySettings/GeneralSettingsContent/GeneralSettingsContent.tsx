@@ -36,7 +36,7 @@ import { useMutate, useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { ACCESS_MODES, getErrorMessage, permissionProps, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { RepoVisibility } from 'utils/GitUtils'
@@ -48,7 +48,7 @@ import Private from '../../../icons/private.svg?url'
 import css from '../RepositorySettings.module.scss'
 
 interface GeneralSettingsProps {
-  repoMetadata: TypesRepository | undefined
+  repoMetadata: RepoRepositoryOutput | undefined
   refetch: () => void
   gitRef: string
   isRepositoryEmpty: boolean
@@ -84,7 +84,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_edit']
     },
@@ -94,7 +94,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_delete']
     },
@@ -186,7 +186,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
     <Formik
       formName="repoGeneralSettings"
       initialValues={{
-        name: repoMetadata?.uid,
+        name: repoMetadata?.identifier,
         desc: repoMetadata?.description,
         defaultBranch: repoMetadata?.default_branch,
         isPublic: currRepoVisibility
@@ -204,7 +204,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 </Container>
                 <Container className={css.content}>
                   <Text color={Color.GREY_800} className={css.textSize}>
-                    {repoMetadata?.uid}
+                    {repoMetadata?.identifier}
                   </Text>
                 </Container>
               </Layout.Horizontal>

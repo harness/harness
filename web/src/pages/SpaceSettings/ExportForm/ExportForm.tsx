@@ -35,7 +35,7 @@ import {
   stringSubstitute
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 
 import { useStrings } from 'framework/strings'
 import type { ExportFormDataExtended } from 'utils/GitUtils'
@@ -73,7 +73,7 @@ const ExportForm = (props: ExportFormProps) => {
     organization: yup.string().trim().required(getString('importSpace.orgRequired')),
     name: yup.string().trim().required(getString('importSpace.spaceNameRequired'))
   })
-  const { data: repositories } = useGet<TypesRepository[]>({
+  const { data: repositories } = useGet<RepoRepositoryOutput[]>({
     path: `/api/v1/spaces/${space}/+/repos`
   })
 

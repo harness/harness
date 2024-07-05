@@ -27,14 +27,14 @@ import type {
   OpenapiGetContentOutput,
   TypesCommit,
   TypesPullReq,
-  TypesRepository,
+  RepoRepositoryOutput,
   TypesRuleViolations
 } from 'services/code'
 import { getConfig } from 'services/config'
 import { PullRequestSection, getErrorMessage } from './Utils'
 
 export interface GitInfoProps {
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   gitRef: string
   resourcePath: string
   resourceContent: OpenapiGetContentOutput
@@ -287,7 +287,7 @@ export function formatTriggers(triggers: EnumWebhookTrigger[]) {
 export const handleUpload = (
   blob: File,
   setMarkdownContent: (data: string) => void,
-  repoMetadata: TypesRepository | undefined,
+  repoMetadata: RepoRepositoryOutput | undefined,
   showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void,
   standalone: boolean,
   routingId?: string
@@ -305,7 +305,7 @@ export const uploadImage = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fileBlob: any,
   showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void,
-  repoMetadata: TypesRepository | undefined,
+  repoMetadata: RepoRepositoryOutput | undefined,
   standalone: boolean,
   routingId?: string
 ) => {

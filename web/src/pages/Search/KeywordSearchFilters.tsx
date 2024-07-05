@@ -5,7 +5,7 @@ import { useGet } from 'restful-react'
 
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 
 import css from './Search.module.scss'
 
@@ -44,7 +44,7 @@ const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
   const { getString } = useStrings()
   const space = useGetSpaceParam()
 
-  const { data } = useGet<TypesRepository[]>({
+  const { data } = useGet<RepoRepositoryOutput[]>({
     path: `/api/v1/spaces/${space}/+/repos`,
     debounce: 500,
     lazy: isRepoLevelSearch
@@ -52,7 +52,7 @@ const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
 
   const repositoryOptions =
     data?.map(repository => ({
-      label: String(repository.uid),
+      label: String(repository.identifier),
       value: String(repository.path)
     })) || []
 

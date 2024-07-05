@@ -111,7 +111,7 @@ export function ExecutionPageHeader({
           <Link to={routes.toCODERepositories({ space })}>{getString('repositories')}</Link>
           <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
           <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
-            {repoMetadata.uid}
+            {repoMetadata.identifier}
           </Link>
           {extraBreadcrumbLinks.map(link => (
             <Fragment key={link.url}>

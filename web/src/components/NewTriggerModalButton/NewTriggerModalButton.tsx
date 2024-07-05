@@ -82,7 +82,7 @@ export const NewTriggerModalButton: React.FC<NewTriggerModalButtonProps> = ({
       try {
         const payload: OpenapiCreateTriggerRequest = {
           actions: formData.actions,
-          uid: formData.name
+          identifier: formData.name
         }
         await createTrigger(payload)
         hideModal()

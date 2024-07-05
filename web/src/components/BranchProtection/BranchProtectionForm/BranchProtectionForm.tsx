@@ -39,7 +39,7 @@ import { BranchTargetType, SettingTypeMode, SettingsTab, branchTargetOptions } f
 import { useStrings } from 'framework/strings'
 import { REGEX_VALID_REPO_NAME, getErrorMessage, permissionProps, rulesFormInitialPayload } from 'utils/Utils'
 import type {
-  TypesRepository,
+  RepoRepositoryOutput,
   OpenapiRule,
   TypesPrincipalInfo,
   EnumMergeMethod,
@@ -58,7 +58,7 @@ import css from './BranchProtectionForm.module.scss'
 const BranchProtectionForm = (props: {
   ruleUid: string
   editMode: boolean
-  repoMetadata?: TypesRepository | undefined
+  repoMetadata?: RepoRepositoryOutput | undefined
   refetchRules: () => void
   settingSectionMode: SettingTypeMode
 }) => {
@@ -172,7 +172,7 @@ const BranchProtectionForm = (props: {
         userArrayState.length > 0 ? userArrayState : usersArray?.map(user => `${user.id} ${user.display_name}`)
 
       return {
-        name: rule?.uid,
+        name: rule?.identifier,
         desc: rule.description,
         enable: rule.state !== 'disabled',
         target: '',
@@ -188,8 +188,9 @@ const BranchProtectionForm = (props: {
         requireNewChanges: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_latest_commit,
         reqResOfChanges: (rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_no_change_request,
         requireCommentResolution: (rule.definition as ProtectionBranch)?.pullreq?.comments?.require_resolve_all, // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        requireStatusChecks: (rule.definition as any)?.pullreq?.status_checks?.require_uids?.length > 0,
-        statusChecks: (rule.definition as ProtectionBranch)?.pullreq?.status_checks?.require_uids || ([] as string[]),
+        requireStatusChecks: (rule.definition as any)?.pullreq?.status_checks?.require_identifiers?.length > 0,
+        statusChecks:
+          (rule.definition as ProtectionBranch)?.pullreq?.status_checks?.require_identifiers || ([] as string[]),
         limitMergeStrategies: !!(rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed,
         mergeCommit: isMergePresent,
         squashMerge: isSquashPresent,
@@ -210,7 +211,7 @@ const BranchProtectionForm = (props: {
     {
       resource: {
         resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.uid as string
+        resourceIdentifier: repoMetadata?.identifier as string
       },
       permissions: ['code_repo_edit']
     },
@@ -238,7 +239,7 @@ const BranchProtectionForm = (props: {
 
         const bypassList = formData?.bypassList?.map(item => parseInt(item.split(' ')[0]))
         const payload: OpenapiRule = {
-          uid: formData.name,
+          identifier: formData.name,
           type: 'branch',
           description: formData.desc,
           state: formData.enable === true ? 'active' : 'disabled',
@@ -267,7 +268,7 @@ const BranchProtectionForm = (props: {
                 delete_branch: formData.autoDelete
               },
               status_checks: {
-                require_uids: formData.statusChecks
+                require_identifiers: formData.statusChecks
               }
             },
             lifecycle: {

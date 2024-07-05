@@ -53,7 +53,7 @@ const useDeleteRepoModal = () => {
         <Layout.Vertical flex={{ justifyContent: 'center' }}>
           <Icon name="nav-project" size={32} />
           <Text font={{ size: 'large' }} color="grey900" padding={{ top: 'small', bottom: 'medium' }}>
-            {repoMetadata?.uid}
+            {repoMetadata?.identifier}
           </Text>
         </Layout.Vertical>
         <Divider />
@@ -76,7 +76,7 @@ const useDeleteRepoModal = () => {
             </Container>
             <Text padding={{ top: 'small' }} color="grey500">
               {getString('repoDelete.deleteConfirm1', {
-                repo: repoMetadata?.uid
+                repo: repoMetadata?.identifier
               })}
             </Text>
             <Button
@@ -93,11 +93,11 @@ const useDeleteRepoModal = () => {
           <>
             <Text padding={{ top: 'small', bottom: 'small' }} color="grey500">
               {getString('repoDelete.deleteConfirm2', {
-                repo: repoMetadata?.uid
+                repo: repoMetadata?.identifier
               })}
             </Text>
             <TextInput
-              placeholder={repoMetadata?.uid}
+              placeholder={repoMetadata?.identifier}
               value={deleteConfirmString}
               onInput={e => {
                 setDeleteConfirmString(e.currentTarget.value)
@@ -107,7 +107,7 @@ const useDeleteRepoModal = () => {
               variation={ButtonVariation.SECONDARY}
               intent="danger"
               loading
-              disabled={deleteConfirmString !== repoMetadata?.uid || loading}
+              disabled={deleteConfirmString !== repoMetadata?.identifier || loading}
               margin={{ top: 'small' }}
               onClick={async () => {
                 try {

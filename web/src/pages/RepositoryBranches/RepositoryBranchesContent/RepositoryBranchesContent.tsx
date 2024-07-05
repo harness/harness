@@ -19,7 +19,7 @@ import { Container } from '@harnessio/uicore'
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
-import type { RepoBranch, TypesRepository } from 'services/code'
+import type { RepoBranch, RepoRepositoryOutput } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
@@ -76,7 +76,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Partial<Pick<GitInfo
         <Container padding="xlarge" className={css.resourceContent}>
           <BranchesContentHeader
             loading={loading && searchTerm !== undefined}
-            repoMetadata={repoMetadata as TypesRepository}
+            repoMetadata={repoMetadata as RepoRepositoryOutput}
             onBranchTypeSwitched={gitRef => {
               setPage(1)
               history.push(
@@ -96,7 +96,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Partial<Pick<GitInfo
           {!!branches?.length && (
             <BranchesContent
               branches={branches}
-              repoMetadata={repoMetadata as TypesRepository}
+              repoMetadata={repoMetadata as RepoRepositoryOutput}
               searchTerm={searchTerm}
               onDeleteSuccess={refetch}
             />

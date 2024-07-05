@@ -32,7 +32,7 @@ import { useGet } from 'restful-react'
 import { defaultTo } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
-import type { TypesCommit, TypesRepository } from 'services/code'
+import type { TypesCommit, RepoRepositoryOutput } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { CODERoutes } from 'RouteDefinitions'
 import { CommitActions } from 'components/CommitActions/CommitActions'
@@ -41,7 +41,7 @@ import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLoca
 import { useDocumentTitle } from 'hooks/useDocumentTitle'
 import css from './CommitInfo.module.scss'
 
-const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string }) => {
+const CommitInfo = (props: { repoMetadata: RepoRepositoryOutput; commitRef: string }) => {
   const { repoMetadata, commitRef } = props
   const history = useHistory()
   const { getString } = useStrings()

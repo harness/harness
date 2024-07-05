@@ -24,7 +24,7 @@ import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useStrings } from 'framework/strings'
-import type { TypesPullReq, TypesRepository, EnumPullReqReviewDecision } from 'services/code'
+import type { TypesPullReq, RepoRepositoryOutput, EnumPullReqReviewDecision } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { ReviewerSelect } from 'components/ReviewerSelect/ReviewerSelect'
 import { PullReqReviewDecision, processReviewDecision } from 'pages/PullRequest/PullRequestUtils'
@@ -33,7 +33,7 @@ import css from './PullRequestSideBar.module.scss'
 
 interface PullRequestSideBarProps {
   reviewers?: Unknown
-  repoMetadata: TypesRepository
+  repoMetadata: RepoRepositoryOutput
   pullRequestMetadata: TypesPullReq
   refetchReviewers: () => void
 }

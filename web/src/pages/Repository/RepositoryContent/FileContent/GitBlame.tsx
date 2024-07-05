@@ -24,7 +24,7 @@ import ReactTimeago from 'react-timeago'
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { noop } from 'lodash-es'
-import type { GitBlamePart, TypesRepository } from 'services/code'
+import type { GitBlamePart, RepoRepositoryOutput } from 'services/code'
 import { normalizeGitRef, type GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
@@ -45,7 +45,7 @@ interface BlameBlock {
 }
 
 interface BlameBlockExtended extends BlameBlock {
-  repoMetaData?: TypesRepository
+  repoMetaData?: RepoRepositoryOutput
 }
 
 type BlameBlockRecord = Record<number, BlameBlock>
@@ -223,7 +223,7 @@ interface GitBlameRendererProps {
   source: string
   onViewUpdate?: (update: ViewUpdate) => void
   blameBlocks: BlameBlockRecord
-  repoMetadata: TypesRepository | undefined
+  repoMetadata: RepoRepositoryOutput | undefined
   standalone: boolean
 }
 

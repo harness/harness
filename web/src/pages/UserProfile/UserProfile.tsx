@@ -190,7 +190,7 @@ const UserProfile = () => {
         Cell: ({ row }: CellProps<TypesToken>) => {
           return (
             <Text font={{ variation: FontVariation.SMALL_SEMI }} lineClamp={1}>
-              {row.original.uid}
+              {row.original.identifier}
             </Text>
           )
         }
@@ -236,7 +236,7 @@ const UserProfile = () => {
         )
       },
       {
-        accessor: 'uid',
+        accessor: 'identifier',
         Header: '',
         width: '5%',
         Cell: ({ row }: CellProps<TypesToken>) => {
@@ -246,7 +246,7 @@ const UserProfile = () => {
               items={[
                 {
                   text: getString('deleteToken'),
-                  onClick: () => handleDeleteToken(row.original.uid as string)
+                  onClick: () => handleDeleteToken(row.original.identifier as string)
                 }
               ]}
             />
