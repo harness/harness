@@ -923,8 +923,10 @@ type (
 	GitspaceEventStore interface {
 		// Create creates a new record for the given gitspace event.
 		Create(ctx context.Context, gitspaceEvent *types.GitspaceEvent) error
+
 		// List returns all events for the given query filter.
 		List(ctx context.Context, filter *types.GitspaceEventFilter) ([]*types.GitspaceEvent, error)
+
 		// FindLatestByTypeAndGitspaceConfigID returns the latest gitspace event for the given config ID and event type
 		// where the entity type is gitspace config.
 		FindLatestByTypeAndGitspaceConfigID(
