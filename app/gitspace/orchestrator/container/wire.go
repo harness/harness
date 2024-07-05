@@ -12,27 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infraprovider
+package container
 
 import (
+	"github.com/harness/gitness/infraprovider"
+
 	"github.com/google/wire"
 )
 
-// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideDockerProvider,
-	ProvideFactory,
-	ProvideDockerClientFactory,
+	ProvideEmbeddedDockerOrchestrator,
+	ProvideVSCodeWebService,
+	ProvideVSCodeService,
 )
 
-func ProvideDockerProvider(dockerClientFactory *DockerClientFactory) *DockerProvider {
-	return NewDockerProvider(dockerClientFactory)
+func ProvideEmbeddedDockerOrchestrator(
+	dockerClientFactory *infraprovider.DockerClientFactory,
+	vsCodeService *VSCode,
+	vsCodeWebService *VSCodeWeb,
+	config *Config,
+) Orchestrator {
+	return NewEmbeddedDockerOrchestrator(
+		dockerClientFactory,
+		vsCodeService,
+		vsCodeWebService,
+		config,
+	)
 }
 
-func ProvideFactory(dockerProvider *DockerProvider) Factory {
-	return NewFactory(dockerProvider)
+func ProvideVSCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
+	return NewVsCodeWebService(config)
 }
 
-func ProvideDockerClientFactory(config *DockerConfig) *DockerClientFactory {
-	return NewDockerClientFactory(config)
+func ProvideVSCodeService() *VSCode {
+	return NewVsCodeService()
 }

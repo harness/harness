@@ -22,6 +22,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -31,6 +32,7 @@ import (
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/events"
 	gittypes "github.com/harness/gitness/git/types"
+	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
@@ -48,6 +50,7 @@ const (
 	schemeHTTPS    = "https"
 	gitnessHomeDir = ".gitness"
 	blobDir        = "blob"
+	gitspacesDir   = "gitspaces"
 )
 
 // LoadConfig returns the system configuration from the
@@ -370,4 +373,45 @@ func ProvideJobsConfig(config *types.Config) job.Config {
 		BackgroundJobsMaxRunning:    config.BackgroundJobs.MaxRunning,
 		BackgroundJobsRetentionTime: config.BackgroundJobs.RetentionTime,
 	}
+}
+
+// ProvideDockerConfig loads config for Docker.
+func ProvideDockerConfig(config *types.Config) *infraprovider.DockerConfig {
+	return &infraprovider.DockerConfig{
+		DockerHost:       config.Docker.Host,
+		DockerAPIVersion: config.Docker.APIVersion,
+		DockerCertPath:   config.Docker.CertPath,
+		DockerTLSVerify:  config.Docker.TLSVerify,
+	}
+}
+
+// ProvideIDEVSCodeWebConfig loads the VSCode Web IDE config from the main config.
+func ProvideIDEVSCodeWebConfig(config *types.Config) *container.VSCodeWebConfig {
+	return &container.VSCodeWebConfig{
+		Port: config.IDE.VSCodeWeb.Port,
+	}
+}
+
+// ProvideGitspaceContainerOrchestratorConfig loads the Gitspace container orchestrator config from the main config.
+func ProvideGitspaceContainerOrchestratorConfig(config *types.Config) (*container.Config, error) {
+	var bindMountSourceBasePath string
+
+	if config.Gitspace.DefaultBindMountSourceBasePath == "" {
+		var homedir string
+
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("unable to determine home directory: %w", err)
+		}
+
+		bindMountSourceBasePath = filepath.Join(homedir, gitnessHomeDir, gitspacesDir)
+	} else {
+		bindMountSourceBasePath = filepath.Join(config.Gitspace.DefaultBindMountSourceBasePath, gitspacesDir)
+	}
+
+	return &container.Config{
+		DefaultBaseImage:               config.Gitspace.DefaultBaseImage,
+		DefaultBindMountTargetPath:     config.Gitspace.DefaultBindMountTargetPath,
+		DefaultBindMountSourceBasePath: bindMountSourceBasePath,
+	}, nil
 }

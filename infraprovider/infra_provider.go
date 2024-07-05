@@ -42,7 +42,4 @@ type InfraProvider interface {
 	ProvisioningType() enum.InfraProvisioningType
 	// Exec executes a shell command in the infrastructure.
 	Exec(ctx context.Context, infra Infrastructure, cmd []string) (io.Reader, io.Reader, error)
-	// Client returns a client which can be used to connect the provided infra.
-	// The responsibility of calling the close func lies with the user.
-	Client(ctx context.Context, infra Infrastructure) (Client, error)
 }

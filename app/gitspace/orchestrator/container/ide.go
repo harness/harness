@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infraprovider
+package container
 
 import (
 	"context"
 
-	"github.com/docker/docker/client"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-var _ Client = (*DockerClient)(nil)
+type IDE interface {
+	// Setup is responsible for doing all the operations for setting up the IDE in the container e.g. installation,
+	// copying settings and configurations, ensuring SSH server is running etc.
+	Setup(ctx context.Context, containerParams *Devcontainer, gitspaceInstance *types.GitspaceInstance) error
 
-type DockerClient struct {
-	dockerClient *client.Client
-	closeFunc    func(ctx context.Context)
-}
+	// PortAndProtocol provides the port with protocol which will be used by this IDE.
+	PortAndProtocol() string
 
-func (d DockerClient) Close(ctx context.Context) {
-	d.closeFunc(ctx)
+	// Type provides the IDE type to which the service belongs.
+	Type() enum.IDEType
 }

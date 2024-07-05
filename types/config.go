@@ -386,4 +386,22 @@ type Config struct {
 		// TLSVerify enables or disables TLS verification, off by default.
 		TLSVerify string `envconfig:"GITNESS_DOCKER_TLS_VERIFY"`
 	}
+
+	IDE struct {
+		VSCodeWeb struct {
+			// PortAndProtocol is the port on which the VS Code Web will be accessible.
+			Port string `envconfig:"GITNESS_IDE_VSCODEWEB_PORT" default:"8089"`
+		}
+	}
+
+	Gitspace struct {
+		// DefaultBaseImage is used to create the Gitspace when no devcontainer.json is absent or doesn't have image.
+		DefaultBaseImage string `envconfig:"GITNESS_GITSPACE_DEFAULT_BASE_IMAGE" default:"mcr.microsoft.com/devcontainers/base:dev-ubuntu-24.04"` //nolint:lll
+		// DefaultBindMountTargetPath is the target for bind mount in the Gitspace container.
+		DefaultBindMountTargetPath string `envconfig:"GITNESS_GITSPACE_DEFAULT_BIND_MOUNT_TARGET_PATH" default:"/gitspace"` //nolint:lll
+		// DefaultBindMountTargetPath is the source for bind mount in the Gitspace container.
+		// Sub-directories will be created from this eg <DefaultBindMountSourceBasePath>/gitspace/space1/space2/config1
+		// If left blank, it will be set to $HOME/.gitness
+		DefaultBindMountSourceBasePath string `envconfig:"GITNESS_GITSPACE_DEFAULT_BIND_MOUNT_SOURCE_BASE_PATH"`
+	}
 }

@@ -18,9 +18,7 @@ type IDEType string
 
 func (IDEType) Enum() []interface{} { return toInterfaceSlice(ideTypes) }
 
-var ideTypes = ([]IDEType{
-	IDETypeVSCode, IDETypeVSCodeWeb,
-})
+var ideTypes = []IDEType{IDETypeVSCode, IDETypeVSCodeWeb}
 
 const (
 	IDETypeVSCode    IDEType = "vs_code"
