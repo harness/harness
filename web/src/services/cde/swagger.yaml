@@ -406,6 +406,44 @@ paths:
       summary: Get gitspace instance logs
       tags:
         - gitspaces
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}/token:
+    get:
+      operationId: getToken
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: org identifier.
+          in: path
+          name: orgIdentifier
+          required: true
+          schema:
+            type: string
+        - description: project identifier.
+          in: path
+          name: projectIdentifier
+          required: true
+          schema:
+            type: string
+        - description: gitspace identifier.
+          in: path
+          name: gitspaceIdentifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiGetTokenResponse'
+          description: OK
+      summary: Get gitspace token
+      tags:
+        - gitspaces
   /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders:
     get:
       operationId: listInfraProviders
@@ -892,6 +930,11 @@ components:
         updated:
           type: integer
         url:
+          type: string
+      type: object
+    OpenapiGetTokenResponse:
+      properties:
+        gitspace_token:
           type: string
       type: object
     OpenapiGitspaceActionRequest:

@@ -154,6 +154,10 @@ export interface OpenapiGetGitspaceResponse {
   url?: string
 }
 
+export interface OpenapiGetTokenResponse {
+  gitspace_token?: string
+}
+
 export interface OpenapiGitspaceActionRequest {
   action?: EnumGitspaceActionType
 }
@@ -927,6 +931,68 @@ export const useGetGitspaceInstanceLogs = ({
   useGet<OpenapiGetGitspaceLogsResponse, unknown, void, GetGitspaceInstanceLogsPathParams>(
     (paramsInPath: GetGitspaceInstanceLogsPathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/${paramsInPath.gitspaceIdentifier}/logs`,
+    {
+      base: getConfig('cde/api/v1'),
+      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, gitspaceIdentifier },
+      ...props
+    }
+  )
+
+export interface GetTokenPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+  /**
+   * gitspace identifier.
+   */
+  gitspaceIdentifier: string
+}
+
+export type GetTokenProps = Omit<GetProps<OpenapiGetTokenResponse, unknown, void, GetTokenPathParams>, 'path'> &
+  GetTokenPathParams
+
+/**
+ * Get gitspace token
+ */
+export const GetToken = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  gitspaceIdentifier,
+  ...props
+}: GetTokenProps) => (
+  <Get<OpenapiGetTokenResponse, unknown, void, GetTokenPathParams>
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces/${gitspaceIdentifier}/token`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseGetTokenProps = Omit<UseGetProps<OpenapiGetTokenResponse, unknown, void, GetTokenPathParams>, 'path'> &
+  GetTokenPathParams
+
+/**
+ * Get gitspace token
+ */
+export const useGetToken = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  gitspaceIdentifier,
+  ...props
+}: UseGetTokenProps) =>
+  useGet<OpenapiGetTokenResponse, unknown, void, GetTokenPathParams>(
+    (paramsInPath: GetTokenPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/${paramsInPath.gitspaceIdentifier}/token`,
     {
       base: getConfig('cde/api/v1'),
       pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, gitspaceIdentifier },

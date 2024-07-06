@@ -15,7 +15,7 @@
  */
 
 import { Container, Layout, TableV2, Text, useToaster } from '@harnessio/uicore'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Color } from '@harnessio/design-system'
 import type { Renderer, CellProps } from 'react-table'
 import ReactTimeago from 'react-timeago'
@@ -40,7 +40,8 @@ import {
   type EnumGitspaceStateType,
   type OpenapiGetGitspaceResponse,
   EnumIDEType,
-  useDeleteGitspace
+  useDeleteGitspace,
+  useGetToken
 } from 'services/cde'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
 import { GitspaceActionType, GitspaceStatus, IDEType } from 'cde/constants'
@@ -402,20 +403,43 @@ export const ListGitspaces = ({
   const { getString } = useStrings()
   const { routes } = useAppContext()
 
+  const { projectIdentifier, orgIdentifier, accountIdentifier } = useGetCDEAPIParams() as CDEPathParams
+
+  const [selectedRowUrl, setSelectedRowUrl] = useState<string | undefined>('')
+
+  const { data: tokenData, refetch } = useGetToken({
+    accountIdentifier,
+    projectIdentifier,
+    orgIdentifier,
+    gitspaceIdentifier: '',
+    lazy: true
+  })
+
+  useEffect(() => {
+    if (tokenData) {
+      window.open(`${selectedRowUrl}&token=${tokenData?.gitspace_token}`, '_blank')
+    }
+  }, [tokenData])
+
   return (
     <Container>
       {data && (
         <TableV2<OpenapiGetGitspaceResponse>
           className={css.table}
           onRowClick={row => {
-            const pathparamsList = row?.config?.space_path?.split('/') || []
-            const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
-
             if (row?.state === GitspaceStatus.RUNNING) {
               if (row?.config?.ide === IDEType.VSCODE) {
                 window.open(`vscode://harness-inc.gitspaces/${projectIdentifier}/${row?.config?.id}`, '_blank')
               } else {
-                window.open(row?.url, '_blank')
+                setSelectedRowUrl(row.url)
+                refetch({
+                  pathParams: {
+                    accountIdentifier,
+                    projectIdentifier,
+                    orgIdentifier,
+                    gitspaceIdentifier: row.config?.id
+                  }
+                })
               }
             } else {
               history.push(

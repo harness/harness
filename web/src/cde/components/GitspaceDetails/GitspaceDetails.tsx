@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Text, Layout, Container, Button, ButtonVariation, PageError, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import type { PopoverProps } from '@harnessio/uicore/dist/components/Popover/Popover'
@@ -29,7 +29,8 @@ import {
   type GitspaceActionPathParams,
   type OpenapiGetGitspaceResponse,
   type OpenapiGitspaceActionRequest,
-  useDeleteGitspace
+  useDeleteGitspace,
+  useGetToken
 } from 'services/cde'
 import { useStrings } from 'framework/strings'
 import { GitspaceActionType, GitspaceStatus, IDEType } from 'cde/constants'
@@ -38,6 +39,7 @@ import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde/hooks/useGetCDEAPIParams'
 import { useConfirmAct } from 'hooks/useConfirmAction'
+import { useQueryParams } from 'hooks/useQueryParams'
 import Gitspace from '../../icons/Gitspace.svg?url'
 import { StartStopButton, getStatusColor } from '../ListGitspaces/ListGitspaces'
 import { usePolling } from './usePolling'
@@ -75,6 +77,7 @@ export const GitspaceDetails = ({
   const { routes } = useAppContext()
   const space = useGetSpaceParam()
   const { showError, showSuccess } = useToaster()
+  const { openvscodeweb = '' } = useQueryParams<{ openvscodeweb?: string }>()
   const history = useHistory()
   const { projectIdentifier, orgIdentifier, accountIdentifier } = useGetCDEAPIParams() as CDEPathParams
 
@@ -86,6 +89,33 @@ export const GitspaceDetails = ({
     config?.ide === IDEType.VSCODE ? getString('cde.details.openEditor') : getString('cde.details.openBrowser')
 
   const color = getStatusColor(state as EnumGitspaceStateType)
+
+  const { data: tokenData, refetch: refetchToken } = useGetToken({
+    accountIdentifier,
+    projectIdentifier,
+    orgIdentifier,
+    gitspaceIdentifier: '',
+    lazy: true
+  })
+
+  useEffect(() => {
+    if (tokenData) {
+      window.open(`${url}&token=${tokenData?.gitspace_token}`, openvscodeweb ? '_self' : '_blank')
+    }
+  }, [tokenData])
+
+  useEffect(() => {
+    if (openvscodeweb === 'true' && url) {
+      refetchToken({
+        pathParams: {
+          accountIdentifier,
+          projectIdentifier,
+          orgIdentifier,
+          gitspaceIdentifier: gitspaceId
+        }
+      })
+    }
+  }, [url])
 
   const {
     data: eventData,
@@ -229,7 +259,14 @@ export const GitspaceDetails = ({
                 if (config?.ide === IDEType.VSCODE) {
                   window.open(`vscode://harness-inc.gitspaces/${projectIdentifier}/${gitspaceId}`, '_blank')
                 } else {
-                  window.open(url, '_blank')
+                  refetchToken({
+                    pathParams: {
+                      accountIdentifier,
+                      projectIdentifier,
+                      orgIdentifier,
+                      gitspaceIdentifier: gitspaceId
+                    }
+                  })
                 }
               }}
               variation={ButtonVariation.PRIMARY}>
