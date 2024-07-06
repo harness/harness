@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
-          go-version: '1.20'
+          go-version: '1.22'
       - name: get dependencies
         run: |
           mkdir -p ./web/dist

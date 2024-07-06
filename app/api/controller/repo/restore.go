@@ -94,8 +94,5 @@ func (c *Controller) RestoreNoAuth(
 	}
 
 	// Repos restored as private since public access data has been deleted upon deletion.
-	return &RepositoryOutput{
-		Repository: *repo,
-		IsPublic:   false,
-	}, nil
+	return GetRepoOutputWithAccess(ctx, false, repo), nil
 }

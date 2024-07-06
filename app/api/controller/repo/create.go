@@ -149,10 +149,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 	repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(repo.Path)
 
-	repoOutput := &RepositoryOutput{
-		Repository: *repo,
-		IsPublic:   in.IsPublic,
-	}
+	repoOutput := GetRepoOutputWithAccess(ctx, in.IsPublic, repo)
 
 	err = c.auditService.Log(ctx,
 		session.Principal,

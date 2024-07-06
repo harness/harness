@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/drone/go-scm/scm"
 	"github.com/drone/go-scm/scm/driver/azure"
@@ -100,7 +101,7 @@ func (r *RepositoryInfo) ToRepo(
 		Updated:       now,
 		ForkID:        0,
 		DefaultBranch: r.DefaultBranch,
-		Importing:     true,
+		State:         enum.RepoStateGitImport,
 		Path:          paths.Concatenate(spacePath, identifier),
 	}, r.IsPublic
 }

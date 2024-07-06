@@ -26,13 +26,18 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"golang.org/x/exp/slices"
 )
 
-// GetRepo fetches an active repo (not one that is currently being imported).
+var ActiveRepoStates = []enum.RepoState{enum.RepoStateActive}
+
+// GetRepo fetches an repository.
 func GetRepo(
 	ctx context.Context,
 	repoStore store.RepoStore,
 	repoRef string,
+	allowedStates []enum.RepoState,
 ) (*types.Repository, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
@@ -43,8 +48,8 @@ func GetRepo(
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
 
-	if repo.Importing {
-		return nil, usererror.BadRequest("Repository import is in progress.")
+	if len(allowedStates) > 0 && !slices.Contains(allowedStates, repo.State) {
+		return nil, usererror.BadRequest("Repository is not ready to use.")
 	}
 
 	return repo, nil
@@ -59,8 +64,9 @@ func GetRepoCheckAccess(
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
+	allowedStates []enum.RepoState,
 ) (*types.Repository, error) {
-	repo, err := GetRepo(ctx, repoStore, repoRef)
+	repo, err := GetRepo(ctx, repoStore, repoRef, allowedStates)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
@@ -85,5 +91,18 @@ func GetRepoOutput(
 	return &RepositoryOutput{
 		Repository: *repo,
 		IsPublic:   isPublic,
+		Importing:  repo.State != enum.RepoStateActive,
 	}, nil
+}
+
+func GetRepoOutputWithAccess(
+	_ context.Context,
+	isPublic bool,
+	repo *types.Repository,
+) *RepositoryOutput {
+	return &RepositoryOutput{
+		Repository: *repo,
+		IsPublic:   isPublic,
+		Importing:  repo.State != enum.RepoStateActive,
+	}
 }

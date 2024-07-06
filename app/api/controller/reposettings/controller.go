@@ -63,5 +63,6 @@ func (c *Controller) getRepoCheckAccess(
 		session,
 		repoRef,
 		reqPermission,
+		repo.ActiveRepoStates,
 	)
 }

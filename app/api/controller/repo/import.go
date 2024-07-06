@@ -114,10 +114,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)
 	}
 
-	return &RepositoryOutput{
-		Repository: *repo,
-		IsPublic:   false,
-	}, nil
+	return GetRepoOutputWithAccess(ctx, false, repo), nil
 }
 
 func (c *Controller) sanitizeImportInput(in *ImportInput) error {

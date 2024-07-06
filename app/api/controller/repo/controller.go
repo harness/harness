@@ -49,7 +49,8 @@ var errPublicRepoCreationDisabled = usererror.BadRequestf("Public repository cre
 
 type RepositoryOutput struct {
 	types.Repository
-	IsPublic bool `json:"is_public" yaml:"is_public"`
+	IsPublic  bool `json:"is_public" yaml:"is_public"`
+	Importing bool `json:"importing" yaml:"-"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.
@@ -156,6 +157,7 @@ func (c *Controller) getRepo(
 		ctx,
 		c.repoStore,
 		repoRef,
+		ActiveRepoStates,
 	)
 }
 
@@ -174,6 +176,26 @@ func (c *Controller) getRepoCheckAccess(
 		session,
 		repoRef,
 		reqPermission,
+		ActiveRepoStates,
+	)
+}
+
+// getRepoCheckAccessForGit fetches a repo
+// and checks if the current user has permission to access it.
+func (c *Controller) getRepoCheckAccessForGit(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	reqPermission enum.Permission,
+) (*types.Repository, error) {
+	return GetRepoCheckAccess(
+		ctx,
+		c.repoStore,
+		c.authorizer,
+		session,
+		repoRef,
+		reqPermission,
+		nil, // Any state allowed - we'll block in the pre-receive hook.
 	)
 }
 

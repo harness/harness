@@ -33,7 +33,7 @@ func (c *Controller) GitInfoRefs(
 	gitProtocol string,
 	w io.Writer,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	repo, err := c.getRepoCheckAccessForGit(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return fmt.Errorf("failed to verify repo access: %w", err)
 	}

@@ -47,6 +47,11 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, err
 	}
 
+	if !in.Internal && repo.State != enum.RepoStateActive && repo.State != enum.RepoStateMigrateGitPush {
+		output.Error = ptr.String("Push not allowed in the current repository state")
+		return output, nil
+	}
+
 	if err := c.limiter.RepoSize(ctx, in.RepoID); err != nil {
 		return hook.Output{}, fmt.Errorf(
 			"resource limit exceeded: %w",

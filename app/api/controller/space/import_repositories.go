@@ -21,7 +21,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/limiter"
-	repoCtrl "github.com/harness/gitness/app/api/controller/repo"
+	repoctrl "github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
@@ -39,8 +39,8 @@ type ImportRepositoriesInput struct {
 }
 
 type ImportRepositoriesOutput struct {
-	ImportingRepos []*repoCtrl.RepositoryOutput `json:"importing_repos"`
-	DuplicateRepos []*repoCtrl.RepositoryOutput `json:"duplicate_repos"` // repos which already exist in the space.
+	ImportingRepos []*repoctrl.RepositoryOutput `json:"importing_repos"`
+	DuplicateRepos []*repoctrl.RepositoryOutput `json:"duplicate_repos"` // repos which already exist in the space.
 }
 
 // getSpaceCheckAuthRepoCreation checks whether the user has permissions to create repos
@@ -165,12 +165,9 @@ func (c *Controller) ImportRepositories(
 		return ImportRepositoriesOutput{}, err
 	}
 
-	reposOut := make([]*repoCtrl.RepositoryOutput, len(repos))
+	reposOut := make([]*repoctrl.RepositoryOutput, len(repos))
 	for i, repo := range repos {
-		reposOut[i] = &repoCtrl.RepositoryOutput{
-			Repository: *repo,
-			IsPublic:   false,
-		}
+		reposOut[i] = repoctrl.GetRepoOutputWithAccess(ctx, false, repo)
 
 		err = c.auditService.Log(ctx,
 			session.Principal,
@@ -187,12 +184,9 @@ func (c *Controller) ImportRepositories(
 		}
 	}
 
-	duplicateReposOut := make([]*repoCtrl.RepositoryOutput, len(duplicateRepos))
+	duplicateReposOut := make([]*repoctrl.RepositoryOutput, len(duplicateRepos))
 	for i, dupRepo := range duplicateRepos {
-		duplicateReposOut[i] = &repoCtrl.RepositoryOutput{
-			Repository: *dupRepo,
-			IsPublic:   false,
-		}
+		duplicateReposOut[i] = repoctrl.GetRepoOutputWithAccess(ctx, false, dupRepo)
 	}
 
 	return ImportRepositoriesOutput{ImportingRepos: reposOut, DuplicateRepos: duplicateReposOut}, nil

@@ -40,7 +40,7 @@ func (c *Controller) GitServicePack(
 		permission = enum.PermissionRepoPush
 	}
 
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, permission)
+	repo, err := c.getRepoCheckAccessForGit(ctx, session, repoRef, permission)
 	if err != nil {
 		return fmt.Errorf("failed to verify repo access: %w", err)
 	}

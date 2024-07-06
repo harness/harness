@@ -58,8 +58,8 @@ func (c *Controller) Move(ctx context.Context,
 		return nil, err
 	}
 
-	if repo.Importing {
-		return nil, usererror.BadRequest("can't move a repo that is being imported")
+	if repo.State != enum.RepoStateActive {
+		return nil, usererror.BadRequest("Can't move a repo that isn't ready to use.")
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit); err != nil {

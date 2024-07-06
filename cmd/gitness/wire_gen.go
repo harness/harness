@@ -266,7 +266,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, eventsReporter, migrator, pullreqService, protectionManager, streamer, codeownersService, lockerLocker)
+	pullReq := importer.ProvidePullReqImporter(provider, gitInterface, principalStore, repoStore, pullReqStore, pullReqActivityStore, transactor)
+	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, eventsReporter, migrator, pullreqService, protectionManager, streamer, codeownersService, lockerLocker, pullReq)
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)

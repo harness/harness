@@ -1,6 +1,6 @@
 module github.com/harness/gitness
 
-go 1.20
+go 1.22
 
 replace github.com/docker/docker => github.com/docker/engine v17.12.0-ce-rc1.0.20200309214505-aa6a9891b09c+incompatible
 
@@ -12,6 +12,8 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/coreos/go-semver v0.3.0
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
+	github.com/docker/docker v23.0.3+incompatible
+	github.com/docker/go-connections v0.4.0
 	github.com/drone-runners/drone-runner-docker v1.8.4-0.20240109154718-47375e234554
 	github.com/drone/drone-go v1.7.1
 	github.com/drone/drone-yaml v1.2.3
@@ -36,7 +38,7 @@ require (
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/gotidy/ptr v1.4.0
 	github.com/guregu/null v4.0.0+incompatible
-	github.com/harness/harness-migrate v0.21.1-0.20240624210736-65c7e9fbe930
+	github.com/harness/harness-migrate v0.21.1-0.20240703163651-0641dc7290d8
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/joho/godotenv v1.3.0
@@ -88,8 +90,6 @@ require (
 	github.com/containerd/containerd v1.7.6 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v23.0.3+incompatible // indirect
-	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
 	github.com/fatih/semgroup v1.2.0 // indirect

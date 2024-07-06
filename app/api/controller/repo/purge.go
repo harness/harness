@@ -64,7 +64,7 @@ func (c *Controller) PurgeNoAuth(
 	session *auth.Session,
 	repo *types.Repository,
 ) error {
-	if repo.Importing {
+	if repo.State == enum.RepoStateGitImport {
 		log.Ctx(ctx).Info().Msg("repository is importing. cancelling the import job.")
 		err := c.importer.Cancel(ctx, repo)
 		if err != nil {

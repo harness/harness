@@ -63,10 +63,7 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 
 	// no op
 	if isPublic == in.IsPublic {
-		return &RepositoryOutput{
-			Repository: *repo,
-			IsPublic:   isPublic,
-		}, nil
+		return GetRepoOutputWithAccess(ctx, isPublic, repo), nil
 	}
 
 	if err = c.publicAccess.Set(ctx, enum.PublicResourceTypeRepo, repo.Path, in.IsPublic); err != nil {
@@ -95,8 +92,5 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update repository operation: %s", err)
 	}
 
-	return &RepositoryOutput{
-		Repository: *repo,
-		IsPublic:   in.IsPublic,
-	}, nil
+	return GetRepoOutputWithAccess(ctx, in.IsPublic, repo), nil
 }

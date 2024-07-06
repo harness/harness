@@ -32,6 +32,7 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideRepoImporter,
+	ProvidePullReqImporter,
 )
 
 func ProvideRepoImporter(
@@ -72,4 +73,26 @@ func ProvideRepoImporter(
 	}
 
 	return importer, nil
+}
+
+func ProvidePullReqImporter(
+	urlProvider url.Provider,
+	git git.Interface,
+	principalStore store.PrincipalStore,
+	repoStore store.RepoStore,
+	pullReqStore store.PullReqStore,
+	pullReqActStore store.PullReqActivityStore,
+	tx dbtx.Transactor,
+) *PullReq {
+	importer := &PullReq{
+		urlProvider:     urlProvider,
+		git:             git,
+		principalStore:  principalStore,
+		repoStore:       repoStore,
+		pullReqStore:    pullReqStore,
+		pullReqActStore: pullReqActStore,
+		tx:              tx,
+	}
+
+	return importer
 }

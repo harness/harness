@@ -238,7 +238,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", fmt.Errorf("failed to find repo by id: %w", err)
 	}
 
-	if !repo.Importing {
+	if repo.State != enum.RepoStateGitImport {
 		return "", fmt.Errorf("repository %s is not being imported", repo.Identifier)
 	}
 
@@ -302,7 +302,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 
 	err = func() error {
 		repo, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
-			if !repo.Importing {
+			if repo.State != enum.RepoStateGitImport {
 				return errors.New("repository has already finished importing")
 			}
 			repo.GitUID = gitUID
@@ -328,13 +328,13 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		log.Info().Msg("update repo in DB")
 
 		repo, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
-			if !repo.Importing {
+			if repo.State != enum.RepoStateGitImport {
 				return errors.New("repository has already finished importing")
 			}
 
 			repo.GitUID = gitUID
 			repo.DefaultBranch = defaultBranch
-			repo.Importing = false
+			repo.State = enum.RepoStateActive
 
 			return nil
 		})
@@ -385,7 +385,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (job.Progress, error) {
 	progress, err := r.scheduler.GetJobProgress(ctx, JobIDFromRepoID(repo.ID))
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
-		if repo.Importing {
+		if repo.State == enum.RepoStateGitImport {
 			// if the job is not found but repo is marked as importing, return state=failed
 			return job.FailProgress(), nil
 		}
@@ -401,7 +401,7 @@ func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (j
 }
 
 func (r *Repository) Cancel(ctx context.Context, repo *types.Repository) error {
-	if !repo.Importing {
+	if repo.State != enum.RepoStateGitImport {
 		return nil
 	}
 

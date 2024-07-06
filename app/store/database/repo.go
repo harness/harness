@@ -86,8 +86,8 @@ type repository struct {
 	NumOpenPulls   int `db:"repo_num_open_pulls"`
 	NumMergedPulls int `db:"repo_num_merged_pulls"`
 
-	Importing bool `db:"repo_importing"`
-	IsEmpty   bool `db:"repo_is_empty"`
+	State   enum.RepoState `db:"repo_state"`
+	IsEmpty bool           `db:"repo_is_empty"`
 }
 
 const (
@@ -112,7 +112,7 @@ const (
 		,repo_num_closed_pulls
 		,repo_num_open_pulls
 		,repo_num_merged_pulls
-		,repo_importing
+		,repo_state
 		,repo_is_empty`
 )
 
@@ -236,7 +236,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_num_closed_pulls
 			,repo_num_open_pulls
 			,repo_num_merged_pulls
-			,repo_importing
+			,repo_state
 			,repo_is_empty
 		) values (
 			:repo_version
@@ -258,7 +258,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_num_closed_pulls
 			,:repo_num_open_pulls
 			,:repo_num_merged_pulls
-			,:repo_importing
+			,:repo_state
 			,:repo_is_empty
 		) RETURNING repo_id`
 
@@ -301,7 +301,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_num_closed_pulls = :repo_num_closed_pulls
 			,repo_num_open_pulls = :repo_num_open_pulls
 			,repo_num_merged_pulls = :repo_num_merged_pulls
-			,repo_importing = :repo_importing
+			,repo_state = :repo_state
 			,repo_is_empty = :repo_is_empty
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
@@ -744,7 +744,7 @@ func (s *RepoStore) mapToRepo(
 		NumClosedPulls: in.NumClosedPulls,
 		NumOpenPulls:   in.NumOpenPulls,
 		NumMergedPulls: in.NumMergedPulls,
-		Importing:      in.Importing,
+		State:          in.State,
 		IsEmpty:        in.IsEmpty,
 		// Path: is set below
 	}
@@ -827,7 +827,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 		NumClosedPulls: in.NumClosedPulls,
 		NumOpenPulls:   in.NumOpenPulls,
 		NumMergedPulls: in.NumMergedPulls,
-		Importing:      in.Importing,
+		State:          in.State,
 		IsEmpty:        in.IsEmpty,
 	}
 }
@@ -857,7 +857,7 @@ func applySortFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squi
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("repo_importing desc, repo_uid " + filter.Order.String())
+		stmt = stmt.OrderBy("repo_state desc, repo_uid " + filter.Order.String())
 	case enum.RepoAttrCreated:
 		stmt = stmt.OrderBy("repo_created " + filter.Order.String())
 	case enum.RepoAttrUpdated:

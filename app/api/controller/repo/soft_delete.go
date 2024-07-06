@@ -97,7 +97,7 @@ func (c *Controller) SoftDeleteNoAuth(
 		return fmt.Errorf("failed to delete public access for repo: %w", err)
 	}
 
-	if repo.Importing {
+	if repo.State != enum.RepoStateActive {
 		return c.PurgeNoAuth(ctx, session, repo)
 	}
 
