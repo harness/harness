@@ -64,6 +64,7 @@ var WireSet = wire.NewSet(
 	ProvideInfraProviderResourceStore,
 	ProvideGitspaceConfigStore,
 	ProvideGitspaceInstanceStore,
+	ProvideGitspaceEventStore,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -282,4 +283,9 @@ func ProvidePublicAccessStore(db *sqlx.DB) store.PublicAccessStore {
 // ProvidePublicKeyStore provides a public key store.
 func ProvidePublicKeyStore(db *sqlx.DB) store.PublicKeyStore {
 	return NewPublicKeyStore(db)
+}
+
+// ProvideGitspaceEventStore provides a gitspace event store.
+func ProvideGitspaceEventStore(db *sqlx.DB) store.GitspaceEventStore {
+	return NewGitspaceEventStore(db)
 }

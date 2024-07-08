@@ -51,8 +51,6 @@ var gitspaceEventTypes = []GitspaceEventType{
 	GitspaceEventTypeAgentGitspaceStateReportUnknown,
 }
 
-var eventsMessageMap = eventsMessageMapping()
-
 const (
 	// Start action events.
 	GitspaceEventTypeGitspaceActionStart          GitspaceEventType = "gitspace_action_start"
@@ -90,44 +88,3 @@ const (
 	GitspaceEventTypeAgentGitspaceStateReportStopped GitspaceEventType = "agent_gitspace_state_report_stopped"
 	GitspaceEventTypeAgentGitspaceStateReportUnknown GitspaceEventType = "agent_gitspace_state_report_unknown"
 )
-
-func (e GitspaceEventType) GetValue() string {
-	return eventsMessageMap[e]
-}
-
-// TODO: Move eventsMessageMapping() to controller.
-
-func eventsMessageMapping() map[GitspaceEventType]string {
-	var gitspaceConfigsMap = make(map[GitspaceEventType]string)
-
-	gitspaceConfigsMap[GitspaceEventTypeGitspaceActionStart] = "Starting Gitspace..."
-	gitspaceConfigsMap[GitspaceEventTypeGitspaceActionStartCompleted] = "Started Gitspace"
-	gitspaceConfigsMap[GitspaceEventTypeGitspaceActionStartFailed] = "Starting Gitspace Failed"
-
-	gitspaceConfigsMap[GitspaceEventTypeGitspaceActionStop] = "Stopping Gitspace"
-	gitspaceConfigsMap[GitspaceEventTypeGitspaceActionStopCompleted] = "Stopped Gitspace"
-	gitspaceConfigsMap[GitspaceEventTypeGitspaceActionStopFailed] = "Stopping Gitspace Failed"
-
-	gitspaceConfigsMap[GitspaceEventTypeInfraProvisioningStart] = "Provisioning Infrastructure..."
-	gitspaceConfigsMap[GitspaceEventTypeInfraProvisioningCompleted] = "Provisioning Infrastructure Completed"
-	gitspaceConfigsMap[GitspaceEventTypeInfraProvisioningFailed] = "Provisioning Infrastructure Failed"
-
-	gitspaceConfigsMap[GitspaceEventTypeInfraUnprovisioningStart] = "Unprovisioning Infrastructure..."
-	gitspaceConfigsMap[GitspaceEventTypeInfraUnprovisioningCompleted] = "Unprovisioning Infrastructure Completed"
-	gitspaceConfigsMap[GitspaceEventTypeInfraUnprovisioningFailed] = "Unprovisioning Infrastructure Failed"
-
-	gitspaceConfigsMap[GitspaceEventTypeAgentConnectStart] = "Connecting to the gitspace agent..."
-	gitspaceConfigsMap[GitspaceEventTypeAgentConnectCompleted] = "Connected to the gitspace agent"
-	gitspaceConfigsMap[GitspaceEventTypeAgentConnectFailed] = "Failed connecting to the gitspace agent"
-
-	gitspaceConfigsMap[GitspaceEventTypeAgentGitspaceCreationStart] = "Setting up the gitspace..."
-	gitspaceConfigsMap[GitspaceEventTypeAgentGitspaceCreationCompleted] = "Successfully setup the gitspace"
-	gitspaceConfigsMap[GitspaceEventTypeAgentGitspaceCreationFailed] = "Failed to setup the gitspace"
-
-	gitspaceConfigsMap[GitspaceEventTypeAgentGitspaceStateReportRunning] = "Gitspace is running"
-	gitspaceConfigsMap[GitspaceEventTypeAgentGitspaceStateReportStopped] = "Gitspace is stopped"
-	gitspaceConfigsMap[GitspaceEventTypeAgentGitspaceStateReportUnknown] = "Gitspace is in unknown state"
-	gitspaceConfigsMap[GitspaceEventTypeAgentGitspaceStateReportError] = "Gitspace has an error"
-
-	return gitspaceConfigsMap
-}

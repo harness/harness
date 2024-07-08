@@ -31,11 +31,11 @@ const (
 
 type (
 	GitspaceEventPayload struct {
-		EntityID         int64                   `json:"entity_id,omitempty"`
-		EntityIdentifier string                  `json:"entity_identifier,omitempty"`
-		EntityType       enum.GitspaceEntityType `json:"entity_type,omitempty"`
-		EventType        enum.GitspaceEventType  `json:"event_type,omitempty"`
-		Created          int64                   `json:"created,omitempty"`
+		EntityID   int64                   `json:"entity_id,omitempty"`
+		QueryKey   string                  `json:"query_key,omitempty"`
+		EntityType enum.GitspaceEntityType `json:"entity_type,omitempty"`
+		EventType  enum.GitspaceEventType  `json:"event_type,omitempty"`
+		Created    int64                   `json:"created,omitempty"`
 	}
 )
 

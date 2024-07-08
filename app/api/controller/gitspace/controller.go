@@ -25,6 +25,7 @@ type Controller struct {
 	gitspaceConfigStore        store.GitspaceConfigStore
 	gitspaceInstanceStore      store.GitspaceInstanceStore
 	spaceStore                 store.SpaceStore
+	gitspaceEventStore         store.GitspaceEventStore
 }
 
 // TODO Stubbed Impl
@@ -34,6 +35,7 @@ func NewController(
 	gitspaceConfigStore store.GitspaceConfigStore,
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	spaceStore store.SpaceStore,
+	gitspaceEventStore store.GitspaceEventStore,
 ) *Controller {
 	return &Controller{
 		authorizer:                 authorizer,
@@ -41,5 +43,6 @@ func NewController(
 		gitspaceConfigStore:        gitspaceConfigStore,
 		gitspaceInstanceStore:      gitspaceInstanceStore,
 		spaceStore:                 spaceStore,
+		gitspaceEventStore:         gitspaceEventStore,
 	}
 }

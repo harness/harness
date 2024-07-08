@@ -47,6 +47,10 @@ type gitspacesListRequest struct {
 	paginationRequest
 }
 
+type gitspaceEventsListRequest struct {
+	paginationRequest
+}
+
 func gitspaceOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("gitspaces")
@@ -109,4 +113,15 @@ func gitspaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/gitspaces", opList)
+
+	opEventList := openapi3.Operation{}
+	opEventList.WithTags("gitspaces")
+	opEventList.WithSummary("List gitspace events")
+	opEventList.WithMapOfAnything(map[string]interface{}{"operationId": "listGitspaceEvents"})
+	_ = reflector.SetRequest(&opList, new(gitspaceEventsListRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opEventList, new([]*types.GitspaceEventResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opEventList, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opEventList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opEventList, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/gitspaces/{gitspace_identifier}/events", opEventList)
 }

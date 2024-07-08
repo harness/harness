@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -48,12 +49,12 @@ type gitspaceEventStore struct {
 }
 
 type gitspaceEvent struct {
-	ID               int64                   `db:"geven_id"`
-	Event            enum.GitspaceEventType  `db:"geven_event"`
-	Created          int64                   `db:"geven_created"`
-	EntityType       enum.GitspaceEntityType `db:"geven_entity_type"`
-	EntityIdentifier string                  `db:"geven_entity_uid"`
-	EntityID         int64                   `db:"geven_entity_id"`
+	ID         int64                   `db:"geven_id"`
+	Event      enum.GitspaceEventType  `db:"geven_event"`
+	Created    int64                   `db:"geven_created"`
+	EntityType enum.GitspaceEntityType `db:"geven_entity_type"`
+	QueryKey   string                  `db:"geven_entity_uid"` // TODO: change to query_key
+	EntityID   int64                   `db:"geven_entity_id"`
 }
 
 func NewGitspaceEventStore(db *sqlx.DB) store.GitspaceEventStore {
@@ -93,7 +94,7 @@ func (g gitspaceEventStore) Create(ctx context.Context, gitspaceEvent *types.Git
 			gitspaceEvent.Event,
 			gitspaceEvent.Created,
 			gitspaceEvent.EntityType,
-			gitspaceEvent.EntityIdentifier,
+			gitspaceEvent.QueryKey,
 			gitspaceEvent.EntityID,
 		).
 		Suffix("RETURNING " + gitspaceEventIDColumn)
@@ -111,23 +112,72 @@ func (g gitspaceEventStore) Create(ctx context.Context, gitspaceEvent *types.Git
 func (g gitspaceEventStore) List(
 	ctx context.Context,
 	filter *types.GitspaceEventFilter,
-) ([]*types.GitspaceEvent, error) {
-	stmt := database.Builder.
+) ([]*types.GitspaceEvent, int, error) {
+	queryStmt := database.Builder.
 		Select(gitspaceEventsColumnsWithID).
-		From(gitspaceEventsTable).
-		Where("geven_entity_id = $1", filter.EntityID).
-		Where("geven_entity_type = $2", filter.EntityType)
-	sql, args, err := stmt.ToSql()
+		From(gitspaceEventsTable)
+
+	queryStmt = g.setQueryFilter(queryStmt, filter)
+
+	queryStmt = g.setPaginationFilter(queryStmt, filter)
+
+	sql, args, err := queryStmt.ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert squirrel builder to sql: %w", err)
+		return nil, 0, fmt.Errorf("failed to convert squirrel builder to sql: %w", err)
 	}
+
 	db := dbtx.GetAccessor(ctx, g.db)
+
 	gitspaceEventEntities := make([]*gitspaceEvent, 0)
 	if err = db.SelectContext(ctx, gitspaceEventEntities, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspaceEvent")
+		return nil, 0, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspaceEvent")
 	}
+
+	countStmt := database.Builder.
+		Select("count(*)").
+		From(gitspaceEventsTable)
+
+	countStmt = g.setQueryFilter(countStmt, filter)
+
+	sql, args, err = countStmt.ToSql()
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to convert squirrel builder to sql: %w", err)
+	}
+
+	var count int
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return nil, 0, database.ProcessSQLErrorf(ctx, err, "Failed executing custom count query")
+	}
+
 	gitspaceEvents := g.mapGitspaceEvents(gitspaceEventEntities)
-	return gitspaceEvents, nil
+
+	return gitspaceEvents, count, nil
+}
+
+func (g gitspaceEventStore) setQueryFilter(
+	stmt squirrel.SelectBuilder,
+	filter *types.GitspaceEventFilter,
+) squirrel.SelectBuilder {
+	if filter.QueryKey != "" {
+		stmt = stmt.Where(squirrel.Eq{"geven_entity_uid": filter.QueryKey})
+	}
+	if filter.EntityType != "" {
+		stmt = stmt.Where(squirrel.Eq{"geven_entity_type": filter.EntityType})
+	}
+	if filter.EntityID != 0 {
+		stmt = stmt.Where(squirrel.Eq{"geven_entity_id": filter.EntityID})
+	}
+	return stmt
+}
+
+func (g gitspaceEventStore) setPaginationFilter(
+	stmt squirrel.SelectBuilder,
+	filter *types.GitspaceEventFilter,
+) squirrel.SelectBuilder {
+	offset := (filter.Page - 1) * filter.Size
+	stmt = stmt.Offset(uint64(offset)).Limit(uint64(filter.Size))
+	return stmt
 }
 
 func (g gitspaceEventStore) mapGitspaceEvents(gitspaceEventEntities []*gitspaceEvent) []*types.GitspaceEvent {
@@ -141,10 +191,10 @@ func (g gitspaceEventStore) mapGitspaceEvents(gitspaceEventEntities []*gitspaceE
 
 func (g gitspaceEventStore) mapGitspaceEvent(event *gitspaceEvent) *types.GitspaceEvent {
 	return &types.GitspaceEvent{
-		Event:            event.Event,
-		Created:          event.Created,
-		EntityType:       event.EntityType,
-		EntityIdentifier: event.EntityIdentifier,
-		EntityID:         event.EntityID,
+		Event:      event.Event,
+		Created:    event.Created,
+		EntityType: event.EntityType,
+		QueryKey:   event.QueryKey,
+		EntityID:   event.EntityID,
 	}
 }

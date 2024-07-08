@@ -32,6 +32,7 @@ func ProvideController(
 	configStore store.GitspaceConfigStore,
 	instanceStore store.GitspaceInstanceStore,
 	spaceStore store.SpaceStore,
+	eventStore store.GitspaceEventStore,
 ) *Controller {
-	return NewController(authorizer, resourceStore, configStore, instanceStore, spaceStore)
+	return NewController(authorizer, resourceStore, configStore, instanceStore, spaceStore, eventStore)
 }

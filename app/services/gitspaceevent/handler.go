@@ -28,11 +28,11 @@ func (s *Service) handleGitspaceEvent(
 	event *events.Event[*gitspaceevents.GitspaceEventPayload],
 ) error {
 	gitspaceEvent := &types.GitspaceEvent{
-		Event:            event.Payload.EventType,
-		EntityID:         event.Payload.EntityID,
-		EntityIdentifier: event.Payload.EntityIdentifier,
-		EntityType:       event.Payload.EntityType,
-		Created:          event.Payload.Created,
+		Event:      event.Payload.EventType,
+		EntityID:   event.Payload.EntityID,
+		QueryKey:   event.Payload.QueryKey,
+		EntityType: event.Payload.EntityType,
+		Created:    event.Payload.Created,
 	}
 
 	err := s.gitspaceEventStore.Create(ctx, gitspaceEvent)
