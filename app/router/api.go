@@ -145,16 +145,22 @@ func NewAPIHandler(
 	// configure cors middleware
 	r.Use(corsHandler(config))
 
-	// for now always attempt auth - enforced per operation.
-	r.Use(middlewareauthn.Attempt(authenticator))
-
 	r.Use(audit.Middleware())
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
-			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
-			webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl,
-			searchCtrl, gitspaceCtrl, migrateCtrl)
+		// special methods that don't require authentication
+		setupAccountWithoutAuth(r, userCtrl, sysCtrl, config)
+		setupSystem(r, config, sysCtrl)
+		setupResources(r)
+
+		r.Group(func(r chi.Router) {
+			r.Use(middlewareauthn.Attempt(authenticator))
+
+			setupRoutesV1WithAuth(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl,
+				pipelineCtrl, connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
+				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, uploadCtrl,
+				searchCtrl, gitspaceCtrl, migrateCtrl)
+		})
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -175,7 +181,7 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 }
 
 // nolint: revive // it's the app context, it shouldn't be the first argument
-func setupRoutesV1(r chi.Router,
+func setupRoutesV1WithAuth(r chi.Router,
 	appCtx context.Context,
 	config *types.Config,
 	repoCtrl *repo.Controller,
@@ -197,12 +203,12 @@ func setupRoutesV1(r chi.Router,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
-	sysCtrl *system.Controller,
 	uploadCtrl *upload.Controller,
 	searchCtrl *keywordsearch.Controller,
 	gitspaceCtrl *gitspace.Controller,
 	migrateCtrl *migrate.Controller,
 ) {
+	setupAccountWithAuth(r, userCtrl, config)
 	setupSpaces(r, appCtx, spaceCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
 		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl)
@@ -214,9 +220,6 @@ func setupRoutesV1(r chi.Router,
 	setupPrincipals(r, principalCtrl)
 	setupInternal(r, githookCtrl, git)
 	setupAdmin(r, userCtrl)
-	setupAccount(r, userCtrl, sysCtrl, config)
-	setupSystem(r, config, sysCtrl)
-	setupResources(r)
 	setupPlugins(r, pluginCtrl)
 	setupKeywordSearch(r, searchCtrl)
 	setupGitspaces(r, gitspaceCtrl)
@@ -729,10 +732,19 @@ func setupAdmin(r chi.Router, userCtrl *user.Controller) {
 	})
 }
 
-func setupAccount(r chi.Router, userCtrl *user.Controller, sysCtrl *system.Controller, config *types.Config) {
+func setupAccountWithoutAuth(
+	r chi.Router,
+	userCtrl *user.Controller,
+	sysCtrl *system.Controller,
+	config *types.Config,
+) {
 	cookieName := config.Token.CookieName
 	r.Post("/login", account.HandleLogin(userCtrl, cookieName))
 	r.Post("/register", account.HandleRegister(userCtrl, sysCtrl, cookieName))
+}
+
+func setupAccountWithAuth(r chi.Router, userCtrl *user.Controller, config *types.Config) {
+	cookieName := config.Token.CookieName
 	r.Post("/logout", account.HandleLogout(userCtrl, cookieName))
 }
 
