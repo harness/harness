@@ -20,7 +20,7 @@ require (
 	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
 	github.com/drone/go-convert v0.0.0-20230919093251-7104c3bcc635
 	github.com/drone/go-generate v0.0.0-20230920014042-6085ee5c9522
-	github.com/drone/go-scm v1.38.0
+	github.com/drone/go-scm v1.38.2
 	github.com/drone/runner-go v1.12.0
 	github.com/drone/spec v0.0.0-20230920145636-3827abdce961
 	github.com/fatih/color v1.16.0

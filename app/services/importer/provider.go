@@ -286,7 +286,7 @@ func LoadRepositoryFromProvider(
 		Space:         scmRepo.Namespace,
 		Identifier:    scmRepo.Name,
 		CloneURL:      scmRepo.Clone,
-		IsPublic:      provider.Type != ProviderTypeAzure && !scmRepo.Private,
+		IsPublic:      !scmRepo.Private,
 		DefaultBranch: scmRepo.Branch,
 	}, provider, nil
 }

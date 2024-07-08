@@ -200,8 +200,8 @@ github.com/drone/go-convert v0.0.0-20230919093251-7104c3bcc635 h1:qQX+U2iEm4X2Fc
 github.com/drone/go-convert v0.0.0-20230919093251-7104c3bcc635/go.mod h1:PyCDcuAhGF6W0VJ6qMmlM47dsSyGv/zDiMqeJxMFuGM=
 github.com/drone/go-generate v0.0.0-20230920014042-6085ee5c9522 h1:i3EfRpr/eYifK9w0ninT3xHAthkS4NTQjLX0/zDIsy4=
 github.com/drone/go-generate v0.0.0-20230920014042-6085ee5c9522/go.mod h1:eTfy716efMJgVvk/ZkRvitaXY2UuytfqDjxclFMeLdQ=
-github.com/drone/go-scm v1.38.0 h1:8pqnme6ubh9iS26zBY6AsOfncqB1JphT6qcrJLq4eV8=
-github.com/drone/go-scm v1.38.0/go.mod h1:DFIJJjhMj0TSXPz+0ni4nyZ9gtTtC40Vh/TGRugtyWw=
+github.com/drone/go-scm v1.38.2 h1:u8fEuz2vbcn5y93YPiT0nkcmQKKAxNuL08N0xuHCLTY=
+github.com/drone/go-scm v1.38.2/go.mod h1:DFIJJjhMj0TSXPz+0ni4nyZ9gtTtC40Vh/TGRugtyWw=
 github.com/drone/runner-go v1.12.0 h1:zUjDj9ylsJ4n4Mvy4znddq/Z4EBzcUXzTltpzokKtgs=
 github.com/drone/runner-go v1.12.0/go.mod h1:vu4pPPYDoeN6vdYQAY01GGGsAIW4aLganJNaa8Fx8zE=
 github.com/drone/signal v1.0.0/go.mod h1:S8t92eFT0g4WUgEc/LxG+LCuiskpMNsG0ajAMGnyZpc=
