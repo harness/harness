@@ -149,53 +149,55 @@ export const SelectRepository = ({ disabled }: { disabled?: boolean }) => {
   )
 
   return (
-    <GitspaceSelect
-      text={<RepositoryText repoURL={code_repo_url} />}
-      icon={'code'}
-      errorMessage={errors.code_repo_url}
-      formikName="code_repo_url"
-      tooltipProps={{
-        onClose: () => {
-          setError(undefined)
-          setRepoMetadata(undefined)
+    <Container width={'63%'}>
+      <GitspaceSelect
+        text={<RepositoryText repoURL={code_repo_url} />}
+        icon={'code'}
+        errorMessage={errors.code_repo_url}
+        formikName="code_repo_url"
+        tooltipProps={{
+          onClose: () => {
+            setError(undefined)
+            setRepoMetadata(undefined)
+          }
+        }}
+        disabled={disabled}
+        renderMenu={
+          <Menu>
+            <Layout.Vertical
+              className={css.formContainer}
+              flex={{ justifyContent: 'center', alignItems: 'center' }}
+              spacing="small"
+              padding={'large'}>
+              <Text font={{ variation: FontVariation.CARD_TITLE }}>{getString('cde.repository.pasteRepo')}</Text>
+              <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_450}>
+                {getString('cde.repository.pasterRepoSubtext')}
+              </Text>
+              <Container width={'100%'}>
+                <TextInput
+                  disabled={loading}
+                  rightElementProps={{ size: 16, className: css.loadingIcon }}
+                  rightElement={loading ? 'loading' : undefined}
+                  className={css.urlInput}
+                  placeholder="e.g https://github.com/microsoft/vscode-remote-try-python.git"
+                  onChange={async event => {
+                    const target = event.target as HTMLInputElement
+                    await onChange(target.value)
+                  }}
+                />
+                {error && <Text font={{ variation: FontVariation.FORM_MESSAGE_DANGER }}>{error}</Text>}
+                {Boolean(repoMetadata) && (
+                  <SelectRepositoryCard data={repoMetadata!} onChange={setFormikState} resetData={setRepoMetadata} />
+                )}
+              </Container>
+              <Text font={{ variation: FontVariation.FORM_LABEL }}>{getString('cde.or')}</Text>
+              <Text>
+                {getString('cde.noRepo')} <Link to={'#'}> {getString('cde.createRepo')} </Link>
+              </Text>
+            </Layout.Vertical>
+          </Menu>
         }
-      }}
-      disabled={disabled}
-      renderMenu={
-        <Menu>
-          <Layout.Vertical
-            className={css.formContainer}
-            flex={{ justifyContent: 'center', alignItems: 'center' }}
-            spacing="small"
-            padding={'large'}>
-            <Text font={{ variation: FontVariation.CARD_TITLE }}>{getString('cde.repository.pasteRepo')}</Text>
-            <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_450}>
-              {getString('cde.repository.pasterRepoSubtext')}
-            </Text>
-            <Container width={'100%'}>
-              <TextInput
-                disabled={loading}
-                rightElementProps={{ size: 16, className: css.loadingIcon }}
-                rightElement={loading ? 'loading' : undefined}
-                className={css.urlInput}
-                placeholder="e.g https://github.com/microsoft/vscode-remote-try-python.git"
-                onChange={async event => {
-                  const target = event.target as HTMLInputElement
-                  await onChange(target.value)
-                }}
-              />
-              {error && <Text font={{ variation: FontVariation.FORM_MESSAGE_DANGER }}>{error}</Text>}
-              {Boolean(repoMetadata) && (
-                <SelectRepositoryCard data={repoMetadata!} onChange={setFormikState} resetData={setRepoMetadata} />
-              )}
-            </Container>
-            <Text font={{ variation: FontVariation.FORM_LABEL }}>{getString('cde.or')}</Text>
-            <Text>
-              {getString('cde.noRepo')} <Link to={'#'}> {getString('cde.createRepo')} </Link>
-            </Text>
-          </Layout.Vertical>
-        </Menu>
-      }
-    />
+      />
+    </Container>
   )
 }

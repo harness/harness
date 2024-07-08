@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useState } from 'react'
-import { Layout, Text } from '@harnessio/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Map } from 'iconoir-react'
 import { useFormikContext } from 'formik'
@@ -67,51 +67,53 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
   }, [defaultValue?.label?.toLowerCase()])
 
   return (
-    <GitspaceSelect
-      disabled={disabled}
-      overridePopOverWidth
-      text={
-        <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-          <Map height={20} width={20} style={{ marginRight: '12px', alignItems: 'center' }} />
-          <Layout.Vertical>
-            <Text font={'normal'}>{getString('cde.region')}</Text>
-            <Text font={'normal'}>{metadata?.region || getString('cde.region')}</Text>
-          </Layout.Vertical>
-        </Layout.Horizontal>
-      }
-      formikName="metadata.region"
-      errorMessage={
-        (
-          errors['metadata'] as unknown as {
-            [key: string]: string
-          }
-        )?.region as unknown as string
-      }
-      renderMenu={
-        <Layout.Horizontal padding={{ top: 'small', bottom: 'small' }}>
-          <Menu>
-            {options.map(({ label }) => {
-              return (
-                <MenuItem
-                  key={label}
-                  active={label === regionState?.toLowerCase()}
-                  text={<Text font={{ size: 'normal', weight: 'bold' }}>{label.toUpperCase()}</Text>}
-                  onClick={() => {
-                    onChange('metadata.region', label.toLowerCase())
-                    onChange('infra_provider_resource_id', undefined)
-                  }}
-                  onMouseOver={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-                    setRegionState(e.currentTarget.innerText)
-                  }}
-                />
-              )
-            })}
-          </Menu>
-          <Menu>
-            <img src={getMapFromRegion(regionState?.toLowerCase() || '')} />
-          </Menu>
-        </Layout.Horizontal>
-      }
-    />
+    <Container width={'50%'}>
+      <GitspaceSelect
+        disabled={disabled}
+        overridePopOverWidth
+        text={
+          <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+            <Map height={20} width={20} style={{ marginRight: '12px', alignItems: 'center' }} />
+            <Layout.Vertical>
+              <Text font={'normal'}>{getString('cde.region')}</Text>
+              <Text font={'normal'}>{metadata?.region || getString('cde.region')}</Text>
+            </Layout.Vertical>
+          </Layout.Horizontal>
+        }
+        formikName="metadata.region"
+        errorMessage={
+          (
+            errors['metadata'] as unknown as {
+              [key: string]: string
+            }
+          )?.region as unknown as string
+        }
+        renderMenu={
+          <Layout.Horizontal padding={{ top: 'small', bottom: 'small' }}>
+            <Menu>
+              {options.map(({ label }) => {
+                return (
+                  <MenuItem
+                    key={label}
+                    active={label === regionState?.toLowerCase()}
+                    text={<Text font={{ size: 'normal', weight: 'bold' }}>{label.toUpperCase()}</Text>}
+                    onClick={() => {
+                      onChange('metadata.region', label.toLowerCase())
+                      onChange('infra_provider_resource_id', undefined)
+                    }}
+                    onMouseOver={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+                      setRegionState(e.currentTarget.innerText)
+                    }}
+                  />
+                )
+              })}
+            </Menu>
+            <Menu>
+              <img src={getMapFromRegion(regionState?.toLowerCase() || '')} />
+            </Menu>
+          </Layout.Horizontal>
+        }
+      />
+    </Container>
   )
 }

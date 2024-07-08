@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect } from 'react'
-import { Layout, Text } from '@harnessio/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Cpu } from 'iconoir-react'
 import { useFormikContext } from 'formik'
@@ -59,7 +59,7 @@ export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface)
   })
 
   useEffect(() => {
-    if (defaultValue && gitspaceId) {
+    if (defaultValue && !gitspaceId) {
       onChange('infra_provider_resource_id', defaultValue.id)
     }
   }, [defaultValue?.id, gitspaceId])
@@ -67,60 +67,62 @@ export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface)
   const data = (machineTypes?.find(item => item.id === machine) || {}) as (typeof machineTypes)[0]
 
   return (
-    <GitspaceSelect
-      overridePopOverWidth
-      text={
-        <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-          <Cpu height={20} width={20} style={{ marginRight: '12px', alignItems: 'center' }} />
-          <Layout.Vertical>
-            <Text font={'normal'}>{getString('cde.machine')}</Text>
-            <Text font={'normal'}>{data.label || getString('cde.machine')}</Text>
-          </Layout.Vertical>
-        </Layout.Horizontal>
-      }
-      errorMessage={errors.infra_provider_resource_id}
-      formikName="infra_provider_resource_id"
-      renderMenu={
-        <Layout.Horizontal padding={{ top: 'small', bottom: 'small' }}>
-          <Menu>
-            {machineTypes.length ? (
-              <>
-                {machineTypes.map(item => {
-                  return (
-                    <MenuItem
-                      key={item.id}
-                      active={values.infra_provider_resource_id === item.id}
-                      text={
-                        <Layout.Vertical>
-                          <Text font={{ size: 'normal', weight: 'bold' }}>{item.label?.toUpperCase()}</Text>
-                          <Layout.Horizontal spacing={'small'}>
-                            <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
-                              {getString('cde.cpu')}: {item.cpu?.toUpperCase()}
-                            </Text>
-                            <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
-                              {getString('cde.memory')}: {item.memory?.toUpperCase()}
-                            </Text>
-                            <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
-                              {getString('cde.disk')}: {item.disk?.toUpperCase()}
-                            </Text>
-                          </Layout.Horizontal>
-                        </Layout.Vertical>
-                      }
-                      onClick={() => {
-                        onChange('infra_provider_resource_id', item.id || '')
-                      }}
-                    />
-                  )
-                })}
-              </>
-            ) : (
-              <>
-                <Text font={{ size: 'normal', weight: 'bold' }}>{getString('cde.regionSelectWarning')}</Text>
-              </>
-            )}
-          </Menu>
-        </Layout.Horizontal>
-      }
-    />
+    <Container width={'50%'}>
+      <GitspaceSelect
+        overridePopOverWidth
+        text={
+          <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+            <Cpu height={20} width={20} style={{ marginRight: '12px', alignItems: 'center' }} />
+            <Layout.Vertical>
+              <Text font={'normal'}>{getString('cde.machine')}</Text>
+              <Text font={'normal'}>{data.label || getString('cde.machine')}</Text>
+            </Layout.Vertical>
+          </Layout.Horizontal>
+        }
+        errorMessage={errors.infra_provider_resource_id}
+        formikName="infra_provider_resource_id"
+        renderMenu={
+          <Layout.Horizontal padding={{ top: 'small', bottom: 'small' }}>
+            <Menu>
+              {machineTypes.length ? (
+                <>
+                  {machineTypes.map(item => {
+                    return (
+                      <MenuItem
+                        key={item.id}
+                        active={values.infra_provider_resource_id === item.id}
+                        text={
+                          <Layout.Vertical>
+                            <Text font={{ size: 'normal', weight: 'bold' }}>{item.label?.toUpperCase()}</Text>
+                            <Layout.Horizontal spacing={'small'}>
+                              <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
+                                {getString('cde.cpu')}: {item.cpu?.toUpperCase()}
+                              </Text>
+                              <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
+                                {getString('cde.memory')}: {item.memory?.toUpperCase()}
+                              </Text>
+                              <Text padding={'small'} className={css.tags} font={{ variation: FontVariation.SMALL }}>
+                                {getString('cde.disk')}: {item.disk?.toUpperCase()}
+                              </Text>
+                            </Layout.Horizontal>
+                          </Layout.Vertical>
+                        }
+                        onClick={() => {
+                          onChange('infra_provider_resource_id', item.id || '')
+                        }}
+                      />
+                    )
+                  })}
+                </>
+              ) : (
+                <>
+                  <Text font={{ size: 'normal', weight: 'bold' }}>{getString('cde.regionSelectWarning')}</Text>
+                </>
+              )}
+            </Menu>
+          </Layout.Horizontal>
+        }
+      />
+    </Container>
   )
 }
