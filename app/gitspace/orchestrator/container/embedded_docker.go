@@ -84,7 +84,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 	gitspaceConfig *types.GitspaceConfig,
 	devcontainerConfig *types.DevcontainerConfig,
 	infra *infraprovider.Infrastructure,
-) (map[enum.IDEType]string, error) {
+) (*StartResponse, error) {
 	containerName := getGitspaceContainerName(gitspaceConfig)
 
 	log := log.Ctx(ctx).With().Str(loggingKey, containerName).Logger()
@@ -108,7 +108,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 	}
 
 	var usedPorts map[enum.IDEType]string
-
+	var containerID string
 	switch state {
 	case containerStateRunning:
 		log.Debug().Msg("gitspace is already running")
@@ -118,11 +118,13 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 			return nil, startErr
 		}
 
-		ports, startErr := e.getUsedPorts(ctx, containerName, dockerClient, ideService)
+		id, ports, startErr := e.getContainerInfo(ctx, containerName, dockerClient, ideService)
 		if startErr != nil {
 			return nil, startErr
 		}
+
 		usedPorts = ports
+		containerID = id
 
 	case containerStateRemoved:
 		log.Debug().Msg("gitspace is not running, starting it...")
@@ -143,10 +145,12 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 		if startErr != nil {
 			return nil, fmt.Errorf("failed to start gitspace %s: %w", containerName, startErr)
 		}
-		ports, startErr := e.getUsedPorts(ctx, containerName, dockerClient, ideService)
+		id, ports, startErr := e.getContainerInfo(ctx, containerName, dockerClient, ideService)
 		if startErr != nil {
 			return nil, startErr
 		}
+
+		containerID = id
 		usedPorts = ports
 
 		// TODO: Add gitspace status reporting.
@@ -156,7 +160,11 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 		return nil, fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
 	}
 
-	return usedPorts, nil
+	return &StartResponse{
+		ContainerID:   containerID,
+		ContainerName: containerName,
+		PortsUsed:     usedPorts,
+	}, nil
 }
 
 func (e *EmbeddedDockerOrchestrator) startGitspace(
@@ -211,15 +219,15 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	return nil
 }
 
-func (e *EmbeddedDockerOrchestrator) getUsedPorts(
+func (e *EmbeddedDockerOrchestrator) getContainerInfo(
 	ctx context.Context,
 	containerName string,
 	dockerClient *client.Client,
 	ideService IDE,
-) (map[enum.IDEType]string, error) {
+) (string, map[enum.IDEType]string, error) {
 	inspectResp, err := dockerClient.ContainerInspect(ctx, containerName)
 	if err != nil {
-		return nil, fmt.Errorf("could not inspect container %s: %w", containerName, err)
+		return "", nil, fmt.Errorf("could not inspect container %s: %w", containerName, err)
 	}
 
 	usedPorts := map[enum.IDEType]string{}
@@ -232,7 +240,7 @@ func (e *EmbeddedDockerOrchestrator) getUsedPorts(
 		}
 	}
 
-	return usedPorts, nil
+	return inspectResp.ID, usedPorts, nil
 }
 
 func (e *EmbeddedDockerOrchestrator) getIDEService(gitspaceConfig *types.GitspaceConfig) (IDE, error) {

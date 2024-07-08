@@ -19,7 +19,6 @@ import (
 
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
 type Orchestrator interface {
@@ -30,7 +29,7 @@ type Orchestrator interface {
 		gitspaceConfig *types.GitspaceConfig,
 		devcontainerConfig *types.DevcontainerConfig,
 		infra *infraprovider.Infrastructure,
-	) (map[enum.IDEType]string, error)
+	) (*StartResponse, error)
 
 	// StopGitspace stops and removes the gitspace container.
 	StopGitspace(ctx context.Context, gitspaceConfig *types.GitspaceConfig, infra *infraprovider.Infrastructure) error

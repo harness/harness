@@ -46,11 +46,8 @@ func NewInfraProvisionerService(
 
 func (i infraProvisioner) Provision(
 	ctx context.Context,
-	_ int64,
 	infraProviderResource *types.InfraProviderResource,
-	gitspaceConfigIdentifier string,
-	_ int64,
-	_ string,
+	gitspaceConfig *types.GitspaceConfig,
 ) (*infraprovider.Infrastructure, error) {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
@@ -83,11 +80,11 @@ func (i infraProvisioner) Provision(
 		return nil, fmt.Errorf("invalid provisioning params %v: %w", infraProviderResource.Metadata, err)
 	}
 
-	provisionedInfra, err := infraProvider.Provision(ctx, gitspaceConfigIdentifier, allParams)
+	provisionedInfra, err := infraProvider.Provision(ctx, gitspaceConfig.Identifier, allParams)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"unable to provision infrastructure for gitspaceConfigIdentifier %v: %w",
-			gitspaceConfigIdentifier,
+			gitspaceConfig.Identifier,
 			err,
 		)
 	}
@@ -101,11 +98,8 @@ func (i infraProvisioner) Provision(
 
 func (i infraProvisioner) Stop(
 	ctx context.Context,
-	_ int64,
 	infraProviderResource *types.InfraProviderResource,
-	gitspaceConfigIdentifier string,
-	_ int64,
-	_ string,
+	gitspaceConfig *types.GitspaceConfig,
 ) (*infraprovider.Infrastructure, error) {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
@@ -144,7 +138,7 @@ func (i infraProvisioner) Stop(
 		// TODO: Fetch and check existing infraProvisioned record
 	} else {
 		provisionedInfra = infraprovider.Infrastructure{
-			ResourceKey:  gitspaceConfigIdentifier,
+			ResourceKey:  gitspaceConfig.Identifier,
 			ProviderType: infraProviderEntity.Type,
 			Parameters:   allParams,
 		}
@@ -164,11 +158,8 @@ func (i infraProvisioner) Stop(
 
 func (i infraProvisioner) Unprovision(
 	ctx context.Context,
-	_ int64,
 	infraProviderResource *types.InfraProviderResource,
-	gitspaceConfigIdentifier string,
-	_ int64,
-	_ string,
+	gitspaceConfig *types.GitspaceConfig,
 ) (*infraprovider.Infrastructure, error) {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
@@ -207,7 +198,7 @@ func (i infraProvisioner) Unprovision(
 		// TODO: Fetch and check existing infraProvisioned record
 	} else {
 		provisionedInfra = infraprovider.Infrastructure{
-			ResourceKey:  gitspaceConfigIdentifier,
+			ResourceKey:  gitspaceConfig.Identifier,
 			ProviderType: infraProviderEntity.Type,
 			Parameters:   allParams,
 		}
@@ -227,9 +218,8 @@ func (i infraProvisioner) Unprovision(
 
 func (i infraProvisioner) Find(
 	ctx context.Context,
-	_ int64,
 	infraProviderResource *types.InfraProviderResource,
-	_ int64,
+	_ *types.GitspaceConfig,
 ) (*infraprovider.Infrastructure, error) {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {

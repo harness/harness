@@ -28,35 +28,28 @@ type InfraProvisioner interface {
 	// stores the details in the db depending on the provisioning type.
 	Provision(
 		ctx context.Context,
-		spaceID int64,
 		infraProviderResource *types.InfraProviderResource,
-		gitspaceConfigIdentifier string,
-		gitspaceInstanceID int64,
-		gitspaceInstanceIdentifier string,
+		gitspaceConfig *types.GitspaceConfig,
 	) (*infraprovider.Infrastructure, error)
+
 	// Stop unprovisions those resources which can be stopped without losing the gitspace data.
 	Stop(
 		ctx context.Context,
-		spaceID int64,
 		infraProviderResource *types.InfraProviderResource,
-		gitspaceConfigIdentifier string,
-		gitspaceInstanceID int64,
-		gitspaceInstanceIdentifier string,
+		gitspaceConfig *types.GitspaceConfig,
 	) (*infraprovider.Infrastructure, error)
+
 	// Unprovision unprovisions all the resources created for the gitspace.
 	Unprovision(
 		ctx context.Context,
-		spaceID int64,
 		infraProviderResource *types.InfraProviderResource,
-		gitspaceConfigIdentifier string,
-		gitspaceInstanceID int64,
-		gitspaceInstanceIdentifier string,
+		gitspaceConfig *types.GitspaceConfig,
 	) (*infraprovider.Infrastructure, error)
+
 	// Find finds the provisioned infra resources for the gitspace instance.
 	Find(
 		ctx context.Context,
-		spaceID int64,
 		infraProviderResource *types.InfraProviderResource,
-		gitspaceInstanceID int64,
+		gitspaceConfig *types.GitspaceConfig,
 	) (*infraprovider.Infrastructure, error)
 }

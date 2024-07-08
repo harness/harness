@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -36,6 +37,8 @@ var _ SCM = (*scm)(nil)
 type SCM interface {
 	// DevcontainerConfig fetches devcontainer config file from the given repo and branch.
 	DevcontainerConfig(ctx context.Context, gitspaceConfig *types.GitspaceConfig) (*types.DevcontainerConfig, error)
+	// RepositoryName finds the repository name for the code repo URL from its provider.
+	RepositoryName(ctx context.Context, gitspaceConfig *types.GitspaceConfig) (string, error)
 }
 
 type scm struct{}
@@ -126,6 +129,22 @@ func (s scm) DevcontainerConfig(
 	}
 
 	return &config, nil
+}
+
+// TODO: Make RepositoryName compatible with all SCM providers
+
+func (s scm) RepositoryName(_ context.Context, gitspaceConfig *types.GitspaceConfig) (string, error) {
+	parsedURL, err := url.Parse(gitspaceConfig.CodeRepoURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse url: %w", err)
+	}
+	pathSegments := strings.Split(parsedURL.Path, "/")
+
+	if len(pathSegments) < 3 || pathSegments[1] == "" || pathSegments[2] == "" {
+		return "", fmt.Errorf("invalid repository name URL: %s", parsedURL.String())
+	}
+	repoName := pathSegments[2]
+	return strings.ReplaceAll(repoName, ".git", ""), nil
 }
 
 func removeComments(input []byte) []byte {
