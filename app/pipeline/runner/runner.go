@@ -71,7 +71,6 @@ func NewExecutionRunner(
 	if err != nil {
 		return nil, err
 	}
-
 	exec := runtime.NewExecer(tracer, remote, upload,
 		engine, int64(config.CI.ParallelWorkers))
 

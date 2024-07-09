@@ -27,7 +27,6 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
-	"github.com/guregu/null"
 	"github.com/rs/zerolog/log"
 )
 
@@ -116,7 +115,8 @@ func (o orchestrator) StartGitspace(
 			Path:   fmt.Sprintf("ssh-remote+%s@%s:%s/gitspace/%s", "harness", infra.Host, port, repoName),
 		}
 	}
-	gitspaceInstance.URL = null.NewString(ideURL.String(), true)
+	ideURLString := ideURL.String()
+	gitspaceInstance.URL = &ideURLString
 
 	gitspaceInstance.LastUsed = time.Now().UnixMilli()
 	gitspaceInstance.State = enum.GitspaceInstanceStateRunning
@@ -152,8 +152,6 @@ func (o orchestrator) StopGitspace(
 
 	gitspaceInstance := gitspaceConfig.GitspaceInstance
 	gitspaceInstance.State = enum.GitspaceInstanceStateDeleted
-	gitspaceInstance.URL = null.NewString("", false)
-
 	return gitspaceInstance, err
 }
 

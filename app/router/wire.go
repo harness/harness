@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/execution"
 	"github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/controller/gitspace"
+	"github.com/harness/gitness/app/api/controller/infraprovider"
 	"github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/logs"
 	"github.com/harness/gitness/app/api/controller/migrate"
@@ -116,6 +117,7 @@ func ProvideAPIHandler(
 	sysCtrl *system.Controller,
 	blobCtrl *upload.Controller,
 	searchCtrl *keywordsearch.Controller,
+	infraProviderCtrl *infraprovider.Controller,
 	gitspaceCtrl *gitspace.Controller,
 	migrateCtrl *migrate.Controller,
 ) APIHandler {
@@ -123,7 +125,7 @@ func ProvideAPIHandler(
 		authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
 		githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl,
-		migrateCtrl, gitspaceCtrl)
+		infraProviderCtrl, migrateCtrl, gitspaceCtrl)
 }
 
 func ProvideWebHandler(config *types.Config, openapi openapi.Service) WebHandler {

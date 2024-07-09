@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/execution"
 	controllergithook "github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/controller/gitspace"
+	"github.com/harness/gitness/app/api/controller/infraprovider"
 	"github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/logs"
 	"github.com/harness/gitness/app/api/controller/migrate"
@@ -48,6 +49,7 @@ import (
 	handlerexecution "github.com/harness/gitness/app/api/handler/execution"
 	handlergithook "github.com/harness/gitness/app/api/handler/githook"
 	handlergitspace "github.com/harness/gitness/app/api/handler/gitspace"
+	handlerinfraProvider "github.com/harness/gitness/app/api/handler/infraprovider"
 	handlerkeywordsearch "github.com/harness/gitness/app/api/handler/keywordsearch"
 	handlerlogs "github.com/harness/gitness/app/api/handler/logs"
 	handlerpipeline "github.com/harness/gitness/app/api/handler/pipeline"
@@ -125,6 +127,7 @@ func NewAPIHandler(
 	sysCtrl *system.Controller,
 	uploadCtrl *upload.Controller,
 	searchCtrl *keywordsearch.Controller,
+	infraProviderCtrl *infraprovider.Controller,
 	migrateCtrl *migrate.Controller,
 	gitspaceCtrl *gitspace.Controller,
 ) APIHandler {
@@ -159,7 +162,7 @@ func NewAPIHandler(
 			setupRoutesV1WithAuth(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl,
 				pipelineCtrl, connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, uploadCtrl,
-				searchCtrl, gitspaceCtrl, migrateCtrl)
+				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl)
 		})
 	})
 
@@ -206,6 +209,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	uploadCtrl *upload.Controller,
 	searchCtrl *keywordsearch.Controller,
 	gitspaceCtrl *gitspace.Controller,
+	infraProviderCtrl *infraprovider.Controller,
 	migrateCtrl *migrate.Controller,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
@@ -222,6 +226,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	setupAdmin(r, userCtrl)
 	setupPlugins(r, pluginCtrl)
 	setupKeywordSearch(r, searchCtrl)
+	setupInfraProviders(r, infraProviderCtrl)
 	setupGitspaces(r, gitspaceCtrl)
 	setupMigrate(r, migrateCtrl)
 }
@@ -707,10 +712,19 @@ func setupGitspaces(r chi.Router, gitspacesCtrl *gitspace.Controller) {
 		r.Post("/", handlergitspace.HandleCreateConfig(gitspacesCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamGitspaceIdentifier), func(r chi.Router) {
 			r.Get("/", handlergitspace.HandleFind(gitspacesCtrl))
-			r.Post("/action", handlergitspace.HandleAction(gitspacesCtrl))
+			r.Post("/actions", handlergitspace.HandleAction(gitspacesCtrl))
 			r.Delete("/", handlergitspace.HandleDeleteConfig(gitspacesCtrl))
 			r.Patch("/", handlergitspace.HandleUpdateConfig(gitspacesCtrl))
 			r.Get("/events", handlergitspace.HandleGetEvents(gitspacesCtrl))
+		})
+	})
+}
+
+func setupInfraProviders(r chi.Router, infraProviderCtrl *infraprovider.Controller) {
+	r.Route("/infraproviders", func(r chi.Router) {
+		r.Post("/", handlerinfraProvider.HandleCreateConfig(infraProviderCtrl))
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamInfraProviderConfigIdentifier), func(r chi.Router) {
+			r.Get("/", handlerinfraProvider.HandleFind(infraProviderCtrl))
 		})
 	})
 }

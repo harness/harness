@@ -16,6 +16,8 @@ package gitspace
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
+	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -32,7 +34,17 @@ func ProvideController(
 	configStore store.GitspaceConfigStore,
 	instanceStore store.GitspaceInstanceStore,
 	spaceStore store.SpaceStore,
+	reporter *gitspaceevents.Reporter,
+	orchestrator orchestrator.Orchestrator,
 	eventStore store.GitspaceEventStore,
 ) *Controller {
-	return NewController(authorizer, resourceStore, configStore, instanceStore, spaceStore, eventStore)
+	return NewController(
+		authorizer,
+		resourceStore,
+		configStore,
+		instanceStore,
+		spaceStore,
+		reporter,
+		orchestrator,
+		eventStore)
 }

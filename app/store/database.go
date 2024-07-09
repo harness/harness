@@ -572,19 +572,13 @@ type (
 		Create(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error
 
 		// Update tries to update a gitspace config in the datastore with optimistic locking.
-		Update(ctx context.Context, gitspaceConfig *types.GitspaceConfig) (*types.GitspaceConfig, error)
+		Update(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error
 
 		// List lists the gitspace configs present in a parent space ID in the datastore.
 		List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceConfig, error)
 
 		// Count the number of gitspace configs in a space matching the given filter.
 		Count(ctx context.Context, filter *types.GitspaceFilter) (int64, error)
-
-		// Delete deletes a pipeline ID from the datastore.
-		Delete(ctx context.Context, id int64) error
-
-		// DeleteByIdentifier deletes the gitspaceConfig with the given identifier for the given space.
-		DeleteByIdentifier(ctx context.Context, spaceID int64, identifier string) error
 	}
 
 	GitspaceInstanceStore interface {
@@ -602,13 +596,13 @@ type (
 		Create(ctx context.Context, gitspaceInstance *types.GitspaceInstance) error
 
 		// Update tries to update a gitspace instance in the datastore with optimistic locking.
-		Update(ctx context.Context, gitspaceInstance *types.GitspaceInstance) (*types.GitspaceInstance, error)
+		Update(ctx context.Context, gitspaceInstance *types.GitspaceInstance) error
 
 		// List lists the gitspace instance present in a parent space ID in the datastore.
 		List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceInstance, error)
 
-		// Delete deletes a gitspace instance ID from the datastore.
-		Delete(ctx context.Context, id int64) error
+		// List lists the latest gitspace instance present for the gitspace configs in the datastore.
+		FindAllLatestByGitspaceConfigID(ctx context.Context, gitspaceConfigIDs []int64) ([]*types.GitspaceInstance, error)
 	}
 
 	InfraProviderConfigStore interface {
@@ -620,9 +614,6 @@ type (
 
 		// Create creates a new infra provider config in the datastore.
 		Create(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error
-
-		// DeleteByIdentifier deletes the infra provider config with the given identifier for the given space.
-		DeleteByIdentifier(ctx context.Context, spaceID int64, identifier string) error
 	}
 
 	InfraProviderResourceStore interface {
@@ -640,9 +631,6 @@ type (
 			infraProviderConfigID int64,
 			filter types.ListQueryFilter,
 		) ([]*types.InfraProviderResource, error)
-
-		// ListAll lists all the infra provider resource in a given space.
-		ListAll(ctx context.Context, parentID int64, filter types.ListQueryFilter) ([]*types.InfraProviderResource, error)
 
 		// DeleteByIdentifier deletes the Infra provider resource with the given identifier for the given space.
 		DeleteByIdentifier(ctx context.Context, spaceID int64, identifier string) error

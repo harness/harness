@@ -16,8 +16,6 @@ package types
 
 import (
 	"github.com/harness/gitness/infraprovider/enum"
-
-	"github.com/guregu/null"
 )
 
 type InfraProviderConfig struct {
@@ -39,16 +37,16 @@ type InfraProviderResource struct {
 	Name                          string                 `json:"name"`
 	InfraProviderConfigID         int64                  `json:"-"`
 	InfraProviderConfigIdentifier string                 `json:"config_identifier"`
-	CPU                           null.String            `json:"cpu"`
-	Memory                        null.String            `json:"memory"`
-	Disk                          null.String            `json:"disk"`
-	Network                       null.String            `json:"network"`
+	CPU                           *string                `json:"cpu"`
+	Memory                        *string                `json:"memory"`
+	Disk                          *string                `json:"disk"`
+	Network                       *string                `json:"network"`
 	Region                        string                 `json:"region"`
 	Metadata                      map[string]string      `json:"metadata"`
-	GatewayHost                   null.String            `json:"gateway_host"`
-	GatewayPort                   null.String            `json:"gateway_port"`
-	TemplateID                    null.Int               `json:"-"`
-	TemplateIdentifier            null.String            `json:"template_identifier"`
+	GatewayHost                   *string                `json:"gateway_host"`
+	GatewayPort                   *string                `json:"gateway_port"`
+	TemplateID                    *int64                 `json:"-"`
+	TemplateIdentifier            *string                `json:"template_identifier"`
 	SpaceID                       int64                  `json:"-"`
 	SpacePath                     string                 `json:"space_path"`
 	InfraProviderType             enum.InfraProviderType `json:"infra_provider_type"`

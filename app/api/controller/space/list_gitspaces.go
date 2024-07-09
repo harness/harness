@@ -16,16 +16,76 @@ package space
 
 import (
 	"context"
+	"fmt"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 func (c *Controller) ListGitspaces(
-	_ context.Context,
-	_ *auth.Session,
-	_ string,
-	_ types.ListQueryFilter,
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	filter types.ListQueryFilter,
 ) ([]*types.GitspaceConfig, int64, error) {
-	return nil, 0, nil
+	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find space: %w", err)
+	}
+	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, "", enum.PermissionGitspaceView)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to authorize gitspace: %w", err)
+	}
+	gitspaceFilter := &types.GitspaceFilter{
+		QueryFilter: filter,
+		UserID:      session.Principal.UID,
+		SpaceIDs:    []int64{space.ID},
+	}
+	gitspaceConfigs, err := c.gitspaceConfigStore.List(ctx, gitspaceFilter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list gitspace configs: %w", err)
+	}
+	count, err := c.gitspaceConfigStore.Count(ctx, gitspaceFilter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count gitspaces in space: %w", err)
+	}
+	var gitspaceConfigIDs = make([]int64, 0)
+	for idx := 0; idx < len(gitspaceConfigs); idx++ {
+		if gitspaceConfigs[idx].IsDeleted {
+			continue
+		}
+		gitspaceConfigs[idx].SpacePath = space.Path // As the API is for a space, this will remain same
+		gitspaceConfigIDs = append(gitspaceConfigIDs, gitspaceConfigs[idx].ID)
+	}
+	gitspaceInstancesMap, err := c.getLatestInstanceMap(ctx, gitspaceConfigIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+	for _, gitspaceConfig := range gitspaceConfigs {
+		gitspaceConfig.GitspaceInstance = gitspaceInstancesMap[gitspaceConfig.ID]
+		if gitspaceConfig.GitspaceInstance != nil {
+			gitspaceConfig.State, _ = enum.GetGitspaceStateFromInstance(gitspaceConfig.GitspaceInstance.State)
+			gitspaceConfig.GitspaceInstance.SpacePath = gitspaceConfig.SpacePath
+		} else {
+			gitspaceConfig.State = enum.GitspaceStateUninitialized
+		}
+	}
+	return gitspaceConfigs, count, nil
+}
+
+func (c *Controller) getLatestInstanceMap(
+	ctx context.Context,
+	gitspaceConfigIDs []int64,
+) (map[int64]*types.GitspaceInstance, error) {
+	var gitspaceInstances, err = c.gitspaceInstanceStore.FindAllLatestByGitspaceConfigID(ctx, gitspaceConfigIDs)
+	if err != nil {
+		return nil, err
+	}
+	var gitspaceInstancesMap = make(map[int64]*types.GitspaceInstance)
+	for _, gitspaceEntry := range gitspaceInstances {
+		gitspaceInstancesMap[gitspaceEntry.GitSpaceConfigID] = gitspaceEntry
+	}
+	return gitspaceInstancesMap, nil
 }

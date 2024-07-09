@@ -12,47 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspace
+package infraprovider
 
 import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/harness/gitness/app/api/controller/gitspace"
+	"github.com/harness/gitness/app/api/controller/infraprovider"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/paths"
 )
 
-func HandleUpdateConfig(gitspaceCtrl *gitspace.Controller) http.HandlerFunc {
+// HandleCreateConfig returns a http.HandlerFunc that creates a new InfraProviderConfig with its resources.
+func HandleCreateConfig(infraProviderCtrl *infraprovider.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		in := new(gitspace.UpdateInput)
+		in := new(infraprovider.CreateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		gitspaceConfigRef, err := request.GetGitspaceRefFromPath(r)
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-		spaceRef, gitspaceConfigIdentifier, err := paths.DisectLeaf(gitspaceConfigRef)
+		infraProviderConfig, err := infraProviderCtrl.Create(ctx, session, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		err = gitspaceCtrl.Update(ctx, session, spaceRef, gitspaceConfigIdentifier, in)
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-
-		render.JSON(w, http.StatusOK, nil)
+		render.JSON(w, http.StatusCreated, infraProviderConfig)
 	}
 }

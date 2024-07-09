@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspace
+package infraprovider
 
 import (
 	"context"
@@ -29,40 +29,23 @@ func (c *Controller) Find(
 	session *auth.Session,
 	spaceRef string,
 	identifier string,
-) (*types.GitspaceConfig, error) {
+) (*types.InfraProviderConfig, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
-	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionGitspaceView)
+	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionInfraProviderView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, identifier)
+	infraProviderConfig, err := c.infraProviderConfigStore.FindByIdentifier(ctx, space.ID, identifier)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find gitspace config: %w", err)
+		return nil, fmt.Errorf("failed to find infraprovider config: %w", err)
 	}
-	infraProviderResource, err := c.infraProviderResourceStore.Find(
-		ctx,
-		gitspaceConfig.InfraProviderResourceID)
+	resources, err := c.infraProviderResourceStore.List(ctx, infraProviderConfig.ID, types.ListQueryFilter{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to find infra provider resource for gitspace config: %w", err)
+		return nil, fmt.Errorf("failed to find infraprovider resources: %w", err)
 	}
-	gitspaceConfig.SpacePath = space.Path
-	gitspaceConfig.InfraProviderResourceIdentifier = infraProviderResource.Identifier
-	instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
-	if err != nil {
-		return nil, err
-	}
-	if instance != nil {
-		gitspaceConfig.GitspaceInstance = instance
-		gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State)
-		if err != nil {
-			return nil, err
-		}
-		gitspaceConfig.State = gitspaceStateType
-	} else {
-		gitspaceConfig.State = enum.GitspaceStateUninitialized
-	}
-	return gitspaceConfig, nil
+	infraProviderConfig.Resources = resources
+	return infraProviderConfig, nil
 }

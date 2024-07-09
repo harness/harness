@@ -16,6 +16,8 @@ package gitspace
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
+	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/store"
 )
 
@@ -25,16 +27,19 @@ type Controller struct {
 	gitspaceConfigStore        store.GitspaceConfigStore
 	gitspaceInstanceStore      store.GitspaceInstanceStore
 	spaceStore                 store.SpaceStore
+	eventReporter              *gitspaceevents.Reporter
+	orchestrator               orchestrator.Orchestrator
 	gitspaceEventStore         store.GitspaceEventStore
 }
 
-// TODO Stubbed Impl
 func NewController(
 	authorizer authz.Authorizer,
 	infraProviderResourceStore store.InfraProviderResourceStore,
 	gitspaceConfigStore store.GitspaceConfigStore,
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	spaceStore store.SpaceStore,
+	eventReporter *gitspaceevents.Reporter,
+	orchestrator orchestrator.Orchestrator,
 	gitspaceEventStore store.GitspaceEventStore,
 ) *Controller {
 	return &Controller{
@@ -43,6 +48,8 @@ func NewController(
 		gitspaceConfigStore:        gitspaceConfigStore,
 		gitspaceInstanceStore:      gitspaceInstanceStore,
 		spaceStore:                 spaceStore,
+		eventReporter:              eventReporter,
+		orchestrator:               orchestrator,
 		gitspaceEventStore:         gitspaceEventStore,
 	}
 }

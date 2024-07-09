@@ -35,19 +35,19 @@ func HandleAction(gitspaceCtrl *gitspace.Controller) http.HandlerFunc {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
-
 		gitspaceConfigRef, err := request.GetGitspaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 		spaceRef, gitspaceConfigIdentifier, err := paths.DisectLeaf(gitspaceConfigRef)
+		in.SpaceRef = spaceRef
+		in.Identifier = gitspaceConfigIdentifier
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
-
-		gitspaceConfig, err := gitspaceCtrl.Action(ctx, session, spaceRef, gitspaceConfigIdentifier, in)
+		gitspaceConfig, err := gitspaceCtrl.Action(ctx, session, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

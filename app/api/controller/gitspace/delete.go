@@ -16,16 +16,68 @@ package gitspace
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
-// TODO Stubbed Impl
+const gitspaceConfigNotFound = "Failed to find gitspace config with identifier "
+
 func (c *Controller) Delete(
-	_ context.Context,
-	_ *auth.Session,
-	_ string,
-	_ string,
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	identifier string,
 ) error {
+	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return fmt.Errorf("failed to find space: %w", err)
+	}
+	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionGitspaceDelete)
+	if err != nil {
+		return fmt.Errorf("failed to authorize: %w", err)
+	}
+
+	gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, identifier)
+	if err != nil || gitspaceConfig == nil {
+		log.Err(err).Msg(gitspaceConfigNotFound + identifier)
+		return err
+	}
+	instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
+	gitspaceConfig.GitspaceInstance = instance
+	if err != nil {
+		return fmt.Errorf("failed to find gitspace with config : %q %w", gitspaceConfig.Identifier, err)
+	}
+	stopErr := c.stopRunningGitspace(ctx, instance, gitspaceConfig)
+	if stopErr != nil {
+		return stopErr
+	}
+	gitspaceConfig.IsDeleted = true
+	if err = c.gitspaceConfigStore.Update(ctx, gitspaceConfig); err != nil {
+		log.Err(err).Msg("Failed to delete gitspace config with ID " + strconv.FormatInt(gitspaceConfig.ID, 10))
+		return err
+	}
+	return nil
+}
+
+func (c *Controller) stopRunningGitspace(
+	ctx context.Context,
+	instance *types.GitspaceInstance,
+	config *types.GitspaceConfig) error {
+	if instance != nil &&
+		(instance.State == enum.GitspaceInstanceStateRunning ||
+			instance.State == enum.GitspaceInstanceStateUnknown) {
+		if instanceUpdated, err := c.orchestrator.DeleteGitspace(ctx, config); err != nil {
+			return err
+		} else if err = c.gitspaceInstanceStore.Update(ctx, instanceUpdated); err != nil {
+			return err
+		}
+	}
 	return nil
 }

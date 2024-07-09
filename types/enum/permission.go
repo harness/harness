@@ -28,6 +28,7 @@ const (
 	ResourceTypeConnector      ResourceType = "CONNECTOR"
 	ResourceTypeTemplate       ResourceType = "TEMPLATE"
 	ResourceTypeGitspace       ResourceType = "GITSPACE"
+	ResourceTypeInfraProvider  ResourceType = "INFRAPROVIDER"
 )
 
 // Permission represents the different types of permissions a principal can have.
@@ -131,4 +132,14 @@ const (
 	PermissionGitspaceEdit   Permission = "gitspace_edit"
 	PermissionGitspaceDelete Permission = "gitspace_delete"
 	PermissionGitspaceAccess Permission = "gitspace_access"
+)
+
+const (
+	/*
+		----- INFRAPROVIDER -----
+	*/
+	PermissionInfraProviderView   Permission = "infraprovider_view"
+	PermissionInfraProviderEdit   Permission = "infraprovider_edit"
+	PermissionInfraProviderDelete Permission = "infraprovider_delete"
+	PermissionInfraProviderAccess Permission = "infraprovider_access"
 )

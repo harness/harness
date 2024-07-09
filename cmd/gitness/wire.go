@@ -14,7 +14,8 @@ import (
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
 	githookCtrl "github.com/harness/gitness/app/api/controller/githook"
-	gitspacecontroller "github.com/harness/gitness/app/api/controller/gitspace"
+	gitspaceCtrl "github.com/harness/gitness/app/api/controller/gitspace"
+	infraproviderCtrl "github.com/harness/gitness/app/api/controller/infraprovider"
 	controllerkeywordsearch "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	controllerlogs "github.com/harness/gitness/app/api/controller/logs"
@@ -40,8 +41,13 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
 	gitevents "github.com/harness/gitness/app/events/git"
+	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	repoevents "github.com/harness/gitness/app/events/repo"
+	infrastructure "github.com/harness/gitness/app/gitspace/infrastructure"
+	"github.com/harness/gitness/app/gitspace/orchestrator"
+	containerorchestrator "github.com/harness/gitness/app/gitspace/orchestrator/container"
+	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/converter"
@@ -87,6 +93,7 @@ import (
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/storage"
+	infraproviderpkg "github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
@@ -132,6 +139,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		system.WireSet,
 		authn.WireSet,
 		authz.WireSet,
+		gitspaceevents.WireSet,
 		gitevents.WireSet,
 		pullreqevents.WireSet,
 		repoevents.WireSet,
@@ -200,7 +208,16 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		ssh.WireSet,
 		publickey.WireSet,
 		migrate.WireSet,
-		gitspacecontroller.WireSet,
+		gitspaceCtrl.WireSet,
+		infraproviderCtrl.WireSet,
+		infraproviderpkg.WireSet,
+		scm.WireSet,
+		orchestrator.WireSet,
+		containerorchestrator.WireSet,
+		infrastructure.WireSet,
+		cliserver.ProvideIDEVSCodeWebConfig,
+		cliserver.ProvideDockerConfig,
+		cliserver.ProvideGitspaceContainerOrchestratorConfig,
 	)
 	return &cliserver.System{}, nil
 }

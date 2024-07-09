@@ -47,7 +47,7 @@ func (v *VSCodeWeb) Setup(
 ) error {
 	installScript, err := GenerateScriptFromTemplate(
 		templateInstallVSCodeWeb, &InstallVSCodeWebPayload{
-			Password: gitspaceInstance.AccessKey.String,
+			Password: *gitspaceInstance.AccessKey,
 			Port:     v.config.Port,
 		})
 	if err != nil {

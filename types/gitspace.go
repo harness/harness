@@ -16,8 +16,6 @@ package types
 
 import (
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/guregu/null"
 )
 
 type GitspaceConfig struct {
@@ -31,14 +29,14 @@ type GitspaceConfig struct {
 	CodeRepoURL                     string                    `json:"code_repo_url"`
 	CodeRepoType                    enum.GitspaceCodeRepoType `json:"code_repo_type"`
 	Branch                          string                    `json:"branch"`
-	DevcontainerPath                string                    `json:"devcontainer_path,omitempty"`
+	DevcontainerPath                *string                   `json:"devcontainer_path,omitempty"`
 	UserID                          string                    `json:"user_id"`
 	SpaceID                         int64                     `json:"-"`
 	CodeAuthType                    string                    `json:"-"`
 	CodeAuthID                      string                    `json:"-"`
 	IsDeleted                       bool                      `json:"-"`
 	CodeRepoIsPrivate               bool                      `json:"-"`
-	GitspaceInstance                *GitspaceInstance         `json:"instance,omitempty"`
+	GitspaceInstance                *GitspaceInstance         `json:"instance"`
 	SpacePath                       string                    `json:"space_path"`
 	Created                         int64                     `json:"created"`
 	Updated                         int64                     `json:"updated"`
@@ -48,16 +46,16 @@ type GitspaceInstance struct {
 	ID               int64                          `json:"-"`
 	GitSpaceConfigID int64                          `json:"-"`
 	Identifier       string                         `json:"identifier"`
-	URL              null.String                    `json:"url,omitempty"`
+	URL              *string                        `json:"url,omitempty"`
 	State            enum.GitspaceInstanceStateType `json:"state"`
 	UserID           string                         `json:"-"`
-	ResourceUsage    null.String                    `json:"resource_usage"`
+	ResourceUsage    *string                        `json:"resource_usage"`
 	LastUsed         int64                          `json:"last_used,omitempty"`
 	TotalTimeUsed    int64                          `json:"total_time_used"`
-	TrackedChanges   string                         `json:"tracked_changes"`
-	AccessKey        null.String                    `json:"access_key,omitempty"`
+	TrackedChanges   *string                        `json:"tracked_changes"`
+	AccessKey        *string                        `json:"access_key,omitempty"`
 	AccessType       enum.GitspaceAccessType        `json:"access_type"`
-	MachineUser      null.String                    `json:"machine_user,omitempty"`
+	MachineUser      *string                        `json:"machine_user,omitempty"`
 	SpacePath        string                         `json:"space_path"`
 	SpaceID          int64                          `json:"-"`
 	Created          int64                          `json:"created"`

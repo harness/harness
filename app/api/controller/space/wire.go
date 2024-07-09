@@ -44,11 +44,13 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 	spaceStore store.SpaceStore, repoStore store.RepoStore, principalStore store.PrincipalStore,
 	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository,
 	exporter *exporter.Repository, limiter limiter.ResourceLimiter, publicAccess publicaccess.Service,
-	auditService audit.Service, gitspaceStore store.GitspaceConfigStore,
+	auditService audit.Service, gitspaceConfigStore store.GitspaceConfigStore, instanceStore store.GitspaceInstanceStore,
 ) *Controller {
 	return NewController(config, tx, urlProvider, sseStreamer, identifierCheck, authorizer,
 		spacePathStore, pipelineStore, secretStore,
 		connectorStore, templateStore,
 		spaceStore, repoStore, principalStore,
-		repoCtrl, membershipStore, importer, exporter, limiter, publicAccess, auditService, gitspaceStore)
+		repoCtrl, membershipStore, importer,
+		exporter, limiter, publicAccess,
+		auditService, gitspaceConfigStore, instanceStore)
 }

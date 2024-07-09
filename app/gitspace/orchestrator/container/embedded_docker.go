@@ -266,7 +266,7 @@ func (e *EmbeddedDockerOrchestrator) setupSSHServer(
 	sshServerScript, err := GenerateScriptFromTemplate(
 		templateSetupSSHServer, &SetupSSHServerPayload{
 			Username:         "harness",
-			Password:         gitspaceInstance.AccessKey.String,
+			Password:         *gitspaceInstance.AccessKey,
 			WorkingDirectory: devcontainer.WorkingDir,
 		})
 	if err != nil {

@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/execution"
 	"github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/controller/gitspace"
+	infraprovider2 "github.com/harness/gitness/app/api/controller/infraprovider"
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	logs2 "github.com/harness/gitness/app/api/controller/logs"
@@ -39,8 +40,13 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
 	events4 "github.com/harness/gitness/app/events/git"
+	events5 "github.com/harness/gitness/app/events/gitspace"
 	events3 "github.com/harness/gitness/app/events/pullreq"
 	events2 "github.com/harness/gitness/app/events/repo"
+	"github.com/harness/gitness/app/gitspace/infrastructure"
+	"github.com/harness/gitness/app/gitspace/orchestrator"
+	"github.com/harness/gitness/app/gitspace/orchestrator/container"
+	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/converter"
@@ -86,6 +92,7 @@ import (
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/storage"
+	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
@@ -234,7 +241,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	gitspaceConfigStore := database.ProvideGitspaceConfigStore(db)
-	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceConfigStore)
+	gitspaceInstanceStore := database.ProvideGitspaceInstanceStore(db)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceConfigStore, gitspaceInstanceStore)
 	pipelineController := pipeline.ProvideController(repoStore, triggerStore, authorizer, pipelineStore)
 	secretController := secret.ProvideController(encrypter, secretStore, authorizer, spaceStore)
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pipelineStore, repoStore)
@@ -310,11 +318,31 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, searcher, repoController, spaceController)
 	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db)
-	gitspaceInstanceStore := database.ProvideGitspaceInstanceStore(db)
+	infraProviderConfigStore := database.ProvideInfraProviderConfigStore(db)
+	dockerConfig := server.ProvideDockerConfig(config)
+	dockerClientFactory := infraprovider.ProvideDockerClientFactory(dockerConfig)
+	dockerProvider := infraprovider.ProvideDockerProvider(dockerClientFactory)
+	factory := infraprovider.ProvideFactory(dockerProvider)
+	infraproviderController := infraprovider2.ProvideController(authorizer, infraProviderResourceStore, infraProviderConfigStore, spaceStore, factory)
+	reporter3, err := events5.ProvideReporter(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	scmSCM := scm.ProvideSCM()
+	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory)
+	vsCode := container.ProvideVSCodeService()
+	vsCodeWebConfig := server.ProvideIDEVSCodeWebConfig(config)
+	vsCodeWeb := container.ProvideVSCodeWebService(vsCodeWebConfig)
+	containerConfig, err := server.ProvideGitspaceContainerOrchestratorConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, vsCode, vsCodeWeb, containerConfig)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
-	gitspaceController := gitspace.ProvideController(authorizer, infraProviderResourceStore, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, gitspaceEventStore)
+	gitspaceController := gitspace.ProvideController(authorizer, infraProviderResourceStore, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore)
 	migrateController := migrate.ProvideController(authorizer, principalStore)
-	apiHandler := router.ProvideAPIHandler(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, gitspaceController, migrateController)
+	apiHandler := router.ProvideAPIHandler(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController)
 	gitHandler := router.ProvideGitHandler(provider, authenticator, repoController)
 	openapiService := openapi.ProvideOpenAPIService()
 	webHandler := router.ProvideWebHandler(config, openapiService)
