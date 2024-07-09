@@ -9,7 +9,6 @@ package main
 
 import (
 	"context"
-	"github.com/harness/gitness/app/services/gitspaceevent"
 
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
@@ -46,6 +45,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	infrastructure "github.com/harness/gitness/app/gitspace/infrastructure"
+	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	containerorchestrator "github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/scm"
@@ -65,6 +65,7 @@ import (
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/exporter"
+	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	locker "github.com/harness/gitness/app/services/locker"
@@ -221,6 +222,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideDockerConfig,
 		cliserver.ProvideGitspaceContainerOrchestratorConfig,
 		cliserver.ProvideGitspaceEventConfig,
+		logutil.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

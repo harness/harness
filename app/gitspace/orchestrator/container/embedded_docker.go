@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -59,6 +60,7 @@ type EmbeddedDockerOrchestrator struct {
 	vsCodeService       *VSCode
 	vsCodeWebService    *VSCodeWeb
 	config              *Config
+	statefulLogger      *logutil.StatefulLogger
 }
 
 func NewEmbeddedDockerOrchestrator(
@@ -66,12 +68,14 @@ func NewEmbeddedDockerOrchestrator(
 	vsCodeService *VSCode,
 	vsCodeWebService *VSCodeWeb,
 	config *Config,
+	statefulLogger *logutil.StatefulLogger,
 ) Orchestrator {
 	return &EmbeddedDockerOrchestrator{
 		dockerClientFactory: dockerClientFactory,
 		vsCodeService:       vsCodeService,
 		vsCodeWebService:    vsCodeWebService,
 		config:              config,
+		statefulLogger:      statefulLogger,
 	}
 }
 
@@ -135,6 +139,18 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 			return nil, startErr
 		}
 
+		logStreamInstance, loggerErr := e.statefulLogger.CreateLogStream(ctx, gitspaceConfig.ID)
+		if loggerErr != nil {
+			return nil, fmt.Errorf("error getting log stream for gitspace ID %d: %w", gitspaceConfig.ID, loggerErr)
+		}
+
+		defer func() {
+			loggerErr = logStreamInstance.Flush()
+			if loggerErr != nil {
+				log.Warn().Err(loggerErr).Msgf("failed to flush log stream for gitspace ID %d", gitspaceConfig.ID)
+			}
+		}()
+
 		startErr = e.startGitspace(
 			ctx,
 			gitspaceConfig,
@@ -142,6 +158,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 			containerName,
 			dockerClient,
 			ideService,
+			logStreamInstance,
 		)
 		if startErr != nil {
 			return nil, fmt.Errorf("failed to start gitspace %s: %w", containerName, startErr)
@@ -175,18 +192,19 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	containerName string,
 	dockerClient *client.Client,
 	ideService IDE,
+	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	var imageName = devcontainerConfig.Image
 	if imageName == "" {
 		imageName = e.config.DefaultBaseImage
 	}
 
-	err := e.pullImage(ctx, imageName, dockerClient)
+	err := e.pullImage(ctx, imageName, dockerClient, logStreamInstance)
 	if err != nil {
 		return err
 	}
 
-	err = e.createContainer(ctx, gitspaceConfig, dockerClient, imageName, containerName, ideService)
+	err = e.createContainer(ctx, gitspaceConfig, dockerClient, imageName, containerName, ideService, logStreamInstance)
 	if err != nil {
 		return err
 	}
@@ -197,24 +215,57 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		WorkingDir:    e.config.DefaultBindMountTargetPath,
 	}
 
-	err = e.executePostCreateCommand(ctx, devcontainerConfig, devcontainer)
+	err = e.executePostCreateCommand(ctx, devcontainerConfig, devcontainer, logStreamInstance)
 	if err != nil {
 		return err
 	}
 
-	err = e.cloneCode(ctx, gitspaceConfig, devcontainerConfig, devcontainer)
+	err = e.cloneCode(ctx, gitspaceConfig, devcontainerConfig, devcontainer, logStreamInstance)
 	if err != nil {
 		return err
 	}
 
-	err = e.setupSSHServer(ctx, gitspaceConfig.GitspaceInstance, devcontainer)
+	err = e.setupSSHServer(ctx, gitspaceConfig.GitspaceInstance, devcontainer, logStreamInstance)
 	if err != nil {
 		return err
 	}
 
-	err = ideService.Setup(ctx, devcontainer, gitspaceConfig.GitspaceInstance)
+	err = e.setupIDE(ctx, gitspaceConfig, devcontainer, ideService, logStreamInstance)
 	if err != nil {
-		return fmt.Errorf("failed to setup IDE for gitspace %s: %w", containerName, err)
+		return err
+	}
+
+	return nil
+}
+
+func (e *EmbeddedDockerOrchestrator) setupIDE(
+	ctx context.Context,
+	gitspaceConfig *types.GitspaceConfig,
+	devcontainer *Devcontainer,
+	ideService IDE,
+	logStreamInstance *logutil.LogStreamInstance,
+) error {
+	loggingErr := logStreamInstance.Write("Setting up IDE inside container: " + string(gitspaceConfig.IDE))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	err := ideService.Setup(ctx, devcontainer, gitspaceConfig.GitspaceInstance)
+	if err != nil {
+		loggingErr = logStreamInstance.Write("Error while setting up IDE inside container: " + err.Error())
+
+		err = fmt.Errorf("failed to setup IDE for gitspace %s: %w", devcontainer.ContainerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully set up IDE inside container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	return nil
@@ -263,6 +314,7 @@ func (e *EmbeddedDockerOrchestrator) setupSSHServer(
 	ctx context.Context,
 	gitspaceInstance *types.GitspaceInstance,
 	devcontainer *Devcontainer,
+	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	sshServerScript, err := GenerateScriptFromTemplate(
 		templateSetupSSHServer, &SetupSSHServerPayload{
@@ -275,9 +327,32 @@ func (e *EmbeddedDockerOrchestrator) setupSSHServer(
 			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
 	}
 
-	_, err = devcontainer.ExecuteCommand(ctx, sshServerScript, false)
+	loggingErr := logStreamInstance.Write("Installing ssh-server inside container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	output, err := devcontainer.ExecuteCommand(ctx, sshServerScript, false)
 	if err != nil {
-		return fmt.Errorf("failed to setup SSH server: %w", err)
+		loggingErr = logStreamInstance.Write("Error while installing ssh-server inside container: " + err.Error())
+
+		err = fmt.Errorf("failed to setup SSH server: %w", err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("SSH server installation output...\n" + string(*output))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully installed ssh-server inside container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	return nil
@@ -288,6 +363,7 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 	gitspaceConfig *types.GitspaceConfig,
 	devcontainerConfig *types.DevcontainerConfig,
 	devcontainer *Devcontainer,
+	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	var devcontainerPresent = "true"
 	if devcontainerConfig.Image == "" {
@@ -304,9 +380,32 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 		return fmt.Errorf("failed to generate scipt to clone git from template %s: %w", templateCloneGit, err)
 	}
 
-	_, err = devcontainer.ExecuteCommand(ctx, gitCloneScript, false)
+	loggingErr := logStreamInstance.Write("Cloning git repo inside container: " + gitspaceConfig.CodeRepoURL)
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	output, err := devcontainer.ExecuteCommand(ctx, gitCloneScript, false)
 	if err != nil {
-		return fmt.Errorf("failed to clone code: %w", err)
+		loggingErr = logStreamInstance.Write("Error while cloning git repo inside container: " + err.Error())
+
+		err = fmt.Errorf("failed to clone code: %w", err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("Cloning git repo output...\n" + string(*output))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully cloned git repo inside container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	return nil
@@ -316,14 +415,43 @@ func (e *EmbeddedDockerOrchestrator) executePostCreateCommand(
 	ctx context.Context,
 	devcontainerConfig *types.DevcontainerConfig,
 	devcontainer *Devcontainer,
+	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	if devcontainerConfig.PostCreateCommand == "" {
+		loggingErr := logStreamInstance.Write("No post-create command provided, skipping execution")
+		if loggingErr != nil {
+			return fmt.Errorf("logging error: %w", loggingErr)
+		}
+
 		return nil
 	}
 
-	_, err := devcontainer.ExecuteCommand(ctx, devcontainerConfig.PostCreateCommand, false)
+	loggingErr := logStreamInstance.Write("Executing postCreate command: " + devcontainerConfig.PostCreateCommand)
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	output, err := devcontainer.ExecuteCommand(ctx, devcontainerConfig.PostCreateCommand, false)
 	if err != nil {
-		return fmt.Errorf("post create command failed %q: %w", devcontainerConfig.PostCreateCommand, err)
+		loggingErr = logStreamInstance.Write("Error while executing postCreate command")
+
+		err = fmt.Errorf("failed to execute postCreate command %q: %w", devcontainerConfig.PostCreateCommand, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("Post create command execution output...\n" + string(*output))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully executed postCreate command")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	return nil
@@ -336,6 +464,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 	imageName string,
 	containerName string,
 	ideService IDE,
+	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	portUsedByIDE := ideService.PortAndProtocol()
 
@@ -372,10 +501,34 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 			gitspaceConfig.SpacePath,
 			gitspaceConfig.Identifier,
 		)
+
+	loggingErr := logStreamInstance.Write("Creating bind mount source directory: " + bindMountSourcePath)
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
 	err := os.MkdirAll(bindMountSourcePath, os.ModePerm)
 	if err != nil {
-		return fmt.Errorf(
+		loggingErr = logStreamInstance.Write("Error while creating bind mount source directory: " + err.Error())
+
+		err = fmt.Errorf(
 			"could not create bind mount source path %s: %w", bindMountSourcePath, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully created bind mount source directory")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	loggingErr = logStreamInstance.Write("Creating container: " + containerName)
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	resp2, err := dockerClient.ContainerCreate(ctx, &container.Config{
@@ -394,12 +547,43 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 		},
 	}, nil, containerName)
 	if err != nil {
-		return fmt.Errorf("could not create container %s: %w", containerName, err)
+		loggingErr = logStreamInstance.Write("Error while creating container: " + err.Error())
+
+		err = fmt.Errorf("could not create container %s: %w", containerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully created container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	loggingErr = logStreamInstance.Write("Starting container: " + containerName)
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	err = dockerClient.ContainerStart(ctx, resp2.ID, dockerTypes.ContainerStartOptions{})
 	if err != nil {
-		return fmt.Errorf("could not start container %s: %w", containerName, err)
+		loggingErr = logStreamInstance.Write("Error while creating container: " + err.Error())
+
+		err = fmt.Errorf("could not start container %s: %w", containerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully started container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	return nil
@@ -409,20 +593,59 @@ func (e *EmbeddedDockerOrchestrator) pullImage(
 	ctx context.Context,
 	imageName string,
 	dockerClient *client.Client,
+	logStreamInstance *logutil.LogStreamInstance,
 ) error {
-	resp, err := dockerClient.ImagePull(ctx, imageName, dockerTypes.ImagePullOptions{})
+	loggingErr := logStreamInstance.Write("Pulling image: " + imageName)
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	pullResponse, err := dockerClient.ImagePull(ctx, imageName, dockerTypes.ImagePullOptions{})
+
 	defer func() {
-		closingErr := resp.Close()
+		closingErr := pullResponse.Close()
 		if closingErr != nil {
 			log.Warn().Err(closingErr).Msg("failed to close image pull response")
 		}
 	}()
+
 	if err != nil {
-		return fmt.Errorf("could not pull image %s: %w", imageName, err)
+		loggingErr = logStreamInstance.Write("Error while pulling image: " + err.Error())
+
+		err = fmt.Errorf("could not pull image %s: %w", imageName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
 	}
-	// TODO: This is required to ensure the execution waits till the image is downloaded.
-	// Will be removed once logs PR is merged.
-	io.Copy(io.Discard, resp) // nolint:errcheck
+
+	// NOTE: It is necessary to read all the data in pullResponse to ensure the image has been completely downloaded.
+	// If the execution proceeds before the response is completed, the container will not find the required image.
+	output, err := io.ReadAll(pullResponse)
+	if err != nil {
+		loggingErr = logStreamInstance.Write("Error while parsing image pull response: " + err.Error())
+
+		err = fmt.Errorf("error while parsing pull image output %s: %w", imageName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write(string(output))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully pulled image")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
 	return nil
 }
 
@@ -461,7 +684,20 @@ func (e EmbeddedDockerOrchestrator) StopGitspace(
 	}
 
 	log.Debug().Msg("stopping gitspace")
-	err = e.stopGitspace(ctx, containerName, dockerClient)
+
+	logStreamInstance, loggerErr := e.statefulLogger.CreateLogStream(ctx, gitspaceConfig.ID)
+	if loggerErr != nil {
+		return fmt.Errorf("error getting log stream for gitspace ID %d: %w", gitspaceConfig.ID, loggerErr)
+	}
+
+	defer func() {
+		loggerErr = logStreamInstance.Flush()
+		if loggerErr != nil {
+			log.Warn().Err(loggerErr).Msgf("failed to flush log stream for gitspace ID %d", gitspaceConfig.ID)
+		}
+	}()
+
+	err = e.stopGitspace(ctx, containerName, dockerClient, logStreamInstance)
 	if err != nil {
 		return fmt.Errorf("failed to stop gitspace %s: %w", containerName, err)
 	}
@@ -475,15 +711,52 @@ func (e EmbeddedDockerOrchestrator) stopGitspace(
 	ctx context.Context,
 	containerName string,
 	dockerClient *client.Client,
+	logStreamInstance *logutil.LogStreamInstance,
 ) error {
+	loggingErr := logStreamInstance.Write("Stopping container: " + containerName)
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
 	err := dockerClient.ContainerStop(ctx, containerName, nil)
 	if err != nil {
-		return fmt.Errorf("could not stop container %s: %w", containerName, err)
+		loggingErr = logStreamInstance.Write("Error while stopping container: " + err.Error())
+
+		err = fmt.Errorf("could not stop container %s: %w", containerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully stopped container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	loggingErr = logStreamInstance.Write("Removing container: " + containerName)
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	err = dockerClient.ContainerRemove(ctx, containerName, dockerTypes.ContainerRemoveOptions{Force: true})
 	if err != nil {
-		return fmt.Errorf("could not remove container %s: %w", containerName, err)
+		loggingErr = logStreamInstance.Write("Error while removing container: " + err.Error())
+
+		err = fmt.Errorf("could not remove container %s: %w", containerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully removed container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	return nil

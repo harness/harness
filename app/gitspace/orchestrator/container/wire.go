@@ -15,6 +15,7 @@
 package container
 
 import (
+	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/infraprovider"
 
 	"github.com/google/wire"
@@ -31,12 +32,14 @@ func ProvideEmbeddedDockerOrchestrator(
 	vsCodeService *VSCode,
 	vsCodeWebService *VSCodeWeb,
 	config *Config,
+	statefulLogger *logutil.StatefulLogger,
 ) Orchestrator {
 	return NewEmbeddedDockerOrchestrator(
 		dockerClientFactory,
 		vsCodeService,
 		vsCodeWebService,
 		config,
+		statefulLogger,
 	)
 }
 

@@ -44,6 +44,7 @@ import (
 	events3 "github.com/harness/gitness/app/events/pullreq"
 	events2 "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/gitspace/infrastructure"
+	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/scm"
@@ -338,7 +339,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, vsCode, vsCodeWeb, containerConfig)
+	statefulLogger := logutil.ProvideStatefulLogger(logStream)
+	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, vsCode, vsCodeWeb, containerConfig, statefulLogger)
 	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
 	gitspaceController := gitspace.ProvideController(authorizer, infraProviderResourceStore, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore)
