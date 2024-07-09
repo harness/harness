@@ -219,7 +219,7 @@ func (g gitspaceInstanceStore) FindAllLatestByGitspaceConfigID(
 		Where(whereClause)
 
 	// Use the base select query in a common table expression (CTE)
-	stmt := squirrel.Select(gitspaceConfigSelectColumns).
+	stmt := squirrel.Select(gitspaceInstanceSelectColumns).
 		FromSelect(baseSelect, "RankedRows").
 		Where("rn = 1")
 

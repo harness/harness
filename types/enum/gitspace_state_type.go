@@ -23,12 +23,19 @@ func (GitspaceStateType) Enum() []interface{} {
 }
 
 var gitspaceStateTypes = []GitspaceStateType{
-	GitspaceStateRunning, GitspaceStateStopped, GitspaceStateError, GitspaceStateUninitialized,
+	GitspaceStateRunning,
+	GitspaceStateStopped,
+	GitspaceStateError,
+	GitspaceStateUninitialized,
+	GitspaceStateStarting,
+	GitspaceStateStopping,
 }
 
 const (
 	GitspaceStateRunning       GitspaceStateType = "running"
 	GitspaceStateStopped       GitspaceStateType = "stopped"
+	GitspaceStateStarting      GitspaceStateType = "starting"
+	GitspaceStateStopping      GitspaceStateType = "stopping"
 	GitspaceStateError         GitspaceStateType = "error"
 	GitspaceStateUninitialized GitspaceStateType = "uninitialized"
 )

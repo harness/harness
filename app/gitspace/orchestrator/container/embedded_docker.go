@@ -17,6 +17,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -371,7 +372,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 			gitspaceConfig.SpacePath,
 			gitspaceConfig.Identifier,
 		)
-	err := os.MkdirAll(bindMountSourcePath, 0600)
+	err := os.MkdirAll(bindMountSourcePath, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf(
 			"could not create bind mount source path %s: %w", bindMountSourcePath, err)
@@ -419,7 +420,9 @@ func (e *EmbeddedDockerOrchestrator) pullImage(
 	if err != nil {
 		return fmt.Errorf("could not pull image %s: %w", imageName, err)
 	}
-
+	// TODO: This is required to ensure the execution waits till the image is downloaded.
+	// Will be removed once logs PR is merged.
+	io.Copy(io.Discard, resp) // nolint:errcheck
 	return nil
 }
 

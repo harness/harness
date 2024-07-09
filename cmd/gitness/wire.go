@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"github.com/harness/gitness/app/services/gitspaceevent"
 
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
@@ -197,6 +198,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		reposervice.WireSet,
 		cliserver.ProvideCodeOwnerConfig,
 		codeowners.WireSet,
+		gitspaceevent.WireSet,
 		cliserver.ProvideKeywordSearchConfig,
 		keywordsearch.WireSet,
 		controllerkeywordsearch.WireSet,
@@ -218,6 +220,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideIDEVSCodeWebConfig,
 		cliserver.ProvideDockerConfig,
 		cliserver.ProvideGitspaceContainerOrchestratorConfig,
+		cliserver.ProvideGitspaceEventConfig,
 	)
 	return &cliserver.System{}, nil
 }

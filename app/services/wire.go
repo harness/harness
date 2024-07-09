@@ -16,6 +16,7 @@ package services
 
 import (
 	"github.com/harness/gitness/app/services/cleanup"
+	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/notification"
@@ -43,6 +44,7 @@ type Services struct {
 	Cleanup            *cleanup.Service
 	Notification       *notification.Service
 	Keywordsearch      *keywordsearch.Service
+	GitspaceEvent      *gitspaceevent.Service
 }
 
 func ProvideServices(
@@ -56,6 +58,7 @@ func ProvideServices(
 	cleanupSvc *cleanup.Service,
 	notificationSvc *notification.Service,
 	keywordsearchSvc *keywordsearch.Service,
+	gitspaceEventSvc *gitspaceevent.Service,
 ) Services {
 	return Services{
 		Webhook:            webhooksSvc,
@@ -68,5 +71,6 @@ func ProvideServices(
 		Cleanup:            cleanupSvc,
 		Notification:       notificationSvc,
 		Keywordsearch:      keywordsearchSvc,
+		GitspaceEvent:      gitspaceEventSvc,
 	}
 }

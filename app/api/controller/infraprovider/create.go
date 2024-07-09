@@ -144,5 +144,10 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	if err := check.Identifier(in.Identifier); err != nil {
 		return err
 	}
+	for _, resource := range in.Resources {
+		if err := check.Identifier(resource.Identifier); err != nil {
+			return err
+		}
+	}
 	return nil
 }

@@ -63,6 +63,7 @@ import (
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/exporter"
+	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/locker"
@@ -396,7 +397,16 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService)
+	gitspaceeventConfig := server.ProvideGitspaceEventConfig(config)
+	readerFactory3, err := events5.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	gitspaceeventService, err := gitspaceevent.ProvideService(ctx, gitspaceeventConfig, readerFactory3, gitspaceEventStore)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceeventService)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

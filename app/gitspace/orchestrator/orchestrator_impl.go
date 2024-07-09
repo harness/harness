@@ -159,18 +159,14 @@ func (o orchestrator) DeleteGitspace(
 	ctx context.Context,
 	gitspaceConfig *types.GitspaceConfig,
 ) (*types.GitspaceInstance, error) {
-	var updatedGitspaceInstance *types.GitspaceInstance
-
 	gitspaceInstance := gitspaceConfig.GitspaceInstance
-
+	infraProviderResource, err := o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
+	}
 	if gitspaceInstance.State == enum.GitspaceInstanceStateRunning ||
 		gitspaceInstance.State == enum.GitspaceInstanceStateUnknown {
-		infraProviderResource, err := o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
-		}
-
 		infra, err := o.infraProvisioner.Find(ctx, infraProviderResource, gitspaceConfig)
 		if err != nil {
 			return nil, fmt.Errorf("cannot find the provisioned infra: %w", err)
@@ -180,16 +176,12 @@ func (o orchestrator) DeleteGitspace(
 		if err != nil {
 			return nil, fmt.Errorf("error stopping the Gitspace container: %w", err)
 		}
-
-		_, err = o.infraProvisioner.Unprovision(ctx, infraProviderResource, gitspaceConfig)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"cannot stop provisioned infrastructure with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
-		}
-
-		gitspaceInstance.State = enum.GitspaceInstanceStateDeleted
-		updatedGitspaceInstance = gitspaceInstance
 	}
-
-	return updatedGitspaceInstance, nil
+	_, err = o.infraProvisioner.Unprovision(ctx, infraProviderResource, gitspaceConfig)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"cannot stop provisioned infrastructure with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
+	}
+	gitspaceInstance.State = enum.GitspaceInstanceStateDeleted
+	return gitspaceInstance, nil
 }

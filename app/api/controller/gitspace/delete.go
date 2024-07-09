@@ -49,14 +49,12 @@ func (c *Controller) Delete(
 		log.Err(err).Msg(gitspaceConfigNotFound + identifier)
 		return err
 	}
-	instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
+	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
 	gitspaceConfig.GitspaceInstance = instance
-	if err != nil {
-		return fmt.Errorf("failed to find gitspace with config : %q %w", gitspaceConfig.Identifier, err)
-	}
-	stopErr := c.stopRunningGitspace(ctx, instance, gitspaceConfig)
-	if stopErr != nil {
-		return stopErr
+	if instance != nil {
+		if stopErr := c.stopRunningGitspace(ctx, gitspaceConfig); stopErr != nil {
+			return stopErr
+		}
 	}
 	gitspaceConfig.IsDeleted = true
 	if err = c.gitspaceConfigStore.Update(ctx, gitspaceConfig); err != nil {
@@ -68,16 +66,11 @@ func (c *Controller) Delete(
 
 func (c *Controller) stopRunningGitspace(
 	ctx context.Context,
-	instance *types.GitspaceInstance,
 	config *types.GitspaceConfig) error {
-	if instance != nil &&
-		(instance.State == enum.GitspaceInstanceStateRunning ||
-			instance.State == enum.GitspaceInstanceStateUnknown) {
-		if instanceUpdated, err := c.orchestrator.DeleteGitspace(ctx, config); err != nil {
-			return err
-		} else if err = c.gitspaceInstanceStore.Update(ctx, instanceUpdated); err != nil {
-			return err
-		}
+	if instanceUpdated, err := c.orchestrator.DeleteGitspace(ctx, config); err != nil {
+		return err
+	} else if err = c.gitspaceInstanceStore.Update(ctx, instanceUpdated); err != nil {
+		return err
 	}
 	return nil
 }

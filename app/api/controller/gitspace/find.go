@@ -50,10 +50,7 @@ func (c *Controller) Find(
 	}
 	gitspaceConfig.SpacePath = space.Path
 	gitspaceConfig.InfraProviderResourceIdentifier = infraProviderResource.Identifier
-	instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
-	if err != nil {
-		return nil, err
-	}
+	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
 	if instance != nil {
 		gitspaceConfig.GitspaceInstance = instance
 		gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State)

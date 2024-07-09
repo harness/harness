@@ -46,6 +46,7 @@ func (c *Controller) Find(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find infraprovider resources: %w", err)
 	}
+	infraProviderConfig.SpacePath = space.Path
 	infraProviderConfig.Resources = resources
 	return infraProviderConfig, nil
 }

@@ -48,6 +48,7 @@ type gitspacesListRequest struct {
 }
 
 type gitspaceEventsListRequest struct {
+	Ref string `path:"gitspace_identifier"`
 	paginationRequest
 }
 
@@ -118,7 +119,7 @@ func gitspaceOperations(reflector *openapi3.Reflector) {
 	opEventList.WithTags("gitspaces")
 	opEventList.WithSummary("List gitspace events")
 	opEventList.WithMapOfAnything(map[string]interface{}{"operationId": "listGitspaceEvents"})
-	_ = reflector.SetRequest(&opList, new(gitspaceEventsListRequest), http.MethodGet)
+	_ = reflector.SetRequest(&opEventList, new(gitspaceEventsListRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opEventList, new([]*types.GitspaceEventResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opEventList, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opEventList, new(usererror.Error), http.StatusInternalServerError)

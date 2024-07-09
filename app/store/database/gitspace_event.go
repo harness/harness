@@ -81,7 +81,7 @@ func (g gitspaceEventStore) FindLatestByTypeAndGitspaceConfigID(
 	db := dbtx.GetAccessor(ctx, g.db)
 	gitspaceEventEntity := new(gitspaceEvent)
 	if err = db.GetContext(ctx, gitspaceEventEntity, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspaceEvent")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace event")
 	}
 	return g.mapGitspaceEvent(gitspaceEventEntity), nil
 }
@@ -128,9 +128,9 @@ func (g gitspaceEventStore) List(
 
 	db := dbtx.GetAccessor(ctx, g.db)
 
-	gitspaceEventEntities := make([]*gitspaceEvent, 0)
-	if err = db.SelectContext(ctx, gitspaceEventEntities, sql, args...); err != nil {
-		return nil, 0, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspaceEvent")
+	var gitspaceEventEntities []*gitspaceEvent
+	if err = db.SelectContext(ctx, &gitspaceEventEntities, sql, args...); err != nil {
+		return nil, 0, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace event")
 	}
 
 	countStmt := database.Builder.
