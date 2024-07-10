@@ -17,6 +17,7 @@ package gitspace
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
+	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -39,6 +40,7 @@ func ProvideController(
 	reporter *gitspaceevents.Reporter,
 	orchestrator orchestrator.Orchestrator,
 	eventStore store.GitspaceEventStore,
+	statefulLogger *logutil.StatefulLogger,
 ) *Controller {
 	return NewController(
 		tx,
@@ -49,5 +51,7 @@ func ProvideController(
 		spaceStore,
 		reporter,
 		orchestrator,
-		eventStore)
+		eventStore,
+		statefulLogger,
+	)
 }

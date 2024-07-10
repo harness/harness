@@ -42,6 +42,7 @@ func (s *subscriber) close() {
 	s.Lock()
 	if !s.closed {
 		close(s.closec)
+		close(s.handler)
 		s.closed = true
 	}
 	s.Unlock()

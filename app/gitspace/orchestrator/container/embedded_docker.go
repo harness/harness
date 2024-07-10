@@ -47,6 +47,7 @@ const (
 	containerStateRemoved  = "removed"
 	templateCloneGit       = "clone_git.sh"
 	templateSetupSSHServer = "setup_ssh_server.sh"
+	gitspacesDir           = "gitspaces"
 )
 
 type Config struct {
@@ -179,9 +180,10 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 	}
 
 	return &StartResponse{
-		ContainerID:   containerID,
-		ContainerName: containerName,
-		PortsUsed:     usedPorts,
+		ContainerID:      containerID,
+		ContainerName:    containerName,
+		WorkingDirectory: e.config.DefaultBindMountTargetPath,
+		PortsUsed:        usedPorts,
 	}, nil
 }
 
@@ -498,6 +500,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 	bindMountSourcePath :=
 		filepath.Join(
 			e.config.DefaultBindMountSourceBasePath,
+			gitspacesDir,
 			gitspaceConfig.SpacePath,
 			gitspaceConfig.Identifier,
 		)

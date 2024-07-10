@@ -51,7 +51,6 @@ const (
 	schemeHTTPS    = "https"
 	gitnessHomeDir = ".gitness"
 	blobDir        = "blob"
-	gitspacesDir   = "gitspaces"
 )
 
 // LoadConfig returns the system configuration from the
@@ -405,9 +404,7 @@ func ProvideGitspaceContainerOrchestratorConfig(config *types.Config) (*containe
 			return nil, fmt.Errorf("unable to determine home directory: %w", err)
 		}
 
-		bindMountSourceBasePath = filepath.Join(homedir, gitnessHomeDir, gitspacesDir)
-	} else {
-		bindMountSourceBasePath = filepath.Join(config.Gitspace.DefaultBindMountSourceBasePath, gitspacesDir)
+		bindMountSourceBasePath = filepath.Join(homedir, gitnessHomeDir)
 	}
 
 	return &container.Config{

@@ -31,7 +31,7 @@ func init() {
 	eventMessageMap = eventsMessageMapping()
 }
 
-func (c *Controller) GetEvents(
+func (c *Controller) Events(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,

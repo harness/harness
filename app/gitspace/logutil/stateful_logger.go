@@ -35,7 +35,7 @@ type LogStreamInstance struct {
 	id       int64
 	offsetID int64
 	position int
-	scanner  *reusableScanner
+	scanner  *scanner
 	logz     livelog.LogStream
 }
 
@@ -62,11 +62,20 @@ func (s *StatefulLogger) CreateLogStream(ctx context.Context, id int64) (*LogStr
 		id:       id,
 		offsetID: offsetID,
 		ctx:      ctx,
-		scanner:  newReusableScanner(),
+		scanner:  newScanner(),
 		logz:     s.logz,
 	}
 
 	return newStream, nil
+}
+
+// TailLogStream tails the underlying livelog.LogStream stream and returns the data and error channels.
+func (s *StatefulLogger) TailLogStream(
+	ctx context.Context,
+	id int64,
+) (<-chan *livelog.Line, <-chan error) {
+	offsetID := offset + id
+	return s.logz.Tail(ctx, offsetID)
 }
 
 // Write writes the msg into the underlying log stream.
@@ -76,6 +85,8 @@ func (l *LogStreamInstance) Write(msg string) error {
 		return fmt.Errorf("error parsing log lines %s: %w", msg, err)
 	}
 
+	now := time.Now().UnixMilli()
+
 	for _, line := range lines {
 		err = l.logz.Write(
 			l.ctx,
@@ -83,7 +94,7 @@ func (l *LogStreamInstance) Write(msg string) error {
 			&livelog.Line{
 				Number:    l.position,
 				Message:   line,
-				Timestamp: time.Now().UnixMilli(),
+				Timestamp: now,
 			})
 		if err != nil {
 			return fmt.Errorf("could not write log %s for ID %d at pos %d: %w", line, l.id, l.position, err)

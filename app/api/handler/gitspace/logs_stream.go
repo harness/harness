@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/paths"
 )
 
-func HandleGetEvents(gitspaceCtrl *gitspace.Controller) http.HandlerFunc {
+func HandleLogsStream(gitspaceCtrl *gitspace.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -38,16 +38,12 @@ func HandleGetEvents(gitspaceCtrl *gitspace.Controller) http.HandlerFunc {
 			return
 		}
 
-		page := request.ParsePage(r)
-		limit := request.ParseLimit(r)
-
-		events, count, err := gitspaceCtrl.GetEvents(ctx, session, spaceRef, gitspaceIdentifier, page, limit)
+		linec, errc, err := gitspaceCtrl.LogsStream(ctx, session, spaceRef, gitspaceIdentifier)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.Pagination(r, w, page, limit, count)
-		render.JSON(w, http.StatusOK, events)
+		render.StreamSSE(ctx, w, nil, linec, errc)
 	}
 }

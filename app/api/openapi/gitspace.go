@@ -19,6 +19,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller/gitspace"
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
 
 	"github.com/swaggest/openapi-go/openapi3"
@@ -125,4 +126,16 @@ func gitspaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opEventList, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opEventList, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/gitspaces/{gitspace_identifier}/events", opEventList)
+
+	opStreamLogs := openapi3.Operation{}
+	opStreamLogs.WithTags("gitspaces")
+	opEventList.WithSummary("Stream gitspace logs")
+	opStreamLogs.WithMapOfAnything(map[string]interface{}{"operationId": "opStreamLogs"})
+	_ = reflector.SetRequest(&opStreamLogs, new(gitspaceRequest), http.MethodGet)
+	_ = reflector.SetStringResponse(&opStreamLogs, http.StatusOK, "text/event-stream")
+	_ = reflector.SetJSONResponse(&opStreamLogs, []*livelog.Line{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opStreamLogs, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opStreamLogs, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opStreamLogs, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/gitspaces/{gitspace_identifier}/logs/stream", opStreamLogs)
 }

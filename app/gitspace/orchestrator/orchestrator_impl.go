@@ -101,18 +101,31 @@ func (o orchestrator) StartGitspace(
 
 	var ideURL url.URL
 
+	if infra.Host == "" {
+		// TODO: This fix does not cover all use-cases. Ideally, we need to read the host name on which this docker is
+		// running and set it as the infra.Host. Remove once that change is done.
+		infra.Host = "localhost"
+	}
+
 	if gitspaceConfig.IDE == enum.IDETypeVSCodeWeb {
 		ideURL = url.URL{
 			Scheme:   "http",
 			Host:     infra.Host + ":" + port,
-			RawQuery: "folder=/gitspace/" + repoName,
+			RawQuery: "folder=/" + startResponse.WorkingDirectory + "/" + repoName,
 		}
 	} else if gitspaceConfig.IDE == enum.IDETypeVSCode {
 		// TODO: the following user ID is hard coded and should be changed.
 		ideURL = url.URL{
 			Scheme: "vscode-remote",
 			Host:   "", // Empty since we include the host and port in the path
-			Path:   fmt.Sprintf("ssh-remote+%s@%s:%s/gitspace/%s", "harness", infra.Host, port, repoName),
+			Path: fmt.Sprintf(
+				"ssh-remote+%s@%s:%s/%s/%s",
+				"harness",
+				infra.Host,
+				port,
+				startResponse.WorkingDirectory,
+				repoName,
+			),
 		}
 	}
 	ideURLString := ideURL.String()

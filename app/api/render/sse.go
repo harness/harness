@@ -100,7 +100,11 @@ func StreamSSE(
 				return
 			}
 
-		case event := <-chEvents:
+		case event, canProduce := <-chEvents:
+			if !canProduce {
+				log.Ctx(ctx).Debug().Msg("events channel is drained and closed.")
+				return
+			}
 			if err := stream.event(event); err != nil {
 				log.Ctx(ctx).Err(err).Msgf("failed to send SSE event: %s", event.Type)
 				return

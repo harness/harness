@@ -17,7 +17,8 @@ package container
 import "github.com/harness/gitness/types/enum"
 
 type StartResponse struct {
-	ContainerID   string
-	ContainerName string
-	PortsUsed     map[enum.IDEType]string
+	ContainerID      string
+	ContainerName    string
+	WorkingDirectory string
+	PortsUsed        map[enum.IDEType]string
 }

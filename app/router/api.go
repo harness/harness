@@ -715,7 +715,8 @@ func setupGitspaces(r chi.Router, gitspacesCtrl *gitspace.Controller) {
 			r.Post("/actions", handlergitspace.HandleAction(gitspacesCtrl))
 			r.Delete("/", handlergitspace.HandleDeleteConfig(gitspacesCtrl))
 			r.Patch("/", handlergitspace.HandleUpdateConfig(gitspacesCtrl))
-			r.Get("/events", handlergitspace.HandleGetEvents(gitspacesCtrl))
+			r.Get("/events", handlergitspace.HandleEvents(gitspacesCtrl))
+			r.Get("/logs/stream", handlergitspace.HandleLogsStream(gitspacesCtrl))
 		})
 	})
 }

@@ -20,29 +20,27 @@ import (
 	"strings"
 )
 
-type reusableScanner struct {
-	scanner *bufio.Scanner
-	reader  *strings.Reader
+type scanner struct {
+	reader *strings.Reader
 }
 
-func newReusableScanner() *reusableScanner {
+func newScanner() *scanner {
 	reader := strings.NewReader("")
-	scanner := bufio.NewScanner(reader)
-	return &reusableScanner{
-		scanner: scanner,
-		reader:  reader,
+	return &scanner{
+		reader: reader,
 	}
 }
 
-func (r *reusableScanner) scan(input string) ([]string, error) {
+func (r *scanner) scan(input string) ([]string, error) {
 	r.reader.Reset(input)
+	scanner := bufio.NewScanner(r.reader)
 	var lines []string
 
-	for r.scanner.Scan() {
-		lines = append(lines, r.scanner.Text())
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
 	}
 
-	if err := r.scanner.Err(); err != nil {
+	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("error reading string %s: %w", input, err)
 	}
 

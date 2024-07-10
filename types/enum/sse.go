@@ -28,4 +28,6 @@ const (
 	SSETypeRepositoryExportCompleted SSEType = "repository_export_completed"
 
 	SSETypePullRequestUpdated SSEType = "pullreq_updated"
+
+	SSETypeLogLineAppended SSEType = "log_line_appended"
 )
