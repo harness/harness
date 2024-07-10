@@ -17,7 +17,6 @@ package gitspace
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
@@ -58,8 +57,7 @@ func (c *Controller) Delete(
 	}
 	gitspaceConfig.IsDeleted = true
 	if err = c.gitspaceConfigStore.Update(ctx, gitspaceConfig); err != nil {
-		log.Err(err).Msg("Failed to delete gitspace config with ID " + strconv.FormatInt(gitspaceConfig.ID, 10))
-		return err
+		return fmt.Errorf("failed to delete gitspace config with ID: %s %w", gitspaceConfig.Identifier, err)
 	}
 	return nil
 }

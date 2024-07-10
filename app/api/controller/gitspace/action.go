@@ -87,45 +87,28 @@ func (c *Controller) startGitspace(ctx context.Context, config *types.GitspaceCo
 	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
 	const resourceNotFoundErr = "Failed to find gitspace: resource not found"
 	if err != nil && err.Error() != resourceNotFoundErr { // TODO fix this
-		return nil, fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
+		return nil, fmt.Errorf("failed to find gitspace instance for config ID : %s %w", config.Identifier, err)
 	}
 	config.GitspaceInstance = savedGitspaceInstance
+	_, err = c.gitspaceBusyOperation(ctx, config)
+	if err != nil {
+		return nil, err
+	}
 	if savedGitspaceInstance == nil || savedGitspaceInstance.State.IsFinalStatus() {
-		codeServerPassword := defaultAccessKey
-		gitspaceMachineUser := defaultMachineUser
-		now := time.Now().UnixMilli()
-		suffixUID, err := gonanoid.Generate(allowedUIDAlphabet, 6)
+		gitspaceInstance, err := c.createGitspaceInstance(config)
 		if err != nil {
-			return nil, fmt.Errorf("could not generate UID for gitspace config : %q %w", config.Identifier, err)
-		}
-		identifier := strings.ToLower(config.Identifier + "-" + suffixUID)
-		var gitspaceInstance = &types.GitspaceInstance{
-			GitSpaceConfigID: config.ID,
-			Identifier:       identifier,
-			State:            enum.GitspaceInstanceStateUninitialized,
-			UserID:           config.UserID,
-			SpaceID:          config.SpaceID,
-			SpacePath:        config.SpacePath,
-			Created:          now,
-			Updated:          now,
-			TotalTimeUsed:    0,
-		}
-		if config.IDE == enum.IDETypeVSCodeWeb || config.IDE == enum.IDETypeVSCode {
-			gitspaceInstance.AccessKey = &codeServerPassword
-			gitspaceInstance.AccessType = enum.GitspaceAccessTypeUserCredentials
-			gitspaceInstance.MachineUser = &gitspaceMachineUser
+			return nil, err
 		}
 		if err = c.gitspaceInstanceStore.Create(ctx, gitspaceInstance); err != nil {
 			return nil, fmt.Errorf("failed to create gitspace instance for %s %w", config.Identifier, err)
 		}
-		newGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
-		newGitspaceInstance.SpacePath = config.SpacePath
-		if err != nil {
-			return nil, fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
-		}
-		config.GitspaceInstance = newGitspaceInstance
 	}
-
+	newGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
+	newGitspaceInstance.SpacePath = config.SpacePath
+	if err != nil {
+		return nil, fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
+	}
+	config.GitspaceInstance = newGitspaceInstance
 	updatedGitspace, err := c.orchestrator.StartGitspace(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find start gitspace : %s %w", config.Identifier, err)
@@ -138,6 +121,53 @@ func (c *Controller) startGitspace(ctx context.Context, config *types.GitspaceCo
 	return config, nil
 }
 
+func (c *Controller) createGitspaceInstance(config *types.GitspaceConfig) (*types.GitspaceInstance, error) {
+	codeServerPassword := defaultAccessKey
+	gitspaceMachineUser := defaultMachineUser
+	now := time.Now().UnixMilli()
+	suffixUID, err := gonanoid.Generate(allowedUIDAlphabet, 6)
+	if err != nil {
+		return nil, fmt.Errorf("could not generate UID for gitspace config : %q %w", config.Identifier, err)
+	}
+	identifier := strings.ToLower(config.Identifier + "-" + suffixUID)
+	var gitspaceInstance = &types.GitspaceInstance{
+		GitSpaceConfigID: config.ID,
+		Identifier:       identifier,
+		State:            enum.GitspaceInstanceStateStarting,
+		UserID:           config.UserID,
+		SpaceID:          config.SpaceID,
+		SpacePath:        config.SpacePath,
+		Created:          now,
+		Updated:          now,
+		TotalTimeUsed:    0,
+	}
+	if config.IDE == enum.IDETypeVSCodeWeb || config.IDE == enum.IDETypeVSCode {
+		gitspaceInstance.AccessKey = &codeServerPassword
+		gitspaceInstance.AccessType = enum.GitspaceAccessTypeUserCredentials
+		gitspaceInstance.MachineUser = &gitspaceMachineUser
+	}
+	return gitspaceInstance, nil
+}
+
+func (c *Controller) gitspaceBusyOperation(
+	ctx context.Context,
+	config *types.GitspaceConfig,
+) (*types.GitspaceConfig, error) {
+	if config.GitspaceInstance == nil {
+		return config, nil
+	}
+	if config.GitspaceInstance.State.IsBusyStatus() &&
+		time.Since(time.UnixMilli(config.Updated)) <= (10*60*1000) {
+		return nil, fmt.Errorf("gitspace start/stop is already pending for : %q", config.Identifier)
+	} else if config.GitspaceInstance.State.IsBusyStatus() {
+		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
+		if err := c.gitspaceInstanceStore.Update(ctx, config.GitspaceInstance); err != nil {
+			return nil, fmt.Errorf("failed to update gitspace config for %s %w", config.Identifier, err)
+		}
+	}
+	return config, nil
+}
+
 func (c *Controller) stopGitspace(ctx context.Context, config *types.GitspaceConfig) (*types.GitspaceConfig, error) {
 	savedGitspace, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
 	if err != nil {
@@ -145,9 +175,17 @@ func (c *Controller) stopGitspace(ctx context.Context, config *types.GitspaceCon
 	}
 	if savedGitspace.State.IsFinalStatus() {
 		return nil, fmt.Errorf(
-			"gitspace Instance cannot be stopped with ID %s %w", savedGitspace.Identifier, err)
+			"gitspace instance cannot be stopped with ID %s %w", savedGitspace.Identifier, err)
 	}
 	config.GitspaceInstance = savedGitspace
+	config, err = c.gitspaceBusyOperation(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+	config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
+	if err = c.gitspaceInstanceStore.Update(ctx, config.GitspaceInstance); err != nil {
+		return nil, fmt.Errorf("failed to update gitspace config for stopping %s %w", config.Identifier, err)
+	}
 	if updatedGitspace, stopErr := c.orchestrator.StopGitspace(ctx, config); stopErr != nil {
 		return nil, fmt.Errorf(
 			"failed to stop gitspace instance with ID %s %w", savedGitspace.Identifier, stopErr)

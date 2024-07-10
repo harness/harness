@@ -80,33 +80,40 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 	now := time.Now().UnixMilli()
-	infraProviderResource, err := c.infraProviderResourceStore.FindByIdentifier(
-		ctx,
-		parentSpace.ID,
-		in.ResourceIdentifier)
+	var gitspaceConfig *types.GitspaceConfig
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		infraProviderResource, err := c.infraProviderResourceStore.FindByIdentifier(
+			ctx,
+			parentSpace.ID,
+			in.ResourceIdentifier)
+		if err != nil {
+			return fmt.Errorf("could not find infra provider resource : %q %w", in.ResourceIdentifier, err)
+		}
+		gitspaceConfig = &types.GitspaceConfig{
+			Identifier:                      identifier,
+			Name:                            in.Name,
+			IDE:                             in.IDE,
+			InfraProviderResourceID:         infraProviderResource.ID,
+			InfraProviderResourceIdentifier: infraProviderResource.Identifier,
+			CodeRepoType:                    enum.CodeRepoTypeUnknown, // TODO fix this
+			State:                           enum.GitspaceStateUninitialized,
+			CodeRepoURL:                     in.CodeRepoURL,
+			Branch:                          in.Branch,
+			DevcontainerPath:                in.DevcontainerPath,
+			UserID:                          session.Principal.UID,
+			SpaceID:                         parentSpace.ID,
+			SpacePath:                       parentSpace.Path,
+			Created:                         now,
+			Updated:                         now,
+		}
+		err = c.gitspaceConfigStore.Create(ctx, gitspaceConfig)
+		if err != nil {
+			return fmt.Errorf("failed to create gitspace config for : %q %w", identifier, err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("could not find infra provider resource : %q %w", in.ResourceIdentifier, err)
-	}
-	gitspaceConfig := &types.GitspaceConfig{
-		Identifier:                      identifier,
-		Name:                            in.Name,
-		IDE:                             in.IDE,
-		InfraProviderResourceID:         infraProviderResource.ID,
-		InfraProviderResourceIdentifier: infraProviderResource.Identifier,
-		CodeRepoType:                    enum.CodeRepoTypeUnknown, // TODO fix this
-		State:                           enum.GitspaceStateUninitialized,
-		CodeRepoURL:                     in.CodeRepoURL,
-		Branch:                          in.Branch,
-		DevcontainerPath:                in.DevcontainerPath,
-		UserID:                          session.Principal.UID,
-		SpaceID:                         parentSpace.ID,
-		SpacePath:                       parentSpace.Path,
-		Created:                         now,
-		Updated:                         now,
-	}
-	err = c.gitspaceConfigStore.Create(ctx, gitspaceConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create gitspace config for : %q %w", identifier, err)
+		return nil, err
 	}
 	return gitspaceConfig, nil
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/infraprovider"
+	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
 )
@@ -28,11 +29,12 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(
+	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
 	resourceStore store.InfraProviderResourceStore,
 	configStore store.InfraProviderConfigStore,
 	spaceStore store.SpaceStore,
 	factory infraprovider.Factory,
 ) *Controller {
-	return NewController(authorizer, resourceStore, configStore, factory, spaceStore)
+	return NewController(tx, authorizer, resourceStore, configStore, factory, spaceStore)
 }

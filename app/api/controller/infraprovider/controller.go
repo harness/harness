@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/infraprovider"
+	"github.com/harness/gitness/store/database/dbtx"
 )
 
 type Controller struct {
@@ -26,9 +27,11 @@ type Controller struct {
 	infraProviderConfigStore   store.InfraProviderConfigStore
 	infraProviderFactory       infraprovider.Factory
 	spaceStore                 store.SpaceStore
+	tx                         dbtx.Transactor
 }
 
 func NewController(
+	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
 	infraProviderResourceStore store.InfraProviderResourceStore,
 	infraProviderConfigStore store.InfraProviderConfigStore,
@@ -36,6 +39,7 @@ func NewController(
 	spaceStore store.SpaceStore,
 ) *Controller {
 	return &Controller{
+		tx:                         tx,
 		authorizer:                 authorizer,
 		infraProviderResourceStore: infraProviderResourceStore,
 		infraProviderConfigStore:   infraProviderConfigStore,

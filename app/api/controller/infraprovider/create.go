@@ -84,58 +84,64 @@ func (c *Controller) Create(
 		Created:    now,
 		Updated:    now,
 	}
-	err = c.infraProviderConfigStore.Create(ctx, infraProviderConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create infraprovider config for : %q %w", infraProviderConfig.Identifier, err)
-	}
-	infraProviderConfiginDB, err := c.infraProviderConfigStore.FindByIdentifier(
-		ctx,
-		parentSpace.ID,
-		infraProviderConfig.Identifier)
-	if err != nil {
-		return nil, err
-	}
-	infraProvider, err := c.infraProviderFactory.GetInfraProvider(infraProviderConfiginDB.Type)
-	if err != nil {
-		return nil, err
-	}
-	if len(infraProvider.TemplateParams()) > 0 {
-		return nil, fmt.Errorf("failed to fetch templates") // TODO Implement
-	}
-	parameters := []infraprovider.Parameter{}
-	// TODO logic to populate paramteters as per the provider type
-	err = infraProvider.ValidateParams(parameters)
-	if err != nil {
-		return nil, err
-	}
-	for _, res := range in.Resources {
-		entity := &types.InfraProviderResource{
-			Identifier:            res.Identifier,
-			InfraProviderConfigID: infraProviderConfiginDB.ID,
-			InfraProviderType:     res.InfraProviderType,
-			Name:                  res.Name,
-			SpaceID:               parentSpace.ID,
-			CPU:                   res.CPU,
-			Memory:                res.Memory,
-			Disk:                  res.Disk,
-			Network:               res.Network,
-			Region:                strings.Join(res.Region, " "), // TODO fix
-			Metadata:              res.Metadata,
-			GatewayHost:           res.GatewayHost,
-			GatewayPort:           res.GatewayPort, // No template as of now
-			Created:               now,
-			Updated:               now,
-		}
-		err = c.infraProviderResourceStore.Create(ctx, infraProviderConfiginDB.ID, entity)
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
+		err = c.infraProviderConfigStore.Create(ctx, infraProviderConfig)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create infraprovider resource for : %q %w", entity.Identifier, err)
+			return fmt.Errorf("failed to create infraprovider config for : %q %w", infraProviderConfig.Identifier, err)
 		}
-	}
-	resources, err := c.infraProviderResourceStore.List(ctx, infraProviderConfiginDB.ID, types.ListQueryFilter{})
-	infraProviderConfig.Resources = resources
+		infraProviderConfiginDB, err := c.infraProviderConfigStore.FindByIdentifier(
+			ctx,
+			parentSpace.ID,
+			infraProviderConfig.Identifier)
+		if err != nil {
+			return err
+		}
+		infraProvider, err := c.infraProviderFactory.GetInfraProvider(infraProviderConfiginDB.Type)
+		if err != nil {
+			return err
+		}
+		if len(infraProvider.TemplateParams()) > 0 {
+			return fmt.Errorf("failed to fetch templates") // TODO Implement
+		}
+		parameters := []infraprovider.Parameter{}
+		// TODO logic to populate paramteters as per the provider type
+		err = infraProvider.ValidateParams(parameters)
+		if err != nil {
+			return fmt.Errorf("failed to validate infraprovider templates")
+		}
+		for _, res := range in.Resources {
+			entity := &types.InfraProviderResource{
+				Identifier:            res.Identifier,
+				InfraProviderConfigID: infraProviderConfiginDB.ID,
+				InfraProviderType:     res.InfraProviderType,
+				Name:                  res.Name,
+				SpaceID:               parentSpace.ID,
+				CPU:                   res.CPU,
+				Memory:                res.Memory,
+				Disk:                  res.Disk,
+				Network:               res.Network,
+				Region:                strings.Join(res.Region, " "), // TODO fix
+				Metadata:              res.Metadata,
+				GatewayHost:           res.GatewayHost,
+				GatewayPort:           res.GatewayPort, // No template as of now
+				Created:               now,
+				Updated:               now,
+			}
+			err = c.infraProviderResourceStore.Create(ctx, infraProviderConfiginDB.ID, entity)
+			if err != nil {
+				return fmt.Errorf("failed to create infraprovider resource for : %q %w", entity.Identifier, err)
+			}
+		}
+		resources, err := c.infraProviderResourceStore.List(ctx, infraProviderConfiginDB.ID, types.ListQueryFilter{})
+		infraProviderConfig.Resources = resources
+		if err != nil {
+			return fmt.Errorf(
+				"error creating infra provider resource for config : %q %w", infraProviderConfiginDB.Identifier, err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf(
-			"error creating infra provider resource for config : %q %w", infraProviderConfiginDB.Identifier, err)
+		return nil, err
 	}
 	return infraProviderConfig, nil
 }

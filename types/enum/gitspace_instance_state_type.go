@@ -26,6 +26,8 @@ var gitspaceInstanceStateTypes = []GitspaceInstanceStateType{
 	GitspaceInstanceStateUnknown,
 	GitspaceInstanceStateError,
 	GitspaceInstanceStateDeleted,
+	GitspaceInstanceStateStarting,
+	GitspaceInstanceStateStopping,
 }
 
 const (
@@ -34,13 +36,27 @@ const (
 	GitspaceInstanceStateUnknown       GitspaceInstanceStateType = "unknown"
 	GitspaceInstanceStateError         GitspaceInstanceStateType = "error"
 	GitspaceInstanceStateDeleted       GitspaceInstanceStateType = "deleted"
+
+	GitspaceInstanceStateStarting GitspaceInstanceStateType = "starting"
+	GitspaceInstanceStateStopping GitspaceInstanceStateType = "stopping"
 )
 
-func (gitspaceInstanceState GitspaceInstanceStateType) IsFinalStatus() bool {
+func (g GitspaceInstanceStateType) IsFinalStatus() bool {
 	//nolint:exhaustive
-	switch gitspaceInstanceState {
+	switch g {
 	case GitspaceInstanceStateDeleted,
 		GitspaceInstanceStateError:
+		return true
+	default:
+		return false
+	}
+}
+
+func (g GitspaceInstanceStateType) IsBusyStatus() bool {
+	//nolint:exhaustive
+	switch g {
+	case GitspaceInstanceStateStarting,
+		GitspaceInstanceStateStopping:
 		return true
 	default:
 		return false
