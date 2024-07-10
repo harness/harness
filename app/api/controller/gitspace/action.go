@@ -66,14 +66,14 @@ func (c *Controller) Action(
 	switch in.Action {
 	case enum.GitspaceActionTypeStart:
 		c.emitGitspaceConfigEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStart)
-		gitspace, err := c.startGitspace(ctx, gitspaceConfig)
+		gitspace, err := c.startGitspaceAction(ctx, gitspaceConfig)
 		if err != nil {
 			c.emitGitspaceConfigEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStartFailed)
 		}
 		return gitspace, err
 	case enum.GitspaceActionTypeStop:
 		c.emitGitspaceConfigEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStop)
-		gitspace, err := c.stopGitspace(ctx, gitspaceConfig)
+		gitspace, err := c.stopGitspaceAction(ctx, gitspaceConfig)
 		if err != nil {
 			c.emitGitspaceConfigEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStopFailed)
 		}
@@ -83,7 +83,10 @@ func (c *Controller) Action(
 	}
 }
 
-func (c *Controller) startGitspace(ctx context.Context, config *types.GitspaceConfig) (*types.GitspaceConfig, error) {
+func (c *Controller) startGitspaceAction(
+	ctx context.Context,
+	config *types.GitspaceConfig,
+) (*types.GitspaceConfig, error) {
 	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
 	const resourceNotFoundErr = "Failed to find gitspace: resource not found"
 	if err != nil && err.Error() != resourceNotFoundErr { // TODO fix this
@@ -109,12 +112,24 @@ func (c *Controller) startGitspace(ctx context.Context, config *types.GitspaceCo
 		return nil, fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
 	}
 	config.GitspaceInstance = newGitspaceInstance
-	updatedGitspace, err := c.orchestrator.StartGitspace(ctx, config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find start gitspace : %s %w", config.Identifier, err)
+	config.State, _ = enum.GetGitspaceStateFromInstance(newGitspaceInstance.State)
+	ctx2 := context.WithoutCancel(ctx)
+	go func() {
+		_, _ = c.startAsyncOperation(ctx2, config)
+	}()
+	return config, nil
+}
+
+func (c *Controller) startAsyncOperation(
+	ctx context.Context,
+	config *types.GitspaceConfig,
+) (*types.GitspaceConfig, error) {
+	updatedGitspace, orchestrateErr := c.orchestrator.StartGitspace(ctx, config)
+	if err := c.gitspaceInstanceStore.Update(ctx, updatedGitspace); err != nil {
+		return nil, fmt.Errorf("failed to update gitspace %w %w", err, orchestrateErr)
 	}
-	if err = c.gitspaceInstanceStore.Update(ctx, updatedGitspace); err != nil {
-		return nil, fmt.Errorf("failed to update gitspace %w", err)
+	if orchestrateErr != nil {
+		return nil, fmt.Errorf("failed to find start gitspace : %s %w", config.Identifier, orchestrateErr)
 	}
 	config.GitspaceInstance = updatedGitspace
 	config.State, _ = enum.GetGitspaceStateFromInstance(updatedGitspace.State)
@@ -156,8 +171,9 @@ func (c *Controller) gitspaceBusyOperation(
 	if config.GitspaceInstance == nil {
 		return config, nil
 	}
+	const timedOutInSeconds = 5
 	if config.GitspaceInstance.State.IsBusyStatus() &&
-		time.Since(time.UnixMilli(config.Updated)) <= (10*60*1000) {
+		time.Since(time.UnixMilli(config.GitspaceInstance.Updated)).Milliseconds() <= (timedOutInSeconds*60*1000) {
 		return nil, fmt.Errorf("gitspace start/stop is already pending for : %q", config.Identifier)
 	} else if config.GitspaceInstance.State.IsBusyStatus() {
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
@@ -168,7 +184,10 @@ func (c *Controller) gitspaceBusyOperation(
 	return config, nil
 }
 
-func (c *Controller) stopGitspace(ctx context.Context, config *types.GitspaceConfig) (*types.GitspaceConfig, error) {
+func (c *Controller) stopGitspaceAction(
+	ctx context.Context,
+	config *types.GitspaceConfig,
+) (*types.GitspaceConfig, error) {
 	savedGitspace, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
@@ -186,17 +205,35 @@ func (c *Controller) stopGitspace(ctx context.Context, config *types.GitspaceCon
 	if err = c.gitspaceInstanceStore.Update(ctx, config.GitspaceInstance); err != nil {
 		return nil, fmt.Errorf("failed to update gitspace config for stopping %s %w", config.Identifier, err)
 	}
-	if updatedGitspace, stopErr := c.orchestrator.StopGitspace(ctx, config); stopErr != nil {
-		return nil, fmt.Errorf(
-			"failed to stop gitspace instance with ID %s %w", savedGitspace.Identifier, stopErr)
-	} else if updatedGitspace != nil {
-		if stopErr = c.gitspaceInstanceStore.Update(ctx, updatedGitspace); stopErr != nil {
+	config.State, _ = enum.GetGitspaceStateFromInstance(savedGitspace.State)
+	ctx2 := context.WithoutCancel(ctx)
+	go func() {
+		_, _ = c.stopAsyncOperation(ctx2, config)
+	}()
+	return config, err
+}
+
+func (c *Controller) stopAsyncOperation(
+	ctx context.Context,
+	config *types.GitspaceConfig,
+) (*types.GitspaceConfig, error) {
+	savedGitspace := config.GitspaceInstance
+	updatedGitspace, orchestrateErr := c.orchestrator.StopGitspace(ctx, config)
+	if updatedGitspace != nil {
+		if err := c.gitspaceInstanceStore.Update(ctx, updatedGitspace); err != nil {
 			return nil, fmt.Errorf(
-				"unable to update the gitspace with config id %s %w", savedGitspace.Identifier, stopErr)
+				"unable to update the gitspace with config id %s %w %w",
+				savedGitspace.Identifier,
+				err,
+				orchestrateErr)
 		}
-		config.GitspaceInstance = updatedGitspace
-		config.State, _ = enum.GetGitspaceStateFromInstance(updatedGitspace.State)
+		if orchestrateErr != nil {
+			return nil, fmt.Errorf(
+				"failed to stop gitspace instance with ID %s %w", savedGitspace.Identifier, orchestrateErr)
+		}
 	}
+	config.GitspaceInstance = updatedGitspace
+	config.State, _ = enum.GetGitspaceStateFromInstance(updatedGitspace.State)
 	return config, nil
 }
 

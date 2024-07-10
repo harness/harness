@@ -42,7 +42,7 @@ const (
 
 func GetGitspaceStateFromInstance(
 	instanceState GitspaceInstanceStateType) (GitspaceStateType, error) {
-	switch instanceState { //nolint:exhaustive
+	switch instanceState {
 	case GitspaceInstanceStateRunning:
 		return GitspaceStateRunning, nil
 	case GitspaceInstanceStateDeleted:
@@ -53,6 +53,9 @@ func GetGitspaceStateFromInstance(
 		return GitspaceStateStopping, nil
 	case GitspaceInstanceStateUninitialized:
 		return GitspaceStateUninitialized, nil
+	case GitspaceInstanceStateError,
+		GitspaceInstanceStateUnknown:
+		return GitspaceStateError, nil
 	default:
 		return GitspaceStateError, fmt.Errorf("unsupported gitspace instance state %s", string(instanceState))
 	}
