@@ -66,12 +66,14 @@ func (c *Controller) Update(
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
 	parentRefAsID, err := strconv.ParseInt(in.SpaceRef, 10, 64)
-
 	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.SpaceRef)) == 0) {
 		return ErrGitspaceRequiresParent
 	}
+
+	//nolint:revive
 	if err := check.Identifier(in.Identifier); err != nil {
 		return err
 	}
+
 	return nil
 }

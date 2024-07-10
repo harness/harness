@@ -322,11 +322,16 @@ func (c *Controller) CommentApplySuggestions(
 	// update activities (use UpdateOptLock as it can have racing condition with comment migration)
 	resolved := ptr.Of(now.UnixMilli())
 	resolvedBy := &session.Principal.ID
+	resolvedActivities := map[int64]struct{}{}
 	for _, update := range activityUpdates {
 		_, err = c.activityStore.UpdateOptLock(ctx, update.act, func(act *types.PullReqActivity) error {
-			if update.resolve {
+			// only resolve where required (can happen in case of parallel resolution of activity)
+			if update.resolve && act.Resolved == nil {
 				act.Resolved = resolved
 				act.ResolvedBy = resolvedBy
+				resolvedActivities[act.ID] = struct{}{}
+			} else {
+				delete(resolvedActivities, act.ID)
 			}
 
 			if update.checksum != "" {
@@ -343,6 +348,23 @@ func (c *Controller) CommentApplySuggestions(
 			// best effort - commit already happened
 			log.Ctx(ctx).Warn().Err(err).Msgf("failed to update activity %d after applying suggestions", update.act.ID)
 		}
+	}
+
+	// This is a best effort approach as in case of sqlite a transaction is likely to be blocked
+	// by parallel event-triggered db writes from the above commit.
+	// WARNING: This could cause the count to diverge (similar to create / delete).
+	// TODO: Use transaction once sqlite issue has been addressed.
+	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		pr.UnresolvedCount -= len(resolvedActivities)
+		return nil
+	})
+	if err != nil {
+		return CommentApplySuggestionsOutput{}, nil,
+			fmt.Errorf("failed to update pull request's unresolved comment count: %w", err)
+	}
+
+	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
 
 	return CommentApplySuggestionsOutput{
