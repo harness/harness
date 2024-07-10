@@ -341,7 +341,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
 	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, vsCode, vsCodeWeb, containerConfig, statefulLogger)
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter3)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
 	gitspaceController := gitspace.ProvideController(transactor, authorizer, infraProviderResourceStore, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore, statefulLogger)
 	migrateController := migrate.ProvideController(authorizer, principalStore)

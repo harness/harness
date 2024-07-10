@@ -81,6 +81,10 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopCompleted] = "Stopped Gitspace"
 	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopFailed] = "Stopping Gitspace Failed"
 
+	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerStart] = "Fetching devcontainer config..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerCompleted] = "Fetched devcontainer config"
+	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerFailed] = "Fetching devcontainer config failed"
+
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningStart] = "Provisioning Infrastructure..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningCompleted] = "Provisioning Infrastructure Completed"
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningFailed] = "Provisioning Infrastructure Failed"
@@ -96,6 +100,10 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceCreationStart] = "Setting up the gitspace..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceCreationCompleted] = "Successfully setup the gitspace"
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceCreationFailed] = "Failed to setup the gitspace"
+
+	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceDeletionStart] = "Removing the gitspace..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceDeletionCompleted] = "Successfully removed the gitspace"
+	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceDeletionFailed] = "Failed to remove the gitspace"
 
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportRunning] = "Gitspace is running"
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportStopped] = "Gitspace is stopped"

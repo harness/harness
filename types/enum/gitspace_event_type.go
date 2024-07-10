@@ -29,6 +29,10 @@ var gitspaceEventTypes = []GitspaceEventType{
 	GitspaceEventTypeGitspaceActionStopCompleted,
 	GitspaceEventTypeGitspaceActionStopFailed,
 
+	GitspaceEventTypeFetchDevcontainerStart,
+	GitspaceEventTypeFetchDevcontainerCompleted,
+	GitspaceEventTypeFetchDevcontainerFailed,
+
 	GitspaceEventTypeInfraProvisioningStart,
 	GitspaceEventTypeInfraProvisioningCompleted,
 	GitspaceEventTypeInfraProvisioningFailed,
@@ -44,6 +48,10 @@ var gitspaceEventTypes = []GitspaceEventType{
 	GitspaceEventTypeAgentGitspaceCreationStart,
 	GitspaceEventTypeAgentGitspaceCreationCompleted,
 	GitspaceEventTypeAgentGitspaceCreationFailed,
+
+	GitspaceEventTypeAgentGitspaceDeletionStart,
+	GitspaceEventTypeAgentGitspaceDeletionCompleted,
+	GitspaceEventTypeAgentGitspaceDeletionFailed,
 
 	GitspaceEventTypeAgentGitspaceStateReportRunning,
 	GitspaceEventTypeAgentGitspaceStateReportError,
@@ -61,6 +69,11 @@ const (
 	GitspaceEventTypeGitspaceActionStop          GitspaceEventType = "gitspace_action_stop"
 	GitspaceEventTypeGitspaceActionStopCompleted GitspaceEventType = "gitspace_action_stop_completed"
 	GitspaceEventTypeGitspaceActionStopFailed    GitspaceEventType = "gitspace_action_stop_failed"
+
+	// Fetch devcontainer config events.
+	GitspaceEventTypeFetchDevcontainerStart     GitspaceEventType = "fetch_devcontainer_start"
+	GitspaceEventTypeFetchDevcontainerCompleted GitspaceEventType = "fetch_devcontainer_completed"
+	GitspaceEventTypeFetchDevcontainerFailed    GitspaceEventType = "fetch_devcontainer_failed"
 
 	// Infra provisioning events.
 	GitspaceEventTypeInfraProvisioningStart     GitspaceEventType = "infra_provisioning_start"
@@ -81,6 +94,11 @@ const (
 	GitspaceEventTypeAgentGitspaceCreationStart     GitspaceEventType = "agent_gitspace_creation_start"
 	GitspaceEventTypeAgentGitspaceCreationCompleted GitspaceEventType = "agent_gitspace_creation_completed"
 	GitspaceEventTypeAgentGitspaceCreationFailed    GitspaceEventType = "agent_gitspace_creation_failed"
+
+	// Gitspace deletion events.
+	GitspaceEventTypeAgentGitspaceDeletionStart     GitspaceEventType = "agent_gitspace_deletion_start"
+	GitspaceEventTypeAgentGitspaceDeletionCompleted GitspaceEventType = "agent_gitspace_deletion_completed"
+	GitspaceEventTypeAgentGitspaceDeletionFailed    GitspaceEventType = "agent_gitspace_deletion_failed"
 
 	// Gitspace state events.
 	GitspaceEventTypeAgentGitspaceStateReportRunning GitspaceEventType = "agent_gitspace_state_report_running"

@@ -119,6 +119,8 @@ func (g gitspaceEventStore) List(
 
 	queryStmt = g.setQueryFilter(queryStmt, filter)
 
+	queryStmt = g.setSortFilter(queryStmt, filter)
+
 	queryStmt = g.setPaginationFilter(queryStmt, filter)
 
 	sql, args, err := queryStmt.ToSql()
@@ -169,6 +171,13 @@ func (g gitspaceEventStore) setQueryFilter(
 		stmt = stmt.Where(squirrel.Eq{"geven_entity_id": filter.EntityID})
 	}
 	return stmt
+}
+
+func (g gitspaceEventStore) setSortFilter(
+	stmt squirrel.SelectBuilder,
+	_ *types.GitspaceEventFilter,
+) squirrel.SelectBuilder {
+	return stmt.OrderBy("geven_created ASC")
 }
 
 func (g gitspaceEventStore) setPaginationFilter(

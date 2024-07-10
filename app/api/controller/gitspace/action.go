@@ -251,7 +251,8 @@ func (c *Controller) sanitizeActionInput(in *ActionInput) error {
 func (c *Controller) emitGitspaceConfigEvent(
 	ctx context.Context,
 	config *types.GitspaceConfig,
-	eventType enum.GitspaceEventType) {
+	eventType enum.GitspaceEventType,
+) {
 	c.eventReporter.EmitGitspaceEvent(ctx, events.GitspaceEvent, &events.GitspaceEventPayload{
 		QueryKey:   config.Identifier,
 		EntityID:   config.ID,

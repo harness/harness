@@ -52,17 +52,21 @@ func (s scm) DevcontainerConfig(
 	gitspaceConfig *types.GitspaceConfig,
 ) (*types.DevcontainerConfig, error) {
 	gitWorkingDirectory := "/tmp/git/"
+
 	cloneDir := gitWorkingDirectory + uuid.New().String()
+
 	err := os.MkdirAll(cloneDir, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("error creating directory %s: %w", cloneDir, err)
 	}
+
 	defer func() {
 		err = os.RemoveAll(cloneDir)
 		if err != nil {
 			log.Ctx(ctx).Warn().Err(err).Msg("Unable to remove working directory")
 		}
 	}()
+
 	filePath := ".devcontainer/devcontainer.json"
 	err = validateArgs(gitspaceConfig)
 	if err != nil {

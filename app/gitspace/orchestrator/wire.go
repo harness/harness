@@ -15,6 +15,7 @@
 package orchestrator
 
 import (
+	events "github.com/harness/gitness/app/events/gitspace"
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/scm"
@@ -33,6 +34,7 @@ func ProvideOrchestrator(
 	infraProviderResourceStore store.InfraProviderResourceStore,
 	infraProvisioner infrastructure.InfraProvisioner,
 	containerOrchestrator container.Orchestrator,
+	reporter *events.Reporter,
 ) Orchestrator {
-	return NewOrchestrator(scm, infraProviderResourceStore, infraProvisioner, containerOrchestrator)
+	return NewOrchestrator(scm, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter)
 }
