@@ -562,7 +562,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
               </Layout.Horizontal>
             </Container>
           )}
-          {!isEmpty(codeOwners) && (
+          {!isEmpty(codeOwners) && !isEmpty(codeOwners.evaluation_entries) && (
             <Container className={css.borderContainer} padding={{ left: 'xlarge', right: 'small' }}>
               <Layout.Horizontal className={css.paddingContainer} flex={{ justifyContent: 'space-between' }}>
                 {codeOwnerChangeReqEntries && codeOwnerChangeReqEntries?.length > 0 ? (

@@ -235,7 +235,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
         messageString += `* ${commit.message}\n`
         messageTitle =
           mergeOption.method === MergeStrategy.SQUASH
-            ? `${commit.title} (#${pullReqMetadata?.number})`
+            ? `${pullReqMetadata?.title} (#${pullReqMetadata?.number})`
             : `Merge branch ${pullReqMetadata?.source_branch} of ${repoMetadata?.path} (#${pullReqMetadata?.number})`
       })
     }

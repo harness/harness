@@ -587,6 +587,16 @@ const ChangesInternal: React.FC<ChangesProps> = ({
             </Container>
           </Case>
         </Match>
+        {diffs === undefined && (
+          <Container padding="xlarge">
+            <NoResultCard
+              showWhen={() => diffs === undefined && !loadingRawDiff && !loading}
+              forSearch={true}
+              title={emptyTitle}
+              emptySearchMessage={emptyMessage}
+            />
+          </Container>
+        )}
       </Render>
     </Container>
   )

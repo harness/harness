@@ -30,6 +30,7 @@ import GitLogo from 'images/gitLogo.png'
 import HarnessDarkLogo from 'images/logo-dark.png'
 import MergeStrat from 'images/mergeStrat.png'
 import MergeRebase from 'images/mergeRebase.png'
+import PrEmptyChangesState from 'images/prEmptyChanges.png'
 
 export const Images = {
   HarnessDarkLogo,
@@ -47,5 +48,6 @@ export const Images = {
   Subtract,
   EmptySpace,
   MergeStrat,
-  MergeRebase
+  MergeRebase,
+  PrEmptyChangesState
 }
