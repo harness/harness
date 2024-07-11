@@ -18,13 +18,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	_ "embed"
 )
 
 var _ IDE = (*VSCodeWeb)(nil)
 
-const templateInstallVSCodeWeb = "install_vscode_web.sh"
+//go:embed template/install_vscode_web.sh
+var installScript string
+
+const templateRunVSCodeWeb = "run_vscode_web.sh"
 
 type VSCodeWebConfig struct {
 	Port string
@@ -38,32 +42,31 @@ func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 	return &VSCodeWeb{config: config}
 }
 
-// Setup runs the installScript which downloads the required version of the code-server binary and runs it
-// with the given password.
-func (v *VSCodeWeb) Setup(
-	ctx context.Context,
-	devcontainer *Devcontainer,
-	gitspaceInstance *types.GitspaceInstance,
-) error {
-	installScript, err := GenerateScriptFromTemplate(
-		templateInstallVSCodeWeb, &InstallVSCodeWebPayload{
-			Password: *gitspaceInstance.AccessKey,
-			Port:     v.config.Port,
+// Setup runs the installScript which downloads the required version of the code-server binary and runs it.
+func (v *VSCodeWeb) Setup(ctx context.Context, devcontainer *Devcontainer) ([]byte, error) {
+	output, err := devcontainer.ExecuteCommand(ctx, installScript, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to install code-server: %w", err)
+	}
+
+	runScript, err := GenerateScriptFromTemplate(
+		templateRunVSCodeWeb, &RunVSCodeWebPayload{
+			Port: v.config.Port,
 		})
 	if err != nil {
-		return fmt.Errorf(
-			"failed to generate scipt to install code server from template %s: %w",
-			templateInstallVSCodeWeb,
+		return output, fmt.Errorf(
+			"failed to generate scipt to run code-server from template %s: %w",
+			templateRunVSCodeWeb,
 			err,
 		)
 	}
 
-	_, err = devcontainer.ExecuteCommand(ctx, installScript, true)
+	_, err = devcontainer.ExecuteCommand(ctx, runScript, true)
 	if err != nil {
-		return fmt.Errorf("failed to install code-server: %w", err)
+		return output, fmt.Errorf("failed to run code-server: %w", err)
 	}
 
-	return nil
+	return output, nil
 }
 
 // PortAndProtocol returns the port on which the code-server is listening.

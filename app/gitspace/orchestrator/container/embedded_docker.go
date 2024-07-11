@@ -232,7 +232,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
-	err = e.setupIDE(ctx, gitspaceConfig, devcontainer, ideService, logStreamInstance)
+	err = e.setupIDE(ctx, devcontainer, ideService, logStreamInstance)
 	if err != nil {
 		return err
 	}
@@ -242,17 +242,16 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 
 func (e *EmbeddedDockerOrchestrator) setupIDE(
 	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
 	devcontainer *Devcontainer,
 	ideService IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
-	loggingErr := logStreamInstance.Write("Setting up IDE inside container: " + string(gitspaceConfig.IDE))
+	loggingErr := logStreamInstance.Write("Setting up IDE inside container: " + string(ideService.Type()))
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	err := ideService.Setup(ctx, devcontainer, gitspaceConfig.GitspaceInstance)
+	output, err := ideService.Setup(ctx, devcontainer)
 	if err != nil {
 		loggingErr = logStreamInstance.Write("Error while setting up IDE inside container: " + err.Error())
 
@@ -263,6 +262,11 @@ func (e *EmbeddedDockerOrchestrator) setupIDE(
 		}
 
 		return err
+	}
+
+	loggingErr = logStreamInstance.Write("IDE setup output...\n" + string(output))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	loggingErr = logStreamInstance.Write("Successfully set up IDE inside container")
@@ -347,7 +351,7 @@ func (e *EmbeddedDockerOrchestrator) setupSSHServer(
 		return err
 	}
 
-	loggingErr = logStreamInstance.Write("SSH server installation output...\n" + string(*output))
+	loggingErr = logStreamInstance.Write("SSH server installation output...\n" + string(output))
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
@@ -400,7 +404,7 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 		return err
 	}
 
-	loggingErr = logStreamInstance.Write("Cloning git repo output...\n" + string(*output))
+	loggingErr = logStreamInstance.Write("Cloning git repo output...\n" + string(output))
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
@@ -446,7 +450,7 @@ func (e *EmbeddedDockerOrchestrator) executePostCreateCommand(
 		return err
 	}
 
-	loggingErr = logStreamInstance.Write("Post create command execution output...\n" + string(*output))
+	loggingErr = logStreamInstance.Write("Post create command execution output...\n" + string(output))
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}

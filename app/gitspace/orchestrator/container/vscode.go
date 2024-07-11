@@ -17,7 +17,6 @@ package container
 import (
 	"context"
 
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -31,8 +30,8 @@ func NewVsCodeService() *VSCode {
 
 // Setup is a NOOP since VS Code doesn't require any installation.
 // TODO Check if the SSH server is accessible on the required port.
-func (v *VSCode) Setup(_ context.Context, _ *Devcontainer, _ *types.GitspaceInstance) error {
-	return nil
+func (v *VSCode) Setup(_ context.Context, _ *Devcontainer) ([]byte, error) {
+	return nil, nil
 }
 
 // PortAndProtocol return nil since VS Code doesn't require any additional port to be exposed.

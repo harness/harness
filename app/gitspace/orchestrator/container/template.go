@@ -39,9 +39,8 @@ type CloneGitPayload struct {
 	Image               string
 }
 
-type InstallVSCodeWebPayload struct {
-	Password string
-	Port     string
+type RunVSCodeWebPayload struct {
+	Port string
 }
 
 type SetupSSHServerPayload struct {

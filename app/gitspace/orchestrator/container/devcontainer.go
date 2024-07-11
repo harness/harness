@@ -29,7 +29,7 @@ type Devcontainer struct {
 	DockerClient  *client.Client
 }
 
-func (d *Devcontainer) ExecuteCommand(ctx context.Context, command string, detach bool) (*[]byte, error) {
+func (d *Devcontainer) ExecuteCommand(ctx context.Context, command string, detach bool) ([]byte, error) {
 	cmd := []string{"/bin/bash", "-c", command}
 
 	execConfig := dockerTypes.ExecConfig{
@@ -63,5 +63,5 @@ func (d *Devcontainer) ExecuteCommand(ctx context.Context, command string, detac
 		}
 	}
 
-	return &output, nil
+	return output, nil
 }
