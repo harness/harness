@@ -243,7 +243,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       commitTitle: messageTitle,
       commitMessage: mergeOption.method === MergeStrategy.SQUASH ? messageString : ''
     }
-  }, [pullReqCommits, mergeOption])
+  }, [pullReqCommits, mergeOption, pullReqMetadata])
 
   if (pullReqMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullReqMetadata} />
