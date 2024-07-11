@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -32,6 +33,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var (
+	ErrNoDefaultBranch = errors.New("no default branch")
+)
+
 var _ SCM = (*scm)(nil)
 
 type SCM interface {
@@ -39,9 +44,36 @@ type SCM interface {
 	DevcontainerConfig(ctx context.Context, gitspaceConfig *types.GitspaceConfig) (*types.DevcontainerConfig, error)
 	// RepositoryName finds the repository name for the code repo URL from its provider.
 	RepositoryName(ctx context.Context, gitspaceConfig *types.GitspaceConfig) (string, error)
+	// check if the current URL is a valid and accessible code repo, input can be connector info, user token etc.
+	CheckValidCodeRepo(ctx context.Context, request CodeRepositoryRequest,
+	) (*CodeRepositoryResponse, error)
 }
 
 type scm struct{}
+
+func (s scm) CheckValidCodeRepo(ctx context.Context, request CodeRepositoryRequest) (*CodeRepositoryResponse, error) {
+	err := validateURL(request)
+	if err != nil {
+		return nil, fmt.Errorf("invalid URL, %w", err)
+	}
+	codeRepositoryResponse := &CodeRepositoryResponse{
+		URL:               request.URL,
+		CodeRepoIsPrivate: true,
+	}
+	defaultBranch, err := detectDefaultGitBranch(ctx, request.URL)
+	if err == nil {
+		branch := "main"
+		if defaultBranch != "" {
+			branch = defaultBranch
+		}
+		codeRepositoryResponse = &CodeRepositoryResponse{
+			URL:               request.URL,
+			Branch:            branch,
+			CodeRepoIsPrivate: false,
+		}
+	}
+	return codeRepositoryResponse, nil
+}
 
 func NewSCM() SCM {
 	return &scm{}
@@ -156,6 +188,32 @@ func removeComments(input []byte) []byte {
 	input = blockCommentRegex.ReplaceAll(input, nil)
 	lineCommentRegex := regexp.MustCompile(`//.*`)
 	return lineCommentRegex.ReplaceAll(input, nil)
+}
+
+func detectDefaultGitBranch(ctx context.Context, gitRepoDir string) (string, error) {
+	cmd := command.New("ls-remote",
+		command.WithFlag("--symref"),
+		command.WithFlag("-q"),
+		command.WithArg(gitRepoDir),
+		command.WithArg("HEAD"),
+	)
+	output := &bytes.Buffer{}
+	if err := cmd.Run(ctx, command.WithStdout(output)); err != nil {
+		return "", fmt.Errorf("failed to ls remote repo")
+	}
+	var lsRemoteHeadRegexp = regexp.MustCompile(`ref: refs/heads/([^\s]+)\s+HEAD`)
+	match := lsRemoteHeadRegexp.FindStringSubmatch(strings.TrimSpace(output.String()))
+	if match == nil {
+		return "", ErrNoDefaultBranch
+	}
+	return match[1], nil
+}
+
+func validateURL(request CodeRepositoryRequest) error {
+	if _, err := url.ParseRequestURI(request.URL); err != nil {
+		return err
+	}
+	return nil
 }
 
 func validateArgs(_ *types.GitspaceConfig) error {

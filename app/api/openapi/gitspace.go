@@ -19,6 +19,7 @@ import (
 
 	"github.com/harness/gitness/app/api/controller/gitspace"
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
 
@@ -27,6 +28,10 @@ import (
 
 type createGitspaceRequest struct {
 	gitspace.CreateInput
+}
+
+type lookupRepoGitspaceRequest struct {
+	gitspace.LookupRepoInput
 }
 
 type updateGitspaceRequest struct {
@@ -138,4 +143,16 @@ func gitspaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opStreamLogs, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opStreamLogs, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/gitspaces/{gitspace_identifier}/logs/stream", opStreamLogs)
+
+	opRepoLookup := openapi3.Operation{}
+	opRepoLookup.WithTags("gitspaces")
+	opRepoLookup.WithSummary("Validate git repo for gitspaces")
+	opRepoLookup.WithMapOfAnything(map[string]interface{}{"operationId": "repoLookupForGitspace"})
+	_ = reflector.SetRequest(&opCreate, new(lookupRepoGitspaceRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opRepoLookup, new(scm.CodeRepositoryResponse), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/gitspaces/lookup-repo", opCreate)
 }

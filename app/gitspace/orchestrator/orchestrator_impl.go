@@ -70,11 +70,11 @@ func (o orchestrator) StartGitspace(
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerFailed)
 
-		log.Warn().Err(err).Msg("devcontainerConfig fetch failed.")
+		log.Warn().Err(err).Msg("devcontainer config fetch failed.")
 	}
 
 	if devcontainerConfig == nil {
-		log.Warn().Err(err).Msg("devcontainerConfig is nil, using empty config")
+		log.Warn().Err(err).Msg("devcontainer config is nil, using empty config")
 		devcontainerConfig = &types.DevcontainerConfig{}
 	}
 
@@ -82,7 +82,7 @@ func (o orchestrator) StartGitspace(
 
 	infraProviderResource, err := o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
 	if err != nil {
-		return gitspaceInstance, fmt.Errorf("cannot get the infraProviderResource for ID %d: %w",
+		return gitspaceInstance, fmt.Errorf("cannot get the infraprovider resource for ID %d: %w",
 			gitspaceConfig.InfraProviderResourceID, err)
 	}
 

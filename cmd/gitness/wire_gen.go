@@ -343,7 +343,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, vsCode, vsCodeWeb, containerConfig, statefulLogger)
 	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter3)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
-	gitspaceController := gitspace.ProvideController(transactor, authorizer, infraProviderResourceStore, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore, statefulLogger)
+	gitspaceController := gitspace.ProvideController(transactor, authorizer, infraProviderResourceStore, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM)
 	migrateController := migrate.ProvideController(authorizer, principalStore)
 	apiHandler := router.ProvideAPIHandler(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController)
 	gitHandler := router.ProvideGitHandler(provider, authenticator, repoController)

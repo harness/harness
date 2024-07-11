@@ -709,6 +709,7 @@ func setupKeywordSearch(r chi.Router, searchCtrl *keywordsearch.Controller) {
 
 func setupGitspaces(r chi.Router, gitspacesCtrl *gitspace.Controller) {
 	r.Route("/gitspaces", func(r chi.Router) {
+		r.Post("/lookup-repo", handlergitspace.HandleLookupRepo(gitspacesCtrl))
 		r.Post("/", handlergitspace.HandleCreateConfig(gitspacesCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamGitspaceIdentifier), func(r chi.Router) {
 			r.Get("/", handlergitspace.HandleFind(gitspacesCtrl))

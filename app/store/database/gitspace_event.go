@@ -116,7 +116,6 @@ func (g gitspaceEventStore) List(
 	queryStmt := database.Builder.
 		Select(gitspaceEventsColumnsWithID).
 		From(gitspaceEventsTable)
-
 	queryStmt = g.setQueryFilter(queryStmt, filter)
 
 	queryStmt = g.setSortFilter(queryStmt, filter)
@@ -177,7 +176,7 @@ func (g gitspaceEventStore) setSortFilter(
 	stmt squirrel.SelectBuilder,
 	_ *types.GitspaceEventFilter,
 ) squirrel.SelectBuilder {
-	return stmt.OrderBy("geven_created ASC")
+	return stmt.OrderBy("geven_created DESC")
 }
 
 func (g gitspaceEventStore) setPaginationFilter(
