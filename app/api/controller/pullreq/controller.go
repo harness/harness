@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -120,9 +121,9 @@ func NewController(
 
 func (c *Controller) verifyBranchExistence(ctx context.Context,
 	repo *types.Repository, branch string,
-) (string, error) {
+) (sha.SHA, error) {
 	if branch == "" {
-		return "", usererror.BadRequest("branch name can't be empty")
+		return sha.SHA{}, usererror.BadRequest("branch name can't be empty")
 	}
 
 	ref, err := c.git.GetRef(ctx,
@@ -132,16 +133,16 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 			Type:       gitenum.RefTypeBranch,
 		})
 	if errors.AsStatus(err) == errors.StatusNotFound {
-		return "", usererror.BadRequest(
+		return sha.SHA{}, usererror.BadRequest(
 			fmt.Sprintf("branch %q does not exist in the repository %q", branch, repo.Identifier))
 	}
 	if err != nil {
-		return "", fmt.Errorf(
+		return sha.SHA{}, fmt.Errorf(
 			"failed to check existence of the branch %q in the repository %q: %w",
 			branch, repo.Identifier, err)
 	}
 
-	return ref.SHA.String(), nil
+	return ref.SHA, nil
 }
 
 func (c *Controller) getRepoCheckAccess(ctx context.Context,

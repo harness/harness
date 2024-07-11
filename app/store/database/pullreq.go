@@ -93,6 +93,8 @@ type pullReq struct {
 
 	CommitCount null.Int `db:"pullreq_commit_count"`
 	FileCount   null.Int `db:"pullreq_file_count"`
+	Additions   null.Int `db:"pullreq_additions"`
+	Deletions   null.Int `db:"pullreq_deletions"`
 }
 
 const (
@@ -126,7 +128,9 @@ const (
 		,pullreq_merge_sha
 		,pullreq_merge_conflicts
 		,pullreq_commit_count
-		,pullreq_file_count`
+		,pullreq_file_count
+		,pullreq_additions
+		,pullreq_deletions`
 
 	pullReqSelectBase = `
 	SELECT` + pullReqColumns + `
@@ -219,6 +223,8 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_merge_conflicts
 		,pullreq_commit_count
 		,pullreq_file_count
+		,pullreq_additions
+		,pullreq_deletions
 	) values (
 		 :pullreq_version
 		,:pullreq_number
@@ -249,6 +255,8 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_merge_conflicts
 		,:pullreq_commit_count
 		,:pullreq_file_count
+		,:pullreq_additions
+		,:pullreq_deletions
 	) RETURNING pullreq_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -292,6 +300,8 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_merge_conflicts = :pullreq_merge_conflicts
 		,pullreq_commit_count = :pullreq_commit_count
 		,pullreq_file_count = :pullreq_file_count
+		,pullreq_additions = :pullreq_additions
+		,pullreq_deletions = :pullreq_deletions
 	WHERE pullreq_id = :pullreq_id AND pullreq_version = :pullreq_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -380,6 +390,8 @@ func (s *PullReqStore) ResetMergeCheckStatus(
 		,pullreq_merge_conflicts = NULL
 		,pullreq_commit_count = NULL
 		,pullreq_file_count = NULL
+		,pullreq_additions = NULL
+		,pullreq_deletions = NULL
 	WHERE pullreq_target_repo_id = $3 AND
 		pullreq_target_branch = $4 AND
 		pullreq_state not in ($5, $6)`
@@ -579,6 +591,8 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 			DiffStats: types.DiffStats{
 				Commits:      pr.CommitCount.Ptr(),
 				FilesChanged: pr.FileCount.Ptr(),
+				Additions:    pr.Additions.Ptr(),
+				Deletions:    pr.Deletions.Ptr(),
 			},
 		},
 	}
@@ -617,6 +631,8 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		MergeConflicts:   null.NewString(mergeConflicts, mergeConflicts != ""),
 		CommitCount:      null.IntFromPtr(pr.Stats.Commits),
 		FileCount:        null.IntFromPtr(pr.Stats.FilesChanged),
+		Additions:        null.IntFromPtr(pr.Stats.Additions),
+		Deletions:        null.IntFromPtr(pr.Stats.Deletions),
 	}
 
 	return m

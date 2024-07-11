@@ -270,7 +270,12 @@ func (c *Controller) Merge(
 					pr.MergeSHA = nil // dry-run doesn't create a merge commit so output is empty.
 					pr.MergeConflicts = nil
 				}
-				pr.Stats.DiffStats = types.NewDiffStats(mergeOutput.CommitCount, mergeOutput.ChangedFileCount)
+				pr.Stats.DiffStats = types.NewDiffStats(
+					mergeOutput.CommitCount,
+					mergeOutput.ChangedFileCount,
+					mergeOutput.Additions,
+					mergeOutput.Deletions,
+				)
 				return nil
 			})
 			if err != nil {
@@ -378,7 +383,12 @@ func (c *Controller) Merge(
 			pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
 			pr.MergeSHA = nil
 			pr.MergeConflicts = mergeOutput.ConflictFiles
-			pr.Stats.DiffStats = types.NewDiffStats(mergeOutput.CommitCount, mergeOutput.ChangedFileCount)
+			pr.Stats.DiffStats = types.NewDiffStats(
+				mergeOutput.CommitCount,
+				mergeOutput.ChangedFileCount,
+				mergeOutput.Additions,
+				mergeOutput.Deletions,
+			)
 			return nil
 		})
 		if err != nil {
@@ -415,7 +425,12 @@ func (c *Controller) Merge(
 		pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
 		pr.MergeSHA = ptr.String(mergeOutput.MergeSHA.String())
 		pr.MergeConflicts = nil
-		pr.Stats.DiffStats = types.NewDiffStats(mergeOutput.CommitCount, mergeOutput.ChangedFileCount)
+		pr.Stats.DiffStats = types.NewDiffStats(
+			mergeOutput.CommitCount,
+			mergeOutput.ChangedFileCount,
+			mergeOutput.Additions,
+			mergeOutput.Deletions,
+		)
 
 		// update sequence for PR activities
 		pr.ActivitySeq++

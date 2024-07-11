@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -70,7 +71,7 @@ func (c *Controller) Create(
 		return nil, usererror.BadRequest("target and source branch can't be the same")
 	}
 
-	var sourceSHA string
+	var sourceSHA sha.SHA
 
 	if sourceSHA, err = c.verifyBranchExistence(ctx, sourceRepo, in.SourceBranch); err != nil {
 		return nil, err
@@ -95,8 +96,17 @@ func (c *Controller) Create(
 
 	mergeBaseSHA := mergeBaseResult.MergeBaseSHA
 
-	if mergeBaseSHA.String() == sourceSHA {
+	if mergeBaseSHA == sourceSHA {
 		return nil, usererror.BadRequest("The source branch doesn't contain any new commits")
+	}
+
+	prStats, err := c.git.DiffStats(ctx, &git.DiffParams{
+		ReadParams: git.ReadParams{RepoUID: targetRepo.GitUID},
+		BaseRef:    mergeBaseSHA.String(),
+		HeadRef:    sourceSHA.String(),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch PR diff stats: %w", err)
 	}
 
 	targetRepo, err = c.repoStore.UpdateOptLock(ctx, targetRepo, func(repo *types.Repository) error {
@@ -107,7 +117,12 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to acquire PullReqSeq number: %w", err)
 	}
 
-	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in, sourceSHA, mergeBaseSHA.String())
+	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in, sourceSHA, mergeBaseSHA)
+	pr.Stats = types.PullReqStats{
+		DiffStats:       types.NewDiffStats(prStats.Commits, prStats.FilesChanged, prStats.Additions, prStats.Deletions),
+		Conversations:   0,
+		UnresolvedCount: 0,
+	}
 
 	err = c.pullreqStore.Create(ctx, pr)
 	if err != nil {
@@ -118,7 +133,7 @@ func (c *Controller) Create(
 		Base:         eventBase(pr, &session.Principal),
 		SourceBranch: in.SourceBranch,
 		TargetBranch: in.TargetBranch,
-		SourceSHA:    sourceSHA,
+		SourceSHA:    sourceSHA.String(),
 	})
 
 	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
@@ -135,7 +150,7 @@ func newPullReq(
 	sourceRepo *types.Repository,
 	targetRepo *types.Repository,
 	in *CreateInput,
-	sourceSHA, mergeBaseSHA string,
+	sourceSHA, mergeBaseSHA sha.SHA,
 ) *types.PullReq {
 	now := time.Now().UnixMilli()
 	return &types.PullReq{
@@ -152,7 +167,7 @@ func newPullReq(
 		Description:      in.Description,
 		SourceRepoID:     sourceRepo.ID,
 		SourceBranch:     in.SourceBranch,
-		SourceSHA:        sourceSHA,
+		SourceSHA:        sourceSHA.String(),
 		TargetRepoID:     targetRepo.ID,
 		TargetBranch:     in.TargetBranch,
 		ActivitySeq:      0,
@@ -160,7 +175,7 @@ func newPullReq(
 		Merged:           nil,
 		MergeCheckStatus: enum.MergeCheckStatusUnchecked,
 		MergeMethod:      nil,
-		MergeBaseSHA:     mergeBaseSHA,
+		MergeBaseSHA:     mergeBaseSHA.String(),
 		Author:           *session.Principal.ToPrincipalInfo(),
 		Merger:           nil,
 	}

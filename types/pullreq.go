@@ -66,14 +66,20 @@ type PullReq struct {
 type DiffStats struct {
 	Commits      *int64 `json:"commits,omitempty"`
 	FilesChanged *int64 `json:"files_changed,omitempty"`
+	Additions    *int64 `json:"additions"`
+	Deletions    *int64 `json:"deletions"`
 }
 
-func NewDiffStats(commitCount int, fileCount int) DiffStats {
+func NewDiffStats(commitCount, fileCount, additions, deletions int) DiffStats {
 	cc := int64(commitCount)
 	fc := int64(fileCount)
+	add := int64(additions)
+	del := int64(deletions)
 	return DiffStats{
 		Commits:      &cc,
 		FilesChanged: &fc,
+		Additions:    &add,
+		Deletions:    &del,
 	}
 }
 

@@ -49,7 +49,7 @@ func (c *Controller) Find(
 	headRef := pr.SourceSHA
 	baseRef := pr.MergeBaseSHA
 
-	if pr.Stats.DiffStats.Commits == nil || pr.Stats.FilesChanged == nil {
+	if s := pr.Stats.DiffStats; s.Commits == nil || s.FilesChanged == nil || s.Additions == nil || s.Deletions == nil {
 		output, err := c.git.DiffStats(ctx, &git.DiffParams{
 			ReadParams: git.CreateReadParams(repo),
 			BaseRef:    baseRef,
@@ -59,7 +59,7 @@ func (c *Controller) Find(
 			return nil, err
 		}
 
-		pr.Stats.DiffStats = types.NewDiffStats(output.Commits, output.FilesChanged)
+		pr.Stats.DiffStats = types.NewDiffStats(output.Commits, output.FilesChanged, output.Additions, output.Deletions)
 	}
 
 	return pr, nil

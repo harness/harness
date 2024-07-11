@@ -121,6 +121,8 @@ func (s *Service) DiffShortStat(ctx context.Context, params *DiffParams) (DiffSh
 type DiffStatsOutput struct {
 	Commits      int
 	FilesChanged int
+	Additions    int
+	Deletions    int
 }
 
 func (s *Service) DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOutput, error) {
@@ -130,6 +132,8 @@ func (s *Service) DiffStats(ctx context.Context, params *DiffParams) (DiffStatsO
 	var (
 		totalCommits int
 		totalFiles   int
+		additions    int
+		deletions    int
 	)
 
 	errGroup, groupCtx := errgroup.WithContext(ctx)
@@ -163,12 +167,14 @@ func (s *Service) DiffStats(ctx context.Context, params *DiffParams) (DiffStatsO
 			ReadParams: params.ReadParams,
 			BaseRef:    params.BaseRef,
 			HeadRef:    params.HeadRef,
-			MergeBase:  true, // must be true, because commitDivergences use tripple dot notation
+			MergeBase:  true, // must be true, because commitDivergences use triple dot notation
 		})
 		if err != nil {
 			return err
 		}
 		totalFiles = stat.Files
+		additions = stat.Additions
+		deletions = stat.Deletions
 		return nil
 	})
 
@@ -180,6 +186,8 @@ func (s *Service) DiffStats(ctx context.Context, params *DiffParams) (DiffStatsO
 	return DiffStatsOutput{
 		Commits:      totalCommits,
 		FilesChanged: totalFiles,
+		Additions:    additions,
+		Deletions:    deletions,
 	}, nil
 }
 

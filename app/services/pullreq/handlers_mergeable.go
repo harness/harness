@@ -234,7 +234,12 @@ func (s *Service) updateMergeData(
 			pr.MergeSHA = ptr.String(mergeOutput.MergeSHA.String())
 			pr.MergeConflicts = nil
 		}
-		pr.Stats.DiffStats = types.NewDiffStats(mergeOutput.CommitCount, mergeOutput.ChangedFileCount)
+		pr.Stats.DiffStats = types.NewDiffStats(
+			mergeOutput.CommitCount,
+			mergeOutput.ChangedFileCount,
+			mergeOutput.Additions,
+			mergeOutput.Deletions,
+		)
 
 		return nil
 	})

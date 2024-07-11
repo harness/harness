@@ -100,6 +100,8 @@ type MergeOutput struct {
 
 	CommitCount      int
 	ChangedFileCount int
+	Additions        int
+	Deletions        int
 	ConflictFiles    []string
 }
 
@@ -215,7 +217,6 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		return MergeOutput{}, errors.Internal(err,
 			"failed to find short stat between %s and %s", baseCommitSHA, headCommitSHA)
 	}
-	changedFileCount := shortStat.Files
 
 	commitCount, err := merge.CommitCount(ctx, repoPath, baseCommitSHA.String(), headCommitSHA.String())
 	if err != nil {
@@ -240,7 +241,9 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 			MergeBaseSHA:     mergeBaseCommitSHA,
 			MergeSHA:         sha.None,
 			CommitCount:      commitCount,
-			ChangedFileCount: changedFileCount,
+			ChangedFileCount: shortStat.Files,
+			Additions:        shortStat.Additions,
+			Deletions:        shortStat.Deletions,
 			ConflictFiles:    conflicts,
 		}, nil
 	}
@@ -303,7 +306,9 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 			MergeBaseSHA:     mergeBaseCommitSHA,
 			MergeSHA:         sha.None,
 			CommitCount:      commitCount,
-			ChangedFileCount: changedFileCount,
+			ChangedFileCount: shortStat.Files,
+			Additions:        shortStat.Additions,
+			Deletions:        shortStat.Deletions,
 			ConflictFiles:    conflicts,
 		}, nil
 	}
@@ -314,7 +319,9 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		MergeBaseSHA:     mergeBaseCommitSHA,
 		MergeSHA:         mergeCommitSHA,
 		CommitCount:      commitCount,
-		ChangedFileCount: changedFileCount,
+		ChangedFileCount: shortStat.Files,
+		Additions:        shortStat.Additions,
+		Deletions:        shortStat.Deletions,
 		ConflictFiles:    nil,
 	}, nil
 }

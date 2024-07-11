@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -101,8 +102,8 @@ func (c *Controller) State(ctx context.Context,
 		changeClose
 	)
 
-	var sourceSHA string
-	var mergeBaseSHA string
+	var sourceSHA sha.SHA
+	var mergeBaseSHA sha.SHA
 	var stateChange change
 
 	//nolint:nestif // refactor if needed
@@ -129,7 +130,7 @@ func (c *Controller) State(ctx context.Context,
 			return nil, fmt.Errorf("failed to find merge base: %w", err)
 		}
 
-		mergeBaseSHA = mergeBaseResult.MergeBaseSHA.String()
+		mergeBaseSHA = mergeBaseResult.MergeBaseSHA
 
 		stateChange = changeReopen
 	} else if pr.State == enum.PullReqStateOpen && in.State != enum.PullReqStateOpen {
@@ -150,8 +151,8 @@ func (c *Controller) State(ctx context.Context,
 			pr.MergeTargetSHA = nil
 			pr.Closed = &pr.Edited
 		case changeReopen:
-			pr.SourceSHA = sourceSHA
-			pr.MergeBaseSHA = mergeBaseSHA
+			pr.SourceSHA = sourceSHA.String()
+			pr.MergeBaseSHA = mergeBaseSHA.String()
 			pr.Closed = nil
 		}
 
@@ -177,8 +178,8 @@ func (c *Controller) State(ctx context.Context,
 	case changeReopen:
 		c.eventReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{
 			Base:         eventBase(pr, &session.Principal),
-			SourceSHA:    sourceSHA,
-			MergeBaseSHA: mergeBaseSHA,
+			SourceSHA:    sourceSHA.String(),
+			MergeBaseSHA: mergeBaseSHA.String(),
 		})
 	case changeClose:
 		c.eventReporter.Closed(ctx, &pullreqevents.ClosedPayload{
