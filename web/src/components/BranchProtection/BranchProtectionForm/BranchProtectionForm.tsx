@@ -278,6 +278,9 @@ const BranchProtectionForm = (props: {
             }
           }
         }
+        if (!formData.requireStatusChecks) {
+          delete (payload?.definition as ProtectionBranch)?.pullreq?.status_checks
+        }
         if (!formData.limitMergeStrategies) {
           delete (payload?.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed
         }
