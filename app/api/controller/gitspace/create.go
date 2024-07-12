@@ -140,12 +140,11 @@ func (c *Controller) createOrFindInfraProviderResource(
 	if err != nil &&
 		err.Error() == infraProviderResourceMissingErr &&
 		resourceIdentifier == defaultResourceIdentifier {
-		err2 := c.autoCreateDefaultResource(ctx, parentSpace, now)
-		if err2 != nil {
-			return err2
+		err = c.autoCreateDefaultResource(ctx, parentSpace, now)
+		if err != nil {
+			return err
 		}
-	}
-	if err != nil {
+	} else if err != nil {
 		return fmt.Errorf("could not find infra provider resource : %q %w", resourceIdentifier, err)
 	}
 	return err
