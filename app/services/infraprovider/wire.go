@@ -15,25 +15,23 @@
 package infraprovider
 
 import (
-	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/infraprovider"
+	"github.com/harness/gitness/store/database/dbtx"
+
+	"github.com/google/wire"
 )
 
-type Controller struct {
-	authorizer       authz.Authorizer
-	spaceStore       store.SpaceStore
-	infraproviderSvc infraprovider.ProviderService
-}
+var WireSet = wire.NewSet(
+	ProvideInfraProvider,
+)
 
-func NewController(
-	authorizer authz.Authorizer,
+func ProvideInfraProvider(
+	infraProviderResourceStore store.InfraProviderResourceStore,
+	infraProviderConfigStore store.InfraProviderConfigStore,
+	infraProviderFactory infraprovider.Factory,
 	spaceStore store.SpaceStore,
-	infraproviderSvc infraprovider.ProviderService,
-) *Controller {
-	return &Controller{
-		authorizer:       authorizer,
-		spaceStore:       spaceStore,
-		infraproviderSvc: infraproviderSvc,
-	}
+	tx dbtx.Transactor,
+) ProviderService {
+	return NewService(tx, infraProviderResourceStore, infraProviderConfigStore, infraProviderFactory, spaceStore)
 }

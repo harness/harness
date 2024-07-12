@@ -24,6 +24,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	infraproviderenum "github.com/harness/gitness/infraprovider/enum"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -32,6 +33,8 @@ import (
 )
 
 const allowedUIDAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+const defaultResourceIdentifier = "default"
+const infraProviderResourceMissingErr = "Failed to find infraProviderResource: resource not found"
 
 var (
 	// errSecretRequiresParent if the user tries to create a secret without a parent space.
@@ -81,13 +84,19 @@ func (c *Controller) Create(
 	}
 	now := time.Now().UnixMilli()
 	var gitspaceConfig *types.GitspaceConfig
+	resourceIdentifier := in.ResourceIdentifier
+	err = c.createOrFindInfraProviderResource(ctx, parentSpace, resourceIdentifier, now)
+	if err != nil {
+		return nil, err
+	}
+	// TODO figure out how to flush the DB txn above before we proceed.
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		infraProviderResource, err := c.infraProviderResourceStore.FindByIdentifier(
+		infraProviderResource, err := c.infraProviderSvc.FindResourceByIdentifier(
 			ctx,
 			parentSpace.ID,
-			in.ResourceIdentifier)
+			resourceIdentifier)
 		if err != nil {
-			return fmt.Errorf("could not find infra provider resource : %q %w", in.ResourceIdentifier, err)
+			return fmt.Errorf("could not find infra provider resource : %q %w", resourceIdentifier, err)
 		}
 		gitspaceConfig = &types.GitspaceConfig{
 			Identifier:                      identifier,
@@ -95,7 +104,7 @@ func (c *Controller) Create(
 			IDE:                             in.IDE,
 			InfraProviderResourceID:         infraProviderResource.ID,
 			InfraProviderResourceIdentifier: infraProviderResource.Identifier,
-			CodeRepoType:                    enum.CodeRepoTypeUnknown, // TODO fix this
+			CodeRepoType:                    enum.CodeRepoTypeUnknown,
 			State:                           enum.GitspaceStateUninitialized,
 			CodeRepoURL:                     in.CodeRepoURL,
 			Branch:                          in.Branch,
@@ -118,13 +127,77 @@ func (c *Controller) Create(
 	return gitspaceConfig, nil
 }
 
+func (c *Controller) createOrFindInfraProviderResource(
+	ctx context.Context,
+	parentSpace *types.Space,
+	resourceIdentifier string,
+	now int64,
+) error {
+	_, err := c.infraProviderSvc.FindResourceByIdentifier(
+		ctx,
+		parentSpace.ID,
+		resourceIdentifier)
+	if err != nil &&
+		err.Error() == infraProviderResourceMissingErr &&
+		resourceIdentifier == defaultResourceIdentifier {
+		err2 := c.autoCreateDefaultResource(ctx, parentSpace, now)
+		if err2 != nil {
+			return err2
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("could not find infra provider resource : %q %w", resourceIdentifier, err)
+	}
+	return err
+}
+
+func (c *Controller) autoCreateDefaultResource(ctx context.Context, parentSpace *types.Space, now int64) error {
+	infraProviderConfig := &types.InfraProviderConfig{
+		Identifier: defaultResourceIdentifier,
+		Name:       "default docker infrastructure",
+		Type:       infraproviderenum.InfraProviderTypeDocker,
+		SpaceID:    parentSpace.ID,
+		SpacePath:  parentSpace.Path,
+		Created:    now,
+		Updated:    now,
+	}
+	defaultResource := &types.InfraProviderResource{
+		Identifier:                    defaultResourceIdentifier,
+		Name:                          "Standard Docker Resource",
+		InfraProviderConfigIdentifier: infraProviderConfig.Identifier,
+		InfraProviderType:             infraproviderenum.InfraProviderTypeDocker,
+		CPU:                           wrapString("any"),
+		Memory:                        wrapString("any"),
+		Disk:                          wrapString("any"),
+		Network:                       wrapString("standard"),
+		SpaceID:                       parentSpace.ID,
+		SpacePath:                     parentSpace.Path,
+		Created:                       now,
+		Updated:                       now,
+	}
+	infraProviderConfig.Resources = []*types.InfraProviderResource{defaultResource}
+	err := c.infraProviderSvc.CreateInfraProvider(ctx, infraProviderConfig)
+	if err != nil {
+		return fmt.Errorf("could not autocreate the resources: %w", err)
+	}
+	return nil
+}
+
+func wrapString(str string) *string {
+	return &str
+}
+
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	if err := check.Identifier(in.Identifier); err != nil {
+		return err
+	}
+	if err := check.Identifier(in.ResourceIdentifier); err != nil {
 		return err
 	}
 	parentRefAsID, err := strconv.ParseInt(in.SpaceRef, 10, 64)
 	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.SpaceRef)) == 0) {
 		return ErrGitspaceRequiresParent
 	}
+
 	return nil
 }

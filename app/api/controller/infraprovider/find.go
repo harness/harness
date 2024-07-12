@@ -38,15 +38,5 @@ func (c *Controller) Find(
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	infraProviderConfig, err := c.infraProviderConfigStore.FindByIdentifier(ctx, space.ID, identifier)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider config: %w", err)
-	}
-	resources, err := c.infraProviderResourceStore.List(ctx, infraProviderConfig.ID, types.ListQueryFilter{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider resources: %w", err)
-	}
-	infraProviderConfig.SpacePath = space.Path
-	infraProviderConfig.Resources = resources
-	return infraProviderConfig, nil
+	return c.infraproviderSvc.Find(ctx, space, identifier)
 }

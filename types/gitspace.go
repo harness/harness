@@ -27,7 +27,7 @@ type GitspaceConfig struct {
 	InfraProviderResourceID         int64                     `json:"-"`
 	InfraProviderResourceIdentifier string                    `json:"resource_identifier"`
 	CodeRepoURL                     string                    `json:"code_repo_url"`
-	CodeRepoType                    enum.GitspaceCodeRepoType `json:"code_repo_type"`
+	CodeRepoType                    enum.GitspaceCodeRepoType `json:"-"`
 	Branch                          string                    `json:"branch"`
 	DevcontainerPath                *string                   `json:"devcontainer_path,omitempty"`
 	UserID                          string                    `json:"user_id"`

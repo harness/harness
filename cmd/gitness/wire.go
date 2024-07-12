@@ -67,6 +67,7 @@ import (
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	locker "github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/metric"
@@ -210,6 +211,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		audit.WireSet,
 		ssh.WireSet,
 		publickey.WireSet,
+		infraprovider.WireSet,
 		migrate.WireSet,
 		gitspaceCtrl.WireSet,
 		infraproviderCtrl.WireSet,

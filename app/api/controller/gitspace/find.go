@@ -20,6 +20,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -45,9 +46,7 @@ func (c *Controller) Find(
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-		infraProviderResource, err := c.infraProviderResourceStore.Find(
-			ctx,
-			gitspaceConfig.InfraProviderResourceID)
+		infraProviderResource, err := c.infraProviderSvc.FindResource(ctx, gitspaceConfig.InfraProviderResourceID)
 		if err != nil {
 			return fmt.Errorf("failed to find infra provider resource for gitspace config: %w", err)
 		}
@@ -69,7 +68,7 @@ func (c *Controller) Find(
 			gitspaceConfig.State = enum.GitspaceStateUninitialized
 		}
 		return nil
-	})
+	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
 		return nil, err
 	}

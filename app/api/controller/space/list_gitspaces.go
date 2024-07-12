@@ -20,6 +20,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -81,7 +82,7 @@ func (c *Controller) ListGitspaces(
 			}
 		}
 		return nil
-	})
+	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
 		return nil, 0, err
 	}

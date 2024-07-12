@@ -14,7 +14,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/execution"
 	"github.com/harness/gitness/app/api/controller/githook"
 	"github.com/harness/gitness/app/api/controller/gitspace"
-	infraprovider2 "github.com/harness/gitness/app/api/controller/infraprovider"
+	infraprovider3 "github.com/harness/gitness/app/api/controller/infraprovider"
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	logs2 "github.com/harness/gitness/app/api/controller/logs"
@@ -66,6 +66,7 @@ import (
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/importer"
+	infraprovider2 "github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/metric"
@@ -325,7 +326,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	dockerClientFactory := infraprovider.ProvideDockerClientFactory(dockerConfig)
 	dockerProvider := infraprovider.ProvideDockerProvider(dockerClientFactory)
 	factory := infraprovider.ProvideFactory(dockerProvider)
-	infraproviderController := infraprovider2.ProvideController(transactor, authorizer, infraProviderResourceStore, infraProviderConfigStore, spaceStore, factory)
+	providerService := infraprovider2.ProvideInfraProvider(infraProviderResourceStore, infraProviderConfigStore, factory, spaceStore, transactor)
+	infraproviderController := infraprovider3.ProvideController(authorizer, spaceStore, providerService)
 	reporter3, err := events5.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -343,7 +345,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, vsCode, vsCodeWeb, containerConfig, statefulLogger)
 	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter3)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
-	gitspaceController := gitspace.ProvideController(transactor, authorizer, infraProviderResourceStore, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM)
+	gitspaceController := gitspace.ProvideController(transactor, authorizer, providerService, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM)
 	migrateController := migrate.ProvideController(authorizer, principalStore)
 	apiHandler := router.ProvideAPIHandler(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController)
 	gitHandler := router.ProvideGitHandler(provider, authenticator, repoController)

@@ -175,10 +175,8 @@ func (s infraProviderResourceStore) FindByIdentifier(
 
 func (s infraProviderResourceStore) Create(
 	ctx context.Context,
-	infraProviderConfigID int64,
 	infraProviderResource *types.InfraProviderResource,
 ) error {
-	// TODO move this to proper place, maybe create mapper
 	jsonBytes, marshalErr := json.Marshal(infraProviderResource.Metadata)
 	if marshalErr != nil {
 		return marshalErr
@@ -189,7 +187,7 @@ func (s infraProviderResourceStore) Create(
 		Values(
 			infraProviderResource.Identifier,
 			infraProviderResource.Name,
-			infraProviderConfigID,
+			infraProviderResource.InfraProviderConfigID,
 			infraProviderResource.InfraProviderType,
 			infraProviderResource.SpaceID,
 			infraProviderResource.Created,

@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/scm"
+	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -34,7 +35,7 @@ var WireSet = wire.NewSet(
 func ProvideController(
 	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
-	resourceStore store.InfraProviderResourceStore,
+	infraProviderSvc infraprovider.ProviderService,
 	configStore store.GitspaceConfigStore,
 	instanceStore store.GitspaceInstanceStore,
 	spaceStore store.SpaceStore,
@@ -47,7 +48,7 @@ func ProvideController(
 	return NewController(
 		tx,
 		authorizer,
-		resourceStore,
+		infraProviderSvc,
 		configStore,
 		instanceStore,
 		spaceStore,

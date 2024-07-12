@@ -624,7 +624,7 @@ type (
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderResource, error)
 
 		// Create creates a new infra provider resource in the datastore.
-		Create(ctx context.Context, infraProviderConfigID int64, infraProviderResource *types.InfraProviderResource) error
+		Create(ctx context.Context, infraProviderResource *types.InfraProviderResource) error
 
 		// List lists the infra provider resource present for the gitspace config in a parent space ID in the datastore.
 		List(ctx context.Context,
