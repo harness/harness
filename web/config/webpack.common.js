@@ -30,7 +30,6 @@ const moduleFederationConfig = require('./moduleFederation.config')
 const moduleFederationConfigCDE = require('./cde/moduleFederation.config')
 const CONTEXT = process.cwd()
 const DEV = process.env.NODE_ENV === 'development'
-const ENABLE_GITSPACE = process.env.ENABLE_GITSPACE === 'true'
 
 const getModuleFields = () => {
   if (process.env.MODULE === 'cde') {
@@ -224,8 +223,7 @@ module.exports = {
     moduleFederationPlugin,
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core
-      __DEV__: DEV,
-      __ENABLE_GITSPACE__: ENABLE_GITSPACE
+      __DEV__: DEV
     }),
     new GenerateStringTypesPlugin(),
     new RetryChunkLoadPlugin({

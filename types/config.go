@@ -399,6 +399,9 @@ type Config struct {
 		DefaultBaseImage string `envconfig:"GITNESS_GITSPACE_DEFAULT_BASE_IMAGE" default:"mcr.microsoft.com/devcontainers/base:dev-ubuntu-24.04"` //nolint:lll
 		// DefaultBindMountTargetPath is the target for bind mount in the Gitspace container.
 		DefaultBindMountTargetPath string `envconfig:"GITNESS_GITSPACE_DEFAULT_BIND_MOUNT_TARGET_PATH" default:"/gitspace"` //nolint:lll
+
+		Enable bool `envconfig:"GITNESS_GITSPACE_ENABLE" default:"false"`
+
 		// DefaultBindMountTargetPath is the source for bind mount in the Gitspace container.
 		// Sub-directories will be created from this eg <DefaultBindMountSourceBasePath>/gitspace/space1/space2/config1
 		// If left blank, it will be set to $HOME/.gitness
