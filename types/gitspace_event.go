@@ -22,7 +22,8 @@ type GitspaceEvent struct {
 	EntityID   int64                   `json:"-"`
 	QueryKey   string                  `json:"query_key,omitempty"`
 	EntityType enum.GitspaceEntityType `json:"entity_type,omitempty"`
-	Created    int64                   `json:"timestamp,omitempty"`
+	Timestamp  int64                   `json:"timestamp,omitempty"`
+	Created    int64                   `json:"created,omitempty"`
 }
 
 type GitspaceEventResponse struct {

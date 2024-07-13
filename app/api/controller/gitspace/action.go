@@ -257,6 +257,6 @@ func (c *Controller) emitGitspaceConfigEvent(
 		EntityID:   config.ID,
 		EntityType: enum.GitspaceEntityTypeGitspaceConfig,
 		EventType:  eventType,
-		Created:    time.Now().UnixMilli(),
+		Timestamp:  time.Now().UnixNano(),
 	})
 }

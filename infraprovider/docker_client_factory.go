@@ -26,13 +26,6 @@ import (
 	"github.com/docker/go-connections/tlsconfig"
 )
 
-type DockerConfig struct {
-	DockerHost       string
-	DockerAPIVersion string
-	DockerCertPath   string
-	DockerTLSVerify  string
-}
-
 type DockerClientFactory struct {
 	config *DockerConfig
 }

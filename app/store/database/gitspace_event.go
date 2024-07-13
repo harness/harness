@@ -36,8 +36,9 @@ const (
 		geven_event,
 		geven_created,
 		geven_entity_type,
-		geven_entity_uid,
-		geven_entity_id
+		geven_query_key,
+		geven_entity_id,
+		geven_timestamp
 	`
 	gitspaceEventsColumnsWithID = gitspaceEventIDColumn + `,
 		` + gitspaceEventsColumns
@@ -53,8 +54,9 @@ type gitspaceEvent struct {
 	Event      enum.GitspaceEventType  `db:"geven_event"`
 	Created    int64                   `db:"geven_created"`
 	EntityType enum.GitspaceEntityType `db:"geven_entity_type"`
-	QueryKey   string                  `db:"geven_entity_uid"` // TODO: change to query_key
+	QueryKey   string                  `db:"geven_query_key"`
 	EntityID   int64                   `db:"geven_entity_id"`
+	Timestamp  int64                   `db:"geven_timestamp"`
 }
 
 func NewGitspaceEventStore(db *sqlx.DB) store.GitspaceEventStore {
@@ -73,7 +75,7 @@ func (g gitspaceEventStore) FindLatestByTypeAndGitspaceConfigID(
 		From(gitspaceEventsTable).
 		Where("geven_event = $1", eventType).
 		Where("geven_entity_id = $2", gitspaceConfigID).
-		OrderBy("geven_created DESC")
+		OrderBy("geven_timestamp DESC")
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert squirrel builder to sql: %w", err)
@@ -96,6 +98,7 @@ func (g gitspaceEventStore) Create(ctx context.Context, gitspaceEvent *types.Git
 			gitspaceEvent.EntityType,
 			gitspaceEvent.QueryKey,
 			gitspaceEvent.EntityID,
+			gitspaceEvent.Timestamp,
 		).
 		Suffix("RETURNING " + gitspaceEventIDColumn)
 	db := dbtx.GetAccessor(ctx, g.db)
@@ -161,7 +164,7 @@ func (g gitspaceEventStore) setQueryFilter(
 	filter *types.GitspaceEventFilter,
 ) squirrel.SelectBuilder {
 	if filter.QueryKey != "" {
-		stmt = stmt.Where(squirrel.Eq{"geven_entity_uid": filter.QueryKey})
+		stmt = stmt.Where(squirrel.Eq{"geven_query_key": filter.QueryKey})
 	}
 	if filter.EntityType != "" {
 		stmt = stmt.Where(squirrel.Eq{"geven_entity_type": filter.EntityType})
@@ -176,7 +179,7 @@ func (g gitspaceEventStore) setSortFilter(
 	stmt squirrel.SelectBuilder,
 	_ *types.GitspaceEventFilter,
 ) squirrel.SelectBuilder {
-	return stmt.OrderBy("geven_created DESC")
+	return stmt.OrderBy("geven_timestamp DESC")
 }
 
 func (g gitspaceEventStore) setPaginationFilter(
@@ -204,5 +207,6 @@ func (g gitspaceEventStore) mapGitspaceEvent(event *gitspaceEvent) *types.Gitspa
 		EntityType: event.EntityType,
 		QueryKey:   event.QueryKey,
 		EntityID:   event.EntityID,
+		Timestamp:  event.Timestamp,
 	}
 }

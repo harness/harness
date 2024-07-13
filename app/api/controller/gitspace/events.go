@@ -63,7 +63,7 @@ func (c *Controller) Events(
 		gitspaceEventResponse := &types.GitspaceEventResponse{
 			GitspaceEvent: *event,
 			Message:       eventMessageMap[event.Event],
-			EventTime:     time.UnixMilli(event.Created).Format(time.RFC3339)}
+			EventTime:     time.Unix(0, event.Timestamp).Format(time.RFC3339Nano)}
 		result[index] = gitspaceEventResponse
 	}
 

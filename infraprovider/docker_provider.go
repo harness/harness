@@ -27,11 +27,13 @@ import (
 var _ InfraProvider = (*DockerProvider)(nil)
 
 type DockerProvider struct {
+	config              *DockerConfig
 	dockerClientFactory *DockerClientFactory
 }
 
-func NewDockerProvider(dockerClientFactory *DockerClientFactory) *DockerProvider {
+func NewDockerProvider(config *DockerConfig, dockerClientFactory *DockerClientFactory) *DockerProvider {
 	return &DockerProvider{
+		config:              config,
 		dockerClientFactory: dockerClientFactory,
 	}
 }
@@ -62,6 +64,7 @@ func (d DockerProvider) Provision(ctx context.Context, _ string, params []Parame
 		Identifier:   info.ID,
 		ProviderType: enum.InfraProviderTypeDocker,
 		Status:       enum.InfraStatusProvisioned,
+		Host:         d.config.DockerMachineHostName,
 	}, nil
 }
 

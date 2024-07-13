@@ -158,6 +158,9 @@ func backfillURLs(config *types.Config) error {
 	}
 
 	// backfill all external URLs that weren't explicitly overwritten
+	if config.URL.Base == "" {
+		config.URL.Base = baseURL.String()
+	}
 	if config.URL.API == "" {
 		config.URL.API = baseURL.JoinPath("api").String()
 	}
@@ -376,13 +379,22 @@ func ProvideJobsConfig(config *types.Config) job.Config {
 }
 
 // ProvideDockerConfig loads config for Docker.
-func ProvideDockerConfig(config *types.Config) *infraprovider.DockerConfig {
-	return &infraprovider.DockerConfig{
-		DockerHost:       config.Docker.Host,
-		DockerAPIVersion: config.Docker.APIVersion,
-		DockerCertPath:   config.Docker.CertPath,
-		DockerTLSVerify:  config.Docker.TLSVerify,
+func ProvideDockerConfig(config *types.Config) (*infraprovider.DockerConfig, error) {
+	if config.Docker.MachineHostName == "" {
+		gitnessBaseURL, err := url.Parse(config.URL.Base)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse Gitness base URL %s: %w", gitnessBaseURL, err)
+		}
+		config.Docker.MachineHostName = gitnessBaseURL.Hostname()
 	}
+
+	return &infraprovider.DockerConfig{
+		DockerHost:            config.Docker.Host,
+		DockerAPIVersion:      config.Docker.APIVersion,
+		DockerCertPath:        config.Docker.CertPath,
+		DockerTLSVerify:       config.Docker.TLSVerify,
+		DockerMachineHostName: config.Docker.MachineHostName,
+	}, nil
 }
 
 // ProvideIDEVSCodeWebConfig loads the VSCode Web IDE config from the main config.
@@ -394,8 +406,6 @@ func ProvideIDEVSCodeWebConfig(config *types.Config) *container.VSCodeWebConfig 
 
 // ProvideGitspaceContainerOrchestratorConfig loads the Gitspace container orchestrator config from the main config.
 func ProvideGitspaceContainerOrchestratorConfig(config *types.Config) (*container.Config, error) {
-	var bindMountSourceBasePath string
-
 	if config.Gitspace.DefaultBindMountSourceBasePath == "" {
 		var homedir string
 
@@ -404,13 +414,18 @@ func ProvideGitspaceContainerOrchestratorConfig(config *types.Config) (*containe
 			return nil, fmt.Errorf("unable to determine home directory: %w", err)
 		}
 
-		bindMountSourceBasePath = filepath.Join(homedir, gitnessHomeDir)
+		config.Gitspace.DefaultBindMountSourceBasePath = filepath.Join(homedir, gitnessHomeDir)
+	}
+
+	if config.Gitspace.DefaultBindMountSourceBasePathAbsolute == "" {
+		config.Gitspace.DefaultBindMountSourceBasePathAbsolute = config.Gitspace.DefaultBindMountSourceBasePath
 	}
 
 	return &container.Config{
-		DefaultBaseImage:               config.Gitspace.DefaultBaseImage,
-		DefaultBindMountTargetPath:     config.Gitspace.DefaultBindMountTargetPath,
-		DefaultBindMountSourceBasePath: bindMountSourceBasePath,
+		DefaultBaseImage:                       config.Gitspace.DefaultBaseImage,
+		DefaultBindMountTargetPath:             config.Gitspace.DefaultBindMountTargetPath,
+		DefaultBindMountSourceBasePath:         config.Gitspace.DefaultBindMountSourceBasePath,
+		DefaultBindMountSourceBasePathAbsolute: config.Gitspace.DefaultBindMountSourceBasePathAbsolute,
 	}, nil
 }
 

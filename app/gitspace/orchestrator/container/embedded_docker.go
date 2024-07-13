@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/infraprovider"
@@ -51,9 +52,10 @@ const (
 )
 
 type Config struct {
-	DefaultBaseImage               string
-	DefaultBindMountTargetPath     string
-	DefaultBindMountSourceBasePath string
+	DefaultBaseImage                       string
+	DefaultBindMountTargetPath             string
+	DefaultBindMountSourceBasePath         string
+	DefaultBindMountSourceBasePathAbsolute string
 }
 
 type EmbeddedDockerOrchestrator struct {
@@ -182,7 +184,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 	return &StartResponse{
 		ContainerID:      containerID,
 		ContainerName:    containerName,
-		WorkingDirectory: e.config.DefaultBindMountTargetPath,
+		WorkingDirectory: strings.TrimPrefix(e.config.DefaultBindMountTargetPath, "/"),
 		PortsUsed:        usedPorts,
 	}, nil
 }
@@ -509,7 +511,16 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 			gitspaceConfig.Identifier,
 		)
 
-	loggingErr := logStreamInstance.Write("Creating bind mount source directory: " + bindMountSourcePath)
+	absoluteBindMountSourcePath :=
+		filepath.Join(
+			e.config.DefaultBindMountSourceBasePathAbsolute,
+			gitspacesDir,
+			gitspaceConfig.SpacePath,
+			gitspaceConfig.Identifier,
+		)
+
+	loggingErr := logStreamInstance.Write(
+		"Creating bind mount source directory: " + bindMountSourcePath + " (" + absoluteBindMountSourcePath + " )")
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
@@ -548,7 +559,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeBind,
-				Source: bindMountSourcePath,
+				Source: absoluteBindMountSourcePath,
 				Target: e.config.DefaultBindMountTargetPath,
 			},
 		},

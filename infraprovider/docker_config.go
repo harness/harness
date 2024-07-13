@@ -14,25 +14,10 @@
 
 package infraprovider
 
-import (
-	"github.com/google/wire"
-)
-
-// WireSet provides a wire set for this package.
-var WireSet = wire.NewSet(
-	ProvideDockerProvider,
-	ProvideFactory,
-	ProvideDockerClientFactory,
-)
-
-func ProvideDockerProvider(config *DockerConfig, dockerClientFactory *DockerClientFactory) *DockerProvider {
-	return NewDockerProvider(config, dockerClientFactory)
-}
-
-func ProvideFactory(dockerProvider *DockerProvider) Factory {
-	return NewFactory(dockerProvider)
-}
-
-func ProvideDockerClientFactory(config *DockerConfig) *DockerClientFactory {
-	return NewDockerClientFactory(config)
+type DockerConfig struct {
+	DockerHost            string
+	DockerAPIVersion      string
+	DockerCertPath        string
+	DockerTLSVerify       string
+	DockerMachineHostName string
 }

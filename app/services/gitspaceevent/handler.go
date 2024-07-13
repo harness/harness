@@ -17,6 +17,7 @@ package gitspaceevent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	"github.com/harness/gitness/events"
@@ -32,7 +33,8 @@ func (s *Service) handleGitspaceEvent(
 		EntityID:   event.Payload.EntityID,
 		QueryKey:   event.Payload.QueryKey,
 		EntityType: event.Payload.EntityType,
-		Created:    event.Payload.Created,
+		Timestamp:  event.Payload.Timestamp,
+		Created:    time.Now().UnixMilli(),
 	}
 
 	err := s.gitspaceEventStore.Create(ctx, gitspaceEvent)

@@ -322,9 +322,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, searcher, repoController, spaceController)
 	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db)
 	infraProviderConfigStore := database.ProvideInfraProviderConfigStore(db)
-	dockerConfig := server.ProvideDockerConfig(config)
+	dockerConfig, err := server.ProvideDockerConfig(config)
+	if err != nil {
+		return nil, err
+	}
 	dockerClientFactory := infraprovider.ProvideDockerClientFactory(dockerConfig)
-	dockerProvider := infraprovider.ProvideDockerProvider(dockerClientFactory)
+	dockerProvider := infraprovider.ProvideDockerProvider(dockerConfig, dockerClientFactory)
 	factory := infraprovider.ProvideFactory(dockerProvider)
 	providerService := infraprovider2.ProvideInfraProvider(infraProviderResourceStore, infraProviderConfigStore, factory, spaceStore, transactor)
 	infraproviderController := infraprovider3.ProvideController(authorizer, spaceStore, providerService)
