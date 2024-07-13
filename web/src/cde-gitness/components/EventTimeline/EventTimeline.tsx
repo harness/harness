@@ -7,7 +7,7 @@ import { useStrings } from 'framework/strings'
 import { formatTimestamp } from './EventTimeline.utils'
 import css from './EventTimeline.module.scss'
 
-const EventTimeline = ({ data }: { data?: TypesGitspaceEventResponse[] | null; polling?: boolean }) => {
+const EventTimeline = ({ data }: { data?: TypesGitspaceEventResponse[] | null }) => {
   const localRef = useRef<HTMLDivElement | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
@@ -50,7 +50,7 @@ const EventTimeline = ({ data }: { data?: TypesGitspaceEventResponse[] | null; p
       <Container ref={localRef}>
         {data?.map((item, index) => {
           return (
-            <Layout.Horizontal background={Color.GREY_50} key={item.query_key}>
+            <Layout.Horizontal background={Color.GREY_50} key={`${item.query_key}_${item.timestamp}`}>
               <Container
                 background={Color.GREY_50}
                 width={'8%'}

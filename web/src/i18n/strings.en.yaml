@@ -1160,8 +1160,8 @@ cde:
   stopingGitspace: Stopping Gitspace
   sessionDuration: Last Started
   lastActivated: LAST ACTIVATED
-  deleteGitspaceTitle: Delete Gitspace
-  deleteGitspaceText: "Are you sure to delete the gitspace, '{{name}}'?"
+  deleteGitspaceTitle: Delete Gitspace '{{name}}'
+  deleteGitspaceText: 'This action cannot be undone. Are you sure you want to proceed to delete?'
   deleteSuccess: Gitspace deleted succesfully
   repositoryAndBranch: Repository & Branch
   importInto: Import Repository into Gitness

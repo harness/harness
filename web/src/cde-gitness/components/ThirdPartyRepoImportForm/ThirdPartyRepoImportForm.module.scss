@@ -1,4 +1,6 @@
 .formFields {
+  div[data-id='branch-1'],
+  div[data-id='code_repo_url-0'],
   [class*='repoInput'],
   [class*='branchDropdown'] {
     width: 100% !important;

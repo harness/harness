@@ -22,7 +22,7 @@ import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import EventTimelineAccordion from 'cde-gitness/components/EventTimelineAccordion/EventTimelineAccordion'
 import { DetailsCard } from 'cde-gitness/components/DetailsCard/DetailsCard'
-import type { TypesGitspaceConfig, TypesGitspaceEventResponse } from 'cde-gitness/services'
+import type { EnumGitspaceStateType, TypesGitspaceConfig, TypesGitspaceEventResponse } from 'cde-gitness/services'
 import { GitspaceActionType, GitspaceStatus } from 'cde/constants'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
@@ -33,6 +33,7 @@ import vscodeIcon from 'cde/icons/VSCode.svg?url'
 import pauseIcon from 'cde-gitness/assests/pause.svg?url'
 import { StandaloneIDEType } from 'cde-gitness/constants'
 import homeIcon from 'cde-gitness/assests/home.svg?url'
+import { useConfirmAct } from 'hooks/useConfirmAction'
 import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
 import { useGetLogStream } from '../../hooks/useGetLogStream'
 import css from './GitspaceDetails.module.scss'
@@ -41,9 +42,10 @@ export const GitspaceDetails = () => {
   const space = useGetSpaceParam()
   const { getString } = useStrings()
   const { routes } = useAppContext()
-  const { showError } = useToaster()
+  const { showError, showSuccess } = useToaster()
   const history = useHistory()
   const [startTriggred, setStartTriggred] = useState<boolean>(false)
+  const [triggerPollingOnStart, setTriggerPollingOnStart] = useState<EnumGitspaceStateType>()
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
 
   const [isStreamingLogs, setIsStreamingLogs] = useState(false)
@@ -60,7 +62,11 @@ export const GitspaceDetails = () => {
     debounce: 500
   })
 
-  const { refetch: refetchLogsData, response } = useGet<any>({
+  const {
+    refetch: refetchLogsData,
+    response,
+    error: streamLogsError
+  } = useGet<any>({
     path: `api/v1/gitspaces/${space}/${gitspaceId}/+/logs/stream`,
     debounce: 500,
     lazy: true
@@ -79,12 +85,11 @@ export const GitspaceDetails = () => {
   const { updateQueryParams } = useUpdateQueryParams<{ redirectFrom?: string }>()
   const { redirectFrom = '' } = useQueryParams<{ redirectFrom?: string }>()
 
-  const pollingCondition = [
-    GitspaceStatus.RUNNING,
-    GitspaceStatus.STOPPED,
-    GitspaceStatus.ERROR,
-    GitspaceStatus.UNINITIALIZED
-  ].includes(data?.state as GitspaceStatus)
+  const pollingCondition = triggerPollingOnStart
+    ? false
+    : [GitspaceStatus.RUNNING, GitspaceStatus.STOPPED, GitspaceStatus.ERROR, GitspaceStatus.UNINITIALIZED].includes(
+        data?.state as GitspaceStatus
+      )
 
   const disabledActionButtons = [GitspaceStatus.STARTING, GitspaceStatus.STOPPING].includes(
     data?.state as GitspaceStatus
@@ -99,15 +104,21 @@ export const GitspaceDetails = () => {
     if (disabledActionButtons && filteredEvent?.length && !isStreamingLogs) {
       refetchLogsData()
       setIsStreamingLogs(true)
-    } else if (filteredEvent?.length && !disabledActionButtons && isStreamingLogs) {
+    } else if (
+      (filteredEvent?.length && !disabledActionButtons && isStreamingLogs) ||
+      (isStreamingLogs && streamLogsError)
+    ) {
       setIsStreamingLogs(false)
     }
-  }, [eventData, data?.instance?.updated, disabledActionButtons])
+  }, [eventData, data?.instance?.updated, disabledActionButtons, streamLogsError])
 
   usePolling(
     async () => {
       await refetchEventData()
       await refetch()
+      if (triggerPollingOnStart) {
+        setTriggerPollingOnStart(undefined)
+      }
     },
     {
       pollingInterval: 10000,
@@ -120,7 +131,11 @@ export const GitspaceDetails = () => {
       if (redirectFrom && !startTriggred && !mutateLoading) {
         try {
           setStartTriggred(true)
-          await actionMutate({ action: GitspaceActionType.START })
+          const resp = await actionMutate({ action: GitspaceActionType.START })
+          if (resp?.state === GitspaceStatus.STARTING) {
+            setTriggerPollingOnStart(resp.state)
+          }
+          await refetchEventData()
           await refetch()
           updateQueryParams({ redirectFrom: undefined })
         } catch (err) {
@@ -135,6 +150,28 @@ export const GitspaceDetails = () => {
   }, [data?.state, redirectFrom, mutateLoading, startTriggred])
 
   const formattedlogsdata = useGetLogStream({ response })
+
+  const confirmDelete = useConfirmAct()
+
+  const handleDelete = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    confirmDelete({
+      intent: 'danger',
+      title: getString('cde.deleteGitspaceTitle', { name: data?.name }),
+      message: getString('cde.deleteGitspaceText'),
+      confirmText: getString('delete'),
+      action: async () => {
+        try {
+          e.preventDefault()
+          e.stopPropagation()
+          await deleteGitspace({})
+          showSuccess(getString('cde.deleteSuccess'))
+          history.push(routes.toCDEGitspaces({ space }))
+        } catch (exception) {
+          showError(getErrorMessage(exception))
+        }
+      }
+    })
+  }
 
   return (
     <>
@@ -223,7 +260,7 @@ export const GitspaceDetails = () => {
                       }}
                     />
                     <MenuItem
-                      onClick={deleteGitspace as Unknown as () => void}
+                      onClick={handleDelete as Unknown as () => void}
                       text={
                         <Layout.Horizontal
                           spacing="small"

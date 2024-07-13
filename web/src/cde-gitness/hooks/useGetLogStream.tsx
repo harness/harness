@@ -1,4 +1,6 @@
+import { get } from 'lodash-es'
 import { useEffect, useState } from 'react'
+import { useStrings, type UseStringsReturn } from 'framework/strings'
 
 export interface LogData {
   pos: number
@@ -6,24 +8,29 @@ export interface LogData {
   time: number
 }
 
-export function parseLog(log: string): LogData[] {
+export function parseLog(log: string, getString: UseStringsReturn['getString']): LogData[] {
   const logLines = log.trim().split('\n\n')
   const parsedData: LogData[] = []
 
-  logLines.forEach(line => {
-    const dataMatch = line.match(/data: (.+)/)
+  try {
+    logLines.forEach(line => {
+      const dataMatch = line.match(/data: (.+)/)
 
-    if (dataMatch && dataMatch[1] !== 'eof') {
-      const eventData: LogData = JSON.parse(dataMatch[1])
+      if (dataMatch && dataMatch[1] !== 'eof') {
+        const eventData: LogData = JSON.parse(dataMatch[1])
 
-      parsedData.push(eventData)
-    }
-  })
+        parsedData.push(eventData)
+      }
+    })
+  } catch (error) {
+    parsedData.push({ pos: 1, out: get(error, 'message') || getString('cde.details.logsFailed'), time: 0 })
+  }
 
   return parsedData
 }
 
 export const useGetLogStream = ({ response }: { response: any }) => {
+  const { getString } = useStrings()
   const [data, setData] = useState('')
 
   useEffect(() => {
@@ -50,5 +57,5 @@ export const useGetLogStream = ({ response }: { response: any }) => {
     }
   }, [response])
 
-  return { data: parseLog(data) }
+  return { data: parseLog(data, getString) }
 }

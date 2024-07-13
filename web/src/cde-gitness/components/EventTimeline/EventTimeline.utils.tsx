@@ -3,8 +3,17 @@ import moment from 'moment'
 import { Text, Layout } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 
+export const convertToMilliSecs = (timestamp: number) => {
+  if (timestamp > 1e12) {
+    timestamp = Math.floor(timestamp / 1e6)
+  }
+  return timestamp
+}
+
 export const formatTimestamp = (timestamp: number) => {
-  const inputDate = moment(timestamp)
+  const convertedTimeStamp = convertToMilliSecs(timestamp)
+
+  const inputDate = moment(convertedTimeStamp)
   const currentDate = moment()
 
   if (inputDate.isSame(currentDate, 'day')) {
