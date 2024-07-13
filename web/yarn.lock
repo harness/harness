@@ -1649,10 +1649,10 @@
   resolved "https://registry.npmjs.org/@harnessio/design-system/-/design-system-2.1.1.tgz#2da3036602ed9b9446d8139c72009e6dc1e25642"
   integrity sha512-ZwAGM1srOZ49/6YkwyjkczUv4v91CN0rCecRYnV3/g+xdSV5ycrUvkJjl9nHub6jw2eCGC0GdyNgAtAJnLmGfQ==
 
-"@harnessio/icons@^2.1.3":
-  version "2.1.3"
-  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.3.tgz#abe777ff94491dd1647693fc18e74f956c42fd52"
-  integrity sha512-hlYwjlS8sv46SvXyydnykNu0ZM89+xyGp3MAuOfdKLgxOn1wMMu/88VwP7tPhHmCRhkGhn7xAPY/JLkYT24pgg==
+"@harnessio/icons@^2.1.5":
+  version "2.1.5"
+  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.5.tgz#07ad9417e79a2fef6ccc79df7f21758c2a85feb9"
+  integrity sha512-fFVXoPXnEXAM6lwfT8r7qhR265Pn79u99i/0EijbA0CgxPvtrHaIldcDoKBCk963VFXNIdjqJps405TzHwJSeA==
 
 "@harnessio/uicore@^4.1.2":
   version "4.1.2"

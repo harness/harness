@@ -34,6 +34,7 @@
   }
 
   .listContainer {
+    border-radius: 20px !important;
     :global {
       a.bp3-menu-item:hover,
       .bp3-active {
@@ -52,4 +53,18 @@
 
 .repositoryCell {
   width: fit-content !important;
+  margin-right: var(--spacing-xxlarge) !important;
+}
+
+.stopModal {
+  width: 650px !important;
+  [class*='ConfirmationDialog--body'] {
+    margin-bottom: 0px !important;
+  }
+  span[data-icon='info-messaging'] {
+    display: none;
+  }
+  svg {
+    fill: #004ba4;
+  }
 }

@@ -49,7 +49,7 @@ import { useGet, useMutate } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { compact, get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
-import { String, useStrings } from 'framework/strings'
+import { useStrings } from 'framework/strings'
 import {
   DEFAULT_BRANCH_NAME,
   getErrorMessage,
@@ -75,6 +75,7 @@ import type {
   OpenapiCreateRepositoryRequest
 } from 'services/code'
 import { useAppContext } from 'AppContext'
+import type { TypesRepository } from 'cde-gitness/services'
 import ImportForm from './ImportForm/ImportForm'
 import ImportReposForm from './ImportReposForm/ImportReposForm'
 import Private from '../../icons/private.svg?url'
@@ -95,9 +96,9 @@ export interface NewRepoModalButtonProps extends Omit<ButtonProps, 'onClick' | '
   modalTitle: string
   submitButtonTitle?: string
   cancelButtonTitle?: string
-  onSubmit: (data: RepoRepositoryOutput & SpaceImportRepositoriesOutput) => void
-  newRepoModalOnly?: boolean
-  notFoundRepoName?: string
+  onSubmit: (data: TypesRepository & RepoRepositoryOutput & SpaceImportRepositoriesOutput) => void
+  repoCreationType?: RepoCreationType
+  customRenderer?: (onChange: (event: any) => void) => React.ReactNode
 }
 
 export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
@@ -481,17 +482,15 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     [space]
   )
 
-  return props?.newRepoModalOnly ? (
-    <MenuItem
-      icon="plus"
-      text={<String stringID="cde.create.repoNotFound" vars={{ repo: props?.notFoundRepoName }} useRichText />}
-      onClick={e => {
+  return props?.repoCreationType ? (
+    <>
+      {props?.customRenderer?.(e => {
         e.preventDefault()
         e.stopPropagation()
-        setRepoOption(repoCreateOptions[0])
+        setRepoOption(repoCreateOptions.find(option => option.type === props?.repoCreationType) || repoCreateOptions[0])
         setTimeout(() => openModal(), 0)
-      }}
-    />
+      })}
+    </>
   ) : (
     <SplitButton
       {...props}

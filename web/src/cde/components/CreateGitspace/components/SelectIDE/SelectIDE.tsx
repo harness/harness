@@ -22,18 +22,22 @@ import { GitspaceSelect } from 'cde/components/GitspaceSelect/GitspaceSelect'
 import { useStrings, type UseStringsReturn } from 'framework/strings'
 import { IDEType } from 'cde/constants'
 import type { OpenapiCreateGitspaceRequest } from 'services/cde'
+import { StandaloneIDEType } from 'cde-gitness/constants'
 import VSCode from '../../../../icons/VSCode.svg?url'
 
-export const getIDESelectItems = (getString: UseStringsReturn['getString']) => [
-  { label: getString('cde.ide.desktop'), value: IDEType.VSCODE },
-  { label: getString('cde.ide.browser'), value: IDEType.VSCODEWEB }
-]
+export const getIDESelectItems = (getString: UseStringsReturn['getString'], standalone = false) => {
+  const ideEnum = standalone ? StandaloneIDEType : IDEType
+  return [
+    { label: getString('cde.ide.desktop'), value: ideEnum.VSCODE },
+    { label: getString('cde.ide.browser'), value: ideEnum.VSCODEWEB }
+  ]
+}
 
-export const SelectIDE = () => {
+export const SelectIDE = ({ standalone = false }: { standalone?: boolean }) => {
   const { values, errors, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { ide } = values
   const { getString } = useStrings()
-  const IDESelectItems = getIDESelectItems(getString)
+  const IDESelectItems = getIDESelectItems(getString, standalone)
   const IDELabel = IDESelectItems.find(item => item.value === ide)?.label
   return (
     <GitspaceSelect

@@ -34,7 +34,10 @@ export enum GitspaceStatus {
   RUNNING = 'running',
   STOPPED = 'stopped',
   UNKNOWN = 'unknown',
-  ERROR = 'error'
+  ERROR = 'error',
+  STARTING = 'starting',
+  STOPPING = 'stopping',
+  UNINITIALIZED = 'uninitialized'
 }
 
 export enum IDEType {

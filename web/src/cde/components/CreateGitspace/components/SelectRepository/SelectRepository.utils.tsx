@@ -1,6 +1,7 @@
 import React from 'react'
 import { Bitbucket as BitbucketIcon, Code, GitLabFull, GithubCircle } from 'iconoir-react'
 import type { EnumCodeRepoType } from 'services/cde'
+import type { EnumGitspaceCodeRepoType } from 'cde-gitness/services'
 
 export const isValidUrl = (url: string) => {
   const urlPattern = new RegExp(
@@ -37,17 +38,24 @@ export enum CodeRepoType {
   Unknown = 'unknown'
 }
 
-export const getIconByRepoType = ({ repoType }: { repoType?: EnumCodeRepoType }): React.ReactNode => {
+export const getIconByRepoType = ({
+  repoType,
+  height = 40
+}: {
+  repoType?: EnumCodeRepoType | EnumGitspaceCodeRepoType
+  height?: number
+}): React.ReactNode => {
   switch (repoType) {
     case CodeRepoType.Github:
-      return <GithubCircle height={40} />
+      return <GithubCircle height={height} />
     case CodeRepoType.Gitlab:
-      return <GitLabFull height={40} />
+      return <GitLabFull height={height} />
     case CodeRepoType.Bitbucket:
-      return <BitbucketIcon height={40} />
+      return <BitbucketIcon height={height} />
     default:
     case CodeRepoType.Unknown:
     case CodeRepoType.HarnessCode:
-      return <Code height={40} />
+    case 'harness_code':
+      return <Code height={height} />
   }
 }

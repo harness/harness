@@ -1,23 +1,22 @@
 import React, { useState } from 'react'
 import {
+  Breadcrumbs,
   Button,
   ButtonVariation,
   Card,
   Container,
   Formik,
   FormikForm,
+  Heading,
   Layout,
   Page,
   Text,
   useToaster
 } from '@harnessio/uicore'
-import { FontVariation } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
-import {
-  ThirdPartyRepoImportForm,
-  ThirdPartyRepoImportFormProps
-} from 'cde-gitness/components/ThirdPartyRepoImportForm/ThirdPartyRepoImportForm'
+import { ThirdPartyRepoImportForm } from 'cde-gitness/components/ThirdPartyRepoImportForm/ThirdPartyRepoImportForm'
 import { GitnessRepoImportForm } from 'cde-gitness/components/GitnessRepoImportForm/GitnessRepoImportForm'
 import { SelectIDE } from 'cde/components/CreateGitspace/components/SelectIDE/SelectIDE'
 import { useCreateGitspace, type OpenapiCreateGitspaceRequest } from 'cde-gitness/services'
@@ -25,8 +24,8 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { getErrorMessage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import RepositoryTypeButton, { RepositoryType } from '../../components/RepositoryTypeButton/RepositoryTypeButton'
-import { gitnessFormInitialValues, thirdPartyformInitialValues } from './GitspaceCreate.constants'
-import { handleImportSubmit, validateGitnessForm, validationSchemaStepOne } from './GitspaceCreate.utils'
+import { gitnessFormInitialValues } from './GitspaceCreate.constants'
+import { validateGitnessForm } from './GitspaceCreate.utils'
 import css from './GitspaceCreate.module.scss'
 
 export const GitspaceCreate = () => {
@@ -40,38 +39,49 @@ export const GitspaceCreate = () => {
 
   return (
     <>
-      <Page.Header title={getString('cde.gitspaces')} />
+      <Page.Header
+        title={getString('cde.createGitspace')}
+        breadcrumbs={
+          <Breadcrumbs
+            links={[
+              { url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') },
+              { url: routes.toCDEGitspacesCreate({ space }), label: getString('cde.createGitspace') }
+            ]}
+          />
+        }
+      />
       <Page.Body className={css.main}>
+        <Container className={css.titleContainer}>
+          <Layout.Vertical spacing="small" margin={{ bottom: 'medium' }}>
+            <Heading font={{ weight: 'bold' }} color={Color.BLACK} level={2}>
+              {getString('cde.createGitspace')}
+            </Heading>
+            <Text font={{ size: 'medium' }}>{getString('cde.create.subtext')}</Text>
+          </Layout.Vertical>
+        </Container>
         <Card className={css.cardMain}>
-          <Text className={css.cardTitle} font={{ variation: FontVariation.CARD_TITLE }}>
-            {getString('cde.createGitspace')}
-          </Text>
           <Container className={css.subContainers}>
             <Formik
               onSubmit={async data => {
                 try {
-                  const payload =
-                    activeButton === RepositoryType.GITNESS
-                      ? data
-                      : handleImportSubmit(data as ThirdPartyRepoImportFormProps)
-                  await mutate({ ...payload, space_ref: space } as OpenapiCreateGitspaceRequest & {
+                  const payload = data
+                  const response = await mutate({ ...payload, space_ref: space } as OpenapiCreateGitspaceRequest & {
                     space_ref?: string
                   })
                   showSuccess(getString('cde.create.gitspaceCreateSuccess'))
-                  history.push(routes.toCDEGitspaces({ space }))
+                  history.push(
+                    `${routes.toCDEGitspaceDetail({
+                      space,
+                      gitspaceId: response.identifier || ''
+                    })}?redirectFrom=login`
+                  )
                 } catch (error) {
                   showError(getString('cde.create.gitspaceCreateFailed'))
                   showError(getErrorMessage(error))
                 }
               }}
-              initialValues={
-                activeButton === RepositoryType.GITNESS ? gitnessFormInitialValues : thirdPartyformInitialValues
-              }
-              validationSchema={
-                activeButton === RepositoryType.GITNESS
-                  ? validateGitnessForm(getString)
-                  : validationSchemaStepOne(getString)
-              }
+              initialValues={gitnessFormInitialValues}
+              validationSchema={validateGitnessForm(getString)}
               formName="importRepoForm"
               enableReinitialize>
               {formik => {
@@ -105,7 +115,7 @@ export const GitspaceCreate = () => {
                         )}
                       </Container>
                       <Container className={css.formOuterContainer}>
-                        <SelectIDE />
+                        <SelectIDE standalone />
                         <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
                           {getString('cde.createGitspace')}
                         </Button>

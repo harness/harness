@@ -1,0 +1,23 @@
+.marker {
+  align-self: center;
+  position: relative;
+  left: 5.5px;
+  height: 12px;
+  width: 12px;
+  background: var(--grey-400) !important;
+  border-radius: 6px;
+  padding: 2px;
+  border: 2px solid #fff;
+}
+
+.main {
+  overflow: scroll;
+  max-height: 350px;
+}
+
+.lightBackground {
+  background: #dee8f9 !important;
+}
+.darkBackground {
+  background: #bbd1f6 !important;
+}

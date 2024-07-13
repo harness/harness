@@ -16,5 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const hideContainer: string
-export declare const repoAndBranch: string
+export declare const formFields: string
+export declare const importForm: string
+export declare const repoInput: string

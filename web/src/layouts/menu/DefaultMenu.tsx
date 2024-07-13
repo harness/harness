@@ -172,6 +172,17 @@ export const DefaultMenu: React.FC = () => {
           </Container>
         </Render>
 
+        {__ENABLE_GITSPACE__ && (
+          <Render when={selectedSpace}>
+            <NavMenuItem
+              className=""
+              label={getString('cde.gitspaces')}
+              to={routes.toCDEGitspaces({ space: selectedSpace?.path as string })}
+              icon="gitspace"
+            />
+          </Render>
+        )}
+
         <Render when={!standalone && selectedSpace}>
           <NavMenuItem
             icon="thinner-search"

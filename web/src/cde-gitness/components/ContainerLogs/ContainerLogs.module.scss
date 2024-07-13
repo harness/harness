@@ -1,0 +1,92 @@
+/*
+ * Copyright 2023 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import 'src/utils/utils';
+
+.consoleContainer {
+  min-height: 500px !important;
+  max-height: 70vh !important;
+  overflow: scroll;
+  align-items: start !important;
+  padding-top: var(--spacing-large) !important;
+  padding-left: var(--spacing-xlarge) !important;
+  background-color: var(--black) !important;
+  color: var(--white) !important;
+  pre {
+    background-color: var(--black) !important;
+    color: var(--white) !important;
+    text-align: start !important;
+    font-size: 12px;
+    font-family: var(--font-family-mono) !important;
+  }
+}
+
+.logTitle {
+  color: var(--white) !important;
+  background: var(--black) !important;
+  border-top-left-radius: 50px;
+  border-top-right-radius: 50px;
+  padding-top: var(--spacing-medium) !important;
+  text-align: left;
+  padding-left: var(--spacing-xxlarge) !important;
+  padding-bottom: var(--spacing-large) !important;
+  font-size: 16px !important;
+}
+
+.mainLog {
+  flex-shrink: 0;
+
+  .line {
+    margin: 0;
+    padding: 0;
+    cursor: text;
+    min-height: 20px;
+    display: block;
+
+    @include mono-font;
+    color: var(--white);
+
+    word-wrap: break-word !important;
+    white-space: pre-wrap !important;
+  }
+}
+
+.stepLogContainer {
+  padding: var(--spacing-small) !important;
+  flex-shrink: 0;
+
+  .consoleLine {
+    color: var(--white);
+
+    @include mono-font;
+
+    word-wrap: break-word !important;
+    white-space: pre-wrap !important;
+    cursor: text;
+    margin: 0;
+    padding: 0;
+
+    &:empty {
+      display: inline-block;
+      min-height: 20px;
+    }
+  }
+}
+
+.logContainer {
+  width: 60%;
+  max-width: 800px !important;
+}

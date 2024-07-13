@@ -34,12 +34,13 @@ const API_URL = process.env.API_URL ?? 'http://localhost:3000'
 const HOST = 'localhost'
 const PORT = getPortByModule()
 const STANDALONE = process.env.STANDALONE === 'true'
+const ENABLE_GITSPACE = process.env.ENABLE_GITSPACE === 'true'
 const CONTEXT = process.cwd()
 const prodConfig = require('./webpack.prod')
 
 console.info(`Starting development build... http://${HOST}:${PORT}`)
 console.info('Environment variables:')
-console.table({ STANDALONE, HOST, PORT, API_URL })
+console.table({ STANDALONE, ENABLE_GITSPACE, HOST, PORT, API_URL })
 
 const devConfig = {
   mode: 'development',

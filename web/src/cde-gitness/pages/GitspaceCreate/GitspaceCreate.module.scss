@@ -1,7 +1,21 @@
 .main {
   display: flex;
-  justify-content: center;
   align-items: center;
+  flex-direction: column;
+  margin-top: 10% !important;
+
+  .titleContainer {
+    width: 50%;
+    margin-bottom: var(--spacing-medium) !important;
+
+    h2 {
+      font-size: 24px !important;
+    }
+    p {
+      font-size: 16px !important;
+      color: #383946;
+    }
+  }
 
   .cardMain {
     width: 50%;

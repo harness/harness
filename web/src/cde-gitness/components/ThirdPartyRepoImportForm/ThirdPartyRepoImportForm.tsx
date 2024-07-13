@@ -1,125 +1,145 @@
-import { FormInput, FormikForm, Layout } from '@harnessio/uicore'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
+import { get, debounce } from 'lodash-es'
+import cx from 'classnames'
+import { FormikForm, Layout, FormInput, Container, Text } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
+import { Color } from '@harnessio/design-system'
+import { useHistory } from 'react-router-dom'
+import { Icon } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
-import { GitProviders, ImportFormData, getOrgLabel, getOrgPlaceholder, getProviders } from 'utils/GitUtils'
+import {
+  getRepoIdFromURL,
+  getRepoNameFromURL,
+  isValidUrl
+} from 'cde/components/CreateGitspace/components/SelectRepository/SelectRepository.utils'
+import { BranchInput } from 'cde/components/CreateGitspace/components/BranchInput/BranchInput'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import NewRepoModalButton from 'components/NewRepoModalButton/NewRepoModalButton'
+import { RepoCreationType } from 'utils/GitUtils'
+import { useAppContext } from 'AppContext'
+import { OpenapiCreateGitspaceRequest, useGitspacelookup } from 'cde-gitness/services'
 import css from './ThirdPartyRepoImportForm.module.scss'
 
-export interface ThirdPartyRepoImportFormProps extends ImportFormData {
-  branch: string
-  ide: string
-  id: string
+enum RepoCheckStatus {
+  Valid = 'valid',
+  InValid = 'InValid'
 }
 
 export const ThirdPartyRepoImportForm = () => {
-  const [auth, setAuth] = useState(false)
   const { getString } = useStrings()
-  const { values, setFieldValue, validateField } = useFormikContext<ThirdPartyRepoImportFormProps>()
+  const history = useHistory()
+  const space = useGetSpaceParam()
+  const { routes } = useAppContext()
+  const { setValues, setFieldError } = useFormikContext<OpenapiCreateGitspaceRequest>()
+
+  const { mutate, loading } = useGitspacelookup({})
+
+  const [repoCheckState, setRepoCheckState] = useState<RepoCheckStatus | undefined>()
+
+  const onChange = useCallback(
+    debounce(async (url: string) => {
+      let errorMessage = ''
+      try {
+        if (isValidUrl(url)) {
+          const response = (await mutate({ space_ref: space, url })) as {
+            is_private?: boolean
+            branch: string
+            url: string
+          }
+          if (response?.is_private) {
+            errorMessage = getString('cde.repository.privateRepoWarning')
+            setRepoCheckState(RepoCheckStatus.InValid)
+          } else {
+            setValues((prvValues: any) => {
+              return {
+                ...prvValues,
+                code_repo_url: response.url,
+                branch: response.branch,
+                identifier: getRepoIdFromURL(response.url),
+                name: getRepoNameFromURL(response.url)
+              }
+            })
+            setRepoCheckState(RepoCheckStatus.Valid)
+          }
+        } else {
+          if (url?.trim()?.length) {
+            errorMessage = 'Invalid URL Format'
+            setRepoCheckState(RepoCheckStatus.InValid)
+          } else {
+            if (repoCheckState) {
+              setRepoCheckState(undefined)
+            }
+          }
+        }
+      } catch (err) {
+        errorMessage = get(err, 'message') || ''
+      }
+      setFieldError('code_repo_url', errorMessage)
+    }, 1000),
+    [repoCheckState]
+  )
+
   return (
     <FormikForm>
-      <FormInput.Select name={'gitProvider'} label={getString('importSpace.gitProvider')} items={getProviders()} />
-      {![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET, GitProviders.AZURE].includes(
-        values.gitProvider
-      ) && (
-        <FormInput.Text
-          className={css.hideContainer}
-          name="hostUrl"
-          label={getString('importRepo.url')}
-          placeholder={getString('importRepo.urlPlaceholder')}
-          tooltipProps={{
-            dataTooltipId: 'repositoryURLTextField'
-          }}
-        />
-      )}
-      <FormInput.Text
-        className={css.hideContainer}
-        name="org"
-        label={getString(getOrgLabel(values.gitProvider))}
-        placeholder={getString(getOrgPlaceholder(values.gitProvider))}
-      />
-      {values.gitProvider === GitProviders.AZURE && (
-        <FormInput.Text
-          className={css.hideContainer}
-          name="project"
-          label={getString('importRepo.project')}
-          placeholder={getString('importRepo.projectPlaceholder')}
-        />
-      )}
-      <Layout.Horizontal spacing="medium" flex={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <Layout.Vertical className={css.repoAndBranch} spacing="small">
-          <FormInput.Text
-            className={css.hideContainer}
-            name="repo"
-            label={getString('importRepo.repo')}
-            placeholder={getString('importRepo.repoPlaceholder')}
-            onChange={event => {
-              const target = event.target as HTMLInputElement
-              setFieldValue('repo', target.value)
-              if (target.value) {
-                setFieldValue('name', target.value)
-                validateField('repo')
-              }
-            }}
-          />
-        </Layout.Vertical>
-        <Layout.Vertical className={css.repoAndBranch} spacing="small">
-          <FormInput.Text
-            className={css.hideContainer}
-            name="branch"
-            label={getString('branch')}
-            placeholder={getString('cde.create.branchPlaceholder')}
-            onChange={event => {
-              const target = event.target as HTMLInputElement
-              setFieldValue('branch', target.value)
-            }}
-          />
-        </Layout.Vertical>
-      </Layout.Horizontal>
-      <Layout.Horizontal spacing="medium">
-        <FormInput.CheckBox
-          name="authorization"
-          label={getString('importRepo.reqAuth')}
-          tooltipProps={{
-            dataTooltipId: 'authorization'
-          }}
-          onClick={() => {
-            setAuth(!auth)
-          }}
-          style={auth ? {} : { margin: 0 }}
-        />
-      </Layout.Horizontal>
-
-      {auth ? (
-        <>
-          {[GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider) && (
-            <FormInput.Text
-              name="username"
-              label={getString('userName')}
-              placeholder={getString('importRepo.userPlaceholder')}
-              tooltipProps={{
-                dataTooltipId: 'repositoryUserTextField'
+      <Layout.Horizontal spacing="small">
+        <Text
+          icon="warning-icon"
+          font={{ size: 'small' }}
+          margin={{ bottom: 'medium' }}
+          iconProps={{ size: 20, color: Color.ORANGE_500 }}
+          background={Color.ORANGE_50}
+          padding="small">
+          {getString('cde.create.importWarning')}
+          {
+            <NewRepoModalButton
+              space={space}
+              repoCreationType={RepoCreationType.IMPORT}
+              customRenderer={fn => (
+                <Text className={css.importForm} color={Color.PRIMARY_7} onClick={fn}>
+                  {getString('cde.importInto')}
+                </Text>
+              )}
+              modalTitle={getString('importGitRepo')}
+              onSubmit={() => {
+                history.push(routes.toCDEGitspacesCreate({ space }))
               }}
             />
-          )}
+          }
+        </Text>
+      </Layout.Horizontal>
+      <Layout.Horizontal spacing="medium">
+        <Container width="63%" className={css.formFields}>
           <FormInput.Text
-            inputGroup={{ type: 'password' }}
-            name="password"
-            label={
-              [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
-                ? getString('importRepo.appPassword')
-                : getString('importRepo.passToken')
-            }
-            placeholder={
-              [GitProviders.BITBUCKET, GitProviders.AZURE].includes(values.gitProvider)
-                ? getString('importRepo.appPasswordPlaceholder')
-                : getString('importRepo.passTokenPlaceholder')
-            }
-            tooltipProps={{
-              dataTooltipId: 'repositoryPasswordTextField'
+            name="code_repo_url"
+            inputGroup={{
+              leftIcon: 'git-repo',
+              color: Color.GREY_500,
+              rightElement: (
+                <Container height={50} width={25} flex={{ alignItems: 'center' }}>
+                  {loading ? (
+                    <Icon name="loading" />
+                  ) : repoCheckState ? (
+                    repoCheckState === RepoCheckStatus.Valid ? (
+                      <Icon name="tick-circle" color={Color.GREEN_450} />
+                    ) : (
+                      <Icon name="warning-sign" color={Color.ERROR} />
+                    )
+                  ) : undefined}
+                </Container>
+              )
+            }}
+            placeholder={getString('cde.repository.repositoryURL')}
+            className={cx(css.repoInput)}
+            onChange={async event => {
+              const target = event.target as HTMLInputElement
+              await onChange(target.value)
             }}
           />
-        </>
-      ) : null}
+        </Container>
+        <Container width="35%" className={css.formFields}>
+          <BranchInput />
+        </Container>
+      </Layout.Horizontal>
     </FormikForm>
   )
 }

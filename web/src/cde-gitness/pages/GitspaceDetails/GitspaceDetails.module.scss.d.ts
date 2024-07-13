@@ -16,12 +16,9 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const cardMain: string
-export declare const cardTitle: string
-export declare const formContainer: string
-export declare const formDivider: string
-export declare const formOuterContainer: string
-export declare const formTitleContainer: string
-export declare const main: string
-export declare const subContainers: string
+export declare const accordionnCustomSummary: string
+export declare const cardContainer: string
+export declare const customSubheader: string
+export declare const pageMain: string
+export declare const popover: string
 export declare const titleContainer: string

@@ -1,0 +1,69 @@
+.customSubheader {
+  height: 10vh;
+}
+
+.pageMain {
+  margin: var(--spacing-xxlarge) !important;
+}
+
+@media (min-width: 2000px) {
+  .titleContainer {
+    width: 80% !important;
+    margin: 0 10% !important;
+  }
+}
+
+.titleContainer {
+  width: 95% !important;
+  margin: 0 5% !important;
+}
+
+.cardContainer {
+  margin-top: var(--spacing-xxlarge) !important;
+  width: 100% !important;
+
+  [data-testid='eventsCard-panel'] {
+    padding: 0px !important;
+  }
+
+  &:first-child {
+    margin-top: 0px !important;
+  }
+}
+
+.popover {
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+
+  :global {
+    a.bp3-menu-item:hover,
+    .bp3-active {
+      background: var(--primary-1) !important;
+      color: var(--grey-1000) !important;
+    }
+  }
+}
+
+.accordionnCustomSummary {
+  :global(.Accordion--chevron) {
+    margin-left: auto;
+    color: var(--grey-700);
+  }
+
+  :global([class*='Accordion--panel']) {
+    padding: 0px !important;
+  }
+
+  div[data-testid='eventsCard-summary'],
+  div[data-testid='logsCard-summary'] {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    margin: 0 var(--spacing-medium);
+    width: 100%;
+
+    div:first-child {
+      width: 97%;
+    }
+  }
+}
