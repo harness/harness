@@ -383,12 +383,14 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 			RepoURL:             gitspaceConfig.CodeRepoURL,
 			DevcontainerPresent: devcontainerPresent,
 			Image:               e.config.DefaultBaseImage,
+			Branch:              gitspaceConfig.Branch,
 		})
 	if err != nil {
 		return fmt.Errorf("failed to generate scipt to clone git from template %s: %w", templateCloneGit, err)
 	}
 
-	loggingErr := logStreamInstance.Write("Cloning git repo inside container: " + gitspaceConfig.CodeRepoURL)
+	loggingErr := logStreamInstance.Write(
+		"Cloning git repo inside container: " + gitspaceConfig.CodeRepoURL + " branch: " + gitspaceConfig.Branch)
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
@@ -520,7 +522,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 		)
 
 	loggingErr := logStreamInstance.Write(
-		"Creating bind mount source directory: " + bindMountSourcePath + " (" + absoluteBindMountSourcePath + " )")
+		"Creating bind mount source directory: " + bindMountSourcePath + " (" + absoluteBindMountSourcePath + ")")
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}

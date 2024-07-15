@@ -3,6 +3,7 @@
 repo_url={{ .RepoURL }}
 devcontainer_present={{ .DevcontainerPresent }}
 image={{ .Image }}
+branch={{ .Branch }}
 
 # Extract the repository name from the URL
 repo_name=$(basename -s .git "$repo_url")
@@ -22,7 +23,7 @@ fi
 # Clone the repository only if it doesn't exist
 if [ ! -d "$repo_name" ]; then
     echo "Cloning the repository..."
-    git clone "$repo_url"
+    git clone "$repo_url" --branch "$branch"
 else
     echo "Repository already exists. Skipping clone."
 fi

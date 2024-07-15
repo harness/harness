@@ -37,6 +37,7 @@ type CloneGitPayload struct {
 	RepoURL             string
 	DevcontainerPresent string
 	Image               string
+	Branch              string
 }
 
 type RunVSCodeWebPayload struct {
