@@ -251,6 +251,28 @@ func (s gitspaceConfigStore) List(ctx context.Context, filter *types.GitspaceFil
 	return s.mapToGitspaceConfigs(ctx, dst)
 }
 
+func (s gitspaceConfigStore) ListAll(
+	ctx context.Context,
+	userUID string,
+) ([]*types.GitspaceConfig, error) {
+	stmt := database.Builder.
+		Select(gitspaceConfigSelectColumns).
+		From(gitspaceConfigsTable).
+		Where(squirrel.Eq{"gconf_is_deleted": false}).
+		Where(squirrel.Eq{"gconf_user_uid": userUID})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	var dst []*gitspaceConfig
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	}
+	return s.mapToGitspaceConfigs(ctx, dst)
+}
+
 func (s *gitspaceConfigStore) mapToGitspaceConfig(
 	_ context.Context,
 	in *gitspaceConfig,
@@ -276,8 +298,10 @@ func (s *gitspaceConfigStore) mapToGitspaceConfig(
 	return res, nil
 }
 
-func (s *gitspaceConfigStore) mapToGitspaceConfigs(ctx context.Context,
-	configs []*gitspaceConfig) ([]*types.GitspaceConfig, error) {
+func (s *gitspaceConfigStore) mapToGitspaceConfigs(
+	ctx context.Context,
+	configs []*gitspaceConfig,
+) ([]*types.GitspaceConfig, error) {
 	var err error
 	res := make([]*types.GitspaceConfig, len(configs))
 	for i := range configs {

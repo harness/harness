@@ -579,6 +579,9 @@ type (
 
 		// Count the number of gitspace configs in a space matching the given filter.
 		Count(ctx context.Context, filter *types.GitspaceFilter) (int64, error)
+
+		// ListAll lists all the gitspace configs present for a user in the given spaces in the datastore.
+		ListAll(ctx context.Context, userUID string) ([]*types.GitspaceConfig, error)
 	}
 
 	GitspaceInstanceStore interface {

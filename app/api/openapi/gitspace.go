@@ -58,6 +58,9 @@ type gitspaceEventsListRequest struct {
 	paginationRequest
 }
 
+type gitspacesListAllRequest struct {
+}
+
 func gitspaceOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("gitspaces")
@@ -155,4 +158,15 @@ func gitspaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/gitspaces/lookup-repo", opCreate)
+
+	opListAll := openapi3.Operation{}
+	opListAll.WithTags("gitspaces")
+	opListAll.WithSummary("List all gitspaces")
+	opListAll.WithMapOfAnything(map[string]interface{}{"operationId": "listAllGitspaces"})
+	_ = reflector.SetRequest(&opListAll, new(gitspacesListAllRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListAll, new([]*types.GitspaceConfig), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListAll, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opListAll, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListAll, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/gitspaces", opListAll)
 }
