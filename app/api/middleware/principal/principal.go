@@ -45,7 +45,8 @@ func RestrictTo(pType enum.PrincipalType) func(http.Handler) http.Handler {
 			if p.UID == types.AnonymousPrincipalUID {
 				log.Ctx(ctx).Debug().Msgf("Valid principal is required, received an Anonymous.")
 
-				render.Unauthorized(ctx, w)
+				// TODO: revert to Unauthorized once UI is handling it properly.
+				render.NotFound(ctx, w)
 				return
 			}
 
