@@ -1159,7 +1159,7 @@ cde:
   startingGitspace: Starting Gitspace
   stopingGitspace: Stopping Gitspace
   sessionDuration: Last Started
-  lastActivated: LAST ACTIVATED
+  lastActivated: Last Activated
   deleteGitspaceTitle: Delete Gitspace '{{name}}'
   deleteGitspaceText: 'This action cannot be undone. Are you sure you want to proceed to delete?'
   deleteSuccess: Gitspace deleted succesfully
@@ -1185,7 +1185,7 @@ cde:
     repoNotFound: 'Create a repo <strong>{{repo}}</strong> in Gitness'
     gitspaceCreateSuccess: Gitspace created successfully
     gitspaceCreateFailed: Gitspace creation failed
-    subtext: Start Coding, no setup required. Dedicated cloud development environments with your favorite editor
+    subtext: Start Coding, no setup required. Dedicated cloud development environments with your favorite editor.
     importWarning:
       Currently we support only third party public repositories. In order to use a private git repository, please
       import the repository into Gitness.

@@ -42,7 +42,6 @@ import {
 } from 'iconoir-react'
 import { Intent, Menu, MenuItem, PopoverInteractionKind, Position } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
-import { isNil } from 'lodash-es'
 import { useMutate } from 'restful-react'
 import type { IconName } from '@harnessio/icons'
 import { UseStringsReturn, useStrings } from 'framework/strings'
@@ -160,9 +159,8 @@ export const RenderGitspaceName: Renderer<CellProps<TypesGitspaceConfig>> = ({ r
 }
 
 export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
-  const { getString } = useStrings()
   const details = row.original
-  const { name, branch, code_repo_url, code_repo_type, instance } = details || {}
+  const { name, branch, code_repo_url, code_repo_type } = details || {}
 
   return (
     <Layout.Vertical spacing={'small'}>
@@ -192,11 +190,6 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
           {branch}
         </Text>
       </Layout.Horizontal>
-      {(isNil(instance?.tracked_changes) || instance?.tracked_changes === '') && (
-        <Text color={Color.GREY_300} font={{ align: 'left', size: 'small', weight: 'semi-bold' }}>
-          {getString('cde.noChange')}
-        </Text>
-      )}
     </Layout.Vertical>
   )
 }
@@ -387,6 +380,7 @@ const ActionMenu = ({
         </Container>
 
         <MenuItem
+          disabled={disabledActionButtons}
           onClick={deleteGitspace as Unknown as () => void}
           text={
             <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>

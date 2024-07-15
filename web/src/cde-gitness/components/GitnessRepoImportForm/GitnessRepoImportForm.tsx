@@ -164,6 +164,7 @@ export const GitnessRepoImportForm = () => {
                         return {
                           ...prvValues,
                           code_repo_url: repo.git_url,
+                          branch: repo.default_branch,
                           identifier: repoParams?.[repoParams.length - 1],
                           name: repo.path
                         }

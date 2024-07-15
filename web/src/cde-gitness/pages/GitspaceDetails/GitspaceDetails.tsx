@@ -98,7 +98,7 @@ export const GitspaceDetails = () => {
   useEffect(() => {
     const filteredEvent = eventData?.filter(
       item =>
-        item.event === 'agent_gitspace_creation_start' &&
+        (item.event === 'agent_gitspace_creation_start' || item.event === 'agent_gitspace_deletion_start') &&
         defaultTo(item?.timestamp, 0) >= defaultTo(data?.instance?.updated, 0)
     )
     if (disabledActionButtons && filteredEvent?.length && !isStreamingLogs) {

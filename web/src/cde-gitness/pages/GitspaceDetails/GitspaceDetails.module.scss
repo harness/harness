@@ -22,6 +22,7 @@
   margin-top: var(--spacing-xxlarge) !important;
   width: 100% !important;
 
+  [data-testid='logsCard-panel'],
   [data-testid='eventsCard-panel'] {
     padding: 0px !important;
   }

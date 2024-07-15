@@ -76,7 +76,7 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
         </Layout.Vertical>
 
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text>{getString('cde.lastUsed')}</Text>
+          <Text>{getString('cde.lastActivated')}</Text>
           {instance?.last_used ? (
             <ReactTimeago date={instance?.last_used || 0} />
           ) : (
