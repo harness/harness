@@ -24,22 +24,13 @@ type Orchestrator interface {
 	// StartGitspace is responsible for all the operations necessary to create the Gitspace container. It fetches the
 	// devcontainer.json from the code repo, provisions infra using the infra provisioner and setting up the Gitspace
 	// through the container orchestrator.
-	StartGitspace(
-		ctx context.Context,
-		gitspaceConfig *types.GitspaceConfig,
-	) (*types.GitspaceInstance, error)
+	StartGitspace(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error
 
 	// StopGitspace is responsible for stopping a running Gitspace. It stops the Gitspace container and unprovisions
 	// all the infra resources which are not required to restart the Gitspace.
-	StopGitspace(
-		ctx context.Context,
-		gitspaceConfig *types.GitspaceConfig,
-	) (*types.GitspaceInstance, error)
+	StopGitspace(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error
 
 	// DeleteGitspace is responsible for deleting a Gitspace. It stops the Gitspace container and unprovisions
 	// all the infra resources.
-	DeleteGitspace(
-		ctx context.Context,
-		gitspaceConfig *types.GitspaceConfig,
-	) (*types.GitspaceInstance, error)
+	DeleteGitspace(ctx context.Context, gitspaceConfig *types.GitspaceConfig) (*types.GitspaceInstance, error)
 }
