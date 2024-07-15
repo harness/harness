@@ -34,6 +34,28 @@ const (
 	ArchiveFormatTgz   ArchiveFormat = "tgz"
 )
 
+var ArchiveFormats = []ArchiveFormat{
+	ArchiveFormatTar,
+	ArchiveFormatZip,
+	ArchiveFormatTarGz,
+	ArchiveFormatTgz,
+}
+
+func ParseArchiveFormat(format string) (ArchiveFormat, error) {
+	switch format {
+	case "tar":
+		return ArchiveFormatTar, nil
+	case "zip":
+		return ArchiveFormatZip, nil
+	case "tar.gz":
+		return ArchiveFormatTarGz, nil
+	case "tgz":
+		return ArchiveFormatTgz, nil
+	default:
+		return "", errors.InvalidArgument("failed to parse file format '%s' is invalid", format)
+	}
+}
+
 func (f ArchiveFormat) Validate() error {
 	switch f {
 	case ArchiveFormatTar, ArchiveFormatZip, ArchiveFormatTarGz, ArchiveFormatTgz:

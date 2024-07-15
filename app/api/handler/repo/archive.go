@@ -34,7 +34,12 @@ func HandleArchive(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		params, filename := request.ParseArchiveParams(r)
+		params, filename, err := request.ParseArchiveParams(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
 		var contentType string
 		switch params.Format {
 		case api.ArchiveFormatTar:

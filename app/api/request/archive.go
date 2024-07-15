@@ -33,16 +33,26 @@ const (
 	QueryParamArchiveCompression = "compression"
 )
 
-func ParseArchiveParams(r *http.Request) (api.ArchiveParams, string) {
+func Ext(path string) string {
+	found := ""
+	for _, format := range api.ArchiveFormats {
+		if strings.HasSuffix(path, "."+string(format)) {
+			if len(found) == 0 || len(found) < len(format) {
+				found = string(format)
+			}
+		}
+	}
+	return found
+}
+
+func ParseArchiveParams(r *http.Request) (api.ArchiveParams, string, error) {
 	// separate rev and ref part from url, for example:
 	// api/v1/repos/root/demo/+/archive/refs/heads/main.zip
 	// will produce rev=refs/heads and ref=main.zip
-	rev, filename := filepath.Split(PathParamOrEmpty(r, PathParamArchiveGitRef))
+	path := PathParamOrEmpty(r, PathParamArchiveGitRef)
+	rev, filename := filepath.Split(path)
 	// use ext as format specifier
-	ext := filepath.Ext(filename)
-	// get name of the ref from filename
-	name := strings.TrimSuffix(filename, ext)
-	format := strings.Replace(ext, ".", "", 1)
+	format := Ext(filename)
 	// prefix is used for git archive to prefix all paths.
 	prefix, _ := QueryParam(r, QueryParamArchivePrefix)
 	attributes, _ := QueryParam(r, QueryParamArchiveAttributes)
@@ -65,13 +75,20 @@ func ParseArchiveParams(r *http.Request) (api.ArchiveParams, string) {
 		}
 	}
 
+	archFormat, err := api.ParseArchiveFormat(format)
+	if err != nil {
+		return api.ArchiveParams{}, "", err
+	}
+
+	// get name from filename
+	name := strings.TrimSuffix(filename, "."+format)
 	return api.ArchiveParams{
-		Format:      api.ArchiveFormat(format),
+		Format:      archFormat,
 		Prefix:      prefix,
 		Attributes:  api.ArchiveAttribute(attributes),
 		Time:        mtime,
 		Compression: compression,
 		Treeish:     rev + name,
 		Paths:       r.URL.Query()[QueryParamArchivePaths],
-	}, filename
+	}, filename, nil
 }
