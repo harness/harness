@@ -175,7 +175,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 		usedPorts = ports
 
 		// TODO: Add gitspace status reporting.
-		log.Debug().Msg("started gitspace")
+		log.Debug().Msgf("started gitspace: %s", gitspaceConfig.Identifier)
 
 	default:
 		return nil, fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)

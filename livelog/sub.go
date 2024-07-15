@@ -16,6 +16,8 @@ package livelog
 
 import (
 	"sync"
+
+	"github.com/rs/zerolog/log"
 )
 
 type subscriber struct {
@@ -27,6 +29,16 @@ type subscriber struct {
 }
 
 func (s *subscriber) publish(line *Line) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			log.Debug().Msgf("publishing to closed subscriber")
+		}
+	}()
+
+	s.Lock()
+	defer s.Unlock()
+
 	select {
 	case <-s.closec:
 	case s.handler <- line:

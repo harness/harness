@@ -42,7 +42,9 @@ func (s *stream) write(line *Line) error {
 	s.Lock()
 	s.hist = append(s.hist, line)
 	for l := range s.list {
-		l.publish(line)
+		if !l.closed {
+			l.publish(line)
+		}
 	}
 	// the history should not be unbounded. The history
 	// slice is capped and items are removed in a FIFO

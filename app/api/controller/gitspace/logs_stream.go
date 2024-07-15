@@ -58,6 +58,8 @@ func (c *Controller) LogsStream(
 
 	go func() {
 		defer close(evenc)
+		defer close(errch)
+
 		for {
 			select {
 			case <-ctx.Done():
