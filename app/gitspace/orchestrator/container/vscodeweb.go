@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	_ "embed"
@@ -43,7 +44,7 @@ func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 }
 
 // Setup runs the installScript which downloads the required version of the code-server binary and runs it.
-func (v *VSCodeWeb) Setup(ctx context.Context, devcontainer *Devcontainer) ([]byte, error) {
+func (v *VSCodeWeb) Setup(ctx context.Context, devcontainer *Devcontainer, _ *types.GitspaceInstance) ([]byte, error) {
 	output, err := devcontainer.ExecuteCommand(ctx, installScript, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to install code-server: %w", err)

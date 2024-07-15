@@ -41,7 +41,6 @@ var _ Orchestrator = (*EmbeddedDockerOrchestrator)(nil)
 
 const (
 	loggingKey             = "gitspace.container"
-	sshPort                = "22/tcp"
 	catchAllIP             = "0.0.0.0"
 	catchAllPort           = "0"
 	containerStateRunning  = "running"
@@ -85,7 +84,7 @@ func NewEmbeddedDockerOrchestrator(
 // StartGitspace checks if the Gitspace is already running by checking its entry in a map. If is it running,
 // it returns, else, it creates a new Gitspace container by using the provided image. If the provided image is
 // nil, it uses a default image read from Gitness config. Post creation it runs the postCreate command and clones
-// the code inside the container. It uses the IDE service to setup the relevant IDE and also installs SSH server
+// the code inside the container. It uses the IDE service to setup the relevant IDE and install the SSH server
 // inside the container.
 func (e *EmbeddedDockerOrchestrator) StartGitspace(
 	ctx context.Context,
@@ -229,12 +228,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
-	err = e.setupSSHServer(ctx, gitspaceConfig.GitspaceInstance, devcontainer, logStreamInstance)
-	if err != nil {
-		return err
-	}
-
-	err = e.setupIDE(ctx, devcontainer, ideService, logStreamInstance)
+	err = e.setupIDE(ctx, gitspaceConfig.GitspaceInstance, devcontainer, ideService, logStreamInstance)
 	if err != nil {
 		return err
 	}
@@ -244,6 +238,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 
 func (e *EmbeddedDockerOrchestrator) setupIDE(
 	ctx context.Context,
+	gitspaceInstance *types.GitspaceInstance,
 	devcontainer *Devcontainer,
 	ideService IDE,
 	logStreamInstance *logutil.LogStreamInstance,
@@ -253,7 +248,7 @@ func (e *EmbeddedDockerOrchestrator) setupIDE(
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	output, err := ideService.Setup(ctx, devcontainer)
+	output, err := ideService.Setup(ctx, devcontainer, gitspaceInstance)
 	if err != nil {
 		loggingErr = logStreamInstance.Write("Error while setting up IDE inside container: " + err.Error())
 
@@ -292,9 +287,6 @@ func (e *EmbeddedDockerOrchestrator) getContainerInfo(
 
 	usedPorts := map[enum.IDEType]string{}
 	for port, bindings := range inspectResp.NetworkSettings.Ports {
-		if port == sshPort {
-			usedPorts[enum.IDETypeVSCode] = bindings[0].HostPort
-		}
 		if port == nat.Port(ideService.PortAndProtocol()) {
 			usedPorts[ideService.Type()] = bindings[0].HostPort
 		}
@@ -316,54 +308,6 @@ func (e *EmbeddedDockerOrchestrator) getIDEService(gitspaceConfig *types.Gitspac
 	}
 
 	return ideService, nil
-}
-
-func (e *EmbeddedDockerOrchestrator) setupSSHServer(
-	ctx context.Context,
-	gitspaceInstance *types.GitspaceInstance,
-	devcontainer *Devcontainer,
-	logStreamInstance *logutil.LogStreamInstance,
-) error {
-	sshServerScript, err := GenerateScriptFromTemplate(
-		templateSetupSSHServer, &SetupSSHServerPayload{
-			Username:         "harness",
-			Password:         *gitspaceInstance.AccessKey,
-			WorkingDirectory: devcontainer.WorkingDir,
-		})
-	if err != nil {
-		return fmt.Errorf(
-			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
-	}
-
-	loggingErr := logStreamInstance.Write("Installing ssh-server inside container")
-	if loggingErr != nil {
-		return fmt.Errorf("logging error: %w", loggingErr)
-	}
-
-	output, err := devcontainer.ExecuteCommand(ctx, sshServerScript, false)
-	if err != nil {
-		loggingErr = logStreamInstance.Write("Error while installing ssh-server inside container: " + err.Error())
-
-		err = fmt.Errorf("failed to setup SSH server: %w", err)
-
-		if loggingErr != nil {
-			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
-		}
-
-		return err
-	}
-
-	loggingErr = logStreamInstance.Write("SSH server installation output...\n" + string(output))
-	if loggingErr != nil {
-		return fmt.Errorf("logging error: %w", loggingErr)
-	}
-
-	loggingErr = logStreamInstance.Write("Successfully installed ssh-server inside container")
-	if loggingErr != nil {
-		return fmt.Errorf("logging error: %w", loggingErr)
-	}
-
-	return nil
 }
 
 func (e *EmbeddedDockerOrchestrator) cloneCode(
@@ -478,10 +422,6 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 ) error {
 	portUsedByIDE := ideService.PortAndProtocol()
 
-	exposedPorts := nat.PortSet{
-		sshPort: struct{}{},
-	}
-
 	hostPortBindings := []nat.PortBinding{
 		{
 			HostIP:   catchAllIP,
@@ -489,9 +429,8 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 		},
 	}
 
-	portBindings := nat.PortMap{
-		sshPort: hostPortBindings,
-	}
+	exposedPorts := nat.PortSet{}
+	portBindings := nat.PortMap{}
 
 	if portUsedByIDE != "" {
 		natPort := nat.Port(portUsedByIDE)

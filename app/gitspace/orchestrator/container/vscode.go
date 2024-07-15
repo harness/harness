@@ -16,11 +16,15 @@ package container
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 var _ IDE = (*VSCode)(nil)
+
+const sshPort = "22/tcp"
 
 type VSCode struct{}
 
@@ -28,15 +32,40 @@ func NewVsCodeService() *VSCode {
 	return &VSCode{}
 }
 
-// Setup is a NOOP since VS Code doesn't require any installation.
-// TODO Check if the SSH server is accessible on the required port.
-func (v *VSCode) Setup(_ context.Context, _ *Devcontainer) ([]byte, error) {
-	return nil, nil
+// Setup installs and runs SSH server inside the container.
+func (v *VSCode) Setup(
+	ctx context.Context,
+	devcontainer *Devcontainer,
+	gitspaceInstance *types.GitspaceInstance,
+) ([]byte, error) {
+	var output = ""
+
+	sshServerScript, err := GenerateScriptFromTemplate(
+		templateSetupSSHServer, &SetupSSHServerPayload{
+			Username:         "harness",
+			Password:         *gitspaceInstance.AccessKey,
+			WorkingDirectory: devcontainer.WorkingDir,
+		})
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
+	}
+
+	output += "Installing ssh-server inside container\n"
+
+	execOutput, err := devcontainer.ExecuteCommand(ctx, sshServerScript, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup SSH serverr: %w", err)
+	}
+
+	output += "SSH server installation output...\n" + string(execOutput) + "\nSuccessfully installed ssh-server\n"
+
+	return []byte(output), nil
 }
 
-// PortAndProtocol return nil since VS Code doesn't require any additional port to be exposed.
+// PortAndProtocol returns the port on which the ssh-server is listening.
 func (v *VSCode) PortAndProtocol() string {
-	return ""
+	return sshPort
 }
 
 func (v *VSCode) Type() enum.IDEType {

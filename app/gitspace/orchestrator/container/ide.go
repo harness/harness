@@ -17,13 +17,14 @@ package container
 import (
 	"context"
 
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type IDE interface {
 	// Setup is responsible for doing all the operations for setting up the IDE in the container e.g. installation,
 	// copying settings and configurations, ensuring SSH server is running etc.
-	Setup(ctx context.Context, containerParams *Devcontainer) ([]byte, error)
+	Setup(ctx context.Context, containerParams *Devcontainer, gitspaceInstance *types.GitspaceInstance) ([]byte, error)
 
 	// PortAndProtocol provides the port with protocol which will be used by this IDE.
 	PortAndProtocol() string
