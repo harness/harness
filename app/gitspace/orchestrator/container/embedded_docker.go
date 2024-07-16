@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/infraprovider"
@@ -49,8 +48,6 @@ const (
 
 type Config struct {
 	DefaultBaseImage string
-	WorkingDirectory string
-	RootSource       string
 }
 
 type EmbeddedDockerOrchestrator struct {
@@ -87,6 +84,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 	gitspaceConfig *types.GitspaceConfig,
 	devcontainerConfig *types.DevcontainerConfig,
 	infra *infraprovider.Infrastructure,
+	repoName string,
 ) (*StartResponse, error) {
 	containerName := getGitspaceContainerName(gitspaceConfig)
 
@@ -148,7 +146,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 				log.Warn().Err(loggerErr).Msgf("failed to flush log stream for gitspace ID %d", gitspaceConfig.ID)
 			}
 		}()
-
+		workingDirectory := "/" + repoName
 		startErr = e.startGitspace(
 			ctx,
 			gitspaceConfig,
@@ -158,6 +156,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 			ideService,
 			logStreamInstance,
 			infra.Storage,
+			workingDirectory,
 		)
 		if startErr != nil {
 			return nil, fmt.Errorf("failed to start gitspace %s: %w", containerName, startErr)
@@ -178,10 +177,9 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 	}
 
 	return &StartResponse{
-		ContainerID:      containerID,
-		ContainerName:    containerName,
-		WorkingDirectory: strings.TrimPrefix(e.config.WorkingDirectory, "/"),
-		PortsUsed:        usedPorts,
+		ContainerID:   containerID,
+		ContainerName: containerName,
+		PortsUsed:     usedPorts,
 	}, nil
 }
 
@@ -194,6 +192,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	ideService IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 	volumeName string,
+	workingDirectory string,
 ) error {
 	var imageName = devcontainerConfig.Image
 	if imageName == "" {
@@ -213,6 +212,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		ideService,
 		logStreamInstance,
 		volumeName,
+		workingDirectory,
 	)
 	if err != nil {
 		return err
@@ -221,12 +221,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	var devcontainer = &Devcontainer{
 		ContainerName: containerName,
 		DockerClient:  dockerClient,
-		WorkingDir:    e.config.WorkingDirectory,
-	}
-
-	err = e.executePostCreateCommand(ctx, devcontainerConfig, devcontainer, logStreamInstance)
-	if err != nil {
-		return err
+		WorkingDir:    workingDirectory,
 	}
 
 	err = e.cloneCode(ctx, gitspaceConfig, devcontainerConfig, devcontainer, logStreamInstance)
@@ -235,6 +230,11 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	}
 
 	err = e.setupIDE(ctx, gitspaceConfig.GitspaceInstance, devcontainer, ideService, logStreamInstance)
+	if err != nil {
+		return err
+	}
+
+	err = e.executePostCreateCommand(ctx, devcontainerConfig, devcontainer, logStreamInstance)
 	if err != nil {
 		return err
 	}
@@ -425,6 +425,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 	ideService IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 	volumeName string,
+	workingDirectory string,
 ) error {
 	portUsedByIDE := ideService.PortAndProtocol()
 
@@ -466,7 +467,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 			{
 				Type:   mount.TypeVolume,
 				Source: volumeName,
-				Target: e.config.WorkingDirectory,
+				Target: workingDirectory,
 			},
 		},
 	}, nil, containerName)

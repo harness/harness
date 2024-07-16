@@ -113,7 +113,7 @@ func (o orchestrator) StartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationStart)
 
-	startResponse, err := o.containerOrchestrator.StartGitspace(ctx, gitspaceConfig, devcontainerConfig, infra)
+	startResponse, err := o.containerOrchestrator.StartGitspace(ctx, gitspaceConfig, devcontainerConfig, infra, repoName)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationFailed)
 
@@ -130,7 +130,7 @@ func (o orchestrator) StartGitspace(
 		ideURL = url.URL{
 			Scheme:   "http",
 			Host:     infra.Host + ":" + port,
-			RawQuery: filepath.Join("folder=", startResponse.WorkingDirectory, repoName),
+			RawQuery: filepath.Join("folder=", repoName),
 		}
 	} else if gitspaceConfig.IDE == enum.IDETypeVSCode {
 		// TODO: the following userID is hard coded and should be changed.
@@ -142,7 +142,7 @@ func (o orchestrator) StartGitspace(
 				"ssh-remote+%s@%s:%s",
 				userID,
 				infra.Host,
-				filepath.Join(port, startResponse.WorkingDirectory, repoName),
+				filepath.Join(port, repoName),
 			),
 		}
 	}

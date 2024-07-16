@@ -29,6 +29,7 @@ type Orchestrator interface {
 		gitspaceConfig *types.GitspaceConfig,
 		devcontainerConfig *types.DevcontainerConfig,
 		infra *infraprovider.Infrastructure,
+		repoName string,
 	) (*StartResponse, error)
 
 	// StopGitspace stops and removes the gitspace container.

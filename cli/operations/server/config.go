@@ -408,7 +408,6 @@ func ProvideIDEVSCodeWebConfig(config *types.Config) *container.VSCodeWebConfig 
 func ProvideGitspaceContainerOrchestratorConfig(config *types.Config) *container.Config {
 	return &container.Config{
 		DefaultBaseImage: config.Gitspace.DefaultBaseImage,
-		WorkingDirectory: config.Gitspace.WorkingDirectory,
 	}
 }
 

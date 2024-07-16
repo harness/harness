@@ -401,9 +401,6 @@ type Config struct {
 		// DefaultBaseImage is used to create the Gitspace when no devcontainer.json is absent or doesn't have image.
 		DefaultBaseImage string `envconfig:"GITNESS_GITSPACE_DEFAULT_BASE_IMAGE" default:"mcr.microsoft.com/devcontainers/base:dev-ubuntu-24.04"` //nolint:lll
 
-		// WorkingDirectory is the default working directory in the Gitspace container.
-		WorkingDirectory string `envconfig:"GITNESS_GITSPACE_WORKING_DIR" default:"/gitspace"`
-
 		Enable bool `envconfig:"GITNESS_GITSPACE_ENABLE" default:"false"`
 
 		Events struct {

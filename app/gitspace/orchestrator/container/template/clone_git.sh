@@ -23,7 +23,7 @@ fi
 # Clone the repository only if it doesn't exist
 if [ ! -d "$repo_name" ]; then
     echo "Cloning the repository..."
-    git clone "$repo_url" --branch "$branch"
+    git clone "$repo_url" --branch "$branch" .
 else
     echo "Repository already exists. Skipping clone."
 fi
