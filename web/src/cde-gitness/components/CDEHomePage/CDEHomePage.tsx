@@ -49,7 +49,7 @@ const CDEHomePage = () => {
               window.open('https://developer.harness.io/docs/', '_blank')
             }}
             variation={ButtonVariation.LINK}
-            rightIcon="code-open">
+            rightIcon="launch">
             {getString('cde.homePage.learnMoreAboutGitspaces')}
           </Button>
         </Layout.Horizontal>
