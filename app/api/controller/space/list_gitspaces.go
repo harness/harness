@@ -51,25 +51,22 @@ func (c *Controller) ListGitspaces(
 		if err != nil {
 			return fmt.Errorf("failed to list gitspace configs: %w", err)
 		}
-		count, err = c.gitspaceConfigStore.Count(ctx, gitspaceFilter)
-		if err != nil {
-			return fmt.Errorf("failed to count gitspaces in space: %w", err)
-		}
-		var gitspaceConfigIDs = make([]int64, 0)
-		for idx := 0; idx < len(gitspaceConfigs); idx++ {
-			if gitspaceConfigs[idx].IsDeleted {
-				continue
+		if len(gitspaceConfigs) >= filter.Size {
+			count, err = c.gitspaceConfigStore.Count(ctx, gitspaceFilter)
+			if err != nil {
+				return fmt.Errorf("failed to count gitspaces in space: %w", err)
 			}
-			gitspaceConfigs[idx].SpacePath = space.Path // As the API is for a space, this will remain same
-			gitspaceConfigIDs = append(gitspaceConfigIDs, gitspaceConfigs[idx].ID)
+		} else {
+			count = int64(len(gitspaceConfigs))
 		}
-		gitspaceInstancesMap, err := c.getLatestInstanceMap(ctx, gitspaceConfigIDs)
+		gitspaceInstancesMap, err := c.getLatestInstanceMap(ctx, gitspaceConfigs)
 		if err != nil {
 			return err
 		}
 		for _, gitspaceConfig := range gitspaceConfigs {
 			instance := gitspaceInstancesMap[gitspaceConfig.ID]
 			gitspaceConfig.GitspaceInstance = instance
+			gitspaceConfig.SpacePath = space.Path
 			if instance != nil {
 				gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State)
 				if err != nil {
@@ -91,8 +88,12 @@ func (c *Controller) ListGitspaces(
 
 func (c *Controller) getLatestInstanceMap(
 	ctx context.Context,
-	gitspaceConfigIDs []int64,
+	gitspaceConfigs []*types.GitspaceConfig,
 ) (map[int64]*types.GitspaceInstance, error) {
+	var gitspaceConfigIDs = make([]int64, 0)
+	for idx := 0; idx < len(gitspaceConfigs); idx++ {
+		gitspaceConfigIDs = append(gitspaceConfigIDs, gitspaceConfigs[idx].ID)
+	}
 	var gitspaceInstances, err = c.gitspaceInstanceStore.FindAllLatestByGitspaceConfigID(ctx, gitspaceConfigIDs)
 	if err != nil {
 		return nil, err

@@ -89,7 +89,6 @@ func (c *Controller) Create(
 	if err != nil {
 		return nil, err
 	}
-	// TODO figure out how to flush the DB txn above before we proceed.
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		infraProviderResource, err := c.infraProviderSvc.FindResourceByIdentifier(
 			ctx,
