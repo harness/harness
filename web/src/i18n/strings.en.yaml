@@ -1168,6 +1168,13 @@ cde:
   status: Status
   getStarted: Get started with Gitspaces by
   createImport: creating or importing repositories
+  homePage:
+    start: Start
+    noSetupRequired: no setup required
+    noteOne: Dedicated cloud development environments with your favorite editor
+    noteTwo: Get always consistent development environments that boost productivity and empower collaboration.
+    getStartedNow: Get Started Now
+    learnMoreAboutGitspaces: Learn more about Gitspaces
   listing:
     online: Active
     offline: Stopped

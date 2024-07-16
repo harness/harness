@@ -22,7 +22,9 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ListGitspaces } from 'cde-gitness/components/GitspaceListing/ListGitspaces'
 import type { TypesGitspaceConfig } from 'cde-gitness/services'
+import CDEHomePage from 'cde-gitness/components/CDEHomePage/CDEHomePage'
 import css from './GitspacesListing.module.scss'
+import zeroDayCss from 'cde-gitness/components/CDEHomePage/CDEHomePage.module.scss'
 
 export const GitspaceListing = () => {
   const space = useGetSpaceParam()
@@ -53,48 +55,58 @@ export const GitspaceListing = () => {
 
   return (
     <>
-      <Page.Header
-        title={
-          <div className="ng-tooltip-native">
-            <h2 data-tooltip-id="artifactListPageHeading"> {getString('cde.gitspaces')}</h2>
-            <HarnessDocTooltip tooltipId="GitSpaceListPageHeading" useStandAlone={true} />
-          </div>
-        }
-        breadcrumbs={
-          <Breadcrumbs links={[{ url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') }]} />
-        }
-        toolbar={
-          <Button
-            onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
-            variation={ButtonVariation.PRIMARY}>
-            {getString('cde.newGitspace')}
-          </Button>
-        }
-      />
-      <Container className={css.main}>
+      {data?.length !== 0 && (
+        <Page.Header
+          title={
+            <div className="ng-tooltip-native">
+              <h2 data-tooltip-id="artifactListPageHeading"> {getString('cde.gitspaces')}</h2>
+              <HarnessDocTooltip tooltipId="GitSpaceListPageHeading" useStandAlone={true} />
+            </div>
+          }
+          breadcrumbs={
+            <Breadcrumbs links={[{ url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') }]} />
+          }
+          toolbar={
+            <Button
+              onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
+              variation={ButtonVariation.PRIMARY}>
+              {getString('cde.newGitspace')}
+            </Button>
+          }
+        />
+      )}
+      <Container className={data?.length === 0 ? zeroDayCss.background : css.main}>
         <Layout.Vertical spacing={'large'}>
-          <Page.Body
-            loading={loading}
-            error={
-              error ? (
-                <Layout.Vertical spacing={'large'}>
-                  <Text font={{ variation: FontVariation.FORM_MESSAGE_DANGER }}>{getErrorMessage(error)}</Text>
-                  <Button
-                    onClick={() => refetch?.()}
-                    variation={ButtonVariation.PRIMARY}
-                    text={getString('cde.retry')}
-                  />
-                </Layout.Vertical>
-              ) : null
-            }
-            noData={{
-              when: () => data?.length === 0,
-              image: noSpace,
-              message: getString('cde.noGitspaces')
-            }}>
-            <ListGitspaces data={data || []} refreshList={refetch} />
-            <ResourceListingPagination response={response} page={page} setPage={setPage} />
-          </Page.Body>
+          {data && data?.length === 0 ? (
+            <CDEHomePage />
+          ) : (
+            <Page.Body
+              loading={loading}
+              error={
+                error ? (
+                  <Layout.Vertical spacing={'large'}>
+                    <Text font={{ variation: FontVariation.FORM_MESSAGE_DANGER }}>{getErrorMessage(error)}</Text>
+                    <Button
+                      onClick={() => refetch?.()}
+                      variation={ButtonVariation.PRIMARY}
+                      text={getString('cde.retry')}
+                    />
+                  </Layout.Vertical>
+                ) : null
+              }
+              noData={{
+                when: () => data?.length === 0,
+                image: noSpace,
+                message: getString('cde.noGitspaces')
+              }}>
+              {data?.length && (
+                <>
+                  <ListGitspaces data={data || []} refreshList={refetch} />
+                  <ResourceListingPagination response={response} page={page} setPage={setPage} />
+                </>
+              )}
+            </Page.Body>
+          )}
         </Layout.Vertical>
       </Container>
     </>
