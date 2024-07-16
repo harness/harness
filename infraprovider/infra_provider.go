@@ -23,13 +23,13 @@ import (
 
 type InfraProvider interface {
 	// Provision provisions infrastructure against a resourceKey with the provided parameters.
-	Provision(ctx context.Context, resourceKey string, parameters []Parameter) (Infrastructure, error)
+	Provision(ctx context.Context, spacePath string, resourceKey string, parameters []Parameter) (Infrastructure, error)
 	// Find finds infrastructure provisioned against a resourceKey.
 	Find(ctx context.Context, resourceKey string, parameters []Parameter) (Infrastructure, error)
 	// Stop frees up the resources allocated against a resourceKey, which can be freed.
 	Stop(ctx context.Context, infra Infrastructure) (Infrastructure, error)
-	// Destroy unprovisions all infrastructure provisioned againest the resourceKey.
-	Destroy(ctx context.Context, infra Infrastructure) (Infrastructure, error)
+	// Deprovision removes all infrastructure provisioned againest the resourceKey.
+	Deprovision(ctx context.Context, infra Infrastructure) (Infrastructure, error)
 	// Status checks the infrastructure status provisioned againest the resourceKey.
 	Status(ctx context.Context, infra Infrastructure) (enum.InfraStatus, error)
 	// AvailableParams provides a schema to define the infrastructure.

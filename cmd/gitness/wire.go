@@ -225,6 +225,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideGitspaceContainerOrchestratorConfig,
 		cliserver.ProvideGitspaceEventConfig,
 		logutil.WireSet,
+		cliserver.ProvideDockerProviderConfig,
 	)
 	return &cliserver.System{}, nil
 }

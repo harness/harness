@@ -80,7 +80,7 @@ func (i infraProvisioner) Provision(
 		return nil, fmt.Errorf("invalid provisioning params %v: %w", infraProviderResource.Metadata, err)
 	}
 
-	provisionedInfra, err := infraProvider.Provision(ctx, gitspaceConfig.Identifier, allParams)
+	provisionedInfra, err := infraProvider.Provision(ctx, gitspaceConfig.SpacePath, gitspaceConfig.Identifier, allParams)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"unable to provision infrastructure for gitspaceConfigIdentifier %v: %w",
@@ -156,7 +156,7 @@ func (i infraProvisioner) Stop(
 	return &stoppedInfra, err
 }
 
-func (i infraProvisioner) Unprovision(
+func (i infraProvisioner) Deprovision(
 	ctx context.Context,
 	infraProviderResource *types.InfraProviderResource,
 	gitspaceConfig *types.GitspaceConfig,
@@ -199,12 +199,13 @@ func (i infraProvisioner) Unprovision(
 	} else {
 		provisionedInfra = infraprovider.Infrastructure{
 			ResourceKey:  gitspaceConfig.Identifier,
+			SpacePath:    gitspaceConfig.SpacePath,
 			ProviderType: infraProviderEntity.Type,
 			Parameters:   allParams,
 		}
 	}
 
-	destroyedInfra, err := infraProvider.Destroy(ctx, provisionedInfra)
+	destroyedInfra, err := infraProvider.Deprovision(ctx, provisionedInfra)
 	if err != nil {
 		return nil, fmt.Errorf("unable to stop provisioned infra %+v: %w", provisionedInfra, err)
 	}

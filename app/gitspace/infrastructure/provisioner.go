@@ -39,8 +39,8 @@ type InfraProvisioner interface {
 		gitspaceConfig *types.GitspaceConfig,
 	) (*infraprovider.Infrastructure, error)
 
-	// Unprovision unprovisions all the resources created for the gitspace.
-	Unprovision(
+	// Deprovision removes all the resources created for the gitspace.
+	Deprovision(
 		ctx context.Context,
 		infraProviderResource *types.InfraProviderResource,
 		gitspaceConfig *types.GitspaceConfig,

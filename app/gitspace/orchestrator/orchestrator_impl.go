@@ -262,7 +262,7 @@ func (o orchestrator) DeleteGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraUnprovisioningStart)
 
-	_, err = o.infraProvisioner.Unprovision(ctx, infraProviderResource, gitspaceConfig)
+	_, err = o.infraProvisioner.Deprovision(ctx, infraProviderResource, gitspaceConfig)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraUnprovisioningFailed)
 

@@ -25,8 +25,12 @@ var WireSet = wire.NewSet(
 	ProvideDockerClientFactory,
 )
 
-func ProvideDockerProvider(config *DockerConfig, dockerClientFactory *DockerClientFactory) *DockerProvider {
-	return NewDockerProvider(config, dockerClientFactory)
+func ProvideDockerProvider(
+	config *DockerConfig,
+	dockerClientFactory *DockerClientFactory,
+	dockerProviderConfig *DockerProviderConfig,
+) *DockerProvider {
+	return NewDockerProvider(config, dockerClientFactory, dockerProviderConfig)
 }
 
 func ProvideFactory(dockerProvider *DockerProvider) Factory {

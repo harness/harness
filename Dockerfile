@@ -82,7 +82,7 @@ ENV GITNESS_DATABASE_DATASOURCE /data/database.sqlite
 ENV GITNESS_METRIC_ENABLED=true
 ENV GITNESS_METRIC_ENDPOINT=https://stats.drone.ci/api/v1/gitness
 ENV GITNESS_TOKEN_COOKIE_NAME=token
-ENV GITNESS_GITSPACE_DEFAULT_BIND_MOUNT_SOURCE_BASE_PATH /data
+ENV GITNESS_GITSPACE_ROOT /data
 ENV GITNESS_DOCKER_HOST unix:///var/run/docker.sock
 
 COPY --from=builder /app/gitness /app/gitness

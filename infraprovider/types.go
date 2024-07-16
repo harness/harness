@@ -33,6 +33,7 @@ type Parameter struct {
 type Infrastructure struct {
 	Identifier   string
 	ResourceKey  string
+	SpacePath    string
 	ProviderType enum.InfraProviderType
 	Parameters   []Parameter
 	Status       enum.InfraStatus

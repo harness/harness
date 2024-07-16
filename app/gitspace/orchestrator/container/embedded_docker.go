@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -51,10 +50,9 @@ const (
 )
 
 type Config struct {
-	DefaultBaseImage                       string
-	DefaultBindMountTargetPath             string
-	DefaultBindMountSourceBasePath         string
-	DefaultBindMountSourceBasePathAbsolute string
+	DefaultBaseImage string
+	WorkingDirectory string
+	RootSource       string
 }
 
 type EmbeddedDockerOrchestrator struct {
@@ -174,7 +172,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 		usedPorts = ports
 
 		// TODO: Add gitspace status reporting.
-		log.Debug().Msgf("started gitspace: %s", gitspaceConfig.Identifier)
+		log.Debug().Msg("started gitspace")
 
 	default:
 		return nil, fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
@@ -183,7 +181,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 	return &StartResponse{
 		ContainerID:      containerID,
 		ContainerName:    containerName,
-		WorkingDirectory: strings.TrimPrefix(e.config.DefaultBindMountTargetPath, "/"),
+		WorkingDirectory: strings.TrimPrefix(e.config.WorkingDirectory, "/"),
 		PortsUsed:        usedPorts,
 	}, nil
 }
@@ -215,7 +213,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	var devcontainer = &Devcontainer{
 		ContainerName: containerName,
 		DockerClient:  dockerClient,
-		WorkingDir:    e.config.DefaultBindMountTargetPath,
+		WorkingDir:    e.config.WorkingDirectory,
 	}
 
 	err = e.executePostCreateCommand(ctx, devcontainerConfig, devcontainer, logStreamInstance)
@@ -444,48 +442,15 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 	commands := make(strslice.StrSlice, 0)
 	commands = append(commands, "infinity")
 
-	bindMountSourcePath :=
+	mountSource :=
 		filepath.Join(
-			e.config.DefaultBindMountSourceBasePath,
+			e.config.RootSource,
 			gitspacesDir,
 			gitspaceConfig.SpacePath,
 			gitspaceConfig.Identifier,
 		)
 
-	absoluteBindMountSourcePath :=
-		filepath.Join(
-			e.config.DefaultBindMountSourceBasePathAbsolute,
-			gitspacesDir,
-			gitspaceConfig.SpacePath,
-			gitspaceConfig.Identifier,
-		)
-
-	loggingErr := logStreamInstance.Write(
-		"Creating bind mount source directory: " + bindMountSourcePath + " (" + absoluteBindMountSourcePath + ")")
-	if loggingErr != nil {
-		return fmt.Errorf("logging error: %w", loggingErr)
-	}
-
-	err := os.MkdirAll(bindMountSourcePath, os.ModePerm)
-	if err != nil {
-		loggingErr = logStreamInstance.Write("Error while creating bind mount source directory: " + err.Error())
-
-		err = fmt.Errorf(
-			"could not create bind mount source path %s: %w", bindMountSourcePath, err)
-
-		if loggingErr != nil {
-			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
-		}
-
-		return err
-	}
-
-	loggingErr = logStreamInstance.Write("Successfully created bind mount source directory")
-	if loggingErr != nil {
-		return fmt.Errorf("logging error: %w", loggingErr)
-	}
-
-	loggingErr = logStreamInstance.Write("Creating container: " + containerName)
+	loggingErr := logStreamInstance.Write("Creating container: " + containerName)
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
@@ -500,8 +465,8 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeBind,
-				Source: absoluteBindMountSourcePath,
-				Target: e.config.DefaultBindMountTargetPath,
+				Source: mountSource,
+				Target: e.config.WorkingDirectory,
 			},
 		},
 	}, nil, containerName)

@@ -400,18 +400,20 @@ type Config struct {
 	Gitspace struct {
 		// DefaultBaseImage is used to create the Gitspace when no devcontainer.json is absent or doesn't have image.
 		DefaultBaseImage string `envconfig:"GITNESS_GITSPACE_DEFAULT_BASE_IMAGE" default:"mcr.microsoft.com/devcontainers/base:dev-ubuntu-24.04"` //nolint:lll
-		// DefaultBindMountTargetPath is the target for bind mount in the Gitspace container.
-		DefaultBindMountTargetPath string `envconfig:"GITNESS_GITSPACE_DEFAULT_BIND_MOUNT_TARGET_PATH" default:"/gitspace"` //nolint:lll
+
+		// WorkingDirectory is the default working directory in the Gitspace container.
+		WorkingDirectory string `envconfig:"GITNESS_GITSPACE_WORKING_DIR" default:"/gitspace"`
 
 		Enable bool `envconfig:"GITNESS_GITSPACE_ENABLE" default:"false"`
 
-		// DefaultBindMountTargetPath is the source for bind mount in the Gitspace container.
-		// Sub-directories will be created from this eg <DefaultBindMountSourceBasePath>/gitspace/space1/space2/config1
+		// Root is the source for bind mount in the Gitspace container.
+		// Sub-directories will be created from this eg <Root>/gitspace/space1/space2/config1
 		// If left blank, it will be set to $HOME/.gitness
-		DefaultBindMountSourceBasePath string `envconfig:"GITNESS_GITSPACE_DEFAULT_BIND_MOUNT_SOURCE_BASE_PATH"`
-		// DefaultBindMountSourceBasePathAbsolute is the source path on which the DefaultBindMountSourceBasePath
-		// is mounted in Gitness container. If left blank, it will be equal to DefaultBindMountSourceBasePath.
-		DefaultBindMountSourceBasePathAbsolute string `envconfig:"GITNESS_GITSPACE_DEFAULT_BIND_MOUNT_SOURCE_BASE_PATH_ABSOLUTE"` //nolint:lll
+		Root string `envconfig:"GITNESS_GITSPACE_ROOT"`
+
+		// RootSource is the source path on which the Root is mounted in Gitness container.
+		// If left blank, it will be equal to Root.
+		RootSource string `envconfig:"GITNESS_GITSPACE_ROOT_SOURCE"`
 
 		Events struct {
 			Concurrency int `envconfig:"GITNESS_GITSPACE_EVENTS_CONCURRENCY" default:"4"`

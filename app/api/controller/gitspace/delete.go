@@ -50,6 +50,7 @@ func (c *Controller) Delete(
 	}
 	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
 	gitspaceConfig.GitspaceInstance = instance
+	gitspaceConfig.SpacePath = space.Path
 	if instance != nil {
 		if stopErr := c.stopRunningGitspace(ctx, gitspaceConfig); stopErr != nil {
 			return stopErr
@@ -64,7 +65,8 @@ func (c *Controller) Delete(
 
 func (c *Controller) stopRunningGitspace(
 	ctx context.Context,
-	config *types.GitspaceConfig) error {
+	config *types.GitspaceConfig,
+) error {
 	if instanceUpdated, err := c.orchestrator.DeleteGitspace(ctx, config); err != nil {
 		return err
 	} else if err = c.gitspaceInstanceStore.Update(ctx, instanceUpdated); err != nil {
