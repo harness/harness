@@ -304,10 +304,10 @@ const ActionMenu = ({
   const { getString } = useStrings()
   const { showError } = useToaster()
   const { instance, ide, identifier = '', space_path = '', state } = data
-  const { identifier: id, url = '' } = instance || {}
+  const { url = '' } = instance || {}
   const history = useHistory()
   const { routes } = useAppContext()
-  const pathparamsList = instance?.space_path?.split('/') || []
+  const pathparamsList = space_path?.split('/') || []
   const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
   const topBorder = state === GitspaceStatus.RUNNING && !actionLoading ? { top: true } : {}
   const disabledActionButtons = [GitspaceStatus.STARTING, GitspaceStatus.STOPPING].includes(state as GitspaceStatus)
@@ -326,7 +326,7 @@ const ActionMenu = ({
               e.preventDefault()
               e.stopPropagation()
               if (ide === IDEType.VSCODE) {
-                window.open(`vscode://harness-inc.gitspaces/${projectIdentifier}/${id}`, '_blank')
+                window.open(`vscode://harness-inc.gitspaces/${projectIdentifier}/${identifier}?gitness`, '_blank')
               } else {
                 window.open(url || '', '_blank')
               }
@@ -661,15 +661,12 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
         <TableV2<TypesGitspaceConfig>
           className={css.table}
           onRowClick={row => {
-            const pathparamsList = row?.instance?.space_path?.split('/') || []
+            const pathparamsList = row?.space_path?.split('/') || []
             const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
 
             if (row?.state === GitspaceStatus.RUNNING) {
               if (row?.ide === IDEType.VSCODE) {
-                window.open(
-                  `vscode://harness-inc.gitspaces/${projectIdentifier}/${row?.instance?.identifier}`,
-                  '_blank'
-                )
+                window.open(`vscode://harness-inc.gitspaces/${projectIdentifier}/${row?.identifier}?gitness`, '_blank')
               } else {
                 window.open(row?.instance?.url || '', '_blank')
               }
