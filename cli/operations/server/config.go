@@ -405,18 +405,10 @@ func ProvideIDEVSCodeWebConfig(config *types.Config) *container.VSCodeWebConfig 
 }
 
 // ProvideGitspaceContainerOrchestratorConfig loads the Gitspace container orchestrator config from the main config.
-func ProvideGitspaceContainerOrchestratorConfig(
-	config *types.Config,
-	dockerProviderConfig *infraprovider.DockerProviderConfig,
-) *container.Config {
-	if config.Gitspace.RootSource == "" {
-		config.Gitspace.RootSource = dockerProviderConfig.MountSourceBasePath
-	}
-
+func ProvideGitspaceContainerOrchestratorConfig(config *types.Config) *container.Config {
 	return &container.Config{
 		DefaultBaseImage: config.Gitspace.DefaultBaseImage,
 		WorkingDirectory: config.Gitspace.WorkingDirectory,
-		RootSource:       config.Gitspace.RootSource,
 	}
 }
 
@@ -427,22 +419,4 @@ func ProvideGitspaceEventConfig(config *types.Config) gitspaceevent.Config {
 		Concurrency:     config.Gitspace.Events.Concurrency,
 		MaxRetries:      config.Gitspace.Events.MaxRetries,
 	}
-}
-
-// ProvideDockerProviderConfig loads the Docker provider config from the main config.
-func ProvideDockerProviderConfig(config *types.Config) (*infraprovider.DockerProviderConfig, error) {
-	if config.Gitspace.Root == "" {
-		var homedir string
-
-		homedir, err := os.UserHomeDir()
-		if err != nil {
-			return nil, fmt.Errorf("unable to determine home directory: %w", err)
-		}
-
-		config.Gitspace.Root = filepath.Join(homedir, gitnessHomeDir)
-	}
-
-	return &infraprovider.DockerProviderConfig{
-		MountSourceBasePath: config.Gitspace.Root,
-	}, nil
 }

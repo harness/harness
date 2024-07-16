@@ -406,15 +406,6 @@ type Config struct {
 
 		Enable bool `envconfig:"GITNESS_GITSPACE_ENABLE" default:"false"`
 
-		// Root is the source for bind mount in the Gitspace container.
-		// Sub-directories will be created from this eg <Root>/gitspace/space1/space2/config1
-		// If left blank, it will be set to $HOME/.gitness
-		Root string `envconfig:"GITNESS_GITSPACE_ROOT"`
-
-		// RootSource is the source path on which the Root is mounted in Gitness container.
-		// If left blank, it will be equal to Root.
-		RootSource string `envconfig:"GITNESS_GITSPACE_ROOT_SOURCE"`
-
 		Events struct {
 			Concurrency int `envconfig:"GITNESS_GITSPACE_EVENTS_CONCURRENCY" default:"4"`
 			MaxRetries  int `envconfig:"GITNESS_GITSPACE_EVENTS_MAX_RETRIES" default:"3"`

@@ -93,7 +93,7 @@ func (i infraProvisioner) Provision(
 		// TODO: Update the infraProvisioned record
 	}
 
-	return &provisionedInfra, nil
+	return provisionedInfra, nil
 }
 
 func (i infraProvisioner) Stop(
@@ -133,11 +133,11 @@ func (i infraProvisioner) Stop(
 		return nil, fmt.Errorf("invalid provisioning params %+v: %w", infraProviderResource.Metadata, err)
 	}
 
-	var provisionedInfra infraprovider.Infrastructure
+	var provisionedInfra *infraprovider.Infrastructure
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive
 		// TODO: Fetch and check existing infraProvisioned record
 	} else {
-		provisionedInfra = infraprovider.Infrastructure{
+		provisionedInfra = &infraprovider.Infrastructure{
 			ResourceKey:  gitspaceConfig.Identifier,
 			ProviderType: infraProviderEntity.Type,
 			Parameters:   allParams,
@@ -153,7 +153,7 @@ func (i infraProvisioner) Stop(
 		// TODO: Update existing infraProvisioned record
 	}
 
-	return &stoppedInfra, err
+	return stoppedInfra, err
 }
 
 func (i infraProvisioner) Deprovision(
@@ -193,18 +193,16 @@ func (i infraProvisioner) Deprovision(
 		return nil, fmt.Errorf("invalid provisioning params %+v: %w", infraProviderResource.Metadata, err)
 	}
 
-	var provisionedInfra infraprovider.Infrastructure
+	var provisionedInfra *infraprovider.Infrastructure
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive
 		// TODO: Fetch and check existing infraProvisioned record
 	} else {
-		provisionedInfra = infraprovider.Infrastructure{
-			ResourceKey:  gitspaceConfig.Identifier,
-			SpacePath:    gitspaceConfig.SpacePath,
-			ProviderType: infraProviderEntity.Type,
-			Parameters:   allParams,
+		provisionedInfra, err = infraProvider.Find(ctx, gitspaceConfig.SpacePath, gitspaceConfig.Identifier, allParams)
+		if err != nil {
+			return nil, fmt.Errorf("unable to find provisioned infra for gitspace %s: %w",
+				gitspaceConfig.Identifier, err)
 		}
 	}
-
 	destroyedInfra, err := infraProvider.Deprovision(ctx, provisionedInfra)
 	if err != nil {
 		return nil, fmt.Errorf("unable to stop provisioned infra %+v: %w", provisionedInfra, err)
@@ -214,7 +212,7 @@ func (i infraProvisioner) Deprovision(
 		// TODO: Update existing infraProvisioned record
 	}
 
-	return &destroyedInfra, err
+	return destroyedInfra, err
 }
 
 func (i infraProvisioner) Find(

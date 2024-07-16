@@ -327,11 +327,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	dockerClientFactory := infraprovider.ProvideDockerClientFactory(dockerConfig)
-	dockerProviderConfig, err := server.ProvideDockerProviderConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	dockerProvider := infraprovider.ProvideDockerProvider(dockerConfig, dockerClientFactory, dockerProviderConfig)
+	dockerProvider := infraprovider.ProvideDockerProvider(dockerConfig, dockerClientFactory)
 	factory := infraprovider.ProvideFactory(dockerProvider)
 	providerService := infraprovider2.ProvideInfraProvider(infraProviderResourceStore, infraProviderConfigStore, factory, spaceStore, transactor)
 	infraproviderController := infraprovider3.ProvideController(authorizer, spaceStore, providerService)
@@ -344,7 +340,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	vsCode := container.ProvideVSCodeService()
 	vsCodeWebConfig := server.ProvideIDEVSCodeWebConfig(config)
 	vsCodeWeb := container.ProvideVSCodeWebService(vsCodeWebConfig)
-	containerConfig := server.ProvideGitspaceContainerOrchestratorConfig(config, dockerProviderConfig)
+	containerConfig := server.ProvideGitspaceContainerOrchestratorConfig(config)
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
 	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, vsCode, vsCodeWeb, containerConfig, statefulLogger)
 	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter3)

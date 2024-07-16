@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path/filepath"
 	"strings"
 
 	"github.com/harness/gitness/app/gitspace/logutil"
@@ -46,7 +45,6 @@ const (
 	containerStateRemoved  = "removed"
 	templateCloneGit       = "clone_git.sh"
 	templateSetupSSHServer = "setup_ssh_server.sh"
-	gitspacesDir           = "gitspaces"
 )
 
 type Config struct {
@@ -159,6 +157,7 @@ func (e *EmbeddedDockerOrchestrator) StartGitspace(
 			dockerClient,
 			ideService,
 			logStreamInstance,
+			infra.Storage,
 		)
 		if startErr != nil {
 			return nil, fmt.Errorf("failed to start gitspace %s: %w", containerName, startErr)
@@ -194,6 +193,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	dockerClient *client.Client,
 	ideService IDE,
 	logStreamInstance *logutil.LogStreamInstance,
+	volumeName string,
 ) error {
 	var imageName = devcontainerConfig.Image
 	if imageName == "" {
@@ -205,7 +205,15 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
-	err = e.createContainer(ctx, gitspaceConfig, dockerClient, imageName, containerName, ideService, logStreamInstance)
+	err = e.createContainer(
+		ctx,
+		dockerClient,
+		imageName,
+		containerName,
+		ideService,
+		logStreamInstance,
+		volumeName,
+	)
 	if err != nil {
 		return err
 	}
@@ -411,12 +419,12 @@ func (e *EmbeddedDockerOrchestrator) executePostCreateCommand(
 
 func (e *EmbeddedDockerOrchestrator) createContainer(
 	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
 	dockerClient *client.Client,
 	imageName string,
 	containerName string,
 	ideService IDE,
 	logStreamInstance *logutil.LogStreamInstance,
+	volumeName string,
 ) error {
 	portUsedByIDE := ideService.PortAndProtocol()
 
@@ -442,14 +450,6 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 	commands := make(strslice.StrSlice, 0)
 	commands = append(commands, "infinity")
 
-	mountSource :=
-		filepath.Join(
-			e.config.RootSource,
-			gitspacesDir,
-			gitspaceConfig.SpacePath,
-			gitspaceConfig.Identifier,
-		)
-
 	loggingErr := logStreamInstance.Write("Creating container: " + containerName)
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
@@ -464,8 +464,8 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 		PortBindings: portBindings,
 		Mounts: []mount.Mount{
 			{
-				Type:   mount.TypeBind,
-				Source: mountSource,
+				Type:   mount.TypeVolume,
+				Source: volumeName,
 				Target: e.config.WorkingDirectory,
 			},
 		},

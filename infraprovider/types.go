@@ -39,4 +39,5 @@ type Infrastructure struct {
 	Status       enum.InfraStatus
 	Host         string
 	Port         int
+	Storage      string
 }
