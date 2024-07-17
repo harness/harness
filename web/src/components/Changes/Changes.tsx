@@ -250,9 +250,13 @@ const ChangesInternal: React.FC<ChangesProps> = ({
     if (cachedDiff.raw) {
       const _diffs = Diff2Html.parse(cachedDiff.raw, DIFF2HTML_CONFIG)
         .map(diff => {
+          diff.oldName = normalizeGitFilePath(diff.oldName)
+          diff.newName = normalizeGitFilePath(diff.newName)
+
           const fileId = changedFileId([diff.oldName, diff.newName])
           const containerId = `container-${fileId}`
           const contentId = `content-${fileId}`
+
           const filePath = diff.isDeleted ? diff.oldName : diff.newName
 
           return {
@@ -613,3 +617,13 @@ const shouldRetainDiffChildren = (dom: HTMLElement | null) => !!dom?.querySelect
 const outterBlockName = (blockIndex: number) => `outter-${blockIndex}`
 const innerBlockName = (filePath: string) => `inner-${filePath}`
 const { scheduleTask } = createRequestIdleCallbackTaskPool()
+
+// Workaround util to correct filePath which is not correctly produced by
+// git itself when filename contains space
+// @see https://stackoverflow.com/questions/77596606/why-does-git-add-trailing-tab-to-the-b-line-of-the-diff-when-the-file-nam
+const normalizeGitFilePath = (filePath: string) => {
+  if (filePath && filePath.endsWith('\t') && filePath.indexOf(' ') !== -1) {
+    return filePath.replace(/\t$/, '')
+  }
+  return filePath
+}
