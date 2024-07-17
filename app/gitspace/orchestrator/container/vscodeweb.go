@@ -26,10 +26,10 @@ import (
 
 var _ IDE = (*VSCodeWeb)(nil)
 
-//go:embed template/install_vscode_web.sh
-var installScript string
+//go:embed template/run_vscode_web.sh
+var runScript string
 
-const templateRunVSCodeWeb = "run_vscode_web.sh"
+const templateInstallVSCodeWeb = "install_vscode_web.sh"
 
 type VSCodeWebConfig struct {
 	Port string
@@ -43,30 +43,36 @@ func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 	return &VSCodeWeb{config: config}
 }
 
-// Setup runs the installScript which downloads the required version of the code-server binary and runs it.
+// Setup runs the installScript which downloads the required version of the code-server binary.
 func (v *VSCodeWeb) Setup(ctx context.Context, devcontainer *Devcontainer, _ *types.GitspaceInstance) ([]byte, error) {
-	output, err := devcontainer.ExecuteCommand(ctx, installScript, false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to install code-server: %w", err)
-	}
-
-	runScript, err := GenerateScriptFromTemplate(
-		templateRunVSCodeWeb, &RunVSCodeWebPayload{
+	installScript, err := GenerateScriptFromTemplate(
+		templateInstallVSCodeWeb, &InstallVSCodeWebPayload{
 			Port: v.config.Port,
 		})
 	if err != nil {
-		return output, fmt.Errorf(
-			"failed to generate scipt to run code-server from template %s: %w",
-			templateRunVSCodeWeb,
+		return nil, fmt.Errorf(
+			"failed to generate scipt to install VSCode Web from template %s: %w",
+			templateInstallVSCodeWeb,
 			err,
 		)
 	}
 
-	_, err = devcontainer.ExecuteCommand(ctx, runScript, true)
+	output, err := devcontainer.ExecuteCommand(ctx, installScript, false)
 	if err != nil {
-		return output, fmt.Errorf("failed to run code-server: %w", err)
+		return nil, fmt.Errorf("failed to install VSCode Web: %w", err)
 	}
 
+	return output, nil
+}
+
+// Run runs the code-server binary.
+func (v *VSCodeWeb) Run(ctx context.Context, devcontainer *Devcontainer) ([]byte, error) {
+	var output []byte
+
+	_, err := devcontainer.ExecuteCommand(ctx, runScript, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run VSCode Web: %w", err)
+	}
 	return output, nil
 }
 

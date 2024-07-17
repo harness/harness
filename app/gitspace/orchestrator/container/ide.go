@@ -23,8 +23,11 @@ import (
 
 type IDE interface {
 	// Setup is responsible for doing all the operations for setting up the IDE in the container e.g. installation,
-	// copying settings and configurations, ensuring SSH server is running etc.
+	// copying settings and configurations.
 	Setup(ctx context.Context, containerParams *Devcontainer, gitspaceInstance *types.GitspaceInstance) ([]byte, error)
+
+	// Run runs the IDE and supporting services.
+	Run(ctx context.Context, containerParams *Devcontainer) ([]byte, error)
 
 	// PortAndProtocol provides the port with protocol which will be used by this IDE.
 	PortAndProtocol() string

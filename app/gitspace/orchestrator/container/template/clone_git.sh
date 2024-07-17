@@ -46,5 +46,3 @@ EOL
 else
     echo "devcontainer_present is set to true. Skipping .devcontainer creation."
 fi
-
-echo "Script completed."

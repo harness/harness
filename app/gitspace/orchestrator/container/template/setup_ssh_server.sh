@@ -49,4 +49,3 @@ fi
 chown -R $username .
 
 mkdir /var/run/sshd
-/usr/sbin/sshd

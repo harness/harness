@@ -40,7 +40,7 @@ type CloneGitPayload struct {
 	Branch              string
 }
 
-type RunVSCodeWebPayload struct {
+type InstallVSCodeWebPayload struct {
 	Port string
 }
 

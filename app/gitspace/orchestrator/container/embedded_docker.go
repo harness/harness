@@ -136,6 +136,17 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			return nil, startErr
 		}
 
+		devcontainer := &Devcontainer{
+			ContainerName: containerName,
+			WorkingDir:    e.getWorkingDir(repoName),
+			DockerClient:  dockerClient,
+		}
+
+		err = e.runIDE(ctx, devcontainer, ideService, logStreamInstance)
+		if err != nil {
+			return nil, err
+		}
+
 		// TODO: Add gitspace status reporting.
 		log.Debug().Msg("started gitspace")
 
@@ -154,8 +165,6 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			}
 		}()
 
-		workingDirectory := "/" + repoName
-
 		startErr := e.startGitspace(
 			ctx,
 			gitspaceConfig,
@@ -165,7 +174,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			ideService,
 			logStreamInstance,
 			infra.Storage,
-			workingDirectory,
+			e.getWorkingDir(repoName),
 		)
 		if startErr != nil {
 			return nil, fmt.Errorf("failed to start gitspace %s: %w", containerName, startErr)
@@ -188,6 +197,10 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 		ContainerName: containerName,
 		PortsUsed:     ports,
 	}, nil
+}
+
+func (e *EmbeddedDockerOrchestrator) getWorkingDir(repoName string) string {
+	return "/" + repoName
 }
 
 func (e *EmbeddedDockerOrchestrator) startGitspace(
@@ -246,9 +259,53 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
+	err = e.runIDE(ctx, devcontainer, ideService, logStreamInstance)
+	if err != nil {
+		return err
+	}
+
 	err = e.executePostCreateCommand(ctx, devcontainerConfig, devcontainer, logStreamInstance)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// TODO: Instead of explicitly running IDE related processes, we can explore service to run the service on boot.
+
+func (e *EmbeddedDockerOrchestrator) runIDE(
+	ctx context.Context,
+	devcontainer *Devcontainer,
+	ideService IDE,
+	logStreamInstance *logutil.LogStreamInstance,
+) error {
+	loggingErr := logStreamInstance.Write("Running the IDE inside container: " + string(ideService.Type()))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	output, err := ideService.Run(ctx, devcontainer)
+	if err != nil {
+		loggingErr = logStreamInstance.Write("Error while running IDE inside container: " + err.Error())
+
+		err = fmt.Errorf("failed to run the IDE for gitspace %s: %w", devcontainer.ContainerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("IDE run output...\n" + string(output))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully run the IDE inside container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
 	return nil
@@ -489,8 +546,6 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 		portBindings[natPort] = hostPortBindings
 	}
 
-	entryPoint := []string{"/bin/bash", "-c", `trap "exit 0" 15; sleep infinity`}
-
 	loggingErr := logStreamInstance.Write("Creating container: " + containerName)
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
@@ -498,7 +553,8 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 
 	_, err := dockerClient.ContainerCreate(ctx, &container.Config{
 		Image:        imageName,
-		Entrypoint:   entryPoint,
+		Entrypoint:   []string{"/bin/bash"},
+		Cmd:          []string{"-c", "trap \"exit 0\" 15;\n sleep infinity & wait $!"},
 		ExposedPorts: exposedPorts,
 	}, &container.HostConfig{
 		PortBindings: portBindings,

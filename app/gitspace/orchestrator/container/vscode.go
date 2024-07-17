@@ -20,9 +20,14 @@ import (
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	_ "embed"
 )
 
 var _ IDE = (*VSCode)(nil)
+
+//go:embed template/run_ssh_server.sh
+var runSSHScript string
 
 const sshPort = "22/tcp"
 
@@ -32,7 +37,7 @@ func NewVsCodeService() *VSCode {
 	return &VSCode{}
 }
 
-// Setup installs and runs SSH server inside the container.
+// Setup installs the SSH server inside the container.
 func (v *VSCode) Setup(
 	ctx context.Context,
 	devcontainer *Devcontainer,
@@ -59,6 +64,20 @@ func (v *VSCode) Setup(
 	}
 
 	output += "SSH server installation output...\n" + string(execOutput) + "\nSuccessfully installed ssh-server\n"
+
+	return []byte(output), nil
+}
+
+// Run runs the SSH server inside the container.
+func (v *VSCode) Run(ctx context.Context, devcontainer *Devcontainer) ([]byte, error) {
+	var output = ""
+
+	execOutput, err := devcontainer.ExecuteCommand(ctx, runSSHScript, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run SSH serverr: %w", err)
+	}
+
+	output += "SSH server run output...\n" + string(execOutput) + "\nSuccessfully run ssh-server\n"
 
 	return []byte(output), nil
 }
