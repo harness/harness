@@ -458,6 +458,14 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 		stmt = stmt.Where(squirrel.Eq{"pullreq_created_by": opts.CreatedBy})
 	}
 
+	if opts.CreatedLt > 0 {
+		stmt = stmt.Where("pullreq_created < ?", opts.CreatedLt)
+	}
+
+	if opts.CreatedGt > 0 {
+		stmt = stmt.Where("pullreq_created > ?", opts.CreatedGt)
+	}
+
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return 0, errors.Wrap(err, "Failed to convert query to sql")
