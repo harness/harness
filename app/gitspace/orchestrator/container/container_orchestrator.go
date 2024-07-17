@@ -22,9 +22,10 @@ import (
 )
 
 type Orchestrator interface {
-	// StartGitspace starts the gitspace container using the specified image or default image, clones the code,
-	// runs SSH server and installs the IDE inside the container. It returns a map of the ports used by the Gitspace.
-	StartGitspace(
+	// CreateAndStartGitspace starts an exited container and starts a new container if the container is removed.
+	// If the container is newly created, it clones the code, sets up the IDE and executes the postCreateCommand.
+	// It returns the container ID, name and ports used.
+	CreateAndStartGitspace(
 		ctx context.Context,
 		gitspaceConfig *types.GitspaceConfig,
 		devcontainerConfig *types.DevcontainerConfig,
@@ -32,9 +33,12 @@ type Orchestrator interface {
 		repoName string,
 	) (*StartResponse, error)
 
-	// StopGitspace stops and removes the gitspace container.
-	StopGitspace(ctx context.Context, gitspaceConfig *types.GitspaceConfig, infra *infraprovider.Infrastructure) error
+	// StopGitspace stops the gitspace container.
+	StopGitspace(ctx context.Context, config *types.GitspaceConfig, infra *infraprovider.Infrastructure) error
 
-	// Status checks if the infra is reachable and ready to begin container creation.
+	// StopAndRemoveGitspace stops and removes the gitspace container.
+	StopAndRemoveGitspace(ctx context.Context, config *types.GitspaceConfig, infra *infraprovider.Infrastructure) error
+
+	// Status checks if the infra is reachable and ready to orchestrate containers.
 	Status(ctx context.Context, infra *infraprovider.Infrastructure) error
 }

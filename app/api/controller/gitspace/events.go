@@ -89,9 +89,13 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningCompleted] = "Provisioning Infrastructure Completed"
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningFailed] = "Provisioning Infrastructure Failed"
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraUnprovisioningStart] = "Unprovisioning Infrastructure..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraUnprovisioningCompleted] = "Unprovisioning Infrastructure Completed"
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraUnprovisioningFailed] = "Unprovisioning Infrastructure Failed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopStart] = "Stopping Infrastructure..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopCompleted] = "Stopping Infrastructure Completed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopFailed] = "Stopping Infrastructure Failed"
+
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningStart] = "Deprovisioning Infrastructure..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningCompleted] = "Deprovisioning Infrastructure Completed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningFailed] = "Deprovisioning Infrastructure Failed"
 
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentConnectStart] = "Connecting to the gitspace agent..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentConnectCompleted] = "Connected to the gitspace agent"
@@ -100,6 +104,10 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceCreationStart] = "Setting up the gitspace..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceCreationCompleted] = "Successfully setup the gitspace"
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceCreationFailed] = "Failed to setup the gitspace"
+
+	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStopStart] = "Stopping the gitspace..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStopCompleted] = "Successfully stopped the gitspace"
+	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStopFailed] = "Failed to stop the gitspace"
 
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceDeletionStart] = "Removing the gitspace..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceDeletionCompleted] = "Successfully removed the gitspace"

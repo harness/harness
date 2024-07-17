@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -113,7 +114,8 @@ func (o orchestrator) StartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationStart)
 
-	startResponse, err := o.containerOrchestrator.StartGitspace(ctx, gitspaceConfig, devcontainerConfig, infra, repoName)
+	startResponse, err := o.containerOrchestrator.CreateAndStartGitspace(
+		ctx, gitspaceConfig, devcontainerConfig, infra, repoName)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationFailed)
 
@@ -175,9 +177,67 @@ func (o orchestrator) StopGitspace(
 		return fmt.Errorf("cannot find the provisioned infra: %w", err)
 	}
 
+	err = o.stopGitspaceContainer(ctx, gitspaceConfig, infra)
+	if err != nil {
+		return err
+	}
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopStart)
+
+	_, err = o.infraProvisioner.Stop(ctx, infraProviderResource, gitspaceConfig)
+	if err != nil {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
+
+		return fmt.Errorf(
+			"cannot stop provisioned infrastructure with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
+	}
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopCompleted)
+
+	gitspaceInstance.State = enum.GitspaceInstanceStateDeleted
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStopCompleted)
+
+	return err
+}
+
+func (o orchestrator) stopGitspaceContainer(
+	ctx context.Context,
+	gitspaceConfig *types.GitspaceConfig,
+	infra *infraprovider.Infrastructure,
+) error {
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectStart)
 
-	err = o.containerOrchestrator.Status(ctx, infra)
+	err := o.containerOrchestrator.Status(ctx, infra)
+	if err != nil {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectFailed)
+
+		return fmt.Errorf("couldn't call the agent health API: %w", err)
+	}
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectCompleted)
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceStopStart)
+
+	err = o.containerOrchestrator.StopGitspace(ctx, gitspaceConfig, infra)
+	if err != nil {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceStopFailed)
+
+		return fmt.Errorf("error stopping the Gitspace container: %w", err)
+	}
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceStopCompleted)
+	return nil
+}
+
+func (o orchestrator) stopAndRemoveGitspaceContainer(
+	ctx context.Context,
+	gitspaceConfig *types.GitspaceConfig,
+	infra *infraprovider.Infrastructure,
+) error {
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectStart)
+
+	err := o.containerOrchestrator.Status(ctx, infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectFailed)
 
@@ -188,7 +248,7 @@ func (o orchestrator) StopGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionStart)
 
-	err = o.containerOrchestrator.StopGitspace(ctx, gitspaceConfig, infra)
+	err = o.containerOrchestrator.StopAndRemoveGitspace(ctx, gitspaceConfig, infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionFailed)
 
@@ -196,24 +256,7 @@ func (o orchestrator) StopGitspace(
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionCompleted)
-
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraUnprovisioningStart)
-
-	_, err = o.infraProvisioner.Stop(ctx, infraProviderResource, gitspaceConfig)
-	if err != nil {
-		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraUnprovisioningFailed)
-
-		return fmt.Errorf(
-			"cannot stop provisioned infrastructure with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
-	}
-
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraUnprovisioningCompleted)
-
-	gitspaceInstance.State = enum.GitspaceInstanceStateDeleted
-
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStopCompleted)
-
-	return err
+	return nil
 }
 
 func (o orchestrator) DeleteGitspace(
@@ -221,7 +264,6 @@ func (o orchestrator) DeleteGitspace(
 	gitspaceConfig *types.GitspaceConfig,
 ) (*types.GitspaceInstance, error) {
 	gitspaceInstance := gitspaceConfig.GitspaceInstance
-	currentState := gitspaceInstance.State
 	gitspaceInstance.State = enum.GitspaceInstanceStateError
 
 	infraProviderResource, err := o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
@@ -230,47 +272,27 @@ func (o orchestrator) DeleteGitspace(
 			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
 	}
 
-	if currentState == enum.GitspaceInstanceStateRunning ||
-		currentState == enum.GitspaceInstanceStateUnknown {
-		infra, err := o.infraProvisioner.Find(ctx, infraProviderResource, gitspaceConfig)
-		if err != nil {
-			return nil, fmt.Errorf("cannot find the provisioned infra: %w", err)
-		}
-
-		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectStart)
-
-		err = o.containerOrchestrator.Status(ctx, infra)
-		if err != nil {
-			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectFailed)
-
-			return gitspaceConfig.GitspaceInstance, fmt.Errorf("couldn't call the agent health API: %w", err)
-		}
-
-		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectCompleted)
-
-		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionStart)
-
-		err = o.containerOrchestrator.StopGitspace(ctx, gitspaceConfig, infra)
-		if err != nil {
-			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionFailed)
-
-			return nil, fmt.Errorf("error stopping the Gitspace container: %w", err)
-		}
-
-		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionCompleted)
+	infra, err := o.infraProvisioner.Find(ctx, infraProviderResource, gitspaceConfig)
+	if err != nil {
+		return nil, fmt.Errorf("cannot find the provisioned infra: %w", err)
 	}
 
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraUnprovisioningStart)
+	err = o.stopAndRemoveGitspaceContainer(ctx, gitspaceConfig, infra)
+	if err != nil {
+		return nil, err
+	}
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningStart)
 
 	_, err = o.infraProvisioner.Deprovision(ctx, infraProviderResource, gitspaceConfig)
 	if err != nil {
-		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraUnprovisioningFailed)
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
 
 		return nil, fmt.Errorf(
-			"cannot stop provisioned infrastructure with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
+			"cannot deprovision infrastructure with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
 	}
 
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraUnprovisioningCompleted)
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningCompleted)
 
 	gitspaceInstance.State = enum.GitspaceInstanceStateDeleted
 

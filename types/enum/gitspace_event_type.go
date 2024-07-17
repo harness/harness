@@ -37,9 +37,13 @@ var gitspaceEventTypes = []GitspaceEventType{
 	GitspaceEventTypeInfraProvisioningCompleted,
 	GitspaceEventTypeInfraProvisioningFailed,
 
-	GitspaceEventTypeInfraUnprovisioningStart,
-	GitspaceEventTypeInfraUnprovisioningCompleted,
-	GitspaceEventTypeInfraUnprovisioningFailed,
+	GitspaceEventTypeInfraStopStart,
+	GitspaceEventTypeInfraStopCompleted,
+	GitspaceEventTypeInfraStopFailed,
+
+	GitspaceEventTypeInfraDeprovisioningStart,
+	GitspaceEventTypeInfraDeprovisioningCompleted,
+	GitspaceEventTypeInfraDeprovisioningFailed,
 
 	GitspaceEventTypeAgentConnectStart,
 	GitspaceEventTypeAgentConnectCompleted,
@@ -48,6 +52,10 @@ var gitspaceEventTypes = []GitspaceEventType{
 	GitspaceEventTypeAgentGitspaceCreationStart,
 	GitspaceEventTypeAgentGitspaceCreationCompleted,
 	GitspaceEventTypeAgentGitspaceCreationFailed,
+
+	GitspaceEventTypeAgentGitspaceStopStart,
+	GitspaceEventTypeAgentGitspaceStopCompleted,
+	GitspaceEventTypeAgentGitspaceStopFailed,
 
 	GitspaceEventTypeAgentGitspaceDeletionStart,
 	GitspaceEventTypeAgentGitspaceDeletionCompleted,
@@ -80,10 +88,15 @@ const (
 	GitspaceEventTypeInfraProvisioningCompleted GitspaceEventType = "infra_provisioning_completed"
 	GitspaceEventTypeInfraProvisioningFailed    GitspaceEventType = "infra_provisioning_failed"
 
-	// Infra unprovisioning events.
-	GitspaceEventTypeInfraUnprovisioningStart     GitspaceEventType = "infra_unprovisioning_start"
-	GitspaceEventTypeInfraUnprovisioningCompleted GitspaceEventType = "infra_unprovisioning_completed"
-	GitspaceEventTypeInfraUnprovisioningFailed    GitspaceEventType = "infra_unprovisioning_failed"
+	// Infra stop events.
+	GitspaceEventTypeInfraStopStart     GitspaceEventType = "infra_stop_start"
+	GitspaceEventTypeInfraStopCompleted GitspaceEventType = "infra_stop_completed"
+	GitspaceEventTypeInfraStopFailed    GitspaceEventType = "infra_stop_failed"
+
+	// Infra deprovisioning events.
+	GitspaceEventTypeInfraDeprovisioningStart     GitspaceEventType = "infra_deprovisioning_start"
+	GitspaceEventTypeInfraDeprovisioningCompleted GitspaceEventType = "infra_deprovisioning_completed"
+	GitspaceEventTypeInfraDeprovisioningFailed    GitspaceEventType = "infra_deprovisioning_failed"
 
 	// Agent connection events.
 	GitspaceEventTypeAgentConnectStart     GitspaceEventType = "agent_connect_start"
@@ -94,6 +107,11 @@ const (
 	GitspaceEventTypeAgentGitspaceCreationStart     GitspaceEventType = "agent_gitspace_creation_start"
 	GitspaceEventTypeAgentGitspaceCreationCompleted GitspaceEventType = "agent_gitspace_creation_completed"
 	GitspaceEventTypeAgentGitspaceCreationFailed    GitspaceEventType = "agent_gitspace_creation_failed"
+
+	// Gitspace stop events.
+	GitspaceEventTypeAgentGitspaceStopStart     GitspaceEventType = "agent_gitspace_stop_start"
+	GitspaceEventTypeAgentGitspaceStopCompleted GitspaceEventType = "agent_gitspace_stop_completed"
+	GitspaceEventTypeAgentGitspaceStopFailed    GitspaceEventType = "agent_gitspace_stop_failed"
 
 	// Gitspace deletion events.
 	GitspaceEventTypeAgentGitspaceDeletionStart     GitspaceEventType = "agent_gitspace_deletion_start"
