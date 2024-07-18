@@ -137,7 +137,7 @@ func gitspaceOperations(reflector *openapi3.Reflector) {
 
 	opStreamLogs := openapi3.Operation{}
 	opStreamLogs.WithTags("gitspaces")
-	opEventList.WithSummary("Stream gitspace logs")
+	opStreamLogs.WithSummary("Stream gitspace logs")
 	opStreamLogs.WithMapOfAnything(map[string]interface{}{"operationId": "opStreamLogs"})
 	_ = reflector.SetRequest(&opStreamLogs, new(gitspaceRequest), http.MethodGet)
 	_ = reflector.SetStringResponse(&opStreamLogs, http.StatusOK, "text/event-stream")
@@ -151,13 +151,13 @@ func gitspaceOperations(reflector *openapi3.Reflector) {
 	opRepoLookup.WithTags("gitspaces")
 	opRepoLookup.WithSummary("Validate git repo for gitspaces")
 	opRepoLookup.WithMapOfAnything(map[string]interface{}{"operationId": "repoLookupForGitspace"})
-	_ = reflector.SetRequest(&opCreate, new(lookupRepoGitspaceRequest), http.MethodPost)
+	_ = reflector.SetRequest(&opRepoLookup, new(lookupRepoGitspaceRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opRepoLookup, new(scm.CodeRepositoryResponse), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRepoLookup, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/gitspaces/lookup-repo", opCreate)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/gitspaces/lookup-repo", opRepoLookup)
 
 	opListAll := openapi3.Operation{}
 	opListAll.WithTags("gitspaces")
