@@ -23,6 +23,8 @@ import (
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Find returns a pull request from the provided repository.
@@ -46,21 +48,29 @@ func (c *Controller) Find(
 		return nil, err
 	}
 
-	headRef := pr.SourceSHA
-	baseRef := pr.MergeBaseSHA
-
-	if s := pr.Stats.DiffStats; s.Commits == nil || s.FilesChanged == nil || s.Additions == nil || s.Deletions == nil {
-		output, err := c.git.DiffStats(ctx, &git.DiffParams{
-			ReadParams: git.CreateReadParams(repo),
-			BaseRef:    baseRef,
-			HeadRef:    headRef,
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		pr.Stats.DiffStats = types.NewDiffStats(output.Commits, output.FilesChanged, output.Additions, output.Deletions)
+	if err := c.backfillStats(ctx, repo, pr); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to backfill PR stats")
 	}
 
 	return pr, nil
+}
+
+func (c *Controller) backfillStats(ctx context.Context, repo *types.Repository, pr *types.PullReq) error {
+	s := pr.Stats.DiffStats
+	if s.Commits != nil && s.FilesChanged != nil && s.Additions != nil && s.Deletions != nil {
+		return nil
+	}
+
+	output, err := c.git.DiffStats(ctx, &git.DiffParams{
+		ReadParams: git.CreateReadParams(repo),
+		BaseRef:    pr.MergeBaseSHA,
+		HeadRef:    pr.SourceSHA,
+	})
+	if err != nil {
+		return fmt.Errorf("failed get diff stats: %w", err)
+	}
+
+	pr.Stats.DiffStats = types.NewDiffStats(output.Commits, output.FilesChanged, output.Additions, output.Deletions)
+
+	return nil
 }
