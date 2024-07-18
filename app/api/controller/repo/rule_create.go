@@ -118,7 +118,7 @@ func (c *Controller) RuleCreate(ctx context.Context,
 
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
+		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier, audit.RepoName, repo.Identifier),
 		audit.ActionCreated,
 		paths.Parent(repo.Path),
 		audit.WithNewObject(r),

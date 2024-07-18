@@ -49,7 +49,7 @@ func (c *Controller) RuleDelete(ctx context.Context,
 
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
+		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier, audit.RepoName, repo.Identifier),
 		audit.ActionDeleted,
 		paths.Parent(repo.Path),
 		audit.WithOldObject(r),

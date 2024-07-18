@@ -103,7 +103,7 @@ func (c *Controller) UpdateDefaultBranch(
 
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
+		audit.NewResource(audit.ResourceTypeRepositorySettings, repo.Identifier),
 		audit.ActionUpdated,
 		paths.Parent(repo.Path),
 		audit.WithOldObject(audit.RepositoryObject{

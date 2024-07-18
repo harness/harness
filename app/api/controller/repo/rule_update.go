@@ -140,7 +140,7 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 
 	err = c.auditService.Log(ctx,
 		session.Principal,
-		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier),
+		audit.NewResource(audit.ResourceTypeBranchRule, r.Identifier, audit.RepoName, repo.Identifier),
 		audit.ActionUpdated,
 		paths.Parent(repo.Path),
 		audit.WithOldObject(oldRule),

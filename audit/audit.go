@@ -30,6 +30,10 @@ var (
 	ErrSpacePathIsRequired          = errors.New("space path is required")
 )
 
+const (
+	RepoName = "repoName"
+)
+
 type Action string
 
 const (
@@ -69,13 +73,20 @@ func (a ResourceType) Validate() error {
 type Resource struct {
 	Type       ResourceType
 	Identifier string
+	Data       map[string]string
 }
 
-func NewResource(rtype ResourceType, identifier string) Resource {
-	return Resource{
+func NewResource(rtype ResourceType, identifier string, keyValues ...string) Resource {
+	r := Resource{
 		Type:       rtype,
 		Identifier: identifier,
+		Data:       make(map[string]string, len(keyValues)),
 	}
+	for i := 0; i < len(keyValues); i += 2 {
+		k, v := keyValues[i], keyValues[i+1]
+		r.Data[k] = v
+	}
+	return r
 }
 
 func (r Resource) Validate() error {
@@ -86,6 +97,14 @@ func (r Resource) Validate() error {
 		return ErrResourceIdentifierIsRequired
 	}
 	return nil
+}
+
+func (r Resource) DataAsSlice() []string {
+	slice := make([]string, 0, len(r.Data)*2)
+	for k, v := range r.Data {
+		slice = append(slice, k, v)
+	}
+	return slice
 }
 
 type DiffObject struct {
