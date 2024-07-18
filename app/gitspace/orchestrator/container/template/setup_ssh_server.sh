@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
 # Install SSH if it's not already installed
-if ! command -v sshd &> /dev/null; then
+if ! command -v sshd >/dev/null 2>&1; then
     echo "OpenSSH server is not installed. Installing..."
     apt-get update
     apt-get install -y openssh-server
@@ -14,7 +14,7 @@ password={{ .Password }}
 workingDir={{ .WorkingDirectory }}
 
 # Check if the user already exists
-if id "$username" &> /dev/null; then
+if id "$username" >/dev/null 2>&1; then
     echo "User $username already exists."
 else
     # Create a new user

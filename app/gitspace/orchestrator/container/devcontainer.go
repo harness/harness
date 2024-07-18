@@ -30,7 +30,7 @@ type Devcontainer struct {
 }
 
 func (d *Devcontainer) ExecuteCommand(ctx context.Context, command string, detach bool) ([]byte, error) {
-	cmd := []string{"/bin/bash", "-c", command}
+	cmd := []string{"/bin/sh", "-c", command}
 
 	execConfig := dockerTypes.ExecConfig{
 		User:         "root",

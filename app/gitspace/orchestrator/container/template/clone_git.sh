@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 repo_url={{ .RepoURL }}
 devcontainer_present={{ .DevcontainerPresent }}
@@ -9,13 +9,13 @@ branch={{ .Branch }}
 repo_name=$(basename -s .git "$repo_url")
 
 # Check if Git is installed
-if ! command -v git &>/dev/null; then
+if ! command -v git >/dev/null 2>&1; then
     echo "Git is not installed. Installing Git..."
     apt-get update
     apt-get install -y git
 fi
 
-if ! command -v git &>/dev/null; then
+if ! command -v git >/dev/null 2>&1; then
     echo "Git is not installed. Exiting..."
     exit 1
 fi

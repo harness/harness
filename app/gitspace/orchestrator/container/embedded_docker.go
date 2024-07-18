@@ -553,8 +553,8 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 
 	_, err := dockerClient.ContainerCreate(ctx, &container.Config{
 		Image:        imageName,
-		Entrypoint:   []string{"/bin/bash"},
-		Cmd:          []string{"-c", "trap \"exit 0\" 15;\n sleep infinity & wait $!"},
+		Entrypoint:   []string{"/bin/sh"},
+		Cmd:          []string{"-c", "trap 'exit 0' 15; sleep infinity & wait $!"},
 		ExposedPorts: exposedPorts,
 	}, &container.HostConfig{
 		PortBindings: portBindings,
