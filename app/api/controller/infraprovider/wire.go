@@ -30,7 +30,7 @@ var WireSet = wire.NewSet(
 func ProvideController(
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
-	infraproviderSvc infraprovider.ProviderService,
+	infraproviderSvc *infraprovider.Service,
 ) *Controller {
 	return NewController(authorizer, spaceStore, infraproviderSvc)
 }

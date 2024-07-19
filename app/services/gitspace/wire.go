@@ -12,26 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infraprovider
+package gitspace
 
 import (
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
 )
 
 var WireSet = wire.NewSet(
-	ProvideInfraProvider,
+	ProvideGitspace,
 )
 
-func ProvideInfraProvider(
+func ProvideGitspace(
 	tx dbtx.Transactor,
-	infraProviderResourceStore store.InfraProviderResourceStore,
-	infraProviderConfigStore store.InfraProviderConfigStore,
-	infraProviderFactory infraprovider.Factory,
+	gitspaceStore store.GitspaceConfigStore,
+	gitspaceInstanceStore store.GitspaceInstanceStore,
 	spaceStore store.SpaceStore,
 ) *Service {
-	return NewService(tx, infraProviderResourceStore, infraProviderConfigStore, infraProviderFactory, spaceStore)
+	return NewService(tx, gitspaceStore, gitspaceInstanceStore, spaceStore)
 }

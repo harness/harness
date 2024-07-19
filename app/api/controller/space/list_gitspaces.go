@@ -20,7 +20,6 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -39,68 +38,5 @@ func (c *Controller) ListGitspaces(
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to authorize gitspace: %w", err)
 	}
-	gitspaceFilter := &types.GitspaceFilter{
-		QueryFilter: filter,
-		UserID:      session.Principal.UID,
-		SpaceIDs:    []int64{space.ID},
-	}
-	var gitspaceConfigs []*types.GitspaceConfig
-	var count int64
-	err = c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
-		gitspaceConfigs, err = c.gitspaceConfigStore.List(ctx, gitspaceFilter)
-		if err != nil {
-			return fmt.Errorf("failed to list gitspace configs: %w", err)
-		}
-		if len(gitspaceConfigs) >= filter.Size {
-			count, err = c.gitspaceConfigStore.Count(ctx, gitspaceFilter)
-			if err != nil {
-				return fmt.Errorf("failed to count gitspaces in space: %w", err)
-			}
-		} else {
-			count = int64(len(gitspaceConfigs))
-		}
-		gitspaceInstancesMap, err := c.getLatestInstanceMap(ctx, gitspaceConfigs)
-		if err != nil {
-			return err
-		}
-		for _, gitspaceConfig := range gitspaceConfigs {
-			instance := gitspaceInstancesMap[gitspaceConfig.ID]
-			gitspaceConfig.GitspaceInstance = instance
-			gitspaceConfig.SpacePath = space.Path
-			if instance != nil {
-				gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State)
-				if err != nil {
-					return err
-				}
-				gitspaceConfig.State = gitspaceStateType
-				instance.SpacePath = gitspaceConfig.SpacePath
-			} else {
-				gitspaceConfig.State = enum.GitspaceStateUninitialized
-			}
-		}
-		return nil
-	}, dbtx.TxDefaultReadOnly)
-	if err != nil {
-		return nil, 0, err
-	}
-	return gitspaceConfigs, count, nil
-}
-
-func (c *Controller) getLatestInstanceMap(
-	ctx context.Context,
-	gitspaceConfigs []*types.GitspaceConfig,
-) (map[int64]*types.GitspaceInstance, error) {
-	var gitspaceConfigIDs = make([]int64, 0)
-	for idx := 0; idx < len(gitspaceConfigs); idx++ {
-		gitspaceConfigIDs = append(gitspaceConfigIDs, gitspaceConfigs[idx].ID)
-	}
-	var gitspaceInstances, err = c.gitspaceInstanceStore.FindAllLatestByGitspaceConfigID(ctx, gitspaceConfigIDs)
-	if err != nil {
-		return nil, err
-	}
-	var gitspaceInstancesMap = make(map[int64]*types.GitspaceInstance)
-	for _, gitspaceEntry := range gitspaceInstances {
-		gitspaceInstancesMap[gitspaceEntry.GitSpaceConfigID] = gitspaceEntry
-	}
-	return gitspaceInstancesMap, nil
+	return c.gitspaceSvc.ListGitspacesForSpace(ctx, space, session.Principal.UID, filter)
 }

@@ -23,13 +23,13 @@ import (
 type Controller struct {
 	authorizer       authz.Authorizer
 	spaceStore       store.SpaceStore
-	infraproviderSvc infraprovider.ProviderService
+	infraproviderSvc *infraprovider.Service
 }
 
 func NewController(
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
-	infraproviderSvc infraprovider.ProviderService,
+	infraproviderSvc *infraprovider.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:       authorizer,

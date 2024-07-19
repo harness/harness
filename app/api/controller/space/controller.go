@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/exporter"
+	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
@@ -61,28 +62,27 @@ func (s SpaceOutput) MarshalJSON() ([]byte, error) {
 type Controller struct {
 	nestedSpacesEnabled bool
 
-	tx                    dbtx.Transactor
-	urlProvider           url.Provider
-	sseStreamer           sse.Streamer
-	identifierCheck       check.SpaceIdentifier
-	authorizer            authz.Authorizer
-	spacePathStore        store.SpacePathStore
-	pipelineStore         store.PipelineStore
-	secretStore           store.SecretStore
-	connectorStore        store.ConnectorStore
-	templateStore         store.TemplateStore
-	spaceStore            store.SpaceStore
-	repoStore             store.RepoStore
-	principalStore        store.PrincipalStore
-	repoCtrl              *repo.Controller
-	membershipStore       store.MembershipStore
-	importer              *importer.Repository
-	exporter              *exporter.Repository
-	resourceLimiter       limiter.ResourceLimiter
-	publicAccess          publicaccess.Service
-	auditService          audit.Service
-	gitspaceConfigStore   store.GitspaceConfigStore
-	gitspaceInstanceStore store.GitspaceInstanceStore
+	tx              dbtx.Transactor
+	urlProvider     url.Provider
+	sseStreamer     sse.Streamer
+	identifierCheck check.SpaceIdentifier
+	authorizer      authz.Authorizer
+	spacePathStore  store.SpacePathStore
+	pipelineStore   store.PipelineStore
+	secretStore     store.SecretStore
+	connectorStore  store.ConnectorStore
+	templateStore   store.TemplateStore
+	spaceStore      store.SpaceStore
+	repoStore       store.RepoStore
+	principalStore  store.PrincipalStore
+	repoCtrl        *repo.Controller
+	membershipStore store.MembershipStore
+	importer        *importer.Repository
+	exporter        *exporter.Repository
+	resourceLimiter limiter.ResourceLimiter
+	publicAccess    publicaccess.Service
+	auditService    audit.Service
+	gitspaceSvc     *gitspace.Service
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
@@ -92,32 +92,30 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
-	gitspaceStore store.GitspaceConfigStore,
-	gitspaceInstanceStore store.GitspaceInstanceStore,
+	gitspaceSvc *gitspace.Service,
 ) *Controller {
 	return &Controller{
-		nestedSpacesEnabled:   config.NestedSpacesEnabled,
-		tx:                    tx,
-		urlProvider:           urlProvider,
-		sseStreamer:           sseStreamer,
-		identifierCheck:       identifierCheck,
-		authorizer:            authorizer,
-		spacePathStore:        spacePathStore,
-		pipelineStore:         pipelineStore,
-		secretStore:           secretStore,
-		connectorStore:        connectorStore,
-		templateStore:         templateStore,
-		spaceStore:            spaceStore,
-		repoStore:             repoStore,
-		principalStore:        principalStore,
-		repoCtrl:              repoCtrl,
-		membershipStore:       membershipStore,
-		importer:              importer,
-		exporter:              exporter,
-		resourceLimiter:       limiter,
-		publicAccess:          publicAccess,
-		auditService:          auditService,
-		gitspaceConfigStore:   gitspaceStore,
-		gitspaceInstanceStore: gitspaceInstanceStore,
+		nestedSpacesEnabled: config.NestedSpacesEnabled,
+		tx:                  tx,
+		urlProvider:         urlProvider,
+		sseStreamer:         sseStreamer,
+		identifierCheck:     identifierCheck,
+		authorizer:          authorizer,
+		spacePathStore:      spacePathStore,
+		pipelineStore:       pipelineStore,
+		secretStore:         secretStore,
+		connectorStore:      connectorStore,
+		templateStore:       templateStore,
+		spaceStore:          spaceStore,
+		repoStore:           repoStore,
+		principalStore:      principalStore,
+		repoCtrl:            repoCtrl,
+		membershipStore:     membershipStore,
+		importer:            importer,
+		exporter:            exporter,
+		resourceLimiter:     limiter,
+		publicAccess:        publicAccess,
+		auditService:        auditService,
+		gitspaceSvc:         gitspaceSvc,
 	}
 }

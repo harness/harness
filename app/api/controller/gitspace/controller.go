@@ -27,7 +27,7 @@ import (
 
 type Controller struct {
 	authorizer            authz.Authorizer
-	infraProviderSvc      infraprovider.ProviderService
+	infraProviderSvc      *infraprovider.Service
 	gitspaceConfigStore   store.GitspaceConfigStore
 	gitspaceInstanceStore store.GitspaceInstanceStore
 	spaceStore            store.SpaceStore
@@ -42,7 +42,7 @@ type Controller struct {
 func NewController(
 	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
-	infraProviderSvc infraprovider.ProviderService,
+	infraProviderSvc *infraprovider.Service,
 	gitspaceConfigStore store.GitspaceConfigStore,
 	gitspaceInstanceStore store.GitspaceInstanceStore,
 	spaceStore store.SpaceStore,

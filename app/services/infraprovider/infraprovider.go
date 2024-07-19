@@ -30,8 +30,8 @@ func NewService(
 	infraProviderConfigStore store.InfraProviderConfigStore,
 	factory infraprovider.Factory,
 	spaceStore store.SpaceStore,
-) ProviderService {
-	return ProviderService{
+) *Service {
+	return &Service{
 		tx:                         tx,
 		infraProviderResourceStore: infraProviderResourceStore,
 		infraProviderConfigStore:   infraProviderConfigStore,
@@ -40,7 +40,7 @@ func NewService(
 	}
 }
 
-type ProviderService struct {
+type Service struct {
 	infraProviderResourceStore store.InfraProviderResourceStore
 	infraProviderConfigStore   store.InfraProviderConfigStore
 	infraProviderFactory       infraprovider.Factory
@@ -48,7 +48,7 @@ type ProviderService struct {
 	tx                         dbtx.Transactor
 }
 
-func (c ProviderService) Find(
+func (c *Service) Find(
 	ctx context.Context,
 	space *types.Space,
 	identifier string,
@@ -66,18 +66,18 @@ func (c ProviderService) Find(
 	return infraProviderConfig, nil
 }
 
-func (c ProviderService) FindResourceByIdentifier(
+func (c *Service) FindResourceByIdentifier(
 	ctx context.Context,
 	spaceID int64,
 	identifier string) (*types.InfraProviderResource, error) {
 	return c.infraProviderResourceStore.FindByIdentifier(ctx, spaceID, identifier)
 }
 
-func (c ProviderService) FindResource(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
+func (c *Service) FindResource(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
 	return c.infraProviderResourceStore.Find(ctx, id)
 }
 
-func (c ProviderService) CreateInfraProvider(
+func (c *Service) CreateInfraProvider(
 	ctx context.Context,
 	infraProviderConfig *types.InfraProviderConfig,
 ) error {

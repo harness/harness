@@ -35,7 +35,7 @@ var WireSet = wire.NewSet(
 func ProvideController(
 	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
-	infraProviderSvc infraprovider.ProviderService,
+	infraProviderSvc *infraprovider.Service,
 	configStore store.GitspaceConfigStore,
 	instanceStore store.GitspaceInstanceStore,
 	spaceStore store.SpaceStore,

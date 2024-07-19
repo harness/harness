@@ -65,9 +65,10 @@ import (
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/exporter"
+	gitspaceSvc "github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/importer"
-	"github.com/harness/gitness/app/services/infraprovider"
+	infraproviderSvc "github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	locker "github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/metric"
@@ -142,7 +143,13 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		system.WireSet,
 		authn.WireSet,
 		authz.WireSet,
+		infrastructure.WireSet,
+		infraproviderpkg.WireSet,
 		gitspaceevents.WireSet,
+		infraproviderCtrl.WireSet,
+		gitspaceCtrl.WireSet,
+		infraproviderSvc.WireSet,
+		gitspaceSvc.WireSet,
 		gitevents.WireSet,
 		pullreqevents.WireSet,
 		repoevents.WireSet,
@@ -211,15 +218,10 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		audit.WireSet,
 		ssh.WireSet,
 		publickey.WireSet,
-		infraprovider.WireSet,
 		migrate.WireSet,
-		gitspaceCtrl.WireSet,
-		infraproviderCtrl.WireSet,
-		infraproviderpkg.WireSet,
 		scm.WireSet,
 		orchestrator.WireSet,
 		containerorchestrator.WireSet,
-		infrastructure.WireSet,
 		cliserver.ProvideIDEVSCodeWebConfig,
 		cliserver.ProvideDockerConfig,
 		cliserver.ProvideGitspaceContainerOrchestratorConfig,
