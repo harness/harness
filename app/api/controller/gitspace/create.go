@@ -49,6 +49,7 @@ type CreateInput struct {
 	SpaceRef           string            `json:"space_ref"` // Ref of the parent space
 	IDE                enum.IDEType      `json:"ide"`
 	ResourceIdentifier string            `json:"resource_identifier"`
+	ResourceSpaceRef   string            `json:"resource_space_ref"`
 	CodeRepoURL        string            `json:"code_repo_url"`
 	Branch             string            `json:"branch"`
 	DevcontainerPath   *string           `json:"devcontainer_path"`
@@ -61,7 +62,7 @@ func (c *Controller) Create(
 	session *auth.Session,
 	in *CreateInput,
 ) (*types.GitspaceConfig, error) {
-	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
+	space, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
@@ -69,7 +70,7 @@ func (c *Controller) Create(
 		ctx,
 		c.authorizer,
 		session,
-		parentSpace.Path,
+		space.Path,
 		"",
 		enum.PermissionGitspaceEdit); err != nil {
 		return nil, err
@@ -85,14 +86,31 @@ func (c *Controller) Create(
 	now := time.Now().UnixMilli()
 	var gitspaceConfig *types.GitspaceConfig
 	resourceIdentifier := in.ResourceIdentifier
-	err = c.createOrFindInfraProviderResource(ctx, parentSpace, resourceIdentifier, now)
+	// assume resource to be in same space if its not explicitly specified.
+	if in.ResourceSpaceRef == "" {
+		in.ResourceSpaceRef = in.SpaceRef
+	}
+	resourceSpace, err := c.spaceStore.FindByRef(ctx, in.ResourceSpaceRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
+	}
+	if err = apiauth.CheckInfraProvider(
+		ctx,
+		c.authorizer,
+		session,
+		resourceSpace.Path,
+		resourceIdentifier,
+		enum.PermissionInfraProviderAccess); err != nil {
+		return nil, err
+	}
+	err = c.createOrFindInfraProviderResource(ctx, resourceSpace, resourceIdentifier, now)
 	if err != nil {
 		return nil, err
 	}
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		infraProviderResource, err := c.infraProviderSvc.FindResourceByIdentifier(
 			ctx,
-			parentSpace.ID,
+			resourceSpace.ID,
 			resourceIdentifier)
 		if err != nil {
 			return fmt.Errorf("could not find infra provider resource : %q %w", resourceIdentifier, err)
@@ -109,8 +127,8 @@ func (c *Controller) Create(
 			Branch:                          in.Branch,
 			DevcontainerPath:                in.DevcontainerPath,
 			UserID:                          session.Principal.UID,
-			SpaceID:                         parentSpace.ID,
-			SpacePath:                       parentSpace.Path,
+			SpaceID:                         space.ID,
+			SpacePath:                       space.Path,
 			Created:                         now,
 			Updated:                         now,
 		}
