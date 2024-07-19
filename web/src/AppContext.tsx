@@ -79,7 +79,8 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
     // Fetch current user when conditions to fetch it matched and
     //  - cache does not exist yet
     //  - or cache is expired
-    if (!lazy && (!currentUser || cacheStrategy.isExpired())) {
+    //  - currentSession is not Public
+    if (!lazy && (!currentUser || cacheStrategy.isExpired()) && !initialValue.isCurrentSessionPublic) {
       fetchCurrentUser()
     }
   }, [lazy, fetchCurrentUser, currentUser])
