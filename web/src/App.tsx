@@ -67,7 +67,7 @@ const App: React.FC<AppProps> = React.memo(function App({
   const Wrapper: React.FC<{ fullPage: boolean }> = useCallback(
     props => {
       return strings ? (
-        <Container className={cx(css.main, { [css.fullPage]: standalone && props.fullPage })}>
+        <Container className={cx('dark', css.main, { [css.fullPage]: standalone && props.fullPage })}>
           <StringsContextProvider initialStrings={strings}>
             <AppErrorBoundary>
               <RestfulProvider
