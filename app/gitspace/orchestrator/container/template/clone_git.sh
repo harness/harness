@@ -19,8 +19,8 @@ if ! command -v git >/dev/null 2>&1; then
     exit 1
 fi
 
-# Clone the repository only if it doesn't exist
-if [ ! -d "$repo_name" ]; then
+# Clone the repository inside the working directory if it doesn't exist
+if [ ! -d ".git" ]; then
     echo "Cloning the repository..."
     git clone "$repo_url" --branch "$branch" .
 else
