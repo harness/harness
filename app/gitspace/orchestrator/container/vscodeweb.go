@@ -18,9 +18,9 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"embed"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -28,8 +28,6 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	dockerTypes "github.com/docker/docker/api/types"
-
-	_ "embed"
 )
 
 var _ IDE = (*VSCodeWeb)(nil)
@@ -39,6 +37,9 @@ var runScript string
 
 //go:embed script/find_vscode_web_path.sh
 var findPathScript string
+
+//go:embed media/vscodeweb/*
+var mediaFiles embed.FS
 
 const templateInstallVSCodeWeb = "install_vscode_web.sh"
 const startMarker = "START_MARKER"
@@ -121,58 +122,12 @@ func (v *VSCodeWeb) Type() enum.IDEType {
 }
 
 func (v *VSCodeWeb) copyMediaToContainer(ctx context.Context, devcontainer *Devcontainer, path string) error {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("could not find working directory cwd: %w", err)
-	}
-	// TODO: Can this be decoupled from the project structure?
-	mediaDir := filepath.Join(cwd, "app", "gitspace", "orchestrator", "container", "media", "vscodeweb")
-
 	// Create a buffer to hold the tar data
 	var tarBuffer bytes.Buffer
 	tarWriter := tar.NewWriter(&tarBuffer)
 
-	// Walk through the source directory and add files to the tar archive
-	err = filepath.Walk(mediaDir, func(filePath string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Create a tar header for each file
-		header, err := tar.FileInfoHeader(info, "")
-		if err != nil {
-			return err
-		}
-
-		x, err := filepath.Rel(mediaDir, filePath)
-		if err != nil {
-			return err
-		}
-
-		header.Name = filepath.ToSlash(x) // Relative path for tar header
-
-		if err = tarWriter.WriteHeader(header); err != nil {
-			return err
-		}
-
-		if !info.IsDir() {
-			// If it's a file, write its contents
-			file, fileErr := os.Open(filePath)
-			if fileErr != nil {
-				return fileErr
-			}
-
-			defer file.Close()
-
-			_, err = io.Copy(tarWriter, file)
-			if err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
-
+	// Walk through the embedded files and add them to the tar archive
+	err := embedToTar(tarWriter, "media/vscodeweb", "")
 	if err != nil {
 		return fmt.Errorf("error creating tar archive: %w", err)
 	}
@@ -193,6 +148,54 @@ func (v *VSCodeWeb) copyMediaToContainer(ctx context.Context, devcontainer *Devc
 	)
 	if err != nil {
 		return fmt.Errorf("error copying files to container: %w", err)
+	}
+
+	return nil
+}
+
+func embedToTar(tarWriter *tar.Writer, baseDir, prefix string) error {
+	entries, err := mediaFiles.ReadDir(baseDir)
+	if err != nil {
+		return fmt.Errorf("error reading media files from base dir %s: %w", baseDir, err)
+	}
+
+	for _, entry := range entries {
+		fullPath := filepath.Join(baseDir, entry.Name())
+		info, err2 := entry.Info()
+		if err2 != nil {
+			return fmt.Errorf("error getting file info for %s: %w", fullPath, err2)
+		}
+
+		// Remove the baseDir from the header name to ensure the files are copied directly into the destination
+		headerName := filepath.Join(prefix, entry.Name())
+
+		header, err2 := tar.FileInfoHeader(info, "")
+		if err2 != nil {
+			return fmt.Errorf("error getting file info header for %s: %w", fullPath, err2)
+		}
+
+		header.Name = strings.TrimPrefix(headerName, "/")
+
+		if err2 = tarWriter.WriteHeader(header); err2 != nil {
+			return fmt.Errorf("error writing file header %+v: %w", header, err2)
+		}
+
+		if !entry.IsDir() {
+			file, err3 := mediaFiles.Open(fullPath)
+			if err3 != nil {
+				return fmt.Errorf("error opening file %s: %w", fullPath, err3)
+			}
+			defer file.Close()
+
+			_, err3 = io.Copy(tarWriter, file)
+			if err3 != nil {
+				return fmt.Errorf("error copying file %s: %w", fullPath, err3)
+			}
+		} else {
+			if err3 := embedToTar(tarWriter, fullPath, headerName); err3 != nil {
+				return fmt.Errorf("error embeding file %s: %w", fullPath, err3)
+			}
+		}
 	}
 
 	return nil
