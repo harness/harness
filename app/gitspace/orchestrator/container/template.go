@@ -34,10 +34,9 @@ var (
 )
 
 type CloneGitPayload struct {
-	RepoURL             string
-	DevcontainerPresent string
-	Image               string
-	Branch              string
+	RepoURL string
+	Image   string
+	Branch  string
 }
 
 type InstallVSCodeWebPayload struct {

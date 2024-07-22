@@ -1,7 +1,6 @@
 #!/bin/sh
 
 repo_url={{ .RepoURL }}
-devcontainer_present={{ .DevcontainerPresent }}
 image={{ .Image }}
 branch={{ .Branch }}
 
@@ -28,21 +27,16 @@ else
     echo "Repository already exists. Skipping clone."
 fi
 
-# Check if devcontainer_present is set to false
-if [ "$devcontainer_present" = "false" ]; then
-    # Ensure the repository is cloned
-    if [ -d "$repo_name" ]; then
-        echo "Creating .devcontainer directory and devcontainer.json..."
-        mkdir -p "$repo_name/.devcontainer"
-        cat <<EOL > "$repo_name/.devcontainer/devcontainer.json"
+# Check if .devcontainer/devcontainer.json exists
+if [ ! -f ".devcontainer/devcontainer.json" ]; then
+    echo "Creating .devcontainer directory and devcontainer.json..."
+    mkdir -p ".devcontainer"
+    cat <<EOL > ".devcontainer/devcontainer.json"
 {
     "image": "$image"
 }
 EOL
-        echo "devcontainer.json created."
-    else
-        echo "Repository directory not found. Cannot create .devcontainer."
-    fi
+    echo "devcontainer.json created."
 else
-    echo "devcontainer_present is set to true. Skipping .devcontainer creation."
+    echo ".devcontainer/devcontainer.json already exists. Skipping creation."
 fi

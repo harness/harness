@@ -249,17 +249,17 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		WorkingDir:    workingDirectory,
 	}
 
-	err = e.cloneCode(ctx, gitspaceConfig, devcontainerConfig, devcontainer, logStreamInstance)
-	if err != nil {
-		return err
-	}
-
 	err = e.setupIDE(ctx, gitspaceConfig.GitspaceInstance, devcontainer, ideService, logStreamInstance)
 	if err != nil {
 		return err
 	}
 
 	err = e.runIDE(ctx, devcontainer, ideService, logStreamInstance)
+	if err != nil {
+		return err
+	}
+
+	err = e.cloneCode(ctx, gitspaceConfig, devcontainer, logStreamInstance)
 	if err != nil {
 		return err
 	}
@@ -388,21 +388,14 @@ func (e *EmbeddedDockerOrchestrator) getIDEService(gitspaceConfig *types.Gitspac
 func (e *EmbeddedDockerOrchestrator) cloneCode(
 	ctx context.Context,
 	gitspaceConfig *types.GitspaceConfig,
-	devcontainerConfig *types.DevcontainerConfig,
 	devcontainer *Devcontainer,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
-	var devcontainerPresent = "true"
-	if devcontainerConfig.Image == "" {
-		devcontainerPresent = "false"
-	}
-
 	gitCloneScript, err := GenerateScriptFromTemplate(
 		templateCloneGit, &CloneGitPayload{
-			RepoURL:             gitspaceConfig.CodeRepoURL,
-			DevcontainerPresent: devcontainerPresent,
-			Image:               e.config.DefaultBaseImage,
-			Branch:              gitspaceConfig.Branch,
+			RepoURL: gitspaceConfig.CodeRepoURL,
+			Image:   e.config.DefaultBaseImage,
+			Branch:  gitspaceConfig.Branch,
 		})
 	if err != nil {
 		return fmt.Errorf("failed to generate scipt to clone git from template %s: %w", templateCloneGit, err)

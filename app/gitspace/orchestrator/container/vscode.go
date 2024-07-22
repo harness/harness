@@ -26,7 +26,7 @@ import (
 
 var _ IDE = (*VSCode)(nil)
 
-//go:embed template/run_ssh_server.sh
+//go:embed script/run_ssh_server.sh
 var runSSHScript string
 
 const sshPort = "22/tcp"
@@ -43,8 +43,6 @@ func (v *VSCode) Setup(
 	devcontainer *Devcontainer,
 	gitspaceInstance *types.GitspaceInstance,
 ) ([]byte, error) {
-	var output = ""
-
 	sshServerScript, err := GenerateScriptFromTemplate(
 		templateSetupSSHServer, &SetupSSHServerPayload{
 			Username:         "harness",
@@ -56,14 +54,14 @@ func (v *VSCode) Setup(
 			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
 	}
 
-	output += "Installing ssh-server inside container\n"
+	output := "Installing ssh-server inside container\n"
 
-	execOutput, err := devcontainer.ExecuteCommand(ctx, sshServerScript, false)
+	_, err = devcontainer.ExecuteCommand(ctx, sshServerScript, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup SSH serverr: %w", err)
 	}
 
-	output += "SSH server installation output...\n" + string(execOutput) + "\nSuccessfully installed ssh-server\n"
+	output += "Successfully installed ssh-server\n"
 
 	return []byte(output), nil
 }
