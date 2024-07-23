@@ -34,17 +34,12 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-// GitHandler is an abstraction of an http handler that handles git calls.
-type GitHandler interface {
-	http.Handler
-}
-
 // NewGitHandler returns a new GitHandler.
 func NewGitHandler(
 	urlProvider url.Provider,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
-) GitHandler {
+) http.Handler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
 

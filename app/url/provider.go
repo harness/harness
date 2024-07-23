@@ -15,6 +15,7 @@
 package url
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"path"
@@ -38,40 +39,40 @@ const (
 type Provider interface {
 	// GetInternalAPIURL returns the internally reachable base url of the server.
 	// NOTE: url is guaranteed to not have any trailing '/'.
-	GetInternalAPIURL() string
+	GetInternalAPIURL(ctx context.Context) string
 
 	// GenerateContainerGITCloneURL generates a URL that can be used by CI container builds to
 	// interact with gitness and clone a repo.
-	GenerateContainerGITCloneURL(repoPath string) string
+	GenerateContainerGITCloneURL(ctx context.Context, repoPath string) string
 
 	// GenerateGITCloneURL generates the public git clone URL for the provided repo path.
 	// NOTE: url is guaranteed to not have any trailing '/'.
-	GenerateGITCloneURL(repoPath string) string
+	GenerateGITCloneURL(ctx context.Context, repoPath string) string
 
 	// GenerateGITCloneSSHURL generates the public git clone URL for the provided repo path.
 	// NOTE: url is guaranteed to not have any trailing '/'.
-	GenerateGITCloneSSHURL(repoPath string) string
+	GenerateGITCloneSSHURL(ctx context.Context, repoPath string) string
 
 	// GenerateUIRepoURL returns the url for the UI screen of a repository.
-	GenerateUIRepoURL(repoPath string) string
+	GenerateUIRepoURL(ctx context.Context, repoPath string) string
 
 	// GenerateUIPRURL returns the url for the UI screen of an existing pr.
-	GenerateUIPRURL(repoPath string, prID int64) string
+	GenerateUIPRURL(ctx context.Context, repoPath string, prID int64) string
 
 	// GenerateUICompareURL returns the url for the UI screen comparing two references.
-	GenerateUICompareURL(repoPath string, ref1 string, ref2 string) string
+	GenerateUICompareURL(ctx context.Context, repoPath string, ref1 string, ref2 string) string
 
 	// GetAPIHostname returns the host for the api endpoint.
-	GetAPIHostname() string
+	GetAPIHostname(ctx context.Context) string
 
 	// GenerateUIBuildURL returns the endpoint to use for viewing build executions.
-	GenerateUIBuildURL(repoPath, pipelineIdentifier string, seqNumber int64) string
+	GenerateUIBuildURL(ctx context.Context, repoPath, pipelineIdentifier string, seqNumber int64) string
 
 	// GetGITHostname returns the host for the git endpoint.
-	GetGITHostname() string
+	GetGITHostname(ctx context.Context) string
 
 	// GetAPIProto returns the proto for the API hostname
-	GetAPIProto() string
+	GetAPIProto(ctx context.Context) string
 }
 
 // Provider provides the URLs of the gitness system.
@@ -159,11 +160,11 @@ func NewProvider(
 	}, nil
 }
 
-func (p *provider) GetInternalAPIURL() string {
+func (p *provider) GetInternalAPIURL(context.Context) string {
 	return p.internalURL.JoinPath(APIMount).String()
 }
 
-func (p *provider) GenerateContainerGITCloneURL(repoPath string) string {
+func (p *provider) GenerateContainerGITCloneURL(_ context.Context, repoPath string) string {
 	repoPath = path.Clean(repoPath)
 	if !strings.HasSuffix(repoPath, GITSuffix) {
 		repoPath += GITSuffix
@@ -172,7 +173,7 @@ func (p *provider) GenerateContainerGITCloneURL(repoPath string) string {
 	return p.containerURL.JoinPath(GITMount, repoPath).String()
 }
 
-func (p *provider) GenerateGITCloneURL(repoPath string) string {
+func (p *provider) GenerateGITCloneURL(_ context.Context, repoPath string) string {
 	repoPath = path.Clean(repoPath)
 	if !strings.HasSuffix(repoPath, GITSuffix) {
 		repoPath += GITSuffix
@@ -181,7 +182,7 @@ func (p *provider) GenerateGITCloneURL(repoPath string) string {
 	return p.gitURL.JoinPath(repoPath).String()
 }
 
-func (p *provider) GenerateGITCloneSSHURL(repoPath string) string {
+func (p *provider) GenerateGITCloneSSHURL(_ context.Context, repoPath string) string {
 	if !p.SSHEnabled {
 		return ""
 	}
@@ -193,31 +194,31 @@ func (p *provider) GenerateGITCloneSSHURL(repoPath string) string {
 	return fmt.Sprintf("%s@%s:%s", p.SSHDefaultUser, p.gitSSHURL.String(), repoPath)
 }
 
-func (p *provider) GenerateUIBuildURL(repoPath, pipelineIdentifier string, seqNumber int64) string {
+func (p *provider) GenerateUIBuildURL(_ context.Context, repoPath, pipelineIdentifier string, seqNumber int64) string {
 	return p.uiURL.JoinPath(repoPath, "pipelines",
 		pipelineIdentifier, "execution", strconv.Itoa(int(seqNumber))).String()
 }
 
-func (p *provider) GenerateUIRepoURL(repoPath string) string {
+func (p *provider) GenerateUIRepoURL(_ context.Context, repoPath string) string {
 	return p.uiURL.JoinPath(repoPath).String()
 }
 
-func (p *provider) GenerateUIPRURL(repoPath string, prID int64) string {
+func (p *provider) GenerateUIPRURL(_ context.Context, repoPath string, prID int64) string {
 	return p.uiURL.JoinPath(repoPath, "pulls", fmt.Sprint(prID)).String()
 }
 
-func (p *provider) GenerateUICompareURL(repoPath string, ref1 string, ref2 string) string {
+func (p *provider) GenerateUICompareURL(_ context.Context, repoPath string, ref1 string, ref2 string) string {
 	return p.uiURL.JoinPath(repoPath, "pulls/compare", ref1+"..."+ref2).String()
 }
 
-func (p *provider) GetAPIHostname() string {
+func (p *provider) GetAPIHostname(context.Context) string {
 	return p.apiURL.Hostname()
 }
 
-func (p *provider) GetGITHostname() string {
+func (p *provider) GetGITHostname(context.Context) string {
 	return p.gitURL.Hostname()
 }
 
-func (p *provider) GetAPIProto() string {
+func (p *provider) GetAPIProto(context.Context) string {
 	return p.apiURL.Scheme
 }

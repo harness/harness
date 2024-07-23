@@ -15,6 +15,7 @@
 package webhook
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -104,14 +105,14 @@ func (r RepositoryInfo) MarshalJSON() ([]byte, error) {
 }
 
 // repositoryInfoFrom gets the RespositoryInfo from a types.Repository.
-func repositoryInfoFrom(repo *types.Repository, urlProvider url.Provider) RepositoryInfo {
+func repositoryInfoFrom(ctx context.Context, repo *types.Repository, urlProvider url.Provider) RepositoryInfo {
 	return RepositoryInfo{
 		ID:            repo.ID,
 		Path:          repo.Path,
 		Identifier:    repo.Identifier,
 		DefaultBranch: repo.DefaultBranch,
-		GitURL:        urlProvider.GenerateGITCloneURL(repo.Path),
-		GitSSHURL:     urlProvider.GenerateGITCloneSSHURL(repo.Path),
+		GitURL:        urlProvider.GenerateGITCloneURL(ctx, repo.Path),
+		GitSSHURL:     urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path),
 	}
 }
 
@@ -133,7 +134,12 @@ type PullReqInfo struct {
 }
 
 // pullReqInfoFrom gets the PullReqInfo from a types.PullReq.
-func pullReqInfoFrom(pr *types.PullReq, repo *types.Repository, urlProvider url.Provider) PullReqInfo {
+func pullReqInfoFrom(
+	ctx context.Context,
+	pr *types.PullReq,
+	repo *types.Repository,
+	urlProvider url.Provider,
+) PullReqInfo {
 	return PullReqInfo{
 		Number:        pr.Number,
 		State:         pr.State,
@@ -146,7 +152,7 @@ func pullReqInfoFrom(pr *types.PullReq, repo *types.Repository, urlProvider url.
 		TargetBranch:  pr.TargetBranch,
 		MergeStrategy: pr.MergeMethod,
 		Author:        principalInfoFrom(&pr.Author),
-		PrURL:         urlProvider.GenerateUIPRURL(repo.Path, pr.Number),
+		PrURL:         urlProvider.GenerateUIPRURL(ctx, repo.Path, pr.Number),
 	}
 }
 

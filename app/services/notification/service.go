@@ -180,6 +180,6 @@ func (s *Service) getBasePayload(
 		Repo:       repo,
 		PullReq:    pullReq,
 		Author:     author,
-		PullReqURL: s.urlProvider.GenerateUIPRURL(repo.Path, pullReq.Number),
+		PullReqURL: s.urlProvider.GenerateUIPRURL(ctx, repo.Path, pullReq.Number),
 	}, nil
 }

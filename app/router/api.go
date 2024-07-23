@@ -89,11 +89,6 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-// APIHandler is an abstraction of a http handler that handles API calls.
-type APIHandler interface {
-	http.Handler
-}
-
 var (
 	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
 	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/",
@@ -130,7 +125,7 @@ func NewAPIHandler(
 	infraProviderCtrl *infraprovider.Controller,
 	migrateCtrl *migrate.Controller,
 	gitspaceCtrl *gitspace.Controller,
-) APIHandler {
+) http.Handler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
 

@@ -245,7 +245,7 @@ func (c *Controller) suggestPullRequest(
 		msgs[0] = fmt.Sprintf("Branch %q has open PRs:", branchName)
 		for i, pr := range prs {
 			msgs[2*i+1] = fmt.Sprintf("  (#%d) %s", pr.Number, pr.Title)
-			msgs[2*i+2] = "    " + c.urlProvider.GenerateUIPRURL(repo.Path, pr.Number)
+			msgs[2*i+2] = "    " + c.urlProvider.GenerateUIPRURL(ctx, repo.Path, pr.Number)
 		}
 		out.Messages = append(out.Messages, msgs...)
 		return
@@ -254,7 +254,7 @@ func (c *Controller) suggestPullRequest(
 	// this is a new PR!
 	out.Messages = append(out.Messages,
 		fmt.Sprintf("Create a pull request for %q by visiting:", branchName),
-		"  "+c.urlProvider.GenerateUICompareURL(repo.Path, repo.DefaultBranch, branchName),
+		"  "+c.urlProvider.GenerateUICompareURL(ctx, repo.Path, repo.DefaultBranch, branchName),
 	)
 }
 

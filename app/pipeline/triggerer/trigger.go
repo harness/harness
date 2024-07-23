@@ -356,7 +356,7 @@ func (t *triggerer) Trigger(
 	// TODO: this can be made better. We are setting this later since otherwise any parsing failure
 	// would lead to an incremented pipeline sequence number.
 	execution.Number = pipeline.Seq
-	execution.Params = combine(execution.Params, Envs(repo, pipeline, t.urlProvider))
+	execution.Params = combine(execution.Params, Envs(ctx, repo, pipeline, t.urlProvider))
 
 	err = t.createExecutionWithStages(ctx, execution, stages)
 	if err != nil {

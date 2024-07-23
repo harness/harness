@@ -280,7 +280,7 @@ func (m *Manager) UploadLogs(ctx context.Context, step int64, r io.Reader) error
 }
 
 // Details provides details about the stage.
-func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, error) {
+func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext, error) {
 	log := log.With().
 		Int64("stage-id", stageID).
 		Logger()
@@ -308,7 +308,7 @@ func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, 
 	}
 
 	// Backfill clone URL
-	repo.GitURL = m.urlProvider.GenerateContainerGITCloneURL(repo.Path)
+	repo.GitURL = m.urlProvider.GenerateContainerGITCloneURL(ctx, repo.Path)
 
 	stages, err := m.Stages.List(noContext, stage.ExecutionID)
 	if err != nil {

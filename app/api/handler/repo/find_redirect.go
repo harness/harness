@@ -43,7 +43,7 @@ func HandleGitRedirect(urlProvider url.Provider) http.HandlerFunc {
 		// NOTE:
 		//   Technically, we could find the repo first and use repo.Path.
 		//   However, the auth cookie isn't available in case of custom git domains, and thus the auth would fail.
-		repoURL := urlProvider.GenerateUIRepoURL(repoRef)
+		repoURL := urlProvider.GenerateUIRepoURL(ctx, repoRef)
 
 		http.Redirect(
 			w,

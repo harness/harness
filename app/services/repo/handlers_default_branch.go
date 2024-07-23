@@ -62,7 +62,7 @@ func (s *Service) handleUpdateDefaultBranch(
 	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
 	envVars, err := githook.GenerateEnvironmentVariables(
 		ctx,
-		s.urlProvider.GetInternalAPIURL(),
+		s.urlProvider.GetInternalAPIURL(ctx),
 		repo.ID,
 		systemPrincipal.ID,
 		true,

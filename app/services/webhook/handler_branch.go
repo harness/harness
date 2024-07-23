@@ -48,7 +48,7 @@ func (s *Service) handleEventBranchCreated(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
-			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
+			repoInfo := repositoryInfoFrom(ctx, repo, s.urlProvider)
 
 			return &ReferencePayload{
 				BaseSegment: BaseSegment{
@@ -89,7 +89,7 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 			}
 
 			commitInfo := commitsInfo[0]
-			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
+			repoInfo := repositoryInfoFrom(ctx, repo, s.urlProvider)
 
 			return &ReferencePayload{
 				BaseSegment: BaseSegment{
@@ -125,7 +125,7 @@ func (s *Service) handleEventBranchDeleted(ctx context.Context,
 	return s.triggerForEventWithRepo(ctx, enum.WebhookTriggerBranchDeleted,
 		event.ID, event.Payload.PrincipalID, event.Payload.RepoID,
 		func(principal *types.Principal, repo *types.Repository) (any, error) {
-			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
+			repoInfo := repositoryInfoFrom(ctx, repo, s.urlProvider)
 
 			return &ReferencePayload{
 				BaseSegment: BaseSegment{

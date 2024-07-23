@@ -15,6 +15,7 @@
 package repo
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -53,7 +54,7 @@ func HandleGitInfoRefs(repoCtrl *repo.Controller, urlProvider url.Provider) http
 
 		err = repoCtrl.GitInfoRefs(ctx, session, repoRef, service, gitProtocol, w)
 		if errors.Is(err, apiauth.ErrNotAuthorized) && auth.IsAnonymousSession(session) {
-			renderBasicAuth(w, urlProvider)
+			renderBasicAuth(ctx, w, urlProvider)
 			return
 		}
 		if err != nil {
@@ -65,8 +66,8 @@ func HandleGitInfoRefs(repoCtrl *repo.Controller, urlProvider url.Provider) http
 
 // renderBasicAuth renders a response that indicates that the client (GIT) requires basic authentication.
 // This is required in order to tell git CLI to query user credentials.
-func renderBasicAuth(w http.ResponseWriter, urlProvider url.Provider) {
+func renderBasicAuth(ctx context.Context, w http.ResponseWriter, urlProvider url.Provider) {
 	// Git doesn't seem to handle "realm" - so it doesn't seem to matter for basic user CLI interactions.
-	w.Header().Add("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, urlProvider.GetAPIHostname()))
+	w.Header().Add("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, urlProvider.GetAPIHostname(ctx)))
 	w.WriteHeader(http.StatusUnauthorized)
 }

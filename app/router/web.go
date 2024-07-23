@@ -29,15 +29,10 @@ import (
 	"github.com/unrolled/secure"
 )
 
-// WebHandler is an abstraction of an http handler that handles web calls.
-type WebHandler interface {
-	http.Handler
-}
-
 // NewWebHandler returns a new WebHandler.
 func NewWebHandler(config *types.Config,
 	openapi openapi.Service,
-) WebHandler {
+) http.Handler {
 	// Use go-chi router for inner routing
 	r := chi.NewRouter()
 	// create middleware to enforce security best practices for

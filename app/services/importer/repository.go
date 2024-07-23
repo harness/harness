@@ -548,7 +548,7 @@ func (r *Repository) createEnvVars(ctx context.Context,
 ) (map[string]string, error) {
 	envVars, err := githook.GenerateEnvironmentVariables(
 		ctx,
-		r.urlProvider.GetInternalAPIURL(),
+		r.urlProvider.GetInternalAPIURL(ctx),
 		repoID,
 		principal.ID,
 		false,

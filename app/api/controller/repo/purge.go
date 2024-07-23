@@ -97,7 +97,7 @@ func (c *Controller) DeleteGitRepository(
 	// create custom write params for delete as repo might or might not exist in db (similar to create).
 	envVars, err := githook.GenerateEnvironmentVariables(
 		ctx,
-		c.urlProvider.GetInternalAPIURL(),
+		c.urlProvider.GetInternalAPIURL(ctx),
 		0, // no repoID
 		session.Principal.ID,
 		true,

@@ -109,8 +109,8 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 		Config:  ConvertToDroneFile(details.Config),
 		Netrc:   ConvertToDroneNetrc(details.Netrc),
 		System: &drone.System{
-			Proto: e.urlProvider.GetAPIProto(),
-			Host:  e.urlProvider.GetAPIHostname(),
+			Proto: e.urlProvider.GetAPIProto(ctx),
+			Host:  e.urlProvider.GetAPIHostname(ctx),
 		},
 	}, nil
 }

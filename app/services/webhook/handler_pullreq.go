@@ -50,8 +50,8 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
-			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
-			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
 			return &PullReqCreatedPayload{
 				BaseSegment: BaseSegment{
@@ -60,7 +60,7 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -98,8 +98,8 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
-			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
-			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
 			return &PullReqReopenedPayload{
 				BaseSegment: BaseSegment{
@@ -108,7 +108,7 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -156,8 +156,8 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 			}
 
 			commitInfo := commitsInfo[0]
-			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
-			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
 			return &PullReqBranchUpdatedPayload{
 				BaseSegment: BaseSegment{
@@ -166,7 +166,7 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -213,8 +213,8 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
-			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
-			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
 			return &PullReqClosedPayload{
 				BaseSegment: BaseSegment{
@@ -223,7 +223,7 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -264,8 +264,8 @@ func (s *Service) handleEventPullReqMerged(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
-			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
-			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
 			return &PullReqClosedPayload{
 				BaseSegment: BaseSegment{
@@ -274,7 +274,7 @@ func (s *Service) handleEventPullReqMerged(ctx context.Context,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
@@ -314,8 +314,8 @@ func (s *Service) handleEventPullReqComment(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqCommentCreated,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
-			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 			activity, err := s.activityStore.Find(ctx, event.Payload.ActivityID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get activity by id for acitivity id %d: %w", event.Payload.ActivityID, err)
@@ -331,7 +331,7 @@ func (s *Service) handleEventPullReqComment(
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{

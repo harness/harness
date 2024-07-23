@@ -15,6 +15,8 @@
 package triggerer
 
 import (
+	"context"
+
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/types"
 
@@ -32,11 +34,12 @@ func combine(env ...map[string]string) map[string]string {
 }
 
 func Envs(
+	ctx context.Context,
 	repo *types.Repository,
 	pipeline *types.Pipeline,
 	urlProvider url.Provider,
 ) map[string]string {
 	return map[string]string{
-		"DRONE_BUILD_LINK": urlProvider.GenerateUIBuildURL(repo.Path, pipeline.Identifier, pipeline.Seq),
+		"DRONE_BUILD_LINK": urlProvider.GenerateUIBuildURL(ctx, repo.Path, pipeline.Identifier, pipeline.Seq),
 	}
 }

@@ -81,8 +81,8 @@ func (c *Controller) ListRepositoriesNoAuth(
 	var reposOut []*repoCtrl.RepositoryOutput
 	for _, repo := range repos {
 		// backfill URLs
-		repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
-		repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(repo.Path)
+		repo.GitURL = c.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
+		repo.GitSSHURL = c.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
 
 		repoOut, err := repoCtrl.GetRepoOutput(ctx, c.publicAccess, repo)
 		if err != nil {
