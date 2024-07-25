@@ -372,7 +372,11 @@ type (
 
 		// CreateWithPayload create a new system activity from the provided payload.
 		CreateWithPayload(ctx context.Context,
-			pr *types.PullReq, principalID int64, payload types.PullReqActivityPayload) (*types.PullReqActivity, error)
+			pr *types.PullReq,
+			principalID int64,
+			payload types.PullReqActivityPayload,
+			metadata *types.PullReqActivityMetadata,
+		) (*types.PullReqActivity, error)
 
 		// Update the pull request activity. It will set new values to the Version and Updated fields.
 		Update(ctx context.Context, act *types.PullReqActivity) error

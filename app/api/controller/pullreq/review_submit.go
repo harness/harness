@@ -76,6 +76,10 @@ func (c *Controller) ReviewSubmit(
 		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
+	if pr.Merged != nil {
+		return nil, usererror.BadRequest("Can't submit a review for merged pull requests")
+	}
+
 	if pr.CreatedBy == session.Principal.ID {
 		return nil, usererror.BadRequest("Can't submit review to own pull requests.")
 	}
@@ -130,7 +134,7 @@ func (c *Controller) ReviewSubmit(
 			CommitSHA: commitSHA.String(),
 			Decision:  in.Decision,
 		}
-		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload)
+		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, nil)
 		return err
 	}()
 	if err != nil {
@@ -142,8 +146,13 @@ func (c *Controller) ReviewSubmit(
 }
 
 // updateReviewer updates pull request reviewer object.
-func (c *Controller) updateReviewer(ctx context.Context, session *auth.Session,
-	pr *types.PullReq, review *types.PullReqReview, sha string) (*types.PullReqReviewer, error) {
+func (c *Controller) updateReviewer(
+	ctx context.Context,
+	session *auth.Session,
+	pr *types.PullReq,
+	review *types.PullReqReview,
+	sha string,
+) (*types.PullReqReviewer, error) {
 	reviewer, err := c.reviewerStore.Find(ctx, pr.ID, session.Principal.ID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return nil, err

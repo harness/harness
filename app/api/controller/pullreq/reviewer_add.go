@@ -53,6 +53,10 @@ func (c *Controller) ReviewerAdd(
 		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
+	if pr.Merged != nil {
+		return nil, usererror.BadRequest("Can't request review for merged pull request")
+	}
+
 	if in.ReviewerID == 0 {
 		return nil, usererror.BadRequest("Must specify reviewer ID.")
 	}

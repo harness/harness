@@ -145,9 +145,7 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 	return ref.SHA, nil
 }
 
-func (c *Controller) getRepoCheckAccess(ctx context.Context,
-	session *auth.Session, repoRef string, reqPermission enum.Permission,
-) (*types.Repository, error) {
+func (c *Controller) getRepo(ctx context.Context, repoRef string) (*types.Repository, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
@@ -159,6 +157,17 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 
 	if repo.State != enum.RepoStateActive {
 		return nil, usererror.BadRequest("Repository is not ready to use.")
+	}
+
+	return repo, nil
+}
+
+func (c *Controller) getRepoCheckAccess(ctx context.Context,
+	session *auth.Session, repoRef string, reqPermission enum.Permission,
+) (*types.Repository, error) {
+	repo, err := c.getRepo(ctx, repoRef)
+	if err != nil {
+		return nil, err
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {

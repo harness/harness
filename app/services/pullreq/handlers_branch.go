@@ -120,7 +120,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			New: event.Payload.NewSHA,
 		}
 
-		_, err = s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID, payload)
+		_, err = s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID, payload, nil)
 		if err != nil {
 			// non-critical error
 			log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after branch update")
@@ -192,7 +192,7 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 		// Whatever is the source sha of the PR is most likely to be pointed at by the PR head ref.
 		pr.ActivitySeq = activitySeqBranchDeleted
 		_, err = s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID,
-			&types.PullRequestActivityPayloadBranchDelete{SHA: pr.SourceSHA})
+			&types.PullRequestActivityPayloadBranchDelete{SHA: pr.SourceSHA}, nil)
 		if err != nil {
 			// non-critical error
 			log.Ctx(ctx).Err(err).Msg("failed to write pull request activity for branch deletion")
@@ -205,7 +205,7 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 			OldDraft: pr.IsDraft,
 			NewDraft: pr.IsDraft,
 		}
-		if _, err := s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID, payload); err != nil {
+		if _, err := s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID, payload, nil); err != nil {
 			// non-critical error
 			log.Ctx(ctx).Err(err).Msg(
 				"failed to write pull request activity for pullrequest closure after branch deletion",

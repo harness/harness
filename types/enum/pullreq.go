@@ -78,14 +78,15 @@ func GetAllPullReqActivityTypes() ([]PullReqActivityType, PullReqActivityType) {
 
 // PullReqActivityType enumeration.
 const (
-	PullReqActivityTypeComment      PullReqActivityType = "comment"
-	PullReqActivityTypeCodeComment  PullReqActivityType = "code-comment"
-	PullReqActivityTypeTitleChange  PullReqActivityType = "title-change"
-	PullReqActivityTypeStateChange  PullReqActivityType = "state-change"
-	PullReqActivityTypeReviewSubmit PullReqActivityType = "review-submit"
-	PullReqActivityTypeBranchUpdate PullReqActivityType = "branch-update"
-	PullReqActivityTypeBranchDelete PullReqActivityType = "branch-delete"
-	PullReqActivityTypeMerge        PullReqActivityType = "merge"
+	PullReqActivityTypeComment        PullReqActivityType = "comment"
+	PullReqActivityTypeCodeComment    PullReqActivityType = "code-comment"
+	PullReqActivityTypeTitleChange    PullReqActivityType = "title-change"
+	PullReqActivityTypeStateChange    PullReqActivityType = "state-change"
+	PullReqActivityTypeReviewSubmit   PullReqActivityType = "review-submit"
+	PullReqActivityTypeReviewerDelete PullReqActivityType = "reviewer-delete"
+	PullReqActivityTypeBranchUpdate   PullReqActivityType = "branch-update"
+	PullReqActivityTypeBranchDelete   PullReqActivityType = "branch-delete"
+	PullReqActivityTypeMerge          PullReqActivityType = "merge"
 )
 
 var pullReqActivityTypes = sortEnum([]PullReqActivityType{
@@ -94,6 +95,7 @@ var pullReqActivityTypes = sortEnum([]PullReqActivityType{
 	PullReqActivityTypeTitleChange,
 	PullReqActivityTypeStateChange,
 	PullReqActivityTypeReviewSubmit,
+	PullReqActivityTypeReviewerDelete,
 	PullReqActivityTypeBranchUpdate,
 	PullReqActivityTypeBranchDelete,
 	PullReqActivityTypeMerge,

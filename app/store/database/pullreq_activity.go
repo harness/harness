@@ -230,7 +230,7 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 }
 
 func (s *PullReqActivityStore) CreateWithPayload(ctx context.Context,
-	pr *types.PullReq, principalID int64, payload types.PullReqActivityPayload,
+	pr *types.PullReq, principalID int64, payload types.PullReqActivityPayload, metadata *types.PullReqActivityMetadata,
 ) (*types.PullReqActivity, error) {
 	now := time.Now().UnixMilli()
 	act := &types.PullReqActivity{
@@ -246,6 +246,7 @@ func (s *PullReqActivityStore) CreateWithPayload(ctx context.Context,
 		Type:      payload.ActivityType(),
 		Kind:      enum.PullReqActivityKindSystem,
 		Text:      "",
+		Metadata:  metadata,
 	}
 
 	_ = act.SetPayload(payload)

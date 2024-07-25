@@ -408,13 +408,15 @@ func (c *Controller) Merge(
 
 	log.Ctx(ctx).Debug().Msgf("successfully merged PR")
 
+	mergedBy := session.Principal.ID
+
 	var activitySeqMerge, activitySeqBranchDeleted int64
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		pr.State = enum.PullReqStateMerged
 
 		nowMilli := now.UnixMilli()
 		pr.Merged = &nowMilli
-		pr.MergedBy = &session.Principal.ID
+		pr.MergedBy = &mergedBy
 		pr.MergeMethod = &in.Method
 
 		// update all Merge specific information (might be empty if previous merge check failed)
@@ -455,7 +457,7 @@ func (c *Controller) Merge(
 		SourceSHA:     mergeOutput.HeadSHA.String(),
 		RulesBypassed: protection.IsBypassed(violations),
 	}
-	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, activityPayload); errAct != nil {
+	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, mergedBy, activityPayload, nil); errAct != nil {
 		// non-critical error
 		log.Ctx(ctx).Err(errAct).Msgf("failed to write pull req merge activity")
 	}
@@ -483,8 +485,8 @@ func (c *Controller) Merge(
 			// NOTE: there is a chance someone pushed on the branch between merge and delete.
 			// Either way, we'll use the SHA that was merged with for the activity to be consistent from PR perspective.
 			pr.ActivitySeq = activitySeqBranchDeleted
-			if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID,
-				&types.PullRequestActivityPayloadBranchDelete{SHA: in.SourceSHA}); errAct != nil {
+			if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, mergedBy,
+				&types.PullRequestActivityPayloadBranchDelete{SHA: in.SourceSHA}, nil); errAct != nil {
 				// non-critical error
 				log.Ctx(ctx).Err(errAct).
 					Msgf("failed to write pull request activity for successful automatic branch delete")

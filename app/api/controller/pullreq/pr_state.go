@@ -169,7 +169,7 @@ func (c *Controller) State(ctx context.Context,
 		OldDraft: oldDraft,
 		NewDraft: pr.IsDraft,
 	}
-	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload); errAct != nil {
+	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, nil); errAct != nil {
 		// non-critical error
 		log.Ctx(ctx).Err(errAct).Msgf("failed to write pull request activity after state change")
 	}

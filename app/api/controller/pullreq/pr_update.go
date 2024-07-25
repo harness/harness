@@ -104,7 +104,7 @@ func (c *Controller) Update(ctx context.Context,
 			Old: oldTitle,
 			New: pr.Title,
 		}
-		if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload); errAct != nil {
+		if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, nil); errAct != nil {
 			// non-critical error
 			log.Ctx(ctx).Err(errAct).Msgf("failed to write pull request activity after title change")
 		}
