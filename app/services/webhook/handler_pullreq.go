@@ -379,8 +379,8 @@ func (s *Service) handleEventPullReqUpdated(
 	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqUpdated,
 		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
 		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
-			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
-			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 
 			return &PullReqUpdatedPayload{
 				BaseSegment: BaseSegment{
@@ -389,7 +389,7 @@ func (s *Service) handleEventPullReqUpdated(
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
-					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
 				},
 				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
 					TargetRef: ReferenceInfo{
