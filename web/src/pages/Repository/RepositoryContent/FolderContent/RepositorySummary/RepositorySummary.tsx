@@ -128,7 +128,7 @@ const RepositorySummary = (props: RepositorySummaryProps) => {
       </Container>
       <Layout.Vertical padding={'small'} className={css.content}>
         <Layout.Vertical spacing="medium">
-          <Text font={{ variation: FontVariation.BODY2_SEMI }} color={Color.BLACK_100} style={{ fontSize: '13px' }}>
+          <Text font={{ variation: FontVariation.BODY2_SEMI }} color={Color.BLACK_100} className={css.summaryDesc}>
             {metadata.description ? (
               metadata.description
             ) : (

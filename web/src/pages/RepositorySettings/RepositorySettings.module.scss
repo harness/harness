@@ -153,6 +153,14 @@
   font-size: 13px !important;
 }
 
+.description {
+  width: 80%;
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: normal;
+  margin: 0 auto;
+}
+
 .tabsContainer {
   flex-grow: 1;
   display: flex;

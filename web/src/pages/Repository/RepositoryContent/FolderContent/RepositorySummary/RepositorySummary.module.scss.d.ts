@@ -22,5 +22,6 @@ export declare const heading: string
 export declare const link: string
 export declare const metaData: string
 export declare const summaryContainer: string
+export declare const summaryDesc: string
 export declare const tag: string
 export declare const tags: string

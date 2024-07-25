@@ -13,6 +13,13 @@
     margin: var(--spacing-small) 0;
     gap: var(--spacing-xlarge);
     font-size: 13px !important;
+    .summaryDesc {
+      font-size: 13px !important;
+      word-wrap: break-word;
+      word-break: break-all;
+      white-space: normal;
+      margin: 0 auto;
+    }
     .tags {
       flex-wrap: wrap;
       align-items: flex-start;

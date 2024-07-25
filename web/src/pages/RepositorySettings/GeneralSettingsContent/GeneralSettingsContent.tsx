@@ -229,7 +229,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                           variation={ButtonVariation.SECONDARY}
                           size={ButtonSize.SMALL}
                           onClick={() => {
-                            mutate({ description: formik.values?.desc })
+                            mutate({ description: formik.values?.desc?.replace(/\n/g, ' ') })
                               .then(() => {
                                 showSuccess(getString('repoUpdate'))
                                 setEditDesc(ACCESS_MODES.VIEW)
@@ -252,7 +252,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                       </Layout.Horizontal>
                     </Layout.Vertical>
                   ) : (
-                    <Text color={Color.GREY_800} className={css.textSize}>
+                    <Text color={Color.GREY_800} className={cx(css.textSize, css.description)}>
                       {formik?.values?.desc || repoMetadata?.description}
                       <Button
                         className={css.textSize}

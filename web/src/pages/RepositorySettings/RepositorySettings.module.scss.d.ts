@@ -21,6 +21,7 @@ export declare const buttonContainer: string
 export declare const content: string
 export declare const contentContainer: string
 export declare const deleteContainer: string
+export declare const description: string
 export declare const descText: string
 export declare const dialogContainer: string
 export declare const dividerContainer: string
