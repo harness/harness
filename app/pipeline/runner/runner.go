@@ -15,6 +15,8 @@
 package runner
 
 import (
+	goruntime "runtime"
+
 	"github.com/harness/gitness/app/pipeline/resolver"
 	"github.com/harness/gitness/types"
 
@@ -52,9 +54,13 @@ func NewExecutionRunner(
 	client runnerclient.Client,
 	resolver *resolver.Manager,
 ) (*runtime2.Runner, error) {
-	// For linux, containers need to have extra hosts set in order to interact with
-	// the gitness container.
-	extraHosts := []string{"host.docker.internal:host-gateway"}
+	// For linux/windows, containers need to have extra hosts set in order to interact with
+	// gitness. For docker desktop for mac, this is built in and not needed.
+	extraHosts := []string{}
+	if goruntime.GOOS != "darwin" {
+		extraHosts = []string{"host.docker.internal:host-gateway"}
+	}
+
 	compiler := &compiler.Compiler{
 		Environ:    provider.Static(map[string]string{}),
 		Registry:   registry.Static([]*drone.Registry{}),
