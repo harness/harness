@@ -1171,6 +1171,7 @@ export interface StringsMap {
   webhookPRCreated: string
   webhookPRMerged: string
   webhookPRReopened: string
+  webhookPRUpdated: string
   webhookSelectAllEvents: string
   webhookSelectIndividualEvents: string
   webhookSelectPushEvents: string

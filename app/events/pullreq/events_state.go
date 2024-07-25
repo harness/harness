@@ -46,8 +46,10 @@ func (r *Reporter) Created(ctx context.Context, payload *CreatedPayload) {
 	log.Ctx(ctx).Debug().Msgf("reported pull request created event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterCreated(fn events.HandlerFunc[*CreatedPayload],
-	opts ...events.HandlerOption) error {
+func (r *Reader) RegisterCreated(
+	fn events.HandlerFunc[*CreatedPayload],
+	opts ...events.HandlerOption,
+) error {
 	return events.ReaderRegisterEvent(r.innerReader, CreatedEvent, fn, opts...)
 }
 
@@ -72,8 +74,10 @@ func (r *Reporter) Closed(ctx context.Context, payload *ClosedPayload) {
 	log.Ctx(ctx).Debug().Msgf("reported pull request closed event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterClosed(fn events.HandlerFunc[*ClosedPayload],
-	opts ...events.HandlerOption) error {
+func (r *Reader) RegisterClosed(
+	fn events.HandlerFunc[*ClosedPayload],
+	opts ...events.HandlerOption,
+) error {
 	return events.ReaderRegisterEvent(r.innerReader, ClosedEvent, fn, opts...)
 }
 
@@ -99,8 +103,10 @@ func (r *Reporter) Reopened(ctx context.Context, payload *ReopenedPayload) {
 	log.Ctx(ctx).Debug().Msgf("reported pull request reopened event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterReopened(fn events.HandlerFunc[*ReopenedPayload],
-	opts ...events.HandlerOption) error {
+func (r *Reader) RegisterReopened(
+	fn events.HandlerFunc[*ReopenedPayload],
+	opts ...events.HandlerOption,
+) error {
 	return events.ReaderRegisterEvent(r.innerReader, ReopenedEvent, fn, opts...)
 }
 
@@ -128,7 +134,42 @@ func (r *Reporter) Merged(ctx context.Context, payload *MergedPayload) {
 	log.Ctx(ctx).Debug().Msgf("reported pull request merged event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterMerged(fn events.HandlerFunc[*MergedPayload],
-	opts ...events.HandlerOption) error {
+func (r *Reader) RegisterMerged(
+	fn events.HandlerFunc[*MergedPayload],
+	opts ...events.HandlerOption,
+) error {
 	return events.ReaderRegisterEvent(r.innerReader, MergedEvent, fn, opts...)
+}
+
+const UpdatedEvent events.EventType = "updated"
+
+type UpdatedPayload struct {
+	Base
+	TitleChanged       bool   `json:"title_changed"`
+	TitleOld           string `json:"title_old"`
+	TitleNew           string `json:"title_new"`
+	DescriptionChanged bool   `json:"description_changed"`
+	DescriptionOld     string `json:"description_old"`
+	DescriptionNew     string `json:"description_new"`
+}
+
+func (r *Reporter) Updated(ctx context.Context, payload *UpdatedPayload) {
+	if payload == nil {
+		return
+	}
+
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, UpdatedEvent, payload)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to send pull request created event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("reported pull request created event with id '%s'", eventID)
+}
+
+func (r *Reader) RegisterUpdated(
+	fn events.HandlerFunc[*UpdatedPayload],
+	opts ...events.HandlerOption,
+) error {
+	return events.ReaderRegisterEvent(r.innerReader, UpdatedEvent, fn, opts...)
 }

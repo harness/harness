@@ -407,6 +407,7 @@ webhookTagUpdated: Tag updated
 webhookTagDeleted: Tag deleted
 webhookPRBranchUpdated: PR branch updated
 webhookPRCreated: PR created
+webhookPRUpdated: PR updated
 webhookPRReopened: PR reopened
 webhookPRClosed: PR closed
 webhookPRCommentCreated: PR comment created

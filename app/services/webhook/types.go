@@ -80,6 +80,16 @@ type PullReqCommentSegment struct {
 	CommentInfo CommentInfo `json:"comment"`
 }
 
+// PullReqUpdateSegment contains details what has been updated in the pull request.
+type PullReqUpdateSegment struct {
+	TitleChanged       bool   `json:"title_changed"`
+	TitleOld           string `json:"title_old"`
+	TitleNew           string `json:"title_new"`
+	DescriptionChanged bool   `json:"description_changed"`
+	DescriptionOld     string `json:"description_old"`
+	DescriptionNew     string `json:"description_new"`
+}
+
 // RepositoryInfo describes the repo related info for a webhook payload.
 // NOTE: don't use types package as we want webhook payload to be independent from API calls.
 type RepositoryInfo struct {

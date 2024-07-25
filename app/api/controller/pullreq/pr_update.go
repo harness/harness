@@ -23,6 +23,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -79,12 +80,17 @@ func (c *Controller) Update(ctx context.Context,
 		}
 	}
 
-	if pr.Title == in.Title && pr.Description == in.Description {
+	titleOld := pr.Title
+	descriptionOld := pr.Description
+
+	titleChanged := titleOld != in.Title
+	descriptionChanged := descriptionOld != in.Description
+
+	if !titleChanged && !descriptionChanged {
 		return pr, nil
 	}
 
-	needToWriteActivity := in.Title != pr.Title
-	oldTitle := pr.Title
+	needToWriteActivity := titleChanged
 
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		pr.Title = in.Title
@@ -101,7 +107,7 @@ func (c *Controller) Update(ctx context.Context,
 
 	if needToWriteActivity {
 		payload := &types.PullRequestActivityPayloadTitleChange{
-			Old: oldTitle,
+			Old: titleOld,
 			New: pr.Title,
 		}
 		if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, nil); errAct != nil {
@@ -109,6 +115,23 @@ func (c *Controller) Update(ctx context.Context,
 			log.Ctx(ctx).Err(errAct).Msgf("failed to write pull request activity after title change")
 		}
 	}
+
+	updateEvent := &pullreqevents.UpdatedPayload{
+		Base: eventBase(pr, &session.Principal),
+	}
+
+	if titleChanged {
+		updateEvent.TitleChanged = titleChanged
+		updateEvent.TitleOld = titleOld
+		updateEvent.TitleNew = pr.Title
+	}
+	if descriptionChanged {
+		updateEvent.DescriptionChanged = descriptionChanged
+		updateEvent.DescriptionOld = descriptionOld
+		updateEvent.DescriptionNew = pr.Description
+	}
+
+	c.eventReporter.Updated(ctx, updateEvent)
 
 	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")

@@ -360,3 +360,57 @@ func (s *Service) handleEventPullReqComment(
 			}, nil
 		})
 }
+
+// PullReqUpdatedPayload describes the body of the pullreq updated trigger.
+type PullReqUpdatedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqUpdateSegment
+}
+
+// handleEventPullReqUpdated handles updated events for pull requests
+// and triggers pullreq updated webhooks for the target repo.
+func (s *Service) handleEventPullReqUpdated(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.UpdatedPayload],
+) error {
+	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqUpdated,
+		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
+		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
+			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+
+			return &PullReqUpdatedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqUpdated,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(pr, targetRepo, s.urlProvider),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				PullReqUpdateSegment: PullReqUpdateSegment{
+					TitleChanged:       event.Payload.TitleChanged,
+					TitleOld:           event.Payload.TitleOld,
+					TitleNew:           event.Payload.TitleNew,
+					DescriptionChanged: event.Payload.DescriptionChanged,
+					DescriptionOld:     event.Payload.DescriptionOld,
+					DescriptionNew:     event.Payload.DescriptionNew,
+				},
+			}, nil
+		})
+}
