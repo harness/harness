@@ -142,6 +142,11 @@ type getPullReqChecksRequest struct {
 	pullReqRequest
 }
 
+type pullReqAssignLabelInput struct {
+	pullReqRequest
+	types.PullReqCreateInput
+}
+
 var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -309,6 +314,21 @@ var queryParameterBeforePullRequestActivity = openapi3.ParameterOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
 				Minimum: ptr.Float64(0),
+			},
+		},
+	},
+}
+
+var queryParameterAssignable = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamAssignable,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should contain all labels assignable to the pullreq."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
 			},
 		},
 	},
@@ -624,4 +644,45 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusForbidden))
 	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusNotFound))
 	panicOnErr(reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/checks", opChecks))
+
+	opAssignLabel := openapi3.Operation{}
+	opAssignLabel.WithTags("pullreq")
+	opAssignLabel.WithMapOfAnything(map[string]interface{}{"operationId": "assignLabel"})
+	_ = reflector.SetRequest(&opAssignLabel, new(pullReqAssignLabelInput), http.MethodPut)
+	_ = reflector.SetJSONResponse(&opAssignLabel, new(types.PullReqLabel), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opAssignLabel, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opAssignLabel, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opAssignLabel, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opAssignLabel, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/labels", opAssignLabel)
+
+	opListLabels := openapi3.Operation{}
+	opListLabels.WithTags("pullreq")
+	opListLabels.WithMapOfAnything(map[string]interface{}{"operationId": "listLabels"})
+	opListLabels.WithParameters(
+		QueryParameterPage, QueryParameterLimit, queryParameterAssignable, queryParameterQueryLabel)
+	_ = reflector.SetRequest(&opListLabels, new(pullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListLabels, new(types.ScopesLabels), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/labels", opListLabels)
+
+	opUnassignLabel := openapi3.Operation{}
+	opUnassignLabel.WithTags("pullreq")
+	opUnassignLabel.WithMapOfAnything(map[string]interface{}{"operationId": "unassignLabel"})
+	_ = reflector.SetRequest(&opUnassignLabel, struct {
+		pullReqRequest
+		LabelID int64 `path:"label_id"`
+	}{}, http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opUnassignLabel, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opUnassignLabel, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opUnassignLabel, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opUnassignLabel, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opUnassignLabel, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/labels/{label_id}", opUnassignLabel)
 }

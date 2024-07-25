@@ -192,9 +192,8 @@ func (s *SpaceStore) findByPathAndDeletedAt(
 	return s.find(ctx, spaceID, &deletedAt)
 }
 
-// GetRootSpace returns a space where space_parent_id is NULL.
-func (s *SpaceStore) GetRootSpace(ctx context.Context, spaceID int64) (*types.Space, error) {
-	query := `WITH RECURSIVE SpaceHierarchy AS (
+const spaceRecursiveQuery = `
+WITH RECURSIVE SpaceHierarchy(space_hierarchy_id, space_hierarchy_parent_id) AS (
 	SELECT space_id, space_parent_id
 	FROM spaces
 	WHERE space_id = $1
@@ -203,11 +202,16 @@ func (s *SpaceStore) GetRootSpace(ctx context.Context, spaceID int64) (*types.Sp
 	
 	SELECT s.space_id, s.space_parent_id
 	FROM spaces s
-	JOIN SpaceHierarchy h ON s.space_id = h.space_parent_id
+	JOIN SpaceHierarchy h ON s.space_id = h.space_hierarchy_parent_id
 )
-SELECT space_id
-FROM SpaceHierarchy
-WHERE space_parent_id IS NULL;`
+`
+
+// GetRootSpace returns a space where space_parent_id is NULL.
+func (s *SpaceStore) GetRootSpace(ctx context.Context, spaceID int64) (*types.Space, error) {
+	query := spaceRecursiveQuery + `
+		SELECT space_hierarchy_id
+		FROM SpaceHierarchy
+		WHERE space_hierarchy_parent_id IS NULL;`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -217,6 +221,39 @@ WHERE space_parent_id IS NULL;`
 	}
 
 	return s.Find(ctx, rootID)
+}
+
+// GetAncestorIDs returns a list of all space IDs along the recursive path to the root space.
+func (s *SpaceStore) GetAncestorIDs(ctx context.Context, spaceID int64) ([]int64, error) {
+	query := spaceRecursiveQuery + `
+		SELECT space_hierarchy_id FROM SpaceHierarchy`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var spaceIDs []int64
+	if err := db.SelectContext(ctx, &spaceIDs, query, spaceID); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to get space hierarchy")
+	}
+
+	return spaceIDs, nil
+}
+
+func (s *SpaceStore) GetHierarchy(
+	ctx context.Context,
+	spaceID int64,
+) ([]*types.Space, error) {
+	query := spaceRecursiveQuery + `
+		SELECT ` + spaceColumns + `
+		FROM spaces INNER JOIN SpaceHierarchy ON space_id = space_hierarchy_id`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var dst []*space
+	if err := db.SelectContext(ctx, &dst, query, spaceID); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	}
+
+	return s.mapToSpaces(ctx, s.db, dst)
 }
 
 // Create a new space.

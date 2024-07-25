@@ -91,8 +91,8 @@ func Translate(ctx context.Context, err error) *Error {
 			log.Ctx(ctx).Warn().Err(appError.Err).Msgf("Application error translation is omitting internal details.")
 		}
 
-		return NewWithPayload(httpStatusCode(
-			appError.Status),
+		return NewWithPayload(
+			httpStatusCode(appError.Status),
 			appError.Message,
 			appError.Details,
 		)

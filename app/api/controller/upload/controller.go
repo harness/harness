@@ -64,7 +64,7 @@ func NewController(authorizer authz.Authorizer,
 func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	reqPermission enum.Permission,
+	permission enum.Permission,
 ) (*types.Repository, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
@@ -75,7 +75,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, permission); err != nil {
 		return nil, fmt.Errorf("failed to verify authorization: %w", err)
 	}
 

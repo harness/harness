@@ -70,6 +70,7 @@ import (
 	"github.com/harness/gitness/app/services/importer"
 	infraproviderSvc "github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/keywordsearch"
+	svclabel "github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/notification"
@@ -135,6 +136,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		reposettings.WireSet,
 		pullreq.WireSet,
 		controllerwebhook.WireSet,
+		svclabel.WireSet,
 		serviceaccount.WireSet,
 		user.WireSet,
 		upload.WireSet,

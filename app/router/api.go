@@ -227,7 +227,12 @@ func setupRoutesV1WithAuth(r chi.Router,
 }
 
 // nolint: revive // it's the app context, it shouldn't be the first argument
-func setupSpaces(r chi.Router, appCtx context.Context, spaceCtrl *space.Controller) {
+func setupSpaces(
+	r chi.Router,
+	appCtx context.Context,
+	spaceCtrl *space.Controller,
+
+) {
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerspace.HandleCreate(spaceCtrl))
@@ -262,6 +267,26 @@ func setupSpaces(r chi.Router, appCtx context.Context, spaceCtrl *space.Controll
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamUserUID), func(r chi.Router) {
 					r.Delete("/", handlerspace.HandleMembershipDelete(spaceCtrl))
 					r.Patch("/", handlerspace.HandleMembershipUpdate(spaceCtrl))
+				})
+			})
+
+			r.Route("/labels", func(r chi.Router) {
+				r.Post("/", handlerspace.HandleDefineLabel(spaceCtrl))
+				r.Get("/", handlerspace.HandleListLabels(spaceCtrl))
+				r.Put("/", handlerspace.HandleSaveLabel(spaceCtrl))
+
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamLabelKey), func(r chi.Router) {
+					r.Delete("/", handlerspace.HandleDeleteLabel(spaceCtrl))
+					r.Patch("/", handlerspace.HandleUpdateLabel(spaceCtrl))
+
+					r.Route("/values", func(r chi.Router) {
+						r.Post("/", handlerspace.HandleDefineLabelValue(spaceCtrl))
+						r.Get("/", handlerspace.HandleListLabelValues(spaceCtrl))
+						r.Route(fmt.Sprintf("/{%s}", request.PathParamLabelValue), func(r chi.Router) {
+							r.Delete("/", handlerspace.HandleDeleteLabelValue(spaceCtrl))
+							r.Patch("/", handlerspace.HandleUpdateLabelValue(spaceCtrl))
+						})
+					})
 				})
 			})
 		})
@@ -385,6 +410,26 @@ func setupRepos(r chi.Router,
 			SetupUploads(r, uploadCtrl)
 
 			SetupRules(r, repoCtrl)
+
+			r.Route("/labels", func(r chi.Router) {
+				r.Post("/", handlerrepo.HandleDefineLabel(repoCtrl))
+				r.Get("/", handlerrepo.HandleListLabels(repoCtrl))
+				r.Put("/", handlerrepo.HandleSaveLabel(repoCtrl))
+
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamLabelKey), func(r chi.Router) {
+					r.Delete("/", handlerrepo.HandleDeleteLabel(repoCtrl))
+					r.Patch("/", handlerrepo.HandleUpdateLabel(repoCtrl))
+
+					r.Route("/values", func(r chi.Router) {
+						r.Post("/", handlerrepo.HandleDefineLabelValue(repoCtrl))
+						r.Get("/", handlerrepo.HandleListLabelValues(repoCtrl))
+						r.Route(fmt.Sprintf("/{%s}", request.PathParamLabelValue), func(r chi.Router) {
+							r.Delete("/", handlerrepo.HandleDeleteLabelValue(repoCtrl))
+							r.Patch("/", handlerrepo.HandleUpdateLabelValue(repoCtrl))
+						})
+					})
+				})
+			})
 		})
 	})
 }
@@ -565,6 +610,14 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Get("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
 			r.Post("/diff", handlerpullreq.HandleDiff(pullreqCtrl))
 			r.Get("/checks", handlerpullreq.HandleCheckList(pullreqCtrl))
+
+			r.Route("/labels", func(r chi.Router) {
+				r.Put("/", handlerpullreq.HandleAssignLabel(pullreqCtrl))
+				r.Get("/", handlerpullreq.HandleListLabels(pullreqCtrl))
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamLabelID), func(r chi.Router) {
+					r.Delete("/", handlerpullreq.HandleUnassignLabel(pullreqCtrl))
+				})
+			})
 		})
 	})
 }

@@ -166,6 +166,14 @@ type (
 		// GetRootSpace returns a space where space_parent_id is NULL.
 		GetRootSpace(ctx context.Context, spaceID int64) (*types.Space, error)
 
+		// GetAncestorIDs returns a list of all space IDs along the recursive path to the root space.
+		GetAncestorIDs(ctx context.Context, spaceID int64) ([]int64, error)
+
+		GetHierarchy(
+			ctx context.Context,
+			spaceID int64,
+		) ([]*types.Space, error)
+
 		// Create creates a new space
 		Create(ctx context.Context, space *types.Space) error
 
@@ -929,5 +937,109 @@ type (
 			eventType enum.GitspaceEventType,
 			gitspaceConfigID int64,
 		) (*types.GitspaceEvent, error)
+	}
+
+	LabelStore interface {
+		// Define defines a label.
+		Define(ctx context.Context, lbl *types.Label) error
+
+		// Update updates a label.
+		Update(ctx context.Context, lbl *types.Label) error
+
+		// Find finds a label defined in a specified space/repo with a specified key.
+		Find(
+			ctx context.Context,
+			spaceID, repoID *int64,
+			key string,
+		) (*types.Label, error)
+
+		// Delete deletes a label defined in a specified space/repo with a specified key.
+		Delete(ctx context.Context, spaceID, repoID *int64, key string) error
+
+		// List list labels defined in a specified space/repo.
+		List(
+			ctx context.Context,
+			spaceID, repoID *int64,
+			filter *types.LabelFilter,
+		) ([]*types.Label, error)
+
+		// FindByID finds label with a specified id.
+		FindByID(ctx context.Context, id int64) (*types.Label, error)
+
+		// ListInScopes lists labels defined in repo and/or specified spaces.
+		ListInScopes(
+			ctx context.Context,
+			repoID int64,
+			scopeIDs []int64,
+			filter *types.LabelFilter,
+		) ([]*types.Label, error)
+
+		// ListInfosInScopes lists label infos defined in repo and/or specified spaces.
+		ListInfosInScopes(
+			ctx context.Context,
+			repoID int64,
+			spaceIDs []int64,
+			filter *types.AssignableLabelFilter,
+		) ([]*types.LabelInfo, error)
+
+		// IncrementValueCount increments count of values defined for a specified label.
+		IncrementValueCount(ctx context.Context, labelID int64, increment int) (int64, error)
+	}
+
+	LabelValueStore interface {
+		// Define defines a label value.
+		Define(ctx context.Context, lbl *types.LabelValue) error
+
+		// Update updates a label value.
+		Update(ctx context.Context, lblVal *types.LabelValue) error
+
+		// Delete deletes a label value associated with a specified label.
+		Delete(ctx context.Context, labelID int64, value string) error
+
+		// Delete deletes specified label values associated with a specified label.
+		DeleteMany(ctx context.Context, labelID int64, values []string) error
+
+		// FindByLabelID finds a label value defined for a specified label.
+		FindByLabelID(
+			ctx context.Context,
+			labelID int64,
+			value string,
+		) (*types.LabelValue, error)
+
+		// List lists label values defined for a specified label.
+		List(
+			ctx context.Context,
+			labelID int64,
+			opts *types.ListQueryFilter,
+		) ([]*types.LabelValue, error)
+
+		// FindByID finds label value with a specified id.
+		FindByID(ctx context.Context, id int64) (*types.LabelValue, error)
+
+		// ListInfosByLabelIDs list label infos by a specified label id.
+		ListInfosByLabelIDs(
+			ctx context.Context,
+			labelIDs []int64,
+		) (map[int64][]*types.LabelValueInfo, error)
+
+		Upsert(ctx context.Context, lblVal *types.LabelValue) error
+	}
+
+	PullReqLabelAssignmentStore interface {
+		// Assign assigns a label to a pullreq.
+		Assign(ctx context.Context, label *types.PullReqLabel) error
+
+		// Unassign removes a label from a pullreq with a specified id.
+		Unassign(ctx context.Context, pullreqID int64, labelID int64) error
+
+		// ListAssigned list labels assigned to a specified pullreq.
+		ListAssigned(ctx context.Context, pullreqID int64) (map[int64]*types.LabelAssignment, error)
+
+		// Find finds a label assigned to a pullreq with a specified id.
+		FindByLabelID(
+			ctx context.Context,
+			pullreqID int64,
+			labelID int64,
+		) (*types.PullReqLabel, error)
 	}
 )

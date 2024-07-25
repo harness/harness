@@ -221,6 +221,18 @@ type archiveRequest struct {
 	Format string `path:"format" required:"true"`
 }
 
+type labelRequest struct {
+	Key         string          `json:"key"`
+	Description string          `json:"description"`
+	Type        enum.LabelType  `json:"type"`
+	Color       enum.LabelColor `json:"color"`
+}
+
+type labelValueRequest struct {
+	Value string          `json:"value"`
+	Color enum.LabelColor `json:"color"`
+}
+
 var queryParameterGitRef = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name: request.QueryParamGitRef,
@@ -598,6 +610,35 @@ var queryParamArchiveCompression = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
+var queryParameterInherited = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamInherited,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should inherit labels from parent parent spaces."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
+var queryParameterQueryLabel = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter the labels by their key."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
 			},
 		},
 	},
@@ -1168,4 +1209,157 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opSummary, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opSummary, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/summary", opSummary)
+
+	opDefineLabel := openapi3.Operation{}
+	opDefineLabel.WithTags("repository")
+	opDefineLabel.WithMapOfAnything(
+		map[string]interface{}{"operationId": "defineRepoLabel"})
+	_ = reflector.SetRequest(&opDefineLabel, &struct {
+		repoRequest
+		labelRequest
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opDefineLabel, new(types.Label), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opDefineLabel, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opDefineLabel, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDefineLabel, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDefineLabel, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opDefineLabel, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/labels", opDefineLabel)
+
+	opSaveLabel := openapi3.Operation{}
+	opSaveLabel.WithTags("repository")
+	opSaveLabel.WithMapOfAnything(
+		map[string]interface{}{"operationId": "saveRepoLabel"})
+	_ = reflector.SetRequest(&opSaveLabel, &struct {
+		repoRequest
+		types.SaveInput
+	}{}, http.MethodPut)
+	_ = reflector.SetJSONResponse(&opSaveLabel, new(types.LabelWithValues), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSaveLabel, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSaveLabel, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSaveLabel, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSaveLabel, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSaveLabel, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPut, "/repos/{repo_ref}/labels", opSaveLabel)
+
+	opListLabels := openapi3.Operation{}
+	opListLabels.WithTags("repository")
+	opListLabels.WithMapOfAnything(
+		map[string]interface{}{"operationId": "listRepoLabels"})
+	opListLabels.WithParameters(
+		QueryParameterPage, QueryParameterLimit, queryParameterInherited, queryParameterQueryLabel)
+	_ = reflector.SetRequest(&opListLabels, new(repoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListLabels, new([]*types.Label), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/labels", opListLabels)
+
+	opDeleteLabel := openapi3.Operation{}
+	opDeleteLabel.WithTags("repository")
+	opDeleteLabel.WithMapOfAnything(
+		map[string]interface{}{"operationId": "deleteRepoLabel"})
+	_ = reflector.SetRequest(&opDeleteLabel, &struct {
+		repoRequest
+		Key string `path:"key"`
+	}{}, http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opDeleteLabel, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opDeleteLabel, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opDeleteLabel, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDeleteLabel, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDeleteLabel, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opDeleteLabel, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodDelete, "/repos/{repo_ref}/labels/{key}", opDeleteLabel)
+
+	opUpdateLabel := openapi3.Operation{}
+	opUpdateLabel.WithTags("repository")
+	opUpdateLabel.WithMapOfAnything(
+		map[string]interface{}{"operationId": "updateRepoLabel"})
+	_ = reflector.SetRequest(&opUpdateLabel, &struct {
+		repoRequest
+		labelRequest
+		Key string `path:"key"`
+	}{}, http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opUpdateLabel, new(types.Label), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUpdateLabel, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opUpdateLabel, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opUpdateLabel, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opUpdateLabel, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opUpdateLabel, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repo_ref}/labels/{key}", opUpdateLabel)
+
+	opDefineLabelValue := openapi3.Operation{}
+	opDefineLabelValue.WithTags("repository")
+	opDefineLabelValue.WithMapOfAnything(
+		map[string]interface{}{"operationId": "defineRepoLabelValue"})
+	_ = reflector.SetRequest(&opDefineLabelValue, &struct {
+		repoRequest
+		labelValueRequest
+		Key string `path:"key"`
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opDefineLabelValue, new(types.LabelValue), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opDefineLabelValue, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opDefineLabelValue, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDefineLabelValue, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDefineLabelValue, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opDefineLabelValue, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/labels/{key}/values", opDefineLabelValue)
+
+	opListLabelValues := openapi3.Operation{}
+	opListLabelValues.WithTags("repository")
+	opListLabelValues.WithMapOfAnything(
+		map[string]interface{}{"operationId": "listRepoLabelValues"})
+	_ = reflector.SetRequest(&opListLabelValues, &struct {
+		repoRequest
+		Key string `path:"key"`
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListLabelValues, new([]*types.LabelValue), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListLabelValues, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opListLabelValues, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListLabelValues, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListLabelValues, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListLabelValues, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/labels/{key}/values", opListLabelValues)
+
+	opDeleteLabelValue := openapi3.Operation{}
+	opDeleteLabelValue.WithTags("repository")
+	opDeleteLabelValue.WithMapOfAnything(
+		map[string]interface{}{"operationId": "deleteRepoLabelValue"})
+	_ = reflector.SetRequest(&opDeleteLabelValue, &struct {
+		repoRequest
+		Key   string `path:"key"`
+		Value string `path:"value"`
+	}{}, http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opDeleteLabelValue, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opDeleteLabelValue, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opDeleteLabelValue, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDeleteLabelValue, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDeleteLabelValue, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opDeleteLabelValue, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(
+		http.MethodDelete, "/repos/{repo_ref}/labels/{key}/values/{value}", opDeleteLabelValue)
+
+	opUpdateLabelValue := openapi3.Operation{}
+	opUpdateLabelValue.WithTags("repository")
+	opUpdateLabelValue.WithMapOfAnything(
+		map[string]interface{}{"operationId": "updateRepoLabelValue"})
+	_ = reflector.SetRequest(&opUpdateLabelValue, &struct {
+		repoRequest
+		labelValueRequest
+		Key   string `path:"key"`
+		Value string `path:"value"`
+	}{}, http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opUpdateLabelValue, new(types.LabelValue), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUpdateLabelValue, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opUpdateLabelValue, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opUpdateLabelValue, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opUpdateLabelValue, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opUpdateLabelValue, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPatch,
+		"/repos/{repo_ref}/labels/{key}/values/{value}", opUpdateLabelValue)
 }

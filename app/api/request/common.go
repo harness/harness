@@ -50,6 +50,9 @@ const (
 	PerPageDefault  = 30
 	PerPageMax      = 100
 
+	QueryParamInherited  = "inherited"
+	QueryParamAssignable = "assignable"
+
 	// TODO: have shared constants across all services?
 	HeaderRequestID       = "X-Request-Id"
 	HeaderUserAgent       = "User-Agent"
@@ -153,6 +156,16 @@ func GetContentEncodingFromHeadersOrDefault(r *http.Request, dflt string) string
 // ParseRecursiveFromQuery extracts the recursive option from the URL query.
 func ParseRecursiveFromQuery(r *http.Request) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamRecursive, false)
+}
+
+// ParseInheritedFromQuery extracts the inherited option from the URL query.
+func ParseInheritedFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamInherited, false)
+}
+
+// ParseAssignableFromQuery extracts the assignable option from the URL query.
+func ParseAssignableFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamAssignable, false)
 }
 
 // GetDeletedAtFromQueryOrError gets the exact resource deletion timestamp from the query.
