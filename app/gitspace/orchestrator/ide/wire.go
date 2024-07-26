@@ -12,25 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package container
+package ide
 
 import (
-	"github.com/harness/gitness/app/gitspace/logutil"
-	"github.com/harness/gitness/infraprovider"
-
 	"github.com/google/wire"
 )
 
 var WireSet = wire.NewSet(
-	ProvideEmbeddedDockerOrchestrator,
+	ProvideVSCodeWebService,
+	ProvideVSCodeService,
 )
 
-func ProvideEmbeddedDockerOrchestrator(
-	dockerClientFactory *infraprovider.DockerClientFactory,
-	statefulLogger *logutil.StatefulLogger,
-) Orchestrator {
-	return NewEmbeddedDockerOrchestrator(
-		dockerClientFactory,
-		statefulLogger,
-	)
+func ProvideVSCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
+	return NewVsCodeWebService(config)
+}
+
+func ProvideVSCodeService() *VSCode {
+	return NewVsCodeService()
 }

@@ -22,7 +22,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/harness/gitness/app/gitspace/orchestrator/container"
+	"github.com/harness/gitness/app/gitspace/orchestrator"
+	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/gitspaceevent"
@@ -398,15 +399,15 @@ func ProvideDockerConfig(config *types.Config) (*infraprovider.DockerConfig, err
 }
 
 // ProvideIDEVSCodeWebConfig loads the VSCode Web IDE config from the main config.
-func ProvideIDEVSCodeWebConfig(config *types.Config) *container.VSCodeWebConfig {
-	return &container.VSCodeWebConfig{
+func ProvideIDEVSCodeWebConfig(config *types.Config) *ide.VSCodeWebConfig {
+	return &ide.VSCodeWebConfig{
 		Port: config.IDE.VSCodeWeb.Port,
 	}
 }
 
-// ProvideGitspaceContainerOrchestratorConfig loads the Gitspace container orchestrator config from the main config.
-func ProvideGitspaceContainerOrchestratorConfig(config *types.Config) *container.Config {
-	return &container.Config{
+// ProvideGitspaceOrchestratorConfig loads the Gitspace orchestrator config from the main config.
+func ProvideGitspaceOrchestratorConfig(config *types.Config) *orchestrator.Config {
+	return &orchestrator.Config{
 		DefaultBaseImage: config.Gitspace.DefaultBaseImage,
 	}
 }

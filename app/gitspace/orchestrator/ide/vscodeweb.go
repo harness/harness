@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package container
+package ide
 
 import (
 	"archive/tar"
@@ -22,8 +22,11 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"strconv"
 	"strings"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
+	"github.com/harness/gitness/app/gitspace/orchestrator/template"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -46,7 +49,7 @@ const startMarker = "START_MARKER"
 const endMarker = "END_MARKER"
 
 type VSCodeWebConfig struct {
-	Port string
+	Port int
 }
 
 type VSCodeWeb struct {
@@ -58,10 +61,14 @@ func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 }
 
 // Setup runs the installScript which downloads the required version of the code-server binary.
-func (v *VSCodeWeb) Setup(ctx context.Context, devcontainer *Devcontainer, _ *types.GitspaceInstance) ([]byte, error) {
-	installScript, err := GenerateScriptFromTemplate(
-		templateInstallVSCodeWeb, &InstallVSCodeWebPayload{
-			Port: v.config.Port,
+func (v *VSCodeWeb) Setup(
+	ctx context.Context,
+	devcontainer *devcontainer.Devcontainer,
+	_ *types.GitspaceInstance,
+) ([]byte, error) {
+	installScript, err := template.GenerateScriptFromTemplate(
+		templateInstallVSCodeWeb, &template.InstallVSCodeWebPayload{
+			Port: strconv.Itoa(v.config.Port),
 		})
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -102,7 +109,7 @@ func (v *VSCodeWeb) Setup(ctx context.Context, devcontainer *Devcontainer, _ *ty
 }
 
 // Run runs the code-server binary.
-func (v *VSCodeWeb) Run(ctx context.Context, devcontainer *Devcontainer) ([]byte, error) {
+func (v *VSCodeWeb) Run(ctx context.Context, devcontainer *devcontainer.Devcontainer) ([]byte, error) {
 	var output []byte
 
 	_, err := devcontainer.ExecuteCommand(ctx, runScript, true)
@@ -113,15 +120,19 @@ func (v *VSCodeWeb) Run(ctx context.Context, devcontainer *Devcontainer) ([]byte
 }
 
 // PortAndProtocol returns the port on which the code-server is listening.
-func (v *VSCodeWeb) PortAndProtocol() string {
-	return v.config.Port + "/tcp"
+func (v *VSCodeWeb) Port() int {
+	return v.config.Port
 }
 
 func (v *VSCodeWeb) Type() enum.IDEType {
 	return enum.IDETypeVSCodeWeb
 }
 
-func (v *VSCodeWeb) copyMediaToContainer(ctx context.Context, devcontainer *Devcontainer, path string) error {
+func (v *VSCodeWeb) copyMediaToContainer(
+	ctx context.Context,
+	devcontainer *devcontainer.Devcontainer,
+	path string,
+) error {
 	// Create a buffer to hold the tar data
 	var tarBuffer bytes.Buffer
 	tarWriter := tar.NewWriter(&tarBuffer)

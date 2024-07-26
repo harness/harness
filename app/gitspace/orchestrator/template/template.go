@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package container
+package template
 
 import (
 	"bytes"
@@ -24,11 +24,11 @@ import (
 )
 
 const (
-	templatesDir = "template"
+	templatesDir = "templates"
 )
 
 var (
-	//go:embed  template/*
+	//go:embed  templates/*
 	files           embed.FS
 	scriptTemplates map[string]*template.Template
 )

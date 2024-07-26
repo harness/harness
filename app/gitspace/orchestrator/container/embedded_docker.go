@@ -18,11 +18,15 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
 
 	"github.com/harness/gitness/app/gitspace/logutil"
+	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
+	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	"github.com/harness/gitness/app/gitspace/orchestrator/template"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	dockerTypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -36,40 +40,25 @@ import (
 var _ Orchestrator = (*EmbeddedDockerOrchestrator)(nil)
 
 const (
-	loggingKey             = "gitspace.container"
-	catchAllIP             = "0.0.0.0"
-	catchAllPort           = "0"
-	containerStateRunning  = "running"
-	containerStateRemoved  = "removed"
-	containerStateStopped  = "exited"
-	templateCloneGit       = "clone_git.sh"
-	templateSetupSSHServer = "setup_ssh_server.sh"
+	loggingKey            = "gitspace.container"
+	catchAllIP            = "0.0.0.0"
+	containerStateRunning = "running"
+	containerStateRemoved = "removed"
+	containerStateStopped = "exited"
+	templateCloneGit      = "clone_git.sh"
 )
-
-type Config struct {
-	DefaultBaseImage string
-}
 
 type EmbeddedDockerOrchestrator struct {
 	dockerClientFactory *infraprovider.DockerClientFactory
-	vsCodeService       *VSCode
-	vsCodeWebService    *VSCodeWeb
-	config              *Config
 	statefulLogger      *logutil.StatefulLogger
 }
 
 func NewEmbeddedDockerOrchestrator(
 	dockerClientFactory *infraprovider.DockerClientFactory,
-	vsCodeService *VSCode,
-	vsCodeWebService *VSCodeWeb,
-	config *Config,
 	statefulLogger *logutil.StatefulLogger,
 ) Orchestrator {
 	return &EmbeddedDockerOrchestrator{
 		dockerClientFactory: dockerClientFactory,
-		vsCodeService:       vsCodeService,
-		vsCodeWebService:    vsCodeWebService,
-		config:              config,
 		statefulLogger:      statefulLogger,
 	}
 }
@@ -84,6 +73,8 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	devcontainerConfig *types.DevcontainerConfig,
 	infra *infraprovider.Infrastructure,
 	repoName string,
+	defaultBaseImage string,
+	ideService ide.IDE,
 ) (*StartResponse, error) {
 	containerName := getGitspaceContainerName(gitspaceConfig)
 
@@ -103,11 +94,6 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 
 	log.Debug().Msg("checking current state of gitspace")
 	state, err := e.containerState(ctx, containerName, dockerClient)
-	if err != nil {
-		return nil, err
-	}
-
-	ideService, err := e.getIDEService(gitspaceConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +122,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			return nil, startErr
 		}
 
-		devcontainer := &Devcontainer{
+		devcontainer := &devcontainer.Devcontainer{
 			ContainerName: containerName,
 			WorkingDir:    e.getWorkingDir(repoName),
 			DockerClient:  dockerClient,
@@ -175,6 +161,8 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			logStreamInstance,
 			infra.Storage,
 			e.getWorkingDir(repoName),
+			infra.PortMappings,
+			defaultBaseImage,
 		)
 		if startErr != nil {
 			return nil, fmt.Errorf("failed to start gitspace %s: %w", containerName, startErr)
@@ -187,15 +175,15 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 		return nil, fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
 	}
 
-	id, ports, startErr := e.getContainerInfo(ctx, containerName, dockerClient, ideService)
+	id, ports, startErr := e.getContainerInfo(ctx, containerName, dockerClient, infra.PortMappings)
 	if startErr != nil {
 		return nil, startErr
 	}
 
 	return &StartResponse{
-		ContainerID:   id,
-		ContainerName: containerName,
-		PortsUsed:     ports,
+		ContainerID:    id,
+		ContainerName:  containerName,
+		PublishedPorts: ports,
 	}, nil
 }
 
@@ -209,14 +197,16 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	devcontainerConfig *types.DevcontainerConfig,
 	containerName string,
 	dockerClient *client.Client,
-	ideService IDE,
+	ideService ide.IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 	volumeName string,
 	workingDirectory string,
+	portMappings map[int]*infraprovider.PortMapping,
+	defaultBaseImage string,
 ) error {
 	var imageName = devcontainerConfig.Image
 	if imageName == "" {
-		imageName = e.config.DefaultBaseImage
+		imageName = defaultBaseImage
 	}
 
 	err := e.pullImage(ctx, imageName, dockerClient, logStreamInstance)
@@ -229,10 +219,10 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		dockerClient,
 		imageName,
 		containerName,
-		ideService,
 		logStreamInstance,
 		volumeName,
 		workingDirectory,
+		portMappings,
 	)
 	if err != nil {
 		return err
@@ -243,7 +233,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
-	var devcontainer = &Devcontainer{
+	var devcontainer = &devcontainer.Devcontainer{
 		ContainerName: containerName,
 		DockerClient:  dockerClient,
 		WorkingDir:    workingDirectory,
@@ -259,7 +249,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
-	err = e.cloneCode(ctx, gitspaceConfig, devcontainer, logStreamInstance)
+	err = e.cloneCode(ctx, gitspaceConfig, devcontainer, defaultBaseImage, logStreamInstance)
 	if err != nil {
 		return err
 	}
@@ -276,8 +266,8 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 
 func (e *EmbeddedDockerOrchestrator) runIDE(
 	ctx context.Context,
-	devcontainer *Devcontainer,
-	ideService IDE,
+	devcontainer *devcontainer.Devcontainer,
+	ideService ide.IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	loggingErr := logStreamInstance.Write("Running the IDE inside container: " + string(ideService.Type()))
@@ -314,8 +304,8 @@ func (e *EmbeddedDockerOrchestrator) runIDE(
 func (e *EmbeddedDockerOrchestrator) setupIDE(
 	ctx context.Context,
 	gitspaceInstance *types.GitspaceInstance,
-	devcontainer *Devcontainer,
-	ideService IDE,
+	devcontainer *devcontainer.Devcontainer,
+	ideService ide.IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	loggingErr := logStreamInstance.Write("Setting up IDE inside container: " + string(ideService.Type()))
@@ -353,48 +343,40 @@ func (e *EmbeddedDockerOrchestrator) getContainerInfo(
 	ctx context.Context,
 	containerName string,
 	dockerClient *client.Client,
-	ideService IDE,
-) (string, map[enum.IDEType]string, error) {
+	portMappings map[int]*infraprovider.PortMapping,
+) (string, map[int]string, error) {
 	inspectResp, err := dockerClient.ContainerInspect(ctx, containerName)
 	if err != nil {
 		return "", nil, fmt.Errorf("could not inspect container %s: %w", containerName, err)
 	}
 
-	usedPorts := map[enum.IDEType]string{}
-	for port, bindings := range inspectResp.NetworkSettings.Ports {
-		if port == nat.Port(ideService.PortAndProtocol()) {
-			usedPorts[ideService.Type()] = bindings[0].HostPort
+	var usedPorts = make(map[int]string)
+	for portAndProtocol, bindings := range inspectResp.NetworkSettings.Ports {
+		portRaw := strings.Split(string(portAndProtocol), "/")[0]
+		port, conversionErr := strconv.Atoi(portRaw)
+		if conversionErr != nil {
+			return "", nil, fmt.Errorf("could not convert port %s to int: %w", portRaw, err)
+		}
+
+		if portMappings[port] != nil {
+			usedPorts[port] = bindings[0].HostPort
 		}
 	}
 
 	return inspectResp.ID, usedPorts, nil
 }
 
-func (e *EmbeddedDockerOrchestrator) getIDEService(gitspaceConfig *types.GitspaceConfig) (IDE, error) {
-	var ideService IDE
-
-	switch gitspaceConfig.IDE {
-	case enum.IDETypeVSCode:
-		ideService = e.vsCodeService
-	case enum.IDETypeVSCodeWeb:
-		ideService = e.vsCodeWebService
-	default:
-		return nil, fmt.Errorf("unsupported IDE: %s", gitspaceConfig.IDE)
-	}
-
-	return ideService, nil
-}
-
 func (e *EmbeddedDockerOrchestrator) cloneCode(
 	ctx context.Context,
 	gitspaceConfig *types.GitspaceConfig,
-	devcontainer *Devcontainer,
+	devcontainer *devcontainer.Devcontainer,
+	defaultBaseImage string,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
-	gitCloneScript, err := GenerateScriptFromTemplate(
-		templateCloneGit, &CloneGitPayload{
+	gitCloneScript, err := template.GenerateScriptFromTemplate(
+		templateCloneGit, &template.CloneGitPayload{
 			RepoURL: gitspaceConfig.CodeRepoURL,
-			Image:   e.config.DefaultBaseImage,
+			Image:   defaultBaseImage,
 			Branch:  gitspaceConfig.Branch,
 		})
 	if err != nil {
@@ -436,7 +418,7 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 func (e *EmbeddedDockerOrchestrator) executePostCreateCommand(
 	ctx context.Context,
 	devcontainerConfig *types.DevcontainerConfig,
-	devcontainer *Devcontainer,
+	devcontainer *devcontainer.Devcontainer,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	if devcontainerConfig.PostCreateCommand == "" {
@@ -516,25 +498,22 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 	dockerClient *client.Client,
 	imageName string,
 	containerName string,
-	ideService IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 	volumeName string,
 	workingDirectory string,
+	portMappings map[int]*infraprovider.PortMapping,
 ) error {
-	portUsedByIDE := ideService.PortAndProtocol()
-
-	hostPortBindings := []nat.PortBinding{
-		{
-			HostIP:   catchAllIP,
-			HostPort: catchAllPort,
-		},
-	}
-
 	exposedPorts := nat.PortSet{}
 	portBindings := nat.PortMap{}
 
-	if portUsedByIDE != "" {
-		natPort := nat.Port(portUsedByIDE)
+	for port, mapping := range portMappings {
+		natPort := nat.Port(strconv.Itoa(port) + "/tcp")
+		hostPortBindings := []nat.PortBinding{
+			{
+				HostIP:   catchAllIP,
+				HostPort: strconv.Itoa(mapping.PublishedPort),
+			},
+		}
 		exposedPorts[natPort] = struct{}{}
 		portBindings[natPort] = hostPortBindings
 	}

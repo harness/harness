@@ -17,6 +17,7 @@ package container
 import (
 	"context"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 )
@@ -31,6 +32,8 @@ type Orchestrator interface {
 		devcontainerConfig *types.DevcontainerConfig,
 		infra *infraprovider.Infrastructure,
 		repoName string,
+		defaultBaseImage string,
+		ideService ide.IDE,
 	) (*StartResponse, error)
 
 	// StopGitspace stops the gitspace container.

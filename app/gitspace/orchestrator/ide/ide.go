@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package container
+package ide
 
 import (
 	"context"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -24,13 +25,17 @@ import (
 type IDE interface {
 	// Setup is responsible for doing all the operations for setting up the IDE in the container e.g. installation,
 	// copying settings and configurations.
-	Setup(ctx context.Context, containerParams *Devcontainer, gitspaceInstance *types.GitspaceInstance) ([]byte, error)
+	Setup(
+		ctx context.Context,
+		devcontainer *devcontainer.Devcontainer,
+		gitspaceInstance *types.GitspaceInstance,
+	) ([]byte, error)
 
 	// Run runs the IDE and supporting services.
-	Run(ctx context.Context, containerParams *Devcontainer) ([]byte, error)
+	Run(ctx context.Context, devcontainer *devcontainer.Devcontainer) ([]byte, error)
 
-	// PortAndProtocol provides the port with protocol which will be used by this IDE.
-	PortAndProtocol() string
+	// Port provides the port which will be used by this IDE.
+	Port() int
 
 	// Type provides the IDE type to which the service belongs.
 	Type() enum.IDEType

@@ -30,6 +30,7 @@ type InfraProvisioner interface {
 		ctx context.Context,
 		infraProviderResource *types.InfraProviderResource,
 		gitspaceConfig *types.GitspaceConfig,
+		requiredPorts []int,
 	) (*infraprovider.Infrastructure, error)
 
 	// Stop unprovisions those resources which can be stopped without losing the gitspace data.

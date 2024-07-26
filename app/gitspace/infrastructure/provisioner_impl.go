@@ -48,6 +48,7 @@ func (i infraProvisioner) Provision(
 	ctx context.Context,
 	infraProviderResource *types.InfraProviderResource,
 	gitspaceConfig *types.GitspaceConfig,
+	requiredPorts []int,
 ) (*infraprovider.Infrastructure, error) {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
@@ -69,6 +70,7 @@ func (i infraProvisioner) Provision(
 	if err != nil {
 		return nil, err
 	}
+
 	allParams = append(allParams, templateParams...)
 
 	params := i.paramsFromResource(infraProviderResource)
@@ -80,7 +82,13 @@ func (i infraProvisioner) Provision(
 		return nil, fmt.Errorf("invalid provisioning params %v: %w", infraProviderResource.Metadata, err)
 	}
 
-	provisionedInfra, err := infraProvider.Provision(ctx, gitspaceConfig.SpacePath, gitspaceConfig.Identifier, allParams)
+	provisionedInfra, err := infraProvider.Provision(
+		ctx,
+		gitspaceConfig.SpacePath,
+		gitspaceConfig.Identifier,
+		requiredPorts,
+		allParams,
+	)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"unable to provision infrastructure for gitspaceConfigIdentifier %v: %w",

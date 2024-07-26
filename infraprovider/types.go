@@ -30,14 +30,34 @@ type Parameter struct {
 	Value string
 }
 
+type PortMapping struct {
+	// PublishedPort is the port on which the container will be listening.
+	PublishedPort int
+	// ForwardedPort is the port on the infra to which the PublishedPort is forwarded.
+	ForwardedPort int
+}
+
 type Infrastructure struct {
-	Identifier   string
-	ResourceKey  string
-	SpacePath    string
+	// Identifier identifies the provisioned infra.
+	Identifier string
+	// ResourceKey is the key for which the infra is provisioned.
+	ResourceKey string
+	// SpaceID for the resource key.
+	SpaceID int64
+	// SpacePath for the resource key.
+	SpacePath string
+	// ProviderType specifies the type of the infra provider.
 	ProviderType enum.InfraProviderType
-	Parameters   []Parameter
-	Status       enum.InfraStatus
-	Host         string
-	Port         int
-	Storage      string
+	// Parameters which are required by the provider to provision the infra.
+	Parameters []Parameter
+	// Status of the infra.
+	Status enum.InfraStatus
+	// Host through which the infra can be accessed for all purposes.
+	Host string
+	// Port on which the infra can be accessed to orchestrate containers.
+	Port int
+	// Storage is the name of the volume or disk created for the resource.
+	Storage string
+	// PortMappings contains the ports assigned for every requested port.
+	PortMappings map[int]*PortMapping
 }

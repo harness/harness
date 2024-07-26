@@ -19,11 +19,13 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	events "github.com/harness/gitness/app/events/gitspace"
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
+	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/infraprovider"
@@ -33,12 +35,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type Config struct {
+	DefaultBaseImage string
+}
+
 type orchestrator struct {
 	scm                        scm.SCM
 	infraProviderResourceStore store.InfraProviderResourceStore
 	infraProvisioner           infrastructure.InfraProvisioner
 	containerOrchestrator      container.Orchestrator
 	eventReporter              *events.Reporter
+	config                     *Config
+	vsCodeService              *ide.VSCode
+	vsCodeWebService           *ide.VSCodeWeb
 }
 
 var _ Orchestrator = (*orchestrator)(nil)
@@ -49,6 +58,9 @@ func NewOrchestrator(
 	infraProvisioner infrastructure.InfraProvisioner,
 	containerOrchestrator container.Orchestrator,
 	eventReporter *events.Reporter,
+	config *Config,
+	vsCodeService *ide.VSCode,
+	vsCodeWebService *ide.VSCodeWeb,
 ) Orchestrator {
 	return orchestrator{
 		scm:                        scm,
@@ -56,6 +68,9 @@ func NewOrchestrator(
 		infraProvisioner:           infraProvisioner,
 		containerOrchestrator:      containerOrchestrator,
 		eventReporter:              eventReporter,
+		config:                     config,
+		vsCodeService:              vsCodeService,
+		vsCodeWebService:           vsCodeWebService,
 	}
 }
 
@@ -88,9 +103,16 @@ func (o orchestrator) StartGitspace(
 			gitspaceConfig.InfraProviderResourceID, err)
 	}
 
+	ideSvc, err := o.getIDEService(gitspaceConfig)
+	if err != nil {
+		return err
+	}
+
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningStart)
 
-	infra, err := o.infraProvisioner.Provision(ctx, infraProviderResource, gitspaceConfig)
+	idePort := ideSvc.Port()
+
+	infra, err := o.infraProvisioner.Provision(ctx, infraProviderResource, gitspaceConfig, []int{idePort})
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 
@@ -115,7 +137,7 @@ func (o orchestrator) StartGitspace(
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationStart)
 
 	startResponse, err := o.containerOrchestrator.CreateAndStartGitspace(
-		ctx, gitspaceConfig, devcontainerConfig, infra, repoName)
+		ctx, gitspaceConfig, devcontainerConfig, infra, repoName, o.config.DefaultBaseImage, ideSvc)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationFailed)
 
@@ -124,14 +146,20 @@ func (o orchestrator) StartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationCompleted)
 
-	port := startResponse.PortsUsed[gitspaceConfig.IDE]
-
 	var ideURL url.URL
+
+	var forwardedPort string
+
+	if infra.PortMappings[idePort].PublishedPort == 0 {
+		forwardedPort = startResponse.PublishedPorts[idePort]
+	} else {
+		forwardedPort = strconv.Itoa(infra.PortMappings[idePort].ForwardedPort)
+	}
 
 	if gitspaceConfig.IDE == enum.IDETypeVSCodeWeb {
 		ideURL = url.URL{
 			Scheme:   "http",
-			Host:     infra.Host + ":" + port,
+			Host:     infra.Host + ":" + forwardedPort,
 			RawQuery: filepath.Join("folder=", repoName),
 		}
 	} else if gitspaceConfig.IDE == enum.IDETypeVSCode {
@@ -144,7 +172,7 @@ func (o orchestrator) StartGitspace(
 				"ssh-remote+%s@%s:%s",
 				userID,
 				infra.Host,
-				filepath.Join(port, repoName),
+				filepath.Join(forwardedPort, repoName),
 			),
 		}
 	}
@@ -316,4 +344,19 @@ func (o orchestrator) emitGitspaceEvent(
 			EventType:  eventType,
 			Timestamp:  time.Now().UnixNano(),
 		})
+}
+
+func (o orchestrator) getIDEService(gitspaceConfig *types.GitspaceConfig) (ide.IDE, error) {
+	var ideService ide.IDE
+
+	switch gitspaceConfig.IDE {
+	case enum.IDETypeVSCode:
+		ideService = o.vsCodeService
+	case enum.IDETypeVSCodeWeb:
+		ideService = o.vsCodeWebService
+	default:
+		return nil, fmt.Errorf("unsupported IDE: %s", gitspaceConfig.IDE)
+	}
+
+	return ideService, nil
 }

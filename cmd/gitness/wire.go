@@ -48,6 +48,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	containerorchestrator "github.com/harness/gitness/app/gitspace/orchestrator/container"
+	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
@@ -226,9 +227,10 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		containerorchestrator.WireSet,
 		cliserver.ProvideIDEVSCodeWebConfig,
 		cliserver.ProvideDockerConfig,
-		cliserver.ProvideGitspaceContainerOrchestratorConfig,
 		cliserver.ProvideGitspaceEventConfig,
 		logutil.WireSet,
+		cliserver.ProvideGitspaceOrchestratorConfig,
+		ide.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

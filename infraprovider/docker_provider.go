@@ -17,7 +17,6 @@ package infraprovider
 import (
 	"context"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/harness/gitness/infraprovider/enum"
@@ -50,6 +49,7 @@ func (d DockerProvider) Provision(
 	ctx context.Context,
 	spacePath string,
 	resourceKey string,
+	requiredPorts []int,
 	params []Parameter,
 ) (*Infrastructure, error) {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, &Infrastructure{
@@ -59,6 +59,7 @@ func (d DockerProvider) Provision(
 	if err != nil {
 		return nil, fmt.Errorf("error getting docker client from docker client factory: %w", err)
 	}
+
 	defer func() {
 		closingErr := dockerClient.Close()
 		if closingErr != nil {
@@ -70,11 +71,27 @@ func (d DockerProvider) Provision(
 	if err != nil {
 		return nil, err
 	}
-	volumeName, err := d.createNamedVolume(ctx, spacePath, resourceKey, dockerClient)
-	infrastructure.Storage = volumeName
+
+	storageName, err := d.createNamedVolume(ctx, spacePath, resourceKey, dockerClient)
 	if err != nil {
 		return nil, err
 	}
+
+	infrastructure.Storage = storageName
+
+	var portMappings = make(map[int]*PortMapping, len(requiredPorts))
+
+	for _, requiredPort := range requiredPorts {
+		portMapping := &PortMapping{
+			PublishedPort: 0,
+			ForwardedPort: 0,
+		}
+
+		portMappings[requiredPort] = portMapping
+	}
+
+	infrastructure.PortMappings = portMappings
+
 	return infrastructure, nil
 }
 
@@ -156,11 +173,6 @@ func (d DockerProvider) TemplateParams() []ParameterSchema {
 // ProvisioningType returns existing as docker provider doesn't create new resources.
 func (d DockerProvider) ProvisioningType() enum.InfraProvisioningType {
 	return enum.InfraProvisioningTypeExisting
-}
-
-func (d DockerProvider) Exec(_ context.Context, _ *Infrastructure, _ []string) (io.Reader, io.Reader, error) {
-	// TODO implement me
-	panic("implement me")
 }
 
 func (d DockerProvider) dockerHostInfo(ctx context.Context, dockerClient *client.Client) (*Infrastructure, error) {

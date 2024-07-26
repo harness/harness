@@ -47,6 +47,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
+	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
@@ -344,13 +345,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	scmSCM := scm.ProvideSCM()
 	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory)
-	vsCode := container.ProvideVSCodeService()
-	vsCodeWebConfig := server.ProvideIDEVSCodeWebConfig(config)
-	vsCodeWeb := container.ProvideVSCodeWebService(vsCodeWebConfig)
-	containerConfig := server.ProvideGitspaceContainerOrchestratorConfig(config)
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
-	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, vsCode, vsCodeWeb, containerConfig, statefulLogger)
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter3)
+	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger)
+	orchestratorConfig := server.ProvideGitspaceOrchestratorConfig(config)
+	vsCode := ide.ProvideVSCodeService()
+	vsCodeWebConfig := server.ProvideIDEVSCodeWebConfig(config)
+	vsCodeWeb := ide.ProvideVSCodeWebService(vsCodeWebConfig)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter3, orchestratorConfig, vsCode, vsCodeWeb)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
 	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM)
 	migrateController := migrate.ProvideController(authorizer, principalStore)

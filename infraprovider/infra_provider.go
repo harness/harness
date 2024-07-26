@@ -16,14 +16,19 @@ package infraprovider
 
 import (
 	"context"
-	"io"
 
 	"github.com/harness/gitness/infraprovider/enum"
 )
 
 type InfraProvider interface {
 	// Provision provisions infrastructure against a resourceKey with the provided parameters.
-	Provision(ctx context.Context, spacePath string, resourceKey string, parameters []Parameter) (*Infrastructure, error)
+	Provision(
+		ctx context.Context,
+		spacePath string,
+		resourceKey string,
+		requiredPorts []int,
+		parameters []Parameter,
+	) (*Infrastructure, error)
 	// Find finds infrastructure provisioned against a resourceKey.
 	Find(ctx context.Context, spacePath string, resourceKey string, parameters []Parameter) (*Infrastructure, error)
 	// Stop frees up the resources allocated against a resourceKey, which can be freed.
@@ -38,6 +43,4 @@ type InfraProvider interface {
 	TemplateParams() []ParameterSchema
 	// ProvisioningType specifies whether the provider will provision new infra resources or it will reuse existing.
 	ProvisioningType() enum.InfraProvisioningType
-	// Exec executes a shell command in the infrastructure.
-	Exec(ctx context.Context, infra *Infrastructure, cmd []string) (io.Reader, io.Reader, error)
 }

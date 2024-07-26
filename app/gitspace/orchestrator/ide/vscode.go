@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package container
+package ide
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
+	"github.com/harness/gitness/app/gitspace/orchestrator/template"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -29,7 +31,8 @@ var _ IDE = (*VSCode)(nil)
 //go:embed script/run_ssh_server.sh
 var runSSHScript string
 
-const sshPort = "22/tcp"
+const sshPort int = 22
+const templateSetupSSHServer string = "setup_ssh_server.sh"
 
 type VSCode struct{}
 
@@ -40,11 +43,11 @@ func NewVsCodeService() *VSCode {
 // Setup installs the SSH server inside the container.
 func (v *VSCode) Setup(
 	ctx context.Context,
-	devcontainer *Devcontainer,
+	devcontainer *devcontainer.Devcontainer,
 	gitspaceInstance *types.GitspaceInstance,
 ) ([]byte, error) {
-	sshServerScript, err := GenerateScriptFromTemplate(
-		templateSetupSSHServer, &SetupSSHServerPayload{
+	sshServerScript, err := template.GenerateScriptFromTemplate(
+		templateSetupSSHServer, &template.SetupSSHServerPayload{
 			Username:         "harness",
 			Password:         *gitspaceInstance.AccessKey,
 			WorkingDirectory: devcontainer.WorkingDir,
@@ -67,7 +70,7 @@ func (v *VSCode) Setup(
 }
 
 // Run runs the SSH server inside the container.
-func (v *VSCode) Run(ctx context.Context, devcontainer *Devcontainer) ([]byte, error) {
+func (v *VSCode) Run(ctx context.Context, devcontainer *devcontainer.Devcontainer) ([]byte, error) {
 	var output = ""
 
 	execOutput, err := devcontainer.ExecuteCommand(ctx, runSSHScript, false)
@@ -80,8 +83,8 @@ func (v *VSCode) Run(ctx context.Context, devcontainer *Devcontainer) ([]byte, e
 	return []byte(output), nil
 }
 
-// PortAndProtocol returns the port on which the ssh-server is listening.
-func (v *VSCode) PortAndProtocol() string {
+// Port returns the port on which the ssh-server is listening.
+func (v *VSCode) Port() int {
 	return sshPort
 }
 
