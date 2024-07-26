@@ -195,7 +195,7 @@ func (d DockerProvider) createNamedVolume(
 	dockerClient *client.Client,
 ) (string, error) {
 	name := volumeName(spacePath, resourceKey)
-	dockerVolume, err := dockerClient.VolumeCreate(ctx, volume.VolumeCreateBody{
+	dockerVolume, err := dockerClient.VolumeCreate(ctx, volume.CreateOptions{
 		Name:       name,
 		Driver:     "local",
 		Labels:     nil,

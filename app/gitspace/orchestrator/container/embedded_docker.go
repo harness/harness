@@ -29,9 +29,9 @@ import (
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 
-	dockerTypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -559,7 +559,7 @@ func (e *EmbeddedDockerOrchestrator) startContainer(
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	err := dockerClient.ContainerStart(ctx, containerName, dockerTypes.ContainerStartOptions{})
+	err := dockerClient.ContainerStart(ctx, containerName, container.StartOptions{})
 	if err != nil {
 		loggingErr = logStreamInstance.Write("Error while creating container: " + err.Error())
 
@@ -624,7 +624,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 				Target: workingDirectory,
 			},
 		},
-	}, nil, containerName)
+	}, nil, nil, containerName)
 	if err != nil {
 		loggingErr = logStreamInstance.Write("Error while creating container: " + err.Error())
 
@@ -651,7 +651,7 @@ func (e *EmbeddedDockerOrchestrator) pullImage(
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	pullResponse, err := dockerClient.ImagePull(ctx, imageName, dockerTypes.ImagePullOptions{})
+	pullResponse, err := dockerClient.ImagePull(ctx, imageName, image.PullOptions{})
 
 	defer func() {
 		closingErr := pullResponse.Close()
@@ -772,7 +772,7 @@ func (e EmbeddedDockerOrchestrator) stopContainer(
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	err := dockerClient.ContainerStop(ctx, containerName, nil)
+	err := dockerClient.ContainerStop(ctx, containerName, container.StopOptions{})
 	if err != nil {
 		loggingErr = logStreamInstance.Write("Error while stopping container: " + err.Error())
 
@@ -810,7 +810,7 @@ func (e *EmbeddedDockerOrchestrator) containerState(
 	var args = filters.NewArgs()
 	args.Add("name", containerName)
 
-	containers, err := dockerClient.ContainerList(ctx, dockerTypes.ContainerListOptions{All: true, Filters: args})
+	containers, err := dockerClient.ContainerList(ctx, container.ListOptions{All: true, Filters: args})
 	if err != nil {
 		return "", fmt.Errorf("could not list container %s: %w", containerName, err)
 	}
@@ -902,7 +902,7 @@ func (e EmbeddedDockerOrchestrator) removeContainer(
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	err := dockerClient.ContainerRemove(ctx, containerName, dockerTypes.ContainerRemoveOptions{Force: true})
+	err := dockerClient.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true})
 	if err != nil {
 		loggingErr = logStreamInstance.Write("Error while removing container: " + err.Error())
 

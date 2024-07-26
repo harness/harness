@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"io"
 
-	dockerTypes "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
 
@@ -32,7 +32,7 @@ type Exec struct {
 func (e *Exec) ExecuteCommand(ctx context.Context, command string, detach bool, userName string) ([]byte, error) {
 	cmd := []string{"/bin/sh", "-c", command}
 
-	execConfig := dockerTypes.ExecConfig{
+	execConfig := container.ExecOptions{
 		User:         userName,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -46,7 +46,7 @@ func (e *Exec) ExecuteCommand(ctx context.Context, command string, detach bool, 
 		return nil, fmt.Errorf("failed to create docker exec for container %s: %w", e.ContainerName, err)
 	}
 
-	execResponse, err := e.DockerClient.ContainerExecAttach(ctx, execID.ID, dockerTypes.ExecStartCheck{Detach: detach})
+	execResponse, err := e.DockerClient.ContainerExecAttach(ctx, execID.ID, container.ExecStartOptions{Detach: detach})
 	if err != nil && err.Error() != "unable to upgrade to tcp, received 200" {
 		return nil, fmt.Errorf("failed to start docker exec for container %s: %w", e.ContainerName, err)
 	}

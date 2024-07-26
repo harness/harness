@@ -30,7 +30,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
-	dockerTypes "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 )
 
 var _ IDE = (*VSCodeWeb)(nil)
@@ -157,7 +157,7 @@ func (v *VSCodeWeb) copyMediaToContainer(
 		devcontainer.ContainerName,
 		path,
 		&tarBuffer,
-		dockerTypes.CopyToContainerOptions{},
+		container.CopyToContainerOptions{},
 	)
 	if err != nil {
 		return fmt.Errorf("error copying files to container: %w", err)
