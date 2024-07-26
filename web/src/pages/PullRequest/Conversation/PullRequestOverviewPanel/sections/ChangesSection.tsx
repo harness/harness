@@ -227,6 +227,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
         title = getString('requestChanges')
         statusMessage = getString('pr.requestedChanges', { user: changeReqReviewer })
         statusIcon = 'warning-icon'
+        isNotRequired = true
       } else if (approvedEvaluations?.length && approvedEvaluations?.length > 0) {
         title = getString('changesSection.changesApproved')
         statusMessage = stringSubstitute(getString('changesSection.changesAppByRev')) as string
