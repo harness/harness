@@ -83,16 +83,17 @@ func (o orchestrator) StartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerStart)
 
-	repoName, devcontainerConfig, err := o.scm.RepoNameAndDevcontainerConfig(ctx, gitspaceConfig)
+	scmResolvedDetails, err := o.scm.Resolve(ctx, gitspaceConfig)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerFailed)
 
-		return fmt.Errorf("failed to fetch code repo details for gitspace config ID %d", gitspaceConfig.ID)
+		return fmt.Errorf("failed to fetch code repo details for gitspace config ID %w %d", err, gitspaceConfig.ID)
 	}
+	devcontainerConfig := scmResolvedDetails.DevcontainerConfig
+	repoName := scmResolvedDetails.RepoName
 
 	if devcontainerConfig == nil {
 		log.Warn().Err(err).Msg("devcontainer config is nil, using empty config")
-		devcontainerConfig = &types.DevcontainerConfig{}
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerCompleted)
@@ -137,7 +138,7 @@ func (o orchestrator) StartGitspace(
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationStart)
 
 	startResponse, err := o.containerOrchestrator.CreateAndStartGitspace(
-		ctx, gitspaceConfig, devcontainerConfig, infra, repoName, o.config.DefaultBaseImage, ideSvc)
+		ctx, gitspaceConfig, infra, scmResolvedDetails, o.config.DefaultBaseImage, ideSvc)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationFailed)
 

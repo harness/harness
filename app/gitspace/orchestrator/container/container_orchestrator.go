@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 )
@@ -29,9 +30,8 @@ type Orchestrator interface {
 	CreateAndStartGitspace(
 		ctx context.Context,
 		gitspaceConfig *types.GitspaceConfig,
-		devcontainerConfig *types.DevcontainerConfig,
 		infra *infraprovider.Infrastructure,
-		repoName string,
+		resolvedDetails *scm.ResolvedDetails,
 		defaultBaseImage string,
 		ideService ide.IDE,
 	) (*StartResponse, error)

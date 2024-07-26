@@ -253,6 +253,14 @@ type Config struct {
 			DisplayName string `envconfig:"GITNESS_PRINCIPAL_PIPELINE_DISPLAY_NAME" default:"Gitness Pipeline"`
 			Email       string `envconfig:"GITNESS_PRINCIPAL_PIPELINE_EMAIL"        default:"pipeline@gitness.io"`
 		}
+
+		// Pipeline defines the principal information used to create the pipeline service.
+		Gitspace struct {
+			UID         string `envconfig:"GITNESS_PRINCIPAL_GITSPACE_UID"          default:"gitspace"`
+			DisplayName string `envconfig:"GITNESS_PRINCIPAL_GITSPACE_DISPLAY_NAME" default:"Gitness Gitspace"`
+			Email       string `envconfig:"GITNESS_PRINCIPAL_GITSPACE_EMAIL"        default:"gitspace@gitness.io"`
+		}
+
 		// Admin defines the principal information used to create the admin user.
 		// NOTE: The admin user is only auto-created in case a password and an email is provided.
 		Admin struct {

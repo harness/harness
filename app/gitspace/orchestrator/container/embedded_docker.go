@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
+	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 
@@ -40,12 +41,15 @@ import (
 var _ Orchestrator = (*EmbeddedDockerOrchestrator)(nil)
 
 const (
-	loggingKey            = "gitspace.container"
-	catchAllIP            = "0.0.0.0"
-	containerStateRunning = "running"
-	containerStateRemoved = "removed"
-	containerStateStopped = "exited"
-	templateCloneGit      = "clone_git.sh"
+	loggingKey              = "gitspace.container"
+	catchAllIP              = "0.0.0.0"
+	containerStateRunning   = "running"
+	containerStateRemoved   = "removed"
+	containerStateStopped   = "exited"
+	templateCloneGit        = "clone_git.sh"
+	templateAuthenticateGit = "authenticate_git.sh"
+	templateManageUser      = "manage_user.sh"
+	harnessUser             = "harness"
 )
 
 type EmbeddedDockerOrchestrator struct {
@@ -70,9 +74,8 @@ func NewEmbeddedDockerOrchestrator(
 func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	ctx context.Context,
 	gitspaceConfig *types.GitspaceConfig,
-	devcontainerConfig *types.DevcontainerConfig,
 	infra *infraprovider.Infrastructure,
-	repoName string,
+	resolvedRepoDetails *scm.ResolvedDetails,
 	defaultBaseImage string,
 	ideService ide.IDE,
 ) (*StartResponse, error) {
@@ -122,10 +125,16 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			return nil, startErr
 		}
 
-		devcontainer := &devcontainer.Devcontainer{
+		devcontainer := &devcontainer.Exec{
 			ContainerName: containerName,
-			WorkingDir:    e.getWorkingDir(repoName),
+			WorkingDir:    e.getWorkingDir(resolvedRepoDetails.RepoName),
 			DockerClient:  dockerClient,
+		}
+
+		if resolvedRepoDetails.Credentials != nil {
+			if err := e.authenticateGit(ctx, devcontainer, resolvedRepoDetails); err != nil {
+				return nil, err
+			}
 		}
 
 		err = e.runIDE(ctx, devcontainer, ideService, logStreamInstance)
@@ -154,13 +163,13 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 		startErr := e.startGitspace(
 			ctx,
 			gitspaceConfig,
-			devcontainerConfig,
 			containerName,
 			dockerClient,
 			ideService,
 			logStreamInstance,
 			infra.Storage,
-			e.getWorkingDir(repoName),
+			e.getWorkingDir(resolvedRepoDetails.RepoName),
+			resolvedRepoDetails,
 			infra.PortMappings,
 			defaultBaseImage,
 		)
@@ -194,17 +203,17 @@ func (e *EmbeddedDockerOrchestrator) getWorkingDir(repoName string) string {
 func (e *EmbeddedDockerOrchestrator) startGitspace(
 	ctx context.Context,
 	gitspaceConfig *types.GitspaceConfig,
-	devcontainerConfig *types.DevcontainerConfig,
 	containerName string,
 	dockerClient *client.Client,
 	ideService ide.IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 	volumeName string,
 	workingDirectory string,
+	resolvedRepoDetails *scm.ResolvedDetails,
 	portMappings map[int]*infraprovider.PortMapping,
 	defaultBaseImage string,
 ) error {
-	var imageName = devcontainerConfig.Image
+	var imageName = resolvedRepoDetails.DevcontainerConfig.Image
 	if imageName == "" {
 		imageName = defaultBaseImage
 	}
@@ -233,10 +242,15 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
-	var devcontainer = &devcontainer.Devcontainer{
+	var devcontainer = &devcontainer.Exec{
 		ContainerName: containerName,
 		DockerClient:  dockerClient,
 		WorkingDir:    workingDirectory,
+	}
+
+	err = e.manageUser(ctx, devcontainer, logStreamInstance, gitspaceConfig.GitspaceInstance.AccessKey)
+	if err != nil {
+		return err
 	}
 
 	err = e.setupIDE(ctx, gitspaceConfig.GitspaceInstance, devcontainer, ideService, logStreamInstance)
@@ -249,12 +263,12 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
-	err = e.cloneCode(ctx, gitspaceConfig, devcontainer, defaultBaseImage, logStreamInstance)
+	err = e.cloneCode(ctx, devcontainer, defaultBaseImage, logStreamInstance, resolvedRepoDetails)
 	if err != nil {
 		return err
 	}
 
-	err = e.executePostCreateCommand(ctx, devcontainerConfig, devcontainer, logStreamInstance)
+	err = e.executePostCreateCommand(ctx, resolvedRepoDetails.DevcontainerConfig, devcontainer, logStreamInstance)
 	if err != nil {
 		return err
 	}
@@ -266,7 +280,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 
 func (e *EmbeddedDockerOrchestrator) runIDE(
 	ctx context.Context,
-	devcontainer *devcontainer.Devcontainer,
+	devcontainer *devcontainer.Exec,
 	ideService ide.IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
@@ -304,7 +318,7 @@ func (e *EmbeddedDockerOrchestrator) runIDE(
 func (e *EmbeddedDockerOrchestrator) setupIDE(
 	ctx context.Context,
 	gitspaceInstance *types.GitspaceInstance,
-	devcontainer *devcontainer.Devcontainer,
+	devcontainer *devcontainer.Exec,
 	ideService ide.IDE,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
@@ -366,30 +380,103 @@ func (e *EmbeddedDockerOrchestrator) getContainerInfo(
 	return inspectResp.ID, usedPorts, nil
 }
 
-func (e *EmbeddedDockerOrchestrator) cloneCode(
+func (e *EmbeddedDockerOrchestrator) authenticateGit(
 	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
-	devcontainer *devcontainer.Devcontainer,
-	defaultBaseImage string,
-	logStreamInstance *logutil.LogStreamInstance,
+	devcontainer *devcontainer.Exec,
+	resolvedRepoDetails *scm.ResolvedDetails,
 ) error {
-	gitCloneScript, err := template.GenerateScriptFromTemplate(
-		templateCloneGit, &template.CloneGitPayload{
-			RepoURL: gitspaceConfig.CodeRepoURL,
-			Image:   defaultBaseImage,
-			Branch:  gitspaceConfig.Branch,
-		})
+	data := &template.AuthenticateGitPayload{
+		Password: resolvedRepoDetails.Credentials.Password,
+	}
+	gitAuthenticateScript, err := template.GenerateScriptFromTemplate(
+		templateAuthenticateGit, data)
 	if err != nil {
-		return fmt.Errorf("failed to generate scipt to clone git from template %s: %w", templateCloneGit, err)
+		return fmt.Errorf("failed to generate scipt to authenticate git from template %s: %w", templateAuthenticateGit, err)
 	}
 
+	_, err = devcontainer.ExecuteCommand(ctx, gitAuthenticateScript, false, harnessUser)
+	if err != nil {
+		err = fmt.Errorf("failed to authenticate git in container: %w", err)
+		return err
+	}
+
+	return nil
+}
+
+func (e *EmbeddedDockerOrchestrator) manageUser(
+	ctx context.Context,
+	devcontainer *devcontainer.Exec,
+	logStreamInstance *logutil.LogStreamInstance,
+	accessKey *string,
+) error {
+	data := template.SetupSSHServerPayload{
+		Username:         "harness",
+		Password:         *accessKey,
+		WorkingDirectory: devcontainer.WorkingDir,
+	}
+	manageUserScript, err := template.GenerateScriptFromTemplate(
+		templateManageUser, data)
+	if err != nil {
+		return fmt.Errorf("failed to generate scipt to manage user from template %s: %w", templateManageUser, err)
+	}
 	loggingErr := logStreamInstance.Write(
-		"Cloning git repo inside container: " + gitspaceConfig.CodeRepoURL + " branch: " + gitspaceConfig.Branch)
+		"creating user inside container: " + data.Username)
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	output, err := devcontainer.ExecuteCommand(ctx, gitCloneScript, false)
+	output, err := devcontainer.ExecuteCommand(ctx, manageUserScript, false, "root")
+	if err != nil {
+		loggingErr = logStreamInstance.Write("Error while creating user inside container : " + err.Error())
+
+		err = fmt.Errorf("failed to create user: %w", err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+		return err
+	}
+
+	loggingErr = logStreamInstance.Write("Managing user output...\n" + string(output))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	loggingErr = logStreamInstance.Write("Successfully created user inside container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	return nil
+}
+
+func (e *EmbeddedDockerOrchestrator) cloneCode(
+	ctx context.Context,
+	devcontainer *devcontainer.Exec,
+	defaultBaseImage string,
+	logStreamInstance *logutil.LogStreamInstance,
+	resolvedRepoDetails *scm.ResolvedDetails,
+) error {
+	data := &template.CloneGitPayload{
+		RepoURL: resolvedRepoDetails.CloneURL,
+		Image:   defaultBaseImage,
+		Branch:  resolvedRepoDetails.Branch,
+	}
+	if resolvedRepoDetails.Credentials != nil {
+		data.Password = resolvedRepoDetails.Credentials.Password
+	}
+	gitCloneScript, err := template.GenerateScriptFromTemplate(
+		templateCloneGit, data)
+	if err != nil {
+		return fmt.Errorf("failed to generate scipt to clone git from template %s: %w", templateCloneGit, err)
+	}
+	loggingErr := logStreamInstance.Write(
+		"Cloning git repo inside container: " + resolvedRepoDetails.CloneURL + " branch: " + resolvedRepoDetails.Branch)
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	output, err := devcontainer.ExecuteCommand(ctx, gitCloneScript, false, harnessUser)
 	if err != nil {
 		loggingErr = logStreamInstance.Write("Error while cloning git repo inside container: " + err.Error())
 
@@ -418,7 +505,7 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 func (e *EmbeddedDockerOrchestrator) executePostCreateCommand(
 	ctx context.Context,
 	devcontainerConfig *types.DevcontainerConfig,
-	devcontainer *devcontainer.Devcontainer,
+	devcontainer *devcontainer.Exec,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	if devcontainerConfig.PostCreateCommand == "" {
@@ -435,7 +522,7 @@ func (e *EmbeddedDockerOrchestrator) executePostCreateCommand(
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	output, err := devcontainer.ExecuteCommand(ctx, devcontainerConfig.PostCreateCommand, false)
+	output, err := devcontainer.ExecuteCommand(ctx, devcontainerConfig.PostCreateCommand, false, harnessUser)
 	if err != nil {
 		loggingErr = logStreamInstance.Write("Error while executing postCreate command")
 

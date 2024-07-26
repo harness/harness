@@ -43,7 +43,7 @@ func NewVsCodeService() *VSCode {
 // Setup installs the SSH server inside the container.
 func (v *VSCode) Setup(
 	ctx context.Context,
-	devcontainer *devcontainer.Devcontainer,
+	devcontainer *devcontainer.Exec,
 	gitspaceInstance *types.GitspaceInstance,
 ) ([]byte, error) {
 	sshServerScript, err := template.GenerateScriptFromTemplate(
@@ -59,7 +59,7 @@ func (v *VSCode) Setup(
 
 	output := "Installing ssh-server inside container\n"
 
-	_, err = devcontainer.ExecuteCommand(ctx, sshServerScript, false)
+	_, err = devcontainer.ExecuteCommand(ctx, sshServerScript, false, rootUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup SSH serverr: %w", err)
 	}
@@ -70,10 +70,10 @@ func (v *VSCode) Setup(
 }
 
 // Run runs the SSH server inside the container.
-func (v *VSCode) Run(ctx context.Context, devcontainer *devcontainer.Devcontainer) ([]byte, error) {
+func (v *VSCode) Run(ctx context.Context, devcontainer *devcontainer.Exec) ([]byte, error) {
 	var output = ""
 
-	execOutput, err := devcontainer.ExecuteCommand(ctx, runSSHScript, false)
+	execOutput, err := devcontainer.ExecuteCommand(ctx, runSSHScript, false, rootUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run SSH serverr: %w", err)
 	}

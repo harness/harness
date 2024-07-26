@@ -58,11 +58,28 @@ func (c *Controller) Action(
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
+
 	gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, in.Identifier)
 	gitspaceConfig.SpacePath = space.Path
 	gitspaceConfig.SpaceID = space.ID
 	if err != nil {
 		return nil, fmt.Errorf("failed to find gitspace config: %w", err)
+	}
+
+	// check if it's an internal repo
+	if gitspaceConfig.CodeRepoType == enum.CodeRepoTypeGitness && gitspaceConfig.CodeRepoURL != "" {
+		repo, err := c.repoStore.FindByRef(ctx, gitspaceConfig.CodeRepoURL)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't fetch repo for the user: %w", err)
+		}
+		if err = apiauth.CheckRepo(
+			ctx,
+			c.authorizer,
+			session,
+			repo,
+			enum.PermissionRepoView); err != nil {
+			return nil, err
+		}
 	}
 	// All the actions should be idempotent.
 	switch in.Action {

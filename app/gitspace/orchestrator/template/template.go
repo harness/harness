@@ -37,9 +37,14 @@ type CloneGitPayload struct {
 	RepoURL string
 	Image   string
 	Branch  string
+	AuthenticateGitPayload
 }
 
-type InstallVSCodeWebPayload struct {
+type AuthenticateGitPayload struct {
+	Password string
+}
+
+type RunVSCodeWebPayload struct {
 	Port string
 }
 

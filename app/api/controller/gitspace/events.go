@@ -73,29 +73,29 @@ func (c *Controller) Events(
 func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	var gitspaceConfigsMap = make(map[enum.GitspaceEventType]string)
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStart] = "Starting Gitspace..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStartCompleted] = "Started Gitspace"
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStartFailed] = "Starting Gitspace Failed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStart] = "Starting gitspace..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStartCompleted] = "Started gitspace"
+	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStartFailed] = "Starting gitspace failed"
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStop] = "Stopping Gitspace"
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopCompleted] = "Stopped Gitspace"
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopFailed] = "Stopping Gitspace Failed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStop] = "Stopping gitspace"
+	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopCompleted] = "Stopped gitspace"
+	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopFailed] = "Stopping gitspace failed"
 
 	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerStart] = "Fetching devcontainer config..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerCompleted] = "Fetched devcontainer config"
 	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerFailed] = "Fetching devcontainer config failed"
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningStart] = "Provisioning Infrastructure..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningCompleted] = "Provisioning Infrastructure Completed"
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningFailed] = "Provisioning Infrastructure Failed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningStart] = "Provisioning infrastructure..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningCompleted] = "Provisioning infrastructure completed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningFailed] = "Provisioning infrastructure failed"
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopStart] = "Stopping Infrastructure..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopCompleted] = "Stopping Infrastructure Completed"
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopFailed] = "Stopping Infrastructure Failed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopStart] = "Stopping infrastructure..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopCompleted] = "Stopping infrastructure completed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopFailed] = "Stopping infrastructure failed"
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningStart] = "Deprovisioning Infrastructure..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningCompleted] = "Deprovisioning Infrastructure Completed"
-	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningFailed] = "Deprovisioning Infrastructure Failed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningStart] = "Deprovisioning infrastructure..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningCompleted] = "Deprovisioning infrastructure completed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraDeprovisioningFailed] = "Deprovisioning infrastructure failed"
 
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentConnectStart] = "Connecting to the gitspace agent..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentConnectCompleted] = "Connected to the gitspace agent"

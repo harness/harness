@@ -23,32 +23,32 @@ import (
 	"github.com/docker/docker/client"
 )
 
-type Devcontainer struct {
+type Exec struct {
 	ContainerName string
 	WorkingDir    string
 	DockerClient  *client.Client
 }
 
-func (d *Devcontainer) ExecuteCommand(ctx context.Context, command string, detach bool) ([]byte, error) {
+func (e *Exec) ExecuteCommand(ctx context.Context, command string, detach bool, userName string) ([]byte, error) {
 	cmd := []string{"/bin/sh", "-c", command}
 
 	execConfig := dockerTypes.ExecConfig{
-		User:         "root",
+		User:         userName,
 		AttachStdout: true,
 		AttachStderr: true,
 		Cmd:          cmd,
 		Detach:       detach,
-		WorkingDir:   d.WorkingDir,
+		WorkingDir:   e.WorkingDir,
 	}
 
-	execID, err := d.DockerClient.ContainerExecCreate(ctx, d.ContainerName, execConfig)
+	execID, err := e.DockerClient.ContainerExecCreate(ctx, e.ContainerName, execConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create docker exec for container %s: %w", d.ContainerName, err)
+		return nil, fmt.Errorf("failed to create docker exec for container %s: %w", e.ContainerName, err)
 	}
 
-	execResponse, err := d.DockerClient.ContainerExecAttach(ctx, execID.ID, dockerTypes.ExecStartCheck{Detach: detach})
+	execResponse, err := e.DockerClient.ContainerExecAttach(ctx, execID.ID, dockerTypes.ExecStartCheck{Detach: detach})
 	if err != nil && err.Error() != "unable to upgrade to tcp, received 200" {
-		return nil, fmt.Errorf("failed to start docker exec for container %s: %w", d.ContainerName, err)
+		return nil, fmt.Errorf("failed to start docker exec for container %s: %w", e.ContainerName, err)
 	}
 
 	if execResponse.Conn != nil {

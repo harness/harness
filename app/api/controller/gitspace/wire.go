@@ -44,6 +44,7 @@ func ProvideController(
 	eventStore store.GitspaceEventStore,
 	statefulLogger *logutil.StatefulLogger,
 	scm scm.SCM,
+	repoStore store.RepoStore,
 ) *Controller {
 	return NewController(
 		tx,
@@ -57,5 +58,6 @@ func ProvideController(
 		eventStore,
 		statefulLogger,
 		scm,
+		repoStore,
 	)
 }

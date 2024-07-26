@@ -343,7 +343,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	scmSCM := scm.ProvideSCM()
+	scmSCM := scm.ProvideSCM(repoStore, gitInterface, tokenStore, principalStore, provider)
 	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory)
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
 	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger)
@@ -353,7 +353,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	vsCodeWeb := ide.ProvideVSCodeWebService(vsCodeWebConfig)
 	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter3, orchestratorConfig, vsCode, vsCodeWeb)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
-	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM)
+	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM, repoStore)
 	migrateController := migrate.ProvideController(authorizer, principalStore)
 	openapiService := openapi.ProvideOpenAPIService()
 	routerRouter := router.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService)

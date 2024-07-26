@@ -44,16 +44,17 @@ var (
 
 // CreateInput is the input used for create operations.
 type CreateInput struct {
-	Identifier         string            `json:"identifier"`
-	Name               string            `json:"name"`
-	SpaceRef           string            `json:"space_ref"` // Ref of the parent space
-	IDE                enum.IDEType      `json:"ide"`
-	ResourceIdentifier string            `json:"resource_identifier"`
-	ResourceSpaceRef   string            `json:"resource_space_ref"`
-	CodeRepoURL        string            `json:"code_repo_url"`
-	Branch             string            `json:"branch"`
-	DevcontainerPath   *string           `json:"devcontainer_path"`
-	Metadata           map[string]string `json:"metadata"`
+	Identifier         string                    `json:"identifier"`
+	Name               string                    `json:"name"`
+	SpaceRef           string                    `json:"space_ref"` // Ref of the parent space
+	IDE                enum.IDEType              `json:"ide"`
+	ResourceIdentifier string                    `json:"resource_identifier"`
+	ResourceSpaceRef   string                    `json:"resource_space_ref"`
+	CodeRepoURL        string                    `json:"code_repo_url"`
+	CodeRepoType       enum.GitspaceCodeRepoType `json:"code_repo_type"`
+	Branch             string                    `json:"branch"`
+	DevcontainerPath   *string                   `json:"devcontainer_path"`
+	Metadata           map[string]string         `json:"metadata"`
 }
 
 // Create creates a new gitspace.
@@ -75,6 +76,21 @@ func (c *Controller) Create(
 		enum.PermissionGitspaceEdit); err != nil {
 		return nil, err
 	}
+	// check if it's an internal repo
+	if in.CodeRepoType == enum.CodeRepoTypeGitness && in.CodeRepoURL != "" {
+		repo, err := c.repoStore.FindByRef(ctx, in.CodeRepoURL)
+		if err != nil {
+			return nil, fmt.Errorf("couldn't fetch repo for the user: %w", err)
+		}
+		if err = apiauth.CheckRepo(
+			ctx,
+			c.authorizer,
+			session,
+			repo,
+			enum.PermissionRepoView); err != nil {
+			return nil, err
+		}
+	}
 	suffixUID, err := gonanoid.Generate(allowedUIDAlphabet, 6)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate UID for gitspace config : %q %w", in.Identifier, err)
@@ -86,7 +102,7 @@ func (c *Controller) Create(
 	now := time.Now().UnixMilli()
 	var gitspaceConfig *types.GitspaceConfig
 	resourceIdentifier := in.ResourceIdentifier
-	// assume resource to be in same space if its not explicitly specified.
+	// assume resource to be in same space if it's not explicitly specified.
 	if in.ResourceSpaceRef == "" {
 		in.ResourceSpaceRef = in.SpaceRef
 	}
@@ -121,7 +137,7 @@ func (c *Controller) Create(
 			IDE:                             in.IDE,
 			InfraProviderResourceID:         infraProviderResource.ID,
 			InfraProviderResourceIdentifier: infraProviderResource.Identifier,
-			CodeRepoType:                    enum.CodeRepoTypeUnknown,
+			CodeRepoType:                    in.CodeRepoType,
 			State:                           enum.GitspaceStateUninitialized,
 			CodeRepoURL:                     in.CodeRepoURL,
 			Branch:                          in.Branch,

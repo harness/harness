@@ -35,8 +35,8 @@ import (
 
 var _ IDE = (*VSCodeWeb)(nil)
 
-//go:embed script/run_vscode_web.sh
-var runScript string
+//go:embed script/install_vscode_web.sh
+var installScript string
 
 //go:embed script/find_vscode_web_path.sh
 var findPathScript string
@@ -44,9 +44,11 @@ var findPathScript string
 //go:embed media/vscodeweb/*
 var mediaFiles embed.FS
 
-const templateInstallVSCodeWeb = "install_vscode_web.sh"
+const templateRunVSCodeWeb = "run_vscode_web.sh"
 const startMarker = "START_MARKER"
 const endMarker = "END_MARKER"
+const rootUser = "root"
+const harnessUser = "harness"
 
 type VSCodeWebConfig struct {
 	Port int
@@ -63,29 +65,17 @@ func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 // Setup runs the installScript which downloads the required version of the code-server binary.
 func (v *VSCodeWeb) Setup(
 	ctx context.Context,
-	devcontainer *devcontainer.Devcontainer,
+	devcontainer *devcontainer.Exec,
 	_ *types.GitspaceInstance,
 ) ([]byte, error) {
-	installScript, err := template.GenerateScriptFromTemplate(
-		templateInstallVSCodeWeb, &template.InstallVSCodeWebPayload{
-			Port: strconv.Itoa(v.config.Port),
-		})
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to generate scipt to install VSCode Web from template %s: %w",
-			templateInstallVSCodeWeb,
-			err,
-		)
-	}
-
 	output := "Installing VSCode Web inside container.\n"
 
-	_, err = devcontainer.ExecuteCommand(ctx, installScript, false)
+	_, err := devcontainer.ExecuteCommand(ctx, installScript, false, rootUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to install VSCode Web: %w", err)
 	}
 
-	findOutput, err := devcontainer.ExecuteCommand(ctx, findPathScript, false)
+	findOutput, err := devcontainer.ExecuteCommand(ctx, findPathScript, false, rootUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find VSCode Web install path: %w", err)
 	}
@@ -109,10 +99,22 @@ func (v *VSCodeWeb) Setup(
 }
 
 // Run runs the code-server binary.
-func (v *VSCodeWeb) Run(ctx context.Context, devcontainer *devcontainer.Devcontainer) ([]byte, error) {
+func (v *VSCodeWeb) Run(ctx context.Context, devcontainer *devcontainer.Exec) ([]byte, error) {
 	var output []byte
 
-	_, err := devcontainer.ExecuteCommand(ctx, runScript, true)
+	runScript, err := template.GenerateScriptFromTemplate(
+		templateRunVSCodeWeb, &template.RunVSCodeWebPayload{
+			Port: strconv.Itoa(v.config.Port),
+		})
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to generate scipt to run VSCode Web from template %s: %w",
+			templateRunVSCodeWeb,
+			err,
+		)
+	}
+
+	_, err = devcontainer.ExecuteCommand(ctx, runScript, true, harnessUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run VSCode Web: %w", err)
 	}
@@ -130,7 +132,7 @@ func (v *VSCodeWeb) Type() enum.IDEType {
 
 func (v *VSCodeWeb) copyMediaToContainer(
 	ctx context.Context,
-	devcontainer *devcontainer.Devcontainer,
+	devcontainer *devcontainer.Exec,
 	path string,
 ) error {
 	// Create a buffer to hold the tar data

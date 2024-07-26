@@ -14,24 +14,20 @@
 
 package scm
 
-import (
-	"github.com/harness/gitness/app/store"
-	urlprovider "github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/git"
+import "github.com/harness/gitness/types"
 
-	"github.com/google/wire"
+type (
+	ResolvedDetails struct {
+		RepoName           string
+		DevcontainerConfig *types.DevcontainerConfig
+		Credentials        *Credentials
+		Branch             string
+		CloneURL           string
+	}
+
+	// Credentials contains login and initialization information used
+	// by an automated login process.
+	Credentials struct {
+		Password string
+	}
 )
-
-// WireSet provides a wire set for this package.
-var WireSet = wire.NewSet(
-	ProvideSCM,
-)
-
-func ProvideSCM(repoStore store.RepoStore,
-	rpcClient git.Interface,
-	tokenStore store.TokenStore,
-	principalStore store.PrincipalStore,
-	urlProvider urlprovider.Provider,
-) SCM {
-	return NewSCM(repoStore, rpcClient, tokenStore, principalStore, urlProvider)
-}

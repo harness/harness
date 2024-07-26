@@ -52,6 +52,17 @@ func NewPipelineServiceSession() *auth.Session {
 	}
 }
 
+// gitspaceServicePrincipal is the principal that is used during
+// gitspace token injection for calling gitness APIs.
+var gitspaceServicePrincipal *types.Principal
+
+func NewGitspaceServiceSession() *auth.Session {
+	return &auth.Session{
+		Principal: *gitspaceServicePrincipal,
+		Metadata:  &auth.EmptyMetadata{},
+	}
+}
+
 // Bootstrap is an abstraction of a function that bootstraps a system.
 type Bootstrap func(context.Context) error
 
@@ -64,6 +75,9 @@ func System(config *types.Config, userCtrl *user.Controller,
 
 		if err := PipelineService(ctx, config, serviceCtrl); err != nil {
 			return fmt.Errorf("failed to setup pipeline service: %w", err)
+		}
+		if err := GitspaceService(ctx, config, serviceCtrl); err != nil {
+			return fmt.Errorf("failed to setup gitspace service: %w", err)
 		}
 
 		if err := AdminUser(ctx, config, userCtrl); err != nil {
@@ -192,6 +206,36 @@ func PipelineService(
 	pipelineServicePrincipal = svc.ToPrincipal()
 
 	log.Ctx(ctx).Info().Msgf("Completed setup of pipeline service '%s' (id: %d).", svc.UID, svc.ID)
+
+	return nil
+}
+
+// GitspaceService sets up the gitspace service principal that is used during
+// gitspace credential injection for calling gitness APIs.
+func GitspaceService(
+	ctx context.Context,
+	config *types.Config,
+	serviceCtrl *service.Controller,
+) error {
+	svc, err := serviceCtrl.FindNoAuth(ctx, config.Principal.Gitspace.UID)
+	if errors.Is(err, store.ErrResourceNotFound) {
+		svc, err = createServicePrincipal(
+			ctx,
+			serviceCtrl,
+			config.Principal.Gitspace.UID,
+			config.Principal.Gitspace.Email,
+			config.Principal.Gitspace.DisplayName,
+			false,
+		)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to setup gitspace service: %w", err)
+	}
+
+	gitspaceServicePrincipal = svc.ToPrincipal()
+
+	log.Ctx(ctx).Info().Msgf("Completed setup of gitspace service '%s' (id: %d).", svc.UID, svc.ID)
 
 	return nil
 }

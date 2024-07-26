@@ -37,6 +37,7 @@ type Controller struct {
 	tx                    dbtx.Transactor
 	statefulLogger        *logutil.StatefulLogger
 	scm                   scm.SCM
+	repoStore             store.RepoStore
 }
 
 func NewController(
@@ -51,6 +52,7 @@ func NewController(
 	gitspaceEventStore store.GitspaceEventStore,
 	statefulLogger *logutil.StatefulLogger,
 	scm scm.SCM,
+	repoStore store.RepoStore,
 ) *Controller {
 	return &Controller{
 		tx:                    tx,
@@ -64,5 +66,6 @@ func NewController(
 		gitspaceEventStore:    gitspaceEventStore,
 		statefulLogger:        statefulLogger,
 		scm:                   scm,
+		repoStore:             repoStore,
 	}
 }

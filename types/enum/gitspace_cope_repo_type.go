@@ -19,12 +19,14 @@ type GitspaceCodeRepoType string
 func (GitspaceCodeRepoType) Enum() []interface{} { return toInterfaceSlice(codeRepoTypes) }
 
 var codeRepoTypes = []GitspaceCodeRepoType{
-	CodeRepoTypeGithub, CodeRepoTypeGitlab, CodeRepoTypeHarnessCode, CodeRepoTypeBitbucket, CodeRepoTypeUnknown,
+	CodeRepoTypeGithub, CodeRepoTypeGitlab, CodeRepoTypeHarnessCode,
+	CodeRepoTypeBitbucket, CodeRepoTypeUnknown, CodeRepoTypeGitness,
 }
 
 const (
 	CodeRepoTypeGithub      GitspaceCodeRepoType = "github"
 	CodeRepoTypeGitlab      GitspaceCodeRepoType = "gitlab"
+	CodeRepoTypeGitness     GitspaceCodeRepoType = "gitness"
 	CodeRepoTypeHarnessCode GitspaceCodeRepoType = "harness_code"
 	CodeRepoTypeBitbucket   GitspaceCodeRepoType = "bitbucket"
 	CodeRepoTypeUnknown     GitspaceCodeRepoType = "unknown"

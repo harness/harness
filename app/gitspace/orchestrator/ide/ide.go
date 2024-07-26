@@ -27,12 +27,12 @@ type IDE interface {
 	// copying settings and configurations.
 	Setup(
 		ctx context.Context,
-		devcontainer *devcontainer.Devcontainer,
+		devcontainer *devcontainer.Exec,
 		gitspaceInstance *types.GitspaceInstance,
 	) ([]byte, error)
 
 	// Run runs the IDE and supporting services.
-	Run(ctx context.Context, devcontainer *devcontainer.Devcontainer) ([]byte, error)
+	Run(ctx context.Context, devcontainer *devcontainer.Exec) ([]byte, error)
 
 	// Port provides the port which will be used by this IDE.
 	Port() int
