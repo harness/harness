@@ -4,6 +4,8 @@ repo_url={{ .RepoURL }}
 image={{ .Image }}
 branch={{ .Branch }}
 password={{ .Password }}
+email={{ .Email }}
+name={{ .Name }}
 
 # Extract the repository name from the URL
 repo_name=$(basename -s .git "$repo_url")
@@ -29,6 +31,8 @@ if ! command -v git >/dev/null 2>&1; then
     exit 1
 fi
 git config --global --add safe.directory /$repo_name
+git config --global user.email $email
+git config --global user.name $name
 # Clone the repository inside the working directory if it doesn't exist
 if [ ! -d ".git" ]; then
     echo "Cloning the repository..."

@@ -254,7 +254,7 @@ type Config struct {
 			Email       string `envconfig:"GITNESS_PRINCIPAL_PIPELINE_EMAIL"        default:"pipeline@gitness.io"`
 		}
 
-		// Pipeline defines the principal information used to create the pipeline service.
+		// Gitspace defines the principal information used to create the gitspace service.
 		Gitspace struct {
 			UID         string `envconfig:"GITNESS_PRINCIPAL_GITSPACE_UID"          default:"gitspace"`
 			DisplayName string `envconfig:"GITNESS_PRINCIPAL_GITSPACE_DISPLAY_NAME" default:"Gitness Gitspace"`

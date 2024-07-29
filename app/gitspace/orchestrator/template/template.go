@@ -41,6 +41,8 @@ type CloneGitPayload struct {
 }
 
 type AuthenticateGitPayload struct {
+	Email    string
+	Name     string
 	Password string
 }
 

@@ -18,16 +18,18 @@ import "github.com/harness/gitness/types"
 
 type (
 	ResolvedDetails struct {
-		RepoName           string
-		DevcontainerConfig *types.DevcontainerConfig
-		Credentials        *Credentials
 		Branch             string
 		CloneURL           string
+		Credentials        *Credentials
+		DevcontainerConfig *types.DevcontainerConfig
+		RepoName           string
 	}
 
 	// Credentials contains login and initialization information used
 	// by an automated login process.
 	Credentials struct {
+		Email    string
+		Name     string
 		Password string
 	}
 )

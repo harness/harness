@@ -346,5 +346,7 @@ func (s genericSCM) gitnessCredentials(
 
 	return &Credentials{
 		Password: jwtToken,
+		Email:    user.Email,
+		Name:     user.DisplayName,
 	}, nil
 }
