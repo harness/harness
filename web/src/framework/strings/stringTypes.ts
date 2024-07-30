@@ -8,6 +8,7 @@ export interface StringsMap {
   accessControl: string
   accountEmail: string
   accountSetting: string
+  accounts: string
   active: string
   activeBranches: string
   add: string
@@ -904,6 +905,8 @@ export interface StringsMap {
   readMe: string
   reader: string
   rebaseMerge: string
+  recursiveSearchLabel: string
+  recursiveSearchTooltip: string
   refresh: string
   reject: string
   rejected: string
@@ -962,6 +965,13 @@ export interface StringsMap {
   searchExamples: string
   searchHeader: string
   searchResult: string
+  'searchScope.accOnly': string
+  'searchScope.allScopes': string
+  'searchScope.base': string
+  'searchScope.orgAndProj': string
+  'searchScope.orgOnly': string
+  'searchScope.placeholder': string
+  'searchScope.title': string
   secret: string
   'secrets.create': string
   'secrets.createSecret': string

@@ -1,12 +1,19 @@
-import React, { Dispatch, SetStateAction } from 'react'
-import { Container, Text, type SelectOption, MultiSelectDropDown, Button, ButtonVariation } from '@harnessio/uicore'
+import React, { Dispatch, SetStateAction, useMemo, useState } from 'react'
+import {
+  Container,
+  Text,
+  type SelectOption,
+  MultiSelectDropDown,
+  Button,
+  ButtonVariation,
+  DropDown
+} from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useGet } from 'restful-react'
-
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { RepoRepositoryOutput } from 'services/code'
-
+import { ScopeLevelEnum } from 'utils/Utils'
 import css from './Search.module.scss'
 
 const languageOptions = [
@@ -32,6 +39,10 @@ interface KeywordSearchFiltersProps {
   setRepositories: Dispatch<SetStateAction<SelectOption[]>>
   selectedLanguages: SelectOption[]
   setLanguages: Dispatch<SetStateAction<SelectOption[]>>
+  recursiveSearchEnabled: boolean
+  setRecursiveSearchEnabled: React.Dispatch<React.SetStateAction<boolean>>
+  curScopeLabel: SelectOption | undefined
+  setCurScopeLabel: React.Dispatch<React.SetStateAction<SelectOption | undefined>>
 }
 
 const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
@@ -39,15 +50,27 @@ const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
   selectedLanguages,
   selectedRepositories,
   setLanguages,
-  setRepositories
+  setRepositories,
+  recursiveSearchEnabled,
+  setRecursiveSearchEnabled,
+  curScopeLabel,
+  setCurScopeLabel
 }) => {
   const { getString } = useStrings()
   const space = useGetSpaceParam()
+  const accId = space?.split('/')[0]
+  const orgId = space?.split('/')[1]
 
+  const projectId = space?.split('/')[2]
+  const enabledRecursive = useMemo(() => recursiveSearchEnabled, [recursiveSearchEnabled])
   const { data } = useGet<RepoRepositoryOutput[]>({
     path: `/api/v1/spaces/${space}/+/repos`,
     debounce: 500,
-    lazy: isRepoLevelSearch
+
+    lazy: isRepoLevelSearch,
+    queryParams: {
+      recursive: enabledRecursive
+    }
   })
 
   const repositoryOptions =
@@ -56,8 +79,47 @@ const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
       value: String(repository.path)
     })) || []
 
+  const scopeOption = [
+    accId && !orgId
+      ? {
+          label: getString('searchScope.allScopes'),
+          value: ScopeLevelEnum.ALL
+        }
+      : null,
+    accId && !orgId ? { label: getString('searchScope.accOnly'), value: ScopeLevelEnum.CURRENT } : null,
+    orgId ? { label: getString('searchScope.orgAndProj'), value: ScopeLevelEnum.ALL } : null,
+    orgId ? { label: getString('searchScope.orgOnly'), value: ScopeLevelEnum.CURRENT } : null
+  ].filter(Boolean) as SelectOption[]
+
+  const [scopeLabel, setScopeLabel] = useState<SelectOption>(curScopeLabel ? curScopeLabel : scopeOption[0])
   return (
     <div className={css.filtersCtn}>
+      {projectId ? null : (
+        <>
+          <Container>
+            <Text font={{ variation: FontVariation.SMALL_SEMI }} color={Color.GREY_600} margin={{ bottom: 'xsmall' }}>
+              {getString('searchScope.title')}
+            </Text>
+            <DropDown
+              placeholder={scopeLabel.label}
+              className={css.dropdown}
+              value={scopeLabel}
+              items={scopeOption}
+              onChange={e => {
+                if (e.value === ScopeLevelEnum.ALL) {
+                  setRecursiveSearchEnabled(true)
+                } else if (e.value === ScopeLevelEnum.CURRENT) {
+                  setRecursiveSearchEnabled(false)
+                }
+                setScopeLabel(e)
+                setCurScopeLabel(e)
+              }}
+              popoverClassName={css.branchDropdown}
+            />
+          </Container>
+        </>
+      )}
+
       {isRepoLevelSearch ? null : (
         <Container>
           <Text font={{ variation: FontVariation.SMALL_SEMI }} color={Color.GREY_600} margin={{ bottom: 'xsmall' }}>
@@ -84,14 +146,16 @@ const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
           items={languageOptions}
         />
       </Container>
-      <Button
-        variation={ButtonVariation.LINK}
-        text={getString('clear')}
-        onClick={() => {
-          setRepositories([])
-          setLanguages([])
-        }}
-      />
+      <Container>
+        <Button
+          variation={ButtonVariation.LINK}
+          text={getString('clear')}
+          onClick={() => {
+            setRepositories([])
+            setLanguages([])
+          }}
+        />
+      </Container>
     </div>
   )
 }

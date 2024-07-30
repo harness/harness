@@ -1275,3 +1275,13 @@ sshCard:
   personalAccessToken: Personal Access Token
   noTokensText: There are no personal access tokens associated with this account
   lastUsed: Last Used
+recursiveSearchTooltip: Disabling recursive search will only search at the account level and exclude organization and project repositories.
+recursiveSearchLabel: 'Recursive search: show results across Repositories within {account} Organization and Projects'
+accounts: "Account's"
+searchScope:
+  base: 'Search scope: {scope}'
+  allScopes: Account, organizations and projects
+  accOnly: Account Only
+  orgOnly: Organizations only
+  orgAndProj: Organizations and Projects
+  title: Search scope

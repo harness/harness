@@ -79,7 +79,10 @@ const Search = () => {
   const [selectedRepositories, setSelectedRepositories] = useState<SelectOption[]>([])
   const [selectedLanguages, setSelectedLanguages] = useState<(SelectOption & { extension?: string })[]>([])
   const [keywordSearchResults, setKeyowordSearchResults] = useState<KeywordSearchResponse>()
+  const projectId = space?.split('/')[2]
 
+  const [recursiveSearchEnabled, setRecursiveSearchEnabled] = useState(!projectId ? true : false)
+  const [curScopeLabel, setCurScopeLabel] = useState<SelectOption>()
   //semantic
   // const [loadingSearch, setLoadingSearch] = useState(false)
   const [semanticSearchResult, setSemanticSearchResult] = useState<SemanticSearchResultType[]>([])
@@ -121,11 +124,14 @@ const Search = () => {
             query += ` case:no`
           }
 
+          // Clear previous results
+          setKeyowordSearchResults(undefined)
           const res = await mutate({
             repo_paths: repoPath ? [repoPath] : repoPaths,
             space_paths: !repoPath && !repoPaths.length ? [space] : [],
             query,
-            max_result_count: maxResultCount
+            max_result_count: maxResultCount,
+            recursive: recursiveSearchEnabled
           })
 
           setKeyowordSearchResults(res)
@@ -136,7 +142,7 @@ const Search = () => {
         showError(getErrorMessage(error))
       }
     }, 300),
-    [selectedLanguages, selectedRepositories, repoPath, mode]
+    [selectedLanguages, selectedRepositories, repoPath, mode, recursiveSearchEnabled]
   )
 
   const performSemanticSearch = useCallback(() => {
@@ -154,7 +160,7 @@ const Search = () => {
       })
       .finally(() => {
         // setLoadingSearch(false)
-      })
+      }) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, history, location, repoPath, sendSemanticSearch, showError, mode])
 
   useEffect(() => {
@@ -162,8 +168,15 @@ const Search = () => {
       debouncedSearch(searchTerm)
     } else if (searchTerm && repoMetadata?.path && mode === SEARCH_MODE.SEMANTIC) {
       performSemanticSearch()
-    }
+    } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLanguages, selectedRepositories, repoMetadata?.path])
+
+  useEffect(() => {
+    setTimeout(() => {
+      debouncedSearch(searchTerm)
+    }, 0) // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setRecursiveSearchEnabled, recursiveSearchEnabled])
+
   return (
     <Container className={css.main}>
       <Container padding="medium" border={{ bottom: true }} flex className={css.header}>
@@ -210,6 +223,10 @@ const Search = () => {
             selectedRepositories={selectedRepositories}
             setLanguages={setSelectedLanguages}
             setRepositories={setSelectedRepositories}
+            recursiveSearchEnabled={recursiveSearchEnabled}
+            setRecursiveSearchEnabled={setRecursiveSearchEnabled}
+            curScopeLabel={curScopeLabel}
+            setCurScopeLabel={setCurScopeLabel}
           />
         )}
 
@@ -279,6 +296,11 @@ interface CodeBlock {
 
 export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; searchTerm: string }) => {
   const { routes } = useAppContext()
+  const space = useGetSpaceParam()
+  const accId = space?.split('/')[0]
+
+  const projectId = space?.split('/')[2]
+  const orgId = space?.split('/')[1]
 
   const [isCollapsed, setIsCollapsed] = useToggle(false)
   const [showMoreMatchs, setShowMoreMatches] = useState(false)
@@ -326,8 +348,18 @@ export const SearchResult = ({ fileMatch, searchTerm }: { fileMatch: FileMatch; 
   }, [fileMatch])
 
   const collapsedCodeBlocks = showMoreMatchs ? codeBlocks.slice(0, 25) : codeBlocks.slice(0, 2)
-  const repoName = fileMatch.repo_path.split('/').pop()
+  const repoPathParts = fileMatch.repo_path.split('/')
+  let repoName = ''
 
+  if (accId && !orgId && !projectId) {
+    repoName = repoPathParts.slice(1).join('/')
+  } else if (accId && orgId && !projectId) {
+    repoName = repoPathParts.slice(2).join('/')
+  } else if (accId && orgId && projectId) {
+    repoName = fileMatch.repo_path.split('/').pop() as string
+  } else {
+    repoName = fileMatch.repo_path.split('/').pop() as string
+  }
   const isFileMatch = fileMatch.matches?.[0]?.line_num === 0
 
   const flattenedMatches = flatten(codeBlocks.map(codeBlock => codeBlock.fragmentMatches))

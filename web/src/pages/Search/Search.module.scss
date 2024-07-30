@@ -261,7 +261,7 @@
 .filtersCtn {
   align-items: flex-end;
   display: grid;
-  grid-template-columns: max-content max-content min-content;
+  grid-template-columns: max-content max-content min-content min-content;
   column-gap: var(--spacing-medium);
   margin-bottom: var(--spacing-large);
 
@@ -274,6 +274,9 @@
 
   .multiSelect {
     min-width: 203px;
+  }
+  .dropdown {
+    min-width: 303px;
   }
 }
 
@@ -359,4 +362,40 @@
 
 .aidaFeedback {
   padding: 5px 10px !important;
+}
+
+.searchContainer {
+  border-radius: 4px;
+  border: 1px solid var(--grey-200) !important;
+  padding: 3px var(--spacing-small) !important;
+
+  :global {
+    .bp3-popover-wrapper {
+      justify-content: center !important;
+      display: flex !important;
+    }
+  }
+}
+
+.icon {
+  > svg {
+    fill: var(--primary-7) !important;
+
+    > path {
+      fill: var(--primary-7) !important;
+    }
+  }
+}
+
+.dropdown {
+  flex-grow: 2;
+}
+
+.branchDropdown {
+  min-width: 303px !important;
+  :global {
+    .bp3-input-group {
+      display: none !important;
+    }
+  }
 }

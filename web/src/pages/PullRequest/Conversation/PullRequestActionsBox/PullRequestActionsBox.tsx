@@ -246,7 +246,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     return {
       commitTitle: messageTitle,
       commitMessage: mergeOption.method === MergeStrategy.SQUASH ? messageString : ''
-    }
+    } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pullReqCommits, mergeOption, pullReqMetadata])
 
   if (pullReqMetadata.state === PullRequestFilterOption.MERGED) {

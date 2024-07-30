@@ -18,6 +18,8 @@
 // This is an auto-generated file
 export declare const aidaFeedback: string
 export declare const aiLabel: string
+export declare const branchDropdown: string
+export declare const dropdown: string
 export declare const editorCtn: string
 export declare const fileContent: string
 export declare const filename: string
@@ -26,6 +28,7 @@ export declare const filtersCtn: string
 export declare const header: string
 export declare const highlight: string
 export declare const highlightLineNumber: string
+export declare const icon: string
 export declare const isCollapsed: string
 export declare const layout: string
 export declare const loadingSpinner: string
@@ -41,6 +44,7 @@ export declare const result: string
 export declare const resultHeader: string
 export declare const resultTitle: string
 export declare const searchBox: string
+export declare const searchContainer: string
 export declare const searchResult: string
 export declare const selected: string
 export declare const semanticStamp: string
