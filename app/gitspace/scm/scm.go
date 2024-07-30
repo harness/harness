@@ -26,6 +26,7 @@ import (
 
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 var (
@@ -88,6 +89,9 @@ func (s scm) GetSCMRepoDetails(
 	gitspaceConfig *types.GitspaceConfig,
 ) (*ResolvedDetails, error) {
 	filePath := devcontainerDefaultPath
+	if gitspaceConfig.CodeRepoType == "" {
+		gitspaceConfig.CodeRepoType = enum.CodeRepoTypeUnknown
+	}
 	scmProvider, err := s.scmProviderFactory.GetSCMProvider(gitspaceConfig.CodeRepoType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve scm provider: %w", err)

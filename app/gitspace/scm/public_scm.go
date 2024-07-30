@@ -104,14 +104,15 @@ func (s GenericSCM) ResolveCredentials(
 	_ context.Context,
 	gitspaceConfig *types.GitspaceConfig,
 ) (*ResolvedCredentials, error) {
-	var resolvedDetails = &ResolvedDetails{}
-	resolvedDetails.Branch = gitspaceConfig.Branch
-	resolvedDetails.CloneURL = gitspaceConfig.CodeRepoURL
+	var resolvedCredentials = &ResolvedCredentials{
+		Branch:   gitspaceConfig.Branch,
+		CloneURL: gitspaceConfig.CodeRepoURL,
+	}
 	repoURL, err := url.Parse(gitspaceConfig.CodeRepoURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse repository URL %s: %w", gitspaceConfig.CodeRepoURL, err)
 	}
 	repoName := strings.TrimSuffix(path.Base(repoURL.Path), ".git")
-	resolvedDetails.RepoName = repoName
-	return nil, err
+	resolvedCredentials.RepoName = repoName
+	return resolvedCredentials, err
 }
