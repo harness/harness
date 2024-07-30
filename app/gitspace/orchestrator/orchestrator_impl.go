@@ -83,7 +83,7 @@ func (o orchestrator) StartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerStart)
 
-	scmResolvedDetails, err := o.scm.Resolve(ctx, gitspaceConfig)
+	scmResolvedDetails, err := o.scm.GetSCMRepoDetails(ctx, gitspaceConfig)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerFailed)
 

@@ -343,7 +343,10 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	scmSCM := scm.ProvideSCM(repoStore, gitInterface, tokenStore, principalStore, provider)
+	gitnessSCM := scm.ProvideGitnessSCM(repoStore, gitInterface, tokenStore, principalStore, provider)
+	genericSCM := scm.ProvideGenericSCM()
+	scmFactory := scm.ProvideFactory(gitnessSCM, genericSCM)
+	scmSCM := scm.ProvideSCM(scmFactory)
 	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory)
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
 	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger)

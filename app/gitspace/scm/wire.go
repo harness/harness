@@ -24,14 +24,26 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideSCM,
+	ProvideGitnessSCM, ProvideGenericSCM, ProvideFactory, ProvideSCM,
 )
 
-func ProvideSCM(repoStore store.RepoStore,
+func ProvideGitnessSCM(repoStore store.RepoStore,
 	rpcClient git.Interface,
 	tokenStore store.TokenStore,
 	principalStore store.PrincipalStore,
 	urlProvider urlprovider.Provider,
-) SCM {
-	return NewSCM(repoStore, rpcClient, tokenStore, principalStore, urlProvider)
+) *GitnessSCM {
+	return NewGitnessSCM(repoStore, rpcClient, tokenStore, principalStore, urlProvider)
+}
+
+func ProvideGenericSCM() *GenericSCM {
+	return NewGenericSCM()
+}
+
+func ProvideFactory(gitness *GitnessSCM, genericSCM *GenericSCM) Factory {
+	return NewFactory(gitness, genericSCM)
+}
+
+func ProvideSCM(factory Factory) SCM {
+	return NewSCM(factory)
 }

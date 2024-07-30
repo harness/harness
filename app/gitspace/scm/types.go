@@ -16,13 +16,20 @@ package scm
 
 import "github.com/harness/gitness/types"
 
+type CodeRepositoryRequest struct {
+	URL string `json:"url"`
+}
+
+type CodeRepositoryResponse struct {
+	URL               string `json:"url"`
+	Branch            string `json:"branch,omitempty"`
+	CodeRepoIsPrivate bool   `json:"is_private"`
+}
+
 type (
 	ResolvedDetails struct {
-		Branch             string
-		CloneURL           string
-		Credentials        *Credentials
+		*ResolvedCredentials
 		DevcontainerConfig *types.DevcontainerConfig
-		RepoName           string
 	}
 
 	// Credentials contains login and initialization information used
@@ -31,5 +38,12 @@ type (
 		Email    string
 		Name     string
 		Password string
+	}
+
+	ResolvedCredentials struct {
+		Branch      string
+		CloneURL    string
+		Credentials *Credentials
+		RepoName    string
 	}
 )
