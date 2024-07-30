@@ -966,15 +966,15 @@ type (
 		// FindByID finds label with a specified id.
 		FindByID(ctx context.Context, id int64) (*types.Label, error)
 
-		// ListInScopes lists labels defined in repo and/or specified spaces.
+		// ListInScopes lists labels defined in specified repo/spaces.
 		ListInScopes(
 			ctx context.Context,
 			repoID int64,
-			scopeIDs []int64,
+			spaceIDs []int64,
 			filter *types.LabelFilter,
 		) ([]*types.Label, error)
 
-		// ListInfosInScopes lists label infos defined in repo and/or specified spaces.
+		// ListInfosInScopes lists label infos defined in specified repo/spaces.
 		ListInfosInScopes(
 			ctx context.Context,
 			repoID int64,
@@ -984,6 +984,15 @@ type (
 
 		// IncrementValueCount increments count of values defined for a specified label.
 		IncrementValueCount(ctx context.Context, labelID int64, increment int) (int64, error)
+
+		// CountInSpace counts the number of labels defined in a specified space.
+		CountInSpace(ctx context.Context, spaceID int64) (int64, error)
+
+		// CountInRepo counts the number of labels defined in a specified repository.
+		CountInRepo(ctx context.Context, repoID int64) (int64, error)
+
+		// CountInScopes counts the number of labels defined in specified repo/spaces.
+		CountInScopes(ctx context.Context, repoID int64, spaceIDs []int64) (int64, error)
 	}
 
 	LabelValueStore interface {
@@ -1021,8 +1030,6 @@ type (
 			ctx context.Context,
 			labelIDs []int64,
 		) (map[int64][]*types.LabelValueInfo, error)
-
-		Upsert(ctx context.Context, lblVal *types.LabelValue) error
 	}
 
 	PullReqLabelAssignmentStore interface {

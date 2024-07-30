@@ -39,12 +39,13 @@ func HandleListLabels(labelCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		labels, err := labelCtrl.ListLabels(ctx, session, spaceRef, filter)
+		labels, total, err := labelCtrl.ListLabels(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
+		render.Pagination(r, w, filter.Page, filter.Size, int(total))
 		render.JSON(w, http.StatusOK, labels)
 	}
 }

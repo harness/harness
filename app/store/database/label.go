@@ -16,7 +16,6 @@ package database
 
 import (
 	"context"
-	"strings"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -226,7 +225,7 @@ func (s *labelStore) List(
 	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 	if filter.Query != "" {
 		stmt = stmt.Where(
-			"LOWER(label_key) LIKE ?", strings.ToLower(filter.Query))
+			"LOWER(label_key) LIKE '%' || LOWER(?) || '%'", filter.Query)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -247,7 +246,7 @@ func (s *labelStore) List(
 func (s *labelStore) ListInScopes(
 	ctx context.Context,
 	repoID int64,
-	scopeIDs []int64,
+	spaceIDs []int64,
 	filter *types.LabelFilter,
 ) ([]*types.Label, error) {
 	stmt := database.Builder.
@@ -255,7 +254,7 @@ func (s *labelStore) ListInScopes(
 		From("labels")
 
 	stmt = stmt.Where(squirrel.Or{
-		squirrel.Eq{"label_space_id": scopeIDs},
+		squirrel.Eq{"label_space_id": spaceIDs},
 		squirrel.Eq{"label_repo_id": repoID},
 	}).
 		OrderBy("label_key").
@@ -265,7 +264,7 @@ func (s *labelStore) ListInScopes(
 	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 	if filter.Query != "" {
 		stmt = stmt.Where(
-			"LOWER(label_key) LIKE ?", strings.ToLower(filter.Query))
+			"LOWER(label_key) LIKE '%' || LOWER(?) || '%'", filter.Query)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -310,7 +309,7 @@ func (s *labelStore) ListInfosInScopes(
 	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 	if filter.Query != "" {
 		stmt = stmt.Where(
-			"LOWER(label_key) LIKE ?", strings.ToLower(filter.Query))
+			"LOWER(label_key) LIKE '%' || LOWER(?) || '%'", filter.Query)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -326,6 +325,55 @@ func (s *labelStore) ListInfosInScopes(
 	}
 
 	return mapLabelInfos(dst), nil
+}
+
+func (s *labelStore) CountInSpace(ctx context.Context, spaceID int64) (int64, error) {
+	const sqlQuery = `SELECT COUNT(*) FROM labels WHERE label_space_id = $1`
+
+	return s.count(ctx, sqlQuery, spaceID)
+}
+
+func (s *labelStore) CountInRepo(ctx context.Context, repoID int64) (int64, error) {
+	const sqlQuery = `SELECT COUNT(*) FROM labels WHERE label_repo_id = $1`
+
+	return s.count(ctx, sqlQuery, repoID)
+}
+
+func (s labelStore) count(ctx context.Context, sqlQuery string, scopeID int64) (int64, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+	var count int64
+	if err := db.QueryRowContext(ctx, sqlQuery, scopeID).Scan(&count); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed to count labels")
+	}
+
+	return count, nil
+}
+
+func (s *labelStore) CountInScopes(
+	ctx context.Context,
+	repoID int64,
+	spaceIDs []int64,
+) (int64, error) {
+	stmt := database.Builder.Select("COUNT(*)").
+		From("labels").
+		Where(squirrel.Or{
+			squirrel.Eq{"label_space_id": spaceIDs},
+			squirrel.Eq{"label_repo_id": repoID},
+		})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	if err = db.QueryRowContext(ctx, sql, args...).Scan(&count); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed to count labels in scopes")
+	}
+
+	return count, nil
 }
 
 func mapLabel(lbl *label) *types.Label {

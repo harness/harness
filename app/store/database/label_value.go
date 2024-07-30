@@ -124,39 +124,6 @@ func (s *labelValueStore) Update(ctx context.Context, lblVal *types.LabelValue) 
 	return nil
 }
 
-func (s *labelValueStore) Upsert(ctx context.Context, lblVal *types.LabelValue) error {
-	const sqlQuery = `
-		INSERT INTO label_values (` + labelValueColumns + `) 
-		VALUES (
-			:label_value_label_id,
-			:label_value_value,
-			:label_value_color,
-			:label_value_created,
-			:label_value_updated,
-			:label_value_created_by,
-			:label_value_updated_by
-		) 
-		ON CONFLICT (label_value_id) DO UPDATE SET
-			label_value_value = EXCLUDED.label_value_value,
-			label_value_color = EXCLUDED.label_value_color,
-			label_value_updated = EXCLUDED.label_value_updated,
-			label_value_updated_by = EXCLUDED.label_value_updated_by
-		RETURNING label_value_id`
-
-	db := dbtx.GetAccessor(ctx, s.db)
-
-	query, args, err := db.BindNamed(sqlQuery, mapInternalLabelValue(lblVal))
-	if err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed to bind query")
-	}
-
-	if err = db.QueryRowContext(ctx, query, args...).Scan(&lblVal.ID); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed to upsert label value")
-	}
-
-	return nil
-}
-
 func (s *labelValueStore) Delete(
 	ctx context.Context,
 	labelID int64,

@@ -149,10 +149,10 @@ func (s *Service) ListPullReqLabels(
 	spaceID int64,
 	pullreqID int64,
 	filter *types.AssignableLabelFilter,
-) (*types.ScopesLabels, error) {
+) (*types.ScopesLabels, int64, error) {
 	spaces, err := s.spaceStore.GetHierarchy(ctx, spaceID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get space hierarchy: %w", err)
+		return nil, 0, fmt.Errorf("failed to get space hierarchy: %w", err)
 	}
 
 	spaceIDs := make([]int64, len(spaces))
@@ -165,7 +165,7 @@ func (s *Service) ListPullReqLabels(
 	pullreqAssignments, err := s.pullReqLabelAssignmentStore.ListAssigned(
 		ctx, pullreqID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list labels assigned to pullreq: %w", err)
+		return nil, 0, fmt.Errorf("failed to list labels assigned to pullreq: %w", err)
 	}
 
 	if !filter.Assignable {
@@ -178,12 +178,17 @@ func (s *Service) ListPullReqLabels(
 		})
 
 		populateScopeLabelsMap(sortedAssignments, scopeLabelsMap, repo, spaces)
-		return createScopeLabels(sortedAssignments, scopeLabelsMap), nil
+		return createScopeLabels(sortedAssignments, scopeLabelsMap), 0, nil
+	}
+
+	total, err := s.labelStore.CountInScopes(ctx, repo.ID, spaceIDs)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count labels in scopes: %w", err)
 	}
 
 	labelInfos, err := s.labelStore.ListInfosInScopes(ctx, repo.ID, spaceIDs, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list repo and spaces label infos: %w", err)
+		return nil, 0, fmt.Errorf("failed to list repo and spaces label infos: %w", err)
 	}
 
 	labelIDs := make([]int64, len(labelInfos))
@@ -193,7 +198,7 @@ func (s *Service) ListPullReqLabels(
 
 	valueInfos, err := s.labelValueStore.ListInfosByLabelIDs(ctx, labelIDs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list label value infos by label ids: %w", err)
+		return nil, 0, fmt.Errorf("failed to list label value infos by label ids: %w", err)
 	}
 
 	allAssignments := make([]*types.LabelAssignment, len(labelInfos))
@@ -210,7 +215,7 @@ func (s *Service) ListPullReqLabels(
 	}
 
 	populateScopeLabelsMap(allAssignments, scopeLabelsMap, repo, spaces)
-	return createScopeLabels(allAssignments, scopeLabelsMap), nil
+	return createScopeLabels(allAssignments, scopeLabelsMap), total, nil
 }
 
 func populateScopeLabelsMap(

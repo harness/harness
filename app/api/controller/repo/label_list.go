@@ -29,16 +29,16 @@ func (c *Controller) ListLabels(
 	session *auth.Session,
 	repoRef string,
 	filter *types.LabelFilter,
-) ([]*types.Label, error) {
+) ([]*types.Label, int64, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
+		return nil, 0, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	labels, err := c.labelSvc.List(ctx, &repo.ParentID, &repo.ID, filter)
+	labels, total, err := c.labelSvc.List(ctx, &repo.ParentID, &repo.ID, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list repo labels: %w", err)
+		return nil, 0, fmt.Errorf("failed to list repo labels: %w", err)
 	}
 
-	return labels, nil
+	return labels, total, nil
 }

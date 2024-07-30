@@ -30,22 +30,22 @@ func (c *Controller) ListLabels(
 	repoRef string,
 	pullreqNum int64,
 	filter *types.AssignableLabelFilter,
-) (*types.ScopesLabels, error) {
+) (*types.ScopesLabels, int64, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
+		return nil, 0, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
 	pullreq, err := c.pullreqStore.FindByNumber(ctx, repo.ID, pullreqNum)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find pullreq: %w", err)
+		return nil, 0, fmt.Errorf("failed to find pullreq: %w", err)
 	}
 
-	scopeLabelsMap, err := c.labelSvc.ListPullReqLabels(
+	scopeLabelsMap, total, err := c.labelSvc.ListPullReqLabels(
 		ctx, repo, repo.ParentID, pullreq.ID, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list pullreq labels: %w", err)
+		return nil, 0, fmt.Errorf("failed to list pullreq labels: %w", err)
 	}
 
-	return scopeLabelsMap, nil
+	return scopeLabelsMap, total, nil
 }

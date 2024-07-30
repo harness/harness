@@ -45,12 +45,13 @@ func HandleListLabels(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		labels, err := pullreqCtrl.ListLabels(ctx, session, repoRef, pullreqNumber, filter)
+		labels, total, err := pullreqCtrl.ListLabels(ctx, session, repoRef, pullreqNumber, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
+		render.Pagination(r, w, filter.Page, filter.Size, int(total))
 		render.JSON(w, http.StatusOK, labels)
 	}
 }

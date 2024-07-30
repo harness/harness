@@ -107,8 +107,8 @@ func (s *Service) Save(
 		} else {
 			label, err = s.update(ctx, principalID, label, &types.UpdateLabelInput{
 				Key:         &in.Label.Key,
-				Type:        &label.Type,
-				Description: &label.Description,
+				Type:        &in.Label.Type,
+				Description: &in.Label.Description,
 				Color:       &in.Label.Color,
 			})
 			if err != nil {
@@ -200,7 +200,7 @@ func (s *Service) List(
 	ctx context.Context,
 	spaceID, repoID *int64,
 	filter *types.LabelFilter,
-) ([]*types.Label, error) {
+) ([]*types.Label, int64, error) {
 	if filter.Inherited {
 		return s.listInScopes(ctx, spaceID, repoID, filter)
 	}
@@ -212,35 +212,63 @@ func (s *Service) list(
 	ctx context.Context,
 	spaceID, repoID *int64,
 	filter *types.LabelFilter,
-) ([]*types.Label, error) {
+) ([]*types.Label, int64, error) {
 	if repoID != nil {
-		return s.labelStore.List(ctx, nil, repoID, filter)
+		total, err := s.labelStore.CountInRepo(ctx, *repoID)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		labels, err := s.labelStore.List(ctx, nil, repoID, filter)
+		if err != nil {
+			return nil, 0, err
+		}
+		return labels, total, nil
 	}
-	return s.labelStore.List(ctx, spaceID, nil, filter)
+
+	count, err := s.labelStore.CountInSpace(ctx, *spaceID)
+	if err != nil {
+		return nil, 0, err
+	}
+	labels, err := s.labelStore.List(ctx, spaceID, nil, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+	return labels, count, nil
 }
 
 func (s *Service) listInScopes(
 	ctx context.Context,
 	spaceID, repoID *int64,
 	filter *types.LabelFilter,
-) ([]*types.Label, error) {
+) ([]*types.Label, int64, error) {
 	var spaceIDs []int64
 	var repoIDVal int64
 	var err error
 	if repoID != nil {
 		spaceIDs, err = s.spaceStore.GetAncestorIDs(ctx, *spaceID)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		repoIDVal = *repoID
 	} else {
 		spaceIDs, err = s.spaceStore.GetAncestorIDs(ctx, *spaceID)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 	}
 
-	return s.labelStore.ListInScopes(ctx, repoIDVal, spaceIDs, filter)
+	total, err := s.labelStore.CountInScopes(ctx, repoIDVal, spaceIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	labels, err := s.labelStore.ListInScopes(ctx, repoIDVal, spaceIDs, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return labels, total, nil
 }
 
 func (s *Service) Delete(
