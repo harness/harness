@@ -35,6 +35,10 @@ type Factory struct {
 	providers map[enum.GitspaceCodeRepoType]Provider
 }
 
+func NewFactoryWithProviders(providers map[enum.GitspaceCodeRepoType]Provider) Factory {
+	return Factory{providers: providers}
+}
+
 func NewFactory(gitnessProvider *GitnessSCM, genericSCM *GenericSCM) Factory {
 	providers := make(map[enum.GitspaceCodeRepoType]Provider)
 	providers[enum.CodeRepoTypeGitness] = gitnessProvider
