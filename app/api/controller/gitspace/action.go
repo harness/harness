@@ -67,8 +67,11 @@ func (c *Controller) Action(
 	}
 
 	// check if it's an internal repo
-	if gitspaceConfig.CodeRepoType == enum.CodeRepoTypeGitness && gitspaceConfig.CodeRepoURL != "" {
-		repo, err := c.repoStore.FindByRef(ctx, gitspaceConfig.CodeRepoURL)
+	if gitspaceConfig.CodeRepoType == enum.CodeRepoTypeGitness {
+		if gitspaceConfig.CodeRepoRef == nil {
+			return nil, fmt.Errorf("couldn't fetch repo for the user, no ref found: %w", err)
+		}
+		repo, err := c.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepoRef)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't fetch repo for the user: %w", err)
 		}

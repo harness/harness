@@ -52,6 +52,7 @@ type CreateInput struct {
 	ResourceSpaceRef   string                    `json:"resource_space_ref"`
 	CodeRepoURL        string                    `json:"code_repo_url"`
 	CodeRepoType       enum.GitspaceCodeRepoType `json:"code_repo_type"`
+	CodeRepoRef        *string                   `json:"code_repo_ref"`
 	Branch             string                    `json:"branch"`
 	DevcontainerPath   *string                   `json:"devcontainer_path"`
 	Metadata           map[string]string         `json:"metadata"`
@@ -77,8 +78,8 @@ func (c *Controller) Create(
 		return nil, err
 	}
 	// check if it's an internal repo
-	if in.CodeRepoType == enum.CodeRepoTypeGitness && in.CodeRepoURL != "" {
-		repo, err := c.repoStore.FindByRef(ctx, in.CodeRepoURL)
+	if in.CodeRepoType == enum.CodeRepoTypeGitness && *in.CodeRepoRef != "" {
+		repo, err := c.repoStore.FindByRef(ctx, *in.CodeRepoRef)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't fetch repo for the user: %w", err)
 		}
@@ -140,6 +141,7 @@ func (c *Controller) Create(
 			CodeRepoType:                    in.CodeRepoType,
 			State:                           enum.GitspaceStateUninitialized,
 			CodeRepoURL:                     in.CodeRepoURL,
+			CodeRepoRef:                     in.CodeRepoRef,
 			Branch:                          in.Branch,
 			DevcontainerPath:                in.DevcontainerPath,
 			UserID:                          session.Principal.UID,

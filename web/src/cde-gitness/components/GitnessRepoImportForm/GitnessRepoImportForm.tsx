@@ -13,6 +13,7 @@ import NewRepoModalButton from 'components/NewRepoModalButton/NewRepoModalButton
 import noRepo from 'cde-gitness/assests/noRepo.svg?url'
 import { RepoCreationType } from 'utils/GitUtils'
 import gitnessRepoLogo from 'cde-gitness/assests/gitness.svg?url'
+import { EnumGitspaceCodeRepoType } from 'cde-gitness/constants'
 import { GitspaceSelect } from '../../../cde/components/GitspaceSelect/GitspaceSelect'
 import css from './GitnessRepoImportForm.module.scss'
 
@@ -166,7 +167,9 @@ export const GitnessRepoImportForm = () => {
                           code_repo_url: repo.git_url,
                           branch: repo.default_branch,
                           identifier: repoParams?.[repoParams.length - 1],
-                          name: repo.path
+                          name: repo.path,
+                          code_repo_ref: repo.path,
+                          code_repo_type: EnumGitspaceCodeRepoType.GITNESS
                         }
                       })
                       formik.setFieldValue('code_repo_url', repo.git_url)

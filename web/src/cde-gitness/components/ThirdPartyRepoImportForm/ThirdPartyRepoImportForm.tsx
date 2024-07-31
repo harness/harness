@@ -18,6 +18,7 @@ import NewRepoModalButton from 'components/NewRepoModalButton/NewRepoModalButton
 import { RepoCreationType } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { OpenapiCreateGitspaceRequest, useGitspacelookup } from 'cde-gitness/services'
+import { EnumGitspaceCodeRepoType } from 'cde-gitness/constants'
 import css from './ThirdPartyRepoImportForm.module.scss'
 
 enum RepoCheckStatus {
@@ -56,7 +57,8 @@ export const ThirdPartyRepoImportForm = () => {
                 code_repo_url: response.url,
                 branch: response.branch,
                 identifier: getRepoIdFromURL(response.url),
-                name: getRepoNameFromURL(response.url)
+                name: getRepoNameFromURL(response.url),
+                code_repo_type: EnumGitspaceCodeRepoType.UNKNOWN
               }
             })
             setRepoCheckState(RepoCheckStatus.Valid)

@@ -1,0 +1,1 @@
+ALTER TABLE gitspace_configs ADD COLUMN gconf_code_repo_ref TEXT;

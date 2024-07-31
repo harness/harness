@@ -22,7 +22,7 @@ export type EnumFileDiffStatus = string
 
 export type EnumGitspaceAccessType = 'jwt_token' | 'user_credentials' | 'ssh_key'
 
-export type EnumGitspaceCodeRepoType = 'github' | 'gitlab' | 'harness_code' | 'bitbucket' | 'unknown'
+export type EnumGitspaceCodeRepoType = 'github' | 'gitlab' | 'harness_code' | 'bitbucket' | 'unknown' | 'gitness'
 
 export type EnumGitspaceEntityType = 'gitspace_config' | 'gitspace_instance'
 
@@ -318,7 +318,9 @@ export interface OpenapiCreateConnectorRequest {
 
 export interface OpenapiCreateGitspaceRequest {
   branch?: string
-  code_repo_url?: string
+  code_repo_url?: string | null
+  code_repo_ref?: string
+  code_repo_type?: EnumGitspaceCodeRepoType
   devcontainer_path?: string | null
   ide?: EnumIDEType
   identifier?: string

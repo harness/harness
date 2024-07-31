@@ -69,7 +69,7 @@ func (s GitnessSCM) ResolveCredentials(
 		return nil, fmt.Errorf("failed to parse repository URL %s: %w", gitspaceConfig.CodeRepoURL, err)
 	}
 	repoName := strings.TrimSuffix(path.Base(repoURL.Path), ".git")
-	repo, err := s.repoStore.FindByRef(ctx, gitspaceConfig.CodeRepoURL)
+	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
@@ -119,7 +119,7 @@ func (s GitnessSCM) GetFileContent(ctx context.Context,
 	gitspaceConfig *types.GitspaceConfig,
 	filePath string,
 ) ([]byte, error) {
-	repo, err := s.repoStore.FindByRef(ctx, gitspaceConfig.CodeRepoURL)
+	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}

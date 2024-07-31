@@ -47,7 +47,8 @@ const (
 		gconf_space_id,
 		gconf_created,
 		gconf_updated,
-        gconf_is_deleted
+        gconf_is_deleted,
+        gconf_code_repo_ref
 	`
 	gitspaceConfigsTable        = `gitspace_configs`
 	ReturningClause             = "RETURNING "
@@ -61,6 +62,7 @@ type gitspaceConfig struct {
 	IDE                     enum.IDEType              `db:"gconf_ide"`
 	InfraProviderResourceID int64                     `db:"gconf_infra_provider_resource_id"`
 	CodeAuthType            string                    `db:"gconf_code_auth_type"`
+	CodeRepoRef             null.String               `db:"gconf_code_repo_ref"`
 	CodeAuthID              string                    `db:"gconf_code_auth_id"`
 	CodeRepoType            enum.GitspaceCodeRepoType `db:"gconf_code_repo_type"`
 	CodeRepoIsPrivate       bool                      `db:"gconf_code_repo_is_private"`
@@ -170,6 +172,7 @@ func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.G
 			gitspaceConfig.Created,
 			gitspaceConfig.Updated,
 			gitspaceConfig.IsDeleted,
+			gitspaceConfig.CodeRepoRef,
 		).
 		Suffix(ReturningClause + "gconf_id")
 	sql, args, err := stmt.ToSql()
@@ -216,6 +219,7 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 		CodeAuthID:              config.CodeAuthID,
 		CodeRepoIsPrivate:       config.CodeRepoIsPrivate,
 		CodeRepoType:            config.CodeRepoType,
+		CodeRepoRef:             null.StringFromPtr(config.CodeRepoRef),
 		CodeRepoURL:             config.CodeRepoURL,
 		DevcontainerPath:        null.StringFromPtr(config.DevcontainerPath),
 		Branch:                  config.Branch,
@@ -284,6 +288,7 @@ func (s *gitspaceConfigStore) mapToGitspaceConfig(
 		InfraProviderResourceID: in.InfraProviderResourceID,
 		IDE:                     in.IDE,
 		CodeRepoType:            in.CodeRepoType,
+		CodeRepoRef:             in.CodeRepoRef.Ptr(),
 		CodeRepoURL:             in.CodeRepoURL,
 		Branch:                  in.Branch,
 		DevcontainerPath:        in.DevcontainerPath.Ptr(),
