@@ -56,8 +56,7 @@ export const ThirdPartyRepoImportForm = () => {
                 code_repo_url: response.url,
                 branch: response.branch,
                 identifier: getRepoIdFromURL(response.url),
-                name: getRepoNameFromURL(response.url),
-                code_repo_type: 'unknown'
+                name: getRepoNameFromURL(response.url)
               }
             })
             setRepoCheckState(RepoCheckStatus.Valid)
