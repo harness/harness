@@ -23,6 +23,7 @@ import { useStrings, type UseStringsReturn } from 'framework/strings'
 import { IDEType } from 'cde/constants'
 import type { OpenapiCreateGitspaceRequest } from 'services/cde'
 import { StandaloneIDEType } from 'cde-gitness/constants'
+import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import VSCode from '../../../../icons/VSCode.svg?url'
 
 export const getIDESelectItems = (getString: UseStringsReturn['getString'], standalone = false) => {
@@ -39,11 +40,18 @@ export const SelectIDE = ({ standalone = false }: { standalone?: boolean }) => {
   const { getString } = useStrings()
   const IDESelectItems = getIDESelectItems(getString, standalone)
   const IDELabel = IDESelectItems.find(item => item.value === ide)?.label
+  const ideEnum = standalone ? StandaloneIDEType : IDEType
+
   return (
     <GitspaceSelect
       text={
         <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-          <img src={VSCode} height={20} width={20} style={{ marginRight: '12px' }} />
+          <img
+            src={ide === ideEnum.VSCODE ? VSCode : vsCodeWebIcon}
+            height={20}
+            width={20}
+            style={{ marginRight: '12px' }}
+          />
           <Layout.Vertical>
             <Text font={ide ? 'small' : 'normal'}>
               {ide ? getString('cde.ide.title') : getString('cde.ide.selectIDE')}

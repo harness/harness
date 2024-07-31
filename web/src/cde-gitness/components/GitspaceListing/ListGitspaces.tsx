@@ -62,6 +62,7 @@ import { useModalHook } from 'hooks/useModalHook'
 import pause from 'cde-gitness/assests/pause.svg?url'
 import web from 'cde-gitness/assests/web.svg?url'
 import deleteIcon from 'cde-gitness/assests/delete.svg?url'
+import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import css from './ListGitspaces.module.scss'
 
 enum CodeRepoType {
@@ -147,10 +148,10 @@ const getUsageTemplate = (
 
 export const RenderGitspaceName: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
   const details = row.original
-  const { name } = details
+  const { name, ide } = details
   return (
     <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-      <img src={VSCode} height={20} width={20} />
+      <img src={ide === IDEType.VSCODE ? VSCode : vsCodeWebIcon} height={20} width={20} />
       <Text color={Color.BLACK} title={name} font={{ align: 'left', size: 'normal', weight: 'semi-bold' }}>
         {name}
       </Text>

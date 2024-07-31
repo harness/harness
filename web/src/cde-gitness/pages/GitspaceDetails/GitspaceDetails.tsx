@@ -30,6 +30,7 @@ import { getErrorMessage } from 'utils/Utils'
 import { usePolling } from 'cde/components/GitspaceDetails/usePolling'
 import deleteIcon from 'cde-gitness/assests/delete.svg?url'
 import vscodeIcon from 'cde/icons/VSCode.svg?url'
+import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import pauseIcon from 'cde-gitness/assests/pause.svg?url'
 import { StandaloneIDEType } from 'cde-gitness/constants'
 import homeIcon from 'cde-gitness/assests/home.svg?url'
@@ -190,7 +191,13 @@ export const GitspaceDetails = () => {
         <Layout.Horizontal width="100%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>
           <Container>
             <Layout.Horizontal spacing="small">
-              <img src={vscodeIcon} height={32} width={32} />
+              {data && (
+                <img
+                  src={data?.ide === StandaloneIDEType.VSCODEWEB ? vsCodeWebIcon : vscodeIcon}
+                  height={32}
+                  width={32}
+                />
+              )}
               <Text font={{ variation: FontVariation.H3 }}>{data?.name}</Text>
             </Layout.Horizontal>
           </Container>
