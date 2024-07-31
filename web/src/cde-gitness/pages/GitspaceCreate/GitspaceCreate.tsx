@@ -65,7 +65,10 @@ export const GitspaceCreate = () => {
               onSubmit={async data => {
                 try {
                   const payload = data
-                  const response = await mutate({ ...payload, space_ref: space } as OpenapiCreateGitspaceRequest & {
+                  const response = await mutate({
+                    ...payload,
+                    space_ref: space
+                  } as OpenapiCreateGitspaceRequest & {
                     space_ref?: string
                   })
                   showSuccess(getString('cde.create.gitspaceCreateSuccess'))

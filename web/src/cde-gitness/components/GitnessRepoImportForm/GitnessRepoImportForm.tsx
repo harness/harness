@@ -18,7 +18,7 @@ import css from './GitnessRepoImportForm.module.scss'
 
 const RepositoryText = ({ repoList, value }: { repoList: TypesRepository[] | null; value?: string }) => {
   const { getString } = useStrings()
-  const repoMetadata = repoList?.find(repo => repo.git_url === value)
+  const repoMetadata = repoList?.find(repo => repo.path === value)
   const repoName = repoMetadata?.path
 
   return (
@@ -114,7 +114,7 @@ export const GitnessRepoImportForm = () => {
   const formik = useFormikContext<any>()
 
   const { values } = formik
-  const repoMetadata = repoListOptions.find(repo => repo.git_url === values.code_repo_url)
+  const repoMetadata = repoListOptions.find(repo => repo.path === values.code_repo_url)
   if (repoRef !== repoMetadata?.path) {
     setReporef(repoMetadata?.path as string)
   }
@@ -157,7 +157,7 @@ export const GitnessRepoImportForm = () => {
                         <Text>{repo.path}</Text>
                       </Layout.Horizontal>
                     }
-                    active={repo.git_url === values.code_repo_url}
+                    active={repo.path === values.code_repo_url}
                     onClick={() => {
                       const repoParams = repo?.path?.split('/') || []
                       formik.setValues((prvValues: any) => {
@@ -166,10 +166,11 @@ export const GitnessRepoImportForm = () => {
                           code_repo_url: repo.git_url,
                           branch: repo.default_branch,
                           identifier: repoParams?.[repoParams.length - 1],
-                          name: repo.path
+                          name: repo.path,
+                          code_repo_type: 'gitness'
                         }
                       })
-                      formik.setFieldValue('code_repo_url', repo.git_url)
+                      formik.setFieldValue('code_repo_url', repo.path)
                     }}
                   />
                 ))
