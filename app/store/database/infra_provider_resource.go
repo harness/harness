@@ -19,10 +19,10 @@ import (
 	"encoding/json"
 
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/infraprovider/enum"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"

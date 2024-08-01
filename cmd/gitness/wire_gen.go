@@ -39,9 +39,10 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
-	events4 "github.com/harness/gitness/app/events/git"
-	events5 "github.com/harness/gitness/app/events/gitspace"
-	events3 "github.com/harness/gitness/app/events/pullreq"
+	events5 "github.com/harness/gitness/app/events/git"
+	events6 "github.com/harness/gitness/app/events/gitspace"
+	events3 "github.com/harness/gitness/app/events/gitspaceinfra"
+	events4 "github.com/harness/gitness/app/events/pullreq"
 	events2 "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/logutil"
@@ -67,6 +68,7 @@ import (
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/gitspaceevent"
+	"github.com/harness/gitness/app/services/gitspaceinfraevent"
 	"github.com/harness/gitness/app/services/importer"
 	infraprovider2 "github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -252,7 +254,21 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	gitspaceConfigStore := database.ProvideGitspaceConfigStore(db)
 	gitspaceInstanceStore := database.ProvideGitspaceInstanceStore(db)
-	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, spaceStore)
+	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db)
+	infraProviderConfigStore := database.ProvideInfraProviderConfigStore(db)
+	dockerConfig, err := server.ProvideDockerConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	dockerClientFactory := infraprovider.ProvideDockerClientFactory(dockerConfig)
+	eventsReporter, err := events3.ProvideReporter(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	dockerProvider := infraprovider.ProvideDockerProvider(dockerConfig, dockerClientFactory, eventsReporter)
+	factory := infraprovider.ProvideFactory(dockerProvider)
+	infraproviderService := infraprovider2.ProvideInfraProvider(transactor, infraProviderResourceStore, infraProviderConfigStore, factory, spaceStore)
+	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, infraproviderService)
 	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, gitspaceConfigStore, gitspaceInstanceStore, labelService)
 	pipelineController := pipeline.ProvideController(repoStore, triggerStore, authorizer, pipelineStore)
 	secretController := secret.ProvideController(encrypter, secretStore, authorizer, spaceStore)
@@ -266,27 +282,27 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
 	pullReqFileViewStore := database.ProvidePullReqFileViewStore(db)
-	eventsReporter, err := events3.ProvideReporter(eventsSystem)
+	reporter2, err := events4.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
 	migrator := codecomments.ProvideMigrator(gitInterface)
-	readerFactory, err := events4.ProvideReaderFactory(eventsSystem)
+	readerFactory, err := events5.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	eventsReaderFactory, err := events3.ProvideReaderFactory(eventsSystem)
+	eventsReaderFactory, err := events4.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
-	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, eventsReporter, gitInterface, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
+	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter2, gitInterface, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
 	if err != nil {
 		return nil, err
 	}
 	pullReq := importer.ProvidePullReqImporter(provider, gitInterface, principalStore, repoStore, pullReqStore, pullReqActivityStore, transactor)
-	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, eventsReporter, migrator, pullreqService, protectionManager, streamer, codeownersService, lockerLocker, pullReq, labelService)
+	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, reporter2, migrator, pullreqService, protectionManager, streamer, codeownersService, lockerLocker, pullReq, labelService)
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
@@ -295,7 +311,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	webhookController := webhook2.ProvideController(webhookConfig, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService, encrypter)
-	reporter2, err := events4.ProvideReporter(eventsSystem)
+	reporter3, err := events5.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +327,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(authorizer, principalStore, repoStore, reporter2, reporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender)
+	githookController := githook.ProvideController(authorizer, principalStore, repoStore, reporter3, reporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore, authorizer)
 	v := check2.ProvideCheckSanitizers()
@@ -328,18 +344,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	uploadController := upload.ProvideController(authorizer, repoStore, blobStore)
 	searcher := keywordsearch.ProvideSearcher(localIndexSearcher)
 	keywordsearchController := keywordsearch2.ProvideController(authorizer, searcher, repoController, spaceController)
-	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db)
-	infraProviderConfigStore := database.ProvideInfraProviderConfigStore(db)
-	dockerConfig, err := server.ProvideDockerConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	dockerClientFactory := infraprovider.ProvideDockerClientFactory(dockerConfig)
-	dockerProvider := infraprovider.ProvideDockerProvider(dockerConfig, dockerClientFactory)
-	factory := infraprovider.ProvideFactory(dockerProvider)
-	infraproviderService := infraprovider2.ProvideInfraProvider(transactor, infraProviderResourceStore, infraProviderConfigStore, factory, spaceStore)
 	infraproviderController := infraprovider3.ProvideController(authorizer, spaceStore, infraproviderService)
-	reporter3, err := events5.ProvideReporter(eventsSystem)
+	reporter4, err := events6.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -354,9 +360,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	vsCode := ide.ProvideVSCodeService()
 	vsCodeWebConfig := server.ProvideIDEVSCodeWebConfig(config)
 	vsCodeWeb := ide.ProvideVSCodeWebService(vsCodeWebConfig)
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter3, orchestratorConfig, vsCode, vsCodeWeb)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter4, orchestratorConfig, vsCode, vsCodeWeb)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
-	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter3, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM, repoStore)
+	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter4, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM, repoStore, gitspaceService)
 	migrateController := migrate.ProvideController(authorizer, principalStore)
 	openapiService := openapi.ProvideOpenAPIService()
 	routerRouter := router.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService)
@@ -410,7 +416,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	gitspaceeventConfig := server.ProvideGitspaceEventConfig(config)
-	readerFactory3, err := events5.ProvideReaderFactory(eventsSystem)
+	readerFactory3, err := events6.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -418,7 +424,15 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceeventService, infraproviderService, gitspaceService)
+	readerFactory4, err := events3.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	gitspaceinfraeventService, err := gitspaceinfraevent.ProvideService(ctx, gitspaceeventConfig, readerFactory4, orchestratorOrchestrator, gitspaceService, reporter4)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceeventService, infraproviderService, gitspaceService, gitspaceinfraeventService)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

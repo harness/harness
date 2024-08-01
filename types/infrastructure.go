@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infraprovider
+package types
 
-import "github.com/harness/gitness/infraprovider/enum"
+import "github.com/harness/gitness/types/enum"
 
-type ParameterSchema struct {
+type InfraProviderParameterSchema struct {
 	Name         string
 	Description  string
 	DefaultValue string
@@ -25,7 +25,7 @@ type ParameterSchema struct {
 	Editable     bool
 }
 
-type Parameter struct {
+type InfraProviderParameter struct {
 	Name  string
 	Value string
 }
@@ -49,13 +49,15 @@ type Infrastructure struct {
 	// ProviderType specifies the type of the infra provider.
 	ProviderType enum.InfraProviderType
 	// Parameters which are required by the provider to provision the infra.
-	Parameters []Parameter
+	Parameters []InfraProviderParameter
 	// Status of the infra.
 	Status enum.InfraStatus
-	// Host through which the infra can be accessed for all purposes.
-	Host string
-	// Port on which the infra can be accessed to orchestrate containers.
-	Port int
+	// Host through which the infra can be accessed.
+	Host      string
+	ProxyHost string
+	// AgentPort on which the agent can be accessed to orchestrate containers.
+	AgentPort int
+	ProxyPort int
 	// Storage is the name of the volume or disk created for the resource.
 	Storage string
 	// PortMappings contains the ports assigned for every requested port.

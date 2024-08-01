@@ -12,28 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infraprovider
+package events
 
 import (
-	"fmt"
+	"github.com/harness/gitness/events"
 
-	"github.com/harness/gitness/types/enum"
+	"github.com/google/wire"
 )
 
-type Factory struct {
-	providers map[enum.InfraProviderType]InfraProvider
+// WireSet provides a wire set for this package.
+var WireSet = wire.NewSet(
+	ProvideReaderFactory,
+	ProvideReporter,
+)
+
+func ProvideReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
+	return NewReaderFactory(eventsSystem)
 }
 
-func NewFactory(dockerProvider *DockerProvider) Factory {
-	providers := make(map[enum.InfraProviderType]InfraProvider)
-	providers[enum.InfraProviderTypeDocker] = dockerProvider
-	return Factory{providers: providers}
-}
-
-func (f *Factory) GetInfraProvider(providerType enum.InfraProviderType) (InfraProvider, error) {
-	val := f.providers[providerType]
-	if val == nil {
-		return nil, fmt.Errorf("unknown infra provider type: %s", providerType)
-	}
-	return val, nil
+func ProvideReporter(eventsSystem *events.System) (*Reporter, error) {
+	return NewReporter(eventsSystem)
 }

@@ -15,7 +15,7 @@
 package types
 
 import (
-	"github.com/harness/gitness/infraprovider/enum"
+	"github.com/harness/gitness/types/enum"
 )
 
 type InfraProviderConfig struct {

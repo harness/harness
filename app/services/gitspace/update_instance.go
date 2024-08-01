@@ -12,28 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infraprovider
+package gitspace
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/types"
 )
 
-type Factory struct {
-	providers map[enum.InfraProviderType]InfraProvider
-}
-
-func NewFactory(dockerProvider *DockerProvider) Factory {
-	providers := make(map[enum.InfraProviderType]InfraProvider)
-	providers[enum.InfraProviderTypeDocker] = dockerProvider
-	return Factory{providers: providers}
-}
-
-func (f *Factory) GetInfraProvider(providerType enum.InfraProviderType) (InfraProvider, error) {
-	val := f.providers[providerType]
-	if val == nil {
-		return nil, fmt.Errorf("unknown infra provider type: %s", providerType)
+func (c *Service) UpdateInstance(
+	ctx context.Context,
+	gitspaceInstance *types.GitspaceInstance,
+) error {
+	err := c.gitspaceInstanceStore.Update(ctx, gitspaceInstance)
+	if err != nil {
+		return fmt.Errorf("failed to update gitspace instance: %w", err)
 	}
-	return val, nil
+	return nil
 }

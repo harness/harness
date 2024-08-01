@@ -12,28 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infraprovider
+package events
 
 import (
-	"fmt"
-
-	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/events"
 )
 
-type Factory struct {
-	providers map[enum.InfraProviderType]InfraProvider
-}
-
-func NewFactory(dockerProvider *DockerProvider) Factory {
-	providers := make(map[enum.InfraProviderType]InfraProvider)
-	providers[enum.InfraProviderTypeDocker] = dockerProvider
-	return Factory{providers: providers}
-}
-
-func (f *Factory) GetInfraProvider(providerType enum.InfraProviderType) (InfraProvider, error) {
-	val := f.providers[providerType]
-	if val == nil {
-		return nil, fmt.Errorf("unknown infra provider type: %s", providerType)
+func NewReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
+	readerFactoryFunc := func(innerReader *events.GenericReader) (*Reader, error) {
+		return &Reader{
+			innerReader: innerReader,
+		}, nil
 	}
-	return val, nil
+
+	return events.NewReaderFactory(eventsSystem, category, readerFactoryFunc)
+}
+
+// Reader is the event reader for this package.
+type Reader struct {
+	innerReader *events.GenericReader
+}
+
+func (r *Reader) Configure(opts ...events.ReaderOption) {
+	r.innerReader.Configure(opts...)
 }

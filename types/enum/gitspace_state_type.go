@@ -41,7 +41,8 @@ const (
 )
 
 func GetGitspaceStateFromInstance(
-	instanceState GitspaceInstanceStateType) (GitspaceStateType, error) {
+	instanceState GitspaceInstanceStateType,
+) (GitspaceStateType, error) {
 	switch instanceState {
 	case GitspaceInstanceStateRunning:
 		return GitspaceStateRunning, nil

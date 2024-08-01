@@ -93,7 +93,7 @@ func (c *Service) CreateInfraProvider(
 		if len(infraProvider.TemplateParams()) > 0 {
 			return fmt.Errorf("failed to fetch templates") // TODO Implement
 		}
-		parameters := []infraprovider.Parameter{}
+		parameters := []types.InfraProviderParameter{}
 		// TODO logic to populate paramteters as per the provider type
 		err = infraProvider.ValidateParams(parameters)
 		if err != nil {

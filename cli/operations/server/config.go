@@ -413,8 +413,8 @@ func ProvideGitspaceOrchestratorConfig(config *types.Config) *orchestrator.Confi
 }
 
 // ProvideGitspaceEventConfig loads the gitspace event service config from the main config.
-func ProvideGitspaceEventConfig(config *types.Config) gitspaceevent.Config {
-	return gitspaceevent.Config{
+func ProvideGitspaceEventConfig(config *types.Config) *gitspaceevent.Config {
+	return &gitspaceevent.Config{
 		EventReaderName: config.InstanceID,
 		Concurrency:     config.Gitspace.Events.Concurrency,
 		MaxRetries:      config.Gitspace.Events.MaxRetries,

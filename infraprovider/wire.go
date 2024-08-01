@@ -15,6 +15,8 @@
 package infraprovider
 
 import (
+	events "github.com/harness/gitness/app/events/gitspaceinfra"
+
 	"github.com/google/wire"
 )
 
@@ -28,8 +30,9 @@ var WireSet = wire.NewSet(
 func ProvideDockerProvider(
 	config *DockerConfig,
 	dockerClientFactory *DockerClientFactory,
+	eventReporter *events.Reporter,
 ) *DockerProvider {
-	return NewDockerProvider(config, dockerClientFactory)
+	return NewDockerProvider(config, dockerClientFactory, eventReporter)
 }
 
 func ProvideFactory(dockerProvider *DockerProvider) Factory {

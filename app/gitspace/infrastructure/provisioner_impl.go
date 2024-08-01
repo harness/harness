@@ -20,8 +20,8 @@ import (
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/infraprovider"
-	"github.com/harness/gitness/infraprovider/enum"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 var _ InfraProvisioner = (*infraProvisioner)(nil)
@@ -44,31 +44,31 @@ func NewInfraProvisionerService(
 	}
 }
 
-func (i infraProvisioner) Provision(
+func (i infraProvisioner) TriggerProvision(
 	ctx context.Context,
 	infraProviderResource *types.InfraProviderResource,
-	gitspaceConfig *types.GitspaceConfig,
+	gitspaceConfig types.GitspaceConfig,
 	requiredPorts []int,
-) (*infraprovider.Infrastructure, error) {
+) error {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	infraProvider, err := i.getInfraProvider(infraProviderEntity)
+	infraProvider, err := i.getInfraProvider(infraProviderEntity.Type)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive,staticcheck
 		// TODO: Check if any existing infra is provisioned, its status and create new infraProvisioned record
 	}
 
-	var allParams []infraprovider.Parameter
+	var allParams []types.InfraProviderParameter
 
 	templateParams, err := i.getTemplateParams(infraProvider, infraProviderResource)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	allParams = append(allParams, templateParams...)
@@ -79,47 +79,44 @@ func (i infraProvisioner) Provision(
 
 	err = infraProvider.ValidateParams(allParams)
 	if err != nil {
-		return nil, fmt.Errorf("invalid provisioning params %v: %w", infraProviderResource.Metadata, err)
+		return fmt.Errorf("invalid provisioning params %v: %w", infraProviderResource.Metadata, err)
 	}
 
-	provisionedInfra, err := infraProvider.Provision(
+	err = infraProvider.Provision(
 		ctx,
+		gitspaceConfig.SpaceID,
 		gitspaceConfig.SpacePath,
 		gitspaceConfig.Identifier,
 		requiredPorts,
 		allParams,
 	)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"unable to provision infrastructure for gitspaceConfigIdentifier %v: %w",
+		return fmt.Errorf(
+			"unable to trigger provision infrastructure for gitspaceConfigIdentifier %v: %w",
 			gitspaceConfig.Identifier,
 			err,
 		)
 	}
 
-	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive,staticcheck
-		// TODO: Update the infraProvisioned record
-	}
-
-	return provisionedInfra, nil
+	return nil
 }
 
-func (i infraProvisioner) Stop(
+func (i infraProvisioner) TriggerStop(
 	ctx context.Context,
 	infraProviderResource *types.InfraProviderResource,
-	gitspaceConfig *types.GitspaceConfig,
-) (*infraprovider.Infrastructure, error) {
+	gitspaceConfig types.GitspaceConfig,
+) error {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	infraProvider, err := i.getInfraProvider(infraProviderEntity)
+	infraProvider, err := i.getInfraProvider(infraProviderEntity.Type)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var allParams []infraprovider.Parameter
+	var allParams []types.InfraProviderParameter
 
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive
 		// TODO: Fetch and check existing infraProvisioned record
@@ -127,7 +124,7 @@ func (i infraProvisioner) Stop(
 	} else {
 		templateParams, err2 := i.getTemplateParams(infraProvider, infraProviderResource)
 		if err2 != nil {
-			return nil, err2
+			return err2
 		}
 		allParams = append(allParams, templateParams...)
 
@@ -138,48 +135,46 @@ func (i infraProvisioner) Stop(
 
 	err = infraProvider.ValidateParams(allParams)
 	if err != nil {
-		return nil, fmt.Errorf("invalid provisioning params %+v: %w", infraProviderResource.Metadata, err)
+		return fmt.Errorf("invalid provisioning params %+v: %w", infraProviderResource.Metadata, err)
 	}
 
-	var provisionedInfra *infraprovider.Infrastructure
+	var provisionedInfra *types.Infrastructure
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive
 		// TODO: Fetch and check existing infraProvisioned record
 	} else {
-		provisionedInfra = &infraprovider.Infrastructure{
+		provisionedInfra = &types.Infrastructure{
+			SpaceID:      gitspaceConfig.SpaceID,
+			SpacePath:    gitspaceConfig.SpacePath,
 			ResourceKey:  gitspaceConfig.Identifier,
 			ProviderType: infraProviderEntity.Type,
 			Parameters:   allParams,
 		}
 	}
 
-	stoppedInfra, err := infraProvider.Stop(ctx, provisionedInfra)
+	err = infraProvider.Stop(ctx, provisionedInfra)
 	if err != nil {
-		return nil, fmt.Errorf("unable to stop provisioned infra %+v: %w", provisionedInfra, err)
+		return fmt.Errorf("unable to trigger stop infra %+v: %w", provisionedInfra, err)
 	}
 
-	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive,staticcheck
-		// TODO: Update existing infraProvisioned record
-	}
-
-	return stoppedInfra, err
+	return nil
 }
 
-func (i infraProvisioner) Deprovision(
+func (i infraProvisioner) TriggerDeprovision(
 	ctx context.Context,
 	infraProviderResource *types.InfraProviderResource,
-	gitspaceConfig *types.GitspaceConfig,
-) (*infraprovider.Infrastructure, error) {
+	gitspaceConfig types.GitspaceConfig,
+) error {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	infraProvider, err := i.getInfraProvider(infraProviderEntity)
+	infraProvider, err := i.getInfraProvider(infraProviderEntity.Type)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var allParams []infraprovider.Parameter
+	var allParams []types.InfraProviderParameter
 
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive
 		// TODO: Fetch and check existing infraProvisioned record
@@ -187,7 +182,7 @@ func (i infraProvisioner) Deprovision(
 	} else {
 		templateParams, err2 := i.getTemplateParams(infraProvider, infraProviderResource)
 		if err2 != nil {
-			return nil, err2
+			return err2
 		}
 		allParams = append(allParams, templateParams...)
 
@@ -198,51 +193,48 @@ func (i infraProvisioner) Deprovision(
 
 	err = infraProvider.ValidateParams(allParams)
 	if err != nil {
-		return nil, fmt.Errorf("invalid provisioning params %+v: %w", infraProviderResource.Metadata, err)
+		return fmt.Errorf("invalid provisioning params %+v: %w", infraProviderResource.Metadata, err)
 	}
 
-	var provisionedInfra *infraprovider.Infrastructure
+	var provisionedInfra *types.Infrastructure
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive
 		// TODO: Fetch and check existing infraProvisioned record
 	} else {
-		provisionedInfra, err = infraProvider.Find(ctx, gitspaceConfig.SpacePath, gitspaceConfig.Identifier, allParams)
+		provisionedInfra, err = infraProvider.Find(
+			ctx, gitspaceConfig.SpaceID, gitspaceConfig.SpacePath, gitspaceConfig.Identifier, allParams)
 		if err != nil {
-			return nil, fmt.Errorf("unable to find provisioned infra for gitspace %s: %w",
+			return fmt.Errorf("unable to find provisioned infra for gitspace %s: %w",
 				gitspaceConfig.Identifier, err)
 		}
 	}
-	destroyedInfra, err := infraProvider.Deprovision(ctx, provisionedInfra)
+	err = infraProvider.Deprovision(ctx, provisionedInfra)
 	if err != nil {
-		return nil, fmt.Errorf("unable to stop provisioned infra %+v: %w", provisionedInfra, err)
+		return fmt.Errorf("unable to trigger deprovision infra %+v: %w", provisionedInfra, err)
 	}
 
-	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive,staticcheck
-		// TODO: Update existing infraProvisioned record
-	}
-
-	return destroyedInfra, err
+	return err
 }
 
 func (i infraProvisioner) Find(
 	ctx context.Context,
 	infraProviderResource *types.InfraProviderResource,
-	_ *types.GitspaceConfig,
-) (*infraprovider.Infrastructure, error) {
+	_ types.GitspaceConfig,
+) (*types.Infrastructure, error) {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
 		return nil, err
 	}
 
-	infraProvider, err := i.getInfraProvider(infraProviderEntity)
+	infraProvider, err := i.getInfraProvider(infraProviderEntity.Type)
 	if err != nil {
 		return nil, err
 	}
 
-	var infra infraprovider.Infrastructure
+	var infra types.Infrastructure
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive
 		// TODO: Fetch existing infraProvisioned record and map to &infraprovider.Infrastructure
 	} else {
-		var allParams []infraprovider.Parameter
+		var allParams []types.InfraProviderParameter
 
 		templateParams, err2 := i.getTemplateParams(infraProvider, infraProviderResource)
 		if err2 != nil {
@@ -254,7 +246,7 @@ func (i infraProvisioner) Find(
 
 		allParams = append(allParams, params...)
 
-		infra = infraprovider.Infrastructure{
+		infra = types.Infrastructure{
 			ProviderType: infraProviderEntity.Type,
 			Parameters:   allParams,
 			Status:       enum.InfraStatusProvisioned,
@@ -277,11 +269,11 @@ func (i infraProvisioner) getConfigFromResource(
 }
 
 func (i infraProvisioner) getInfraProvider(
-	infraProviderEntity *types.InfraProviderConfig,
+	infraProviderType enum.InfraProviderType,
 ) (infraprovider.InfraProvider, error) {
-	infraProvider, err := i.providerFactory.GetInfraProvider(infraProviderEntity.Type)
+	infraProvider, err := i.providerFactory.GetInfraProvider(infraProviderType)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get infra provider of type %v: %w", infraProviderEntity.Type, err)
+		return nil, fmt.Errorf("unable to get infra provider of type %v: %w", infraProviderType, err)
 	}
 	return infraProvider, nil
 }
@@ -289,7 +281,7 @@ func (i infraProvisioner) getInfraProvider(
 func (i infraProvisioner) getTemplateParams(
 	infraProvider infraprovider.InfraProvider,
 	_ *types.InfraProviderResource,
-) ([]infraprovider.Parameter, error) { //nolint:unparam
+) ([]types.InfraProviderParameter, error) { //nolint:unparam
 	templateParams := infraProvider.TemplateParams()
 	if len(templateParams) > 0 { //nolint:revive,staticcheck
 		// TODO: Fetch templates and convert into []Parameters
@@ -299,18 +291,73 @@ func (i infraProvisioner) getTemplateParams(
 
 func (i infraProvisioner) paramsFromResource(
 	infraProviderResource *types.InfraProviderResource,
-) []infraprovider.Parameter {
-	params := make([]infraprovider.Parameter, len(infraProviderResource.Metadata))
+) []types.InfraProviderParameter {
+	params := make([]types.InfraProviderParameter, len(infraProviderResource.Metadata))
 	counter := 0
 	for key, value := range infraProviderResource.Metadata {
 		if key == "" || value == "" {
 			continue
 		}
-		params[counter] = infraprovider.Parameter{
+		params[counter] = types.InfraProviderParameter{
 			Name:  key,
 			Value: value,
 		}
 		counter++
 	}
 	return params
+}
+
+func (i infraProvisioner) ResumeProvision(
+	_ context.Context,
+	_ *types.InfraProviderResource,
+	_ types.GitspaceConfig,
+	_ []int,
+	provisionedInfra *types.Infrastructure,
+) (*types.Infrastructure, error) {
+	infraProvider, err := i.getInfraProvider(provisionedInfra.ProviderType)
+	if err != nil {
+		return nil, err
+	}
+
+	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive,staticcheck
+		// TODO: Update the infraProvisioned record
+	}
+
+	return provisionedInfra, nil
+}
+
+func (i infraProvisioner) ResumeStop(
+	_ context.Context,
+	_ *types.InfraProviderResource,
+	_ types.GitspaceConfig,
+	stoppedInfra *types.Infrastructure,
+) (*types.Infrastructure, error) {
+	infraProvider, err := i.getInfraProvider(stoppedInfra.ProviderType)
+	if err != nil {
+		return nil, err
+	}
+
+	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive,staticcheck
+		// TODO: Update existing infraProvisioned record
+	}
+
+	return stoppedInfra, err
+}
+
+func (i infraProvisioner) ResumeDeprovision(
+	_ context.Context,
+	_ *types.InfraProviderResource,
+	_ types.GitspaceConfig,
+	deprovisionedInfra *types.Infrastructure,
+) (*types.Infrastructure, error) {
+	infraProvider, err := i.getInfraProvider(deprovisionedInfra.ProviderType)
+	if err != nil {
+		return nil, err
+	}
+
+	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew { //nolint:revive,staticcheck
+		// TODO: Update existing infraProvisioned record
+	}
+
+	return deprovisionedInfra, err
 }

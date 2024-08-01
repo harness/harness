@@ -42,6 +42,7 @@ import (
 	"github.com/harness/gitness/app/bootstrap"
 	gitevents "github.com/harness/gitness/app/events/git"
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
+	gitspaceinfraevents "github.com/harness/gitness/app/events/gitspaceinfra"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	infrastructure "github.com/harness/gitness/app/gitspace/infrastructure"
@@ -68,6 +69,7 @@ import (
 	"github.com/harness/gitness/app/services/exporter"
 	gitspaceSvc "github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/gitspaceevent"
+	gitspaceInfraEventSvc "github.com/harness/gitness/app/services/gitspaceinfraevent"
 	"github.com/harness/gitness/app/services/importer"
 	infraproviderSvc "github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/services/keywordsearch"
@@ -153,6 +155,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitspaceCtrl.WireSet,
 		infraproviderSvc.WireSet,
 		gitspaceSvc.WireSet,
+		gitspaceInfraEventSvc.WireSet,
 		gitevents.WireSet,
 		pullreqevents.WireSet,
 		repoevents.WireSet,
@@ -231,6 +234,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		logutil.WireSet,
 		cliserver.ProvideGitspaceOrchestratorConfig,
 		ide.WireSet,
+		gitspaceinfraevents.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

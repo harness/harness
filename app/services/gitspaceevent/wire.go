@@ -30,7 +30,7 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideService(ctx context.Context,
-	config Config,
+	config *Config,
 	gitspaceEventReaderFactory *events.ReaderFactory[*gitspaceevents.Reader],
 	gitspaceEventStore store.GitspaceEventStore,
 ) (*Service, error) {

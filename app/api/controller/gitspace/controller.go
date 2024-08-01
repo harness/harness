@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/scm"
+	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -38,6 +39,7 @@ type Controller struct {
 	statefulLogger        *logutil.StatefulLogger
 	scm                   scm.SCM
 	repoStore             store.RepoStore
+	gitspaceSvc           *gitspace.Service
 }
 
 func NewController(
@@ -53,6 +55,7 @@ func NewController(
 	statefulLogger *logutil.StatefulLogger,
 	scm scm.SCM,
 	repoStore store.RepoStore,
+	gitspaceSvc *gitspace.Service,
 ) *Controller {
 	return &Controller{
 		tx:                    tx,
@@ -67,5 +70,6 @@ func NewController(
 		statefulLogger:        statefulLogger,
 		scm:                   scm,
 		repoStore:             repoStore,
+		gitspaceSvc:           gitspaceSvc,
 	}
 }

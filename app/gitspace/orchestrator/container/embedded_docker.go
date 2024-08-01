@@ -73,8 +73,8 @@ func NewEmbeddedDockerOrchestrator(
 // It returns an error if the container is not running, exited or removed.
 func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
-	infra *infraprovider.Infrastructure,
+	gitspaceConfig types.GitspaceConfig,
+	infra *types.Infrastructure,
 	resolvedRepoDetails *scm.ResolvedDetails,
 	defaultBaseImage string,
 	ideService ide.IDE,
@@ -202,7 +202,7 @@ func (e *EmbeddedDockerOrchestrator) getWorkingDir(repoName string) string {
 
 func (e *EmbeddedDockerOrchestrator) startGitspace(
 	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
+	gitspaceConfig types.GitspaceConfig,
 	containerName string,
 	dockerClient *client.Client,
 	ideService ide.IDE,
@@ -210,7 +210,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	volumeName string,
 	workingDirectory string,
 	resolvedRepoDetails *scm.ResolvedDetails,
-	portMappings map[int]*infraprovider.PortMapping,
+	portMappings map[int]*types.PortMapping,
 	defaultBaseImage string,
 ) error {
 	var imageName = resolvedRepoDetails.DevcontainerConfig.Image
@@ -357,7 +357,7 @@ func (e *EmbeddedDockerOrchestrator) getContainerInfo(
 	ctx context.Context,
 	containerName string,
 	dockerClient *client.Client,
-	portMappings map[int]*infraprovider.PortMapping,
+	portMappings map[int]*types.PortMapping,
 ) (string, map[int]string, error) {
 	inspectResp, err := dockerClient.ContainerInspect(ctx, containerName)
 	if err != nil {
@@ -592,7 +592,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 	logStreamInstance *logutil.LogStreamInstance,
 	volumeName string,
 	workingDirectory string,
-	portMappings map[int]*infraprovider.PortMapping,
+	portMappings map[int]*types.PortMapping,
 ) error {
 	exposedPorts := nat.PortSet{}
 	portBindings := nat.PortMap{}
@@ -707,8 +707,8 @@ func (e *EmbeddedDockerOrchestrator) pullImage(
 // StopGitspace stops a container. If it is removed, it returns an error.
 func (e EmbeddedDockerOrchestrator) StopGitspace(
 	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
-	infra *infraprovider.Infrastructure,
+	gitspaceConfig types.GitspaceConfig,
+	infra *types.Infrastructure,
 ) error {
 	containerName := getGitspaceContainerName(gitspaceConfig)
 
@@ -797,12 +797,12 @@ func (e EmbeddedDockerOrchestrator) stopContainer(
 	return nil
 }
 
-func getGitspaceContainerName(config *types.GitspaceConfig) string {
+func getGitspaceContainerName(config types.GitspaceConfig) string {
 	return "gitspace-" + config.UserID + "-" + config.Identifier
 }
 
 // Status is NOOP for EmbeddedDockerOrchestrator as the docker host is verified by the infra provisioner.
-func (e *EmbeddedDockerOrchestrator) Status(_ context.Context, _ *infraprovider.Infrastructure) error {
+func (e *EmbeddedDockerOrchestrator) Status(_ context.Context, _ *types.Infrastructure) error {
 	return nil
 }
 
@@ -830,8 +830,8 @@ func (e *EmbeddedDockerOrchestrator) containerState(
 // If the container is already removed, it returns.
 func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
-	infra *infraprovider.Infrastructure,
+	gitspaceConfig types.GitspaceConfig,
+	infra *types.Infrastructure,
 ) error {
 	containerName := getGitspaceContainerName(gitspaceConfig)
 

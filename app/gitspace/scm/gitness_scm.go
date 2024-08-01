@@ -62,7 +62,7 @@ func NewGitnessSCM(repoStore store.RepoStore, git git.Interface,
 
 func (s GitnessSCM) ResolveCredentials(
 	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
+	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedCredentials, error) {
 	repoURL, err := url.Parse(gitspaceConfig.CodeRepoURL)
 	if err != nil {
@@ -116,7 +116,7 @@ func (s GitnessSCM) ResolveCredentials(
 }
 
 func (s GitnessSCM) GetFileContent(ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
+	gitspaceConfig types.GitspaceConfig,
 	filePath string,
 ) ([]byte, error) {
 	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepoRef)

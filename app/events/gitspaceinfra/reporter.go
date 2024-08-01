@@ -12,28 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infraprovider
+package events
 
 import (
-	"fmt"
+	"errors"
 
-	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/events"
 )
 
-type Factory struct {
-	providers map[enum.InfraProviderType]InfraProvider
+// Reporter is the event reporter for this package.
+type Reporter struct {
+	innerReporter *events.GenericReporter
 }
 
-func NewFactory(dockerProvider *DockerProvider) Factory {
-	providers := make(map[enum.InfraProviderType]InfraProvider)
-	providers[enum.InfraProviderTypeDocker] = dockerProvider
-	return Factory{providers: providers}
-}
-
-func (f *Factory) GetInfraProvider(providerType enum.InfraProviderType) (InfraProvider, error) {
-	val := f.providers[providerType]
-	if val == nil {
-		return nil, fmt.Errorf("unknown infra provider type: %s", providerType)
+func NewReporter(eventsSystem *events.System) (*Reporter, error) {
+	innerReporter, err := events.NewReporter(eventsSystem, category)
+	if err != nil {
+		return nil, errors.New("failed to create new GenericReporter from event system")
 	}
-	return val, nil
+
+	return &Reporter{
+		innerReporter: innerReporter,
+	}, nil
 }

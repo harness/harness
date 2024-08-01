@@ -22,34 +22,33 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
-	infraproviderenum "github.com/harness/gitness/infraprovider/enum"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 type CreateInput struct {
-	Identifier string                              `json:"identifier"`
-	SpaceRef   string                              `json:"space_ref"` // Ref of the parent space
-	Name       string                              `json:"name"`
-	Type       infraproviderenum.InfraProviderType `json:"type"`
-	Metadata   map[string]string                   `json:"metadata"`
-	Resources  []ResourceInput                     `json:"resources"`
+	Identifier string                 `json:"identifier"`
+	SpaceRef   string                 `json:"space_ref"` // Ref of the parent space
+	Name       string                 `json:"name"`
+	Type       enum.InfraProviderType `json:"type"`
+	Metadata   map[string]string      `json:"metadata"`
+	Resources  []ResourceInput        `json:"resources"`
 }
 
 type ResourceInput struct {
-	Identifier         string                              `json:"identifier"`
-	Name               string                              `json:"name"`
-	InfraProviderType  infraproviderenum.InfraProviderType `json:"infra_provider_type"`
-	CPU                *string                             `json:"cpu"`
-	Memory             *string                             `json:"memory"`
-	Disk               *string                             `json:"disk"`
-	Network            *string                             `json:"network"`
-	Region             []string                            `json:"region"`
-	Metadata           map[string]string                   `json:"metadata"`
-	GatewayHost        *string                             `json:"gateway_host"`
-	GatewayPort        *string                             `json:"gateway_port"`
-	TemplateIdentifier *string                             `json:"template_identifier"`
+	Identifier         string                 `json:"identifier"`
+	Name               string                 `json:"name"`
+	InfraProviderType  enum.InfraProviderType `json:"infra_provider_type"`
+	CPU                *string                `json:"cpu"`
+	Memory             *string                `json:"memory"`
+	Disk               *string                `json:"disk"`
+	Network            *string                `json:"network"`
+	Region             []string               `json:"region"`
+	Metadata           map[string]string      `json:"metadata"`
+	GatewayHost        *string                `json:"gateway_host"`
+	GatewayPort        *string                `json:"gateway_port"`
+	TemplateIdentifier *string                `json:"template_identifier"`
 }
 
 // Create creates a new infraprovider config.

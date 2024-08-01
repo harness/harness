@@ -17,40 +17,64 @@ package infrastructure
 import (
 	"context"
 
-	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 )
 
 // TODO Check if the interface can be discarded
 
 type InfraProvisioner interface {
-	// Provision provisions infra resources using the infraProviderResource with different infra providers and
-	// stores the details in the db depending on the provisioning type.
-	Provision(
+	// TriggerProvision triggers the provisionining of infra resources using the infraProviderResource with different
+	// infra providers.
+	TriggerProvision(
 		ctx context.Context,
 		infraProviderResource *types.InfraProviderResource,
-		gitspaceConfig *types.GitspaceConfig,
+		gitspaceConfig types.GitspaceConfig,
 		requiredPorts []int,
-	) (*infraprovider.Infrastructure, error)
+	) error
 
-	// Stop unprovisions those resources which can be stopped without losing the gitspace data.
-	Stop(
+	// ResumeProvision stores the provisioned infra details in the db depending on the provisioning type.
+	ResumeProvision(
 		ctx context.Context,
 		infraProviderResource *types.InfraProviderResource,
-		gitspaceConfig *types.GitspaceConfig,
-	) (*infraprovider.Infrastructure, error)
+		gitspaceConfig types.GitspaceConfig,
+		requiredPorts []int,
+		provisionedInfra *types.Infrastructure,
+	) (*types.Infrastructure, error)
 
-	// Deprovision removes all the resources created for the gitspace.
-	Deprovision(
+	// TriggerStop triggers deprovisioning of those resources which can be stopped without losing the Gitspace data.
+	TriggerStop(
 		ctx context.Context,
 		infraProviderResource *types.InfraProviderResource,
-		gitspaceConfig *types.GitspaceConfig,
-	) (*infraprovider.Infrastructure, error)
+		gitspaceConfig types.GitspaceConfig,
+	) error
+
+	// ResumeStop stores the deprovisioned infra details in the db depending on the provisioning type.
+	ResumeStop(
+		ctx context.Context,
+		infraProviderResource *types.InfraProviderResource,
+		gitspaceConfig types.GitspaceConfig,
+		deprovisionedInfra *types.Infrastructure,
+	) (*types.Infrastructure, error)
+
+	// TriggerDeprovision triggers deprovisionign of all the resources created for the Gitspace.
+	TriggerDeprovision(
+		ctx context.Context,
+		infraProviderResource *types.InfraProviderResource,
+		gitspaceConfig types.GitspaceConfig,
+	) error
+
+	// ResumeDeprovision stores the deprovisioned infra details in the db depending on the provisioning type.
+	ResumeDeprovision(
+		ctx context.Context,
+		infraProviderResource *types.InfraProviderResource,
+		gitspaceConfig types.GitspaceConfig,
+		deprovisionedInfra *types.Infrastructure,
+	) (*types.Infrastructure, error)
 
 	// Find finds the provisioned infra resources for the gitspace instance.
 	Find(
 		ctx context.Context,
 		infraProviderResource *types.InfraProviderResource,
-		gitspaceConfig *types.GitspaceConfig,
-	) (*infraprovider.Infrastructure, error)
+		gitspaceConfig types.GitspaceConfig,
+	) (*types.Infrastructure, error)
 }

@@ -23,10 +23,10 @@ import (
 )
 
 type Provider interface {
-	ResolveCredentials(ctx context.Context, gitspaceConfig *types.GitspaceConfig) (*ResolvedCredentials, error)
+	ResolveCredentials(ctx context.Context, gitspaceConfig types.GitspaceConfig) (*ResolvedCredentials, error)
 	GetFileContent(
 		ctx context.Context,
-		gitspaceConfig *types.GitspaceConfig,
+		gitspaceConfig types.GitspaceConfig,
 		filePath string,
 	) ([]byte, error)
 }

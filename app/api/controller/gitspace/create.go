@@ -24,7 +24,6 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	infraproviderenum "github.com/harness/gitness/infraprovider/enum"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -189,7 +188,7 @@ func (c *Controller) autoCreateDefaultResource(ctx context.Context, parentSpace 
 	infraProviderConfig := &types.InfraProviderConfig{
 		Identifier: defaultResourceIdentifier,
 		Name:       "default docker infrastructure",
-		Type:       infraproviderenum.InfraProviderTypeDocker,
+		Type:       enum.InfraProviderTypeDocker,
 		SpaceID:    parentSpace.ID,
 		SpacePath:  parentSpace.Path,
 		Created:    now,
@@ -199,7 +198,7 @@ func (c *Controller) autoCreateDefaultResource(ctx context.Context, parentSpace 
 		Identifier:                    defaultResourceIdentifier,
 		Name:                          "Standard Docker Resource",
 		InfraProviderConfigIdentifier: infraProviderConfig.Identifier,
-		InfraProviderType:             infraproviderenum.InfraProviderTypeDocker,
+		InfraProviderType:             enum.InfraProviderTypeDocker,
 		CPU:                           wrapString("any"),
 		Memory:                        wrapString("any"),
 		Disk:                          wrapString("any"),

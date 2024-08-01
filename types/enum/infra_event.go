@@ -12,26 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspace
+package enum
 
-import (
-	"github.com/harness/gitness/app/services/infraprovider"
-	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/store/database/dbtx"
+type InfraEvent string
 
-	"github.com/google/wire"
-)
-
-var WireSet = wire.NewSet(
-	ProvideGitspace,
-)
-
-func ProvideGitspace(
-	tx dbtx.Transactor,
-	gitspaceStore store.GitspaceConfigStore,
-	gitspaceInstanceStore store.GitspaceInstanceStore,
-	spaceStore store.SpaceStore,
-	infraProviderSvc *infraprovider.Service,
-) *Service {
-	return NewService(tx, gitspaceStore, gitspaceInstanceStore, spaceStore, infraProviderSvc)
+func (InfraEvent) Enum() []interface{} {
+	return toInterfaceSlice(infraEvents)
 }
+
+var infraEvents = []InfraEvent{
+	InfraEventProvision, InfraEventStop, InfraEventDeprovision,
+}
+
+const (
+	InfraEventProvision   InfraEvent = "provision"
+	InfraEventStop        InfraEvent = "stop"
+	InfraEventDeprovision InfraEvent = "deprovision"
+)

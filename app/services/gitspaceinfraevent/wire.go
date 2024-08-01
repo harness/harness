@@ -12,55 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gitspace
+package gitspaceinfraevent
 
 import (
-	"github.com/harness/gitness/app/auth/authz"
+	"context"
+
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
-	"github.com/harness/gitness/app/gitspace/logutil"
+	gitspaceinfraevents "github.com/harness/gitness/app/events/gitspaceinfra"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
-	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/gitspace"
-	"github.com/harness/gitness/app/services/infraprovider"
-	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/app/services/gitspaceevent"
+	"github.com/harness/gitness/events"
 
 	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideController,
+	ProvideService,
 )
 
-func ProvideController(
-	tx dbtx.Transactor,
-	authorizer authz.Authorizer,
-	infraProviderSvc *infraprovider.Service,
-	configStore store.GitspaceConfigStore,
-	instanceStore store.GitspaceInstanceStore,
-	spaceStore store.SpaceStore,
-	reporter *gitspaceevents.Reporter,
+func ProvideService(
+	ctx context.Context,
+	config *gitspaceevent.Config,
+	gitspaceInfraEventReaderFactory *events.ReaderFactory[*gitspaceinfraevents.Reader],
 	orchestrator orchestrator.Orchestrator,
-	eventStore store.GitspaceEventStore,
-	statefulLogger *logutil.StatefulLogger,
-	scm scm.SCM,
-	repoStore store.RepoStore,
 	gitspaceSvc *gitspace.Service,
-) *Controller {
-	return NewController(
-		tx,
-		authorizer,
-		infraProviderSvc,
-		configStore,
-		instanceStore,
-		spaceStore,
-		reporter,
+	eventReporter *gitspaceevents.Reporter,
+) (*Service, error) {
+	return NewService(
+		ctx,
+		config,
+		gitspaceInfraEventReaderFactory,
 		orchestrator,
-		eventStore,
-		statefulLogger,
-		scm,
-		repoStore,
 		gitspaceSvc,
+		eventReporter,
 	)
 }

@@ -34,7 +34,7 @@ import (
 
 const defaultAccessKey = "Harness@123"
 const defaultMachineUser = "harness"
-const gitspaceTimedOutInMintues = 10
+const gitspaceTimedOutInMintues = 5
 
 type ActionInput struct {
 	Action     enum.GitspaceActionType `json:"action"`
@@ -135,21 +135,28 @@ func (c *Controller) startGitspaceAction(
 
 func (c *Controller) asyncOperation(
 	ctxWithTimedOut context.Context,
-	config *types.GitspaceConfig,
+	config types.GitspaceConfig,
 	action enum.GitspaceActionType,
+	stateChannel chan enum.GitspaceInstanceStateType,
 	errChannel chan error,
 ) {
+	defer close(stateChannel)
+	defer close(errChannel)
+
 	var orchestrateErr error
+	var instanceState enum.GitspaceInstanceStateType
+
 	switch action {
 	case enum.GitspaceActionTypeStart:
-		orchestrateErr = c.orchestrator.StartGitspace(ctxWithTimedOut, config)
+		instanceState, orchestrateErr = c.orchestrator.TriggerStartGitspace(ctxWithTimedOut, config)
 	case enum.GitspaceActionTypeStop:
-		orchestrateErr = c.orchestrator.StopGitspace(ctxWithTimedOut, config)
+		instanceState, orchestrateErr = c.orchestrator.TriggerStopGitspace(ctxWithTimedOut, config)
 	}
+
 	if orchestrateErr != nil {
-		errChannel <- fmt.Errorf("failed to find start/stop gitspace : %s %w", config.Identifier, orchestrateErr)
+		errChannel <- fmt.Errorf("failed to start/stop gitspace: %s %w", config.Identifier, orchestrateErr)
 	}
-	close(errChannel)
+	stateChannel <- instanceState
 }
 
 func (c *Controller) submitAsyncOps(
@@ -157,21 +164,25 @@ func (c *Controller) submitAsyncOps(
 	config *types.GitspaceConfig,
 	action enum.GitspaceActionType,
 ) {
+	errChannel := make(chan error)
+	stateChannel := make(chan enum.GitspaceInstanceStateType)
+
 	submitCtx := context.WithoutCancel(ctx)
 	ttlExecuteContext, cancel := context.WithTimeout(submitCtx, gitspaceTimedOutInMintues*time.Minute)
-	// submit an async task with a TTL
-	errChannel := make(chan error)
-	go c.asyncOperation(ttlExecuteContext, config, action, errChannel)
-	// wait execution completion for the specified time or mark it as an error
+
+	go c.asyncOperation(ttlExecuteContext, *config, action, stateChannel, errChannel)
+
 	var err error
+	var instanceState enum.GitspaceInstanceStateType
+
 	go func() {
-		defer c.updateGitspaceInstance(submitCtx, config)
 		select {
 		case <-ttlExecuteContext.Done():
 			if ttlExecuteContext.Err() != nil {
 				err = ttlExecuteContext.Err()
 			}
 		case err = <-errChannel:
+		case instanceState = <-stateChannel:
 		}
 		if err != nil {
 			log.Err(err).Msgf("error during async execution for %s", config.GitspaceInstance.Identifier)
@@ -182,6 +193,15 @@ func (c *Controller) submitAsyncOps(
 				c.emitGitspaceConfigEvent(ttlExecuteContext, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
 			}
 		}
+
+		if instanceState == "" {
+			instanceState = enum.GitspaceInstanceStateError
+		}
+
+		config.GitspaceInstance.State = instanceState
+
+		c.updateGitspaceInstance(submitCtx, config.GitspaceInstance)
+
 		cancel()
 	}()
 }
@@ -286,11 +306,11 @@ func (c *Controller) emitGitspaceConfigEvent(
 
 func (c *Controller) updateGitspaceInstance(
 	ctx context.Context,
-	config *types.GitspaceConfig,
+	instance *types.GitspaceInstance,
 ) {
-	err := c.gitspaceInstanceStore.Update(ctx, config.GitspaceInstance)
+	err := c.gitspaceInstanceStore.Update(ctx, instance)
 	if err != nil {
 		log.Err(err).Msgf(
-			"failed to update gitspace instance during exec %q", config.GitspaceInstance.Identifier)
+			"failed to update gitspace instance during exec %q", instance.Identifier)
 	}
 }

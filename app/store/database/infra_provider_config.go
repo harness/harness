@@ -18,10 +18,10 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/infraprovider/enum"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"

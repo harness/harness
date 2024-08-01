@@ -51,26 +51,34 @@ func (c *Controller) Delete(
 	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
 	gitspaceConfig.GitspaceInstance = instance
 	gitspaceConfig.SpacePath = space.Path
-	if instance != nil {
-		if stopErr := c.stopRunningGitspace(ctx, gitspaceConfig); stopErr != nil {
+	if instance == nil {
+		gitspaceConfig.IsDeleted = true
+		err = c.gitspaceConfigStore.Update(ctx, gitspaceConfig)
+		if err != nil {
+			return fmt.Errorf("failed to mark gitspace config as deleted: %w", err)
+		}
+	} else {
+		instanceState, stopErr := c.stopRunningGitspace(ctx, *gitspaceConfig)
+		if stopErr != nil {
 			return stopErr
 		}
-	}
-	gitspaceConfig.IsDeleted = true
-	if err = c.gitspaceConfigStore.Update(ctx, gitspaceConfig); err != nil {
-		return fmt.Errorf("failed to delete gitspace config with ID: %s %w", gitspaceConfig.Identifier, err)
+
+		instance.State = instanceState
+		err = c.gitspaceInstanceStore.Update(ctx, instance)
+		if err != nil {
+			return fmt.Errorf("failed to update instance: %w", err)
+		}
 	}
 	return nil
 }
 
 func (c *Controller) stopRunningGitspace(
 	ctx context.Context,
-	config *types.GitspaceConfig,
-) error {
-	if instanceUpdated, err := c.orchestrator.DeleteGitspace(ctx, config); err != nil {
-		return err
-	} else if err = c.gitspaceInstanceStore.Update(ctx, instanceUpdated); err != nil {
-		return err
+	config types.GitspaceConfig,
+) (enum.GitspaceInstanceStateType, error) {
+	instanceState, err := c.orchestrator.TriggerDeleteGitspace(ctx, config)
+	if err != nil {
+		return instanceState, err
 	}
-	return nil
+	return instanceState, nil
 }

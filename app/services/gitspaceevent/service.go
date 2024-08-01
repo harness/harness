@@ -51,13 +51,13 @@ func (c *Config) Sanitize() error {
 }
 
 type Service struct {
-	config             Config
+	config             *Config
 	gitspaceEventStore store.GitspaceEventStore
 }
 
 func NewService(
 	ctx context.Context,
-	config Config,
+	config *Config,
 	gitspaceEventReaderFactory *events.ReaderFactory[*gitspaceevents.Reader],
 	gitspaceEventStore store.GitspaceEventStore,
 ) (*Service, error) {

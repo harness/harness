@@ -18,19 +18,39 @@ import (
 	"context"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type Orchestrator interface {
-	// StartGitspace is responsible for all the operations necessary to create the Gitspace container. It fetches the
-	// devcontainer.json from the code repo, provisions infra using the infra provisioner and setting up the Gitspace
-	// through the container orchestrator.
-	StartGitspace(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error
+	// TriggerStartGitspace fetches the infra resources configured for the gitspace and triggers the infra provisioning.
+	TriggerStartGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) (enum.GitspaceInstanceStateType, error)
 
-	// StopGitspace is responsible for stopping a running Gitspace. It stops the Gitspace container and unprovisions
+	// ResumeStartGitspace saves the provisioned infra, resolves the code repo details & creates the Gitspace container.
+	ResumeStartGitspace(
+		ctx context.Context,
+		gitspaceConfig types.GitspaceConfig,
+		provisionedInfra *types.Infrastructure,
+	) (types.GitspaceInstance, error)
+
+	// TriggerStopGitspace stops the Gitspace container and triggers infra deprovisioning to deprovision
 	// all the infra resources which are not required to restart the Gitspace.
-	StopGitspace(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error
+	TriggerStopGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) (enum.GitspaceInstanceStateType, error)
 
-	// DeleteGitspace is responsible for deleting a Gitspace. It stops the Gitspace container and unprovisions
+	// ResumeStopGitspace saves the deprovisioned infra details.
+	ResumeStopGitspace(
+		ctx context.Context,
+		gitspaceConfig types.GitspaceConfig,
+		stoppedInfra *types.Infrastructure,
+	) (enum.GitspaceInstanceStateType, error)
+
+	// TriggerDeleteGitspace removes the Gitspace container and triggers infra deprovisioning to deprovision
 	// all the infra resources.
-	DeleteGitspace(ctx context.Context, gitspaceConfig *types.GitspaceConfig) (*types.GitspaceInstance, error)
+	TriggerDeleteGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) (enum.GitspaceInstanceStateType, error)
+
+	// ResumeDeleteGitspace saves the deprovisioned infra details.
+	ResumeDeleteGitspace(
+		ctx context.Context,
+		gitspaceConfig types.GitspaceConfig,
+		deprovisionedInfra *types.Infrastructure,
+	) (enum.GitspaceInstanceStateType, error)
 }

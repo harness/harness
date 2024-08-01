@@ -20,7 +20,6 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -32,45 +31,18 @@ func (c *Controller) Find(
 	identifier string,
 ) (*types.GitspaceConfig, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
-	const resourceNotFoundErr = "Failed to find gitspace: resource not found"
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
+
 	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionGitspaceView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	var gitspaceConfig *types.GitspaceConfig
-	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		gitspaceConfig, err = c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, identifier)
-		if err != nil {
-			return fmt.Errorf("failed to find gitspace config: %w", err)
-		}
-		infraProviderResource, err := c.infraProviderSvc.FindResource(ctx, gitspaceConfig.InfraProviderResourceID)
-		if err != nil {
-			return fmt.Errorf("failed to find infra provider resource for gitspace config: %w", err)
-		}
-		gitspaceConfig.SpacePath = space.Path
-		gitspaceConfig.InfraProviderResourceIdentifier = infraProviderResource.Identifier
-		instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
-		if err != nil && err.Error() != resourceNotFoundErr { // TODO fix this
-			return fmt.Errorf("failed to find gitspace instance for config ID : %s %w", gitspaceConfig.Identifier, err)
-		}
-		if instance != nil {
-			gitspaceConfig.GitspaceInstance = instance
-			instance.SpacePath = gitspaceConfig.SpacePath
-			gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State)
-			if err != nil {
-				return err
-			}
-			gitspaceConfig.State = gitspaceStateType
-		} else {
-			gitspaceConfig.State = enum.GitspaceStateUninitialized
-		}
-		return nil
-	}, dbtx.TxDefaultReadOnly)
+
+	res, err := c.gitspaceSvc.Find(ctx, space.ID, space.Path, identifier)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find gitspace: %w", err)
 	}
-	return gitspaceConfig, nil
+	return res, nil
 }

@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package enum
+package events
 
-func toInterfaceSlice[T interface{}](vals []T) []interface{} {
-	res := make([]interface{}, len(vals))
-	for i := range vals {
-		res[i] = vals[i]
-	}
-	return res
-}
+const (
+	// category defines the event category used for this package.
+	category = "gitspace_infra"
+)

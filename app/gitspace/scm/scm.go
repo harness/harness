@@ -41,7 +41,7 @@ type SCM interface {
 	// GetSCMRepoDetails fetches repository name, credentials & devcontainer config file from the given repo and branch.
 	GetSCMRepoDetails(
 		ctx context.Context,
-		gitspaceConfig *types.GitspaceConfig,
+		gitspaceConfig types.GitspaceConfig,
 	) (*ResolvedDetails, error)
 
 	// CheckValidCodeRepo checks if the current URL is a valid and accessible code repo,
@@ -86,7 +86,7 @@ func (s scm) CheckValidCodeRepo(
 
 func (s scm) GetSCMRepoDetails(
 	ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
+	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedDetails, error) {
 	filePath := devcontainerDefaultPath
 	if gitspaceConfig.CodeRepoType == "" {

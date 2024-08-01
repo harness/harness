@@ -39,7 +39,7 @@ func NewGenericSCM() *GenericSCM {
 }
 
 func (s GenericSCM) GetFileContent(ctx context.Context,
-	gitspaceConfig *types.GitspaceConfig,
+	gitspaceConfig types.GitspaceConfig,
 	filePath string,
 ) ([]byte, error) {
 	gitWorkingDirectory := "/tmp/git/"
@@ -102,7 +102,7 @@ func (s GenericSCM) GetFileContent(ctx context.Context,
 
 func (s GenericSCM) ResolveCredentials(
 	_ context.Context,
-	gitspaceConfig *types.GitspaceConfig,
+	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedCredentials, error) {
 	var resolvedCredentials = &ResolvedCredentials{
 		Branch:   gitspaceConfig.Branch,
