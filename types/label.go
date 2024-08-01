@@ -15,6 +15,7 @@
 package types
 
 import (
+	"strings"
 	"unicode"
 	"unicode/utf8"
 
@@ -124,7 +125,7 @@ type DefineLabelInput struct {
 }
 
 func (in DefineLabelInput) Validate() error {
-	if err := validateLabelText(in.Key, "key"); err != nil {
+	if err := validateLabelText(&in.Key, "key"); err != nil {
 		return err
 	}
 
@@ -149,7 +150,7 @@ type UpdateLabelInput struct {
 
 func (in UpdateLabelInput) Validate() error {
 	if in.Key != nil {
-		if err := validateLabelText(*in.Key, "key"); err != nil {
+		if err := validateLabelText(in.Key, "key"); err != nil {
 			return err
 		}
 	}
@@ -176,7 +177,7 @@ type DefineValueInput struct {
 }
 
 func (in DefineValueInput) Validate() error {
-	if err := validateLabelText(in.Value, "value"); err != nil {
+	if err := validateLabelText(&in.Value, "value"); err != nil {
 		return err
 	}
 
@@ -194,7 +195,7 @@ type UpdateValueInput struct {
 
 func (in UpdateValueInput) Validate() error {
 	if in.Value != nil {
-		if err := validateLabelText(*in.Value, "value"); err != nil {
+		if err := validateLabelText(in.Value, "value"); err != nil {
 			return err
 		}
 	}
@@ -255,16 +256,18 @@ func (in *SaveInput) Validate() error {
 
 var labelTypes, _ = enum.GetAllLabelTypes()
 
-func validateLabelText(text string, typ string) error {
-	if len(text) == 0 {
+func validateLabelText(text *string, typ string) error {
+	*text = strings.TrimSpace(*text)
+
+	if len(*text) == 0 {
 		return errors.InvalidArgument("%s must be a non-empty string", typ)
 	}
 
-	if utf8.RuneCountInString(text) > maxLabelLength {
+	if utf8.RuneCountInString(*text) > maxLabelLength {
 		return errors.InvalidArgument("%s can have at most %d characters", typ, maxLabelLength)
 	}
 
-	for _, ch := range text {
+	for _, ch := range *text {
 		if unicode.IsControl(ch) {
 			return errors.InvalidArgument("%s cannot contain control characters", typ)
 		}

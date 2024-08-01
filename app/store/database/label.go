@@ -327,22 +327,38 @@ func (s *labelStore) ListInfosInScopes(
 	return mapLabelInfos(dst), nil
 }
 
-func (s *labelStore) CountInSpace(ctx context.Context, spaceID int64) (int64, error) {
+func (s *labelStore) CountInSpace(
+	ctx context.Context,
+	spaceID int64,
+	filter *types.LabelFilter,
+) (int64, error) {
 	const sqlQuery = `SELECT COUNT(*) FROM labels WHERE label_space_id = $1`
 
-	return s.count(ctx, sqlQuery, spaceID)
+	return s.count(ctx, sqlQuery, spaceID, filter)
 }
 
-func (s *labelStore) CountInRepo(ctx context.Context, repoID int64) (int64, error) {
+func (s *labelStore) CountInRepo(
+	ctx context.Context,
+	repoID int64,
+	filter *types.LabelFilter,
+) (int64, error) {
 	const sqlQuery = `SELECT COUNT(*) FROM labels WHERE label_repo_id = $1`
 
-	return s.count(ctx, sqlQuery, repoID)
+	return s.count(ctx, sqlQuery, repoID, filter)
 }
 
-func (s labelStore) count(ctx context.Context, sqlQuery string, scopeID int64) (int64, error) {
+func (s labelStore) count(
+	ctx context.Context,
+	sqlQuery string,
+	scopeID int64,
+	filter *types.LabelFilter,
+) (int64, error) {
+	sqlQuery += `
+		AND LOWER(label_key) LIKE '%' || LOWER($2) || '%'`
+
 	db := dbtx.GetAccessor(ctx, s.db)
 	var count int64
-	if err := db.QueryRowContext(ctx, sqlQuery, scopeID).Scan(&count); err != nil {
+	if err := db.QueryRowContext(ctx, sqlQuery, scopeID, filter.Query).Scan(&count); err != nil {
 		return 0, database.ProcessSQLErrorf(ctx, err, "Failed to count labels")
 	}
 
@@ -353,13 +369,15 @@ func (s *labelStore) CountInScopes(
 	ctx context.Context,
 	repoID int64,
 	spaceIDs []int64,
+	filter *types.LabelFilter,
 ) (int64, error) {
 	stmt := database.Builder.Select("COUNT(*)").
 		From("labels").
 		Where(squirrel.Or{
 			squirrel.Eq{"label_space_id": spaceIDs},
 			squirrel.Eq{"label_repo_id": repoID},
-		})
+		}).
+		Where("LOWER(label_key) LIKE '%' || LOWER(?) || '%'", filter.Query)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

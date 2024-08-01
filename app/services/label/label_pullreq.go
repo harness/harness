@@ -181,7 +181,11 @@ func (s *Service) ListPullReqLabels(
 		return createScopeLabels(sortedAssignments, scopeLabelsMap), 0, nil
 	}
 
-	total, err := s.labelStore.CountInScopes(ctx, repo.ID, spaceIDs)
+	total, err := s.labelStore.CountInScopes(ctx, repo.ID, spaceIDs, &types.LabelFilter{
+		ListQueryFilter: types.ListQueryFilter{
+			Query: filter.Query,
+		},
+	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count labels in scopes: %w", err)
 	}

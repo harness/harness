@@ -214,7 +214,7 @@ func (s *Service) list(
 	filter *types.LabelFilter,
 ) ([]*types.Label, int64, error) {
 	if repoID != nil {
-		total, err := s.labelStore.CountInRepo(ctx, *repoID)
+		total, err := s.labelStore.CountInRepo(ctx, *repoID, filter)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -226,7 +226,7 @@ func (s *Service) list(
 		return labels, total, nil
 	}
 
-	count, err := s.labelStore.CountInSpace(ctx, *spaceID)
+	count, err := s.labelStore.CountInSpace(ctx, *spaceID, filter)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -258,7 +258,7 @@ func (s *Service) listInScopes(
 		}
 	}
 
-	total, err := s.labelStore.CountInScopes(ctx, repoIDVal, spaceIDs)
+	total, err := s.labelStore.CountInScopes(ctx, repoIDVal, spaceIDs, filter)
 	if err != nil {
 		return nil, 0, err
 	}
