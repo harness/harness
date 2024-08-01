@@ -29,6 +29,14 @@ import (
 	"golang.org/x/exp/maps"
 )
 
+type AssignToPullReqOut struct {
+	Label         *types.Label
+	PullReqLabel  *types.PullReqLabel
+	OldLabelValue *types.LabelValue
+	NewLabelValue *types.LabelValue
+	ActivityType  enum.PullReqLabelActivityType
+}
+
 func (s *Service) AssignToPullReq(
 	ctx context.Context,
 	principalID int64,
@@ -36,52 +44,126 @@ func (s *Service) AssignToPullReq(
 	repoID int64,
 	repoParentID int64,
 	in *types.PullReqCreateInput,
-) (*types.PullReqLabel, error) {
+) (*AssignToPullReqOut,
+	error,
+) {
 	label, err := s.labelStore.FindByID(ctx, in.LabelID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find label by id: %w", err)
 	}
 
-	if label.SpaceID != nil {
-		spaceIDs, err := s.spaceStore.GetAncestorIDs(ctx, repoParentID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get parent space ids: %w", err)
-		}
-		if ok := slices.Contains(spaceIDs, *label.SpaceID); !ok {
-			return nil, errors.NotFound(
-				"label %d is not defined in current space tree path", label.ID)
-		}
-	} else if label.RepoID != nil && *label.RepoID != repoID {
-		return nil, errors.InvalidArgument(
-			"label %d is not defined in current repo", label.ID)
+	if err := s.checkLabelIsInSpace(ctx, repoParentID, label); err != nil {
+		return nil, err
+	}
+	if label.RepoID != nil && *label.RepoID != repoID {
+		return nil,
+			errors.InvalidArgument("label %d is not defined in current repo", label.ID)
 	}
 
-	pullreqLabel := newPullReqLabel(pullreqID, principalID, in)
+	oldPullreqLabel, err := s.pullReqLabelAssignmentStore.FindByLabelID(ctx, pullreqID, label.ID)
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		return nil, fmt.Errorf("failed to find label by id: %w", err)
+	}
 
-	if in.ValueID != nil {
-		labelValue, err := s.labelValueStore.FindByID(ctx, *in.ValueID)
+	// if the pullreq label did not have value
+	if oldPullreqLabel != nil && oldPullreqLabel.ValueID == nil &&
+		// and we don't assign it a new value
+		in.Value == "" && in.ValueID == nil {
+		return &AssignToPullReqOut{
+			Label:         label,
+			PullReqLabel:  oldPullreqLabel,
+			OldLabelValue: nil,
+			NewLabelValue: nil,
+			ActivityType:  enum.LabelActivityNoop,
+		}, nil
+	}
+
+	var oldLabelValue *types.LabelValue
+	if oldPullreqLabel != nil && oldPullreqLabel.ValueID != nil {
+		oldLabelValue, err = s.labelValueStore.FindByID(ctx, *oldPullreqLabel.ValueID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find label value by id: %w", err)
 		}
-		if label.ID != labelValue.LabelID {
+	}
+
+	// if the pullreq label had a value
+	if oldLabelValue != nil {
+		// and we reassign it the same value
+		if in.ValueID != nil && oldLabelValue.ID == *in.ValueID {
+			return &AssignToPullReqOut{
+				Label:         label,
+				PullReqLabel:  oldPullreqLabel,
+				OldLabelValue: oldLabelValue,
+				NewLabelValue: nil,
+				ActivityType:  enum.LabelActivityNoop,
+			}, nil
+		}
+		// and we reassign it the same value
+		if in.Value != "" && oldLabelValue.Value == in.Value {
+			return &AssignToPullReqOut{
+				Label:         label,
+				PullReqLabel:  oldPullreqLabel,
+				OldLabelValue: oldLabelValue,
+				NewLabelValue: nil,
+				ActivityType:  enum.LabelActivityNoop,
+			}, nil
+		}
+	}
+
+	var newLabelValue *types.LabelValue
+	if in.ValueID != nil {
+		newLabelValue, err = s.labelValueStore.FindByID(ctx, *in.ValueID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find label value by id: %w", err)
+		}
+		if label.ID != newLabelValue.LabelID {
 			return nil, errors.InvalidArgument("label value is not associated with label")
 		}
 	}
 
+	newPullreqLabel := newPullReqLabel(pullreqID, principalID, in)
 	if in.Value != "" {
-		valueID, err := s.getOrDefineValue(ctx, principalID, label, in.Value)
+		newLabelValue, err = s.getOrDefineValue(ctx, principalID, label, in.Value)
 		if err != nil {
 			return nil, err
 		}
-		pullreqLabel.ValueID = &valueID
+		newPullreqLabel.ValueID = &newLabelValue.ID
 	}
 
-	err = s.pullReqLabelAssignmentStore.Assign(ctx, pullreqLabel)
+	err = s.pullReqLabelAssignmentStore.Assign(ctx, newPullreqLabel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to assign label to pullreq: %w", err)
 	}
 
-	return pullreqLabel, nil
+	activityType := enum.LabelActivityAssign
+	if oldPullreqLabel != nil {
+		activityType = enum.LabelActivityReassign
+	}
+
+	return &AssignToPullReqOut{
+		Label:         label,
+		PullReqLabel:  newPullreqLabel,
+		OldLabelValue: oldLabelValue,
+		NewLabelValue: newLabelValue,
+		ActivityType:  activityType,
+	}, nil
+}
+
+func (s *Service) checkLabelIsInSpace(
+	ctx context.Context,
+	repoParentID int64,
+	label *types.Label,
+) error {
+	if label.SpaceID != nil {
+		spaceIDs, err := s.spaceStore.GetAncestorIDs(ctx, repoParentID)
+		if err != nil {
+			return fmt.Errorf("failed to get parent space ids: %w", err)
+		}
+		if ok := slices.Contains(spaceIDs, *label.SpaceID); !ok {
+			return errors.NotFound("label %d is not defined in current space tree path", label.ID)
+		}
+	}
+	return nil
 }
 
 func (s *Service) getOrDefineValue(
@@ -89,17 +171,17 @@ func (s *Service) getOrDefineValue(
 	principalID int64,
 	label *types.Label,
 	value string,
-) (int64, error) {
+) (*types.LabelValue, error) {
 	if label.Type != enum.LabelTypeDynamic {
-		return 0, errors.InvalidArgument("label doesn't allow new value assignment")
+		return nil, errors.InvalidArgument("label doesn't allow new value assignment")
 	}
 
 	labelValue, err := s.labelValueStore.FindByLabelID(ctx, label.ID, value)
 	if err == nil {
-		return labelValue.ID, nil
+		return labelValue, nil
 	}
 	if !errors.Is(err, store.ErrResourceNotFound) {
-		return 0, fmt.Errorf("failed to find label value: %w", err)
+		return nil, fmt.Errorf("failed to find label value: %w", err)
 	}
 
 	labelValue, err = s.DefineValue(
@@ -112,35 +194,44 @@ func (s *Service) getOrDefineValue(
 		},
 	)
 	if err != nil {
-		return 0, fmt.Errorf("failed to create label value: %w", err)
+		return nil, fmt.Errorf("failed to create label value: %w", err)
 	}
 
-	return labelValue.ID, nil
+	return labelValue, nil
 }
 
 func (s *Service) UnassignFromPullReq(
 	ctx context.Context, repoID, repoParentID, pullreqID, labelID int64,
-) error {
+) (*types.Label, *types.LabelValue, error) {
 	label, err := s.labelStore.FindByID(ctx, labelID)
 	if err != nil {
-		return fmt.Errorf("failed to find label by id: %w", err)
+		return nil, nil, fmt.Errorf("failed to find label by id: %w", err)
+	}
+
+	if err := s.checkLabelIsInSpace(ctx, repoParentID, label); err != nil {
+		return nil, nil, err
+	}
+
+	value, err := s.pullReqLabelAssignmentStore.FindValueByLabelID(ctx, labelID)
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		return nil, nil, fmt.Errorf("failed to find label value: %w", err)
 	}
 
 	if label.RepoID != nil && *label.RepoID != repoID {
-		return errors.InvalidArgument(
+		return nil, nil, errors.InvalidArgument(
 			"label %d is not defined in current repo", label.ID)
 	} else if label.SpaceID != nil {
 		spaceIDs, err := s.spaceStore.GetAncestorIDs(ctx, repoParentID)
 		if err != nil {
-			return fmt.Errorf("failed to get parent space ids: %w", err)
+			return nil, nil, fmt.Errorf("failed to get parent space ids: %w", err)
 		}
 		if ok := slices.Contains(spaceIDs, *label.SpaceID); !ok {
-			return errors.NotFound(
+			return nil, nil, errors.NotFound(
 				"label %d is not defined in current space tree path", label.ID)
 		}
 	}
 
-	return s.pullReqLabelAssignmentStore.Unassign(ctx, pullreqID, labelID)
+	return label, value, s.pullReqLabelAssignmentStore.Unassign(ctx, pullreqID, labelID)
 }
 
 func (s *Service) ListPullReqLabels(

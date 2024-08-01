@@ -87,6 +87,7 @@ const (
 	PullReqActivityTypeBranchUpdate   PullReqActivityType = "branch-update"
 	PullReqActivityTypeBranchDelete   PullReqActivityType = "branch-delete"
 	PullReqActivityTypeMerge          PullReqActivityType = "merge"
+	PullReqActivityTypeLabelModify    PullReqActivityType = "label-modify"
 )
 
 var pullReqActivityTypes = sortEnum([]PullReqActivityType{
@@ -99,6 +100,7 @@ var pullReqActivityTypes = sortEnum([]PullReqActivityType{
 	PullReqActivityTypeBranchUpdate,
 	PullReqActivityTypeBranchDelete,
 	PullReqActivityTypeMerge,
+	PullReqActivityTypeLabelModify,
 })
 
 // PullReqActivityKind defines kind of pull request activity system message.
@@ -240,3 +242,27 @@ const (
 	// MergeCheckStatusMergeable branch can merged cleanly into the target branch.
 	MergeCheckStatusMergeable MergeCheckStatus = "mergeable"
 )
+
+type PullReqLabelActivityType string
+
+func (PullReqLabelActivityType) Enum() []interface{} { return toInterfaceSlice(LabelActivityTypes) }
+func (t PullReqLabelActivityType) Sanitize() (PullReqLabelActivityType, bool) {
+	return Sanitize(t, GetAllLabelActivityTypes)
+}
+func GetAllLabelActivityTypes() ([]PullReqLabelActivityType, PullReqLabelActivityType) {
+	return LabelActivityTypes, LabelActivityNoop
+}
+
+const (
+	LabelActivityAssign   PullReqLabelActivityType = "assign"
+	LabelActivityUnassign PullReqLabelActivityType = "unassign"
+	LabelActivityReassign PullReqLabelActivityType = "reassign"
+	LabelActivityNoop     PullReqLabelActivityType = "noop"
+)
+
+var LabelActivityTypes = sortEnum([]PullReqLabelActivityType{
+	LabelActivityAssign,
+	LabelActivityUnassign,
+	LabelActivityReassign,
+	LabelActivityNoop,
+})

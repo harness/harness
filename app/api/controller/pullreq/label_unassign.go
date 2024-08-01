@@ -17,9 +17,13 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // UnassignLabel removes a label from a pull request.
@@ -40,9 +44,37 @@ func (c *Controller) UnassignLabel(
 		return fmt.Errorf("failed to find pullreq: %w", err)
 	}
 
-	if err := c.labelSvc.UnassignFromPullReq(
-		ctx, repo.ID, repo.ParentID, pullreq.ID, labelID); err != nil {
+	label, labelValue, err := c.labelSvc.UnassignFromPullReq(
+		ctx, repo.ID, repo.ParentID, pullreq.ID, labelID)
+	if err != nil {
 		return fmt.Errorf("failed to delete pullreq label: %w", err)
+	}
+
+	pullreq, err = c.pullreqStore.UpdateOptLock(ctx, pullreq, func(pullreq *types.PullReq) error {
+		pullreq.Edited = time.Now().UnixMilli()
+		pullreq.ActivitySeq++
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update pull request: %w", err)
+	}
+
+	var value *string
+	var color *enum.LabelColor
+	if labelValue != nil {
+		value = &labelValue.Value
+		color = &labelValue.Color
+	}
+	payload := &types.PullRequestActivityLabel{
+		Label:      label.Key,
+		LabelColor: label.Color,
+		Value:      value,
+		ValueColor: color,
+		Type:       enum.LabelActivityUnassign,
+	}
+	if _, err := c.activityStore.CreateWithPayload(
+		ctx, pullreq, session.Principal.ID, payload, nil); err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after label unassign")
 	}
 
 	return nil

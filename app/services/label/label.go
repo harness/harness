@@ -196,6 +196,10 @@ func (s *Service) Find(
 	return s.labelStore.Find(ctx, spaceID, repoID, key)
 }
 
+func (s *Service) FindByID(ctx context.Context, labelID int64) (*types.Label, error) {
+	return s.labelStore.FindByID(ctx, labelID)
+}
+
 func (s *Service) List(
 	ctx context.Context,
 	spaceID, repoID *int64,

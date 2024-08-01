@@ -120,7 +120,7 @@ func (s *pullReqLabelStore) FindByLabelID(
 
 	var dst pullReqLabel
 	if err := db.GetContext(ctx, &dst, sqlQuery, pullreqID, labelID); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "failed to delete pullreq label")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to find pullreq label by id")
 	}
 
 	return mapPullReqLabel(&dst), nil
@@ -169,6 +169,25 @@ func (s *pullReqLabelStore) ListAssigned(
 	}
 
 	return ret, nil
+}
+
+func (s *pullReqLabelStore) FindValueByLabelID(
+	ctx context.Context,
+	labelID int64,
+) (*types.LabelValue, error) {
+	const sqlQuery = `SELECT label_value_id, ` + labelValueColumns + `
+		FROM pullreq_labels
+		JOIN label_values ON pullreq_label_label_value_id = label_value_id
+		WHERE pullreq_label_label_id = $1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var dst labelValue
+	if err := db.GetContext(ctx, &dst, sqlQuery, labelID); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find label")
+	}
+
+	return mapLabelValue(&dst), nil
 }
 
 func mapInternalPullReqLabel(lbl *types.PullReqLabel) *pullReqLabel {

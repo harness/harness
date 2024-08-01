@@ -17,10 +17,14 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // AssignLabel assigns a label to a pull request .
@@ -45,11 +49,56 @@ func (c *Controller) AssignLabel(
 		return nil, fmt.Errorf("failed to find pullreq: %w", err)
 	}
 
-	pullreqLabel, err := c.labelSvc.AssignToPullReq(
+	out, err := c.labelSvc.AssignToPullReq(
 		ctx, session.Principal.ID, pullreq.ID, repo.ID, repo.ParentID, in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pullreq label: %w", err)
 	}
 
-	return pullreqLabel, nil
+	if out.ActivityType == enum.LabelActivityNoop {
+		return out.PullReqLabel, nil
+	}
+
+	pullreq, err = c.pullreqStore.UpdateOptLock(ctx, pullreq, func(pullreq *types.PullReq) error {
+		pullreq.Edited = time.Now().UnixMilli()
+		pullreq.ActivitySeq++
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to update pull request: %w", err)
+	}
+
+	payload := activityPayload(out)
+	if _, err := c.activityStore.CreateWithPayload(
+		ctx, pullreq, session.Principal.ID, payload, nil); err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after label unassign")
+	}
+
+	return out.PullReqLabel, nil
+}
+
+func activityPayload(out *label.AssignToPullReqOut) *types.PullRequestActivityLabel {
+	var oldValue *string
+	var oldValueColor *enum.LabelColor
+	if out.OldLabelValue != nil {
+		oldValue = &out.OldLabelValue.Value
+		oldValueColor = &out.OldLabelValue.Color
+	}
+
+	var value *string
+	var valueColor *enum.LabelColor
+	if out.NewLabelValue != nil {
+		value = &out.NewLabelValue.Value
+		valueColor = &out.NewLabelValue.Color
+	}
+
+	return &types.PullRequestActivityLabel{
+		Label:         out.Label.Key,
+		LabelColor:    out.Label.Color,
+		Value:         value,
+		ValueColor:    valueColor,
+		OldValue:      oldValue,
+		OldValueColor: oldValueColor,
+		Type:          out.ActivityType,
+	}
 }
