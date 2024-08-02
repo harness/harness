@@ -60,6 +60,11 @@ func (c *Controller) List(
 			return fmt.Errorf("failed to list pull requests: %w", err)
 		}
 
+		err := c.labelSvc.BackfillMany(ctx, list)
+		if err != nil {
+			return fmt.Errorf("failed to backfill labels assigned to pull requests: %w", err)
+		}
+
 		if filter.Page == 1 && len(list) < filter.Size {
 			count = int64(len(list))
 			return nil

@@ -94,6 +94,16 @@ type LabelAssignment struct {
 	Values        []*LabelValueInfo `json:"values,omitempty"` // query param ?assignable=true
 }
 
+type LabelPullReqAssignmentInfo struct {
+	PullReqID  int64           `json:"-"`
+	LabelID    int64           `json:"id"`
+	LabelKey   string          `json:"key"`
+	LabelColor enum.LabelColor `json:"color,omitempty"`
+	ValueCount int64           `json:"value_count"`
+	Value      *string         `json:"value,omitempty"`
+	ValueColor *string         `json:"value_color,omitempty"`
+}
+
 type ScopeData struct {
 	// Scope = 0 is repo, scope >= 1 is a depth level of a space
 	Scope int64       `json:"scope"`

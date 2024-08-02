@@ -48,6 +48,11 @@ func (c *Controller) Find(
 		return nil, err
 	}
 
+	err = c.labelSvc.Backfill(ctx, pr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to backfill labels assigned to pull request: %w", err)
+	}
+
 	if err := c.backfillStats(ctx, repo, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to backfill PR stats")
 	}

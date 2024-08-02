@@ -21,9 +21,12 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 var _ store.PullReqLabelAssignmentStore = (*pullReqLabelStore)(nil)
@@ -46,6 +49,16 @@ type pullReqLabel struct {
 	Updated      int64    `db:"pullreq_label_updated"`
 	CreatedBy    int64    `db:"pullreq_label_created_by"`
 	UpdatedBy    int64    `db:"pullreq_label_updated_by"`
+}
+
+type pullReqAssignmentInfo struct {
+	PullReqID  int64           `db:"pullreq_label_pullreq_id"`
+	LabelID    int64           `db:"label_id"`
+	LabelKey   string          `db:"label_key"`
+	LabelColor enum.LabelColor `db:"label_color"`
+	ValueCount int64           `db:"label_value_count"`
+	Value      null.String     `db:"label_value_value"`
+	ValueColor null.String     `db:"label_value_color"`
 }
 
 const (
@@ -130,7 +143,7 @@ func (s *pullReqLabelStore) ListAssigned(
 	ctx context.Context,
 	pullreqID int64,
 ) (map[int64]*types.LabelAssignment, error) {
-	const sqlQueryAssigned = `
+	const sqlQuery = `
 		SELECT 
 			label_id
 			,label_repo_id
@@ -143,10 +156,10 @@ func (s *pullReqLabelStore) ListAssigned(
 			,label_value_color
 			,label_scope
 			,label_type
-		FROM pullreq_labels prl
-		INNER JOIN labels l ON prl.pullreq_label_label_id = l.label_id
-		LEFT JOIN label_values lv ON prl.pullreq_label_label_value_id = lv.label_value_id
-		WHERE prl.pullreq_label_pullreq_id = $1`
+		FROM pullreq_labels
+		INNER JOIN labels ON pullreq_label_label_id = label_id
+		LEFT JOIN label_values ON pullreq_label_label_value_id = label_value_id
+		WHERE pullreq_label_pullreq_id = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -154,8 +167,8 @@ func (s *pullReqLabelStore) ListAssigned(
 		labelInfo
 		labelValueInfo
 	}
-	if err := db.SelectContext(ctx, &dst, sqlQueryAssigned, pullreqID); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "failed to find label")
+	if err := db.SelectContext(ctx, &dst, sqlQuery, pullreqID); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to list assigned label")
 	}
 
 	ret := make(map[int64]*types.LabelAssignment, len(dst))
@@ -169,6 +182,39 @@ func (s *pullReqLabelStore) ListAssigned(
 	}
 
 	return ret, nil
+}
+
+func (s *pullReqLabelStore) ListAssignedByPullreqIDs(
+	ctx context.Context,
+	pullreqIDs []int64,
+) (map[int64][]*types.LabelPullReqAssignmentInfo, error) {
+	stmt := database.Builder.Select(`
+			pullreq_label_pullreq_id
+			,label_id
+			,label_key
+			,label_color
+			,label_value_count
+			,label_value_value
+			,label_value_color
+	`).
+		From("pullreq_labels").
+		InnerJoin("labels ON pullreq_label_label_id = label_id").
+		LeftJoin("label_values ON pullreq_label_label_value_id = label_value_id").
+		Where(squirrel.Eq{"pullreq_label_pullreq_id": pullreqIDs})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var dst []*pullReqAssignmentInfo
+	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to list assigned label")
+	}
+
+	return mapPullReqAssignmentInfos(dst), nil
 }
 
 func (s *pullReqLabelStore) FindValueByLabelID(
@@ -212,4 +258,28 @@ func mapPullReqLabel(lbl *pullReqLabel) *types.PullReqLabel {
 		CreatedBy: lbl.CreatedBy,
 		UpdatedBy: lbl.UpdatedBy,
 	}
+}
+
+func mapPullReqAssignmentInfo(lbl *pullReqAssignmentInfo) *types.LabelPullReqAssignmentInfo {
+	return &types.LabelPullReqAssignmentInfo{
+		PullReqID:  lbl.PullReqID,
+		LabelID:    lbl.LabelID,
+		LabelKey:   lbl.LabelKey,
+		LabelColor: lbl.LabelColor,
+		ValueCount: lbl.ValueCount,
+		Value:      lbl.Value.Ptr(),
+		ValueColor: lbl.ValueColor.Ptr(),
+	}
+}
+
+func mapPullReqAssignmentInfos(
+	dbLabels []*pullReqAssignmentInfo,
+) map[int64][]*types.LabelPullReqAssignmentInfo {
+	result := make(map[int64][]*types.LabelPullReqAssignmentInfo)
+
+	for _, lbl := range dbLabels {
+		result[lbl.PullReqID] = append(result[lbl.PullReqID], mapPullReqAssignmentInfo(lbl))
+	}
+
+	return result
 }

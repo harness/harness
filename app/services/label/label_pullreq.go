@@ -253,8 +253,7 @@ func (s *Service) ListPullReqLabels(
 
 	scopeLabelsMap := make(map[int64]*types.ScopeData)
 
-	pullreqAssignments, err := s.pullReqLabelAssignmentStore.ListAssigned(
-		ctx, pullreqID)
+	pullreqAssignments, err := s.pullReqLabelAssignmentStore.ListAssigned(ctx, pullreqID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list labels assigned to pullreq: %w", err)
 	}
@@ -311,6 +310,43 @@ func (s *Service) ListPullReqLabels(
 
 	populateScopeLabelsMap(allAssignments, scopeLabelsMap, repo, spaces)
 	return createScopeLabels(allAssignments, scopeLabelsMap), total, nil
+}
+
+func (s *Service) Backfill(
+	ctx context.Context,
+	pullreq *types.PullReq,
+) error {
+	pullreqAssignments, err := s.pullReqLabelAssignmentStore.ListAssignedByPullreqIDs(
+		ctx, []int64{pullreq.ID})
+	if err != nil {
+		return fmt.Errorf("failed to list labels assigned to pullreq: %w", err)
+	}
+
+	pullreq.Labels = pullreqAssignments[pullreq.ID]
+
+	return nil
+}
+
+func (s *Service) BackfillMany(
+	ctx context.Context,
+	pullreqs []*types.PullReq,
+) error {
+	pullreqIDs := make([]int64, len(pullreqs))
+	for i, pr := range pullreqs {
+		pullreqIDs[i] = pr.ID
+	}
+
+	pullreqAssignments, err := s.pullReqLabelAssignmentStore.ListAssignedByPullreqIDs(
+		ctx, pullreqIDs)
+	if err != nil {
+		return fmt.Errorf("failed to list labels assigned to pullreq: %w", err)
+	}
+
+	for _, pullreq := range pullreqs {
+		pullreq.Labels = pullreqAssignments[pullreq.ID]
+	}
+
+	return nil
 }
 
 func populateScopeLabelsMap(

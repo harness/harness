@@ -1045,7 +1045,10 @@ type (
 		Unassign(ctx context.Context, pullreqID int64, labelID int64) error
 
 		// ListAssigned list labels assigned to a specified pullreq.
-		ListAssigned(ctx context.Context, pullreqID int64) (map[int64]*types.LabelAssignment, error)
+		ListAssigned(
+			ctx context.Context,
+			pullreqID int64,
+		) (map[int64]*types.LabelAssignment, error)
 
 		// Find finds a label assigned to a pullreq with a specified id.
 		FindByLabelID(
@@ -1056,5 +1059,11 @@ type (
 
 		// FindValueByLabelID finds a value assigned to a pullreq label.
 		FindValueByLabelID(ctx context.Context, labelID int64) (*types.LabelValue, error)
+
+		// ListAssignedByPullreqIDs list labels assigned to specified pullreqs.
+		ListAssignedByPullreqIDs(
+			ctx context.Context,
+			pullreqIDs []int64,
+		) (map[int64][]*types.LabelPullReqAssignmentInfo, error)
 	}
 )

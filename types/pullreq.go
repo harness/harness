@@ -60,6 +60,8 @@ type PullReq struct {
 	Author PrincipalInfo  `json:"author"`
 	Merger *PrincipalInfo `json:"merger"`
 	Stats  PullReqStats   `json:"stats"`
+
+	Labels []*LabelPullReqAssignmentInfo `json:"labels,omitempty"`
 }
 
 // DiffStats shows total number of commits and modified files.
