@@ -15,23 +15,20 @@
  */
 
 import React, { useCallback, useState } from 'react'
+import cx from 'classnames'
 import { Container, Dialog, Layout, Text, Utils } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import { Filter } from 'iconoir-react'
 import { useHistory } from 'react-router-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { noop } from 'lodash-es'
-import cx from 'classnames'
-
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { ButtonRoleProps } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'
-
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import KeywordSearchbar from 'components/KeywordSearchbar/KeywordSearchbar'
-
 import css from './KeywordSearch.module.scss'
 
 interface KeywordSearchProps {
@@ -43,6 +40,7 @@ const KeywordSearch = ({ repoMetadata }: KeywordSearchProps) => {
   const { routes } = useAppContext()
   const space = useGetSpaceParam()
   const history = useHistory()
+  const [regexEnabled, setRegexEnabled] = useState<boolean>(false)
 
   const [search, setSearch] = useState('')
   const [showSearchModal, setShowSearchModal] = useState(false)
@@ -55,18 +53,18 @@ const KeywordSearch = ({ repoMetadata }: KeywordSearchProps) => {
           pathname: routes.toCODERepositorySearch({
             repoPath: repoMetadata.path as string
           }),
-          search: `q=${q}`
+          search: `q=${q}&regex=${regexEnabled}`
         })
       } else {
         history.push({
           pathname: routes.toCODESpaceSearch({
             space
           }),
-          search: `q=${q}`
+          search: `q=${q}&regex=${regexEnabled}`
         })
       }
     },
-    [history, repoMetadata?.path, routes]
+    [history, repoMetadata?.path, routes, regexEnabled]
   )
   const onSearch = useCallback(() => {
     if (search?.trim()) {
@@ -112,6 +110,8 @@ const KeywordSearch = ({ repoMetadata }: KeywordSearchProps) => {
                         value={search}
                         onChange={setSearch}
                         onSearch={onSearch}
+                        regexEnabled={regexEnabled}
+                        setRegexEnabled={setRegexEnabled}
                         onKeyDown={e => {
                           if (!search?.trim()) {
                             switch (e.key) {

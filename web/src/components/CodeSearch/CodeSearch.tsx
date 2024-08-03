@@ -15,20 +15,18 @@
  */
 
 import React, { useCallback, useState } from 'react'
+import cx from 'classnames'
 import { Container, Dialog, Layout, Text, Utils } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import { Filter, LongArrowDownLeft } from 'iconoir-react'
 import { useHistory } from 'react-router-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { noop } from 'lodash-es'
-import cx from 'classnames'
-
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { ButtonRoleProps } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'
-
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import CodeSearchBar from 'components/CodeSearchBar/CodeSearchBar'
 import svg from './search-background.svg?url'
@@ -51,7 +49,7 @@ const CodeSearch = ({ repoMetadata }: CodeSearchProps) => {
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [searchSampleQueryIndex, setSearchSampleQueryIndex] = useState<number>(0)
   const [searchMode, setSearchMode] = useState(SEARCH_MODE.KEYWORD)
-
+  const [regexEnabled, setRegexEnabled] = useState<boolean>(false)
   const performSearch = useCallback(
     (q: string, mode: SEARCH_MODE) => {
       if (repoMetadata?.path) {
@@ -59,18 +57,18 @@ const CodeSearch = ({ repoMetadata }: CodeSearchProps) => {
           pathname: routes.toCODERepositorySearch({
             repoPath: repoMetadata.path as string
           }),
-          search: `q=${q}&mode=${mode}`
+          search: `q=${q}&mode=${mode}&regex=${regexEnabled}`
         })
       } else {
         history.push({
           pathname: routes.toCODESpaceSearch({
             space
           }),
-          search: `q=${q}`
+          search: `q=${q}&regex=${regexEnabled}`
         })
       }
     },
-    [history, repoMetadata?.path, routes, searchMode]
+    [history, repoMetadata?.path, routes, searchMode, regexEnabled]
   )
   const onSearch = useCallback(() => {
     if (search?.trim()) {
@@ -138,6 +136,8 @@ const CodeSearch = ({ repoMetadata }: CodeSearchProps) => {
                   <Layout.Horizontal className={css.layout}>
                     <Container className={css.searchContainer}>
                       <CodeSearchBar
+                        setRegexEnabled={setRegexEnabled}
+                        regexEnabled={regexEnabled}
                         searchMode={searchMode}
                         setSearchMode={setSearchMode}
                         value={search}

@@ -64,4 +64,20 @@
     right: 53px;
     top: 9px;
   }
+  .toggleRegexIconContainer {
+    position: absolute;
+    right: 30px !important;
+    top: 4.5px !important;
+    cursor: pointer !important;
+    z-index: 1;
+  }
+  .toggleRegexIconContainer:hover {
+    fill: var(--primary-7) !important;
+  }
+}
+
+.popover {
+  z-index: 2;
+  position: relative;
+  right: 5px !important;
 }

@@ -94,7 +94,7 @@ const KeywordSearchFilters: React.FC<KeywordSearchFiltersProps> = ({
   const [scopeLabel, setScopeLabel] = useState<SelectOption>(curScopeLabel ? curScopeLabel : scopeOption[0])
   return (
     <div className={css.filtersCtn}>
-      {projectId ? null : (
+      {projectId || isRepoLevelSearch ? null : (
         <>
           <Container>
             <Text font={{ variation: FontVariation.SMALL_SEMI }} color={Color.GREY_600} margin={{ bottom: 'xsmall' }}>

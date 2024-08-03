@@ -1285,3 +1285,10 @@ searchScope:
   orgOnly: Organizations only
   orgAndProj: Organizations and Projects
   title: Search scope
+regex:
+  tooltip: '{regex} search {enable}. Click to {disable}'
+  enable: enable
+  disable: disable
+  enabled: enabled
+  disabled: disabled
+  string: RegEx

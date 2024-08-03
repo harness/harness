@@ -15,9 +15,14 @@
  */
 
 import React, { FC } from 'react'
-
+import cx from 'classnames'
+import { Container, Popover, StringSubstitute, Text } from '@harnessio/uicore'
+import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
+import { Color, FontVariation } from '@harnessio/design-system'
+import { useStrings } from 'framework/strings'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-
+import Regex from '../../icons/regex.svg?url'
+import RegexEnabled from '../../icons/regexEnabled.svg?url'
 import css from './KeywordSearchbar.module.scss'
 
 interface KeywordSearchbarProps {
@@ -25,11 +30,22 @@ interface KeywordSearchbarProps {
   onChange: (value: string) => void
   onSearch?: (searchTerm: string) => void
   onKeyDown?: (e: React.KeyboardEvent<HTMLElement>) => void
+  regexEnabled: boolean
+  setRegexEnabled: (value: boolean) => void
 }
 
 const KEYWORD_REGEX = /((?:(?:-{0,1})(?:repo|lang|file|case|count)):\S*|(?: or|and ))/gi
 
-const KeywordSearchbar: FC<KeywordSearchbarProps> = ({ value, onChange, onSearch, onKeyDown }) => {
+const KeywordSearchbar: FC<KeywordSearchbarProps> = ({
+  value,
+  onChange,
+  onSearch,
+  onKeyDown,
+  regexEnabled,
+  setRegexEnabled
+}) => {
+  const { getString } = useStrings()
+
   return (
     <div className={css.searchCtn}>
       <div className={css.textCtn}>
@@ -73,6 +89,37 @@ const KeywordSearchbar: FC<KeywordSearchbarProps> = ({ value, onChange, onSearch
         onSearch={onSearch}
         onKeyDown={onKeyDown}
       />
+
+      <Container className={css.toggleRegexIconContainer}>
+        <Popover
+          content={
+            <Container padding="medium">
+              <Text font={{ variation: FontVariation.SMALL }} color={Color.WHITE}>
+                <StringSubstitute
+                  str={getString('regex.tooltip')}
+                  vars={{
+                    regex: <strong>{getString('regex.string')}</strong>,
+                    enable: regexEnabled ? getString('regex.enabled') : getString('regex.disabled'),
+                    disable: regexEnabled ? getString('regex.disable') : getString('regex.enable')
+                  }}
+                />
+              </Text>
+            </Container>
+          }
+          popoverClassName={cx(css.popover, Classes.DARK)}
+          interactionKind={PopoverInteractionKind.HOVER_TARGET_ONLY}
+          position={PopoverPosition.BOTTOM_RIGHT}
+          isDark={true}>
+          <img
+            src={regexEnabled ? RegexEnabled : Regex}
+            height={22}
+            width={22}
+            onClick={() => {
+              setRegexEnabled?.(!regexEnabled)
+            }}
+          />
+        </Popover>
+      </Container>
     </div>
   )
 }

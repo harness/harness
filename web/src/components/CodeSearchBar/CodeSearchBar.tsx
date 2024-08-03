@@ -17,8 +17,8 @@
 import React, { useState, Dispatch, FC, SetStateAction, useEffect } from 'react'
 
 import cx from 'classnames'
-import { Switch } from '@blueprintjs/core'
-import { Container, Text } from '@harnessio/uicore'
+import { Classes, PopoverInteractionKind, PopoverPosition, Switch } from '@blueprintjs/core'
+import { Container, Popover, StringSubstitute, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Link, useParams } from 'react-router-dom'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
@@ -27,6 +27,9 @@ import type { Identifier } from 'utils/types'
 import { useStrings } from 'framework/strings'
 import { SEARCH_MODE } from 'components/CodeSearch/CodeSearch'
 import svg from '../CodeSearch/search-background.svg?url'
+import Regex from '../../icons/regex.svg?url'
+import RegexEnabled from '../../icons/regexEnabled.svg?url'
+
 import css from './CodeSearchBar.module.scss'
 
 interface CodeSearchBarProps {
@@ -36,11 +39,22 @@ interface CodeSearchBarProps {
   onKeyDown?: (e: React.KeyboardEvent<HTMLElement>) => void
   setSearchMode: Dispatch<SetStateAction<SEARCH_MODE>>
   searchMode: SEARCH_MODE
+  regexEnabled: boolean
+  setRegexEnabled: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const KEYWORD_REGEX = /((?:(?:-{0,1})(?:repo|lang|file|case|count)):\S*|(?: or|and ))/gi
 
-const CodeSearchBar: FC<CodeSearchBarProps> = ({ value, onChange, onSearch, onKeyDown, searchMode, setSearchMode }) => {
+const CodeSearchBar: FC<CodeSearchBarProps> = ({
+  value,
+  onChange,
+  onSearch,
+  onKeyDown,
+  searchMode,
+  setSearchMode,
+  setRegexEnabled,
+  regexEnabled
+}) => {
   const { getString } = useStrings()
   const { hooks, routingId, defaultSettingsURL, isCurrentSessionPublic } = useAppContext()
   const { SEMANTIC_SEARCH_ENABLED: isSemanticSearchFFEnabled } = hooks?.useFeatureFlags()
@@ -102,61 +116,99 @@ const CodeSearchBar: FC<CodeSearchBarProps> = ({ value, onChange, onSearch, onKe
         onKeyDown={onKeyDown}
         placeholder={isSemanticMode ? getString('codeSearchModal') : getString('keywordSearchPlaceholder')}
       />
+      <Container className={css.layoutCtn}>
+        {enableSemanticSearch ? (
+          <>
+            {isSemanticMode ? (
+              <img className={cx(css.toggleLogo)} src={svg} width={122} height={25} />
+            ) : (
+              <Text
+                className={cx(css.toggleTitle)}
+                font={{ variation: FontVariation.SMALL_SEMI }}
+                color={Color.GREY_300}
+                style={{ whiteSpace: 'nowrap' }}>
+                {getString('enableAISearch')}
+              </Text>
+            )}
+            <Switch
+              onChange={() => {
+                searchMode === SEARCH_MODE.KEYWORD
+                  ? setSearchMode(SEARCH_MODE.SEMANTIC)
+                  : setSearchMode(SEARCH_MODE.KEYWORD)
+              }}
+              className={cx(css.toggleBtn)}
+              checked={SEARCH_MODE.SEMANTIC === searchMode}></Switch>
 
-      {enableSemanticSearch ? (
-        <>
-          {isSemanticMode ? (
-            <img className={cx(css.toggleLogo)} src={svg} width={122} height={25} />
-          ) : (
-            <Text
-              className={cx(css.toggleTitle)}
-              font={{ variation: FontVariation.SMALL_SEMI }}
-              color={Color.GREY_300}
-              style={{ whiteSpace: 'nowrap' }}>
-              {getString('enableAISearch')}
-            </Text>
-          )}
-          <Switch
-            onChange={() => {
-              searchMode === SEARCH_MODE.KEYWORD
-                ? setSearchMode(SEARCH_MODE.SEMANTIC)
-                : setSearchMode(SEARCH_MODE.KEYWORD)
-            }}
-            className={cx(css.toggleBtn)}
-            checked={SEARCH_MODE.SEMANTIC === searchMode}></Switch>
-
-          <button
-            className={cx(css.toggleHiddenBtn, css.toggleBtn)}
-            onClick={() =>
-              searchMode === SEARCH_MODE.KEYWORD
-                ? setSearchMode(SEARCH_MODE.SEMANTIC)
-                : setSearchMode(SEARCH_MODE.KEYWORD)
-            }></button>
-        </>
-      ) : (
-        aidaSettingResponse?.data?.value != 'true' &&
-        isSemanticSearchFFEnabled &&
-        !isAidaSettingLoading && (
-          <Container
-            background={Color.AI_PURPLE_50}
-            padding="small"
-            margin={{ top: 'xsmall', right: 'small', left: 'xsmall' }}>
-            <Text
-              font={{ variation: FontVariation.BODY2 }}
-              margin={{ bottom: 'small' }}
-              icon="info-messaging"
-              iconProps={{ size: 15 }}>
-              {getString('turnOnSemanticSearch')}
-            </Text>
-            <Text font={{ variation: FontVariation.BODY2_SEMI }} margin={{ bottom: 'small' }} color={Color.GREY_450}>
-              {getString('enableAIDAMessage')}
-            </Text>
-            <Link to={defaultSettingsURL} color={Color.AI_PURPLE_800}>
-              {getString('reviewProjectSettings')}
-            </Link>
-          </Container>
-        )
-      )}
+            <button
+              className={cx(css.toggleHiddenBtn, css.toggleBtn)}
+              onClick={() =>
+                searchMode === SEARCH_MODE.KEYWORD
+                  ? setSearchMode(SEARCH_MODE.SEMANTIC)
+                  : setSearchMode(SEARCH_MODE.KEYWORD)
+              }></button>
+          </>
+        ) : (
+          aidaSettingResponse?.data?.value != 'true' &&
+          isSemanticSearchFFEnabled &&
+          !isAidaSettingLoading && (
+            <Container
+              background={Color.AI_PURPLE_50}
+              padding="small"
+              className={css.messageContainer}
+              margin={{ top: 'xsmall', right: 'small', left: 'xsmall' }}>
+              <Text
+                font={{ variation: FontVariation.BODY2 }}
+                margin={{ bottom: 'small' }}
+                icon="info-messaging"
+                iconProps={{ size: 15 }}>
+                {getString('turnOnSemanticSearch')}
+              </Text>
+              <Text font={{ variation: FontVariation.BODY2_SEMI }} margin={{ bottom: 'small' }} color={Color.GREY_450}>
+                {getString('enableAIDAMessage')}
+              </Text>
+              <Link to={defaultSettingsURL} color={Color.AI_PURPLE_800}>
+                {getString('reviewProjectSettings')}
+              </Link>
+            </Container>
+          )
+        )}
+        {isSemanticSearchFFEnabled && aidaSettingResponse?.data?.value === 'true' && (
+          <Container className={css.messageContainer}></Container>
+        )}
+        {!isSemanticMode && (
+          <>
+            <Popover
+              content={
+                <Container padding="medium">
+                  <Text font={{ variation: FontVariation.SMALL }} color={Color.WHITE}>
+                    <StringSubstitute
+                      str={getString('regex.tooltip')}
+                      vars={{
+                        regex: <strong>{getString('regex.string')}</strong>,
+                        enable: regexEnabled ? getString('regex.enabled') : getString('regex.disabled'),
+                        disable: regexEnabled ? getString('regex.disable') : getString('regex.enable')
+                      }}
+                    />
+                  </Text>
+                </Container>
+              }
+              popoverClassName={cx(css.popover, Classes.DARK)}
+              interactionKind={PopoverInteractionKind.HOVER_TARGET_ONLY}
+              position={PopoverPosition.BOTTOM_RIGHT}
+              isDark={true}>
+              <img
+                className={css.toggleRegexIconContainer}
+                src={regexEnabled ? RegexEnabled : Regex}
+                height={22}
+                width={22}
+                onClick={() => {
+                  setRegexEnabled(!regexEnabled)
+                }}
+              />
+            </Popover>
+          </>
+        )}
+      </Container>
     </div>
   )
 }

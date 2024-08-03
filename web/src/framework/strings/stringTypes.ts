@@ -908,6 +908,12 @@ export interface StringsMap {
   recursiveSearchLabel: string
   recursiveSearchTooltip: string
   refresh: string
+  'regex.disable': string
+  'regex.disabled': string
+  'regex.enable': string
+  'regex.enabled': string
+  'regex.string': string
+  'regex.tooltip': string
   reject: string
   rejected: string
   remove: string
@@ -970,7 +976,6 @@ export interface StringsMap {
   'searchScope.base': string
   'searchScope.orgAndProj': string
   'searchScope.orgOnly': string
-  'searchScope.placeholder': string
   'searchScope.title': string
   secret: string
   'secrets.create': string

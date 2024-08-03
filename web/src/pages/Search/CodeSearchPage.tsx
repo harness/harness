@@ -73,7 +73,7 @@ const Search = () => {
   const { showError } = useToaster()
   const repoPath = repoName ? `${space}/${repoName}` : undefined
 
-  const { q, mode } = useQueryParams<{ q: string; mode: SEARCH_MODE }>()
+  const { q, mode, regex } = useQueryParams<{ q: string; mode: SEARCH_MODE; regex: string }>()
   const [searchTerm, setSearchTerm] = useState(q || '')
   const [searchMode, setSearchMode] = useState(mode)
   const [selectedRepositories, setSelectedRepositories] = useState<SelectOption[]>([])
@@ -83,6 +83,8 @@ const Search = () => {
 
   const [recursiveSearchEnabled, setRecursiveSearchEnabled] = useState(!projectId ? true : false)
   const [curScopeLabel, setCurScopeLabel] = useState<SelectOption>()
+  const [regexEnabled, setRegexEnabled] = useState<boolean>(regex === 'true' ? true : false)
+
   //semantic
   // const [loadingSearch, setLoadingSearch] = useState(false)
   const [semanticSearchResult, setSemanticSearchResult] = useState<SemanticSearchResultType[]>([])
@@ -131,7 +133,8 @@ const Search = () => {
             space_paths: !repoPath && !repoPaths.length ? [space] : [],
             query,
             max_result_count: maxResultCount,
-            recursive: recursiveSearchEnabled
+            recursive: recursiveSearchEnabled,
+            enable_regex: regexEnabled
           })
 
           setKeyowordSearchResults(res)
@@ -141,8 +144,8 @@ const Search = () => {
       } catch (error) {
         showError(getErrorMessage(error))
       }
-    }, 300),
-    [selectedLanguages, selectedRepositories, repoPath, mode, recursiveSearchEnabled]
+    }, 300), // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedLanguages, selectedRepositories, repoPath, mode, recursiveSearchEnabled, regexEnabled]
   )
 
   const performSemanticSearch = useCallback(() => {
@@ -185,6 +188,8 @@ const Search = () => {
             searchMode={searchMode}
             setSearchMode={setSearchMode}
             value={searchTerm}
+            regexEnabled={regexEnabled}
+            setRegexEnabled={setRegexEnabled}
             onChange={text => {
               setSearchTerm(text)
             }}
@@ -203,6 +208,8 @@ const Search = () => {
         ) : (
           <KeywordSearchbar
             value={searchTerm}
+            regexEnabled={regexEnabled}
+            setRegexEnabled={setRegexEnabled}
             onChange={text => {
               setSearchTerm(text)
             }}

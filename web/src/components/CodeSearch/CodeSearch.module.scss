@@ -30,6 +30,23 @@
     .searchContainer {
       position: relative;
       width: 100%;
+
+      .searchCtn {
+        &[data-search-mode='keyword'] {
+          .toggleRegexIconContainer {
+            position: absolute;
+            right: -23px !important;
+            top: 3.8px !important;
+            z-index: 1;
+
+            .img {
+              position: unset !important;
+              right: unset;
+              top: unset;
+            }
+          }
+        }
+      }
     }
 
     .searchIcon {
