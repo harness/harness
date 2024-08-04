@@ -313,7 +313,7 @@ export const GitspaceDetails = () => {
                       const pathparamsList = data?.space_path?.split('/') || []
                       const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
                       window.open(
-                        `vscode://harness-inc.gitspaces/${projectIdentifier}/${data?.identifier}?gitness`,
+                        `vscode://harness-inc.oss-gitspaces/${projectIdentifier}/${data?.identifier}?gitness`,
                         '_blank'
                       )
                     } else {

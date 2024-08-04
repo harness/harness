@@ -327,7 +327,7 @@ const ActionMenu = ({
               e.preventDefault()
               e.stopPropagation()
               if (ide === IDEType.VSCODE) {
-                window.open(`vscode://harness-inc.gitspaces/${projectIdentifier}/${identifier}?gitness`, '_blank')
+                window.open(`vscode://harness-inc.oss-gitspaces/${projectIdentifier}/${identifier}?gitness`, '_blank')
               } else {
                 window.open(url || '', '_blank')
               }
@@ -667,7 +667,10 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
 
             if (row?.state === GitspaceStatus.RUNNING) {
               if (row?.ide === IDEType.VSCODE) {
-                window.open(`vscode://harness-inc.gitspaces/${projectIdentifier}/${row?.identifier}?gitness`, '_blank')
+                window.open(
+                  `vscode://harness-inc.oss-gitspaces/${projectIdentifier}/${row?.identifier}?gitness`,
+                  '_blank'
+                )
               } else {
                 window.open(row?.instance?.url || '', '_blank')
               }
