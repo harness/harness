@@ -47,7 +47,6 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository,
 	exporter *exporter.Repository, limiter limiter.ResourceLimiter, publicAccess publicaccess.Service,
 	auditService audit.Service, gitspaceService *gitspace.Service,
-	gitspaceConfigStore store.GitspaceConfigStore, instanceStore store.GitspaceInstanceStore,
 	labelSvc *label.Service,
 ) *Controller {
 	return NewController(config, tx, urlProvider, sseStreamer, identifierCheck, authorizer,
@@ -57,6 +56,5 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 		repoCtrl, membershipStore, importer,
 		exporter, limiter, publicAccess,
 		auditService, gitspaceService,
-		gitspaceConfigStore, instanceStore,
 		labelSvc)
 }
