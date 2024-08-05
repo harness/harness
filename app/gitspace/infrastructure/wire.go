@@ -30,10 +30,14 @@ func ProvideInfraProvisionerService(
 	infraProviderConfig store.InfraProviderConfigStore,
 	infraProviderResource store.InfraProviderResourceStore,
 	providerFactory infraprovider.Factory,
+	infraProviderTemplateStore store.InfraProviderTemplateStore,
+	infraProvisionedStore store.InfraProvisionedStore,
 ) InfraProvisioner {
 	return NewInfraProvisionerService(
 		infraProviderConfig,
 		infraProviderResource,
 		providerFactory,
+		infraProviderTemplateStore,
+		infraProvisionedStore,
 	)
 }

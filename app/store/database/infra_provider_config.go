@@ -68,7 +68,7 @@ func (i infraProviderConfigStore) Find(ctx context.Context, id int64) (*types.In
 	stmt := database.Builder.
 		Select(infraProviderConfigSelectColumns).
 		From(infraProviderConfigTable).
-		Where(infraProviderConfigIDColumn+" = $1", id)
+		Where(infraProviderConfigIDColumn+" = $1", id) //nolint:goconst
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -89,7 +89,7 @@ func (i infraProviderConfigStore) FindByIdentifier(
 	stmt := database.Builder.
 		Select(infraProviderConfigSelectColumns).
 		From(infraProviderConfigTable).
-		Where("ipconf_uid = $1", identifier).
+		Where("ipconf_uid = $1", identifier). //nolint:goconst
 		Where("ipconf_space_id = $2", spaceID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {

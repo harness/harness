@@ -35,9 +35,7 @@ type InfraProvisioner interface {
 	// ResumeProvision stores the provisioned infra details in the db depending on the provisioning type.
 	ResumeProvision(
 		ctx context.Context,
-		infraProviderResource *types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
-		requiredPorts []int,
 		provisionedInfra *types.Infrastructure,
 	) (*types.Infrastructure, error)
 
@@ -45,31 +43,30 @@ type InfraProvisioner interface {
 	TriggerStop(
 		ctx context.Context,
 		infraProviderResource *types.InfraProviderResource,
-		gitspaceConfig types.GitspaceConfig,
+		infra *types.Infrastructure,
 	) error
 
 	// ResumeStop stores the deprovisioned infra details in the db depending on the provisioning type.
 	ResumeStop(
 		ctx context.Context,
-		infraProviderResource *types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
 		deprovisionedInfra *types.Infrastructure,
-	) (*types.Infrastructure, error)
+	) error
 
 	// TriggerDeprovision triggers deprovisionign of all the resources created for the Gitspace.
 	TriggerDeprovision(
 		ctx context.Context,
 		infraProviderResource *types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
+		infra *types.Infrastructure,
 	) error
 
 	// ResumeDeprovision stores the deprovisioned infra details in the db depending on the provisioning type.
 	ResumeDeprovision(
 		ctx context.Context,
-		infraProviderResource *types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
 		deprovisionedInfra *types.Infrastructure,
-	) (*types.Infrastructure, error)
+	) error
 
 	// Find finds the provisioned infra resources for the gitspace instance.
 	Find(

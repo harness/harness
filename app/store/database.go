@@ -1066,4 +1066,28 @@ type (
 			pullreqIDs []int64,
 		) (map[int64][]*types.LabelPullReqAssignmentInfo, error)
 	}
+
+	InfraProviderTemplateStore interface {
+		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderTemplate, error)
+		Find(ctx context.Context, id int64) (*types.InfraProviderTemplate, error)
+		Create(ctx context.Context, infraProviderTemplate *types.InfraProviderTemplate) error
+		Delete(ctx context.Context, id int64) error
+	}
+
+	InfraProvisionedStore interface {
+		Find(ctx context.Context, id int64) (*types.InfraProvisioned, error)
+		FindAllLatestByGateway(ctx context.Context, gatewayHost string) ([]*types.InfraProvisionedGatewayView, error)
+		FindLatestByGitspaceInstanceID(
+			ctx context.Context,
+			spaceID int64,
+			gitspaceInstanceID int64,
+		) (*types.InfraProvisioned, error)
+		FindLatestByGitspaceInstanceIdentifier(ctx context.Context,
+			spaceID int64,
+			gitspaceInstanceIdentifier string,
+		) (*types.InfraProvisioned, error)
+		Create(ctx context.Context, infraProvisioned *types.InfraProvisioned) error
+		Delete(ctx context.Context, id int64) error
+		Update(ctx context.Context, infraProvisioned *types.InfraProvisioned) error
+	}
 )

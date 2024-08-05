@@ -130,7 +130,7 @@ func (o orchestrator) TriggerStopGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopStart)
 
-	err = o.infraProvisioner.TriggerStop(ctx, infraProviderResource, gitspaceConfig)
+	err = o.infraProvisioner.TriggerStop(ctx, infraProviderResource, infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
 
@@ -225,7 +225,7 @@ func (o orchestrator) TriggerDeleteGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningStart)
 
-	err = o.infraProvisioner.TriggerDeprovision(ctx, infraProviderResource, gitspaceConfig)
+	err = o.infraProvisioner.TriggerDeprovision(ctx, infraProviderResource, gitspaceConfig, infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
 
@@ -277,12 +277,6 @@ func (o orchestrator) ResumeStartGitspace(
 	gitspaceInstance := *gitspaceConfig.GitspaceInstance
 	gitspaceInstance.State = enum.GitspaceInstanceStateError
 
-	infraProviderResource, err := o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
-	if err != nil {
-		return gitspaceInstance, fmt.Errorf("cannot get the infraprovider resource for ID %d: %w",
-			gitspaceConfig.InfraProviderResourceID, err)
-	}
-
 	ideSvc, err := o.getIDEService(gitspaceConfig)
 	if err != nil {
 		return gitspaceInstance, err
@@ -290,8 +284,7 @@ func (o orchestrator) ResumeStartGitspace(
 
 	idePort := ideSvc.Port()
 
-	provisionedInfra, err = o.infraProvisioner.ResumeProvision(
-		ctx, infraProviderResource, gitspaceConfig, []int{idePort}, provisionedInfra)
+	provisionedInfra, err = o.infraProvisioner.ResumeProvision(ctx, gitspaceConfig, provisionedInfra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 
@@ -395,13 +388,7 @@ func (o orchestrator) ResumeStopGitspace(
 ) (enum.GitspaceInstanceStateType, error) {
 	instanceState := enum.GitspaceInstanceStateError
 
-	infraProviderResource, err := o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
-	if err != nil {
-		return instanceState, fmt.Errorf(
-			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
-	}
-
-	_, err = o.infraProvisioner.ResumeStop(ctx, infraProviderResource, gitspaceConfig, stoppedInfra)
+	err := o.infraProvisioner.ResumeStop(ctx, gitspaceConfig, stoppedInfra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
 
@@ -425,13 +412,7 @@ func (o orchestrator) ResumeDeleteGitspace(
 ) (enum.GitspaceInstanceStateType, error) {
 	instanceState := enum.GitspaceInstanceStateError
 
-	infraProviderResource, err := o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
-	if err != nil {
-		return instanceState, fmt.Errorf(
-			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
-	}
-
-	_, err = o.infraProvisioner.ResumeDeprovision(ctx, infraProviderResource, gitspaceConfig, deprovisionedInfra)
+	err := o.infraProvisioner.ResumeDeprovision(ctx, gitspaceConfig, deprovisionedInfra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
 		return instanceState, fmt.Errorf(

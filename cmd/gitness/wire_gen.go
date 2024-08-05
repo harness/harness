@@ -353,7 +353,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	genericSCM := scm.ProvideGenericSCM()
 	scmFactory := scm.ProvideFactory(gitnessSCM, genericSCM)
 	scmSCM := scm.ProvideSCM(scmFactory)
-	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory)
+	infraProviderTemplateStore := database.ProvideInfraProviderTemplateStore(db)
+	infraProvisionedStore := database.ProvideInfraProvisionedStore(db)
+	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory, infraProviderTemplateStore, infraProvisionedStore)
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
 	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger)
 	orchestratorConfig := server.ProvideGitspaceOrchestratorConfig(config)
@@ -432,7 +434,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceeventService, infraproviderService, gitspaceService, gitspaceinfraeventService)
+	gitspaceServices := services.ProvideGitspaceServices(gitspaceeventService, infraproviderService, gitspaceService, gitspaceinfraeventService)
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, sizeCalculator, repoService, cleanupService, notificationService, keywordsearchService, gitspaceServices)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, sshServer, poller, resolverManager, servicesServices)
 	return serverSystem, nil
 }

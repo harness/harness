@@ -68,6 +68,8 @@ var WireSet = wire.NewSet(
 	ProvideLabelStore,
 	ProvideLabelValueStore,
 	ProvidePullReqLabelStore,
+	ProvideInfraProviderTemplateStore,
+	ProvideInfraProvisionedStore,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -306,4 +308,14 @@ func ProvideLabelValueStore(db *sqlx.DB) store.LabelValueStore {
 // ProvideLabelValueStore provides a label value store.
 func ProvidePullReqLabelStore(db *sqlx.DB) store.PullReqLabelAssignmentStore {
 	return NewPullReqLabelStore(db)
+}
+
+// ProvideInfraProviderTemplateStore provides a infraprovider template store.
+func ProvideInfraProviderTemplateStore(db *sqlx.DB) store.InfraProviderTemplateStore {
+	return NewInfraProviderTemplateStore(db)
+}
+
+// ProvideInfraProvisionedStore provides a provisioned infra store.
+func ProvideInfraProvisionedStore(db *sqlx.DB) store.InfraProvisionedStore {
+	return NewInfraProvisionedStore(db)
 }
