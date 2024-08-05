@@ -120,7 +120,7 @@ func ProvideRouter(
 		infraProviderCtrl, migrateCtrl, gitspaceCtrl)
 	routers[1] = NewAPIRouter(apiHandler)
 
-	webHandler := NewWebHandler(config, openapi)
+	webHandler := NewWebHandler(config, authenticator, openapi)
 	routers[2] = NewWebRouter(webHandler)
 
 	return NewRouter(routers)

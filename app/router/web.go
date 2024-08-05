@@ -17,8 +17,10 @@ package router
 import (
 	"net/http"
 
+	middlewareweb "github.com/harness/gitness/app/api/middleware/web"
 	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/api/render"
+	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/web"
 
@@ -30,7 +32,9 @@ import (
 )
 
 // NewWebHandler returns a new WebHandler.
-func NewWebHandler(config *types.Config,
+func NewWebHandler(
+	config *types.Config,
+	authenticator authn.Authenticator,
 	openapi openapi.Service,
 ) http.Handler {
 	// Use go-chi router for inner routing
@@ -95,7 +99,10 @@ func NewWebHandler(config *types.Config,
 
 	// serve all other routes from the embedded filesystem,
 	// which in turn serves the user interface.
-	r.With(sec.Handler).NotFound(
+	r.With(
+		sec.Handler,
+		middlewareweb.PublicAccess(config.PublicResourceCreationEnabled, authenticator),
+	).NotFound(
 		web.Handler(),
 	)
 

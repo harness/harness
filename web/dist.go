@@ -17,6 +17,7 @@ package web
 
 import (
 	"bytes"
+	"context"
 	"embed"
 	"fmt"
 	"io"
@@ -61,6 +62,12 @@ func Handler() http.HandlerFunc {
 			r.URL.Path = "/"
 		} else {
 			r.URL.Path = "/" + basePath
+		}
+
+		//nolint:revive,staticcheck
+		if RenderPublicAccessFrom(r.Context()) &&
+			(r.URL.Path == "/" || r.URL.Path == "/index.html") {
+			// TODO: handle public access rendering
 		}
 
 		// Disable caching and sniffing via HTTP headers for UI main entry resources
@@ -142,4 +149,22 @@ func createFileMapForDistFolder() error {
 
 func fileNotFoundInDist(path string) bool {
 	return !fileMap[distPath+"/"+path]
+}
+
+// renderPublicAccessKey is the context key for storing and retrieving whether public access should be rendered.
+type renderPublicAccessKey struct{}
+
+// RenderPublicAccessFrom retrieves the public access rendering config from the context.
+// If true, the UI should be rendered for public access.
+func RenderPublicAccessFrom(ctx context.Context) bool {
+	if v, ok := ctx.Value(renderPublicAccessKey{}).(bool); ok {
+		return v
+	}
+
+	return false
+}
+
+// WithRenderPublicAccess returns a copy of parent in which the public access rendering is set to the provided value.
+func WithRenderPublicAccess(parent context.Context, v bool) context.Context {
+	return context.WithValue(parent, renderPublicAccessKey{}, v)
 }
