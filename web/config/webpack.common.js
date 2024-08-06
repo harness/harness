@@ -220,6 +220,13 @@ module.exports = {
       minify: false,
       templateParameters: {}
     }),
+    new HTMLWebpackPlugin({
+      template: 'src/index_public.html',
+      filename: 'index_public.html',
+      favicon: 'src/favicon.svg',
+      minify: false,
+      templateParameters: {}
+    }),
     moduleFederationPlugin,
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core

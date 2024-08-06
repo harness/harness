@@ -55,7 +55,7 @@ const AppContext = React.createContext<AppContextProps>({
   routingId: '',
   defaultSettingsURL: '',
   isPublicAccessEnabledOnResources: false,
-  isCurrentSessionPublic: false
+  isCurrentSessionPublic: !!window.publicAccessOnGitness
 })
 
 export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(function AppContextProvider({

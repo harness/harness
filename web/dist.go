@@ -64,14 +64,16 @@ func Handler() http.HandlerFunc {
 			r.URL.Path = "/" + basePath
 		}
 
-		//nolint:revive,staticcheck
 		if RenderPublicAccessFrom(r.Context()) &&
 			(r.URL.Path == "/" || r.URL.Path == "/index.html") {
-			// TODO: handle public access rendering
+			r.URL.Path = "./index_public.html"
 		}
 
 		// Disable caching and sniffing via HTTP headers for UI main entry resources
-		if r.URL.Path == "/" || r.URL.Path == remoteEntryJSFullPath || r.URL.Path == "/index.html" {
+		if r.URL.Path == "/" ||
+			r.URL.Path == remoteEntryJSFullPath ||
+			r.URL.Path == "/index.html" ||
+			r.URL.Path == "/index_public.html" {
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
 			w.Header().Set("pragma", "no-cache")
 			w.Header().Set("X-Content-Type-Options", "nosniff")

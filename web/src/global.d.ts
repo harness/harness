@@ -70,6 +70,7 @@ declare interface Window {
   STRIP_CDE_PREFIX?: boolean
   STRIP_CODE_PREFIX?: boolean
   Sanitizer: any
+  publicAccessOnGitness: boolean
 }
 
 declare const __ENABLE_CDN__: boolean

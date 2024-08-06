@@ -50,7 +50,7 @@ const App: React.FC<AppProps> = React.memo(function App({
   currentUserProfileURL = '',
   defaultSettingsURL = '',
   isPublicAccessEnabledOnResources = false,
-  isCurrentSessionPublic = false
+  isCurrentSessionPublic = !!window.publicAccessOnGitness
 }: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
   const getRequestOptions = useCallback(

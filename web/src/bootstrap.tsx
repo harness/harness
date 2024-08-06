@@ -51,7 +51,7 @@ ReactDOM.render(
     routingId=""
     defaultSettingsURL=""
     isPublicAccessEnabledOnResources
-    isCurrentSessionPublic={false}
+    isCurrentSessionPublic={!!window.publicAccessOnGitness}
   />,
   document.getElementById('react-root')
 )

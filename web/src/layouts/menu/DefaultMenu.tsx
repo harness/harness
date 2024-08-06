@@ -31,7 +31,7 @@ import css from './DefaultMenu.module.scss'
 
 export const DefaultMenu: React.FC = () => {
   const history = useHistory()
-  const { routes, standalone } = useAppContext()
+  const { routes, standalone, isCurrentSessionPublic } = useAppContext()
   const [selectedSpace, setSelectedSpace] = useState<SpaceSpaceOutput | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
   const { getString } = useStrings()
@@ -58,17 +58,19 @@ export const DefaultMenu: React.FC = () => {
   return (
     <Container className={css.main}>
       <Layout.Vertical spacing="small">
-        <SpaceSelector
-          onSelect={(_selectedSpace, isUserAction) => {
-            setSelectedSpace(_selectedSpace)
-            if (_selectedSpace.path === '' && _selectedSpace.id === -1) {
-              setSelectedSpace(undefined)
-            }
-            if (isUserAction) {
-              history.push(routes.toCODERepositories({ space: _selectedSpace.path as string }))
-            }
-          }}
-        />
+        <Render when={!isCurrentSessionPublic}>
+          <SpaceSelector
+            onSelect={(_selectedSpace, isUserAction) => {
+              setSelectedSpace(_selectedSpace)
+              if (_selectedSpace.path === '' && _selectedSpace.id === -1) {
+                setSelectedSpace(undefined)
+              }
+              if (isUserAction) {
+                history.push(routes.toCODERepositories({ space: _selectedSpace.path as string }))
+              }
+            }}
+          />
+        </Render>
 
         <Render when={selectedSpace}>
           <NavMenuItem
