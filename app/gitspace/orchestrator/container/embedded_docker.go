@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	goruntime "runtime"
 	"strconv"
 	"strings"
 
@@ -614,12 +615,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	_, err := dockerClient.ContainerCreate(ctx, &container.Config{
-		Image:        imageName,
-		Entrypoint:   []string{"/bin/sh"},
-		Cmd:          []string{"-c", "trap 'exit 0' 15; sleep infinity & wait $!"},
-		ExposedPorts: exposedPorts,
-	}, &container.HostConfig{
+	hostConfig := &container.HostConfig{
 		PortBindings: portBindings,
 		Mounts: []mount.Mount{
 			{
@@ -628,7 +624,20 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 				Target: workingDirectory,
 			},
 		},
-	}, nil, nil, containerName)
+	}
+	if goruntime.GOOS == "linux" {
+		extraHosts := []string{"host.docker.internal:host-gateway"}
+		hostConfig.ExtraHosts = extraHosts
+	}
+	containerConfig := &container.Config{
+		Image:        imageName,
+		Entrypoint:   []string{"/bin/sh"},
+		Cmd:          []string{"-c", "trap 'exit 0' 15; sleep infinity & wait $!"},
+		ExposedPorts: exposedPorts,
+	}
+	_, err := dockerClient.ContainerCreate(ctx, containerConfig,
+		hostConfig, nil, nil, containerName)
+
 	if err != nil {
 		loggingErr = logStreamInstance.Write("Error while creating container: " + err.Error())
 
