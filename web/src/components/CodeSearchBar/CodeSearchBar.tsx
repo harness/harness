@@ -173,7 +173,7 @@ const CodeSearchBar: FC<CodeSearchBarProps> = ({
           )
         )}
         {isSemanticSearchFFEnabled && aidaSettingResponse?.data?.value === 'true' && (
-          <Container className={css.messageContainer}></Container>
+          <Container className={css.emptyContainer}></Container>
         )}
         {!isSemanticMode && (
           <>

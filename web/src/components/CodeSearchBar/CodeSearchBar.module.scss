@@ -139,10 +139,13 @@
 
 .layoutCtn {
   display: flex;
-  height: 0px;
 }
 
 .messageContainer {
   width: 100%;
+}
+
+.emptyContainer {
   height: 0px !important;
+  width: 100%;
 }

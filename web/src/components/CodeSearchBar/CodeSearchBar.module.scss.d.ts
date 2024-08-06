@@ -18,6 +18,7 @@
 // This is an auto-generated file
 export declare const andOr: string
 export declare const bp3PopoverWrapper: string
+export declare const emptyContainer: string
 export declare const highltedText: string
 export declare const layoutCtn: string
 export declare const messageContainer: string
