@@ -106,6 +106,8 @@ type PullReqFilter struct {
 	States        []enum.PullReqState `json:"state"`
 	Sort          enum.PullReqSort    `json:"sort"`
 	Order         enum.Order          `json:"order"`
+	LabelID       []int64             `json:"label_id"`
+	ValueID       []int64             `json:"value_id"`
 	CreatedFilter
 }
 

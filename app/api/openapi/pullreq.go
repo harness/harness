@@ -334,6 +334,50 @@ var queryParameterAssignable = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterLabelID = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamLabelID,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("List of label ids used to filter pull requests."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+					},
+				},
+			},
+		},
+		// making it look like label_id=1&label_id=2
+		Style:   ptr.String(string(openapi3.EncodingStyleForm)),
+		Explode: ptr.Bool(true),
+	},
+}
+
+var queryParameterValueID = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamValueID,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("List of label value ids used to filter pull requests."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+					},
+				},
+			},
+		},
+		// making it look like value_id=1&value_id=2
+		Style:   ptr.String(string(openapi3.EncodingStyleForm)),
+		Explode: ptr.Bool(true),
+	},
+}
+
 //nolint:funlen
 func pullReqOperations(reflector *openapi3.Reflector) {
 	createPullReq := openapi3.Operation{}
@@ -356,7 +400,8 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
 		queryParameterOrder, queryParameterSortPullRequest,
 		queryParameterCreatedLt, queryParameterCreatedGt,
-		QueryParameterPage, QueryParameterLimit)
+		QueryParameterPage, QueryParameterLimit,
+		queryParameterLabelID, queryParameterValueID)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)

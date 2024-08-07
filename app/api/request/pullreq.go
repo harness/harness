@@ -71,6 +71,15 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		return nil, fmt.Errorf("encountered error parsing createdby filter: %w", err)
 	}
 
+	labelID, err := QueryParamListAsPositiveInt64(r, QueryParamLabelID)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing labelid filter: %w", err)
+	}
+	valueID, err := QueryParamListAsPositiveInt64(r, QueryParamValueID)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing valueid filter: %w", err)
+	}
+
 	createdAtFilter, err := ParseCreated(r)
 	if err != nil {
 		return nil, fmt.Errorf("encountered error parsing pr created filter: %w", err)
@@ -87,6 +96,8 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		States:        parsePullReqStates(r),
 		Sort:          ParseSortPullReq(r),
 		Order:         ParseOrder(r),
+		LabelID:       labelID,
+		ValueID:       valueID,
 		CreatedFilter: createdAtFilter,
 	}, nil
 }

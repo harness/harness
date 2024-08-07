@@ -424,9 +424,14 @@ func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
 
 // Count of pull requests for a repo.
 func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (int64, error) {
-	stmt := database.Builder.
-		Select("count(*)").
-		From("pullreqs")
+	var stmt squirrel.SelectBuilder
+
+	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 {
+		stmt = database.Builder.Select("count(DISTINCT pullreq_id)")
+	} else {
+		stmt = database.Builder.Select("count(*)")
+	}
+	stmt = stmt.From("pullreqs")
 
 	if len(opts.States) == 1 {
 		stmt = stmt.Where("pullreq_state = ?", opts.States[0])
@@ -465,6 +470,8 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 	if opts.CreatedGt > 0 {
 		stmt = stmt.Where("pullreq_created > ?", opts.CreatedGt)
 	}
+
+	setLabelKeyQuery(&stmt, opts)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -484,9 +491,14 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 
 // List returns a list of pull requests for a repo.
 func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*types.PullReq, error) {
-	stmt := database.Builder.
-		Select(pullReqColumns).
-		From("pullreqs")
+	var stmt squirrel.SelectBuilder
+
+	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 {
+		stmt = database.Builder.Select("DISTINCT " + pullReqColumns)
+	} else {
+		stmt = database.Builder.Select(pullReqColumns)
+	}
+	stmt = stmt.From("pullreqs")
 
 	if len(opts.States) == 1 {
 		stmt = stmt.Where("pullreq_state = ?", opts.States[0])
@@ -525,6 +537,8 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 	if opts.CreatedGt > 0 {
 		stmt = stmt.Where("pullreq_created > ?", opts.CreatedGt)
 	}
+
+	setLabelKeyQuery(&stmt, opts)
 
 	stmt = stmt.Limit(database.Limit(opts.Size))
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
@@ -554,6 +568,33 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 	}
 
 	return result, nil
+}
+
+func setLabelKeyQuery(stmt *squirrel.SelectBuilder, opts *types.PullReqFilter) {
+	if len(opts.LabelID) == 0 && len(opts.ValueID) == 0 {
+		return
+	}
+
+	*stmt = stmt.InnerJoin("pullreq_labels ON pullreq_label_pullreq_id = pullreq_id")
+
+	if len(opts.LabelID) > 0 && len(opts.ValueID) == 0 {
+		*stmt = stmt.Where(
+			squirrel.Eq{"pullreq_label_label_id": opts.LabelID},
+		)
+		return
+	}
+
+	if len(opts.LabelID) == 0 && len(opts.ValueID) > 0 {
+		*stmt = stmt.Where(
+			squirrel.Eq{"pullreq_label_label_value_id": opts.ValueID},
+		)
+		return
+	}
+
+	*stmt = stmt.Where(squirrel.Or{
+		squirrel.Eq{"pullreq_label_label_id": opts.LabelID},
+		squirrel.Eq{"pullreq_label_label_value_id": opts.ValueID},
+	})
 }
 
 func mapPullReq(pr *pullReq) *types.PullReq {

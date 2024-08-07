@@ -31,6 +31,8 @@ const (
 	QueryParamOrder     = "order"
 	QueryParamQuery     = "query"
 	QueryParamRecursive = "recursive"
+	QueryParamLabelID   = "label_id"
+	QueryParamValueID   = "value_id"
 
 	QueryParamState = "state"
 	QueryParamKind  = "kind"
