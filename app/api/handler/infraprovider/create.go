@@ -36,7 +36,7 @@ func HandleCreateConfig(infraProviderCtrl *infraprovider.Controller) http.Handle
 			return
 		}
 
-		infraProviderConfig, err := infraProviderCtrl.Create(ctx, session, in)
+		infraProviderConfig, err := infraProviderCtrl.Create(ctx, *session, *in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

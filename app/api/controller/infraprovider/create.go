@@ -17,7 +17,6 @@ package infraprovider
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
@@ -26,6 +25,8 @@ import (
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
+
+const NoResourceIdentifier = ""
 
 type CreateInput struct {
 	Identifier string                 `json:"identifier"`
@@ -51,25 +52,31 @@ type ResourceInput struct {
 	TemplateIdentifier *string                `json:"template_identifier"`
 }
 
-// Create creates a new infraprovider config.
+type TemplateInput struct {
+	Identifier  string `json:"identifier"`
+	Description string `json:"description"`
+	Data        string `json:"data"`
+}
+
+// Create creates a new infra provider.
 func (c *Controller) Create(
 	ctx context.Context,
-	session *auth.Session,
-	in *CreateInput,
+	session auth.Session,
+	in CreateInput,
 ) (*types.InfraProviderConfig, error) {
 	if err := c.sanitizeCreateInput(in); err != nil {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
+		return nil, fmt.Errorf("failed to find parent by ref %q : %w", in.SpaceRef, err)
 	}
 	if err = apiauth.CheckInfraProvider(
 		ctx,
 		c.authorizer,
-		session,
+		&session,
 		parentSpace.Path,
-		"",
+		NoResourceIdentifier,
 		enum.PermissionInfraProviderEdit); err != nil {
 		return nil, err
 	}
@@ -82,42 +89,17 @@ func (c *Controller) Create(
 		Created:    now,
 		Updated:    now,
 	}
-	var resources []*types.InfraProviderResource
-	for _, res := range in.Resources {
-		infraProviderResource := &types.InfraProviderResource{
-			Identifier:        res.Identifier,
-			InfraProviderType: res.InfraProviderType,
-			Name:              res.Name,
-			SpaceID:           parentSpace.ID,
-			CPU:               res.CPU,
-			Memory:            res.Memory,
-			Disk:              res.Disk,
-			Network:           res.Network,
-			Region:            strings.Join(res.Region, " "), // TODO fix
-			Metadata:          res.Metadata,
-			GatewayHost:       res.GatewayHost,
-			GatewayPort:       res.GatewayPort, // No template as of now
-			Created:           now,
-			Updated:           now,
-		}
-		resources = append(resources, infraProviderResource)
-	}
-	infraProviderConfig.Resources = resources
+	infraProviderConfig.Resources = mapToResourceEntity(in.Resources, *parentSpace, infraProviderConfig.ID)
 	err = c.infraproviderSvc.CreateInfraProvider(ctx, infraProviderConfig)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create the infraprovider: %w", err)
+		return nil, fmt.Errorf("unable to create the infraprovider: %q %w", infraProviderConfig.Identifier, err)
 	}
 	return infraProviderConfig, nil
 }
 
-func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+func (c *Controller) sanitizeCreateInput(in CreateInput) error {
 	if err := check.Identifier(in.Identifier); err != nil {
 		return err
-	}
-	for _, resource := range in.Resources {
-		if err := check.Identifier(resource.Identifier); err != nil {
-			return err
-		}
 	}
 	return nil
 }

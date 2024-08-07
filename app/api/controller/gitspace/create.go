@@ -185,7 +185,7 @@ func (c *Controller) createOrFindInfraProviderResource(
 }
 
 func (c *Controller) autoCreateDefaultResource(ctx context.Context, parentSpace *types.Space, now int64) error {
-	infraProviderConfig := &types.InfraProviderConfig{
+	defaultDockerConfig := &types.InfraProviderConfig{
 		Identifier: defaultResourceIdentifier,
 		Name:       "default docker infrastructure",
 		Type:       enum.InfraProviderTypeDocker,
@@ -194,10 +194,10 @@ func (c *Controller) autoCreateDefaultResource(ctx context.Context, parentSpace 
 		Created:    now,
 		Updated:    now,
 	}
-	defaultResource := &types.InfraProviderResource{
+	defaultResource := types.InfraProviderResource{
 		Identifier:                    defaultResourceIdentifier,
 		Name:                          "Standard Docker Resource",
-		InfraProviderConfigIdentifier: infraProviderConfig.Identifier,
+		InfraProviderConfigIdentifier: defaultDockerConfig.Identifier,
 		InfraProviderType:             enum.InfraProviderTypeDocker,
 		CPU:                           wrapString("any"),
 		Memory:                        wrapString("any"),
@@ -208,10 +208,10 @@ func (c *Controller) autoCreateDefaultResource(ctx context.Context, parentSpace 
 		Created:                       now,
 		Updated:                       now,
 	}
-	infraProviderConfig.Resources = []*types.InfraProviderResource{defaultResource}
-	err := c.infraProviderSvc.CreateInfraProvider(ctx, infraProviderConfig)
+	defaultDockerConfig.Resources = []types.InfraProviderResource{defaultResource}
+	err := c.infraProviderSvc.CreateInfraProvider(ctx, defaultDockerConfig)
 	if err != nil {
-		return fmt.Errorf("could not autocreate the resources: %w", err)
+		return fmt.Errorf("could not auto-create the infra provider: %w", err)
 	}
 	return nil
 }

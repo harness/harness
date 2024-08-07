@@ -26,15 +26,17 @@ import (
 
 func NewService(
 	tx dbtx.Transactor,
-	infraProviderResourceStore store.InfraProviderResourceStore,
-	infraProviderConfigStore store.InfraProviderConfigStore,
+	resourceStore store.InfraProviderResourceStore,
+	configStore store.InfraProviderConfigStore,
+	templateStore store.InfraProviderTemplateStore,
 	factory infraprovider.Factory,
 	spaceStore store.SpaceStore,
 ) *Service {
 	return &Service{
 		tx:                         tx,
-		infraProviderResourceStore: infraProviderResourceStore,
-		infraProviderConfigStore:   infraProviderConfigStore,
+		infraProviderResourceStore: resourceStore,
+		infraProviderConfigStore:   configStore,
+		infraProviderTemplateStore: templateStore,
 		infraProviderFactory:       factory,
 		spaceStore:                 spaceStore,
 	}
@@ -43,6 +45,7 @@ func NewService(
 type Service struct {
 	infraProviderResourceStore store.InfraProviderResourceStore
 	infraProviderConfigStore   store.InfraProviderConfigStore
+	infraProviderTemplateStore store.InfraProviderTemplateStore
 	infraProviderFactory       infraprovider.Factory
 	spaceStore                 store.SpaceStore
 	tx                         dbtx.Transactor
@@ -55,14 +58,21 @@ func (c *Service) Find(
 ) (*types.InfraProviderConfig, error) {
 	infraProviderConfig, err := c.infraProviderConfigStore.FindByIdentifier(ctx, space.ID, identifier)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider config: %w", err)
+		return nil, fmt.Errorf("failed to find infraprovider config: %q %w", identifier, err)
 	}
 	resources, err := c.infraProviderResourceStore.List(ctx, infraProviderConfig.ID, types.ListQueryFilter{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to find infraprovider resources: %w", err)
+		return nil, fmt.Errorf("failed to find infraprovider resources for config: %q %w",
+			infraProviderConfig.Identifier, err)
 	}
 	infraProviderConfig.SpacePath = space.Path
-	infraProviderConfig.Resources = resources
+	values := make([]types.InfraProviderResource, len(infraProviderConfig.Resources))
+	for i, ptr := range resources {
+		if ptr != nil {
+			values[i] = *ptr
+		}
+	}
+	infraProviderConfig.Resources = values
 	return infraProviderConfig, nil
 }
 
@@ -82,34 +92,85 @@ func (c *Service) CreateInfraProvider(
 	infraProviderConfig *types.InfraProviderConfig,
 ) error {
 	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		err := c.infraProviderConfigStore.Create(ctx, infraProviderConfig)
+		err := c.createConfig(ctx, infraProviderConfig)
 		if err != nil {
-			return fmt.Errorf("failed to create infraprovider config for : %q %w", infraProviderConfig.Identifier, err)
+			return fmt.Errorf("could not autocreate the config: %q %w", infraProviderConfig.Identifier, err)
 		}
-		infraProvider, err := c.infraProviderFactory.GetInfraProvider(infraProviderConfig.Type)
+		err = c.createResources(ctx, infraProviderConfig.Resources, infraProviderConfig.ID)
 		if err != nil {
-			return fmt.Errorf("failed to fetch infrastructure impl for type : %q %w", infraProviderConfig.Type, err)
-		}
-		if len(infraProvider.TemplateParams()) > 0 {
-			return fmt.Errorf("failed to fetch templates") // TODO Implement
-		}
-		parameters := []types.InfraProviderParameter{}
-		// TODO logic to populate paramteters as per the provider type
-		err = infraProvider.ValidateParams(parameters)
-		if err != nil {
-			return fmt.Errorf("failed to validate infraprovider templates")
-		}
-		for _, res := range infraProviderConfig.Resources {
-			res.InfraProviderConfigID = infraProviderConfig.ID
-			err = c.infraProviderResourceStore.Create(ctx, res)
-			if err != nil {
-				return fmt.Errorf("failed to create infraprovider resource for : %q %w", res.Identifier, err)
-			}
+			return fmt.Errorf("could not autocreate the resources: %v %w", infraProviderConfig.Resources, err)
 		}
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("failed to complete txn for the infraprovider resource : %w", err)
+		return fmt.Errorf("failed to complete txn for the infraprovider %w", err)
 	}
 	return nil
+}
+
+func (c *Service) createConfig(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
+	err := c.infraProviderConfigStore.Create(ctx, infraProviderConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create infraprovider config for : %q %w", infraProviderConfig.Identifier, err)
+	}
+	return nil
+}
+
+func (c *Service) CreateResources(ctx context.Context, resources []types.InfraProviderResource, configID int64) error {
+	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		return c.createResources(ctx, resources, configID)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to complete txn for the infraprovider resource %w", err)
+	}
+	return nil
+}
+
+func (c *Service) createResources(ctx context.Context, resources []types.InfraProviderResource, configID int64) error {
+	for idx, res := range resources {
+		res.InfraProviderConfigID = configID
+		infraProvider, err := c.infraProviderFactory.GetInfraProvider(res.InfraProviderType)
+		if err != nil {
+			return fmt.Errorf("failed to fetch infrastructure impl for type : %q %w", res.InfraProviderType, err)
+		}
+		if len(infraProvider.TemplateParams()) > 0 {
+			err = c.validateTemplates(ctx, infraProvider, res)
+			if err != nil {
+				return err
+			}
+		}
+		err = c.infraProviderResourceStore.Create(ctx, &resources[idx])
+		if err != nil {
+			return fmt.Errorf("failed to create infraprovider resource for : %q %w", res.Identifier, err)
+		}
+	}
+	return nil
+}
+
+func (c *Service) validateTemplates(
+	ctx context.Context,
+	infraProvider infraprovider.InfraProvider,
+	res types.InfraProviderResource,
+) error {
+	templateParams := infraProvider.TemplateParams()
+	for _, param := range templateParams {
+		key := param.Name
+		if res.Metadata[key] != "" {
+			templateIdentifier := res.Metadata[key]
+			_, err := c.infraProviderTemplateStore.FindByIdentifier(
+				ctx, res.SpaceID, templateIdentifier)
+			if err != nil {
+				return fmt.Errorf("unable to get template params for ID : %s %w",
+					res.Metadata[key], err)
+			}
+		}
+	}
+	return nil
+}
+
+func (c *Service) CreateTemplate(
+	ctx context.Context,
+	template *types.InfraProviderTemplate,
+) error {
+	return c.infraProviderTemplateStore.Create(ctx, template)
 }

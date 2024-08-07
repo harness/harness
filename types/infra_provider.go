@@ -19,16 +19,16 @@ import (
 )
 
 type InfraProviderConfig struct {
-	ID         int64                    `json:"-"`
-	Identifier string                   `json:"identifier"`
-	Name       string                   `json:"name"`
-	Type       enum.InfraProviderType   `json:"type"`
-	Metadata   map[string]string        `json:"metadata"`
-	Resources  []*InfraProviderResource `json:"resources"`
-	SpaceID    int64                    `json:"-"`
-	SpacePath  string                   `json:"space_path"`
-	Created    int64                    `json:"created"`
-	Updated    int64                    `json:"updated"`
+	ID         int64                   `json:"-"`
+	Identifier string                  `json:"identifier"`
+	Name       string                  `json:"name"`
+	Type       enum.InfraProviderType  `json:"type"`
+	Metadata   map[string]string       `json:"metadata"`
+	Resources  []InfraProviderResource `json:"resources"`
+	SpaceID    int64                   `json:"-"`
+	SpacePath  string                  `json:"space_path"`
+	Created    int64                   `json:"created"`
+	Updated    int64                   `json:"updated"`
 }
 
 type InfraProviderResource struct {

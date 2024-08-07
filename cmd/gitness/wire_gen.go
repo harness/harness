@@ -256,6 +256,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	gitspaceInstanceStore := database.ProvideGitspaceInstanceStore(db)
 	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db)
 	infraProviderConfigStore := database.ProvideInfraProviderConfigStore(db)
+	infraProviderTemplateStore := database.ProvideInfraProviderTemplateStore(db)
 	dockerConfig, err := server.ProvideDockerConfig(config)
 	if err != nil {
 		return nil, err
@@ -267,7 +268,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	dockerProvider := infraprovider.ProvideDockerProvider(dockerConfig, dockerClientFactory, eventsReporter)
 	factory := infraprovider.ProvideFactory(dockerProvider)
-	infraproviderService := infraprovider2.ProvideInfraProvider(transactor, infraProviderResourceStore, infraProviderConfigStore, factory, spaceStore)
+	infraproviderService := infraprovider2.ProvideInfraProvider(transactor, infraProviderResourceStore, infraProviderConfigStore, infraProviderTemplateStore, factory, spaceStore)
 	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, infraproviderService)
 	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService)
 	pipelineController := pipeline.ProvideController(repoStore, triggerStore, authorizer, pipelineStore)
@@ -353,7 +354,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	genericSCM := scm.ProvideGenericSCM()
 	scmFactory := scm.ProvideFactory(gitnessSCM, genericSCM)
 	scmSCM := scm.ProvideSCM(scmFactory)
-	infraProviderTemplateStore := database.ProvideInfraProviderTemplateStore(db)
 	infraProvisionedStore := database.ProvideInfraProvisionedStore(db)
 	infrastructureConfig := server.ProvideGitspaceInfraProvisionerConfig(config)
 	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory, infraProviderTemplateStore, infraProvisionedStore, infrastructureConfig)
