@@ -26,9 +26,9 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
-	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"
+	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/sse"
@@ -66,7 +66,7 @@ type Controller struct {
 	sseStreamer         sse.Streamer
 	codeOwners          *codeowners.Service
 	locker              *locker.Locker
-	importer            *importer.PullReq
+	importer            *migrate.PullReq
 	labelSvc            *label.Service
 }
 
@@ -93,7 +93,7 @@ func NewController(
 	sseStreamer sse.Streamer,
 	codeowners *codeowners.Service,
 	locker *locker.Locker,
-	importer *importer.PullReq,
+	importer *migrate.PullReq,
 	labelSvc *label.Service,
 ) *Controller {
 	return &Controller{

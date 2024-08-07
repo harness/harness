@@ -123,7 +123,7 @@ func (c *Controller) sanitizeImportInput(in *ImportInput) error {
 		in.Identifier = in.UID
 	}
 
-	if err := c.validateParentRef(in.ParentRef); err != nil {
+	if err := ValidateParentRef(in.ParentRef); err != nil {
 		return err
 	}
 

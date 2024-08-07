@@ -43,6 +43,11 @@ func Forbidden(ctx context.Context, w http.ResponseWriter) {
 	UserError(ctx, w, usererror.ErrForbidden)
 }
 
+// Forbiddenf writes the json-encoded message with a forbidden error.
+func Forbiddenf(ctx context.Context, w http.ResponseWriter, format string, args ...interface{}) {
+	UserError(ctx, w, usererror.Newf(http.StatusForbidden, format, args...))
+}
+
 // BadRequest writes the json-encoded message for a bad request error.
 func BadRequest(ctx context.Context, w http.ResponseWriter) {
 	UserError(ctx, w, usererror.ErrBadRequest)

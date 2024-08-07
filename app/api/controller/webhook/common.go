@@ -32,8 +32,8 @@ const (
 
 var ErrInternalWebhookOperationNotAllowed = usererror.Forbidden("changes to internal webhooks are not allowed")
 
-// checkURL validates the url of a webhook.
-func checkURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool) error {
+// CheckURL validates the url of a webhook.
+func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool) error {
 	// check URL
 	if len(rawURL) > webhookMaxURLLength {
 		return check.NewValidationErrorf("The URL of a webhook can be at most %d characters long.",
@@ -84,8 +84,8 @@ func checkSecret(secret string) error {
 	return nil
 }
 
-// checkTriggers validates the triggers of a webhook.
-func checkTriggers(triggers []enum.WebhookTrigger) error {
+// CheckTriggers validates the triggers of a webhook.
+func CheckTriggers(triggers []enum.WebhookTrigger) error {
 	// ignore duplicates here, should be deduplicated later
 	for _, trigger := range triggers {
 		if _, ok := trigger.Sanitize(); !ok {
@@ -96,8 +96,8 @@ func checkTriggers(triggers []enum.WebhookTrigger) error {
 	return nil
 }
 
-// deduplicateTriggers de-duplicates the triggers provided by the user.
-func deduplicateTriggers(in []enum.WebhookTrigger) []enum.WebhookTrigger {
+// DeduplicateTriggers de-duplicates the triggers provided by the user.
+func DeduplicateTriggers(in []enum.WebhookTrigger) []enum.WebhookTrigger {
 	if len(in) == 0 {
 		return []enum.WebhookTrigger{}
 	}
@@ -113,4 +113,12 @@ func deduplicateTriggers(in []enum.WebhookTrigger) []enum.WebhookTrigger {
 	}
 
 	return out
+}
+
+func ConvertTriggers(vals []string) []enum.WebhookTrigger {
+	res := make([]enum.WebhookTrigger, len(vals))
+	for i := range vals {
+		res[i] = enum.WebhookTrigger(vals[i])
+	}
+	return res
 }

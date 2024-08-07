@@ -18,7 +18,7 @@ import (
 	keywordsearch2 "github.com/harness/gitness/app/api/controller/keywordsearch"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	logs2 "github.com/harness/gitness/app/api/controller/logs"
-	"github.com/harness/gitness/app/api/controller/migrate"
+	migrate2 "github.com/harness/gitness/app/api/controller/migrate"
 	"github.com/harness/gitness/app/api/controller/pipeline"
 	"github.com/harness/gitness/app/api/controller/plugin"
 	"github.com/harness/gitness/app/api/controller/principal"
@@ -75,6 +75,7 @@ import (
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/metric"
+	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/notification/mailer"
 	"github.com/harness/gitness/app/services/protection"
@@ -302,7 +303,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	pullReq := importer.ProvidePullReqImporter(provider, gitInterface, principalStore, repoStore, pullReqStore, pullReqActivityStore, transactor)
+	pullReq := migrate.ProvidePullReqImporter(provider, gitInterface, principalStore, repoStore, pullReqStore, pullReqActivityStore, transactor)
 	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, reporter2, migrator, pullreqService, protectionManager, streamer, codeownersService, lockerLocker, pullReq, labelService)
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
@@ -366,7 +367,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter4, orchestratorConfig, vsCode, vsCodeWeb)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
 	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter4, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM, repoStore, gitspaceService)
-	migrateController := migrate.ProvideController(authorizer, principalStore)
+	rule := migrate.ProvideRuleImporter(ruleStore, transactor, principalStore)
+	migrateWebhook := migrate.ProvideWebhookImporter(webhookConfig, transactor, webhookStore)
+	migrateController := migrate2.ProvideController(authorizer, publicaccessService, gitInterface, provider, pullReq, rule, migrateWebhook, resourceLimiter, auditService, repoIdentifier, transactor, spaceStore, repoStore)
 	openapiService := openapi.ProvideOpenAPIService()
 	routerRouter := router.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, provider, openapiService)
 	serverServer := server2.ProvideServer(config, routerRouter)

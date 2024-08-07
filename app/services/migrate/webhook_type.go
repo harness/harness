@@ -12,16 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package importer
+package migrate
 
-import (
-	migratetypes "github.com/harness/harness-migrate/types"
+import migratetypes "github.com/harness/harness-migrate/types"
+
+type (
+	ExternalWebhook = migratetypes.Hook
 )
-
-type ExternalPullRequest = migratetypes.PullRequestData
-type ExternalComment = migratetypes.Comment
-
-type externalCommentThread struct {
-	TopLevel ExternalComment
-	Replies  []ExternalComment
-}

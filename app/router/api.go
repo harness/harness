@@ -52,6 +52,7 @@ import (
 	handlerinfraProvider "github.com/harness/gitness/app/api/handler/infraprovider"
 	handlerkeywordsearch "github.com/harness/gitness/app/api/handler/keywordsearch"
 	handlerlogs "github.com/harness/gitness/app/api/handler/logs"
+	handlermigrate "github.com/harness/gitness/app/api/handler/migrate"
 	handlerpipeline "github.com/harness/gitness/app/api/handler/pipeline"
 	handlerplugin "github.com/harness/gitness/app/api/handler/plugin"
 	handlerprincipal "github.com/harness/gitness/app/api/handler/principal"
@@ -92,7 +93,8 @@ import (
 var (
 	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
 	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/",
-		"/v1/secrets/", "/v1/connectors", "/v1/templates/step", "/v1/templates/stage", "/v1/gitspaces", "/v1/infraproviders"}
+		"/v1/secrets/", "/v1/connectors", "/v1/templates/step", "/v1/templates/stage",
+		"/v1/gitspaces", "/v1/infraproviders", "/v1/migrate/repos"}
 )
 
 // NewAPIHandler returns a new APIHandler.
@@ -658,6 +660,7 @@ func SetupRules(r chi.Router, repoCtrl *repo.Controller) {
 	r.Route("/rules", func(r chi.Router) {
 		r.Post("/", handlerrepo.HandleRuleCreate(repoCtrl))
 		r.Get("/", handlerrepo.HandleRuleList(repoCtrl))
+
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRuleIdentifier), func(r chi.Router) {
 			r.Patch("/", handlerrepo.HandleRuleUpdate(repoCtrl))
 			r.Delete("/", handlerrepo.HandleRuleDelete(repoCtrl))
@@ -813,12 +816,16 @@ func setupAccountWithAuth(r chi.Router, userCtrl *user.Controller, config *types
 	r.Post("/logout", account.HandleLogout(userCtrl, cookieName))
 }
 
-func setupMigrate(r chi.Router, ctrl *migrate.Controller) {
+func setupMigrate(r chi.Router, migCtrl *migrate.Controller) {
 	r.Route("/migrate", func(r chi.Router) {
-		SetupMigrateRoutes(r, ctrl)
+		r.Route("/repos", func(r chi.Router) {
+			r.Post("/", handlermigrate.HandleCreateRepo(migCtrl))
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
+				r.Patch("/update-state", handlermigrate.HandleUpdateRepoState(migCtrl))
+				r.Post("/pullreqs", handlermigrate.HandlePullRequests(migCtrl))
+				r.Post("/webhooks", handlermigrate.HandleWebhooks(migCtrl))
+				r.Post("/rules", handlermigrate.HandleRules(migCtrl))
+			})
+		})
 	})
-}
-
-func SetupMigrateRoutes(_ chi.Router, _ *migrate.Controller) {
-	// add migrate routes with spaces
 }

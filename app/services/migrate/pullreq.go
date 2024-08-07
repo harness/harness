@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package importer
+package migrate
 
 import (
 	"context"
@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/parser"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -34,7 +35,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// PullReq is pull request importer.
+// PullReq is pull request migrate.
 type PullReq struct {
 	urlProvider     url.Provider
 	git             git.Interface
@@ -45,6 +46,26 @@ type PullReq struct {
 	tx              dbtx.Transactor
 }
 
+func NewPullReq(
+	urlProvider url.Provider,
+	git git.Interface,
+	principalStore store.PrincipalStore,
+	repoStore store.RepoStore,
+	pullReqStore store.PullReqStore,
+	pullReqActStore store.PullReqActivityStore,
+	tx dbtx.Transactor,
+) *PullReq {
+	return &PullReq{
+		urlProvider:     urlProvider,
+		git:             git,
+		principalStore:  principalStore,
+		repoStore:       repoStore,
+		pullReqStore:    pullReqStore,
+		pullReqActStore: pullReqActStore,
+		tx:              tx,
+	}
+}
+
 type repoImportState struct {
 	git                  git.Interface
 	readParams           git.ReadParams
@@ -52,29 +73,30 @@ type repoImportState struct {
 	pullReqActivityStore store.PullReqActivityStore
 	branchCheck          map[string]*git.Branch
 	principals           map[string]*types.Principal
+	unknownEmails        map[int]map[string]bool
+	migrator             types.Principal
 }
 
 // Import load provided pull requests in go-scm format and imports them.
 //
 //nolint:gocognit
-func (importer PullReq) Import(
+func (migrate PullReq) Import(
 	ctx context.Context,
+	migrator types.Principal,
 	repo *types.Repository,
 	extPullReqs []*ExternalPullRequest,
 ) ([]*types.PullReq, error) {
-	if repo.State != enum.RepoStateMigrateDataImport {
-		return nil, errors.PreconditionFailed("Repository data can't be imported at this point")
-	}
-
 	readParams := git.ReadParams{RepoUID: repo.GitUID}
 
 	repoState := repoImportState{
-		git:                  importer.git,
+		git:                  migrate.git,
 		readParams:           readParams,
-		principalStore:       importer.principalStore,
-		pullReqActivityStore: importer.pullReqActStore,
+		principalStore:       migrate.principalStore,
+		pullReqActivityStore: migrate.pullReqActStore,
 		branchCheck:          map[string]*git.Branch{},
 		principals:           map[string]*types.Principal{},
+		unknownEmails:        map[int]map[string]bool{},
+		migrator:             migrator,
 	}
 
 	pullReqUnique := map[int]struct{}{}
@@ -103,13 +125,13 @@ func (importer PullReq) Import(
 		return nil, nil
 	}
 
-	err := importer.tx.WithTx(ctx, func(ctx context.Context) error {
+	err := migrate.tx.WithTx(ctx, func(ctx context.Context) error {
 		var deltaOpen, deltaClosed, deltaMerged int
 		var maxNumber int64
 
 		// Store the pull request objects and the comments.
 		for _, pullReq := range pullReqs {
-			if err := importer.pullReqStore.Create(ctx, pullReq); err != nil {
+			if err := migrate.pullReqStore.Create(ctx, pullReq); err != nil {
 				return fmt.Errorf("failed to import the pull request %d: %w", pullReq.Number, err)
 			}
 
@@ -131,18 +153,28 @@ func (importer PullReq) Import(
 				return fmt.Errorf("failed to import pull request comments: %w", err)
 			}
 
+			// Add a comment if any principal (PR author or commenter) were replaced by the fallback migrator principal
+			if prUnknownEmails, ok := repoState.unknownEmails[int(pullReq.Number)]; ok && len(prUnknownEmails) != 0 {
+				infoComment, err := repoState.createInfoComment(ctx, repo, pullReq)
+				if err != nil {
+					log.Ctx(ctx).Warn().Err(err).Msg("failed to add an informational comment for replacing non-existing users")
+				} else {
+					comments = append(comments, infoComment)
+				}
+			}
+
 			if len(comments) == 0 { // no need to update the pull request object in the DB if there are no comments.
 				continue
 			}
 
-			if err := importer.pullReqStore.Update(ctx, pullReq); err != nil {
+			if err := migrate.pullReqStore.Update(ctx, pullReq); err != nil {
 				return fmt.Errorf("failed to update pull request after importing of the comments: %w", err)
 			}
 		}
 
 		// Update the repository
 
-		repoUpdate, err := importer.repoStore.Find(ctx, repo.ID)
+		repoUpdate, err := migrate.repoStore.Find(ctx, repo.ID)
 		if err != nil {
 			return fmt.Errorf("failed to fetch repo in pull request import: %w", err)
 		}
@@ -155,7 +187,7 @@ func (importer PullReq) Import(
 		repoUpdate.NumClosedPulls += deltaClosed
 		repoUpdate.NumMergedPulls += deltaMerged
 
-		if err := importer.repoStore.Update(ctx, repoUpdate); err != nil {
+		if err := migrate.repoStore.Update(ctx, repoUpdate); err != nil {
 			return fmt.Errorf("failed to update repo in pull request import: %w", err)
 		}
 
@@ -181,7 +213,7 @@ func (r *repoImportState) convertPullReq(
 		Int("pullreq.number", extPullReq.Number).
 		Logger()
 
-	author, err := r.getPrincipalByEmail(ctx, extPullReq.Author.Email)
+	author, err := r.getPrincipalByEmail(ctx, extPullReq.Author.Email, extPullReq.Number, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pull request author: %w", err)
 	}
@@ -200,7 +232,7 @@ func (r *repoImportState) convertPullReq(
 		Edited:          updatedAt,
 		Closed:          nil,
 		State:           enum.PullReqStateOpen,
-		IsDraft:         false,
+		IsDraft:         extPullReq.Draft,
 		CommentCount:    0,
 		UnresolvedCount: 0,
 		Title:           extPullReq.Title,
@@ -239,14 +271,16 @@ func (r *repoImportState) convertPullReq(
 		pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
 		pr.SourceSHA = extPullReq.Head.SHA
 		pr.MergeTargetSHA = &extPullReq.Base.SHA
-		pr.MergeBaseSHA = extPullReq.Head.SHA // Don't have the real value. Set the value to SourceSHA.
-		pr.MergeSHA = nil                     // Don't have this.
+		pr.MergeBaseSHA = extPullReq.Base.SHA
+		pr.MergeSHA = nil // Don't have this.
 		pr.MergeConflicts = nil
 
 	case enum.PullReqStateClosed:
 		// For closed PR's it's not important to verify existence of branches and commits.
 		// If these don't exist the PR will be impossible to open.
-
+		pr.SourceSHA = extPullReq.Head.SHA
+		pr.MergeTargetSHA = &extPullReq.Base.SHA
+		pr.MergeBaseSHA = extPullReq.Base.SHA
 		pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
 		pr.MergeSHA = nil
 		pr.MergeConflicts = nil
@@ -353,11 +387,10 @@ func (r *repoImportState) createComment(
 	order, subOrder, replySeq int,
 	extComment *ExternalComment,
 ) (*types.PullReqActivity, error) {
-	commenter, err := r.getPrincipalByEmail(ctx, extComment.Author.Email)
+	commenter, err := r.getPrincipalByEmail(ctx, extComment.Author.Email, int(pullReq.Number), false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get comment ID=%d author: %w", extComment.ID, err)
 	}
-
 	commentedAt := extComment.Created.UnixMilli()
 
 	// Mark comments as resolved if the PR is merged, otherwise they are unresolved.
@@ -440,17 +473,87 @@ func (r *repoImportState) createComment(
 	return comment, nil
 }
 
-func (r *repoImportState) getPrincipalByEmail(ctx context.Context, emailAddress string) (*types.Principal, error) {
+// createInfoComment creates an informational comment on the PR
+// if any of the principals were replaced with the migrator.
+func (r *repoImportState) createInfoComment(
+	ctx context.Context,
+	repo *types.Repository,
+	pullReq *types.PullReq,
+) (*types.PullReqActivity, error) {
+	var unknownEmails []string
+	for email := range r.unknownEmails[int(pullReq.Number)] {
+		unknownEmails = append(unknownEmails, email)
+	}
+	now := time.Now().UnixMilli()
+	text := fmt.Sprintf(InfoCommentMessage, r.migrator.UID, strings.Join(unknownEmails, ", "))
+	comment := &types.PullReqActivity{
+		CreatedBy:   r.migrator.ID,
+		Created:     now,
+		Updated:     now,
+		Deleted:     nil,
+		ParentID:    nil,
+		RepoID:      repo.ID,
+		PullReqID:   pullReq.ID,
+		Order:       pullReq.ActivitySeq + 1,
+		SubOrder:    0,
+		ReplySeq:    0,
+		Type:        enum.PullReqActivityTypeComment,
+		Kind:        enum.PullReqActivityKindComment,
+		Text:        text,
+		PayloadRaw:  json.RawMessage("{}"),
+		Metadata:    nil,
+		ResolvedBy:  &r.migrator.ID,
+		Resolved:    &now,
+		CodeComment: nil,
+		Mentions:    nil,
+	}
+
+	if err := r.pullReqActivityStore.Create(ctx, comment); err != nil {
+		return nil, fmt.Errorf("failed to store the info comment author: %w", err)
+	}
+
+	pullReq.ActivitySeq++
+	pullReq.CommentCount++
+
+	return comment, nil
+}
+
+func (r *repoImportState) getPrincipalByEmail(
+	ctx context.Context,
+	emailAddress string,
+	prNumber int,
+	strict bool,
+) (*types.Principal, error) {
 	if principal, exists := r.principals[emailAddress]; exists {
 		return principal, nil
 	}
 
 	principal, err := r.principalStore.FindByEmail(ctx, emailAddress)
-	if err != nil {
+	if err != nil && !errors.Is(err, gitness_store.ErrResourceNotFound) {
 		return nil, fmt.Errorf("failed to load principal by email: %w", err)
 	}
 
-	return principal, nil
+	if err == nil {
+		r.principals[emailAddress] = principal
+		return principal, nil
+	}
+
+	if strict {
+		return nil, fmt.Errorf(
+			"could not find principal by email %s and automatic replacing unknown prinicapls is disabled: %w",
+			emailAddress, err)
+	}
+
+	// ignore not found emails if is not strict
+	if _, exists := r.unknownEmails[prNumber]; !exists {
+		r.unknownEmails[prNumber] = make(map[string]bool, 0)
+	}
+
+	if _, ok := r.unknownEmails[prNumber][emailAddress]; !ok && len(r.unknownEmails[prNumber]) < MaxNumberOfUnknownEmails {
+		r.unknownEmails[prNumber][emailAddress] = true
+	}
+
+	return &r.migrator, nil
 }
 
 func timestampMillis(t time.Time, def int64) int64 {

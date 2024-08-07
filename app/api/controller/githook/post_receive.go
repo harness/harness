@@ -62,8 +62,10 @@ func (c *Controller) PostReceive(
 	// as the branch could be different than the configured default value.
 	c.handleEmptyRepoPush(ctx, repo, in.PostReceiveInput, &out)
 
-	// report ref events (best effort)
-	c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalID, in.PostReceiveInput)
+	// report ref events if repo is in an active state (best effort)
+	if repo.State == enum.RepoStateActive {
+		c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalID, in.PostReceiveInput)
+	}
 
 	// handle branch updates related to PRs - best effort
 	c.handlePRMessaging(ctx, repo, in.PostReceiveInput, &out)

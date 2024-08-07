@@ -74,6 +74,7 @@ import (
 	svclabel "github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/metric"
+	migrateservice "github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/notification"
 	"github.com/harness/gitness/app/services/notification/mailer"
 	"github.com/harness/gitness/app/services/protection"
@@ -203,6 +204,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		plugin.WireSet,
 		resolver.WireSet,
 		importer.WireSet,
+		migrateservice.WireSet,
 		canceler.WireSet,
 		exporter.WireSet,
 		metric.WireSet,

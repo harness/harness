@@ -208,7 +208,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 		in.Identifier = in.UID
 	}
 
-	if err := c.validateParentRef(in.ParentRef); err != nil {
+	if err := ValidateParentRef(in.ParentRef); err != nil {
 		return err
 	}
 

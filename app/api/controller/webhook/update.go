@@ -93,7 +93,7 @@ func (c *Controller) Update(
 		hook.Insecure = *in.Insecure
 	}
 	if in.Triggers != nil {
-		hook.Triggers = deduplicateTriggers(in.Triggers)
+		hook.Triggers = DeduplicateTriggers(in.Triggers)
 	}
 
 	if err = c.webhookStore.Update(ctx, hook); err != nil {
@@ -125,7 +125,7 @@ func sanitizeUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwor
 		}
 	}
 	if in.URL != nil {
-		if err := checkURL(*in.URL, allowLoopback, allowPrivateNetwork); err != nil {
+		if err := CheckURL(*in.URL, allowLoopback, allowPrivateNetwork); err != nil {
 			return err
 		}
 	}
@@ -135,7 +135,7 @@ func sanitizeUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwor
 		}
 	}
 	if in.Triggers != nil {
-		if err := checkTriggers(in.Triggers); err != nil {
+		if err := CheckTriggers(in.Triggers); err != nil {
 			return err
 		}
 	}

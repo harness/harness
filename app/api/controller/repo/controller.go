@@ -203,7 +203,7 @@ func (c *Controller) getRepoCheckAccessForGit(
 	)
 }
 
-func (c *Controller) validateParentRef(parentRef string) error {
+func ValidateParentRef(parentRef string) error {
 	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
 	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(parentRef)) == 0) {
 		return errRepositoryRequiresParent

@@ -15,8 +15,16 @@
 package migrate
 
 import (
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/migrate"
+	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
+	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
 )
@@ -28,10 +36,32 @@ var WireSet = wire.NewSet(
 
 func ProvideController(
 	authorizer authz.Authorizer,
-	principalStore store.PrincipalStore,
+	publicAccess publicaccess.Service,
+	rpcClient git.Interface,
+	urlProvider url.Provider,
+	pullreqImporter *migrate.PullReq,
+	ruleImporter *migrate.Rule,
+	webhookImporter *migrate.Webhook,
+	resourceLimiter limiter.ResourceLimiter,
+	auditService audit.Service,
+	identifierCheck check.RepoIdentifier,
+	tx dbtx.Transactor,
+	spaceStore store.SpaceStore,
+	repoStore store.RepoStore,
 ) *Controller {
 	return NewController(
 		authorizer,
-		principalStore,
+		publicAccess,
+		rpcClient,
+		urlProvider,
+		pullreqImporter,
+		ruleImporter,
+		webhookImporter,
+		resourceLimiter,
+		auditService,
+		identifierCheck,
+		tx,
+		spaceStore,
+		repoStore,
 	)
 }

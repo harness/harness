@@ -92,7 +92,7 @@ func (c *Controller) Create(
 		Secret:                string(encryptedSecret),
 		Enabled:               in.Enabled,
 		Insecure:              in.Insecure,
-		Triggers:              deduplicateTriggers(in.Triggers),
+		Triggers:              DeduplicateTriggers(in.Triggers),
 		LatestExecutionResult: nil,
 	}
 
@@ -149,13 +149,13 @@ func sanitizeCreateInput(in *CreateInput, allowLoopback bool, allowPrivateNetwor
 	if err := check.Description(in.Description); err != nil {
 		return err
 	}
-	if err := checkURL(in.URL, allowLoopback, allowPrivateNetwork); err != nil {
+	if err := CheckURL(in.URL, allowLoopback, allowPrivateNetwork); err != nil {
 		return err
 	}
 	if err := checkSecret(in.Secret); err != nil {
 		return err
 	}
-	if err := checkTriggers(in.Triggers); err != nil { //nolint:revive
+	if err := CheckTriggers(in.Triggers); err != nil { //nolint:revive
 		return err
 	}
 
