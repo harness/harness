@@ -22,6 +22,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/services/cleanup"
@@ -409,6 +410,13 @@ func ProvideIDEVSCodeWebConfig(config *types.Config) *ide.VSCodeWebConfig {
 func ProvideGitspaceOrchestratorConfig(config *types.Config) *orchestrator.Config {
 	return &orchestrator.Config{
 		DefaultBaseImage: config.Gitspace.DefaultBaseImage,
+	}
+}
+
+// ProvideGitspaceInfraProvisionerConfig loads the Gitspace infra provisioner config from the main config.
+func ProvideGitspaceInfraProvisionerConfig(config *types.Config) *infrastructure.Config {
+	return &infrastructure.Config{
+		AgentPort: config.Gitspace.AgentPort,
 	}
 }
 

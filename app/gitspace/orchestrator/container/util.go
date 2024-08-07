@@ -12,26 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package enum
+package container
 
-type InfraStatus string
+import "github.com/harness/gitness/types"
 
-func (InfraStatus) Enum() []interface{} {
-	return toInterfaceSlice(infraStatuses)
+func GetGitspaceContainerName(config types.GitspaceConfig) string {
+	return "gitspace-" + config.UserID + "-" + config.Identifier
 }
 
-var infraStatuses = []InfraStatus{
-	InfraStatusPending,
-	InfraStatusProvisioned,
-	InfraStatusDestroyed,
-	InfraStatusUnknown,
-	InfraStatusError,
+func GetWorkingDir(repoName string) string {
+	return "/" + repoName
 }
-
-const (
-	InfraStatusPending     InfraStatus = "pending"
-	InfraStatusProvisioned InfraStatus = "provisioned"
-	InfraStatusDestroyed   InfraStatus = "destroyed"
-	InfraStatusUnknown     InfraStatus = "unknown"
-	InfraStatusError       InfraStatus = "error"
-)

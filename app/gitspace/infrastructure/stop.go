@@ -24,8 +24,8 @@ import (
 
 func (i infraProvisioner) TriggerStop(
 	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
-	infra *types.Infrastructure,
+	infraProviderResource types.InfraProviderResource,
+	infra types.Infrastructure,
 ) error {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
@@ -48,7 +48,7 @@ func (i infraProvisioner) TriggerStop(
 func (i infraProvisioner) ResumeStop(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	stoppedInfra *types.Infrastructure,
+	stoppedInfra types.Infrastructure,
 ) error {
 	infraProvider, err := i.getInfraProvider(stoppedInfra.ProviderType)
 	if err != nil {
@@ -65,7 +65,7 @@ func (i infraProvisioner) ResumeStop(
 func (i infraProvisioner) resumeStopForNewProvisioning(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	stoppedInfra *types.Infrastructure,
+	stoppedInfra types.Infrastructure,
 ) error {
 	err := i.updateInfraProvisionedRecord(ctx, gitspaceConfig, stoppedInfra)
 	if err != nil {

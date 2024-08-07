@@ -25,9 +25,9 @@ import (
 
 func (i infraProvisioner) TriggerDeprovision(
 	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 	gitspaceConfig types.GitspaceConfig,
-	infra *types.Infrastructure,
+	infra types.Infrastructure,
 ) error {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
@@ -49,7 +49,7 @@ func (i infraProvisioner) triggerDeprovisionForNewProvisioning(
 	ctx context.Context,
 	infraProvider infraprovider.InfraProvider,
 	gitspaceConfig types.GitspaceConfig,
-	infra *types.Infrastructure,
+	infra types.Infrastructure,
 ) error {
 	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx, gitspaceConfig.SpaceID, gitspaceConfig.GitspaceInstance.ID)
@@ -75,7 +75,7 @@ func (i infraProvisioner) triggerDeprovisionForNewProvisioning(
 func (i infraProvisioner) triggerDeprovisionForExistingProvisioning(
 	ctx context.Context,
 	infraProvider infraprovider.InfraProvider,
-	infra *types.Infrastructure,
+	infra types.Infrastructure,
 ) error {
 	err := infraProvider.Deprovision(ctx, infra)
 	if err != nil {
@@ -88,7 +88,7 @@ func (i infraProvisioner) triggerDeprovisionForExistingProvisioning(
 func (i infraProvisioner) ResumeDeprovision(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	deprovisionedInfra *types.Infrastructure,
+	deprovisionedInfra types.Infrastructure,
 ) error {
 	infraProvider, err := i.getInfraProvider(deprovisionedInfra.ProviderType)
 	if err != nil {
@@ -104,7 +104,7 @@ func (i infraProvisioner) ResumeDeprovision(
 func (i infraProvisioner) resumeDeprovisionForNewProvisioning(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	deprovisionedInfra *types.Infrastructure,
+	deprovisionedInfra types.Infrastructure,
 ) error {
 	err := i.updateInfraProvisionedRecord(ctx, gitspaceConfig, deprovisionedInfra)
 	if err != nil {

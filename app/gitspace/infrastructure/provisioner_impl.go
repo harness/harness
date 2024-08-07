@@ -32,12 +32,17 @@ var _ InfraProvisioner = (*infraProvisioner)(nil)
 
 const paramSeparator = "\n===============\n"
 
+type Config struct {
+	AgentPort int
+}
+
 type infraProvisioner struct {
 	infraProviderConfigStore   store.InfraProviderConfigStore
 	infraProviderResourceStore store.InfraProviderResourceStore
 	providerFactory            infraprovider.Factory
 	infraProviderTemplateStore store.InfraProviderTemplateStore
 	infraProvisionedStore      store.InfraProvisionedStore
+	config                     *Config
 }
 
 func NewInfraProvisionerService(
@@ -46,6 +51,7 @@ func NewInfraProvisionerService(
 	providerFactory infraprovider.Factory,
 	infraProviderTemplateStore store.InfraProviderTemplateStore,
 	infraProvisionedStore store.InfraProvisionedStore,
+	config *Config,
 ) InfraProvisioner {
 	return &infraProvisioner{
 		infraProviderConfigStore:   infraProviderConfigStore,
@@ -53,17 +59,19 @@ func NewInfraProvisionerService(
 		providerFactory:            providerFactory,
 		infraProviderTemplateStore: infraProviderTemplateStore,
 		infraProvisionedStore:      infraProvisionedStore,
+		config:                     config,
 	}
 }
 
 func (i infraProvisioner) getConfigFromResource(
 	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 ) (*types.InfraProviderConfig, error) {
 	config, err := i.infraProviderConfigStore.Find(ctx, infraProviderResource.InfraProviderConfigID)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"unable to get infra provider details for ID %d: %w", infraProviderResource.InfraProviderConfigID, err)
+			"unable to get infra provider details for ID %d: %w",
+			infraProviderResource.InfraProviderConfigID, err)
 	}
 	return config, nil
 }
@@ -81,7 +89,7 @@ func (i infraProvisioner) getInfraProvider(
 func (i infraProvisioner) getTemplateParams(
 	ctx context.Context,
 	infraProvider infraprovider.InfraProvider,
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 ) ([]types.InfraProviderParameter, error) {
 	var params []types.InfraProviderParameter
 	templateParams := infraProvider.TemplateParams()
@@ -109,7 +117,7 @@ func (i infraProvisioner) getTemplateParams(
 }
 
 func (i infraProvisioner) paramsFromResource(
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 ) []types.InfraProviderParameter {
 	params := make([]types.InfraProviderParameter, 0)
 	for key, value := range infraProviderResource.Metadata {
@@ -162,7 +170,7 @@ func (i infraProvisioner) responseMetadata(infra types.Infrastructure) (string, 
 
 func (i infraProvisioner) getAllParamsFromDB(
 	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
 ) ([]types.InfraProviderParameter, error) {
 	var allParams []types.InfraProviderParameter
@@ -184,7 +192,7 @@ func (i infraProvisioner) getAllParamsFromDB(
 func (i infraProvisioner) updateInfraProvisionedRecord(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	deprovisionedInfra *types.Infrastructure,
+	deprovisionedInfra types.Infrastructure,
 ) error {
 	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx, gitspaceConfig.SpaceID, gitspaceConfig.GitspaceInstance.ID)
@@ -194,7 +202,7 @@ func (i infraProvisioner) updateInfraProvisionedRecord(
 			gitspaceConfig.GitspaceInstance.ID, err)
 	}
 
-	responseMetadata, err := i.responseMetadata(*deprovisionedInfra)
+	responseMetadata, err := i.responseMetadata(deprovisionedInfra)
 	if err != nil {
 		return err
 	}

@@ -49,18 +49,20 @@ func NewDockerProvider(
 }
 
 // Provision assumes a docker engine is already running on the gitness host machine and re-uses that as infra.
-// It does not start docker engine. It creates a directory in the host machine using the given resource key.
+// It does not start docker engine. It creates a docker volume using the given gitspace config identifier.
 func (d DockerProvider) Provision(
 	ctx context.Context,
 	spaceID int64,
 	spacePath string,
-	resourceKey string,
-	requiredPorts []int,
-	params []types.InfraProviderParameter,
+	gitspaceConfigIdentifier string,
+	_ string,
+	_ int,
+	requiredGitspacePorts []int,
+	inputParameters []types.InfraProviderParameter,
 ) error {
-	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, &types.Infrastructure{
-		ProviderType: enum.InfraProviderTypeDocker,
-		Parameters:   params,
+	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
+		ProviderType:    enum.InfraProviderTypeDocker,
+		InputParameters: inputParameters,
 	})
 	if err != nil {
 		return fmt.Errorf("error getting docker client from docker client factory: %w", err)
@@ -80,18 +82,18 @@ func (d DockerProvider) Provision(
 
 	infrastructure.SpaceID = spaceID
 	infrastructure.SpacePath = spacePath
-	infrastructure.ResourceKey = resourceKey
+	infrastructure.GitspaceConfigIdentifier = gitspaceConfigIdentifier
 
-	storageName, err := d.createNamedVolume(ctx, spacePath, resourceKey, dockerClient)
+	storageName, err := d.createNamedVolume(ctx, spacePath, gitspaceConfigIdentifier, dockerClient)
 	if err != nil {
 		return err
 	}
 
 	infrastructure.Storage = storageName
 
-	var portMappings = make(map[int]*types.PortMapping, len(requiredPorts))
+	var portMappings = make(map[int]*types.PortMapping, len(requiredGitspacePorts))
 
-	for _, requiredPort := range requiredPorts {
+	for _, requiredPort := range requiredGitspacePorts {
 		portMapping := &types.PortMapping{
 			PublishedPort: 0,
 			ForwardedPort: 0,
@@ -100,10 +102,10 @@ func (d DockerProvider) Provision(
 		portMappings[requiredPort] = portMapping
 	}
 
-	infrastructure.PortMappings = portMappings
+	infrastructure.GitspacePortMappings = portMappings
 
 	event := &events.GitspaceInfraEventPayload{
-		Infra: infrastructure,
+		Infra: *infrastructure,
 		Type:  enum.InfraEventProvision,
 	}
 
@@ -117,12 +119,15 @@ func (d DockerProvider) Find(
 	ctx context.Context,
 	spaceID int64,
 	spacePath string,
-	resourceKey string,
-	params []types.InfraProviderParameter,
+	gitspaceConfigIdentifier string,
+	_ string,
+	_ int,
+	_ []int,
+	inputParameters []types.InfraProviderParameter,
 ) (*types.Infrastructure, error) {
-	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, &types.Infrastructure{
-		ProviderType: enum.InfraProviderTypeDocker,
-		Parameters:   params,
+	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
+		ProviderType:    enum.InfraProviderTypeDocker,
+		InputParameters: inputParameters,
 	})
 
 	if err != nil {
@@ -143,9 +148,9 @@ func (d DockerProvider) Find(
 
 	infrastructure.SpaceID = spaceID
 	infrastructure.SpacePath = spacePath
-	infrastructure.ResourceKey = resourceKey
+	infrastructure.GitspaceConfigIdentifier = gitspaceConfigIdentifier
 
-	name := volumeName(spacePath, resourceKey)
+	name := volumeName(spacePath, gitspaceConfigIdentifier)
 
 	volumeInspect, err := dockerClient.VolumeInspect(ctx, name)
 	if err != nil {
@@ -158,7 +163,9 @@ func (d DockerProvider) Find(
 }
 
 // Stop is NOOP as this provider uses already running docker engine. It does not stop the docker engine.
-func (d DockerProvider) Stop(ctx context.Context, infra *types.Infrastructure) error {
+func (d DockerProvider) Stop(ctx context.Context, infra types.Infrastructure) error {
+	infra.Status = enum.InfraStatusDestroyed
+
 	event := &events.GitspaceInfraEventPayload{
 		Infra: infra,
 		Type:  enum.InfraEventStop,
@@ -170,24 +177,28 @@ func (d DockerProvider) Stop(ctx context.Context, infra *types.Infrastructure) e
 }
 
 // Deprovision deletes the volume created by Provision. It does not stop the docker engine.
-func (d DockerProvider) Deprovision(ctx context.Context, infra *types.Infrastructure) error {
-	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, &types.Infrastructure{
-		ProviderType: enum.InfraProviderTypeDocker,
-		Parameters:   infra.Parameters,
+func (d DockerProvider) Deprovision(ctx context.Context, infra types.Infrastructure) error {
+	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
+		ProviderType:    enum.InfraProviderTypeDocker,
+		InputParameters: infra.InputParameters,
 	})
 	if err != nil {
 		return fmt.Errorf("error getting docker client from docker client factory: %w", err)
 	}
+
 	defer func() {
 		closingErr := dockerClient.Close()
 		if closingErr != nil {
 			log.Ctx(ctx).Warn().Err(closingErr).Msg("failed to close docker client")
 		}
 	}()
+
 	err = dockerClient.VolumeRemove(ctx, infra.Storage, true)
 	if err != nil {
 		return fmt.Errorf("couldn't delete volume for %s : %w", infra.Storage, err)
 	}
+
+	infra.Status = enum.InfraStatusDestroyed
 
 	event := &events.GitspaceInfraEventPayload{
 		Infra: infra,

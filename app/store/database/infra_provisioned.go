@@ -65,7 +65,7 @@ type infraProvisioned struct {
 	Created                 int64                  `db:"iprov_created"`
 	Updated                 int64                  `db:"iprov_updated"`
 	ResponseMetadata        *string                `db:"iprov_response_metadata"`
-	Params                  string                 `db:"iprov_opentofu_params"`
+	InputParams             string                 `db:"iprov_opentofu_params"`
 	InfraStatus             enum.InfraStatus       `db:"iprov_infra_status"`
 	ServerHostIP            string                 `db:"iprov_server_host_ip"`
 	ServerHostPort          string                 `db:"iprov_server_host_port"`
@@ -90,7 +90,7 @@ func (i infraProvisionedStore) Find(ctx context.Context, id int64) (*types.Infra
 	stmt := database.Builder.
 		Select(infraProvisionedSelectColumns).
 		From(infraProvisionedTable).
-		Where(infraProvisionedIDColumn+" = $1", id)
+		Where(infraProvisionedIDColumn+" = ?", id) // nolint:goconst
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -153,8 +153,8 @@ func (i infraProvisionedStore) FindLatestByGitspaceInstanceID(
 	stmt := database.Builder.
 		Select(infraProvisionedSelectColumns).
 		From(infraProvisionedTable).
-		Where("iprov_gitspace_id = $1", gitspaceInstanceID).
-		Where("iprov_space_id = $2", spaceID).
+		Where("iprov_gitspace_id = ?", gitspaceInstanceID).
+		Where("iprov_space_id = ?", spaceID).
 		OrderBy("iprov_created DESC")
 
 	sql, args, err := stmt.ToSql()
@@ -210,7 +210,7 @@ func (i infraProvisionedStore) Create(ctx context.Context, infraProvisioned *typ
 			infraProvisioned.Created,
 			infraProvisioned.Updated,
 			infraProvisioned.ResponseMetadata,
-			infraProvisioned.Params,
+			infraProvisioned.InputParams,
 			infraProvisioned.InfraStatus,
 			infraProvisioned.ServerHostIP,
 			infraProvisioned.ServerHostPort,
@@ -235,7 +235,7 @@ func (i infraProvisionedStore) Create(ctx context.Context, infraProvisioned *typ
 func (i infraProvisionedStore) Delete(ctx context.Context, id int64) error {
 	stmt := database.Builder.
 		Delete(infraProvisionedTable).
-		Where(infraProvisionedIDColumn+" = $1", id)
+		Where(infraProvisionedIDColumn+" = ?", id)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -257,7 +257,7 @@ func (i infraProvisionedStore) Update(ctx context.Context, infraProvisioned *typ
 		Set("iprov_infra_status", infraProvisioned.InfraStatus).
 		Set("iprov_server_host_ip", infraProvisioned.ServerHostIP).
 		Set("iprov_server_host_port", infraProvisioned.ServerHostPort).
-		Set("iprov_opentofu_params", infraProvisioned.Params).
+		Set("iprov_opentofu_params", infraProvisioned.InputParams).
 		Set("iprov_updated", infraProvisioned.Updated).
 		Set("iprov_proxy_host", infraProvisioned.ProxyHost).
 		Set("iprov_proxy_port", infraProvisioned.ProxyPort).
@@ -286,7 +286,7 @@ func (entity infraProvisioned) toDTO() *types.InfraProvisioned {
 		Created:                 entity.Created,
 		Updated:                 entity.Updated,
 		ResponseMetadata:        entity.ResponseMetadata,
-		Params:                  entity.Params,
+		InputParams:             entity.InputParams,
 		InfraStatus:             entity.InfraStatus,
 		ServerHostIP:            entity.ServerHostIP,
 		ServerHostPort:          entity.ServerHostPort,

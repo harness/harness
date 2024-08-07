@@ -29,7 +29,7 @@ type Orchestrator interface {
 	ResumeStartGitspace(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
-		provisionedInfra *types.Infrastructure,
+		provisionedInfra types.Infrastructure,
 	) (types.GitspaceInstance, error)
 
 	// TriggerStopGitspace stops the Gitspace container and triggers infra deprovisioning to deprovision
@@ -40,7 +40,7 @@ type Orchestrator interface {
 	ResumeStopGitspace(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
-		stoppedInfra *types.Infrastructure,
+		stoppedInfra types.Infrastructure,
 	) (enum.GitspaceInstanceStateType, error)
 
 	// TriggerDeleteGitspace removes the Gitspace container and triggers infra deprovisioning to deprovision
@@ -51,6 +51,6 @@ type Orchestrator interface {
 	ResumeDeleteGitspace(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
-		deprovisionedInfra *types.Infrastructure,
+		deprovisionedInfra types.Infrastructure,
 	) (enum.GitspaceInstanceStateType, error)
 }

@@ -29,7 +29,7 @@ import (
 
 func (i infraProvisioner) TriggerProvision(
 	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 	gitspaceConfig types.GitspaceConfig,
 	requiredPorts []int,
 ) error {
@@ -53,19 +53,14 @@ func (i infraProvisioner) TriggerProvision(
 
 func (i infraProvisioner) triggerProvisionForNewProvisioning(
 	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
 	infraProviderType enum.InfraProviderType,
 	gitspaceConfig types.GitspaceConfig,
-	requiredPorts []int,
+	requiredGitspacePorts []int,
 ) error {
-	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
+	infraProvisionedLatest, _ := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx, gitspaceConfig.SpaceID, gitspaceConfig.GitspaceInstance.ID)
-	if err != nil {
-		return fmt.Errorf(
-			"could not find latest infra provisioned entity for instance %d: %w",
-			gitspaceConfig.GitspaceInstance.ID, err)
-	}
 
 	if infraProvisionedLatest != nil &&
 		infraProvisionedLatest.InfraStatus == enum.InfraStatusPending &&
@@ -73,7 +68,7 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 		return fmt.Errorf("there is already infra provisioning in pending state %d", infraProvisionedLatest.ID)
 	} else if infraProvisionedLatest != nil {
 		infraProvisionedLatest.InfraStatus = enum.InfraStatusUnknown
-		err = i.infraProvisionedStore.Update(ctx, infraProvisionedLatest)
+		err := i.infraProvisionedStore.Update(ctx, infraProvisionedLatest)
 		if err != nil {
 			return fmt.Errorf("could not update Infra Provisioned entity: %w", err)
 		}
@@ -97,7 +92,7 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 		InfraProviderResourceID: infraProviderResource.ID,
 		Created:                 now.UnixMilli(),
 		Updated:                 now.UnixMilli(),
-		Params:                  paramsToString(allParams),
+		InputParams:             paramsToString(allParams),
 		InfraStatus:             enum.InfraStatusPending,
 		SpaceID:                 gitspaceConfig.SpaceID,
 	}
@@ -107,12 +102,16 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 		return fmt.Errorf("unable to create infraProvisioned entry for %d", gitspaceConfig.GitspaceInstance.ID)
 	}
 
+	agentPort := i.config.AgentPort
+
 	err = infraProvider.Provision(
 		ctx,
 		gitspaceConfig.SpaceID,
 		gitspaceConfig.SpacePath,
 		gitspaceConfig.Identifier,
-		requiredPorts,
+		gitspaceConfig.GitspaceInstance.Identifier,
+		agentPort,
+		requiredGitspacePorts,
 		allParams,
 	)
 	if err != nil {
@@ -135,7 +134,7 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 
 func (i infraProvisioner) triggerProvisionForExistingProvisioning(
 	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
 	gitspaceConfig types.GitspaceConfig,
 	requiredPorts []int,
@@ -155,6 +154,8 @@ func (i infraProvisioner) triggerProvisionForExistingProvisioning(
 		gitspaceConfig.SpaceID,
 		gitspaceConfig.SpacePath,
 		gitspaceConfig.Identifier,
+		gitspaceConfig.GitspaceInstance.Identifier,
+		0, // NOTE: Agent port is not required for provisioning type Existing.
 		requiredPorts,
 		allParams,
 	)
@@ -172,36 +173,36 @@ func (i infraProvisioner) triggerProvisionForExistingProvisioning(
 func (i infraProvisioner) ResumeProvision(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	provisionedInfra *types.Infrastructure,
-) (*types.Infrastructure, error) {
+	provisionedInfra types.Infrastructure,
+) error {
 	infraProvider, err := i.getInfraProvider(provisionedInfra.ProviderType)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
 		return i.resumeProvisionForNewProvisioning(ctx, gitspaceConfig, provisionedInfra)
 	}
 
-	return provisionedInfra, nil
+	return nil
 }
 
 func (i infraProvisioner) resumeProvisionForNewProvisioning(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	provisionedInfra *types.Infrastructure,
-) (*types.Infrastructure, error) {
+	provisionedInfra types.Infrastructure,
+) error {
 	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx, gitspaceConfig.SpaceID, gitspaceConfig.GitspaceInstance.ID)
 	if err != nil {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"could not find latest infra provisioned entity for instance %d: %w",
 			gitspaceConfig.GitspaceInstance.ID, err)
 	}
 
-	responseMetadata, err := i.responseMetadata(*provisionedInfra)
+	responseMetadata, err := i.responseMetadata(provisionedInfra)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	infraProvisionedLatest.InfraStatus = provisionedInfra.Status
@@ -214,8 +215,8 @@ func (i infraProvisioner) resumeProvisionForNewProvisioning(
 
 	err = i.infraProvisionedStore.Update(ctx, infraProvisionedLatest)
 	if err != nil {
-		return nil, fmt.Errorf("unable to update infraProvisioned Entry %d", infraProvisionedLatest.ID)
+		return fmt.Errorf("unable to update infraProvisioned Entry %d", infraProvisionedLatest.ID)
 	}
 
-	return provisionedInfra, nil
+	return nil
 }

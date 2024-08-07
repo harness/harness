@@ -25,7 +25,7 @@ type InfraProvisioned struct {
 	Created                 int64
 	Updated                 int64
 	ResponseMetadata        *string
-	Params                  string
+	InputParams             string
 	InfraStatus             enum.InfraStatus
 	ServerHostIP            string
 	ServerHostPort          string
@@ -41,15 +41,15 @@ type InfraProvisionedGatewayView struct {
 }
 
 type InfraProvisionedUpdateGatewayRequest struct {
-	GitspaceUID string `json:"gitspace_id"`
-	SpaceID     int64  `json:"space_id"`
-	GatewayHost string `json:"gateway_host"`
-	GatewayPort int32  `json:"gateway_port"`
+	GitspaceInstanceIdentifier string `json:"gitspace_id"`
+	SpaceID                    int64  `json:"space_id"`
+	GatewayHost                string `json:"gateway_host"`
+	GatewayPort                int32  `json:"gateway_port"`
 }
 
 type InfraProvisionedResponse struct {
-	ServerHost  string `json:"server_host"`
-	ServerPort  string `json:"server_port"`
-	GitspaceUID string `json:"gitspace_id"`
-	SpaceID     int64  `json:"space_id"`
+	ServerHost                 string `json:"server_host"`
+	ServerPort                 string `json:"server_port"`
+	GitspaceInstanceIdentifier string `json:"gitspace_id"`
+	SpaceID                    int64  `json:"space_id"`
 }

@@ -84,16 +84,14 @@ func (o orchestrator) TriggerStartGitspace(
 			gitspaceConfig.InfraProviderResourceID, err)
 	}
 
-	ideSvc, err := o.getIDEService(gitspaceConfig)
+	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig)
 	if err != nil {
-		return instanceState, err
+		return instanceState, fmt.Errorf("cannot get the ports required for gitspace during start: %w", err)
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningStart)
 
-	idePort := ideSvc.Port()
-
-	err = o.infraProvisioner.TriggerProvision(ctx, infraProviderResource, gitspaceConfig, []int{idePort})
+	err = o.infraProvisioner.TriggerProvision(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 
@@ -118,19 +116,24 @@ func (o orchestrator) TriggerStopGitspace(
 			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
 	}
 
-	infra, err := o.infraProvisioner.Find(ctx, infraProviderResource, gitspaceConfig)
+	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig)
+	if err != nil {
+		return instanceState, fmt.Errorf("cannot get the ports required for gitspace during start: %w", err)
+	}
+
+	infra, err := o.infraProvisioner.Find(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
 	if err != nil {
 		return instanceState, fmt.Errorf("cannot find the provisioned infra: %w", err)
 	}
 
-	err = o.stopGitspaceContainer(ctx, gitspaceConfig, infra)
+	err = o.stopGitspaceContainer(ctx, gitspaceConfig, *infra)
 	if err != nil {
 		return instanceState, err
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopStart)
 
-	err = o.infraProvisioner.TriggerStop(ctx, infraProviderResource, infra)
+	err = o.infraProvisioner.TriggerStop(ctx, *infraProviderResource, *infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
 
@@ -146,7 +149,7 @@ func (o orchestrator) TriggerStopGitspace(
 func (o orchestrator) stopGitspaceContainer(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	infra *types.Infrastructure,
+	infra types.Infrastructure,
 ) error {
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectStart)
 
@@ -175,7 +178,7 @@ func (o orchestrator) stopGitspaceContainer(
 func (o orchestrator) stopAndRemoveGitspaceContainer(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	infra *types.Infrastructure,
+	infra types.Infrastructure,
 ) error {
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectStart)
 
@@ -213,19 +216,24 @@ func (o orchestrator) TriggerDeleteGitspace(
 			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
 	}
 
-	infra, err := o.infraProvisioner.Find(ctx, infraProviderResource, gitspaceConfig)
+	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig)
+	if err != nil {
+		return instanceState, fmt.Errorf("cannot get the ports required for gitspace during start: %w", err)
+	}
+
+	infra, err := o.infraProvisioner.Find(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
 	if err != nil {
 		return instanceState, fmt.Errorf("cannot find the provisioned infra: %w", err)
 	}
 
-	err = o.stopAndRemoveGitspaceContainer(ctx, gitspaceConfig, infra)
+	err = o.stopAndRemoveGitspaceContainer(ctx, gitspaceConfig, *infra)
 	if err != nil {
 		return instanceState, err
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningStart)
 
-	err = o.infraProvisioner.TriggerDeprovision(ctx, infraProviderResource, gitspaceConfig, infra)
+	err = o.infraProvisioner.TriggerDeprovision(ctx, *infraProviderResource, gitspaceConfig, *infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
 
@@ -272,7 +280,7 @@ func (o orchestrator) getIDEService(gitspaceConfig types.GitspaceConfig) (ide.ID
 func (o orchestrator) ResumeStartGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	provisionedInfra *types.Infrastructure,
+	provisionedInfra types.Infrastructure,
 ) (types.GitspaceInstance, error) {
 	gitspaceInstance := *gitspaceConfig.GitspaceInstance
 	gitspaceInstance.State = enum.GitspaceInstanceStateError
@@ -284,12 +292,22 @@ func (o orchestrator) ResumeStartGitspace(
 
 	idePort := ideSvc.Port()
 
-	provisionedInfra, err = o.infraProvisioner.ResumeProvision(ctx, gitspaceConfig, provisionedInfra)
+	err = o.infraProvisioner.ResumeProvision(ctx, gitspaceConfig, provisionedInfra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 
 		return gitspaceInstance, fmt.Errorf(
 			"cannot provision infrastructure for ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
+	}
+
+	if provisionedInfra.Status != enum.InfraStatusProvisioned {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
+
+		return gitspaceInstance, fmt.Errorf(
+			"infra state is %v, should be %v for gitspace instance identifier %s",
+			provisionedInfra.Status,
+			enum.InfraStatusProvisioned,
+			gitspaceConfig.GitspaceInstance.Identifier)
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningCompleted)
@@ -326,7 +344,7 @@ func (o orchestrator) ResumeStartGitspace(
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationStart)
 
 	startResponse, err := o.containerOrchestrator.CreateAndStartGitspace(
-		ctx, gitspaceConfig, provisionedInfra, scmResolvedDetails, o.config.DefaultBaseImage, ideSvc)
+		ctx, gitspaceConfig, provisionedInfra, *scmResolvedDetails, o.config.DefaultBaseImage, ideSvc)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationFailed)
 
@@ -339,10 +357,10 @@ func (o orchestrator) ResumeStartGitspace(
 
 	var forwardedPort string
 
-	if provisionedInfra.PortMappings[idePort].PublishedPort == 0 {
+	if provisionedInfra.GitspacePortMappings[idePort].PublishedPort == 0 {
 		forwardedPort = startResponse.PublishedPorts[idePort]
 	} else {
-		forwardedPort = strconv.Itoa(provisionedInfra.PortMappings[idePort].ForwardedPort)
+		forwardedPort = strconv.Itoa(provisionedInfra.GitspacePortMappings[idePort].ForwardedPort)
 	}
 
 	host := provisionedInfra.Host
@@ -384,7 +402,7 @@ func (o orchestrator) ResumeStartGitspace(
 func (o orchestrator) ResumeStopGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	stoppedInfra *types.Infrastructure,
+	stoppedInfra types.Infrastructure,
 ) (enum.GitspaceInstanceStateType, error) {
 	instanceState := enum.GitspaceInstanceStateError
 
@@ -394,6 +412,16 @@ func (o orchestrator) ResumeStopGitspace(
 
 		return instanceState, fmt.Errorf(
 			"cannot stop provisioned infrastructure with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
+	}
+
+	if stoppedInfra.Status != enum.InfraStatusDestroyed {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
+
+		return instanceState, fmt.Errorf(
+			"infra state is %v, should be %v for gitspace instance identifier %s",
+			stoppedInfra.Status,
+			enum.InfraStatusDestroyed,
+			gitspaceConfig.GitspaceInstance.Identifier)
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopCompleted)
@@ -408,7 +436,7 @@ func (o orchestrator) ResumeStopGitspace(
 func (o orchestrator) ResumeDeleteGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	deprovisionedInfra *types.Infrastructure,
+	deprovisionedInfra types.Infrastructure,
 ) (enum.GitspaceInstanceStateType, error) {
 	instanceState := enum.GitspaceInstanceStateError
 
@@ -419,10 +447,33 @@ func (o orchestrator) ResumeDeleteGitspace(
 			"cannot deprovision infrastructure with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
 	}
 
+	if deprovisionedInfra.Status != enum.InfraStatusDestroyed {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
+
+		return instanceState, fmt.Errorf(
+			"infra state is %v, should be %v for gitspace instance identifier %s",
+			deprovisionedInfra.Status,
+			enum.InfraStatusDestroyed,
+			gitspaceConfig.GitspaceInstance.Identifier)
+	}
+
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningCompleted)
 
 	instanceState = enum.GitspaceInstanceStateDeleted
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStopCompleted)
 	return instanceState, nil
+}
+
+func (o orchestrator) getPortsRequiredForGitspace(
+	gitspaceConfig types.GitspaceConfig,
+) ([]int, error) {
+	// TODO: What if the required ports in the config have deviated from when the last instance was created?
+	ideSvc, err := o.getIDEService(gitspaceConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get IDE service while checking required Gitspace ports: %w", err)
+	}
+
+	idePort := ideSvc.Port()
+	return []int{idePort}, nil
 }

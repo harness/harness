@@ -75,12 +75,12 @@ func NewEmbeddedDockerOrchestrator(
 func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	infra *types.Infrastructure,
-	resolvedRepoDetails *scm.ResolvedDetails,
+	infra types.Infrastructure,
+	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
 	ideService ide.IDE,
 ) (*StartResponse, error) {
-	containerName := getGitspaceContainerName(gitspaceConfig)
+	containerName := GetGitspaceContainerName(gitspaceConfig)
 
 	log := log.Ctx(ctx).With().Str(loggingKey, containerName).Logger()
 
@@ -128,7 +128,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 
 		devcontainer := &devcontainer.Exec{
 			ContainerName: containerName,
-			WorkingDir:    e.getWorkingDir(resolvedRepoDetails.RepoName),
+			WorkingDir:    GetWorkingDir(resolvedRepoDetails.RepoName),
 			DockerClient:  dockerClient,
 		}
 
@@ -151,7 +151,8 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 
 		logStreamInstance, loggerErr := e.statefulLogger.CreateLogStream(ctx, gitspaceConfig.ID)
 		if loggerErr != nil {
-			return nil, fmt.Errorf("error getting log stream for gitspace ID %d: %w", gitspaceConfig.ID, loggerErr)
+			return nil,
+				fmt.Errorf("error getting log stream for gitspace ID %d: %w", gitspaceConfig.ID, loggerErr)
 		}
 
 		defer func() {
@@ -169,9 +170,9 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			ideService,
 			logStreamInstance,
 			infra.Storage,
-			e.getWorkingDir(resolvedRepoDetails.RepoName),
+			GetWorkingDir(resolvedRepoDetails.RepoName),
 			resolvedRepoDetails,
-			infra.PortMappings,
+			infra.GitspacePortMappings,
 			defaultBaseImage,
 		)
 		if startErr != nil {
@@ -185,7 +186,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 		return nil, fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
 	}
 
-	id, ports, startErr := e.getContainerInfo(ctx, containerName, dockerClient, infra.PortMappings)
+	id, ports, startErr := e.getContainerInfo(ctx, containerName, dockerClient, infra.GitspacePortMappings)
 	if startErr != nil {
 		return nil, startErr
 	}
@@ -197,10 +198,6 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	}, nil
 }
 
-func (e *EmbeddedDockerOrchestrator) getWorkingDir(repoName string) string {
-	return "/" + repoName
-}
-
 func (e *EmbeddedDockerOrchestrator) startGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
@@ -210,7 +207,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	logStreamInstance *logutil.LogStreamInstance,
 	volumeName string,
 	workingDirectory string,
-	resolvedRepoDetails *scm.ResolvedDetails,
+	resolvedRepoDetails scm.ResolvedDetails,
 	portMappings map[int]*types.PortMapping,
 	defaultBaseImage string,
 ) error {
@@ -384,7 +381,7 @@ func (e *EmbeddedDockerOrchestrator) getContainerInfo(
 func (e *EmbeddedDockerOrchestrator) authenticateGit(
 	ctx context.Context,
 	devcontainer *devcontainer.Exec,
-	resolvedRepoDetails *scm.ResolvedDetails,
+	resolvedRepoDetails scm.ResolvedDetails,
 ) error {
 	data := &template.AuthenticateGitPayload{
 		Email:    resolvedRepoDetails.Credentials.Email,
@@ -458,7 +455,7 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 	devcontainer *devcontainer.Exec,
 	defaultBaseImage string,
 	logStreamInstance *logutil.LogStreamInstance,
-	resolvedRepoDetails *scm.ResolvedDetails,
+	resolvedRepoDetails scm.ResolvedDetails,
 ) error {
 	data := &template.CloneGitPayload{
 		RepoURL: resolvedRepoDetails.CloneURL,
@@ -717,9 +714,9 @@ func (e *EmbeddedDockerOrchestrator) pullImage(
 func (e EmbeddedDockerOrchestrator) StopGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	infra *types.Infrastructure,
+	infra types.Infrastructure,
 ) error {
-	containerName := getGitspaceContainerName(gitspaceConfig)
+	containerName := GetGitspaceContainerName(gitspaceConfig)
 
 	log := log.Ctx(ctx).With().Str(loggingKey, containerName).Logger()
 
@@ -806,12 +803,8 @@ func (e EmbeddedDockerOrchestrator) stopContainer(
 	return nil
 }
 
-func getGitspaceContainerName(config types.GitspaceConfig) string {
-	return "gitspace-" + config.UserID + "-" + config.Identifier
-}
-
 // Status is NOOP for EmbeddedDockerOrchestrator as the docker host is verified by the infra provisioner.
-func (e *EmbeddedDockerOrchestrator) Status(_ context.Context, _ *types.Infrastructure) error {
+func (e *EmbeddedDockerOrchestrator) Status(_ context.Context, _ types.Infrastructure) error {
 	return nil
 }
 
@@ -840,9 +833,9 @@ func (e *EmbeddedDockerOrchestrator) containerState(
 func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	infra *types.Infrastructure,
+	infra types.Infrastructure,
 ) error {
-	containerName := getGitspaceContainerName(gitspaceConfig)
+	containerName := GetGitspaceContainerName(gitspaceConfig)
 
 	log := log.Ctx(ctx).With().Str(loggingKey, containerName).Logger()
 

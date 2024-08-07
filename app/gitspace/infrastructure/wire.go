@@ -32,6 +32,7 @@ func ProvideInfraProvisionerService(
 	providerFactory infraprovider.Factory,
 	infraProviderTemplateStore store.InfraProviderTemplateStore,
 	infraProvisionedStore store.InfraProvisionedStore,
+	config *Config,
 ) InfraProvisioner {
 	return NewInfraProvisionerService(
 		infraProviderConfig,
@@ -39,5 +40,6 @@ func ProvideInfraProvisionerService(
 		providerFactory,
 		infraProviderTemplateStore,
 		infraProvisionedStore,
+		config,
 	)
 }

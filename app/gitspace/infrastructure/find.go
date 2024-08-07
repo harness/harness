@@ -25,8 +25,9 @@ import (
 
 func (i infraProvisioner) Find(
 	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 	gitspaceConfig types.GitspaceConfig,
+	requiredGitspacePorts []int,
 ) (*types.Infrastructure, error) {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
@@ -38,20 +39,26 @@ func (i infraProvisioner) Find(
 		return nil, err
 	}
 
-	var params []types.InfraProviderParameter
+	var inputParams []types.InfraProviderParameter
+	var agentPort = 0
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
-		params, err = i.paramsForProvisioningTypeNew(ctx, gitspaceConfig)
+		inputParams, err = i.paramsForProvisioningTypeNew(ctx, gitspaceConfig)
 		if err != nil {
 			return nil, err
 		}
+
+		// TODO: What if the agent port has deviated from when the last instance was created?
+		agentPort = i.config.AgentPort
 	} else {
-		params, err = i.paramsForProvisioningTypeExisting(ctx, infraProviderResource, infraProvider)
+		inputParams, err = i.paramsForProvisioningTypeExisting(ctx, infraProviderResource, infraProvider)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return infraProvider.Find(ctx, gitspaceConfig.SpaceID, gitspaceConfig.SpacePath, gitspaceConfig.Identifier, params)
+	return infraProvider.Find(ctx, gitspaceConfig.SpaceID, gitspaceConfig.SpacePath,
+		gitspaceConfig.Identifier, gitspaceConfig.GitspaceInstance.Identifier,
+		agentPort, requiredGitspacePorts, inputParams)
 }
 
 func (i infraProvisioner) paramsForProvisioningTypeNew(
@@ -66,14 +73,14 @@ func (i infraProvisioner) paramsForProvisioningTypeNew(
 			gitspaceConfig.GitspaceInstance.ID, err)
 	}
 
-	allParams := stringToParams(infraProvisionedLatest.Params)
+	allParams := stringToParams(infraProvisionedLatest.InputParams)
 
 	return allParams, nil
 }
 
 func (i infraProvisioner) paramsForProvisioningTypeExisting(
 	ctx context.Context,
-	infraProviderResource *types.InfraProviderResource,
+	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
 ) ([]types.InfraProviderParameter, error) {
 	allParams, err := i.getAllParamsFromDB(ctx, infraProviderResource, infraProvider)

@@ -411,6 +411,8 @@ type Config struct {
 
 		Enable bool `envconfig:"GITNESS_GITSPACE_ENABLE" default:"false"`
 
+		AgentPort int `envconfig:"GITNESS_GITSPACE_AGENT_PORT" default:"8083"`
+
 		Events struct {
 			Concurrency int `envconfig:"GITNESS_GITSPACE_EVENTS_CONCURRENCY" default:"4"`
 			MaxRetries  int `envconfig:"GITNESS_GITSPACE_EVENTS_MAX_RETRIES" default:"3"`

@@ -27,51 +27,52 @@ type InfraProvisioner interface {
 	// infra providers.
 	TriggerProvision(
 		ctx context.Context,
-		infraProviderResource *types.InfraProviderResource,
+		infraProviderResource types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
-		requiredPorts []int,
+		requiredGitspacePorts []int,
 	) error
 
 	// ResumeProvision stores the provisioned infra details in the db depending on the provisioning type.
 	ResumeProvision(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
-		provisionedInfra *types.Infrastructure,
-	) (*types.Infrastructure, error)
+		provisionedInfra types.Infrastructure,
+	) error
 
 	// TriggerStop triggers deprovisioning of those resources which can be stopped without losing the Gitspace data.
 	TriggerStop(
 		ctx context.Context,
-		infraProviderResource *types.InfraProviderResource,
-		infra *types.Infrastructure,
+		infraProviderResource types.InfraProviderResource,
+		infra types.Infrastructure,
 	) error
 
 	// ResumeStop stores the deprovisioned infra details in the db depending on the provisioning type.
 	ResumeStop(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
-		deprovisionedInfra *types.Infrastructure,
+		deprovisionedInfra types.Infrastructure,
 	) error
 
 	// TriggerDeprovision triggers deprovisionign of all the resources created for the Gitspace.
 	TriggerDeprovision(
 		ctx context.Context,
-		infraProviderResource *types.InfraProviderResource,
+		infraProviderResource types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
-		infra *types.Infrastructure,
+		infra types.Infrastructure,
 	) error
 
 	// ResumeDeprovision stores the deprovisioned infra details in the db depending on the provisioning type.
 	ResumeDeprovision(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
-		deprovisionedInfra *types.Infrastructure,
+		deprovisionedInfra types.Infrastructure,
 	) error
 
 	// Find finds the provisioned infra resources for the gitspace instance.
 	Find(
 		ctx context.Context,
-		infraProviderResource *types.InfraProviderResource,
+		infraProviderResource types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
+		requiredGitspacePorts []int,
 	) (*types.Infrastructure, error)
 }

@@ -29,18 +29,18 @@ type Orchestrator interface {
 	CreateAndStartGitspace(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
-		infra *types.Infrastructure,
-		resolvedDetails *scm.ResolvedDetails,
+		infra types.Infrastructure,
+		resolvedDetails scm.ResolvedDetails,
 		defaultBaseImage string,
 		ideService ide.IDE,
 	) (*StartResponse, error)
 
 	// StopGitspace stops the gitspace container.
-	StopGitspace(ctx context.Context, config types.GitspaceConfig, infra *types.Infrastructure) error
+	StopGitspace(ctx context.Context, config types.GitspaceConfig, infra types.Infrastructure) error
 
 	// StopAndRemoveGitspace stops and removes the gitspace container.
-	StopAndRemoveGitspace(ctx context.Context, config types.GitspaceConfig, infra *types.Infrastructure) error
+	StopAndRemoveGitspace(ctx context.Context, config types.GitspaceConfig, infra types.Infrastructure) error
 
 	// Status checks if the infra is reachable and ready to orchestrate containers.
-	Status(ctx context.Context, infra *types.Infrastructure) error
+	Status(ctx context.Context, infra types.Infrastructure) error
 }

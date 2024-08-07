@@ -38,12 +38,12 @@ func NewDockerClientFactory(config *DockerConfig) *DockerClientFactory {
 // NewDockerClient returns a new docker client created using the docker config and infra.
 func (d *DockerClientFactory) NewDockerClient(
 	_ context.Context,
-	infra *types.Infrastructure,
+	infra types.Infrastructure,
 ) (*client.Client, error) {
 	if infra.ProviderType != enum.InfraProviderTypeDocker {
 		return nil, fmt.Errorf("infra provider type %s not supported", infra.ProviderType)
 	}
-	dockerClient, err := d.getClient(infra.Parameters)
+	dockerClient, err := d.getClient(infra.InputParameters)
 	if err != nil {
 		return nil, fmt.Errorf("error creating docker client using infra %+v: %w", infra, err)
 	}

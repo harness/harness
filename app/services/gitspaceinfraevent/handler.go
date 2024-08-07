@@ -32,7 +32,8 @@ func (s *Service) handleGitspaceInfraEvent(
 ) error {
 	payload := event.Payload
 
-	config, fetchErr := s.getConfig(ctx, payload.Infra.SpaceID, payload.Infra.SpacePath, payload.Infra.ResourceKey)
+	config, fetchErr := s.getConfig(
+		ctx, payload.Infra.SpaceID, payload.Infra.SpacePath, payload.Infra.GitspaceConfigIdentifier)
 	if fetchErr != nil {
 		return fetchErr
 	}

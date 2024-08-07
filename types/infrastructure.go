@@ -40,16 +40,18 @@ type PortMapping struct {
 type Infrastructure struct {
 	// Identifier identifies the provisioned infra.
 	Identifier string
-	// ResourceKey is the key for which the infra is provisioned.
-	ResourceKey string
 	// SpaceID for the resource key.
 	SpaceID int64
 	// SpacePath for the resource key.
 	SpacePath string
+	// GitspaceConfigIdentifier is the gitspace config for which the infra is provisioned.
+	GitspaceConfigIdentifier string
+	// GitspaceInstanceIdentifier is the gitspace instance for which the infra is provisioned.
+	GitspaceInstanceIdentifier string
 	// ProviderType specifies the type of the infra provider.
 	ProviderType enum.InfraProviderType
-	// Parameters which are required by the provider to provision the infra.
-	Parameters []InfraProviderParameter
+	// InputParameters which are required by the provider to provision the infra.
+	InputParameters []InfraProviderParameter
 	// Status of the infra.
 	Status enum.InfraStatus
 	// Host through which the infra can be accessed.
@@ -60,6 +62,6 @@ type Infrastructure struct {
 	ProxyPort int
 	// Storage is the name of the volume or disk created for the resource.
 	Storage string
-	// PortMappings contains the ports assigned for every requested port.
-	PortMappings map[int]*PortMapping
+	// GitspacePortMappings contains the ports assigned for every requested port.
+	GitspacePortMappings map[int]*PortMapping
 }
