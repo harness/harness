@@ -17,6 +17,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/controller"
@@ -55,8 +56,12 @@ func (in *CommentCreateInput) IsCodeComment() bool {
 	return in.SourceCommitSHA != ""
 }
 
-func (in *CommentCreateInput) Validate() error {
-	// TODO: Validate Text size.
+func (in *CommentCreateInput) Sanitize() error {
+	in.Text = strings.TrimSpace(in.Text)
+
+	if err := validateComment(in.Text); err != nil {
+		return err
+	}
 
 	if in.SourceCommitSHA == "" && in.TargetCommitSHA == "" {
 		return nil // not a code comment
@@ -95,13 +100,13 @@ func (c *Controller) CommentCreate(
 	prNum int64,
 	in *CommentCreateInput,
 ) (*types.PullReqActivity, error) {
+	if err := in.Sanitize(); err != nil {
+		return nil, err
+	}
+
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
-	}
-
-	if errValidate := in.Validate(); errValidate != nil {
-		return nil, errValidate
 	}
 
 	var pr *types.PullReq

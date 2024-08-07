@@ -17,6 +17,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/auth"
@@ -30,8 +31,13 @@ type CommentUpdateInput struct {
 	Text string `json:"text"`
 }
 
-func (in *CommentUpdateInput) Validate() error {
-	// TODO: Check Text length
+func (in *CommentUpdateInput) Sanitize() error {
+	in.Text = strings.TrimSpace(in.Text)
+
+	if err := validateComment(in.Text); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -48,6 +54,10 @@ func (c *Controller) CommentUpdate(
 	commentID int64,
 	in *CommentUpdateInput,
 ) (*types.PullReqActivity, error) {
+	if err := in.Sanitize(); err != nil {
+		return nil, err
+	}
+
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
@@ -56,10 +66,6 @@ func (c *Controller) CommentUpdate(
 	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
-	}
-
-	if errValidate := in.Validate(); errValidate != nil {
-		return nil, errValidate
 	}
 
 	act, err := c.getCommentCheckEditAccess(ctx, session, pr, commentID)

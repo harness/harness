@@ -17,6 +17,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"unicode/utf8"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
@@ -282,4 +283,35 @@ func eventBase(pr *types.PullReq, principal *types.Principal) pullreqevents.Base
 		Number:       pr.Number,
 		PrincipalID:  principal.ID,
 	}
+}
+
+func validateTitle(title string) error {
+	if title == "" {
+		return usererror.BadRequest("pull request title can't be empty")
+	}
+
+	const maxLen = 256
+	if utf8.RuneCountInString(title) > maxLen {
+		return usererror.BadRequestf("pull request title is too long (maximum is %d characters)", maxLen)
+	}
+
+	return nil
+}
+
+func validateDescription(desc string) error {
+	const maxLen = 64 << 10 // 64K
+	if len(desc) > maxLen {
+		return usererror.BadRequest("pull request description is too long")
+	}
+
+	return nil
+}
+
+func validateComment(desc string) error {
+	const maxLen = 16 << 10 // 16K
+	if len(desc) > maxLen {
+		return usererror.BadRequest("pull request comment is too long")
+	}
+
+	return nil
 }

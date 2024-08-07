@@ -42,6 +42,21 @@ type CreateInput struct {
 	TargetBranch  string `json:"target_branch"`
 }
 
+func (in *CreateInput) Sanitize() error {
+	in.Title = strings.TrimSpace(in.Title)
+	in.Description = strings.TrimSpace(in.Description)
+
+	if err := validateTitle(in.Title); err != nil {
+		return err
+	}
+
+	if err := validateDescription(in.Description); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Create creates a new pull request.
 func (c *Controller) Create(
 	ctx context.Context,
@@ -49,9 +64,8 @@ func (c *Controller) Create(
 	repoRef string,
 	in *CreateInput,
 ) (*types.PullReq, error) {
-	in.Title = strings.TrimSpace(in.Title)
-	if in.Title == "" {
-		return nil, usererror.BadRequest("pull request title can't be empty")
+	if err := in.Sanitize(); err != nil {
+		return nil, err
 	}
 
 	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)

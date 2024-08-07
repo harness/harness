@@ -21,7 +21,6 @@ import (
 	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/types"
@@ -35,15 +34,17 @@ type UpdateInput struct {
 	Description string `json:"description"`
 }
 
-func (in *UpdateInput) Check() error {
+func (in *UpdateInput) Sanitize() error {
 	in.Title = strings.TrimSpace(in.Title)
-	if in.Title == "" {
-		return usererror.BadRequest("pull request title can't be empty")
-	}
-
 	in.Description = strings.TrimSpace(in.Description)
 
-	// TODO: Check the length of the input strings
+	if err := validateTitle(in.Title); err != nil {
+		return err
+	}
+
+	if err := validateDescription(in.Description); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -52,7 +53,7 @@ func (in *UpdateInput) Check() error {
 func (c *Controller) Update(ctx context.Context,
 	session *auth.Session, repoRef string, pullreqNum int64, in *UpdateInput,
 ) (*types.PullReq, error) {
-	if err := in.Check(); err != nil {
+	if err := in.Sanitize(); err != nil {
 		return nil, err
 	}
 
