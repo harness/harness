@@ -286,6 +286,14 @@ func (c *RedisConsumer) reader(ctx context.Context) {
 					if len(stream.Messages) > 0 {
 						scanHistory = true
 						streamsArg[streamLen+x] = stream.Messages[len(stream.Messages)-1].ID
+
+						c.pushInfo(fmt.Sprintf(
+							"stream %q had %d more messages in the history (delivered but no yet acked),"+
+								"continuing scanning after %q",
+							stream.Stream,
+							len(stream.Messages),
+							streamsArg[streamLen+x],
+						))
 					}
 					x++
 				}
