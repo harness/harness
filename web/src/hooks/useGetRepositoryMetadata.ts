@@ -15,11 +15,12 @@
  */
 import { useAtom } from 'jotai'
 import { useEffect, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CODEProps } from 'RouteDefinitions'
 import type { RepoRepositoryOutput } from 'services/code'
 import { diffRefsToRefs, makeDiffRefs } from 'utils/GitUtils'
+import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { newCacheStrategy } from 'utils/CacheStrategy'
 import { repoMetadataAtom } from 'atoms/repoMetadata'
@@ -27,6 +28,8 @@ import { useGetSpaceParam } from './useGetSpaceParam'
 
 export function useGetRepositoryMetadata() {
   const space = useGetSpaceParam()
+  const { routes } = useAppContext()
+  const history = useHistory()
   const {
     repoName,
     gitRef,
@@ -53,11 +56,14 @@ export function useGetRepositoryMetadata() {
     //  - cache does not exist yet
     //  - or cache is expired
     //  - or repoPath is changed
-    if (
-      (repoName && (!repoMetadata || cacheStrategy.isExpired())) ||
-      (repoMetadata && repoMetadata.path !== repoPath)
-    ) {
+    if (repoName && (!repoMetadata || cacheStrategy.isExpired())) {
       refetch()
+    } else if (repoMetadata && repoMetadata.path !== repoPath) {
+      refetch().then(() => {
+        if (repoPath?.toLocaleLowerCase() === repoMetadata.path?.toLocaleLowerCase()) {
+          history.replace(routes.toCODERepository({ repoPath: repoMetadata.path as string }))
+        }
+      })
     }
   }, [repoName, refetch, repoMetadata, repoPath])
 
