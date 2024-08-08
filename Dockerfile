@@ -84,6 +84,8 @@ ENV GITNESS_METRIC_ENDPOINT=https://stats.drone.ci/api/v1/gitness
 ENV GITNESS_TOKEN_COOKIE_NAME=token
 ENV GITNESS_DOCKER_HOST unix:///var/run/docker.sock
 ENV GITNESS_DOCKER_API_VERSION 1.40
+ENV GITNESS_SSH_ENABLE=true
+ENV GITNESS_GITSPACE_ENABLE=true
 
 COPY --from=builder /app/gitness /app/gitness
 COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
