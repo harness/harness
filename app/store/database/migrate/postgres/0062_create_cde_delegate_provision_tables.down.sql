@@ -1,0 +1,1 @@
+DROP TABLE delegate_provision_details;
