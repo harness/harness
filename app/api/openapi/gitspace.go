@@ -34,6 +34,11 @@ type lookupRepoGitspaceRequest struct {
 	gitspace.LookupRepoInput
 }
 
+type actionGitspaceRequest struct {
+	gitspaceRequest
+	gitspace.ActionInput
+}
+
 type updateGitspaceRequest struct {
 }
 
@@ -169,4 +174,15 @@ func gitspaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListAll, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListAll, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/gitspaces", opListAll)
+
+	opAction := openapi3.Operation{}
+	opAction.WithTags("gitspaces")
+	opAction.WithSummary("Perform action on a gitspace")
+	opAction.WithMapOfAnything(map[string]interface{}{"operationId": "actionOnGitspace"})
+	_ = reflector.SetRequest(&opAction, new(actionGitspaceRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opAction, new(types.GitspaceConfig), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opAction, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opAction, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opAction, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/gitspaces/{gitspace_identifier}/action", opAction)
 }
