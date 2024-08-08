@@ -20,17 +20,21 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-type Factory struct {
+type Factory interface {
+	GetInfraProvider(providerType enum.InfraProviderType) (InfraProvider, error)
+}
+
+type factory struct {
 	providers map[enum.InfraProviderType]InfraProvider
 }
 
 func NewFactory(dockerProvider *DockerProvider) Factory {
 	providers := make(map[enum.InfraProviderType]InfraProvider)
 	providers[enum.InfraProviderTypeDocker] = dockerProvider
-	return Factory{providers: providers}
+	return &factory{providers: providers}
 }
 
-func (f *Factory) GetInfraProvider(providerType enum.InfraProviderType) (InfraProvider, error) {
+func (f *factory) GetInfraProvider(providerType enum.InfraProviderType) (InfraProvider, error) {
 	val := f.providers[providerType]
 	if val == nil {
 		return nil, fmt.Errorf("unknown infra provider type: %s", providerType)
