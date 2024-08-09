@@ -21,7 +21,7 @@ RUN yarn && yarn build && yarn cache clean
 FROM --platform=$BUILDPLATFORM golang:1.22-alpine3.18 as builder
 
 RUN apk update \
-    && apk add --no-cache protoc build-base git wget
+    && apk add --no-cache protoc build-base git
 
 # Setup workig dir
 WORKDIR /app
@@ -48,16 +48,14 @@ ARG GITNESS_VERSION_PATCH
 ARG TARGETOS TARGETARCH
 
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
-    wget -P /tmp https://musl.cc/aarch64-linux-musl-cross.tgz && \
-    tar -xvf /tmp/aarch64-linux-musl-cross.tgz -C /tmp && \
-    export CC=/tmp/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc; \
-    else \
-    export CC=gcc; \
+    wget -P ~ https://musl.cc/aarch64-linux-musl-cross.tgz && \
+    tar -xvf ~/aarch64-linux-musl-cross.tgz -C ~ ; \
     fi
 
 # set required build flags
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
+    if [ "$TARGETARCH" = "arm64" ]; then CC=~/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc; fi && \
     LDFLAGS="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.major=${GITNESS_VERSION_MAJOR} -X github.com/harness/gitness/version.minor=${GITNESS_VERSION_MINOR} -X github.com/harness/gitness/version.patch=${GITNESS_VERSION_PATCH} -extldflags '-static'" && \
     CGO_ENABLED=1 \
     GOOS=$TARGETOS GOARCH=$TARGETARCH \
