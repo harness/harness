@@ -400,8 +400,13 @@ type Config struct {
 
 	IDE struct {
 		VSCodeWeb struct {
-			// Port is the port on which the VS Code Web will be accessible.
+			// Port is the port on which the VSCode Web will be accessible.
 			Port int `envconfig:"GITNESS_IDE_VSCODEWEB_PORT" default:"8089"`
+		}
+
+		VSCode struct {
+			// Port is the port on which the SSH server for VSCode will be accessible.
+			Port int `envconfig:"GITNESS_IDE_VSCODE_PORT" default:"8088"`
 		}
 	}
 

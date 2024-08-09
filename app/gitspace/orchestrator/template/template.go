@@ -56,6 +56,10 @@ type SetupSSHServerPayload struct {
 	WorkingDirectory string
 }
 
+type RunSSHServerPayload struct {
+	Port string
+}
+
 func init() {
 	err := LoadTemplates()
 	if err != nil {

@@ -27,6 +27,6 @@ func ProvideVSCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 	return NewVsCodeWebService(config)
 }
 
-func ProvideVSCodeService() *VSCode {
-	return NewVsCodeService()
+func ProvideVSCodeService(config *VSCodeConfig) *VSCode {
+	return NewVsCodeService(config)
 }

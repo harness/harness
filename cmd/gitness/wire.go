@@ -235,6 +235,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitspaceinfraevents.WireSet,
 		gitspaceservice.WireSet,
 		cliserver.ProvideGitspaceInfraProvisionerConfig,
+		cliserver.ProvideIDEVSCodeConfig,
 	)
 	return &cliserver.System{}, nil
 }

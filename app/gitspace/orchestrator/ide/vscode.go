@@ -17,27 +17,29 @@ package ide
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	_ "embed"
 )
 
 var _ IDE = (*VSCode)(nil)
 
-//go:embed script/run_ssh_server.sh
-var runSSHScript string
-
-const sshPort int = 22
 const templateSetupSSHServer string = "setup_ssh_server.sh"
+const templateRunSSHServer string = "run_ssh_server.sh"
 
-type VSCode struct{}
+type VSCodeConfig struct {
+	Port int
+}
 
-func NewVsCodeService() *VSCode {
-	return &VSCode{}
+type VSCode struct {
+	config *VSCodeConfig
+}
+
+func NewVsCodeService(config *VSCodeConfig) *VSCode {
+	return &VSCode{config: config}
 }
 
 // Setup installs the SSH server inside the container.
@@ -73,6 +75,15 @@ func (v *VSCode) Setup(
 func (v *VSCode) Run(ctx context.Context, devcontainer *devcontainer.Exec) ([]byte, error) {
 	var output = ""
 
+	runSSHScript, err := template.GenerateScriptFromTemplate(
+		templateRunSSHServer, &template.RunSSHServerPayload{
+			Port: strconv.Itoa(v.config.Port),
+		})
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
+	}
+
 	execOutput, err := devcontainer.ExecuteCommand(ctx, runSSHScript, false, rootUser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run SSH serverr: %w", err)
@@ -85,7 +96,7 @@ func (v *VSCode) Run(ctx context.Context, devcontainer *devcontainer.Exec) ([]by
 
 // Port returns the port on which the ssh-server is listening.
 func (v *VSCode) Port() int {
-	return sshPort
+	return v.config.Port
 }
 
 func (v *VSCode) Type() enum.IDEType {

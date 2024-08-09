@@ -406,6 +406,13 @@ func ProvideIDEVSCodeWebConfig(config *types.Config) *ide.VSCodeWebConfig {
 	}
 }
 
+// ProvideIDEVSCodeConfig loads the VSCode IDE config from the main config.
+func ProvideIDEVSCodeConfig(config *types.Config) *ide.VSCodeConfig {
+	return &ide.VSCodeConfig{
+		Port: config.IDE.VSCode.Port,
+	}
+}
+
 // ProvideGitspaceOrchestratorConfig loads the Gitspace orchestrator config from the main config.
 func ProvideGitspaceOrchestratorConfig(config *types.Config) *orchestrator.Config {
 	return &orchestrator.Config{
