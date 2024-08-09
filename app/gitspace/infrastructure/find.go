@@ -73,7 +73,10 @@ func (i infraProvisioner) paramsForProvisioningTypeNew(
 			gitspaceConfig.GitspaceInstance.ID, err)
 	}
 
-	allParams := stringToParams(infraProvisionedLatest.InputParams)
+	allParams, err := deserializeInfraProviderParams(infraProvisionedLatest.InputParams)
+	if err != nil {
+		return nil, err
+	}
 
 	return allParams, nil
 }

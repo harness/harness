@@ -85,14 +85,17 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 	}
 
 	now := time.Now()
-
+	paramsBytes, err := serializeInfraProviderParams(allParams)
+	if err != nil {
+		return err
+	}
 	infraProvisioned := &types.InfraProvisioned{
 		GitspaceInstanceID:      gitspaceConfig.GitspaceInstance.ID,
 		InfraProviderType:       infraProviderType,
 		InfraProviderResourceID: infraProviderResource.ID,
 		Created:                 now.UnixMilli(),
 		Updated:                 now.UnixMilli(),
-		InputParams:             paramsToString(allParams),
+		InputParams:             paramsBytes,
 		InfraStatus:             enum.InfraStatusPending,
 		SpaceID:                 gitspaceConfig.SpaceID,
 	}

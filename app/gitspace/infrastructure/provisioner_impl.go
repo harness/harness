@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -29,8 +28,6 @@ import (
 )
 
 var _ InfraProvisioner = (*infraProvisioner)(nil)
-
-const paramSeparator = "\n===============\n"
 
 type Config struct {
 	AgentPort int
@@ -132,31 +129,21 @@ func (i infraProvisioner) paramsFromResource(
 	return params
 }
 
-func paramsToString(in []types.InfraProviderParameter) string {
-	var output = ""
-	for _, value := range in {
-		if value.Name == "" || value.Value == "" {
-			continue
-		}
-		output += value.Name + "=" + value.Value + paramSeparator
+func serializeInfraProviderParams(in []types.InfraProviderParameter) (string, error) {
+	output, err := json.Marshal(in)
+	if err != nil {
+		return "", fmt.Errorf("unable to marshal infra provider params: %w", err)
 	}
-	return output
+	return string(output), nil
 }
 
-func stringToParams(in string) []types.InfraProviderParameter {
-	var output = make([]types.InfraProviderParameter, 0)
-	paramsRaw := strings.Split(in, paramSeparator)
-	for _, value := range paramsRaw {
-		parts := strings.Split(value, "=")
-		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			continue
-		}
-		output = append(output, types.InfraProviderParameter{
-			Name:  parts[0],
-			Value: parts[1],
-		})
+func deserializeInfraProviderParams(in string) ([]types.InfraProviderParameter, error) {
+	var parameters []types.InfraProviderParameter
+	err := json.Unmarshal([]byte(in), &parameters)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal infra provider params %+v: %w", in, err)
 	}
-	return output
+	return parameters, nil
 }
 
 func (i infraProvisioner) responseMetadata(infra types.Infrastructure) (string, error) {
