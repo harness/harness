@@ -115,10 +115,19 @@ func (i infraProvisioner) getTemplateParams(
 
 func (i infraProvisioner) paramsFromResource(
 	infraProviderResource types.InfraProviderResource,
+	infraProvider infraprovider.InfraProvider,
 ) []types.InfraProviderParameter {
+	// NOTE: templateParamsMap is required to filter out template params since their values have already been fetched
+	// and we dont need the template identifiers, which are the values for template params in the resource Metadata.
+	templateParamsMap := make(map[string]bool)
+	for _, templateParam := range infraProvider.TemplateParams() {
+		templateParamsMap[templateParam.Name] = true
+	}
+
 	params := make([]types.InfraProviderParameter, 0)
+
 	for key, value := range infraProviderResource.Metadata {
-		if key == "" || value == "" {
+		if key == "" || value == "" || templateParamsMap[key] {
 			continue
 		}
 		params = append(params, types.InfraProviderParameter{
@@ -169,7 +178,7 @@ func (i infraProvisioner) getAllParamsFromDB(
 
 	allParams = append(allParams, templateParams...)
 
-	params := i.paramsFromResource(infraProviderResource)
+	params := i.paramsFromResource(infraProviderResource, infraProvider)
 
 	allParams = append(allParams, params...)
 
