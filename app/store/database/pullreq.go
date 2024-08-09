@@ -575,26 +575,28 @@ func setLabelKeyQuery(stmt *squirrel.SelectBuilder, opts *types.PullReqFilter) {
 		return
 	}
 
-	*stmt = stmt.InnerJoin("pullreq_labels ON pullreq_label_pullreq_id = pullreq_id")
+	*stmt = stmt.InnerJoin("pullreq_labels ON pullreq_label_pullreq_id = pullreq_id").
+		GroupBy("pullreq_id")
 
-	if len(opts.LabelID) > 0 && len(opts.ValueID) == 0 {
+	switch {
+	case len(opts.LabelID) > 0 && len(opts.ValueID) == 0:
 		*stmt = stmt.Where(
 			squirrel.Eq{"pullreq_label_label_id": opts.LabelID},
 		)
-		return
-	}
 
-	if len(opts.LabelID) == 0 && len(opts.ValueID) > 0 {
+	case len(opts.LabelID) == 0 && len(opts.ValueID) > 0:
 		*stmt = stmt.Where(
 			squirrel.Eq{"pullreq_label_label_value_id": opts.ValueID},
 		)
-		return
+
+	default:
+		*stmt = stmt.Where(squirrel.Or{
+			squirrel.Eq{"pullreq_label_label_id": opts.LabelID},
+			squirrel.Eq{"pullreq_label_label_value_id": opts.ValueID},
+		})
 	}
 
-	*stmt = stmt.Where(squirrel.Or{
-		squirrel.Eq{"pullreq_label_label_id": opts.LabelID},
-		squirrel.Eq{"pullreq_label_label_value_id": opts.ValueID},
-	})
+	*stmt = stmt.Having("COUNT(pullreq_label_pullreq_id) = ?", len(opts.LabelID)+len(opts.ValueID))
 }
 
 func mapPullReq(pr *pullReq) *types.PullReq {
