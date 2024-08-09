@@ -37,6 +37,7 @@ const (
 // TODO: expose via options?
 type Config struct {
 	Acme              bool
+	Host              string
 	Port              int
 	Cert              string
 	Key               string
@@ -78,7 +79,7 @@ func (s *Server) ListenAndServe() (*errgroup.Group, ShutdownFunction) {
 func (s *Server) listenAndServe() (*errgroup.Group, ShutdownFunction) {
 	var g errgroup.Group
 	s1 := &http.Server{
-		Addr:              fmt.Sprintf(":%d", s.config.Port),
+		Addr:              fmt.Sprintf("%s:%d", s.config.Host, s.config.Port),
 		ReadHeaderTimeout: s.config.ReadHeaderTimeout,
 		Handler:           s.handler,
 	}

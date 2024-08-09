@@ -53,7 +53,7 @@ type Config struct {
 	// URL defines the URLs via which the different parts of the service are reachable by.
 	URL struct {
 		// Base is used to generate external facing URLs in case they aren't provided explicitly.
-		// Value is derived from HTTP.Server unless explicitly specified (e.g. http://localhost:3000).
+		// Value is derived from Server.HTTP Config unless explicitly specified (e.g. http://localhost:3000).
 		Base string `envconfig:"GITNESS_URL_BASE"`
 
 		// Git defines the external URL via which the GIT API is reachable.
@@ -66,7 +66,8 @@ type Config struct {
 		Git string `envconfig:"GITNESS_URL_GIT"`
 
 		// GitSSH defines the external URL via which the GIT SSH server is reachable.
-		GitSSH string `envconfig:"GITNESS_URL_GIT_SSH" default:"localhost"`
+		// Value is derived from Base or SSH Config unless explicitly specified (e.g. ssh://localhost).
+		GitSSH string `envconfig:"GITNESS_URL_GIT_SSH"`
 
 		// API defines the external URL via which the rest API is reachable.
 		// NOTE: for routing to work properly, the request path reaching gitness has to end with `/api`
@@ -120,21 +121,19 @@ type Config struct {
 		MixedContent bool   `envconfig:"GITNESS_ENCRYPTER_MIXED_CONTENT"`
 	}
 
-	// Server defines the server configuration parameters.
-	Server struct {
-		// HTTP defines the http configuration parameters
-		HTTP struct {
-			Port  int    `envconfig:"GITNESS_HTTP_PORT" default:"3000"`
-			Proto string `envconfig:"GITNESS_HTTP_PROTO" default:"http"`
-		}
+	// HTTP defines the http server configuration parameters
+	HTTP struct {
+		Port  int    `envconfig:"GITNESS_HTTP_PORT" default:"3000"`
+		Host  string `envconfig:"GITNESS_HTTP_HOST"`
+		Proto string `envconfig:"GITNESS_HTTP_PROTO" default:"http"`
+	}
 
-		// Acme defines Acme configuration parameters.
-		Acme struct {
-			Enabled bool   `envconfig:"GITNESS_ACME_ENABLED"`
-			Endpont string `envconfig:"GITNESS_ACME_ENDPOINT"`
-			Email   bool   `envconfig:"GITNESS_ACME_EMAIL"`
-			Host    string `envconfig:"GITNESS_ACME_HOST"`
-		}
+	// Acme defines Acme configuration parameters.
+	Acme struct {
+		Enabled bool   `envconfig:"GITNESS_ACME_ENABLED"`
+		Endpont string `envconfig:"GITNESS_ACME_ENDPOINT"`
+		Email   bool   `envconfig:"GITNESS_ACME_EMAIL"`
+		Host    string `envconfig:"GITNESS_ACME_HOST"`
 	}
 
 	SSH struct {

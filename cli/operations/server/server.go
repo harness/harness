@@ -138,7 +138,8 @@ func (c *command) run(*kingpin.ParseContext) error {
 	}
 
 	log.Info().
-		Int("port", config.Server.HTTP.Port).
+		Str("host", config.HTTP.Host).
+		Int("port", config.HTTP.Port).
 		Str("revision", version.GitCommit).
 		Str("repository", version.GitRepository).
 		Stringer("version", version.Version).

@@ -17,6 +17,7 @@ package url
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
 	"path"
 	"strconv"
@@ -186,12 +187,7 @@ func (p *provider) GenerateGITCloneSSHURL(_ context.Context, repoPath string) st
 	if !p.SSHEnabled {
 		return ""
 	}
-	repoPath = path.Clean(repoPath)
-	if !strings.HasSuffix(repoPath, GITSuffix) {
-		repoPath += GITSuffix
-	}
-
-	return fmt.Sprintf("%s@%s:%s", p.SSHDefaultUser, p.gitSSHURL.String(), repoPath)
+	return BuildGITCloneSSHURL(p.SSHDefaultUser, p.gitSSHURL, repoPath)
 }
 
 func (p *provider) GenerateUIBuildURL(_ context.Context, repoPath, pipelineIdentifier string, seqNumber int64) string {
@@ -221,4 +217,27 @@ func (p *provider) GetGITHostname(context.Context) string {
 
 func (p *provider) GetAPIProto(context.Context) string {
 	return p.apiURL.Scheme
+}
+
+func BuildGITCloneSSHURL(user string, sshURL *url.URL, repoPath string) string {
+	repoPath = path.Clean(repoPath)
+	if !strings.HasSuffix(repoPath, GITSuffix) {
+		repoPath += GITSuffix
+	}
+
+	// SSH clone url requires custom format depending on port to satisfy git
+	combinedPath := strings.Trim(path.Join(sshURL.Path, repoPath), "/")
+
+	// handle custom ports differently as otherwise git clone fails
+	if sshURL.Port() != "" && sshURL.Port() != "0" && sshURL.Port() != "22" {
+		return fmt.Sprintf(
+			"ssh://%s@%s/%s",
+			user, net.JoinHostPort(sshURL.Hostname(), sshURL.Port()), combinedPath,
+		)
+	}
+
+	return fmt.Sprintf(
+		"%s@%s:%s",
+		user, sshURL.Hostname(), combinedPath,
+	)
 }

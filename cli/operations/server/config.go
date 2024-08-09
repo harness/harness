@@ -51,6 +51,7 @@ import (
 const (
 	schemeHTTP     = "http"
 	schemeHTTPS    = "https"
+	schemeSSH      = "ssh"
 	gitnessHomeDir = ".gitness"
 	blobDir        = "blob"
 )
@@ -105,14 +106,27 @@ func LoadConfig() (*types.Config, error) {
 
 //nolint:gocognit // refactor if required
 func backfillURLs(config *types.Config) error {
-	// default base url
-	// TODO: once we actually use the config.Server.HTTP.Proto, we have to update that here.
+	// default values for HTTP
+	// TODO: once we actually use the config.HTTP.Proto, we have to update that here.
 	scheme, host, port, path := schemeHTTP, "localhost", "", ""
-
+	if config.HTTP.Host != "" {
+		host = config.HTTP.Host
+	}
 	// by default drop scheme's default port
-	if (scheme != schemeHTTP || config.Server.HTTP.Port != 80) &&
-		(scheme != schemeHTTPS || config.Server.HTTP.Port != 443) {
-		port = fmt.Sprint(config.Server.HTTP.Port)
+	if config.HTTP.Port > 0 &&
+		(scheme != schemeHTTP || config.HTTP.Port != 80) &&
+		(scheme != schemeHTTPS || config.HTTP.Port != 443) {
+		port = fmt.Sprint(config.HTTP.Port)
+	}
+
+	// default values for SSH
+	sshHost, sshPort := "localhost", ""
+	if config.SSH.Host != "" {
+		sshHost = config.SSH.Host
+	}
+	// by default drop scheme's default port
+	if config.SSH.Port > 0 && config.SSH.Port != 22 {
+		sshPort = fmt.Sprint(config.SSH.Port)
 	}
 
 	// backfil internal URLS before continuing override with user provided base (which is external facing)
@@ -150,6 +164,14 @@ func backfillURLs(config *types.Config) error {
 		host = u.Hostname()
 		port = u.Port()
 		path = u.Path
+
+		// overwrite sshhost with base url host, but keep port as is
+		sshHost = u.Hostname()
+	}
+
+	// backfill external facing URLs
+	if config.URL.GitSSH == "" {
+		config.URL.GitSSH = combineToRawURL(schemeSSH, sshHost, sshPort, "")
 	}
 
 	// create base URL object
