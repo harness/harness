@@ -127,21 +127,22 @@ func (c *Service) CreateResources(ctx context.Context, resources []types.InfraPr
 }
 
 func (c *Service) createResources(ctx context.Context, resources []types.InfraProviderResource, configID int64) error {
-	for idx, res := range resources {
-		res.InfraProviderConfigID = configID
-		infraProvider, err := c.infraProviderFactory.GetInfraProvider(res.InfraProviderType)
+	for idx := range resources {
+		resource := &resources[idx]
+		resource.InfraProviderConfigID = configID
+		infraProvider, err := c.infraProviderFactory.GetInfraProvider(resource.InfraProviderType)
 		if err != nil {
-			return fmt.Errorf("failed to fetch infrastructure impl for type : %q %w", res.InfraProviderType, err)
+			return fmt.Errorf("failed to fetch infrastructure impl for type : %q %w", resource.InfraProviderType, err)
 		}
 		if len(infraProvider.TemplateParams()) > 0 {
-			err = c.validateTemplates(ctx, infraProvider, res)
+			err = c.validateTemplates(ctx, infraProvider, *resource)
 			if err != nil {
 				return err
 			}
 		}
-		err = c.infraProviderResourceStore.Create(ctx, &resources[idx])
+		err = c.infraProviderResourceStore.Create(ctx, resource)
 		if err != nil {
-			return fmt.Errorf("failed to create infraprovider resource for : %q %w", res.Identifier, err)
+			return fmt.Errorf("failed to create infraprovider resource for : %q %w", resource.Identifier, err)
 		}
 	}
 	return nil
