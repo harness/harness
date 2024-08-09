@@ -41,15 +41,15 @@ import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { DiffFileEntry } from 'utils/types'
 import { useAppContext } from 'AppContext'
-import type { GitFileDiff, TypesPullReq } from 'services/code'
+import type { GitFileDiff, TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import type { UseGetPullRequestInfoResult } from 'pages/PullRequest/useGetPullRequestInfo'
 import { useQueryParams } from 'hooks/useQueryParams'
-import { useCustomEventListener } from 'hooks/useEventListener'
+import { useCustomEventListener, useEventListener } from 'hooks/useEventListener'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { getErrorMessage, isInViewport } from 'utils/Utils'
-import { createRequestIdleCallbackTaskPool } from 'utils/Task'
+import { createRequestAnimationFrameTaskPool } from 'utils/Task'
 import { useResizeObserver } from 'hooks/useResizeObserver'
 import { useFindGitBranch } from 'hooks/useFindGitBranch'
 import Config from 'Config'
@@ -58,7 +58,8 @@ import {
   DIFF_VIEWER_HEADER_HEIGHT,
   ViewStyle,
   getFileViewedState,
-  FileViewedState
+  FileViewedState,
+  DiffCommentItem
 } from './DiffViewerUtils'
 import { usePullReqComments } from './usePullReqComments'
 import Collapse from '../../icons/collapse.svg'
@@ -165,6 +166,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     },
     [ref]
   )
+  const contentHTML = useRef<string | null>(null)
 
   useResizeObserver(
     contentRef,
@@ -178,20 +180,6 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     )
   )
 
-  useEffect(() => {
-    let taskId = 0
-    if (inView) {
-      taskId = scheduleLowPriorityTask(() => {
-        if (isMounted.current && contentRef.current) contentRef.current.classList.remove(css.hidden)
-      })
-    } else {
-      taskId = scheduleLowPriorityTask(() => {
-        if (isMounted.current && contentRef.current) contentRef.current.classList.add(css.hidden)
-      })
-    }
-    return () => cancelTask(taskId)
-  }, [inView, isMounted])
-
   //
   // Handling custom events sent to DiffViewer from external components/features
   // such as "jump to file", "jump to comment", etc...
@@ -201,6 +189,21 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     useCallback(event => {
       const { action, commentId } = event.detail
       const containerDOM = document.getElementById(diff.containerId) as HTMLDivElement
+
+      function scrollToComment(count = 0) {
+        const commentDOM = containerDOM.querySelector(`[data-comment-id="${commentId}"]`) as HTMLDivElement
+
+        if (!isMounted.current || count > 100) {
+          return
+        }
+
+        if (commentDOM) {
+          const dom = commentDOM?.parentElement?.parentElement?.parentElement?.parentElement
+          if (dom) dom.lastElementChild?.scrollIntoView({ block: 'center' })
+        } else {
+          setTimeout(() => scrollToComment(count + 1), 100)
+        }
+      }
 
       function scrollToContainer() {
         if (!isMounted.current) return
@@ -215,10 +218,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
             scrollElement.scroll({ top: (scrollElement.scrollTop || window.scrollY) + scrollGap })
           }
         } else {
-          const commentDOM = containerDOM.querySelector(`[data-comment-id="${commentId}"]`) as HTMLDivElement
-          // dom is the great grand parent of the comment DOM (CommentBox)
-          const dom = commentDOM?.parentElement?.parentElement?.parentElement?.parentElement
-          if (dom) dom.lastElementChild?.scrollIntoView({ block: 'center' })
+          scrollToComment()
         }
       }
 
@@ -247,7 +247,8 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
     containerRef,
     contentRef,
     refetchActivities,
-    setDirty
+    setDirty,
+    memorizedState
   })
 
   useEffect(
@@ -290,7 +291,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
         if (isInViewport(containerRef.current as Element, 1000)) {
           renderDiffAndComments()
         } else {
-          taskId = scheduleLowPriorityTask(renderDiffAndComments)
+          taskId = scheduleTask(renderDiffAndComments)
         }
       }
 
@@ -316,6 +317,69 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
 
   const branchInfo = useFindGitBranch(pullReqMetadata?.source_branch)
 
+  useEffect(
+    function serializeDeserializeContent() {
+      const dom = contentRef.current
+
+      if (inView) {
+        if (isMounted.current && dom && contentHTML.current) {
+          dom.innerHTML = contentHTML.current
+          contentHTML.current = null
+
+          // Remove all signs from the raw HTML that CommentBox was mounted so
+          // it can be mounted/re-rendered again freshly
+          dom.querySelectorAll('tr[data-source-line-number]').forEach(row => {
+            row.removeAttribute('data-source-line-number')
+            row.removeAttribute('data-comment-ids')
+            row.querySelector('button[data-toggle-comment="true"]')?.remove?.()
+          })
+          dom.querySelectorAll('tr[data-annotated-line],tr[data-place-holder-for-line]').forEach(row => {
+            row.remove?.()
+          })
+
+          // Attach comments again
+          commentsHook.current.attachAllCommentThreads()
+        }
+      } else {
+        if (isMounted.current && dom && !contentHTML.current) {
+          const { clientHeight, textContent, innerHTML } = dom
+
+          // Detach comments since they are no longer in sync in DOM as
+          // all DOMs are removed
+          commentsHook.current.detachAllCommentThreads()
+
+          // Save current innerHTML
+          contentHTML.current = innerHTML
+
+          const pre = document.createElement('pre')
+          pre.style.height = clientHeight + 'px'
+          pre.textContent = textContent
+          pre.classList.add(css.offscreenText)
+
+          dom.textContent = ''
+          dom.appendChild(pre)
+
+          // TODO: Might be good to clean textContent a bit to not include
+          // diff header info, line numbers, hunk headers, etc...
+        }
+      }
+    },
+    [inView, isMounted, commentsHook]
+  )
+
+  // Add click event listener from contentRef to handle click event on "Show Diff" button
+  // This can't be done from the button itself because it got serialized / deserialized from
+  // text during off-screen optimization (handler will be gone/destroyed)
+  useEventListener(
+    'click',
+    useCallback(function showDiff(event) {
+      if (((event.target as HTMLElement)?.closest('button') as HTMLElement)?.dataset?.action === ACTION_SHOW_DIFF) {
+        setRenderCustomContent(false)
+      }
+    }, []),
+    contentRef.current as HTMLDivElement
+  )
+
   useShowRequestError(fullDiffError, 0)
 
   useEffect(
@@ -336,7 +400,10 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
 
           if (memorizedState.get(diff.filePath)?.collapsed) {
             setCollapsed(false)
-            memorizedState.set(diff.filePath, { ...memorizedState.get(diff.filePath), collapsed: false })
+            memorizedState.set(diff.filePath, {
+              ...memorizedState.get(diff.filePath),
+              collapsed: false
+            })
           }
         } catch (exception) {
           showError(getErrorMessage(exception), 0)
@@ -505,28 +572,32 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
         </Container>
 
         <Container id={diff.contentId} data-path={diff.filePath} className={css.diffContent} ref={contentRef}>
-          <Render when={renderCustomContent && !collapsed}>
-            <Container height={200} flex={{ align: 'center-center' }}>
-              <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
-                <Render when={fileDeleted || isDiffTooLarge || diffHasVeryLongLine}>
-                  <Button variation={ButtonVariation.LINK} onClick={() => setRenderCustomContent(false)}>
-                    {getString('pr.showDiff')}
-                  </Button>
-                </Render>
-                <Text>
-                  {getString(
-                    fileDeleted
-                      ? 'pr.fileDeleted'
-                      : isDiffTooLarge || diffHasVeryLongLine
-                      ? 'pr.diffTooLarge'
-                      : isBinary
-                      ? 'pr.fileBinary'
-                      : 'pr.fileUnchanged'
-                  )}
-                </Text>
-              </Layout.Vertical>
-            </Container>
-          </Render>
+          {/* Note: This parent container is needed to make sure "Show Diff" work correctly 
+            with content converted between textContent and innerHTML */}
+          <Container>
+            <Render when={renderCustomContent && !collapsed}>
+              <Container height={200} flex={{ align: 'center-center' }}>
+                <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
+                  <Render when={fileDeleted || isDiffTooLarge || diffHasVeryLongLine}>
+                    <Button variation={ButtonVariation.LINK} data-action={ACTION_SHOW_DIFF}>
+                      {getString('pr.showDiff')}
+                    </Button>
+                  </Render>
+                  <Text>
+                    {getString(
+                      fileDeleted
+                        ? 'pr.fileDeleted'
+                        : isDiffTooLarge || diffHasVeryLongLine
+                        ? 'pr.diffTooLarge'
+                        : isBinary
+                        ? 'pr.fileBinary'
+                        : 'pr.fileUnchanged'
+                    )}
+                  </Text>
+                </Layout.Vertical>
+              </Container>
+            </Render>
+          </Container>
         </Container>
       </Layout.Vertical>
       <NavigationCheck when={dirty} />
@@ -535,6 +606,7 @@ const DiffViewerInternal: React.FC<DiffViewerProps> = ({
 }
 
 const BLOCK_HEIGHT = '--block-height'
+const ACTION_SHOW_DIFF = 'showDiff'
 
 export enum DiffViewerEvent {
   SCROLL_INTO_VIEW = 'scrollIntoView'
@@ -549,8 +621,16 @@ export interface DiffViewerExchangeState {
   collapsed?: boolean
   useFullDiff?: boolean
   fullDiff?: DiffFileEntry
+  comments?: Map<number, CommentRestorationTrackingState>
+  commentsVisibilityAtLineNumber?: Map<number, boolean>
 }
 
-const { scheduleTask: scheduleLowPriorityTask, cancelTask } = createRequestIdleCallbackTaskPool()
+export interface CommentRestorationTrackingState extends DiffCommentItem<TypesPullReqActivity> {
+  uncommittedText?: string
+  showReplyPlaceHolder?: boolean
+  uncommittedEditComments?: Map<number, string>
+}
+
+const { scheduleTask, cancelTask } = createRequestAnimationFrameTaskPool()
 
 export const DiffViewer = React.memo(DiffViewerInternal)

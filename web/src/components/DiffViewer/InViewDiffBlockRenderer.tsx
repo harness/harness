@@ -19,7 +19,6 @@ import cx from 'classnames'
 import { Container, useIsMounted } from '@harnessio/uicore'
 import { useInView } from 'react-intersection-observer'
 import type { FCWithChildren } from 'utils/types'
-import Config from 'Config'
 import { useResizeObserver } from 'hooks/useResizeObserver'
 import css from './InViewDiffBlockRenderer.module.scss'
 
@@ -27,19 +26,21 @@ interface InViewDiffBlockRendererProps {
   root: RefObject<Element>
   blockName: string
   shouldRetainChildren: (containerDOM: HTMLElement | null) => boolean
+  detectionMargin: number
 }
 
 const InViewDiffBlockRendererInternal: FCWithChildren<InViewDiffBlockRendererProps> = ({
   root,
   blockName,
   children,
-  shouldRetainChildren
+  shouldRetainChildren,
+  detectionMargin
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const isMounted = useIsMounted()
   const { ref, inView } = useInView({
     root: root.current,
-    rootMargin: `${Config.IN_VIEWPORT_DETECTION_MARGIN}px 0px ${Config.IN_VIEWPORT_DETECTION_MARGIN}px 0px`,
+    rootMargin: `${detectionMargin}px 0px ${detectionMargin}px 0px`,
     initialInView: false
   })
   const setContainerRef = useCallback(

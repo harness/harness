@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { createRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { EditorView } from '@codemirror/view'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
 import { Container, Layout, Avatar, TextInput, Text, FlexExpander, Button, useIsMounted } from '@harnessio/uicore'
@@ -34,6 +34,7 @@ import { ButtonRoleProps, CodeCommentState } from 'utils/Utils'
 import { useResizeObserver } from 'hooks/useResizeObserver'
 import { useCustomEventListener } from 'hooks/useEventListener'
 import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
+import type { CommentRestorationTrackingState, DiffViewerExchangeState } from 'components/DiffViewer/DiffViewer'
 import commentActiveIconUrl from './comment.svg?url'
 import commentResolvedIconUrl from './comment-resolved.svg?url'
 import css from './CommentBox.module.scss'
@@ -83,6 +84,7 @@ interface CommentBoxProps<T> {
   resetOnSave?: boolean
   hideCancel?: boolean
   currentUserName: string
+  commentThreadId?: number
   commentItems: CommentItem<T>[]
   handleAction: (
     action: CommentAction,
@@ -99,6 +101,8 @@ interface CommentBoxProps<T> {
   routingId: string
   copyLinkToComment: (commentId: number, commentItem: CommentItem<T>) => void
   suggestionBlock?: SuggestionBlock
+  memorizedState?: CommentRestorationTrackingState
+  commentsVisibilityAtLineNumber?: DiffViewerExchangeState['commentsVisibilityAtLineNumber']
 }
 
 const CommentBoxInternal = <T = unknown,>({
@@ -109,6 +113,7 @@ const CommentBoxInternal = <T = unknown,>({
   initialContent = '',
   width,
   fluid,
+  commentThreadId,
   commentItems = [],
   currentUserName,
   handleAction,
@@ -123,7 +128,9 @@ const CommentBoxInternal = <T = unknown,>({
   standalone,
   routingId,
   copyLinkToComment,
-  suggestionBlock
+  suggestionBlock,
+  memorizedState,
+  commentsVisibilityAtLineNumber
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
@@ -133,6 +140,13 @@ const CommentBoxInternal = <T = unknown,>({
   const [dirties, setDirties] = useState<Record<string, boolean>>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const isMounted = useIsMounted()
+
+  const clearMemorizedState = useCallback(() => {
+    if (memorizedState) {
+      delete memorizedState.showReplyPlaceHolder
+      delete memorizedState.uncommittedText
+    }
+  }, [memorizedState])
 
   useResizeObserver(
     containerRef,
@@ -156,10 +170,13 @@ const CommentBoxInternal = <T = unknown,>({
   const _onCancel = useCallback(() => {
     setMarkdown('')
     setShowReplyPlaceHolder(true)
+
+    clearMemorizedState()
+
     if (onCancel && !comments.length) {
       onCancel()
     }
-  }, [setShowReplyPlaceHolder, onCancel, comments.length])
+  }, [setShowReplyPlaceHolder, onCancel, comments.length, clearMemorizedState])
   const hidePlaceHolder = useCallback(() => setShowReplyPlaceHolder(false), [setShowReplyPlaceHolder])
   const onQuote = useCallback((content: string) => {
     const replyContent = content
@@ -179,13 +196,73 @@ const CommentBoxInternal = <T = unknown,>({
     })
   }, [dirties, setDirty])
 
+  useEffect(
+    // This function restores CommentBox internal states from memorizedState
+    // after it got destroyed during HTML/textContent serialization/deserialization
+    // This approach is not optimized, we probably have to think about a shared
+    // store per diff or something else to make the flow nicer
+    function serializeNewCommentInfo() {
+      if (!commentThreadId || !memorizedState) return
+
+      if (commentThreadId < 0) {
+        if (!comments?.[0]?.id) {
+          if (!markdown && memorizedState.uncommittedText) {
+            setMarkdown(memorizedState.uncommittedText)
+            viewRef.current?.dispatch({
+              changes: {
+                from: 0,
+                to: viewRef.current.state.doc.length,
+                insert: memorizedState.uncommittedText
+              }
+            })
+            viewRef.current?.contentDOM?.blur()
+          } else {
+            memorizedState.uncommittedText = markdown
+            memorizedState.showReplyPlaceHolder = showReplyPlaceHolder
+          }
+        } else {
+          clearMemorizedState()
+        }
+      } else if (commentThreadId > 0) {
+        if (!showReplyPlaceHolder) {
+          if (markdown) {
+            memorizedState.uncommittedText = markdown
+            memorizedState.showReplyPlaceHolder = false
+          }
+        } else {
+          if (!markdown && memorizedState.showReplyPlaceHolder === false) {
+            setShowReplyPlaceHolder(false)
+
+            const { uncommittedText = '' } = memorizedState
+
+            setTimeout(() => {
+              setMarkdown(uncommittedText)
+              viewRef.current?.dispatch({
+                changes: {
+                  from: 0,
+                  to: viewRef.current.state.doc.length,
+                  insert: uncommittedText
+                }
+              })
+              viewRef.current?.contentDOM?.blur()
+            }, 0)
+          }
+
+          delete memorizedState.showReplyPlaceHolder
+          delete memorizedState.uncommittedText
+        }
+      }
+    },
+    [markdown, commentThreadId, comments, memorizedState, clearMemorizedState, showReplyPlaceHolder]
+  )
+
   return (
     <Container
       className={cx(css.main, { [css.fluid]: fluid }, outerClassName)}
       padding={!fluid ? 'medium' : undefined}
       width={width}
       ref={containerRef}
-      data-comment-thread-id={comments?.[0]?.id || ''}>
+      data-comment-thread-id={comments?.[0]?.id || commentThreadId || ''}>
       {outlets[CommentBoxOutletPosition.TOP]}
       <Container className={cx(boxClassName, css.box)}>
         <Layout.Vertical>
@@ -210,6 +287,8 @@ const CommentBoxInternal = <T = unknown,>({
             outlets={outlets}
             copyLinkToComment={copyLinkToComment}
             suggestionBlock={suggestionBlock}
+            memorizedState={memorizedState}
+            commentsVisibilityAtLineNumber={commentsVisibilityAtLineNumber}
           />
           <Match expr={showReplyPlaceHolder && enableReplyPlaceHolderRef.current}>
             <Truthy>
@@ -250,6 +329,8 @@ const CommentBoxInternal = <T = unknown,>({
                   value={markdown}
                   onChange={setMarkdown}
                   onSave={async (value: string) => {
+                    clearMemorizedState()
+
                     if (handleAction) {
                       const [result, updatedItem] = await handleAction(
                         comments.length ? CommentAction.REPLY : CommentAction.NEW,
@@ -306,7 +387,13 @@ const CommentBoxInternal = <T = unknown,>({
 interface CommentsThreadProps<T>
   extends Pick<
     CommentBoxProps<T>,
-    'commentItems' | 'handleAction' | 'outlets' | 'copyLinkToComment' | 'suggestionBlock'
+    | 'commentItems'
+    | 'handleAction'
+    | 'outlets'
+    | 'copyLinkToComment'
+    | 'suggestionBlock'
+    | 'memorizedState'
+    | 'commentsVisibilityAtLineNumber'
   > {
   onQuote: (content: string) => void
   setDirty: (index: number, dirty: boolean) => void
@@ -321,21 +408,26 @@ const CommentsThread = <T = unknown,>({
   outlets = {},
   repoMetadata,
   copyLinkToComment,
-  suggestionBlock
+  suggestionBlock,
+  memorizedState,
+  commentsVisibilityAtLineNumber
 }: CommentsThreadProps<T>) => {
   const { getString } = useStrings()
   const { standalone, routingId } = useAppContext()
   const [editIndexes, setEditIndexes] = useState<Record<number, boolean>>({})
   const resetStateAtIndex = useCallback(
-    (index: number) => {
+    (index: number, commentItem: CommentItem<T>) => {
       delete editIndexes[index]
       setEditIndexes({ ...editIndexes })
+
+      if (memorizedState?.uncommittedEditComments && commentItem?.id) {
+        memorizedState.uncommittedEditComments.delete(commentItem.id)
+      }
     },
-    [editIndexes]
+    [editIndexes, memorizedState]
   )
   const isCommentThreadResolved = useMemo(() => !!get(commentItems[0], 'payload.resolved'), [commentItems])
   const domRef = useRef<HTMLElement>()
-  const show = useRef(isCommentThreadResolved ? false : true)
   const internalFlags = useRef({ initialized: false })
 
   useEffect(
@@ -353,18 +445,18 @@ const CommentsThread = <T = unknown,>({
         const lineNumColDOM = annotatedRow.firstElementChild as HTMLElement
         const sourceLineNumber = annotatedRow.dataset.sourceLineNumber
         const button: HTMLButtonElement = lineNumColDOM?.querySelector('button') || document.createElement('button')
+        const showFromMemory = commentsVisibilityAtLineNumber?.get(Number(sourceLineNumber))
+        let show = showFromMemory !== undefined ? showFromMemory : isCommentThreadResolved ? false : true
 
         if (!button.onclick) {
           const toggleHidden = (dom: Element) => {
-            if (show.current) dom.setAttribute('hidden', '')
+            if (show) dom.setAttribute('hidden', '')
             else dom.removeAttribute('hidden')
           }
           const toggleComments = (e: KeyboardEvent | MouseEvent) => {
             let commentRow = annotatedRow.nextElementSibling as HTMLElement
 
             while (commentRow?.dataset?.annotatedLine) {
-              toggleHidden(commentRow)
-
               // Toggle opposite place-holder as well
               const diffParent = commentRow.closest('.d2h-code-wrapper')?.parentElement
               const oppositeDiv = diffParent?.classList.contains('right')
@@ -376,11 +468,16 @@ const CommentsThread = <T = unknown,>({
 
               oppositePlaceHolders?.forEach(dom => toggleHidden(dom))
 
+              toggleHidden(commentRow)
               commentRow = commentRow.nextElementSibling as HTMLElement
             }
-            show.current = !show.current
+            show = !show
 
-            if (!show.current) button.dataset.threadsCount = String(activeThreads + resolvedThreads)
+            if (memorizedState) {
+              commentsVisibilityAtLineNumber?.set(Number(sourceLineNumber), show)
+            }
+
+            if (!show) button.dataset.threadsCount = String(activeThreads + resolvedThreads)
             else delete button.dataset.threadsCount
 
             e.stopPropagation()
@@ -388,6 +485,7 @@ const CommentsThread = <T = unknown,>({
 
           button.classList.add(css.toggleComment)
           button.title = getString('pr.toggleComments')
+          button.dataset.toggleComment = 'true'
 
           button.addEventListener('keydown', e => {
             if (e.key === 'Enter') toggleComments(e)
@@ -404,7 +502,9 @@ const CommentsThread = <T = unknown,>({
         while (commentRow?.dataset?.annotatedLine) {
           if (commentRow.dataset.commentThreadStatus == CodeCommentState.RESOLVED) {
             resolvedThreads++
-            if (!internalFlags.current.initialized) show.current = false
+            if (!internalFlags.current.initialized && !showFromMemory) {
+              show = false
+            }
           } else activeThreads++
 
           commentRow = commentRow.nextElementSibling as HTMLElement
@@ -415,19 +515,44 @@ const CommentsThread = <T = unknown,>({
         if (!internalFlags.current.initialized) {
           internalFlags.current.initialized = true
 
-          if (!show.current && resolvedThreads) button.dataset.threadsCount = String(resolvedThreads)
+          if (!show && resolvedThreads) button.dataset.threadsCount = String(resolvedThreads)
           else delete button.dataset.threadsCount
         }
       }
     },
-    [isCommentThreadResolved, getString]
+    [isCommentThreadResolved, getString, commentsVisibilityAtLineNumber, memorizedState]
   )
+  const viewRefs = useRef(
+    Object.fromEntries(
+      commentItems.map(commentItem => [commentItem.id, createRef() as React.MutableRefObject<EditorView | undefined>])
+    )
+  )
+  const contentRestoredRefs = useRef<Record<number, boolean>>({})
 
   return (
     <Render when={commentItems.length}>
       <Container className={css.viewer} padding="xlarge" ref={domRef}>
         {commentItems.map((commentItem, index) => {
           const isLastItem = index === commentItems.length - 1
+          const contentFromMemorizedState = memorizedState?.uncommittedEditComments?.get(commentItem.id)
+          const viewRef = viewRefs.current[commentItem.id]
+
+          if (viewRef && contentFromMemorizedState !== undefined && !contentRestoredRefs.current[commentItem.id]) {
+            editIndexes[index] = true
+            contentRestoredRefs.current[commentItem.id] = true
+
+            setTimeout(() => {
+              if (contentFromMemorizedState !== commentItem.content) {
+                viewRef.current?.dispatch({
+                  changes: {
+                    from: 0,
+                    to: viewRef.current.state.doc.length,
+                    insert: contentFromMemorizedState
+                  }
+                })
+              }
+            }, 0)
+          }
 
           return (
             <ThreadSection
@@ -487,7 +612,14 @@ const CommentsThread = <T = unknown,>({
                             className: cx(css.optionMenuIcon, css.edit),
                             iconName: 'Edit',
                             text: getString('edit'),
-                            onClick: () => setEditIndexes({ ...editIndexes, ...{ [index]: true } })
+                            onClick: () => {
+                              setEditIndexes({ ...editIndexes, ...{ [index]: true } })
+                              if (memorizedState) {
+                                memorizedState.uncommittedEditComments =
+                                  memorizedState.uncommittedEditComments || new Map()
+                                memorizedState.uncommittedEditComments.set(commentItem.id, commentItem.content)
+                              }
+                            }
                           },
                           {
                             hasIcon: true,
@@ -512,7 +644,7 @@ const CommentsThread = <T = unknown,>({
                             text: getString('delete'),
                             onClick: async () => {
                               if (await handleAction(CommentAction.DELETE, '', commentItem)) {
-                                resetStateAtIndex(index)
+                                resetStateAtIndex(index, commentItem)
                               }
                             }
                           }
@@ -538,13 +670,20 @@ const CommentsThread = <T = unknown,>({
                         standalone={standalone}
                         repoMetadata={repoMetadata}
                         value={commentItem?.content}
+                        viewRef={viewRefs.current[commentItem.id]}
                         onSave={async value => {
                           if (await handleAction(CommentAction.UPDATE, value, commentItem)) {
                             commentItem.content = value
-                            resetStateAtIndex(index)
+                            resetStateAtIndex(index, commentItem)
                           }
                         }}
-                        onCancel={() => resetStateAtIndex(index)}
+                        onChange={value => {
+                          if (memorizedState) {
+                            memorizedState.uncommittedEditComments = memorizedState.uncommittedEditComments || new Map()
+                            memorizedState.uncommittedEditComments.set(commentItem.id, value)
+                          }
+                        }}
+                        onCancel={() => resetStateAtIndex(index, commentItem)}
                         setDirty={_dirty => {
                           setDirty(index, _dirty)
                         }}
@@ -555,7 +694,7 @@ const CommentsThread = <T = unknown,>({
                           save: getString('save'),
                           cancel: getString('cancel')
                         }}
-                        autoFocusAndPosition
+                        autoFocusAndPosition={contentFromMemorizedState ? false : true}
                         suggestionBlock={suggestionBlock}
                       />
                     </Container>

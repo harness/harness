@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useMutate } from 'restful-react'
 import Selecto from 'selecto'
 import ReactDOM from 'react-dom'
@@ -35,6 +35,7 @@ import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/Code
 import { dispatchCustomEvent } from 'hooks/useEventListener'
 import { UseGetPullRequestInfoResult, usePullReqActivities } from 'pages/PullRequest/useGetPullRequestInfo'
 import { CommentThreadTopDecoration } from 'components/CommentThreadTopDecoration/CommentThreadTopDecoration'
+import type { DiffViewerExchangeState } from './DiffViewer'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
@@ -68,6 +69,7 @@ interface UsePullReqCommentsProps extends Pick<GitInfoProps, 'repoMetadata'> {
   contentRef: React.RefObject<HTMLDivElement | null>
   refetchActivities?: UseGetPullRequestInfoResult['refetchActivities']
   setDirty?: React.Dispatch<React.SetStateAction<boolean>>
+  memorizedState: Map<string, DiffViewerExchangeState>
 }
 
 export function usePullReqComments({
@@ -85,7 +87,8 @@ export function usePullReqComments({
   containerRef,
   contentRef,
   refetchActivities,
-  setDirty
+  setDirty,
+  memorizedState
 }: UsePullReqCommentsProps) {
   const activities = usePullReqActivities()
   const { getString } = useStrings()
@@ -98,7 +101,18 @@ export function usePullReqComments({
   )
   const { save, update, remove } = useCommentAPI(commentPath)
   const location = useLocation()
-  const [comments] = useState(new Map<number, DiffCommentItem<TypesPullReqActivity>>())
+
+  const comments = useMemo(() => {
+    let _comments = memorizedState.get(diff.filePath)?.comments
+
+    if (!_comments) {
+      _comments = new Map<number, DiffCommentItem<TypesPullReqActivity>>()
+      memorizedState.set(diff.filePath, { ...memorizedState.get(diff.filePath), comments: _comments })
+    }
+
+    return _comments
+  }, [diff.filePath, memorizedState])
+
   const copyLinkToComment = useCallback(
     (id, commentItem) => {
       const path = `${routes.toCODEPullRequest({
@@ -252,8 +266,18 @@ export function usePullReqComments({
       commentRowElement.innerHTML = `<td colspan="2"></td>`
       lineInfo.rowElement.after(commentRowElement)
 
+      if (!memorizedState.get(diff.filePath)?.commentsVisibilityAtLineNumber) {
+        memorizedState.set(diff.filePath, {
+          ...memorizedState.get(diff.filePath),
+          commentsVisibilityAtLineNumber: new Map()
+        })
+      }
+
+      // Get show commments from memorizedState
+      const showComments = memorizedState.get(diff.filePath)?.commentsVisibilityAtLineNumber?.get(comment.lineNumberEnd)
+
       // Set both place-holder and comment box hidden when comment thread is resolved
-      if (isCommentThreadResolved) {
+      if ((showComments === undefined && isCommentThreadResolved) || showComments === false) {
         oppositeRowPlaceHolder.setAttribute('hidden', '')
         commentRowElement.setAttribute('hidden', '')
       }
@@ -300,6 +324,12 @@ export function usePullReqComments({
             lang: filenameToLanguage(diff.filePath.split('/').pop())
           }
 
+      // Vars to verified if a CommentBox is restored from innerHTML/textContent optimization
+      const _memorizedState = memorizedState.get(diff.filePath)?.comments?.get(commentThreadId)
+      const isCommentBoxRestored =
+        (commentThreadId && commentThreadId < 0 && _memorizedState?.uncommittedText !== undefined) ||
+        _memorizedState?.showReplyPlaceHolder === false
+
       // Note: CommentBox is rendered as an independent React component.
       //       Everything passed to it must be either values, or refs.
       //       If you pass callbacks or states, they won't be updated and
@@ -311,6 +341,7 @@ export function usePullReqComments({
             routingId={routingId}
             standalone={standalone}
             repoMetadata={repoMetadata}
+            commentThreadId={commentThreadId}
             commentItems={comment._commentItems as CommentItem<TypesPullReqActivity>[]}
             initialContent={''}
             width={getCommentBoxWidth(isSideBySide)}
@@ -323,7 +354,7 @@ export function usePullReqComments({
                 last.style.height = `${boxHeight}px`
               }
             }}
-            autoFocusAndPosition={true}
+            autoFocusAndPosition={isCommentBoxRestored ? false : true}
             enableReplyPlaceHolder={(comment._commentItems as CommentItem<TypesPullReqActivity>[])?.length > 0}
             onCancel={comment.destroy}
             setDirty={setDirty || noop}
@@ -470,6 +501,8 @@ export function usePullReqComments({
                 />
               )
             }}
+            memorizedState={_memorizedState}
+            commentsVisibilityAtLineNumber={memorizedState.get(diff.filePath)?.commentsVisibilityAtLineNumber}
           />
         </AppWrapper>,
         element
@@ -498,7 +531,8 @@ export function usePullReqComments({
       refetchActivities,
       copyLinkToComment,
       markSelectedLines,
-      updateDataCommentIds
+      updateDataCommentIds,
+      memorizedState
     ]
   )
 

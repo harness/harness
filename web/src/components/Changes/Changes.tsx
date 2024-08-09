@@ -390,7 +390,7 @@ const ChangesInternal: React.FC<ChangesProps> = ({
           }
 
           scheduleTask(() => {
-            if (isMounted.current && loopCount++ < 50) {
+            if (isMounted.current && loopCount++ < 100) {
               if (
                 !outterBlockDOM ||
                 !innerBlockDOM ||
@@ -548,14 +548,16 @@ const ChangesInternal: React.FC<ChangesProps> = ({
                     key={key}
                     blockName={outterBlockName(blockIndex)}
                     root={scrollElementRef as RefObject<Element>}
-                    shouldRetainChildren={shouldRetainDiffChildren}>
+                    shouldRetainChildren={shouldRetainDiffChildren}
+                    detectionMargin={calculateDetectionMargin(diffs?.length as number)}>
                     {diffsBlock.map((diff, index) => {
                       return (
                         <InViewDiffBlockRenderer
                           key={key + index}
                           blockName={innerBlockName(diff.filePath)}
                           root={diffsContainerRef}
-                          shouldRetainChildren={shouldRetainDiffChildren}>
+                          shouldRetainChildren={shouldRetainDiffChildren}
+                          detectionMargin={Config.IN_VIEWPORT_DETECTION_MARGIN}>
                           <DiffViewer
                             readOnly={readOnly || (commitRange?.length || 0) > 0} // render in readonly mode in case a commit is selected
                             diff={diff}
@@ -617,6 +619,12 @@ const shouldRetainDiffChildren = (dom: HTMLElement | null) => !!dom?.querySelect
 const outterBlockName = (blockIndex: number) => `outter-${blockIndex}`
 const innerBlockName = (filePath: string) => `inner-${filePath}`
 const { scheduleTask } = createRequestIdleCallbackTaskPool()
+
+// If there are more than 200 diffs, we decrease the detection margin to make sure browser do not crash. As a result, Cmd-F
+// won't work well on diffs that got hidden/out of viewport.
+// TODO: This could be more accurate to calculate based on the complexity of the diff contents (added/deleted lines)?
+const calculateDetectionMargin = (diffsLength: number) =>
+  diffsLength >= 200 ? 5000 : Config.IN_VIEWPORT_DETECTION_MARGIN
 
 // Workaround util to correct filePath which is not correctly produced by
 // git itself when filename contains space

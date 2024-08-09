@@ -49,7 +49,7 @@ export function useCollapseHarnessNav() {
     if (handled.current) {
       const nav = document.getElementById('main-side-nav')
       const pullReqNavItem = nav?.querySelector('[data-code-repo-section="pull-requests"]')
-      const toggleNavButton = nav?.querySelector('span[icon][class*="SideNavToggleButton"]') as HTMLElement
+      const toggleNavButton = nav?.querySelector('span[icon][class*="icon-symbol-triangle"]') as HTMLElement
 
       if (pullReqNavItem && toggleNavButton) {
         const isCollapsed = pullReqNavItem.clientWidth <= 64
@@ -63,7 +63,7 @@ export function useCollapseHarnessNav() {
       }
 
       return () => {
-        if (handled.current) {
+        if (handled.current && toggleNavButton) {
           toggleNavButton.click()
         }
       }

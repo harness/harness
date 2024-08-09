@@ -31,7 +31,7 @@ export default {
   PULL_REQUEST_DIFF_RENDERING_BLOCK_SIZE: 10,
 
   /** Detection margin for on-screen / off-screen rendering optimization. In pixels.  */
-  IN_VIEWPORT_DETECTION_MARGIN: 5_000,
+  IN_VIEWPORT_DETECTION_MARGIN: 256_000,
 
   /** Limit for the secret input in bytes */
   SECRET_LIMIT_IN_BYTES: 5_242_880
