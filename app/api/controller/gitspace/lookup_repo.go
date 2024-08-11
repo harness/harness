@@ -17,8 +17,10 @@ package gitspace
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/types/enum"
@@ -30,11 +32,20 @@ type LookupRepoInput struct {
 	URL        string `json:"url"`
 }
 
+var (
+	ErrInvalidURL = usererror.BadRequest(
+		"The URL specified is not valid format.")
+	ErrBadURLScheme = usererror.BadRequest("the URL is missing scheme, it must start with http or https")
+)
+
 func (c *Controller) LookupRepo(
 	ctx context.Context,
 	session *auth.Session,
 	in *LookupRepoInput,
 ) (*scm.CodeRepositoryResponse, error) {
+	if err := c.sanitizeLookupRepoInput(in); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
 	space, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find space: %w", err)
@@ -49,4 +60,18 @@ func (c *Controller) LookupRepo(
 		return nil, err
 	}
 	return codeRepositoryResponse, nil
+}
+
+func (c *Controller) sanitizeLookupRepoInput(in *LookupRepoInput) error {
+	parsedURL, err := url.Parse(in.URL)
+	if err != nil {
+		return ErrInvalidURL
+	}
+	if parsedURL.Scheme == "" {
+		return ErrBadURLScheme
+	}
+	if _, err := url.ParseRequestURI(parsedURL.RequestURI()); err != nil {
+		return err
+	}
+	return nil
 }

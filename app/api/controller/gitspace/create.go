@@ -67,6 +67,9 @@ func (c *Controller) Create(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
+	if err = c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
 	if err = apiauth.CheckGitspace(
 		ctx,
 		c.authorizer,
@@ -96,9 +99,6 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("could not generate UID for gitspace config : %q %w", in.Identifier, err)
 	}
 	identifier := strings.ToLower(in.Identifier + "-" + suffixUID)
-	if err = c.sanitizeCreateInput(in); err != nil {
-		return nil, fmt.Errorf("invalid input: %w", err)
-	}
 	now := time.Now().UnixMilli()
 	var gitspaceConfig *types.GitspaceConfig
 	resourceIdentifier := in.ResourceIdentifier

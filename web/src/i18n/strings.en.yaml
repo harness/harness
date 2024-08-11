@@ -1180,8 +1180,8 @@ cde:
     online: Active
     offline: Stopped
     error: Error
-    starting: Starting...
-    stopping: Stopping...
+    starting: Starting
+    stopping: Stopping
   create:
     repositoryDetails: Repository Details
     gitnessRepositories: Gitness Repositories

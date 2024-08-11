@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 
@@ -57,14 +56,7 @@ func NewSCM(factory Factory) SCM {
 	return &scm{scmProviderFactory: factory}
 }
 
-func (s scm) CheckValidCodeRepo(
-	ctx context.Context,
-	request CodeRepositoryRequest,
-) (*CodeRepositoryResponse, error) {
-	err := validateURL(request)
-	if err != nil {
-		return nil, fmt.Errorf("invalid URL, %w", err)
-	}
+func (s scm) CheckValidCodeRepo(ctx context.Context, request CodeRepositoryRequest) (*CodeRepositoryResponse, error) {
 	codeRepositoryResponse := &CodeRepositoryResponse{
 		URL:               request.URL,
 		CodeRepoIsPrivate: true,
@@ -145,11 +137,4 @@ func detectDefaultGitBranch(ctx context.Context, gitRepoDir string) (string, err
 		return "", ErrNoDefaultBranch
 	}
 	return match[1], nil
-}
-
-func validateURL(request CodeRepositoryRequest) error {
-	if _, err := url.ParseRequestURI(request.URL); err != nil {
-		return err
-	}
-	return nil
 }
