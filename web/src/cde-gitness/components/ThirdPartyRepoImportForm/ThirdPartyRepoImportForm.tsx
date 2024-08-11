@@ -74,7 +74,7 @@ export const ThirdPartyRepoImportForm = () => {
           }
         }
       } catch (err) {
-        errorMessage = get(err, 'message') || ''
+        errorMessage = get(err, 'data.message') || get(err, 'message') || ''
       }
       setFieldError('code_repo_url', errorMessage)
     }, 1000),
