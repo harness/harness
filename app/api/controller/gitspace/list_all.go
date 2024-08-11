@@ -26,12 +26,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+const spaceIsDeleted = "Failed to find space: resource not found"
+
 func (c *Controller) ListAllGitspaces( // nolint:gocognit
 	ctx context.Context,
 	session *auth.Session,
 ) ([]*types.GitspaceConfig, error) {
 	var result []*types.GitspaceConfig
-
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		allGitspaceConfigs, err := c.gitspaceConfigStore.ListAll(ctx, session.Principal.UID)
 		if err != nil {
@@ -44,12 +45,14 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 			if spacesMap[allGitspaceConfigs[idx].SpaceID] == "" {
 				space, findSpaceErr := c.spaceStore.Find(ctx, allGitspaceConfigs[idx].SpaceID)
 				if findSpaceErr != nil {
-					return fmt.Errorf(
-						"failed to find space for ID %d: %w", allGitspaceConfigs[idx].SpaceID, findSpaceErr)
+					if findSpaceErr.Error() != spaceIsDeleted {
+						return fmt.Errorf(
+							"error fetching space %d: %w", allGitspaceConfigs[idx].SpaceID, findSpaceErr)
+					}
+					continue
 				}
 				spacesMap[allGitspaceConfigs[idx].SpaceID] = space.Path
 			}
-
 			allGitspaceConfigs[idx].SpacePath = spacesMap[allGitspaceConfigs[idx].SpaceID]
 		}
 
