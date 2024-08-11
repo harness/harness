@@ -15,30 +15,51 @@
 package devcontainer
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 )
 
+const RootUser = "root"
+
 type Exec struct {
-	ContainerName string
-	WorkingDir    string
-	DockerClient  *client.Client
+	ContainerName  string
+	DockerClient   *client.Client
+	HomeDir        string
+	UserIdentifier string
 }
 
-func (e *Exec) ExecuteCommand(ctx context.Context, command string, detach bool, userName string) ([]byte, error) {
+type execResult struct {
+	StdOut []byte
+	StdErr []byte
+}
+
+func (e *Exec) ExecuteCommand(
+	ctx context.Context,
+	command string,
+	root bool,
+	detach bool,
+	workingDir string,
+) ([]byte, error) {
+	user := e.UserIdentifier
+	if root {
+		user = RootUser
+	}
+
 	cmd := []string{"/bin/sh", "-c", command}
 
 	execConfig := container.ExecOptions{
-		User:         userName,
+		User:         user,
 		AttachStdout: true,
 		AttachStderr: true,
 		Cmd:          cmd,
 		Detach:       detach,
-		WorkingDir:   e.WorkingDir,
+		WorkingDir:   workingDir,
 	}
 
 	execID, err := e.DockerClient.ContainerExecCreate(ctx, e.ContainerName, execConfig)
@@ -46,22 +67,67 @@ func (e *Exec) ExecuteCommand(ctx context.Context, command string, detach bool, 
 		return nil, fmt.Errorf("failed to create docker exec for container %s: %w", e.ContainerName, err)
 	}
 
-	execResponse, err := e.DockerClient.ContainerExecAttach(ctx, execID.ID, container.ExecStartOptions{Detach: detach})
+	attachResult, err := e.attachExec(ctx, execID.ID, detach)
 	if err != nil && err.Error() != "unable to upgrade to tcp, received 200" {
 		return nil, fmt.Errorf("failed to start docker exec for container %s: %w", e.ContainerName, err)
 	}
 
-	if execResponse.Conn != nil {
-		defer execResponse.Close()
+	var stdOutput []byte
+	if attachResult != nil {
+		stdOutput = attachResult.StdOut
 	}
 
-	var output []byte
-	if execResponse.Reader != nil {
-		output, err = io.ReadAll(execResponse.Reader)
+	return stdOutput, nil
+}
+
+func (e *Exec) ExecuteCommandInHomeDirectory(
+	ctx context.Context,
+	command string,
+	root bool,
+	detach bool,
+) ([]byte, error) {
+	return e.ExecuteCommand(ctx, command, root, detach, e.HomeDir)
+}
+
+func (e *Exec) attachExec(ctx context.Context, id string, detach bool) (*execResult, error) {
+	resp, attachErr := e.DockerClient.ContainerExecAttach(ctx, id, container.ExecStartOptions{Detach: detach})
+	if attachErr != nil {
+		return nil, attachErr
+	}
+	defer resp.Close()
+
+	var outBuf, errBuf bytes.Buffer
+	copyErr := make(chan error)
+
+	go func() {
+		// StdCopy demultiplexes the stream into two buffers
+		_, err := stdcopy.StdCopy(&outBuf, &errBuf, resp.Reader)
+		copyErr <- err
+	}()
+
+	select {
+	case err := <-copyErr:
 		if err != nil {
 			return nil, err
 		}
+		break
+
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
 
-	return output, nil
+	stdout, err := io.ReadAll(&outBuf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read stdout of exec for container %s: %w", e.ContainerName, err)
+	}
+
+	stderr, err := io.ReadAll(&errBuf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read stderr of exec for container %s: %w", e.ContainerName, err)
+	}
+
+	return &execResult{
+		StdOut: stdout,
+		StdErr: stderr,
+	}, nil
 }

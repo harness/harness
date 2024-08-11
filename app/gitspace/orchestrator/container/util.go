@@ -14,12 +14,20 @@
 
 package container
 
-import "github.com/harness/gitness/types"
+import (
+	"path/filepath"
+
+	"github.com/harness/gitness/types"
+)
+
+const (
+	linuxHome = "/home"
+)
 
 func GetGitspaceContainerName(config types.GitspaceConfig) string {
 	return "gitspace-" + config.UserID + "-" + config.Identifier
 }
 
-func GetWorkingDir(repoName string) string {
-	return "/" + repoName
+func GetUserHomeDir(userIdentifier string) string {
+	return filepath.Join(linuxHome, userIdentifier)
 }

@@ -21,7 +21,6 @@ import (
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -45,14 +44,11 @@ func NewVsCodeService(config *VSCodeConfig) *VSCode {
 // Setup installs the SSH server inside the container.
 func (v *VSCode) Setup(
 	ctx context.Context,
-	devcontainer *devcontainer.Exec,
-	gitspaceInstance *types.GitspaceInstance,
+	exec *devcontainer.Exec,
 ) ([]byte, error) {
 	sshServerScript, err := template.GenerateScriptFromTemplate(
 		templateSetupSSHServer, &template.SetupSSHServerPayload{
-			Username:         "harness",
-			Password:         *gitspaceInstance.AccessKey,
-			WorkingDirectory: devcontainer.WorkingDir,
+			Username: exec.UserIdentifier,
 		})
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -61,7 +57,7 @@ func (v *VSCode) Setup(
 
 	output := "Installing ssh-server inside container\n"
 
-	_, err = devcontainer.ExecuteCommand(ctx, sshServerScript, false, rootUser)
+	_, err = exec.ExecuteCommandInHomeDirectory(ctx, sshServerScript, true, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup SSH serverr: %w", err)
 	}
@@ -72,7 +68,7 @@ func (v *VSCode) Setup(
 }
 
 // Run runs the SSH server inside the container.
-func (v *VSCode) Run(ctx context.Context, devcontainer *devcontainer.Exec) ([]byte, error) {
+func (v *VSCode) Run(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
 	var output = ""
 
 	runSSHScript, err := template.GenerateScriptFromTemplate(
@@ -84,7 +80,7 @@ func (v *VSCode) Run(ctx context.Context, devcontainer *devcontainer.Exec) ([]by
 			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
 	}
 
-	execOutput, err := devcontainer.ExecuteCommand(ctx, runSSHScript, false, rootUser)
+	execOutput, err := exec.ExecuteCommandInHomeDirectory(ctx, runSSHScript, true, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run SSH serverr: %w", err)
 	}

@@ -18,21 +18,16 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type IDE interface {
 	// Setup is responsible for doing all the operations for setting up the IDE in the container e.g. installation,
 	// copying settings and configurations.
-	Setup(
-		ctx context.Context,
-		devcontainer *devcontainer.Exec,
-		gitspaceInstance *types.GitspaceInstance,
-	) ([]byte, error)
+	Setup(ctx context.Context, exec *devcontainer.Exec) ([]byte, error)
 
 	// Run runs the IDE and supporting services.
-	Run(ctx context.Context, devcontainer *devcontainer.Exec) ([]byte, error)
+	Run(ctx context.Context, exec *devcontainer.Exec) ([]byte, error)
 
 	// Port provides the port which will be used by this IDE.
 	Port() int

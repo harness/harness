@@ -34,9 +34,10 @@ var (
 )
 
 type CloneGitPayload struct {
-	RepoURL string
-	Image   string
-	Branch  string
+	RepoURL  string
+	Image    string
+	Branch   string
+	RepoName string
 	AuthenticateGitPayload
 }
 
@@ -50,10 +51,14 @@ type RunVSCodeWebPayload struct {
 	Port string
 }
 
+type SetupUserPayload struct {
+	Username string
+	Password string
+	HomeDir  string
+}
+
 type SetupSSHServerPayload struct {
-	Username         string
-	Password         string
-	WorkingDirectory string
+	Username string
 }
 
 type RunSSHServerPayload struct {

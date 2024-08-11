@@ -10,8 +10,6 @@ else
 fi
 
 username={{ .Username }}
-password={{ .Password }}
-workingDir={{ .WorkingDirectory }}
 
 # Configure SSH to allow this user
 config_file='/etc/ssh/sshd_config'

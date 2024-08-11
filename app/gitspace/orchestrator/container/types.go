@@ -15,7 +15,8 @@
 package container
 
 type StartResponse struct {
-	ContainerID    string
-	ContainerName  string
-	PublishedPorts map[int]string
+	ContainerID      string
+	ContainerName    string
+	PublishedPorts   map[int]string
+	AbsoluteRepoPath string
 }

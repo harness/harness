@@ -27,7 +27,6 @@ import (
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/docker/docker/api/types/container"
@@ -47,8 +46,6 @@ var mediaFiles embed.FS
 const templateRunVSCodeWeb = "run_vscode_web.sh"
 const startMarker = "START_MARKER"
 const endMarker = "END_MARKER"
-const rootUser = "root"
-const harnessUser = "harness"
 
 type VSCodeWebConfig struct {
 	Port int
@@ -63,19 +60,15 @@ func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 }
 
 // Setup runs the installScript which downloads the required version of the code-server binary.
-func (v *VSCodeWeb) Setup(
-	ctx context.Context,
-	devcontainer *devcontainer.Exec,
-	_ *types.GitspaceInstance,
-) ([]byte, error) {
+func (v *VSCodeWeb) Setup(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
 	output := "Installing VSCode Web inside container.\n"
 
-	_, err := devcontainer.ExecuteCommand(ctx, installScript, false, rootUser)
+	_, err := exec.ExecuteCommandInHomeDirectory(ctx, installScript, true, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to install VSCode Web: %w", err)
 	}
 
-	findOutput, err := devcontainer.ExecuteCommand(ctx, findPathScript, false, rootUser)
+	findOutput, err := exec.ExecuteCommandInHomeDirectory(ctx, findPathScript, true, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find VSCode Web install path: %w", err)
 	}
@@ -88,7 +81,7 @@ func (v *VSCodeWeb) Setup(
 	}
 
 	mediaFolderPath := path[startIndex+len(startMarker) : endIndex]
-	err = v.copyMediaToContainer(ctx, devcontainer, mediaFolderPath)
+	err = v.copyMediaToContainer(ctx, exec, mediaFolderPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to copy media folder to container at path %s: %w", mediaFolderPath, err)
 	}
@@ -99,7 +92,7 @@ func (v *VSCodeWeb) Setup(
 }
 
 // Run runs the code-server binary.
-func (v *VSCodeWeb) Run(ctx context.Context, devcontainer *devcontainer.Exec) ([]byte, error) {
+func (v *VSCodeWeb) Run(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
 	var output []byte
 
 	runScript, err := template.GenerateScriptFromTemplate(
@@ -114,7 +107,7 @@ func (v *VSCodeWeb) Run(ctx context.Context, devcontainer *devcontainer.Exec) ([
 		)
 	}
 
-	_, err = devcontainer.ExecuteCommand(ctx, runScript, true, harnessUser)
+	_, err = exec.ExecuteCommandInHomeDirectory(ctx, runScript, false, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run VSCode Web: %w", err)
 	}
@@ -132,7 +125,7 @@ func (v *VSCodeWeb) Type() enum.IDEType {
 
 func (v *VSCodeWeb) copyMediaToContainer(
 	ctx context.Context,
-	devcontainer *devcontainer.Exec,
+	exec *devcontainer.Exec,
 	path string,
 ) error {
 	// Create a buffer to hold the tar data
@@ -152,9 +145,9 @@ func (v *VSCodeWeb) copyMediaToContainer(
 	}
 
 	// Copy the tar archive to the container
-	err = devcontainer.DockerClient.CopyToContainer(
+	err = exec.DockerClient.CopyToContainer(
 		ctx,
-		devcontainer.ContainerName,
+		exec.ContainerName,
 		path,
 		&tarBuffer,
 		container.CopyToContainerOptions{},

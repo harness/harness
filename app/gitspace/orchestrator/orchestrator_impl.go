@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	events "github.com/harness/gitness/app/events/gitspace"
@@ -33,6 +34,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 )
+
+const harnessUser = "harness"
 
 type Config struct {
 	DefaultBaseImage string
@@ -164,6 +167,9 @@ func (o orchestrator) stopGitspaceContainer(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceStopStart)
 
+	// NOTE: Currently we use a static identifier as the Gitspace user.
+	gitspaceConfig.UserID = harnessUser
+
 	err = o.containerOrchestrator.StopGitspace(ctx, gitspaceConfig, infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceStopFailed)
@@ -192,6 +198,9 @@ func (o orchestrator) stopAndRemoveGitspaceContainer(
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectCompleted)
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionStart)
+
+	// NOTE: Currently we use a static identifier as the Gitspace user.
+	gitspaceConfig.UserID = harnessUser
 
 	err = o.containerOrchestrator.StopAndRemoveGitspace(ctx, gitspaceConfig, infra)
 	if err != nil {
@@ -322,7 +331,6 @@ func (o orchestrator) ResumeStartGitspace(
 			"failed to fetch code repo details for gitspace config ID %w %d", err, gitspaceConfig.ID)
 	}
 	devcontainerConfig := scmResolvedDetails.DevcontainerConfig
-	repoName := scmResolvedDetails.RepoName
 
 	if devcontainerConfig == nil {
 		log.Warn().Err(err).Msg("devcontainer config is nil, using empty config")
@@ -342,6 +350,9 @@ func (o orchestrator) ResumeStartGitspace(
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectCompleted)
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationStart)
+
+	// NOTE: Currently we use a static identifier as the Gitspace user.
+	gitspaceConfig.UserID = harnessUser
 
 	startResponse, err := o.containerOrchestrator.CreateAndStartGitspace(
 		ctx, gitspaceConfig, provisionedInfra, *scmResolvedDetails, o.config.DefaultBaseImage, ideSvc)
@@ -368,23 +379,24 @@ func (o orchestrator) ResumeStartGitspace(
 		host = provisionedInfra.ProxyHost
 	}
 
+	relativeRepoPath := strings.TrimPrefix(startResponse.AbsoluteRepoPath, "/")
+
 	if gitspaceConfig.IDE == enum.IDETypeVSCodeWeb {
 		ideURL = url.URL{
 			Scheme:   "http",
 			Host:     host + ":" + forwardedPort,
-			RawQuery: filepath.Join("folder=", repoName),
+			RawQuery: filepath.Join("folder=", relativeRepoPath),
 		}
 	} else if gitspaceConfig.IDE == enum.IDETypeVSCode {
 		// TODO: the following userID is hard coded and should be changed.
-		userID := "harness"
 		ideURL = url.URL{
 			Scheme: "vscode-remote",
 			Host:   "", // Empty since we include the host and port in the path
 			Path: fmt.Sprintf(
 				"ssh-remote+%s@%s:%s",
-				userID,
+				gitspaceConfig.UserID,
 				host,
-				filepath.Join(forwardedPort, repoName),
+				filepath.Join(forwardedPort, relativeRepoPath),
 			),
 		}
 	}
