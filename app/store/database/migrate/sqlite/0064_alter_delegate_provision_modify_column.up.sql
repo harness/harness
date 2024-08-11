@@ -2,10 +2,10 @@ DROP TABLE delegate_provision_details;
 
 CREATE TABLE delegate_provision_details
 (
-    dpdeta_id                           SERIAL PRIMARY KEY,
+    dpdeta_id                           INTEGER PRIMARY KEY AUTOINCREMENT,
     dpdeta_task_id                      TEXT    NOT NULL,
     dpdeta_action_type                  TEXT    NOT NULL,
-    dpdeta_gitspace_instance_identifier TEXT NOT NULL,
+    dpdeta_gitspace_instance_identifier TEXT    NOT NULL,
     dpdeta_space_id                     INTEGER NOT NULL,
     dpdeta_agent_port                   INTEGER NOT NULL,
     dpdeta_created                      BIGINT  NOT NULL,
