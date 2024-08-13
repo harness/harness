@@ -374,16 +374,17 @@ func (o orchestrator) ResumeStartGitspace(
 		forwardedPort = strconv.Itoa(provisionedInfra.GitspacePortMappings[idePort].ForwardedPort)
 	}
 
-	host := provisionedInfra.Host
-	if provisionedInfra.ProxyHost != "" {
-		host = provisionedInfra.ProxyHost
+	scheme := provisionedInfra.GitspaceScheme
+	host := provisionedInfra.GitspaceHost
+	if provisionedInfra.ProxyGitspaceHost != "" {
+		host = provisionedInfra.ProxyGitspaceHost
 	}
 
 	relativeRepoPath := strings.TrimPrefix(startResponse.AbsoluteRepoPath, "/")
 
 	if gitspaceConfig.IDE == enum.IDETypeVSCodeWeb {
 		ideURL = url.URL{
-			Scheme:   "http",
+			Scheme:   scheme,
 			Host:     host + ":" + forwardedPort,
 			RawQuery: filepath.Join("folder=", relativeRepoPath),
 		}

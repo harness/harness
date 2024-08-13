@@ -54,12 +54,23 @@ type Infrastructure struct {
 	InputParameters []InfraProviderParameter
 	// Status of the infra.
 	Status enum.InfraStatus
-	// Host through which the infra can be accessed.
-	Host      string
-	ProxyHost string
+
+	// AgentHost through which the infra can be accessed.
+	AgentHost string
 	// AgentPort on which the agent can be accessed to orchestrate containers.
 	AgentPort int
-	ProxyPort int
+	// ProxyAgentHost on which to connect to agent incase a proxy is used.
+	ProxyAgentHost string
+	ProxyAgentPort int
+	// HostScheme is scheme to connect to the host e.g. https
+	HostScheme string
+
+	// GitspaceHost on which gitspace is accessible directly, without proxy being configured.
+	GitspaceHost string
+	// ProxyGitspaceHost on which gitspace is accessible through a proxy.
+	ProxyGitspaceHost string
+	GitspaceScheme    string
+
 	// Storage is the name of the volume or disk created for the resource.
 	Storage string
 	// GitspacePortMappings contains the ports assigned for every requested port.

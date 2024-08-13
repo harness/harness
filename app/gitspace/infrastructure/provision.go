@@ -209,10 +209,10 @@ func (i infraProvisioner) resumeProvisionForNewProvisioning(
 	}
 
 	infraProvisionedLatest.InfraStatus = provisionedInfra.Status
-	infraProvisionedLatest.ServerHostIP = provisionedInfra.Host
+	infraProvisionedLatest.ServerHostIP = provisionedInfra.AgentHost
 	infraProvisionedLatest.ServerHostPort = strconv.Itoa(provisionedInfra.AgentPort)
-	infraProvisionedLatest.ProxyHost = provisionedInfra.ProxyHost
-	infraProvisionedLatest.ProxyPort = int32(provisionedInfra.ProxyPort)
+	infraProvisionedLatest.ProxyHost = provisionedInfra.ProxyAgentHost
+	infraProvisionedLatest.ProxyPort = int32(provisionedInfra.ProxyAgentPort)
 	infraProvisionedLatest.ResponseMetadata = &responseMetadata
 	infraProvisionedLatest.Updated = time.Now().UnixMilli()
 

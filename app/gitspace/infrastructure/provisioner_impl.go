@@ -204,10 +204,10 @@ func (i infraProvisioner) updateInfraProvisionedRecord(
 	}
 
 	infraProvisionedLatest.InfraStatus = deprovisionedInfra.Status
-	infraProvisionedLatest.ServerHostIP = deprovisionedInfra.Host
+	infraProvisionedLatest.ServerHostIP = deprovisionedInfra.AgentHost
 	infraProvisionedLatest.ServerHostPort = strconv.Itoa(deprovisionedInfra.AgentPort)
-	infraProvisionedLatest.ProxyHost = deprovisionedInfra.ProxyHost
-	infraProvisionedLatest.ProxyPort = int32(deprovisionedInfra.ProxyPort)
+	infraProvisionedLatest.ProxyHost = deprovisionedInfra.ProxyAgentHost
+	infraProvisionedLatest.ProxyPort = int32(deprovisionedInfra.ProxyAgentPort)
 	infraProvisionedLatest.ResponseMetadata = &responseMetadata
 	infraProvisionedLatest.Updated = time.Now().UnixMilli()
 

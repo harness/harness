@@ -239,10 +239,11 @@ func (d DockerProvider) dockerHostInfo(
 		return nil, fmt.Errorf("unable to connect to docker engine: %w", err)
 	}
 	return &types.Infrastructure{
-		Identifier:   info.ID,
-		ProviderType: enum.InfraProviderTypeDocker,
-		Status:       enum.InfraStatusProvisioned,
-		Host:         d.config.DockerMachineHostName,
+		Identifier:     info.ID,
+		ProviderType:   enum.InfraProviderTypeDocker,
+		Status:         enum.InfraStatusProvisioned,
+		GitspaceHost:   d.config.DockerMachineHostName,
+		GitspaceScheme: "http",
 	}, nil
 }
 
