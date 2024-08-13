@@ -209,7 +209,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     if (allowedStrats) {
       const matchingMethods = mergeOptions.filter(option => allowedStrats.includes(option.method))
       if (matchingMethods.length > 0) {
-        if (!matchingMethods.includes(mergeOption)) {
+        if (!matchingMethods.map(({ method }) => method).includes(mergeOption.method)) {
           setMergeOption(matchingMethods[0])
         } else if (mergeOption) {
           setMergeOption(mergeOption)
