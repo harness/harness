@@ -91,6 +91,6 @@ COPY --from=builder /app/gitness /app/gitness
 COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 EXPOSE 3000
-EXPOSE 3001
+EXPOSE 3022
 
 ENTRYPOINT [ "/app/gitness", "server" ]

@@ -139,7 +139,7 @@ type Config struct {
 	SSH struct {
 		Enable bool   `envconfig:"GITNESS_SSH_ENABLE" default:"false"`
 		Host   string `envconfig:"GITNESS_SSH_HOST"`
-		Port   int    `envconfig:"GITNESS_SSH_PORT" default:"22"`
+		Port   int    `envconfig:"GITNESS_SSH_PORT" default:"3022"`
 		// DefaultUser holds value for generating urls {user}@host:path and force check
 		// no other user can authenticate unless it is empty then any username is allowed
 		DefaultUser             string   `envconfig:"GITNESS_SSH_DEFAULT_USER" default:"git"`
