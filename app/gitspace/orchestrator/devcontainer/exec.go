@@ -35,8 +35,9 @@ type Exec struct {
 }
 
 type execResult struct {
-	StdOut []byte
-	StdErr []byte
+	StdOut   []byte
+	StdErr   []byte
+	ExitCode int
 }
 
 func (e *Exec) ExecuteCommand(
@@ -67,14 +68,24 @@ func (e *Exec) ExecuteCommand(
 		return nil, fmt.Errorf("failed to create docker exec for container %s: %w", e.ContainerName, err)
 	}
 
-	attachResult, err := e.attachExec(ctx, execID.ID, detach)
+	resp, err := e.attachAndInspectExec(ctx, execID.ID, detach)
 	if err != nil && err.Error() != "unable to upgrade to tcp, received 200" {
 		return nil, fmt.Errorf("failed to start docker exec for container %s: %w", e.ContainerName, err)
 	}
 
+	if resp != nil && resp.ExitCode != 0 {
+		var errLog string
+		if resp.StdErr != nil {
+			errLog = string(resp.StdErr)
+		}
+
+		return nil, fmt.Errorf("error during command execution in container %s. exit code %d. log: %s",
+			e.ContainerName, resp.ExitCode, errLog)
+	}
+
 	var stdOutput []byte
-	if attachResult != nil {
-		stdOutput = attachResult.StdOut
+	if resp != nil {
+		stdOutput = resp.StdOut
 	}
 
 	return stdOutput, nil
@@ -89,7 +100,7 @@ func (e *Exec) ExecuteCommandInHomeDirectory(
 	return e.ExecuteCommand(ctx, command, root, detach, e.HomeDir)
 }
 
-func (e *Exec) attachExec(ctx context.Context, id string, detach bool) (*execResult, error) {
+func (e *Exec) attachAndInspectExec(ctx context.Context, id string, detach bool) (*execResult, error) {
 	resp, attachErr := e.DockerClient.ContainerExecAttach(ctx, id, container.ExecStartOptions{Detach: detach})
 	if attachErr != nil {
 		return nil, attachErr
@@ -126,8 +137,14 @@ func (e *Exec) attachExec(ctx context.Context, id string, detach bool) (*execRes
 		return nil, fmt.Errorf("failed to read stderr of exec for container %s: %w", e.ContainerName, err)
 	}
 
+	inspectRes, err := e.DockerClient.ContainerExecInspect(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to inspect exec for container %s: %w", e.ContainerName, err)
+	}
+
 	return &execResult{
-		StdOut: stdout,
-		StdErr: stderr,
+		StdOut:   stdout,
+		StdErr:   stderr,
+		ExitCode: inspectRes.ExitCode,
 	}, nil
 }

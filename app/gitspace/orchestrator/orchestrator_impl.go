@@ -489,3 +489,28 @@ func (o orchestrator) getPortsRequiredForGitspace(
 	idePort := ideSvc.Port()
 	return []int{idePort}, nil
 }
+
+func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig) (string, error) {
+	infraProviderResource, err := o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
+	if err != nil {
+		return "", fmt.Errorf(
+			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
+	}
+
+	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig)
+	if err != nil {
+		return "", fmt.Errorf("cannot get the ports required for gitspace during get logs: %w", err)
+	}
+
+	infra, err := o.infraProvisioner.Find(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
+	if err != nil {
+		return "", fmt.Errorf("cannot find the provisioned infra: %w", err)
+	}
+
+	logs, err := o.containerOrchestrator.StreamLogs(ctx, gitspaceConfig, *infra)
+	if err != nil {
+		return "", fmt.Errorf("error while fetching logs from container orchestrator: %w", err)
+	}
+
+	return logs, nil
+}

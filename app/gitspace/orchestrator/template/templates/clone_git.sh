@@ -33,9 +33,9 @@ fi
 git config --global user.email $email
 git config --global user.name $name
 # Clone the repository inside the working directory if it doesn't exist
-if [ ! -d ".git" ]; then
+if [ ! -d "$HOME/$repo_name/.git" ]; then
     echo "Cloning the repository..."
-    if ! git clone "$repo_url" --branch "$branch" ; then
+    if ! git clone "$repo_url" --branch "$branch" "$HOME/$repo_name"; then
       echo "Failed to clone the repository. Exiting..."
       rm $HOME/.git-askpass
       exit 1

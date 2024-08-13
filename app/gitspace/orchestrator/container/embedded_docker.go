@@ -941,3 +941,10 @@ func (e EmbeddedDockerOrchestrator) removeContainer(
 
 	return nil
 }
+
+func (e *EmbeddedDockerOrchestrator) StreamLogs(
+	_ context.Context,
+	_ types.GitspaceConfig,
+	_ types.Infrastructure) (string, error) {
+	return "", fmt.Errorf("not implemented")
+}

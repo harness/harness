@@ -43,4 +43,7 @@ type Orchestrator interface {
 
 	// Status checks if the infra is reachable and ready to orchestrate containers.
 	Status(ctx context.Context, infra types.Infrastructure) error
+
+	// StreamLogs is used to fetch gitspace's start/stop logs from the container orchestrator.
+	StreamLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig, infra types.Infrastructure) (string, error)
 }

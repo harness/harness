@@ -53,4 +53,7 @@ type Orchestrator interface {
 		gitspaceConfig types.GitspaceConfig,
 		deprovisionedInfra types.Infrastructure,
 	) (enum.GitspaceInstanceStateType, error)
+
+	// GetGitspaceLogs fetches gitspace's start/stop logs.
+	GetGitspaceLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig) (string, error)
 }
