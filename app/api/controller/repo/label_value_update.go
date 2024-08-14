@@ -37,6 +37,10 @@ func (c *Controller) UpdateLabelValue(
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
+	if err := in.Validate(); err != nil {
+		return nil, fmt.Errorf("failed to validate input: %w", err)
+	}
+
 	label, err := c.labelSvc.Find(ctx, nil, &repo.ID, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo label: %w", err)

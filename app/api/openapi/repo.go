@@ -221,14 +221,14 @@ type archiveRequest struct {
 	Format string `path:"format" required:"true"`
 }
 
-type labelRequest struct {
+type LabelRequest struct {
 	Key         string          `json:"key"`
 	Description string          `json:"description"`
 	Type        enum.LabelType  `json:"type"`
 	Color       enum.LabelColor `json:"color"`
 }
 
-type labelValueRequest struct {
+type LabelValueRequest struct {
 	Value string          `json:"value"`
 	Color enum.LabelColor `json:"color"`
 }
@@ -615,7 +615,7 @@ var queryParamArchiveCompression = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterInherited = openapi3.ParameterOrRef{
+var QueryParameterInherited = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamInherited,
 		In:          openapi3.ParameterInQuery,
@@ -630,7 +630,7 @@ var queryParameterInherited = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterQueryLabel = openapi3.ParameterOrRef{
+var QueryParameterQueryLabel = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
 		In:          openapi3.ParameterInQuery,
@@ -1216,7 +1216,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		map[string]interface{}{"operationId": "defineRepoLabel"})
 	_ = reflector.SetRequest(&opDefineLabel, &struct {
 		repoRequest
-		labelRequest
+		LabelRequest
 	}{}, http.MethodPost)
 	_ = reflector.SetJSONResponse(&opDefineLabel, new(types.Label), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opDefineLabel, new(usererror.Error), http.StatusBadRequest)
@@ -1247,7 +1247,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListLabels.WithMapOfAnything(
 		map[string]interface{}{"operationId": "listRepoLabels"})
 	opListLabels.WithParameters(
-		QueryParameterPage, QueryParameterLimit, queryParameterInherited, queryParameterQueryLabel)
+		QueryParameterPage, QueryParameterLimit, QueryParameterInherited, QueryParameterQueryLabel)
 	_ = reflector.SetRequest(&opListLabels, new(repoRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListLabels, new([]*types.Label), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusBadRequest)
@@ -1280,7 +1280,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		map[string]interface{}{"operationId": "updateRepoLabel"})
 	_ = reflector.SetRequest(&opUpdateLabel, &struct {
 		repoRequest
-		labelRequest
+		LabelRequest
 		Key string `path:"key"`
 	}{}, http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdateLabel, new(types.Label), http.StatusOK)
@@ -1297,7 +1297,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		map[string]interface{}{"operationId": "defineRepoLabelValue"})
 	_ = reflector.SetRequest(&opDefineLabelValue, &struct {
 		repoRequest
-		labelValueRequest
+		LabelValueRequest
 		Key string `path:"key"`
 	}{}, http.MethodPost)
 	_ = reflector.SetJSONResponse(&opDefineLabelValue, new(types.LabelValue), http.StatusCreated)
@@ -1350,7 +1350,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		map[string]interface{}{"operationId": "updateRepoLabelValue"})
 	_ = reflector.SetRequest(&opUpdateLabelValue, &struct {
 		repoRequest
-		labelValueRequest
+		LabelValueRequest
 		Key   string `path:"key"`
 		Value string `path:"value"`
 	}{}, http.MethodPatch)

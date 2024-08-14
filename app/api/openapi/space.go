@@ -453,7 +453,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 		map[string]interface{}{"operationId": "defineSpaceLabel"})
 	_ = reflector.SetRequest(&opDefineLabel, &struct {
 		spaceRequest
-		labelRequest
+		LabelRequest
 	}{}, http.MethodPost)
 	_ = reflector.SetJSONResponse(&opDefineLabel, new(types.Label), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opDefineLabel, new(usererror.Error), http.StatusBadRequest)
@@ -484,7 +484,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opListLabels.WithMapOfAnything(
 		map[string]interface{}{"operationId": "listSpaceLabels"})
 	opListLabels.WithParameters(
-		QueryParameterPage, QueryParameterLimit, queryParameterInherited, queryParameterQueryLabel)
+		QueryParameterPage, QueryParameterLimit, QueryParameterInherited, QueryParameterQueryLabel)
 	_ = reflector.SetRequest(&opListLabels, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListLabels, new([]*types.Label), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusBadRequest)
@@ -517,7 +517,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 		map[string]interface{}{"operationId": "updateSpaceLabel"})
 	_ = reflector.SetRequest(&opUpdateLabel, &struct {
 		spaceRequest
-		labelRequest
+		LabelRequest
 		Key string `path:"key"`
 	}{}, http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdateLabel, new(types.Label), http.StatusOK)
@@ -535,7 +535,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 		map[string]interface{}{"operationId": "defineSpaceLabelValue"})
 	_ = reflector.SetRequest(&opDefineLabelValue, &struct {
 		spaceRequest
-		labelValueRequest
+		LabelValueRequest
 		Key string `path:"key"`
 	}{}, http.MethodPost)
 	_ = reflector.SetJSONResponse(&opDefineLabelValue, new(types.LabelValue), http.StatusCreated)
@@ -588,7 +588,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 		map[string]interface{}{"operationId": "updateSpaceLabelValue"})
 	_ = reflector.SetRequest(&opUpdateLabelValue, &struct {
 		spaceRequest
-		labelValueRequest
+		LabelValueRequest
 		Key   string `path:"key"`
 		Value string `path:"value"`
 	}{}, http.MethodPatch)

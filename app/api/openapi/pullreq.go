@@ -319,7 +319,7 @@ var queryParameterBeforePullRequestActivity = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterAssignable = openapi3.ParameterOrRef{
+var QueryParameterAssignable = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamAssignable,
 		In:          openapi3.ParameterInQuery,
@@ -334,7 +334,7 @@ var queryParameterAssignable = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterLabelID = openapi3.ParameterOrRef{
+var QueryParameterLabelID = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamLabelID,
 		In:          openapi3.ParameterInQuery,
@@ -356,7 +356,7 @@ var queryParameterLabelID = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterValueID = openapi3.ParameterOrRef{
+var QueryParameterValueID = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamValueID,
 		In:          openapi3.ParameterInQuery,
@@ -401,7 +401,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterOrder, queryParameterSortPullRequest,
 		queryParameterCreatedLt, queryParameterCreatedGt,
 		QueryParameterPage, QueryParameterLimit,
-		queryParameterLabelID, queryParameterValueID)
+		QueryParameterLabelID, QueryParameterValueID)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
@@ -706,7 +706,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	opListLabels.WithTags("pullreq")
 	opListLabels.WithMapOfAnything(map[string]interface{}{"operationId": "listLabels"})
 	opListLabels.WithParameters(
-		QueryParameterPage, QueryParameterLimit, queryParameterAssignable, queryParameterQueryLabel)
+		QueryParameterPage, QueryParameterLimit, QueryParameterAssignable, QueryParameterQueryLabel)
 	_ = reflector.SetRequest(&opListLabels, new(pullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListLabels, new(types.ScopesLabels), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListLabels, new(usererror.Error), http.StatusBadRequest)
