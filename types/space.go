@@ -43,6 +43,12 @@ type Space struct {
 	Deleted     *int64 `json:"deleted,omitempty"`
 }
 
+type SpaceParentData struct {
+	ID         int64  `json:"id"`
+	Identifier string `json:"identifier"`
+	ParentID   int64  `json:"parent_id"`
+}
+
 // Stores spaces query parameters.
 type SpaceFilter struct {
 	Page              int            `json:"page"`

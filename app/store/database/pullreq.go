@@ -433,45 +433,7 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 	}
 	stmt = stmt.From("pullreqs")
 
-	if len(opts.States) == 1 {
-		stmt = stmt.Where("pullreq_state = ?", opts.States[0])
-	} else if len(opts.States) > 1 {
-		stmt = stmt.Where(squirrel.Eq{"pullreq_state": opts.States})
-	}
-
-	if opts.SourceRepoID != 0 {
-		stmt = stmt.Where("pullreq_source_repo_id = ?", opts.SourceRepoID)
-	}
-
-	if opts.SourceBranch != "" {
-		stmt = stmt.Where("pullreq_source_branch = ?", opts.SourceBranch)
-	}
-
-	if opts.TargetRepoID != 0 {
-		stmt = stmt.Where("pullreq_target_repo_id = ?", opts.TargetRepoID)
-	}
-
-	if opts.TargetBranch != "" {
-		stmt = stmt.Where("pullreq_target_branch = ?", opts.TargetBranch)
-	}
-
-	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(pullreq_title) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
-	}
-
-	if len(opts.CreatedBy) > 0 {
-		stmt = stmt.Where(squirrel.Eq{"pullreq_created_by": opts.CreatedBy})
-	}
-
-	if opts.CreatedLt > 0 {
-		stmt = stmt.Where("pullreq_created < ?", opts.CreatedLt)
-	}
-
-	if opts.CreatedGt > 0 {
-		stmt = stmt.Where("pullreq_created > ?", opts.CreatedGt)
-	}
-
-	setLabelKeyQuery(&stmt, opts)
+	s.applyFilter(&stmt, opts)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -500,45 +462,7 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 	}
 	stmt = stmt.From("pullreqs")
 
-	if len(opts.States) == 1 {
-		stmt = stmt.Where("pullreq_state = ?", opts.States[0])
-	} else if len(opts.States) > 1 {
-		stmt = stmt.Where(squirrel.Eq{"pullreq_state": opts.States})
-	}
-
-	if opts.SourceRepoID != 0 {
-		stmt = stmt.Where("pullreq_source_repo_id = ?", opts.SourceRepoID)
-	}
-
-	if opts.SourceBranch != "" {
-		stmt = stmt.Where("pullreq_source_branch = ?", opts.SourceBranch)
-	}
-
-	if opts.TargetRepoID != 0 {
-		stmt = stmt.Where("pullreq_target_repo_id = ?", opts.TargetRepoID)
-	}
-
-	if opts.TargetBranch != "" {
-		stmt = stmt.Where("pullreq_target_branch = ?", opts.TargetBranch)
-	}
-
-	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(pullreq_title) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
-	}
-
-	if len(opts.CreatedBy) > 0 {
-		stmt = stmt.Where(squirrel.Eq{"pullreq_created_by": opts.CreatedBy})
-	}
-
-	if opts.CreatedLt > 0 {
-		stmt = stmt.Where("pullreq_created < ?", opts.CreatedLt)
-	}
-
-	if opts.CreatedGt > 0 {
-		stmt = stmt.Where("pullreq_created > ?", opts.CreatedGt)
-	}
-
-	setLabelKeyQuery(&stmt, opts)
+	s.applyFilter(&stmt, opts)
 
 	stmt = stmt.Limit(database.Limit(opts.Size))
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
@@ -570,7 +494,47 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 	return result, nil
 }
 
-func setLabelKeyQuery(stmt *squirrel.SelectBuilder, opts *types.PullReqFilter) {
+func (*PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.PullReqFilter) {
+	if len(opts.States) == 1 {
+		*stmt = stmt.Where("pullreq_state = ?", opts.States[0])
+	} else if len(opts.States) > 1 {
+		*stmt = stmt.Where(squirrel.Eq{"pullreq_state": opts.States})
+	}
+
+	if opts.SourceRepoID != 0 {
+		*stmt = stmt.Where("pullreq_source_repo_id = ?", opts.SourceRepoID)
+	}
+
+	if opts.SourceBranch != "" {
+		*stmt = stmt.Where("pullreq_source_branch = ?", opts.SourceBranch)
+	}
+
+	if opts.TargetRepoID != 0 {
+		*stmt = stmt.Where("pullreq_target_repo_id = ?", opts.TargetRepoID)
+	}
+
+	if opts.TargetBranch != "" {
+		*stmt = stmt.Where("pullreq_target_branch = ?", opts.TargetBranch)
+	}
+
+	if opts.Query != "" {
+		*stmt = stmt.Where("LOWER(pullreq_title) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+	}
+
+	if len(opts.CreatedBy) > 0 {
+		*stmt = stmt.Where(squirrel.Eq{"pullreq_created_by": opts.CreatedBy})
+	}
+
+	if opts.CreatedLt > 0 {
+		*stmt = stmt.Where("pullreq_created < ?", opts.CreatedLt)
+	}
+
+	if opts.CreatedGt > 0 {
+		*stmt = stmt.Where("pullreq_created > ?", opts.CreatedGt)
+	}
+
+	// labels
+
 	if len(opts.LabelID) == 0 && len(opts.ValueID) == 0 {
 		return
 	}

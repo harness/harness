@@ -562,19 +562,9 @@ func (s *RepoStore) countAll(
 	parentID int64,
 	filter *types.RepoFilter,
 ) (int64, error) {
-	query := `WITH RECURSIVE SpaceHierarchy AS (
-    SELECT space_id, space_parent_id
-    FROM spaces
-    WHERE space_id = $1
-    
-    UNION
-    
-    SELECT s.space_id, s.space_parent_id
-    FROM spaces s
-    JOIN SpaceHierarchy h ON s.space_parent_id = h.space_id
-)
-SELECT space_id
-FROM SpaceHierarchy h1;`
+	query := spaceDescendantsQuery + `
+		SELECT space_descendant_id
+		FROM space_descendants`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -649,24 +639,14 @@ func (s *RepoStore) listAll(
 	parentID int64,
 	filter *types.RepoFilter,
 ) ([]*types.Repository, error) {
-	where := `WITH RECURSIVE SpaceHierarchy AS (
-    SELECT space_id, space_parent_id
-    FROM spaces
-    WHERE space_id = $1
-    
-    UNION
-    
-    SELECT s.space_id, s.space_parent_id
-    FROM spaces s
-    JOIN SpaceHierarchy h ON s.space_parent_id = h.space_id
-)
-SELECT space_id
-FROM SpaceHierarchy h1;`
+	query := spaceDescendantsQuery + `
+		SELECT space_descendant_id
+		FROM space_descendants`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var spaceIDs []int64
-	if err := db.SelectContext(ctx, &spaceIDs, where, parentID); err != nil {
+	if err := db.SelectContext(ctx, &spaceIDs, query, parentID); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "failed to retrieve spaces")
 	}
 

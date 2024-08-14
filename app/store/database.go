@@ -169,10 +169,14 @@ type (
 		// GetAncestorIDs returns a list of all space IDs along the recursive path to the root space.
 		GetAncestorIDs(ctx context.Context, spaceID int64) ([]int64, error)
 
-		GetHierarchy(
-			ctx context.Context,
-			spaceID int64,
-		) ([]*types.Space, error)
+		// GetAncestors returns a list of all spaces along the recursive path to the root space.
+		GetAncestors(ctx context.Context, spaceID int64) ([]*types.Space, error)
+
+		// GetAncestorsData returns a list of space parent data for spaces that are ancestors of the space.
+		GetAncestorsData(ctx context.Context, spaceID int64) ([]types.SpaceParentData, error)
+
+		// GetDescendantsData returns a list of space parent data for spaces that are descendants of the space.
+		GetDescendantsData(ctx context.Context, spaceID int64) ([]types.SpaceParentData, error)
 
 		// Create creates a new space
 		Create(ctx context.Context, space *types.Space) error

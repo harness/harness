@@ -241,7 +241,7 @@ func (s *Service) ListPullReqLabels(
 	pullreqID int64,
 	filter *types.AssignableLabelFilter,
 ) (*types.ScopesLabels, int64, error) {
-	spaces, err := s.spaceStore.GetHierarchy(ctx, spaceID)
+	spaces, err := s.spaceStore.GetAncestors(ctx, spaceID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to get space hierarchy: %w", err)
 	}

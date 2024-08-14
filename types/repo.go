@@ -100,6 +100,8 @@ type RepositoryGitInfo struct {
 	GitUID   string
 }
 
+func (rgi *RepositoryGitInfo) GetGitUID() string { return rgi.GitUID }
+
 type RepositoryPullReqSummary struct {
 	OpenCount   int `json:"open_count"`
 	ClosedCount int `json:"closed_count"`

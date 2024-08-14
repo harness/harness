@@ -192,26 +192,40 @@ func (s *SpaceStore) findByPathAndDeletedAt(
 	return s.find(ctx, spaceID, &deletedAt)
 }
 
-const spaceRecursiveQuery = `
-WITH RECURSIVE SpaceHierarchy(space_hierarchy_id, space_hierarchy_parent_id) AS (
-	SELECT space_id, space_parent_id
+const spaceAncestorsQuery = `
+WITH RECURSIVE space_ancestors(space_ancestor_id, space_ancestor_uid, space_ancestor_parent_id) AS (
+	SELECT space_id, space_uid, space_parent_id
 	FROM spaces
 	WHERE space_id = $1
 	
 	UNION
 	
-	SELECT s.space_id, s.space_parent_id
-	FROM spaces s
-	JOIN SpaceHierarchy h ON s.space_id = h.space_hierarchy_parent_id
+	SELECT space_id, space_uid, space_parent_id
+	FROM spaces
+	JOIN space_ancestors ON space_id = space_ancestor_parent_id
+)
+`
+
+const spaceDescendantsQuery = `
+WITH RECURSIVE space_descendants(space_descendant_id, space_descendant_uid, space_descendant_parent_id) AS (
+	SELECT space_id, space_uid, space_parent_id
+	FROM spaces
+	WHERE space_id = $1
+
+	UNION
+
+	SELECT space_id, space_uid, space_parent_id
+	FROM spaces
+	JOIN space_descendants ON space_descendant_id = space_parent_id
 )
 `
 
 // GetRootSpace returns a space where space_parent_id is NULL.
 func (s *SpaceStore) GetRootSpace(ctx context.Context, spaceID int64) (*types.Space, error) {
-	query := spaceRecursiveQuery + `
-		SELECT space_hierarchy_id
-		FROM SpaceHierarchy
-		WHERE space_hierarchy_parent_id IS NULL;`
+	query := spaceAncestorsQuery + `
+		SELECT space_ancestor_id
+		FROM space_ancestors
+		WHERE space_ancestor_parent_id IS NULL`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -225,35 +239,91 @@ func (s *SpaceStore) GetRootSpace(ctx context.Context, spaceID int64) (*types.Sp
 
 // GetAncestorIDs returns a list of all space IDs along the recursive path to the root space.
 func (s *SpaceStore) GetAncestorIDs(ctx context.Context, spaceID int64) ([]int64, error) {
-	query := spaceRecursiveQuery + `
-		SELECT space_hierarchy_id FROM SpaceHierarchy`
+	query := spaceAncestorsQuery + `
+		SELECT space_ancestor_id FROM space_ancestors`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var spaceIDs []int64
 	if err := db.SelectContext(ctx, &spaceIDs, query, spaceID); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "failed to get space hierarchy")
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to get space ancestors IDs")
 	}
 
 	return spaceIDs, nil
 }
 
-func (s *SpaceStore) GetHierarchy(
+func (s *SpaceStore) GetAncestors(
 	ctx context.Context,
 	spaceID int64,
 ) ([]*types.Space, error) {
-	query := spaceRecursiveQuery + `
+	query := spaceAncestorsQuery + `
 		SELECT ` + spaceColumns + `
-		FROM spaces INNER JOIN SpaceHierarchy ON space_id = space_hierarchy_id`
+		FROM spaces INNER JOIN space_ancestors ON space_id = space_ancestor_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var dst []*space
 	if err := db.SelectContext(ctx, &dst, query, spaceID); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing get space ancestors query")
 	}
 
 	return s.mapToSpaces(ctx, s.db, dst)
+}
+
+// GetAncestorsData returns a list of space parent data for spaces that are ancestors of the space.
+func (s *SpaceStore) GetAncestorsData(ctx context.Context, spaceID int64) ([]types.SpaceParentData, error) {
+	query := spaceAncestorsQuery + `
+		SELECT space_ancestor_id, space_ancestor_uid, space_ancestor_parent_id FROM space_ancestors`
+
+	return s.readParentsData(ctx, query, spaceID)
+}
+
+// GetDescendantsData returns a list of space parent data for spaces that are descendants of the space.
+func (s *SpaceStore) GetDescendantsData(ctx context.Context, spaceID int64) ([]types.SpaceParentData, error) {
+	query := spaceDescendantsQuery + `
+		SELECT space_descendant_id, space_descendant_uid, space_descendant_parent_id FROM space_descendants`
+
+	return s.readParentsData(ctx, query, spaceID)
+}
+
+func (s *SpaceStore) readParentsData(
+	ctx context.Context,
+	query string,
+	spaceID int64,
+) ([]types.SpaceParentData, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	rows, err := db.QueryContext(ctx, query, spaceID)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to run space parent data query")
+	}
+
+	defer func() { _ = rows.Close() }()
+
+	var result []types.SpaceParentData
+
+	for rows.Next() {
+		var id int64
+		var uid string
+		var parent null.Int
+
+		err = rows.Scan(&id, &uid, &parent)
+		if err != nil {
+			return nil, database.ProcessSQLErrorf(ctx, err, "failed to scan space parent data")
+		}
+
+		result = append(result, types.SpaceParentData{
+			ID:         id,
+			Identifier: uid,
+			ParentID:   parent.Int64,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to read space parent data")
+	}
+
+	return result, nil
 }
 
 // Create a new space.
