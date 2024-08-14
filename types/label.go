@@ -264,8 +264,6 @@ func (in *SaveInput) Validate() error {
 	return nil
 }
 
-var labelTypes, _ = enum.GetAllLabelTypes()
-
 func validateLabelText(text *string, typ string) error {
 	*text = strings.TrimSpace(*text)
 
@@ -286,16 +284,27 @@ func validateLabelText(text *string, typ string) error {
 	return nil
 }
 
+var labelTypes, _ = enum.GetAllLabelTypes()
+
 func validateLabelType(typ enum.LabelType) error {
+	if typ == "" {
+		return errors.InvalidArgument("label type missing")
+	}
+
 	if _, ok := typ.Sanitize(); !ok {
 		return errors.InvalidArgument("label type must be in %v", labelTypes)
 	}
+
 	return nil
 }
 
 var colorTypes, _ = enum.GetAllLabelColors()
 
 func validateLabelColor(color enum.LabelColor) error {
+	if color == "" {
+		return errors.InvalidArgument("label color missing")
+	}
+
 	_, ok := color.Sanitize()
 	if !ok {
 		return errors.InvalidArgument("color type must be in %v", colorTypes)
