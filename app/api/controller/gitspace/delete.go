@@ -58,15 +58,9 @@ func (c *Controller) Delete(
 			return fmt.Errorf("failed to mark gitspace config as deleted: %w", err)
 		}
 	} else {
-		instanceState, stopErr := c.stopRunningGitspace(ctx, *gitspaceConfig)
+		stopErr := c.stopRunningGitspace(ctx, *gitspaceConfig)
 		if stopErr != nil {
 			return stopErr
-		}
-
-		instance.State = instanceState
-		err = c.gitspaceInstanceStore.Update(ctx, instance)
-		if err != nil {
-			return fmt.Errorf("failed to update instance: %w", err)
 		}
 	}
 	return nil
@@ -75,10 +69,16 @@ func (c *Controller) Delete(
 func (c *Controller) stopRunningGitspace(
 	ctx context.Context,
 	config types.GitspaceConfig,
-) (enum.GitspaceInstanceStateType, error) {
-	instanceState, err := c.orchestrator.TriggerDeleteGitspace(ctx, config)
+) error {
+	config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
+	c.updateGitspaceInstance(ctx, config.GitspaceInstance)
+
+	err := c.orchestrator.TriggerDeleteGitspace(ctx, config)
 	if err != nil {
-		return instanceState, err
+		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
+		c.updateGitspaceInstance(ctx, config.GitspaceInstance)
+		return err
 	}
-	return instanceState, nil
+
+	return nil
 }

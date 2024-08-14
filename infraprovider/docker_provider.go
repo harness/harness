@@ -109,7 +109,10 @@ func (d DockerProvider) Provision(
 		Type:  enum.InfraEventProvision,
 	}
 
-	d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
+	err = d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
+	if err != nil {
+		return fmt.Errorf("error emitting gitspace infra event for provisioning: %w", err)
+	}
 
 	return nil
 }
@@ -171,7 +174,10 @@ func (d DockerProvider) Stop(ctx context.Context, infra types.Infrastructure) er
 		Type:  enum.InfraEventStop,
 	}
 
-	d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
+	err := d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
+	if err != nil {
+		return fmt.Errorf("error emitting gitspace infra event for stopping: %w", err)
+	}
 
 	return nil
 }
@@ -205,7 +211,10 @@ func (d DockerProvider) Deprovision(ctx context.Context, infra types.Infrastruct
 		Type:  enum.InfraEventDeprovision,
 	}
 
-	d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
+	err = d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
+	if err != nil {
+		return fmt.Errorf("error emitting gitspace infra event for deprovisioning: %w", err)
+	}
 
 	return nil
 }

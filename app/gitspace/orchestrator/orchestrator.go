@@ -23,7 +23,7 @@ import (
 
 type Orchestrator interface {
 	// TriggerStartGitspace fetches the infra resources configured for the gitspace and triggers the infra provisioning.
-	TriggerStartGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) (enum.GitspaceInstanceStateType, error)
+	TriggerStartGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) error
 
 	// ResumeStartGitspace saves the provisioned infra, resolves the code repo details & creates the Gitspace container.
 	ResumeStartGitspace(
@@ -34,7 +34,7 @@ type Orchestrator interface {
 
 	// TriggerStopGitspace stops the Gitspace container and triggers infra deprovisioning to deprovision
 	// all the infra resources which are not required to restart the Gitspace.
-	TriggerStopGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) (enum.GitspaceInstanceStateType, error)
+	TriggerStopGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) error
 
 	// ResumeStopGitspace saves the deprovisioned infra details.
 	ResumeStopGitspace(
@@ -45,7 +45,7 @@ type Orchestrator interface {
 
 	// TriggerDeleteGitspace removes the Gitspace container and triggers infra deprovisioning to deprovision
 	// all the infra resources.
-	TriggerDeleteGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) (enum.GitspaceInstanceStateType, error)
+	TriggerDeleteGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) error
 
 	// ResumeDeleteGitspace saves the deprovisioned infra details.
 	ResumeDeleteGitspace(

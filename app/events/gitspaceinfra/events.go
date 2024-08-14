@@ -16,6 +16,7 @@ package events
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
@@ -41,17 +42,18 @@ func (r *Reporter) EmitGitspaceInfraEvent(
 	ctx context.Context,
 	event events.EventType,
 	payload *GitspaceInfraEventPayload,
-) {
+) error {
 	if payload == nil {
-		return
+		return fmt.Errorf("payload can not be nil for event type %s", GitspaceInfraEvent)
 	}
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, event, payload)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to send %v event", event)
-		return
+		return fmt.Errorf("failed to send %+v event", event)
 	}
 
 	log.Ctx(ctx).Debug().Msgf("reported %v event with id '%s'", event, eventID)
+
+	return nil
 }
 
 func (r *Reader) RegisterGitspaceInfraEvent(

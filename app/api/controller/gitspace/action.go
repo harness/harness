@@ -137,26 +137,31 @@ func (c *Controller) asyncOperation(
 	ctxWithTimedOut context.Context,
 	config types.GitspaceConfig,
 	action enum.GitspaceActionType,
-	stateChannel chan enum.GitspaceInstanceStateType,
 	errChannel chan error,
 ) {
-	defer close(stateChannel)
 	defer close(errChannel)
 
 	var orchestrateErr error
-	var instanceState enum.GitspaceInstanceStateType
 
 	switch action {
 	case enum.GitspaceActionTypeStart:
-		instanceState, orchestrateErr = c.orchestrator.TriggerStartGitspace(ctxWithTimedOut, config)
+		config.GitspaceInstance.State = enum.GitspaceInstanceStateStarting
+		c.updateGitspaceInstance(ctxWithTimedOut, config.GitspaceInstance)
+
+		orchestrateErr = c.orchestrator.TriggerStartGitspace(ctxWithTimedOut, config)
 	case enum.GitspaceActionTypeStop:
-		instanceState, orchestrateErr = c.orchestrator.TriggerStopGitspace(ctxWithTimedOut, config)
+		config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
+		c.updateGitspaceInstance(ctxWithTimedOut, config.GitspaceInstance)
+
+		orchestrateErr = c.orchestrator.TriggerStopGitspace(ctxWithTimedOut, config)
 	}
 
 	if orchestrateErr != nil {
+		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
+		c.updateGitspaceInstance(ctxWithTimedOut, config.GitspaceInstance)
+
 		errChannel <- fmt.Errorf("failed to start/stop gitspace: %s %w", config.Identifier, orchestrateErr)
 	}
-	stateChannel <- instanceState
 }
 
 func (c *Controller) submitAsyncOps(
@@ -165,15 +170,13 @@ func (c *Controller) submitAsyncOps(
 	action enum.GitspaceActionType,
 ) {
 	errChannel := make(chan error)
-	stateChannel := make(chan enum.GitspaceInstanceStateType)
 
 	submitCtx := context.WithoutCancel(ctx)
 	ttlExecuteContext, cancel := context.WithTimeout(submitCtx, gitspaceTimedOutInMintues*time.Minute)
 
-	go c.asyncOperation(ttlExecuteContext, *config, action, stateChannel, errChannel)
+	go c.asyncOperation(ttlExecuteContext, *config, action, errChannel)
 
 	var err error
-	var instanceState enum.GitspaceInstanceStateType
 
 	go func() {
 		select {
@@ -182,7 +185,6 @@ func (c *Controller) submitAsyncOps(
 				err = ttlExecuteContext.Err()
 			}
 		case err = <-errChannel:
-		case instanceState = <-stateChannel:
 		}
 		if err != nil {
 			log.Err(err).Msgf("error during async execution for %s", config.GitspaceInstance.Identifier)
@@ -193,14 +195,6 @@ func (c *Controller) submitAsyncOps(
 				c.emitGitspaceConfigEvent(ttlExecuteContext, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
 			}
 		}
-
-		if instanceState == "" {
-			instanceState = enum.GitspaceInstanceStateError
-		}
-
-		config.GitspaceInstance.State = instanceState
-
-		c.updateGitspaceInstance(submitCtx, config.GitspaceInstance)
 
 		cancel()
 	}()
