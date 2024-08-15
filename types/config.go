@@ -385,7 +385,7 @@ type Config struct {
 
 	Docker struct {
 		// Host sets the url to the docker server.
-		Host string `envconfig:"GITNESS_DOCKER_HOST" default:"unix:///var/run/docker.sock"`
+		Host string `envconfig:"GITNESS_DOCKER_HOST"`
 		// APIVersion sets the version of the API to reach, leave empty for latest.
 		APIVersion string `envconfig:"GITNESS_DOCKER_API_VERSION"`
 		// CertPath sets the path to load the TLS certificates from.

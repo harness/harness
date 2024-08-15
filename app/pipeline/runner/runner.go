@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/resolver"
 	"github.com/harness/gitness/types"
 
+	dockerclient "github.com/docker/docker/client"
 	"github.com/drone-runners/drone-runner-docker/engine"
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
@@ -49,6 +50,21 @@ var Privileged = []string{
 	"plugins/heroku",
 }
 
+// dockerOpts returns back the options to be overridden from docker options set
+// in the environment. If values are specified in gitness, they get preference.
+func dockerOpts(config *types.Config) []dockerclient.Opt {
+	var overrides []dockerclient.Opt
+
+	if config.Docker.Host != "" {
+		overrides = append(overrides, dockerclient.WithHost(config.Docker.Host))
+	}
+	if config.Docker.APIVersion != "" {
+		overrides = append(overrides, dockerclient.WithVersion(config.Docker.APIVersion))
+	}
+
+	return overrides
+}
+
 func NewExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
@@ -73,7 +89,7 @@ func NewExecutionRunner(
 	remote := remote.New(client)
 	upload := uploader.New(client)
 	tracer := history.New(remote)
-	engine, err := engine.NewEnv(engine.Opts{})
+	engine, err := engine.NewEnv(engine.Opts{}, dockerOpts(config)...)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +106,7 @@ func NewExecutionRunner(
 		Exec:     exec.Exec,
 	}
 
-	engine2, err := engine2.NewEnv(engine2.Opts{})
+	engine2, err := engine2.NewEnv(engine2.Opts{}, dockerOpts(config)...)
 	if err != nil {
 		return nil, err
 	}

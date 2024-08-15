@@ -51,20 +51,11 @@ func (d *DockerClientFactory) NewDockerClient(
 }
 
 func (d *DockerClientFactory) getClient(_ []types.InfraProviderParameter) (*client.Client, error) {
-	var opts []client.Opt
-
-	opts = append(opts, client.WithHost(d.config.DockerHost))
-
-	opts = append(opts, client.WithVersion(d.config.DockerAPIVersion))
-
-	if d.config.DockerCertPath != "" {
-		httpsClient, err := d.getHTTPSClient()
-		if err != nil {
-			return nil, fmt.Errorf("unable to create https client for docker client: %w", err)
-		}
-		opts = append(opts, client.WithHTTPClient(httpsClient))
+	overrides, err := d.dockerOpts(d.config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create docker opts overrides: %w", err)
 	}
-
+	opts := append([]client.Opt{client.FromEnv}, overrides...)
 	dockerClient, err := client.NewClientWithOpts(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create docker client: %w", err)
@@ -88,4 +79,24 @@ func (d *DockerClientFactory) getHTTPSClient() (*http.Client, error) {
 		Transport:     &http.Transport{TLSClientConfig: tlsc},
 		CheckRedirect: client.CheckRedirect,
 	}, nil
+}
+
+// dockerOpts returns back the options to be overridden from docker options set
+// in the environment. If values are specified in gitness, they get preference.
+func (d *DockerClientFactory) dockerOpts(config *DockerConfig) ([]client.Opt, error) {
+	var overrides []client.Opt
+	if config.DockerHost != "" {
+		overrides = append(overrides, client.WithHost(config.DockerHost))
+	}
+	if config.DockerAPIVersion != "" {
+		overrides = append(overrides, client.WithVersion(config.DockerAPIVersion))
+	}
+	if config.DockerCertPath != "" {
+		httpsClient, err := d.getHTTPSClient()
+		if err != nil {
+			return nil, fmt.Errorf("unable to create https client for docker client: %w", err)
+		}
+		overrides = append(overrides, client.WithHTTPClient(httpsClient))
+	}
+	return overrides, nil
 }
