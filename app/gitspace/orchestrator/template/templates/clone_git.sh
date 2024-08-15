@@ -30,8 +30,8 @@ if ! command -v git >/dev/null 2>&1; then
     exit 1
 fi
 
-git config --global user.email $email
-git config --global user.name $name
+git config --global user.email "$email"
+git config --global user.name "$name"
 # Clone the repository inside the working directory if it doesn't exist
 if [ ! -d "$HOME/$repo_name/.git" ]; then
     echo "Cloning the repository..."
@@ -43,9 +43,10 @@ if [ ! -d "$HOME/$repo_name/.git" ]; then
 else
     echo "Repository already exists. Skipping clone."
 fi
+git ls-remote
 rm $HOME/.git-askpass
 
-git config --global --add safe.directory $HOME/$repo_name
+git config --global --add safe.directory "$HOME/$repo_name"
 
 # Check if .devcontainer/devcontainer.json exists
 if [ ! -f "$HOME/$repo_name/.devcontainer/devcontainer.json" ]; then
