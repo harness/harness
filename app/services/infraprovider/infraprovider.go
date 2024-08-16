@@ -66,13 +66,15 @@ func (c *Service) Find(
 			infraProviderConfig.Identifier, err)
 	}
 	infraProviderConfig.SpacePath = space.Path
-	values := make([]types.InfraProviderResource, len(infraProviderConfig.Resources))
-	for i, ptr := range resources {
-		if ptr != nil {
-			values[i] = *ptr
+	if len(resources) > 0 {
+		providerResources := make([]types.InfraProviderResource, len(resources))
+		for i, resource := range resources {
+			if resource != nil {
+				providerResources[i] = *resource
+			}
 		}
+		infraProviderConfig.Resources = providerResources
 	}
-	infraProviderConfig.Resources = values
 	return infraProviderConfig, nil
 }
 

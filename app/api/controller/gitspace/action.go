@@ -114,7 +114,7 @@ func (c *Controller) startGitspaceAction(
 		return err
 	}
 	if savedGitspaceInstance == nil || savedGitspaceInstance.State.IsFinalStatus() {
-		gitspaceInstance, err := c.createGitspaceInstance(config)
+		gitspaceInstance, err := c.buildGitspaceInstance(config)
 		if err != nil {
 			return err
 		}
@@ -208,7 +208,7 @@ func (c *Controller) submitAsyncOps(
 	}()
 }
 
-func (c *Controller) createGitspaceInstance(config *types.GitspaceConfig) (*types.GitspaceInstance, error) {
+func (c *Controller) buildGitspaceInstance(config *types.GitspaceConfig) (*types.GitspaceInstance, error) {
 	gitspaceMachineUser := defaultMachineUser
 	now := time.Now().UnixMilli()
 	suffixUID, err := gonanoid.Generate(allowedUIDAlphabet, 6)
