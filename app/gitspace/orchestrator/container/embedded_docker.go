@@ -90,7 +90,6 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 		gitspaceConfig.GitspaceInstance.AccessKey != nil {
 		accessKey = *gitspaceConfig.GitspaceInstance.AccessKey
 	} else {
-		log.Error().Msgf("no access key is configured: %s", gitspaceConfig.Identifier)
 		return nil, fmt.Errorf("no access key is configured: %s", gitspaceConfig.Identifier)
 	}
 

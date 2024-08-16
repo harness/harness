@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -30,7 +31,7 @@ type IDE interface {
 	Run(ctx context.Context, exec *devcontainer.Exec) ([]byte, error)
 
 	// Port provides the port which will be used by this IDE.
-	Port() int
+	Port() *types.GitspacePort
 
 	// Type provides the IDE type to which the service belongs.
 	Type() enum.IDEType

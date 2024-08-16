@@ -290,18 +290,18 @@ func (o orchestrator) ResumeStartGitspace(
 	gitspaceConfig types.GitspaceConfig,
 	provisionedInfra types.Infrastructure,
 ) (types.GitspaceInstance, error) {
-	gitspaceInstance := *gitspaceConfig.GitspaceInstance
+	gitspaceInstance := gitspaceConfig.GitspaceInstance
 	gitspaceInstance.State = enum.GitspaceInstanceStateError
 
 	secretResolver, err := o.getSecretResolver(gitspaceInstance.AccessType)
 	if err != nil {
 		log.Err(err).Msgf("could not find secret resolver for type: %s", gitspaceInstance.AccessType)
-		return gitspaceInstance, err
+		return *gitspaceInstance, err
 	}
 	rootSpaceID, _, err := paths.DisectRoot(gitspaceConfig.SpacePath)
 	if err != nil {
 		log.Err(err).Msgf("unable to find root space id from space path: %s", gitspaceConfig.SpacePath)
-		return gitspaceInstance, err
+		return *gitspaceInstance, err
 	}
 	resolvedSecret, err := secretResolver.Resolve(ctx, secret.ResolutionContext{
 		UserIdentifier:     gitspaceConfig.UserID,
@@ -312,13 +312,13 @@ func (o orchestrator) ResumeStartGitspace(
 	if err != nil {
 		log.Err(err).Msgf("could not resolve secret type: %s, ref: %s",
 			gitspaceInstance.AccessType, *gitspaceInstance.AccessKeyRef)
-		return gitspaceInstance, err
+		return *gitspaceInstance, err
 	}
 	gitspaceInstance.AccessKey = &resolvedSecret.SecretValue
 
 	ideSvc, err := o.getIDEService(gitspaceConfig)
 	if err != nil {
-		return gitspaceInstance, err
+		return *gitspaceInstance, err
 	}
 
 	idePort := ideSvc.Port()
@@ -327,18 +327,19 @@ func (o orchestrator) ResumeStartGitspace(
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 
-		return gitspaceInstance, fmt.Errorf(
+		return *gitspaceInstance, fmt.Errorf(
 			"cannot provision infrastructure for ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
 	}
 
 	if provisionedInfra.Status != enum.InfraStatusProvisioned {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 
-		return gitspaceInstance, fmt.Errorf(
+		return *gitspaceInstance, fmt.Errorf(
 			"infra state is %v, should be %v for gitspace instance identifier %s",
 			provisionedInfra.Status,
 			enum.InfraStatusProvisioned,
-			gitspaceConfig.GitspaceInstance.Identifier)
+			gitspaceConfig.GitspaceInstance.Identifier,
+		)
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningCompleted)
@@ -349,7 +350,7 @@ func (o orchestrator) ResumeStartGitspace(
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerFailed)
 
-		return gitspaceInstance, fmt.Errorf(
+		return *gitspaceInstance, fmt.Errorf(
 			"failed to fetch code repo details for gitspace config ID %w %d", err, gitspaceConfig.ID)
 	}
 	devcontainerConfig := scmResolvedDetails.DevcontainerConfig
@@ -366,7 +367,7 @@ func (o orchestrator) ResumeStartGitspace(
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectFailed)
 
-		return gitspaceInstance, fmt.Errorf("couldn't call the agent health API: %w", err)
+		return *gitspaceInstance, fmt.Errorf("couldn't call the agent health API: %w", err)
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectCompleted)
@@ -381,7 +382,7 @@ func (o orchestrator) ResumeStartGitspace(
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationFailed)
 
-		return gitspaceInstance, fmt.Errorf("couldn't call the agent start API: %w", err)
+		return *gitspaceInstance, fmt.Errorf("couldn't call the agent start API: %w", err)
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationCompleted)
@@ -390,10 +391,10 @@ func (o orchestrator) ResumeStartGitspace(
 
 	var forwardedPort string
 
-	if provisionedInfra.GitspacePortMappings[idePort].PublishedPort == 0 {
-		forwardedPort = startResponse.PublishedPorts[idePort]
+	if provisionedInfra.GitspacePortMappings[idePort.Port].PublishedPort == 0 {
+		forwardedPort = startResponse.PublishedPorts[idePort.Port]
 	} else {
-		forwardedPort = strconv.Itoa(provisionedInfra.GitspacePortMappings[idePort].ForwardedPort)
+		forwardedPort = strconv.Itoa(provisionedInfra.GitspacePortMappings[idePort.Port].ForwardedPort)
 	}
 
 	scheme := provisionedInfra.GitspaceScheme
@@ -431,7 +432,7 @@ func (o orchestrator) ResumeStartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStartCompleted)
 
-	return gitspaceInstance, nil
+	return *gitspaceInstance, nil
 }
 
 func (o orchestrator) getSecretResolver(accessType enum.GitspaceAccessType) (secret.Resolver, error) {
@@ -515,7 +516,7 @@ func (o orchestrator) ResumeDeleteGitspace(
 
 func (o orchestrator) getPortsRequiredForGitspace(
 	gitspaceConfig types.GitspaceConfig,
-) ([]int, error) {
+) ([]types.GitspacePort, error) {
 	// TODO: What if the required ports in the config have deviated from when the last instance was created?
 	ideSvc, err := o.getIDEService(gitspaceConfig)
 	if err != nil {
@@ -523,7 +524,7 @@ func (o orchestrator) getPortsRequiredForGitspace(
 	}
 
 	idePort := ideSvc.Port()
-	return []int{idePort}, nil
+	return []types.GitspacePort{*idePort}, nil
 }
 
 func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig) (string, error) {

@@ -29,7 +29,7 @@ type InfraProvisioner interface {
 		ctx context.Context,
 		infraProviderResource types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
-		requiredGitspacePorts []int,
+		requiredGitspacePorts []types.GitspacePort,
 	) error
 
 	// ResumeProvision stores the provisioned infra details in the db depending on the provisioning type.
@@ -73,6 +73,6 @@ type InfraProvisioner interface {
 		ctx context.Context,
 		infraProviderResource types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
-		requiredGitspacePorts []int,
+		requiredGitspacePorts []types.GitspacePort,
 	) (*types.Infrastructure, error)
 }

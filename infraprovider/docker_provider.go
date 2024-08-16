@@ -57,7 +57,7 @@ func (d DockerProvider) Provision(
 	gitspaceConfigIdentifier string,
 	_ string,
 	_ int,
-	requiredGitspacePorts []int,
+	requiredGitspacePorts []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
 ) error {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
@@ -99,7 +99,7 @@ func (d DockerProvider) Provision(
 			ForwardedPort: 0,
 		}
 
-		portMappings[requiredPort] = portMapping
+		portMappings[requiredPort.Port] = portMapping
 	}
 
 	infrastructure.GitspacePortMappings = portMappings
@@ -125,7 +125,7 @@ func (d DockerProvider) Find(
 	gitspaceConfigIdentifier string,
 	_ string,
 	_ int,
-	_ []int,
+	_ []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
 ) (*types.Infrastructure, error) {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{

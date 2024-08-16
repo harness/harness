@@ -21,6 +21,7 @@ import (
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -92,8 +93,11 @@ func (v *VSCode) Run(ctx context.Context, exec *devcontainer.Exec) ([]byte, erro
 }
 
 // Port returns the port on which the ssh-server is listening.
-func (v *VSCode) Port() int {
-	return v.config.Port
+func (v *VSCode) Port() *types.GitspacePort {
+	return &types.GitspacePort{
+		Port:     v.config.Port,
+		Protocol: enum.CommunicationProtocolSSH,
+	}
 }
 
 func (v *VSCode) Type() enum.IDEType {

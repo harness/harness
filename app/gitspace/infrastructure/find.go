@@ -27,7 +27,7 @@ func (i infraProvisioner) Find(
 	ctx context.Context,
 	infraProviderResource types.InfraProviderResource,
 	gitspaceConfig types.GitspaceConfig,
-	requiredGitspacePorts []int,
+	requiredGitspacePorts []types.GitspacePort,
 ) (*types.Infrastructure, error) {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {

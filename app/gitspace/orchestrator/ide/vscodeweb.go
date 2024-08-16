@@ -27,6 +27,7 @@ import (
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/docker/docker/api/types/container"
@@ -115,8 +116,11 @@ func (v *VSCodeWeb) Run(ctx context.Context, exec *devcontainer.Exec) ([]byte, e
 }
 
 // PortAndProtocol returns the port on which the code-server is listening.
-func (v *VSCodeWeb) Port() int {
-	return v.config.Port
+func (v *VSCodeWeb) Port() *types.GitspacePort {
+	return &types.GitspacePort{
+		Port:     v.config.Port,
+		Protocol: enum.CommunicationProtocolHTTP,
+	}
 }
 
 func (v *VSCodeWeb) Type() enum.IDEType {

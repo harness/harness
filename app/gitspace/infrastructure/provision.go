@@ -31,7 +31,7 @@ func (i infraProvisioner) TriggerProvision(
 	ctx context.Context,
 	infraProviderResource types.InfraProviderResource,
 	gitspaceConfig types.GitspaceConfig,
-	requiredPorts []int,
+	requiredGitspacePorts []types.GitspacePort,
 ) error {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
 	if err != nil {
@@ -45,10 +45,10 @@ func (i infraProvisioner) TriggerProvision(
 
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
 		return i.triggerProvisionForNewProvisioning(
-			ctx, infraProviderResource, infraProvider, infraProviderEntity.Type, gitspaceConfig, requiredPorts)
+			ctx, infraProviderResource, infraProvider, infraProviderEntity.Type, gitspaceConfig, requiredGitspacePorts)
 	}
 	return i.triggerProvisionForExistingProvisioning(
-		ctx, infraProviderResource, infraProvider, gitspaceConfig, requiredPorts)
+		ctx, infraProviderResource, infraProvider, gitspaceConfig, requiredGitspacePorts)
 }
 
 func (i infraProvisioner) triggerProvisionForNewProvisioning(
@@ -57,7 +57,7 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 	infraProvider infraprovider.InfraProvider,
 	infraProviderType enum.InfraProviderType,
 	gitspaceConfig types.GitspaceConfig,
-	requiredGitspacePorts []int,
+	requiredGitspacePorts []types.GitspacePort,
 ) error {
 	infraProvisionedLatest, _ := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx, gitspaceConfig.SpaceID, gitspaceConfig.GitspaceInstance.ID)
@@ -140,7 +140,7 @@ func (i infraProvisioner) triggerProvisionForExistingProvisioning(
 	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
 	gitspaceConfig types.GitspaceConfig,
-	requiredPorts []int,
+	requiredGitspacePorts []types.GitspacePort,
 ) error {
 	allParams, err := i.getAllParamsFromDB(ctx, infraProviderResource, infraProvider)
 	if err != nil {
@@ -159,7 +159,7 @@ func (i infraProvisioner) triggerProvisionForExistingProvisioning(
 		gitspaceConfig.Identifier,
 		gitspaceConfig.GitspaceInstance.Identifier,
 		0, // NOTE: Agent port is not required for provisioning type Existing.
-		requiredPorts,
+		requiredGitspacePorts,
 		allParams,
 	)
 	if err != nil {
