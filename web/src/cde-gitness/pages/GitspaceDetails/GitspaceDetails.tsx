@@ -39,6 +39,7 @@ import { useGitspaceEvents } from 'cde-gitness/hooks/useGitspaceEvents'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useGitspacesLogs } from 'cde-gitness/hooks/useGitspaceLogs'
+import { useGetToken } from 'services/cde'
 import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
 import { useGetLogStream } from '../../hooks/useGetLogStream'
 import css from './GitspaceDetails.module.scss'
@@ -46,7 +47,7 @@ import css from './GitspaceDetails.module.scss'
 const GitspaceDetails = () => {
   const space = useGetSpaceParam()
   const { getString } = useStrings()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const { showError, showSuccess } = useToaster()
   const history = useHistory()
   const [startTriggred, setStartTriggred] = useState<boolean>(false)
@@ -148,7 +149,7 @@ const GitspaceDetails = () => {
         try {
           e.preventDefault()
           e.stopPropagation()
-          await deleteGitspace(gitspaceId)
+          await deleteGitspace(standalone ? {} : gitspaceId || '')
           showSuccess(getString('cde.deleteSuccess'))
           history.push(routes.toCDEGitspaces({ space }))
         } catch (exception) {
@@ -157,6 +158,24 @@ const GitspaceDetails = () => {
       }
     })
   }
+
+  const [accountIdentifier, orgIdentifier, projectIdentifier] = data?.space_path?.split('/') || []
+
+  const { data: tokenData, refetch: refetchToken } = useGetToken({
+    accountIdentifier: '',
+    projectIdentifier: '',
+    orgIdentifier: '',
+    gitspace_identifier: '',
+    lazy: true
+  })
+
+  const [selectedRowUrl, setSelectedRowUrl] = useState<string | undefined>('')
+
+  useEffect(() => {
+    if (tokenData) {
+      window.open(`${selectedRowUrl}&token=${tokenData?.gitspace_token}`, '_blank')
+    }
+  }, [tokenData])
 
   return (
     <>
@@ -294,14 +313,20 @@ const GitspaceDetails = () => {
                     e.preventDefault()
                     e.stopPropagation()
                     if (data?.ide === StandaloneIDEType.VSCODE) {
-                      const pathparamsList = data?.space_path?.split('/') || []
-                      const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
-                      window.open(
-                        `vscode://harness-inc.oss-gitspaces/${projectIdentifier}/${data?.identifier}?gitness`,
-                        '_blank'
-                      )
+                      const params = standalone ? '?gitness' : ''
+                      const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
+                      const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectIdentifier}/${data?.identifier}${params}`
+                      window.open(vsCodeURL, '_blank')
                     } else {
-                      window.open(data?.instance?.url || '', '_blank')
+                      setSelectedRowUrl(data?.instance?.url || '')
+                      refetchToken({
+                        pathParams: {
+                          accountIdentifier,
+                          projectIdentifier,
+                          orgIdentifier,
+                          gitspace_identifier: data?.identifier || ''
+                        }
+                      })
                     }
                   }}>
                   {data?.ide === StandaloneIDEType.VSCODE && getString('cde.details.openEditor')}

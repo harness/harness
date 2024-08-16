@@ -120,6 +120,8 @@ export const getStatusText = (getString: UseStringsReturn['getString'], status?:
       return getString('cde.listing.starting')
     case GitspaceStatus.STOPPING:
       return getString('cde.listing.stopping')
+    case GitspaceStatus.UNINITIALIZED:
+      return GitspaceStatus.UNINITIALIZED.toLowerCase()
     default:
       return getString('cde.listing.offline')
   }
@@ -356,11 +358,26 @@ const ActionMenu = ({
   const { instance, ide, identifier = '', space_path = '', state } = data
   const { url = '' } = instance || {}
   const history = useHistory()
-  const { routes } = useAppContext()
-  const pathparamsList = space_path?.split('/') || []
-  const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
+  const { routes, standalone } = useAppContext()
+  const [accountIdentifier, orgIdentifier, projectIdentifier] = space_path?.split('/') || []
   const topBorder = state === GitspaceStatus.RUNNING && !actionLoading ? { top: true } : {}
   const disabledActionButtons = [GitspaceStatus.STARTING, GitspaceStatus.STOPPING].includes(state as GitspaceStatus)
+
+  const { data: tokenData, refetch } = useGetToken({
+    accountIdentifier: '',
+    projectIdentifier: '',
+    orgIdentifier: '',
+    gitspace_identifier: '',
+    lazy: true
+  })
+
+  const [selectedRowUrl, setSelectedRowUrl] = useState<string | undefined>('')
+
+  useEffect(() => {
+    if (tokenData) {
+      window.open(`${selectedRowUrl}&token=${tokenData?.gitspace_token}`, '_blank')
+    }
+  }, [tokenData])
 
   return (
     <Container
@@ -376,9 +393,24 @@ const ActionMenu = ({
               e.preventDefault()
               e.stopPropagation()
               if (ide === IDEType.VSCODE) {
-                window.open(`vscode://harness-inc.oss-gitspaces/${projectIdentifier}/${identifier}?gitness`, '_blank')
+                const params = standalone ? '?gitness' : ''
+                const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
+                const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectIdentifier}/${identifier}${params}`
+                window.open(vsCodeURL, '_blank')
               } else {
-                window.open(url || '', '_blank')
+                if (standalone) {
+                  window.open(url || '', '_blank')
+                } else {
+                  setSelectedRowUrl(url || '')
+                  refetch({
+                    pathParams: {
+                      accountIdentifier,
+                      projectIdentifier,
+                      orgIdentifier,
+                      gitspace_identifier: identifier || ''
+                    }
+                  })
+                }
               }
             }}
             text={
@@ -453,7 +485,7 @@ interface RenderActionsProps extends CellProps<TypesGitspaceConfig> {
 export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
   const { getString } = useStrings()
   const history = useHistory()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const { showError, showSuccess } = useToaster()
   const details = row.original
   const { identifier, name, space_path } = details
@@ -583,7 +615,7 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
         try {
           e.preventDefault()
           e.stopPropagation()
-          await deleteGitspace(identifier || '')
+          await deleteGitspace(standalone ? {} : identifier || '')
           showSuccess(getString('cde.deleteSuccess'))
           await refreshList()
         } catch (exception) {
@@ -729,17 +761,14 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
         <TableV2<TypesGitspaceConfig>
           className={standalone ? css.table : css.cdeTable}
           onRowClick={row => {
-            // const pathparamsList = row?.space_path?.split('/') || []
-            // const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
-
             const [accountIdentifier, orgIdentifier, projectIdentifier] = row?.space_path?.split('/') || []
 
             if (row?.state === GitspaceStatus.RUNNING) {
               if (row?.ide === IDEType.VSCODE) {
-                window.open(
-                  `vscode://harness-inc.oss-gitspaces/${projectIdentifier}/${row?.identifier}?gitness`,
-                  '_blank'
-                )
+                const params = standalone ? '?gitness' : ''
+                const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
+                const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectIdentifier}/${row?.identifier}${params}`
+                window.open(vsCodeURL, '_blank')
               } else {
                 if (standalone) {
                   window.open(row?.instance?.url || '', '_blank')

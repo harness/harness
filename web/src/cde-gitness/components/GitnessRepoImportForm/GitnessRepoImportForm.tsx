@@ -4,6 +4,7 @@ import { Button, ButtonVariation, Container, ExpandingSearchInput, Layout, Text 
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Color } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
+import { Repository } from 'iconoir-react'
 import { useFormikContext } from 'formik'
 import type { TypesRepository } from 'services/code'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -17,14 +18,26 @@ import { EnumGitspaceCodeRepoType } from 'cde-gitness/constants'
 import { GitspaceSelect } from '../GitspaceSelect/GitspaceSelect'
 import css from './GitnessRepoImportForm.module.scss'
 
-const RepositoryText = ({ repoList, value }: { repoList: TypesRepository[] | null; value?: string }) => {
+const RepositoryText = ({
+  repoList,
+  value,
+  isCDE
+}: {
+  repoList: TypesRepository[] | null
+  value?: string
+  isCDE?: boolean
+}) => {
   const { getString } = useStrings()
   const repoMetadata = repoList?.find(repo => repo.git_url === value)
   const repoName = repoMetadata?.path
 
   return (
     <Layout.Horizontal spacing={'medium'} flex={{ justifyContent: 'flex-start', alignItems: 'center' }}>
-      <img src={gitnessRepoLogo} height={24} width={24} />
+      {isCDE ? (
+        <Repository className={css.repoIcon} color="none" height={24} width={24} />
+      ) : (
+        <img src={gitnessRepoLogo} height={24} width={24} />
+      )}
       {repoName ? (
         <Container margin={{ left: 'medium' }}>
           <Layout.Vertical spacing="xsmall">
@@ -127,7 +140,7 @@ export const GitnessRepoImportForm = ({ isCDE }: { isCDE?: boolean }) => {
           loading={loading}
           formikName="code_repo_url"
           formInputClassName={css.repoAndBranch}
-          text={<RepositoryText value={values.code_repo_url} repoList={repositories} />}
+          text={<RepositoryText value={values.code_repo_url} repoList={repositories} isCDE={isCDE} />}
           tooltipProps={{
             onClose: () => {
               setRepoSearch('')

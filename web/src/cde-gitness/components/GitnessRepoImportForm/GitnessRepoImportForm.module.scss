@@ -6,3 +6,9 @@
   padding: var(--spacing-large) !important;
   background-color: var(--grey-50) !important;
 }
+
+.repoIcon {
+  path {
+    fill: none !important;
+  }
+}
