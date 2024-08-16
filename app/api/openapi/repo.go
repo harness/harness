@@ -50,6 +50,11 @@ type updateRepoRequest struct {
 	repo.UpdateInput
 }
 
+type updateDefaultBranchRequest struct {
+	repoRequest
+	repo.UpdateDefaultBranchInput
+}
+
 type moveRepoRequest struct {
 	repoRequest
 	repo.MoveInput
@@ -692,6 +697,17 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repo_ref}", opUpdate)
+
+	opUpdateDefaultBranch := openapi3.Operation{}
+	opUpdateDefaultBranch.WithTags("repository")
+	opUpdateDefaultBranch.WithMapOfAnything(map[string]interface{}{"operationId": "updateDefaultBranch"})
+	_ = reflector.SetRequest(&opUpdateDefaultBranch, new(updateDefaultBranchRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opUpdateDefaultBranch, new(repo.RepositoryOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUpdateDefaultBranch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opUpdateDefaultBranch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opUpdateDefaultBranch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opUpdateDefaultBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/default-branch", opUpdateDefaultBranch)
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("repository")
