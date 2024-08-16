@@ -51,9 +51,9 @@ import CodeSearchPage from 'pages/Search/CodeSearchPage'
 import AddUpdatePipeline from 'pages/AddUpdatePipeline/AddUpdatePipeline'
 import { useAppContext } from 'AppContext'
 import PipelineSettings from 'components/PipelineSettings/PipelineSettings'
-import { GitspaceDetails } from 'cde-gitness/pages/GitspaceDetails/GitspaceDetails'
-import { GitspaceListing } from 'cde-gitness/pages/GitspaceListing/GitspaceListing'
-import { GitspaceCreate } from 'cde-gitness/pages/GitspaceCreate/GitspaceCreate'
+import GitspaceDetails from 'cde-gitness/pages/GitspaceDetails/GitspaceDetails'
+import GitspaceListing from 'cde-gitness/pages/GitspaceListing/GitspaceListing'
+import GitspaceCreate from 'cde-gitness/pages/GitspaceCreate/GitspaceCreate'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()

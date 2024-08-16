@@ -14,7 +14,7 @@ import noRepo from 'cde-gitness/assests/noRepo.svg?url'
 import { RepoCreationType } from 'utils/GitUtils'
 import gitnessRepoLogo from 'cde-gitness/assests/gitness.svg?url'
 import { EnumGitspaceCodeRepoType } from 'cde-gitness/constants'
-import { GitspaceSelect } from '../../../cde/components/GitspaceSelect/GitspaceSelect'
+import { GitspaceSelect } from '../GitspaceSelect/GitspaceSelect'
 import css from './GitnessRepoImportForm.module.scss'
 
 const RepositoryText = ({ repoList, value }: { repoList: TypesRepository[] | null; value?: string }) => {
@@ -62,7 +62,7 @@ const BranchText = ({ value }: { value?: string }) => {
   )
 }
 
-export const GitnessRepoImportForm = () => {
+export const GitnessRepoImportForm = ({ isCDE }: { isCDE?: boolean }) => {
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const [branchSearch, setBranchSearch] = useState('')
@@ -162,6 +162,7 @@ export const GitnessRepoImportForm = () => {
                     onClick={() => {
                       const repoParams = repo?.path?.split('/') || []
                       formik.setValues((prvValues: any) => {
+                        const codeRepoType = isCDE ? {} : { code_repo_type: EnumGitspaceCodeRepoType.GITNESS }
                         return {
                           ...prvValues,
                           code_repo_url: repo.git_url,
@@ -169,10 +170,9 @@ export const GitnessRepoImportForm = () => {
                           identifier: repoParams?.[repoParams.length - 1],
                           name: repo.path,
                           code_repo_ref: repo.path,
-                          code_repo_type: EnumGitspaceCodeRepoType.GITNESS
+                          ...codeRepoType
                         }
                       })
-                      formik.setFieldValue('code_repo_url', repo.git_url)
                     }}
                   />
                 ))

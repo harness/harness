@@ -50,7 +50,7 @@ func (c *Service) Find(
 		if instance != nil {
 			gitspaceConfig.GitspaceInstance = instance
 			instance.SpacePath = gitspaceConfig.SpacePath
-			gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State)
+			gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State, instance.Updated)
 			if err != nil {
 				return err
 			}

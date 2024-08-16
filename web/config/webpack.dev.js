@@ -30,7 +30,9 @@ const getPortByModule = () => {
   }
 }
 
+const moduleType = process.env.MODULE
 const API_URL = process.env.API_URL ?? 'http://localhost:3000'
+const CDE_API_URL = process.env.CDE_API_URL ?? 'http://localhost:3000'
 const HOST = 'localhost'
 const PORT = getPortByModule()
 const STANDALONE = process.env.STANDALONE === 'true'
@@ -64,7 +66,7 @@ const devConfig = {
     port: PORT,
     proxy: {
       '/api': {
-        target: API_URL,
+        target: moduleType === 'cde' ? CDE_API_URL : API_URL,
         logLevel: 'debug',
         secure: false,
         changeOrigin: true

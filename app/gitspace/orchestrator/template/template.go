@@ -21,6 +21,8 @@ import (
 	"io/fs"
 	"path"
 	"text/template"
+
+	"github.com/harness/gitness/types/enum"
 )
 
 const (
@@ -52,13 +54,15 @@ type RunVSCodeWebPayload struct {
 }
 
 type SetupUserPayload struct {
-	Username string
-	Password string
-	HomeDir  string
+	Username   string
+	AccessKey  string
+	AccessType enum.GitspaceAccessType
+	HomeDir    string
 }
 
 type SetupSSHServerPayload struct {
-	Username string
+	Username   string
+	AccessType enum.GitspaceAccessType
 }
 
 type RunSSHServerPayload struct {

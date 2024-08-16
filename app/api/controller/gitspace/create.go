@@ -55,6 +55,7 @@ type CreateInput struct {
 	Branch             string                    `json:"branch"`
 	DevcontainerPath   *string                   `json:"devcontainer_path"`
 	Metadata           map[string]string         `json:"metadata"`
+	SSHTokenIdentifier string                    `json:"ssh_token_identifier"`
 }
 
 // Create creates a new gitspace.
@@ -148,6 +149,7 @@ func (c *Controller) Create(
 			SpacePath:                       space.Path,
 			Created:                         now,
 			Updated:                         now,
+			SSHTokenIdentifier:              in.SSHTokenIdentifier,
 		}
 		err = c.gitspaceConfigStore.Create(ctx, gitspaceConfig)
 		if err != nil {

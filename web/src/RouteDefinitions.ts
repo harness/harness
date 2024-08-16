@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { CDERoutes, routes as cdeRoutes } from 'cde/RouteDefinitions'
+import { CDERoutes, routes as cdeRoutes } from 'cde-gitness/RouteDefinitions'
 
 export interface CODEProps {
   space?: string

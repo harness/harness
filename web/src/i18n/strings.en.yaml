@@ -1182,6 +1182,7 @@ cde:
     error: Error
     starting: Starting
     stopping: Stopping
+    ownerAndCreated: Owner & Created On
   create:
     repositoryDetails: Repository Details
     gitnessRepositories: Gitness Repositories

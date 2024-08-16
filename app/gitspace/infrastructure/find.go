@@ -72,7 +72,9 @@ func (i infraProvisioner) paramsForProvisioningTypeNew(
 			"could not find latest infra provisioned entity for instance %d: %w",
 			gitspaceConfig.GitspaceInstance.ID, err)
 	}
-
+	if infraProvisionedLatest.InputParams == "" {
+		return []types.InfraProviderParameter{}, err
+	}
 	allParams, err := deserializeInfraProviderParams(infraProvisionedLatest.InputParams)
 	if err != nil {
 		return nil, err

@@ -17,6 +17,7 @@ package gitspace
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/types"
 )
@@ -25,6 +26,7 @@ func (c *Service) UpdateConfig(
 	ctx context.Context,
 	gitspaceConfig *types.GitspaceConfig,
 ) error {
+	gitspaceConfig.Updated = time.Now().UnixMilli()
 	err := c.gitspaceConfigStore.Update(ctx, gitspaceConfig)
 	if err != nil {
 		return fmt.Errorf("failed to update gitspace config: %w", err)

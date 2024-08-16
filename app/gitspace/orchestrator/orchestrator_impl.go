@@ -28,6 +28,9 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/scm"
+	"github.com/harness/gitness/app/gitspace/secret"
+	secretenum "github.com/harness/gitness/app/gitspace/secret/enum"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -50,6 +53,7 @@ type orchestrator struct {
 	config                     *Config
 	vsCodeService              *ide.VSCode
 	vsCodeWebService           *ide.VSCodeWeb
+	secretResolverFactory      *secret.ResolverFactory
 }
 
 var _ Orchestrator = (*orchestrator)(nil)
@@ -63,6 +67,7 @@ func NewOrchestrator(
 	config *Config,
 	vsCodeService *ide.VSCode,
 	vsCodeWebService *ide.VSCodeWeb,
+	secretResolverFactory *secret.ResolverFactory,
 ) Orchestrator {
 	return orchestrator{
 		scm:                        scm,
@@ -73,6 +78,7 @@ func NewOrchestrator(
 		config:                     config,
 		vsCodeService:              vsCodeService,
 		vsCodeWebService:           vsCodeWebService,
+		secretResolverFactory:      secretResolverFactory,
 	}
 }
 
@@ -120,6 +126,9 @@ func (o orchestrator) TriggerStopGitspace(
 	}
 
 	infra, err := o.infraProvisioner.Find(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
+	if infra.Storage == "" {
+		log.Warn().Msgf("couldn't find the storage for resource ID %d", gitspaceConfig.InfraProviderResourceID)
+	}
 	if err != nil {
 		return fmt.Errorf("cannot find the provisioned infra: %w", err)
 	}
@@ -284,6 +293,29 @@ func (o orchestrator) ResumeStartGitspace(
 	gitspaceInstance := *gitspaceConfig.GitspaceInstance
 	gitspaceInstance.State = enum.GitspaceInstanceStateError
 
+	secretResolver, err := o.getSecretResolver(gitspaceInstance.AccessType)
+	if err != nil {
+		log.Err(err).Msgf("could not find secret resolver for type: %s", gitspaceInstance.AccessType)
+		return gitspaceInstance, err
+	}
+	rootSpaceID, _, err := paths.DisectRoot(gitspaceConfig.SpacePath)
+	if err != nil {
+		log.Err(err).Msgf("unable to find root space id from space path: %s", gitspaceConfig.SpacePath)
+		return gitspaceInstance, err
+	}
+	resolvedSecret, err := secretResolver.Resolve(ctx, secret.ResolutionContext{
+		UserIdentifier:     gitspaceConfig.UserID,
+		GitspaceIdentifier: gitspaceConfig.Identifier,
+		SecretRef:          *gitspaceInstance.AccessKeyRef,
+		SpaceIdentifier:    rootSpaceID,
+	})
+	if err != nil {
+		log.Err(err).Msgf("could not resolve secret type: %s, ref: %s",
+			gitspaceInstance.AccessType, *gitspaceInstance.AccessKeyRef)
+		return gitspaceInstance, err
+	}
+	gitspaceInstance.AccessKey = &resolvedSecret.SecretValue
+
 	ideSvc, err := o.getIDEService(gitspaceConfig)
 	if err != nil {
 		return gitspaceInstance, err
@@ -402,6 +434,19 @@ func (o orchestrator) ResumeStartGitspace(
 	return gitspaceInstance, nil
 }
 
+func (o orchestrator) getSecretResolver(accessType enum.GitspaceAccessType) (secret.Resolver, error) {
+	secretType := secretenum.PasswordSecretType
+	switch accessType {
+	case enum.GitspaceAccessTypeUserCredentials:
+		secretType = secretenum.PasswordSecretType
+	case enum.GitspaceAccessTypeJWTToken:
+		secretType = secretenum.JWTSecretType
+	case enum.GitspaceAccessTypeSSHKey:
+		secretType = secretenum.SSHSecretType
+	}
+	return o.secretResolverFactory.GetSecretResolver(secretType)
+}
+
 func (o orchestrator) ResumeStopGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
@@ -494,10 +539,14 @@ func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.
 	}
 
 	infra, err := o.infraProvisioner.Find(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
+	if infra.Storage == "" {
+		return "", fmt.Errorf("couldn't find the storage for resource ID %d", gitspaceConfig.InfraProviderResourceID)
+	}
 	if err != nil {
 		return "", fmt.Errorf("cannot find the provisioned infra: %w", err)
 	}
-
+	// NOTE: Currently we use a static identifier as the Gitspace user.
+	gitspaceConfig.UserID = harnessUser
 	logs, err := o.containerOrchestrator.StreamLogs(ctx, gitspaceConfig, *infra)
 	if err != nil {
 		return "", fmt.Errorf("error while fetching logs from container orchestrator: %w", err)

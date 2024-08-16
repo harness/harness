@@ -85,6 +85,15 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 
 	log := log.Ctx(ctx).With().Str(loggingKey, containerName).Logger()
 
+	var accessKey string
+	if gitspaceConfig.GitspaceInstance != nil &&
+		gitspaceConfig.GitspaceInstance.AccessKey != nil {
+		accessKey = *gitspaceConfig.GitspaceInstance.AccessKey
+	} else {
+		log.Error().Msgf("no access key is configured: %s", gitspaceConfig.Identifier)
+		return nil, fmt.Errorf("no access key is configured: %s", gitspaceConfig.Identifier)
+	}
+
 	dockerClient, err := e.dockerClientFactory.NewDockerClient(ctx, infra)
 	if err != nil {
 		return nil, fmt.Errorf("error getting docker client from docker client factory: %w", err)
@@ -135,6 +144,8 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			DockerClient:   dockerClient,
 			HomeDir:        homeDir,
 			UserIdentifier: gitspaceConfig.UserID,
+			AccessKey:      accessKey,
+			AccessType:     gitspaceConfig.GitspaceInstance.AccessType,
 		}
 
 		if resolvedRepoDetails.Credentials != nil {
@@ -181,6 +192,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			homeDir,
 			codeRepoDir,
 			logStreamInstance,
+			accessKey,
 		)
 		if startErr != nil {
 			return nil, fmt.Errorf("failed to start gitspace %s: %w", containerName, startErr)
@@ -219,6 +231,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 	homeDir string,
 	codeRepoDir string,
 	logStreamInstance *logutil.LogStreamInstance,
+	accessKey string,
 ) error {
 	var imageName = resolvedRepoDetails.DevcontainerConfig.Image
 	if imageName == "" {
@@ -254,9 +267,11 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		DockerClient:   dockerClient,
 		HomeDir:        homeDir,
 		UserIdentifier: gitspaceConfig.UserID,
+		AccessKey:      accessKey,
+		AccessType:     gitspaceConfig.GitspaceInstance.AccessType,
 	}
 
-	err = e.manageUser(ctx, exec, gitspaceConfig.GitspaceInstance.AccessKey, logStreamInstance)
+	err = e.manageUser(ctx, exec, logStreamInstance)
 	if err != nil {
 		return err
 	}
@@ -416,13 +431,13 @@ func (e *EmbeddedDockerOrchestrator) authenticateGit(
 func (e *EmbeddedDockerOrchestrator) manageUser(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	accessKey *string,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
 	data := template.SetupUserPayload{
-		Username: exec.UserIdentifier,
-		Password: *accessKey,
-		HomeDir:  exec.HomeDir,
+		Username:   exec.UserIdentifier,
+		AccessKey:  exec.AccessKey,
+		AccessType: exec.AccessType,
+		HomeDir:    exec.HomeDir,
 	}
 	manageUserScript, err := template.GenerateScriptFromTemplate(
 		templateManageUser, data)

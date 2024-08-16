@@ -15,31 +15,35 @@ import { Play } from 'iconoir-react'
 import { useHistory, useParams } from 'react-router-dom'
 import { Color, FontVariation, PopoverProps } from '@harnessio/design-system'
 import { Menu, MenuItem, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
-import { useGet, useMutate } from 'restful-react'
 import { defaultTo } from 'lodash-es'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import EventTimelineAccordion from 'cde-gitness/components/EventTimelineAccordion/EventTimelineAccordion'
 import { DetailsCard } from 'cde-gitness/components/DetailsCard/DetailsCard'
-import type { EnumGitspaceStateType, TypesGitspaceConfig, TypesGitspaceEventResponse } from 'cde-gitness/services'
-import { GitspaceActionType, GitspaceStatus } from 'cde/constants'
+import type { EnumGitspaceStateType, TypesGitspaceEventResponse } from 'cde-gitness/services'
+import { GitspaceActionType, GitspaceStatus } from 'cde-gitness/constants'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { getErrorMessage } from 'utils/Utils'
-import { usePolling } from 'cde/components/GitspaceDetails/usePolling'
+import { usePolling } from 'cde-gitness/hooks/usePolling'
 import deleteIcon from 'cde-gitness/assests/delete.svg?url'
-import vscodeIcon from 'cde/icons/VSCode.svg?url'
+import vscodeIcon from 'cde-gitness/assests/VSCode.svg?url'
 import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import pauseIcon from 'cde-gitness/assests/pause.svg?url'
 import { StandaloneIDEType } from 'cde-gitness/constants'
 import homeIcon from 'cde-gitness/assests/home.svg?url'
 import { useConfirmAct } from 'hooks/useConfirmAction'
+import { useGitspaceDetails } from 'cde-gitness/hooks/useGitspaceDetails'
+import { useGitspaceEvents } from 'cde-gitness/hooks/useGitspaceEvents'
+import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
+import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
+import { useGitspacesLogs } from 'cde-gitness/hooks/useGitspaceLogs'
 import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
 import { useGetLogStream } from '../../hooks/useGetLogStream'
 import css from './GitspaceDetails.module.scss'
 
-export const GitspaceDetails = () => {
+const GitspaceDetails = () => {
   const space = useGetSpaceParam()
   const { getString } = useStrings()
   const { routes } = useAppContext()
@@ -53,35 +57,15 @@ export const GitspaceDetails = () => {
 
   const [startPolling, setStartPolling] = useState<GitspaceActionType | undefined>(undefined)
 
-  const { loading, data, refetch, error } = useGet<TypesGitspaceConfig>({
-    path: `/api/v1/gitspaces/${space}/${gitspaceId}/+`,
-    debounce: 500
-  })
+  const { loading, data, refetch, error } = useGitspaceDetails({ gitspaceId })
 
-  const { data: eventData, refetch: refetchEventData } = useGet<TypesGitspaceEventResponse[]>({
-    path: `/api/v1/gitspaces/${space}/${gitspaceId}/+/events`,
-    debounce: 500
-  })
+  const { data: eventData, refetch: refetchEventData } = useGitspaceEvents({ gitspaceId })
 
-  const {
-    refetch: refetchLogsData,
-    response,
-    error: streamLogsError
-  } = useGet<any>({
-    path: `api/v1/gitspaces/${space}/${gitspaceId}/+/logs/stream`,
-    debounce: 500,
-    lazy: true
-  })
+  const { refetch: refetchLogsData, response, error: streamLogsError } = useGitspacesLogs({ gitspaceId })
 
-  const { mutate: actionMutate, loading: mutateLoading } = useMutate({
-    verb: 'POST',
-    path: `/api/v1/gitspaces/${space}/${gitspaceId}/+/actions`
-  })
+  const { mutate: actionMutate, loading: mutateLoading } = useGitspaceActions({ gitspaceId })
 
-  const { mutate: deleteGitspace, loading: deleteLoading } = useMutate<any>({
-    verb: 'DELETE',
-    path: `/api/v1/gitspaces/${space}/${gitspaceId}/+`
-  })
+  const { mutate: deleteGitspace, loading: deleteLoading } = useDeleteGitspaces({ gitspaceId })
 
   const { updateQueryParams } = useUpdateQueryParams<{ redirectFrom?: string }>()
   const { redirectFrom = '' } = useQueryParams<{ redirectFrom?: string }>()
@@ -97,8 +81,8 @@ export const GitspaceDetails = () => {
   )
 
   useEffect(() => {
-    const filteredEvent = eventData?.filter(
-      item =>
+    const filteredEvent = (eventData as Unknown)?.filter(
+      (item: Unknown) =>
         (item.event === 'agent_gitspace_creation_start' || item.event === 'agent_gitspace_deletion_start') &&
         defaultTo(item?.timestamp, 0) >= defaultTo(data?.instance?.updated, 0)
     )
@@ -164,7 +148,7 @@ export const GitspaceDetails = () => {
         try {
           e.preventDefault()
           e.stopPropagation()
-          await deleteGitspace({})
+          await deleteGitspace(gitspaceId)
           showSuccess(getString('cde.deleteSuccess'))
           history.push(routes.toCDEGitspaces({ space }))
         } catch (exception) {
@@ -364,7 +348,7 @@ export const GitspaceDetails = () => {
             <DetailsCard data={data} loading={mutateLoading} />
           </Card>
           <Card className={css.cardContainer}>
-            <EventTimelineAccordion data={eventData} />
+            <EventTimelineAccordion data={eventData as TypesGitspaceEventResponse[]} />
           </Card>
 
           <Card className={css.cardContainer}>
@@ -394,3 +378,4 @@ export const GitspaceDetails = () => {
     </>
   )
 }
+export default GitspaceDetails

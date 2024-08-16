@@ -48,7 +48,8 @@ func (v *VSCode) Setup(
 ) ([]byte, error) {
 	sshServerScript, err := template.GenerateScriptFromTemplate(
 		templateSetupSSHServer, &template.SetupSSHServerPayload{
-			Username: exec.UserIdentifier,
+			Username:   exec.UserIdentifier,
+			AccessType: exec.AccessType,
 		})
 	if err != nil {
 		return nil, fmt.Errorf(

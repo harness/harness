@@ -22,7 +22,8 @@ import {
   Text,
   useToaster,
   Button,
-  ButtonVariation
+  ButtonVariation,
+  Avatar
 } from '@harnessio/uicore'
 import React, { useEffect, useState } from 'react'
 import { Color } from '@harnessio/design-system'
@@ -42,27 +43,30 @@ import {
 } from 'iconoir-react'
 import { Intent, Menu, MenuItem, PopoverInteractionKind, Position } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
-import { useMutate } from 'restful-react'
 import type { IconName } from '@harnessio/icons'
+import moment from 'moment'
+import RegionIcon from 'cde-gitness/assests/globe.svg?url'
 import { UseStringsReturn, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import VSCode from 'cde/icons/VSCode.svg?url'
-import { GitspaceActionType, GitspaceStatus } from 'cde/constants'
+import VSCode from 'cde-gitness/assests/VSCode.svg?url'
+import { GitspaceActionType, GitspaceStatus } from 'cde-gitness/constants'
 import type {
   EnumGitspaceStateType,
   EnumIDEType,
   TypesGitspaceConfig,
   EnumGitspaceCodeRepoType
 } from 'cde-gitness/services'
-import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import gitspaceIcon from 'cde-gitness/assests/gitspace.svg?url'
 import { useModalHook } from 'hooks/useModalHook'
 import pause from 'cde-gitness/assests/pause.svg?url'
 import web from 'cde-gitness/assests/web.svg?url'
 import deleteIcon from 'cde-gitness/assests/delete.svg?url'
 import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
+import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
+import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
+import { useGetToken } from 'services/cde'
 import css from './ListGitspaces.module.scss'
 
 enum CodeRepoType {
@@ -149,13 +153,58 @@ const getUsageTemplate = (
 export const RenderGitspaceName: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
   const details = row.original
   const { name, ide } = details
-  return (
+  const { getString } = useStrings()
+  const { standalone } = useAppContext()
+  return standalone ? (
     <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
       <img src={ide === IDEType.VSCODE ? VSCode : vsCodeWebIcon} height={20} width={20} />
-      <Text color={Color.BLACK} title={name} font={{ align: 'left', size: 'normal', weight: 'semi-bold' }}>
+      <Text
+        lineClamp={1}
+        color={Color.BLACK}
+        title={name}
+        font={{ align: 'left', size: 'normal', weight: 'semi-bold' }}>
         {name}
       </Text>
     </Layout.Horizontal>
+  ) : (
+    <Layout.Vertical spacing={'medium'}>
+      <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
+        <img src={ide === IDEType.VSCODE ? VSCode : vsCodeWebIcon} height={20} width={20} />
+        <Text
+          lineClamp={1}
+          color={Color.BLACK}
+          title={name}
+          font={{ align: 'left', size: 'normal', weight: 'semi-bold' }}>
+          {name}
+        </Text>
+      </Layout.Horizontal>
+
+      <Layout.Horizontal spacing={'small'}>
+        <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center' }}>
+          <img height={12} width={12} src={RegionIcon} /> <Text font={{ size: 'small' }}>{getString('cde.na')}</Text>
+        </Layout.Horizontal>
+        <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center' }}>
+          <Cpu height={12} width={12} /> <Text font={{ size: 'small' }}>{getString('cde.na')}</Text>
+        </Layout.Horizontal>
+      </Layout.Horizontal>
+    </Layout.Vertical>
+  )
+}
+
+export const OwnerAndCreatedAt: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
+  const { created } = row.original
+  return (
+    <Layout.Vertical spacing="medium" flex={{ alignItems: 'start', justifyContent: 'center' }}>
+      <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'center' }}>
+        <Avatar size="small" name="test" email="test@harness.io" />
+        <Text font={{ size: 'small' }} color={Color.GREY_800}>
+          test@harness.io
+        </Text>
+      </Layout.Horizontal>
+      <Text font={{ size: 'small' }} color={Color.GREY_800}>
+        {moment(created).format('DD MMM, YYYY hh:mma')}
+      </Text>
+    </Layout.Vertical>
   )
 }
 
@@ -403,23 +452,15 @@ interface RenderActionsProps extends CellProps<TypesGitspaceConfig> {
 
 export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
   const { getString } = useStrings()
-  const space = useGetSpaceParam()
   const history = useHistory()
   const { routes } = useAppContext()
   const { showError, showSuccess } = useToaster()
   const details = row.original
   const { identifier, name, space_path } = details
-  // const { mutate: deleteGitspace, loading: deleteLoading } = useDeleteGitspace({})
 
-  const { mutate: deleteGitspace, loading: deleteLoading } = useMutate<any>({
-    verb: 'DELETE',
-    path: `/api/v1/gitspaces/${space}/${identifier}/+`
-  })
+  const { mutate: deleteGitspace, loading: deleteLoading } = useDeleteGitspaces({ gitspaceId: identifier || '' })
 
-  const { mutate: actionGitspace, loading: actionLoading } = useMutate({
-    verb: 'POST',
-    path: `/api/v1/gitspaces/${space}/${identifier}/+/actions`
-  })
+  const { mutate: actionGitspace, loading: actionLoading } = useGitspaceActions({ gitspaceId: identifier || '' })
 
   const [handleStopGitspace, hideModal] = useModalHook(() => {
     return (
@@ -542,7 +583,7 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
         try {
           e.preventDefault()
           e.stopPropagation()
-          await deleteGitspace({})
+          await deleteGitspace(identifier || '')
           showSuccess(getString('cde.deleteSuccess'))
           await refreshList()
         } catch (exception) {
@@ -583,7 +624,7 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
 export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig[]; refreshList: () => void }) => {
   const history = useHistory()
   const { getString } = useStrings()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
 
   const [currentRow, setCurrentRow] = useState<TypesGitspaceConfig>()
 
@@ -656,14 +697,42 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
     }
   }, [currentRow])
 
+  const extraColumns = standalone
+    ? []
+    : [
+        {
+          id: 'userid',
+          Header: getString('cde.listing.ownerAndCreated'),
+          Cell: OwnerAndCreatedAt
+        }
+      ]
+
+  const { data: tokenData, refetch } = useGetToken({
+    accountIdentifier: '',
+    projectIdentifier: '',
+    orgIdentifier: '',
+    gitspace_identifier: '',
+    lazy: true
+  })
+
+  const [selectedRowUrl, setSelectedRowUrl] = useState<string | undefined>('')
+
+  useEffect(() => {
+    if (tokenData) {
+      window.open(`${selectedRowUrl}&token=${tokenData?.gitspace_token}`, '_blank')
+    }
+  }, [tokenData])
+
   return (
     <Container>
       {data && (
         <TableV2<TypesGitspaceConfig>
-          className={css.table}
+          className={standalone ? css.table : css.cdeTable}
           onRowClick={row => {
-            const pathparamsList = row?.space_path?.split('/') || []
-            const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
+            // const pathparamsList = row?.space_path?.split('/') || []
+            // const projectIdentifier = pathparamsList[pathparamsList.length - 1] || ''
+
+            const [accountIdentifier, orgIdentifier, projectIdentifier] = row?.space_path?.split('/') || []
 
             if (row?.state === GitspaceStatus.RUNNING) {
               if (row?.ide === IDEType.VSCODE) {
@@ -672,7 +741,19 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
                   '_blank'
                 )
               } else {
-                window.open(row?.instance?.url || '', '_blank')
+                if (standalone) {
+                  window.open(row?.instance?.url || '', '_blank')
+                } else {
+                  setSelectedRowUrl(row.instance?.url || '')
+                  refetch({
+                    pathParams: {
+                      accountIdentifier,
+                      projectIdentifier,
+                      orgIdentifier,
+                      gitspace_identifier: row.identifier || ''
+                    }
+                  })
+                }
               }
             } else if (row?.state === GitspaceStatus.STOPPED) {
               setCurrentRow(row)
@@ -706,6 +787,7 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
               Header: getString('cde.lastActivated'),
               Cell: RenderLastActivity
             },
+            ...extraColumns,
             {
               id: 'action',
               Cell: (props: RenderActionsProps) => <RenderActions {...props} refreshList={refreshList} />

@@ -53,7 +53,7 @@ func (c *Controller) Delete(
 	gitspaceConfig.SpacePath = space.Path
 	if instance == nil {
 		gitspaceConfig.IsDeleted = true
-		err = c.gitspaceConfigStore.Update(ctx, gitspaceConfig)
+		err = c.gitspaceSvc.UpdateConfig(ctx, gitspaceConfig)
 		if err != nil {
 			return fmt.Errorf("failed to mark gitspace config as deleted: %w", err)
 		}
@@ -71,12 +71,17 @@ func (c *Controller) stopRunningGitspace(
 	config types.GitspaceConfig,
 ) error {
 	config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
-	c.updateGitspaceInstance(ctx, config.GitspaceInstance)
-
-	err := c.orchestrator.TriggerDeleteGitspace(ctx, config)
+	err := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
+	if err != nil {
+		return fmt.Errorf("failed to update instance: %w", err)
+	}
+	err = c.orchestrator.TriggerDeleteGitspace(ctx, config)
 	if err != nil {
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
-		c.updateGitspaceInstance(ctx, config.GitspaceInstance)
+		updatErr := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
+		if updatErr != nil {
+			return fmt.Errorf("failed to update instance: %w", updatErr)
+		}
 		return err
 	}
 

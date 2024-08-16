@@ -38,9 +38,9 @@ module.exports = {
   filename: 'remoteEntry.js',
   exposes: {
     './App': './src/App.tsx',
-    './Gitspaces': './src/cde/pages/Gitspaces/Gitspaces.tsx',
-    './GitspaceDetail': './src/cde/pages/GitspaceDetail/GitspaceDetail.tsx',
-    './GitspaceList': './src/cde/pages/GitspacesListing/GitspacesListing.tsx'
+    './Gitspaces': './src/cde-gitness/pages/GitspaceCreate/GitspaceCreate.tsx',
+    './GitspaceDetail': './src/cde-gitness/pages/GitspaceDetails/GitspaceDetails.tsx',
+    './GitspaceList': './src/cde-gitness/pages/GitspaceListing/GitspaceListing.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],

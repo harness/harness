@@ -5,9 +5,9 @@ import ReactTimeago from 'react-timeago'
 import { Circle } from 'iconoir-react'
 import type { IconName } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
-import { getIconByRepoType } from 'cde/components/CreateGitspace/components/SelectRepository/SelectRepository.utils'
 import type { TypesGitspaceConfig } from 'cde-gitness/services'
-import { GitspaceStatus } from 'cde/constants'
+import { GitspaceStatus } from 'cde-gitness/constants'
+import { getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
 import { getStatusColor, getStatusText } from '../GitspaceListing/ListGitspaces'
 
 export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loading?: boolean }) => {

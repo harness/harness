@@ -72,6 +72,7 @@ export interface AppProps {
     useLogsStreaming: Unknown
     useFeatureFlags: Unknown
     useGetSettingValue: Unknown
+    useGetUserSourceCodeManagers?: Unknown
   }>
 
   currentUser: Required<TypesUser>

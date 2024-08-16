@@ -1,8 +1,9 @@
 #!/bin/sh
 
 username={{ .Username }}
-password={{ .Password }}
+accessKey={{ .AccessKey }}
 homeDir={{ .HomeDir }}
+accessType={{ .AccessType }}
 
 # Check if the user already exists
 if id "$username" >/dev/null 2>&1; then
@@ -16,9 +17,12 @@ else
     fi
 fi
 
-# Set or update the user's password using chpasswd
-echo "$username:$password" | chpasswd
-
 # Changing ownership of everything inside user home to the newly created user
 chown -R $username:$username $homeDir
 echo "Changing ownership of dir $homeDir to $username."
+
+if $accessType = "ssh_key"; then
+    echo $accessKey > $homeDir/.ssh/authorized_keys
+else
+    echo "$username:$accessKey" | chpasswd
+fi

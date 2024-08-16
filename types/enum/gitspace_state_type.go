@@ -14,7 +14,10 @@
 
 package enum
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type GitspaceStateType string
 
@@ -42,22 +45,34 @@ const (
 
 func GetGitspaceStateFromInstance(
 	instanceState GitspaceInstanceStateType,
+	lastUpdateTime int64,
 ) (GitspaceStateType, error) {
 	switch instanceState {
 	case GitspaceInstanceStateRunning:
 		return GitspaceStateRunning, nil
 	case GitspaceInstanceStateDeleted:
 		return GitspaceStateStopped, nil
-	case GitspaceInstanceStateStarting:
-		return GitspaceStateStarting, nil
-	case GitspaceInstanceStateStopping:
-		return GitspaceStateStopping, nil
 	case GitspaceInstanceStateUninitialized:
 		return GitspaceStateUninitialized, nil
 	case GitspaceInstanceStateError,
 		GitspaceInstanceStateUnknown:
 		return GitspaceStateError, nil
+	case GitspaceInstanceStateStarting:
+		if lastUpdateTimeExceeded(lastUpdateTime) {
+			return GitspaceStateError, nil
+		}
+		return GitspaceStateStarting, nil
+	case GitspaceInstanceStateStopping:
+		if lastUpdateTimeExceeded(lastUpdateTime) {
+			return GitspaceStateError, nil
+		}
+		return GitspaceStateStopping, nil
 	default:
 		return GitspaceStateError, fmt.Errorf("unsupported gitspace instance state %s", string(instanceState))
 	}
+}
+
+func lastUpdateTimeExceeded(lastUpdateTime int64) bool {
+	duration := time.Minute * 10
+	return time.Since(time.UnixMilli(lastUpdateTime)) > duration
 }

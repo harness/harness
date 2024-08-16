@@ -157,7 +157,7 @@ func (d DockerProvider) Find(
 
 	volumeInspect, err := dockerClient.VolumeInspect(ctx, name)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't find the volume for %s : %w", name, err)
+		log.Err(err).Msgf("couldn't find the volume for %s", name)
 	}
 
 	infrastructure.Storage = volumeInspect.Name

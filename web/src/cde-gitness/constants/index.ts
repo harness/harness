@@ -11,3 +11,25 @@ export enum EnumGitspaceCodeRepoType {
   UNKNOWN = 'unknown',
   GITNESS = 'gitness'
 }
+
+export enum GitspaceStatus {
+  RUNNING = 'running',
+  STOPPED = 'stopped',
+  UNKNOWN = 'unknown',
+  ERROR = 'error',
+  STARTING = 'starting',
+  STOPPING = 'stopping',
+  UNINITIALIZED = 'uninitialized'
+}
+
+export enum GitspaceActionType {
+  START = 'start',
+  STOP = 'stop'
+}
+
+export enum GitspaceRegion {
+  USEast = 'us-east',
+  USWest = 'us-west',
+  Europe = 'Europe',
+  Australia = 'Australia'
+}

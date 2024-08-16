@@ -32,7 +32,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const defaultAccessKey = "Harness@123"
+const defaultPasswordRef = "harness_password"
 const defaultMachineUser = "harness"
 const gitspaceTimedOutInMintues = 5
 
@@ -128,7 +128,6 @@ func (c *Controller) startGitspaceAction(
 		return fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
 	}
 	config.GitspaceInstance = newGitspaceInstance
-	config.State, _ = enum.GetGitspaceStateFromInstance(newGitspaceInstance.State)
 	c.submitAsyncOps(ctx, config, enum.GitspaceActionTypeStart)
 	return nil
 }
@@ -146,20 +145,29 @@ func (c *Controller) asyncOperation(
 	switch action {
 	case enum.GitspaceActionTypeStart:
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateStarting
-		c.updateGitspaceInstance(ctxWithTimedOut, config.GitspaceInstance)
-
+		err := c.gitspaceSvc.UpdateInstance(ctxWithTimedOut, config.GitspaceInstance)
+		if err != nil {
+			log.Err(err).Msgf(
+				"failed to update gitspace instance during exec %q", config.GitspaceInstance.Identifier)
+		}
 		orchestrateErr = c.orchestrator.TriggerStartGitspace(ctxWithTimedOut, config)
 	case enum.GitspaceActionTypeStop:
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
-		c.updateGitspaceInstance(ctxWithTimedOut, config.GitspaceInstance)
-
+		err := c.gitspaceSvc.UpdateInstance(ctxWithTimedOut, config.GitspaceInstance)
+		if err != nil {
+			log.Err(err).Msgf(
+				"failed to update gitspace instance during exec %q", config.GitspaceInstance.Identifier)
+		}
 		orchestrateErr = c.orchestrator.TriggerStopGitspace(ctxWithTimedOut, config)
 	}
 
 	if orchestrateErr != nil {
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
-		c.updateGitspaceInstance(ctxWithTimedOut, config.GitspaceInstance)
-
+		err := c.gitspaceSvc.UpdateInstance(ctxWithTimedOut, config.GitspaceInstance)
+		if err != nil {
+			log.Err(err).Msgf(
+				"failed to update gitspace instance during exec %q", config.GitspaceInstance.Identifier)
+		}
 		errChannel <- fmt.Errorf("failed to start/stop gitspace: %s %w", config.Identifier, orchestrateErr)
 	}
 }
@@ -201,7 +209,6 @@ func (c *Controller) submitAsyncOps(
 }
 
 func (c *Controller) createGitspaceInstance(config *types.GitspaceConfig) (*types.GitspaceInstance, error) {
-	codeServerPassword := defaultAccessKey
 	gitspaceMachineUser := defaultMachineUser
 	now := time.Now().UnixMilli()
 	suffixUID, err := gonanoid.Generate(allowedUIDAlphabet, 6)
@@ -221,9 +228,14 @@ func (c *Controller) createGitspaceInstance(config *types.GitspaceConfig) (*type
 		TotalTimeUsed:    0,
 	}
 	if config.IDE == enum.IDETypeVSCodeWeb || config.IDE == enum.IDETypeVSCode {
-		gitspaceInstance.AccessKey = &codeServerPassword
-		gitspaceInstance.AccessType = enum.GitspaceAccessTypeUserCredentials
 		gitspaceInstance.MachineUser = &gitspaceMachineUser
+	}
+	gitspaceInstance.AccessType = enum.GitspaceAccessTypeSSHKey
+	gitspaceInstance.AccessKeyRef = &config.SSHTokenIdentifier
+	if len(config.SSHTokenIdentifier) == 0 {
+		ref := strings.Clone(defaultPasswordRef)
+		gitspaceInstance.AccessKeyRef = &ref
+		gitspaceInstance.AccessType = enum.GitspaceAccessTypeUserCredentials
 	}
 	return gitspaceInstance, nil
 }
@@ -240,7 +252,7 @@ func (c *Controller) gitspaceBusyOperation(
 		return fmt.Errorf("gitspace start/stop is already pending for : %q", config.Identifier)
 	} else if config.GitspaceInstance.State.IsBusyStatus() {
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
-		if err := c.gitspaceInstanceStore.Update(ctx, config.GitspaceInstance); err != nil {
+		if err := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance); err != nil {
 			return fmt.Errorf("failed to update gitspace config for %s %w", config.Identifier, err)
 		}
 	}
@@ -265,10 +277,9 @@ func (c *Controller) stopGitspaceAction(
 		return err
 	}
 	config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
-	if err = c.gitspaceInstanceStore.Update(ctx, config.GitspaceInstance); err != nil {
+	if err = c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance); err != nil {
 		return fmt.Errorf("failed to update gitspace config for stopping %s %w", config.Identifier, err)
 	}
-	config.State, _ = enum.GetGitspaceStateFromInstance(savedGitspaceInstance.State)
 	c.submitAsyncOps(ctx, config, enum.GitspaceActionTypeStop)
 	return nil
 }
@@ -296,15 +307,4 @@ func (c *Controller) emitGitspaceConfigEvent(
 		EventType:  eventType,
 		Timestamp:  time.Now().UnixNano(),
 	})
-}
-
-func (c *Controller) updateGitspaceInstance(
-	ctx context.Context,
-	instance *types.GitspaceInstance,
-) {
-	err := c.gitspaceInstanceStore.Update(ctx, instance)
-	if err != nil {
-		log.Err(err).Msgf(
-			"failed to update gitspace instance during exec %q", instance.Identifier)
-	}
 }

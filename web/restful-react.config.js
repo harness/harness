@@ -22,11 +22,11 @@ const customGenerator = require('./scripts/swagger-custom-generator.js')
 
 module.exports = {
   code: {
-    output: 'src/services/code/index.tsx',
-    file: 'src/services/code/swagger.yaml',
+    output: 'src/services/cde/index.tsx',
+    file: 'src/services/cde/swagger.yaml',
     customImport: `import { getConfig } from "../config";`,
     customProps: {
-      base: `{getConfig("code/api/v1")}`
+      base: `{getConfig("cde/api/v1")}`
     }
   }
 }

@@ -46,10 +46,10 @@ const (
         gits_last_used,           
         gits_total_time_used,     
         gits_tracked_changes,
-		gits_access_key,
 		gits_access_type,
 		gits_machine_user,
-		gits_uid`
+		gits_uid,
+		gits_access_key_ref`
 	gitspaceInstanceSelectColumns = "gits_id," + gitspaceInstanceInsertColumns
 	gitspaceInstanceTable         = `gitspaces`
 )
@@ -65,8 +65,8 @@ type gitspaceInstance struct {
 	LastUsed         int64                          `db:"gits_last_used"`
 	TotalTimeUsed    int64                          `db:"gits_total_time_used"`
 	TrackedChanges   null.String                    `db:"gits_tracked_changes"`
-	AccessKey        null.String                    `db:"gits_access_key"`
 	AccessType       enum.GitspaceAccessType        `db:"gits_access_type"`
+	AccessKeyRef     null.String                    `db:"gits_access_key_ref"`
 	MachineUser      null.String                    `db:"gits_machine_user"`
 	Identifier       string                         `db:"gits_uid"`
 	Created          int64                          `db:"gits_created"`
@@ -118,10 +118,10 @@ func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *typ
 			gitspaceInstance.LastUsed,
 			gitspaceInstance.TotalTimeUsed,
 			gitspaceInstance.TrackedChanges,
-			gitspaceInstance.AccessKey,
 			gitspaceInstance.AccessType,
 			gitspaceInstance.MachineUser,
 			gitspaceInstance.Identifier,
+			gitspaceInstance.AccessKeyRef,
 		).
 		Suffix(ReturningClause + "gits_id")
 	sql, args, err := stmt.ToSql()
@@ -251,8 +251,8 @@ func (g gitspaceInstanceStore) mapToGitspaceInstance(
 		LastUsed:         in.LastUsed,
 		TotalTimeUsed:    in.TotalTimeUsed,
 		TrackedChanges:   in.TrackedChanges.Ptr(),
-		AccessKey:        in.AccessKey.Ptr(),
 		AccessType:       in.AccessType,
+		AccessKeyRef:     in.AccessKeyRef.Ptr(),
 		MachineUser:      in.MachineUser.Ptr(),
 		SpaceID:          in.SpaceID,
 		Created:          in.Created,

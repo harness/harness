@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/harness/gitness/types/enum"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -32,6 +34,8 @@ type Exec struct {
 	DockerClient   *client.Client
 	HomeDir        string
 	UserIdentifier string
+	AccessKey      string
+	AccessType     enum.GitspaceAccessType
 }
 
 type execResult struct {

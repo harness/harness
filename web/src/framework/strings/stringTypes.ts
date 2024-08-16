@@ -215,6 +215,7 @@ export interface StringsMap {
   'cde.listing.error': string
   'cde.listing.offline': string
   'cde.listing.online': string
+  'cde.listing.ownerAndCreated': string
   'cde.listing.starting': string
   'cde.listing.stopping': string
   'cde.logs': string

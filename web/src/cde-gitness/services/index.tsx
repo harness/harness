@@ -1821,7 +1821,7 @@ export type UseListGitspacesProps = Omit<
  */
 export const useListGitspaces = (props: UseListGitspacesProps) =>
   useGet<TypesGitspaceConfig[], UsererrorError, ListGitspacesQueryParams, void>(`/gitspaces`, {
-    base: getConfig('api/v1'),
+    base: getConfig('cde/api/v1'),
     ...props
   })
 

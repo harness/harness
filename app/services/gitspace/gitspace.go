@@ -84,7 +84,7 @@ func (c *Service) ListGitspacesForSpace(
 			gitspaceConfig.GitspaceInstance = instance
 			gitspaceConfig.SpacePath = space.Path
 			if instance != nil {
-				gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State)
+				gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State, instance.Updated)
 				if err != nil {
 					return err
 				}

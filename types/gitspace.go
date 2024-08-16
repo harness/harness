@@ -41,6 +41,7 @@ type GitspaceConfig struct {
 	SpacePath                       string                    `json:"space_path"`
 	Created                         int64                     `json:"created"`
 	Updated                         int64                     `json:"updated"`
+	SSHTokenIdentifier              string                    `json:"ssh_token_identifier"`
 }
 
 type GitspaceInstance struct {
@@ -56,6 +57,7 @@ type GitspaceInstance struct {
 	TrackedChanges   *string                        `json:"tracked_changes"`
 	AccessKey        *string                        `json:"access_key,omitempty"`
 	AccessType       enum.GitspaceAccessType        `json:"access_type"`
+	AccessKeyRef     *string                        `json:"access_key_ref"`
 	MachineUser      *string                        `json:"machine_user,omitempty"`
 	SpacePath        string                         `json:"space_path"`
 	SpaceID          int64                          `json:"-"`

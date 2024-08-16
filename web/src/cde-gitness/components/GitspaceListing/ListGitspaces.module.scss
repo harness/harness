@@ -28,6 +28,20 @@
   }
 }
 
+.cdeTable {
+  margin-top: var(--spacing-large);
+
+  div[class*='TableV2--cell'] {
+    width: auto !important;
+  }
+
+  div[class*='TableV2--cells'],
+  div[class*='TableV2--header'] {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr 1fr 0.7fr 50px;
+  }
+}
+
 .popover {
   > div[class*='popover-arrow'] {
     display: none;

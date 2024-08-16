@@ -98,7 +98,7 @@ func (c *Controller) filterAndPopulateInstanceDetails(
 		gitspaceConfig.GitspaceInstance = instance
 
 		if instance != nil {
-			gitspaceStateType, stateErr := enum.GetGitspaceStateFromInstance(instance.State)
+			gitspaceStateType, stateErr := enum.GetGitspaceStateFromInstance(instance.State, instance.Updated)
 			if stateErr != nil {
 				return nil, stateErr
 			}

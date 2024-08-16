@@ -50,6 +50,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/scm"
+	secret2 "github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/converter"
@@ -365,7 +366,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	vsCode := ide.ProvideVSCodeService(vsCodeConfig)
 	vsCodeWebConfig := server.ProvideIDEVSCodeWebConfig(config)
 	vsCodeWeb := ide.ProvideVSCodeWebService(vsCodeWebConfig)
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter4, orchestratorConfig, vsCode, vsCodeWeb)
+	passwordResolver := secret2.ProvidePasswordResolver()
+	resolverFactory := secret2.ProvideResolverFactory(passwordResolver)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, reporter4, orchestratorConfig, vsCode, vsCodeWeb, resolverFactory)
 	gitspaceEventStore := database.ProvideGitspaceEventStore(db)
 	gitspaceController := gitspace2.ProvideController(transactor, authorizer, infraproviderService, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, reporter4, orchestratorOrchestrator, gitspaceEventStore, statefulLogger, scmSCM, repoStore, gitspaceService)
 	rule := migrate.ProvideRuleImporter(ruleStore, transactor, principalStore)

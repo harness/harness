@@ -7,12 +7,8 @@ import { Color } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { Icon } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
-import {
-  getRepoIdFromURL,
-  getRepoNameFromURL,
-  isValidUrl
-} from 'cde/components/CreateGitspace/components/SelectRepository/SelectRepository.utils'
-import { BranchInput } from 'cde/components/CreateGitspace/components/BranchInput/BranchInput'
+import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from 'cde-gitness/utils/SelectRepository.utils'
+import { BranchInput } from 'cde-gitness/components/BranchInput/BranchInput'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import NewRepoModalButton from 'components/NewRepoModalButton/NewRepoModalButton'
 import { RepoCreationType } from 'utils/GitUtils'

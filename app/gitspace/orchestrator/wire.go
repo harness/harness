@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/scm"
+	"github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -39,6 +40,7 @@ func ProvideOrchestrator(
 	config *Config,
 	vsCodeService *ide.VSCode,
 	vsCodeWebService *ide.VSCodeWeb,
+	secretResolverFactory *secret.ResolverFactory,
 ) Orchestrator {
 	return NewOrchestrator(
 		scm,
@@ -49,5 +51,6 @@ func ProvideOrchestrator(
 		config,
 		vsCodeService,
 		vsCodeWebService,
+		secretResolverFactory,
 	)
 }

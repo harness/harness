@@ -48,7 +48,8 @@ const (
 		gconf_created,
 		gconf_updated,
         gconf_is_deleted,
-        gconf_code_repo_ref
+        gconf_code_repo_ref,
+		gconf_ssh_token_identifier
 	`
 	gitspaceConfigsTable        = `gitspace_configs`
 	ReturningClause             = "RETURNING "
@@ -74,6 +75,7 @@ type gitspaceConfig struct {
 	Created                 int64                     `db:"gconf_created"`
 	Updated                 int64                     `db:"gconf_updated"`
 	IsDeleted               bool                      `db:"gconf_is_deleted"`
+	SSHTokenIdentifier      string                    `db:"gconf_ssh_token_identifier"`
 }
 
 var _ store.GitspaceConfigStore = (*gitspaceConfigStore)(nil)
@@ -173,6 +175,7 @@ func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.G
 			gitspaceConfig.Updated,
 			gitspaceConfig.IsDeleted,
 			gitspaceConfig.CodeRepoRef,
+			gitspaceConfig.SSHTokenIdentifier,
 		).
 		Suffix(ReturningClause + "gconf_id")
 	sql, args, err := stmt.ToSql()
@@ -228,6 +231,7 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 		IsDeleted:               config.IsDeleted,
 		Created:                 config.Created,
 		Updated:                 config.Updated,
+		SSHTokenIdentifier:      config.SSHTokenIdentifier,
 	}
 }
 
@@ -299,6 +303,7 @@ func (s *gitspaceConfigStore) mapToGitspaceConfig(
 		CodeRepoIsPrivate:       in.CodeRepoIsPrivate,
 		Created:                 in.Created,
 		Updated:                 in.Updated,
+		SSHTokenIdentifier:      in.SSHTokenIdentifier,
 	}
 	return res, nil
 }

@@ -78,7 +78,7 @@ func (s *Service) handleGitspaceInfraEvent(
 	default:
 		return fmt.Errorf("unknown event type: %s", event.Payload.Type)
 	}
-
+	instance.Updated = time.Now().UnixMilli()
 	err = s.gitspaceSvc.UpdateInstance(ctx, instance)
 	if err != nil {
 		return fmt.Errorf("failed to update gitspace instance: %w", err)

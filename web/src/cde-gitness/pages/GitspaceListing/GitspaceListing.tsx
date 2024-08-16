@@ -11,22 +11,21 @@ import {
 } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
-import { useGet } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { LIST_FETCHING_LIMIT, PageBrowserProps, getErrorMessage } from 'utils/Utils'
-import noSpace from 'cde/images/no-gitspace.svg?url'
+import { PageBrowserProps, getErrorMessage } from 'utils/Utils'
+import noSpace from 'cde-gitness/assests/no-gitspace.svg?url'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ListGitspaces } from 'cde-gitness/components/GitspaceListing/ListGitspaces'
-import type { TypesGitspaceConfig } from 'cde-gitness/services'
 import CDEHomePage from 'cde-gitness/components/CDEHomePage/CDEHomePage'
+import { useLisitngApi } from '../../hooks/useLisitngApi'
 import css from './GitspacesListing.module.scss'
 import zeroDayCss from 'cde-gitness/components/CDEHomePage/CDEHomePage.module.scss'
 
-export const GitspaceListing = () => {
+const GitspaceListing = () => {
   const space = useGetSpaceParam()
   const history = useHistory()
   const { getString } = useStrings()
@@ -35,17 +34,7 @@ export const GitspaceListing = () => {
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
 
-  const {
-    data = '',
-    loading = false,
-    error = undefined,
-    refetch,
-    response
-  } = useGet<TypesGitspaceConfig[]>({
-    path: `/api/v1/spaces/${space}/+/gitspaces`,
-    queryParams: { page, limit: LIST_FETCHING_LIMIT },
-    debounce: 500
-  })
+  const { data = '', loading = false, error = undefined, refetch, response } = useLisitngApi({ page })
 
   // useEffect(() => {
   //   if (!data && !loading) {
@@ -112,3 +101,5 @@ export const GitspaceListing = () => {
     </>
   )
 }
+
+export default GitspaceListing

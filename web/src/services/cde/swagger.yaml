@@ -30,7 +30,7 @@ paths:
       summary: List gitspaces for account
       tags:
         - gitspaces
-  /accounts/{accountIdentifier}/infraproviders/{infraProviderConfigIdentifier}/resources:
+  /accounts/{accountIdentifier}/infraproviders/{infraprovider_identifier}/resources:
     get:
       operationId: listInfraProviderResourcesForAccount
       parameters:
@@ -42,7 +42,7 @@ paths:
             type: string
         - description: infra Provider Config Identifier.
           in: path
-          name: infraProviderConfigIdentifier
+          name: infraprovider_identifier
           required: true
           schema:
             type: string
@@ -138,9 +138,27 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/OpenapiGetGitspaceResponse'
+                  $ref: '#/components/schemas/TypesGitspaceConfig'
                 type: array
           description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
       summary: List gitspaces
       tags:
         - gitspaces
@@ -175,12 +193,36 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenapiCreateGitspaceResponse'
+                $ref: '#/components/schemas/TypesGitspaceConfig'
           description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
       summary: Create gitspace config
       tags:
-        - gitspaceconfigs
-  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}:
+        - gitspaces
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspace_identifier}:
     delete:
       operationId: deleteGitspace
       parameters:
@@ -204,18 +246,42 @@ paths:
             type: string
         - description: gitspace identifier.
           in: path
-          name: gitspaceIdentifier
+          name: gitspace_identifier
           required: true
           schema:
             type: string
       responses:
         '204':
           description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
       summary: Delete gitspace config
       tags:
-        - gitspaceconfigs
+        - gitspaces
     get:
-      operationId: getGitspace
+      operationId: findGitspace
       parameters:
         - description: account identifier.
           in: path
@@ -237,7 +303,7 @@ paths:
             type: string
         - description: gitspace identifier.
           in: path
-          name: gitspaceIdentifier
+          name: gitspace_identifier
           required: true
           schema:
             type: string
@@ -246,8 +312,32 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenapiGetGitspaceResponse'
+                $ref: '#/components/schemas/TypesGitspaceConfig'
           description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
       summary: Get gitspace
       tags:
         - gitspaces
@@ -274,7 +364,7 @@ paths:
             type: string
         - description: gitspace identifier.
           in: path
-          name: gitspaceIdentifier
+          name: gitspace_identifier
           required: true
           schema:
             type: string
@@ -284,12 +374,40 @@ paths:
             schema:
               $ref: '#/components/schemas/OpenapiUpdateGitspaceRequest'
       responses:
-        '204':
-          description: No Content
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesGitspaceConfig'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
       summary: Update gitspace config
       tags:
-        - gitspaceconfigs
-  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}/actions:
+        - gitspaces
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspace_identifier}/actions:
     post:
       operationId: gitspaceAction
       parameters:
@@ -313,7 +431,7 @@ paths:
             type: string
         - description: gitspace identifier.
           in: path
-          name: gitspaceIdentifier
+          name: gitspace_identifier
           required: true
           schema:
             type: string
@@ -324,11 +442,15 @@ paths:
               $ref: '#/components/schemas/OpenapiGitspaceActionRequest'
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesGitspaceConfig'
           description: OK
       summary: Gitspace action
       tags:
         - gitspaces
-  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}/events:
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspace_identifier}/events:
     get:
       operationId: getGitspaceEvents
       parameters:
@@ -352,7 +474,7 @@ paths:
             type: string
         - description: gitspace identifier.
           in: path
-          name: gitspaceIdentifier
+          name: gitspace_identifier
           required: true
           schema:
             type: string
@@ -362,13 +484,13 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/OpenapiGetGitspaceEventResponse'
+                  $ref: '#/components/schemas/TypesGitspaceEventResponse'
                 type: array
           description: OK
       summary: Get gitspace events
       tags:
         - gitspaces
-  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}/logs:
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspace_identifier}/logs:
     get:
       operationId: getGitspaceInstanceLogs
       parameters:
@@ -392,7 +514,7 @@ paths:
             type: string
         - description: gitspace identifier.
           in: path
-          name: gitspaceIdentifier
+          name: gitspace_identifier
           required: true
           schema:
             type: string
@@ -401,12 +523,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenapiGetGitspaceLogsResponse'
+                type: string
           description: OK
       summary: Get gitspace instance logs
       tags:
         - gitspaces
-  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspaceIdentifier}/token:
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspace_identifier}/token:
     get:
       operationId: getToken
       parameters:
@@ -430,7 +552,7 @@ paths:
             type: string
         - description: gitspace identifier.
           in: path
-          name: gitspaceIdentifier
+          name: gitspace_identifier
           required: true
           schema:
             type: string
@@ -442,6 +564,67 @@ paths:
                 $ref: '#/components/schemas/OpenapiGetTokenResponse'
           description: OK
       summary: Get gitspace token
+      tags:
+        - gitspaces
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/lookup-repo:
+    post:
+      operationId: repoLookupForGitspace
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: org identifier.
+          in: path
+          name: orgIdentifier
+          required: true
+          schema:
+            type: string
+        - description: project identifier.
+          in: path
+          name: projectIdentifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiLookupRepoGitspaceRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScmCodeRepositoryResponse'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Validate git repo for gitspaces
       tags:
         - gitspaces
   /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders:
@@ -503,20 +686,44 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OpenapiCreateInfraProviderRequest'
+              $ref: '#/components/schemas/OpenapiCreateInfraProviderConfigRequest'
       responses:
         '201':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenapiCreateInfraProviderResponse'
+                $ref: '#/components/schemas/TypesInfraProviderConfig'
           description: Created
-      summary: Create InfraProvider
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Create infraProvider config
       tags:
         - infraproviders
-  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraProviderConfigIdentifier}:
-    delete:
-      operationId: deleteInfraProvider
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraprovider_identifier}:
+    get:
+      operationId: getInfraProvider
       parameters:
         - description: account identifier.
           in: path
@@ -538,17 +745,39 @@ paths:
             type: string
         - description: infra Provider Config Identifier.
           in: path
-          name: infraProviderConfigIdentifier
+          name: infraprovider_identifier
           required: true
           schema:
             type: string
       responses:
-        '204':
-          description: No Content
-      summary: Delete infraprovider
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesInfraProviderConfig'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Get infraProviderConfig
       tags:
         - infraproviders
-  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraProviderConfigIdentifier}/resources:
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraprovider_identifier}/resources:
     get:
       operationId: listInfraProviderResources
       parameters:
@@ -572,7 +801,7 @@ paths:
             type: string
         - description: infra Provider Config Identifier.
           in: path
-          name: infraProviderConfigIdentifier
+          name: infraprovider_identifier
           required: true
           schema:
             type: string
@@ -586,86 +815,6 @@ paths:
       summary: List infraProvider Resources
       tags:
         - infraproviderresources
-    post:
-      operationId: createInfraProviderResource
-      parameters:
-        - description: account identifier.
-          in: path
-          name: accountIdentifier
-          required: true
-          schema:
-            type: string
-        - description: org identifier.
-          in: path
-          name: orgIdentifier
-          required: true
-          schema:
-            type: string
-        - description: project identifier.
-          in: path
-          name: projectIdentifier
-          required: true
-          schema:
-            type: string
-        - description: infra Provider Config Identifier.
-          in: path
-          name: infraProviderConfigIdentifier
-          required: true
-          schema:
-            type: string
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenapiCreateInfraProviderResourceResponse'
-          description: Created
-      summary: Create InfraProvider Resource
-      tags:
-        - infraproviderresources
-  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraProviderConfigIdentifier}/templates:
-    post:
-      operationId: createInfraProviderTemplate
-      parameters:
-        - description: account identifier.
-          in: path
-          name: accountIdentifier
-          required: true
-          schema:
-            type: string
-        - description: org identifier.
-          in: path
-          name: orgIdentifier
-          required: true
-          schema:
-            type: string
-        - description: project identifier.
-          in: path
-          name: projectIdentifier
-          required: true
-          schema:
-            type: string
-        - description: infra Provider Config Identifier.
-          in: path
-          name: infraProviderConfigIdentifier
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpenapiCreateInfraProviderTemplateRequest'
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenapiCreateInfraProviderTemplateResponse'
-          description: Created
-      summary: Create InfraProvider Template
-      tags:
-        - infraproviders
 components:
   schemas:
     EnumCodeRepoAccessType:
@@ -683,6 +832,12 @@ components:
       type: string
     EnumGitspaceAccessType:
       enum:
+        - jwt_token
+        - user_credentials
+        - ssh_key
+      type: string
+    EnumGitspaceAccessTypeType2:
+      enum:
         - jwtToken
         - password
         - sshKey
@@ -691,6 +846,15 @@ components:
       enum:
         - start
         - stop
+      type: string
+    EnumGitspaceCodeRepoType:
+      enum:
+        - github
+        - gitlab
+        - harness_code
+        - bitbucket
+        - unknown
+        - gitness
       type: string
     EnumGitspaceEntityType:
       enum:
@@ -715,7 +879,26 @@ components:
         - agentGitspaceStateReportStopped
         - agentGitspaceStateReportUnknown
       type: string
+    EnumGitspaceInstanceStateType:
+      enum:
+        - running
+        - uninitialized
+        - unknown
+        - error
+        - deleted
+        - starting
+        - stopping
+      type: string
     EnumGitspaceStateType:
+      enum:
+        - running
+        - stopped
+        - error
+        - uninitialized
+        - starting
+        - stopping
+      type: string
+    EnumGitspaceStateTypeType2:
       enum:
         - running
         - stopped
@@ -723,8 +906,19 @@ components:
       type: string
     EnumIDEType:
       enum:
+        - vs_code
+        - vs_code_web
+      type: string
+    EnumIDETypeType2:
+      enum:
         - vsCode
         - vsCodeWeb
+      type: string
+    EnumInfraProviderType:
+      enum:
+        - docker
+        - harness_gcp
+        - harness_cloud
       type: string
     EnumProviderType:
       enum:
@@ -733,23 +927,63 @@ components:
         - harnessOVHCloud
         - docker
       type: string
+    InfraproviderResourceInput:
+      properties:
+        cpu:
+          nullable: true
+          type: string
+        disk:
+          nullable: true
+          type: string
+        gateway_host:
+          nullable: true
+          type: string
+        gateway_port:
+          nullable: true
+          type: string
+        identifier:
+          type: string
+        infra_provider_type:
+          $ref: '#/components/schemas/EnumInfraProviderType'
+        memory:
+          nullable: true
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        network:
+          nullable: true
+          type: string
+        region:
+          items:
+            type: string
+          nullable: true
+          type: array
+        template_identifier:
+          nullable: true
+          type: string
+      type: object
     OpenapiCreateGitspaceRequest:
       properties:
         branch:
           type: string
-        code_repo_id:
+        code_repo_ref:
+          nullable: true
           type: string
         code_repo_type:
-          $ref: '#/components/schemas/EnumCodeRepoType'
+          $ref: '#/components/schemas/EnumGitspaceCodeRepoType'
         code_repo_url:
           type: string
         devcontainer_path:
-          type: string
-        id:
+          nullable: true
           type: string
         ide:
           $ref: '#/components/schemas/EnumIDEType'
-        infra_provider_resource_id:
+        identifier:
           type: string
         metadata:
           additionalProperties:
@@ -758,43 +992,18 @@ components:
           type: object
         name:
           type: string
-        prebuild_repo_id:
+        resource_identifier:
+          type: string
+        resource_space_ref:
+          type: string
+        space_ref:
+          type: string
+        ssh_token_identifier:
           type: string
       type: object
-    OpenapiCreateGitspaceResponse:
+    OpenapiCreateInfraProviderConfigRequest:
       properties:
-        access_key:
-          type: string
-        access_type:
-          $ref: '#/components/schemas/EnumGitspaceAccessType'
-        config:
-          $ref: '#/components/schemas/TypesGitspaceConfigResponse'
-        created:
-          type: integer
-        id:
-          type: string
-        last_used:
-          type: integer
-        machine_user:
-          type: string
-        resource_usage:
-          type: string
-        space_path:
-          type: string
-        state:
-          $ref: '#/components/schemas/EnumGitspaceStateType'
-        total_time_used:
-          type: integer
-        tracked_changes:
-          type: string
-        updated:
-          type: integer
-        url:
-          type: string
-      type: object
-    OpenapiCreateInfraProviderRequest:
-      properties:
-        id:
+        identifier:
           type: string
         metadata:
           additionalProperties:
@@ -802,9 +1011,16 @@ components:
           nullable: true
           type: object
         name:
+          type: string
+        resources:
+          items:
+            $ref: '#/components/schemas/InfraproviderResourceInput'
+          nullable: true
+          type: array
+        space_ref:
           type: string
         type:
-          $ref: '#/components/schemas/EnumProviderType'
+          $ref: '#/components/schemas/EnumInfraProviderType'
       type: object
     OpenapiCreateInfraProviderResourceResponse:
       properties:
@@ -883,30 +1099,12 @@ components:
         url:
           type: string
       type: object
-    OpenapiGetGitspaceEventResponse:
-      properties:
-        entity_type:
-          $ref: '#/components/schemas/EnumGitspaceEntityType'
-        entity_uid:
-          type: string
-        event:
-          $ref: '#/components/schemas/EnumGitspaceEventType'
-        event_time:
-          type: string
-        message:
-          type: string
-        timestamp:
-          type: integer
-      type: object
-    OpenapiGetGitspaceLogsResponse:
-      nullable: true
-      type: string
     OpenapiGetGitspaceResponse:
       properties:
         access_key:
           type: string
         access_type:
-          $ref: '#/components/schemas/EnumGitspaceAccessType'
+          $ref: '#/components/schemas/EnumGitspaceAccessTypeType2'
         config:
           $ref: '#/components/schemas/TypesGitspaceConfigResponse'
         created:
@@ -922,7 +1120,7 @@ components:
         space_path:
           type: string
         state:
-          $ref: '#/components/schemas/EnumGitspaceStateType'
+          $ref: '#/components/schemas/EnumGitspaceStateTypeType2'
         total_time_used:
           type: integer
         tracked_changes:
@@ -947,6 +1145,13 @@ components:
         $ref: '#/components/schemas/TypesInfraProviderResourceResponse'
       nullable: true
       type: array
+    OpenapiLookupRepoGitspaceRequest:
+      properties:
+        space_ref:
+          type: string
+        url:
+          type: string
+      type: object
     OpenapiUpdateGitspaceRequest:
       properties:
         branch:
@@ -962,7 +1167,7 @@ components:
         id:
           type: string
         ide:
-          $ref: '#/components/schemas/EnumIDEType'
+          $ref: '#/components/schemas/EnumIDETypeType2'
         infra_provider_resource_id:
           type: string
         metadata:
@@ -973,6 +1178,52 @@ components:
         name:
           type: string
         prebuild_repo_id:
+          type: string
+      type: object
+    ScmCodeRepositoryResponse:
+      properties:
+        branch:
+          type: string
+        is_private:
+          type: boolean
+        url:
+          type: string
+      type: object
+    TypesGitspaceConfig:
+      properties:
+        branch:
+          type: string
+        code_repo_ref:
+          nullable: true
+          type: string
+        code_repo_type:
+          $ref: '#/components/schemas/EnumGitspaceCodeRepoType'
+        code_repo_url:
+          type: string
+        created:
+          type: integer
+        devcontainer_path:
+          nullable: true
+          type: string
+        ide:
+          $ref: '#/components/schemas/EnumIDEType'
+        identifier:
+          type: string
+        instance:
+          $ref: '#/components/schemas/TypesGitspaceInstance'
+        name:
+          type: string
+        resource_identifier:
+          type: string
+        space_path:
+          type: string
+        ssh_token_identifier:
+          type: string
+        state:
+          $ref: '#/components/schemas/EnumGitspaceStateType'
+        updated:
+          type: integer
+        user_id:
           type: string
       type: object
     TypesGitspaceConfigResponse:
@@ -992,7 +1243,7 @@ components:
         id:
           type: string
         ide:
-          $ref: '#/components/schemas/EnumIDEType'
+          $ref: '#/components/schemas/EnumIDETypeType2'
         infra_provider_resource_id:
           type: string
         name:
@@ -1007,6 +1258,127 @@ components:
           type: integer
         user_id:
           type: string
+      type: object
+    TypesGitspaceEventResponse:
+      properties:
+        created:
+          type: integer
+        entity_type:
+          $ref: '#/components/schemas/EnumGitspaceEntityType'
+        entity_uid:
+          type: string
+        event:
+          $ref: '#/components/schemas/EnumGitspaceEventType'
+        event_time:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: integer
+      type: object
+    TypesGitspaceInstance:
+      properties:
+        access_key:
+          nullable: true
+          type: string
+        access_type:
+          $ref: '#/components/schemas/EnumGitspaceAccessType'
+        created:
+          type: integer
+        identifier:
+          type: string
+        last_used:
+          type: integer
+        machine_user:
+          nullable: true
+          type: string
+        resource_usage:
+          nullable: true
+          type: string
+        space_path:
+          type: string
+        state:
+          $ref: '#/components/schemas/EnumGitspaceInstanceStateType'
+        total_time_used:
+          type: integer
+        tracked_changes:
+          nullable: true
+          type: string
+        updated:
+          type: integer
+        url:
+          nullable: true
+          type: string
+      type: object
+    TypesInfraProviderConfig:
+      properties:
+        created:
+          type: integer
+        identifier:
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        resources:
+          items:
+            $ref: '#/components/schemas/TypesInfraProviderResource'
+          nullable: true
+          type: array
+        space_path:
+          type: string
+        type:
+          $ref: '#/components/schemas/EnumInfraProviderType'
+        updated:
+          type: integer
+      type: object
+    TypesInfraProviderResource:
+      properties:
+        config_identifier:
+          type: string
+        cpu:
+          nullable: true
+          type: string
+        created:
+          type: integer
+        disk:
+          nullable: true
+          type: string
+        gateway_host:
+          nullable: true
+          type: string
+        gateway_port:
+          nullable: true
+          type: string
+        identifier:
+          type: string
+        infra_provider_type:
+          $ref: '#/components/schemas/EnumInfraProviderType'
+        memory:
+          nullable: true
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        network:
+          nullable: true
+          type: string
+        region:
+          type: string
+        space_path:
+          type: string
+        template_identifier:
+          nullable: true
+          type: string
+        updated:
+          type: integer
       type: object
     TypesInfraProviderResourceRequest:
       properties:
@@ -1078,6 +1450,14 @@ components:
           type: string
         updated:
           type: integer
+      type: object
+    UsererrorError:
+      properties:
+        message:
+          type: string
+        values:
+          additionalProperties: {}
+          type: object
       type: object
   securitySchemes:
     bearerAuth:

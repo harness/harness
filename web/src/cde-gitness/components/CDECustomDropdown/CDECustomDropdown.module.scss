@@ -1,0 +1,54 @@
+.main {
+  width: 100% !important;
+  display: flex !important;
+  padding: var(--spacing-large) 0 !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.button {
+  width: 100% !important;
+  height: 50px !important;
+  justify-content: space-between !important;
+  font-size: var(--font-size-normal);
+  --border: 1px solid var(--grey-200) !important;
+  --background-color-active: var(--white) !important;
+  --box-shadow: none !important;
+  white-space: nowrap !important;
+
+  &:active,
+  &:hover,
+  &[class*='bp3-active'] {
+    --border: 1px solid var(--primary-7) !important;
+  }
+
+  :global(> .bp3-button-text) {
+    width: 100%;
+    margin-left: var(--spacing-small);
+  }
+}
+
+.popover {
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+
+  .listContainer {
+    min-height: 50px;
+    overflow-y: auto;
+
+    :global {
+      .bp3-menu {
+        li {
+          padding: var(--spacing-small) !important;
+        }
+      }
+
+      a.bp3-menu-item:hover,
+      .bp3-active {
+        background: var(--primary-1) !important;
+        color: var(--grey-1000) !important;
+      }
+    }
+  }
+}

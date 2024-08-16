@@ -10,6 +10,7 @@ else
 fi
 
 username={{ .Username }}
+accessType={{ .AccessType }}
 
 # Configure SSH to allow this user
 config_file='/etc/ssh/sshd_config'
@@ -22,10 +23,18 @@ else
     echo "AllowUsers $username" >> $config_file
 fi
 
+if $accessType = "ssh_key"; then
+# Ensure password authentication is disabled
+sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' $config_file
+if ! grep -q "^PasswordAuthentication no" $config_file; then
+    echo "PasswordAuthentication no" >> $config_file
+fi
+else
 # Ensure password authentication is enabled
 sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' $config_file
 if ! grep -q "^PasswordAuthentication yes" $config_file; then
     echo "PasswordAuthentication yes" >> $config_file
+fi
 fi
 
 mkdir /var/run/sshd

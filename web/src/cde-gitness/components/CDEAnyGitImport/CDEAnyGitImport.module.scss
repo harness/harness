@@ -1,0 +1,37 @@
+.repoInput {
+  input {
+    height: 50px !important;
+    border-radius: 7px !important;
+    border: 1px solid var(--grey-200) !important;
+    box-shadow: none !important;
+    background: var(--grey-100);
+    padding-left: 15% !important;
+
+    &:active {
+      background: white;
+    }
+    &:focus {
+      background: white;
+    }
+  }
+}
+
+.formFields {
+  div[data-id='branch-1'],
+  div[data-id='code_repo_url-0'],
+  [class*='repoInput'],
+  [class*='branchDropdown'] {
+    width: 100% !important;
+  }
+}
+
+.leftElementClassName {
+  :global {
+    .bp3-input-left-container {
+      display: flex;
+      height: 100%;
+      align-items: center;
+      margin-left: var(--spacing-medium);
+    }
+  }
+}

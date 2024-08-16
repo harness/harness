@@ -61,7 +61,7 @@ func (c *Controller) Update(
 		return fmt.Errorf("failed to find gitspace config: %w", err)
 	}
 	// TODO Update with proper locks
-	return c.gitspaceConfigStore.Update(ctx, gitspaceConfig)
+	return c.gitspaceSvc.UpdateConfig(ctx, gitspaceConfig)
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
