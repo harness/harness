@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -140,6 +141,21 @@ func (c *Controller) ReviewSubmit(
 	if err != nil {
 		// non-critical error
 		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after review submit")
+	}
+
+	err = c.instrumentation.Track(ctx, instrument.Event{
+		Type:      instrument.EventTypeReviewPullRequest,
+		Principal: session.Principal.ToPrincipalInfo(),
+		Path:      repo.Path,
+		Properties: map[instrument.Property]any{
+			instrument.PropertyRepositoryID:   repo.ID,
+			instrument.PropertyRepositoryName: repo.Identifier,
+			instrument.PropertyPullRequestID:  pr.Number,
+			instrument.PropertyDecision:       in.Decision,
+		},
+	})
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for review pull request operation: %s", err)
 	}
 
 	return review, nil

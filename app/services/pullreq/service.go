@@ -43,6 +43,7 @@ type Service struct {
 	pullreqStore        store.PullReqStore
 	activityStore       store.PullReqActivityStore
 	codeCommentView     store.CodeCommentView
+	principalInfoCache  store.PrincipalInfoCache
 	codeCommentMigrator *codecomments.Migrator
 	fileViewStore       store.PullReqFileViewStore
 	sseStreamer         sse.Streamer
@@ -68,6 +69,7 @@ func New(ctx context.Context,
 	codeCommentView store.CodeCommentView,
 	codeCommentMigrator *codecomments.Migrator,
 	fileViewStore store.PullReqFileViewStore,
+	principalInfoCache store.PrincipalInfoCache,
 	bus pubsub.PubSub,
 	urlProvider url.Provider,
 	sseStreamer sse.Streamer,
@@ -79,6 +81,7 @@ func New(ctx context.Context,
 		repoStore:           repoStore,
 		pullreqStore:        pullreqStore,
 		activityStore:       activityStore,
+		principalInfoCache:  principalInfoCache,
 		codeCommentView:     codeCommentView,
 		urlProvider:         urlProvider,
 		codeCommentMigrator: codeCommentMigrator,

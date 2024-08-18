@@ -71,6 +71,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/gitspaceservice"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	svclabel "github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"
@@ -238,6 +239,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitspaceservice.WireSet,
 		cliserver.ProvideGitspaceInfraProvisionerConfig,
 		cliserver.ProvideIDEVSCodeConfig,
+		instrument.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

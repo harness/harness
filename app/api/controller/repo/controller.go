@@ -29,6 +29,7 @@ import (
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
@@ -94,6 +95,7 @@ type Controller struct {
 	repoCheck          Check
 	publicAccess       publicaccess.Service
 	labelSvc           *label.Service
+	instrumentation    instrument.Service
 }
 
 func NewController(
@@ -122,6 +124,7 @@ func NewController(
 	repoCheck Check,
 	publicAccess publicaccess.Service,
 	labelSvc *label.Service,
+	instrumentation instrument.Service,
 ) *Controller {
 	return &Controller{
 		defaultBranch:      config.Git.DefaultBranch,
@@ -149,6 +152,7 @@ func NewController(
 		repoCheck:          repoCheck,
 		publicAccess:       publicAccess,
 		labelSvc:           labelSvc,
+		instrumentation:    instrumentation,
 	}
 }
 

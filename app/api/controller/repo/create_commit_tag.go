@@ -21,10 +21,13 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // CreateCommitTagInput used for tag creation apis.
@@ -101,5 +104,17 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		return nil, nil, fmt.Errorf("failed to map tag received from service output: %w", err)
 	}
 
+	err = c.instrumentation.Track(ctx, instrument.Event{
+		Type:      instrument.EventTypeCreateTag,
+		Principal: session.Principal.ToPrincipalInfo(),
+		Path:      repo.Path,
+		Properties: map[instrument.Property]any{
+			instrument.PropertyRepositoryID:   repo.ID,
+			instrument.PropertyRepositoryName: repo.Identifier,
+		},
+	})
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for create tag operation: %s", err)
+	}
 	return &commitTag, nil, nil
 }

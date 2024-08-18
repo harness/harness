@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
@@ -125,6 +126,20 @@ func (c *Controller) RuleCreate(ctx context.Context,
 	)
 	if err != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create branch rule operation: %s", err)
+	}
+
+	err = c.instrumentation.Track(ctx, instrument.Event{
+		Type:      instrument.EventTypeCreateBranchRule,
+		Principal: session.Principal.ToPrincipalInfo(),
+		Path:      repo.Path,
+		Properties: map[instrument.Property]any{
+			instrument.PropertyRepositoryID:   repo.ID,
+			instrument.PropertyRepositoryName: repo.Identifier,
+			instrument.PropertyRuleID:         r.ID,
+		},
+	})
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for create branch rule operation: %s", err)
 	}
 
 	r.Users, err = c.getRuleUsers(ctx, r)

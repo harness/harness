@@ -12,20 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pullreq
+package instrument
 
 import (
 	"context"
 
 	gitevents "github.com/harness/gitness/app/events/git"
-	pullreqevents "github.com/harness/gitness/app/events/pullreq"
-	"github.com/harness/gitness/app/services/codecomments"
-	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/git"
-	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -33,42 +28,46 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideService,
+	ProvideRepositoryCount,
+	ProvideGitConsumer,
 )
 
-func ProvideService(ctx context.Context,
+func ProvideGitConsumer(
+	ctx context.Context,
 	config *types.Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
-	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
-	pullReqEvReporter *pullreqevents.Reporter,
-	git git.Interface,
-	repoGitInfoCache store.RepoGitInfoCache,
 	repoStore store.RepoStore,
-	pullreqStore store.PullReqStore,
-	activityStore store.PullReqActivityStore,
 	principalInfoCache store.PrincipalInfoCache,
-	codeCommentView store.CodeCommentView,
-	codeCommentMigrator *codecomments.Migrator,
-	fileViewStore store.PullReqFileViewStore,
-	pubsub pubsub.PubSub,
-	urlProvider url.Provider,
-	sseStreamer sse.Streamer,
-) (*Service, error) {
-	return New(ctx,
+	instrumentation Service,
+) (Consumer, error) {
+	return NewConsumer(
+		ctx,
 		config,
 		gitReaderFactory,
-		pullReqEvFactory,
-		pullReqEvReporter,
-		git,
-		repoGitInfoCache,
 		repoStore,
-		pullreqStore,
-		activityStore,
-		codeCommentView,
-		codeCommentMigrator,
-		fileViewStore,
 		principalInfoCache,
-		pubsub,
-		urlProvider,
-		sseStreamer,
+		instrumentation,
 	)
+}
+
+func ProvideRepositoryCount(
+	ctx context.Context,
+	config *types.Config,
+	svc Service,
+	repoStore store.RepoStore,
+	scheduler *job.Scheduler,
+	executor *job.Executor,
+) (*RepositoryCount, error) {
+	return NewRepositoryCount(
+		ctx,
+		config,
+		svc,
+		repoStore,
+		scheduler,
+		executor,
+	)
+}
+
+func ProvideService() Service {
+	return Noop{}
 }

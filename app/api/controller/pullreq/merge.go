@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/bootstrap"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/contextutil"
 	"github.com/harness/gitness/errors"
@@ -498,6 +499,20 @@ func (c *Controller) Merge(
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
 
+	err = c.instrumentation.Track(ctx, instrument.Event{
+		Type:      instrument.EventTypeMergePullRequest,
+		Principal: session.Principal.ToPrincipalInfo(),
+		Path:      sourceRepo.Path,
+		Properties: map[instrument.Property]any{
+			instrument.PropertyRepositoryID:   sourceRepo.ID,
+			instrument.PropertyRepositoryName: sourceRepo.Identifier,
+			instrument.PropertyPullRequestID:  pr.Number,
+			instrument.PropertyMergeStrategy:  in.Method,
+		},
+	})
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for merge pr operation: %s", err)
+	}
 	return &types.MergeResponse{
 		SHA:            mergeOutput.MergeSHA.String(),
 		BranchDeleted:  branchDeleted,

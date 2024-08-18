@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/services/gitspaceevent"
 	"github.com/harness/gitness/app/services/gitspaceinfraevent"
 	"github.com/harness/gitness/app/services/infraprovider"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/notification"
@@ -37,17 +38,20 @@ var WireSet = wire.NewSet(
 )
 
 type Services struct {
-	Webhook            *webhook.Service
-	PullReq            *pullreq.Service
-	Trigger            *trigger.Service
-	JobScheduler       *job.Scheduler
-	MetricCollector    *metric.Collector
-	RepoSizeCalculator *repo.SizeCalculator
-	Repo               *repo.Service
-	Cleanup            *cleanup.Service
-	Notification       *notification.Service
-	Keywordsearch      *keywordsearch.Service
-	GitspaceService    *GitspaceServices
+	Webhook               *webhook.Service
+	PullReq               *pullreq.Service
+	Trigger               *trigger.Service
+	JobScheduler          *job.Scheduler
+	MetricCollector       *metric.Collector
+	RepoSizeCalculator    *repo.SizeCalculator
+	Repo                  *repo.Service
+	Cleanup               *cleanup.Service
+	Notification          *notification.Service
+	Keywordsearch         *keywordsearch.Service
+	GitspaceService       *GitspaceServices
+	Instrumentation       instrument.Service
+	instrumentConsumer    instrument.Consumer
+	instrumentRepoCounter *instrument.RepositoryCount
 }
 
 type GitspaceServices struct {
@@ -83,18 +87,24 @@ func ProvideServices(
 	notificationSvc *notification.Service,
 	keywordsearchSvc *keywordsearch.Service,
 	gitspaceSvc *GitspaceServices,
+	instrumentation instrument.Service,
+	instrumentConsumer instrument.Consumer,
+	instrumentRepoCounter *instrument.RepositoryCount,
 ) Services {
 	return Services{
-		Webhook:            webhooksSvc,
-		PullReq:            pullReqSvc,
-		Trigger:            triggerSvc,
-		JobScheduler:       jobScheduler,
-		MetricCollector:    metricCollector,
-		RepoSizeCalculator: repoSizeCalculator,
-		Repo:               repo,
-		Cleanup:            cleanupSvc,
-		Notification:       notificationSvc,
-		Keywordsearch:      keywordsearchSvc,
-		GitspaceService:    gitspaceSvc,
+		Webhook:               webhooksSvc,
+		PullReq:               pullReqSvc,
+		Trigger:               triggerSvc,
+		JobScheduler:          jobScheduler,
+		MetricCollector:       metricCollector,
+		RepoSizeCalculator:    repoSizeCalculator,
+		Repo:                  repo,
+		Cleanup:               cleanupSvc,
+		Notification:          notificationSvc,
+		Keywordsearch:         keywordsearchSvc,
+		GitspaceService:       gitspaceSvc,
+		Instrumentation:       instrumentation,
+		instrumentConsumer:    instrumentConsumer,
+		instrumentRepoCounter: instrumentRepoCounter,
 	}
 }

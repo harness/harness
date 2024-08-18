@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
@@ -152,6 +153,20 @@ func (c *Controller) Create(
 
 	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
+	}
+
+	err = c.instrumentation.Track(ctx, instrument.Event{
+		Type:      instrument.EventTypeCreatePullRequest,
+		Principal: session.Principal.ToPrincipalInfo(),
+		Path:      sourceRepo.Path,
+		Properties: map[instrument.Property]any{
+			instrument.PropertyRepositoryID:   sourceRepo.ID,
+			instrument.PropertyRepositoryName: sourceRepo.Identifier,
+			instrument.PropertyPullRequestID:  pr.Number,
+		},
+	})
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for create pull request operation: %s", err)
 	}
 
 	return pr, nil

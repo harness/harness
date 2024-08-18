@@ -593,6 +593,58 @@ func (s *RepoStore) countAll(
 	return numRepos, nil
 }
 
+// CountByRootSpaces counts total number of repositories grouped by root spaces.
+func (s *RepoStore) CountByRootSpaces(
+	ctx context.Context,
+) ([]types.RepositoryCount, error) {
+	query := `
+WITH RECURSIVE
+    SpaceHierarchy(root_id, space_id, space_parent_id, space_uid) AS (
+        SELECT space_id, space_id, space_parent_id, space_uid
+        FROM spaces
+        WHERE space_parent_id is null
+
+        UNION
+
+        SELECT h.root_id, s.space_id, s.space_parent_id, h.space_uid
+        FROM spaces s
+                 JOIN SpaceHierarchy h ON s.space_parent_id = h.space_id
+    )
+SELECT 
+	COUNT(r.repo_id) AS total, 
+	s.root_id AS root_space_id,
+	s.space_uid 
+FROM repositories r
+JOIN SpaceHierarchy s ON s.space_id = r.repo_parent_id
+GROUP BY root_space_id, s.space_uid
+`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	rows, err := db.QueryxContext(ctx, query)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to count repositories")
+	}
+
+	defer rows.Close()
+
+	var result []types.RepositoryCount
+	for rows.Next() {
+		var count types.RepositoryCount
+		if err = rows.Scan(&count.Total, &count.SpaceID, &count.SpaceUID); err != nil {
+			return nil, database.ProcessSQLErrorf(ctx, err, "failed to scan row for count repositories query")
+		}
+
+		result = append(result, count)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 // List returns a list of active repos in a space.
 // With "DeletedBeforeOrAt" filter, lists deleted repos by opts.DeletedBeforeOrAt.
 func (s *RepoStore) List(

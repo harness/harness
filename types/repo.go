@@ -114,3 +114,9 @@ type RepositorySummary struct {
 	TagCount                 int                      `json:"tag_count"`
 	PullReqSummary           RepositoryPullReqSummary `json:"pull_req_summary"`
 }
+
+type RepositoryCount struct {
+	SpaceID  int64  `json:"space_id"`
+	SpaceUID string `json:"space_uid"`
+	Total    int    `json:"total"`
+}

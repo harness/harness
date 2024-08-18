@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
@@ -48,6 +49,7 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 	exporter *exporter.Repository, limiter limiter.ResourceLimiter, publicAccess publicaccess.Service,
 	auditService audit.Service, gitspaceService *gitspace.Service,
 	labelSvc *label.Service,
+	instrumentation instrument.Service,
 ) *Controller {
 	return NewController(config, tx, urlProvider, sseStreamer, identifierCheck, authorizer,
 		spacePathStore, pipelineStore, secretStore,
@@ -56,5 +58,7 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 		repoCtrl, membershipStore, importer,
 		exporter, limiter, publicAccess,
 		auditService, gitspaceService,
-		labelSvc)
+		labelSvc,
+		instrumentation,
+	)
 }

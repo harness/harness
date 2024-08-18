@@ -248,6 +248,8 @@ type (
 		// Count of active repos in a space. With "DeletedBeforeOrAt" filter, counts deleted repos.
 		Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error)
 
+		CountByRootSpaces(ctx context.Context) ([]types.RepositoryCount, error)
+
 		// List returns a list of repos in a space. With "DeletedBeforeOrAt" filter, lists deleted repos.
 		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 

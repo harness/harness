@@ -26,6 +26,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/migrate"
@@ -68,6 +69,7 @@ type Controller struct {
 	locker              *locker.Locker
 	importer            *migrate.PullReq
 	labelSvc            *label.Service
+	instrumentation     instrument.Service
 }
 
 func NewController(
@@ -95,6 +97,7 @@ func NewController(
 	locker *locker.Locker,
 	importer *migrate.PullReq,
 	labelSvc *label.Service,
+	instrumentation instrument.Service,
 ) *Controller {
 	return &Controller{
 		tx:                  tx,
@@ -121,6 +124,7 @@ func NewController(
 		locker:              locker,
 		importer:            importer,
 		labelSvc:            labelSvc,
+		instrumentation:     instrumentation,
 	}
 }
 

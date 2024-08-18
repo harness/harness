@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/limiter"
@@ -26,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -181,6 +183,20 @@ func (c *Controller) ImportRepositories(
 		)
 		if err != nil {
 			log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)
+		}
+		err = c.instrumentation.Track(ctx, instrument.Event{
+			Type:      instrument.EventTypeRepositoryCreate,
+			Principal: session.Principal.ToPrincipalInfo(),
+			Timestamp: time.Now(),
+			Path:      space.Path,
+			Properties: map[instrument.Property]any{
+				instrument.PropertyRepositoryID:           repo.ID,
+				instrument.PropertyRepositoryName:         repo.Identifier,
+				instrument.PropertyRepositoryCreationType: instrument.CreationTypeImport,
+			},
+		})
+		if err != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for import repository operation: %s", err)
 		}
 	}
 

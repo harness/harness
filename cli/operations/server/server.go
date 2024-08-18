@@ -166,6 +166,12 @@ func (c *command) run(*kingpin.ParseContext) error {
 		}
 	}
 
+	// shutdown instrumentation
+	err = system.services.Instrumentation.Close(shutdownCtx)
+	if err != nil {
+		log.Err(err).Msg("failed to close instrumentation gracefully")
+	}
+	// shutdown job scheduler
 	system.services.JobScheduler.WaitJobsDone(shutdownCtx)
 
 	log.Info().Msg("wait for subroutines to complete")

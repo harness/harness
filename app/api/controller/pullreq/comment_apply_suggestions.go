@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/contextutil"
 	"github.com/harness/gitness/git"
@@ -365,6 +366,23 @@ func (c *Controller) CommentApplySuggestions(
 
 	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
+	}
+
+	err = c.instrumentation.Track(ctx, instrument.Event{
+		Type:      instrument.EventTypePRSuggestionApplied,
+		Principal: session.Principal.ToPrincipalInfo(),
+		Path:      repo.Path,
+		Properties: map[instrument.Property]any{
+			instrument.PropertyRepositoryID:   repo.ID,
+			instrument.PropertyRepositoryName: repo.Identifier,
+			instrument.PropertyPullRequestID:  pr.Number,
+		},
+	})
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf(
+			"failed to insert instrumentation record for pull request suggestion applied operation: %s",
+			err,
+		)
 	}
 
 	return CommentApplySuggestionsOutput{

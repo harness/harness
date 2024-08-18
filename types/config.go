@@ -422,4 +422,9 @@ type Config struct {
 			MaxRetries  int `envconfig:"GITNESS_GITSPACE_EVENTS_MAX_RETRIES" default:"3"`
 		}
 	}
+
+	Instrumentation struct {
+		Enable bool   `envconfig:"GITNESS_INSTRUMENTATION_ENABLE" default:"false"`
+		Cron   string `envconfig:"GITNESS_INSTRUMENTATION_CRON" default:"0 0 * * *"`
+	}
 }

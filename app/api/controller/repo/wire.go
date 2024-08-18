@@ -20,6 +20,7 @@ import (
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
@@ -69,13 +70,14 @@ func ProvideController(
 	repoChecks Check,
 	publicAccess publicaccess.Service,
 	labelSvc *label.Service,
+	instrumentation instrument.Service,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
 		repoStore, spaceStore, pipelineStore,
 		principalStore, ruleStore, settings, principalInfoCache, protectionManager, rpcClient, importer,
 		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
-		repoChecks, publicAccess, labelSvc)
+		repoChecks, publicAccess, labelSvc, instrumentation)
 }
 
 func ProvideRepoCheck() Check {

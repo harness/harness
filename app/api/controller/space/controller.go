@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/sse"
@@ -85,6 +86,7 @@ type Controller struct {
 	auditService    audit.Service
 	gitspaceSvc     *gitspace.Service
 	labelSvc        *label.Service
+	instrumentation instrument.Service
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
@@ -95,6 +97,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
+	instrumentation instrument.Service,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled: config.NestedSpacesEnabled,
@@ -120,5 +123,6 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		auditService:        auditService,
 		gitspaceSvc:         gitspaceSvc,
 		labelSvc:            labelSvc,
+		instrumentation:     instrumentation,
 	}
 }
