@@ -62,7 +62,12 @@ const GitspaceDetails = () => {
 
   const { data: eventData, refetch: refetchEventData } = useGitspaceEvents({ gitspaceId })
 
-  const { refetch: refetchLogsData, response, error: streamLogsError } = useGitspacesLogs({ gitspaceId })
+  const {
+    data: responseData,
+    refetch: refetchLogsData,
+    response,
+    error: streamLogsError
+  } = useGitspacesLogs({ gitspaceId })
 
   const { mutate: actionMutate, loading: mutateLoading } = useGitspaceActions({ gitspaceId })
 
@@ -112,6 +117,17 @@ const GitspaceDetails = () => {
     }
   )
 
+  usePolling(
+    async () => {
+      await refetchLogsData()
+    },
+    {
+      pollingInterval: 10000,
+      startCondition: (eventData?.[eventData?.length - 1]?.event as string) === 'agent_gitspace_creation_start',
+      stopCondition: pollingCondition
+    }
+  )
+
   useEffect(() => {
     const startTrigger = async () => {
       if (redirectFrom && !startTriggred && !mutateLoading) {
@@ -135,7 +151,7 @@ const GitspaceDetails = () => {
     }
   }, [data?.state, redirectFrom, mutateLoading, startTriggred])
 
-  const formattedlogsdata = useGetLogStream({ response })
+  const formattedlogsdata = useGetLogStream(standalone ? { response } : { response: undefined })
 
   const confirmDelete = useConfirmAct()
 
@@ -392,7 +408,7 @@ const GitspaceDetails = () => {
                 id="logsCard"
                 details={
                   <Container>
-                    <ContainerLogs data={formattedlogsdata.data} />
+                    <ContainerLogs data={standalone ? formattedlogsdata.data : responseData} />
                   </Container>
                 }
               />

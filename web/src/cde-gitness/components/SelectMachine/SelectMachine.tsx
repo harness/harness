@@ -21,7 +21,7 @@ import { Cpu } from 'iconoir-react'
 import { useFormikContext } from 'formik'
 import { FontVariation } from '@harnessio/design-system'
 import { useParams } from 'react-router-dom'
-import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResourceResponse } from 'services/cde'
+import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResource } from 'services/cde'
 import { useStrings } from 'framework/strings'
 import { CDECustomDropdown } from 'cde-gitness/components/CDECustomDropdown/CDECustomDropdown'
 import css from './SelectMachine.module.scss'
@@ -37,8 +37,8 @@ export const labelToMachineId = {
 }
 
 interface SelectMachineInterface {
-  options: TypesInfraProviderResourceResponse[]
-  defaultValue: TypesInfraProviderResourceResponse
+  options: TypesInfraProviderResource[]
+  defaultValue: TypesInfraProviderResource
 }
 
 export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface) => {
@@ -48,9 +48,9 @@ export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface)
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
 
   const machineTypes = options.map(item => {
-    const { cpu, disk, memory, id, name } = item
+    const { cpu, disk, memory, identifier, name } = item
     return {
-      id,
+      identifier,
       label: name,
       cpu,
       disk,
@@ -60,15 +60,16 @@ export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface)
 
   useEffect(() => {
     if (defaultValue && !gitspaceId) {
-      onChange('resource_identifier', defaultValue.id)
+      onChange('resource_identifier', defaultValue.identifier)
     }
-  }, [defaultValue?.id, gitspaceId])
+  }, [defaultValue?.identifier, gitspaceId])
 
-  const data = (machineTypes?.find(item => item.id === machine) || {}) as (typeof machineTypes)[0]
+  const data = (machineTypes?.find(item => item.identifier === machine) || {}) as (typeof machineTypes)[0]
 
   return (
     <Container>
       <CDECustomDropdown
+        overridePopOverWidth
         leftElement={
           <Layout.Horizontal>
             <Cpu height={20} width={20} style={{ marginRight: '8px', alignItems: 'center' }} />
@@ -93,8 +94,8 @@ export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface)
                   {machineTypes.map(item => {
                     return (
                       <MenuItem
-                        key={item.id}
-                        active={values.resource_identifier === item.id}
+                        key={item.identifier}
+                        active={values.resource_identifier === item.identifier}
                         text={
                           <Layout.Vertical>
                             <Text font={{ size: 'normal', weight: 'bold' }}>{item.label?.toUpperCase()}</Text>
@@ -112,7 +113,7 @@ export const SelectMachine = ({ options, defaultValue }: SelectMachineInterface)
                           </Layout.Vertical>
                         }
                         onClick={() => {
-                          onChange('resource_identifier', item.id || '')
+                          onChange('resource_identifier', item.identifier || '')
                         }}
                       />
                     )

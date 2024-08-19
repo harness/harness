@@ -64,7 +64,7 @@ export const CDEIDESelect = ({
               <MenuItem
                 key={item.value}
                 text={
-                  <Layout.Horizontal>
+                  <Layout.Horizontal width="90%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>
                     <img height={16} width={16} src={item.img} />
                     <Text>{item.label}</Text>
                   </Layout.Horizontal>

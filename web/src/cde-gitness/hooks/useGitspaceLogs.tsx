@@ -1,4 +1,5 @@
 import { useGet } from 'restful-react'
+import { useEffect } from 'react'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { useAppContext } from 'AppContext'
 import { useGetGitspaceInstanceLogs } from 'services/cde'
@@ -21,6 +22,12 @@ export const useGitspacesLogs = ({ gitspaceId }: { gitspaceId: string }) => {
     gitspace_identifier: gitspaceId,
     lazy: true
   })
+
+  useEffect(() => {
+    if (!standalone) {
+      cde.refetch()
+    }
+  }, [])
 
   return standalone ? gitness : cde
 }

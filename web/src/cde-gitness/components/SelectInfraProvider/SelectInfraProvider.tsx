@@ -20,7 +20,7 @@ import { Layout } from '@harnessio/uicore'
 import { useFormikContext } from 'formik'
 import { useParams } from 'react-router-dom'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
-import { OpenapiCreateGitspaceRequest, useListInfraProviderResources } from 'services/cde'
+import { OpenapiCreateGitspaceRequest, useGetInfraProvider } from 'services/cde'
 import { SelectRegion } from '../SelectRegion/SelectRegion'
 import { SelectMachine } from '../SelectMachine/SelectMachine'
 
@@ -32,7 +32,7 @@ export const SelectInfraProvider = () => {
   //   infraProviderConfigIdentifier: 'HARNESS_GCP'
   // })
 
-  const { data } = useListInfraProviderResources({
+  const { data } = useGetInfraProvider({
     accountIdentifier,
     projectIdentifier,
     orgIdentifier,
@@ -41,11 +41,11 @@ export const SelectInfraProvider = () => {
 
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
 
-  const optionsList = data && isObject(data) ? data : []
+  const optionsList = data?.resources && isObject(data?.resources) ? data?.resources : []
 
   useEffect(() => {
     if (gitspaceId && values.resource_identifier && optionsList.length) {
-      const match = optionsList.find(item => item.id === values.resource_identifier)
+      const match = optionsList.find(item => item.identifier === values.resource_identifier)
       if (values?.metadata?.region !== match?.region) {
         onChange('metadata.region', match?.region?.toLowerCase())
       }
@@ -53,7 +53,7 @@ export const SelectInfraProvider = () => {
   }, [gitspaceId, values.resource_identifier, values?.metadata?.region, optionsList.map(i => i.name).join('')])
 
   const regionOptions = Object.entries(groupBy(optionsList, 'region')).map(i => {
-    return { label: i[0], value: i[1] }
+    return { label: i[0] as string, value: i[1] }
   })
 
   const machineOptions =

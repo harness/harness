@@ -21,7 +21,7 @@ import { Map } from 'iconoir-react'
 import { useFormikContext } from 'formik'
 import { useStrings } from 'framework/strings'
 import { GitspaceRegion } from 'cde-gitness/constants'
-import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResourceResponse } from 'services/cde'
+import type { OpenapiCreateGitspaceRequest, TypesInfraProviderResource } from 'services/cde'
 import { CDECustomDropdown } from 'cde-gitness/components/CDECustomDropdown/CDECustomDropdown'
 import USWest from './assests/USWest.png'
 import USEast from './assests/USEast.png'
@@ -31,8 +31,8 @@ import Empty from './assests/Empty.png'
 
 interface SelectRegionInterface {
   disabled?: boolean
-  defaultValue: { label: string; value: TypesInfraProviderResourceResponse[] }
-  options: { label: string; value: TypesInfraProviderResourceResponse[] }[]
+  defaultValue: { label: string; value: TypesInfraProviderResource[] }
+  options: { label: string; value: TypesInfraProviderResource[] }[]
 }
 
 export const getMapFromRegion = (region: string) => {
@@ -68,6 +68,7 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
   return (
     <Container>
       <CDECustomDropdown
+        overridePopOverWidth
         label={
           <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <Layout.Vertical>
