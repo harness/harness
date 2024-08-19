@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -100,37 +101,9 @@ func (s infraProviderResourceStore) List(ctx context.Context, infraProviderConfi
 	db := dbtx.GetAccessor(ctx, s.db)
 	dst := new([]infraProviderResource)
 	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider resources")
 	}
 	return s.mapToInfraProviderResources(ctx, *dst)
-}
-
-func (s infraProviderResourceStore) mapToInfraProviderResource(_ context.Context,
-	in *infraProviderResource) (*types.InfraProviderResource, error) {
-	openTofuParamsMap := make(map[string]string)
-	marshalErr := json.Unmarshal(in.OpenTofuParams, &openTofuParamsMap)
-	if marshalErr != nil {
-		return nil, marshalErr
-	}
-	return &types.InfraProviderResource{
-		Identifier:            in.Identifier,
-		InfraProviderConfigID: in.InfraProviderConfigID,
-		ID:                    in.ID,
-		InfraProviderType:     in.InfraProviderType,
-		Name:                  in.Name,
-		SpaceID:               in.SpaceID,
-		CPU:                   in.CPU.Ptr(),
-		Memory:                in.Memory.Ptr(),
-		Disk:                  in.Disk.Ptr(),
-		Network:               in.Network.Ptr(),
-		Region:                in.Region,
-		Metadata:              openTofuParamsMap,
-		GatewayHost:           in.GatewayHost.Ptr(),
-		GatewayPort:           in.GatewayPort.Ptr(),
-		TemplateID:            in.TemplateID.Ptr(),
-		Created:               in.Created,
-		Updated:               in.Updated,
-	}, nil
 }
 
 func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
@@ -146,7 +119,7 @@ func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.
 	dst := new(infraProviderResource)
 	db := dbtx.GetAccessor(ctx, s.db)
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProviderResource")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %d", id)
 	}
 	return s.mapToInfraProviderResource(ctx, dst)
 }
@@ -168,7 +141,7 @@ func (s infraProviderResourceStore) FindByIdentifier(
 	dst := new(infraProviderResource)
 	db := dbtx.GetAccessor(ctx, s.db)
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProviderResource")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %s", identifier)
 	}
 	return s.mapToInfraProviderResource(ctx, dst)
 }
@@ -209,7 +182,39 @@ func (s infraProviderResourceStore) Create(
 	}
 	db := dbtx.GetAccessor(ctx, s.db)
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&infraProviderResource.ID); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "infra provider resource query failed")
+		return database.ProcessSQLErrorf(
+			ctx, err, "infra provider resource create failed %s", infraProviderResource.Identifier)
+	}
+	return nil
+}
+
+func (s infraProviderResourceStore) Update(
+	ctx context.Context,
+	infraProviderResource *types.InfraProviderResource,
+) error {
+	dbinfraProviderResource, err := s.mapToInternalInfraProviderResource(ctx, infraProviderResource)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to map to DB Obj for infraprovider resource %s", infraProviderResource.Identifier)
+	}
+	stmt := database.Builder.
+		Update(infraProviderResourceTable).
+		Set("ipreso_display_name", dbinfraProviderResource.Name).
+		Set("ipreso_updated", dbinfraProviderResource.Updated).
+		Set("ipreso_memory", dbinfraProviderResource.Memory).
+		Set("ipreso_disk", dbinfraProviderResource.Disk).
+		Set("ipreso_network", dbinfraProviderResource.Network).
+		Set("ipreso_region", dbinfraProviderResource.Region).
+		Set("ipreso_opentofu_params", dbinfraProviderResource.OpenTofuParams).
+		Where("ipreso_id = ?", infraProviderResource.ID)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(
+			ctx, err, "Failed to update infraprovider resource %s", infraProviderResource.Identifier)
 	}
 	return nil
 }
@@ -225,9 +230,64 @@ func (s infraProviderResourceStore) DeleteByIdentifier(ctx context.Context, spac
 	}
 	db := dbtx.GetAccessor(ctx, s.db)
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed to delete infra provider resource")
+		return database.ProcessSQLErrorf(
+			ctx, err, "Failed to delete infra provider resource %s", identifier)
 	}
 	return nil
+}
+
+func (s infraProviderResourceStore) mapToInfraProviderResource(_ context.Context,
+	in *infraProviderResource) (*types.InfraProviderResource, error) {
+	openTofuParamsMap := make(map[string]string)
+	marshalErr := json.Unmarshal(in.OpenTofuParams, &openTofuParamsMap)
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
+	return &types.InfraProviderResource{
+		Identifier:            in.Identifier,
+		InfraProviderConfigID: in.InfraProviderConfigID,
+		ID:                    in.ID,
+		InfraProviderType:     in.InfraProviderType,
+		Name:                  in.Name,
+		SpaceID:               in.SpaceID,
+		CPU:                   in.CPU.Ptr(),
+		Memory:                in.Memory.Ptr(),
+		Disk:                  in.Disk.Ptr(),
+		Network:               in.Network.Ptr(),
+		Region:                in.Region,
+		Metadata:              openTofuParamsMap,
+		GatewayHost:           in.GatewayHost.Ptr(),
+		GatewayPort:           in.GatewayPort.Ptr(),
+		TemplateID:            in.TemplateID.Ptr(),
+		Created:               in.Created,
+		Updated:               in.Updated,
+	}, nil
+}
+
+func (s infraProviderResourceStore) mapToInternalInfraProviderResource(_ context.Context,
+	in *types.InfraProviderResource) (*infraProviderResource, error) {
+	jsonBytes, marshalErr := json.Marshal(in.Metadata)
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
+	return &infraProviderResource{
+		Identifier:            in.Identifier,
+		InfraProviderConfigID: in.InfraProviderConfigID,
+		InfraProviderType:     in.InfraProviderType,
+		Name:                  in.Name,
+		SpaceID:               in.SpaceID,
+		CPU:                   null.StringFromPtr(in.CPU),
+		Memory:                null.StringFromPtr(in.Memory),
+		Disk:                  null.StringFromPtr(in.Disk),
+		Network:               null.StringFromPtr(in.Network),
+		Region:                in.Region,
+		OpenTofuParams:        jsonBytes,
+		GatewayHost:           null.StringFromPtr(in.GatewayHost),
+		GatewayPort:           null.StringFromPtr(in.GatewayPort),
+		TemplateID:            null.IntFromPtr(in.TemplateID),
+		Created:               in.Created,
+		Updated:               in.Updated,
+	}, nil
 }
 
 func (s infraProviderResourceStore) mapToInfraProviderResources(ctx context.Context,

@@ -85,7 +85,7 @@ func (i infraProviderTemplateStore) FindByIdentifier(
 	infraProviderTemplateEntity := new(infraProviderTemplate)
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err := db.GetContext(ctx, infraProviderTemplateEntity, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProviderTemplate")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider template %s", identifier)
 	}
 	return infraProviderTemplateEntity.mapToDTO(), nil
 }
@@ -107,7 +107,7 @@ func (i infraProviderTemplateStore) Find(
 	infraProviderTemplateEntity := new(infraProviderTemplate)
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err := db.GetContext(ctx, infraProviderTemplateEntity, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProviderTemplate")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider template %d", id)
 	}
 	return infraProviderTemplateEntity.mapToDTO(), nil
 }
@@ -135,7 +135,32 @@ func (i infraProviderTemplateStore) Create(
 	}
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&infraProviderTemplate.ID); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "infraProviderTemplate query failed")
+		return database.ProcessSQLErrorf(
+			ctx, err, "infraprovider template create failed %s", infraProviderTemplate.Identifier)
+	}
+	return nil
+}
+
+func (i infraProviderTemplateStore) Update(
+	ctx context.Context,
+	infraProviderTemplate *types.InfraProviderTemplate,
+) error {
+	dbinfraProviderTemplate := i.mapToInternalInfraProviderTemplate(infraProviderTemplate)
+	stmt := database.Builder.
+		Update(infraProviderResourceTable).
+		Set("iptemp_description", dbinfraProviderTemplate.Description).
+		Set("ipreso_updated", dbinfraProviderTemplate.Updated).
+		Set("iptemp_data", dbinfraProviderTemplate.Data).
+		Set("iptemp_version", dbinfraProviderTemplate.Version+1).
+		Where("iptemp_id = ?", infraProviderTemplate.ID)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, i.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(
+			ctx, err, "Failed to update infraprovider template %s", infraProviderTemplate.Identifier)
 	}
 	return nil
 }
@@ -151,9 +176,23 @@ func (i infraProviderTemplateStore) Delete(ctx context.Context, id int64) error 
 	}
 	db := dbtx.GetAccessor(ctx, i.db)
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed to delete infra provider template")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to delete infraprovider template")
 	}
 	return nil
+}
+
+func (i infraProviderTemplateStore) mapToInternalInfraProviderTemplate(
+	template *types.InfraProviderTemplate) infraProviderTemplate {
+	return infraProviderTemplate{
+		Identifier:            template.Identifier,
+		InfraProviderConfigID: template.InfraProviderConfigID,
+		Description:           template.Description,
+		Data:                  template.Data,
+		Version:               template.Version,
+		SpaceID:               template.SpaceID,
+		Created:               template.Created,
+		Updated:               template.Updated,
+	}
 }
 
 func (entity infraProviderTemplate) mapToDTO() *types.InfraProviderTemplate {

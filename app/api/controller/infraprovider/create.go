@@ -89,7 +89,7 @@ func (c *Controller) Create(
 		Created:    now,
 		Updated:    now,
 	}
-	infraProviderConfig.Resources = mapToResourceEntity(in.Resources, *parentSpace, infraProviderConfig.ID)
+	infraProviderConfig.Resources = mapToResourceEntity(in.Resources, *parentSpace, now)
 	err = c.infraproviderSvc.CreateInfraProvider(ctx, infraProviderConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create the infraprovider: %q %w", infraProviderConfig.Identifier, err)

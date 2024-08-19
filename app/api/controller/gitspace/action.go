@@ -16,6 +16,7 @@ package gitspace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -24,6 +25,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	events "github.com/harness/gitness/app/events/gitspace"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -104,9 +106,8 @@ func (c *Controller) startGitspaceAction(
 	config *types.GitspaceConfig,
 ) error {
 	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
-	const resourceNotFoundErr = "Failed to find gitspace: resource not found"
-	if err != nil && err.Error() != resourceNotFoundErr {
-		return fmt.Errorf("failed to find gitspace instance for config ID : %s %w", config.Identifier, err)
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		return err
 	}
 	config.GitspaceInstance = savedGitspaceInstance
 	err = c.gitspaceBusyOperation(ctx, config)

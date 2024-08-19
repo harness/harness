@@ -24,6 +24,8 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -33,7 +35,6 @@ import (
 
 const allowedUIDAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 const defaultResourceIdentifier = "default"
-const infraProviderResourceMissingErr = "Failed to find infraProviderResource: resource not found"
 
 var (
 	// errSecretRequiresParent if the user tries to create a secret without a parent space.
@@ -174,7 +175,7 @@ func (c *Controller) createOrFindInfraProviderResource(
 		parentSpace.ID,
 		resourceIdentifier)
 	if err != nil &&
-		err.Error() == infraProviderResourceMissingErr &&
+		errors.Is(err, store.ErrResourceNotFound) &&
 		resourceIdentifier == defaultResourceIdentifier {
 		err = c.autoCreateDefaultResource(ctx, parentSpace, now)
 		if err != nil {

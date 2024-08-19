@@ -124,7 +124,7 @@ func (s gitspaceConfigStore) Find(ctx context.Context, id int64) (*types.Gitspac
 	}
 	db := dbtx.GetAccessor(ctx, s.db)
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace config")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace config for %d", id)
 	}
 	return s.mapToGitspaceConfig(ctx, dst)
 }
@@ -148,7 +148,7 @@ func (s gitspaceConfigStore) FindByIdentifier(
 	dst := new(gitspaceConfig)
 	db := dbtx.GetAccessor(ctx, s.db)
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace config")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace config for %s", identifier)
 	}
 	return s.mapToGitspaceConfig(ctx, dst)
 }
@@ -184,7 +184,8 @@ func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.G
 	}
 	db := dbtx.GetAccessor(ctx, s.db)
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&gitspaceConfig.ID); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "gitspace config query failed")
+		return database.ProcessSQLErrorf(
+			ctx, err, "gitspace config create query failed for %s", gitspaceConfig.Identifier)
 	}
 	return nil
 }
@@ -206,7 +207,8 @@ func (s gitspaceConfigStore) Update(ctx context.Context,
 	}
 	db := dbtx.GetAccessor(ctx, s.db)
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed to update gitspace config")
+		return database.ProcessSQLErrorf(
+			ctx, err, "Failed to update gitspace config for %s", gitspaceConfig.Identifier)
 	}
 	return nil
 }
@@ -254,7 +256,7 @@ func (s gitspaceConfigStore) List(ctx context.Context, filter *types.GitspaceFil
 	db := dbtx.GetAccessor(ctx, s.db)
 	var dst []*gitspaceConfig
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace config list query")
 	}
 	return s.mapToGitspaceConfigs(ctx, dst)
 }
@@ -276,7 +278,7 @@ func (s gitspaceConfigStore) ListAll(
 	db := dbtx.GetAccessor(ctx, s.db)
 	var dst []*gitspaceConfig
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace config list query")
 	}
 	return s.mapToGitspaceConfigs(ctx, dst)
 }

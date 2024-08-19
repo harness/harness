@@ -101,7 +101,7 @@ func (i infraProvisionedStore) Find(ctx context.Context, id int64) (*types.Infra
 	db := dbtx.GetAccessor(ctx, i.db)
 	err = db.GetContext(ctx, entity, sql, args...)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProvisioned")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovisioned for %d", id)
 	}
 
 	return entity.toDTO(), nil
@@ -129,7 +129,8 @@ func (i infraProvisionedStore) FindAllLatestByGateway(
 	db := dbtx.GetAccessor(ctx, i.db)
 	err = db.SelectContext(ctx, &entities, sql, args...)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProvisioned")
+		return nil, database.ProcessSQLErrorf(
+			ctx, err, "Failed to find infraprovisioned for host %s", gatewayHost)
 	}
 
 	var result = make([]*types.InfraProvisionedGatewayView, len(entities))
@@ -165,7 +166,8 @@ func (i infraProvisionedStore) FindLatestByGitspaceInstanceID(
 	entity := new(infraProvisioned)
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err := db.GetContext(ctx, entity, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProvisioned")
+		return nil, database.ProcessSQLErrorf(
+			ctx, err, "Failed to find latestinfraprovisioned for instance %d", gitspaceInstanceID)
 	}
 
 	return entity.toDTO(), nil
@@ -192,7 +194,8 @@ func (i infraProvisionedStore) FindLatestByGitspaceInstanceIdentifier(
 	entity := new(infraProvisioned)
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err := db.GetContext(ctx, entity, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProvisioned")
+		return nil, database.ProcessSQLErrorf(
+			ctx, err, "Failed to find infraprovisioned for instance %s", gitspaceInstanceIdentifier)
 	}
 
 	return entity.toDTO(), nil
@@ -226,7 +229,9 @@ func (i infraProvisionedStore) Create(ctx context.Context, infraProvisioned *typ
 
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&infraProvisioned.ID); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "infraProvisioned query failed")
+		return database.ProcessSQLErrorf(
+			ctx, err, "infraprovisioned create query failed for instance : %d",
+			infraProvisioned.GitspaceInstanceID)
 	}
 
 	return nil
@@ -244,7 +249,7 @@ func (i infraProvisionedStore) Delete(ctx context.Context, id int64) error {
 
 	db := dbtx.GetAccessor(ctx, i.db)
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed to delete infra provisioned")
+		return database.ProcessSQLErrorf(ctx, err, "Failed to delete infraprovisioned for %d", id)
 	}
 
 	return nil
@@ -270,7 +275,8 @@ func (i infraProvisionedStore) Update(ctx context.Context, infraProvisioned *typ
 
 	db := dbtx.GetAccessor(ctx, i.db)
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed to update infra provisioned")
+		return database.ProcessSQLErrorf(
+			ctx, err, "Failed to update infra provisioned for instance %d", infraProvisioned.GitspaceInstanceID)
 	}
 
 	return nil

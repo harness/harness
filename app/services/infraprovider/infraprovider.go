@@ -22,6 +22,8 @@ import (
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
 )
 
 func NewService(
@@ -123,7 +125,52 @@ func (c *Service) CreateResources(ctx context.Context, resources []types.InfraPr
 		return c.createResources(ctx, resources, configID)
 	})
 	if err != nil {
-		return fmt.Errorf("failed to complete txn for the infraprovider resource %w", err)
+		return fmt.Errorf("failed to complete create txn for the infraprovider resource %w", err)
+	}
+	return nil
+}
+
+func (c *Service) UpdateResource(ctx context.Context, resource types.InfraProviderResource) error {
+	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		space, err := c.spaceStore.FindByRef(ctx, resource.SpacePath)
+		if err != nil {
+			return err
+		}
+		infraProviderResource, err := c.FindResourceByIdentifier(ctx, space.ID, resource.Identifier)
+		if err != nil {
+			return err
+		}
+		resource.ID = infraProviderResource.ID
+		if err = c.infraProviderResourceStore.Update(ctx, &resource); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to complete update txn for the infraprovider resource %w", err)
+	}
+	return nil
+}
+
+func (c *Service) UpdateTemplate(ctx context.Context, template types.InfraProviderTemplate) error {
+	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		space, err := c.spaceStore.FindByRef(ctx, template.SpacePath)
+		if err != nil {
+			return err
+		}
+		templateInDB, err := c.infraProviderTemplateStore.FindByIdentifier(ctx, space.ID, template.Identifier)
+		if err != nil {
+			return err
+		}
+		template.ID = templateInDB.ID
+		template.SpaceID = space.ID
+		if err = c.infraProviderTemplateStore.Update(ctx, &template); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to complete update txn for the infraprovider template %w", err)
 	}
 	return nil
 }
@@ -163,8 +210,8 @@ func (c *Service) validateTemplates(
 			_, err := c.infraProviderTemplateStore.FindByIdentifier(
 				ctx, res.SpaceID, templateIdentifier)
 			if err != nil {
-				return fmt.Errorf("unable to get template params for ID : %s %w",
-					res.Metadata[key], err)
+				log.Warn().Msgf("unable to get template params for ID : %s",
+					res.Metadata[key])
 			}
 		}
 	}

@@ -16,14 +16,14 @@ package gitspace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
-
-const resourceNotFoundErr = "Failed to find gitspace: resource not found"
 
 func (c *Service) Find(
 	ctx context.Context,
@@ -44,8 +44,8 @@ func (c *Service) Find(
 		gitspaceConfig.SpacePath = spacePath
 		gitspaceConfig.InfraProviderResourceIdentifier = infraProviderResource.Identifier
 		instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
-		if err != nil && err.Error() != resourceNotFoundErr { // TODO fix this
-			return fmt.Errorf("failed to find gitspace instance for config ID : %s %w", gitspaceConfig.Identifier, err)
+		if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+			return err
 		}
 		if instance != nil {
 			gitspaceConfig.GitspaceInstance = instance

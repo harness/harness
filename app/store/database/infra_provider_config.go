@@ -64,6 +64,25 @@ type infraProviderConfigStore struct {
 	db *sqlx.DB
 }
 
+func (i infraProviderConfigStore) Update(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
+	dbinfraProviderConfig := i.mapToInternalInfraProviderConfig(ctx, infraProviderConfig)
+	stmt := database.Builder.
+		Update(infraProviderConfigTable).
+		Set("ipconf_display_name", dbinfraProviderConfig.Name).
+		Set("ipconf_updated", dbinfraProviderConfig.Updated).
+		Where("ipconf_id = ?", infraProviderConfig.ID)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, i.db)
+	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
+		return database.ProcessSQLErrorf(
+			ctx, err, "Failed to update infra provider config %s", infraProviderConfig.Identifier)
+	}
+	return nil
+}
+
 func (i infraProviderConfigStore) Find(ctx context.Context, id int64) (*types.InfraProviderConfig, error) {
 	stmt := database.Builder.
 		Select(infraProviderConfigSelectColumns).
@@ -76,9 +95,9 @@ func (i infraProviderConfigStore) Find(ctx context.Context, id int64) (*types.In
 	dst := new(infraProviderConfig)
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProviderConfig")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider config %d", id)
 	}
-	return i.mapToInfraProviderConfig(ctx, dst)
+	return i.mapToInfraProviderConfig(ctx, dst), nil
 }
 
 func (i infraProviderConfigStore) FindByIdentifier(
@@ -98,9 +117,9 @@ func (i infraProviderConfigStore) FindByIdentifier(
 	dst := new(infraProviderConfig)
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraProviderConfig")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider config %s", identifier)
 	}
-	return i.mapToInfraProviderConfig(ctx, dst)
+	return i.mapToInfraProviderConfig(ctx, dst), nil
 }
 
 func (i infraProviderConfigStore) Create(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
@@ -122,14 +141,15 @@ func (i infraProviderConfigStore) Create(ctx context.Context, infraProviderConfi
 	}
 	db := dbtx.GetAccessor(ctx, i.db)
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&infraProviderConfig.ID); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "infra config query failed")
+		return database.ProcessSQLErrorf(
+			ctx, err, "infraprovider config create query failed for %s", infraProviderConfig.Identifier)
 	}
 	return nil
 }
 
 func (i infraProviderConfigStore) mapToInfraProviderConfig(
 	_ context.Context,
-	in *infraProviderConfig) (*types.InfraProviderConfig, error) {
+	in *infraProviderConfig) *types.InfraProviderConfig {
 	infraProviderConfigEntity := &types.InfraProviderConfig{
 		ID:         in.ID,
 		Identifier: in.Identifier,
@@ -139,5 +159,19 @@ func (i infraProviderConfigStore) mapToInfraProviderConfig(
 		Created:    in.Created,
 		Updated:    in.Updated,
 	}
-	return infraProviderConfigEntity, nil
+	return infraProviderConfigEntity
+}
+
+func (i infraProviderConfigStore) mapToInternalInfraProviderConfig(
+	_ context.Context,
+	in *types.InfraProviderConfig) *infraProviderConfig {
+	infraProviderConfigEntity := &infraProviderConfig{
+		Identifier: in.Identifier,
+		Name:       in.Name,
+		Type:       in.Type,
+		SpaceID:    in.SpaceID,
+		Created:    in.Created,
+		Updated:    in.Updated,
+	}
+	return infraProviderConfigEntity
 }

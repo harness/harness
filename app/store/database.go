@@ -635,6 +635,9 @@ type (
 
 		// Create creates a new infra provider config in the datastore.
 		Create(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error
+
+		// Update tries to update the infra provider config in the datastore.
+		Update(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error
 	}
 
 	InfraProviderResourceStore interface {
@@ -646,6 +649,9 @@ type (
 
 		// Create creates a new infra provider resource in the datastore.
 		Create(ctx context.Context, infraProviderResource *types.InfraProviderResource) error
+
+		// Update tries to update the infra provider resource in the datastore.
+		Update(ctx context.Context, infraProviderResource *types.InfraProviderResource) error
 
 		// List lists the infra provider resource present for the gitspace config in a parent space ID in the datastore.
 		List(ctx context.Context,
@@ -1076,6 +1082,7 @@ type (
 	InfraProviderTemplateStore interface {
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.InfraProviderTemplate, error)
 		Find(ctx context.Context, id int64) (*types.InfraProviderTemplate, error)
+		Update(ctx context.Context, infraProviderTemplate *types.InfraProviderTemplate) error
 		Create(ctx context.Context, infraProviderTemplate *types.InfraProviderTemplate) error
 		Delete(ctx context.Context, id int64) error
 	}

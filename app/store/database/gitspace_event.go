@@ -83,7 +83,7 @@ func (g gitspaceEventStore) FindLatestByTypeAndGitspaceConfigID(
 	db := dbtx.GetAccessor(ctx, g.db)
 	gitspaceEventEntity := new(gitspaceEvent)
 	if err = db.GetContext(ctx, gitspaceEventEntity, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace event")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace event for %d", gitspaceConfigID)
 	}
 	return g.mapGitspaceEvent(gitspaceEventEntity), nil
 }
@@ -107,7 +107,8 @@ func (g gitspaceEventStore) Create(ctx context.Context, gitspaceEvent *types.Git
 		return fmt.Errorf("failed to convert squirrel builder to sql: %w", err)
 	}
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&gitspaceEvent.ID); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "%s query failed", gitspaceEventsTable)
+		return database.ProcessSQLErrorf(
+			ctx, err, "failed to create gitspace event for %s", gitspaceEvent.QueryKey)
 	}
 	return nil
 }
@@ -134,7 +135,7 @@ func (g gitspaceEventStore) List(
 
 	var gitspaceEventEntities []*gitspaceEvent
 	if err = db.SelectContext(ctx, &gitspaceEventEntities, sql, args...); err != nil {
-		return nil, 0, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace event")
+		return nil, 0, database.ProcessSQLErrorf(ctx, err, "Failed to list gitspace event")
 	}
 
 	countStmt := database.Builder.

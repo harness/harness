@@ -97,7 +97,7 @@ func (g gitspaceInstanceStore) Find(ctx context.Context, id int64) (*types.Gitsp
 	gitspace := new(gitspaceInstance)
 	db := dbtx.GetAccessor(ctx, g.db)
 	if err := db.GetContext(ctx, gitspace, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace %d", id)
 	}
 	return g.mapToGitspaceInstance(ctx, gitspace)
 }
@@ -130,7 +130,8 @@ func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *typ
 	}
 	db := dbtx.GetAccessor(ctx, g.db)
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&gitspaceInstance.ID); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "gitspace query failed")
+		return database.ProcessSQLErrorf(
+			ctx, err, "gitspace instance query failed for %s", gitspaceInstance.Identifier)
 	}
 	return nil
 }
@@ -152,7 +153,8 @@ func (g gitspaceInstanceStore) Update(
 	}
 	db := dbtx.GetAccessor(ctx, g.db)
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed to update gitspace")
+		return database.ProcessSQLErrorf(
+			ctx, err, "Failed to update gitspace instance for %s", gitspaceInstance.Identifier)
 	}
 	return nil
 }
@@ -176,7 +178,8 @@ func (g gitspaceInstanceStore) FindLatestByGitspaceConfigID(
 	gitspace := new(gitspaceInstance)
 	db := dbtx.GetAccessor(ctx, g.db)
 	if err := db.GetContext(ctx, gitspace, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace")
+		return nil, database.ProcessSQLErrorf(
+			ctx, err, "Failed to find latest gitspace instance for %d", gitspaceConfigID)
 	}
 	return g.mapToGitspaceInstance(ctx, gitspace)
 }
@@ -198,7 +201,7 @@ func (g gitspaceInstanceStore) List(
 	db := dbtx.GetAccessor(ctx, g.db)
 	var dst []*gitspaceInstance
 	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace instance list query")
 	}
 	return g.mapToGitspaceInstances(ctx, dst)
 }
@@ -231,7 +234,8 @@ func (g gitspaceInstanceStore) FindAllLatestByGitspaceConfigID(
 	db := dbtx.GetAccessor(ctx, g.db)
 	var dst []*gitspaceInstance
 	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(
+			ctx, err, "Failed executing all latest gitspace instance list query")
 	}
 	return g.mapToGitspaceInstances(ctx, dst)
 }
