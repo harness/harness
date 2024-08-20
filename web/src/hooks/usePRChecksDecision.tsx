@@ -29,6 +29,7 @@ export function usePRChecksDecision({
   const { data, error, refetch } = useListStatusCheckResults({
     repo_ref: `${repoMetadata?.path as string}/+`,
     commit_sha: pullReqMetadata?.source_sha as string,
+    queryParams: { limit: 100 },
     lazy: !repoMetadata?.path || !pullReqMetadata?.source_sha
   })
   const [count, setCount] = useState(DEFAULT_COUNTS)
