@@ -34,33 +34,25 @@ type LabelColor string
 
 func (LabelColor) Enum() []interface{}              { return toInterfaceSlice(LabelColors) }
 func (t LabelColor) Sanitize() (LabelColor, bool)   { return Sanitize(t, GetAllLabelColors) }
-func GetAllLabelColors() ([]LabelColor, LabelColor) { return LabelColors, LabelColorBackground }
+func GetAllLabelColors() ([]LabelColor, LabelColor) { return LabelColors, LabelColorBlue }
 
 const (
-	LabelColorBackground LabelColor = "background"
-	LabelColorStroke     LabelColor = "stroke"
-	LabelColorText       LabelColor = "text"
-	LabelColorAccent     LabelColor = "accent"
-	LabelColorRed        LabelColor = "red"
-	LabelColorGreen      LabelColor = "green"
-	LabelColorYellow     LabelColor = "yellow"
-	LabelColorBlue       LabelColor = "blue"
-	LabelColorPink       LabelColor = "pink"
-	LabelColorPurple     LabelColor = "purple"
-	LabelColorViolet     LabelColor = "violet"
-	LabelColorIndigo     LabelColor = "indigo"
-	LabelColorCyan       LabelColor = "cyan"
-	LabelColorOrange     LabelColor = "orange"
-	LabelColorBrown      LabelColor = "brown"
-	LabelColorMint       LabelColor = "mint"
-	LabelColorLime       LabelColor = "lime"
+	LabelColorRed    LabelColor = "red"
+	LabelColorGreen  LabelColor = "green"
+	LabelColorYellow LabelColor = "yellow"
+	LabelColorBlue   LabelColor = "blue"
+	LabelColorPink   LabelColor = "pink"
+	LabelColorPurple LabelColor = "purple"
+	LabelColorViolet LabelColor = "violet"
+	LabelColorIndigo LabelColor = "indigo"
+	LabelColorCyan   LabelColor = "cyan"
+	LabelColorOrange LabelColor = "orange"
+	LabelColorBrown  LabelColor = "brown"
+	LabelColorMint   LabelColor = "mint"
+	LabelColorLime   LabelColor = "lime"
 )
 
 var LabelColors = sortEnum([]LabelColor{
-	LabelColorBackground,
-	LabelColorStroke,
-	LabelColorText,
-	LabelColorAccent,
 	LabelColorRed,
 	LabelColorGreen,
 	LabelColorYellow,

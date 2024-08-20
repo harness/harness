@@ -36,8 +36,8 @@ func (c *Controller) UpdateLabel(
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	if err := in.Validate(); err != nil {
-		return nil, fmt.Errorf("failed to validate input: %w", err)
+	if err := in.Sanitize(); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
 	label, err := c.labelSvc.Update(ctx, session.Principal.ID, nil, &repo.ID, key, in)

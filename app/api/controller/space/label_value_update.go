@@ -37,8 +37,8 @@ func (c *Controller) UpdateLabelValue(
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	if err := in.Validate(); err != nil {
-		return nil, fmt.Errorf("failed to validate input: %w", err)
+	if err := in.Sanitize(); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
 	label, err := c.labelSvc.Find(ctx, &space.ID, nil, key)

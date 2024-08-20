@@ -134,17 +134,18 @@ type DefineLabelInput struct {
 	Color       enum.LabelColor `json:"color"`
 }
 
-func (in DefineLabelInput) Validate() error {
-	if err := validateLabelText(&in.Key, "key"); err != nil {
+func (in *DefineLabelInput) Sanitize() error {
+	if err := sanitizeLabelText(&in.Key, "key"); err != nil {
 		return err
 	}
 
-	if err := validateLabelType(in.Type); err != nil {
+	sanitizeDescription(&in.Description)
+
+	if err := sanitizeLabelType(&in.Type); err != nil {
 		return err
 	}
 
-	err := validateLabelColor(in.Color)
-	if err != nil {
+	if err := sanitizeLabelColor(&in.Color); err != nil {
 		return err
 	}
 
@@ -158,24 +159,19 @@ type UpdateLabelInput struct {
 	Color       *enum.LabelColor `json:"color,omitempty"`
 }
 
-func (in UpdateLabelInput) Validate() error {
-	if in.Key != nil {
-		if err := validateLabelText(in.Key, "key"); err != nil {
-			return err
-		}
+func (in *UpdateLabelInput) Sanitize() error {
+	if err := sanitizeLabelText(in.Key, "key"); err != nil {
+		return err
 	}
 
-	if in.Type != nil {
-		if err := validateLabelType(*in.Type); err != nil {
-			return err
-		}
+	sanitizeDescription(in.Description)
+
+	if err := sanitizeLabelType(in.Type); err != nil {
+		return err
 	}
 
-	if in.Color != nil {
-		err := validateLabelColor(*in.Color)
-		if err != nil {
-			return err
-		}
+	if err := sanitizeLabelColor(in.Color); err != nil {
+		return err
 	}
 
 	return nil
@@ -186,12 +182,12 @@ type DefineValueInput struct {
 	Color enum.LabelColor `json:"color"`
 }
 
-func (in DefineValueInput) Validate() error {
-	if err := validateLabelText(&in.Value, "value"); err != nil {
+func (in *DefineValueInput) Sanitize() error {
+	if err := sanitizeLabelText(&in.Value, "value"); err != nil {
 		return err
 	}
 
-	if err := validateLabelColor(in.Color); err != nil {
+	if err := sanitizeLabelColor(&in.Color); err != nil {
 		return err
 	}
 
@@ -203,17 +199,15 @@ type UpdateValueInput struct {
 	Color *enum.LabelColor `json:"color"`
 }
 
-func (in UpdateValueInput) Validate() error {
+func (in *UpdateValueInput) Sanitize() error {
 	if in.Value != nil {
-		if err := validateLabelText(in.Value, "value"); err != nil {
+		if err := sanitizeLabelText(in.Value, "value"); err != nil {
 			return err
 		}
 	}
 
-	if in.Color != nil {
-		if err := validateLabelColor(*in.Color); err != nil {
-			return err
-		}
+	if err := sanitizeLabelColor(in.Color); err != nil {
+		return err
 	}
 
 	return nil
@@ -250,13 +244,13 @@ type SaveInput struct {
 	Values []*SaveLabelValueInput `json:"values,omitempty"`
 }
 
-func (in *SaveInput) Validate() error {
-	if err := in.Label.Validate(); err != nil {
+func (in *SaveInput) Sanitize() error {
+	if err := in.Label.Sanitize(); err != nil {
 		return err
 	}
 
 	for _, value := range in.Values {
-		if err := value.Validate(); err != nil {
+		if err := value.Sanitize(); err != nil {
 			return err
 		}
 	}
@@ -264,7 +258,11 @@ func (in *SaveInput) Validate() error {
 	return nil
 }
 
-func validateLabelText(text *string, typ string) error {
+func sanitizeLabelText(text *string, typ string) error {
+	if text == nil {
+		return nil
+	}
+
 	*text = strings.TrimSpace(*text)
 
 	if len(*text) == 0 {
@@ -284,31 +282,44 @@ func validateLabelText(text *string, typ string) error {
 	return nil
 }
 
-var labelTypes, _ = enum.GetAllLabelTypes()
-
-func validateLabelType(typ enum.LabelType) error {
-	if typ == "" {
-		return errors.InvalidArgument("label type missing")
+func sanitizeDescription(description *string) {
+	if description == nil {
+		return
 	}
 
-	if _, ok := typ.Sanitize(); !ok {
-		return errors.InvalidArgument("label type must be in %v", labelTypes)
+	*description = strings.TrimSpace(*description)
+}
+
+func sanitizeLabelType(typ *enum.LabelType) error {
+	if typ == nil {
+		return nil
+	}
+
+	*typ = enum.LabelType(trimLowerText(string(*typ)))
+
+	var ok bool
+	if *typ, ok = typ.Sanitize(); !ok {
+		return errors.InvalidArgument("invalid label type")
 	}
 
 	return nil
 }
 
-var colorTypes, _ = enum.GetAllLabelColors()
-
-func validateLabelColor(color enum.LabelColor) error {
-	if color == "" {
-		return errors.InvalidArgument("label color missing")
+func sanitizeLabelColor(color *enum.LabelColor) error {
+	if color == nil {
+		return nil
 	}
 
-	_, ok := color.Sanitize()
-	if !ok {
-		return errors.InvalidArgument("color type must be in %v", colorTypes)
+	*color = enum.LabelColor(trimLowerText(string(*color)))
+
+	var ok bool
+	if *color, ok = color.Sanitize(); !ok {
+		return errors.InvalidArgument("invalid label color")
 	}
 
 	return nil
+}
+
+func trimLowerText(text string) string {
+	return strings.ToLower(strings.TrimSpace(text))
 }

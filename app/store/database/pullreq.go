@@ -427,13 +427,17 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 	var stmt squirrel.SelectBuilder
 
 	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 {
-		stmt = database.Builder.Select("count(DISTINCT pullreq_id)")
+		stmt = database.Builder.Select("1")
 	} else {
-		stmt = database.Builder.Select("count(*)")
+		stmt = database.Builder.Select("COUNT(*)")
 	}
-	stmt = stmt.From("pullreqs")
 
+	stmt = stmt.From("pullreqs")
 	s.applyFilter(&stmt, opts)
+
+	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 {
+		stmt = database.Builder.Select("COUNT(*)").FromSelect(stmt, "subquery")
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
