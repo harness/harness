@@ -56,6 +56,7 @@ func (c *Controller) getRepoCheckAccess(
 	repoRef string,
 	reqPermission enum.Permission,
 ) (*types.Repository, error) {
+	// migrating repositories need to adjust the repo settings during the import, hence expanding the allowedstates.
 	return repo.GetRepoCheckAccess(
 		ctx,
 		c.repoStore,
@@ -63,6 +64,6 @@ func (c *Controller) getRepoCheckAccess(
 		session,
 		repoRef,
 		reqPermission,
-		repo.ActiveRepoStates,
+		[]enum.RepoState{enum.RepoStateActive, enum.RepoStateMigrateGitPush},
 	)
 }
