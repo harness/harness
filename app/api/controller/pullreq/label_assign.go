@@ -95,6 +95,7 @@ func activityPayload(out *label.AssignToPullReqOut) *types.PullRequestActivityLa
 	return &types.PullRequestActivityLabel{
 		Label:         out.Label.Key,
 		LabelColor:    out.Label.Color,
+		LabelScope:    out.Label.Scope,
 		Value:         value,
 		ValueColor:    valueColor,
 		OldValue:      oldValue,

@@ -160,6 +160,7 @@ func (a *PullRequestActivityPayloadBranchDelete) ActivityType() enum.PullReqActi
 type PullRequestActivityLabel struct {
 	Label         string                        `json:"label"`
 	LabelColor    enum.LabelColor               `json:"label_color"`
+	LabelScope    int64                         `json:"label_scope"`
 	Value         *string                       `json:"value,omitempty"`
 	ValueColor    *enum.LabelColor              `json:"value_color,omitempty"`
 	OldValue      *string                       `json:"old_value,omitempty"`

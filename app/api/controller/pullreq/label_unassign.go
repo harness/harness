@@ -68,6 +68,7 @@ func (c *Controller) UnassignLabel(
 	payload := &types.PullRequestActivityLabel{
 		Label:      label.Key,
 		LabelColor: label.Color,
+		LabelScope: label.Scope,
 		Value:      value,
 		ValueColor: color,
 		Type:       enum.LabelActivityUnassign,

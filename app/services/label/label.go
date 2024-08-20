@@ -148,6 +148,9 @@ func (s *Service) Save(
 		for i, value := range valuesToCreate {
 			valuesToReturn[i] = newLabelValue(principalID, label.ID, &value.DefineValueInput)
 			if err = s.labelValueStore.Define(ctx, valuesToReturn[i]); err != nil {
+				if errors.Is(err, store.ErrDuplicate) {
+					return errors.Conflict("value %s already exists", valuesToReturn[i].Value)
+				}
 				return err
 			}
 		}
