@@ -43,7 +43,7 @@ func (c *Controller) ReviewerAdd(
 	prNum int64,
 	in *ReviewerAddInput,
 ) (*types.PullReqReviewer, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoReview)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
@@ -91,7 +91,7 @@ func (c *Controller) ReviewerAdd(
 		if err = apiauth.CheckRepo(ctx, c.authorizer, &auth.Session{
 			Principal: *reviewerPrincipal,
 			Metadata:  nil,
-		}, repo, enum.PermissionRepoView); err != nil {
+		}, repo, enum.PermissionRepoReview); err != nil {
 			log.Ctx(ctx).Info().Msgf("Reviewer principal: %s access error: %s", reviewerInfo.UID, err)
 			return nil, usererror.BadRequest("The reviewer doesn't have enough permissions for the repository.")
 		}

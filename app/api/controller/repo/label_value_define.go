@@ -48,7 +48,7 @@ func (c *Controller) DefineLabelValue(
 
 	permission := enum.PermissionRepoEdit
 	if label.Type == enum.LabelTypeDynamic {
-		permission = enum.PermissionRepoPush
+		permission = enum.PermissionRepoReview
 	}
 
 	if err = apiauth.CheckRepo(

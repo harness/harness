@@ -53,7 +53,7 @@ func (c *Controller) ReviewerDelete(
 	var reqPermission enum.Permission
 	switch {
 	case session.Principal.ID == reviewer.PrincipalID:
-		reqPermission = enum.PermissionRepoView // Anybody should be allowed to remove their own reviews.
+		reqPermission = enum.PermissionRepoReview // Anybody can remove their own reviews with RepoReview permission.
 	case reviewer.ReviewDecision == enum.PullReqReviewDecisionPending:
 		reqPermission = enum.PermissionRepoPush // The reviewer was asked for a review but didn't submit it yet.
 	default:

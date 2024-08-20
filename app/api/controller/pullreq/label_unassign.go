@@ -34,7 +34,7 @@ func (c *Controller) UnassignLabel(
 	pullreqNum int64,
 	labelID int64,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoReview)
 	if err != nil {
 		return fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
