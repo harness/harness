@@ -34,14 +34,18 @@ interface NoResultCardProps {
   onButtonClick?: () => void
   permissionProp?: { disabled: boolean; tooltip: JSX.Element | string } | undefined
   standalone?: boolean
+  forFilter?: boolean
+  emptyFilterMessage?: string
 }
 
 export const NoResultCard: React.FC<NoResultCardProps> = ({
   showWhen = () => true,
   forSearch,
+  forFilter = false,
   title,
   message,
   emptySearchMessage,
+  emptyFilterMessage,
   buttonText = '',
   buttonIcon = CodeIcon.Add,
   onButtonClick = noop,
@@ -57,12 +61,16 @@ export const NoResultCard: React.FC<NoResultCardProps> = ({
     <Container className={css.main}>
       <NoDataCard
         image={Images.EmptyState}
-        messageTitle={forSearch ? title || getString('noResultTitle') : undefined}
+        messageTitle={forSearch || forFilter ? title || getString('noResultTitle') : undefined}
         message={
-          forSearch ? emptySearchMessage || getString('noResultMessage') : message || getString('noResultMessage')
+          forSearch
+            ? emptySearchMessage || getString('noResultMessage')
+            : forFilter
+            ? emptyFilterMessage || getString('noFilterResultMessage')
+            : message || getString('noResultMessage')
         }
         button={
-          forSearch ? undefined : (
+          forSearch || forFilter ? undefined : (
             <Button
               variation={ButtonVariation.PRIMARY}
               text={buttonText}

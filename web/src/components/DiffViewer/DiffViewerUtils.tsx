@@ -34,7 +34,14 @@ export enum CommentType {
   MERGE = 'merge',
   BRANCH_UPDATE = 'branch-update',
   BRANCH_DELETE = 'branch-delete',
-  STATE_CHANGE = 'state-change'
+  STATE_CHANGE = 'state-change',
+  LABEL_MODIFY = 'label-modify'
+}
+
+export enum LabelActivity {
+  ASSIGN = 'assign',
+  UN_ASSIGN = 'unassign',
+  RE_ASSIGN = 'reassign'
 }
 
 /**

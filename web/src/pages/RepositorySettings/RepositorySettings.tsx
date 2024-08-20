@@ -24,20 +24,24 @@ import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { getErrorMessage, voidFn } from 'utils/Utils'
+import { LabelsPageScope, getErrorMessage, voidFn } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 // import Webhooks from 'pages/Webhooks/Webhooks'
 import { useAppContext } from 'AppContext'
 import BranchProtectionListing from 'components/BranchProtection/BranchProtectionListing'
 import { SettingsTab, normalizeGitRef } from 'utils/GitUtils'
 import SecurityScanSettings from 'pages/RepositorySettings/SecurityScanSettings/SecurityScanSettings'
+import LabelsListing from 'pages/Labels/LabelsListing'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import GeneralSettingsContent from './GeneralSettingsContent/GeneralSettingsContent'
 import css from './RepositorySettings.module.scss'
 
 export default function RepositorySettings() {
   const { repoMetadata, error, loading, refetch, settingSection, gitRef, resourcePath } = useGetRepositoryMetadata()
+  const space = useGetSpaceParam()
   const history = useHistory()
-  const { routes } = useAppContext()
+  const { routes, hooks, standalone } = useAppContext()
+  const { CODE_PULLREQ_LABELS: isLabelEnabled } = hooks?.useFeatureFlags()
   const [activeTab, setActiveTab] = React.useState<string>(settingSection || SettingsTab.general)
   const { getString } = useStrings()
   const { isRepositoryEmpty } = useGetResourceContent({
@@ -71,7 +75,24 @@ export default function RepositorySettings() {
       id: SettingsTab.security,
       title: getString('security'),
       panel: <SecurityScanSettings repoMetadata={repoMetadata} activeTab={activeTab} />
-    }
+    },
+    ...(isLabelEnabled || standalone
+      ? [
+          {
+            id: SettingsTab.labels,
+            title: getString('labels.labels'),
+            panel: (
+              <LabelsListing
+                activeTab={activeTab}
+                repoMetadata={repoMetadata}
+                currentPageScope={LabelsPageScope.REPOSITORY}
+                space={space}
+              />
+            )
+          }
+        ]
+      : [])
+
     // {
     //   id: SettingsTab.webhooks,
     //   title: getString('webhooks'),
@@ -87,7 +108,7 @@ export default function RepositorySettings() {
       <RepositoryPageHeader
         className={css.headerContainer}
         repoMetadata={repoMetadata}
-        title={getString('settings')}
+        title={getString('manageRepository')}
         dataTooltipId="repositorySettings"
       />
       <PageBody error={getErrorMessage(error)} retryOnError={voidFn(refetch)}>

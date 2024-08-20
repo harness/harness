@@ -66,3 +66,10 @@
 .iconPadding {
   padding-left: 0.6rem !important;
 }
+
+.labelsLayout {
+  width: auto;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 7px;
+}

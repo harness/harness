@@ -616,6 +616,60 @@ export interface StringsMap {
   'keywordSearch.sampleQueries.searchForPattern': string
   keywordSearchPlaceholder: string
   killed: string
+  'labels.addNewValue': string
+  'labels.addValue': string
+  'labels.addaValue': string
+  'labels.allowDynamic': string
+  'labels.anyValue': string
+  'labels.anyValueOption': string
+  'labels.applied': string
+  'labels.appliedLabel': string
+  'labels.canbeAddedByUsers': string
+  'labels.createLabel': string
+  'labels.createdIn': string
+  'labels.deleteLabel': string
+  'labels.deleteLabelConfirm': string
+  'labels.descriptionOptional': string
+  'labels.failedToDeleteLabel': string
+  'labels.filterByLabels': string
+  'labels.findALabel': string
+  'labels.findOrAdd': string
+  'labels.findaValue': string
+  'labels.intentText': string
+  'labels.label': string
+  'labels.labelCreated': string
+  'labels.labelCreationFailed': string
+  'labels.labelName': string
+  'labels.labelNameReq': string
+  'labels.labelNotFound': string
+  'labels.labelPreview': string
+  'labels.labelTo': string
+  'labels.labelUpdateFailed': string
+  'labels.labelUpdated': string
+  'labels.labelValue': string
+  'labels.labelValueReq': string
+  'labels.labelValuesOptional': string
+  'labels.labels': string
+  'labels.labelsApplied': string
+  'labels.newLabel': string
+  'labels.noLabels': string
+  'labels.noLabelsFound': string
+  'labels.noNewLine': string
+  'labels.noRepoLabelsFound': string
+  'labels.noResults': string
+  'labels.noScopeLabelsFound': string
+  'labels.placeholderDescription': string
+  'labels.prCount': string
+  'labels.provideLabelName': string
+  'labels.provideLabelValue': string
+  'labels.removeLabel': string
+  'labels.removed': string
+  'labels.removedLabel': string
+  'labels.scopeMessage': string
+  'labels.showLabelsScope': string
+  'labels.stringMax': string
+  'labels.updateLabel': string
+  'labels.updated': string
   language: string
   leaveAComment: string
   license: string
@@ -627,6 +681,7 @@ export interface StringsMap {
   makeRequired: string
   manageApiToken: string
   manageCredText: string
+  manageRepository: string
   markAsDraft: string
   matchPassword: string
   mergeBranchTitle: string
@@ -679,6 +734,7 @@ export interface StringsMap {
   noCommitsPR: string
   noExpiration: string
   noExpirationDate: string
+  noFilterResultMessage: string
   noOptionalReviewers: string
   noRequiredReviewers: string
   noResultMessage: string
@@ -899,6 +955,7 @@ export interface StringsMap {
   public: string
   pullMustBeMadeFromBranches: string
   pullRequestEmpty: string
+  pullRequestNotFoundforFilter: string
   pullRequestalreadyExists: string
   pullRequests: string
   quote: string

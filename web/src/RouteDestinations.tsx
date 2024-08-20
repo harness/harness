@@ -54,6 +54,7 @@ import PipelineSettings from 'components/PipelineSettings/PipelineSettings'
 import GitspaceDetails from 'cde-gitness/pages/GitspaceDetails/GitspaceDetails'
 import GitspaceListing from 'cde-gitness/pages/GitspaceListing/GitspaceListing'
 import GitspaceCreate from 'cde-gitness/pages/GitspaceCreate/GitspaceCreate'
+import ManageLabels from 'pages/ManageSpace/ManageLabels/ManageLabels'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
@@ -81,7 +82,12 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </LayoutWithSideNav>
         </Route>
 
-        <Route path={routes.toCODESpaceSettings({ space: pathProps.space })} exact>
+        <Route
+          path={[
+            routes.toCODESpaceSettings({ space: pathProps.space, settingSection: pathProps.settingSection }),
+            routes.toCODESpaceSettings({ space: pathProps.space })
+          ]}
+          exact>
           <LayoutWithSideNav title={getString('pageTitle.spaceSettings')}>
             <SpaceSettings />
           </LayoutWithSideNav>
@@ -372,6 +378,12 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           ]}>
           <LayoutWithSideNav title={getString('pageTitle.repository')}>
             <Repository />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODESpaceLabels({ space: pathProps.space })} exact>
+          <LayoutWithSideNav title={getString('labels.labels')}>
+            <ManageLabels />
           </LayoutWithSideNav>
         </Route>
 

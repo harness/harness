@@ -18,6 +18,7 @@
 // This is an auto-generated file
 export declare const alignLayout: string
 export declare const iconPadding: string
+export declare const labelsLayout: string
 export declare const redIcon: string
 export declare const reviewerAvatar: string
 export declare const reviewerName: string

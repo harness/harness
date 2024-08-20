@@ -10,19 +10,93 @@ export interface ApiFileDiffRequest {
   start_line?: number
 }
 
-export type EnumCIStatus = string
-
 export type EnumCheckPayloadKind = '' | 'markdown' | 'pipeline' | 'raw'
 
 export type EnumCheckStatus = 'error' | 'failure' | 'pending' | 'running' | 'success'
 
 export type EnumContentEncodingType = 'base64' | 'utf8'
 
-export type EnumFileDiffStatus = string
+export type EnumGitspaceAccessType = 'jwt_token' | 'user_credentials' | 'ssh_key'
+
+export type EnumGitspaceActionType = 'start' | 'stop'
+
+export type EnumGitspaceCodeRepoType = 'github' | 'gitlab' | 'harness_code' | 'bitbucket' | 'unknown' | 'gitness'
+
+export type EnumGitspaceEntityType = 'gitspace_config' | 'gitspace_instance'
+
+export type EnumGitspaceEventType =
+  | 'gitspace_action_start'
+  | 'gitspace_action_start_completed'
+  | 'gitspace_action_start_failed'
+  | 'gitspace_action_stop'
+  | 'gitspace_action_stop_completed'
+  | 'gitspace_action_stop_failed'
+  | 'fetch_devcontainer_start'
+  | 'fetch_devcontainer_completed'
+  | 'fetch_devcontainer_failed'
+  | 'infra_provisioning_start'
+  | 'infra_provisioning_completed'
+  | 'infra_provisioning_failed'
+  | 'infra_stop_start'
+  | 'infra_stop_completed'
+  | 'infra_stop_failed'
+  | 'infra_deprovisioning_start'
+  | 'infra_deprovisioning_completed'
+  | 'infra_deprovisioning_failed'
+  | 'agent_connect_start'
+  | 'agent_connect_completed'
+  | 'agent_connect_failed'
+  | 'agent_gitspace_creation_start'
+  | 'agent_gitspace_creation_completed'
+  | 'agent_gitspace_creation_failed'
+  | 'agent_gitspace_stop_start'
+  | 'agent_gitspace_stop_completed'
+  | 'agent_gitspace_stop_failed'
+  | 'agent_gitspace_deletion_start'
+  | 'agent_gitspace_deletion_completed'
+  | 'agent_gitspace_deletion_failed'
+  | 'agent_gitspace_state_report_running'
+  | 'agent_gitspace_state_report_error'
+  | 'agent_gitspace_state_report_stopped'
+  | 'agent_gitspace_state_report_unknown'
+
+export type EnumGitspaceInstanceStateType =
+  | 'running'
+  | 'uninitialized'
+  | 'unknown'
+  | 'error'
+  | 'deleted'
+  | 'starting'
+  | 'stopping'
+
+export type EnumGitspaceStateType = 'running' | 'stopped' | 'error' | 'uninitialized' | 'starting' | 'stopping'
+
+export type EnumIDEType = 'vs_code' | 'vs_code_web'
+
+export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud'
+
+export type EnumLabelColor =
+  | 'accent'
+  | 'background'
+  | 'blue'
+  | 'brown'
+  | 'cyan'
+  | 'green'
+  | 'indigo'
+  | 'lime'
+  | 'mint'
+  | 'orange'
+  | 'pink'
+  | 'purple'
+  | 'red'
+  | 'stroke'
+  | 'text'
+  | 'violet'
+  | 'yellow'
+
+export type EnumLabelType = 'dynamic' | 'static'
 
 export type EnumMembershipRole = 'contributor' | 'executor' | 'reader' | 'space_owner'
-
-export type EnumMergeCheckStatus = string
 
 export type EnumMergeMethod = 'merge' | 'rebase' | 'squash'
 
@@ -39,8 +113,10 @@ export type EnumPullReqActivityType =
   | 'branch-update'
   | 'code-comment'
   | 'comment'
+  | 'label-modify'
   | 'merge'
   | 'review-submit'
+  | 'reviewer-delete'
   | 'state-change'
   | 'title-change'
 
@@ -52,11 +128,7 @@ export type EnumPullReqReviewerType = 'assigned' | 'requested' | 'self_assigned'
 
 export type EnumPullReqState = 'closed' | 'merged' | 'open'
 
-export type EnumResolverType = string
-
 export type EnumRuleState = 'active' | 'disabled' | 'monitor' | null
-
-export type EnumTokenType = string
 
 export type EnumTriggerAction =
   | 'branch_created'
@@ -81,9 +153,9 @@ export type EnumWebhookTrigger =
   | 'pullreq_closed'
   | 'pullreq_comment_created'
   | 'pullreq_created'
-  | 'pullreq_updated'
   | 'pullreq_merged'
   | 'pullreq_reopened'
+  | 'pullreq_updated'
   | 'tag_created'
   | 'tag_deleted'
   | 'tag_updated'
@@ -98,8 +170,11 @@ export interface GitCommit {
   committer?: GitSignature
   file_stats?: GitCommitFileStats[]
   message?: string
-  parent_shas?: ShaSHA[]
-  sha?: ShaSHA
+  parent_shas?: string[]
+  /**
+   * Git object hash
+   */
+  sha?: string
   title?: string
 }
 
@@ -117,10 +192,10 @@ export interface GitFileDiff {
   is_submodule?: boolean
   old_path?: string
   old_sha?: string
-  patch?: number[]
+  patch?: string
   path?: string
   sha?: string
-  status?: EnumFileDiffStatus
+  status?: string
 }
 
 export interface GitIdentity {
@@ -149,6 +224,23 @@ export interface ImporterProvider {
 
 export type ImporterProviderType = 'github' | 'gitlab' | 'bitbucket' | 'stash' | 'gitea' | 'gogs' | 'azure'
 
+export interface InfraproviderResourceInput {
+  cpu?: string | null
+  disk?: string | null
+  gateway_host?: string | null
+  gateway_port?: string | null
+  identifier?: string
+  infra_provider_type?: EnumInfraProviderType
+  memory?: string | null
+  metadata?: {
+    [key: string]: string
+  } | null
+  name?: string
+  network?: string | null
+  region?: string[] | null
+  template_identifier?: string | null
+}
+
 export interface JobProgress {
   failure?: string
   progress?: number
@@ -162,6 +254,10 @@ export interface LivelogLine {
   out?: string
   pos?: number
   time?: number
+}
+
+export interface OpenapiActionGitspaceRequest {
+  action?: EnumGitspaceActionType
 }
 
 export interface OpenapiAdminUsersCreateRequest {
@@ -247,6 +343,34 @@ export interface OpenapiCreateConnectorRequest {
   uid?: string
 }
 
+export interface OpenapiCreateGitspaceRequest {
+  branch?: string
+  code_repo_ref?: string | null
+  code_repo_type?: EnumGitspaceCodeRepoType
+  code_repo_url?: string
+  devcontainer_path?: string | null
+  ide?: EnumIDEType
+  identifier?: string
+  metadata?: {
+    [key: string]: string
+  } | null
+  name?: string
+  resource_identifier?: string
+  resource_space_ref?: string
+  space_ref?: string
+}
+
+export interface OpenapiCreateInfraProviderConfigRequest {
+  identifier?: string
+  metadata?: {
+    [key: string]: string
+  } | null
+  name?: string
+  resources?: InfraproviderResourceInput[] | null
+  space_ref?: string
+  type?: EnumInfraProviderType
+}
+
 export interface OpenapiCreatePipelineRequest {
   config_path?: string
   default_branch?: string
@@ -311,7 +435,7 @@ export interface OpenapiCreateTemplateRequest {
 
 export interface OpenapiCreateTokenRequest {
   identifier?: string
-  lifetime?: TimeDuration
+  lifetime?: number | null
   uid?: string
 }
 
@@ -370,6 +494,11 @@ export interface OpenapiLoginRequest {
   password?: string
 }
 
+export interface OpenapiLookupRepoGitspaceRequest {
+  space_ref?: string
+  url?: string
+}
+
 export interface OpenapiMergePullReq {
   bypass_rules?: boolean
   dry_run?: boolean
@@ -396,6 +525,12 @@ export interface OpenapiPathsDetailsRequest {
 export type OpenapiPostRawDiffRequest = ApiFileDiffRequest[] | null
 
 export type OpenapiPostRawPRDiffRequest = ApiFileDiffRequest[] | null
+
+export interface OpenapiPullReqAssignLabelInput {
+  label_id?: number
+  value?: string
+  value_id?: number | null
+}
 
 export interface OpenapiRegisterRequest {
   display_name?: string
@@ -589,11 +724,11 @@ export interface ProtectionDefStatusChecks {
   require_identifiers?: string[]
 }
 
-export type ProtectionPattern = {
+export interface ProtectionPattern {
   default?: boolean
   exclude?: string[]
   include?: string[]
-} | null
+}
 
 export interface PullreqCommentApplySuggestionsOutput {
   commit_id?: string
@@ -627,7 +762,10 @@ export interface RepoCommitFileAction {
   encoding?: EnumContentEncodingType
   path?: string
   payload?: string
-  sha?: ShaSHA
+  /**
+   * Git object hash
+   */
+  sha?: string
 }
 
 export interface RepoCommitTag {
@@ -648,10 +786,8 @@ export interface RepoContentInfo {
   name?: string
   path?: string
   sha?: string
-  type?: RepoContentType
+  type?: string
 }
-
-export type RepoContentType = string
 
 export interface RepoFileContent {
   data?: string
@@ -697,6 +833,7 @@ export interface RepoRepositoryOutput {
   path?: string
   size?: number
   size_updated?: number
+  state?: number
   updated?: number
 }
 
@@ -722,10 +859,11 @@ export interface ReposettingsSecuritySettings {
   secret_scanning_enabled?: boolean | null
 }
 
-/**
- * Git object hash
- */
-export type ShaSHA = string
+export interface ScmCodeRepositoryResponse {
+  branch?: string
+  is_private?: boolean
+  url?: string
+}
 
 export interface SpaceExportProgressOutput {
   repos?: JobProgress[] | null
@@ -754,12 +892,11 @@ export interface SpaceSpaceOutput {
 }
 
 export interface SystemConfigOutput {
+  gitspace_enabled?: boolean
   public_resource_creation_enabled?: boolean
   ssh_enabled?: boolean
   user_signup_allowed?: boolean
 }
-
-export type TimeDuration = number | null
 
 export interface TypesChangeStats {
   changes?: number
@@ -827,7 +964,7 @@ export interface TypesCommitFileStats {
   insertions?: number
   old_path?: string
   path?: string
-  status?: EnumFileDiffStatus
+  status?: string
 }
 
 export interface TypesCommitFilesResponse {
@@ -852,7 +989,9 @@ export interface TypesConnector {
 }
 
 export interface TypesDiffStats {
+  additions?: number | null
   commits?: number | null
+  deletions?: number | null
   files_changed?: number | null
 }
 
@@ -888,7 +1027,7 @@ export interface TypesExecution {
   source_repo?: string
   stages?: TypesStage[]
   started?: number
-  status?: EnumCIStatus
+  status?: string
   target?: string
   timestamp?: number
   title?: string
@@ -896,9 +1035,147 @@ export interface TypesExecution {
   updated?: number
 }
 
+export interface TypesGitspaceConfig {
+  branch?: string
+  code_repo_ref?: string | null
+  code_repo_type?: EnumGitspaceCodeRepoType
+  code_repo_url?: string
+  created?: number
+  devcontainer_path?: string | null
+  ide?: EnumIDEType
+  identifier?: string
+  instance?: TypesGitspaceInstance
+  name?: string
+  resource_identifier?: string
+  space_path?: string
+  state?: EnumGitspaceStateType
+  updated?: number
+  user_id?: string
+}
+
+export interface TypesGitspaceEventResponse {
+  created?: number
+  entity_type?: EnumGitspaceEntityType
+  event?: EnumGitspaceEventType
+  event_time?: string
+  message?: string
+  query_key?: string
+  timestamp?: number
+}
+
+export interface TypesGitspaceInstance {
+  access_key?: string | null
+  access_type?: EnumGitspaceAccessType
+  created?: number
+  identifier?: string
+  last_used?: number
+  machine_user?: string | null
+  resource_usage?: string | null
+  space_path?: string
+  state?: EnumGitspaceInstanceStateType
+  total_time_used?: number
+  tracked_changes?: string | null
+  updated?: number
+  url?: string | null
+}
+
 export interface TypesIdentity {
   email?: string
   name?: string
+}
+
+export interface TypesInfraProviderConfig {
+  created?: number
+  identifier?: string
+  metadata?: {
+    [key: string]: string
+  } | null
+  name?: string
+  resources?: TypesInfraProviderResource[] | null
+  space_path?: string
+  type?: EnumInfraProviderType
+  updated?: number
+}
+
+export interface TypesInfraProviderResource {
+  config_identifier?: string
+  cpu?: string | null
+  created?: number
+  disk?: string | null
+  gateway_host?: string | null
+  gateway_port?: string | null
+  identifier?: string
+  infra_provider_type?: EnumInfraProviderType
+  memory?: string | null
+  metadata?: {
+    [key: string]: string
+  } | null
+  name?: string
+  network?: string | null
+  region?: string
+  space_path?: string
+  template_identifier?: string | null
+  updated?: number
+}
+
+export interface TypesLabel {
+  color?: EnumLabelColor
+  created?: number
+  created_by?: number
+  description?: string
+  id?: number
+  key?: string
+  repo_id?: number | null
+  scope?: number
+  space_id?: number | null
+  type?: EnumLabelType
+  updated?: number
+  updated_by?: number
+  value_count?: number
+}
+
+export interface TypesLabelAssignment {
+  assigned?: boolean | null
+  assigned_value?: TypesLabelValueInfo
+  color?: EnumLabelColor
+  id?: number
+  key?: string
+  scope?: number
+  type?: EnumLabelType
+  values?: TypesLabelValueInfo[]
+}
+
+export interface TypesLabelPullReqAssignmentInfo {
+  color?: EnumLabelColor
+  id?: number
+  key?: string
+  scope?: number
+  value?: string | null
+  value_color?: EnumLabelColor
+  value_count?: number
+  value_id?: number | null
+}
+
+export interface TypesLabelValue {
+  color?: EnumLabelColor
+  created?: number
+  created_by?: number
+  id?: number
+  label_id?: number
+  updated?: number
+  updated_by?: number
+  value?: string
+}
+
+export interface TypesLabelValueInfo {
+  color?: string | null
+  id?: number | null
+  value?: string | null
+}
+
+export interface TypesLabelWithValues {
+  label?: TypesLabel
+  values?: TypesLabelValue[] | null
 }
 
 export interface TypesListCommitResponse {
@@ -1000,8 +1277,9 @@ export interface TypesPullReq {
   description?: string
   edited?: number
   is_draft?: boolean
+  labels?: TypesLabelPullReqAssignmentInfo[]
   merge_base_sha?: string
-  merge_check_status?: EnumMergeCheckStatus
+  merge_check_status?: string
   merge_conflicts?: string[]
   merge_method?: EnumMergeMethod
   merge_target_sha?: string | null
@@ -1075,6 +1353,16 @@ export interface TypesPullReqFileView {
   sha?: string
 }
 
+export interface TypesPullReqLabel {
+  created?: number
+  created_by?: number
+  label_id?: number
+  pullreq_id?: number
+  updated?: number
+  updated_by?: number
+  value_id?: number | null
+}
+
 export interface TypesPullReqReviewer {
   added_by?: TypesPrincipalInfo
   created?: number
@@ -1087,8 +1375,10 @@ export interface TypesPullReqReviewer {
 }
 
 export interface TypesPullReqStats {
+  additions?: number | null
   commits?: number | null
   conversations?: number
+  deletions?: number | null
   files_changed?: number | null
   unresolved_count?: number
 }
@@ -1111,7 +1401,6 @@ export interface TypesRepository {
   git_url?: string
   id?: number
   identifier?: string
-  importing?: boolean
   is_empty?: boolean
   num_closed_pulls?: number
   num_forks?: number
@@ -1122,6 +1411,7 @@ export interface TypesRepository {
   path?: string
   size?: number
   size_updated?: number
+  state?: number
   updated?: number
 }
 
@@ -1143,10 +1433,8 @@ export interface TypesRuleInfo {
   repo_path?: string
   space_path?: string
   state?: EnumRuleState
-  type?: TypesRuleType
+  type?: string
 }
-
-export type TypesRuleType = string
 
 export interface TypesRuleViolations {
   bypassable?: boolean
@@ -1157,6 +1445,31 @@ export interface TypesRuleViolations {
 
 export interface TypesRulesViolations {
   violations?: TypesRuleViolations[] | null
+}
+
+export interface TypesSaveLabelInput {
+  color?: EnumLabelColor
+  description?: string
+  id?: number
+  key?: string
+  type?: EnumLabelType
+}
+
+export interface TypesSaveLabelValueInput {
+  color?: EnumLabelColor
+  id?: number
+  value?: string
+}
+
+export interface TypesScopeData {
+  repository?: TypesRepository
+  scope?: number
+  space?: TypesSpace
+}
+
+export interface TypesScopesLabels {
+  label_data?: TypesLabelAssignment[] | null
+  scope_data?: TypesScopeData[] | null
 }
 
 export interface TypesSecret {
@@ -1218,7 +1531,7 @@ export interface TypesStage {
   os?: string
   repo_id?: number
   started?: number
-  status?: EnumCIStatus
+  status?: string
   steps?: TypesStep[]
   stopped?: number
   throttle?: number
@@ -1237,7 +1550,7 @@ export interface TypesStep {
   number?: number
   schema?: string
   started?: number
-  status?: EnumCIStatus
+  status?: string
   stopped?: number
 }
 
@@ -1247,7 +1560,7 @@ export interface TypesTemplate {
   description?: string
   identifier?: string
   space_id?: number
-  type?: EnumResolverType
+  type?: string
   updated?: number
 }
 
@@ -1257,7 +1570,7 @@ export interface TypesToken {
   identifier?: string
   issued_at?: number
   principal_id?: number
-  type?: EnumTokenType
+  type?: string
 }
 
 export interface TypesTokenResponse {
@@ -1609,6 +1922,352 @@ export const useUpdateConnector = ({ connector_ref, ...props }: UseUpdateConnect
     'PATCH',
     (paramsInPath: UpdateConnectorPathParams) => `/connectors/${paramsInPath.connector_ref}`,
     { base: getConfig('code/api/v1'), pathParams: { connector_ref }, ...props }
+  )
+
+export interface ListGitspacesQueryParams {
+  sort?: 'id' | 'created' | 'updated'
+  order?: 'asc' | 'desc'
+  page?: number
+  limit?: number
+}
+
+export type ListGitspacesProps = Omit<
+  GetProps<TypesGitspaceConfig[], UsererrorError, ListGitspacesQueryParams, void>,
+  'path'
+>
+
+/**
+ * List gitspaces
+ */
+export const ListGitspaces = (props: ListGitspacesProps) => (
+  <Get<TypesGitspaceConfig[], UsererrorError, ListGitspacesQueryParams, void>
+    path={`/gitspaces`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListGitspacesProps = Omit<
+  UseGetProps<TypesGitspaceConfig[], UsererrorError, ListGitspacesQueryParams, void>,
+  'path'
+>
+
+/**
+ * List gitspaces
+ */
+export const useListGitspaces = (props: UseListGitspacesProps) =>
+  useGet<TypesGitspaceConfig[], UsererrorError, ListGitspacesQueryParams, void>(`/gitspaces`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
+
+export type CreateGitspaceProps = Omit<
+  MutateProps<TypesGitspaceConfig, UsererrorError, void, OpenapiCreateGitspaceRequest, void>,
+  'path' | 'verb'
+>
+
+/**
+ * Create gitspace config
+ */
+export const CreateGitspace = (props: CreateGitspaceProps) => (
+  <Mutate<TypesGitspaceConfig, UsererrorError, void, OpenapiCreateGitspaceRequest, void>
+    verb="POST"
+    path={`/gitspaces`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreateGitspaceProps = Omit<
+  UseMutateProps<TypesGitspaceConfig, UsererrorError, void, OpenapiCreateGitspaceRequest, void>,
+  'path' | 'verb'
+>
+
+/**
+ * Create gitspace config
+ */
+export const useCreateGitspace = (props: UseCreateGitspaceProps) =>
+  useMutate<TypesGitspaceConfig, UsererrorError, void, OpenapiCreateGitspaceRequest, void>('POST', `/gitspaces`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
+
+export type DeleteGitspaceProps = Omit<MutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
+
+/**
+ * Delete gitspace config
+ */
+export const DeleteGitspace = (props: DeleteGitspaceProps) => (
+  <Mutate<void, UsererrorError, void, string, void>
+    verb="DELETE"
+    path={`/gitspaces`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteGitspaceProps = Omit<UseMutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
+
+/**
+ * Delete gitspace config
+ */
+export const useDeleteGitspace = (props: UseDeleteGitspaceProps) =>
+  useMutate<void, UsererrorError, void, string, void>('DELETE', `/gitspaces`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
+
+export interface FindGitspacePathParams {
+  gitspace_identifier: string
+}
+
+export type FindGitspaceProps = Omit<
+  GetProps<TypesGitspaceConfig, UsererrorError, void, FindGitspacePathParams>,
+  'path'
+> &
+  FindGitspacePathParams
+
+/**
+ * Get gitspace
+ */
+export const FindGitspace = ({ gitspace_identifier, ...props }: FindGitspaceProps) => (
+  <Get<TypesGitspaceConfig, UsererrorError, void, FindGitspacePathParams>
+    path={`/gitspaces/${gitspace_identifier}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFindGitspaceProps = Omit<
+  UseGetProps<TypesGitspaceConfig, UsererrorError, void, FindGitspacePathParams>,
+  'path'
+> &
+  FindGitspacePathParams
+
+/**
+ * Get gitspace
+ */
+export const useFindGitspace = ({ gitspace_identifier, ...props }: UseFindGitspaceProps) =>
+  useGet<TypesGitspaceConfig, UsererrorError, void, FindGitspacePathParams>(
+    (paramsInPath: FindGitspacePathParams) => `/gitspaces/${paramsInPath.gitspace_identifier}`,
+    { base: getConfig('code/api/v1'), pathParams: { gitspace_identifier }, ...props }
+  )
+
+export interface ActionOnGitspacePathParams {
+  gitspace_identifier: string
+}
+
+export type ActionOnGitspaceProps = Omit<
+  MutateProps<TypesGitspaceConfig, UsererrorError, void, OpenapiActionGitspaceRequest, ActionOnGitspacePathParams>,
+  'path' | 'verb'
+> &
+  ActionOnGitspacePathParams
+
+/**
+ * Perform action on a gitspace
+ */
+export const ActionOnGitspace = ({ gitspace_identifier, ...props }: ActionOnGitspaceProps) => (
+  <Mutate<TypesGitspaceConfig, UsererrorError, void, OpenapiActionGitspaceRequest, ActionOnGitspacePathParams>
+    verb="POST"
+    path={`/gitspaces/${gitspace_identifier}/action`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseActionOnGitspaceProps = Omit<
+  UseMutateProps<TypesGitspaceConfig, UsererrorError, void, OpenapiActionGitspaceRequest, ActionOnGitspacePathParams>,
+  'path' | 'verb'
+> &
+  ActionOnGitspacePathParams
+
+/**
+ * Perform action on a gitspace
+ */
+export const useActionOnGitspace = ({ gitspace_identifier, ...props }: UseActionOnGitspaceProps) =>
+  useMutate<TypesGitspaceConfig, UsererrorError, void, OpenapiActionGitspaceRequest, ActionOnGitspacePathParams>(
+    'POST',
+    (paramsInPath: ActionOnGitspacePathParams) => `/gitspaces/${paramsInPath.gitspace_identifier}/action`,
+    { base: getConfig('code/api/v1'), pathParams: { gitspace_identifier }, ...props }
+  )
+
+export interface ListGitspaceEventsQueryParams {
+  page?: number
+  limit?: number
+}
+
+export interface ListGitspaceEventsPathParams {
+  gitspace_identifier: string
+}
+
+export type ListGitspaceEventsProps = Omit<
+  GetProps<TypesGitspaceEventResponse[], UsererrorError, ListGitspaceEventsQueryParams, ListGitspaceEventsPathParams>,
+  'path'
+> &
+  ListGitspaceEventsPathParams
+
+/**
+ * List gitspace events
+ */
+export const ListGitspaceEvents = ({ gitspace_identifier, ...props }: ListGitspaceEventsProps) => (
+  <Get<TypesGitspaceEventResponse[], UsererrorError, ListGitspaceEventsQueryParams, ListGitspaceEventsPathParams>
+    path={`/gitspaces/${gitspace_identifier}/events`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListGitspaceEventsProps = Omit<
+  UseGetProps<
+    TypesGitspaceEventResponse[],
+    UsererrorError,
+    ListGitspaceEventsQueryParams,
+    ListGitspaceEventsPathParams
+  >,
+  'path'
+> &
+  ListGitspaceEventsPathParams
+
+/**
+ * List gitspace events
+ */
+export const useListGitspaceEvents = ({ gitspace_identifier, ...props }: UseListGitspaceEventsProps) =>
+  useGet<TypesGitspaceEventResponse[], UsererrorError, ListGitspaceEventsQueryParams, ListGitspaceEventsPathParams>(
+    (paramsInPath: ListGitspaceEventsPathParams) => `/gitspaces/${paramsInPath.gitspace_identifier}/events`,
+    { base: getConfig('code/api/v1'), pathParams: { gitspace_identifier }, ...props }
+  )
+
+export interface OpStreamLogsPathParams {
+  gitspace_identifier: string
+}
+
+export type OpStreamLogsProps = Omit<GetProps<LivelogLine[], UsererrorError, void, OpStreamLogsPathParams>, 'path'> &
+  OpStreamLogsPathParams
+
+/**
+ * Stream gitspace logs
+ */
+export const OpStreamLogs = ({ gitspace_identifier, ...props }: OpStreamLogsProps) => (
+  <Get<LivelogLine[], UsererrorError, void, OpStreamLogsPathParams>
+    path={`/gitspaces/${gitspace_identifier}/logs/stream`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseOpStreamLogsProps = Omit<
+  UseGetProps<LivelogLine[], UsererrorError, void, OpStreamLogsPathParams>,
+  'path'
+> &
+  OpStreamLogsPathParams
+
+/**
+ * Stream gitspace logs
+ */
+export const useOpStreamLogs = ({ gitspace_identifier, ...props }: UseOpStreamLogsProps) =>
+  useGet<LivelogLine[], UsererrorError, void, OpStreamLogsPathParams>(
+    (paramsInPath: OpStreamLogsPathParams) => `/gitspaces/${paramsInPath.gitspace_identifier}/logs/stream`,
+    { base: getConfig('code/api/v1'), pathParams: { gitspace_identifier }, ...props }
+  )
+
+export type RepoLookupForGitspaceProps = Omit<
+  MutateProps<ScmCodeRepositoryResponse, UsererrorError, void, OpenapiLookupRepoGitspaceRequest, void>,
+  'path' | 'verb'
+>
+
+/**
+ * Validate git repo for gitspaces
+ */
+export const RepoLookupForGitspace = (props: RepoLookupForGitspaceProps) => (
+  <Mutate<ScmCodeRepositoryResponse, UsererrorError, void, OpenapiLookupRepoGitspaceRequest, void>
+    verb="POST"
+    path={`/gitspaces/lookup-repo`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseRepoLookupForGitspaceProps = Omit<
+  UseMutateProps<ScmCodeRepositoryResponse, UsererrorError, void, OpenapiLookupRepoGitspaceRequest, void>,
+  'path' | 'verb'
+>
+
+/**
+ * Validate git repo for gitspaces
+ */
+export const useRepoLookupForGitspace = (props: UseRepoLookupForGitspaceProps) =>
+  useMutate<ScmCodeRepositoryResponse, UsererrorError, void, OpenapiLookupRepoGitspaceRequest, void>(
+    'POST',
+    `/gitspaces/lookup-repo`,
+    { base: getConfig('code/api/v1'), ...props }
+  )
+
+export type CreateInfraProviderProps = Omit<
+  MutateProps<TypesInfraProviderConfig, UsererrorError, void, OpenapiCreateInfraProviderConfigRequest, void>,
+  'path' | 'verb'
+>
+
+/**
+ * Create infraProvider config
+ */
+export const CreateInfraProvider = (props: CreateInfraProviderProps) => (
+  <Mutate<TypesInfraProviderConfig, UsererrorError, void, OpenapiCreateInfraProviderConfigRequest, void>
+    verb="POST"
+    path={`/infraproviders`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreateInfraProviderProps = Omit<
+  UseMutateProps<TypesInfraProviderConfig, UsererrorError, void, OpenapiCreateInfraProviderConfigRequest, void>,
+  'path' | 'verb'
+>
+
+/**
+ * Create infraProvider config
+ */
+export const useCreateInfraProvider = (props: UseCreateInfraProviderProps) =>
+  useMutate<TypesInfraProviderConfig, UsererrorError, void, OpenapiCreateInfraProviderConfigRequest, void>(
+    'POST',
+    `/infraproviders`,
+    { base: getConfig('code/api/v1'), ...props }
+  )
+
+export interface GetInfraProviderPathParams {
+  infraprovider_identifier: string
+}
+
+export type GetInfraProviderProps = Omit<
+  GetProps<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderPathParams>,
+  'path'
+> &
+  GetInfraProviderPathParams
+
+/**
+ * Get infraProviderConfig
+ */
+export const GetInfraProvider = ({ infraprovider_identifier, ...props }: GetInfraProviderProps) => (
+  <Get<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderPathParams>
+    path={`/infraproviders/${infraprovider_identifier}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseGetInfraProviderProps = Omit<
+  UseGetProps<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderPathParams>,
+  'path'
+> &
+  GetInfraProviderPathParams
+
+/**
+ * Get infraProviderConfig
+ */
+export const useGetInfraProvider = ({ infraprovider_identifier, ...props }: UseGetInfraProviderProps) =>
+  useGet<TypesInfraProviderConfig, UsererrorError, void, GetInfraProviderPathParams>(
+    (paramsInPath: GetInfraProviderPathParams) => `/infraproviders/${paramsInPath.infraprovider_identifier}`,
+    { base: getConfig('code/api/v1'), pathParams: { infraprovider_identifier }, ...props }
   )
 
 export interface OnLoginQueryParams {
@@ -2727,6 +3386,360 @@ export const useRawDiffPost = ({ repo_ref, range, ...props }: UseRawDiffPostProp
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, range }, ...props }
   )
 
+export interface ListRepoLabelsQueryParams {
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+  /**
+   * The result should inherit labels from parent parent spaces.
+   */
+  inherited?: boolean
+  /**
+   * The substring which is used to filter the labels by their key.
+   */
+  query?: string
+}
+
+export interface ListRepoLabelsPathParams {
+  repo_ref: string
+}
+
+export type ListRepoLabelsProps = Omit<
+  GetProps<TypesLabel[], UsererrorError, ListRepoLabelsQueryParams, ListRepoLabelsPathParams>,
+  'path'
+> &
+  ListRepoLabelsPathParams
+
+export const ListRepoLabels = ({ repo_ref, ...props }: ListRepoLabelsProps) => (
+  <Get<TypesLabel[], UsererrorError, ListRepoLabelsQueryParams, ListRepoLabelsPathParams>
+    path={`/repos/${repo_ref}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListRepoLabelsProps = Omit<
+  UseGetProps<TypesLabel[], UsererrorError, ListRepoLabelsQueryParams, ListRepoLabelsPathParams>,
+  'path'
+> &
+  ListRepoLabelsPathParams
+
+export const useListRepoLabels = ({ repo_ref, ...props }: UseListRepoLabelsProps) =>
+  useGet<TypesLabel[], UsererrorError, ListRepoLabelsQueryParams, ListRepoLabelsPathParams>(
+    (paramsInPath: ListRepoLabelsPathParams) => `/repos/${paramsInPath.repo_ref}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface DefineRepoLabelPathParams {
+  repo_ref: string
+}
+
+export interface DefineRepoLabelRequestBody {
+  color?: EnumLabelColor
+  description?: string
+  key?: string
+  type?: EnumLabelType
+}
+
+export type DefineRepoLabelProps = Omit<
+  MutateProps<TypesLabel, UsererrorError, void, DefineRepoLabelRequestBody, DefineRepoLabelPathParams>,
+  'path' | 'verb'
+> &
+  DefineRepoLabelPathParams
+
+export const DefineRepoLabel = ({ repo_ref, ...props }: DefineRepoLabelProps) => (
+  <Mutate<TypesLabel, UsererrorError, void, DefineRepoLabelRequestBody, DefineRepoLabelPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDefineRepoLabelProps = Omit<
+  UseMutateProps<TypesLabel, UsererrorError, void, DefineRepoLabelRequestBody, DefineRepoLabelPathParams>,
+  'path' | 'verb'
+> &
+  DefineRepoLabelPathParams
+
+export const useDefineRepoLabel = ({ repo_ref, ...props }: UseDefineRepoLabelProps) =>
+  useMutate<TypesLabel, UsererrorError, void, DefineRepoLabelRequestBody, DefineRepoLabelPathParams>(
+    'POST',
+    (paramsInPath: DefineRepoLabelPathParams) => `/repos/${paramsInPath.repo_ref}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface SaveRepoLabelPathParams {
+  repo_ref: string
+}
+
+export interface SaveRepoLabelRequestBody {
+  label?: TypesSaveLabelInput
+  values?: TypesSaveLabelValueInput[]
+}
+
+export type SaveRepoLabelProps = Omit<
+  MutateProps<TypesLabelWithValues, UsererrorError, void, SaveRepoLabelRequestBody, SaveRepoLabelPathParams>,
+  'path' | 'verb'
+> &
+  SaveRepoLabelPathParams
+
+export const SaveRepoLabel = ({ repo_ref, ...props }: SaveRepoLabelProps) => (
+  <Mutate<TypesLabelWithValues, UsererrorError, void, SaveRepoLabelRequestBody, SaveRepoLabelPathParams>
+    verb="PUT"
+    path={`/repos/${repo_ref}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseSaveRepoLabelProps = Omit<
+  UseMutateProps<TypesLabelWithValues, UsererrorError, void, SaveRepoLabelRequestBody, SaveRepoLabelPathParams>,
+  'path' | 'verb'
+> &
+  SaveRepoLabelPathParams
+
+export const useSaveRepoLabel = ({ repo_ref, ...props }: UseSaveRepoLabelProps) =>
+  useMutate<TypesLabelWithValues, UsererrorError, void, SaveRepoLabelRequestBody, SaveRepoLabelPathParams>(
+    'PUT',
+    (paramsInPath: SaveRepoLabelPathParams) => `/repos/${paramsInPath.repo_ref}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface DeleteRepoLabelPathParams {
+  repo_ref: string
+}
+
+export type DeleteRepoLabelProps = Omit<
+  MutateProps<void, UsererrorError, void, string, DeleteRepoLabelPathParams>,
+  'path' | 'verb'
+> &
+  DeleteRepoLabelPathParams
+
+export const DeleteRepoLabel = ({ repo_ref, ...props }: DeleteRepoLabelProps) => (
+  <Mutate<void, UsererrorError, void, string, DeleteRepoLabelPathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteRepoLabelProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, DeleteRepoLabelPathParams>,
+  'path' | 'verb'
+> &
+  DeleteRepoLabelPathParams
+
+export const useDeleteRepoLabel = ({ repo_ref, ...props }: UseDeleteRepoLabelProps) =>
+  useMutate<void, UsererrorError, void, string, DeleteRepoLabelPathParams>(
+    'DELETE',
+    (paramsInPath: DeleteRepoLabelPathParams) => `/repos/${paramsInPath.repo_ref}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface UpdateRepoLabelPathParams {
+  repo_ref: string
+  key: string
+}
+
+export interface UpdateRepoLabelRequestBody {
+  color?: EnumLabelColor
+  description?: string
+  key?: string
+  type?: EnumLabelType
+}
+
+export type UpdateRepoLabelProps = Omit<
+  MutateProps<TypesLabel, UsererrorError, void, UpdateRepoLabelRequestBody, UpdateRepoLabelPathParams>,
+  'path' | 'verb'
+> &
+  UpdateRepoLabelPathParams
+
+export const UpdateRepoLabel = ({ repo_ref, key, ...props }: UpdateRepoLabelProps) => (
+  <Mutate<TypesLabel, UsererrorError, void, UpdateRepoLabelRequestBody, UpdateRepoLabelPathParams>
+    verb="PATCH"
+    path={`/repos/${repo_ref}/labels/${key}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateRepoLabelProps = Omit<
+  UseMutateProps<TypesLabel, UsererrorError, void, UpdateRepoLabelRequestBody, UpdateRepoLabelPathParams>,
+  'path' | 'verb'
+> &
+  UpdateRepoLabelPathParams
+
+export const useUpdateRepoLabel = ({ repo_ref, key, ...props }: UseUpdateRepoLabelProps) =>
+  useMutate<TypesLabel, UsererrorError, void, UpdateRepoLabelRequestBody, UpdateRepoLabelPathParams>(
+    'PATCH',
+    (paramsInPath: UpdateRepoLabelPathParams) => `/repos/${paramsInPath.repo_ref}/labels/${paramsInPath.key}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, key }, ...props }
+  )
+
+export interface ListRepoLabelValuesPathParams {
+  repo_ref: string
+  key: string
+}
+
+export type ListRepoLabelValuesProps = Omit<
+  GetProps<TypesLabelValue[], UsererrorError, void, ListRepoLabelValuesPathParams>,
+  'path'
+> &
+  ListRepoLabelValuesPathParams
+
+export const ListRepoLabelValues = ({ repo_ref, key, ...props }: ListRepoLabelValuesProps) => (
+  <Get<TypesLabelValue[], UsererrorError, void, ListRepoLabelValuesPathParams>
+    path={`/repos/${repo_ref}/labels/${key}/values`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListRepoLabelValuesProps = Omit<
+  UseGetProps<TypesLabelValue[], UsererrorError, void, ListRepoLabelValuesPathParams>,
+  'path'
+> &
+  ListRepoLabelValuesPathParams
+
+export const useListRepoLabelValues = ({ repo_ref, key, ...props }: UseListRepoLabelValuesProps) =>
+  useGet<TypesLabelValue[], UsererrorError, void, ListRepoLabelValuesPathParams>(
+    (paramsInPath: ListRepoLabelValuesPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/labels/${paramsInPath.key}/values`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, key }, ...props }
+  )
+
+export interface DefineRepoLabelValuePathParams {
+  repo_ref: string
+  key: string
+}
+
+export interface DefineRepoLabelValueRequestBody {
+  color?: EnumLabelColor
+  value?: string
+}
+
+export type DefineRepoLabelValueProps = Omit<
+  MutateProps<TypesLabelValue, UsererrorError, void, DefineRepoLabelValueRequestBody, DefineRepoLabelValuePathParams>,
+  'path' | 'verb'
+> &
+  DefineRepoLabelValuePathParams
+
+export const DefineRepoLabelValue = ({ repo_ref, key, ...props }: DefineRepoLabelValueProps) => (
+  <Mutate<TypesLabelValue, UsererrorError, void, DefineRepoLabelValueRequestBody, DefineRepoLabelValuePathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/labels/${key}/values`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDefineRepoLabelValueProps = Omit<
+  UseMutateProps<
+    TypesLabelValue,
+    UsererrorError,
+    void,
+    DefineRepoLabelValueRequestBody,
+    DefineRepoLabelValuePathParams
+  >,
+  'path' | 'verb'
+> &
+  DefineRepoLabelValuePathParams
+
+export const useDefineRepoLabelValue = ({ repo_ref, key, ...props }: UseDefineRepoLabelValueProps) =>
+  useMutate<TypesLabelValue, UsererrorError, void, DefineRepoLabelValueRequestBody, DefineRepoLabelValuePathParams>(
+    'POST',
+    (paramsInPath: DefineRepoLabelValuePathParams) =>
+      `/repos/${paramsInPath.repo_ref}/labels/${paramsInPath.key}/values`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, key }, ...props }
+  )
+
+export interface DeleteRepoLabelValuePathParams {
+  repo_ref: string
+  key: string
+}
+
+export type DeleteRepoLabelValueProps = Omit<
+  MutateProps<void, UsererrorError, void, string, DeleteRepoLabelValuePathParams>,
+  'path' | 'verb'
+> &
+  DeleteRepoLabelValuePathParams
+
+export const DeleteRepoLabelValue = ({ repo_ref, key, ...props }: DeleteRepoLabelValueProps) => (
+  <Mutate<void, UsererrorError, void, string, DeleteRepoLabelValuePathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/labels/${key}/values`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteRepoLabelValueProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, DeleteRepoLabelValuePathParams>,
+  'path' | 'verb'
+> &
+  DeleteRepoLabelValuePathParams
+
+export const useDeleteRepoLabelValue = ({ repo_ref, key, ...props }: UseDeleteRepoLabelValueProps) =>
+  useMutate<void, UsererrorError, void, string, DeleteRepoLabelValuePathParams>(
+    'DELETE',
+    (paramsInPath: DeleteRepoLabelValuePathParams) =>
+      `/repos/${paramsInPath.repo_ref}/labels/${paramsInPath.key}/values`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, key }, ...props }
+  )
+
+export interface UpdateRepoLabelValuePathParams {
+  repo_ref: string
+  key: string
+  value: string
+}
+
+export interface UpdateRepoLabelValueRequestBody {
+  color?: EnumLabelColor
+  value?: string
+}
+
+export type UpdateRepoLabelValueProps = Omit<
+  MutateProps<TypesLabelValue, UsererrorError, void, UpdateRepoLabelValueRequestBody, UpdateRepoLabelValuePathParams>,
+  'path' | 'verb'
+> &
+  UpdateRepoLabelValuePathParams
+
+export const UpdateRepoLabelValue = ({ repo_ref, key, value, ...props }: UpdateRepoLabelValueProps) => (
+  <Mutate<TypesLabelValue, UsererrorError, void, UpdateRepoLabelValueRequestBody, UpdateRepoLabelValuePathParams>
+    verb="PATCH"
+    path={`/repos/${repo_ref}/labels/${key}/values/${value}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateRepoLabelValueProps = Omit<
+  UseMutateProps<
+    TypesLabelValue,
+    UsererrorError,
+    void,
+    UpdateRepoLabelValueRequestBody,
+    UpdateRepoLabelValuePathParams
+  >,
+  'path' | 'verb'
+> &
+  UpdateRepoLabelValuePathParams
+
+export const useUpdateRepoLabelValue = ({ repo_ref, key, value, ...props }: UseUpdateRepoLabelValueProps) =>
+  useMutate<TypesLabelValue, UsererrorError, void, UpdateRepoLabelValueRequestBody, UpdateRepoLabelValuePathParams>(
+    'PATCH',
+    (paramsInPath: UpdateRepoLabelValuePathParams) =>
+      `/repos/${paramsInPath.repo_ref}/labels/${paramsInPath.key}/values/${paramsInPath.value}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, key, value }, ...props }
+  )
+
 export interface MergeCheckQueryParams {
   /**
    * provide path for diff operation
@@ -3611,6 +4624,14 @@ export interface ListPullReqQueryParams {
    * The maximum number of results to return.
    */
   limit?: number
+  /**
+   * List of label ids used to filter pull requests.
+   */
+  label_id?: number[]
+  /**
+   * List of label value ids used to filter pull requests.
+   */
+  value_id?: number[]
 }
 
 export interface ListPullReqPathParams {
@@ -3746,8 +4767,10 @@ export interface ListPullReqActivitiesQueryParams {
     | 'branch-update'
     | 'code-comment'
     | 'comment'
+    | 'label-modify'
     | 'merge'
     | 'review-submit'
+    | 'reviewer-delete'
     | 'state-change'
     | 'title-change'
   )[]
@@ -4379,6 +5402,125 @@ export const useFileViewDeletePullReq = ({ repo_ref, pullreq_number, ...props }:
     'DELETE',
     (paramsInPath: FileViewDeletePullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/file-views`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface ListLabelsQueryParams {
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+  /**
+   * The result should contain all labels assignable to the pullreq.
+   */
+  assignable?: boolean
+  /**
+   * The substring which is used to filter the labels by their key.
+   */
+  query?: string
+}
+
+export interface ListLabelsPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type ListLabelsProps = Omit<
+  GetProps<TypesScopesLabels, UsererrorError, ListLabelsQueryParams, ListLabelsPathParams>,
+  'path'
+> &
+  ListLabelsPathParams
+
+export const ListLabels = ({ repo_ref, pullreq_number, ...props }: ListLabelsProps) => (
+  <Get<TypesScopesLabels, UsererrorError, ListLabelsQueryParams, ListLabelsPathParams>
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListLabelsProps = Omit<
+  UseGetProps<TypesScopesLabels, UsererrorError, ListLabelsQueryParams, ListLabelsPathParams>,
+  'path'
+> &
+  ListLabelsPathParams
+
+export const useListLabels = ({ repo_ref, pullreq_number, ...props }: UseListLabelsProps) =>
+  useGet<TypesScopesLabels, UsererrorError, ListLabelsQueryParams, ListLabelsPathParams>(
+    (paramsInPath: ListLabelsPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface AssignLabelPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type AssignLabelProps = Omit<
+  MutateProps<TypesPullReqLabel, UsererrorError, void, OpenapiPullReqAssignLabelInput, AssignLabelPathParams>,
+  'path' | 'verb'
+> &
+  AssignLabelPathParams
+
+export const AssignLabel = ({ repo_ref, pullreq_number, ...props }: AssignLabelProps) => (
+  <Mutate<TypesPullReqLabel, UsererrorError, void, OpenapiPullReqAssignLabelInput, AssignLabelPathParams>
+    verb="PUT"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseAssignLabelProps = Omit<
+  UseMutateProps<TypesPullReqLabel, UsererrorError, void, OpenapiPullReqAssignLabelInput, AssignLabelPathParams>,
+  'path' | 'verb'
+> &
+  AssignLabelPathParams
+
+export const useAssignLabel = ({ repo_ref, pullreq_number, ...props }: UseAssignLabelProps) =>
+  useMutate<TypesPullReqLabel, UsererrorError, void, OpenapiPullReqAssignLabelInput, AssignLabelPathParams>(
+    'PUT',
+    (paramsInPath: AssignLabelPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface UnassignLabelPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type UnassignLabelProps = Omit<
+  MutateProps<void, UsererrorError, void, number, UnassignLabelPathParams>,
+  'path' | 'verb'
+> &
+  UnassignLabelPathParams
+
+export const UnassignLabel = ({ repo_ref, pullreq_number, ...props }: UnassignLabelProps) => (
+  <Mutate<void, UsererrorError, void, number, UnassignLabelPathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUnassignLabelProps = Omit<
+  UseMutateProps<void, UsererrorError, void, number, UnassignLabelPathParams>,
+  'path' | 'verb'
+> &
+  UnassignLabelPathParams
+
+export const useUnassignLabel = ({ repo_ref, pullreq_number, ...props }: UseUnassignLabelProps) =>
+  useMutate<void, UsererrorError, void, number, UnassignLabelPathParams>(
+    'DELETE',
+    (paramsInPath: UnassignLabelPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/labels`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
@@ -6079,6 +7221,360 @@ export const useExportProgressSpace = ({ space_ref, ...props }: UseExportProgres
   useGet<SpaceExportProgressOutput, UsererrorError, void, ExportProgressSpacePathParams>(
     (paramsInPath: ExportProgressSpacePathParams) => `/spaces/${paramsInPath.space_ref}/export-progress`,
     { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
+export interface ListSpaceLabelsQueryParams {
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+  /**
+   * The result should inherit labels from parent parent spaces.
+   */
+  inherited?: boolean
+  /**
+   * The substring which is used to filter the labels by their key.
+   */
+  query?: string
+}
+
+export interface ListSpaceLabelsPathParams {
+  space_ref: string
+}
+
+export type ListSpaceLabelsProps = Omit<
+  GetProps<TypesLabel[], UsererrorError, ListSpaceLabelsQueryParams, ListSpaceLabelsPathParams>,
+  'path'
+> &
+  ListSpaceLabelsPathParams
+
+export const ListSpaceLabels = ({ space_ref, ...props }: ListSpaceLabelsProps) => (
+  <Get<TypesLabel[], UsererrorError, ListSpaceLabelsQueryParams, ListSpaceLabelsPathParams>
+    path={`/spaces/${space_ref}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListSpaceLabelsProps = Omit<
+  UseGetProps<TypesLabel[], UsererrorError, ListSpaceLabelsQueryParams, ListSpaceLabelsPathParams>,
+  'path'
+> &
+  ListSpaceLabelsPathParams
+
+export const useListSpaceLabels = ({ space_ref, ...props }: UseListSpaceLabelsProps) =>
+  useGet<TypesLabel[], UsererrorError, ListSpaceLabelsQueryParams, ListSpaceLabelsPathParams>(
+    (paramsInPath: ListSpaceLabelsPathParams) => `/spaces/${paramsInPath.space_ref}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
+export interface DefineSpaceLabelPathParams {
+  space_ref: string
+}
+
+export interface DefineSpaceLabelRequestBody {
+  color?: EnumLabelColor
+  description?: string
+  key?: string
+  type?: EnumLabelType
+}
+
+export type DefineSpaceLabelProps = Omit<
+  MutateProps<TypesLabel, UsererrorError, void, DefineSpaceLabelRequestBody, DefineSpaceLabelPathParams>,
+  'path' | 'verb'
+> &
+  DefineSpaceLabelPathParams
+
+export const DefineSpaceLabel = ({ space_ref, ...props }: DefineSpaceLabelProps) => (
+  <Mutate<TypesLabel, UsererrorError, void, DefineSpaceLabelRequestBody, DefineSpaceLabelPathParams>
+    verb="POST"
+    path={`/spaces/${space_ref}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDefineSpaceLabelProps = Omit<
+  UseMutateProps<TypesLabel, UsererrorError, void, DefineSpaceLabelRequestBody, DefineSpaceLabelPathParams>,
+  'path' | 'verb'
+> &
+  DefineSpaceLabelPathParams
+
+export const useDefineSpaceLabel = ({ space_ref, ...props }: UseDefineSpaceLabelProps) =>
+  useMutate<TypesLabel, UsererrorError, void, DefineSpaceLabelRequestBody, DefineSpaceLabelPathParams>(
+    'POST',
+    (paramsInPath: DefineSpaceLabelPathParams) => `/spaces/${paramsInPath.space_ref}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
+export interface SaveSpaceLabelPathParams {
+  space_ref: string
+}
+
+export interface SaveSpaceLabelRequestBody {
+  label?: TypesSaveLabelInput
+  values?: TypesSaveLabelValueInput[]
+}
+
+export type SaveSpaceLabelProps = Omit<
+  MutateProps<TypesLabelWithValues, UsererrorError, void, SaveSpaceLabelRequestBody, SaveSpaceLabelPathParams>,
+  'path' | 'verb'
+> &
+  SaveSpaceLabelPathParams
+
+export const SaveSpaceLabel = ({ space_ref, ...props }: SaveSpaceLabelProps) => (
+  <Mutate<TypesLabelWithValues, UsererrorError, void, SaveSpaceLabelRequestBody, SaveSpaceLabelPathParams>
+    verb="PUT"
+    path={`/spaces/${space_ref}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseSaveSpaceLabelProps = Omit<
+  UseMutateProps<TypesLabelWithValues, UsererrorError, void, SaveSpaceLabelRequestBody, SaveSpaceLabelPathParams>,
+  'path' | 'verb'
+> &
+  SaveSpaceLabelPathParams
+
+export const useSaveSpaceLabel = ({ space_ref, ...props }: UseSaveSpaceLabelProps) =>
+  useMutate<TypesLabelWithValues, UsererrorError, void, SaveSpaceLabelRequestBody, SaveSpaceLabelPathParams>(
+    'PUT',
+    (paramsInPath: SaveSpaceLabelPathParams) => `/spaces/${paramsInPath.space_ref}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
+export interface DeleteSpaceLabelPathParams {
+  space_ref: string
+}
+
+export type DeleteSpaceLabelProps = Omit<
+  MutateProps<void, UsererrorError, void, string, DeleteSpaceLabelPathParams>,
+  'path' | 'verb'
+> &
+  DeleteSpaceLabelPathParams
+
+export const DeleteSpaceLabel = ({ space_ref, ...props }: DeleteSpaceLabelProps) => (
+  <Mutate<void, UsererrorError, void, string, DeleteSpaceLabelPathParams>
+    verb="DELETE"
+    path={`/spaces/${space_ref}/labels`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteSpaceLabelProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, DeleteSpaceLabelPathParams>,
+  'path' | 'verb'
+> &
+  DeleteSpaceLabelPathParams
+
+export const useDeleteSpaceLabel = ({ space_ref, ...props }: UseDeleteSpaceLabelProps) =>
+  useMutate<void, UsererrorError, void, string, DeleteSpaceLabelPathParams>(
+    'DELETE',
+    (paramsInPath: DeleteSpaceLabelPathParams) => `/spaces/${paramsInPath.space_ref}/labels`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
+export interface UpdateSpaceLabelPathParams {
+  space_ref: string
+  key: string
+}
+
+export interface UpdateSpaceLabelRequestBody {
+  color?: EnumLabelColor
+  description?: string
+  key?: string
+  type?: EnumLabelType
+}
+
+export type UpdateSpaceLabelProps = Omit<
+  MutateProps<TypesLabel, UsererrorError, void, UpdateSpaceLabelRequestBody, UpdateSpaceLabelPathParams>,
+  'path' | 'verb'
+> &
+  UpdateSpaceLabelPathParams
+
+export const UpdateSpaceLabel = ({ space_ref, key, ...props }: UpdateSpaceLabelProps) => (
+  <Mutate<TypesLabel, UsererrorError, void, UpdateSpaceLabelRequestBody, UpdateSpaceLabelPathParams>
+    verb="PATCH"
+    path={`/spaces/${space_ref}/labels/${key}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateSpaceLabelProps = Omit<
+  UseMutateProps<TypesLabel, UsererrorError, void, UpdateSpaceLabelRequestBody, UpdateSpaceLabelPathParams>,
+  'path' | 'verb'
+> &
+  UpdateSpaceLabelPathParams
+
+export const useUpdateSpaceLabel = ({ space_ref, key, ...props }: UseUpdateSpaceLabelProps) =>
+  useMutate<TypesLabel, UsererrorError, void, UpdateSpaceLabelRequestBody, UpdateSpaceLabelPathParams>(
+    'PATCH',
+    (paramsInPath: UpdateSpaceLabelPathParams) => `/spaces/${paramsInPath.space_ref}/labels/${paramsInPath.key}`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref, key }, ...props }
+  )
+
+export interface ListSpaceLabelValuesPathParams {
+  space_ref: string
+  key: string
+}
+
+export type ListSpaceLabelValuesProps = Omit<
+  GetProps<TypesLabelValue[], UsererrorError, void, ListSpaceLabelValuesPathParams>,
+  'path'
+> &
+  ListSpaceLabelValuesPathParams
+
+export const ListSpaceLabelValues = ({ space_ref, key, ...props }: ListSpaceLabelValuesProps) => (
+  <Get<TypesLabelValue[], UsererrorError, void, ListSpaceLabelValuesPathParams>
+    path={`/spaces/${space_ref}/labels/${key}/values`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListSpaceLabelValuesProps = Omit<
+  UseGetProps<TypesLabelValue[], UsererrorError, void, ListSpaceLabelValuesPathParams>,
+  'path'
+> &
+  ListSpaceLabelValuesPathParams
+
+export const useListSpaceLabelValues = ({ space_ref, key, ...props }: UseListSpaceLabelValuesProps) =>
+  useGet<TypesLabelValue[], UsererrorError, void, ListSpaceLabelValuesPathParams>(
+    (paramsInPath: ListSpaceLabelValuesPathParams) =>
+      `/spaces/${paramsInPath.space_ref}/labels/${paramsInPath.key}/values`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref, key }, ...props }
+  )
+
+export interface DefineSpaceLabelValuePathParams {
+  space_ref: string
+  key: string
+}
+
+export interface DefineSpaceLabelValueRequestBody {
+  color?: EnumLabelColor
+  value?: string
+}
+
+export type DefineSpaceLabelValueProps = Omit<
+  MutateProps<TypesLabelValue, UsererrorError, void, DefineSpaceLabelValueRequestBody, DefineSpaceLabelValuePathParams>,
+  'path' | 'verb'
+> &
+  DefineSpaceLabelValuePathParams
+
+export const DefineSpaceLabelValue = ({ space_ref, key, ...props }: DefineSpaceLabelValueProps) => (
+  <Mutate<TypesLabelValue, UsererrorError, void, DefineSpaceLabelValueRequestBody, DefineSpaceLabelValuePathParams>
+    verb="POST"
+    path={`/spaces/${space_ref}/labels/${key}/values`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDefineSpaceLabelValueProps = Omit<
+  UseMutateProps<
+    TypesLabelValue,
+    UsererrorError,
+    void,
+    DefineSpaceLabelValueRequestBody,
+    DefineSpaceLabelValuePathParams
+  >,
+  'path' | 'verb'
+> &
+  DefineSpaceLabelValuePathParams
+
+export const useDefineSpaceLabelValue = ({ space_ref, key, ...props }: UseDefineSpaceLabelValueProps) =>
+  useMutate<TypesLabelValue, UsererrorError, void, DefineSpaceLabelValueRequestBody, DefineSpaceLabelValuePathParams>(
+    'POST',
+    (paramsInPath: DefineSpaceLabelValuePathParams) =>
+      `/spaces/${paramsInPath.space_ref}/labels/${paramsInPath.key}/values`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref, key }, ...props }
+  )
+
+export interface DeleteSpaceLabelValuePathParams {
+  space_ref: string
+  key: string
+}
+
+export type DeleteSpaceLabelValueProps = Omit<
+  MutateProps<void, UsererrorError, void, string, DeleteSpaceLabelValuePathParams>,
+  'path' | 'verb'
+> &
+  DeleteSpaceLabelValuePathParams
+
+export const DeleteSpaceLabelValue = ({ space_ref, key, ...props }: DeleteSpaceLabelValueProps) => (
+  <Mutate<void, UsererrorError, void, string, DeleteSpaceLabelValuePathParams>
+    verb="DELETE"
+    path={`/spaces/${space_ref}/labels/${key}/values`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteSpaceLabelValueProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, DeleteSpaceLabelValuePathParams>,
+  'path' | 'verb'
+> &
+  DeleteSpaceLabelValuePathParams
+
+export const useDeleteSpaceLabelValue = ({ space_ref, key, ...props }: UseDeleteSpaceLabelValueProps) =>
+  useMutate<void, UsererrorError, void, string, DeleteSpaceLabelValuePathParams>(
+    'DELETE',
+    (paramsInPath: DeleteSpaceLabelValuePathParams) =>
+      `/spaces/${paramsInPath.space_ref}/labels/${paramsInPath.key}/values`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref, key }, ...props }
+  )
+
+export interface UpdateSpaceLabelValuePathParams {
+  space_ref: string
+  key: string
+  value: string
+}
+
+export interface UpdateSpaceLabelValueRequestBody {
+  color?: EnumLabelColor
+  value?: string
+}
+
+export type UpdateSpaceLabelValueProps = Omit<
+  MutateProps<TypesLabelValue, UsererrorError, void, UpdateSpaceLabelValueRequestBody, UpdateSpaceLabelValuePathParams>,
+  'path' | 'verb'
+> &
+  UpdateSpaceLabelValuePathParams
+
+export const UpdateSpaceLabelValue = ({ space_ref, key, value, ...props }: UpdateSpaceLabelValueProps) => (
+  <Mutate<TypesLabelValue, UsererrorError, void, UpdateSpaceLabelValueRequestBody, UpdateSpaceLabelValuePathParams>
+    verb="PATCH"
+    path={`/spaces/${space_ref}/labels/${key}/values/${value}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateSpaceLabelValueProps = Omit<
+  UseMutateProps<
+    TypesLabelValue,
+    UsererrorError,
+    void,
+    UpdateSpaceLabelValueRequestBody,
+    UpdateSpaceLabelValuePathParams
+  >,
+  'path' | 'verb'
+> &
+  UpdateSpaceLabelValuePathParams
+
+export const useUpdateSpaceLabelValue = ({ space_ref, key, value, ...props }: UseUpdateSpaceLabelValueProps) =>
+  useMutate<TypesLabelValue, UsererrorError, void, UpdateSpaceLabelValueRequestBody, UpdateSpaceLabelValuePathParams>(
+    'PATCH',
+    (paramsInPath: UpdateSpaceLabelValuePathParams) =>
+      `/spaces/${paramsInPath.space_ref}/labels/${paramsInPath.key}/values/${paramsInPath.value}`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref, key, value }, ...props }
   )
 
 export interface MembershipListQueryParams {

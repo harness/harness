@@ -92,6 +92,14 @@ export const getUsingFetch = <
       return res.text().then(text => Promise.reject(text))
     }
 
+    if (res.status === 504) {
+      return res.text().then(text => Promise.reject(text))
+    }
+
+    if (res.status === 404) {
+      return res.text().then(text => Promise.reject(text))
+    }
+
     return res.text()
   })
 }

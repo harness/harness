@@ -40,7 +40,7 @@ import type { RepoRepositoryOutput } from 'services/code'
 import { useStrings } from 'framework/strings'
 import type { ExportFormDataExtended } from 'utils/GitUtils'
 import Upgrade from '../../../icons/Upgrade.svg?url'
-import css from '../SpaceSettings.module.scss'
+import css from '../GeneralSettings/GeneralSpaceSettings.module.scss'
 
 interface ExportFormProps {
   handleSubmit: (data: ExportFormDataExtended) => void

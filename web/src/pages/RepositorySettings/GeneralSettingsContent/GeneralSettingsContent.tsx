@@ -48,7 +48,7 @@ import Private from '../../../icons/private.svg?url'
 import css from '../RepositorySettings.module.scss'
 
 interface GeneralSettingsProps {
-  repoMetadata: RepoRepositoryOutput | undefined
+  repoMetadata?: RepoRepositoryOutput
   refetch: () => void
   gitRef: string
   isRepositoryEmpty: boolean

@@ -19,16 +19,18 @@ import { Avatar, Container, Layout, StringSubstitute, Text } from '@harnessio/ui
 import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { defaultTo } from 'lodash-es'
+import { Case, Match } from 'react-jsx-match'
 import { CodeIcon, GitInfoProps, MergeStrategy } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import { PullRequestSection } from 'utils/Utils'
-import { CommentType } from 'components/DiffViewer/DiffViewerUtils'
+import { CommentType, LabelActivity } from 'components/DiffViewer/DiffViewerUtils'
 import { useAppContext } from 'AppContext'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
+import { Label } from 'components/Label/Label'
 import css from './Conversation.module.scss'
 
 interface SystemCommentProps extends Pick<GitInfoProps, 'pullReqMetadata'> {
@@ -41,7 +43,7 @@ interface MergePayload {
   merge_method: string
   rules_bypassed: boolean
 }
-
+//ToDo : update all comment options with the correct payload type and remove Unknown
 export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, commentItems, repoMetadataPath }) => {
   const { getString } = useStrings()
   const payload = commentItems[0].payload
@@ -280,6 +282,77 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                   new: <strong>{(payload?.payload as Unknown)?.new}</strong>
                 }}
               />
+            </Text>
+            <PipeSeparator height={9} />
+
+            <TimePopoverWithLocal
+              time={defaultTo(payload?.created as number, 0)}
+              inline={true}
+              width={100}
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_400}
+            />
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
+    case CommentType.LABEL_MODIFY: {
+      return (
+        <Container className={css.mergedBox}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text tag="div">
+              <Match expr={(payload?.payload as Unknown).type}>
+                <Case val={LabelActivity.ASSIGN}>
+                  <strong>{payload?.author?.display_name}</strong> {getString('labels.applied')}
+                  <Label
+                    name={(payload?.payload as Unknown).label}
+                    label_color={(payload?.payload as Unknown).label_color}
+                    label_value={{
+                      name: (payload?.payload as Unknown).value,
+                      color: (payload?.payload as Unknown).value_color
+                    }}
+                    scope={(payload?.payload as Unknown).scope}
+                  />
+                  <span>{getString('labels.label')}</span>
+                </Case>
+                <Case val={LabelActivity.RE_ASSIGN}>
+                  <strong>{payload?.author?.display_name}</strong> <span>{getString('labels.updated')}</span>
+                  <Label
+                    name={(payload?.payload as Unknown).label}
+                    label_color={(payload?.payload as Unknown).label_color}
+                    label_value={{
+                      name: (payload?.payload as Unknown).old_value,
+                      color: (payload?.payload as Unknown).old_value_color
+                    }}
+                    scope={(payload?.payload as Unknown).scope}
+                  />
+                  <span>{getString('labels.labelTo')}</span>
+                  <Label
+                    name={(payload?.payload as Unknown).label}
+                    label_color={(payload?.payload as Unknown).label_color}
+                    label_value={{
+                      name: (payload?.payload as Unknown).value,
+                      color: (payload?.payload as Unknown).value_color
+                    }}
+                    scope={(payload?.payload as Unknown).scope}
+                  />
+                </Case>
+                <Case val={LabelActivity.UN_ASSIGN}>
+                  <strong>{payload?.author?.display_name}</strong> <span>{getString('labels.removed')}</span>
+                  <Label
+                    name={(payload?.payload as Unknown).label}
+                    label_color={(payload?.payload as Unknown).label_color}
+                    label_value={{
+                      name: (payload?.payload as Unknown).value,
+                      color: (payload?.payload as Unknown).value_color
+                    }}
+                    scope={(payload?.payload as Unknown).scope}
+                  />
+                  <span>{getString('labels.label')}</span>
+                </Case>
+              </Match>
             </Text>
             <PipeSeparator height={9} />
 

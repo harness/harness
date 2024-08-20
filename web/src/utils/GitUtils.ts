@@ -124,7 +124,13 @@ export enum SettingsTab {
   webhooks = 'webhook',
   general = '/',
   branchProtection = 'rules',
-  security = 'security'
+  security = 'security',
+  labels = 'labels'
+}
+
+export enum SpaceSettingsTab {
+  general = '/',
+  labels = 'labels'
 }
 
 export enum VulnerabilityScanningType {

@@ -408,6 +408,441 @@ paths:
           description: Internal Server Error
       tags:
         - connector
+  /gitspaces:
+    get:
+      operationId: listGitspaces
+      parameters:
+        - in: query
+          name: sort
+          schema:
+            enum:
+              - id
+              - created
+              - updated
+            type: string
+        - in: query
+          name: order
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - in: query
+          name: page
+          schema:
+            default: 1
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            default: 30
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesGitspaceConfig'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: List gitspaces
+      tags:
+        - gitspaces
+    post:
+      operationId: createGitspace
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateGitspaceRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesGitspaceConfig'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Create gitspace config
+      tags:
+        - gitspaces
+  /gitspaces/{gitspace_identifier}:
+    delete:
+      operationId: deleteGitspace
+      parameters:
+        - in: path
+          name: gitspace_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Delete gitspace config
+      tags:
+        - gitspaces
+    get:
+      operationId: findGitspace
+      parameters:
+        - in: path
+          name: gitspace_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesGitspaceConfig'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Get gitspace
+      tags:
+        - gitspaces
+  /gitspaces/{gitspace_identifier}/action:
+    post:
+      operationId: actionOnGitspace
+      parameters:
+        - in: path
+          name: gitspace_identifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiActionGitspaceRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesGitspaceConfig'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Perform action on a gitspace
+      tags:
+        - gitspaces
+  /gitspaces/{gitspace_identifier}/events:
+    get:
+      operationId: listGitspaceEvents
+      parameters:
+        - in: query
+          name: page
+          schema:
+            default: 1
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            default: 30
+            type: integer
+        - in: path
+          name: gitspace_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesGitspaceEventResponse'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: List gitspace events
+      tags:
+        - gitspaces
+  /gitspaces/{gitspace_identifier}/logs/stream:
+    get:
+      operationId: opStreamLogs
+      parameters:
+        - in: path
+          name: gitspace_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LivelogLine'
+                type: array
+            text/event-stream:
+              schema:
+                type: string
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Stream gitspace logs
+      tags:
+        - gitspaces
+  /gitspaces/lookup-repo:
+    post:
+      operationId: repoLookupForGitspace
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiLookupRepoGitspaceRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScmCodeRepositoryResponse'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Validate git repo for gitspaces
+      tags:
+        - gitspaces
+  /infraproviders:
+    post:
+      operationId: createInfraProvider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateInfraProviderConfigRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesInfraProviderConfig'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Create infraProvider config
+      tags:
+        - infraproviders
+  /infraproviders/{infraprovider_identifier}:
+    get:
+      operationId: getInfraProvider
+      parameters:
+        - in: path
+          name: infraprovider_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesInfraProviderConfig'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: Get infraProviderConfig
+      tags:
+        - infraproviders
   /login:
     post:
       operationId: onLogin
@@ -2040,6 +2475,559 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/labels:
+    get:
+      operationId: listRepoLabels
+      parameters:
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: The result should inherit labels from parent parent spaces.
+          in: query
+          name: inherited
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: The substring which is used to filter the labels by their key.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesLabel'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+    post:
+      operationId: defineRepoLabel
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                color:
+                  $ref: '#/components/schemas/EnumLabelColor'
+                description:
+                  type: string
+                key:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/EnumLabelType'
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabel'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+    put:
+      operationId: saveRepoLabel
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                label:
+                  $ref: '#/components/schemas/TypesSaveLabelInput'
+                values:
+                  items:
+                    $ref: '#/components/schemas/TypesSaveLabelValueInput'
+                  type: array
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabelWithValues'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/labels/{key}:
+    delete:
+      operationId: deleteRepoLabel
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+    patch:
+      operationId: updateRepoLabel
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                color:
+                  $ref: '#/components/schemas/EnumLabelColor'
+                description:
+                  type: string
+                key:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/EnumLabelType'
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabel'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/labels/{key}/values:
+    get:
+      operationId: listRepoLabelValues
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesLabelValue'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+    post:
+      operationId: defineRepoLabelValue
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                color:
+                  $ref: '#/components/schemas/EnumLabelColor'
+                value:
+                  type: string
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabelValue'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/labels/{key}/values/{value}:
+    delete:
+      operationId: deleteRepoLabelValue
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: value
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+    patch:
+      operationId: updateRepoLabelValue
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: value
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                color:
+                  $ref: '#/components/schemas/EnumLabelColor'
+                value:
+                  type: string
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabelValue'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/merge-check/{range}:
     post:
       operationId: mergeCheck
@@ -3297,6 +4285,26 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - description: List of label ids used to filter pull requests.
+          explode: true
+          in: query
+          name: label_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: List of label value ids used to filter pull requests.
+          explode: true
+          in: query
+          name: value_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
         - in: path
           name: repo_ref
           required: true
@@ -3508,8 +4516,10 @@ paths:
                 - branch-update
                 - code-comment
                 - comment
+                - label-modify
                 - merge
                 - review-submit
+                - reviewer-delete
                 - state-change
                 - title-change
               type: string
@@ -4264,6 +5274,182 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/labels:
+    get:
+      operationId: listLabels
+      parameters:
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: The result should contain all labels assignable to the pullreq.
+          in: query
+          name: assignable
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: The substring which is used to filter the labels by their key.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesScopesLabels'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+    put:
+      operationId: assignLabel
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiPullReqAssignLabelInput'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReqLabel'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/labels/{label_id}:
+    delete:
+      operationId: unassignLabel
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: label_id
+          required: true
+          schema:
+            type: integer
       responses:
         '204':
           description: No Content
@@ -6773,6 +7959,559 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/labels:
+    get:
+      operationId: listSpaceLabels
+      parameters:
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: The result should inherit labels from parent parent spaces.
+          in: query
+          name: inherited
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: The substring which is used to filter the labels by their key.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesLabel'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    post:
+      operationId: defineSpaceLabel
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                color:
+                  $ref: '#/components/schemas/EnumLabelColor'
+                description:
+                  type: string
+                key:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/EnumLabelType'
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabel'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    put:
+      operationId: saveSpaceLabel
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                label:
+                  $ref: '#/components/schemas/TypesSaveLabelInput'
+                values:
+                  items:
+                    $ref: '#/components/schemas/TypesSaveLabelValueInput'
+                  type: array
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabelWithValues'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/labels/{key}:
+    delete:
+      operationId: deleteSpaceLabel
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    patch:
+      operationId: updateSpaceLabel
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                color:
+                  $ref: '#/components/schemas/EnumLabelColor'
+                description:
+                  type: string
+                key:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/EnumLabelType'
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabel'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/labels/{key}/values:
+    get:
+      operationId: listSpaceLabelValues
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesLabelValue'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    post:
+      operationId: defineSpaceLabelValue
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                color:
+                  $ref: '#/components/schemas/EnumLabelColor'
+                value:
+                  type: string
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabelValue'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/labels/{key}/values/{value}:
+    delete:
+      operationId: deleteSpaceLabelValue
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: value
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    patch:
+      operationId: updateSpaceLabelValue
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: value
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                color:
+                  $ref: '#/components/schemas/EnumLabelColor'
+                value:
+                  type: string
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesLabelValue'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /spaces/{space_ref}/members:
     get:
       operationId: membershipList
@@ -7998,8 +9737,6 @@ components:
         start_line:
           type: integer
       type: object
-    EnumCIStatus:
-      type: string
     EnumCheckPayloadKind:
       enum:
         - ''
@@ -8020,7 +9757,122 @@ components:
         - base64
         - utf8
       type: string
-    EnumFileDiffStatus:
+    EnumGitspaceAccessType:
+      enum:
+        - jwt_token
+        - user_credentials
+        - ssh_key
+      type: string
+    EnumGitspaceActionType:
+      enum:
+        - start
+        - stop
+      type: string
+    EnumGitspaceCodeRepoType:
+      enum:
+        - github
+        - gitlab
+        - harness_code
+        - bitbucket
+        - unknown
+        - gitness
+      type: string
+    EnumGitspaceEntityType:
+      enum:
+        - gitspace_config
+        - gitspace_instance
+      type: string
+    EnumGitspaceEventType:
+      enum:
+        - gitspace_action_start
+        - gitspace_action_start_completed
+        - gitspace_action_start_failed
+        - gitspace_action_stop
+        - gitspace_action_stop_completed
+        - gitspace_action_stop_failed
+        - fetch_devcontainer_start
+        - fetch_devcontainer_completed
+        - fetch_devcontainer_failed
+        - infra_provisioning_start
+        - infra_provisioning_completed
+        - infra_provisioning_failed
+        - infra_stop_start
+        - infra_stop_completed
+        - infra_stop_failed
+        - infra_deprovisioning_start
+        - infra_deprovisioning_completed
+        - infra_deprovisioning_failed
+        - agent_connect_start
+        - agent_connect_completed
+        - agent_connect_failed
+        - agent_gitspace_creation_start
+        - agent_gitspace_creation_completed
+        - agent_gitspace_creation_failed
+        - agent_gitspace_stop_start
+        - agent_gitspace_stop_completed
+        - agent_gitspace_stop_failed
+        - agent_gitspace_deletion_start
+        - agent_gitspace_deletion_completed
+        - agent_gitspace_deletion_failed
+        - agent_gitspace_state_report_running
+        - agent_gitspace_state_report_error
+        - agent_gitspace_state_report_stopped
+        - agent_gitspace_state_report_unknown
+      type: string
+    EnumGitspaceInstanceStateType:
+      enum:
+        - running
+        - uninitialized
+        - unknown
+        - error
+        - deleted
+        - starting
+        - stopping
+      type: string
+    EnumGitspaceStateType:
+      enum:
+        - running
+        - stopped
+        - error
+        - uninitialized
+        - starting
+        - stopping
+      type: string
+    EnumIDEType:
+      enum:
+        - vs_code
+        - vs_code_web
+      type: string
+    EnumInfraProviderType:
+      enum:
+        - docker
+        - harness_gcp
+        - harness_cloud
+      type: string
+    EnumLabelColor:
+      enum:
+        - accent
+        - background
+        - blue
+        - brown
+        - cyan
+        - green
+        - indigo
+        - lime
+        - mint
+        - orange
+        - pink
+        - purple
+        - red
+        - stroke
+        - text
+        - violet
+        - yellow
+      type: string
+    EnumLabelType:
+      enum:
+        - dynamic
+        - static
       type: string
     EnumMembershipRole:
       enum:
@@ -8028,8 +9880,6 @@ components:
         - executor
         - reader
         - space_owner
-      type: string
-    EnumMergeCheckStatus:
       type: string
     EnumMergeMethod:
       enum:
@@ -8064,8 +9914,10 @@ components:
         - branch-update
         - code-comment
         - comment
+        - label-modify
         - merge
         - review-submit
+        - reviewer-delete
         - state-change
         - title-change
       type: string
@@ -8093,16 +9945,12 @@ components:
         - merged
         - open
       type: string
-    EnumResolverType:
-      type: string
     EnumRuleState:
       enum:
         - active
         - disabled
         - monitor
       nullable: true
-      type: string
-    EnumTokenType:
       type: string
     EnumTriggerAction:
       enum:
@@ -8139,6 +9987,7 @@ components:
         - pullreq_created
         - pullreq_merged
         - pullreq_reopened
+        - pullreq_updated
         - tag_created
         - tag_deleted
         - tag_updated
@@ -8167,10 +10016,12 @@ components:
           type: string
         parent_shas:
           items:
-            $ref: '#/components/schemas/ShaSHA'
+            description: Git object hash
+            type: string
           type: array
         sha:
-          $ref: '#/components/schemas/ShaSHA'
+          description: Git object hash
+          type: string
         title:
           type: string
       type: object
@@ -8201,16 +10052,14 @@ components:
         old_sha:
           type: string
         patch:
-          items:
-            minimum: 0
-            type: integer
-          type: array
+          format: base64
+          type: string
         path:
           type: string
         sha:
           type: string
         status:
-          $ref: '#/components/schemas/EnumFileDiffStatus'
+          type: string
       type: object
     GitIdentity:
       properties:
@@ -8260,6 +10109,46 @@ components:
         - gogs
         - azure
       type: string
+    InfraproviderResourceInput:
+      properties:
+        cpu:
+          nullable: true
+          type: string
+        disk:
+          nullable: true
+          type: string
+        gateway_host:
+          nullable: true
+          type: string
+        gateway_port:
+          nullable: true
+          type: string
+        identifier:
+          type: string
+        infra_provider_type:
+          $ref: '#/components/schemas/EnumInfraProviderType'
+        memory:
+          nullable: true
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        network:
+          nullable: true
+          type: string
+        region:
+          items:
+            type: string
+          nullable: true
+          type: array
+        template_identifier:
+          nullable: true
+          type: string
+      type: object
     JobProgress:
       properties:
         failure:
@@ -8287,6 +10176,11 @@ components:
           type: integer
         time:
           type: integer
+      type: object
+    OpenapiActionGitspaceRequest:
+      properties:
+        action:
+          $ref: '#/components/schemas/EnumGitspaceActionType'
       type: object
     OpenapiAdminUsersCreateRequest:
       properties:
@@ -8440,6 +10334,59 @@ components:
           deprecated: true
           type: string
       type: object
+    OpenapiCreateGitspaceRequest:
+      properties:
+        branch:
+          type: string
+        code_repo_ref:
+          nullable: true
+          type: string
+        code_repo_type:
+          $ref: '#/components/schemas/EnumGitspaceCodeRepoType'
+        code_repo_url:
+          type: string
+        devcontainer_path:
+          nullable: true
+          type: string
+        ide:
+          $ref: '#/components/schemas/EnumIDEType'
+        identifier:
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        resource_identifier:
+          type: string
+        resource_space_ref:
+          type: string
+        space_ref:
+          type: string
+      type: object
+    OpenapiCreateInfraProviderConfigRequest:
+      properties:
+        identifier:
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        resources:
+          items:
+            $ref: '#/components/schemas/InfraproviderResourceInput'
+          nullable: true
+          type: array
+        space_ref:
+          type: string
+        type:
+          $ref: '#/components/schemas/EnumInfraProviderType'
+      type: object
     OpenapiCreatePipelineRequest:
       properties:
         config_path:
@@ -8553,7 +10500,8 @@ components:
         identifier:
           type: string
         lifetime:
-          $ref: '#/components/schemas/TimeDuration'
+          nullable: true
+          type: integer
         uid:
           deprecated: true
           type: string
@@ -8656,6 +10604,13 @@ components:
         password:
           type: string
       type: object
+    OpenapiLookupRepoGitspaceRequest:
+      properties:
+        space_ref:
+          type: string
+        url:
+          type: string
+      type: object
     OpenapiMergePullReq:
       properties:
         bypass_rules:
@@ -8709,6 +10664,16 @@ components:
         $ref: '#/components/schemas/ApiFileDiffRequest'
       nullable: true
       type: array
+    OpenapiPullReqAssignLabelInput:
+      properties:
+        label_id:
+          type: integer
+        value:
+          type: string
+        value_id:
+          nullable: true
+          type: integer
+      type: object
     OpenapiRegisterRequest:
       properties:
         display_name:
@@ -9064,7 +11029,6 @@ components:
           type: array
       type: object
     ProtectionPattern:
-      nullable: true
       properties:
         default:
           type: boolean
@@ -9129,7 +11093,8 @@ components:
         payload:
           type: string
         sha:
-          $ref: '#/components/schemas/ShaSHA'
+          description: Git object hash
+          type: string
       type: object
     RepoCommitTag:
       properties:
@@ -9160,10 +11125,8 @@ components:
         sha:
           type: string
         type:
-          $ref: '#/components/schemas/RepoContentType'
+          type: string
       type: object
-    RepoContentType:
-      type: string
     RepoFileContent:
       properties:
         data:
@@ -9250,6 +11213,8 @@ components:
           type: integer
         size_updated:
           type: integer
+        state:
+          type: integer
         updated:
           type: integer
       type: object
@@ -9284,9 +11249,15 @@ components:
           nullable: true
           type: boolean
       type: object
-    ShaSHA:
-      description: Git object hash
-      type: string
+    ScmCodeRepositoryResponse:
+      properties:
+        branch:
+          type: string
+        is_private:
+          type: boolean
+        url:
+          type: string
+      type: object
     SpaceExportProgressOutput:
       properties:
         repos:
@@ -9339,6 +11310,8 @@ components:
       type: object
     SystemConfigOutput:
       properties:
+        gitspace_enabled:
+          type: boolean
         public_resource_creation_enabled:
           type: boolean
         ssh_enabled:
@@ -9346,9 +11319,6 @@ components:
         user_signup_allowed:
           type: boolean
       type: object
-    TimeDuration:
-      nullable: true
-      type: integer
     TypesChangeStats:
       properties:
         changes:
@@ -9470,7 +11440,7 @@ components:
         path:
           type: string
         status:
-          $ref: '#/components/schemas/EnumFileDiffStatus'
+          type: string
       type: object
     TypesCommitFilesResponse:
       properties:
@@ -9511,7 +11481,13 @@ components:
       type: object
     TypesDiffStats:
       properties:
+        additions:
+          nullable: true
+          type: integer
         commits:
+          nullable: true
+          type: integer
+        deletions:
           nullable: true
           type: integer
         files_changed:
@@ -9583,7 +11559,7 @@ components:
         started:
           type: integer
         status:
-          $ref: '#/components/schemas/EnumCIStatus'
+          type: string
         target:
           type: string
         timestamp:
@@ -9595,12 +11571,283 @@ components:
         updated:
           type: integer
       type: object
+    TypesGitspaceConfig:
+      properties:
+        branch:
+          type: string
+        code_repo_ref:
+          nullable: true
+          type: string
+        code_repo_type:
+          $ref: '#/components/schemas/EnumGitspaceCodeRepoType'
+        code_repo_url:
+          type: string
+        created:
+          type: integer
+        devcontainer_path:
+          nullable: true
+          type: string
+        ide:
+          $ref: '#/components/schemas/EnumIDEType'
+        identifier:
+          type: string
+        instance:
+          $ref: '#/components/schemas/TypesGitspaceInstance'
+        name:
+          type: string
+        resource_identifier:
+          type: string
+        space_path:
+          type: string
+        state:
+          $ref: '#/components/schemas/EnumGitspaceStateType'
+        updated:
+          type: integer
+        user_id:
+          type: string
+      type: object
+    TypesGitspaceEventResponse:
+      properties:
+        created:
+          type: integer
+        entity_type:
+          $ref: '#/components/schemas/EnumGitspaceEntityType'
+        event:
+          $ref: '#/components/schemas/EnumGitspaceEventType'
+        event_time:
+          type: string
+        message:
+          type: string
+        query_key:
+          type: string
+        timestamp:
+          type: integer
+      type: object
+    TypesGitspaceInstance:
+      properties:
+        access_key:
+          nullable: true
+          type: string
+        access_type:
+          $ref: '#/components/schemas/EnumGitspaceAccessType'
+        created:
+          type: integer
+        identifier:
+          type: string
+        last_used:
+          type: integer
+        machine_user:
+          nullable: true
+          type: string
+        resource_usage:
+          nullable: true
+          type: string
+        space_path:
+          type: string
+        state:
+          $ref: '#/components/schemas/EnumGitspaceInstanceStateType'
+        total_time_used:
+          type: integer
+        tracked_changes:
+          nullable: true
+          type: string
+        updated:
+          type: integer
+        url:
+          nullable: true
+          type: string
+      type: object
     TypesIdentity:
       properties:
         email:
           type: string
         name:
           type: string
+      type: object
+    TypesInfraProviderConfig:
+      properties:
+        created:
+          type: integer
+        identifier:
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        resources:
+          items:
+            $ref: '#/components/schemas/TypesInfraProviderResource'
+          nullable: true
+          type: array
+        space_path:
+          type: string
+        type:
+          $ref: '#/components/schemas/EnumInfraProviderType'
+        updated:
+          type: integer
+      type: object
+    TypesInfraProviderResource:
+      properties:
+        config_identifier:
+          type: string
+        cpu:
+          nullable: true
+          type: string
+        created:
+          type: integer
+        disk:
+          nullable: true
+          type: string
+        gateway_host:
+          nullable: true
+          type: string
+        gateway_port:
+          nullable: true
+          type: string
+        identifier:
+          type: string
+        infra_provider_type:
+          $ref: '#/components/schemas/EnumInfraProviderType'
+        memory:
+          nullable: true
+          type: string
+        metadata:
+          additionalProperties:
+            type: string
+          nullable: true
+          type: object
+        name:
+          type: string
+        network:
+          nullable: true
+          type: string
+        region:
+          type: string
+        space_path:
+          type: string
+        template_identifier:
+          nullable: true
+          type: string
+        updated:
+          type: integer
+      type: object
+    TypesLabel:
+      properties:
+        color:
+          $ref: '#/components/schemas/EnumLabelColor'
+        created:
+          type: integer
+        created_by:
+          type: integer
+        description:
+          type: string
+        id:
+          type: integer
+        key:
+          type: string
+        repo_id:
+          nullable: true
+          type: integer
+        scope:
+          type: integer
+        space_id:
+          nullable: true
+          type: integer
+        type:
+          $ref: '#/components/schemas/EnumLabelType'
+        updated:
+          type: integer
+        updated_by:
+          type: integer
+        value_count:
+          type: integer
+      type: object
+    TypesLabelAssignment:
+      properties:
+        assigned:
+          nullable: true
+          type: boolean
+        assigned_value:
+          $ref: '#/components/schemas/TypesLabelValueInfo'
+        color:
+          $ref: '#/components/schemas/EnumLabelColor'
+        id:
+          type: integer
+        key:
+          type: string
+        scope:
+          type: integer
+        type:
+          $ref: '#/components/schemas/EnumLabelType'
+        values:
+          items:
+            $ref: '#/components/schemas/TypesLabelValueInfo'
+          type: array
+      type: object
+    TypesLabelPullReqAssignmentInfo:
+      properties:
+        color:
+          $ref: '#/components/schemas/EnumLabelColor'
+        id:
+          type: integer
+        key:
+          type: string
+        scope:
+          type: integer
+        value:
+          nullable: true
+          type: string
+        value_color:
+          $ref: '#/components/schemas/EnumLabelColor'
+        value_count:
+          type: integer
+        value_id:
+          nullable: true
+          type: integer
+      type: object
+    TypesLabelValue:
+      properties:
+        color:
+          $ref: '#/components/schemas/EnumLabelColor'
+        created:
+          type: integer
+        created_by:
+          type: integer
+        id:
+          type: integer
+        label_id:
+          type: integer
+        updated:
+          type: integer
+        updated_by:
+          type: integer
+        value:
+          type: string
+      type: object
+    TypesLabelValueInfo:
+      properties:
+        color:
+          nullable: true
+          type: string
+        id:
+          nullable: true
+          type: integer
+        value:
+          nullable: true
+          type: string
+      type: object
+    TypesLabelWithValues:
+      properties:
+        label:
+          $ref: '#/components/schemas/TypesLabel'
+        values:
+          items:
+            $ref: '#/components/schemas/TypesLabelValue'
+          nullable: true
+          type: array
       type: object
     TypesListCommitResponse:
       properties:
@@ -9788,10 +12035,14 @@ components:
           type: integer
         is_draft:
           type: boolean
+        labels:
+          items:
+            $ref: '#/components/schemas/TypesLabelPullReqAssignmentInfo'
+          type: array
         merge_base_sha:
           type: string
         merge_check_status:
-          $ref: '#/components/schemas/EnumMergeCheckStatus'
+          type: string
         merge_conflicts:
           items:
             type: string
@@ -9925,6 +12176,24 @@ components:
         sha:
           type: string
       type: object
+    TypesPullReqLabel:
+      properties:
+        created:
+          type: integer
+        created_by:
+          type: integer
+        label_id:
+          type: integer
+        pullreq_id:
+          type: integer
+        updated:
+          type: integer
+        updated_by:
+          type: integer
+        value_id:
+          nullable: true
+          type: integer
+      type: object
     TypesPullReqReviewer:
       properties:
         added_by:
@@ -9947,10 +12216,16 @@ components:
       type: object
     TypesPullReqStats:
       properties:
+        additions:
+          nullable: true
+          type: integer
         commits:
           nullable: true
           type: integer
         conversations:
+          type: integer
+        deletions:
+          nullable: true
           type: integer
         files_changed:
           nullable: true
@@ -9992,8 +12267,6 @@ components:
           type: integer
         identifier:
           type: string
-        importing:
-          type: boolean
         is_empty:
           type: boolean
         num_closed_pulls:
@@ -10013,6 +12286,8 @@ components:
         size:
           type: integer
         size_updated:
+          type: integer
+        state:
           type: integer
         updated:
           type: integer
@@ -10048,10 +12323,8 @@ components:
         state:
           $ref: '#/components/schemas/EnumRuleState'
         type:
-          $ref: '#/components/schemas/TypesRuleType'
+          type: string
       type: object
-    TypesRuleType:
-      type: string
     TypesRuleViolations:
       properties:
         bypassable:
@@ -10071,6 +12344,50 @@ components:
         violations:
           items:
             $ref: '#/components/schemas/TypesRuleViolations'
+          nullable: true
+          type: array
+      type: object
+    TypesSaveLabelInput:
+      properties:
+        color:
+          $ref: '#/components/schemas/EnumLabelColor'
+        description:
+          type: string
+        id:
+          type: integer
+        key:
+          type: string
+        type:
+          $ref: '#/components/schemas/EnumLabelType'
+      type: object
+    TypesSaveLabelValueInput:
+      properties:
+        color:
+          $ref: '#/components/schemas/EnumLabelColor'
+        id:
+          type: integer
+        value:
+          type: string
+      type: object
+    TypesScopeData:
+      properties:
+        repository:
+          $ref: '#/components/schemas/TypesRepository'
+        scope:
+          type: integer
+        space:
+          $ref: '#/components/schemas/TypesSpace'
+      type: object
+    TypesScopesLabels:
+      properties:
+        label_data:
+          items:
+            $ref: '#/components/schemas/TypesLabelAssignment'
+          nullable: true
+          type: array
+        scope_data:
+          items:
+            $ref: '#/components/schemas/TypesScopeData'
           nullable: true
           type: array
       type: object
@@ -10183,7 +12500,7 @@ components:
         started:
           type: integer
         status:
-          $ref: '#/components/schemas/EnumCIStatus'
+          type: string
         steps:
           items:
             $ref: '#/components/schemas/TypesStep'
@@ -10222,7 +12539,7 @@ components:
         started:
           type: integer
         status:
-          $ref: '#/components/schemas/EnumCIStatus'
+          type: string
         stopped:
           type: integer
       type: object
@@ -10239,7 +12556,7 @@ components:
         space_id:
           type: integer
         type:
-          $ref: '#/components/schemas/EnumResolverType'
+          type: string
         updated:
           type: integer
       type: object
@@ -10257,7 +12574,7 @@ components:
         principal_id:
           type: integer
         type:
-          $ref: '#/components/schemas/EnumTokenType'
+          type: string
       type: object
     TypesTokenResponse:
       properties:

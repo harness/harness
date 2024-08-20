@@ -20,7 +20,7 @@
 
   .table {
     .row {
-      height: 80px;
+      height: fit-content;
       display: flex;
       justify-content: center;
       padding: 0;
@@ -36,6 +36,16 @@
 
       .convo {
         white-space: nowrap;
+      }
+      .prLabels {
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .prwrap {
+        width: 80% !important;
+        flex-wrap: wrap;
       }
     }
 

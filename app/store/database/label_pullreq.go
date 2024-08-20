@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/gotidy/ptr"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -56,9 +57,11 @@ type pullReqAssignmentInfo struct {
 	LabelID    int64           `db:"label_id"`
 	LabelKey   string          `db:"label_key"`
 	LabelColor enum.LabelColor `db:"label_color"`
+	LabelScope int64           `db:"label_scope"`
 	ValueCount int64           `db:"label_value_count"`
+	ValueID    null.Int        `db:"label_value_id"`
 	Value      null.String     `db:"label_value_value"`
-	ValueColor null.String     `db:"label_value_color"`
+	ValueColor null.String     `db:"label_value_color"` // get's converted to *enum.LabelColor
 }
 
 const (
@@ -193,7 +196,9 @@ func (s *pullReqLabelStore) ListAssignedByPullreqIDs(
 			,label_id
 			,label_key
 			,label_color
+			,label_scope
 			,label_value_count
+			,label_value_id
 			,label_value_value
 			,label_value_color
 	`).
@@ -261,14 +266,20 @@ func mapPullReqLabel(lbl *pullReqLabel) *types.PullReqLabel {
 }
 
 func mapPullReqAssignmentInfo(lbl *pullReqAssignmentInfo) *types.LabelPullReqAssignmentInfo {
+	var valueColor *enum.LabelColor
+	if lbl.ValueColor.Valid {
+		valueColor = ptr.Of(enum.LabelColor(lbl.ValueColor.String))
+	}
 	return &types.LabelPullReqAssignmentInfo{
 		PullReqID:  lbl.PullReqID,
 		LabelID:    lbl.LabelID,
 		LabelKey:   lbl.LabelKey,
 		LabelColor: lbl.LabelColor,
+		LabelScope: lbl.LabelScope,
 		ValueCount: lbl.ValueCount,
+		ValueID:    lbl.ValueID.Ptr(),
 		Value:      lbl.Value.Ptr(),
-		ValueColor: lbl.ValueColor.Ptr(),
+		ValueColor: valueColor,
 	}
 }
 

@@ -30,6 +30,7 @@ commits: Commits
 commitChanges: Commit changes
 pullRequests: Pull Requests
 settings: Settings
+manageRepository: Manage Repository
 newFile: New File
 editFile: Edit File
 prev: Prev
@@ -90,6 +91,7 @@ cloneHTTPS: Git clone URL
 nameYourFile: Name your file...
 noResultTitle: Sorry, no result found
 noResultMessage: What you searched was unfortunately not found or doesn’t exist
+noFilterResultMessage: No results were found based on the applied filters
 pageTitle:
   signin: Sign In
   register: Register a new account
@@ -216,6 +218,7 @@ newFileNotAllowed: You must be on a branch to create a new file
 fileDeleted: '__path__ successfully deleted.'
 newPullRequest: New Pull Request
 pullRequestEmpty: There are no pull requests in your repo. Click the button below to create a pull request.
+pullRequestNotFoundforFilter: No pull requests match the applied filters
 comparingChanges: Comparing Changes
 selectToViewMore: Select branch to view more here.
 createPullRequest: Create pull request
@@ -1293,3 +1296,58 @@ regex:
   enabled: enabled
   disabled: disabled
   string: RegEx
+labels:
+  labels: Labels
+  newLabel: New Label
+  labelName: Label Name
+  labelValue: Label Value
+  labelNotFound: ' label not found'
+  allowDynamic: Allow users to add values
+  addNewValue: 'Add new value  '
+  addValue: 'Add value'
+  removeLabel: Remove Label
+  deleteLabel: Delete Label
+  provideLabelName: Provide Label name
+  labelCreated: Label created
+  labelUpdated: Label updated
+  labelNameReq: Label Name is required
+  labelValueReq: Label Value is required
+  noLabels: No Labels
+  updated: 'updated '
+  applied: 'applied '
+  label: ' label'
+  labelTo: ' label to '
+  removed: 'removed '
+  anyValue: 'anyvalue'
+  anyValueOption: '(any value)'
+  failedToDeleteLabel: Failed to delete Label
+  findALabel: Find a label
+  canbeAddedByUsers: '*can be added by users*'
+  removedLabel: Removed '{label}' label
+  showLabelsScope: Show labels from parent scopes
+  createLabel: Create Label
+  updateLabel: Update Label
+  appliedLabel: Create a <strong>new branch</strong> for this commit and start a pull request
+  labelsApplied: '{labelCount|1:Label,Labels} Applied'
+  createdIn: Created In
+  labelCreationFailed: Failed to create label
+  labelUpdateFailed: Failed to update label
+  noLabelsFound: No Labels found. Click on the button below to create a Label.
+  noRepoLabelsFound: There are no Labels in your repo. Click the button below to create a Label.
+  noScopeLabelsFound: There are no Labels present in current scope. Click the button below to create a Label.
+  scopeMessage: (Showing labels created at current scope or higher)
+  deleteLabelConfirm: Are you sure you want to delete label <strong>{{name}}</strong>? You can't undo this action.
+  intentText: Editing/deleting a label or its values will impact all the areas it has been used.
+  prCount: 'Showing {count} {count|1:result,results}'
+  noResults: No results found
+  labelPreview: Label Preview
+  filterByLabels: Filter by Label/s
+  provideLabelValue: 'Provide label value'
+  findaValue: Find a value
+  findOrAdd: Find or add a new value
+  labelValuesOptional: 'Label Value/s (Optional)'
+  descriptionOptional: 'Description (Optional)'
+  placeholderDescription: Enter a short description for the label
+  addaValue: Add a value
+  stringMax: '{entity} must be 50 characters or less'
+  noNewLine: '{entity} cannot contain new lines'

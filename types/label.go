@@ -95,13 +95,15 @@ type LabelAssignment struct {
 }
 
 type LabelPullReqAssignmentInfo struct {
-	PullReqID  int64           `json:"-"`
-	LabelID    int64           `json:"id"`
-	LabelKey   string          `json:"key"`
-	LabelColor enum.LabelColor `json:"color,omitempty"`
-	ValueCount int64           `json:"value_count"`
-	Value      *string         `json:"value,omitempty"`
-	ValueColor *string         `json:"value_color,omitempty"`
+	PullReqID  int64            `json:"-"`
+	LabelID    int64            `json:"id"`
+	LabelKey   string           `json:"key"`
+	LabelColor enum.LabelColor  `json:"color,omitempty"`
+	LabelScope int64            `json:"scope"`
+	ValueCount int64            `json:"value_count"`
+	ValueID    *int64           `json:"value_id,omitempty"`
+	Value      *string          `json:"value,omitempty"`
+	ValueColor *enum.LabelColor `json:"value_color,omitempty"`
 }
 
 type ScopeData struct {

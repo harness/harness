@@ -15,7 +15,7 @@
  */
 
 .main {
-  max-height: calc(var(--page-height) - 160px);
+  min-height: calc(var(--page-height) - 160px);
   background-color: var(--primary-bg) !important;
   width: 100%;
   margin: var(--spacing-small);
@@ -27,7 +27,6 @@
 
     .bp3-tab-panel {
       width: 100%;
-      height: 500px;
     }
 
     .bp3-tab {
