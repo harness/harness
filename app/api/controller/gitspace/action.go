@@ -69,11 +69,11 @@ func (c *Controller) Action(
 	}
 
 	// check if it's an internal repo
-	if gitspaceConfig.CodeRepoType == enum.CodeRepoTypeGitness {
-		if gitspaceConfig.CodeRepoRef == nil {
+	if gitspaceConfig.CodeRepo.Type == enum.CodeRepoTypeGitness {
+		if gitspaceConfig.CodeRepo.Ref == nil {
 			return nil, fmt.Errorf("couldn't fetch repo for the user, no ref found: %w", err)
 		}
-		repo, err := c.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepoRef)
+		repo, err := c.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't fetch repo for the user: %w", err)
 		}
@@ -221,7 +221,7 @@ func (c *Controller) buildGitspaceInstance(config *types.GitspaceConfig) (*types
 		GitSpaceConfigID: config.ID,
 		Identifier:       identifier,
 		State:            enum.GitspaceInstanceStateStarting,
-		UserID:           config.UserID,
+		UserID:           config.GitspaceUser.Identifier,
 		SpaceID:          config.SpaceID,
 		SpacePath:        config.SpacePath,
 		Created:          now,

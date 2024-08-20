@@ -58,14 +58,14 @@ func (s GenericSCM) GetFileContent(ctx context.Context,
 
 	log.Info().Msg("Cloning the repository...")
 	cmd := command.New("clone",
-		command.WithFlag("--branch", gitspaceConfig.Branch),
+		command.WithFlag("--branch", gitspaceConfig.CodeRepo.Branch),
 		command.WithFlag("--no-checkout"),
 		command.WithFlag("--depth", "1"),
-		command.WithArg(gitspaceConfig.CodeRepoURL),
+		command.WithArg(gitspaceConfig.CodeRepo.URL),
 		command.WithArg(cloneDir),
 	)
 	if err := cmd.Run(ctx, command.WithDir(cloneDir)); err != nil {
-		return nil, fmt.Errorf("failed to clone repository %s: %w", gitspaceConfig.CodeRepoURL, err)
+		return nil, fmt.Errorf("failed to clone repository %s: %w", gitspaceConfig.CodeRepo.URL, err)
 	}
 
 	var lsTreeOutput bytes.Buffer
@@ -106,11 +106,11 @@ func (s GenericSCM) ResolveCredentials(
 ) (*ResolvedCredentials, error) {
 	var resolvedCredentials = &ResolvedCredentials{
 		Branch:   gitspaceConfig.Branch,
-		CloneURL: gitspaceConfig.CodeRepoURL,
+		CloneURL: gitspaceConfig.CodeRepo.URL,
 	}
-	repoURL, err := url.Parse(gitspaceConfig.CodeRepoURL)
+	repoURL, err := url.Parse(gitspaceConfig.CodeRepo.URL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse repository URL %s: %w", gitspaceConfig.CodeRepoURL, err)
+		return nil, fmt.Errorf("failed to parse repository URL %s: %w", gitspaceConfig.CodeRepo.URL, err)
 	}
 	repoName := strings.TrimSuffix(path.Base(repoURL.Path), ".git")
 	resolvedCredentials.RepoName = repoName

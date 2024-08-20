@@ -59,18 +59,19 @@ type gitspaceInstance struct {
 	GitSpaceConfigID int64                          `db:"gits_gitspace_config_id"`
 	URL              null.String                    `db:"gits_url"`
 	State            enum.GitspaceInstanceStateType `db:"gits_state"`
-	UserUID          string                         `db:"gits_user_uid"`
-	ResourceUsage    null.String                    `db:"gits_resource_usage"`
-	SpaceID          int64                          `db:"gits_space_id"`
-	LastUsed         int64                          `db:"gits_last_used"`
-	TotalTimeUsed    int64                          `db:"gits_total_time_used"`
-	TrackedChanges   null.String                    `db:"gits_tracked_changes"`
-	AccessType       enum.GitspaceAccessType        `db:"gits_access_type"`
-	AccessKeyRef     null.String                    `db:"gits_access_key_ref"`
-	MachineUser      null.String                    `db:"gits_machine_user"`
-	Identifier       string                         `db:"gits_uid"`
-	Created          int64                          `db:"gits_created"`
-	Updated          int64                          `db:"gits_updated"`
+	// TODO: migrate to principal int64 id to use principal cache and consistent with gitness code.
+	UserUID        string                  `db:"gits_user_uid"`
+	ResourceUsage  null.String             `db:"gits_resource_usage"`
+	SpaceID        int64                   `db:"gits_space_id"`
+	LastUsed       int64                   `db:"gits_last_used"`
+	TotalTimeUsed  int64                   `db:"gits_total_time_used"`
+	TrackedChanges null.String             `db:"gits_tracked_changes"`
+	AccessType     enum.GitspaceAccessType `db:"gits_access_type"`
+	AccessKeyRef   null.String             `db:"gits_access_key_ref"`
+	MachineUser    null.String             `db:"gits_machine_user"`
+	Identifier     string                  `db:"gits_uid"`
+	Created        int64                   `db:"gits_created"`
+	Updated        int64                   `db:"gits_updated"`
 }
 
 // NewGitspaceInstanceStore returns a new GitspaceInstanceStore.

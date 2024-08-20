@@ -64,12 +64,12 @@ func (s GitnessSCM) ResolveCredentials(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedCredentials, error) {
-	repoURL, err := url.Parse(gitspaceConfig.CodeRepoURL)
+	repoURL, err := url.Parse(gitspaceConfig.CodeRepo.URL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse repository URL %s: %w", gitspaceConfig.CodeRepoURL, err)
+		return nil, fmt.Errorf("failed to parse repository URL %s: %w", gitspaceConfig.CodeRepo.URL, err)
 	}
 	repoName := strings.TrimSuffix(path.Base(repoURL.Path), ".git")
-	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepoRef)
+	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
@@ -79,10 +79,10 @@ func (s GitnessSCM) ResolveCredentials(
 	}
 	// Backfill clone URL
 	gitURL := s.urlProvider.GenerateContainerGITCloneURL(ctx, repo.Path)
-	resolvedCredentails := &ResolvedCredentials{Branch: gitspaceConfig.Branch, CloneURL: gitURL}
+	resolvedCredentails := &ResolvedCredentials{Branch: gitspaceConfig.CodeRepo.Branch, CloneURL: gitURL}
 	resolvedCredentails.RepoName = repoName
 	gitspacePrincipal := bootstrap.NewGitspaceServiceSession().Principal
-	user, err := findUserFromUID(ctx, s.principalStore, gitspaceConfig.UserID)
+	user, err := findUserFromUID(ctx, s.principalStore, gitspaceConfig.GitspaceUser.Identifier)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (s GitnessSCM) GetFileContent(ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	filePath string,
 ) ([]byte, error) {
-	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepoRef)
+	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
@@ -127,7 +127,7 @@ func (s GitnessSCM) GetFileContent(ctx context.Context,
 	readParams := git.CreateReadParams(repo)
 	treeNodeOutput, err := s.git.GetTreeNode(ctx, &git.GetTreeNodeParams{
 		ReadParams:          readParams,
-		GitREF:              gitspaceConfig.Branch,
+		GitREF:              gitspaceConfig.CodeRepo.Branch,
 		Path:                filePath,
 		IncludeLatestCommit: false,
 	})
@@ -139,7 +139,7 @@ func (s GitnessSCM) GetFileContent(ctx context.Context,
 	if treeNodeOutput.Node.Type != git.TreeNodeTypeBlob {
 		return nil, usererror.BadRequestf(
 			"Object in '%s' at '/%s' is of type '%s'. Only objects of type %s support raw viewing.",
-			gitspaceConfig.Branch, filePath, treeNodeOutput.Node.Type, git.TreeNodeTypeBlob)
+			gitspaceConfig.CodeRepo.Branch, filePath, treeNodeOutput.Node.Type, git.TreeNodeTypeBlob)
 	}
 
 	blobReader, err := s.git.GetBlob(ctx, &git.GetBlobParams{

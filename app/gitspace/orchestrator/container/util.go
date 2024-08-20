@@ -25,7 +25,7 @@ const (
 )
 
 func GetGitspaceContainerName(config types.GitspaceConfig) string {
-	return "gitspace-" + config.UserID + "-" + config.Identifier
+	return "gitspace-" + config.GitspaceUser.Identifier + "-" + config.Identifier
 }
 
 func GetUserHomeDir(userIdentifier string) string {

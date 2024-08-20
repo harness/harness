@@ -154,8 +154,8 @@ func ProvideInfraProviderResourceStore(db *sqlx.DB) store.InfraProviderResourceS
 }
 
 // ProvideGitspaceConfigStore provides a gitspace config store.
-func ProvideGitspaceConfigStore(db *sqlx.DB) store.GitspaceConfigStore {
-	return NewGitspaceConfigStore(db)
+func ProvideGitspaceConfigStore(db *sqlx.DB, pCache store.PrincipalInfoCache) store.GitspaceConfigStore {
+	return NewGitspaceConfigStore(db, pCache)
 }
 
 // ProvideGitspaceInstanceStore provides a gitspace instance store.

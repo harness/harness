@@ -170,7 +170,7 @@ func (o orchestrator) stopGitspaceContainer(
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceStopStart)
 
 	// NOTE: Currently we use a static identifier as the Gitspace user.
-	gitspaceConfig.UserID = harnessUser
+	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 
 	err = o.containerOrchestrator.StopGitspace(ctx, gitspaceConfig, infra)
 	if err != nil {
@@ -202,7 +202,7 @@ func (o orchestrator) stopAndRemoveGitspaceContainer(
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionStart)
 
 	// NOTE: Currently we use a static identifier as the Gitspace user.
-	gitspaceConfig.UserID = harnessUser
+	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 
 	err = o.containerOrchestrator.StopAndRemoveGitspace(ctx, gitspaceConfig, infra)
 	if err != nil {
@@ -304,7 +304,7 @@ func (o orchestrator) ResumeStartGitspace(
 		return *gitspaceInstance, err
 	}
 	resolvedSecret, err := secretResolver.Resolve(ctx, secret.ResolutionContext{
-		UserIdentifier:     gitspaceConfig.UserID,
+		UserIdentifier:     gitspaceConfig.GitspaceUser.Identifier,
 		GitspaceIdentifier: gitspaceConfig.Identifier,
 		SecretRef:          *gitspaceInstance.AccessKeyRef,
 		SpaceIdentifier:    rootSpaceID,
@@ -375,7 +375,7 @@ func (o orchestrator) ResumeStartGitspace(
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationStart)
 
 	// NOTE: Currently we use a static identifier as the Gitspace user.
-	gitspaceConfig.UserID = harnessUser
+	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 
 	startResponse, err := o.containerOrchestrator.CreateAndStartGitspace(
 		ctx, gitspaceConfig, provisionedInfra, *scmResolvedDetails, o.config.DefaultBaseImage, ideSvc)
@@ -418,7 +418,7 @@ func (o orchestrator) ResumeStartGitspace(
 			Host:   "", // Empty since we include the host and port in the path
 			Path: fmt.Sprintf(
 				"ssh-remote+%s@%s:%s",
-				gitspaceConfig.UserID,
+				gitspaceConfig.GitspaceUser.Identifier,
 				host,
 				filepath.Join(forwardedPort, relativeRepoPath),
 			),
@@ -547,7 +547,7 @@ func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.
 		return "", fmt.Errorf("cannot find the provisioned infra: %w", err)
 	}
 	// NOTE: Currently we use a static identifier as the Gitspace user.
-	gitspaceConfig.UserID = harnessUser
+	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 	logs, err := o.containerOrchestrator.StreamLogs(ctx, gitspaceConfig, *infra)
 	if err != nil {
 		return "", fmt.Errorf("error while fetching logs from container orchestrator: %w", err)

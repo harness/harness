@@ -49,7 +49,8 @@ const (
 		gconf_updated,
         gconf_is_deleted,
         gconf_code_repo_ref,
-		gconf_ssh_token_identifier
+		gconf_ssh_token_identifier,
+        gconf_created_by
 	`
 	gitspaceConfigsTable        = `gitspace_configs`
 	ReturningClause             = "RETURNING "
@@ -70,25 +71,29 @@ type gitspaceConfig struct {
 	CodeRepoURL             string                    `db:"gconf_code_repo_url"`
 	DevcontainerPath        null.String               `db:"gconf_devcontainer_path"`
 	Branch                  string                    `db:"gconf_branch"`
-	UserUID                 string                    `db:"gconf_user_uid"`
-	SpaceID                 int64                     `db:"gconf_space_id"`
-	Created                 int64                     `db:"gconf_created"`
-	Updated                 int64                     `db:"gconf_updated"`
-	IsDeleted               bool                      `db:"gconf_is_deleted"`
-	SSHTokenIdentifier      string                    `db:"gconf_ssh_token_identifier"`
+	// TODO: migrate to principal int64 id to use principal cache and consistent with gitness code.
+	UserUID            string   `db:"gconf_user_uid"`
+	SpaceID            int64    `db:"gconf_space_id"`
+	Created            int64    `db:"gconf_created"`
+	Updated            int64    `db:"gconf_updated"`
+	IsDeleted          bool     `db:"gconf_is_deleted"`
+	SSHTokenIdentifier string   `db:"gconf_ssh_token_identifier"`
+	CreatedBy          null.Int `db:"gconf_created_by"`
 }
 
 var _ store.GitspaceConfigStore = (*gitspaceConfigStore)(nil)
 
 // NewGitspaceConfigStore returns a new GitspaceConfigStore.
-func NewGitspaceConfigStore(db *sqlx.DB) store.GitspaceConfigStore {
+func NewGitspaceConfigStore(db *sqlx.DB, pCache store.PrincipalInfoCache) store.GitspaceConfigStore {
 	return &gitspaceConfigStore{
-		db: db,
+		db:     db,
+		pCache: pCache,
 	}
 }
 
 type gitspaceConfigStore struct {
-	db *sqlx.DB
+	db     *sqlx.DB
+	pCache store.PrincipalInfoCache
 }
 
 func (s gitspaceConfigStore) Count(ctx context.Context, filter *types.GitspaceFilter) (int64, error) {
@@ -115,8 +120,8 @@ func (s gitspaceConfigStore) Find(ctx context.Context, id int64) (*types.Gitspac
 	stmt := database.Builder.
 		Select(gitspaceConfigSelectColumns).
 		From(gitspaceConfigsTable).
-		Where("gconf_id = $1", id). //nolint:goconst
-		Where("gconf_is_deleted = $2", false)
+		Where("gconf_id = ?", id). //nolint:goconst
+		Where("gconf_is_deleted = ?", false)
 	dst := new(gitspaceConfig)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -162,20 +167,21 @@ func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.G
 			gitspaceConfig.Name,
 			gitspaceConfig.IDE,
 			gitspaceConfig.InfraProviderResourceID,
-			gitspaceConfig.CodeAuthType,
-			gitspaceConfig.CodeAuthID,
-			gitspaceConfig.CodeRepoType,
-			gitspaceConfig.CodeRepoIsPrivate,
-			gitspaceConfig.CodeRepoURL,
+			gitspaceConfig.CodeRepo.AuthType,
+			gitspaceConfig.CodeRepo.AuthID,
+			gitspaceConfig.CodeRepo.Type,
+			gitspaceConfig.CodeRepo.IsPrivate,
+			gitspaceConfig.CodeRepo.URL,
 			gitspaceConfig.DevcontainerPath,
 			gitspaceConfig.Branch,
-			gitspaceConfig.UserID,
+			gitspaceConfig.GitspaceUser.Identifier,
 			gitspaceConfig.SpaceID,
 			gitspaceConfig.Created,
 			gitspaceConfig.Updated,
 			gitspaceConfig.IsDeleted,
-			gitspaceConfig.CodeRepoRef,
+			gitspaceConfig.CodeRepo.Ref,
 			gitspaceConfig.SSHTokenIdentifier,
+			gitspaceConfig.GitspaceUser.ID,
 		).
 		Suffix(ReturningClause + "gconf_id")
 	sql, args, err := stmt.ToSql()
@@ -200,7 +206,7 @@ func (s gitspaceConfigStore) Update(ctx context.Context,
 		Set("gconf_updated", dbGitspaceConfig.Updated).
 		Set("gconf_infra_provider_resource_id", dbGitspaceConfig.InfraProviderResourceID).
 		Set("gconf_is_deleted", dbGitspaceConfig.IsDeleted).
-		Where("gconf_id = $6", gitspaceConfig.ID)
+		Where("gconf_id = ?", gitspaceConfig.ID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -220,20 +226,21 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 		Name:                    config.Name,
 		IDE:                     config.IDE,
 		InfraProviderResourceID: config.InfraProviderResourceID,
-		CodeAuthType:            config.CodeAuthType,
-		CodeAuthID:              config.CodeAuthID,
-		CodeRepoIsPrivate:       config.CodeRepoIsPrivate,
-		CodeRepoType:            config.CodeRepoType,
-		CodeRepoRef:             null.StringFromPtr(config.CodeRepoRef),
-		CodeRepoURL:             config.CodeRepoURL,
+		CodeAuthType:            config.CodeRepo.AuthType,
+		CodeAuthID:              config.CodeRepo.AuthID,
+		CodeRepoIsPrivate:       config.CodeRepo.IsPrivate,
+		CodeRepoType:            config.CodeRepo.Type,
+		CodeRepoRef:             null.StringFromPtr(config.CodeRepo.Ref),
+		CodeRepoURL:             config.CodeRepo.URL,
 		DevcontainerPath:        null.StringFromPtr(config.DevcontainerPath),
 		Branch:                  config.Branch,
-		UserUID:                 config.UserID,
+		UserUID:                 config.GitspaceUser.Identifier,
 		SpaceID:                 config.SpaceID,
 		IsDeleted:               config.IsDeleted,
 		Created:                 config.Created,
 		Updated:                 config.Updated,
 		SSHTokenIdentifier:      config.SSHTokenIdentifier,
+		CreatedBy:               null.IntFromPtr(config.GitspaceUser.ID),
 	}
 }
 
@@ -256,7 +263,7 @@ func (s gitspaceConfigStore) List(ctx context.Context, filter *types.GitspaceFil
 	db := dbtx.GetAccessor(ctx, s.db)
 	var dst []*gitspaceConfig
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace config list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace config list space query")
 	}
 	return s.mapToGitspaceConfigs(ctx, dst)
 }
@@ -278,34 +285,46 @@ func (s gitspaceConfigStore) ListAll(
 	db := dbtx.GetAccessor(ctx, s.db)
 	var dst []*gitspaceConfig
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace config list query")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace config list all query")
 	}
 	return s.mapToGitspaceConfigs(ctx, dst)
 }
 
 func (s *gitspaceConfigStore) mapToGitspaceConfig(
-	_ context.Context,
+	ctx context.Context,
 	in *gitspaceConfig,
 ) (*types.GitspaceConfig, error) {
+	codeRepo := types.CodeRepo{
+		URL:              in.CodeRepoURL,
+		Ref:              in.CodeRepoRef.Ptr(),
+		Type:             in.CodeRepoType,
+		Branch:           in.Branch,
+		DevcontainerPath: in.DevcontainerPath.Ptr(),
+		IsPrivate:        in.CodeRepoIsPrivate,
+		AuthType:         in.CodeAuthType,
+		AuthID:           in.CodeAuthID,
+	}
 	var res = &types.GitspaceConfig{
 		ID:                      in.ID,
 		Identifier:              in.Identifier,
 		Name:                    in.Name,
 		InfraProviderResourceID: in.InfraProviderResourceID,
 		IDE:                     in.IDE,
-		CodeRepoType:            in.CodeRepoType,
-		CodeRepoRef:             in.CodeRepoRef.Ptr(),
-		CodeRepoURL:             in.CodeRepoURL,
-		Branch:                  in.Branch,
-		DevcontainerPath:        in.DevcontainerPath.Ptr(),
-		UserID:                  in.UserUID,
 		SpaceID:                 in.SpaceID,
-		CodeAuthType:            in.CodeAuthType,
-		CodeAuthID:              in.CodeAuthID,
-		CodeRepoIsPrivate:       in.CodeRepoIsPrivate,
 		Created:                 in.Created,
 		Updated:                 in.Updated,
 		SSHTokenIdentifier:      in.SSHTokenIdentifier,
+		CodeRepo:                codeRepo,
+		GitspaceUser: types.GitspaceUser{
+			ID:         in.CreatedBy.Ptr(),
+			Identifier: in.UserUID},
+	}
+	if res.GitspaceUser.ID != nil {
+		author, _ := s.pCache.Get(ctx, *res.GitspaceUser.ID)
+		if author != nil {
+			res.GitspaceUser.DisplayName = author.DisplayName
+			res.GitspaceUser.Email = author.Email
+		}
 	}
 	return res, nil
 }

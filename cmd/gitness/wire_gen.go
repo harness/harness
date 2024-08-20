@@ -256,7 +256,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	gitspaceConfigStore := database.ProvideGitspaceConfigStore(db)
+	gitspaceConfigStore := database.ProvideGitspaceConfigStore(db, principalInfoCache)
 	gitspaceInstanceStore := database.ProvideGitspaceInstanceStore(db)
 	infraProviderResourceStore := database.ProvideInfraProviderResourceStore(db)
 	infraProviderConfigStore := database.ProvideInfraProviderConfigStore(db)

@@ -133,24 +133,35 @@ func (c *Controller) Create(
 		if err != nil {
 			return fmt.Errorf("could not find infra provider resource : %q %w", resourceIdentifier, err)
 		}
+		codeRepo := types.CodeRepo{
+			URL:              in.CodeRepoURL,
+			Ref:              in.CodeRepoRef,
+			Type:             in.CodeRepoType,
+			Branch:           in.Branch,
+			DevcontainerPath: in.DevcontainerPath,
+		}
+
+		principal := session.Principal
+		principalID := principal.ID
+		user := types.GitspaceUser{
+			Identifier:  principal.UID,
+			Email:       principal.Email,
+			DisplayName: principal.DisplayName,
+			ID:          &principalID}
 		gitspaceConfig = &types.GitspaceConfig{
 			Identifier:                      identifier,
 			Name:                            in.Name,
 			IDE:                             in.IDE,
 			InfraProviderResourceID:         infraProviderResource.ID,
 			InfraProviderResourceIdentifier: infraProviderResource.Identifier,
-			CodeRepoType:                    in.CodeRepoType,
 			State:                           enum.GitspaceStateUninitialized,
-			CodeRepoURL:                     in.CodeRepoURL,
-			CodeRepoRef:                     in.CodeRepoRef,
-			Branch:                          in.Branch,
-			DevcontainerPath:                in.DevcontainerPath,
-			UserID:                          session.Principal.UID,
 			SpaceID:                         space.ID,
 			SpacePath:                       space.Path,
 			Created:                         now,
 			Updated:                         now,
 			SSHTokenIdentifier:              in.SSHTokenIdentifier,
+			CodeRepo:                        codeRepo,
+			GitspaceUser:                    user,
 		}
 		err = c.gitspaceConfigStore.Create(ctx, gitspaceConfig)
 		if err != nil {

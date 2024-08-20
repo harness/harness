@@ -111,7 +111,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 		return nil, err
 	}
 
-	homeDir := GetUserHomeDir(gitspaceConfig.UserID)
+	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
 	codeRepoDir := filepath.Join(homeDir, resolvedRepoDetails.RepoName)
 
 	switch state {
@@ -142,7 +142,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			ContainerName:  containerName,
 			DockerClient:   dockerClient,
 			HomeDir:        homeDir,
-			UserIdentifier: gitspaceConfig.UserID,
+			UserIdentifier: gitspaceConfig.GitspaceUser.Identifier,
 			AccessKey:      accessKey,
 			AccessType:     gitspaceConfig.GitspaceInstance.AccessType,
 		}
@@ -265,7 +265,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		ContainerName:  containerName,
 		DockerClient:   dockerClient,
 		HomeDir:        homeDir,
-		UserIdentifier: gitspaceConfig.UserID,
+		UserIdentifier: gitspaceConfig.GitspaceUser.Identifier,
 		AccessKey:      accessKey,
 		AccessType:     gitspaceConfig.GitspaceInstance.AccessType,
 	}

@@ -19,29 +19,40 @@ import (
 )
 
 type GitspaceConfig struct {
-	ID                              int64                     `json:"-"`
-	Identifier                      string                    `json:"identifier"`
-	Name                            string                    `json:"name"`
-	IDE                             enum.IDEType              `json:"ide"`
-	State                           enum.GitspaceStateType    `json:"state"`
-	InfraProviderResourceID         int64                     `json:"-"`
-	InfraProviderResourceIdentifier string                    `json:"resource_identifier"`
-	CodeRepoURL                     string                    `json:"code_repo_url"`
-	CodeRepoRef                     *string                   `json:"code_repo_ref"`
-	CodeRepoType                    enum.GitspaceCodeRepoType `json:"code_repo_type"`
-	Branch                          string                    `json:"branch"`
-	DevcontainerPath                *string                   `json:"devcontainer_path,omitempty"`
-	UserID                          string                    `json:"user_id"`
-	SpaceID                         int64                     `json:"-"`
-	CodeAuthType                    string                    `json:"-"`
-	CodeAuthID                      string                    `json:"-"`
-	IsDeleted                       bool                      `json:"-"`
-	CodeRepoIsPrivate               bool                      `json:"-"`
-	GitspaceInstance                *GitspaceInstance         `json:"instance"`
-	SpacePath                       string                    `json:"space_path"`
-	Created                         int64                     `json:"created"`
-	Updated                         int64                     `json:"updated"`
-	SSHTokenIdentifier              string                    `json:"ssh_token_identifier"`
+	ID                              int64                  `json:"-"`
+	Identifier                      string                 `json:"identifier"`
+	Name                            string                 `json:"name"`
+	IDE                             enum.IDEType           `json:"ide"`
+	State                           enum.GitspaceStateType `json:"state"`
+	InfraProviderResourceID         int64                  `json:"-"`
+	InfraProviderResourceIdentifier string                 `json:"resource_identifier"`
+	SpaceID                         int64                  `json:"-"`
+	IsDeleted                       bool                   `json:"-"`
+	GitspaceInstance                *GitspaceInstance      `json:"instance"`
+	SpacePath                       string                 `json:"space_path"`
+	Created                         int64                  `json:"created"`
+	Updated                         int64                  `json:"updated"`
+	SSHTokenIdentifier              string                 `json:"ssh_token_identifier"`
+	CodeRepo
+	GitspaceUser
+}
+
+type CodeRepo struct {
+	URL              string                    `json:"code_repo_url"`
+	Ref              *string                   `json:"code_repo_ref"`
+	Type             enum.GitspaceCodeRepoType `json:"code_repo_type"`
+	Branch           string                    `json:"branch"`
+	DevcontainerPath *string                   `json:"devcontainer_path,omitempty"`
+	IsPrivate        bool                      `json:"code_repo_is_private"`
+	AuthType         string                    `json:"-"`
+	AuthID           string                    `json:"-"`
+}
+
+type GitspaceUser struct {
+	ID          *int64 `json:"-"`
+	Identifier  string `json:"user_id"`
+	Email       string `json:"user_email"`
+	DisplayName string `json:"user_display_name"`
 }
 
 type GitspaceInstance struct {

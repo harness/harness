@@ -81,10 +81,10 @@ func (s scm) GetSCMRepoDetails(
 	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedDetails, error) {
 	filePath := devcontainerDefaultPath
-	if gitspaceConfig.CodeRepoType == "" {
-		gitspaceConfig.CodeRepoType = enum.CodeRepoTypeUnknown
+	if gitspaceConfig.CodeRepo.Type == "" {
+		gitspaceConfig.CodeRepo.Type = enum.CodeRepoTypeUnknown
 	}
-	scmProvider, err := s.scmProviderFactory.GetSCMProvider(gitspaceConfig.CodeRepoType)
+	scmProvider, err := s.scmProviderFactory.GetSCMProvider(gitspaceConfig.CodeRepo.Type)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve scm provider: %w", err)
 	}
