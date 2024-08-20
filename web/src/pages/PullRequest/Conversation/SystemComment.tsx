@@ -313,7 +313,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                       name: (payload?.payload as Unknown).value,
                       color: (payload?.payload as Unknown).value_color
                     }}
-                    scope={(payload?.payload as Unknown).scope}
+                    scope={(payload?.payload as Unknown).label_scope}
                   />
                   <span>{getString('labels.label')}</span>
                 </Case>
@@ -326,7 +326,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                       name: (payload?.payload as Unknown).old_value,
                       color: (payload?.payload as Unknown).old_value_color
                     }}
-                    scope={(payload?.payload as Unknown).scope}
+                    scope={(payload?.payload as Unknown).label_scope}
                   />
                   <span>{getString('labels.labelTo')}</span>
                   <Label
@@ -336,7 +336,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                       name: (payload?.payload as Unknown).value,
                       color: (payload?.payload as Unknown).value_color
                     }}
-                    scope={(payload?.payload as Unknown).scope}
+                    scope={(payload?.payload as Unknown).label_scope}
                   />
                 </Case>
                 <Case val={LabelActivity.UN_ASSIGN}>
@@ -348,7 +348,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                       name: (payload?.payload as Unknown).value,
                       color: (payload?.payload as Unknown).value_color
                     }}
-                    scope={(payload?.payload as Unknown).scope}
+                    scope={(payload?.payload as Unknown).label_scope}
                   />
                   <span>{getString('labels.label')}</span>
                 </Case>
