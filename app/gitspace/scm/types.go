@@ -14,10 +14,17 @@
 
 package scm
 
-import "github.com/harness/gitness/types"
+import (
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
+)
 
 type CodeRepositoryRequest struct {
-	URL string `json:"url"`
+	URL            string
+	RepoType       enum.GitspaceCodeRepoType
+	UserIdentifier string
+	UserID         int64
+	SpacePath      string
 }
 
 type CodeRepositoryResponse struct {

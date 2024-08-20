@@ -56,21 +56,55 @@ func NewSCM(factory Factory) SCM {
 	return &scm{scmProviderFactory: factory}
 }
 
-func (s scm) CheckValidCodeRepo(ctx context.Context, request CodeRepositoryRequest) (*CodeRepositoryResponse, error) {
+func (s scm) CheckValidCodeRepo(
+	ctx context.Context,
+	codeRepositoryRequest CodeRepositoryRequest,
+) (*CodeRepositoryResponse, error) {
 	codeRepositoryResponse := &CodeRepositoryResponse{
-		URL:               request.URL,
+		URL:               codeRepositoryRequest.URL,
 		CodeRepoIsPrivate: true,
 	}
-	defaultBranch, err := detectDefaultGitBranch(ctx, request.URL)
+	defaultBranch, err := detectDefaultGitBranch(ctx, codeRepositoryRequest.URL)
+	if err == nil {
+		branch := "main"
+		if defaultBranch != "" {
+			branch = defaultBranch
+		}
+		return &CodeRepositoryResponse{
+			URL:               codeRepositoryRequest.URL,
+			Branch:            branch,
+			CodeRepoIsPrivate: false,
+		}, nil
+	}
+	repoType := enum.CodeRepoTypeUnknown
+	if codeRepositoryRequest.RepoType != "" {
+		repoType = codeRepositoryRequest.RepoType
+	}
+	scmProvider, err := s.scmProviderFactory.GetSCMProvider(repoType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve scm provider: %w", err)
+	}
+	codeRepo := types.CodeRepo{URL: codeRepositoryRequest.URL}
+	gitspaceUser := types.GitspaceUser{Identifier: codeRepositoryRequest.UserIdentifier}
+	gitspaceConfig := types.GitspaceConfig{
+		CodeRepo:     codeRepo,
+		SpacePath:    codeRepositoryRequest.SpacePath,
+		GitspaceUser: gitspaceUser,
+	}
+	resolvedCreds, err := scmProvider.ResolveCredentials(ctx, gitspaceConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve repo credentials and url: %w", err)
+	}
+	defaultBranch, err = detectDefaultGitBranch(ctx, resolvedCreds.CloneURL)
 	if err == nil {
 		branch := "main"
 		if defaultBranch != "" {
 			branch = defaultBranch
 		}
 		codeRepositoryResponse = &CodeRepositoryResponse{
-			URL:               request.URL,
+			URL:               codeRepositoryRequest.URL,
 			Branch:            branch,
-			CodeRepoIsPrivate: false,
+			CodeRepoIsPrivate: true,
 		}
 	}
 	return codeRepositoryResponse, nil

@@ -27,14 +27,16 @@ import (
 )
 
 type LookupRepoInput struct {
-	Identifier string `json:"-"`
-	SpaceRef   string `json:"space_ref"` // Ref of the parent space
-	URL        string `json:"url"`
+	SpaceRef string                    `json:"space_ref"` // Ref of the parent space
+	URL      string                    `json:"url"`
+	RepoType enum.GitspaceCodeRepoType `json:"repo_type"`
 }
 
 var (
 	ErrInvalidURL = usererror.BadRequest(
 		"The URL specified is not valid format.")
+	ErrRepoMissing = usererror.BadRequest(
+		"There must be URL or Ref specified fir repo.")
 	ErrBadURLScheme = usererror.BadRequest("the URL is missing scheme, it must start with http or https")
 )
 
@@ -54,7 +56,13 @@ func (c *Controller) LookupRepo(
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	repositoryRequest := scm.CodeRepositoryRequest{URL: in.URL}
+	repositoryRequest := scm.CodeRepositoryRequest{
+		URL:            in.URL,
+		UserIdentifier: session.Principal.UID,
+		SpacePath:      space.Path,
+		RepoType:       in.RepoType,
+		UserID:         session.Principal.ID,
+	}
 	codeRepositoryResponse, err := c.scm.CheckValidCodeRepo(ctx, repositoryRequest)
 	if err != nil {
 		return nil, err
@@ -63,6 +71,9 @@ func (c *Controller) LookupRepo(
 }
 
 func (c *Controller) sanitizeLookupRepoInput(in *LookupRepoInput) error {
+	if in.RepoType == "" && in.URL == "" {
+		return ErrRepoMissing
+	}
 	parsedURL, err := url.Parse(in.URL)
 	if err != nil {
 		return ErrInvalidURL
