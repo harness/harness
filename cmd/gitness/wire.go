@@ -10,6 +10,8 @@ package main
 import (
 	"context"
 
+	"github.com/harness/gitness/app/api/controller/aiagent"
+	"github.com/harness/gitness/app/api/controller/capabilities"
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -43,6 +45,7 @@ import (
 	gitevents "github.com/harness/gitness/app/events/git"
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	gitspaceinfraevents "github.com/harness/gitness/app/events/gitspaceinfra"
+	pipelineevents "github.com/harness/gitness/app/events/pipeline"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	infrastructure "github.com/harness/gitness/app/gitspace/infrastructure"
@@ -64,6 +67,8 @@ import (
 	"github.com/harness/gitness/app/router"
 	"github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	aiagentservice "github.com/harness/gitness/app/services/aiagent"
+	capabilitiesservice "github.com/harness/gitness/app/services/capabilities"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/codeowners"
@@ -153,6 +158,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		infrastructure.WireSet,
 		infraproviderpkg.WireSet,
 		gitspaceevents.WireSet,
+		pipelineevents.WireSet,
 		infraproviderCtrl.WireSet,
 		gitspaceCtrl.WireSet,
 		gitevents.WireSet,
@@ -240,6 +246,10 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideGitspaceInfraProvisionerConfig,
 		cliserver.ProvideIDEVSCodeConfig,
 		instrument.WireSet,
+		aiagentservice.WireSet,
+		aiagent.WireSet,
+		capabilities.WireSet,
+		capabilitiesservice.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

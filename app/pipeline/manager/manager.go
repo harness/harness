@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/bootstrap"
+	events "github.com/harness/gitness/app/events/pipeline"
 	"github.com/harness/gitness/app/jwt"
 	"github.com/harness/gitness/app/pipeline/converter"
 	"github.com/harness/gitness/app/pipeline/file"
@@ -152,6 +153,8 @@ type Manager struct {
 	// Webhook store.WebhookSender
 
 	publicAccess publicaccess.Service
+	// events reporter
+	reporter events.Reporter
 }
 
 func New(
@@ -172,6 +175,7 @@ func New(
 	stepStore store.StepStore,
 	userStore store.PrincipalStore,
 	publicAccess publicaccess.Service,
+	reporter events.Reporter,
 ) *Manager {
 	return &Manager{
 		Config:           config,
@@ -191,6 +195,7 @@ func New(
 		Steps:            stepStore,
 		Users:            userStore,
 		publicAccess:     publicAccess,
+		reporter:         reporter,
 	}
 }
 
@@ -481,6 +486,7 @@ func (m *Manager) AfterStage(_ context.Context, stage *types.Stage) error {
 		Scheduler:   m.Scheduler,
 		Steps:       m.Steps,
 		Stages:      m.Stages,
+		Reporter:    m.reporter,
 	}
 	return t.do(noContext, stage)
 }

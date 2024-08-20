@@ -36,6 +36,21 @@ const (
 	CIStatusError         CIStatus = "error"
 )
 
+// Enum returns all possible CIStatus values.
+func (CIStatus) Enum() []interface{} {
+	return toInterfaceSlice(ciStatuses)
+}
+
+// Sanitize validates and returns a sanitized CIStatus value.
+func (status CIStatus) Sanitize() (CIStatus, bool) {
+	return Sanitize(status, GetAllCIStatuses)
+}
+
+// GetAllCIStatuses returns all possible CIStatus values and a default value.
+func GetAllCIStatuses() ([]CIStatus, CIStatus) {
+	return ciStatuses, CIStatusPending
+}
+
 func (status CIStatus) ConvertToCheckStatus() CheckStatus {
 	if status == CIStatusPending || status == CIStatusWaitingOnDeps {
 		return CheckStatusPending
@@ -87,3 +102,17 @@ func (status CIStatus) IsFailed() bool {
 		status == CIStatusKilled ||
 		status == CIStatusError
 }
+
+// List of all CIStatus values.
+var ciStatuses = sortEnum([]CIStatus{
+	CIStatusSkipped,
+	CIStatusBlocked,
+	CIStatusDeclined,
+	CIStatusWaitingOnDeps,
+	CIStatusPending,
+	CIStatusRunning,
+	CIStatusSuccess,
+	CIStatusFailure,
+	CIStatusKilled,
+	CIStatusError,
+})

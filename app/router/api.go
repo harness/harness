@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/app/api/controller/aiagent"
+	"github.com/harness/gitness/app/api/controller/capabilities"
 	"github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -44,6 +46,8 @@ import (
 	"github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/handler/account"
+	handleraiagent "github.com/harness/gitness/app/api/handler/aiagent"
+	handlercapabilities "github.com/harness/gitness/app/api/handler/capabilities"
 	handlercheck "github.com/harness/gitness/app/api/handler/check"
 	handlerconnector "github.com/harness/gitness/app/api/handler/connector"
 	handlerexecution "github.com/harness/gitness/app/api/handler/execution"
@@ -93,8 +97,8 @@ import (
 var (
 	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
 	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/",
-		"/v1/secrets/", "/v1/connectors", "/v1/templates/step", "/v1/templates/stage",
-		"/v1/gitspaces", "/v1/infraproviders", "/v1/migrate/repos"}
+		"/v1/secrets/", "/v1/connectors", "/v1/templates/step", "/v1/templates/stage", "/v1/gitspaces", "/v1/infraproviders",
+		"/v1/migrate/repos", "/v1/pipelines"}
 )
 
 // NewAPIHandler returns a new APIHandler.
@@ -127,6 +131,8 @@ func NewAPIHandler(
 	infraProviderCtrl *infraprovider.Controller,
 	migrateCtrl *migrate.Controller,
 	gitspaceCtrl *gitspace.Controller,
+	aiagentCtrl *aiagent.Controller,
+	capabilitiesCtrl *capabilities.Controller,
 ) http.Handler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
@@ -159,7 +165,7 @@ func NewAPIHandler(
 			setupRoutesV1WithAuth(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl,
 				pipelineCtrl, connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, uploadCtrl,
-				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl)
+				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, aiagentCtrl, capabilitiesCtrl)
 		})
 	})
 
@@ -208,6 +214,8 @@ func setupRoutesV1WithAuth(r chi.Router,
 	gitspaceCtrl *gitspace.Controller,
 	infraProviderCtrl *infraprovider.Controller,
 	migrateCtrl *migrate.Controller,
+	aiagentCtrl *aiagent.Controller,
+	capabilitiesCtrl *capabilities.Controller,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
 	setupSpaces(r, appCtx, spaceCtrl)
@@ -216,6 +224,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	setupConnectors(r, connectorCtrl)
 	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
+	setupAiAgent(r, aiagentCtrl, capabilitiesCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupPrincipals(r, principalCtrl)
@@ -253,6 +262,7 @@ func setupSpaces(
 			r.Post("/import", handlerspace.HandleImportRepositories(spaceCtrl))
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
+			r.Get("/pipelines", handlerspace.HandleListPipelines(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
 			r.Get("/service-accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
 			r.Get("/secrets", handlerspace.HandleListSecrets(spaceCtrl))
@@ -501,6 +511,16 @@ func setupTemplates(
 				r.Patch("/", handlertemplate.HandleUpdate(templateCtrl))
 				r.Delete("/", handlertemplate.HandleDelete(templateCtrl))
 			})
+	})
+}
+
+func setupAiAgent(r chi.Router, aiagentCtrl *aiagent.Controller, capabilitiesCtrl *capabilities.Controller) {
+	r.Route("/harness-intelligence", func(r chi.Router) {
+		r.Post("/generate-pipeline", handleraiagent.HandleGeneratePipeline(aiagentCtrl))
+		r.Post("/update-pipeline", handleraiagent.HandleUpdatePipeline(aiagentCtrl))
+		r.Post("/capabilities", handlercapabilities.HandleRunCapabilities(capabilitiesCtrl))
+		r.Post("/suggest-pipeline", handleraiagent.HandleSuggestPipelines(aiagentCtrl))
+		r.Post("/analyse-execution", handleraiagent.HandleAnalyse(aiagentCtrl))
 	})
 }
 

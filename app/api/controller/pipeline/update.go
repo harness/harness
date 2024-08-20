@@ -21,6 +21,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pipeline"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -60,7 +61,7 @@ func (c *Controller) Update(
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
-	return c.pipelineStore.UpdateOptLock(ctx, pipeline, func(pipeline *types.Pipeline) error {
+	updated, err := c.pipelineStore.UpdateOptLock(ctx, pipeline, func(pipeline *types.Pipeline) error {
 		if in.Identifier != nil {
 			pipeline.Identifier = *in.Identifier
 		}
@@ -76,6 +77,11 @@ func (c *Controller) Update(
 
 		return nil
 	})
+
+	// send pipeline update event
+	c.reporter.Updated(ctx, &events.UpdatedPayload{PipelineID: pipeline.ID, RepoID: pipeline.RepoID})
+
+	return updated, err
 }
 
 func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {

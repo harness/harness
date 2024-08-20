@@ -16,6 +16,7 @@ package pipeline
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	events "github.com/harness/gitness/app/events/pipeline"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -31,11 +32,13 @@ func ProvideController(
 	triggerStore store.TriggerStore,
 	authorizer authz.Authorizer,
 	pipelineStore store.PipelineStore,
+	reporter *events.Reporter,
 ) *Controller {
 	return NewController(
 		authorizer,
 		repoStore,
 		triggerStore,
 		pipelineStore,
+		*reporter,
 	)
 }

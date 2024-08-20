@@ -15,8 +15,8 @@ require (
 	github.com/drone-runners/drone-runner-docker v1.8.4-0.20240815103043-c6c3a3e33ce3
 	github.com/drone/drone-go v1.7.1
 	github.com/drone/drone-yaml v1.2.3
-	github.com/drone/funcmap v0.0.0-20240227160611-7e19e9cd5a1c
-	github.com/drone/go-convert v0.0.0-20240307072510-6bd371c65e61
+	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
+	github.com/drone/go-convert v0.0.0-20230919093251-7104c3bcc635
 	github.com/drone/go-generate v0.0.0-20230920014042-6085ee5c9522
 	github.com/drone/go-scm v1.38.4
 	github.com/drone/runner-go v1.12.0
@@ -77,7 +77,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.12 // indirect
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/99designs/basicauth-go v0.0.0-20160802081356-2a93ba0f464d // indirect
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/BobuSumisu/aho-corasick v1.0.3 // indirect
@@ -94,7 +93,6 @@ require (
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
-	github.com/drone/signal v1.0.0 // indirect
 	github.com/fatih/semgroup v1.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -161,30 +159,31 @@ require (
 )
 
 require (
-	cloud.google.com/go/profiler v0.4.1
-	github.com/Microsoft/go-winio v0.6.2 // indirect
+	cloud.google.com/go/profiler v0.3.1
+	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20240626203959-61d1e3462e30 // indirect
+	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/djherbis/buffer v1.2.0
 	github.com/djherbis/nio/v3 v3.0.1
-	github.com/google/pprof v0.0.0-20240722153945-304e4f0156b8 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/google/pprof v0.0.0-20221103000818-d260c55eee4c // indirect
 	github.com/google/subcommands v1.2.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/swaggest/jsonschema-go v0.3.72
-	github.com/swaggest/refl v1.3.0 // indirect
+	github.com/swaggest/jsonschema-go v0.3.40
+	github.com/swaggest/refl v1.1.0 // indirect
 	github.com/vearutop/statigz v1.4.0 // indirect
-	github.com/yuin/goldmark v1.7.4
+	github.com/yuin/goldmark v1.4.13
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
-	google.golang.org/genproto v0.0.0-20240723171418-e6d459c13d2a // indirect
+	google.golang.org/genproto v0.0.0-20240722135656-d784300faade // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )

@@ -68,7 +68,7 @@ func convertPipelineJoin(join *pipelineExecutionJoin) *types.Pipeline {
 		ID:           join.ID.Int64,
 		PipelineID:   join.PipelineID.Int64,
 		RepoID:       join.RepoID.Int64,
-		Action:       join.Action.String,
+		Action:       enum.TriggerAction(join.Action.String),
 		Trigger:      join.Trigger.String,
 		Number:       join.Number.Int64,
 		After:        join.After.String,
@@ -90,5 +90,29 @@ func convertPipelineJoin(join *pipelineExecutionJoin) *types.Pipeline {
 		Created:      join.Created.Int64,
 		Updated:      join.Updated.Int64,
 	}
+	return ret
+}
+
+type pipelineRepoJoin struct {
+	*types.Pipeline
+	RepoID  sql.NullInt64  `db:"repo_id"`
+	RepoUID sql.NullString `db:"repo_uid"`
+}
+
+func convertPipelineRepoJoins(rows []*pipelineRepoJoin) []*types.Pipeline {
+	pipelines := []*types.Pipeline{}
+	for _, k := range rows {
+		pipeline := convertPipelineRepoJoin(k)
+		pipelines = append(pipelines, pipeline)
+	}
+	return pipelines
+}
+
+func convertPipelineRepoJoin(join *pipelineRepoJoin) *types.Pipeline {
+	ret := join.Pipeline
+	if !join.RepoID.Valid {
+		return ret
+	}
+	ret.RepoUID = join.RepoUID.String
 	return ret
 }

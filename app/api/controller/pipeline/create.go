@@ -23,6 +23,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pipeline"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -106,6 +107,9 @@ func (c *Controller) Create(
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to create auto trigger on pipeline creation")
 	}
+
+	// send pipeline create event
+	c.reporter.Created(ctx, &events.CreatedPayload{PipelineID: pipeline.ID, RepoID: pipeline.RepoID})
 
 	return pipeline, nil
 }

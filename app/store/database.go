@@ -698,6 +698,12 @@ type (
 
 		// IncrementSeqNum increments the sequence number of the pipeline
 		IncrementSeqNum(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
+
+		// ListInSpace lists pipelines in a particular space.
+		ListInSpace(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Pipeline, error)
+
+		// CountInSpace counts pipelines in a particular space.
+		CountInSpace(ctx context.Context, spaceID int64, filter types.ListQueryFilter) (int64, error)
 	}
 
 	SecretStore interface {

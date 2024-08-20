@@ -163,8 +163,8 @@ func Parse(
 // Since we want to maintain compatibility with drone, the older format
 // needs to be maintained (even if the variables do not exist in gitness).
 func mapBuild(v *types.Execution, vm *jsonnet.VM) {
-	vm.ExtVar(build+"event", v.Event)
-	vm.ExtVar(build+"action", v.Action)
+	vm.ExtVar(build+"event", string(v.Event))
+	vm.ExtVar(build+"action", string(v.Action))
 	vm.ExtVar(build+"environment", v.Deploy)
 	vm.ExtVar(build+"link", v.Link)
 	vm.ExtVar(build+"branch", v.Target)

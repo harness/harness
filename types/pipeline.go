@@ -32,6 +32,9 @@ type Pipeline struct {
 	Execution *Execution `db:"-"                        json:"execution,omitempty"`
 	Updated   int64      `db:"pipeline_updated"         json:"updated"`
 	Version   int64      `db:"pipeline_version"         json:"-"`
+
+	// Repo specific information not stored with pipelines
+	RepoUID string `db:"-" json:"repo_uid,omitempty"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.

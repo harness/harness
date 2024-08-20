@@ -37,9 +37,9 @@ const (
 	// TriggerActionPullReqBranchUpdated gets triggered when a pull request source branch gets updated.
 	TriggerActionPullReqBranchUpdated TriggerAction = "pullreq_branch_updated"
 	// TriggerActionPullReqClosed gets triggered when a pull request is closed.
-	TriggerActionPullReqClosed = "pullreq_closed"
+	TriggerActionPullReqClosed TriggerAction = "pullreq_closed"
 	// TriggerActionPullReqMerged gets triggered when a pull request is merged.
-	TriggerActionPullReqMerged = "pullreq_merged"
+	TriggerActionPullReqMerged TriggerAction = "pullreq_merged"
 )
 
 func (TriggerAction) Enum() []interface{}               { return toInterfaceSlice(triggerActions) }

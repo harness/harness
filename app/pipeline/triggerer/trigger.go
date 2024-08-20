@@ -150,7 +150,7 @@ func (t *triggerer) Trigger(
 		}
 	}()
 
-	event := string(base.Action.GetTriggerEvent())
+	event := base.Action.GetTriggerEvent()
 
 	repo, err := t.repoStore.Find(ctx, pipeline.RepoID)
 	if err != nil {
@@ -178,7 +178,7 @@ func (t *triggerer) Trigger(
 		Parent:     base.Parent,
 		Status:     enum.CIStatusPending,
 		Event:      event,
-		Action:     string(base.Action),
+		Action:     base.Action,
 		Link:       base.Link,
 		// Timestamp:    base.Timestamp,
 		Title:        trunc(base.Title, 2000),
@@ -254,7 +254,7 @@ func (t *triggerer) Trigger(
 			switch {
 			case skipBranch(pipeline, base.Target):
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match branch")
-			case skipEvent(pipeline, event):
+			case skipEvent(pipeline, string(event)):
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match event")
 			case skipAction(pipeline, string(base.Action)):
 				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match action")
@@ -557,8 +557,8 @@ func (t *triggerer) createExecutionWithError(
 		Parent:       base.Parent,
 		Status:       enum.CIStatusError,
 		Error:        message,
-		Event:        string(base.Action.GetTriggerEvent()),
-		Action:       string(base.Action),
+		Event:        base.Action.GetTriggerEvent(),
+		Action:       base.Action,
 		Link:         base.Link,
 		Title:        base.Title,
 		Message:      base.Message,

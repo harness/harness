@@ -216,6 +216,75 @@ func (s *pipelineStore) List(
 	return dst, nil
 }
 
+// ListInSpace lists all the pipelines for a space.
+func (s *pipelineStore) ListInSpace(
+	ctx context.Context,
+	spaceID int64,
+	filter types.ListQueryFilter,
+) ([]*types.Pipeline, error) {
+	const pipelineWithRepoColumns = pipelineColumns + `
+	,repositories.repo_id
+	,repositories.repo_uid
+	`
+	stmt := database.Builder.
+		Select(pipelineWithRepoColumns).
+		From("pipelines").
+		InnerJoin("repositories ON pipelines.pipeline_repo_id = repositories.repo_id").
+		Where("repositories.repo_parent_id = ?", fmt.Sprint(spaceID))
+
+	if filter.Query != "" {
+		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+	}
+
+	stmt = stmt.Limit(database.Limit(filter.Size))
+	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*pipelineRepoJoin{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	}
+
+	return convertPipelineRepoJoins(dst), nil
+}
+
+// CountInSpace counts the number of pipelines in a space.
+func (s *pipelineStore) CountInSpace(
+	ctx context.Context,
+	spaceID int64,
+	filter types.ListQueryFilter,
+) (int64, error) {
+	stmt := database.Builder.
+		Select("count(*)").
+		From("pipelines").
+		InnerJoin("repositories ON pipelines.pipeline_repo_id = repositories.repo_id").
+		Where("repositories.repo_parent_id = ?", fmt.Sprint(spaceID))
+
+	if filter.Query != "" {
+		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+	}
+
+	var count int64
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return count, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count, nil
+}
+
 // ListLatest lists all the pipelines under a repository with information
 // about the latest build if available.
 func (s *pipelineStore) ListLatest(

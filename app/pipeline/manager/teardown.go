@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	events "github.com/harness/gitness/app/events/pipeline"
 	"github.com/harness/gitness/app/pipeline/checks"
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/sse"
@@ -43,6 +44,7 @@ type teardown struct {
 	Repos       store.RepoStore
 	Steps       store.StepStore
 	Stages      store.StageStore
+	Reporter    events.Reporter
 }
 
 //nolint:gocognit // refactor if needed.
@@ -173,6 +175,9 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		log.Warn().Err(err).
 			Msg("manager: could not publish execution completed event")
 	}
+
+	// send pipeline execution status
+	t.reportExecutionCompleted(ctx, execution)
 
 	pipeline, err := t.Pipelines.Find(ctx, execution.PipelineID)
 	if err != nil {
@@ -363,4 +368,13 @@ func (t *teardown) resync(ctx context.Context, stage *types.Stage) error {
 	stage.Started = updated.Started
 	stage.Stopped = updated.Stopped
 	return nil
+}
+
+func (t *teardown) reportExecutionCompleted(ctx context.Context, execution *types.Execution) {
+	t.Reporter.Executed(ctx, &events.ExecutedPayload{
+		PipelineID:   execution.PipelineID,
+		RepoID:       execution.RepoID,
+		ExecutionNum: execution.Number,
+		Status:       execution.Status,
+	})
 }

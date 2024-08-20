@@ -55,8 +55,8 @@ type execution struct {
 	Parent       int64              `db:"execution_parent"`
 	Status       enum.CIStatus      `db:"execution_status"`
 	Error        string             `db:"execution_error"`
-	Event        string             `db:"execution_event"`
-	Action       string             `db:"execution_action"`
+	Event        enum.TriggerEvent  `db:"execution_event"`
+	Action       enum.TriggerAction `db:"execution_action"`
 	Link         string             `db:"execution_link"`
 	Timestamp    int64              `db:"execution_timestamp"`
 	Title        string             `db:"execution_title"`
