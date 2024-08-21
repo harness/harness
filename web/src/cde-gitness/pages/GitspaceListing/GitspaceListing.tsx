@@ -90,7 +90,7 @@ const GitspaceListing = () => {
               }}>
               {data?.length && (
                 <>
-                  <ListGitspaces data={data || []} refreshList={refetch} />
+                  <ListGitspaces data={(data as Unknown) || []} refreshList={refetch} />
                   <ResourceListingPagination response={response} page={page} setPage={setPage} />
                 </>
               )}

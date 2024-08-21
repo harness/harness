@@ -38,7 +38,7 @@
   div[class*='TableV2--cells'],
   div[class*='TableV2--header'] {
     display: grid !important;
-    grid-template-columns: 1fr 1fr 1fr 1fr 0.7fr 50px;
+    grid-template-columns: 1fr 1fr 0.5fr 1fr 1fr 50px;
   }
 }
 

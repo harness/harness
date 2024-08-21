@@ -127,7 +127,16 @@ export const CDECreateGitspace = () => {
                               </Layout.Horizontal>
                             }
                             onClick={() => {
-                              formik.setFieldValue('code_repo_type', item.value)
+                              formik.setValues((prvValues: any) => {
+                                return {
+                                  ...prvValues,
+                                  code_repo_url: undefined,
+                                  branch: undefined,
+                                  identifier: undefined,
+                                  name: undefined,
+                                  code_repo_type: item.value
+                                }
+                              })
                             }}
                           />
                         ))}

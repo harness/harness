@@ -52,12 +52,7 @@ import { getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import VSCode from 'cde-gitness/assests/VSCode.svg?url'
 import { GitspaceActionType, GitspaceStatus } from 'cde-gitness/constants'
-import type {
-  EnumGitspaceStateType,
-  EnumIDEType,
-  TypesGitspaceConfig,
-  EnumGitspaceCodeRepoType
-} from 'cde-gitness/services'
+import type { EnumGitspaceStateType, EnumIDEType, TypesGitspaceConfig, EnumGitspaceCodeRepoType } from 'services/cde'
 import gitspaceIcon from 'cde-gitness/assests/gitspace.svg?url'
 import { useModalHook } from 'hooks/useModalHook'
 import pause from 'cde-gitness/assests/pause.svg?url'
@@ -194,16 +189,16 @@ export const RenderGitspaceName: Renderer<CellProps<TypesGitspaceConfig>> = ({ r
 }
 
 export const OwnerAndCreatedAt: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
-  const { created } = row.original
+  const { user_email, user_display_name, created } = row.original
   return (
     <Layout.Vertical spacing="medium" flex={{ alignItems: 'start', justifyContent: 'center' }}>
       <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'center' }}>
-        <Avatar size="small" name="test" email="test@harness.io" />
-        <Text font={{ size: 'small' }} color={Color.GREY_800}>
-          test@harness.io
+        <Avatar size="small" name={user_display_name} email={user_email} />
+        <Text lineClamp={1} font={{ size: 'small' }} color={Color.GREY_800}>
+          {user_display_name}
         </Text>
       </Layout.Horizontal>
-      <Text font={{ size: 'small' }} color={Color.GREY_800}>
+      <Text margin={{ left: 'small' }} font={{ size: 'small' }} color={Color.GREY_800}>
         {moment(created).format('DD MMM, YYYY hh:mma')}
       </Text>
     </Layout.Vertical>

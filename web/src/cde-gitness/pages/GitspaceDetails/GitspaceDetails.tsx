@@ -334,15 +334,19 @@ const GitspaceDetails = () => {
                       const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectIdentifier}/${data?.identifier}${params}`
                       window.open(vsCodeURL, '_blank')
                     } else {
-                      setSelectedRowUrl(data?.instance?.url || '')
-                      refetchToken({
-                        pathParams: {
-                          accountIdentifier,
-                          projectIdentifier,
-                          orgIdentifier,
-                          gitspace_identifier: data?.identifier || ''
-                        }
-                      })
+                      if (standalone) {
+                        window.open(data?.instance?.url || '', '_blank')
+                      } else {
+                        setSelectedRowUrl(data?.instance?.url || '')
+                        refetchToken({
+                          pathParams: {
+                            accountIdentifier,
+                            projectIdentifier,
+                            orgIdentifier,
+                            gitspace_identifier: data?.identifier || ''
+                          }
+                        })
+                      }
                     }
                   }}>
                   {data?.ide === StandaloneIDEType.VSCODE && getString('cde.details.openEditor')}

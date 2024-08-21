@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import cx from 'classnames'
 import { Container, FormikForm, FormInput, Layout } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
@@ -8,7 +8,6 @@ import { useFormikContext } from 'formik'
 import { Repository } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateGitspaceRequest } from 'cde-gitness/services'
-import { EnumGitspaceCodeRepoType } from 'cde-gitness/constants'
 import { BranchInput } from 'cde-gitness/components/BranchInput/BranchInput'
 import { useRepoLookupForGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
@@ -22,7 +21,7 @@ enum RepoCheckStatus {
 
 export const CDEAnyGitImport = () => {
   const { getString } = useStrings()
-  const { setValues, setFieldError } = useFormikContext<OpenapiCreateGitspaceRequest>()
+  const { setValues, setFieldError, values } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
 
   const { mutate, loading } = useRepoLookupForGitspace({
@@ -33,12 +32,18 @@ export const CDEAnyGitImport = () => {
 
   const [repoCheckState, setRepoCheckState] = useState<RepoCheckStatus | undefined>()
 
+  useEffect(() => {
+    if (values?.code_repo_type) {
+      setRepoCheckState(undefined)
+    }
+  }, [values?.code_repo_type])
+
   const onChange = useCallback(
     debounce(async (url: string) => {
       let errorMessage = ''
       try {
         if (isValidUrl(url)) {
-          const response = (await mutate({ url, repo_type: EnumGitspaceCodeRepoType.UNKNOWN })) as {
+          const response = (await mutate({ url, repo_type: values?.code_repo_type })) as {
             is_private?: boolean
             branch: string
             url: string
@@ -54,7 +59,7 @@ export const CDEAnyGitImport = () => {
                 branch: response.branch,
                 identifier: getRepoIdFromURL(response.url),
                 name: getRepoNameFromURL(response.url),
-                code_repo_type: EnumGitspaceCodeRepoType.UNKNOWN
+                code_repo_type: values?.code_repo_type
               }
             })
             setRepoCheckState(RepoCheckStatus.Valid)
@@ -74,7 +79,7 @@ export const CDEAnyGitImport = () => {
       }
       setFieldError('code_repo_url', errorMessage)
     }, 1000),
-    [repoCheckState]
+    [repoCheckState, values?.code_repo_type]
   )
 
   return (
