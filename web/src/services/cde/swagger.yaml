@@ -30,32 +30,6 @@ paths:
       summary: List gitspaces for account
       tags:
         - gitspaces
-  /accounts/{accountIdentifier}/infraproviders/{infraprovider_identifier}/resources:
-    get:
-      operationId: listInfraProviderResourcesForAccount
-      parameters:
-        - description: account identifier.
-          in: path
-          name: accountIdentifier
-          required: true
-          schema:
-            type: string
-        - description: infra Provider Config Identifier.
-          in: path
-          name: infraprovider_identifier
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenapiListInfraProviderResourceResponse'
-          description: OK
-      summary: List infraProvider Resources
-      tags:
-        - infraproviderresources
   /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/coderepository:
     post:
       operationId: getCodeRepository
@@ -778,8 +752,8 @@ paths:
       tags:
         - infraproviders
   /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/infraproviders/{infraprovider_identifier}/resources:
-    get:
-      operationId: listInfraProviderResources
+    post:
+      operationId: createInfraProviderResource
       parameters:
         - description: account identifier.
           in: path
@@ -806,22 +780,19 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        '201':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenapiListInfraProviderResourceResponse'
-          description: OK
-      summary: List infraProvider Resources
+                items:
+                  $ref: '#/components/schemas/TypesInfraProviderResourceType2'
+                type: array
+          description: Created
+      summary: Create InfraProvider Resource
       tags:
         - infraproviderresources
 components:
   schemas:
-    EnumCodeRepoAccessType:
-      enum:
-        - private
-        - public
-      type: string
     EnumCodeRepoType:
       enum:
         - github
@@ -1022,14 +993,6 @@ components:
         type:
           $ref: '#/components/schemas/EnumInfraProviderType'
       type: object
-    OpenapiCreateInfraProviderResourceResponse:
-      properties:
-        resources:
-          items:
-            $ref: '#/components/schemas/TypesInfraProviderResourceRequest'
-          nullable: true
-          type: array
-      type: object
     OpenapiCreateInfraProviderResponse:
       properties:
         created:
@@ -1091,11 +1054,11 @@ components:
     OpenapiGetCodeRepositoryResponse:
       properties:
         access_type:
-          $ref: '#/components/schemas/EnumCodeRepoAccessType'
+          $ref: '#/components/schemas/EnumGitspaceAccessType'
         branch:
           type: string
         repo_type:
-          $ref: '#/components/schemas/EnumCodeRepoType'
+          $ref: '#/components/schemas/EnumGitspaceCodeRepoType'
         url:
           type: string
       type: object
@@ -1140,13 +1103,10 @@ components:
         action:
           $ref: '#/components/schemas/EnumGitspaceActionType'
       type: object
-    OpenapiListInfraProviderResourceResponse:
-      items:
-        $ref: '#/components/schemas/TypesInfraProviderResourceResponse'
-      nullable: true
-      type: array
     OpenapiLookupRepoGitspaceRequest:
       properties:
+        repo_type:
+          $ref: '#/components/schemas/EnumGitspaceCodeRepoType'
         space_ref:
           type: string
         url:
@@ -1193,6 +1153,8 @@ components:
       properties:
         branch:
           type: string
+        code_repo_is_private:
+          type: boolean
         code_repo_ref:
           nullable: true
           type: string
@@ -1223,6 +1185,10 @@ components:
           $ref: '#/components/schemas/EnumGitspaceStateType'
         updated:
           type: integer
+        user_display_name:
+          type: string
+        user_email:
+          type: string
         user_id:
           type: string
       type: object
@@ -1279,6 +1245,9 @@ components:
     TypesGitspaceInstance:
       properties:
         access_key:
+          nullable: true
+          type: string
+        access_key_ref:
           nullable: true
           type: string
         access_type:
@@ -1380,76 +1349,7 @@ components:
         updated:
           type: integer
       type: object
-    TypesInfraProviderResourceRequest:
-      properties:
-        cpu:
-          type: string
-        disk:
-          type: string
-        gateway_host:
-          type: string
-        gateway_port:
-          type: string
-        id:
-          type: string
-        infra_provider_type:
-          $ref: '#/components/schemas/EnumProviderType'
-        memory:
-          type: string
-        name:
-          type: string
-        network:
-          type: string
-        opentofu_params:
-          additionalProperties:
-            type: string
-          nullable: true
-          type: object
-        region:
-          items:
-            type: string
-          nullable: true
-          type: array
-        template_id:
-          type: string
-      type: object
-    TypesInfraProviderResourceResponse:
-      properties:
-        cpu:
-          type: string
-        created:
-          type: integer
-        disk:
-          type: string
-        gateway_host:
-          type: string
-        gateway_port:
-          type: string
-        id:
-          type: string
-        infra_provider_config_id:
-          type: string
-        infra_provider_type:
-          $ref: '#/components/schemas/EnumProviderType'
-        memory:
-          type: string
-        name:
-          type: string
-        network:
-          type: string
-        opentofu_params:
-          additionalProperties:
-            type: string
-          nullable: true
-          type: object
-        region:
-          type: string
-        space_path:
-          type: string
-        template_id:
-          type: string
-        updated:
-          type: integer
+    TypesInfraProviderResourceType2:
       type: object
     UsererrorError:
       properties:

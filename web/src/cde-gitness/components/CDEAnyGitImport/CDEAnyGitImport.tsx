@@ -38,7 +38,7 @@ export const CDEAnyGitImport = () => {
       let errorMessage = ''
       try {
         if (isValidUrl(url)) {
-          const response = (await mutate({ url })) as {
+          const response = (await mutate({ url, repo_type: EnumGitspaceCodeRepoType.UNKNOWN })) as {
             is_private?: boolean
             branch: string
             url: string
