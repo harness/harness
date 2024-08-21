@@ -606,6 +606,9 @@ type (
 		// Find returns a gitspace instance given a gitspace instance ID from the datastore.
 		Find(ctx context.Context, id int64) (*types.GitspaceInstance, error)
 
+		// FindByIdentifier returns a gitspace instance given a gitspace instance identifier from the datastore.
+		FindByIdentifier(ctx context.Context, identifier string) (*types.GitspaceInstance, error)
+
 		// FindLatestByGitspaceConfigID returns the latest gitspace instance given a gitspace config ID from the datastore.
 		FindLatestByGitspaceConfigID(
 			ctx context.Context,

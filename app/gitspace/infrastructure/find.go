@@ -17,6 +17,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
@@ -56,9 +57,27 @@ func (i infraProvisioner) Find(
 		}
 	}
 
-	return infraProvider.Find(ctx, gitspaceConfig.SpaceID, gitspaceConfig.SpacePath,
+	infra, err := infraProvider.Find(ctx, gitspaceConfig.SpaceID, gitspaceConfig.SpacePath,
 		gitspaceConfig.Identifier, gitspaceConfig.GitspaceInstance.Identifier,
 		agentPort, requiredGitspacePorts, inputParams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find infrastructure: %w", err)
+	}
+
+	if infra == nil { // fallback
+		infra, err = i.getInfraFromStoredInfo(ctx, gitspaceConfig, infraProviderEntity)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build infrastructure from stored info: %w", err)
+		}
+	}
+
+	gitspaceScheme, err := i.getGitspaceScheme(gitspaceConfig.IDE, infraProviderResource.Metadata["gitspace_scheme"])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get gitspace_scheme: %w", err)
+	}
+	infra.GitspaceScheme = gitspaceScheme
+	infra.HostScheme = infraProviderResource.Metadata["host_scheme"]
+	return infra, nil
 }
 
 func (i infraProvisioner) paramsForProvisioningTypeNew(
@@ -94,4 +113,50 @@ func (i infraProvisioner) paramsForProvisioningTypeExisting(
 	}
 
 	return allParams, nil
+}
+
+func (i infraProvisioner) getGitspaceScheme(ideType enum.IDEType, gitspaceSchemeFromMetadata string) (string, error) {
+	switch ideType {
+	case enum.IDETypeVSCodeWeb:
+		{
+			return gitspaceSchemeFromMetadata, nil
+		}
+	case enum.IDETypeVSCode:
+		{
+			return "ssh", nil
+		}
+	default:
+		{
+			return "", fmt.Errorf("unknown ideType %s", ideType)
+		}
+	}
+}
+
+func (i infraProvisioner) getInfraFromStoredInfo(
+	ctx context.Context,
+	gitspaceConfig types.GitspaceConfig,
+	infraProviderEntity *types.InfraProviderConfig,
+) (*types.Infrastructure, error) {
+	infraProvisioned, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
+		ctx,
+		gitspaceConfig.SpaceID,
+		gitspaceConfig.GitspaceInstance.ID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find infraProvisioned: %w", err)
+	}
+	serverHostPort, err := strconv.Atoi(infraProvisioned.ServerHostPort)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse server host port: %w", err)
+	}
+	return &types.Infrastructure{
+		Identifier:                 gitspaceConfig.GitspaceInstance.Identifier,
+		SpaceID:                    gitspaceConfig.SpaceID,
+		SpacePath:                  gitspaceConfig.SpacePath,
+		GitspaceConfigIdentifier:   gitspaceConfig.Identifier,
+		GitspaceInstanceIdentifier: gitspaceConfig.GitspaceInstance.Identifier,
+		ProviderType:               infraProviderEntity.Type,
+		AgentHost:                  infraProvisioned.ServerHostIP,
+		AgentPort:                  serverHostPort,
+	}, nil
 }

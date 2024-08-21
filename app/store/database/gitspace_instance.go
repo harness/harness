@@ -103,6 +103,27 @@ func (g gitspaceInstanceStore) Find(ctx context.Context, id int64) (*types.Gitsp
 	return g.mapToGitspaceInstance(ctx, gitspace)
 }
 
+func (g gitspaceInstanceStore) FindByIdentifier(
+	ctx context.Context,
+	identifier string,
+) (*types.GitspaceInstance, error) {
+	stmt := database.Builder.
+		Select(gitspaceInstanceSelectColumns).
+		From(gitspaceInstanceTable).
+		Where("gits_uid = $1", identifier)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	gitspace := new(gitspaceInstance)
+	db := dbtx.GetAccessor(ctx, g.db)
+	if err := db.GetContext(ctx, gitspace, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace %s", identifier)
+	}
+	return g.mapToGitspaceInstance(ctx, gitspace)
+}
+
 func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *types.GitspaceInstance) error {
 	stmt := database.Builder.
 		Insert(gitspaceInstanceTable).
