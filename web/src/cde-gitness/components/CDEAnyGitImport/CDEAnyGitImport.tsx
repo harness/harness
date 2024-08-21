@@ -48,9 +48,22 @@ export const CDEAnyGitImport = () => {
             branch: string
             url: string
           }
-          if (response?.is_private) {
+          if (!response?.branch) {
             errorMessage = getString('cde.repository.privateRepoWarning')
             setRepoCheckState(RepoCheckStatus.InValid)
+            setValues((prvValues: any) => {
+              return {
+                ...prvValues,
+                code_repo_url: response.url,
+                branch: undefined,
+                identifier: undefined,
+                name: undefined,
+                code_repo_type: values?.code_repo_type
+              }
+            })
+            setTimeout(() => {
+              setFieldError('code_repo_url', errorMessage)
+            }, 500)
           } else {
             setValues((prvValues: any) => {
               return {
