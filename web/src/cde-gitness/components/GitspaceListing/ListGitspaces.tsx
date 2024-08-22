@@ -389,8 +389,9 @@ const ActionMenu = ({
               e.stopPropagation()
               if (ide === IDEType.VSCODE) {
                 const params = standalone ? '?gitness' : ''
+                const projectOrSpace = standalone ? space_path : projectIdentifier
                 const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
-                const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectIdentifier}/${identifier}${params}`
+                const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectOrSpace}/${identifier}${params}`
                 window.open(vsCodeURL, '_blank')
               } else {
                 if (standalone) {
@@ -761,8 +762,9 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
             if (row?.state === GitspaceStatus.RUNNING) {
               if (row?.ide === IDEType.VSCODE) {
                 const params = standalone ? '?gitness' : ''
+                const projectOrSpace = standalone ? row?.space_path : projectIdentifier
                 const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
-                const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectIdentifier}/${row?.identifier}${params}`
+                const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectOrSpace}/${row?.identifier}${params}`
                 window.open(vsCodeURL, '_blank')
               } else {
                 if (standalone) {

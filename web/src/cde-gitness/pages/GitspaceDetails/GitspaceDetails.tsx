@@ -128,14 +128,16 @@ const GitspaceDetails = () => {
       }
     },
     {
-      pollingInterval: 10000,
+      pollingInterval: standalone ? 2000 : 10000,
       startCondition: Boolean(startPolling) || !pollingCondition
     }
   )
 
   usePolling(
     async () => {
-      await refetchLogsData()
+      if (!standalone) {
+        await refetchLogsData()
+      }
     },
     {
       pollingInterval: 10000,
@@ -346,8 +348,9 @@ const GitspaceDetails = () => {
                     e.stopPropagation()
                     if (data?.ide === StandaloneIDEType.VSCODE) {
                       const params = standalone ? '?gitness' : ''
+                      const projectOrSpace = standalone ? space : projectIdentifier
                       const vscodeExtensionCode = standalone ? 'harness-inc.oss-gitspaces' : 'harness-inc.gitspaces'
-                      const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectIdentifier}/${data?.identifier}${params}`
+                      const vsCodeURL = `vscode://${vscodeExtensionCode}/${projectOrSpace}/${data?.identifier}${params}`
                       window.open(vsCodeURL, '_blank')
                     } else {
                       if (standalone) {
