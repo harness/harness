@@ -1,0 +1,87 @@
+moduleName: '{{ $.repositoryList.artifactRegistry.label }}'
+add: Add
+clearFilters: Clear Filters
+save: Save
+discard: Discard
+delete: Delete
+prod: Prod
+nonProd: Non-Prod
+noMatchingFilterData: No results found matching the filter criteria
+stepNotFound: Step not found
+tabNotFound: Tab not found
+search: Search
+copied: Copied
+download: download
+dateLabel: Date
+timeLabel: Time
+new: NEW
+harLabel: '{{ $.repositoryList.artifactRegistry.label }}'
+na: N/A
+cancel: Cancel
+failedToLoadData: Failed to load data. Please try again!
+noResultsFound: No results found
+optionalField: '{{name}} (optional)'
+description: '{{ $.versionDetails.overview.generalInformation.description }}'
+tagsLabel: '{{ $.artifactList.table.columns.tags }}'
+plusNewName: + New {{name}}
+enterPlaceholder: Enter {{name}}
+descriptionPlaceholder: Enter Description
+noDescription: No Description
+lastUpdated: Last Updated
+createdAt: Created At
+modifiedAt: Modified At
+tags:
+  latest: LATEST
+  latestVersion: LATEST VERSION
+breadcrumbs:
+  repositories: '{{ $.repositoryList.pageHeading }}'
+  artifacts: '{{ $.artifactList.pageHeading }}'
+  upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+actions:
+  edit: Edit
+  delete: '{{ $.delete }}'
+  quarantine: Quarantine
+  restore: Restore
+  scan: Scan
+  setupClient: Set Up Client
+cleanupPolicy:
+  name: Cleanup Policy Name
+  addBtn: Add Cleanup Policy
+  cleanUpByTagPrefixes: 'Cleanup by <b>Tag Prefixes</b>'
+  cleanUpByVersionPrefixes: 'Cleanup by <b>Version Prefixes</b>'
+  cleanUpByPackagePrefixes: 'Cleanup by <b>Package Prefixes</b>'
+  cleanUpByArtifactsOlderThan: 'Cleanup by <b>Artifacts older than</b>'
+  cleanUpByArtifactsOlderThanPlaceholder: Specify days
+  placeholder: 'specify $type prefix and press enter'
+  addPattern: Add Pattern
+  infoMessage: Define the cleanup policy using the options below. Cleanup will occur when all the enabled options are met.
+packageTypes:
+  dockerPackage: Docker Package
+  helmPackage: Helm Package
+repositoryTypes:
+  docker: Docker
+  helm: Helm
+  generic: Generic
+  maven: Maven
+  npm: npm
+  gradle: Gradle
+  pypi: PyPi
+  nuget: NuGet
+sideNav:
+  repositories: '{{ $.repositoryList.pageHeading }}'
+  artifacts: '{{ $.artifactList.pageHeading }}'
+  upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+badges:
+  artifactRegistry: '{{ $.repositoryList.artifactRegistry.label }}'
+  upstreamProxy: '{{ $.repositoryList.upstreamProxy.label }}'
+validationMessages:
+  repokeyRegExMessage: Registry name must start with letter and can only contain lowercase alphanumerics, _, . and -
+  nameRequired: Registry name is required
+  cleanupPolicy:
+    nameRequired: Cleanup policy name is required
+    expireDaysRequired: Expire days is required
+    positiveExpireDays: Expire days must be greater than 0
+  urlRequired: Remote registry URL is required
+  urlPattern: Remote registry URL must be valid
+  userNameRequired: Username is required
+  passwordRequired: Password is required

@@ -223,14 +223,16 @@ func ProvideTokenStore(db *sqlx.DB) store.TokenStore {
 }
 
 // ProvidePullReqStore provides a pull request store.
-func ProvidePullReqStore(db *sqlx.DB,
+func ProvidePullReqStore(
+	db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache,
 ) store.PullReqStore {
 	return NewPullReqStore(db, principalInfoCache)
 }
 
 // ProvidePullReqActivityStore provides a pull request activity store.
-func ProvidePullReqActivityStore(db *sqlx.DB,
+func ProvidePullReqActivityStore(
+	db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache,
 ) store.PullReqActivityStore {
 	return NewPullReqActivityStore(db, principalInfoCache)
@@ -247,7 +249,8 @@ func ProvidePullReqReviewStore(db *sqlx.DB) store.PullReqReviewStore {
 }
 
 // ProvidePullReqReviewerStore provides a pull request reviewer store.
-func ProvidePullReqReviewerStore(db *sqlx.DB,
+func ProvidePullReqReviewerStore(
+	db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache,
 ) store.PullReqReviewerStore {
 	return NewPullReqReviewerStore(db, principalInfoCache)
@@ -269,7 +272,8 @@ func ProvideWebhookExecutionStore(db *sqlx.DB) store.WebhookExecutionStore {
 }
 
 // ProvideCheckStore provides a status check result store.
-func ProvideCheckStore(db *sqlx.DB,
+func ProvideCheckStore(
+	db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache,
 ) store.CheckStore {
 	return NewCheckStore(db, principalInfoCache)

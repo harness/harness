@@ -27,6 +27,7 @@ type ConfigOutput struct {
 	PublicResourceCreationEnabled bool `json:"public_resource_creation_enabled"`
 	SSHEnabled                    bool `json:"ssh_enabled"`
 	GitspaceEnabled               bool `json:"gitspace_enabled"`
+	ArtifactRegistryEnabled       bool `json:"artifact_registry_enabled"`
 }
 
 // HandleGetConfig returns an http.HandlerFunc that processes an http.Request
@@ -46,6 +47,7 @@ func HandleGetConfig(config *types.Config, sysCtrl *system.Controller) http.Hand
 			UserSignupAllowed:             userSignupAllowed,
 			PublicResourceCreationEnabled: config.PublicResourceCreationEnabled,
 			GitspaceEnabled:               config.Gitspace.Enable,
+			ArtifactRegistryEnabled:       config.Registry.Enable,
 		})
 	}
 }

@@ -82,4 +82,10 @@ export interface AppProps {
   isPublicAccessEnabledOnResources: boolean
   isCurrentSessionPublic: boolean
   module?: string
+
+  arAppStore?: {
+    repositoryIdentifier?: string
+    artifactIdentifier?: string
+    versionIdentifier?: string
+  }
 }

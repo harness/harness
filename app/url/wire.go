@@ -33,5 +33,6 @@ func ProvideURLProvider(config *types.Config) (Provider, error) {
 		config.SSH.DefaultUser,
 		config.SSH.Enable,
 		config.URL.UI,
+		config.URL.Registry,
 	)
 }

@@ -34,7 +34,7 @@ tools: $(tools) ## Install tools required for the build
 
 ###############################################################################
 #
-# Build and testing rules
+# Gitness Build and testing rules
 #
 ###############################################################################
 
@@ -46,6 +46,43 @@ test: generate  ## Run the go tests
 	@echo "Running tests"
 	go test -v -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
+
+
+
+###############################################################################
+#
+# Artifact Registry Build and testing rules
+#
+###############################################################################
+
+run: clean build
+	./gitness server .local.env || true
+
+ar-conformance-test: clean build
+	./gitness server .local.env > logfile.log 2>&1 & echo $$! > server.PID
+	@sleep 10
+	./registry/tests/conformance_test.sh localhost:3000 || true
+	kill `cat server.PID`
+	@rm server.PID
+	@rm logfile.log
+
+ar-hot-conformance-test:
+	rm -rf distribution-spec || true
+	./registry/tests/conformance_test.sh localhost:3000 || true
+
+ar-api-update:
+	@set -e; \
+	oapi-codegen --config ./registry/config/openapi/artifact-services.yaml ./registry/app/api/openapi/api.yaml; \
+	oapi-codegen --config ./registry/config/openapi/artifact-types.yaml ./registry/app/api/openapi/api.yaml;
+
+ar-clean:
+	@rm artifact-registry 2> /dev/null || true
+	@docker stop ps_artifacthub 2> /dev/null || true
+	rm -rf distribution-spec
+	@kill -9 $$(lsof -t -i:3000) || true
+	@rm server.PID || true
+	@rm logfile.log || true
+	go clean
 
 ###############################################################################
 #

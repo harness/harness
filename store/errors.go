@@ -19,6 +19,7 @@ import "errors"
 var (
 	ErrResourceNotFound           = errors.New("resource not found")
 	ErrDuplicate                  = errors.New("resource is a duplicate")
+	ErrForeignKeyViolation        = errors.New("foreign resource does not exists")
 	ErrVersionConflict            = errors.New("resource version conflict")
 	ErrPathTooLong                = errors.New("the path is too long")
 	ErrPrimaryPathAlreadyExists   = errors.New("primary path already exists for resource")

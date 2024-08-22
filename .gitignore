@@ -8,6 +8,8 @@ _research
 web/node_modules
 web/dist
 web/coverage
+web/.yalc
+web/yalc.lock
 yarn-error*
 release
 .idea
@@ -18,6 +20,12 @@ web/cypress/node_modules
 *.rsa
 *.rsa.pub
 node_modules/
+dist
+.yalc
+yalc.lock
+node_modules
 
 # ignore any executables we build
 /gitness
+/registry/logs/*
+/distribution-spec

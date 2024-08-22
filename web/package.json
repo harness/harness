@@ -15,15 +15,19 @@
   },
   "keywords": [],
   "scripts": {
+    "prepare": "cd .. && husky install web/.husky",
     "webpack": "NODE_ENV=development webpack serve --config config/webpack.dev.js",
     "webpack:cde": "NODE_ENV=development MODULE=cde webpack serve --config config/webpack.dev.js",
     "typed-scss": "typed-scss-modules src --watch",
     "dev": "run-p webpack typed-scss",
     "dev:cde": "MODULE=cde run-p webpack:cde typed-scss",
+    "dev:cypress": "NODE_ENV=development TARGET_LOCALHOST=false CYPRESS=true PROJECT_ID=CYPRESS_PROJECT_ID ORG_ID=CYPRESS_ORG_ID ACCOUNT_ID=CYPRESS_ACCOUNT_ID BASE_URL=http://localhost:8080 NODE_OPTIONS=\"--max-old-space-size=6144\" webpack serve --progress --config config/webpack.dev.js",
+    "dev:ar": "NODE_ENV=development webpack serve --config src/ar/config/webpack.dev.js",
     "test": "jest src --silent",
     "test:watch": "jest --watch",
     "build": "rm -rf dist && webpack --config config/webpack.prod.js",
     "build:cde": "rm -rf dist && MODULE=cde webpack --config config/webpack.prod.js",
+    "build:ar": "rm -rf dist && webpack --config src/ar/config/webpack.prod.js",
     "lint": "eslint --rulesdir ./scripts/eslint-rules --ext .ts --ext .tsx src",
     "prettier": "prettier --check \"./src/**/*.{ts,tsx,css,scss}\"",
     "coverage": "npm test --coverage",
@@ -34,8 +38,7 @@
     "services": "restful-react import --config restful-react.config.js",
     "postservices": "prettier --write src/services/**/*.tsx",
     "strings": "npm-run-all strings:*",
-    "strings:genTypes": "node scripts/strings/generateTypesCli.mjs",
-    "dev:cypress": "NODE_ENV=development TARGET_LOCALHOST=false CYPRESS=true PROJECT_ID=CYPRESS_PROJECT_ID ORG_ID=CYPRESS_ORG_ID ACCOUNT_ID=CYPRESS_ACCOUNT_ID BASE_URL=http://localhost:8080 NODE_OPTIONS=\"--max-old-space-size=6144\" webpack serve --progress --config config/webpack.dev.js"
+    "strings:genTypes": "node scripts/strings/generateTypesCli.mjs"
   },
   "dependencies": {
     "@blueprintjs/core": "3.26.1",
@@ -47,8 +50,10 @@
     "@codemirror/state": "^6.2.0",
     "@codemirror/view": "^6.9.6",
     "@harnessio/design-system": "^2.1.1",
-    "@harnessio/icons": "^2.1.5",
+    "@harnessio/icons": "^2.1.7",
+    "@harnessio/react-har-service-client": "^0.0.15",
     "@harnessio/uicore": "^4.1.2",
+    "@tanstack/react-query": "4.20.4",
     "@types/dompurify": "^3.0.2",
     "@types/react-monaco-editor": "^0.16.0",
     "@uiw/codemirror-extensions-color": "^4.19.9",
@@ -59,12 +64,15 @@
     "classnames": "^2.2.6",
     "clipboard-copy": "^3.1.0",
     "diff2html": "3.4.22",
-    "event-source-polyfill": "^1.0.22",
     "dompurify": "^3.0.5",
+    "event-source-polyfill": "^1.0.22",
     "formik": "2.2.9",
     "hast-util-to-html": "^9.0.1",
+    "highcharts": "9.2.0",
+    "highcharts-react-official": "3.0.0",
     "highlight.js": "^11.8.0",
     "iconoir-react": "^6.11.0",
+    "immer": "^9.0.6",
     "jotai": "^2.6.3",
     "lang-map": "^0.4.0",
     "lodash-es": "^4.17.15",
@@ -99,12 +107,12 @@
     "yup": "^0.29.1"
   },
   "devDependencies": {
-    "@types/event-source-polyfill": "^1.0.0",
     "@svgr/webpack": "^8.1.0",
     "@testing-library/jest-dom": "^5.12.0",
     "@testing-library/react": "^10.0.3",
     "@testing-library/react-hooks": "5",
     "@types/classnames": "^2.2.10",
+    "@types/event-source-polyfill": "^1.0.0",
     "@types/jest": "^26.0.15",
     "@types/lodash-es": "^4.17.3",
     "@types/masonry-layout": "^4.2.1",
@@ -122,6 +130,7 @@
     "@typescript-eslint/eslint-plugin": "^5.33.1",
     "@typescript-eslint/parser": "^5.33.1",
     "case": "^1.6.3",
+    "circular-dependency-plugin": "5.2.2",
     "css-loader": "^6.3.0",
     "dotenv": "^10.0.0",
     "eslint": "^7.27.0",
@@ -136,8 +145,8 @@
     "fork-ts-checker-webpack-plugin": "^6.2.1",
     "glob": "^7.1.6",
     "html-webpack-plugin": "^5.3.1",
+    "husky": "8.0.1",
     "identity-obj-proxy": "^3.0.0",
-    "immer": "^10.0.3",
     "jest": "^26.2.0",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
@@ -158,6 +167,7 @@
     "typescript": "^4.7.4",
     "url-loader": "^4.1.1",
     "webpack": "^5.58.0",
+    "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.15.1",
     "yaml-loader": "^0.6.0"
@@ -167,5 +177,18 @@
   },
   "engines": {
     "node": ">=14.16.0"
+  },
+  "i18nSettings": {
+    "extensionToLanguageMap": {
+      "es": [
+        "es"
+      ],
+      "en": [
+        "en",
+        "en-US",
+        "en-IN",
+        "en-UK"
+      ]
+    }
   }
 }

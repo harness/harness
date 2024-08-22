@@ -48,6 +48,8 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/registry/app/api"
+	"github.com/harness/gitness/registry/app/api/router"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -56,6 +58,7 @@ import (
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideRouter,
+	api.WireSet,
 )
 
 func GetGitRoutingHost(ctx context.Context, urlProvider url.Provider) string {
@@ -106,8 +109,9 @@ func ProvideRouter(
 	capabilitiesCtrl *capabilities.Controller,
 	urlProvider url.Provider,
 	openapi openapi.Service,
+	registryRouter router.AppRouter,
 ) *Router {
-	routers := make([]Interface, 3)
+	routers := make([]Interface, 4)
 
 	gitRoutingHost := GetGitRoutingHost(appCtx, urlProvider)
 	gitHandler := NewGitHandler(
@@ -116,16 +120,18 @@ func ProvideRouter(
 		repoCtrl,
 	)
 	routers[0] = NewGitRouter(gitHandler, gitRoutingHost)
+	routers[1] = router.NewRegistryRouter(registryRouter)
 
-	apiHandler := NewAPIHandler(appCtx, config,
+	apiHandler := NewAPIHandler(
+		appCtx, config,
 		authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
 		githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl,
 		infraProviderCtrl, migrateCtrl, gitspaceCtrl, aiagentCtrl, capabilitiesCtrl)
-	routers[1] = NewAPIRouter(apiHandler)
+	routers[2] = NewAPIRouter(apiHandler)
 
 	webHandler := NewWebHandler(config, authenticator, openapi)
-	routers[2] = NewWebRouter(webHandler)
+	routers[3] = NewWebRouter(webHandler)
 
 	return NewRouter(routers)
 }

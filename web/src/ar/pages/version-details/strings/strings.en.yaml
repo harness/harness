@@ -1,0 +1,54 @@
+page: Version Details Page
+tabs:
+  overview: Overview
+  artifactDetails: Artifact Details
+  supplyChain: SBOM
+  securityTests: Vulnerabilities
+  deployments: Deployments
+  code: Code (coming soon)
+cards:
+  deploymentsCard:
+    title: Deployments
+    buildTitle: Build Pipeline
+    executionId: Execution ID
+  securityTests:
+    title: Security Tests
+    totalCount: Total Count
+    critical: Critical
+    high: High
+    medium: Medium
+    low: Low
+    info: Info
+    ignored: Ignored
+  supplyChain:
+    title: Supply Chain
+    totalComponents: Total Components
+    sbomScore: SBOM Score
+    slsaProvenance: SLSA Provenance
+    allowList: Allow List
+    denyListViolation: Deny List Violation
+overview:
+  generalInformation:
+    title: General Information
+    name: '{{ $.artifactList.table.columns.name }}'
+    version: Version/Tag
+    packageType: Package type
+    repositoryPath: Registry path
+    url: URL to file
+    size: '{{ $.digestList.table.columns.size }}'
+    downloads: '{{ $.repositoryList.table.columns.downloads }}'
+    uploadedBy: Uploaded by
+    createdAndLastModifiedAt: Created | Last modified
+    description: Description
+    pullCommand: Pull command
+artifactDetails:
+  tabs:
+    layers: Layers
+    manifest: Manifest
+  layers:
+    digest: '{{ $.digestList.table.columns.digest }}'
+    imageLayers: Image Layers
+    lastPush: Last Push
+    size: '{{ $.digestList.table.columns.size }}'
+    archSelectLabel: OS/ARCH
+    archSelectPlaceholder: Select OS/ARCH

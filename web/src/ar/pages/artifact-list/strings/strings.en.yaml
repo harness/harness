@@ -1,0 +1,15 @@
+page: Artifact List Page
+pageHeading: Artifacts
+deployedArtifacts: Deployed Artifacts
+table:
+  noArtifactsTitle: There are no artifact available.
+  allRepositories: All Registries
+  columns:
+    name: Name
+    repository: Registry
+    tags: Labels
+    downloads: Downloads (In the last week)
+    latestVersion: Latest Version
+  actions:
+    editRepository: Edit Registry
+    deleteRepository: Delete Registry

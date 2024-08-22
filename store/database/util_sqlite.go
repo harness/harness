@@ -18,6 +18,7 @@
 package database
 
 import (
+	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
@@ -33,6 +34,22 @@ func isSQLUniqueConstraintError(original error) bool {
 	var pqErr *pq.Error
 	if errors.As(original, &pqErr) {
 		return pqErr.Code == "23505" // unique_violation
+	}
+
+	return false
+}
+
+func isSQLForeignKeyViolationError(original error) bool {
+	var sqliteErr sqlite3.Error
+	if errors.As(original, &sqliteErr) {
+		return errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintForeignKey)
+	}
+
+	var pqErr *pq.Error
+	// this can happen if the child manifest is deleted by
+	// the online GC while attempting to create the list
+	if errors.As(original, &pqErr) && pqErr.Code == pgerrcode.ForeignKeyViolation {
+		return true
 	}
 
 	return false

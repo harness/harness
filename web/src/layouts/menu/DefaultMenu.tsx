@@ -15,10 +15,13 @@
  */
 
 import React, { useMemo, useState } from 'react'
-import { Container, Layout } from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 import { FingerprintLockCircle, BookmarkBook, UserSquare, Settings } from 'iconoir-react'
+
+import { Icon } from '@harnessio/icons'
+import { Container, Layout } from '@harnessio/uicore'
+
 import { useGet } from 'restful-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
@@ -31,7 +34,8 @@ import css from './DefaultMenu.module.scss'
 
 export const DefaultMenu: React.FC = () => {
   const history = useHistory()
-  const { routes, standalone, isCurrentSessionPublic } = useAppContext()
+  const { routes, standalone, isCurrentSessionPublic, arAppStore } = useAppContext()
+  const { repositoryIdentifier } = arAppStore || {}
   const [selectedSpace, setSelectedSpace] = useState<SpaceSpaceOutput | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
   const { getString } = useStrings()
@@ -173,6 +177,31 @@ export const DefaultMenu: React.FC = () => {
                   }
                 />
               )}
+            </Layout.Vertical>
+          </Container>
+        </Render>
+
+        <Render when={standalone && selectedSpace && systemConfig?.artifact_registry_enabled}>
+          <NavMenuItem
+            label={getString('pageTitle.artifactRegistries')}
+            to={routes.toAR({ space: selectedSpace?.path as string })}
+            customIcon={<Icon name="artifact-registry-outlined" />}
+            isDeselected={!!repositoryIdentifier}
+            isHighlighted={!!repositoryIdentifier}
+          />
+        </Render>
+
+        <Render when={standalone && repositoryIdentifier && systemConfig?.artifact_registry_enabled}>
+          <Container className={css.repoLinks}>
+            <Layout.Vertical spacing="small">
+              <NavMenuItem
+                isSubLink
+                label={getString('artifacts')}
+                to={routes.toARArtifacts({
+                  space: selectedSpace?.path as string,
+                  repositoryIdentifier: repositoryIdentifier as string
+                })}
+              />
             </Layout.Vertical>
           </Container>
         </Render>

@@ -287,6 +287,8 @@ issues:
       linters: [ govet ]
     - source: "^//\\s*go:generate\\s"
       linters: [ lll ]
+    - text: 'local replacement are not allowed: github.com/harness/gitness'
+      linters: [ gomoddirectives ]
     - text: 'replacement are not allowed: github.com/docker/docker'
       linters: [ gomoddirectives ]
     - source: "(noinspection|TODO)"
@@ -297,6 +299,192 @@ issues:
       linters: [ errorlint ]
     - path: "^cli/"
       linters: [forbidigo]
+    #Registry Specific
+    - path: "^registry/app/manifest/.*"
+      linters: [ tagliatelle, staticcheck, revive ]
+    - path: "^registry/app/dist_temp/.*"
+      linters: [ errorlint ]
+    - path: "^registry/app/driver/filesystem/.*"
+      linters: [ gocritic ]
+    - path: "^registry/app/driver/s3-aws/.*"
+      linters: [ gocognit, gocyclo, gosec, nestif, cyclop]
+    - path: "^registry/app/remote/clients/registry/interceptor/interceptor.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/http/modifier/modifier.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/fileinfo.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/storagedriver.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/walk.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/challenge/addr.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/challenge/authchallenge.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/challenge/authchallenge_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/requestutil/util.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/requestutil/util_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/descriptor.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/doc.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/errors.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/manifests.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/versioned.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/lib/authorizer.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/lib/link.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/http/tls.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/http/transport.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/http/transport_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/schema2/manifest.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/schema2/manifest_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/ocischema/index.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/ocischema/manifest.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/clients/registry/auth/null/authorizer.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/clients/registry/auth/basic/authorizer.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/clients/registry/auth/basic/authorizer_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/lib/errors/const.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/lib/errors/errors.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/lib/errors/stack.go"
+      linters: [ goheader ]
+    - path: "^registry/app/common/lib/errors/stack_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/clients/registry/auth/bearer/authorizer.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/clients/registry/auth/bearer/cache.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/clients/registry/auth/bearer/scope.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/manifestlist/manifestlist.go"
+      linters: [ goheader ]
+    - path: "^registry/app/manifest/manifestlist/manifestlist_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/factory/factory.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/context.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/doc.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/http.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/logger.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/trace.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/util.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/version.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/http_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/trace_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/dcontext/version_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/base/base.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/base/regulator.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/base/regulator_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/blobs.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/blobwriter.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/blobwriter_resumable.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/errors.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/filereader.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/gcstoragelient.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/io.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/middleware.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/ociblobstore.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/paths.go"
+      linters: [ goheader ]
+    - path: "^registry/app/storage/storageservice.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/clients/registry/client.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/adapter/adapter.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/clients/registry/auth/authorizer.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/s3-aws/s3.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/s3-aws/s3_v2_signer.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/filesystem/driver.go"
+      linters: [ goheader ]
+    - path: "^registry/app/pkg/docker/app.go"
+      linters: [ goheader ]
+    - path: "^registry/app/pkg/docker/catalog.go"
+      linters: [ goheader ]
+    - path: "^registry/app/pkg/docker/compat.go"
+      linters: [ goheader ]
+    - path: "^registry/app/pkg/docker/context.go"
+      linters: [ goheader ]
+    - path: "^registry/app/pkg/docker/controller.go"
+      linters: [ goheader ]
+    - path: "^registry/app/pkg/docker/local.go"
+      linters: [ goheader ]
+    - path: "^registry/app/pkg/docker/manifest_service.go"
+      linters: [ goheader ]
+    - path: "^registry/app/pkg/docker/remote.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/adapter/dockerhub/adapter.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/adapter/dockerhub/client.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/adapter/dockerhub/consts.go"
+      linters: [ goheader ]
+    - path: "^registry/app/driver/testsuites/testsuites.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/errcode/errors.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/errcode/handler.go"
+      linters: [ goheader ]
+    - path: "^registry/app/dist_temp/errcode/register.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/controller/proxy/controller.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/controller/proxy/inflight.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/controller/proxy/local.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/controller/proxy/remote.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/controller/proxy/inflight_test.go"
+      linters: [ goheader ]
+    - path: "^registry/app/remote/adapter/native/adapter.go"
+      linters: [ goheader ]
+    #Registry Specific ends
     - text: "mnd: Magic number: \\d"
       linters:
         - gomnd

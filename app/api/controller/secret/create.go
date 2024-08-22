@@ -126,7 +126,7 @@ func enc(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error)
 }
 
 // helper function returns the same secret with decrypted data.
-func dec(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
+func Dec(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
 	if secret == nil {
 		return nil, fmt.Errorf("cannot decrypt a nil secret")
 	}

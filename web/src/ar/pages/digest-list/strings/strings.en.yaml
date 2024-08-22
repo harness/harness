@@ -1,0 +1,10 @@
+page: Digest List Page
+table:
+  noDigestTitle: No Digest
+  aboutDigest: No Digest available.
+  columns:
+    digest: Digest
+    osArch: OS/Arch
+    size: Size
+    uploadedBy: Uploaded By
+    downloads: Downloads/Last Download

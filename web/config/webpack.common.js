@@ -24,6 +24,8 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin')
 const GenerateStringTypesPlugin = require('../scripts/webpack/GenerateStringTypesPlugin').GenerateStringTypesPlugin
+const GenerateArStringTypesPlugin =
+  require('../src/ar/scripts/webpack/GenerateArStringTypesPlugin').GenerateArStringTypesPlugin
 const { RetryChunkLoadPlugin } = require('webpack-retry-chunk-load-plugin')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const moduleFederationConfig = require('./moduleFederation.config')
@@ -233,6 +235,7 @@ module.exports = {
       __DEV__: DEV
     }),
     new GenerateStringTypesPlugin(),
+    new GenerateArStringTypesPlugin(),
     new RetryChunkLoadPlugin({
       maxRetries: 5
     }),

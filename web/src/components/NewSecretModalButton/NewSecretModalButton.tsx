@@ -59,7 +59,7 @@ export interface NewSecretModalButtonProps extends Omit<ButtonProps, 'onClick' |
   modalTitle: string
   submitButtonTitle?: string
   cancelButtonTitle?: string
-  onSuccess: () => void
+  onSuccess: (secret: TypesSecret) => void
 }
 
 export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
@@ -87,10 +87,10 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
           description: formData.description,
           identifier: formData.name
         }
-        await createSecret(payload)
+        const response = await createSecret(payload)
         hideModal()
         showSuccess(getString('secrets.createSuccess'))
-        onSuccess()
+        onSuccess(response)
       } catch (exception) {
         showError(getErrorMessage(exception), 0, getString('secrets.failedToCreate'))
       }

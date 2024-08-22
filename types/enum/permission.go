@@ -29,6 +29,7 @@ const (
 	ResourceTypeTemplate       ResourceType = "TEMPLATE"
 	ResourceTypeGitspace       ResourceType = "GITSPACE"
 	ResourceTypeInfraProvider  ResourceType = "INFRAPROVIDER"
+	ResourceTypeRegistry       ResourceType = "REGISTRY"
 )
 
 // Permission represents the different types of permissions a principal can have.
@@ -142,4 +143,22 @@ const (
 	PermissionInfraProviderEdit   Permission = "infraprovider_edit"
 	PermissionInfraProviderDelete Permission = "infraprovider_delete"
 	PermissionInfraProviderAccess Permission = "infraprovider_access"
+)
+
+const (
+	/*
+		----- ARTIFACTS -----
+	*/
+	PermissionArtifactsDownload Permission = "artifacts_download"
+	PermissionArtifactsUpload   Permission = "artifacts_upload"
+	PermissionArtifactsDelete   Permission = "artifacts_delete"
+)
+
+const (
+	/*
+		----- REGISTRY -----
+	*/
+	PermissionRegistryView   Permission = "registry_view"
+	PermissionRegistryEdit   Permission = "registry_edit"
+	PermissionRegistryDelete Permission = "registry_delete"
 )

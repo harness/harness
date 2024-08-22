@@ -1,0 +1,61 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.conatiner {
+  margin-top: var(--spacing-medium);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-small);
+}
+
+.searchInput {
+  height: 34px;
+}
+
+.message {
+  padding: var(--spacing-small) var(--spacing-medium) !important;
+}
+
+.defaultBackground {
+  background-color: var(--grey-100) !important;
+}
+
+.infoBackground {
+  background-color: var(--blue-50) !important;
+}
+
+.listContainer {
+  border: 1px solid var(--grey-200);
+  height: 200px;
+  overflow: auto;
+
+  .menuItem:hover {
+    background-color: var(--primary-1);
+    color: var(--black);
+
+    .addBtn {
+      display: block !important;
+    }
+  }
+}
+
+.addBtn {
+  padding: 0px !important;
+  min-height: 20px !important;
+  height: 20px !important;
+  display: none !important;
+  min-width: 10px !important;
+}

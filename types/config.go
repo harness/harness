@@ -89,6 +89,10 @@ type Config struct {
 		// (either running directly or via a port exposed in a docker container).
 		// Value is derived from HTTP.Server unless explicitly specified (e.g. http://host.docker.internal:3000).
 		Container string `envconfig:"GITNESS_URL_CONTAINER"`
+
+		// Registry is used as a base to generate external facing URLs.
+		// Value is derived from Base unless explicitly specified (e.g. http://localhost:3000).
+		Registry string `envconfig:"GITNESS_REGISTRY_URL"`
 	}
 
 	// Git defines the git configuration parameters
@@ -420,6 +424,61 @@ type Config struct {
 		Events struct {
 			Concurrency int `envconfig:"GITNESS_GITSPACE_EVENTS_CONCURRENCY" default:"4"`
 			MaxRetries  int `envconfig:"GITNESS_GITSPACE_EVENTS_MAX_RETRIES" default:"3"`
+		}
+	}
+
+	Registry struct {
+		Enable  bool `envconfig:"GITNESS_REGISTRY_ENABLED" default:"false"`
+		Storage struct {
+			// StorageType defines the type of storage to use for the registry. Options are: `filesystem`, `s3aws`
+			StorageType string `envconfig:"GITNESS_REGISTRY_STORAGE_TYPE" default:"filesystem"`
+
+			// FileSystemStorage defines the configuration for the filesystem storage if StorageType is `filesystem`.
+			FileSystemStorage struct {
+				MaxThreads    int    `envconfig:"GITNESS_REGISTRY_FILESYSTEM_MAX_THREADS" default:"100"`
+				RootDirectory string `envconfig:"GITNESS_REGISTRY_FILESYSTEM_ROOT_DIRECTORY"`
+			}
+
+			// S3Storage defines the configuration for the S3 storage if StorageType is `s3aws`.
+			S3Storage struct {
+				AccessKey                   string `envconfig:"GITNESS_REGISTRY_S3_ACCESS_KEY"`
+				SecretKey                   string `envconfig:"GITNESS_REGISTRY_S3_SECRET_KEY"`
+				Region                      string `envconfig:"GITNESS_REGISTRY_S3_REGION"`
+				RegionEndpoint              string `envconfig:"GITNESS_REGISTRY_S3_REGION_ENDPOINT"`
+				ForcePathStyle              bool   `envconfig:"GITNESS_REGISTRY_S3_FORCE_PATH_STYLE" default:"true"`
+				Accelerate                  bool   `envconfig:"GITNESS_REGISTRY_S3_ACCELERATED" default:"false"`
+				Bucket                      string `envconfig:"GITNESS_REGISTRY_S3_BUCKET"`
+				Encrypt                     bool   `envconfig:"GITNESS_REGISTRY_S3_ENCRYPT" default:"false"`
+				KeyID                       string `envconfig:"GITNESS_REGISTRY_S3_KEY_ID"`
+				Secure                      bool   `envconfig:"GITNESS_REGISTRY_S3_SECURE" default:"true"`
+				V4Auth                      bool   `envconfig:"GITNESS_REGISTRY_S3_V4_AUTH" default:"true"`
+				ChunkSize                   int    `envconfig:"GITNESS_REGISTRY_S3_CHUNK_SIZE" default:"10485760"`
+				MultipartCopyChunkSize      int    `envconfig:"GITNESS_REGISTRY_S3_MULTIPART_COPY_CHUNK_SIZE" default:"33554432"`
+				MultipartCopyMaxConcurrency int    `envconfig:"GITNESS_REGISTRY_S3_MULTIPART_COPY_MAX_CONCURRENCY" default:"100"`
+				MultipartCopyThresholdSize  int    `envconfig:"GITNESS_REGISTRY_S3_MULTIPART_COPY_THRESHOLD_SIZE" default:"33554432"` //nolint:lll
+				RootDirectory               string `envconfig:"GITNESS_REGISTRY_S3_ROOT_DIRECTORY"`
+				UseDualStack                bool   `envconfig:"GITNESS_REGISTRY_S3_USE_DUAL_STACK" default:"false"`
+				LogLevel                    string `envconfig:"GITNESS_REGISTRY_S3_LOG_LEVEL" default:"info"`
+				Delete                      bool   `envconfig:"GITNESS_REGISTRY_S3_DELETE_ENABLED" default:"true"`
+				Redirect                    bool   `envconfig:"GITNESS_REGISTRY_S3_STORAGE_REDIRECT" default:"false"`
+			}
+		}
+
+		HTTP struct {
+			// GITNESS_REGISTRY_HTTP_SECRET is used to encrypt the upload session details during docker push.
+			// If not provided, a random secret will be generated. This may cause problems with uploads if multiple
+			// registries are behind a load-balancer
+			Secret string `envconfig:"GITNESS_REGISTRY_HTTP_SECRET"`
+		}
+
+		//nolint:lll
+		GarbageCollection struct {
+			Enabled                     bool          `envconfig:"GITNESS_REGISTRY_GARBAGE_COLLECTION_ENABLED" default:"false"`
+			NoIdleBackoff               bool          `envconfig:"GITNESS_REGISTRY_GARBAGE_COLLECTION_NO_IDLE_BACKOFF" default:"false"`
+			MaxBackoffDuration          time.Duration `envconfig:"GITNESS_REGISTRY_GARBAGE_COLLECTION_MAX_BACKOFF_DURATION" default:"10m"`
+			InitialIntervalDuration     time.Duration `envconfig:"GITNESS_REGISTRY_GARBAGE_COLLECTION_INITIAL_INTERVAL_DURATION" default:"5s"`     //nolint:lll
+			TransactionTimeoutDuration  time.Duration `envconfig:"GITNESS_REGISTRY_GARBAGE_COLLECTION_TRANSACTION_TIMEOUT_DURATION" default:"10s"` //nolint:lll
+			BlobsStorageTimeoutDuration time.Duration `envconfig:"GITNESS_REGISTRY_GARBAGE_COLLECTION_BLOB_STORAGE_TIMEOUT_DURATION" default:"5s"` //nolint:lll
 		}
 	}
 

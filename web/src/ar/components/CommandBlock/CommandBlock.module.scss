@@ -1,0 +1,60 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.commandBlock {
+  overflow: auto;
+  width: 100% !important;
+  background-color: var(--primary-1) !important;
+  &.darkmode {
+    background-color: var(--black) !important;
+  }
+  padding: var(--spacing-small) var(--spacing-medium) !important;
+  p {
+    padding-right: var(--spacing-medium) !important;
+    // TODO: update this to variable
+    font-family: Monaco, 'Ubuntu Mono', 'Courier New', monospace !important;
+  }
+  svg[data-icon='duplicate'] {
+    path {
+      color: var(--primary-7) !important;
+    }
+  }
+  .commandText {
+    flex: 80%;
+  }
+}
+.ignoreWhiteSpaces {
+  white-space: pre-wrap !important;
+}
+
+.noWrap {
+  white-space: nowrap !important;
+  overflow: auto !important;
+  scrollbar-width: none;
+}
+
+.downloadBtn {
+  cursor: pointer;
+  margin-left: 0px !important;
+  padding-left: var(--spacing-xsmall) !important;
+}
+.copyButtonHover {
+  :global(.bp3-icon) {
+    svg > path {
+      fill: var(--white) !important;
+    }
+  }
+}

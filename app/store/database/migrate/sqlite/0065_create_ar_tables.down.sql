@@ -1,0 +1,13 @@
+DROP TABLE registries;
+DROP TABLE media_types;
+DROP TABLE blobs;
+DROP TABLE registry_blobs;
+DROP TABLE manifests;
+DROP TABLE manifest_references;
+DROP TABLE layers;
+DROP TABLE artifacts;
+DROP TABLE artifact_stats;
+DROP TABLE tags;
+DROP TABLE upstream_proxy_configs;
+DROP TABLE cleanup_policies;
+DROP TABLE cleanup_policy_prefix_mappings;

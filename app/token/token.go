@@ -30,8 +30,21 @@ import (
 const (
 	// userSessionTokenLifeTime is the duration a login / register token is valid.
 	// NOTE: Users can list / delete session tokens via rest API if they want to cleanup earlier.
-	userSessionTokenLifeTime time.Duration = 30 * 24 * time.Hour // 30 days.
+	userSessionTokenLifeTime                  time.Duration = 30 * 24 * time.Hour // 30 days.
+	sessionTokenWithAccessPermissionsLifeTime time.Duration = 24 * time.Hour      // 24 hours.
 )
+
+func CreateUserWithAccessPermissions(
+	user *types.User,
+	accessPermissions *jwt.SubClaimsAccessPermissions,
+) (string, error) {
+	principal := user.ToPrincipal()
+	return createWithAccessPermissions(
+		principal,
+		ptr.Duration(sessionTokenWithAccessPermissionsLifeTime),
+		accessPermissions,
+	)
+}
 
 func CreateUserSession(
 	ctx context.Context,
@@ -127,4 +140,19 @@ func create(
 	}
 
 	return &token, jwtToken, nil
+}
+
+func createWithAccessPermissions(
+	createdFor *types.Principal,
+	lifetime *time.Duration,
+	accessPermissions *jwt.SubClaimsAccessPermissions,
+) (string, error) {
+	jwtToken, err := jwt.GenerateForTokenWithAccessPermissions(
+		createdFor.ID, lifetime, createdFor.Salt, accessPermissions,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create jwt token: %w", err)
+	}
+
+	return jwtToken, nil
 }

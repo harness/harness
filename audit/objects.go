@@ -14,11 +14,31 @@
 
 package audit
 
-import "github.com/harness/gitness/types"
+import (
+	"time"
+
+	registrytypes "github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/types"
+)
 
 // RepositoryObject is the object used for emitting repository related audits.
 // TODO: ensure audit only takes audit related objects?
 type RepositoryObject struct {
 	types.Repository
 	IsPublic bool `yaml:"is_public"`
+}
+
+type RegistryObject struct {
+	registrytypes.Registry
+}
+type RegistryUpstreamProxyConfigObject struct {
+	ID         int64
+	RegistryID int64
+	Source     string
+	URL        string
+	AuthType   string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	CreatedBy  int64
+	UpdatedBy  int64
 }

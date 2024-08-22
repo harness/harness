@@ -1,0 +1,32 @@
+page: Upstream Porxy Details
+form:
+  title: Upstream Proxy Definition
+createForm:
+  title: Create a New Upstream Proxy
+  packageType: Package Type
+  key: Upstream Proxy Key
+  url: Remote Registry URL
+  urlPlaceholder: Specify URL
+  source:
+    title: Source
+    dockerHub: Docker Hub
+    custom: Custom
+  authentication:
+    title: Authentication
+    userNameAndPassword: Username and Password
+    anonymous: Anonymous
+    anonymousSubLabel: (No credentials required)
+    username: Username
+    password: Password
+  create: Create Upstream Proxy
+editForm:
+  title: Update Upstream Proxy
+  update: '{{ $.upstreamProxyDetails.editForm.title }}'
+actions:
+  delete:
+    title: Delete Upstream Registry
+    contentText: Are you sure you want to delete the upstream registry?
+    repositoryDeleted: Upstream registry deleted successfully
+  createUpdateModal:
+    createSuccessMessage: Upstream proxy created successfully
+    updateSuccessMessage: Upstream proxy updated successfully

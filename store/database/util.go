@@ -60,6 +60,8 @@ func ProcessSQLErrorf(ctx context.Context, err error, format string, args ...int
 		translatedError = store.ErrResourceNotFound
 	case isSQLUniqueConstraintError(err):
 		translatedError = store.ErrDuplicate
+	case isSQLForeignKeyViolationError(err):
+		translatedError = store.ErrForeignKeyViolation
 	default:
 	}
 

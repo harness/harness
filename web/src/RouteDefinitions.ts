@@ -15,6 +15,7 @@
  */
 
 import { CDERoutes, routes as cdeRoutes } from 'cde-gitness/RouteDefinitions'
+import { ARRoutes, routes as arRoutes } from '@ar/gitness/RouteDefinitions'
 
 export interface CODEProps {
   space?: string
@@ -63,7 +64,7 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   gitspaceId: ':gitspaceId'
 }
 
-export interface CODERoutes extends CDERoutes {
+export interface CODERoutes extends CDERoutes, ARRoutes {
   toSignIn: () => string
   toRegister: () => string
 
@@ -139,7 +140,7 @@ export const routes: CODERoutes = {
   toCODEUserProfile: () => '/profile',
   toCODEUserChangePassword: () => '/change-password',
 
-  toCODERepositories: ({ space }) => `/spaces/${space}`,
+  toCODERepositories: ({ space }) => `/spaces/${space}/repos`,
   toCODERepository: ({ repoPath, gitRef, resourcePath }) =>
     `/${repoPath}${gitRef ? '/files/' + gitRef : ''}${resourcePath ? '/~/' + resourcePath : ''}`,
   toCODEFileEdit: ({
@@ -174,5 +175,6 @@ export const routes: CODERoutes = {
   toCODEExecutions: ({ repoPath, pipeline }) => `/${repoPath}/pipelines/${pipeline}`,
   toCODEExecution: ({ repoPath, pipeline, execution }) => `/${repoPath}/pipelines/${pipeline}/execution/${execution}`,
   toCODESecret: ({ space, secret }) => `/secrets/${space}/secret/${secret}`,
-  ...cdeRoutes
+  ...cdeRoutes,
+  ...arRoutes
 }

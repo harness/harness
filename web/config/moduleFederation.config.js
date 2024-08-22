@@ -54,7 +54,8 @@ module.exports = {
     './Search': './src/pages/Search/CodeSearchPage.tsx',
     './Labels': './src/pages/ManageSpace/ManageLabels/ManageLabels.tsx',
     './WebhookDetails': './src/pages/WebhookDetails/WebhookDetails.tsx',
-    './NewRepoModalButton': './src/components/NewRepoModalButton/NewRepoModalButton.tsx'
+    './NewRepoModalButton': './src/components/NewRepoModalButton/NewRepoModalButton.tsx',
+    './HAREnterpriseApp': './src/ar/app/EnterpriseApp.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],

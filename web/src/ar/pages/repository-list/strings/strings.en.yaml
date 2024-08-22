@@ -1,0 +1,28 @@
+pageHeading: Artifact Registries
+newRepository: New Artifact Registry
+artifactRegistry:
+  label: Artifact Registry
+  subLabel: Manage internal packages and external dependencies through a unified registry.
+upstreamProxy:
+  label: Upstream Proxy
+  subLabel: Connect to an external registry to access additional packages and dependencies.
+selectEnvironments: Environments
+selectPackageTypes: Package Types
+selectLabels: '{{ $.artifactList.table.columns.tags }}'
+deleteModal:
+  title: '{{ $.artifactList.table.actions.deleteRepository }}'
+  contentText: Are you sure you want to delete the registry?
+table:
+  noRepositoriesTitle: There are no registries available.
+  columns:
+    nameAndEnvironment: '{{ $.artifactList.table.columns.name }}'
+    lastModified: Last Modified
+    url: URL
+    size: '{{ $.digestList.table.columns.size }}'
+    artifacts: '{{ $.artifactList.pageHeading }}'
+    upstreamProxies: '{{ $.repositoryDetails.repositoryForm.upstreamProxiesTitle }}'
+    downloads: Downloads
+    type: Type
+  copyUrl: Copy URL
+  copyRegistryUrl: Copy Registry URL
+  copyUpstreamUrl: Copy Proxy URL

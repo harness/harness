@@ -62,13 +62,15 @@ func (a *JWTAuthenticator) Authenticate(r *http.Request) (*auth.Session, error) 
 	var principal *types.Principal
 	var err error
 	claims := &jwt.Claims{}
-	parsed, err := gojwt.ParseWithClaims(str, claims, func(_ *gojwt.Token) (interface{}, error) {
-		principal, err = a.principalStore.Find(ctx, claims.PrincipalID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get principal for token: %w", err)
-		}
-		return []byte(principal.Salt), nil
-	})
+	parsed, err := gojwt.ParseWithClaims(
+		str, claims, func(_ *gojwt.Token) (interface{}, error) {
+			principal, err = a.principalStore.Find(ctx, claims.PrincipalID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get principal for token: %w", err)
+			}
+			return []byte(principal.Salt), nil
+		},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("parsing of JWT claims failed: %w", err)
 	}
@@ -90,6 +92,8 @@ func (a *JWTAuthenticator) Authenticate(r *http.Request) (*auth.Session, error) 
 		}
 	case claims.Membership != nil:
 		metadata = a.metadataFromMembershipClaims(claims.Membership)
+	case claims.AccessPermissions != nil:
+		metadata = a.metadataFromAccessPermissions(claims.AccessPermissions)
 	default:
 		return nil, fmt.Errorf("jwt is missing sub-claims")
 	}
@@ -113,8 +117,10 @@ func (a *JWTAuthenticator) metadataFromTokenClaims(
 
 	// protect against faked JWTs for other principals in case of single salt leak
 	if principal.ID != tkn.PrincipalID {
-		return nil, fmt.Errorf("JWT was for principal %d while db token was for principal %d",
-			principal.ID, tkn.PrincipalID)
+		return nil, fmt.Errorf(
+			"JWT was for principal %d while db token was for principal %d",
+			principal.ID, tkn.PrincipalID,
+		)
 	}
 
 	return &auth.TokenMetadata{
@@ -130,6 +136,14 @@ func (a *JWTAuthenticator) metadataFromMembershipClaims(
 	return &auth.MembershipMetadata{
 		SpaceID: mbsClaims.SpaceID,
 		Role:    mbsClaims.Role,
+	}
+}
+
+func (a *JWTAuthenticator) metadataFromAccessPermissions(
+	s *jwt.SubClaimsAccessPermissions,
+) auth.Metadata {
+	return &auth.AccessPermissionMetadata{
+		AccessPermissions: s,
 	}
 }
 

@@ -116,6 +116,7 @@ pageTitle:
   secrets: Secrets
   executions: Executions
   search: Search powered by AI
+  artifactRegistries: Artifact Registries
 repos:
   name: Repository Name
   data: Repo Data
@@ -131,7 +132,7 @@ createRepoModal:
   privateLabel: You choose who can see and commit to this repository.
   publicWarning: Please note that anyone with access to the Gitness environment can clone this repo.
 validation:
-  repoNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
+  repoNamePatternIsNotValid: Registry name should be 1~255 characters long with lower case characters, numbers and ._- and must be start with numbers or characters
   gitBranchNameInvalid: Branch name is invalid.
   gitTagNameInvalid: Tag name is invalid.
   uidInvalid: User ID can only contain alphanumerics, '-', '_', '.', and '$'
@@ -1279,6 +1280,7 @@ sshCard:
   personalAccessToken: Personal Access Token
   noTokensText: There are no personal access tokens associated with this account
   lastUsed: Last Used
+artifacts: Artifacts
 recursiveSearchTooltip: Disabling recursive search will only search at the account level and exclude organization and project repositories.
 recursiveSearchLabel: 'Recursive search: show results across Repositories within {account} Organization and Projects'
 accounts: "Account's"

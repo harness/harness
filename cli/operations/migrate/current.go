@@ -34,6 +34,7 @@ func (c *commandCurrent) run(*kingpin.ParseContext) error {
 	defer cancel()
 
 	db, err := getDB(ctx, c.envfile)
+
 	if err != nil {
 		return err
 	}

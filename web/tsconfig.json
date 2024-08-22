@@ -19,9 +19,13 @@
     "experimentalDecorators": true,
     "typeRoots": ["node_modules/@types", "./typings"],
     "resolveJsonModule": true,
+    "ignoreDeprecations": "5.0",
     "importsNotUsedAsValues": "error",
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "paths": {
+      "@ar/*": ["ar/*"]
+    }
   },
   "include": ["src/"],
   "exclude": ["node_modules"]

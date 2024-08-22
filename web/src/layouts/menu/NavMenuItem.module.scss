@@ -83,6 +83,7 @@
 
   &.selected .customIcon,
   &.highlighted .customIcon {
+    --intent-color: var(--primary-8);
     color: var(--primary-8);
   }
 

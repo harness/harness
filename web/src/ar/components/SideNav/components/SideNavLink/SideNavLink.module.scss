@@ -1,0 +1,106 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.link {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-small) 12px !important;
+  margin-bottom: var(--spacing-tiny) !important;
+  background-color: transparent;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+  margin-bottom: var(--spacing-xsmall);
+
+  svg {
+    path,
+    circle {
+      color: var(--grey-400) !important;
+    }
+  }
+
+  &:hover {
+    text-decoration: none;
+    background-color: var(--primary-9-dark);
+
+    p {
+      color: var(--grey-100) !important;
+    }
+
+    svg {
+      path,
+      circle {
+        color: var(--grey-100) !important;
+      }
+    }
+
+    &.collapsed {
+      .dot {
+        background-color: var(--primary-8);
+      }
+    }
+  }
+
+  &.collapsed {
+    align-items: center;
+
+    &.center {
+      justify-content: center;
+    }
+
+    .dot {
+      height: 4px;
+      width: 4px;
+      border-radius: 100%;
+      background-color: var(--grey-300);
+    }
+  }
+
+  &:last-child {
+    margin-bottom: 0px;
+  }
+
+  &.selected {
+    background-color: var(--primary-9-dark);
+
+    svg {
+      path,
+      circle {
+        color: var(--primary-4) !important;
+      }
+    }
+
+    p {
+      color: var(--primary-4) !important;
+      font-weight: 500 !important;
+    }
+  }
+}
+
+.section {
+  border-bottom: 1px solid var(--grey-200);
+
+  &:last-child {
+    border: none;
+  }
+}
+
+.popover {
+  position: relative;
+  left: 10px;
+  max-width: 200px;
+  padding: var(--spacing-small);
+}

@@ -16,6 +16,7 @@
 
 import React from 'react'
 import { Route, Switch, BrowserRouter } from 'react-router-dom'
+import ArApp from '@ar/gitness/ArApp'
 import { SignIn } from 'pages/SignIn/SignIn'
 import { SignUp } from 'pages/SignUp/SignUp'
 import Repository from 'pages/Repository/Repository'
@@ -92,6 +93,14 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             <SpaceSettings />
           </LayoutWithSideNav>
         </Route>
+
+        {standalone && (
+          <Route path={routes.toAR({ space: pathProps.space })}>
+            <LayoutWithSideNav title={getString('pageTitle.artifactRegistries')}>
+              <ArApp />
+            </LayoutWithSideNav>
+          </Route>
+        )}
 
         <Route
           path={routes.toCODECompare({

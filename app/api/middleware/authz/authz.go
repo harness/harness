@@ -28,21 +28,23 @@ import (
 // BlockSessionToken blocks any request that uses a session token for authentication.
 // NOTE: Major use case as of now is blocking usage of session tokens with git.
 func BlockSessionToken(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
 
-		// only block if auth data was available and it's based on a session token.
-		if session, oks := request.AuthSessionFrom(ctx); oks {
-			if tokenMetadata, okt := session.Metadata.(*auth.TokenMetadata); okt &&
-				tokenMetadata.TokenType == enum.TokenTypeSession {
-				log.Ctx(ctx).Warn().Msg("blocking git operation - session tokens are not allowed for usage with git")
+			// only block if auth data was available and it's based on a session token.
+			if session, oks := request.AuthSessionFrom(ctx); oks {
+				if tokenMetadata, ok := session.Metadata.(*auth.TokenMetadata); ok &&
+					tokenMetadata.TokenType == enum.TokenTypeSession {
+					log.Ctx(ctx).Warn().Msg("blocking git operation - session tokens are not allowed for usage with git")
 
-				// NOTE: Git doesn't print the error message, so just return default 401 Unauthorized.
-				render.Unauthorized(ctx, w)
-				return
+					// NOTE: Git doesn't print the error message, so just return default 401 Unauthorized.
+					render.Unauthorized(ctx, w)
+					return
+				}
 			}
-		}
 
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		},
+	)
 }

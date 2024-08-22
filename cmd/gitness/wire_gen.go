@@ -63,7 +63,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/runner"
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/pipeline/triggerer"
-	"github.com/harness/gitness/app/router"
+	router2 "github.com/harness/gitness/app/router"
 	server2 "github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
 	"github.com/harness/gitness/app/services/aiagent"
@@ -113,6 +113,12 @@ import (
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
+	api2 "github.com/harness/gitness/registry/app/api"
+	"github.com/harness/gitness/registry/app/api/router"
+	"github.com/harness/gitness/registry/app/pkg"
+	"github.com/harness/gitness/registry/app/pkg/docker"
+	database2 "github.com/harness/gitness/registry/app/store/database"
+	"github.com/harness/gitness/registry/gc"
 	"github.com/harness/gitness/ssh"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -396,7 +402,36 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	aiagentController := aiagent2.ProvideController(authorizer, harnessIntelligence, repoStore, pipelineStore, executionStore)
 	openapiService := openapi.ProvideOpenAPIService()
-	routerRouter := router.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, aiagentController, capabilitiesController, provider, openapiService)
+	storageDriver, err := api2.BlobStorageProvider(config)
+	if err != nil {
+		return nil, err
+	}
+	storageDeleter := gc.StorageDeleterProvider(storageDriver)
+	mediaTypesRepository := database2.ProvideMediaTypeDao(db)
+	blobRepository := database2.ProvideBlobDao(db, mediaTypesRepository)
+	storageService := docker.StorageServiceProvider(config, storageDriver)
+	manifestRepository := database2.ProvideManifestDao(db, mediaTypesRepository)
+	gcService := gc.ServiceProvider()
+	app := docker.NewApp(ctx, db, storageDeleter, blobRepository, spaceStore, config, storageService, mediaTypesRepository, manifestRepository, gcService)
+	registryRepository := database2.ProvideRepoDao(db, mediaTypesRepository)
+	manifestReferenceRepository := database2.ProvideManifestRefDao(db)
+	tagRepository := database2.ProvideTagDao(db)
+	artifactRepository := database2.ProvideArtifactDao(db)
+	artifactStatRepository := database2.ProvideArtifactStatDao(db)
+	layerRepository := database2.ProvideLayerDao(db, mediaTypesRepository)
+	manifestService := docker.ManifestServiceProvider(registryRepository, manifestRepository, blobRepository, mediaTypesRepository, manifestReferenceRepository, tagRepository, artifactRepository, artifactStatRepository, layerRepository, gcService, transactor)
+	registryBlobRepository := database2.ProvideRegistryBlobDao(db)
+	localRegistry := docker.LocalRegistryProvider(app, manifestService, blobRepository, registryRepository, manifestRepository, registryBlobRepository, mediaTypesRepository, tagRepository, artifactRepository, artifactStatRepository, gcService, transactor)
+	upstreamProxyConfigRepository := database2.ProvideUpstreamDao(db, registryRepository)
+	remoteRegistry := docker.RemoteRegistryProvider(localRegistry, app, upstreamProxyConfigRepository, secretStore, encrypter)
+	coreController := pkg.CoreControllerProvider(registryRepository)
+	dockerController := docker.ControllerProvider(localRegistry, remoteRegistry, coreController, spaceStore, authorizer)
+	handler := api2.NewHandlerProvider(dockerController, spaceStore, tokenStore, controller, authenticator, provider, authorizer)
+	registryOCIHandler := router.OCIHandlerProvider(handler)
+	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
+	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, tagRepository, manifestRepository, cleanupPolicyRepository, artifactRepository, storageDriver, spaceStore, transactor, authenticator, provider, authorizer, auditService)
+	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler)
+	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, aiagentController, capabilitiesController, provider, openapiService, appRouter)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)
 	sshServer := ssh.ProvideServer(config, publickeyService, repoController)

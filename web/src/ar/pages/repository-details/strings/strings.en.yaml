@@ -1,0 +1,50 @@
+repositoryForm:
+  title: Artifact Registry Definition
+  modalTitle: Create a New Artifact Registry
+  name: Registry Name
+  nameRequired: Registry name is required
+  modalSubTitle: Configure your registry for uploading artifacts and fetching dependencies.
+  selectRepoType: Select the registry type
+  environment: Environment
+  environmentPlaceholder: Select Environment
+  newEnvironment: New Environment
+  advancedOptionsTitle: Advanced (Optional)
+  ossAdvancedOptionsSubTitle: Configure Upstream Proxies.
+  enterpriseAdvancedOptionsSubTitle: Configure Upstream Proxies, Artifact Filtering rules and Cleanup policies for the Artifact Registry.
+  includeExcludePatternsTitle: Artifact Filtering Rules
+  includeExcludePatternsSubTitle: Define patterns to control which artifacts are allowed or blocked in this registry.
+  addPatterns: Specify Allowed Patterns
+  includePatternsLabel: Allowed Patterns
+  includePatternsPlaceholder: Specify pattern to include and hit enter
+  newIncludePattern: New Include Pattern
+  excludePatternsLabel: Blocked Patterns
+  excludePatternsPlaceholder: Specify pattern to exclude and hit enter
+  newExcludePattern: New Exclude Pattern
+  upstreamProxiesTitle: Upstream Proxies
+  upstreamProxiesSubTitle: Connect to upstream package sources to automatically download and cache external dependencies for your builds.
+  newUpstreamProxy: New Upstream Proxy
+  cleanupPoliciesTitle: Cleanup Policies
+  cleanupPoliciesSubTitle: Setup periodic cleanup of registries limiting them by days and character patterns
+  create: Create Registry
+  repositoryCreated: Registry created successfully
+  repositoryUpdated: Registry updated successfully
+  repositoryDeleted: Registry deleted successfully
+tabs:
+  configuration: Configuration
+  packages: '{{ $.artifactList.pageHeading }}'
+upstreamProxiesSelectList:
+  selectList:
+    Title: Available upstream proxies ({{count}})
+  selectedList:
+    Title: Selected proxies ({{count}})
+    note:
+      label: Note
+      message: Proxies are queried by the ordered list below.
+  newUpstreamProxyLabel: '{{ $.repositoryDetails.repositoryForm.newUpstreamProxy }}'
+  addUpstreamProxies: Configure Upstream
+clientSetup:
+  done: Done
+  step: Step {{stepIndex}}
+  generateToken: Generate Token
+  generateNewToken: Generate New Token
+  failedToGenerateToken: Failed to generate token!

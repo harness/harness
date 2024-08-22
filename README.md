@@ -96,6 +96,14 @@ To regenerate the code, please execute the following steps:
 
 The latest API changes should now be reflected in `web/src/services/code/index.tsx`
 
+# Run Registry Conformance Tests
+```
+make conformance-test
+```
+For running conformance tests with existing running service, use:
+```
+make hot-conformance-test
+```
 
 ## User Interface
 
@@ -104,6 +112,7 @@ This project includes a full user interface for interacting with the system. Whe
 ## REST API
 
 This project includes a swagger specification. When you run the application, you can access the swagger specification by navigating to `http://localhost:3000/swagger` in your browser (for raw yaml see `http://localhost:3000/openapi.yaml`).
+For registry endpoints, currently swagger is located on different endpoint `http://localhost:3000/registry/swagger/` (for raw json see `http://localhost:3000/registry/swagger.json`). These will be later moved to the main swagger endpoint. 
 
 
 For testing, it's simplest to just use the cli to create a token (this requires gitness server to run):

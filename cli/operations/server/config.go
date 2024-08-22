@@ -194,6 +194,9 @@ func backfillURLs(config *types.Config) error {
 	if config.URL.UI == "" {
 		config.URL.UI = baseURL.String()
 	}
+	if config.URL.Registry == "" {
+		config.URL.Registry = baseURL.String()
+	}
 
 	return nil
 }
@@ -238,22 +241,26 @@ func getSanitizedMachineName() (string, error) {
 			norm.NFD,
 			runes.ReplaceIllFormed(),
 			runes.Remove(runes.In(unicode.Mn)),
-			runes.Map(func(r rune) rune {
-				switch {
-				case 'A' <= r && r <= 'Z':
-					return r + 32
-				case 'a' <= r && r <= 'z':
-					return r
-				case '0' <= r && r <= '9':
-					return r
-				case r == '-', r == '.':
-					return r
-				default:
-					return '_'
-				}
-			}),
-			norm.NFC),
-		hostName)
+			runes.Map(
+				func(r rune) rune {
+					switch {
+					case 'A' <= r && r <= 'Z':
+						return r + 32
+					case 'a' <= r && r <= 'z':
+						return r
+					case '0' <= r && r <= '9':
+						return r
+					case r == '-', r == '.':
+						return r
+					default:
+						return '_'
+					}
+				},
+			),
+			norm.NFC,
+		),
+		hostName,
+	)
 	if err != nil {
 		return "", err
 	}

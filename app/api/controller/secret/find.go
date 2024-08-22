@@ -42,7 +42,7 @@ func (c *Controller) Find(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find secret: %w", err)
 	}
-	secret, err = dec(c.encrypter, secret)
+	secret, err = Dec(c.encrypter, secret)
 	if err != nil {
 		return nil, fmt.Errorf("could not decrypt secret: %w", err)
 	}

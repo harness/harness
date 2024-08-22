@@ -1,0 +1,1607 @@
+openapi: "3.0.0"
+info:
+  title: Harness Artifact Registry API
+  version: 1.0.0
+  contact:
+    name: Harness Artifact Registry - developers
+    url: https://www.harness.io
+
+tags:
+  - name: Registries
+    description: APIs to create, update, list registries
+  - name: Artifacts
+    description: APIs to get, list artifacts
+  - name: Docker Artifacts
+    description: APIs to get details of docker artifacts
+  - name: Helm Artifacts
+    description: APIs to get details of helm artifacts
+
+
+servers:
+  - url: /api/v1
+    description: Registry
+
+paths:
+  /spaces/{space_ref}/registries:
+    get:
+      summary: List Registries
+      description: Lists all the Registries.
+      operationId: GetAllRegistries
+      tags:
+        - Spaces
+      parameters:
+        - $ref: "#/components/parameters/spaceRefPathParam"
+        - $ref: "#/components/parameters/packageTypeParam"
+        - $ref: "#/components/parameters/RegistryTypeParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListRegistryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry:
+    post:
+      summary: Create Registry.
+      description: Create a Registry.
+      operationId: CreateRegistry
+      tags:
+        - Registries
+      requestBody:
+        $ref: "#/components/requestBodies/RegistryRequest"
+      responses:
+        201:
+          $ref: "#/components/responses/RegistryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+
+  /registry/{registry_ref}:
+    get:
+      summary: Returns Registry Details
+      description: Returns Registry Details in the account for the given key
+      operationId: GetRegistry
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/RegistryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      summary: Updates a Registry
+      description: Updates a Registry in the account for the given key
+      operationId: ModifyRegistry
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      requestBody:
+        $ref: "#/components/requestBodies/RegistryRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/RegistryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: Delete a Registry
+      description: Delete a Registry in the account for the given key
+      operationId: DeleteRegistry
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/client-setup-details:
+    get:
+      summary: Returns CLI Client Setup Details
+      description: Returns CLI Client Setup Details based on package type
+      operationId: GetClientSetupDetails
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactParam"
+        - $ref: "#/components/parameters/versionParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ClientSetupDetailsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /spaces/{space_ref}/artifacts:
+    get:
+      summary: List Artifacts
+      description: Lists all the Artifacts.
+      operationId: GetAllArtifacts
+      tags:
+        - Spaces
+      parameters:
+        - $ref: "#/components/parameters/spaceRefPathParam"
+        - $ref: "#/components/parameters/LabelsParam"
+        - $ref: "#/components/parameters/packageTypeParam"
+        - $ref: "#/components/parameters/RegistryIdentifierParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListArtifactResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /spaces/{space_ref}/artifact/stats:
+    get:
+      summary: Get Artifact Stats
+      description: Get Artifact Stats.
+      operationId: GetArtifactStatsForSpace
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/spaceRefPathParam"
+        - $ref: "#/components/parameters/fromDateParam"
+        - $ref: "#/components/parameters/toDateParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactStatsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/labels:
+    get:
+      summary: List Artifact Labels
+      description: List Artifact Labels.
+      operationId: ListArtifactLabels
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListArtifactLabelResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/stats:
+    get:
+      summary: Get Artifact Stats
+      description: Get Artifact Stats.
+      operationId: GetArtifactStatsForRegistry
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/fromDateParam"
+        - $ref: "#/components/parameters/toDateParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactStatsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/summary:
+    get:
+      summary: Get Artifact Summary
+      description: Get Artifact Summary.
+      operationId: GetArtifactSummary
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactSummaryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/versions:
+    get:
+      summary: List Artifact Versions
+      description: Lists all the Artifact Versions.
+      operationId: GetAllArtifactVersions
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+      responses:
+        200:
+          $ref: "#/components/responses/ListArtifactVersionResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/labels:
+    put:
+      summary: Update Artifact Labels
+      description: Update Artifact Labels.
+      operationId: UpdateArtifactLabels
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+      requestBody:
+        $ref: "#/components/requestBodies/ArtifactLabelRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactLabelResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/stats:
+    get:
+      summary: Get Artifact Stats
+      description: Get Artifact Stats.
+      operationId: GetArtifactStats
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/fromDateParam"
+        - $ref: "#/components/parameters/toDateParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactStatsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/summary:
+    get:
+      summary: Get Artifact Version Summary
+      description: Get Artifact Version Summary.
+      operationId: GetArtifactVersionSummary
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/ArtifactVersionSummaryResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/details:
+    get:
+      summary: Describe Docker Artifact Detail
+      description: Get Docker Artifact Details
+      operationId: GetDockerArtifactDetails
+      tags:
+        - Docker Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/digestParam"
+      responses:
+        200:
+          $ref: "#/components/responses/DockerArtifactDetailResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/manifest:
+    get:
+      summary: Describe Docker Artifact Manifest
+      description: Get Docker Artifact Manifest
+      operationId: GetDockerArtifactManifest
+      tags:
+        - Docker Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/digestParam"
+      responses:
+        200:
+          $ref: "#/components/responses/DockerArtifactManifestResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/manifests:
+    get:
+      summary: Describe Docker Artifact Manifests
+      description: Get Docker Artifact Manifests
+      operationId: GetDockerArtifactManifests
+      tags:
+        - Docker Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/DockerManifestsResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/layers:
+    get:
+      summary: Describe Docker Artifact Layers
+      description: Get Docker Artifact Layers
+      operationId: GetDockerArtifactLayers
+      tags:
+        - Docker Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+        - $ref: "#/components/parameters/digestParam"
+      responses:
+        200:
+          $ref: "#/components/responses/DockerLayersResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/helm/details:
+    get:
+      summary: Describe Helm Artifact Detail
+      description: Get Helm Artifact Details
+      operationId: GetHelmArtifactDetails
+      tags:
+        - Helm Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/HelmArtifactDetailResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}/helm/manifest:
+    get:
+      summary: Describe Helm Artifact Manifest
+      description: Get Helm Artifact Manifest
+      operationId: GetHelmArtifactManifest
+      tags:
+        - Helm Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/HelmArtifactManifestResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+components:
+  requestBodies:
+    RegistryRequest:
+      description: request for create and update registry
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RegistryRequest"
+    ArtifactLabelRequest:
+      description: request to update artifact labels
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ArtifactLabelRequest"
+  responses:
+    ArtifactStatsResponse:
+      description: response to get artifact stats response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactStats"
+            required:
+              - status
+              - data
+    ArtifactLabelResponse:
+      description: response to get artifact label response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactSummary"
+            required:
+              - status
+              - data
+    ClientSetupDetailsResponse:
+      description: response for client setup details
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ClientSetupDetails"
+            required:
+              - status
+              - data
+    RegistryResponse:
+      description: response for create, get and update registry
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/Registry"
+            required:
+              - status
+              - data
+    DockerArtifactDetailResponse:
+      description: response to get docker artifact detail
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/DockerArtifactDetail"
+            required:
+              - status
+              - data
+    HelmArtifactDetailResponse:
+      description: response to get helm artifact detail
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/HelmArtifactDetail"
+            required:
+              - status
+              - data
+    ArtifactSummaryResponse:
+      description: response to get artifact summary
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactSummary"
+            required:
+              - status
+              - data
+    ArtifactVersionSummaryResponse:
+      description: response to get docker artifact version summary
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ArtifactVersionSummary"
+            required:
+              - status
+              - data
+    DockerArtifactManifestResponse:
+      description: response to get docker artifact manifest
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/DockerArtifactManifest"
+            required:
+              - status
+              - data
+    HelmArtifactManifestResponse:
+      description: response to get helm artifact manifest
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/HelmArtifactManifest"
+            required:
+              - status
+              - data
+    DockerManifestsResponse:
+      description: response to get artifact layers
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/DockerManifests"
+            required:
+              - status
+              - data
+    ListArtifactLabelResponse:
+      description: response for list artifact labels
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListArtifactLabel"
+            required:
+              - status
+              - data
+    DockerLayersResponse:
+      description: response to get artifact layers
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/DockerLayersSummary"
+            required:
+              - status
+              - data
+    ListRegistryResponse:
+      description: response for list registry
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListRegistry"
+            required:
+              - status
+              - data
+    ListArtifactResponse:
+      description: response for list artifact
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListArtifact"
+            required:
+              - status
+              - data
+    ListArtifactVersionResponse:
+      description: response for list versions of artifact
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListArtifactVersion"
+            required:
+              - status
+              - data
+    Unauthenticated:
+      description: Unauthenticated
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Success:
+      description: Success Response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+            required:
+              - status
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    ArtifactStats:
+      type: object
+      description: Harness Artifact Stats
+      properties:
+        downloadCount:
+          type: integer
+          format: int64
+        uploadSize:
+          type: integer
+          format: int64
+        downloadSize:
+          type: integer
+          format: int64
+        totalStorageSize:
+          type: integer
+          format: int64
+    ListRegistry:
+      type: object
+      description: A list of Harness Artifact Registries
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        registries:
+          type: array
+          description: A list of Harness Artifact Registries
+          items:
+            $ref: "#/components/schemas/RegistryMetadata"
+      required:
+        - registries
+    ListArtifact:
+      type: object
+      description: A list of Artifacts
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        artifacts:
+          type: array
+          description: A list of Artifact
+          items:
+            $ref: "#/components/schemas/ArtifactMetadata"
+      required:
+        - artifacts
+    ListArtifactVersion:
+      type: object
+      description: A list of Artifact versions
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          description: The current page
+          format: int64
+          example: 0
+        artifactVersions:
+          type: array
+          description: A list of Artifact versions
+          items:
+            $ref: "#/components/schemas/ArtifactVersionMetadata"
+      required:
+        - artifacts
+    ListArtifactLabel:
+      type: object
+      description: A list of Harness Artifact Labels
+      properties:
+        pageCount:
+          type: integer
+          description: The total number of pages
+          format: int64
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        labels:
+          type: array
+          items:
+            type: string
+      required:
+        - labels
+    RegistryMetadata:
+      type: object
+      description: Harness Artifact Registry Metadata
+      properties:
+        type:
+          $ref: "#/components/schemas/RegistryType"
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        description:
+          type: string
+        url:
+          type: string
+        identifier:
+          type: string
+        registrySize:
+          type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        artifactsCount:
+          type: integer
+          format: int64
+        labels:
+          type: array
+          items:
+            type: string
+        lastModified:
+          type: string
+        path:
+          type: string
+      required:
+        - type
+        - packageType
+        - identifier
+        - url
+    ClientSetupDetails:
+      type: object
+      description: Client Setup Details
+      properties:
+        mainHeader:
+          type: string
+        secHeader:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientSetupSection"
+      required:
+        - mainHeader
+        - secHeader
+        - sections
+    ClientSetupSection:
+      type: object
+      description: Client Setup Section
+      properties:
+        header:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientSetupStep"
+    ClientSetupStep:
+      type: object
+      description: Client Setup Step
+      properties:
+        header:
+          type: string
+        commands:
+          type: array
+          items:
+            type: string
+        type:
+          $ref: "#/components/schemas/ClientSetupStepType"
+    ArtifactMetadata:
+      type: object
+      description: Artifact Metadata
+      properties:
+        name:
+          type: string
+        registryIdentifier:
+          type: string
+        registryPath:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        latestVersion:
+          type: string
+        lastModified:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+      required:
+        - name
+        - registryIdentifier
+        - latestVersion
+        - registryPath
+    ArtifactVersionMetadata:
+      type: object
+      description: Artifact Version Metadata
+      properties:
+        name:
+          type: string
+        size:
+          type: string
+        registryIdentifier:
+          type: string
+        registryPath:
+          type: string
+        digestCount:
+          type: integer
+          format: int64
+        pullCommand:
+          type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        islatestVersion:
+          type: boolean
+        lastModified:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+      required:
+        - name
+        - registryIdentifier
+        - latestVersion
+        - registryPath
+    Registry:
+      type: object
+      description: Harness Artifact Registry
+      properties:
+        cleanupPolicy:
+          type: array
+          items:
+            $ref: "#/components/schemas/CleanupPolicy"
+        identifier:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        description:
+          type: string
+        url:
+          type: string
+        allowedPattern:
+          type: array
+          items:
+            type: string
+        blockedPattern:
+          type: array
+          items:
+            type: string
+        labels:
+          type: array
+          items:
+            type: string
+        config:
+          $ref: '#/components/schemas/RegistryConfig'
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+      required:
+        - name
+        - identifier
+        - type
+        - url
+        - packageType
+    DockerArtifactDetail:
+      type: object
+      description: Docker Artifact Detail
+      properties:
+        imageName:
+          type: string
+        version:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        registryPath:
+          type: string
+        url:
+          type: string
+        size:
+          type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        pullCommand:
+          type: string
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+        isLatestVersion:
+          type: boolean
+      required:
+        - imageName
+        - version
+        - registryPath
+        - url
+        - packageType
+    HelmArtifactDetail:
+      type: object
+      description: Helm Artifact Detail
+      properties:
+        artifact:
+          type: string
+        version:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        registryPath:
+          type: string
+        url:
+          type: string
+        size:
+          type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        pullCommand:
+          type: string
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+        isLatestVersion:
+          type: boolean
+      required:
+        - imageName
+        - version
+        - registryPath
+        - url
+        - packageType
+    ArtifactSummary:
+      type: object
+      description: Harness Artifact Summary
+      properties:
+        imageName:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        labels:
+          type: array
+          items:
+            type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+        modifiedAt:
+          type: string
+      required:
+        - imageName
+        - packageType
+    ArtifactVersionSummary:
+      type: object
+      description: Docker Artifact Version Summary
+      properties:
+        imageName:
+          type: string
+        version:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        isLatestVersion:
+          type: boolean
+      required:
+        - imageName
+        - version
+        - packageType
+    DockerArtifactManifest:
+      type: object
+      description: Docker Artifact Manifest
+      properties:
+        manifest:
+          type: string
+      required:
+        - manifest
+    HelmArtifactManifest:
+      type: object
+      description: Helm Artifact Manifest
+      properties:
+        manifest:
+          type: string
+      required:
+        - manifest
+    DockerLayerEntry:
+      type: object
+      description: Harness Artifact Layers
+      properties:
+        command:
+          type: string
+        size:
+          type: string
+      required:
+        - command
+    DockerManifestDetails:
+      type: object
+      description: Harness Artifact Layers
+      properties:
+        osArch:
+          type: string
+        digest:
+          type: string
+        size:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - digest
+        - layers
+        - osArch
+    DockerManifests:
+      type: object
+      description: Harness Manifests
+      properties:
+        imageName:
+          type: string
+        version:
+          type: string
+        isLatestVersion:
+          type: boolean
+        manifests:
+          type: array
+          items:
+            $ref: '#/components/schemas/DockerManifestDetails'
+      required:
+        - imageName
+        - version
+    DockerLayersSummary:
+      type: object
+      description: Harness Layers Summary
+      properties:
+        digest:
+          type: string
+        osArch:
+          type: string
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/DockerLayerEntry'
+      required:
+        - digest
+    RegistryConfig:
+      type: object
+      description: SubConfig specific for Virtual or Upstream Registry
+      required:
+        - type
+      properties:
+        type:
+          $ref: "#/components/schemas/RegistryType"
+      discriminator:
+        propertyName: type
+        mapping:
+          VIRTUAL: "#/components/schemas/VirtualConfig"
+          UPSTREAM: "#/components/schemas/UpstreamConfig"
+      oneOf:
+        - $ref: "#/components/schemas/VirtualConfig"
+        - $ref: "#/components/schemas/UpstreamConfig"
+    VirtualConfig:
+      type: object
+      description: Configuration for Harness Virtual Artifact Registries
+      properties:
+        upstreamProxies:
+          type: array
+          items:
+            type: string
+    UpstreamConfig:
+      type: object
+      description: Configuration for Harness Artifact UpstreamProxies
+      properties:
+        authType:
+          $ref: "#/components/schemas/AuthType"
+        auth:
+          oneOf:
+            - $ref: "#/components/schemas/UserPassword"
+            - $ref: "#/components/schemas/Anonymous"
+        url:
+          type: string
+        source:
+          type: string
+          enum:
+            - Dockerhub
+            - Custom
+      x-discriminator-value: UPSTREAM
+      required:
+        - authType
+    CleanupPolicy:
+      type: object
+      description: Cleanup Policy for Harness Artifact Registries
+      properties:
+        name:
+          type: string
+        expireDays:
+          type: integer
+        versionPrefix:
+          type: array
+          items:
+            type: string
+        packagePrefix:
+          type: array
+          items:
+            type: string
+    RegistryType:
+      type: string
+      description: refers to type of registry i.e virtual or upstream
+      enum:
+        - VIRTUAL
+        - UPSTREAM
+      discriminator:
+        propertyName: type
+    PackageType:
+      type: string
+      description: refers to package
+      enum:
+        - DOCKER
+        - MAVEN
+        - GENERIC
+        - HELM
+    Status:
+      type: string
+      description: "Indicates if the request was successful or not"
+      enum:
+        - SUCCESS
+        - FAILURE
+        - ERROR
+    AuthType:
+      type: string
+      description: "Authentication type"
+      enum:
+        - UserPassword
+        - Anonymous
+    ClientSetupStepType:
+      type: string
+      description: "ClientSetupStepType type"
+      enum:
+        - Static
+        - GenerateToken    
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: The http error code
+          example: 404
+        message:
+          type: string
+          description: The reason the request failed
+        details:
+          type: object
+          description: Additional details about the error
+      required:
+        - code
+        - message
+    RegistryRequest:
+      type: object
+      properties:
+        identifier:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+        description:
+          type: string
+        allowedPattern:
+          type: array
+          items:
+            type: string
+        blockedPattern:
+          type: array
+          items:
+            type: string
+        cleanupPolicy:
+          type: array
+          items:
+            $ref: "#/components/schemas/CleanupPolicy"
+        labels:
+          type: array
+          items:
+            type: string
+        config:
+          $ref: '#/components/schemas/RegistryConfig'
+        parentRef:
+          type: string
+      required:
+        - identifier
+        - type
+        - packageType
+    ArtifactLabelRequest:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+      required:
+        - labels
+    UserPassword:
+      properties:
+        userName:
+          type: string
+        secretIdentifier:
+          type: string
+        secretSpaceId:
+          type: integer
+      required:
+        - userName
+        - password
+    Anonymous: {}
+  parameters:
+    packageTypeParam:
+      name: package_type
+      in: query
+      required: false
+      description: Registry Package Type
+      schema:
+        type: array
+        items:
+          type: string
+    RegistryTypeParam:
+      name: type
+      in: query
+      required: false
+      description: Registry Type
+      schema:
+        type: string
+        enum:
+          - VIRTUAL
+          - UPSTREAM
+    RegistryIdentifierParam:
+      name: reg_identifier
+      in: query
+      required: false
+      description: Registry Identifier
+      schema:
+        type: string
+    spaceRefPathParam:
+      name: space_ref
+      in: path
+      required: true
+      description: Unique space path.
+      schema:
+        type: string
+    LabelsParam:
+      name: label
+      in: query
+      required: false
+      description: Label.
+      schema:
+        type: array
+        items:
+          type: string
+    registryRefPathParam:
+      name: registry_ref
+      in: path
+      required: true
+      description: Unique registry path.
+      schema:
+        type: string
+    artifactParam:
+      name: artifact
+      in: query
+      required: false
+      description: Artifat
+      schema:
+        type: string
+    versionParam:
+      name: version
+      in: query
+      required: false
+      description: Version
+      schema:
+        type: string
+    artifactPathParam:
+      name: artifact
+      in: path
+      required: true
+      description: Name of artifact.
+      schema:
+        type: string
+    versionPathParam:
+      name: version
+      in: path
+      required: true
+      description: Name of Artifact Version.
+      schema:
+        type: string
+    digestParam:
+      name: digest
+      in: query
+      required: true
+      description: Digest.
+      schema:
+        type: string
+    searchTerm:
+      name: search_term
+      in: query
+      required: false
+      description: search Term.
+      schema:
+        type: string
+    pageNumber:
+      name: page
+      in: query
+      required: false
+      description: Current page number
+      schema:
+        type: integer
+        format: int64
+        default: 1
+    pageSize:
+      name: size
+      in: query
+      required: false
+      description: Number of items per page
+      schema:
+        type: integer
+        format: int64
+        default: 20
+    sortOrder:
+      name: sort_order
+      in: query
+      required: false
+      description: sortOrder
+      schema:
+        type: string
+    sortField:
+      name: sort_field
+      in: query
+      required: false
+      description: sortField
+      schema:
+        type: string
+    fromDateParam:
+      name: from
+      in: query
+      required: false
+      description: Date. Format - MM/DD/YYYY
+      schema:
+        type: string
+    toDateParam:
+      name: to
+      in: query
+      required: false
+      description: Date. Format - MM/DD/YYYY
+      schema:
+        type: string         

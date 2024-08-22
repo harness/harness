@@ -1,0 +1,89 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.pageBody {
+  --page-header-height: 0px;
+}
+
+.packagesPageBody {
+  --page-header-height: 253px !important;
+}
+
+.tabsContainer {
+  position: relative !important;
+  & > :global(.bp3-tabs > .bp3-tab-list) {
+    border-bottom: 1px solid var(--grey-200);
+  }
+  :global {
+    .bp3-tab-panel {
+      margin-top: 0;
+    }
+
+    .bp3-tab-list {
+      background-color: var(--white);
+      width: 100%;
+      border-bottom: 0;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.13);
+      align-items: center;
+      padding: 0 var(--spacing-xlarge);
+
+      position: sticky;
+      top: 0px;
+      z-index: 2;
+    }
+  }
+  .btnContainer {
+    position: absolute !important;
+    top: 6px;
+    right: var(--spacing-xlarge);
+    .tagRender {
+      & > :global(.bp3-button-text) {
+        color: var(--orange-600) !important;
+        text-decoration: underline;
+        text-decoration-color: var(--orange-600);
+        font-size: var(--font-size-small) !important;
+      }
+      margin-right: var(--spacing-5);
+      line-height: 15px;
+      &::before {
+        content: '';
+        width: 10px;
+        height: 10px;
+        border-radius: 100%;
+        background: var(--orange-600);
+        display: inline-block;
+        margin: 0 4px;
+      }
+    }
+    .saveButton {
+      width: 70px !important;
+      height: 24px !important;
+      border-radius: 4px;
+      font-size: 13px !important;
+    }
+    .discardBtn {
+      margin-left: var(--spacing-3) !important;
+    }
+  }
+}
+
+.stickyBtnContainer {
+  position: sticky;
+  bottom: 0;
+  background-color: var(--white) !important;
+  z-index: 11;
+  border-radius: 6px !important;
+}

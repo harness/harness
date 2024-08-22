@@ -38,7 +38,8 @@ var (
 // Check checks if a resource specific permission is granted for the current auth session in the scope.
 // Returns nil if the permission is granted, otherwise returns an error.
 // NotAuthenticated, NotAuthorized, or any underlying error.
-func Check(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
+func Check(
+	ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
 	scope *types.Scope, resource *types.Resource, permission enum.Permission,
 ) error {
 	authorized, err := authorizer.Check(
@@ -46,7 +47,31 @@ func Check(ctx context.Context, authorizer authz.Authorizer, session *auth.Sessi
 		session,
 		scope,
 		resource,
-		permission)
+		permission,
+	)
+	if err != nil {
+		return err
+	}
+
+	if !authorized {
+		return ErrNotAuthorized
+	}
+
+	return nil
+}
+
+// CheckAll checks if multiple resources specific permission is granted for the current auth session in the scope.
+// Returns nil if the permission is granted, otherwise returns an error.
+// NotAuthenticated, NotAuthorized, or any underlying error.
+func CheckAll(
+	ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
+	permissionChecks ...types.PermissionCheck,
+) error {
+	authorized, err := authorizer.CheckAll(
+		ctx,
+		session,
+		permissionChecks...,
+	)
 	if err != nil {
 		return err
 	}
@@ -62,9 +87,11 @@ func Check(ctx context.Context, authorizer authz.Authorizer, session *auth.Sessi
 // in the scope of a parent.
 // Returns nil if the permission is granted, otherwise returns an error.
 // NotAuthenticated, NotAuthorized, or any underlying error.
-func CheckChild(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
+func CheckChild(
+	ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
 	spaceStore store.SpaceStore, repoStore store.RepoStore, parentType enum.ParentResourceType, parentID int64,
-	resourceType enum.ResourceType, resourceName string, permission enum.Permission) error {
+	resourceType enum.ResourceType, resourceName string, permission enum.Permission,
+) error {
 	scope, err := getScopeForParent(ctx, spaceStore, repoStore, parentType, parentID)
 	if err != nil {
 		return err
@@ -79,8 +106,10 @@ func CheckChild(ctx context.Context, authorizer authz.Authorizer, session *auth.
 }
 
 // getScopeForParent Returns the scope for a given resource parent (space or repo).
-func getScopeForParent(ctx context.Context, spaceStore store.SpaceStore, repoStore store.RepoStore,
-	parentType enum.ParentResourceType, parentID int64) (*types.Scope, error) {
+func getScopeForParent(
+	ctx context.Context, spaceStore store.SpaceStore, repoStore store.RepoStore,
+	parentType enum.ParentResourceType, parentID int64,
+) (*types.Scope, error) {
 	// TODO: Can this be done cleaner?
 	switch parentType {
 	case enum.ParentResourceTypeSpace:

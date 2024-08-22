@@ -15,17 +15,24 @@
 package jwt
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/pkg/errors"
 )
 
 const (
 	issuer = "Gitness"
+)
+
+// Source represents the source of the SubClaimsAccessPermissions.
+type Source string
+
+const (
+	OciSource Source = "oci"
 )
 
 // Claims defines gitness jwt claims.
@@ -34,8 +41,9 @@ type Claims struct {
 
 	PrincipalID int64 `json:"pid,omitempty"`
 
-	Token      *SubClaimsToken      `json:"tkn,omitempty"`
-	Membership *SubClaimsMembership `json:"ms,omitempty"`
+	Token             *SubClaimsToken             `json:"tkn,omitempty"`
+	Membership        *SubClaimsMembership        `json:"ms,omitempty"`
+	AccessPermissions *SubClaimsAccessPermissions `json:"ap,omitempty"`
 }
 
 // SubClaimsToken contains information about the token the JWT was created for.
@@ -48,6 +56,18 @@ type SubClaimsToken struct {
 type SubClaimsMembership struct {
 	Role    enum.MembershipRole `json:"role,omitempty"`
 	SpaceID int64               `json:"sid,omitempty"`
+}
+
+// SubClaimsAccessPermissions stores allowed actions on a resource.
+type SubClaimsAccessPermissions struct {
+	Source      Source              `json:"src,omitempty"`
+	Permissions []AccessPermissions `json:"permissions,omitempty"`
+}
+
+// AccessPermissions stores allowed actions on a resource.
+type AccessPermissions struct {
+	SpaceID     int64             `json:"sid,omitempty"`
+	Permissions []enum.Permission `json:"p"`
 }
 
 // GenerateForToken generates a jwt for a given token.
@@ -73,7 +93,7 @@ func GenerateForToken(token *types.Token, secret string) (string, error) {
 
 	res, err := jwtToken.SignedString([]byte(secret))
 	if err != nil {
-		return "", errors.Wrap(err, "Failed to sign token")
+		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
 
 	return res, nil
@@ -106,7 +126,37 @@ func GenerateWithMembership(
 
 	res, err := jwtToken.SignedString([]byte(secret))
 	if err != nil {
-		return "", errors.Wrap(err, "Failed to sign token")
+		return "", fmt.Errorf("failed to sign token: %w", err)
+	}
+
+	return res, nil
+}
+
+// GenerateForTokenWithAccessPermissions generates a jwt for a given token.
+func GenerateForTokenWithAccessPermissions(
+	principalID int64,
+	lifetime *time.Duration,
+	secret string, accessPermissions *SubClaimsAccessPermissions,
+) (string, error) {
+	issuedAt := time.Now()
+	if lifetime == nil {
+		return "", fmt.Errorf("token lifetime is required")
+	}
+	expiresAt := issuedAt.Add(*lifetime)
+
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer:    issuer,
+			IssuedAt:  issuedAt.Unix(),
+			ExpiresAt: expiresAt.Unix(),
+		},
+		PrincipalID:       principalID,
+		AccessPermissions: accessPermissions,
+	})
+
+	res, err := jwtToken.SignedString([]byte(secret))
+	if err != nil {
+		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
 
 	return res, nil

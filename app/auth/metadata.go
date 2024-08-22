@@ -14,7 +14,10 @@
 
 package auth
 
-import "github.com/harness/gitness/types/enum"
+import (
+	"github.com/harness/gitness/app/jwt"
+	"github.com/harness/gitness/types/enum"
+)
 
 type Metadata interface {
 	ImpactsAuthorization() bool
@@ -44,5 +47,14 @@ type MembershipMetadata struct {
 }
 
 func (m *MembershipMetadata) ImpactsAuthorization() bool {
+	return true
+}
+
+// AccessPermissionMetadata contains information about permissions per space.
+type AccessPermissionMetadata struct {
+	AccessPermissions *jwt.SubClaimsAccessPermissions
+}
+
+func (m *AccessPermissionMetadata) ImpactsAuthorization() bool {
 	return true
 }

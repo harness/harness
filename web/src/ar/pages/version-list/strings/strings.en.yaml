@@ -1,0 +1,16 @@
+page: Version List Page
+table:
+  noVersionsTitle: There are no versions available.
+  columns:
+    version: Version
+    size: '{{ $.digestList.table.columns.size }}'
+    digests: Digests
+    pullCommand: Download Command
+    activelyDeployed: Actively Deployed
+    downloads: '{{ $.repositoryList.table.columns.downloads }}'
+    publishedByAt: '{{ $.versionDetails.artifactDetails.layers.lastPush }}'
+    deployments: '{{ $.versionDetails.tabs.deployments }}'
+actions:
+  deleteModal:
+    title: Delete Version
+    contentText: Are you sure you want to delete the artifact version?

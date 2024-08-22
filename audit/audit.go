@@ -54,17 +54,22 @@ func (a Action) Validate() error {
 type ResourceType string
 
 const (
-	ResourceTypeRepository         ResourceType = "repository"
-	ResourceTypeBranchRule         ResourceType = "branch_rule"
-	ResourceTypeRepositorySettings ResourceType = "repository_settings"
+	ResourceTypeRepository            ResourceType = "repository"
+	ResourceTypeBranchRule            ResourceType = "branch_rule"
+	ResourceTypeRepositorySettings    ResourceType = "repository_settings"
+	ResourceTypeRegistry              ResourceType = "registry"
+	ResourceTypeRegistryUpstreamProxy ResourceType = "registry_upstream_proxy"
 )
 
 func (a ResourceType) Validate() error {
 	switch a {
 	case ResourceTypeRepository,
 		ResourceTypeBranchRule,
-		ResourceTypeRepositorySettings:
+		ResourceTypeRepositorySettings,
+		ResourceTypeRegistry,
+		ResourceTypeRegistryUpstreamProxy:
 		return nil
+
 	default:
 		return ErrResourceTypeUndefined
 	}

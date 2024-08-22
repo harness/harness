@@ -74,6 +74,9 @@ type Provider interface {
 
 	// GetAPIProto returns the proto for the API hostname
 	GetAPIProto(ctx context.Context) string
+
+	// RegistryURL returns the url for oci token endpoint
+	RegistryURL() string
 }
 
 // Provider provides the URLs of the gitness system.
@@ -99,6 +102,9 @@ type provider struct {
 
 	// uiURL stores the raw URL to the ui endpoints.
 	uiURL *url.URL
+
+	// registryURL stores the raw URL to the registry endpoints.
+	registryURL *url.URL
 }
 
 func NewProvider(
@@ -110,6 +116,7 @@ func NewProvider(
 	sshDefaultUser string,
 	sshEnabled bool,
 	uiURLRaw string,
+	registryURLRaw string,
 ) (Provider, error) {
 	// remove trailing '/' to make usage easier
 	internalURLRaw = strings.TrimRight(internalURLRaw, "/")
@@ -118,6 +125,7 @@ func NewProvider(
 	gitURLRaw = strings.TrimRight(gitURLRaw, "/")
 	gitSSHURLRaw = strings.TrimRight(gitSSHURLRaw, "/")
 	uiURLRaw = strings.TrimRight(uiURLRaw, "/")
+	registryURLRaw = strings.TrimRight(registryURLRaw, "/")
 
 	internalURL, err := url.Parse(internalURLRaw)
 	if err != nil {
@@ -149,6 +157,11 @@ func NewProvider(
 		return nil, fmt.Errorf("provided uiURLRaw '%s' is invalid: %w", uiURLRaw, err)
 	}
 
+	registryURL, err := url.Parse(registryURLRaw)
+	if err != nil {
+		return nil, fmt.Errorf("provided registryURLRaw '%s' is invalid: %w", registryURLRaw, err)
+	}
+
 	return &provider{
 		internalURL:    internalURL,
 		containerURL:   containerURL,
@@ -158,6 +171,7 @@ func NewProvider(
 		SSHDefaultUser: sshDefaultUser,
 		SSHEnabled:     sshEnabled,
 		uiURL:          uiURL,
+		registryURL:    registryURL,
 	}, nil
 }
 
@@ -191,8 +205,10 @@ func (p *provider) GenerateGITCloneSSHURL(_ context.Context, repoPath string) st
 }
 
 func (p *provider) GenerateUIBuildURL(_ context.Context, repoPath, pipelineIdentifier string, seqNumber int64) string {
-	return p.uiURL.JoinPath(repoPath, "pipelines",
-		pipelineIdentifier, "execution", strconv.Itoa(int(seqNumber))).String()
+	return p.uiURL.JoinPath(
+		repoPath, "pipelines",
+		pipelineIdentifier, "execution", strconv.Itoa(int(seqNumber)),
+	).String()
 }
 
 func (p *provider) GenerateUIRepoURL(_ context.Context, repoPath string) string {
@@ -217,6 +233,10 @@ func (p *provider) GetGITHostname(context.Context) string {
 
 func (p *provider) GetAPIProto(context.Context) string {
 	return p.apiURL.Scheme
+}
+
+func (p *provider) RegistryURL() string {
+	return p.registryURL.String()
 }
 
 func BuildGITCloneSSHURL(user string, sshURL *url.URL, repoPath string) string {

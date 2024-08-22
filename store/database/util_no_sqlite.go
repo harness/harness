@@ -30,3 +30,12 @@ func isSQLUniqueConstraintError(original error) bool {
 
 	return false
 }
+
+func isSQLForeignKeyViolationError(original error) bool {
+	var pqErr *pq.Error
+	if errors.As(original, &pqErr) {
+		return pqErr.Code == "23503"
+	}
+
+	return false
+}
