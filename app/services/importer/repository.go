@@ -273,7 +273,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 
 	if isRepoPublic {
 		err = r.auditService.Log(ctx,
-			bootstrap.NewPipelineServiceSession().Principal,
+			bootstrap.NewSystemServiceSession().Principal,
 			audit.NewResource(audit.ResourceTypeRepository, repo.Identifier),
 			audit.ActionUpdated,
 			paths.Parent(repo.Path),
