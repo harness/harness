@@ -51,39 +51,43 @@ func (c *Controller) Delete(
 	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
 	gitspaceConfig.GitspaceInstance = instance
 	gitspaceConfig.SpacePath = space.Path
-	if instance == nil {
+	if instance == nil || instance.State.IsFinalStatus() {
 		gitspaceConfig.IsDeleted = true
 		err = c.gitspaceSvc.UpdateConfig(ctx, gitspaceConfig)
 		if err != nil {
 			return fmt.Errorf("failed to mark gitspace config as deleted: %w", err)
 		}
 	} else {
-		stopErr := c.stopRunningGitspace(ctx, *gitspaceConfig)
-		if stopErr != nil {
-			return stopErr
-		}
+		ctxWithoutCancel := context.WithoutCancel(ctx)
+		go c.stopRunningGitspace(ctxWithoutCancel, *gitspaceConfig)
 	}
 	return nil
 }
 
-func (c *Controller) stopRunningGitspace(
-	ctx context.Context,
-	config types.GitspaceConfig,
-) error {
+func (c *Controller) stopRunningGitspace(ctx context.Context, config types.GitspaceConfig) {
 	config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
 	err := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
 	if err != nil {
-		return fmt.Errorf("failed to update instance: %w", err)
-	}
-	err = c.orchestrator.TriggerDeleteGitspace(ctx, config)
-	if err != nil {
-		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
-		updatErr := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
-		if updatErr != nil {
-			return fmt.Errorf("failed to update instance: %w", updatErr)
-		}
-		return err
+		log.Ctx(ctx).Err(err).Msgf("failed to update instance %s before triggering delete",
+			config.GitspaceInstance.Identifier)
+		return
 	}
 
-	return nil
+	err = c.orchestrator.TriggerDeleteGitspace(ctx, config)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("error during triggering delete for gitspace instance %s",
+			config.GitspaceInstance.Identifier)
+
+		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
+		updateErr := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
+		if updateErr != nil {
+			log.Ctx(ctx).Err(updateErr).Msgf("failed to update instance %s after error in triggering delete",
+				config.GitspaceInstance.Identifier)
+		}
+
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("successfully triggered delete for gitspace instance %s",
+		config.GitspaceInstance.Identifier)
 }
