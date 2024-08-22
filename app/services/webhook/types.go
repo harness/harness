@@ -96,7 +96,9 @@ type RepositoryInfo struct {
 	ID            int64  `json:"id"`
 	Path          string `json:"path"`
 	Identifier    string `json:"identifier"`
+	Description   string `json:"description"`
 	DefaultBranch string `json:"default_branch"`
+	URL           string `json:"url"`
 	GitURL        string `json:"git_url"`
 	GitSSHURL     string `json:"git_ssh_url"`
 }
@@ -114,13 +116,15 @@ func (r RepositoryInfo) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// repositoryInfoFrom gets the RespositoryInfo from a types.Repository.
+// repositoryInfoFrom gets the RepositoryInfo from a types.Repository.
 func repositoryInfoFrom(ctx context.Context, repo *types.Repository, urlProvider url.Provider) RepositoryInfo {
 	return RepositoryInfo{
 		ID:            repo.ID,
 		Path:          repo.Path,
 		Identifier:    repo.Identifier,
+		Description:   repo.Description,
 		DefaultBranch: repo.DefaultBranch,
+		URL:           urlProvider.GenerateUIRepoURL(ctx, repo.Path),
 		GitURL:        urlProvider.GenerateGITCloneURL(ctx, repo.Path),
 		GitSSHURL:     urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path),
 	}
