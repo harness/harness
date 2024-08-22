@@ -428,7 +428,7 @@ type Config struct {
 	}
 
 	Registry struct {
-		Enable  bool `envconfig:"GITNESS_REGISTRY_ENABLED" default:"false"`
+		Enable  bool `envconfig:"GITNESS_REGISTRY_ENABLED" default:"true"`
 		Storage struct {
 			// StorageType defines the type of storage to use for the registry. Options are: `filesystem`, `s3aws`
 			StorageType string `envconfig:"GITNESS_REGISTRY_STORAGE_TYPE" default:"filesystem"`
