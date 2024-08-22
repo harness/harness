@@ -1,4 +1,4 @@
-create table registries
+create table if not exists registries
 (
     registry_id               INTEGER PRIMARY KEY AUTOINCREMENT,
     registry_name             text not null
@@ -21,7 +21,7 @@ create table registries
         unique (registry_root_parent_id, registry_name)
 );
 
-create table media_types
+create table if not exists media_types
 (
     mt_id         INTEGER PRIMARY KEY AUTOINCREMENT,
     mt_media_type text not null
@@ -30,7 +30,7 @@ create table media_types
     mt_created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
 );
 
-create table blobs
+create table if not exists blobs
 (
     blob_id             INTEGER PRIMARY KEY AUTOINCREMENT,
     blob_root_parent_id INTEGER not null,
@@ -44,10 +44,10 @@ create table blobs
     constraint unique_digest_root_parent_id unique (blob_digest, blob_root_parent_id)
     );
 
-create index index_blobs_on_media_type_id
+create index if not exists index_blobs_on_media_type_id
     on blobs (blob_media_type_id);
 
-create table registry_blobs
+create table if not exists registry_blobs
 (
     rblob_id          INTEGER PRIMARY KEY AUTOINCREMENT,
     rblob_registry_id INTEGER not null
@@ -70,15 +70,15 @@ create table registry_blobs
     unique (rblob_registry_id, rblob_blob_id, rblob_image_name)
     );
 
-create index index_registry_blobs_on_reg_id
+create index if not exists index_registry_blobs_on_reg_id
     on registry_blobs (rblob_registry_id);
 
-create index index_registry_blobs_on_reg_blob_id
+create index if not exists index_registry_blobs_on_reg_blob_id
     on registry_blobs (rblob_registry_id, rblob_blob_id);
 
 
 
-create table manifests
+create table if not exists manifests
 (
     manifest_id                        INTEGER PRIMARY KEY AUTOINCREMENT,
     manifest_registry_id               INTEGER not null
@@ -120,15 +120,15 @@ create table manifests
     on delete cascade
     );
 
-create index index_manifests_on_media_type_id
+create index if not exists index_manifests_on_media_type_id
     on manifests (manifest_media_type_id);
 
-create index index_manifests_on_configuration_blob_id
+create index if not exists index_manifests_on_configuration_blob_id
     on manifests (manifest_configuration_blob_id);
 
 
 
-create table manifest_references
+create table if not exists manifest_references
 (
     manifest_ref_id          INTEGER PRIMARY KEY AUTOINCREMENT,
     manifest_ref_registry_id INTEGER not null,
@@ -149,10 +149,10 @@ create table manifest_references
     check (manifest_ref_parent_id <> manifest_ref_child_id)
     );
 
-create index index_manifest_references_on_rpstry_id_child_id
+create index if not exists index_manifest_references_on_rpstry_id_child_id
     on manifest_references (manifest_ref_registry_id, manifest_ref_child_id);
 
-create table layers
+create table if not exists layers
 (
     layer_id            INTEGER PRIMARY KEY AUTOINCREMENT,
     layer_registry_id   INTEGER not null,
@@ -177,13 +177,13 @@ create table layers
     on delete cascade
     );
 
-create index index_layer_on_media_type_id
+create index if not exists index_layer_on_media_type_id
     on layers (layer_media_type_id);
 
-create index index_layer_on_blob_id
+create index if not exists index_layer_on_blob_id
     on layers (layer_blob_id);
 
-create table artifacts
+create table if not exists artifacts
 (
     artifact_id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     artifact_name                text not null,
@@ -201,10 +201,10 @@ create table artifacts
     constraint check_artifact_name_length check ((length(artifact_name) <= 255))
     );
 
-create index index_artifact_on_registry_id ON artifacts (artifact_registry_id);
+create index if not exists index_artifact_on_registry_id ON artifacts (artifact_registry_id);
 
 
-create table artifact_stats
+create table if not exists artifact_stats
 (
     artifact_stat_id                               INTEGER PRIMARY KEY AUTOINCREMENT,
     artifact_stat_artifact_id                      INTEGER not null
@@ -221,7 +221,7 @@ create table artifact_stats
     constraint unique_artifact_stats_artifact_id_and_date unique (artifact_stat_artifact_id, artifact_stat_date)
     );
 
-create table tags
+create table if not exists tags
 (
     tag_id          INTEGER PRIMARY KEY AUTOINCREMENT,
     tag_name        text not null
@@ -242,10 +242,10 @@ create table tags
     unique (tag_registry_id, tag_name, tag_image_name)
     );
 
-create index index_tag_on_rpository_id_and_manifest_id
+create index if not exists index_tag_on_rpository_id_and_manifest_id
     on tags (tag_registry_id, tag_manifest_id);
 
-create table upstream_proxy_configs
+create table if not exists upstream_proxy_configs
 (
     upstream_proxy_config_id          INTEGER PRIMARY KEY AUTOINCREMENT,
     upstream_proxy_config_registry_id INTEGER not null
@@ -265,13 +265,12 @@ create table upstream_proxy_configs
     upstream_proxy_config_updated_by  INTEGER,
     constraint fk_layers_secret_identifier_and_secret_space_id FOREIGN KEY
      (upstream_proxy_config_secret_identifier, upstream_proxy_config_secret_space_id) REFERENCES secrets(secret_uid, secret_space_id)
-        ON DELETE CASCADE
 );
 
-create index index_upstream_proxy_config_on_registry_id
+create index if not exists index_upstream_proxy_config_on_registry_id
     on upstream_proxy_configs (upstream_proxy_config_registry_id);
 
-create table cleanup_policies
+create table if not exists cleanup_policies
 (
     cp_id             INTEGER PRIMARY KEY AUTOINCREMENT,
     cp_registry_id    INTEGER not null
@@ -285,10 +284,10 @@ create table cleanup_policies
     cp_updated_by     INTEGER not null
 );
 
-create index index_cleanup_policies_on_registry_id
+create index if not exists index_cleanup_policies_on_registry_id
     on cleanup_policies (cp_registry_id);
 
-create table cleanup_policy_prefix_mappings
+create table if not exists cleanup_policy_prefix_mappings
 (
     cpp_id                INTEGER PRIMARY KEY AUTOINCREMENT,
     cpp_cleanup_policy_id INTEGER not null
@@ -298,12 +297,12 @@ create table cleanup_policy_prefix_mappings
     cpp_prefix_type       text not null
 );
 
-create index index_cleanup_policy_map_on_policy_id
+create index if not exists index_cleanup_policy_map_on_policy_id
     on cleanup_policy_prefix_mappings (cpp_cleanup_policy_id);
 
 
 
-insert into media_types (mt_media_type)
+insert or ignore into media_types (mt_media_type)
 values ('application/vnd.docker.distribution.manifest.v1+json'),
        ('application/vnd.docker.distribution.manifest.v1+prettyjws'),
        ('application/vnd.docker.distribution.manifest.v2+json'),
