@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button, ButtonVariation, Container, Formik, FormikForm, Layout, Text, useToaster } from '@harnessio/uicore'
 import { useHistory } from 'react-router-dom'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -37,6 +36,8 @@ import { OpenapiCreateGitspaceRequest, useCreateGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { GitnessRepoImportForm } from 'cde-gitness/components/GitnessRepoImportForm/GitnessRepoImportForm'
 import { EnumGitspaceCodeRepoType } from 'cde-gitness/constants'
+import { CDESSHSelect } from 'cde-gitness/components/CDESSHSelect/CDESSHSelect'
+import { useQueryParams } from 'hooks/useQueryParams'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
 import css from './GitspaceCreate.module.scss'
@@ -56,11 +57,14 @@ export const CDECreateGitspace = () => {
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
   const { showSuccess, showError } = useToaster()
   const { mutate } = useCreateGitspace({ accountIdentifier, orgIdentifier, projectIdentifier })
+  const { idpRepoURL = '' } = useQueryParams<{ idpRepoURL?: string }>()
+
+  const [repoURLviaQueryParam, setrepoURLviaQueryParam] = useState('')
 
   const scmOptions: SCMType[] = [
     { name: 'Harness Code', value: EnumGitspaceCodeRepoType.HARNESS_CODE, icon: harnessCode },
-    { name: 'Github', value: EnumGitspaceCodeRepoType.GITHUB, icon: github },
-    { name: 'Gitlab', value: EnumGitspaceCodeRepoType.GITLAB, icon: gitlab },
+    { name: 'GitHub Cloud', value: EnumGitspaceCodeRepoType.GITHUB, icon: github },
+    { name: 'GitLab Cloud', value: EnumGitspaceCodeRepoType.GITLAB, icon: gitlab },
     { name: 'Bitbucket', value: EnumGitspaceCodeRepoType.BITBUCKET, icon: bitbucket },
     { name: 'Any public Git repository', value: EnumGitspaceCodeRepoType.UNKNOWN, icon: genericGit }
   ]
@@ -68,6 +72,12 @@ export const CDECreateGitspace = () => {
   const { data: OauthSCMs } = useGetUserSourceCodeManagers({
     queryParams: { accountIdentifier, userIdentifier: currentUser?.uid }
   })
+
+  useEffect(() => {
+    if (idpRepoURL !== repoURLviaQueryParam) {
+      setrepoURLviaQueryParam(idpRepoURL)
+    }
+  }, [idpRepoURL])
 
   const oauthSCMsListTypes =
     OauthSCMs?.data?.userSourceCodeManagerResponseDTOList?.map((item: { type: string }) => item.type.toLowerCase()) ||
@@ -96,7 +106,11 @@ export const CDECreateGitspace = () => {
           showError(getErrorMessage(error))
         }
       }}
-      initialValues={{ ...gitnessFormInitialValues, code_repo_type: EnumGitspaceCodeRepoType.HARNESS_CODE }}
+      initialValues={{
+        ...gitnessFormInitialValues,
+        code_repo_url: idpRepoURL,
+        code_repo_type: EnumGitspaceCodeRepoType.HARNESS_CODE
+      }}
       validationSchema={validateGitnessForm(getString)}
       formName="importRepoForm"
       enableReinitialize>
@@ -204,6 +218,7 @@ export const CDECreateGitspace = () => {
               </Container>
               <Container className={css.formOuterContainer}>
                 <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} />
+                <CDESSHSelect />
                 <SelectInfraProvider />
                 <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
                   {getString('cde.createGitspace')}

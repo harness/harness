@@ -73,6 +73,9 @@ export interface AppProps {
     useFeatureFlags: Unknown
     useGetSettingValue: Unknown
     useGetUserSourceCodeManagers?: Unknown
+    useListAggregatedTokens?: Unknown
+    useDeleteToken?: Unknown
+    useCreateToken?: Unknown
   }>
 
   currentUser: Required<TypesUser>

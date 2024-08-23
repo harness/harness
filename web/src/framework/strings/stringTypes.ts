@@ -262,6 +262,11 @@ export interface StringsMap {
   'cde.repositoryAndBranch': string
   'cde.retry': string
   'cde.sessionDuration': string
+  'cde.sshSelect.180days': string
+  'cde.sshSelect.30days': string
+  'cde.sshSelect.90days': string
+  'cde.sshSelect.deleteToken': string
+  'cde.sshSelect.noexpiration': string
   'cde.startingGitspace': string
   'cde.status': string
   'cde.stopingGitspace': string

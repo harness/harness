@@ -1152,7 +1152,7 @@ cde:
   na: NA
   retry: Retry
   eventTimeline: Event Timeline
-  cpu: Cpu
+  cpu: CPU
   memory: Memory
   disk: Disk
   regionSelectWarning: Select a region first
@@ -1173,6 +1173,12 @@ cde:
   status: Status
   getStarted: Get started with Gitspaces by
   createImport: creating or importing repositories
+  sshSelect:
+    30days: 30 Days
+    90days: 90 Days
+    180days: 180 Days
+    noexpiration: No Expiration
+    deleteToken: Delete SSH Token '{{name}}'
   homePage:
     start: Start
     noSetupRequired: no setup required

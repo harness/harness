@@ -1,0 +1,26 @@
+.note {
+  display: flex !important;
+  align-items: center;
+  background: var(--blue-100) !important;
+  padding: var(--spacing-small) 0 !important;
+  justify-content: center;
+}
+
+.sshKeyValue {
+  :global {
+    textarea {
+      height: 108px !important;
+      resize: vertical;
+    }
+  }
+}
+
+.main {
+  width: 35% !important;
+}
+
+.addsshButton {
+  width: 100%;
+  justify-content: flex-start;
+  font-size: var(--font-size-small) !important;
+}
