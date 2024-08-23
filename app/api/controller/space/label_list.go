@@ -30,7 +30,7 @@ func (c *Controller) ListLabels(
 	spaceRef string,
 	filter *types.LabelFilter,
 ) ([]*types.Label, int64, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to acquire access to space: %w", err)
 	}

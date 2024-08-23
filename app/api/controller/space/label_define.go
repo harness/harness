@@ -30,7 +30,7 @@ func (c *Controller) DefineLabel(
 	spaceRef string,
 	in *types.DefineLabelInput,
 ) (*types.Label, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}

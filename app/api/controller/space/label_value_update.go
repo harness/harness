@@ -32,7 +32,7 @@ func (c *Controller) UpdateLabelValue(
 	value string,
 	in *types.UpdateValueInput,
 ) (*types.LabelValue, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
