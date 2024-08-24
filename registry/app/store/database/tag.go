@@ -374,7 +374,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 
 	if len(labels) > 0 {
 		sort.Strings(labels)
-		labelsVal := getEmptySQLString(util.ArrToString(labels))
+		labelsVal := util.GetEmptySQLString(util.ArrToString(labels))
 
 		labelsVal.String = labelSeparatorStart + labelsVal.String + labelSeparatorEnd
 		q = q.Where("'^_' || ar.artifact_labels || '^_' LIKE ?", labelsVal)
@@ -430,7 +430,7 @@ func (t tagDao) CountAllArtifactsByParentID(
 
 	if len(labels) > 0 {
 		sort.Strings(labels)
-		labelsVal := getEmptySQLString(util.ArrToString(labels))
+		labelsVal := util.GetEmptySQLString(util.ArrToString(labels))
 		labelsVal.String = labelSeparatorStart + labelsVal.String + labelSeparatorEnd
 		q = q.Where("'^_' || ar.artifact_labels || '^_' LIKE ?", labelsVal)
 	}
@@ -645,7 +645,7 @@ func (t tagDao) GetAllArtifactsByRepo(
 
 	if len(labels) > 0 {
 		sort.Strings(labels)
-		labelsVal := getEmptySQLString(util.ArrToString(labels))
+		labelsVal := util.GetEmptySQLString(util.ArrToString(labels))
 		labelsVal.String = labelSeparatorStart + labelsVal.String + labelSeparatorEnd
 		q = q.Where("'^_' || ar.artifact_labels || '^_' LIKE ?", labelsVal)
 	}
@@ -691,7 +691,7 @@ func (t tagDao) CountAllArtifactsByRepo(
 
 	if len(labels) > 0 {
 		sort.Strings(labels)
-		labelsVal := getEmptySQLString(util.ArrToString(labels))
+		labelsVal := util.GetEmptySQLString(util.ArrToString(labels))
 		labelsVal.String = labelSeparatorStart + labelsVal.String + labelSeparatorEnd
 		q = q.Where("'^_' || ar.artifact_labels || '^_' LIKE ?", labelsVal)
 	}

@@ -376,25 +376,18 @@ func mapToInternalRegistry(ctx context.Context, in *types.Registry) *registryDB 
 		Name:            in.Name,
 		ParentID:        in.ParentID,
 		RootParentID:    in.RootParentID,
-		Description:     getEmptySQLString(in.Description),
+		Description:     util.GetEmptySQLString(in.Description),
 		Type:            in.Type,
 		PackageType:     in.PackageType,
-		UpstreamProxies: getEmptySQLString(util.Int64ArrToString(in.UpstreamProxies)),
-		AllowedPattern:  getEmptySQLString(util.ArrToString(in.AllowedPattern)),
-		BlockedPattern:  getEmptySQLString(util.ArrToString(in.BlockedPattern)),
-		Labels:          getEmptySQLString(util.ArrToString(in.Labels)),
+		UpstreamProxies: util.GetEmptySQLString(util.Int64ArrToString(in.UpstreamProxies)),
+		AllowedPattern:  util.GetEmptySQLString(util.ArrToString(in.AllowedPattern)),
+		BlockedPattern:  util.GetEmptySQLString(util.ArrToString(in.BlockedPattern)),
+		Labels:          util.GetEmptySQLString(util.ArrToString(in.Labels)),
 		CreatedAt:       in.CreatedAt.UnixMilli(),
 		UpdatedAt:       in.UpdatedAt.UnixMilli(),
 		CreatedBy:       in.CreatedBy,
 		UpdatedBy:       in.UpdatedBy,
 	}
-}
-
-func getEmptySQLString(str string) sql.NullString {
-	if commons.IsEmpty(str) {
-		return sql.NullString{String: str, Valid: false}
-	}
-	return sql.NullString{String: str, Valid: true}
 }
 
 func (r registryDao) Delete(ctx context.Context, parentID int64, name string) (err error) {

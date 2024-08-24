@@ -156,11 +156,12 @@ func ValidateIdentifier(identifier string) error {
 }
 
 func ValidateUpstream(config *api.RegistryConfig) error {
-	if !commons.IsEmpty(config.Type) && config.Type == api.RegistryTypeUPSTREAM {
-		upstreamConfig, err := config.AsUpstreamConfig()
-		if err != nil {
-			return err
-		}
+	upstreamConfig, err := config.AsUpstreamConfig()
+	if err != nil {
+		return err
+	}
+	if !commons.IsEmpty(config.Type) && config.Type == api.RegistryTypeUPSTREAM &&
+		*upstreamConfig.Source != api.UpstreamConfigSourceDockerhub {
 		if commons.IsEmpty(upstreamConfig.Url) {
 			return errors.New("URL is required for upstream repository")
 		}

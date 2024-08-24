@@ -48,19 +48,19 @@ func NewUpstreamproxyDao(db *sqlx.DB, registryDao store.RegistryRepository) stor
 
 // upstreamProxyConfigDB holds the record of an upstream_proxy_config in DB.
 type upstreamProxyConfigDB struct {
-	ID               int64  `db:"upstream_proxy_config_id"`
-	RegistryID       int64  `db:"upstream_proxy_config_registry_id"`
-	Source           string `db:"upstream_proxy_config_source"`
-	URL              string `db:"upstream_proxy_config_url"`
-	AuthType         string `db:"upstream_proxy_config_auth_type"`
-	UserName         string `db:"upstream_proxy_config_user_name"`
-	SecretIdentifier string `db:"upstream_proxy_config_secret_identifier"`
-	SecretSpaceID    int    `db:"upstream_proxy_config_secret_space_id"`
-	Token            string `db:"upstream_proxy_config_token"`
-	CreatedAt        int64  `db:"upstream_proxy_config_created_at"`
-	UpdatedAt        int64  `db:"upstream_proxy_config_updated_at"`
-	CreatedBy        int64  `db:"upstream_proxy_config_created_by"`
-	UpdatedBy        int64  `db:"upstream_proxy_config_updated_by"`
+	ID               int64          `db:"upstream_proxy_config_id"`
+	RegistryID       int64          `db:"upstream_proxy_config_registry_id"`
+	Source           string         `db:"upstream_proxy_config_source"`
+	URL              string         `db:"upstream_proxy_config_url"`
+	AuthType         string         `db:"upstream_proxy_config_auth_type"`
+	UserName         string         `db:"upstream_proxy_config_user_name"`
+	SecretIdentifier sql.NullString `db:"upstream_proxy_config_secret_identifier"`
+	SecretSpaceID    sql.NullInt32  `db:"upstream_proxy_config_secret_space_id"`
+	Token            string         `db:"upstream_proxy_config_token"`
+	CreatedAt        int64          `db:"upstream_proxy_config_created_at"`
+	UpdatedAt        int64          `db:"upstream_proxy_config_updated_at"`
+	CreatedBy        int64          `db:"upstream_proxy_config_created_by"`
+	UpdatedBy        int64          `db:"upstream_proxy_config_updated_by"`
 }
 
 type upstreamProxyDB struct {
@@ -75,8 +75,8 @@ type upstreamProxyDB struct {
 	RepoURL          string               `db:"repo_url"`
 	RepoAuthType     string               `db:"repo_auth_type"`
 	UserName         string               `db:"user_name"`
-	SecretIdentifier string               `db:"secret_identifier"`
-	SecretSpaceID    int                  `db:"secret_space_id"`
+	SecretIdentifier sql.NullString       `db:"secret_identifier"`
+	SecretSpaceID    sql.NullInt32        `db:"secret_space_id"`
 	Token            string               `db:"token"`
 	CreatedAt        int64                `db:"created_at"`
 	UpdatedAt        int64                `db:"updated_at"`
@@ -360,8 +360,8 @@ func (r UpstreamproxyDao) mapToInternalUpstreamProxy(
 		URL:              in.URL,
 		AuthType:         in.AuthType,
 		UserName:         in.UserName,
-		SecretIdentifier: in.SecretIdentifier,
-		SecretSpaceID:    in.SecretSpaceID,
+		SecretIdentifier: util.GetEmptySQLString(in.SecretIdentifier),
+		SecretSpaceID:    util.GetEmptySQLInt32(in.SecretSpaceID),
 		Token:            in.Token,
 		CreatedAt:        in.CreatedAt.UnixMilli(),
 		UpdatedAt:        in.UpdatedAt.UnixMilli(),

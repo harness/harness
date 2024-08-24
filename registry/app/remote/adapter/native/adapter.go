@@ -71,7 +71,16 @@ func getPwd(
 ) string {
 	password := ""
 	if api.AuthType(reg.RepoAuthType) == api.AuthTypeUserPassword {
-		secret, err := secretStore.FindByIdentifier(ctx, int64(reg.SecretSpaceID), reg.SecretIdentifier)
+		secretSpaceID := int64(0)
+		if reg.SecretSpaceID.Valid {
+			secretSpaceID = int64(reg.SecretSpaceID.Int32)
+		}
+
+		secretIdentifier := ""
+		if reg.SecretIdentifier.Valid {
+			secretIdentifier = reg.SecretIdentifier.String
+		}
+		secret, err := secretStore.FindByIdentifier(ctx, secretSpaceID, secretIdentifier)
 		if err != nil {
 			log.Error().Msgf("failed to find secret: %v", err)
 		}

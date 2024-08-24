@@ -315,9 +315,13 @@ func CreateUpstreamProxyResponseJSONResponse(upstreamproxy *types.UpstreamProxy)
 	if api.AuthType(upstreamproxy.RepoAuthType) == api.AuthTypeUserPassword {
 		auth := api.UserPassword{}
 		auth.UserName = upstreamproxy.UserName
-		// FIXME: Mask this password.
-		auth.SecretIdentifier = &upstreamproxy.SecretIdentifier
-		auth.SecretSpaceId = &upstreamproxy.SecretSpaceID
+		auth.SecretIdentifier = &upstreamproxy.SecretIdentifier.String
+		auth.SecretSpaceId = nil
+		if upstreamproxy.SecretSpaceID.Valid {
+			// Convert int32 to int and assign to the expected field
+			secretSpaceID := int(upstreamproxy.SecretSpaceID.Int32)
+			auth.SecretSpaceId = &secretSpaceID
+		}
 		_ = configAuth.FromUserPassword(auth)
 	}
 

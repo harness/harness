@@ -286,7 +286,7 @@ func (a ArtifactDao) mapToInternalArtifact(ctx context.Context, in *types.Artifa
 		ID:         in.ID,
 		Name:       in.Name,
 		RegistryID: in.RegistryID,
-		Labels:     getEmptySQLString(util.ArrToString(in.Labels)),
+		Labels:     util.GetEmptySQLString(util.ArrToString(in.Labels)),
 		Enabled:    in.Enabled,
 		CreatedAt:  in.CreatedAt.UnixMilli(),
 		UpdatedAt:  in.UpdatedAt.UnixMilli(),
