@@ -130,7 +130,7 @@ func (s scm) GetSCMRepoDetails(
 		ResolvedCredentials: resolvedCredentials,
 	}
 
-	catFileOutputBytes, err := scmProvider.GetFileContent(ctx, gitspaceConfig, filePath)
+	catFileOutputBytes, err := scmProvider.GetFileContent(ctx, gitspaceConfig, filePath, resolvedCredentials)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read devcontainer file : %w", err)
 	}

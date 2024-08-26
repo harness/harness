@@ -28,6 +28,7 @@ type Provider interface {
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
 		filePath string,
+		credentials *ResolvedCredentials,
 	) ([]byte, error)
 	ListReporisotries(ctx context.Context,
 		filter *RepositoryFilter,

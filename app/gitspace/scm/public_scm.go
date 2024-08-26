@@ -55,6 +55,7 @@ func (s *GenericSCM) ListReporisotries(_ context.Context,
 func (s GenericSCM) GetFileContent(ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	filePath string,
+	_ *ResolvedCredentials,
 ) ([]byte, error) {
 	gitWorkingDirectory := "/tmp/git/"
 	cloneDir := gitWorkingDirectory + uuid.New().String()

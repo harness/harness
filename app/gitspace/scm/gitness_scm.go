@@ -196,6 +196,7 @@ func (s GitnessSCM) ResolveCredentials(
 func (s GitnessSCM) GetFileContent(ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	filePath string,
+	_ *ResolvedCredentials,
 ) ([]byte, error) {
 	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
 	if err != nil {
