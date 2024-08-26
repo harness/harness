@@ -59,6 +59,7 @@ type (
 		Page    int    `json:"page"`
 		Size    int    `json:"size"`
 		Query   string `json:"query"`
+		User    string `json:"user"`
 	}
 
 	BranchFilter struct {
@@ -67,6 +68,7 @@ type (
 		Query      string `json:"query"`
 		Page       int    `json:"page"`
 		Size       int    `json:"size"`
+		RepoURL    string `json:"repo_url"`
 	}
 
 	Repository struct {
