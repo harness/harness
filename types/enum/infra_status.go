@@ -26,11 +26,13 @@ var infraStatuses = []InfraStatus{
 	InfraStatusDestroyed,
 	InfraStatusUnknown,
 	InfraStatusError,
+	InfraStatusStopped,
 }
 
 const (
 	InfraStatusPending     InfraStatus = "pending"
 	InfraStatusProvisioned InfraStatus = "provisioned"
+	InfraStatusStopped     InfraStatus = "stopped"
 	InfraStatusDestroyed   InfraStatus = "destroyed"
 	InfraStatusUnknown     InfraStatus = "unknown"
 	InfraStatusError       InfraStatus = "error"

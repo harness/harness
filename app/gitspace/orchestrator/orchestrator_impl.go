@@ -463,7 +463,8 @@ func (o orchestrator) ResumeStopGitspace(
 			"cannot stop provisioned infrastructure with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
 	}
 
-	if stoppedInfra.Status != enum.InfraStatusDestroyed {
+	if stoppedInfra.Status != enum.InfraStatusDestroyed &&
+		stoppedInfra.Status != enum.InfraStatusStopped {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
 
 		return instanceState, fmt.Errorf(
