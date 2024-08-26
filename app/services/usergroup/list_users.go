@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pullreq
+package usergroup
 
 import (
 	"context"
@@ -20,27 +20,12 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
-// ReviewerList returns reviewer list for the pull request.
-func (c *Controller) ReviewerList(
-	ctx context.Context,
-	session *auth.Session,
-	repoRef string,
-	prNum int64,
-) ([]*types.PullReqReviewer, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
-	if err != nil {
-		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
-	}
-
-	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
-	}
-
-	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
-
-	return reviewers, err
+func (s *searchService) ListUsers(
+	_ context.Context,
+	_ *auth.Session,
+	_ *types.UserGroup,
+) ([]string, error) {
+	return nil, fmt.Errorf("not implemented")
 }

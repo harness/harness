@@ -12,35 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pullreq
+package usergroup
 
 import (
 	"context"
 	"fmt"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-// ReviewerList returns reviewer list for the pull request.
-func (c *Controller) ReviewerList(
+func (c Controller) List(
 	ctx context.Context,
 	session *auth.Session,
-	repoRef string,
-	prNum int64,
-) ([]*types.PullReqReviewer, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
-	if err != nil {
-		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
+	filter *types.ListQueryFilter,
+	spacePath string,
+) ([]*types.UserGroupInfo, error) {
+	if err := apiauth.Check(
+		ctx,
+		c.authorizer,
+		session,
+		&types.Scope{},
+		&types.Resource{
+			Type: enum.ResourceTypeUser,
+		},
+		enum.PermissionUserView,
+	); err != nil {
+		return nil, err
 	}
 
-	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
+	userGroupInfos, err := c.searchSvc.Search(ctx, filter, spacePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
+		return nil, fmt.Errorf("failed to search user groups: %w", err)
 	}
-
-	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
-
-	return reviewers, err
+	return userGroupInfos, nil
 }

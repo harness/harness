@@ -44,6 +44,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/trigger"
 	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/controller/user"
+	"github.com/harness/gitness/app/api/controller/usergroup"
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/handler/account"
 	handleraiagent "github.com/harness/gitness/app/api/handler/aiagent"
@@ -72,6 +73,7 @@ import (
 	handlertrigger "github.com/harness/gitness/app/api/handler/trigger"
 	handlerupload "github.com/harness/gitness/app/api/handler/upload"
 	handleruser "github.com/harness/gitness/app/api/handler/user"
+	handlerUserGroup "github.com/harness/gitness/app/api/handler/usergroup"
 	"github.com/harness/gitness/app/api/handler/users"
 	handlerwebhook "github.com/harness/gitness/app/api/handler/webhook"
 	"github.com/harness/gitness/app/api/middleware/address"
@@ -124,6 +126,7 @@ func NewAPIHandler(
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
+	userGroupCtrl *usergroup.Controller,
 	checkCtrl *check.Controller,
 	sysCtrl *system.Controller,
 	uploadCtrl *upload.Controller,
@@ -164,7 +167,7 @@ func NewAPIHandler(
 
 			setupRoutesV1WithAuth(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl,
 				pipelineCtrl, connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
-				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, uploadCtrl,
+				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, uploadCtrl,
 				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, aiagentCtrl, capabilitiesCtrl)
 		})
 	})
@@ -208,6 +211,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
+	userGroupCtrl *usergroup.Controller,
 	checkCtrl *check.Controller,
 	uploadCtrl *upload.Controller,
 	searchCtrl *keywordsearch.Controller,
@@ -218,7 +222,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	capabilitiesCtrl *capabilities.Controller,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
-	setupSpaces(r, appCtx, spaceCtrl)
+	setupSpaces(r, appCtx, spaceCtrl, userGroupCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
 		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl)
 	setupConnectors(r, connectorCtrl)
@@ -242,6 +246,7 @@ func setupSpaces(
 	r chi.Router,
 	appCtx context.Context,
 	spaceCtrl *space.Controller,
+	userGroupCtrl *usergroup.Controller,
 
 ) {
 	r.Route("/spaces", func(r chi.Router) {
@@ -264,6 +269,7 @@ func setupSpaces(
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
 			r.Get("/pipelines", handlerspace.HandleListPipelines(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
+			r.Get("/usergroups", handlerUserGroup.HandleList(userGroupCtrl))
 			r.Get("/service-accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
 			r.Get("/secrets", handlerspace.HandleListSecrets(spaceCtrl))
 			r.Get("/connectors", handlerspace.HandleListConnectors(spaceCtrl))
@@ -622,6 +628,15 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 				r.Put("/", handlerpullreq.HandleReviewerAdd(pullreqCtrl))
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamReviewerID), func(r chi.Router) {
 					r.Delete("/", handlerpullreq.HandleReviewerDelete(pullreqCtrl))
+				})
+				r.Route("/usergroups", func(r chi.Router) {
+					r.Put("/", handlerpullreq.HandleUserGroupReviewerAdd(pullreqCtrl))
+					r.Route(fmt.Sprintf("/{%s}", request.PathParamUserGroupID), func(r chi.Router) {
+						r.Delete("/", handlerpullreq.HandleUserGroupReviewerDelete(pullreqCtrl))
+					})
+				})
+				r.Route("/combined", func(r chi.Router) {
+					r.Get("/", handlerpullreq.HandleReviewerCombinedList(pullreqCtrl))
 				})
 			})
 			r.Route("/reviews", func(r chi.Router) {

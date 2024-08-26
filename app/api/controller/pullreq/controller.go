@@ -32,6 +32,7 @@ import (
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -45,31 +46,34 @@ import (
 )
 
 type Controller struct {
-	tx                  dbtx.Transactor
-	urlProvider         url.Provider
-	authorizer          authz.Authorizer
-	pullreqStore        store.PullReqStore
-	activityStore       store.PullReqActivityStore
-	codeCommentView     store.CodeCommentView
-	reviewStore         store.PullReqReviewStore
-	reviewerStore       store.PullReqReviewerStore
-	repoStore           store.RepoStore
-	principalStore      store.PrincipalStore
-	principalInfoCache  store.PrincipalInfoCache
-	fileViewStore       store.PullReqFileViewStore
-	membershipStore     store.MembershipStore
-	checkStore          store.CheckStore
-	git                 git.Interface
-	eventReporter       *pullreqevents.Reporter
-	codeCommentMigrator *codecomments.Migrator
-	pullreqService      *pullreq.Service
-	protectionManager   *protection.Manager
-	sseStreamer         sse.Streamer
-	codeOwners          *codeowners.Service
-	locker              *locker.Locker
-	importer            *migrate.PullReq
-	labelSvc            *label.Service
-	instrumentation     instrument.Service
+	tx                     dbtx.Transactor
+	urlProvider            url.Provider
+	authorizer             authz.Authorizer
+	pullreqStore           store.PullReqStore
+	activityStore          store.PullReqActivityStore
+	codeCommentView        store.CodeCommentView
+	reviewStore            store.PullReqReviewStore
+	reviewerStore          store.PullReqReviewerStore
+	userGroupReviewerStore store.UserGroupReviewersStore
+	repoStore              store.RepoStore
+	principalStore         store.PrincipalStore
+	userGroupStore         store.UserGroupStore
+	principalInfoCache     store.PrincipalInfoCache
+	fileViewStore          store.PullReqFileViewStore
+	membershipStore        store.MembershipStore
+	checkStore             store.CheckStore
+	git                    git.Interface
+	eventReporter          *pullreqevents.Reporter
+	codeCommentMigrator    *codecomments.Migrator
+	pullreqService         *pullreq.Service
+	protectionManager      *protection.Manager
+	sseStreamer            sse.Streamer
+	codeOwners             *codeowners.Service
+	locker                 *locker.Locker
+	importer               *migrate.PullReq
+	labelSvc               *label.Service
+	instrumentation        instrument.Service
+	userGroupService       usergroup.SearchService
 }
 
 func NewController(
@@ -83,6 +87,8 @@ func NewController(
 	pullreqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
+	userGroupStore store.UserGroupStore,
+	userGroupReviewerStore store.UserGroupReviewersStore,
 	principalInfoCache store.PrincipalInfoCache,
 	fileViewStore store.PullReqFileViewStore,
 	membershipStore store.MembershipStore,
@@ -98,33 +104,37 @@ func NewController(
 	importer *migrate.PullReq,
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
+	userGroupService usergroup.SearchService,
 ) *Controller {
 	return &Controller{
-		tx:                  tx,
-		urlProvider:         urlProvider,
-		authorizer:          authorizer,
-		pullreqStore:        pullreqStore,
-		activityStore:       pullreqActivityStore,
-		codeCommentView:     codeCommentView,
-		reviewStore:         pullreqReviewStore,
-		reviewerStore:       pullreqReviewerStore,
-		repoStore:           repoStore,
-		principalStore:      principalStore,
-		principalInfoCache:  principalInfoCache,
-		fileViewStore:       fileViewStore,
-		membershipStore:     membershipStore,
-		checkStore:          checkStore,
-		git:                 git,
-		codeCommentMigrator: codeCommentMigrator,
-		eventReporter:       eventReporter,
-		pullreqService:      pullreqService,
-		protectionManager:   protectionManager,
-		sseStreamer:         sseStreamer,
-		codeOwners:          codeowners,
-		locker:              locker,
-		importer:            importer,
-		labelSvc:            labelSvc,
-		instrumentation:     instrumentation,
+		tx:                     tx,
+		urlProvider:            urlProvider,
+		authorizer:             authorizer,
+		pullreqStore:           pullreqStore,
+		activityStore:          pullreqActivityStore,
+		codeCommentView:        codeCommentView,
+		reviewStore:            pullreqReviewStore,
+		reviewerStore:          pullreqReviewerStore,
+		repoStore:              repoStore,
+		principalStore:         principalStore,
+		userGroupStore:         userGroupStore,
+		userGroupReviewerStore: userGroupReviewerStore,
+		principalInfoCache:     principalInfoCache,
+		fileViewStore:          fileViewStore,
+		membershipStore:        membershipStore,
+		checkStore:             checkStore,
+		git:                    git,
+		codeCommentMigrator:    codeCommentMigrator,
+		eventReporter:          eventReporter,
+		pullreqService:         pullreqService,
+		protectionManager:      protectionManager,
+		sseStreamer:            sseStreamer,
+		codeOwners:             codeowners,
+		locker:                 locker,
+		importer:               importer,
+		labelSvc:               labelSvc,
+		instrumentation:        instrumentation,
+		userGroupService:       userGroupService,
 	}
 }
 

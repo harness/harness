@@ -82,7 +82,7 @@ func (c *Controller) ReviewerAdd(
 		var reviewerPrincipal *types.Principal
 		reviewerPrincipal, err = c.principalStore.Find(ctx, in.ReviewerID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to find reviewer principal: %w", err)
 		}
 
 		reviewerInfo = reviewerPrincipal.ToPrincipalInfo()

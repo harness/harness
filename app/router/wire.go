@@ -43,6 +43,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/trigger"
 	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/controller/user"
+	"github.com/harness/gitness/app/api/controller/usergroup"
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth/authn"
@@ -98,6 +99,7 @@ func ProvideRouter(
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
+	userGroupCtrl *usergroup.Controller,
 	checkCtrl *check.Controller,
 	sysCtrl *system.Controller,
 	blobCtrl *upload.Controller,
@@ -126,7 +128,7 @@ func ProvideRouter(
 		appCtx, config,
 		authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
-		githookCtrl, git, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl,
+		githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl,
 		infraProviderCtrl, migrateCtrl, gitspaceCtrl, aiagentCtrl, capabilitiesCtrl)
 	routers[2] = NewAPIRouter(apiHandler)
 

@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/trigger"
 	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/controller/user"
+	usergroup2 "github.com/harness/gitness/app/api/controller/usergroup"
 	webhook2 "github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth/authn"
@@ -301,6 +302,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	codeCommentView := database.ProvideCodeCommentView(db)
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
+	userGroupStore := database.ProvideUserGroupStore(db)
+	userGroupReviewersStore := database.ProvideUserGroupReviewerStore(db, principalInfoCache, userGroupStore)
 	pullReqFileViewStore := database.ProvidePullReqFileViewStore(db)
 	reporter3, err := events5.ProvideReporter(eventsSystem)
 	if err != nil {
@@ -322,7 +325,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	pullReq := migrate.ProvidePullReqImporter(provider, gitInterface, principalStore, repoStore, pullReqStore, pullReqActivityStore, transactor)
-	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, reporter3, migrator, pullreqService, protectionManager, streamer, codeownersService, lockerLocker, pullReq, labelService, instrumentService)
+	searchService := usergroup.ProvideSearchService()
+	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, userGroupStore, userGroupReviewersStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, reporter3, migrator, pullreqService, protectionManager, streamer, codeownersService, lockerLocker, pullReq, labelService, instrumentService, searchService)
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
@@ -350,6 +354,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	githookController := githook.ProvideController(authorizer, principalStore, repoStore, reporter4, reporter, gitInterface, pullReqStore, provider, protectionManager, clientFactory, resourceLimiter, settingsService, preReceiveExtender, updateExtender, postReceiveExtender)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore, authorizer)
+	usergroupController := usergroup2.ProvideController(userGroupStore, spaceStore, authorizer, searchService)
 	v := check2.ProvideCheckSanitizers()
 	checkController := check2.ProvideController(transactor, authorizer, repoStore, checkStore, gitInterface, v)
 	systemController := system.NewController(principalStore, config)
@@ -431,7 +436,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
 	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, tagRepository, manifestRepository, cleanupPolicyRepository, artifactRepository, storageDriver, spaceStore, transactor, authenticator, provider, authorizer, auditService)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler)
-	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, aiagentController, capabilitiesController, provider, openapiService, appRouter)
+	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, aiagentController, capabilitiesController, provider, openapiService, appRouter)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)
 	sshServer := ssh.ProvideServer(config, publickeyService, repoController)

@@ -22,11 +22,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const ReviewerAddedEvent events.EventType = "reviewer-added"
+const (
+	ReviewerAddedEvent     events.EventType = "reviewer-added"
+	UserGroupReviewerAdded events.EventType = "usergroup-reviewer-added"
+)
 
 type ReviewerAddedPayload struct {
 	Base
 	ReviewerID int64 `json:"reviewer_id"`
+}
+
+type UserGroupReviewerAddedPayload struct {
+	Base
+	UserGroupReviewerID int64 `json:"usergroup_reviewer_id"`
 }
 
 func (r *Reporter) ReviewerAdded(
@@ -51,4 +59,29 @@ func (r *Reader) RegisterReviewerAdded(
 	opts ...events.HandlerOption,
 ) error {
 	return events.ReaderRegisterEvent(r.innerReader, ReviewerAddedEvent, fn, opts...)
+}
+
+func (r *Reporter) UserGroupReviewerAdded(
+	ctx context.Context,
+	payload *UserGroupReviewerAddedPayload,
+) {
+	if payload == nil {
+		return
+	}
+
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, UserGroupReviewerAdded, payload)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to send pull request reviewer added event")
+		return
+	}
+
+	log.Ctx(ctx).Debug().Msgf("reported pull request reviewer added event with id '%s'", eventID)
+}
+
+// ToDo: Start using this for sending out notifications
+func (r *Reader) RegisterUserGroupReviewerAdded(
+	fn events.HandlerFunc[*UserGroupReviewerAddedPayload],
+	opts ...events.HandlerOption,
+) error {
+	return events.ReaderRegisterEvent(r.innerReader, UserGroupReviewerAdded, fn, opts...)
 }

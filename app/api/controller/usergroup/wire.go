@@ -15,19 +15,23 @@
 package usergroup
 
 import (
+	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/usergroup"
+	"github.com/harness/gitness/app/store"
+
 	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideUserGroupResolver,
-	ProvideSearchService,
+	ProvideController,
 )
 
-func ProvideUserGroupResolver() Resolver {
-	return NewGitnessResolver()
-}
-
-func ProvideSearchService() SearchService {
-	return NewSearchService()
+func ProvideController(
+	userGroupStore store.UserGroupStore,
+	spaceStore store.SpaceStore,
+	authorizer authz.Authorizer,
+	searchSvc usergroup.SearchService,
+) *Controller {
+	return NewController(userGroupStore, spaceStore, authorizer, searchSvc)
 }

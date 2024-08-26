@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -44,14 +45,19 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 	codeCommentsView store.CodeCommentView,
 	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore,
-	principalStore store.PrincipalStore, principalInfoCache store.PrincipalInfoCache,
-	fileViewStore store.PullReqFileViewStore, membershipStore store.MembershipStore,
+	principalStore store.PrincipalStore,
+	userGroupStore store.UserGroupStore,
+	userGroupReviewerStore store.UserGroupReviewersStore,
+	principalInfoCache store.PrincipalInfoCache,
+	fileViewStore store.PullReqFileViewStore,
+	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
 	rpcClient git.Interface, eventReporter *pullreqevents.Reporter, codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service, ruleManager *protection.Manager, sseStreamer sse.Streamer,
 	codeOwners *codeowners.Service, locker *locker.Locker, importer *migrate.PullReq,
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
+	userGroupService usergroup.SearchService,
 ) *Controller {
 	return NewController(tx,
 		urlProvider,
@@ -63,6 +69,8 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 		pullReqReviewerStore,
 		repoStore,
 		principalStore,
+		userGroupStore,
+		userGroupReviewerStore,
 		principalInfoCache,
 		fileViewStore,
 		membershipStore,
@@ -78,5 +86,6 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 		importer,
 		labelSvc,
 		instrumentation,
+		userGroupService,
 	)
 }

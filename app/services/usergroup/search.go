@@ -15,19 +15,23 @@
 package usergroup
 
 import (
-	"github.com/google/wire"
+	"context"
+	"fmt"
+
+	"github.com/harness/gitness/types"
 )
 
-// WireSet provides a wire set for this package.
-var WireSet = wire.NewSet(
-	ProvideUserGroupResolver,
-	ProvideSearchService,
-)
-
-func ProvideUserGroupResolver() Resolver {
-	return NewGitnessResolver()
+type searchService struct {
 }
 
-func ProvideSearchService() SearchService {
-	return NewSearchService()
+func NewSearchService() SearchService {
+	return &searchService{}
+}
+
+func (s *searchService) Search(
+	_ context.Context,
+	_ *types.ListQueryFilter,
+	_ string,
+) ([]*types.UserGroupInfo, error) {
+	return nil, fmt.Errorf("not implemented")
 }

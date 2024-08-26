@@ -30,6 +30,8 @@ import (
 var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvidePrincipalStore,
+	ProvideUserGroupStore,
+	ProvideUserGroupReviewerStore,
 	ProvidePrincipalInfoView,
 	ProvideSpacePathStore,
 	ProvideSpaceStore,
@@ -91,6 +93,20 @@ func ProvideDatabase(ctx context.Context, config database.Config) (*sqlx.DB, err
 // ProvidePrincipalStore provides a principal store.
 func ProvidePrincipalStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) store.PrincipalStore {
 	return NewPrincipalStore(db, uidTransformation)
+}
+
+// ProvideUserGroupStore provides a principal store.
+func ProvideUserGroupStore(db *sqlx.DB) store.UserGroupStore {
+	return NewUserGroupStore(db)
+}
+
+// ProvideUserGroupReviewerStore provides a usergroup reviewer store.
+func ProvideUserGroupReviewerStore(
+	db *sqlx.DB,
+	pInfoCache store.PrincipalInfoCache,
+	userGroupStore store.UserGroupStore,
+) store.UserGroupReviewersStore {
+	return NewUsergroupReviewerStore(db, pInfoCache, userGroupStore)
 }
 
 // ProvidePrincipalInfoView provides a principal info store.

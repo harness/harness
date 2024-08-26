@@ -439,7 +439,6 @@ type (
 		Create(ctx context.Context, v *types.PullReqReview) error
 	}
 
-	// PullReqReviewerStore defines the pull request reviewer storage.
 	PullReqReviewerStore interface {
 		// Find returns the pull request reviewer or an error if it doesn't exist.
 		Find(ctx context.Context, prID, principalID int64) (*types.PullReqReviewer, error)
@@ -455,6 +454,18 @@ type (
 
 		// List returns all pull request reviewers for the pull request.
 		List(ctx context.Context, prID int64) ([]*types.PullReqReviewer, error)
+	}
+
+	// UserGroupReviewersStore defines the pull request usergroup reviewer storage.
+	UserGroupReviewersStore interface {
+		Create(ctx context.Context, v *types.UserGroupReviewer) error
+		Delete(ctx context.Context, prID, principalID int64) error
+		List(ctx context.Context, prID int64) ([]*types.UserGroupReviewer, error)
+		Find(
+			ctx context.Context,
+			prID,
+			userGroupReviewerID int64,
+		) (*types.UserGroupReviewer, error)
 	}
 
 	// PullReqFileViewStore stores information about what file a user viewed.
@@ -914,8 +925,29 @@ type (
 	}
 
 	UserGroupStore interface {
+		// Find returns a usergroup given an ID.
+		Find(ctx context.Context, id int64) (*types.UserGroup, error)
+
+		// Map returns a map of usergroups given a list of IDs.
+		Map(ctx context.Context, ids []int64) (map[int64]*types.UserGroup, error)
+
+		// FindManyByIdentifiersAndSpaceID returns a list of usergroups
+		FindManyByIdentifiersAndSpaceID(ctx context.Context, identifiers []string, spaceID int64) ([]*types.UserGroup, error)
+
+		// FindManyByIDs returns a list of usergroups searching them via ids
+		FindManyByIDs(ctx context.Context, ids []int64) ([]*types.UserGroup, error)
+
 		// FindByIdentifier returns a types.UserGroup given a space ID and identifier.
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.UserGroup, error)
+
+		// Create creates a new usergroup
+		Create(ctx context.Context, spaceID int64, userGroup *types.UserGroup) error
+
+		CreateOrUpdate(
+			ctx context.Context,
+			spaceID int64,
+			userGroup *types.UserGroup,
+		) error
 	}
 
 	PublicKeyStore interface {

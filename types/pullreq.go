@@ -145,6 +145,29 @@ type PullReqReviewer struct {
 	AddedBy  PrincipalInfo `json:"added_by"`
 }
 
+type UserGroupReviewer struct {
+	PullReqID   int64 `json:"-"`
+	UserGroupID int64 `json:"-"`
+
+	CreatedBy int64 `json:"-"`
+	Created   int64 `json:"created"`
+	Updated   int64 `json:"updated"`
+
+	RepoID int64 `json:"-"`
+
+	AddedBy   PrincipalInfo `json:"added_by"`
+	UserGroup UserGroupInfo `json:"reviewer_group"`
+
+	//	Reviewers Info
+	Reviewers []UserGroupReviewerDecision `json:"reviewers"`
+}
+
+type UserGroupReviewerDecision struct {
+	ReviewDecision enum.PullReqReviewDecision `json:"review_decision"`
+	SHA            string                     `json:"sha"`
+	Reviewer       PrincipalInfo              `json:"reviewer"`
+}
+
 // PullReqFileView represents a file reviewed entry for a given pr and principal.
 // NOTE: keep api lightweight and don't return unnecessary extra data.
 type PullReqFileView struct {

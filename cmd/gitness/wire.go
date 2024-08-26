@@ -19,6 +19,8 @@ package main
 
 import (
 	"context"
+	"github.com/harness/gitness/app/api/controller/system"
+	"github.com/harness/gitness/app/api/controller/usergroup"
 
 	"github.com/harness/gitness/app/api/controller/aiagent"
 	"github.com/harness/gitness/app/api/controller/capabilities"
@@ -42,7 +44,6 @@ import (
 	"github.com/harness/gitness/app/api/controller/service"
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
 	"github.com/harness/gitness/app/api/controller/space"
-	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/controller/template"
 	controllertrigger "github.com/harness/gitness/app/api/controller/trigger"
 	"github.com/harness/gitness/app/api/controller/upload"
@@ -101,7 +102,7 @@ import (
 	reposervice "github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/trigger"
-	"github.com/harness/gitness/app/services/usergroup"
+	usergroupservice "github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -162,6 +163,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		upload.WireSet,
 		service.WireSet,
 		principal.WireSet,
+		usergroupservice.WireSet,
 		system.WireSet,
 		authn.WireSet,
 		authz.WireSet,

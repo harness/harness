@@ -26,6 +26,7 @@ const (
 	PathParamPullReqNumber    = "pullreq_number"
 	PathParamPullReqCommentID = "pullreq_comment_id"
 	PathParamReviewerID       = "pullreq_reviewer_id"
+	PathParamUserGroupID      = "user_group_id"
 )
 
 func GetPullReqNumberFromPath(r *http.Request) (int64, error) {
@@ -34,6 +35,9 @@ func GetPullReqNumberFromPath(r *http.Request) (int64, error) {
 
 func GetReviewerIDFromPath(r *http.Request) (int64, error) {
 	return PathParamAsPositiveInt64(r, PathParamReviewerID)
+}
+func GetUserGroupIDFromPath(r *http.Request) (int64, error) {
+	return PathParamAsPositiveInt64(r, PathParamUserGroupID)
 }
 
 func GetPullReqCommentIDPath(r *http.Request) (int64, error) {
