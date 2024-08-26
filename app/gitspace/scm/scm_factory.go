@@ -29,6 +29,12 @@ type Provider interface {
 		gitspaceConfig types.GitspaceConfig,
 		filePath string,
 	) ([]byte, error)
+	ListReporisotries(ctx context.Context,
+		filter *RepositoryFilter,
+		credentials *ResolvedCredentials) ([]Repository, error)
+	ListBranches(ctx context.Context,
+		filter *BranchFilter,
+		credentials *ResolvedCredentials) ([]Branch, error)
 }
 
 type Factory struct {

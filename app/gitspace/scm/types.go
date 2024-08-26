@@ -53,4 +53,32 @@ type (
 		Credentials *Credentials
 		RepoName    string
 	}
+
+	RepositoryFilter struct {
+		SpaceID int64  `json:"space_id"`
+		Page    int    `json:"page"`
+		Size    int    `json:"size"`
+		Query   string `json:"query"`
+	}
+
+	BranchFilter struct {
+		SpaceID    int64  `json:"space_id"`
+		Repository string `json:"repo"`
+		Query      string `json:"query"`
+		Page       int    `json:"page"`
+		Size       int    `json:"size"`
+	}
+
+	Repository struct {
+		Name          string `json:"name"`
+		DefaultBranch string `json:"default_branch"`
+		// git urls
+		GitURL    string `json:"git_url"`
+		GitSSHURL string `json:"git_ssh_url,omitempty"`
+	}
+
+	Branch struct {
+		Name string `json:"name"`
+		SHA  string `json:"sha"`
+	}
 )

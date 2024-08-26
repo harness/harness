@@ -38,6 +38,20 @@ func NewGenericSCM() *GenericSCM {
 	return &GenericSCM{}
 }
 
+// ListBranches implements Provider.
+func (s *GenericSCM) ListBranches(_ context.Context,
+	_ *BranchFilter,
+	_ *ResolvedCredentials) ([]Branch, error) {
+	return []Branch{}, nil
+}
+
+// ListReporisotries implements Provider.
+func (s *GenericSCM) ListReporisotries(_ context.Context,
+	_ *RepositoryFilter,
+	_ *ResolvedCredentials) ([]Repository, error) {
+	return []Repository{}, nil
+}
+
 func (s GenericSCM) GetFileContent(ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	filePath string,

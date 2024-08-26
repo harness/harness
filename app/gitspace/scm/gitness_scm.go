@@ -31,6 +31,7 @@ import (
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 var _ Provider = (*GitnessSCM)(nil)
@@ -45,6 +46,83 @@ type GitnessSCM struct {
 	tokenStore     store.TokenStore
 	principalStore store.PrincipalStore
 	urlProvider    urlprovider.Provider
+}
+
+// ListBranches implements Provider.
+func (s *GitnessSCM) ListBranches(ctx context.Context,
+	filter *BranchFilter,
+	_ *ResolvedCredentials) ([]Branch, error) {
+	repo, err := s.repoStore.FindByRef(ctx, filter.Repository)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo: %w", err)
+	}
+	rpcOut, err := s.git.ListBranches(ctx, &git.ListBranchesParams{
+		ReadParams:    git.CreateReadParams(repo),
+		IncludeCommit: false,
+		Query:         filter.Query,
+		Sort:          git.BranchSortOptionDate,
+		Order:         git.SortOrderDesc,
+		Page:          int32(filter.Page),
+		PageSize:      int32(filter.Size),
+	})
+	if err != nil {
+		return nil, err
+	}
+	branches := make([]Branch, len(rpcOut.Branches))
+	for i := range rpcOut.Branches {
+		branches[i] = mapBranch(rpcOut.Branches[i])
+	}
+
+	return branches, nil
+}
+
+func mapBranch(b git.Branch) Branch {
+	return Branch{
+		Name: b.Name,
+		SHA:  b.SHA.String(),
+	}
+}
+
+// ListReporisotries implements Provider.
+func (s *GitnessSCM) ListReporisotries(ctx context.Context,
+	filter *RepositoryFilter,
+	_ *ResolvedCredentials) ([]Repository, error) {
+	repos, err := s.repoStore.List(ctx, filter.SpaceID, &types.RepoFilter{
+		Page:  filter.Page,
+		Size:  filter.Size,
+		Query: filter.Query,
+		Sort:  enum.RepoAttrUpdated,
+		Order: enum.OrderDesc,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list child repos: %w", err)
+	}
+	var reposOut []Repository
+	for _, repo := range repos {
+		// backfill URLs
+		repo.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
+		repo.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
+
+		repoOut, err := mapRepository(repo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get repo %q output: %w", repo.Path, err)
+		}
+
+		reposOut = append(reposOut, repoOut)
+	}
+	return reposOut, nil
+}
+
+func mapRepository(repo *types.Repository) (Repository, error) {
+	if repo == nil {
+		return Repository{}, fmt.Errorf("repository is null")
+	}
+	return Repository{
+		Name:          repo.Identifier,
+		DefaultBranch: repo.DefaultBranch,
+		GitURL:        repo.GitURL,
+		GitSSHURL:     repo.GitSSHURL,
+	}, nil
 }
 
 func NewGitnessSCM(repoStore store.RepoStore, git git.Interface,
