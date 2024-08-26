@@ -219,8 +219,7 @@ func GetClientSetupDetails(
 	header3 := "Retag and Push the image"
 	section3step1Header := "Run this Docker command in your terminal to tag the image."
 	section3step1Commands := []string{
-		"docker tag <HOSTNAME>/<REPOSITORY_REFERENCE>/<IMAGE_NAME>" +
-			" <HOSTNAME>/<REPOSITORY_REFERENCE>/<IMAGE_NAME>:<TAG>",
+		"docker tag <IMAGE_NAME>:<TAG> <HOSTNAME>/<REPOSITORY_REFERENCE>/<IMAGE_NAME>:<TAG>",
 	}
 	section3step1Type := artifact.ClientSetupStepTypeStatic
 	section3step2Header := "Run this Docker command in your terminal to push the image."
@@ -247,12 +246,12 @@ func GetClientSetupDetails(
 				Steps:  &section1,
 			},
 			{
-				Header: &header2,
-				Steps:  &section2,
-			},
-			{
 				Header: &header3,
 				Steps:  &section3,
+			},
+			{
+				Header: &header2,
+				Steps:  &section2,
 			},
 		},
 	}
