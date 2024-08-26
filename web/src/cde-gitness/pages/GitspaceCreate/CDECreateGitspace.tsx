@@ -35,7 +35,7 @@ import { SelectInfraProvider } from 'cde-gitness/components/SelectInfraProvider/
 import { OpenapiCreateGitspaceRequest, useCreateGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { GitnessRepoImportForm } from 'cde-gitness/components/GitnessRepoImportForm/GitnessRepoImportForm'
-import { EnumGitspaceCodeRepoType } from 'cde-gitness/constants'
+import { EnumGitspaceCodeRepoType, StandaloneIDEType } from 'cde-gitness/constants'
 import { CDESSHSelect } from 'cde-gitness/components/CDESSHSelect/CDESSHSelect'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
@@ -218,7 +218,7 @@ export const CDECreateGitspace = () => {
               </Container>
               <Container className={css.formOuterContainer}>
                 <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} />
-                <CDESSHSelect />
+                {formik.values.ide === StandaloneIDEType.VSCODE && <CDESSHSelect />}
                 <SelectInfraProvider />
                 <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
                   {getString('cde.createGitspace')}

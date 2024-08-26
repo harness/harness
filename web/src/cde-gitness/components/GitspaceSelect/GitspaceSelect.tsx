@@ -34,6 +34,7 @@ interface GitspaceSelectProps {
   formInputClassName?: string
   loading?: boolean
   buttonClassName?: string
+  withoutCurrentColor?: boolean
 }
 
 export const GitspaceSelect = ({
@@ -46,7 +47,8 @@ export const GitspaceSelect = ({
   formikName,
   tooltipProps,
   buttonClassName,
-  formInputClassName
+  formInputClassName,
+  withoutCurrentColor
 }: GitspaceSelectProps) => {
   const { getString } = useStrings()
   const buttonRef = useRef<HTMLDivElement | null>(null)
@@ -102,6 +104,7 @@ export const GitspaceSelect = ({
               {...iconProp}
               {...addTooltipProps}
               disabled={disabled}
+              withoutCurrentColor={withoutCurrentColor}
             />
           </div>
         )

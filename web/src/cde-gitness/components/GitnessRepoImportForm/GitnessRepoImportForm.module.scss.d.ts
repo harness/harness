@@ -18,4 +18,3 @@
 // This is an auto-generated file
 export declare const noReposContainer: string
 export declare const repoAndBranch: string
-export declare const repoIcon: string

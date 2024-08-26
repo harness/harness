@@ -50,7 +50,7 @@ const RepositoryText = ({
   return (
     <Layout.Horizontal spacing={'medium'} flex={{ justifyContent: 'flex-start', alignItems: 'center' }}>
       {isCDE ? (
-        <Repository className={css.repoIcon} color="none" height={24} width={24} />
+        <Repository color="none" height={24} width={24} />
       ) : (
         <img src={gitnessRepoLogo} height={24} width={24} />
       )}
@@ -271,6 +271,7 @@ export const GitnessRepoImportForm = ({ isCDE }: { isCDE?: boolean }) => {
               )}
             </Menu>
           }
+          withoutCurrentColor
         />
       </Container>
       <Container width={'35%'}>
