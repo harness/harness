@@ -21,9 +21,9 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common"
-	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -95,7 +95,7 @@ func (c *APIController) GetClientSetupDetails(
 
 	return artifact.GetClientSetupDetails200JSONResponse{
 		ClientSetupDetailsResponseJSONResponse: *GetClientSetupDetails(
-			ctx, packageType, regInfo, reg,
+			ctx, packageType, regInfo,
 			string(r.RegistryRef), imageParam, tagParam, c.URLProvider.RegistryURL(),
 		),
 	}, nil
@@ -105,7 +105,6 @@ func GetClientSetupDetails(
 	ctx context.Context,
 	packageType string,
 	_ *RegistryRequestBaseInfo,
-	_ *types.Registry,
 	regRef string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
@@ -292,6 +291,9 @@ func replaceText(
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
 ) {
+	rootSpace, _, _ := paths.DisectRoot(regRef)
+	_, registryName, _ := paths.DisectLeaf(regRef)
+	repoRef := rootSpace + "/" + registryName
 	if username != "" {
 		(*st.Commands)[i] = strings.ReplaceAll((*st.Commands)[i], "<USERNAME>", username)
 	}
@@ -301,7 +303,7 @@ func replaceText(
 	if regRef != "" {
 		(*st.Commands)[i] = strings.ReplaceAll(
 			(*st.Commands)[i],
-			"<REPOSITORY_REFERENCE>", regRef,
+			"<REPOSITORY_REFERENCE>", repoRef,
 		)
 	}
 	if image != nil {
