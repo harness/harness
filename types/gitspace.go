@@ -77,7 +77,8 @@ type GitspaceInstance struct {
 }
 
 type GitspaceFilter struct {
-	QueryFilter ListQueryFilter
-	UserID      string
-	SpaceIDs    []int64
+	QueryFilter    ListQueryFilter
+	UserID         string
+	SpaceIDs       []int64
+	IncludeDeleted bool
 }

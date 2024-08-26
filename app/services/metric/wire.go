@@ -34,17 +34,19 @@ func ProvideCollector(
 	executionStore store.ExecutionStore,
 	scheduler *job.Scheduler,
 	executor *job.Executor,
+	gitspaceConfigStore store.GitspaceConfigStore,
 ) (*Collector, error) {
 	job := &Collector{
-		hostname:       config.InstanceID,
-		enabled:        config.Metric.Enabled,
-		endpoint:       config.Metric.Endpoint,
-		token:          config.Metric.Token,
-		userStore:      userStore,
-		repoStore:      repoStore,
-		pipelineStore:  pipelineStore,
-		executionStore: executionStore,
-		scheduler:      scheduler,
+		hostname:            config.InstanceID,
+		enabled:             config.Metric.Enabled,
+		endpoint:            config.Metric.Endpoint,
+		token:               config.Metric.Token,
+		userStore:           userStore,
+		repoStore:           repoStore,
+		pipelineStore:       pipelineStore,
+		executionStore:      executionStore,
+		scheduler:           scheduler,
+		gitspaceConfigStore: gitspaceConfigStore,
 	}
 
 	err := executor.Register(jobType, job)

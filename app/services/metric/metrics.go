@@ -40,18 +40,20 @@ type metricData struct {
 	Repos      int64  `json:"repo_count"`
 	Pipelines  int64  `json:"pipeline_count"`
 	Executions int64  `json:"execution_count"`
+	Gitspaces  int64  `json:"gitspace_count"`
 }
 
 type Collector struct {
-	hostname       string
-	enabled        bool
-	endpoint       string
-	token          string
-	userStore      store.PrincipalStore
-	repoStore      store.RepoStore
-	pipelineStore  store.PipelineStore
-	executionStore store.ExecutionStore
-	scheduler      *job.Scheduler
+	hostname            string
+	enabled             bool
+	endpoint            string
+	token               string
+	userStore           store.PrincipalStore
+	repoStore           store.RepoStore
+	pipelineStore       store.PipelineStore
+	executionStore      store.ExecutionStore
+	scheduler           *job.Scheduler
+	gitspaceConfigStore store.GitspaceConfigStore
 }
 
 func (c *Collector) Register(ctx context.Context) error {
@@ -107,6 +109,12 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 		return "", fmt.Errorf("failed to get executions total count: %w", err)
 	}
 
+	// total gitspaces (configs) in the system
+	totalGitspaces, err := c.gitspaceConfigStore.Count(ctx, &types.GitspaceFilter{IncludeDeleted: true})
+	if err != nil {
+		return "", fmt.Errorf("failed to get gitspace total count: %w", err)
+	}
+
 	data := metricData{
 		Hostname:   c.hostname,
 		Installer:  users[0].Email,
@@ -116,6 +124,7 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 		Repos:      totalRepos,
 		Pipelines:  totalPipelines,
 		Executions: totalExecutions,
+		Gitspaces:  totalGitspaces,
 	}
 
 	buf := new(bytes.Buffer)

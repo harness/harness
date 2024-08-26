@@ -100,10 +100,18 @@ func (s gitspaceConfigStore) Count(ctx context.Context, filter *types.GitspaceFi
 	db := dbtx.GetAccessor(ctx, s.db)
 	countStmt := database.Builder.
 		Select("COUNT(*)").
-		From(gitspaceConfigsTable).
-		Where(squirrel.Eq{"gconf_is_deleted": false}).
-		Where(squirrel.Eq{"gconf_user_uid": filter.UserID}).
-		Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
+		From(gitspaceConfigsTable)
+
+	if !filter.IncludeDeleted {
+		countStmt = countStmt.Where(squirrel.Eq{"gconf_is_deleted": false})
+	}
+	if filter.UserID != "" {
+		countStmt = countStmt.Where(squirrel.Eq{"gconf_user_uid": filter.UserID})
+	}
+	if filter.SpaceIDs != nil {
+		countStmt = countStmt.Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
+	}
+
 	sql, args, err := countStmt.ToSql()
 	if err != nil {
 		return 0, errors.Wrap(err, "Failed to convert squirrel builder to sql")
