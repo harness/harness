@@ -16,7 +16,6 @@ package request
 
 import (
 	"net/http"
-	"net/url"
 )
 
 const (
@@ -30,13 +29,7 @@ const (
 )
 
 func GetPipelineIdentifierFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamPipelineIdentifier)
-	if err != nil {
-		return "", err
-	}
-
-	// paths are unescaped
-	return url.PathUnescape(rawRef)
+	return PathParamOrError(r, PathParamPipelineIdentifier)
 }
 
 func GetBranchFromQuery(r *http.Request) string {
@@ -61,11 +54,5 @@ func GetLatestFromPath(r *http.Request) bool {
 }
 
 func GetTriggerIdentifierFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamTriggerIdentifier)
-	if err != nil {
-		return "", err
-	}
-
-	// paths are unescaped
-	return url.PathUnescape(rawRef)
+	return PathParamOrError(r, PathParamTriggerIdentifier)
 }

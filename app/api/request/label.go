@@ -27,11 +27,11 @@ const (
 )
 
 func GetLabelKeyFromPath(r *http.Request) (string, error) {
-	return EncodedPathParamOrError(r, PathParamLabelKey)
+	return PathParamOrError(r, PathParamLabelKey)
 }
 
 func GetLabelValueFromPath(r *http.Request) (string, error) {
-	return EncodedPathParamOrError(r, PathParamLabelValue)
+	return PathParamOrError(r, PathParamLabelValue)
 }
 
 func GetLabelIDFromPath(r *http.Request) (int64, error) {

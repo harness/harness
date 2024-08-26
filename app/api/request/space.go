@@ -16,7 +16,6 @@ package request
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -27,13 +26,7 @@ const (
 )
 
 func GetSpaceRefFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamSpaceRef)
-	if err != nil {
-		return "", err
-	}
-
-	// paths are unescaped and lower
-	return url.PathUnescape(rawRef)
+	return PathParamOrError(r, PathParamSpaceRef)
 }
 
 // ParseSortSpace extracts the space sort parameter from the url.

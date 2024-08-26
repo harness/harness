@@ -16,7 +16,6 @@ package request
 
 import (
 	"net/http"
-	"net/url"
 )
 
 const (
@@ -24,11 +23,5 @@ const (
 )
 
 func GetConnectorRefFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamConnectorRef)
-	if err != nil {
-		return "", err
-	}
-
-	// paths are unescaped
-	return url.PathUnescape(rawRef)
+	return PathParamOrError(r, PathParamConnectorRef)
 }

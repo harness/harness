@@ -16,7 +16,6 @@ package request
 
 import (
 	"net/http"
-	"net/url"
 )
 
 const (
@@ -25,20 +24,9 @@ const (
 )
 
 func GetTemplateRefFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamTemplateRef)
-	if err != nil {
-		return "", err
-	}
-
-	// paths are unescaped
-	return url.PathUnescape(rawRef)
+	return PathParamOrError(r, PathParamTemplateRef)
 }
 
 func GetTemplateTypeFromPath(r *http.Request) (string, error) {
-	templateType, err := PathParamOrError(r, PathParamTemplateType)
-	if err != nil {
-		return "", err
-	}
-
-	return templateType, nil
+	return PathParamOrError(r, PathParamTemplateType)
 }

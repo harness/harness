@@ -142,7 +142,7 @@ func NewAPIHandler(
 	r.Use(middleware.Recoverer)
 
 	// configure logging middleware.
-	r.Use(hlog.URLHandler("http.url"))
+	r.Use(logging.URLHandler("http.url"))
 	r.Use(hlog.MethodHandler("http.method"))
 	r.Use(logging.HLogRequestIDHandler())
 	r.Use(logging.HLogAccessLogHandler())

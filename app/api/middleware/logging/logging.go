@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/logging"
 
 	"github.com/rs/xid"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -73,4 +74,19 @@ func HLogAccessLogHandler() func(http.Handler) http.Handler {
 				Msg("http request completed.")
 		},
 	)
+}
+
+func URLHandler(fieldKey string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log := zerolog.Ctx(r.Context())
+			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
+				if r.URL.RawPath != "" {
+					return c.Str(fieldKey, r.URL.RawPath+"?"+r.URL.RawQuery)
+				}
+				return c.Str(fieldKey, r.URL.Path+"?"+r.URL.RawQuery)
+			})
+			next.ServeHTTP(w, r)
+		})
+	}
 }

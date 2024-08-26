@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	EncodedPathSeparator = "%252F"
+	EncodedPathSeparator = "%2F"
 )
 
 // GitPathBefore wraps an http.HandlerFunc in a layer that encodes a path coming
@@ -69,7 +69,7 @@ func TerminatedPathBefore(prefixes []string, next http.Handler) http.Handler {
 
 // pathTerminatedWithMarker function encodes a path followed by a custom marker and returns a request with an
 // updated URL.Path.
-// A non-empty prefix can be provided to encode encode only after the prefix.
+// A non-empty prefix can be provided to encode only after the prefix.
 // It allows our Rest API to handle paths of the form "/spaces/space1/space2/+/authToken"
 //
 // Examples:
@@ -77,12 +77,21 @@ func TerminatedPathBefore(prefixes []string, next http.Handler) http.Handler {
 // Prefix: "" Path: "/space1/.gitness.git" => "/space1%2F.gitness"
 // Prefix: "/spaces" Path: "/spaces/space1/space2/+/authToken" => "/spaces/space1%2Fspace2/authToken".
 func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, markerReplacement string) (bool, error) {
+	// r.URL.Path contains URL-decoded URI path. r.URL.RawPath contains raw URI path. But, if the URI don't contain
+	// any character that needs encoding, the r.URL.RawPath is empty (otherwise it would be equal to r.URL.Path).
+
+	// We work with r.URL.RawPath it is exist, or with r.URL.Path if the r.URL.RawPath is empty.
+	urlPath := r.URL.Path
+	if r.URL.RawPath != "" {
+		urlPath = r.URL.RawPath
+	}
+
 	// In case path doesn't start with prefix - nothing to encode
-	if len(r.URL.Path) < len(prefix) || r.URL.Path[0:len(prefix)] != prefix {
+	if len(urlPath) < len(prefix) || urlPath[0:len(prefix)] != prefix {
 		return false, nil
 	}
 
-	originalSubPath := r.URL.Path[len(prefix):]
+	originalSubPath := urlPath[len(prefix):]
 	path, found := cutOutTerminatedPath(originalSubPath, marker)
 	if !found {
 		// If we don't find a marker - nothing to encode
@@ -90,7 +99,6 @@ func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, mar
 	}
 
 	// if marker was found - convert to escaped version (skip first character in case path starts with '/').
-	// Since replacePrefix unescapes the strings, we have to double escape.
 	escapedPath := path[0:1] + strings.ReplaceAll(path[1:], types.PathSeparator, EncodedPathSeparator)
 
 	prefixWithPath := prefix + path + marker

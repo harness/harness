@@ -16,7 +16,6 @@ package request
 
 import (
 	"net/http"
-	"net/url"
 )
 
 const (
@@ -24,11 +23,5 @@ const (
 )
 
 func GetGitspaceRefFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamGitspaceIdentifier)
-	if err != nil {
-		return "", err
-	}
-
-	// paths are unescaped
-	return url.PathUnescape(rawRef)
+	return PathParamOrError(r, PathParamGitspaceIdentifier)
 }

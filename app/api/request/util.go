@@ -65,36 +65,21 @@ func GetHeader(r *http.Request, headerName string) (string, bool) {
 // PathParamOrError tries to retrieve the parameter from the request and
 // returns the parameter if it exists and is not empty, otherwise returns an error.
 func PathParamOrError(r *http.Request, paramName string) (string, error) {
-	val, ok := PathParam(r, paramName)
-	if !ok {
+	val, err := PathParam(r, paramName)
+	if err != nil {
+		return "", err
+	}
+	if val == "" {
 		return "", usererror.BadRequestf("Parameter '%s' not found in request path.", paramName)
 	}
 
 	return val, nil
 }
 
-// EncodedPathParamOrError tries to retrieve the parameter from the request and
-// returns the parameter if it exists and is not empty, otherwise returns an error,
-// then it tries to URL decode parameter value,
-// and returns decoded value, or an error on decoding failure.
-func EncodedPathParamOrError(r *http.Request, paramName string) (string, error) {
-	val, err := PathParamOrError(r, paramName)
-	if err != nil {
-		return "", err
-	}
-
-	decoded, err := url.PathUnescape(val)
-	if err != nil {
-		return "", usererror.BadRequestf("Value %s for param %s has incorrect encoding", val, paramName)
-	}
-
-	return decoded, nil
-}
-
 // PathParamOrEmpty retrieves the path parameter or returns an empty string otherwise.
 func PathParamOrEmpty(r *http.Request, paramName string) string {
-	val, ok := PathParam(r, paramName)
-	if !ok {
+	val, err := PathParam(r, paramName)
+	if err != nil {
 		return ""
 	}
 
@@ -102,13 +87,18 @@ func PathParamOrEmpty(r *http.Request, paramName string) string {
 }
 
 // PathParam retrieves the path parameter or returns false if it exists.
-func PathParam(r *http.Request, paramName string) (string, bool) {
+func PathParam(r *http.Request, paramName string) (string, error) {
 	val := chi.URLParam(r, paramName)
 	if val == "" {
-		return "", false
+		return "", nil
 	}
 
-	return val, true
+	val, err := url.PathUnescape(val)
+	if err != nil {
+		return "", usererror.BadRequestf("Failed to decode path parameter '%s'.", paramName)
+	}
+
+	return val, nil
 }
 
 // QueryParam returns the parameter if it exists.

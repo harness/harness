@@ -41,31 +41,23 @@ func ReplacePrefix(r *http.Request, oldPrefix string, newPrefix string) error {
 	 * http.StripPrefix initially changed the path only, but that was updated because of official recommendations:
 	 * 		https://github.com/golang/go/issues/18952
 	 */
-	unOldPrefix, err := url.PathUnescape(oldPrefix)
-	if err != nil {
-		return fmt.Errorf("failed to unescape old prefix '%s'", oldPrefix)
-	}
-	unNewPrefix, err := url.PathUnescape(newPrefix)
-	if err != nil {
-		return fmt.Errorf("failed to unescape new prefix '%s'", newPrefix)
-	}
 
-	unl := len(unOldPrefix)
-	if len(r.URL.Path) < unl || r.URL.Path[0:unl] != unOldPrefix {
-		return fmt.Errorf("path '%s' doesn't contain prefix '%s'", r.URL.Path, unOldPrefix)
-	}
+	l := len(oldPrefix)
 
-	// only change RawPath if it exists
 	if r.URL.RawPath != "" {
-		l := len(oldPrefix)
 		if len(r.URL.RawPath) < l || r.URL.RawPath[0:l] != oldPrefix {
 			return fmt.Errorf("raw path '%s' doesn't contain prefix '%s'", r.URL.RawPath, oldPrefix)
 		}
 
 		r.URL.RawPath = newPrefix + r.URL.RawPath[l:]
-	}
+		r.URL.Path = url.PathEscape(r.URL.RawPath)
+	} else {
+		if len(r.URL.Path) < l || r.URL.Path[0:l] != oldPrefix {
+			return fmt.Errorf("path '%s' doesn't contain prefix '%s'", r.URL.Path, oldPrefix)
+		}
 
-	r.URL.Path = unNewPrefix + r.URL.Path[unl:]
+		r.URL.Path = newPrefix + r.URL.Path[l:]
+	}
 
 	return nil
 }

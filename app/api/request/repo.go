@@ -16,7 +16,6 @@ package request
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -28,13 +27,7 @@ const (
 )
 
 func GetRepoRefFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamRepoRef)
-	if err != nil {
-		return "", err
-	}
-
-	// paths are unescaped
-	return url.PathUnescape(rawRef)
+	return PathParamOrError(r, PathParamRepoRef)
 }
 
 // ParseSortRepo extracts the repo sort parameter from the url.

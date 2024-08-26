@@ -16,7 +16,6 @@ package request
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/types"
@@ -28,13 +27,7 @@ const (
 )
 
 func GetPublicKeyIdentifierFromPath(r *http.Request) (string, error) {
-	identifier, err := PathParamOrError(r, PathParamPublicKeyIdentifier)
-	if err != nil {
-		return "", err
-	}
-
-	// paths are unescaped
-	return url.PathUnescape(identifier)
+	return PathParamOrError(r, PathParamPublicKeyIdentifier)
 }
 
 // ParseListPublicKeyQueryFilterFromRequest parses query filter for public keys from the url.
