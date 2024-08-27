@@ -96,7 +96,7 @@ func (s *Service) Save(
 
 	err = s.tx.WithTx(ctx, func(ctx context.Context) error {
 		label, err = s.labelStore.FindByID(ctx, in.Label.ID)
-		if err != nil {
+		if err != nil { //nolint:nestif
 			if !errors.Is(err, store.ErrResourceNotFound) {
 				return err
 			}
@@ -105,6 +105,10 @@ func (s *Service) Save(
 				return err
 			}
 		} else {
+			if err := checkLabelInScope(spaceID, repoID, label); err != nil {
+				return err
+			}
+
 			label, err = s.update(ctx, principalID, label, &types.UpdateLabelInput{
 				Key:         &in.Label.Key,
 				Type:        &in.Label.Type,
@@ -337,4 +341,16 @@ func applyChanges(principalID int64, label *types.Label, in *types.UpdateLabelIn
 	}
 
 	return label, hasChanges
+}
+
+func checkLabelInScope(
+	spaceID, repoID *int64,
+	label *types.Label,
+) error {
+	if (repoID != nil && (label.RepoID == nil || *label.RepoID != *repoID)) ||
+		(spaceID != nil && (label.SpaceID == nil || *label.SpaceID != *spaceID)) {
+		return errors.InvalidArgument("label is not defined in requested scope")
+	}
+
+	return nil
 }

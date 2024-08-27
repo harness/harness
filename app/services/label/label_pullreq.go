@@ -52,12 +52,8 @@ func (s *Service) AssignToPullReq(
 		return nil, fmt.Errorf("failed to find label by id: %w", err)
 	}
 
-	if err := s.checkLabelIsInSpace(ctx, repoParentID, label); err != nil {
+	if err := s.checkPullreqLabelInScope(ctx, repoParentID, repoID, label); err != nil {
 		return nil, err
-	}
-	if label.RepoID != nil && *label.RepoID != repoID {
-		return nil,
-			errors.InvalidArgument("label %d is not defined in current repo", label.ID)
 	}
 
 	oldPullreqLabel, err := s.pullReqLabelAssignmentStore.FindByLabelID(ctx, pullreqID, label.ID)
@@ -149,23 +145,6 @@ func (s *Service) AssignToPullReq(
 	}, nil
 }
 
-func (s *Service) checkLabelIsInSpace(
-	ctx context.Context,
-	repoParentID int64,
-	label *types.Label,
-) error {
-	if label.SpaceID != nil {
-		spaceIDs, err := s.spaceStore.GetAncestorIDs(ctx, repoParentID)
-		if err != nil {
-			return fmt.Errorf("failed to get parent space ids: %w", err)
-		}
-		if ok := slices.Contains(spaceIDs, *label.SpaceID); !ok {
-			return errors.NotFound("label %d is not defined in current space tree path", label.ID)
-		}
-	}
-	return nil
-}
-
 func (s *Service) getOrDefineValue(
 	ctx context.Context,
 	principalID int64,
@@ -208,27 +187,13 @@ func (s *Service) UnassignFromPullReq(
 		return nil, nil, fmt.Errorf("failed to find label by id: %w", err)
 	}
 
-	if err := s.checkLabelIsInSpace(ctx, repoParentID, label); err != nil {
+	if err := s.checkPullreqLabelInScope(ctx, repoParentID, repoID, label); err != nil {
 		return nil, nil, err
 	}
 
 	value, err := s.pullReqLabelAssignmentStore.FindValueByLabelID(ctx, labelID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return nil, nil, fmt.Errorf("failed to find label value: %w", err)
-	}
-
-	if label.RepoID != nil && *label.RepoID != repoID {
-		return nil, nil, errors.InvalidArgument(
-			"label %d is not defined in current repo", label.ID)
-	} else if label.SpaceID != nil {
-		spaceIDs, err := s.spaceStore.GetAncestorIDs(ctx, repoParentID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to get parent space ids: %w", err)
-		}
-		if ok := slices.Contains(spaceIDs, *label.SpaceID); !ok {
-			return nil, nil, errors.NotFound(
-				"label %d is not defined in current space tree path", label.ID)
-		}
 	}
 
 	return label, value, s.pullReqLabelAssignmentStore.Unassign(ctx, pullreqID, labelID)
@@ -407,4 +372,26 @@ func newPullReqLabel(
 		CreatedBy: principalID,
 		UpdatedBy: principalID,
 	}
+}
+
+func (s *Service) checkPullreqLabelInScope(
+	ctx context.Context,
+	repoParentID, repoID int64,
+	label *types.Label,
+) error {
+	if label.RepoID != nil && *label.RepoID != repoID {
+		return errors.InvalidArgument("label %d is not defined in current repo", label.ID)
+	}
+
+	if label.SpaceID != nil {
+		spaceIDs, err := s.spaceStore.GetAncestorIDs(ctx, repoParentID)
+		if err != nil {
+			return fmt.Errorf("failed to get parent space ids: %w", err)
+		}
+		if ok := slices.Contains(spaceIDs, *label.SpaceID); !ok {
+			return errors.InvalidArgument("label %d is not defined in current space tree path", label.ID)
+		}
+	}
+
+	return nil
 }

@@ -31,7 +31,6 @@ func (c *Controller) DefineLabelValue(
 	key string,
 	in *types.DefineValueInput,
 ) (*types.LabelValue, error) {
-	// TODO: permission check should be based on static vs dynamic label
 	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)

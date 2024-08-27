@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -32,7 +31,7 @@ func (c *Controller) DefineLabelValue(
 	key string,
 	in *types.DefineValueInput,
 ) (*types.LabelValue, error) {
-	repo, err := GetRepo(ctx, c.repoStore, repoRef, []enum.RepoState{enum.RepoStateActive})
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
@@ -44,16 +43,6 @@ func (c *Controller) DefineLabelValue(
 	label, err := c.labelSvc.Find(ctx, nil, &repo.ID, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo label: %w", err)
-	}
-
-	permission := enum.PermissionRepoEdit
-	if label.Type == enum.LabelTypeDynamic {
-		permission = enum.PermissionRepoReview
-	}
-
-	if err = apiauth.CheckRepo(
-		ctx, c.authorizer, session, repo, permission); err != nil {
-		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
 	value, err := c.labelSvc.DefineValue(ctx, session.Principal.ID, label.ID, in)
