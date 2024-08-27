@@ -61,7 +61,7 @@ import deleteIcon from 'cde-gitness/assests/delete.svg?url'
 import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
-import { useGetToken } from 'services/cde'
+import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import css from './ListGitspaces.module.scss'
 
 enum CodeRepoType {
@@ -358,21 +358,7 @@ const ActionMenu = ({
   const topBorder = state === GitspaceStatus.RUNNING && !actionLoading ? { top: true } : {}
   const disabledActionButtons = [GitspaceStatus.STARTING, GitspaceStatus.STOPPING].includes(state as GitspaceStatus)
 
-  const { data: tokenData, refetch } = useGetToken({
-    accountIdentifier: '',
-    projectIdentifier: '',
-    orgIdentifier: '',
-    gitspace_identifier: '',
-    lazy: true
-  })
-
-  const [selectedRowUrl, setSelectedRowUrl] = useState<string | undefined>('')
-
-  useEffect(() => {
-    if (tokenData) {
-      window.open(`${selectedRowUrl}&token=${tokenData?.gitspace_token}`, '_blank')
-    }
-  }, [tokenData])
+  const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
 
   return (
     <Container
@@ -398,7 +384,7 @@ const ActionMenu = ({
                   window.open(url || '', '_blank')
                 } else {
                   setSelectedRowUrl(url || '')
-                  refetch({
+                  refetchToken({
                     pathParams: {
                       accountIdentifier,
                       projectIdentifier,
@@ -735,21 +721,7 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
         }
       ]
 
-  const { data: tokenData, refetch } = useGetToken({
-    accountIdentifier: '',
-    projectIdentifier: '',
-    orgIdentifier: '',
-    gitspace_identifier: '',
-    lazy: true
-  })
-
-  const [selectedRowUrl, setSelectedRowUrl] = useState<string | undefined>('')
-
-  useEffect(() => {
-    if (tokenData) {
-      window.open(`${selectedRowUrl}&token=${tokenData?.gitspace_token}`, '_blank')
-    }
-  }, [tokenData])
+  const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
 
   return (
     <Container>
@@ -771,7 +743,7 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
                   window.open(row?.instance?.url || '', '_blank')
                 } else {
                   setSelectedRowUrl(row.instance?.url || '')
-                  refetch({
+                  refetchToken({
                     pathParams: {
                       accountIdentifier,
                       projectIdentifier,

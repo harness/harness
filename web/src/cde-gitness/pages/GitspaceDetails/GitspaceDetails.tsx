@@ -55,7 +55,7 @@ import { useGitspaceEvents } from 'cde-gitness/hooks/useGitspaceEvents'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useGitspacesLogs } from 'cde-gitness/hooks/useGitspaceLogs'
-import { useGetToken } from 'services/cde'
+import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
 import { useGetLogStream } from '../../hooks/useGetLogStream'
 import css from './GitspaceDetails.module.scss'
@@ -195,21 +195,7 @@ const GitspaceDetails = () => {
 
   const [accountIdentifier, orgIdentifier, projectIdentifier] = data?.space_path?.split('/') || []
 
-  const { data: tokenData, refetch: refetchToken } = useGetToken({
-    accountIdentifier: '',
-    projectIdentifier: '',
-    orgIdentifier: '',
-    gitspace_identifier: '',
-    lazy: true
-  })
-
-  const [selectedRowUrl, setSelectedRowUrl] = useState<string | undefined>('')
-
-  useEffect(() => {
-    if (tokenData) {
-      window.open(`${selectedRowUrl}&token=${tokenData?.gitspace_token}`, '_blank')
-    }
-  }, [tokenData])
+  const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
 
   return (
     <>
