@@ -20,9 +20,15 @@ fi
 # Changing ownership of everything inside user home to the newly created user
 chown -R $username:$username $homeDir
 echo "Changing ownership of dir $homeDir to $username."
+chmod 755 $homeDir
 
-if $accessType = "ssh_key"; then
+if [ "ssh_key" = "$accessType" ] ; then
+    echo "Add ssh key in $homeDir/.ssh/authorized_keys"
+    mkdir -p $homeDir/.ssh
+    chmod 700 $homeDir/.ssh
     echo $accessKey > $homeDir/.ssh/authorized_keys
+    chmod 600 $homeDir/.ssh/authorized_keys
+    chown -R $username:$username $homeDir/.ssh
 else
     echo "$username:$accessKey" | chpasswd
 fi

@@ -14,6 +14,7 @@ accessType={{ .AccessType }}
 
 # Configure SSH to allow this user
 config_file='/etc/ssh/sshd_config'
+
 grep -q "^AllowUsers" $config_file
 if [ $? -eq 0 ]; then
     # If AllowUsers exists, add the user to it
@@ -23,12 +24,17 @@ else
     echo "AllowUsers $username" >> $config_file
 fi
 
-if $accessType = "ssh_key"; then
+echo "Access type $accessType"
+
+if [ "ssh_key" = "$accessType" ] ; then
 # Ensure password authentication is disabled
 sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' $config_file
 if ! grep -q "^PasswordAuthentication no" $config_file; then
     echo "PasswordAuthentication no" >> $config_file
 fi
+sed -i 's/^UsePAM yes/UsePAM no/' $config_file
+echo "AuthorizedKeysFile	.ssh/authorized_keys" >> $config_file
+echo "PubkeyAuthentication yes" >> $config_file
 else
 # Ensure password authentication is enabled
 sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' $config_file
