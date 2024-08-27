@@ -27,6 +27,8 @@ import type { OpenapiCreateGitspaceRequest } from 'cde-gitness/services'
 import { BranchInput } from 'cde-gitness/components/BranchInput/BranchInput'
 import { useRepoLookupForGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
+import type { RepoQueryParams } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
+import { useQueryParams } from 'hooks/useQueryParams'
 import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from './CDEAnyGitImport.utils'
 import css from './CDEAnyGitImport.module.scss'
 
@@ -37,6 +39,7 @@ enum RepoCheckStatus {
 
 export const CDEAnyGitImport = () => {
   const { getString } = useStrings()
+  const repoQueryParams = useQueryParams<RepoQueryParams>()
   const { setValues, setFieldError, values } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
 
@@ -54,8 +57,14 @@ export const CDEAnyGitImport = () => {
     }
   }, [values?.code_repo_type])
 
+  useEffect(() => {
+    if (values.code_repo_url === repoQueryParams.codeRepoURL && repoQueryParams.codeRepoURL) {
+      onChange(repoQueryParams.codeRepoURL as string, Boolean(repoQueryParams.branch))
+    }
+  }, [values.code_repo_url, repoQueryParams.codeRepoURL])
+
   const onChange = useCallback(
-    debounce(async (url: string) => {
+    debounce(async (url: string, skipBranchUpdate?: boolean) => {
       let errorMessage = ''
       try {
         if (isValidUrl(url)) {
@@ -81,11 +90,12 @@ export const CDEAnyGitImport = () => {
               setFieldError('code_repo_url', errorMessage)
             }, 500)
           } else {
+            const branchValue = skipBranchUpdate ? {} : { branch: response.branch }
             setValues((prvValues: any) => {
               return {
                 ...prvValues,
                 code_repo_url: response.url,
-                branch: response.branch,
+                ...branchValue,
                 identifier: getRepoIdFromURL(response.url),
                 name: getRepoNameFromURL(response.url),
                 code_repo_type: values?.code_repo_type

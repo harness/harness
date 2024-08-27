@@ -31,6 +31,8 @@ import noRepo from 'cde-gitness/assests/noRepo.svg?url'
 import { RepoCreationType } from 'utils/GitUtils'
 import gitnessRepoLogo from 'cde-gitness/assests/gitness.svg?url'
 import { EnumGitspaceCodeRepoType } from 'cde-gitness/constants'
+import { useQueryParams } from 'hooks/useQueryParams'
+import type { RepoQueryParams } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import { GitspaceSelect } from '../GitspaceSelect/GitspaceSelect'
 import css from './GitnessRepoImportForm.module.scss'
 
@@ -140,6 +142,17 @@ export const GitnessRepoImportForm = ({ isCDE }: { isCDE?: boolean }) => {
 
   const repoListOptions = repositories || []
   const hideInitialMenu = Boolean(repoSearch) || Boolean(repositories)
+
+  const repoQueryParams = useQueryParams<RepoQueryParams>()
+
+  useEffect(() => {
+    if (isCDE) {
+      const repoData = repoListOptions?.find(repo => repo.git_url === repoQueryParams.codeRepoURL)
+      if (!repoQueryParams.branch && repoData) {
+        formik.setFieldValue('branch', repoData?.default_branch)
+      }
+    }
+  }, [repoListOptions, isCDE])
 
   const formik = useFormikContext<any>()
 

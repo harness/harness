@@ -38,6 +38,7 @@ import { GitnessRepoImportForm } from 'cde-gitness/components/GitnessRepoImportF
 import { EnumGitspaceCodeRepoType, StandaloneIDEType } from 'cde-gitness/constants'
 import { CDESSHSelect } from 'cde-gitness/components/CDESSHSelect/CDESSHSelect'
 import { useQueryParams } from 'hooks/useQueryParams'
+import { getRepoIdFromURL, getRepoNameFromURL } from 'cde-gitness/components/CDEAnyGitImport/CDEAnyGitImport.utils'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
 import css from './GitspaceCreate.module.scss'
@@ -46,6 +47,14 @@ interface SCMType {
   name: string
   value: EnumGitspaceCodeRepoType
   icon: string
+}
+
+export interface RepoQueryParams {
+  name?: string
+  identifier?: string
+  branch?: string
+  codeRepoURL?: string
+  codeRepoType?: EnumGitspaceCodeRepoType
 }
 
 export const CDECreateGitspace = () => {
@@ -57,9 +66,9 @@ export const CDECreateGitspace = () => {
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
   const { showSuccess, showError } = useToaster()
   const { mutate } = useCreateGitspace({ accountIdentifier, orgIdentifier, projectIdentifier })
-  const { idpRepoURL = '' } = useQueryParams<{ idpRepoURL?: string }>()
+  const repoQueryParams = useQueryParams<RepoQueryParams>()
 
-  const [repoURLviaQueryParam, setrepoURLviaQueryParam] = useState('')
+  const [repoURLviaQueryParam, setrepoURLviaQueryParam] = useState<RepoQueryParams>({ ...repoQueryParams })
 
   const scmOptions: SCMType[] = [
     { name: 'Harness Code', value: EnumGitspaceCodeRepoType.HARNESS_CODE, icon: harnessCode },
@@ -74,14 +83,35 @@ export const CDECreateGitspace = () => {
   })
 
   useEffect(() => {
-    if (idpRepoURL !== repoURLviaQueryParam) {
-      setrepoURLviaQueryParam(idpRepoURL)
+    const { codeRepoURL, codeRepoType, branch: queryParamBranch } = repoQueryParams
+    if (codeRepoURL !== repoURLviaQueryParam.codeRepoURL && codeRepoType !== repoURLviaQueryParam.codeRepoType) {
+      setrepoURLviaQueryParam(prv => {
+        return {
+          ...prv,
+          name: getRepoNameFromURL(codeRepoURL),
+          identifier: getRepoIdFromURL(codeRepoURL),
+          branch: queryParamBranch,
+          codeRepoURL,
+          codeRepoType
+        }
+      })
     }
-  }, [idpRepoURL])
+  }, [repoQueryParams])
 
   const oauthSCMsListTypes =
     OauthSCMs?.data?.userSourceCodeManagerResponseDTOList?.map((item: { type: string }) => item.type.toLowerCase()) ||
     []
+
+  const includeQueryParams =
+    repoQueryParams?.codeRepoURL && repoQueryParams?.codeRepoType
+      ? {
+          code_repo_url: repoQueryParams.codeRepoURL,
+          branch: repoQueryParams.branch,
+          identifier: getRepoIdFromURL(repoQueryParams.codeRepoURL),
+          name: getRepoNameFromURL(repoQueryParams.codeRepoURL),
+          code_repo_type: repoQueryParams.codeRepoType
+        }
+      : {}
 
   return (
     <Formik
@@ -108,8 +138,8 @@ export const CDECreateGitspace = () => {
       }}
       initialValues={{
         ...gitnessFormInitialValues,
-        code_repo_url: idpRepoURL,
-        code_repo_type: EnumGitspaceCodeRepoType.HARNESS_CODE
+        code_repo_type: EnumGitspaceCodeRepoType.HARNESS_CODE,
+        ...includeQueryParams
       }}
       validationSchema={validateGitnessForm(getString)}
       formName="importRepoForm"
