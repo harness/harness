@@ -130,7 +130,7 @@ func (c *Controller) Merge(
 		timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to lock repository for pull request merge: %w", err)
 	}
 	defer unlock()
 
@@ -310,6 +310,24 @@ func (c *Controller) Merge(
 	}
 
 	if protection.IsCritical(violations) {
+		sb := strings.Builder{}
+		for i, ruleViolation := range violations {
+			if i > 0 {
+				sb.WriteByte(',')
+			}
+			sb.WriteString(ruleViolation.Rule.Identifier)
+			sb.WriteString(":[")
+			for j, v := range ruleViolation.Violations {
+				if j > 0 {
+					sb.WriteByte(',')
+				}
+				sb.WriteString(v.Code)
+			}
+			sb.WriteString("]")
+		}
+
+		log.Ctx(ctx).Info().Msgf("aborting pull request merge because of rule violations: %s", sb.String())
+
 		return nil, &types.MergeViolations{RuleViolations: violations}, nil
 	}
 
@@ -400,6 +418,8 @@ func (c *Controller) Merge(
 				log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 			}
 		}
+
+		log.Ctx(ctx).Info().Msg("aborting pull request merge because of conflicts")
 
 		return nil, &types.MergeViolations{
 			ConflictFiles:  mergeOutput.ConflictFiles,
