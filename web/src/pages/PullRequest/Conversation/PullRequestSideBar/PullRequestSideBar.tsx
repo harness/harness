@@ -15,7 +15,7 @@
  */
 
 import React, { useState } from 'react'
-import { PopoverInteractionKind } from '@blueprintjs/core'
+import { PopoverInteractionKind, Spinner } from '@blueprintjs/core'
 import { useGet, useMutate } from 'restful-react'
 import { omit } from 'lodash-es'
 import cx from 'classnames'
@@ -43,13 +43,15 @@ interface PullRequestSideBarProps {
   pullRequestMetadata: TypesPullReq
   refetchReviewers: () => void
   refetchLabels: () => void
+  refetchActivities: () => void
 }
 
 const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   const { standalone, hooks } = useAppContext()
   const { CODE_PULLREQ_LABELS: isLabelEnabled } = hooks?.useFeatureFlags()
   const [labelQuery, setLabelQuery] = useState<string>('')
-  const { reviewers, repoMetadata, pullRequestMetadata, refetchReviewers, labels, refetchLabels } = props
+  const { reviewers, repoMetadata, pullRequestMetadata, refetchReviewers, labels, refetchLabels, refetchActivities } =
+    props
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
   const generateReviewDecisionInfo = (
@@ -166,13 +168,10 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
     path: ({ id }) => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/reviewers/${id}`
   })
 
-  const { mutate: removeLabel } = useMutate({
+  const { mutate: removeLabel, loading: removingLabel } = useMutate({
     verb: 'DELETE',
     base: getConfig('code/api/v1'),
-    path: ({ label_id }) =>
-      `/repos/${encodeURIComponent(repoMetadata.path as string)}/pullreq/${
-        pullRequestMetadata?.number
-      }/labels/${encodeURIComponent(label_id)}`
+    path: ({ label_id }) => `/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/labels/${label_id}`
   })
 
   const {
@@ -420,6 +419,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                 query={labelQuery}
                 setQuery={setLabelQuery}
                 labelListLoading={labelListLoading}
+                refetchActivities={refetchActivities}
               />
             </Layout.Horizontal>
             <Container padding={{ top: 'medium', bottom: 'large' }}>
@@ -451,6 +451,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                                     label: label.key
                                   }) as string
                                 )
+                            refetchActivities()
                           })
                           .catch(err => {
                             showError(getErrorMessage(err))
@@ -464,6 +465,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                     {getString('labels.noLabels')}
                   </Text>
                 )}
+                {removingLabel && <Spinner size={16} />}
               </Layout.Horizontal>
             </Container>
           </Layout.Vertical>

@@ -21,6 +21,7 @@ import { routes } from 'RouteDefinitions'
 import { defaultCurrentUser } from 'AppContext'
 import { useFeatureFlags } from 'hooks/useFeatureFlag'
 import { useGetSettingValue } from 'hooks/useGetSettingValue'
+import { useGetAuthSettings } from 'hooks/useGetAuthSettings'
 import { defaultUsefulOrNot } from 'components/DefaultUsefulOrNot/UsefulOrNot'
 import App from './App'
 import './bootstrap.scss'
@@ -41,7 +42,8 @@ ReactDOM.render(
       useLogsContent: noop,
       useLogsStreaming: noop,
       useFeatureFlags,
-      useGetSettingValue
+      useGetSettingValue,
+      useGetAuthSettings
     }}
     currentUser={defaultCurrentUser}
     customComponents={{

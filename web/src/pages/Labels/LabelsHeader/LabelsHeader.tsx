@@ -18,9 +18,8 @@ import { Container, Layout, FlexExpander, ButtonVariation, Button, Checkbox } fr
 import { Render } from 'react-jsx-match'
 import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
-import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { LabelsPageScope, permissionProps } from 'utils/Utils'
+import type { LabelsPageScope } from 'utils/Utils'
 import type { RepoRepositoryOutput } from 'services/code'
 import css from './LabelsHeader.module.scss'
 
@@ -30,28 +29,10 @@ const LabelsHeader = ({
   showParentScopeFilter,
   inheritLabels,
   setInheritLabels,
-  openLabelCreateModal,
-  spaceRef,
-  repoMetadata,
-  currentPageScope
+  openLabelCreateModal
 }: LabelsHeaderProps) => {
   const [searchTerm, setSearchTerm] = useState('')
   const { getString } = useStrings()
-  const { hooks, standalone } = useAppContext()
-
-  const permPushResult = hooks?.usePermissionTranslate?.(
-    {
-      resource: {
-        resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier:
-          currentPageScope === LabelsPageScope.REPOSITORY && repoMetadata
-            ? repoMetadata.identifier
-            : (spaceRef as string)
-      },
-      permissions: ['code_repo_edit']
-    },
-    [spaceRef]
-  )
 
   //ToDo: check space permissions as well in case of spaces
 
@@ -63,7 +44,6 @@ const LabelsHeader = ({
           text={getString('labels.newLabel')}
           icon={CodeIcon.Add}
           onClick={openLabelCreateModal}
-          {...permissionProps(permPushResult, standalone)}
         />
         <Render when={showParentScopeFilter}>
           <Checkbox

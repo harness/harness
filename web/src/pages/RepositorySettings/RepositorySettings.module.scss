@@ -121,6 +121,9 @@
 }
 
 .dialogContainer {
+  width: 600px;
+  max-height: 95vh;
+  overflow: auto;
   :global(.bp3-dialog-header) {
     margin-bottom: var(--spacing-medium) !important;
   }
@@ -144,7 +147,7 @@
 .buttonContainer {
   width: 20%;
   padding-top: var(--spacing-xsmall) !important;
-  gap: 10px;
+  gap: 15px;
   margin-left: auto !important;
 }
 

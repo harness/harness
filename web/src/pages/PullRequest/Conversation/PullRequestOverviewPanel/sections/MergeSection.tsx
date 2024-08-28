@@ -132,7 +132,7 @@ const MergeSection = (props: MergeSectionProps) => {
               </Layout.Vertical>
             )}
           </Layout.Horizontal>
-          {!mergeable && (
+          {!mergeable && !unchecked && (
             <Button
               padding={{ right: 'unset' }}
               className={cx(css.blueText, css.buttonPadding)}

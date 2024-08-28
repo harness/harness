@@ -14,42 +14,6 @@
  * limitations under the License.
  */
 
-.main {
-  background-color: var(--primary-bg) !important;
-
-  .noData > div {
-    height: calc(100vh - var(--page-header-height, 64px) - 120px) !important;
-  }
-}
-
-.toggle {
-  > input {
-    opacity: 0;
-    position: relative;
-    top: 40%;
-    z-index: 999;
-  }
-}
-
-.toggleEnable {
-  > input {
-    left: 52%;
-  }
-}
-
-.toggleDisable {
-  > input {
-    left: 32%;
-  }
-}
-
-.cancelButton {
-  margin-left: var(--spacing-small) !important;
-}
-
-.scopeCheckbox {
-  display: flex;
-  align-items: center;
-  padding-right: 7px !important;
-  padding-left: 7px !important;
+export function useGetAuthSettings<T = Record<string, boolean>>() {
+  return {} as T
 }

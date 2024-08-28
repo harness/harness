@@ -38,7 +38,6 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import {
   getErrorMessage,
   LIST_FETCHING_LIMIT,
-  permissionProps,
   type PageBrowserProps,
   ColorName,
   LabelTypes,
@@ -54,7 +53,7 @@ import { useConfirmAction } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useAppContext } from 'AppContext'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
-import { LabelTitle, LabelValuesList } from 'components/Label/Label'
+import { LabelTitle, LabelValuesList, LabelValuesListQuery } from 'components/Label/Label'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { getConfig } from 'services/config'
 import LabelsHeader from './LabelsHeader/LabelsHeader'
@@ -63,7 +62,7 @@ import css from './LabelsListing.module.scss'
 
 const LabelsListing = (props: LabelListingProps) => {
   const { activeTab, currentPageScope, repoMetadata, space } = props
-  const { hooks, standalone } = useAppContext()
+  const { standalone } = useAppContext()
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
   const history = useHistory()
@@ -133,15 +132,27 @@ const LabelsListing = (props: LabelListingProps) => {
 
   const { openModal: openLabelCreateModal, openUpdateLabelModal } = useLabelModal({ refetchlabelsList })
   const renderRowSubComponent = React.useCallback(({ row }: { row: Row<LabelTypes> }) => {
-    return (
-      <LabelValuesList
-        name={row.original?.key as string}
-        scope={row.original?.scope as number}
-        repoMetadata={repoMetadata}
-        space={space}
-        standalone={standalone}
-      />
-    )
+    if (standalone) {
+      return (
+        <LabelValuesList
+          name={row.original?.key as string}
+          scope={row.original?.scope as number}
+          repoMetadata={repoMetadata}
+          space={space}
+          standalone={standalone}
+        />
+      )
+    } else {
+      return (
+        <LabelValuesListQuery
+          name={row.original?.key as string}
+          scope={row.original?.scope as number}
+          repoMetadata={repoMetadata}
+          space={space}
+          standalone={standalone}
+        />
+      )
+    }
   }, [])
 
   const ToggleAccordionCell: Renderer<{
@@ -215,7 +226,7 @@ const LabelsListing = (props: LabelListingProps) => {
         width: '40%',
         sort: 'true',
         Cell: ({ row }: CellProps<LabelTypes>) => {
-          return <Text lineClamp={3}>{row.original?.description}</Text>
+          return <Text lineClamp={1}>{row.original?.description}</Text>
         }
       },
       {
@@ -235,6 +246,24 @@ const LabelsListing = (props: LabelListingProps) => {
             path: deleteLabelPath
           })
 
+          //ToDo : Remove the following block when Encoding is handled by BE for Harness
+          const deleteLabelPathHarness =
+            row.original?.scope === 0
+              ? `/repos/${repoMetadata?.identifier}/labels/${encodedLabelKey}`
+              : `/labels/${encodedLabelKey}`
+
+          const { mutate: deleteLabelQueryCall } = useMutate({
+            verb: 'DELETE',
+            base: getConfig('code/api/v1'),
+            path: deleteLabelPathHarness,
+            queryParams: {
+              accountIdentifier: scopeRef?.split('/')[0],
+              orgIdentifier: scopeRef?.split('/')[1],
+              projectIdentifier: scopeRef?.split('/')[2]
+            }
+          })
+
+          //ToDo: remove type check of standalone when Encoding is handled by BE for Harness
           const confirmLabelDelete = useConfirmAction({
             title: getString('labels.deleteLabel'),
             confirmText: getString('delete'),
@@ -242,23 +271,19 @@ const LabelsListing = (props: LabelListingProps) => {
             message: <String useRichText stringID="labels.deleteLabelConfirm" vars={{ name: row.original.key }} />,
             action: async e => {
               e.stopPropagation()
-              deleteLabel({})
-                .then(() => {
-                  showSuccess(
-                    <StringSubstitute
-                      str={getString('labels.deleteLabel')}
-                      vars={{
-                        tag: row.original.key
-                      }}
-                    />,
-                    5000
-                  )
-                  refetchlabelsList()
-                  setPage(1)
-                })
-                .catch(error => {
-                  showError(getErrorMessage(error), 0, getString('labels.failedToDeleteLabel'))
-                })
+              const handleSuccess = (tag: string) => {
+                showSuccess(<StringSubstitute str={getString('labels.deletedLabel')} vars={{ tag }} />, 5000)
+                refetchlabelsList()
+                setPage(1)
+              }
+
+              const handleError = (error: any) => {
+                showError(getErrorMessage(error), 0, getString('labels.failedToDeleteLabel'))
+              }
+
+              const deleteAction = standalone ? deleteLabel({}) : deleteLabelQueryCall({})
+
+              deleteAction.then(() => handleSuccess(row.original.key ?? '')).catch(handleError)
             }
           })
           return (
@@ -294,18 +319,6 @@ const LabelsListing = (props: LabelListingProps) => {
       }
     ], // eslint-disable-next-line react-hooks/exhaustive-deps
     [history, getString, repoMetadata?.path, space, setPage, showError, showSuccess]
-  )
-
-  const permPushResult = hooks?.usePermissionTranslate?.(
-    {
-      resource: {
-        resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier:
-          currentPageScope === LabelsPageScope.REPOSITORY ? (repoMetadata?.identifier as string) : (space as string)
-      },
-      permissions: ['code_repo_edit']
-    },
-    [space]
   )
 
   return (
@@ -346,7 +359,6 @@ const LabelsListing = (props: LabelListingProps) => {
         message={getString('labels.noLabelsFound')}
         buttonText={getString('labels.newLabel')}
         onButtonClick={() => openLabelCreateModal()}
-        permissionProp={permissionProps(permPushResult, standalone)}
       />
     </Container>
   )

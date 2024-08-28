@@ -128,9 +128,9 @@ repos:
 createRepoModal:
   branchLabel: 'Your repository will be initialized with a '
   branch: ' branch.'
-  publicLabel: Anyone with access to the Gitness environment can clone this repo.
+  publicLabel: Anyone who can view the repository can clone it.
   privateLabel: You choose who can see and commit to this repository.
-  publicWarning: Please note that anyone with access to the Gitness environment can clone this repo.
+  publicWarning: Please note that anyone who can view the repository can clone it.
 validation:
   repoNamePatternIsNotValid: Registry name should be 1~255 characters long with lower case characters, numbers and ._- and must be start with numbers or characters
   gitBranchNameInvalid: Branch name is invalid.
@@ -1315,6 +1315,7 @@ labels:
   addValue: 'Add value'
   removeLabel: Remove Label
   deleteLabel: Delete Label
+  deletedLabel: 'Deleted Label : {tag}'
   provideLabelName: Provide Label name
   labelCreated: Label created
   labelUpdated: Label updated
@@ -1347,6 +1348,8 @@ labels:
   deleteLabelConfirm: Are you sure you want to delete label <strong>{{name}}</strong>? You can't undo this action.
   intentText: Editing/deleting a label or its values will impact all the areas it has been used.
   prCount: 'Showing {count} {count|1:result,results}'
+  failedtoFetchLabels: Failed to fetch labels
+  failedtoFetchValues: Failed to fetch label values
   noResults: No results found
   labelPreview: Label Preview
   filterByLabels: Filter by Label/s

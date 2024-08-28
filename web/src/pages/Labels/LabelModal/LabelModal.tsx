@@ -33,7 +33,7 @@ import {
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { Menu, MenuItem, PopoverInteractionKind, Position } from '@blueprintjs/core'
+import { Menu, MenuItem, PopoverInteractionKind, Position, Spinner } from '@blueprintjs/core'
 import * as Yup from 'yup'
 import { FieldArray } from 'formik'
 import { useGet, useMutate } from 'restful-react'
@@ -181,29 +181,50 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
     path: updateLabel?.scope ? `/spaces/${scopeRef as string}/+/labels` : `/spaces/${space as string}/+/labels`
   })
 
+  const getPath = () =>
+    updateLabel?.scope === 0 && repoMetadata
+      ? `/repos/${encodeURIComponent(repoMetadata?.path as string)}/labels/${encodeURIComponent(
+          updateLabel?.key ? updateLabel?.key : ''
+        )}/values`
+      : `/spaces/${encodeURIComponent(scopeRef)}/labels/${encodeURIComponent(
+          updateLabel?.key ? updateLabel?.key : ''
+        )}/values`
+
   const {
-    data: repoLabelValues,
-    loading: repoValueListLoading,
-    refetch: refetchRepoValuesList
+    data: initLabelValues,
+    loading: initValueListLoading,
+    refetch: refetchInitValuesList
   } = useGet<TypesLabelValue[]>({
     base: getConfig('code/api/v1'),
-    path: `/repos/${encodeURIComponent(repoMetadata?.path as string)}/labels/${encodeURIComponent(
-      updateLabel?.key ? updateLabel?.key : ''
-    )}/values`,
+    path: getPath(),
     lazy: true
   })
 
+  //ToDo : Remove getLabelValuesPromiseQuery component when Encoding is handled by BE for Harness
+
+  const getPathHarness = () =>
+    updateLabel?.scope === 0 && repoMetadata
+      ? `/repos/${repoMetadata?.identifier}/labels/${encodeURIComponent(
+          updateLabel?.key ? updateLabel?.key : ''
+        )}/values`
+      : `/labels/${encodeURIComponent(updateLabel?.key ? updateLabel?.key : '')}/values`
+
   const {
-    data: spaceLabelValues,
-    loading: spaceValueListLoading,
-    refetch: refetchSpaceValuesList
+    data: initLabelValuesQuery,
+    loading: initValueListLoadingQuery,
+    refetch: refetchInitValuesListQuery
   } = useGet<TypesLabelValue[]>({
     base: getConfig('code/api/v1'),
-    path: `/spaces/${encodeURIComponent(scopeRef)}/labels/${encodeURIComponent(
-      updateLabel?.key ? updateLabel?.key : ''
-    )}/values`,
+    path: getPathHarness(),
+    queryParams: {
+      accountIdentifier: scopeRef?.split('/')[0],
+      orgIdentifier: scopeRef?.split('/')[1],
+      projectIdentifier: scopeRef?.split('/')[2]
+    },
     lazy: true
   })
+
+  //ToDo: Remove all references of suffix with Query when Encoding is handled by BE for Harness
 
   const [openModal, hideModal] = useModalHook(() => {
     const handleLabelSubmit = (formData: LabelFormData) => {
@@ -329,20 +350,20 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
         return { ...baseValues, color: ColorName.Blue }
       }
 
-      if (repoMetadata && updateLabel?.scope === 0) {
-        return { ...baseValues, labelValues: getLabelValues(repoLabelValues ?? undefined) }
-      }
+      if (modalMode === ModalMode.UPDATE && updateLabel?.value_count === 0) return baseValues
 
-      return { ...baseValues, labelValues: getLabelValues(spaceLabelValues ?? undefined) }
+      if (standalone) {
+        return { ...baseValues, labelValues: getLabelValues(initLabelValues ?? undefined) }
+      }
+      return { ...baseValues, labelValues: getLabelValues(initLabelValuesQuery ?? undefined) }
     })()
 
     return (
       <Dialog
         isOpen
         onOpening={() => {
-          if (modalMode === ModalMode.UPDATE) {
-            if (repoMetadata && updateLabel?.scope === 0) refetchRepoValuesList()
-            else refetchSpaceValuesList()
+          if (modalMode === ModalMode.UPDATE && updateLabel?.value_count !== 0) {
+            standalone ? refetchInitValuesList() : refetchInitValuesListQuery()
           }
         }}
         enforceFocus={false}
@@ -408,68 +429,75 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
                         <FieldArray
                           name="labelValues"
                           render={({ push, remove }) => {
-                            return (
-                              <Layout.Vertical>
-                                {formik.values.labelValues?.map((_, index) => (
-                                  <Layout.Horizontal
-                                    key={`labelValue + ${index}`}
-                                    flex={{
-                                      alignItems: formik.isValid ? 'center' : 'flex-start',
-                                      justifyContent: 'flex-start'
-                                    }}
-                                    style={{ gap: '4px', margin: '4px' }}>
-                                    <ColorSelectorDropdown
-                                      key={`labelValueColor + ${index}`}
-                                      currentColorName={
-                                        formik.values.labelValues &&
-                                        index !== undefined &&
-                                        (formik.values.labelValues[index].color as ColorName)
-                                      }
-                                      onClick={(colorName: ColorName) => {
-                                        formik.setFieldValue(
-                                          'labelValues',
-                                          formik.values.labelValues?.map((value, i) =>
-                                            i === index ? { ...value, color: colorName } : value
-                                          )
-                                        )
-                                      }}
-                                    />
-                                    <FormInput.Text
-                                      key={`labelValueKey + ${index}`}
-                                      style={{ flexGrow: '1', margin: 0 }}
-                                      name={`${'labelValues'}[${index}].value`}
-                                      placeholder={getString('labels.provideLabelValue')}
-                                      tooltipProps={{
-                                        dataTooltipId: 'labels.newLabel'
-                                      }}
-                                      inputGroup={{ autoFocus: true }}
-                                    />
-                                    <Button
-                                      key={`removeValue + ${index}`}
-                                      style={{ marginRight: 'auto', color: 'var(--grey-300)' }}
-                                      variation={ButtonVariation.ICON}
-                                      icon={'code-close'}
-                                      onClick={() => {
-                                        remove(index)
-                                      }}
-                                    />
-                                  </Layout.Horizontal>
-                                ))}
-                                <Button
-                                  style={{ marginRight: 'auto' }}
-                                  variation={ButtonVariation.LINK}
-                                  disabled={!formik.isValid || formik.values.labelName?.length === 0}
-                                  text={getString('labels.addValue')}
-                                  icon={CodeIcon.Add}
-                                  onClick={() =>
-                                    push({
-                                      name: '',
-                                      color: formik.values.color
-                                    })
-                                  }
-                                />
-                              </Layout.Vertical>
+                            if (
+                              modalMode === ModalMode.UPDATE &&
+                              updateLabel?.value_count !== 0 &&
+                              (initValueListLoading || initValueListLoadingQuery)
                             )
+                              return <Spinner size={20} />
+                            else
+                              return (
+                                <Layout.Vertical>
+                                  {formik.values.labelValues?.map((_, index) => (
+                                    <Layout.Horizontal
+                                      key={`labelValue + ${index}`}
+                                      flex={{
+                                        alignItems: formik.isValid ? 'center' : 'flex-start',
+                                        justifyContent: 'flex-start'
+                                      }}
+                                      style={{ gap: '4px', margin: '4px' }}>
+                                      <ColorSelectorDropdown
+                                        key={`labelValueColor + ${index}`}
+                                        currentColorName={
+                                          formik.values.labelValues &&
+                                          index !== undefined &&
+                                          (formik.values.labelValues[index].color as ColorName)
+                                        }
+                                        onClick={(colorName: ColorName) => {
+                                          formik.setFieldValue(
+                                            'labelValues',
+                                            formik.values.labelValues?.map((value, i) =>
+                                              i === index ? { ...value, color: colorName } : value
+                                            )
+                                          )
+                                        }}
+                                      />
+                                      <FormInput.Text
+                                        key={`labelValueKey + ${index}`}
+                                        style={{ flexGrow: '1', margin: 0 }}
+                                        name={`${'labelValues'}[${index}].value`}
+                                        placeholder={getString('labels.provideLabelValue')}
+                                        tooltipProps={{
+                                          dataTooltipId: 'labels.newLabel'
+                                        }}
+                                        inputGroup={{ autoFocus: true }}
+                                      />
+                                      <Button
+                                        key={`removeValue + ${index}`}
+                                        style={{ marginRight: 'auto', color: 'var(--grey-300)' }}
+                                        variation={ButtonVariation.ICON}
+                                        icon={'code-close'}
+                                        onClick={() => {
+                                          remove(index)
+                                        }}
+                                      />
+                                    </Layout.Horizontal>
+                                  ))}
+                                  <Button
+                                    style={{ marginRight: 'auto' }}
+                                    variation={ButtonVariation.LINK}
+                                    disabled={!formik.isValid || formik.values.labelName?.length === 0}
+                                    text={getString('labels.addValue')}
+                                    icon={CodeIcon.Add}
+                                    onClick={() =>
+                                      push({
+                                        name: '',
+                                        color: formik.values.color
+                                      })
+                                    }
+                                  />
+                                </Layout.Vertical>
+                              )
                           }}
                         />
                       </Container>
@@ -498,37 +526,43 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
                   <Layout.Vertical
                     style={{ width: '45%', padding: '25px 35px 25px 35px', borderLeft: '1px solid var(--grey-100)' }}>
                     <Text>{getString('labels.labelPreview')}</Text>
-                    <Layout.Vertical spacing={'medium'}>
-                      {formik.values.labelValues?.length
-                        ? formik.values.labelValues?.map((valueObj, i) => (
-                            <Label
-                              key={`label + ${i}`}
-                              name={formik.values.labelName || getString('labels.labelName')}
-                              label_color={formik.values.color}
-                              label_value={
-                                valueObj.value?.length
-                                  ? { name: valueObj.value, color: valueObj.color }
-                                  : {
-                                      name: getString('labels.labelValue'),
-                                      color: valueObj.color || formik.values.color
-                                    }
-                              }
-                            />
-                          ))
-                        : !formik.values.allowDynamicValues && (
-                            <Label
-                              name={formik.values.labelName || getString('labels.labelName')}
-                              label_color={formik.values.color}
-                            />
-                          )}
-                      {formik.values.allowDynamicValues && (
-                        <Label
-                          name={formik.values.labelName || getString('labels.labelName')}
-                          label_color={formik.values.color}
-                          label_value={{ name: getString('labels.canbeAddedByUsers') }}
-                        />
-                      )}
-                    </Layout.Vertical>
+                    {modalMode === ModalMode.UPDATE &&
+                    updateLabel?.value_count !== 0 &&
+                    (initValueListLoading || initValueListLoadingQuery) ? (
+                      <Spinner size={20} />
+                    ) : (
+                      <Layout.Vertical spacing={'medium'}>
+                        {formik.values.labelValues?.length
+                          ? formik.values.labelValues?.map((valueObj, i) => (
+                              <Label
+                                key={`label + ${i}`}
+                                name={formik.values.labelName || getString('labels.labelName')}
+                                label_color={formik.values.color}
+                                label_value={
+                                  valueObj.value?.length
+                                    ? { name: valueObj.value, color: valueObj.color }
+                                    : {
+                                        name: getString('labels.labelValue'),
+                                        color: valueObj.color || formik.values.color
+                                      }
+                                }
+                              />
+                            ))
+                          : !formik.values.allowDynamicValues && (
+                              <Label
+                                name={formik.values.labelName || getString('labels.labelName')}
+                                label_color={formik.values.color}
+                              />
+                            )}
+                        {formik.values.allowDynamicValues && (
+                          <Label
+                            name={formik.values.labelName || getString('labels.labelName')}
+                            label_color={formik.values.color}
+                            label_value={{ name: getString('labels.canbeAddedByUsers') }}
+                          />
+                        )}
+                      </Layout.Vertical>
+                    )}
                   </Layout.Vertical>
                 </Layout.Horizontal>
               </FormikForm>
@@ -539,11 +573,12 @@ const useLabelModal = ({ refetchlabelsList }: LabelModalProps) => {
     )
   }, [
     updateLabel,
-    repoLabelValues,
-    spaceLabelValues,
-    repoValueListLoading,
-    spaceValueListLoading,
+    initLabelValues,
+    initLabelValuesQuery,
+    initValueListLoading,
+    initValueListLoadingQuery,
     refetchlabelsList,
+    refetchInitValuesListQuery,
     modalMode
   ])
 

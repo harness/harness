@@ -171,6 +171,7 @@ export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMeta
   PRStateLoading: boolean
   conflictingFiles: string[] | undefined
   setConflictingFiles: React.Dispatch<React.SetStateAction<string[] | undefined>>
+  refetchPullReq: () => void
 }
 
 export interface PRMergeOption extends SelectOption {

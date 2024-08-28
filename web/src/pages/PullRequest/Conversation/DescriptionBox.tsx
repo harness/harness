@@ -35,7 +35,11 @@ import { useAppContext } from 'AppContext'
 import type { ConversationProps } from './Conversation'
 import css from './Conversation.module.scss'
 
-interface DescriptionBoxProps extends Omit<ConversationProps, 'onCancelEditDescription' | 'pullReqCommits'> {
+interface DescriptionBoxProps
+  extends Omit<
+    ConversationProps,
+    'onCancelEditDescription' | 'pullReqCommits' | 'refetchActivities' | 'refetchPullReq'
+  > {
   onCancelEditDescription: () => void
   pullReqCommits: TypesListCommitResponse | undefined
 }

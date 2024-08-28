@@ -468,6 +468,8 @@ export const getProviders = () =>
 export const codeOwnersNotFoundMessage = 'CODEOWNERS file not found'
 export const codeOwnersNotFoundMessage2 = `path "CODEOWNERS" not found`
 export const codeOwnersNotFoundMessage3 = `failed to find node 'CODEOWNERS' in 'main': failed to get tree node: failed to ls file: path "CODEOWNERS" not found`
+export const oldCommitRefetchRequired = 'A newer commit is available. Only the latest commit can be merged.'
+export const prMergedRefetchRequired = 'Pull request already merged'
 
 export const dryMerge = (
   isMounted: React.MutableRefObject<boolean>,
@@ -504,6 +506,7 @@ export const dryMerge = (
   pullRequestSection: string | undefined,
   showError: (message: React.ReactNode, timeout?: number | undefined, key?: string | undefined) => void,
   setConflictingFiles: React.Dispatch<React.SetStateAction<string[] | undefined>>,
+  refetchPullReq: () => void,
   setRequiresCommentApproval?: (value: React.SetStateAction<boolean>) => void,
   setAtLeastOneReviewerRule?: (value: React.SetStateAction<boolean>) => void,
   setReqCodeOwnerApproval?: (value: React.SetStateAction<boolean>) => void,
@@ -555,6 +558,11 @@ export const dryMerge = (
             setReqCodeOwnerLatestApproval?.(err.requires_code_owners_approval_latest)
             setMinReqLatestApproval?.(err.minimum_required_approvals_count_latest)
             setConflictingFiles?.(err.conflict_files)
+          } else if (
+            err.status === 400 &&
+            (getErrorMessage(err) === oldCommitRefetchRequired || getErrorMessage(err) === prMergedRefetchRequired)
+          ) {
+            refetchPullReq()
           } else if (
             getErrorMessage(err) === codeOwnersNotFoundMessage ||
             getErrorMessage(err) === codeOwnersNotFoundMessage2 ||

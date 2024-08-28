@@ -29,60 +29,16 @@
       max-width: 55%;
     }
 
+    div[class*='TableV2--row'] {
+      padding: 3px var(--spacing-medium);
+      justify-content: center;
+      min-height: 48px;
+    }
+
     div[class*='TableV2--rowSubComponent'] {
       border-top: 1px solid var(--grey-100);
-      padding: 20px 4px 4px 5%;
-    }
-  }
-
-  .dividerContainer {
-    opacity: 0.2;
-    height: 1px;
-    color: var(--grey-100);
-    margin: 10px 0;
-    width: 95%;
-  }
-
-  .border {
-    border-bottom: 1px solid var(--grey-100) !important;
-  }
-
-  .hideDetailsContainer {
-    display: none;
-  }
-
-  .appliedRulesTextContainer {
-    border-radius: 4px;
-    background: var(--grey-50) !important;
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    padding: var(--spacing-small) !important;
-    margin-bottom: var(--spacing-xsmall) !important;
-  }
-
-  .popover {
-    z-index: 999;
-    padding: var(--spacing-tiny) !important;
-  }
-
-  .widthContainer {
-    max-width: calc(100% - 100px);
-    overflow-x: hidden;
-    display: flex;
-    flex-wrap: wrap;
-  }
-
-  .hideButtonIcon {
-    :global {
-      [class*='ConfirmationDialog--header'] {
-        .bp3-icon {
-          display: none !important;
-        }
-      }
-
-      [class*='ConfirmationDialog--body'] {
-        padding-left: 3px !important;
-      }
+      padding: 14px var(--spacing-xsmall) 14px 4.7%;
+      margin-top: var(--spacing-tiny);
     }
   }
 }

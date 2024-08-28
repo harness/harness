@@ -59,6 +59,7 @@ export default function PullRequest() {
     commitSHA,
     refetchActivities,
     refetchCommits,
+    refetchPullReq,
     retryOnErrorFunc
   } = useGetPullRequestInfo()
 
@@ -158,6 +159,8 @@ export default function PullRequest() {
                         prStats={pullReqStats}
                         showEditDescription={showEditDescription}
                         onCancelEditDescription={() => setShowEditDescription(false)}
+                        refetchPullReq={refetchPullReq}
+                        refetchActivities={refetchActivities}
                       />
                     )
                   },

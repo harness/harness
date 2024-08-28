@@ -65,7 +65,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   allowedStrategy,
   pullReqCommits,
   PRStateLoading,
-  setConflictingFiles
+  setConflictingFiles,
+  refetchPullReq
 }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
@@ -127,7 +128,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       setAllowedStrats,
       pullRequestSection,
       showError,
-      setConflictingFiles
+      setConflictingFiles,
+      refetchPullReq
     ) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unchecked, pullReqMetadata?.source_sha])
   const [prMerged, setPrMerged] = useState(false)
@@ -146,7 +148,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
           setAllowedStrats,
           pullRequestSection,
           showError,
-          setConflictingFiles
+          setConflictingFiles,
+          refetchPullReq
         )
       }
     }, POLLING_INTERVAL) // Poll every 20 seconds
@@ -154,7 +157,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     return () => {
       clearInterval(intervalId)
     } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onPRStateChanged, prMerged])
+  }, [onPRStateChanged, prMerged, pullReqMetadata?.source_sha])
   const isDraft = pullReqMetadata.is_draft
   const mergeOptions: PRMergeOption[] = [
     {

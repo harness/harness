@@ -72,6 +72,7 @@ export interface AppProps {
     useLogsStreaming: Unknown
     useFeatureFlags: Unknown
     useGetSettingValue: Unknown
+    useGetAuthSettings: Unknown
     useGetUserSourceCodeManagers?: Unknown
     useListAggregatedTokens?: Unknown
     useDeleteToken?: Unknown

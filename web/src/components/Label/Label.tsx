@@ -19,7 +19,7 @@ import cx from 'classnames'
 import { Button, ButtonSize, ButtonVariation, Container, Layout, Tag, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { useGet } from 'restful-react'
-import { Menu } from '@blueprintjs/core'
+import { Menu, Spinner } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { isEmpty } from 'lodash-es'
 import { ColorName, LabelType, getColorsObj, getScopeData, getScopeIcon } from 'utils/Utils'
@@ -329,7 +329,59 @@ export const LabelValuesList: React.FC<{
           />
         ))
       ) : (
-        <Icon name="steps-spinner" size={16} />
+        <Spinner size={16} />
+      )}
+    </Layout.Horizontal>
+  )
+}
+
+// ToDo : Remove LabelValuesListQuery component when Encoding is handled by BE for Harness
+export const LabelValuesListQuery: React.FC<{
+  name: string
+  scope: number
+  repoMetadata?: RepoRepositoryOutput
+  space?: string
+  standalone: boolean
+}> = ({ name, scope, repoMetadata, space = '', standalone }) => {
+  const { scopeRef } = getScopeData(space as string, scope, standalone)
+
+  const getPath = () =>
+    scope === 0
+      ? `/repos/${repoMetadata?.identifier}/labels/${encodeURIComponent(name)}/values`
+      : `/labels/${encodeURIComponent(name)}/values`
+
+  const {
+    data: labelValues,
+    refetch: refetchLabelValues,
+    loading: loadingLabelValues
+  } = useGet<TypesLabelValue[]>({
+    base: getConfig('code/api/v1'),
+    path: getPath(),
+    queryParams: {
+      accountIdentifier: scopeRef?.split('/')[0],
+      orgIdentifier: scopeRef?.split('/')[1],
+      projectIdentifier: scopeRef?.split('/')[2]
+    },
+    lazy: true
+  })
+
+  useEffect(() => {
+    refetchLabelValues()
+  }, [name, scope, space, repoMetadata])
+
+  return (
+    <Layout.Horizontal className={css.valuesList}>
+      {!loadingLabelValues && labelValues && !isEmpty(labelValues) ? (
+        labelValues.map(value => (
+          <Label
+            key={`${name}-${value.value}`}
+            name={name}
+            scope={scope}
+            label_value={{ name: value.value, color: value.color as ColorName }}
+          />
+        ))
+      ) : (
+        <Spinner size={16} />
       )}
     </Layout.Horizontal>
   )

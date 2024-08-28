@@ -129,45 +129,47 @@ export const LabelFilter = (props: LabelFilterProps) => {
   const getLabelValuesPromise = async (key: string, scope: number): Promise<SelectOption[]> => {
     setLoadingLabelValues(true)
     const { scopeRef } = getScopeData(spaceRef, scope, standalone)
-    if (scope === 0) {
-      try {
-        const fetchedValues: TypesLabelValue[] = await getUsingFetch(
-          getConfig('code/api/v1'),
-          `/repos/${encodeURIComponent(repoMetadata?.path as string)}/labels/${encodeURIComponent(key)}/values`,
-          bearerToken,
-          {}
-        )
-        const updatedValuesList = mapToSelectOptions(fetchedValues)
-        setLoadingLabelValues(false)
-        return updatedValuesList
-      } catch (error) {
-        setLoadingLabelValues(false)
-        showError(getErrorMessage(error))
-        return []
-      }
-    } else {
-      try {
-        const fetchedValues: TypesLabelValue[] = await getUsingFetch(
-          getConfig('code/api/v1'),
-          `/spaces/${encodeURIComponent(scopeRef)}/labels/${encodeURIComponent(key)}/values`,
-          bearerToken,
-          {}
-        )
-        const updatedValuesList = Array.isArray(fetchedValues)
-          ? ([
-              ...(fetchedValues || []).map(item => ({
-                label: JSON.stringify(item),
-                value: String(item?.id)
-              }))
-            ] as SelectOption[])
-          : ([] as SelectOption[])
-        setLoadingLabelValues(false)
-        return updatedValuesList
-      } catch (error) {
-        setLoadingLabelValues(false)
-        showError(getErrorMessage(error))
-        return []
-      }
+    const getPath = () =>
+      scope === 0
+        ? `/repos/${encodeURIComponent(repoMetadata?.path as string)}/labels/${encodeURIComponent(key)}/values`
+        : `/spaces/${encodeURIComponent(scopeRef)}/labels/${encodeURIComponent(key)}/values`
+
+    try {
+      const fetchedValues: TypesLabelValue[] = await getUsingFetch(getConfig('code/api/v1'), getPath(), bearerToken, {})
+      const updatedValuesList = mapToSelectOptions(fetchedValues)
+      setLoadingLabelValues(false)
+      return updatedValuesList
+    } catch (error) {
+      setLoadingLabelValues(false)
+      showError(getErrorMessage(error))
+      return []
+    }
+  }
+
+  // ToDo : Remove getLabelValuesPromiseQuery component when Encoding is handled by BE for Harness
+  const getLabelValuesPromiseQuery = async (key: string, scope: number): Promise<SelectOption[]> => {
+    setLoadingLabelValues(true)
+    const { scopeRef } = getScopeData(spaceRef, scope, standalone)
+    const getPath = () =>
+      scope === 0
+        ? `/repos/${repoMetadata?.identifier}/labels/${encodeURIComponent(key)}/values`
+        : `/labels/${encodeURIComponent(key)}/values`
+
+    try {
+      const fetchedValues: TypesLabelValue[] = await getUsingFetch(getConfig('code/api/v1'), getPath(), bearerToken, {
+        queryParams: {
+          accountIdentifier: scopeRef?.split('/')[0],
+          orgIdentifier: scopeRef?.split('/')[1],
+          projectIdentifier: scopeRef?.split('/')[2]
+        }
+      })
+      const updatedValuesList = mapToSelectOptions(fetchedValues)
+      setLoadingLabelValues(false)
+      return updatedValuesList
+    } catch (error) {
+      setLoadingLabelValues(false)
+      showError(getErrorMessage(error))
+      return []
     }
   }
 
@@ -320,11 +322,20 @@ export const LabelFilter = (props: LabelFilterProps) => {
                   setIsVisible(true)
                   setValueQuery('')
                   setHighlightItem(item.label as string)
-                  getLabelValuesPromise(itemObj.key, itemObj.scope)
-                    .then(res => setLabelValues(res))
-                    .catch(err => {
-                      showError(getErrorMessage(err))
-                    })
+                  // ToDo : Remove this check once BE has support for encoding
+                  if (standalone) {
+                    getLabelValuesPromise(itemObj.key, itemObj.scope)
+                      .then(res => setLabelValues(res))
+                      .catch(err => {
+                        showError(getErrorMessage(err))
+                      })
+                  } else {
+                    getLabelValuesPromiseQuery(itemObj.key, itemObj.scope)
+                      .then(res => setLabelValues(res))
+                      .catch(err => {
+                        showError(getErrorMessage(err))
+                      })
+                  }
                 }}
                 tooltip={
                   labelsValueList && !loadingLabelValues ? (

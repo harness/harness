@@ -16,16 +16,9 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const appliedRulesTextContainer: string
-export declare const border: string
-export declare const dividerContainer: string
-export declare const hideButtonIcon: string
-export declare const hideDetailsContainer: string
 export declare const labelCtn: string
 export declare const main: string
 export declare const optionItem: string
-export declare const popover: string
 export declare const row: string
 export declare const table: string
 export declare const toggleAccordion: string
-export declare const widthContainer: string

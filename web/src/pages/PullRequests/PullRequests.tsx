@@ -274,8 +274,7 @@ export default function PullRequests() {
                             (isLabelEnabled || standalone) &&
                             row.original &&
                             row.original.labels &&
-                            row.original.labels.length !== 0 &&
-                            !prLoading
+                            row.original.labels.length !== 0
                           }>
                           {row.original?.labels?.map((label, index) => (
                             <Label
@@ -406,19 +405,14 @@ export default function PullRequests() {
                 <Layout.Horizontal
                   flex={{ alignItems: 'center', justifyContent: 'flex-start' }}
                   style={{ flexWrap: 'wrap', gap: '5px' }}>
-                  <Render when={!prLoading}>
-                    {isEmpty(data) ? (
-                      <Text color={Color.GREY_400}>{getString('labels.noResults')}</Text>
-                    ) : (
-                      <Text color={Color.GREY_400}>
-                        {
-                          stringSubstitute(getString('labels.prCount'), {
-                            count: data?.length
-                          }) as string
-                        }
-                      </Text>
-                    )}
-                  </Render>
+                  <Text color={Color.GREY_400}>
+                    {isEmpty(data)
+                      ? getString('labels.noResults')
+                      : (stringSubstitute(getString('labels.prCount'), {
+                          count: data?.length
+                        }) as string)}
+                  </Text>
+
                   {(isLabelEnabled || standalone) &&
                     labelFilter &&
                     labelFilter?.length !== 0 &&

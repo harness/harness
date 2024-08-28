@@ -56,6 +56,7 @@ export interface LabelSelectorProps {
   setQuery: React.Dispatch<React.SetStateAction<string>>
   query: string
   labelListLoading: boolean
+  refetchActivities: () => void
 }
 
 export interface LabelSelectProps extends Omit<ButtonProps, 'onSelect'> {
@@ -87,6 +88,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
   query,
   setQuery,
   labelListLoading,
+  refetchActivities,
   ...props
 }) => {
   const [popoverDialogOpen, setPopoverDialogOpen] = useState<boolean>(false)
@@ -110,7 +112,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
         resourceType: 'CODE_REPOSITORY',
         resourceIdentifier: repoMetadata?.identifier as string
       },
-      permissions: ['code_repo_edit']
+      permissions: ['code_repo_push']
     },
     [space]
   )
@@ -121,6 +123,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
       text={<span className={css.prefix}>{getString('add')}</span>}
       variation={ButtonVariation.TERTIARY}
       minimal
+      disabled={labelListLoading}
       size={ButtonSize.SMALL}
       tooltip={
         <PopoverContent
@@ -139,6 +142,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                     setQuery('')
                     setPopoverDialogOpen(false)
                     showSuccess(`Applied '${label.key}' label`)
+                    refetchActivities()
                   })
                   .catch(error => showError(getErrorMessage(error)))
               } catch (exception) {
@@ -161,6 +165,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                   setCurrentLabel({ key: '', id: -1 })
                   setPopoverDialogOpen(false)
                   showSuccess(`Applied '${labelKey}:${valueKey}' label`)
+                  refetchActivities()
                 })
                 .catch(error => showError(getErrorMessage(error)))
             } catch (exception) {
@@ -185,6 +190,7 @@ export const LabelSelector: React.FC<LabelSelectorProps> = ({
                   setCurrentLabel({ key: '', id: -1 })
                   setPopoverDialogOpen(false)
                   setQuery('')
+                  refetchActivities()
                 })
                 .catch(error => showError(getErrorMessage(error)))
             } catch (exception) {
@@ -266,60 +272,62 @@ const PopoverContent: React.FC<LabelSelectProps> = ({
     }
   }, [menuItemIndex, menuState, labelsList, labelsValueList])
 
-  const handleKeyDownLabels: React.KeyboardEventHandler<HTMLInputElement> = e => {
-    if (labelsList && labelsList.length !== 0) {
-      switch (e.key) {
-        case 'ArrowDown':
-          setMenuItemIndex((index: number) => {
-            return index + 1 > labelsList.length ? 1 : index + 1
-          })
-          break
-        case 'ArrowUp':
-          setMenuItemIndex((index: number) => {
-            return index - 1 > 0 ? index - 1 : labelsList.length
-          })
-          break
-        case 'Enter':
-          if (labelsList[menuItemIndex - 1]) {
-            onSelectLabel(labelsList[menuItemIndex - 1])
-            setQuery('')
-          }
-          break
-        default:
-          break
-      }
-    }
-  }
+  // const handleKeyDownLabels: React.KeyboardEventHandler<HTMLInputElement> = e => {
+  //   if (labelsList && labelsList.length !== 0) {
+  //     e.preventDefault()
+  //     switch (e.key) {
+  //       case 'ArrowDown':
+  //         setMenuItemIndex((index: number) => {
+  //           return index + 1 > labelsList.length ? 1 : index + 1
+  //         })
+  //         break
+  //       case 'ArrowUp':
+  //         setMenuItemIndex((index: number) => {
+  //           return index - 1 > 0 ? index - 1 : labelsList.length
+  //         })
+  //         break
+  //       case 'Enter':
+  //         if (labelsList[menuItemIndex - 1]) {
+  //           onSelectLabel(labelsList[menuItemIndex - 1])
+  //           setQuery('')
+  //         }
+  //         break
+  //       default:
+  //         break
+  //     }
+  //   }
+  // }
 
   const handleKeyDownValue: React.KeyboardEventHandler<HTMLInputElement> = e => {
     if (e.key === 'Backspace' && !query && currentLabel) {
       setQuery('')
       handleValueRemove && handleValueRemove()
-    } else if (labelsValueList && labelsValueList.length !== 0) {
-      switch (e.key) {
-        case 'ArrowDown':
-          setMenuItemIndex((index: number) => {
-            return index + 1 > labelsValueList.length ? 1 : index + 1
-          })
-          break
-        case 'ArrowUp':
-          setMenuItemIndex((index: number) => {
-            return index - 1 > 0 ? index - 1 : labelsValueList.length
-          })
-          break
-        case 'Enter':
-          onSelectValue(
-            currentLabel.id ?? -1,
-            labelsValueList[menuItemIndex - 1].id ?? -1,
-            currentLabel.key ?? '',
-            labelsValueList[menuItemIndex - 1].value ?? ''
-          )
-          setQuery('')
-          break
-        default:
-          break
-      }
     }
+    // } else if (labelsValueList && labelsValueList.length !== 0) {
+    //   switch (e.key) {
+    //     case 'ArrowDown':
+    //       setMenuItemIndex((index: number) => {
+    //         return index + 1 > labelsValueList.length ? 1 : index + 1
+    //       })
+    //       break
+    //     case 'ArrowUp':
+    //       setMenuItemIndex((index: number) => {
+    //         return index - 1 > 0 ? index - 1 : labelsValueList.length
+    //       })
+    //       break
+    //     case 'Enter':
+    //       onSelectValue(
+    //         currentLabel.id ?? -1,
+    //         labelsValueList[menuItemIndex - 1].id ?? -1,
+    //         currentLabel.key ?? '',
+    //         labelsValueList[menuItemIndex - 1].value ?? ''
+    //       )
+    //       setQuery('')
+    //       break
+    //     default:
+    //       break
+    //   }
+    // }
   }
 
   return (
@@ -343,7 +351,7 @@ const PopoverContent: React.FC<LabelSelectProps> = ({
               className: css.closeBtn,
               size: 20
             }}
-            onKeyDown={handleKeyDownLabels}
+            // onKeyDown={handleKeyDownLabels}
           />
         ) : (
           currentLabel &&

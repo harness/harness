@@ -81,6 +81,8 @@ export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | '
   standalone: boolean
   routingId: string
   pullReqCommits: TypesListCommitResponse | undefined
+  refetchActivities: () => void
+  refetchPullReq: () => void
 }
 
 export const Conversation: React.FC<ConversationProps> = ({
@@ -93,7 +95,9 @@ export const Conversation: React.FC<ConversationProps> = ({
   prChecksDecisionResult,
   standalone,
   routingId,
-  pullReqCommits
+  pullReqCommits,
+  refetchActivities,
+  refetchPullReq
 }) => {
   const { getString } = useStrings()
   const { currentUser, routes, hooks } = useAppContext()
@@ -442,6 +446,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                         setActivityFilter={setActivityFilter}
                         loadingReviewers={loadingReviewers}
                         refetchCodeOwners={refetchCodeOwners}
+                        refetchPullReq={refetchPullReq}
                         activities={activities}
                       />
                     </Container>
@@ -508,6 +513,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                 refetchReviewers={refetchReviewers}
                 labels={labels}
                 refetchLabels={refetchLabels}
+                refetchActivities={refetchActivities}
               />
             </Layout.Horizontal>
           </Container>

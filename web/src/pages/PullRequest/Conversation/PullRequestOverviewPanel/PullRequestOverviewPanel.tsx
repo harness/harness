@@ -51,6 +51,7 @@ interface PullRequestOverviewPanelProps {
   setActivityFilter: (val: SelectOption) => void
   loadingReviewers: boolean
   refetchCodeOwners: () => void
+  refetchPullReq: () => void
   activities: TypesPullReqActivity[] | undefined
   pullReqCommits: TypesListCommitResponse | undefined
 }
@@ -67,7 +68,8 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     loadingReviewers,
     refetchCodeOwners,
     activities,
-    pullReqCommits
+    pullReqCommits,
+    refetchPullReq
   } = props
   const { getString } = useStrings()
   const { showError } = useToaster()
@@ -174,6 +176,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
       pullRequestSection,
       showError,
       setConflictingFiles,
+      refetchPullReq,
       setRequiresCommentApproval,
       setAtLeastOneReviewerRule,
       setReqCodeOwnerApproval,
@@ -197,6 +200,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
           allowedStrategy={allowedStrats}
           pullReqCommits={pullReqCommits}
           PRStateLoading={PRStateLoading || loadingReviewers}
+          refetchPullReq={refetchPullReq}
         />
         {pullReqMetadata.state !== PullRequestState.CLOSED && (
           <PullRequestPanelSections

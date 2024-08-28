@@ -76,6 +76,7 @@ import type {
 } from 'services/code'
 import { useAppContext } from 'AppContext'
 import type { TypesRepository } from 'cde-gitness/services'
+import { usePublicResourceConfig } from 'hooks/usePublicResourceConfig'
 import ImportForm from './ImportForm/ImportForm'
 import ImportReposForm from './ImportReposForm/ImportReposForm'
 import Private from '../../icons/private.svg?url'
@@ -112,7 +113,8 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
     const [branchName, setBranchName] = useState(DEFAULT_BRANCH_NAME)
-    const [enablePublicRepo, setEnablePublicRepo] = useState(false)
+    const { allowPublicResourceCreation, configLoading, systemConfigError, errorWhileFetchingAuthSettings } =
+      usePublicResourceConfig()
     const { showError } = useToaster()
 
     const { mutate: createRepo, loading: submitLoading } = useMutate<RepoRepositoryOutput>({
@@ -147,31 +149,19 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       loading: licenseLoading,
       error: licenseError
     } = useGet({ path: '/api/v1/resources/license' })
-    const {
-      data: systemConfig,
-      loading: systemConfigLoading,
-      error: systemConfigError
-    } = useGet({ path: 'api/v1/system/config' })
 
     const loading =
-      submitLoading ||
-      gitIgnoreLoading ||
-      licenseLoading ||
-      importRepoLoading ||
-      submitImportLoading ||
-      systemConfigLoading
+      submitLoading || gitIgnoreLoading || licenseLoading || importRepoLoading || submitImportLoading || configLoading
 
     useEffect(() => {
-      if (gitIgnoreError || licenseError || systemConfigError) {
-        showError(getErrorMessage(gitIgnoreError || licenseError || systemConfigError), 0)
+      if (gitIgnoreError || licenseError || systemConfigError || errorWhileFetchingAuthSettings) {
+        showError(
+          getErrorMessage(gitIgnoreError || licenseError || systemConfigError || errorWhileFetchingAuthSettings),
+          0
+        )
       }
-    }, [gitIgnoreError, licenseError, systemConfigError, showError])
+    }, [gitIgnoreError, licenseError, systemConfigError, errorWhileFetchingAuthSettings, showError])
 
-    useEffect(() => {
-      if (systemConfig) {
-        setEnablePublicRepo(systemConfig.public_resource_creation_enabled)
-      }
-    }, [systemConfig])
     const handleSubmit = (formData: RepoFormData) => {
       try {
         const payload: OpenapiCreateRepositoryRequest = {
@@ -354,7 +344,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
                       {getString('createRepoModal.branch')}
                     </Text>
                   </Container>
-                  <Render when={enablePublicRepo}>
+                  <Render when={allowPublicResourceCreation}>
                     <hr className={css.dividerContainer} />
                     <Container>
                       <FormInput.RadioGroup

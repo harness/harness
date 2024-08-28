@@ -207,6 +207,7 @@ export function useGetPullRequestInfo() {
     commitSHA,
     refetchActivities,
     refetchCommits,
+    refetchPullReq,
     retryOnErrorFunc
   }
 }

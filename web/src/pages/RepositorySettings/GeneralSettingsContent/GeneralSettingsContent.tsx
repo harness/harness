@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Container,
   Layout,
@@ -32,7 +32,7 @@ import cx from 'classnames'
 import { Color, FontVariation, Intent } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 import { noop } from 'lodash-es'
-import { useMutate, useGet } from 'restful-react'
+import { useMutate } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { ACCESS_MODES, getErrorMessage, permissionProps, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
@@ -42,6 +42,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { RepoVisibility } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useModalHook } from 'hooks/useModalHook'
+import { usePublicResourceConfig } from 'hooks/usePublicResourceConfig'
 import useDeleteRepoModal from './DeleteRepoModal/DeleteRepoModal'
 import useDefaultBranchModal from './DefaultBranchModal/DefaultBranchModal'
 import Private from '../../../icons/private.svg?url'
@@ -62,14 +63,13 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const [defaultBranch, setDefaultBranch] = useState(ACCESS_MODES.VIEW)
   const { openModal: openDefaultBranchModal } = useDefaultBranchModal({ currentGitRef, setDefaultBranch, refetch })
   const { showError, showSuccess } = useToaster()
-
+  const { standalone, hooks } = useAppContext()
   const space = useGetSpaceParam()
-  const { standalone, hooks, isPublicAccessEnabledOnResources } = useAppContext()
+  const { allowPublicResourceCreation } = usePublicResourceConfig()
   const { getString } = useStrings()
   const currRepoVisibility = repoMetadata?.is_public === true ? RepoVisibility.PUBLIC : RepoVisibility.PRIVATE
-
   const [repoVis, setRepoVis] = useState<RepoVisibility>(currRepoVisibility)
-  const [enablePublicRepo, setEnablePublicRepo] = useState(false)
+
   const { mutate } = useMutate({
     verb: 'PATCH',
     path: `/api/v1/repos/${repoMetadata?.path}/+/`
@@ -100,19 +100,11 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
     },
     [space]
   )
-  const { data: systemConfig } = useGet({ path: 'api/v1/system/config' })
-
-  useEffect(() => {
-    if (systemConfig) {
-      setEnablePublicRepo(systemConfig.public_resource_creation_enabled)
-    }
-  }, [systemConfig])
 
   const ModalComponent: React.FC = () => {
     return (
       <Dialog
         className={css.dialogContainer}
-        style={{ width: 585, maxHeight: '95vh', overflow: 'auto' }}
         title={<Text font={{ variation: FontVariation.H4 }}>{getString('changeRepoVis')}</Text>}
         isOpen
         onClose={hideModal}>
@@ -144,7 +136,6 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
           </Container>
           <Layout.Horizontal className={css.buttonContainer}>
             <Button
-              margin={{ right: 'medium' }}
               type="submit"
               text={
                 <StringSubstitute
@@ -333,7 +324,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 </Container>
               </Layout.Horizontal>
             </Container>
-            <Render when={enablePublicRepo && isPublicAccessEnabledOnResources}>
+            <Render when={allowPublicResourceCreation}>
               <Container padding="large" margin={{ bottom: 'medium' }} className={css.generalContainer}>
                 <Layout.Horizontal padding={{ bottom: 'medium' }}>
                   <Container className={css.label}>

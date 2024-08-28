@@ -651,8 +651,11 @@ export interface StringsMap {
   'labels.createdIn': string
   'labels.deleteLabel': string
   'labels.deleteLabelConfirm': string
+  'labels.deletedLabel': string
   'labels.descriptionOptional': string
   'labels.failedToDeleteLabel': string
+  'labels.failedtoFetchLabels': string
+  'labels.failedtoFetchValues': string
   'labels.filterByLabels': string
   'labels.findALabel': string
   'labels.findOrAdd': string
