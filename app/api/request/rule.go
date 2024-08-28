@@ -25,6 +25,7 @@ const (
 	PathParamRuleIdentifier = "rule_identifier"
 
 	QueryParamBypassRules = "bypass_rules"
+	QueryParamDryRunRules = "dry_run_rules"
 )
 
 // ParseRuleFilter extracts the protection rule query parameters from the url.
@@ -70,4 +71,9 @@ func parseRuleSort(r *http.Request) enum.RuleSort {
 // ParseBypassRulesFromQuery extracts the bypass rules parameter from the URL query.
 func ParseBypassRulesFromQuery(r *http.Request) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamBypassRules, false)
+}
+
+// ParseDryRunRulesFromQuery extracts the dry run rules parameter from the URL query.
+func ParseDryRunRulesFromQuery(r *http.Request) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamDryRunRules, false)
 }

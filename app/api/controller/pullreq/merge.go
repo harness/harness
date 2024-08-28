@@ -294,7 +294,7 @@ func (c *Controller) Merge(
 			BranchDeleted:  ruleOut.DeleteSourceBranch,
 			RuleViolations: violations,
 
-			// values only retured by dry run
+			// values only returned by dry run
 			DryRun:                              true,
 			ConflictFiles:                       pr.MergeConflicts,
 			AllowedMethods:                      ruleOut.AllowedMethods,

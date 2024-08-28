@@ -527,6 +527,21 @@ var queryParameterBypassRules = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterDryRunRules = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamDryRunRules,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Dry run rules for operations"),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 var queryParameterDeletedAt = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamDeletedAt,
@@ -907,7 +922,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDeleteBranch := openapi3.Operation{}
 	opDeleteBranch.WithTags("repository")
 	opDeleteBranch.WithMapOfAnything(map[string]interface{}{"operationId": "deleteBranch"})
-	opDeleteBranch.WithParameters(queryParameterBypassRules)
+	opDeleteBranch.WithParameters(queryParameterBypassRules, queryParameterDryRunRules)
 	_ = reflector.SetRequest(&opDeleteBranch, new(deleteBranchRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusInternalServerError)

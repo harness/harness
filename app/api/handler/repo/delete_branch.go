@@ -46,7 +46,13 @@ func HandleDeleteBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		violations, err := repoCtrl.DeleteBranch(ctx, session, repoRef, branchName, bypassRules)
+		dryRunRules, err := request.ParseDryRunRulesFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		violations, err := repoCtrl.DeleteBranch(ctx, session, repoRef, branchName, bypassRules, dryRunRules)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 		}

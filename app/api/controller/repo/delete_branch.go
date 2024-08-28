@@ -33,6 +33,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	repoRef string,
 	branchName string,
 	bypassRules bool,
+	dryRunRules bool,
 ) ([]types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
@@ -66,6 +67,10 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	}
 	if protection.IsCritical(violations) {
 		return violations, nil
+	}
+
+	if dryRunRules {
+		return []types.RuleViolations{}, nil
 	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
