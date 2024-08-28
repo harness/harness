@@ -144,6 +144,9 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 	}
 
 	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, branchRef)
+	if err != nil {
+		return CommitFilesResponse{}, fmt.Errorf("failed to create ref updater: %w", err)
+	}
 
 	// run the actions in a shared repo
 
