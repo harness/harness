@@ -58,6 +58,8 @@ paths:
       operationId: CreateRegistry
       tags:
         - Registries
+      parameters:
+        - $ref: "#/components/parameters/spaceRefQueryParam"
       requestBody:
         $ref: "#/components/requestBodies/RegistryRequest"
       responses:
@@ -1468,6 +1470,13 @@ components:
         - password
     Anonymous: {}
   parameters:
+    spaceRefQueryParam:
+      name: space_ref
+      in: query
+      required: false
+      description: Unique space path
+      schema:
+        type: string
     packageTypeParam:
       name: package_type
       in: query

@@ -467,6 +467,9 @@ type SortOrder string
 // SpaceRefPathParam defines model for spaceRefPathParam.
 type SpaceRefPathParam string
 
+// SpaceRefQueryParam defines model for spaceRefQueryParam.
+type SpaceRefQueryParam string
+
 // ToDateParam defines model for toDateParam.
 type ToDateParam string
 
@@ -640,6 +643,12 @@ type Unauthenticated Error
 
 // Unauthorized defines model for Unauthorized.
 type Unauthorized Error
+
+// CreateRegistryParams defines parameters for CreateRegistry.
+type CreateRegistryParams struct {
+	// SpaceRef Unique space path
+	SpaceRef *SpaceRefQueryParam `form:"space_ref,omitempty" json:"space_ref,omitempty"`
+}
 
 // ListArtifactLabelsParams defines parameters for ListArtifactLabels.
 type ListArtifactLabelsParams struct {
