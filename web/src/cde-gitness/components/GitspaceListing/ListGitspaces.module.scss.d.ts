@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const branchCell: string
 export declare const cdeTable: string
 export declare const gitspaceUrl: string
 export declare const listContainer: string

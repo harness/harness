@@ -160,7 +160,9 @@ export const CDESSHSelect = () => {
                     <Button variation={ButtonVariation.PRIMARY} type="submit">
                       Add Key
                     </Button>
-                    <Button variation={ButtonVariation.TERTIARY}>Cancel</Button>
+                    <Button onClick={hideModal} variation={ButtonVariation.TERTIARY}>
+                      Cancel
+                    </Button>
                   </Layout.Horizontal>
                 </FormikForm>
               )

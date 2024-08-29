@@ -140,6 +140,9 @@ export const CDEAnyGitImport = () => {
                 code_repo_type: values?.code_repo_type
               }
             })
+            if (!skipBranchUpdate) {
+              setSearchBranch(response.branch)
+            }
             setRepoCheckState(RepoCheckStatus.Valid)
           }
         }
@@ -161,13 +164,14 @@ export const CDEAnyGitImport = () => {
       <Layout.Horizontal spacing="medium">
         <Container width="63%" className={css.formFields}>
           <GitspaceSelect
+            hideMenu={isValidUrl(searchTerm)}
             text={
               <Container flex={{ alignItems: 'center' }} className={css.customTextInput}>
                 <Repository height={32} width={32} />
                 <TextInput
                   inputRef={ref => (repoRef.current = ref)}
                   value={searchTerm}
-                  placeholder="enter url or type reop name"
+                  placeholder="enter url or type repo name"
                   onChange={async event => {
                     const target = event.target as HTMLInputElement
                     setSearchTerm(target?.value?.trim() || '')
@@ -180,7 +184,7 @@ export const CDEAnyGitImport = () => {
             rightIcon={
               loading || repoLoading
                 ? 'loading'
-                : repoCheckState
+                : repoCheckState && isValidUrl(searchTerm)
                 ? repoCheckState === RepoCheckStatus.Valid
                   ? 'tick-circle'
                   : 'warning-sign'

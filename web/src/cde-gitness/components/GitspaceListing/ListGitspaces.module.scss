@@ -66,8 +66,11 @@
 }
 
 .repositoryCell {
-  width: fit-content !important;
-  margin-right: var(--spacing-xxlarge) !important;
+  max-width: 70%;
+}
+
+.branchCell {
+  max-width: 30%;
 }
 
 .stopModal {

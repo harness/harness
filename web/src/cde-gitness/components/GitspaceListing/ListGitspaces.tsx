@@ -29,22 +29,12 @@ import React, { useEffect, useState } from 'react'
 import { Color } from '@harnessio/design-system'
 import type { Renderer, CellProps } from 'react-table'
 import ReactTimeago from 'react-timeago'
-import {
-  Circle,
-  Cpu,
-  Clock,
-  Play,
-  Db,
-  ModernTv,
-  GithubCircle,
-  GitLabFull,
-  Code,
-  Bitbucket as BitbucketIcon
-} from 'iconoir-react'
+import { Circle, Cpu, Clock, Play, Db, ModernTv } from 'iconoir-react'
 import { Intent, Menu, MenuItem, PopoverInteractionKind, Position } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
 import type { IconName } from '@harnessio/icons'
 import moment from 'moment'
+import { defaultTo } from 'lodash-es'
 import RegionIcon from 'cde-gitness/assests/globe.svg?url'
 import { UseStringsReturn, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -62,29 +52,12 @@ import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
+import { scmOptions } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import css from './ListGitspaces.module.scss'
 
-enum CodeRepoType {
-  Github = 'github',
-  Gitlab = 'gitlab',
-  HarnessCode = 'harness_code',
-  Bitbucket = 'bitbucket',
-  Unknown = 'unknown'
-}
-
 const getIconByRepoType = ({ repoType }: { repoType?: EnumGitspaceCodeRepoType }): React.ReactNode => {
-  switch (repoType) {
-    case CodeRepoType.Github:
-      return <GithubCircle height={24} width={24} />
-    case CodeRepoType.Gitlab:
-      return <GitLabFull height={24} width={24} />
-    case CodeRepoType.Bitbucket:
-      return <BitbucketIcon height={24} width={24} />
-    default:
-    case CodeRepoType.Unknown:
-    case CodeRepoType.HarnessCode:
-      return <Code height={24} width={24} />
-  }
+  const scmOption = scmOptions.find(option => option.value === repoType)
+  return <img height={24} width={24} src={defaultTo(scmOption?.icon, '')} style={{ marginRight: '10px' }} />
 }
 
 export const getStatusColor = (status?: EnumGitspaceStateType) => {
@@ -213,33 +186,38 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
   return (
     <Layout.Horizontal
       spacing={'small'}
-      className={css.repositoryCell}
       flex={{ alignItems: 'center', justifyContent: 'start' }}
       onClick={e => {
         e.preventDefault()
         e.stopPropagation()
         window.open(code_repo_url, '_blank')
       }}>
-      <Container height={24} width={24}>
-        {getIconByRepoType({ repoType: code_repo_type })}
-      </Container>
-      <Container width="100%">
+      <Layout.Horizontal
+        className={css.repositoryCell}
+        spacing={'small'}
+        flex={{ alignItems: 'center', justifyContent: 'start' }}>
+        <Container height={24} width={24}>
+          {getIconByRepoType({ repoType: code_repo_type })}
+        </Container>
         <Text lineClamp={1} color={Color.PRIMARY_7} title={name} font={{ align: 'left', size: 'normal' }}>
           {name}
         </Text>
-      </Container>
-      <Text color={Color.PRIMARY_7}>:</Text>
-      <Container width="30%">
+      </Layout.Horizontal>
+      <Layout.Horizontal
+        className={css.branchCell}
+        spacing={'small'}
+        flex={{ alignItems: 'center', justifyContent: 'start' }}>
+        <Text color={Color.PRIMARY_7}>:</Text>
         <Text
           lineClamp={1}
           icon="git-branch"
           iconProps={{ size: 12 }}
           color={Color.PRIMARY_7}
-          title={name}
+          title={branch}
           font={{ align: 'left', size: 'normal' }}>
           {branch}
         </Text>
-      </Container>
+      </Layout.Horizontal>
     </Layout.Horizontal>
   )
 }

@@ -416,7 +416,7 @@ const GitspaceDetails = () => {
                 }
                 id="logsCard"
                 details={
-                  <Container>
+                  <Container width="100%">
                     <ContainerLogs data={standalone ? formattedlogsdata.data : responseData} />
                   </Container>
                 }
