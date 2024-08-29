@@ -168,6 +168,7 @@ export const RenderGitspaceName: Renderer<CellProps<TypesGitspaceConfig>> = ({ r
       <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
         <img src={ide === IDEType.VSCODE ? VSCode : vsCodeWebIcon} height={20} width={20} />
         <Text
+          width="90%"
           lineClamp={1}
           color={Color.BLACK}
           title={name}
@@ -210,23 +211,25 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
   const { name, branch, code_repo_url, code_repo_type } = details || {}
 
   return (
-    <Layout.Vertical spacing={'small'}>
-      <Layout.Horizontal
-        spacing={'small'}
-        className={css.repositoryCell}
-        flex={{ alignItems: 'center', justifyContent: 'start' }}
-        onClick={e => {
-          e.preventDefault()
-          e.stopPropagation()
-          window.open(code_repo_url, '_blank')
-        }}>
-        <Container height={24} width={24}>
-          {getIconByRepoType({ repoType: code_repo_type })}
-        </Container>
+    <Layout.Horizontal
+      spacing={'small'}
+      className={css.repositoryCell}
+      flex={{ alignItems: 'center', justifyContent: 'start' }}
+      onClick={e => {
+        e.preventDefault()
+        e.stopPropagation()
+        window.open(code_repo_url, '_blank')
+      }}>
+      <Container height={24} width={24}>
+        {getIconByRepoType({ repoType: code_repo_type })}
+      </Container>
+      <Container width="100%">
         <Text lineClamp={1} color={Color.PRIMARY_7} title={name} font={{ align: 'left', size: 'normal' }}>
           {name}
         </Text>
-        <Text color={Color.PRIMARY_7}>:</Text>
+      </Container>
+      <Text color={Color.PRIMARY_7}>:</Text>
+      <Container width="30%">
         <Text
           lineClamp={1}
           icon="git-branch"
@@ -236,8 +239,8 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
           font={{ align: 'left', size: 'normal' }}>
           {branch}
         </Text>
-      </Layout.Horizontal>
-    </Layout.Vertical>
+      </Container>
+    </Layout.Horizontal>
   )
 }
 
