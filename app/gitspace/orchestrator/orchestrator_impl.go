@@ -120,17 +120,11 @@ func (o orchestrator) TriggerStopGitspace(
 			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
 	}
 
-	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig)
+	infra, err := o.getProvisionedInfra(ctx, infraProviderResource, gitspaceConfig)
 	if err != nil {
-		return fmt.Errorf("cannot get the ports required for gitspace during start: %w", err)
-	}
-
-	infra, err := o.infraProvisioner.Find(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
-	if infra.Storage == "" {
-		log.Warn().Msgf("couldn't find the storage for resource ID %d", gitspaceConfig.InfraProviderResourceID)
-	}
-	if err != nil {
-		return fmt.Errorf("cannot find the provisioned infra: %w", err)
+		return fmt.Errorf(
+			"unable to find provisioned infra while triggering stop for gitspace instance %s: %w",
+			gitspaceConfig.GitspaceInstance.Identifier, err)
 	}
 
 	err = o.stopGitspaceContainer(ctx, gitspaceConfig, *infra)
@@ -225,14 +219,11 @@ func (o orchestrator) TriggerDeleteGitspace(
 			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
 	}
 
-	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig)
+	infra, err := o.getProvisionedInfra(ctx, infraProviderResource, gitspaceConfig)
 	if err != nil {
-		return fmt.Errorf("cannot get the ports required for gitspace during start: %w", err)
-	}
-
-	infra, err := o.infraProvisioner.Find(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
-	if err != nil {
-		return fmt.Errorf("cannot find the provisioned infra: %w", err)
+		return fmt.Errorf(
+			"unable to find provisioned infra while triggering delete for gitspace instance %s: %w",
+			gitspaceConfig.GitspaceInstance.Identifier, err)
 	}
 
 	err = o.stopAndRemoveGitspaceContainer(ctx, gitspaceConfig, *infra)
@@ -529,24 +520,13 @@ func (o orchestrator) getPortsRequiredForGitspace(
 }
 
 func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig) (string, error) {
-	infraProviderResource, err := o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
+	infra, err := o.getProvisionedInfra(ctx, nil, gitspaceConfig)
 	if err != nil {
 		return "", fmt.Errorf(
-			"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
+			"unable to find provisioned infra while fetching logs for gitspace instance %s: %w",
+			gitspaceConfig.GitspaceInstance.Identifier, err)
 	}
 
-	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig)
-	if err != nil {
-		return "", fmt.Errorf("cannot get the ports required for gitspace during get logs: %w", err)
-	}
-
-	infra, err := o.infraProvisioner.Find(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
-	if infra.Storage == "" {
-		return "", fmt.Errorf("couldn't find the storage for resource ID %d", gitspaceConfig.InfraProviderResourceID)
-	}
-	if err != nil {
-		return "", fmt.Errorf("cannot find the provisioned infra: %w", err)
-	}
 	// NOTE: Currently we use a static identifier as the Gitspace user.
 	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 	logs, err := o.containerOrchestrator.StreamLogs(ctx, gitspaceConfig, *infra)
@@ -555,4 +535,39 @@ func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.
 	}
 
 	return logs, nil
+}
+
+func (o orchestrator) getProvisionedInfra(
+	ctx context.Context,
+	infraProviderResource *types.InfraProviderResource,
+	gitspaceConfig types.GitspaceConfig,
+) (*types.Infrastructure, error) {
+	if infraProviderResource == nil {
+		var err error
+		infraProviderResource, err = o.infraProviderResourceStore.Find(ctx, gitspaceConfig.InfraProviderResourceID)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"cannot get the infraProviderResource with ID %d: %w", gitspaceConfig.InfraProviderResourceID, err)
+		}
+	}
+
+	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get the ports required for gitspace: %w", err)
+	}
+
+	infra, err := o.infraProvisioner.Find(ctx, *infraProviderResource, gitspaceConfig, requiredGitspacePorts)
+	if err != nil {
+		return nil, fmt.Errorf("cannot find the provisioned infra: %w", err)
+	}
+
+	if infra.Status != enum.InfraStatusProvisioned {
+		return nil, fmt.Errorf("expected infra state is provisioned, actual state is: %s", infra.Status)
+	}
+
+	if infra.Storage == "" {
+		log.Warn().Msgf("couldn't find the storage for resource ID %d", gitspaceConfig.InfraProviderResourceID)
+	}
+
+	return infra, nil
 }
