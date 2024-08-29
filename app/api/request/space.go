@@ -15,6 +15,7 @@
 package request
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/harness/gitness/types"
@@ -23,6 +24,8 @@ import (
 
 const (
 	PathParamSpaceRef = "space_ref"
+
+	QueryParamIncludeSubspaces = "include_subspaces"
 )
 
 func GetSpaceRefFromPath(r *http.Request) (string, error) {
@@ -74,4 +77,13 @@ func ParseSpaceFilter(r *http.Request) (*types.SpaceFilter, error) {
 		DeletedAt:         deletedAt,
 		DeletedBeforeOrAt: deletedBeforeOrAt,
 	}, nil
+}
+
+func GetIncludeSubspacesFromQuery(r *http.Request) (bool, error) {
+	v, err := QueryParamAsBoolOrDefault(r, QueryParamIncludeSubspaces, false)
+	if err != nil {
+		return false, fmt.Errorf("failed to parse include subspaces parameter: %w", err)
+	}
+
+	return v, nil
 }

@@ -126,3 +126,48 @@ var queryParameterCreatedGt = openapi3.ParameterOrRef{
 		},
 	},
 }
+
+var queryParameterEditedLt = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamEditedLt,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should contain only entries edited before this timestamp (unix millis)."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Minimum: ptr.Float64(0),
+			},
+		},
+	},
+}
+
+var queryParameterEditedGt = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamEditedGt,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should contain only entries edited after this timestamp (unix millis)."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Minimum: ptr.Float64(0),
+			},
+		},
+	},
+}
+
+var queryParameterIncludeSubspaces = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamIncludeSubspaces,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should contain entries from the desired space and of its subspaces."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}

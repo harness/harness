@@ -49,7 +49,7 @@ type SpaceParentData struct {
 	ParentID   int64  `json:"parent_id"`
 }
 
-// Stores spaces query parameters.
+// SpaceFilter stores spaces query parameters.
 type SpaceFilter struct {
 	Page              int            `json:"page"`
 	Size              int            `json:"size"`

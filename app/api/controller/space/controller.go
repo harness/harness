@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -79,6 +80,7 @@ type Controller struct {
 	principalStore  store.PrincipalStore
 	repoCtrl        *repo.Controller
 	membershipStore store.MembershipStore
+	prListService   *pullreq.ListService
 	importer        *importer.Repository
 	exporter        *exporter.Repository
 	resourceLimiter limiter.ResourceLimiter
@@ -94,7 +96,8 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	spacePathStore store.SpacePathStore, pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
-	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
+	membershipStore store.MembershipStore, prListService *pullreq.ListService,
+	importer *importer.Repository, exporter *exporter.Repository,
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
 	instrumentation instrument.Service,
@@ -116,6 +119,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		principalStore:      principalStore,
 		repoCtrl:            repoCtrl,
 		membershipStore:     membershipStore,
+		prListService:       prListService,
 		importer:            importer,
 		exporter:            exporter,
 		resourceLimiter:     limiter,

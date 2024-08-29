@@ -378,6 +378,21 @@ var QueryParameterValueID = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterIncludeDescription = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamIncludeDescription,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("By providing this parameter the description would be included in the response."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func pullReqOperations(reflector *openapi3.Reflector) {
 	createPullReq := openapi3.Operation{}
@@ -399,7 +414,8 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
 		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
 		queryParameterOrder, queryParameterSortPullRequest,
-		queryParameterCreatedLt, queryParameterCreatedGt,
+		queryParameterCreatedLt, queryParameterCreatedGt, queryParameterEditedLt, queryParameterEditedGt,
+		queryParameterIncludeDescription,
 		QueryParameterPage, QueryParameterLimit,
 		QueryParameterLabelID, QueryParameterValueID)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)

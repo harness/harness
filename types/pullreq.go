@@ -94,21 +94,27 @@ type PullReqStats struct {
 
 // PullReqFilter stores pull request query parameters.
 type PullReqFilter struct {
-	Page          int                 `json:"page"`
-	Size          int                 `json:"size"`
-	Query         string              `json:"query"`
-	CreatedBy     []int64             `json:"created_by"`
-	SourceRepoID  int64               `json:"-"` // caller should use source_repo_ref
-	SourceRepoRef string              `json:"source_repo_ref"`
-	SourceBranch  string              `json:"source_branch"`
-	TargetRepoID  int64               `json:"-"`
-	TargetBranch  string              `json:"target_branch"`
-	States        []enum.PullReqState `json:"state"`
-	Sort          enum.PullReqSort    `json:"sort"`
-	Order         enum.Order          `json:"order"`
-	LabelID       []int64             `json:"label_id"`
-	ValueID       []int64             `json:"value_id"`
+	Page               int                 `json:"page"`
+	Size               int                 `json:"size"`
+	Query              string              `json:"query"`
+	CreatedBy          []int64             `json:"created_by"`
+	SourceRepoID       int64               `json:"-"` // caller should use source_repo_ref
+	SourceRepoRef      string              `json:"source_repo_ref"`
+	SourceBranch       string              `json:"source_branch"`
+	TargetRepoID       int64               `json:"-"`
+	TargetBranch       string              `json:"target_branch"`
+	States             []enum.PullReqState `json:"state"`
+	Sort               enum.PullReqSort    `json:"sort"`
+	Order              enum.Order          `json:"order"`
+	LabelID            []int64             `json:"label_id"`
+	ValueID            []int64             `json:"value_id"`
+	IncludeDescription bool                `json:"include_description"`
 	CreatedFilter
+	EditedFilter
+
+	// internal use only
+	SpaceIDs        []int64
+	RepoIDBlacklist []int64
 }
 
 // PullReqReview holds pull request review.
@@ -202,4 +208,9 @@ type MergeResponse struct {
 type MergeViolations struct {
 	ConflictFiles  []string         `json:"conflict_files,omitempty"`
 	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
+}
+
+type PullReqRepo struct {
+	PullRequest *PullReq    `json:"pull_request"`
+	Repository  *Repository `json:"repository"`
 }

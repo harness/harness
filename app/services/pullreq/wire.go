@@ -17,15 +17,18 @@ package pullreq
 import (
 	"context"
 
+	"github.com/harness/gitness/app/auth/authz"
 	gitevents "github.com/harness/gitness/app/events/git"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
+	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -33,6 +36,7 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideService,
+	ProvideListService,
 )
 
 func ProvideService(ctx context.Context,
@@ -70,5 +74,27 @@ func ProvideService(ctx context.Context,
 		pubsub,
 		urlProvider,
 		sseStreamer,
+	)
+}
+
+func ProvideListService(
+	tx dbtx.Transactor,
+	git git.Interface,
+	authorizer authz.Authorizer,
+	spaceStore store.SpaceStore,
+	repoStore store.RepoStore,
+	repoGitInfoCache store.RepoGitInfoCache,
+	pullreqStore store.PullReqStore,
+	labelSvc *label.Service,
+) *ListService {
+	return NewListService(
+		tx,
+		git,
+		authorizer,
+		spaceStore,
+		repoStore,
+		repoGitInfoCache,
+		pullreqStore,
+		labelSvc,
 	)
 }

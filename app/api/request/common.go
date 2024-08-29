@@ -46,6 +46,8 @@ const (
 
 	QueryParamCreatedLt = "created_lt"
 	QueryParamCreatedGt = "created_gt"
+	QueryParamEditedLt  = "edited_lt"
+	QueryParamEditedGt  = "edited_gt"
 
 	QueryParamPage  = "page"
 	QueryParamLimit = "limit"
@@ -146,6 +148,26 @@ func ParseCreated(r *http.Request) (types.CreatedFilter, error) {
 
 	filter.CreatedGt = createdGt
 	filter.CreatedLt = createdLt
+
+	return filter, nil
+}
+
+// ParseEdited extracts the edited filter from the url query param.
+func ParseEdited(r *http.Request) (types.EditedFilter, error) {
+	filter := types.EditedFilter{}
+
+	editedLt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamEditedLt, 0)
+	if err != nil {
+		return filter, fmt.Errorf("encountered error parsing edited lt: %w", err)
+	}
+
+	editedGt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamEditedGt, 0)
+	if err != nil {
+		return filter, fmt.Errorf("encountered error parsing edited gt: %w", err)
+	}
+
+	filter.EditedGt = editedGt
+	filter.EditedLt = editedLt
 
 	return filter, nil
 }

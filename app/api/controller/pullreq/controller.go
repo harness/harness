@@ -66,6 +66,7 @@ type Controller struct {
 	eventReporter          *pullreqevents.Reporter
 	codeCommentMigrator    *codecomments.Migrator
 	pullreqService         *pullreq.Service
+	pullreqListService     *pullreq.ListService
 	protectionManager      *protection.Manager
 	sseStreamer            sse.Streamer
 	codeOwners             *codeowners.Service
@@ -97,6 +98,7 @@ func NewController(
 	eventReporter *pullreqevents.Reporter,
 	codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service,
+	pullreqListService *pullreq.ListService,
 	protectionManager *protection.Manager,
 	sseStreamer sse.Streamer,
 	codeowners *codeowners.Service,
@@ -127,6 +129,7 @@ func NewController(
 		codeCommentMigrator:    codeCommentMigrator,
 		eventReporter:          eventReporter,
 		pullreqService:         pullreqService,
+		pullreqListService:     pullreqListService,
 		protectionManager:      protectionManager,
 		sseStreamer:            sseStreamer,
 		codeOwners:             codeowners,

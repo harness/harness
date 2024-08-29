@@ -600,4 +600,23 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdateLabelValue, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch,
 		"/spaces/{space_ref}/labels/{key}/values/{value}", opUpdateLabelValue)
+
+	listPullReq := openapi3.Operation{}
+	listPullReq.WithTags("space")
+	listPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "listSpacePullReq"})
+	listPullReq.WithParameters(
+		queryParameterStatePullRequest, queryParameterSourceRepoRefPullRequest,
+		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
+		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
+		queryParameterCreatedLt, queryParameterCreatedGt, queryParameterEditedLt,
+		queryParameterIncludeDescription, queryParameterIncludeSubspaces,
+		QueryParameterLimit,
+		QueryParameterLabelID, QueryParameterValueID)
+	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{repo_ref}/pullreq", listPullReq)
 }

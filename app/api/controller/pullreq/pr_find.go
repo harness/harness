@@ -20,7 +20,6 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -53,29 +52,9 @@ func (c *Controller) Find(
 		return nil, fmt.Errorf("failed to backfill labels assigned to pull request: %w", err)
 	}
 
-	if err := c.backfillStats(ctx, repo, pr); err != nil {
+	if err := c.pullreqListService.BackfillStats(ctx, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to backfill PR stats")
 	}
 
 	return pr, nil
-}
-
-func (c *Controller) backfillStats(ctx context.Context, repo *types.Repository, pr *types.PullReq) error {
-	s := pr.Stats.DiffStats
-	if s.Commits != nil && s.FilesChanged != nil && s.Additions != nil && s.Deletions != nil {
-		return nil
-	}
-
-	output, err := c.git.DiffStats(ctx, &git.DiffParams{
-		ReadParams: git.CreateReadParams(repo),
-		BaseRef:    pr.MergeBaseSHA,
-		HeadRef:    pr.SourceSHA,
-	})
-	if err != nil {
-		return fmt.Errorf("failed get diff stats: %w", err)
-	}
-
-	pr.Stats.DiffStats = types.NewDiffStats(output.Commits, output.FilesChanged, output.Additions, output.Deletions)
-
-	return nil
 }

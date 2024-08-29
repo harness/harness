@@ -19,9 +19,6 @@ package main
 
 import (
 	"context"
-	"github.com/harness/gitness/app/api/controller/system"
-	"github.com/harness/gitness/app/api/controller/usergroup"
-
 	"github.com/harness/gitness/app/api/controller/aiagent"
 	"github.com/harness/gitness/app/api/controller/capabilities"
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
@@ -44,10 +41,12 @@ import (
 	"github.com/harness/gitness/app/api/controller/service"
 	"github.com/harness/gitness/app/api/controller/serviceaccount"
 	"github.com/harness/gitness/app/api/controller/space"
+	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/controller/template"
 	controllertrigger "github.com/harness/gitness/app/api/controller/trigger"
 	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/controller/user"
+	"github.com/harness/gitness/app/api/controller/usergroup"
 	controllerwebhook "github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth/authn"

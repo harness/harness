@@ -27,6 +27,8 @@ const (
 	PathParamPullReqCommentID = "pullreq_comment_id"
 	PathParamReviewerID       = "pullreq_reviewer_id"
 	PathParamUserGroupID      = "user_group_id"
+
+	QueryParamIncludeDescription = "include_description"
 )
 
 func GetPullReqNumberFromPath(r *http.Request) (int64, error) {
@@ -89,20 +91,32 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		return nil, fmt.Errorf("encountered error parsing pr created filter: %w", err)
 	}
 
+	editedAtFilter, err := ParseEdited(r)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing pr edited filter: %w", err)
+	}
+
+	includeDescription, err := QueryParamAsBoolOrDefault(r, QueryParamIncludeDescription, false)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing include description filter: %w", err)
+	}
+
 	return &types.PullReqFilter{
-		Page:          ParsePage(r),
-		Size:          ParseLimit(r),
-		Query:         ParseQuery(r),
-		CreatedBy:     createdBy,
-		SourceRepoRef: r.URL.Query().Get("source_repo_ref"),
-		SourceBranch:  r.URL.Query().Get("source_branch"),
-		TargetBranch:  r.URL.Query().Get("target_branch"),
-		States:        parsePullReqStates(r),
-		Sort:          ParseSortPullReq(r),
-		Order:         ParseOrder(r),
-		LabelID:       labelID,
-		ValueID:       valueID,
-		CreatedFilter: createdAtFilter,
+		Page:               ParsePage(r),
+		Size:               ParseLimit(r),
+		Query:              ParseQuery(r),
+		CreatedBy:          createdBy,
+		SourceRepoRef:      r.URL.Query().Get("source_repo_ref"),
+		SourceBranch:       r.URL.Query().Get("source_branch"),
+		TargetBranch:       r.URL.Query().Get("target_branch"),
+		States:             parsePullReqStates(r),
+		Sort:               ParseSortPullReq(r),
+		Order:              ParseOrder(r),
+		LabelID:            labelID,
+		ValueID:            valueID,
+		IncludeDescription: includeDescription,
+		CreatedFilter:      createdAtFilter,
+		EditedFilter:       editedAtFilter,
 	}, nil
 }
 

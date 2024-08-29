@@ -98,7 +98,7 @@ type pullReq struct {
 }
 
 const (
-	pullReqColumns = `
+	pullReqColumnsNoDescription = `
 		 pullreq_id
 		,pullreq_version
 		,pullreq_number
@@ -112,7 +112,6 @@ const (
 		,pullreq_comment_count
 		,pullreq_unresolved_count
 		,pullreq_title
-		,pullreq_description
 		,pullreq_source_repo_id
 		,pullreq_source_branch
 		,pullreq_source_sha
@@ -131,6 +130,9 @@ const (
 		,pullreq_file_count
 		,pullreq_additions
 		,pullreq_deletions`
+
+	pullReqColumns = pullReqColumnsNoDescription + `
+		,pullreq_description`
 
 	pullReqSelectBase = `
 	SELECT` + pullReqColumns + `
@@ -457,16 +459,7 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 
 // List returns a list of pull requests for a repo.
 func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*types.PullReq, error) {
-	var stmt squirrel.SelectBuilder
-
-	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 {
-		stmt = database.Builder.Select("DISTINCT " + pullReqColumns)
-	} else {
-		stmt = database.Builder.Select(pullReqColumns)
-	}
-	stmt = stmt.From("pullreqs")
-
-	s.applyFilter(&stmt, opts)
+	stmt := s.listQuery(opts)
 
 	stmt = stmt.Limit(database.Limit(opts.Size))
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
@@ -496,6 +489,75 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 	}
 
 	return result, nil
+}
+
+// Stream returns a list of pull requests for a repo.
+func (s *PullReqStore) Stream(ctx context.Context, opts *types.PullReqFilter) (<-chan *types.PullReq, <-chan error) {
+	stmt := s.listQuery(opts)
+
+	stmt = stmt.OrderBy("pullreq_edited desc")
+
+	chPRs := make(chan *types.PullReq)
+	chErr := make(chan error, 1)
+
+	go func() {
+		defer close(chPRs)
+		defer close(chErr)
+
+		sql, args, err := stmt.ToSql()
+		if err != nil {
+			chErr <- errors.Wrap(err, "Failed to convert query to sql")
+			return
+		}
+
+		db := dbtx.GetAccessor(ctx, s.db)
+
+		rows, err := db.QueryxContext(ctx, sql, args...)
+		if err != nil {
+			chErr <- database.ProcessSQLErrorf(ctx, err, "Failed to execute stream query")
+			return
+		}
+
+		defer func() { _ = rows.Close() }()
+
+		for rows.Next() {
+			var prData pullReq
+			err = rows.StructScan(&prData)
+			if err != nil {
+				chErr <- fmt.Errorf("failed to scan pull request: %w", err)
+				return
+			}
+
+			chPRs <- s.mapPullReq(ctx, &prData)
+		}
+
+		if err := rows.Err(); err != nil {
+			chErr <- fmt.Errorf("failed to scan pull request: %w", err)
+		}
+	}()
+
+	return chPRs, chErr
+}
+
+func (s *PullReqStore) listQuery(opts *types.PullReqFilter) squirrel.SelectBuilder {
+	var stmt squirrel.SelectBuilder
+
+	columns := pullReqColumnsNoDescription
+	if opts.IncludeDescription {
+		columns = pullReqColumns
+	}
+
+	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 {
+		stmt = database.Builder.Select("DISTINCT " + columns)
+	} else {
+		stmt = database.Builder.Select(columns)
+	}
+
+	stmt = stmt.From("pullreqs")
+
+	s.applyFilter(&stmt, opts)
+
+	return stmt
 }
 
 func (*PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.PullReqFilter) {
@@ -535,6 +597,28 @@ func (*PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.PullR
 
 	if opts.CreatedGt > 0 {
 		*stmt = stmt.Where("pullreq_created > ?", opts.CreatedGt)
+	}
+
+	if opts.EditedLt > 0 {
+		*stmt = stmt.Where("pullreq_edited < ?", opts.EditedLt)
+	}
+
+	if opts.EditedGt > 0 {
+		*stmt = stmt.Where("pullreq_edited > ?", opts.EditedGt)
+	}
+
+	if len(opts.SpaceIDs) == 1 {
+		*stmt = stmt.InnerJoin("repositories ON repo_id = pullreq_target_repo_id")
+		*stmt = stmt.Where("repo_parent_id = ?", opts.SpaceIDs[0])
+	} else if len(opts.SpaceIDs) > 1 {
+		*stmt = stmt.InnerJoin("repositories ON repo_id = pullreq_target_repo_id")
+		*stmt = stmt.Where(squirrel.Eq{"repo_parent_id": opts.SpaceIDs})
+	}
+
+	if len(opts.RepoIDBlacklist) == 1 {
+		*stmt = stmt.Where("pullreq_target_repo_id <> ?", opts.RepoIDBlacklist[0])
+	} else if len(opts.RepoIDBlacklist) > 1 {
+		*stmt = stmt.Where(squirrel.NotEq{"pullreq_target_repo_id": opts.RepoIDBlacklist})
 	}
 
 	// labels

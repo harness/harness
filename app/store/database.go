@@ -372,8 +372,11 @@ type (
 		// Count of pull requests in a space.
 		Count(ctx context.Context, opts *types.PullReqFilter) (int64, error)
 
-		// List returns a list of pull requests in a space.
+		// List returns a list of pull requests in a repository.
 		List(ctx context.Context, opts *types.PullReqFilter) ([]*types.PullReq, error)
+
+		// Stream returns streams pull requests from repositories.
+		Stream(ctx context.Context, opts *types.PullReqFilter) (<-chan *types.PullReq, <-chan error)
 	}
 
 	PullReqActivityStore interface {

@@ -82,7 +82,7 @@ func (c *Controller) List(
 	}
 
 	for _, pr := range list {
-		if err := c.backfillStats(ctx, repo, pr); err != nil {
+		if err := c.pullreqListService.BackfillStats(ctx, pr); err != nil {
 			log.Ctx(ctx).Warn().Err(err).Msg("failed to backfill PR stats")
 		}
 	}

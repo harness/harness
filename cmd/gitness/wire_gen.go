@@ -264,6 +264,10 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	spaceIdentifier := check.ProvideSpaceIdentifierCheck()
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
+	repoGitInfoView := database.ProvideRepoGitInfoView(db)
+	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
+	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
+	listService := pullreq.ProvideListService(transactor, gitInterface, authorizer, spaceStore, repoStore, repoGitInfoCache, pullReqStore, labelService)
 	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
 	if err != nil {
 		return nil, err
@@ -286,7 +290,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	factory := infraprovider.ProvideFactory(dockerProvider)
 	infraproviderService := infraprovider2.ProvideInfraProvider(transactor, infraProviderResourceStore, infraProviderConfigStore, infraProviderTemplateStore, factory, spaceStore)
 	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, spaceStore, infraproviderService)
-	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService, instrumentService)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, listService, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService, instrumentService)
 	reporter2, err := events4.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -297,7 +301,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	connectorController := connector.ProvideController(connectorStore, authorizer, spaceStore)
 	templateController := template.ProvideController(templateStore, authorizer, spaceStore)
 	pluginController := plugin.ProvideController(pluginStore)
-	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	codeCommentView := database.ProvideCodeCommentView(db)
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
@@ -318,15 +321,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repoGitInfoView := database.ProvideRepoGitInfoView(db)
-	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
 	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter3, gitInterface, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, principalInfoCache, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
 	if err != nil {
 		return nil, err
 	}
 	pullReq := migrate.ProvidePullReqImporter(provider, gitInterface, principalStore, repoStore, pullReqStore, pullReqActivityStore, transactor)
 	searchService := usergroup.ProvideSearchService()
-	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, userGroupStore, userGroupReviewersStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, reporter3, migrator, pullreqService, protectionManager, streamer, codeownersService, lockerLocker, pullReq, labelService, instrumentService, searchService)
+	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, userGroupStore, userGroupReviewersStore, principalInfoCache, pullReqFileViewStore, membershipStore, checkStore, gitInterface, reporter3, migrator, pullreqService, listService, protectionManager, streamer, codeownersService, lockerLocker, pullReq, labelService, instrumentService, searchService)
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
