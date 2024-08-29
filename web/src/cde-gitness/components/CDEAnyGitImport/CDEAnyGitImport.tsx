@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useState } from 'react'
-import cx from 'classnames'
-import { Container, FormikForm, FormInput, Layout } from '@harnessio/uicore'
-import { Color } from '@harnessio/design-system'
-import { Icon } from '@harnessio/icons'
-import { debounce, get } from 'lodash-es'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Container, FormikForm, Layout, Text, TextInput } from '@harnessio/uicore'
+import { debounce, defaultTo, get } from 'lodash-es'
 import { useFormikContext } from 'formik'
-import { Repository } from 'iconoir-react'
+import { GitFork, Repository } from 'iconoir-react'
+import { Menu, MenuItem } from '@blueprintjs/core'
+import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
-import type { OpenapiCreateGitspaceRequest } from 'cde-gitness/services'
-import { BranchInput } from 'cde-gitness/components/BranchInput/BranchInput'
-import { useRepoLookupForGitspace } from 'services/cde'
+import type { OpenapiCreateGitspaceRequest } from 'services/cde'
+import { useListRepos, useListBranches, useRepoLookupForGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
-import type { RepoQueryParams } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
+import { scmOptions, SCMType, type RepoQueryParams } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from './CDEAnyGitImport.utils'
+import { GitspaceSelect } from '../GitspaceSelect/GitspaceSelect'
 import css from './CDEAnyGitImport.module.scss'
 
 enum RepoCheckStatus {
@@ -40,13 +39,47 @@ enum RepoCheckStatus {
 export const CDEAnyGitImport = () => {
   const { getString } = useStrings()
   const repoQueryParams = useQueryParams<RepoQueryParams>()
+
   const { setValues, setFieldError, values } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
+
+  const [searchTerm, setSearchTerm] = useState(values?.code_repo_url as string)
+  const [searchBranch, setSearchBranch] = useState(values?.branch as string)
 
   const { mutate, loading } = useRepoLookupForGitspace({
     accountIdentifier,
     orgIdentifier,
     projectIdentifier
+  })
+
+  const { data: repoData, loading: repoLoading } = useListRepos({
+    accountIdentifier,
+    orgIdentifier,
+    projectIdentifier,
+    gitspace_identifier: '',
+    queryParams: {
+      search_term: searchTerm,
+      repo_type: values?.code_repo_type as string
+    },
+    debounce: 1000
+  })
+
+  const {
+    data: branchData,
+    loading: branchLoading,
+    refetch: refetchBranch
+  } = useListBranches({
+    accountIdentifier,
+    orgIdentifier,
+    projectIdentifier,
+    gitspace_identifier: '',
+    queryParams: {
+      search_term: searchBranch,
+      repo_type: values.code_repo_type || '',
+      repo_url: values.code_repo_url || ''
+    },
+    debounce: 1000,
+    lazy: true
   })
 
   const [repoCheckState, setRepoCheckState] = useState<RepoCheckStatus | undefined>()
@@ -62,6 +95,12 @@ export const CDEAnyGitImport = () => {
       onChange(repoQueryParams.codeRepoURL as string, Boolean(repoQueryParams.branch))
     }
   }, [values.code_repo_url, repoQueryParams.codeRepoURL])
+
+  useEffect(() => {
+    if (searchBranch) {
+      refetchBranch()
+    }
+  }, [searchBranch])
 
   const onChange = useCallback(
     debounce(async (url: string, skipBranchUpdate?: boolean) => {
@@ -103,15 +142,6 @@ export const CDEAnyGitImport = () => {
             })
             setRepoCheckState(RepoCheckStatus.Valid)
           }
-        } else {
-          if (url?.trim()?.length) {
-            errorMessage = 'Invalid URL Format'
-            setRepoCheckState(RepoCheckStatus.InValid)
-          } else {
-            if (repoCheckState) {
-              setRepoCheckState(undefined)
-            }
-          }
         }
       } catch (err) {
         errorMessage = get(err, 'message') || ''
@@ -121,43 +151,142 @@ export const CDEAnyGitImport = () => {
     [repoCheckState, values?.code_repo_type]
   )
 
+  const branchRef = useRef<HTMLInputElement | null | undefined>()
+  const repoRef = useRef<HTMLInputElement | null | undefined>()
+
+  const scmOption = scmOptions.find(item => item.value === values.code_repo_type) as SCMType
+
   return (
     <FormikForm>
       <Layout.Horizontal spacing="medium">
         <Container width="63%" className={css.formFields}>
-          <FormInput.Text
-            name="code_repo_url"
-            inputGroup={{
-              leftElement: (
-                <Container flex={{ alignItems: 'center' }}>
-                  <Repository height={32} width={32} />
-                </Container>
-              ),
-              className: css.leftElementClassName,
-              rightElement: (
-                <Container height={50} width={25} flex={{ alignItems: 'center' }}>
-                  {loading ? (
-                    <Icon name="loading" />
-                  ) : repoCheckState ? (
-                    repoCheckState === RepoCheckStatus.Valid ? (
-                      <Icon name="tick-circle" color={Color.GREEN_450} />
-                    ) : (
-                      <Icon name="warning-sign" color={Color.ERROR} />
+          <GitspaceSelect
+            text={
+              <Container flex={{ alignItems: 'center' }} className={css.customTextInput}>
+                <Repository height={32} width={32} />
+                <TextInput
+                  inputRef={ref => (repoRef.current = ref)}
+                  value={searchTerm}
+                  placeholder="enter url or type reop name"
+                  onChange={async event => {
+                    const target = event.target as HTMLInputElement
+                    setSearchTerm(target?.value?.trim() || '')
+                    await onChange(target.value)
+                  }}
+                />
+              </Container>
+            }
+            tooltipProps={{ isOpen: repoRef.current?.onfocus }}
+            rightIcon={
+              loading || repoLoading
+                ? 'loading'
+                : repoCheckState
+                ? repoCheckState === RepoCheckStatus.Valid
+                  ? 'tick-circle'
+                  : 'warning-sign'
+                : 'chevron-down'
+            }
+            withoutCurrentColor
+            formikName="code_repo_url"
+            renderMenu={
+              <Menu>
+                {repoData?.repositories?.length ? (
+                  repoData?.repositories?.map(item => {
+                    return (
+                      <MenuItem
+                        key={item.name}
+                        disabled={repoLoading}
+                        text={
+                          <Layout.Horizontal
+                            spacing="large"
+                            flex={{ justifyContent: 'flex-start', alignItems: 'center' }}>
+                            <img
+                              height={26}
+                              width={26}
+                              src={defaultTo(scmOption?.icon, '')}
+                              style={{ marginRight: '10px' }}
+                            />
+                            <Layout.Vertical>
+                              <Text color={Color.BLACK}>{item.name}</Text>
+                              <Text font={{ size: 'small' }}>{item.clone_url}</Text>
+                            </Layout.Vertical>
+                          </Layout.Horizontal>
+                        }
+                        onClick={() => {
+                          setSearchTerm(item.name as string)
+                          setValues((prvValues: any) => {
+                            return {
+                              ...prvValues,
+                              code_repo_url: item.clone_url,
+                              branch: item.default_branch,
+                              identifier: getRepoIdFromURL(item.clone_url),
+                              name: getRepoNameFromURL(item.clone_url),
+                              code_repo_type: values?.code_repo_type
+                            }
+                          })
+                          setSearchBranch(item.default_branch as string)
+                          refetchBranch()
+                        }}
+                      />
                     )
-                  ) : undefined}
-                </Container>
-              )
-            }}
-            placeholder={getString('cde.repository.repositoryURL')}
-            className={cx(css.repoInput)}
-            onChange={async event => {
-              const target = event.target as HTMLInputElement
-              await onChange(target.value)
-            }}
+                  })
+                ) : loading || repoLoading ? (
+                  <MenuItem text={<Text>Fetching Repositories</Text>} />
+                ) : (
+                  <MenuItem text={<Text>No Repositories Found</Text>} />
+                )}
+              </Menu>
+            }
           />
         </Container>
         <Container width="35%" className={css.formFields}>
-          <BranchInput />
+          <GitspaceSelect
+            text={
+              <Container flex={{ alignItems: 'center' }} className={css.customTextInput}>
+                <GitFork height={32} width={32} />
+                <TextInput
+                  inputRef={ref => (branchRef.current = ref)}
+                  value={searchBranch}
+                  placeholder="enter branch name"
+                  onChange={async event => {
+                    const target = event.target as HTMLInputElement
+                    setSearchBranch(target?.value?.trim() || '')
+                  }}
+                />
+              </Container>
+            }
+            tooltipProps={{ isOpen: branchRef.current?.onfocus }}
+            rightIcon={loading || branchLoading ? 'loading' : 'chevron-down'}
+            withoutCurrentColor
+            formikName="branch"
+            renderMenu={
+              <Menu>
+                {(branchData as unknown as { branches: { name: string }[] })?.branches?.length ? (
+                  (branchData as unknown as { branches: { name: string }[] })?.branches?.map(item => {
+                    return (
+                      <MenuItem
+                        key={item.name}
+                        text={<Text>{item.name}</Text>}
+                        onClick={() => {
+                          setSearchBranch(item.name as string)
+                          setValues((prvValues: any) => {
+                            return {
+                              ...prvValues,
+                              branch: item.name
+                            }
+                          })
+                        }}
+                      />
+                    )
+                  })
+                ) : loading || repoLoading ? (
+                  <MenuItem text={<Text>Fetching Branches</Text>} />
+                ) : (
+                  <MenuItem text={<Text>No Branches Found</Text>} />
+                )}
+              </Menu>
+            }
+          />
         </Container>
       </Layout.Horizontal>
     </FormikForm>

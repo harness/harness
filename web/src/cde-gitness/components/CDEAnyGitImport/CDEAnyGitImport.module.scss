@@ -51,3 +51,29 @@
     }
   }
 }
+
+.customTextInput {
+  :global {
+    [class*='TextInput--main'] {
+      margin-bottom: 0 !important;
+      height: inherit !important;
+      width: fit-content !important;
+      flex-grow: 1 !important;
+      border: none !important;
+      outline: none !important;
+    }
+
+    .bp3-input {
+      border: none !important;
+      outline: none !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      background: transparent !important;
+      font-size: 14px !important;
+    }
+
+    .bp3-input:hover {
+      box-shadow: none !important;
+    }
+  }
+}

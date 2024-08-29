@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const customTextInput: string
 export declare const formFields: string
 export declare const leftElementClassName: string
 export declare const repoInput: string

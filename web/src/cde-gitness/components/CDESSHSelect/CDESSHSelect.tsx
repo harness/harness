@@ -53,7 +53,8 @@ export const CDESSHSelect = () => {
   const { data, loading, refetch } = useListAggregatedTokens({
     queryParams: {
       accountIdentifier,
-      apiKeyType: 'SSH_KEY'
+      apiKeyType: 'SSH_KEY',
+      parentIdentifier: currentUser.uid
     }
   })
 
@@ -65,7 +66,7 @@ export const CDESSHSelect = () => {
     queryParams: {
       accountIdentifier,
       apiKeyType: 'SSH_KEY',
-      parentIdentifier: currentUser.uid || 'cWQVVVCET4iwomT4hRoj4w',
+      parentIdentifier: currentUser.uid,
       apiKeyIdentifier: `cdesshkey`
     }
   })
@@ -108,7 +109,7 @@ export const CDESSHSelect = () => {
                   tags: {},
                   accountIdentifier,
                   apiKeyIdentifier: `cdesshkey`,
-                  parentIdentifier: currentUser.uid || 'cWQVVVCET4iwomT4hRoj4w',
+                  parentIdentifier: currentUser.uid,
                   apiKeyType: 'SSH_KEY',
                   sshKeyContent: value.sshKeyValue,
                   sshKeyUsage: ['AUTH'],

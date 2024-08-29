@@ -69,8 +69,6 @@ export type EnumIDETypeType2 = 'vsCode' | 'vsCodeWeb'
 
 export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud'
 
-export type EnumProviderType = 'harnessGCP' | 'k8s' | 'harnessOVHCloud' | 'docker'
-
 export interface InfraproviderResourceInput {
   cpu?: string | null
   disk?: string | null
@@ -117,34 +115,10 @@ export interface OpenapiCreateInfraProviderConfigRequest {
   type?: EnumInfraProviderType
 }
 
-export interface OpenapiCreateInfraProviderResponse {
-  created?: number
-  id?: string
-  metadata?: string
-  name?: string
-  space_path?: string
-  type?: EnumProviderType
-  updated?: number
-}
-
 export interface OpenapiCreateInfraProviderTemplateRequest {
-  created?: number
   data?: string
   description?: string
   identifier?: string
-  space_id?: number
-  space_path?: string
-  updated?: number
-}
-
-export interface OpenapiCreateInfraProviderTemplateResponse {
-  created?: number
-  data?: string
-  description?: string
-  identifier?: string
-  space_id?: number
-  space_path?: string
-  updated?: number
 }
 
 export interface OpenapiGetCodeRepositoryRequest {
@@ -158,6 +132,8 @@ export interface OpenapiGetCodeRepositoryResponse {
   repo_type?: EnumGitspaceCodeRepoType
   url?: string
 }
+
+export type OpenapiGetGitspaceLogsResponse = string | null
 
 export interface OpenapiGetGitspaceResponse {
   access_key?: string
@@ -212,6 +188,10 @@ export interface ScmCodeRepositoryResponse {
   url?: string
 }
 
+export interface TypesBranchResponse {
+  name?: string
+}
+
 export interface TypesGitspaceConfig {
   branch?: string
   code_repo_is_private?: boolean
@@ -262,7 +242,7 @@ export interface TypesGitspaceEventResponse {
   timestamp?: number
 }
 
-export interface TypesGitspaceInstance {
+export type TypesGitspaceInstance = {
   access_key?: string | null
   access_key_ref?: string | null
   access_type?: EnumGitspaceAccessType
@@ -277,7 +257,7 @@ export interface TypesGitspaceInstance {
   tracked_changes?: string | null
   updated?: number
   url?: string | null
-}
+} | null
 
 export interface TypesInfraProviderConfig {
   created?: number
@@ -313,8 +293,29 @@ export interface TypesInfraProviderResource {
   updated?: number
 }
 
-export interface TypesInfraProviderResourceType2 {
-  [key: string]: any
+export interface TypesInfraProviderTemplate {
+  config_identifier?: string
+  created?: number
+  data?: string
+  description?: string
+  identifier?: string
+  space_id?: number
+  space_path?: string
+  updated?: number
+}
+
+export interface TypesListBranchesResponse {
+  branches?: TypesBranchResponse[] | null
+}
+
+export interface TypesListRepoResponse {
+  repositories?: TypesRepoResponse[] | null
+}
+
+export interface TypesRepoResponse {
+  clone_url?: string
+  default_branch?: string
+  name?: string
 }
 
 export interface UsererrorError {
@@ -904,6 +905,168 @@ export const useGetGitspaceEvents = ({
     }
   )
 
+export interface ListBranchesQueryParams {
+  /**
+   * Repository type: github, gitlab, bitbucket, harness_code, unknown
+   */
+  repo_type: string
+  /**
+   * Repository URL
+   */
+  repo_url: string
+  /**
+   * Term to search
+   */
+  search_term: string
+}
+
+export interface ListBranchesPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+  /**
+   * gitspace identifier.
+   */
+  gitspace_identifier: string
+}
+
+export type ListBranchesProps = Omit<
+  GetProps<TypesListRepoResponse, UsererrorError, ListBranchesQueryParams, ListBranchesPathParams>,
+  'path'
+> &
+  ListBranchesPathParams
+
+/**
+ * List repositories
+ */
+export const ListBranches = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  gitspace_identifier,
+  ...props
+}: ListBranchesProps) => (
+  <Get<TypesListRepoResponse, UsererrorError, ListBranchesQueryParams, ListBranchesPathParams>
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces/${gitspace_identifier}/list-branches`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListBranchesProps = Omit<
+  UseGetProps<TypesListRepoResponse, UsererrorError, ListBranchesQueryParams, ListBranchesPathParams>,
+  'path'
+> &
+  ListBranchesPathParams
+
+/**
+ * List repositories
+ */
+export const useListBranches = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  gitspace_identifier,
+  ...props
+}: UseListBranchesProps) =>
+  useGet<TypesListRepoResponse, UsererrorError, ListBranchesQueryParams, ListBranchesPathParams>(
+    (paramsInPath: ListBranchesPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/list-branches`,
+    {
+      base: getConfig('cde/api/v1'),
+      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, gitspace_identifier },
+      ...props
+    }
+  )
+
+export interface ListReposQueryParams {
+  /**
+   * Repository type: github, gitlab, bitbucket, harness_code, unknown
+   */
+  repo_type: string
+  /**
+   * Term to search
+   */
+  search_term: string
+}
+
+export interface ListReposPathParams {
+  /**
+   * account identifier.
+   */
+  accountIdentifier: string
+  /**
+   * org identifier.
+   */
+  orgIdentifier: string
+  /**
+   * project identifier.
+   */
+  projectIdentifier: string
+  /**
+   * gitspace identifier.
+   */
+  gitspace_identifier: string
+}
+
+export type ListReposProps = Omit<
+  GetProps<TypesListRepoResponse, UsererrorError, ListReposQueryParams, ListReposPathParams>,
+  'path'
+> &
+  ListReposPathParams
+
+/**
+ * List repositories
+ */
+export const ListRepos = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  gitspace_identifier,
+  ...props
+}: ListReposProps) => (
+  <Get<TypesListRepoResponse, UsererrorError, ListReposQueryParams, ListReposPathParams>
+    path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces/${gitspace_identifier}/list-repos`}
+    base={getConfig('cde/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListReposProps = Omit<
+  UseGetProps<TypesListRepoResponse, UsererrorError, ListReposQueryParams, ListReposPathParams>,
+  'path'
+> &
+  ListReposPathParams
+
+/**
+ * List repositories
+ */
+export const useListRepos = ({
+  accountIdentifier,
+  orgIdentifier,
+  projectIdentifier,
+  gitspace_identifier,
+  ...props
+}: UseListReposProps) =>
+  useGet<TypesListRepoResponse, UsererrorError, ListReposQueryParams, ListReposPathParams>(
+    (paramsInPath: ListReposPathParams) =>
+      `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/list-repos`,
+    {
+      base: getConfig('cde/api/v1'),
+      pathParams: { accountIdentifier, orgIdentifier, projectIdentifier, gitspace_identifier },
+      ...props
+    }
+  )
+
 export interface GetGitspaceInstanceLogsPathParams {
   /**
    * account identifier.
@@ -924,7 +1087,7 @@ export interface GetGitspaceInstanceLogsPathParams {
 }
 
 export type GetGitspaceInstanceLogsProps = Omit<
-  GetProps<string, unknown, void, GetGitspaceInstanceLogsPathParams>,
+  GetProps<OpenapiGetGitspaceLogsResponse, unknown, void, GetGitspaceInstanceLogsPathParams>,
   'path'
 > &
   GetGitspaceInstanceLogsPathParams
@@ -939,7 +1102,7 @@ export const GetGitspaceInstanceLogs = ({
   gitspace_identifier,
   ...props
 }: GetGitspaceInstanceLogsProps) => (
-  <Get<string, unknown, void, GetGitspaceInstanceLogsPathParams>
+  <Get<OpenapiGetGitspaceLogsResponse, unknown, void, GetGitspaceInstanceLogsPathParams>
     path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/gitspaces/${gitspace_identifier}/logs`}
     base={getConfig('cde/api/v1')}
     {...props}
@@ -947,7 +1110,7 @@ export const GetGitspaceInstanceLogs = ({
 )
 
 export type UseGetGitspaceInstanceLogsProps = Omit<
-  UseGetProps<string, unknown, void, GetGitspaceInstanceLogsPathParams>,
+  UseGetProps<OpenapiGetGitspaceLogsResponse, unknown, void, GetGitspaceInstanceLogsPathParams>,
   'path'
 > &
   GetGitspaceInstanceLogsPathParams
@@ -962,7 +1125,7 @@ export const useGetGitspaceInstanceLogs = ({
   gitspace_identifier,
   ...props
 }: UseGetGitspaceInstanceLogsProps) =>
-  useGet<string, unknown, void, GetGitspaceInstanceLogsPathParams>(
+  useGet<OpenapiGetGitspaceLogsResponse, unknown, void, GetGitspaceInstanceLogsPathParams>(
     (paramsInPath: GetGitspaceInstanceLogsPathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/gitspaces/${paramsInPath.gitspace_identifier}/logs`,
     {
@@ -1134,7 +1297,7 @@ export interface ListInfraProvidersPathParams {
 }
 
 export type ListInfraProvidersProps = Omit<
-  GetProps<OpenapiCreateInfraProviderResponse[], unknown, void, ListInfraProvidersPathParams>,
+  GetProps<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersPathParams>,
   'path'
 > &
   ListInfraProvidersPathParams
@@ -1148,7 +1311,7 @@ export const ListInfraProviders = ({
   projectIdentifier,
   ...props
 }: ListInfraProvidersProps) => (
-  <Get<OpenapiCreateInfraProviderResponse[], unknown, void, ListInfraProvidersPathParams>
+  <Get<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersPathParams>
     path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders`}
     base={getConfig('cde/api/v1')}
     {...props}
@@ -1156,7 +1319,7 @@ export const ListInfraProviders = ({
 )
 
 export type UseListInfraProvidersProps = Omit<
-  UseGetProps<OpenapiCreateInfraProviderResponse[], unknown, void, ListInfraProvidersPathParams>,
+  UseGetProps<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersPathParams>,
   'path'
 > &
   ListInfraProvidersPathParams
@@ -1170,7 +1333,7 @@ export const useListInfraProviders = ({
   projectIdentifier,
   ...props
 }: UseListInfraProvidersProps) =>
-  useGet<OpenapiCreateInfraProviderResponse[], unknown, void, ListInfraProvidersPathParams>(
+  useGet<TypesInfraProviderConfig[], unknown, void, ListInfraProvidersPathParams>(
     (paramsInPath: ListInfraProvidersPathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders`,
     { base: getConfig('cde/api/v1'), pathParams: { accountIdentifier, orgIdentifier, projectIdentifier }, ...props }
@@ -1348,7 +1511,7 @@ export interface CreateInfraProviderResourcePathParams {
 }
 
 export type CreateInfraProviderResourceProps = Omit<
-  MutateProps<TypesInfraProviderResourceType2[], unknown, void, void, CreateInfraProviderResourcePathParams>,
+  MutateProps<TypesInfraProviderResource[], unknown, void, void, CreateInfraProviderResourcePathParams>,
   'path' | 'verb'
 > &
   CreateInfraProviderResourcePathParams
@@ -1363,7 +1526,7 @@ export const CreateInfraProviderResource = ({
   infraprovider_identifier,
   ...props
 }: CreateInfraProviderResourceProps) => (
-  <Mutate<TypesInfraProviderResourceType2[], unknown, void, void, CreateInfraProviderResourcePathParams>
+  <Mutate<TypesInfraProviderResource[], unknown, void, void, CreateInfraProviderResourcePathParams>
     verb="POST"
     path={`/accounts/${accountIdentifier}/orgs/${orgIdentifier}/projects/${projectIdentifier}/infraproviders/${infraprovider_identifier}/resources`}
     base={getConfig('cde/api/v1')}
@@ -1372,7 +1535,7 @@ export const CreateInfraProviderResource = ({
 )
 
 export type UseCreateInfraProviderResourceProps = Omit<
-  UseMutateProps<TypesInfraProviderResourceType2[], unknown, void, void, CreateInfraProviderResourcePathParams>,
+  UseMutateProps<TypesInfraProviderResource[], unknown, void, void, CreateInfraProviderResourcePathParams>,
   'path' | 'verb'
 > &
   CreateInfraProviderResourcePathParams
@@ -1387,7 +1550,7 @@ export const useCreateInfraProviderResource = ({
   infraprovider_identifier,
   ...props
 }: UseCreateInfraProviderResourceProps) =>
-  useMutate<TypesInfraProviderResourceType2[], unknown, void, void, CreateInfraProviderResourcePathParams>(
+  useMutate<TypesInfraProviderResource[], unknown, void, void, CreateInfraProviderResourcePathParams>(
     'POST',
     (paramsInPath: CreateInfraProviderResourcePathParams) =>
       `/accounts/${paramsInPath.accountIdentifier}/orgs/${paramsInPath.orgIdentifier}/projects/${paramsInPath.projectIdentifier}/infraproviders/${paramsInPath.infraprovider_identifier}/resources`,

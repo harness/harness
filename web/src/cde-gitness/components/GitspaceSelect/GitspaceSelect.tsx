@@ -35,14 +35,18 @@ interface GitspaceSelectProps {
   loading?: boolean
   buttonClassName?: string
   withoutCurrentColor?: boolean
+  hideMenu?: boolean
+  rightIcon?: IconName
 }
 
 export const GitspaceSelect = ({
   text,
   icon,
   loading,
+  hideMenu,
   renderMenu,
   disabled,
+  rightIcon,
   overridePopOverWidth,
   formikName,
   tooltipProps,
@@ -54,26 +58,28 @@ export const GitspaceSelect = ({
   const buttonRef = useRef<HTMLDivElement | null>(null)
   const [popoverWidth, setPopoverWidth] = useState(0)
 
-  const defaultTooltipProps = {
-    tooltip: (
-      <Container className={css.listContainer} width={overridePopOverWidth ? '100%' : popoverWidth}>
-        {renderMenu ? (
-          renderMenu
-        ) : (
-          <Menu>
-            <Text padding="small">{getString('cde.noData')}</Text>
-          </Menu>
-        )}
-      </Container>
-    ),
-    tooltipProps: {
-      fill: true,
-      interactionKind: PopoverInteractionKind.CLICK,
-      position: PopoverPosition.BOTTOM_LEFT,
-      popoverClassName: cx(css.popover),
-      ...tooltipProps
-    }
-  }
+  const defaultTooltipProps = hideMenu
+    ? {}
+    : {
+        tooltip: (
+          <Container className={css.listContainer} width={overridePopOverWidth ? '100%' : popoverWidth}>
+            {renderMenu ? (
+              renderMenu
+            ) : (
+              <Menu>
+                <Text padding="small">{getString('cde.noData')}</Text>
+              </Menu>
+            )}
+          </Container>
+        ),
+        tooltipProps: {
+          fill: true,
+          interactionKind: PopoverInteractionKind.CLICK,
+          position: PopoverPosition.BOTTOM_LEFT,
+          popoverClassName: cx(css.popover),
+          ...tooltipProps
+        }
+      }
 
   useEffect(() => {
     if (
@@ -98,7 +104,7 @@ export const GitspaceSelect = ({
             <Button
               className={cx(css.button, buttonClassName, { [css.buttonWithoutIcon]: !icon })}
               text={text}
-              rightIcon={loading ? 'loading' : 'chevron-down'}
+              rightIcon={rightIcon ? rightIcon : loading ? 'loading' : 'chevron-down'}
               variation={ButtonVariation.TERTIARY}
               iconProps={{ size: 14 }}
               {...iconProp}

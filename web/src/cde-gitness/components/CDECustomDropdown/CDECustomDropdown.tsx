@@ -66,6 +66,4 @@ export const CDECustomDropdown = ({ label, menu, leftElement, overridePopOverWid
       </Container>
     </Layout.Horizontal>
   )
-
-  return <div>CDECustomDropdown</div>
 }

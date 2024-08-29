@@ -464,6 +464,148 @@ paths:
       summary: Get gitspace events
       tags:
         - gitspaces
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspace_identifier}/list-branches:
+    get:
+      operationId: listBranches
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: org identifier.
+          in: path
+          name: orgIdentifier
+          required: true
+          schema:
+            type: string
+        - description: project identifier.
+          in: path
+          name: projectIdentifier
+          required: true
+          schema:
+            type: string
+        - description: gitspace identifier.
+          in: path
+          name: gitspace_identifier
+          required: true
+          schema:
+            type: string
+        - description: 'Repository type: github, gitlab, bitbucket, harness_code, unknown'
+          in: query
+          name: repo_type
+          required: true
+          schema:
+            type: string
+        - description: Repository URL
+          in: query
+          name: repo_url
+          required: true
+          schema:
+            type: string
+        - description: Term to search
+          in: query
+          name: search_term
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesListRepoResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: List repositories
+      tags:
+        - scm
+  /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspace_identifier}/list-repos:
+    get:
+      operationId: listRepos
+      parameters:
+        - description: account identifier.
+          in: path
+          name: accountIdentifier
+          required: true
+          schema:
+            type: string
+        - description: org identifier.
+          in: path
+          name: orgIdentifier
+          required: true
+          schema:
+            type: string
+        - description: project identifier.
+          in: path
+          name: projectIdentifier
+          required: true
+          schema:
+            type: string
+        - description: gitspace identifier.
+          in: path
+          name: gitspace_identifier
+          required: true
+          schema:
+            type: string
+        - description: 'Repository type: github, gitlab, bitbucket, harness_code, unknown'
+          in: query
+          name: repo_type
+          required: true
+          schema:
+            type: string
+        - description: Term to search
+          in: query
+          name: search_term
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesListRepoResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      summary: List repositories
+      tags:
+        - scm
   /accounts/{accountIdentifier}/orgs/{orgIdentifier}/projects/{projectIdentifier}/gitspaces/{gitspace_identifier}/logs:
     get:
       operationId: getGitspaceInstanceLogs
@@ -497,7 +639,7 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/OpenapiGetGitspaceLogsResponse'
           description: OK
       summary: Get gitspace instance logs
       tags:
@@ -629,7 +771,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/OpenapiCreateInfraProviderResponse'
+                  $ref: '#/components/schemas/TypesInfraProviderConfig'
                 type: array
           description: OK
       summary: List infraproviders
@@ -785,7 +927,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/TypesInfraProviderResourceType2'
+                  $ref: '#/components/schemas/TypesInfraProviderResource'
                 type: array
           description: Created
       summary: Create InfraProvider Resource
@@ -891,13 +1033,6 @@ components:
         - harness_gcp
         - harness_cloud
       type: string
-    EnumProviderType:
-      enum:
-        - harnessGCP
-        - k8s
-        - harnessOVHCloud
-        - docker
-      type: string
     InfraproviderResourceInput:
       properties:
         cpu:
@@ -993,56 +1128,14 @@ components:
         type:
           $ref: '#/components/schemas/EnumInfraProviderType'
       type: object
-    OpenapiCreateInfraProviderResponse:
-      properties:
-        created:
-          type: integer
-        id:
-          type: string
-        metadata:
-          type: string
-        name:
-          type: string
-        space_path:
-          type: string
-        type:
-          $ref: '#/components/schemas/EnumProviderType'
-        updated:
-          type: integer
-      type: object
     OpenapiCreateInfraProviderTemplateRequest:
       properties:
-        created:
-          type: integer
         data:
           type: string
         description:
           type: string
         identifier:
           type: string
-        space_id:
-          type: integer
-        space_path:
-          type: string
-        updated:
-          type: integer
-      type: object
-    OpenapiCreateInfraProviderTemplateResponse:
-      properties:
-        created:
-          type: integer
-        data:
-          type: string
-        description:
-          type: string
-        identifier:
-          type: string
-        space_id:
-          type: integer
-        space_path:
-          type: string
-        updated:
-          type: integer
       type: object
     OpenapiGetCodeRepositoryRequest:
       properties:
@@ -1062,6 +1155,9 @@ components:
         url:
           type: string
       type: object
+    OpenapiGetGitspaceLogsResponse:
+      nullable: true
+      type: string
     OpenapiGetGitspaceResponse:
       properties:
         access_key:
@@ -1147,6 +1243,11 @@ components:
         is_private:
           type: boolean
         url:
+          type: string
+      type: object
+    TypesBranchResponse:
+      properties:
+        name:
           type: string
       type: object
     TypesGitspaceConfig:
@@ -1243,6 +1344,7 @@ components:
           type: integer
       type: object
     TypesGitspaceInstance:
+      nullable: true
       properties:
         access_key:
           nullable: true
@@ -1349,7 +1451,49 @@ components:
         updated:
           type: integer
       type: object
-    TypesInfraProviderResourceType2:
+    TypesInfraProviderTemplate:
+      properties:
+        config_identifier:
+          type: string
+        created:
+          type: integer
+        data:
+          type: string
+        description:
+          type: string
+        identifier:
+          type: string
+        space_id:
+          type: integer
+        space_path:
+          type: string
+        updated:
+          type: integer
+      type: object
+    TypesListBranchesResponse:
+      properties:
+        branches:
+          items:
+            $ref: '#/components/schemas/TypesBranchResponse'
+          nullable: true
+          type: array
+      type: object
+    TypesListRepoResponse:
+      properties:
+        repositories:
+          items:
+            $ref: '#/components/schemas/TypesRepoResponse'
+          nullable: true
+          type: array
+      type: object
+    TypesRepoResponse:
+      properties:
+        clone_url:
+          type: string
+        default_branch:
+          type: string
+        name:
+          type: string
       type: object
     UsererrorError:
       properties:

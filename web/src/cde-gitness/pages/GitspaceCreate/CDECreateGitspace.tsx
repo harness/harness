@@ -34,16 +34,16 @@ import { CDEIDESelect } from 'cde-gitness/components/CDEIDESelect/CDEIDESelect'
 import { SelectInfraProvider } from 'cde-gitness/components/SelectInfraProvider/SelectInfraProvider'
 import { OpenapiCreateGitspaceRequest, useCreateGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
-import { GitnessRepoImportForm } from 'cde-gitness/components/GitnessRepoImportForm/GitnessRepoImportForm'
 import { EnumGitspaceCodeRepoType, StandaloneIDEType } from 'cde-gitness/constants'
 import { CDESSHSelect } from 'cde-gitness/components/CDESSHSelect/CDESSHSelect'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { getRepoIdFromURL, getRepoNameFromURL } from 'cde-gitness/components/CDEAnyGitImport/CDEAnyGitImport.utils'
+import { CDEUnknownSCM } from 'cde-gitness/components/CDEAnyGitImport/CDEUnknownSCM'
 import { gitnessFormInitialValues } from './GitspaceCreate.constants'
 import { validateGitnessForm } from './GitspaceCreate.utils'
 import css from './GitspaceCreate.module.scss'
 
-interface SCMType {
+export interface SCMType {
   name: string
   value: EnumGitspaceCodeRepoType
   icon: string
@@ -57,6 +57,14 @@ export interface RepoQueryParams {
   codeRepoType?: EnumGitspaceCodeRepoType
 }
 
+export const scmOptions: SCMType[] = [
+  { name: 'Harness Code', value: EnumGitspaceCodeRepoType.HARNESS_CODE, icon: harnessCode },
+  { name: 'GitHub Cloud', value: EnumGitspaceCodeRepoType.GITHUB, icon: github },
+  { name: 'GitLab Cloud', value: EnumGitspaceCodeRepoType.GITLAB, icon: gitlab },
+  { name: 'Bitbucket', value: EnumGitspaceCodeRepoType.BITBUCKET, icon: bitbucket },
+  { name: 'Any public Git repository', value: EnumGitspaceCodeRepoType.UNKNOWN, icon: genericGit }
+]
+
 export const CDECreateGitspace = () => {
   const { getString } = useStrings()
   const { routes, currentUserProfileURL, hooks, currentUser } = useAppContext()
@@ -69,14 +77,6 @@ export const CDECreateGitspace = () => {
   const repoQueryParams = useQueryParams<RepoQueryParams>()
 
   const [repoURLviaQueryParam, setrepoURLviaQueryParam] = useState<RepoQueryParams>({ ...repoQueryParams })
-
-  const scmOptions: SCMType[] = [
-    { name: 'Harness Code', value: EnumGitspaceCodeRepoType.HARNESS_CODE, icon: harnessCode },
-    { name: 'GitHub Cloud', value: EnumGitspaceCodeRepoType.GITHUB, icon: github },
-    { name: 'GitLab Cloud', value: EnumGitspaceCodeRepoType.GITLAB, icon: gitlab },
-    { name: 'Bitbucket', value: EnumGitspaceCodeRepoType.BITBUCKET, icon: bitbucket },
-    { name: 'Any public Git repository', value: EnumGitspaceCodeRepoType.UNKNOWN, icon: genericGit }
-  ]
 
   const { data: OauthSCMs } = useGetUserSourceCodeManagers({
     queryParams: { accountIdentifier, userIdentifier: currentUser?.uid }
@@ -239,8 +239,8 @@ export const CDECreateGitspace = () => {
                       </Container>
                       <CDEAnyGitImport />
                     </Layout.Vertical>
-                  ) : scmOption.name === 'Harness Code' ? (
-                    <GitnessRepoImportForm isCDE />
+                  ) : scmOption.value === EnumGitspaceCodeRepoType.UNKNOWN ? (
+                    <CDEUnknownSCM />
                   ) : (
                     <CDEAnyGitImport />
                   )}
