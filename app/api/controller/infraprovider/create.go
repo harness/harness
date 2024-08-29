@@ -29,33 +29,33 @@ import (
 const NoResourceIdentifier = ""
 
 type CreateInput struct {
-	Identifier string                 `json:"identifier"`
-	SpaceRef   string                 `json:"space_ref"` // Ref of the parent space
-	Name       string                 `json:"name"`
-	Type       enum.InfraProviderType `json:"type"`
-	Metadata   map[string]string      `json:"metadata"`
-	Resources  []ResourceInput        `json:"resources"`
+	Identifier string                 `json:"identifier" yaml:"identifier"`
+	SpaceRef   string                 `json:"space_ref" yaml:"space_ref"` // Ref of the parent space
+	Name       string                 `json:"name" yaml:"name"`
+	Type       enum.InfraProviderType `json:"type" yaml:"type"`
+	Metadata   map[string]string      `json:"metadata" yaml:"metadata"`
+	Resources  []ResourceInput        `json:"resources" yaml:"resources"`
 }
 
 type ResourceInput struct {
-	Identifier         string                 `json:"identifier"`
-	Name               string                 `json:"name"`
-	InfraProviderType  enum.InfraProviderType `json:"infra_provider_type"`
-	CPU                *string                `json:"cpu"`
-	Memory             *string                `json:"memory"`
-	Disk               *string                `json:"disk"`
-	Network            *string                `json:"network"`
-	Region             []string               `json:"region"`
-	Metadata           map[string]string      `json:"metadata"`
-	GatewayHost        *string                `json:"gateway_host"`
-	GatewayPort        *string                `json:"gateway_port"`
-	TemplateIdentifier *string                `json:"template_identifier"`
+	Identifier         string                 `json:"identifier" yaml:"identifier"`
+	Name               string                 `json:"name" yaml:"name"`
+	InfraProviderType  enum.InfraProviderType `json:"infra_provider_type" yaml:"infra_provider_type"`
+	CPU                *string                `json:"cpu" yaml:"cpu"`
+	Memory             *string                `json:"memory" yaml:"memory"`
+	Disk               *string                `json:"disk" yaml:"disk"`
+	Network            *string                `json:"network" yaml:"network"`
+	Region             []string               `json:"region" yaml:"region"`
+	Metadata           map[string]string      `json:"metadata" yaml:"metadata"`
+	GatewayHost        *string                `json:"gateway_host" yaml:"gateway_host"`
+	GatewayPort        *string                `json:"gateway_port" yaml:"gateway_port"`
+	TemplateIdentifier *string                `json:"template_identifier" yaml:"template_identifier"`
 }
 
 type TemplateInput struct {
-	Identifier  string `json:"identifier"`
-	Description string `json:"description"`
-	Data        string `json:"data"`
+	Identifier  string `json:"identifier" yaml:"identifier"`
+	Description string `json:"description" yaml:"description"`
+	Data        string `json:"data" yaml:"data"`
 }
 
 // Create creates a new infra provider.
@@ -81,6 +81,19 @@ func (c *Controller) Create(
 		return nil, err
 	}
 	now := time.Now().UnixMilli()
+	infraProviderConfig := c.MapToInfraProviderConfig(in, parentSpace, now)
+	err = c.infraproviderSvc.CreateInfraProvider(ctx, infraProviderConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create the infraprovider: %q %w", infraProviderConfig.Identifier, err)
+	}
+	return infraProviderConfig, nil
+}
+
+func (c *Controller) MapToInfraProviderConfig(
+	in CreateInput,
+	parentSpace *types.Space,
+	now int64,
+) *types.InfraProviderConfig {
 	infraProviderConfig := &types.InfraProviderConfig{
 		Identifier: in.Identifier,
 		Name:       in.Name,
@@ -90,11 +103,7 @@ func (c *Controller) Create(
 		Updated:    now,
 	}
 	infraProviderConfig.Resources = mapToResourceEntity(in.Resources, *parentSpace, now)
-	err = c.infraproviderSvc.CreateInfraProvider(ctx, infraProviderConfig)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create the infraprovider: %q %w", infraProviderConfig.Identifier, err)
-	}
-	return infraProviderConfig, nil
+	return infraProviderConfig
 }
 
 func (c *Controller) sanitizeCreateInput(in CreateInput) error {

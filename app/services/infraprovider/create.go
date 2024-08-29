@@ -38,11 +38,11 @@ func (c *Service) CreateInfraProvider(
 	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
 		err := c.createConfig(ctx, infraProviderConfig)
 		if err != nil {
-			return fmt.Errorf("could not autocreate the config: %q %w", infraProviderConfig.Identifier, err)
+			return fmt.Errorf("could not create the config: %q %w", infraProviderConfig.Identifier, err)
 		}
 		err = c.createResources(ctx, infraProviderConfig.Resources, infraProviderConfig.ID)
 		if err != nil {
-			return fmt.Errorf("could not autocreate the resources: %v %w", infraProviderConfig.Resources, err)
+			return fmt.Errorf("could not create the resources: %v %w", infraProviderConfig.Resources, err)
 		}
 		return nil
 	})

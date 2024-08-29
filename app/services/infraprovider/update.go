@@ -17,9 +17,41 @@ package infraprovider
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/types"
 )
+
+func (c *Service) UpdateInfraProvider(
+	ctx context.Context,
+	infraProviderConfig *types.InfraProviderConfig,
+) error {
+	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		err := c.updateConfig(ctx, infraProviderConfig)
+		if err != nil {
+			return fmt.Errorf("could not update the config: %q %w", infraProviderConfig.Identifier, err)
+		}
+		for _, resource := range infraProviderConfig.Resources {
+			if err = c.UpdateResource(ctx, resource); err != nil {
+				return fmt.Errorf("could not update the resources: %v %w", infraProviderConfig.Resources, err)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to complete txn for the infraprovider %w", err)
+	}
+	return nil
+}
+
+func (c *Service) updateConfig(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
+	infraProviderConfig.Updated = time.Now().UnixMilli()
+	err := c.infraProviderConfigStore.Update(ctx, infraProviderConfig)
+	if err != nil {
+		return fmt.Errorf("failed to update infraprovider config for : %q %w", infraProviderConfig.Identifier, err)
+	}
+	return nil
+}
 
 func (c *Service) UpdateResource(ctx context.Context, resource types.InfraProviderResource) error {
 	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
@@ -32,6 +64,7 @@ func (c *Service) UpdateResource(ctx context.Context, resource types.InfraProvid
 			return err
 		}
 		resource.ID = infraProviderResource.ID
+		resource.Updated = time.Now().UnixMilli()
 		if err = c.infraProviderResourceStore.Update(ctx, &resource); err != nil {
 			return err
 		}

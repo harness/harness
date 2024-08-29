@@ -200,12 +200,12 @@ func (s infraProviderResourceStore) Update(
 	stmt := database.Builder.
 		Update(infraProviderResourceTable).
 		Set("ipreso_display_name", dbinfraProviderResource.Name).
-		Set("ipreso_updated", dbinfraProviderResource.Updated).
 		Set("ipreso_memory", dbinfraProviderResource.Memory).
 		Set("ipreso_disk", dbinfraProviderResource.Disk).
 		Set("ipreso_network", dbinfraProviderResource.Network).
 		Set("ipreso_region", dbinfraProviderResource.Region).
 		Set("ipreso_opentofu_params", dbinfraProviderResource.OpenTofuParams).
+		Set("ipreso_updated", dbinfraProviderResource.Updated).
 		Where("ipreso_id = ?", infraProviderResource.ID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
