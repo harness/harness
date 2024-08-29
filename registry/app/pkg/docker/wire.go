@@ -17,12 +17,12 @@ package docker
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/encrypt"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/gc"
+	"github.com/harness/gitness/secret"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
@@ -58,9 +58,9 @@ func ManifestServiceProvider(
 
 func RemoteRegistryProvider(
 	local *LocalRegistry, app *App, upstreamProxyConfigRepo store.UpstreamProxyConfigRepository,
-	secretStore corestore.SecretStore, encrypter encrypt.Encrypter,
+	spacePathStore corestore.SpacePathStore, secretService secret.Service,
 ) *RemoteRegistry {
-	return NewRemoteRegistry(local, app, upstreamProxyConfigRepo, secretStore, encrypter).(*RemoteRegistry)
+	return NewRemoteRegistry(local, app, upstreamProxyConfigRepo, spacePathStore, secretService).(*RemoteRegistry)
 }
 
 func ControllerProvider(

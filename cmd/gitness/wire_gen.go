@@ -91,6 +91,7 @@ import (
 	"github.com/harness/gitness/app/services/publickey"
 	"github.com/harness/gitness/app/services/pullreq"
 	repo2 "github.com/harness/gitness/app/services/repo"
+	secret3 "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/usergroup"
@@ -429,7 +430,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	registryBlobRepository := database2.ProvideRegistryBlobDao(db)
 	localRegistry := docker.LocalRegistryProvider(app, manifestService, blobRepository, registryRepository, manifestRepository, registryBlobRepository, mediaTypesRepository, tagRepository, artifactRepository, artifactStatRepository, gcService, transactor)
 	upstreamProxyConfigRepository := database2.ProvideUpstreamDao(db, registryRepository)
-	remoteRegistry := docker.RemoteRegistryProvider(localRegistry, app, upstreamProxyConfigRepository, secretStore, encrypter)
+	secretService := secret3.ProvideSecretService(secretStore, encrypter, spacePathStore)
+	remoteRegistry := docker.RemoteRegistryProvider(localRegistry, app, upstreamProxyConfigRepository, spacePathStore, secretService)
 	coreController := pkg.CoreControllerProvider(registryRepository)
 	dockerController := docker.ControllerProvider(localRegistry, remoteRegistry, coreController, spaceStore, authorizer)
 	handler := api2.NewHandlerProvider(dockerController, spaceStore, tokenStore, controller, authenticator, provider, authorizer)

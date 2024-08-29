@@ -20,11 +20,11 @@ import (
 	"io"
 
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/encrypt"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/remote/adapter"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/secret"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/net/context"
@@ -52,14 +52,12 @@ type remoteHelper struct {
 	registry      adapter.ArtifactRegistry
 	upstreamProxy types.UpstreamProxy
 	URL           string
+	secretService secret.Service
 }
 
 // NewRemoteHelper create a remote interface.
 func NewRemoteHelper(
-	ctx context.Context,
-	secretStore store.SecretStore,
-	encrypter encrypt.Encrypter,
-	repoKey string,
+	ctx context.Context, spacePathStore store.SpacePathStore, secretService secret.Service, repoKey string,
 	proxy types.UpstreamProxy,
 ) (RemoteInterface, error) {
 	if proxy.Source == string(api.UpstreamConfigSourceDockerhub) {
@@ -68,14 +66,15 @@ func NewRemoteHelper(
 	r := &remoteHelper{
 		repoKey:       repoKey,
 		upstreamProxy: proxy,
+		secretService: secretService,
 	}
-	if err := r.init(ctx, secretStore, encrypter); err != nil {
+	if err := r.init(ctx, spacePathStore); err != nil {
 		return nil, err
 	}
 	return r, nil
 }
 
-func (r *remoteHelper) init(ctx context.Context, secretStore store.SecretStore, encrypter encrypt.Encrypter) error {
+func (r *remoteHelper) init(ctx context.Context, spacePathStore store.SpacePathStore) error {
 	if r.registry != nil {
 		return nil
 	}
@@ -85,7 +84,7 @@ func (r *remoteHelper) init(ctx context.Context, secretStore store.SecretStore, 
 	if err != nil {
 		return err
 	}
-	adp, err := factory.Create(ctx, secretStore, encrypter, r.upstreamProxy)
+	adp, err := factory.Create(ctx, spacePathStore, r.upstreamProxy, r.secretService)
 	if err != nil {
 		return err
 	}

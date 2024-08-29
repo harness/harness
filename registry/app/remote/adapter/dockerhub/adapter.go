@@ -20,10 +20,10 @@ import (
 	"context"
 
 	store2 "github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/encrypt"
 	adp "github.com/harness/gitness/registry/app/remote/adapter"
 	"github.com/harness/gitness/registry/app/remote/adapter/native"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/secret"
 
 	"github.com/rs/zerolog/log"
 )
@@ -38,10 +38,7 @@ func init() {
 }
 
 func newAdapter(
-	ctx context.Context,
-	secretStore store2.SecretStore,
-	encrypter encrypt.Encrypter,
-	registry types.UpstreamProxy,
+	ctx context.Context, spacePathStore store2.SpacePathStore, service secret.Service, registry types.UpstreamProxy,
 ) (adp.Adapter, error) {
 	client, err := NewClient(registry)
 	if err != nil {
@@ -51,7 +48,7 @@ func newAdapter(
 	// TODO: get Upstream Credentials
 	return &adapter{
 		client:  client,
-		Adapter: native.NewAdapter(ctx, secretStore, encrypter, registry),
+		Adapter: native.NewAdapter(ctx, spacePathStore, service, registry),
 	}, nil
 }
 
@@ -60,12 +57,9 @@ type factory struct {
 
 // Create ...
 func (f *factory) Create(
-	ctx context.Context,
-	secretStore store2.SecretStore,
-	encrypter encrypt.Encrypter,
-	record types.UpstreamProxy,
+	ctx context.Context, spacePathStore store2.SpacePathStore, record types.UpstreamProxy, service secret.Service,
 ) (adp.Adapter, error) {
-	return newAdapter(ctx, secretStore, encrypter, record)
+	return newAdapter(ctx, spacePathStore, service, record)
 }
 
 var (

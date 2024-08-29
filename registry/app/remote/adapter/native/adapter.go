@@ -19,14 +19,13 @@ package native
 import (
 	"context"
 
-	s "github.com/harness/gitness/app/api/controller/secret"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/encrypt"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	adp "github.com/harness/gitness/registry/app/remote/adapter"
 	"github.com/harness/gitness/registry/app/remote/clients/registry"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/secret"
 
 	"github.com/rs/zerolog/log"
 )
@@ -47,16 +46,13 @@ type Adapter struct {
 
 // NewAdapter returns an instance of the Adapter.
 func NewAdapter(
-	ctx context.Context,
-	secretStore store.SecretStore,
-	encrypter encrypt.Encrypter,
-	reg types.UpstreamProxy,
+	ctx context.Context, spacePathStore store.SpacePathStore, service secret.Service, reg types.UpstreamProxy,
 ) *Adapter {
 	adapter := &Adapter{
 		proxy: reg,
 	}
 	// Get the password: lookup secrets.secret_data using secret_identifier & secret_space_id.
-	password := getPwd(ctx, secretStore, encrypter, reg)
+	password := getPwd(ctx, spacePathStore, service, reg)
 	username, password, url := reg.UserName, password, reg.RepoURL
 	adapter.Client = registry.NewClient(url, username, password, false)
 	return adapter
@@ -64,12 +60,8 @@ func NewAdapter(
 
 // getPwd: lookup secrets.secret_data using secret_identifier & secret_space_id.
 func getPwd(
-	ctx context.Context,
-	secretStore store.SecretStore,
-	encrypter encrypt.Encrypter,
-	reg types.UpstreamProxy,
+	ctx context.Context, spacePathStore store.SpacePathStore, secretService secret.Service, reg types.UpstreamProxy,
 ) string {
-	password := ""
 	if api.AuthType(reg.RepoAuthType) == api.AuthTypeUserPassword {
 		secretSpaceID := int64(0)
 		if reg.SecretSpaceID.Valid {
@@ -80,17 +72,20 @@ func getPwd(
 		if reg.SecretIdentifier.Valid {
 			secretIdentifier = reg.SecretIdentifier.String
 		}
-		secret, err := secretStore.FindByIdentifier(ctx, secretSpaceID, secretIdentifier)
+
+		spacePath, err := spacePathStore.FindPrimaryBySpaceID(ctx, secretSpaceID)
 		if err != nil {
-			log.Error().Msgf("failed to find secret: %v", err)
+			log.Error().Msgf("failed to find space path: %v", err)
+			return ""
 		}
-		secret, err = s.Dec(encrypter, secret)
+		decryptSecret, err := secretService.DecryptSecret(ctx, spacePath.Value, secretIdentifier)
 		if err != nil {
-			log.Error().Msgf("could not decrypt secret: %v", err)
+			log.Error().Msgf("failed to decrypt secret: %v", err)
+			return ""
 		}
-		password = secret.Data
+		return decryptSecret
 	}
-	return password
+	return ""
 }
 
 // HealthCheck checks health status of a proxy.

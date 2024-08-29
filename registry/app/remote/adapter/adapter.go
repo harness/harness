@@ -23,9 +23,9 @@ import (
 	"io"
 
 	store2 "github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/secret"
 )
 
 // const definition.
@@ -39,8 +39,7 @@ var registryKeys = []string{}
 // Factory creates a specific Adapter according to the params.
 type Factory interface {
 	Create(
-		ctx context.Context, secretStore store2.SecretStore, encrypter encrypt.Encrypter,
-		record types.UpstreamProxy,
+		ctx context.Context, spacePathStore store2.SpacePathStore, record types.UpstreamProxy, service secret.Service,
 	) (Adapter, error)
 }
 

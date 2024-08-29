@@ -25,7 +25,6 @@ import (
 
 	"github.com/harness/gitness/app/api/request"
 	store2 "github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/pkg"
@@ -33,6 +32,7 @@ import (
 	proxy2 "github.com/harness/gitness/registry/app/remote/controller/proxy"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
+	"github.com/harness/gitness/secret"
 
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/rs/zerolog/log"
@@ -48,18 +48,15 @@ const (
 )
 
 func NewRemoteRegistry(
-	local *LocalRegistry,
-	app *App,
-	upstreamProxyConfigRepo store.UpstreamProxyConfigRepository,
-	secretStore store2.SecretStore,
-	encrypter encrypt.Encrypter,
+	local *LocalRegistry, app *App, upstreamProxyConfigRepo store.UpstreamProxyConfigRepository,
+	spacePathStore store2.SpacePathStore, secretService secret.Service,
 ) Registry {
 	return &RemoteRegistry{
 		local:                   local,
 		App:                     app,
 		upstreamProxyConfigRepo: upstreamProxyConfigRepo,
-		secretStore:             secretStore,
-		encrypter:               encrypter,
+		spacePathStore:          spacePathStore,
+		secretService:           secretService,
 	}
 }
 
@@ -71,8 +68,8 @@ type RemoteRegistry struct {
 	local                   *LocalRegistry
 	App                     *App
 	upstreamProxyConfigRepo store.UpstreamProxyConfigRepository
-	secretStore             store2.SecretStore
-	encrypter               encrypt.Encrypter
+	spacePathStore          store2.SpacePathStore
+	secretService           secret.Service
 }
 
 func (r *RemoteRegistry) Base() error {
@@ -150,7 +147,7 @@ func (r *RemoteRegistry) ManifestExist(
 	responseHeaders *commons.ResponseHeaders, descriptor manifest.Descriptor, manifestResult manifest.Manifest,
 	errs []error,
 ) {
-	proxyCtl := proxy2.ControllerInstance(r.local, r.local.ms)
+	proxyCtl := proxy2.ControllerInstance(r.local, r.local.ms, r.secretService, r.spacePathStore)
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 	}
@@ -180,7 +177,8 @@ func (r *RemoteRegistry) ManifestExist(
 		errs = append(errs, err)
 		return responseHeaders, descriptor, manifestResult, errs
 	}
-	remoteHelper, err := proxy2.NewRemoteHelper(ctx, r.secretStore, r.encrypter, artInfo.RegIdentifier, *upstreamProxy)
+	remoteHelper, err := proxy2.NewRemoteHelper(ctx, r.spacePathStore, r.secretService, artInfo.RegIdentifier,
+		*upstreamProxy)
 	if err != nil {
 		errs = append(errs, errors.New("Proxy is down"))
 		return responseHeaders, descriptor, manifestResult, errs
@@ -239,7 +237,7 @@ func (r *RemoteRegistry) PullManifest(
 	responseHeaders *commons.ResponseHeaders, descriptor manifest.Descriptor, manifestResult manifest.Manifest,
 	errs []error,
 ) {
-	proxyCtl := proxy2.ControllerInstance(r.local, r.local.ms)
+	proxyCtl := proxy2.ControllerInstance(r.local, r.local.ms, r.secretService, r.spacePathStore)
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 	}
@@ -268,7 +266,8 @@ func (r *RemoteRegistry) PullManifest(
 		errs = append(errs, err)
 		return responseHeaders, descriptor, manifestResult, errs
 	}
-	remoteHelper, err := proxy2.NewRemoteHelper(ctx, r.secretStore, r.encrypter, artInfo.RegIdentifier, *upstreamProxy)
+	remoteHelper, err := proxy2.NewRemoteHelper(ctx, r.spacePathStore, r.secretService, artInfo.RegIdentifier,
+		*upstreamProxy)
 	if err != nil {
 		errs = append(errs, errors.New("Proxy is down"))
 		return responseHeaders, descriptor, manifestResult, errs
@@ -353,7 +352,7 @@ func (r *RemoteRegistry) fetchBlobInternal(
 	responseHeaders *commons.ResponseHeaders, fr *storage.FileReader, size int64, readCloser io.ReadCloser,
 	redirectURL string, errs []error,
 ) {
-	proxyCtl := proxy2.ControllerInstance(r.local, r.local.ms)
+	proxyCtl := proxy2.ControllerInstance(r.local, r.local.ms, r.secretService, r.spacePathStore)
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 	}
@@ -399,7 +398,7 @@ func (r *RemoteRegistry) fetchBlobInternal(
 	}
 
 	// This is start of proxy Code.
-	size, readCloser, err = proxyCtl.ProxyBlob(ctx, r.secretStore, r.encrypter, registryInfo, repoKey, *upstreamProxy)
+	size, readCloser, err = proxyCtl.ProxyBlob(ctx, registryInfo, repoKey, *upstreamProxy)
 	if err != nil {
 		errs = append(errs, err)
 		return responseHeaders, fr, size, readCloser, redirectURL, errs

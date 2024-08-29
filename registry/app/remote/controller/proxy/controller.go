@@ -26,13 +26,13 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
-	store2 "github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/encrypt"
+	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/types"
+	"github.com/harness/gitness/secret"
 
 	"github.com/distribution/distribution/v3/registry/api/errcode"
 	"github.com/opencontainers/go-digest"
@@ -68,12 +68,7 @@ type Controller interface {
 	// ProxyBlob proxy the blob request to the remote server, p is the proxy project
 	// art is the RegistryInfo which includes the digest of the blob
 	ProxyBlob(
-		ctx context.Context,
-		secretStore store2.SecretStore,
-		encrypter encrypt.Encrypter,
-		art pkg.RegistryInfo,
-		repoKey string,
-		proxy types.UpstreamProxy,
+		ctx context.Context, art pkg.RegistryInfo, repoKey string, proxy types.UpstreamProxy,
 	) (int64, io.ReadCloser, error)
 	// ProxyManifest proxy the manifest request to the remote server, p is the proxy project,
 	// art is the RegistryInfo which includes the tag or digest of the manifest
@@ -99,21 +94,24 @@ type Controller interface {
 }
 
 type controller struct {
-	// blobCtl         blob.Controller
-	// artifactCtl     artifact.Controller.
 	localRegistry         registryInterface
 	localManifestRegistry registryManifestInterface
-	// cache           cache.Cache
-	// handlerRegistry map[string]ManifestCacheHandler.
+	secretService         secret.Service
+	spacePathStore        store.SpacePathStore
 }
 
 // ControllerInstance -- get the proxy controller instance.
-func ControllerInstance(l registryInterface, lm registryManifestInterface) Controller {
+func ControllerInstance(
+	l registryInterface, lm registryManifestInterface, secretService secret.Service,
+	spacePathStore store.SpacePathStore,
+) Controller {
 	once.Do(
 		func() {
 			ctl = &controller{
 				localRegistry:         l,
 				localManifestRegistry: lm,
+				secretService:         secretService,
+				spacePathStore:        spacePathStore,
 			}
 		},
 	)
@@ -294,17 +292,12 @@ func (c *controller) HeadManifest(
 }
 
 func (c *controller) ProxyBlob(
-	ctx context.Context,
-	secretStore store2.SecretStore,
-	encrypter encrypt.Encrypter,
-	art pkg.RegistryInfo,
-	repoKey string,
-	proxy types.UpstreamProxy,
+	ctx context.Context, art pkg.RegistryInfo, repoKey string, proxy types.UpstreamProxy,
 ) (int64, io.ReadCloser, error) {
 	remoteImage := getRemoteRepo(art)
 	log.Debug().Msgf("The blob doesn't exist, proxy the request to the target server, url:%v", remoteImage)
 
-	rHelper, err := NewRemoteHelper(ctx, secretStore, encrypter, repoKey, proxy)
+	rHelper, err := NewRemoteHelper(ctx, c.spacePathStore, c.secretService, repoKey, proxy)
 	if err != nil {
 		return 0, nil, err
 	}

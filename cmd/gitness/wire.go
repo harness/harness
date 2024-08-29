@@ -100,6 +100,7 @@ import (
 	"github.com/harness/gitness/app/services/publickey"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	reposervice "github.com/harness/gitness/app/services/repo"
+	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/trigger"
 	usergroupservice "github.com/harness/gitness/app/services/usergroup"
@@ -262,6 +263,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		aiagent.WireSet,
 		capabilities.WireSet,
 		capabilitiesservice.WireSet,
+		secretservice.WireSet,
 	)
 	return &cliserver.System{}, nil
 }
