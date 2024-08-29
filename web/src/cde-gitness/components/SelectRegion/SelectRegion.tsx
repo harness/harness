@@ -68,7 +68,6 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
   return (
     <Container>
       <CDECustomDropdown
-        overridePopOverWidth
         label={
           <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <Layout.Vertical>
@@ -86,29 +85,24 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
           </Layout.Horizontal>
         }
         menu={
-          <Layout.Horizontal padding={{ top: 'small', bottom: 'small' }}>
-            <Menu>
-              {options.map(({ label }) => {
-                return (
-                  <MenuItem
-                    key={label}
-                    active={label === regionState?.toLowerCase()}
-                    text={<Text font={{ size: 'normal', weight: 'bold' }}>{label.toUpperCase()}</Text>}
-                    onClick={() => {
-                      onChange('metadata.region', label.toLowerCase())
-                      onChange('resource_identifier', undefined)
-                    }}
-                    onMouseOver={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-                      setRegionState(e.currentTarget.innerText)
-                    }}
-                  />
-                )
-              })}
-            </Menu>
-            <Menu>
-              <img src={getMapFromRegion(regionState?.toLowerCase() || '')} />
-            </Menu>
-          </Layout.Horizontal>
+          <Menu>
+            {options.map(({ label }) => {
+              return (
+                <MenuItem
+                  key={label}
+                  active={label === regionState?.toLowerCase()}
+                  text={<Text font={{ size: 'normal', weight: 'bold' }}>{label.toUpperCase()}</Text>}
+                  onClick={() => {
+                    onChange('metadata.region', label.toLowerCase())
+                    onChange('resource_identifier', undefined)
+                  }}
+                  onMouseOver={(e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+                    setRegionState(e.currentTarget.innerText)
+                  }}
+                />
+              )
+            })}
+          </Menu>
         }
       />
     </Container>
