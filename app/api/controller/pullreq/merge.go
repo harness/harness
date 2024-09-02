@@ -436,6 +436,8 @@ func (c *Controller) Merge(
 		pr.State = enum.PullReqStateMerged
 
 		nowMilli := now.UnixMilli()
+
+		pr.Edited = nowMilli
 		pr.Merged = &nowMilli
 		pr.MergedBy = &mergedBy
 		pr.MergeMethod = &in.Method
