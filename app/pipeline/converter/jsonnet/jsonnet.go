@@ -186,7 +186,7 @@ func mapBuild(v *types.Execution, vm *jsonnet.VM) {
 	fromMap(v.Params, vm)
 }
 
-// mapBuild populates repo level variables available to jsonnet templates.
+// mapRepo populates repo level variables available to jsonnet templates.
 // Since we want to maintain compatibility with drone 2.x, the older format
 // needs to be maintained (even if the variables do not exist in gitness).
 func mapRepo(v *types.Repository, p *types.Pipeline, vm *jsonnet.VM, publicRepo bool) {

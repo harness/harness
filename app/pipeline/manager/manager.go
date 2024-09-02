@@ -458,7 +458,7 @@ func (m *Manager) AfterStep(_ context.Context, step *types.Step) error {
 	return retErr
 }
 
-// BeforeAll signals the build stage is about to start.
+// BeforeStage signals the build stage is about to start.
 func (m *Manager) BeforeStage(_ context.Context, stage *types.Stage) error {
 	s := &setup{
 		Executions:  m.Executions,
@@ -474,7 +474,7 @@ func (m *Manager) BeforeStage(_ context.Context, stage *types.Stage) error {
 	return s.do(noContext, stage)
 }
 
-// AfterAll signals the build stage is complete.
+// AfterStage signals the build stage is complete.
 func (m *Manager) AfterStage(_ context.Context, stage *types.Stage) error {
 	t := &teardown{
 		Executions:  m.Executions,
