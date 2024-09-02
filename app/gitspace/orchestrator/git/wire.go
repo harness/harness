@@ -12,31 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package container
+package git
 
 import (
-	"github.com/harness/gitness/app/gitspace/logutil"
-	"github.com/harness/gitness/app/gitspace/orchestrator/git"
-	"github.com/harness/gitness/app/gitspace/orchestrator/user"
-	"github.com/harness/gitness/infraprovider"
-
 	"github.com/google/wire"
 )
 
 var WireSet = wire.NewSet(
-	ProvideEmbeddedDockerOrchestrator,
+	ProvideGitServiceImpl,
 )
 
-func ProvideEmbeddedDockerOrchestrator(
-	dockerClientFactory *infraprovider.DockerClientFactory,
-	statefulLogger *logutil.StatefulLogger,
-	gitService git.Service,
-	userService user.Service,
-) Orchestrator {
-	return NewEmbeddedDockerOrchestrator(
-		dockerClientFactory,
-		statefulLogger,
-		gitService,
-		userService,
-	)
+func ProvideGitServiceImpl() Service {
+	return NewGitServiceImpl()
 }

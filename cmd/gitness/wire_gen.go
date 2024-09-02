@@ -52,7 +52,9 @@ import (
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
+	git2 "github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	user2 "github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/scm"
 	secret2 "github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/pipeline/canceler"
@@ -384,7 +386,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	infrastructureConfig := server.ProvideGitspaceInfraProvisionerConfig(config)
 	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory, infraProviderTemplateStore, infraProvisionedStore, infrastructureConfig)
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
-	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger)
+	gitService := git2.ProvideGitServiceImpl()
+	userService := user2.ProvideUserServiceImpl()
+	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger, gitService, userService)
 	orchestratorConfig := server.ProvideGitspaceOrchestratorConfig(config)
 	vsCodeConfig := server.ProvideIDEVSCodeConfig(config)
 	vsCode := ide.ProvideVSCodeService(vsCodeConfig)

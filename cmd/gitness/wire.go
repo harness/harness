@@ -63,7 +63,9 @@ import (
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	containerorchestrator "github.com/harness/gitness/app/gitspace/orchestrator/container"
+	containerGit "github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	containerUser "github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/scm"
 	gitspacesecret "github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/pipeline/canceler"
@@ -264,6 +266,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		capabilities.WireSet,
 		capabilitiesservice.WireSet,
 		secretservice.WireSet,
+		containerGit.WireSet,
+		containerUser.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

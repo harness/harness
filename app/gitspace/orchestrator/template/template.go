@@ -35,15 +35,14 @@ var (
 	scriptTemplates map[string]*template.Template
 )
 
-type CloneGitPayload struct {
+type CloneCodePayload struct {
 	RepoURL  string
 	Image    string
 	Branch   string
 	RepoName string
-	AuthenticateGitPayload
 }
 
-type AuthenticateGitPayload struct {
+type SetupGitCredentialsPayload struct {
 	Email    string
 	Name     string
 	Password string

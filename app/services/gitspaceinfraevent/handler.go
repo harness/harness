@@ -24,6 +24,8 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (s *Service) handleGitspaceInfraEvent(
@@ -43,44 +45,49 @@ func (s *Service) handleGitspaceInfraEvent(
 
 	switch payload.Type {
 	case enum.InfraEventProvision:
-		updatedInstance, err := s.orchestrator.ResumeStartGitspace(ctx, *config, payload.Infra)
-		if err != nil {
+		updatedInstance, resumeStartErr := s.orchestrator.ResumeStartGitspace(ctx, *config, payload.Infra)
+		if resumeStartErr != nil {
 			s.emitGitspaceConfigEvent(ctx, config, enum.GitspaceEventTypeGitspaceActionStartFailed)
 
-			return fmt.Errorf("failed to resume start gitspace: %w", err)
+			err = fmt.Errorf("failed to resume start gitspace: %w", resumeStartErr)
 		}
 
 		instance = &updatedInstance
 
 	case enum.InfraEventStop:
-		instanceState, err := s.orchestrator.ResumeStopGitspace(ctx, *config, payload.Infra)
-		if err != nil {
+		instanceState, resumeStopErr := s.orchestrator.ResumeStopGitspace(ctx, *config, payload.Infra)
+		if resumeStopErr != nil {
 			s.emitGitspaceConfigEvent(ctx, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
 
-			return fmt.Errorf("failed to resume stop gitspace: %w", err)
+			err = fmt.Errorf("failed to resume stop gitspace: %w", resumeStopErr)
 		}
 
 		instance.State = instanceState
 
 	case enum.InfraEventDeprovision:
-		instanceState, err := s.orchestrator.ResumeDeleteGitspace(ctx, *config, payload.Infra)
-		if err != nil {
-			return fmt.Errorf("failed to resume delete gitspace: %w", err)
+		instanceState, resumeDeleteErr := s.orchestrator.ResumeDeleteGitspace(ctx, *config, payload.Infra)
+		if resumeDeleteErr != nil {
+			err = fmt.Errorf("failed to resume delete gitspace: %w", resumeDeleteErr)
+		} else {
+			config.IsDeleted = true
+			updateErr := s.gitspaceSvc.UpdateConfig(ctx, config)
+			if updateErr != nil {
+				err = fmt.Errorf("failed to delete gitspace config with ID: %s %w", config.Identifier, updateErr)
+			}
 		}
 
 		instance.State = instanceState
-
-		config.IsDeleted = true
-		if err = s.gitspaceSvc.UpdateConfig(ctx, config); err != nil {
-			return fmt.Errorf("failed to delete gitspace config with ID: %s %w", config.Identifier, err)
-		}
-
 	default:
 		return fmt.Errorf("unknown event type: %s", event.Payload.Type)
 	}
-	err = s.gitspaceSvc.UpdateInstance(ctx, instance)
+
+	updateErr := s.gitspaceSvc.UpdateInstance(ctx, instance)
+	if updateErr != nil {
+		log.Err(updateErr).Msgf("failed to update gitspace instance")
+	}
+
 	if err != nil {
-		return fmt.Errorf("failed to update gitspace instance: %w", err)
+		log.Err(err).Msgf("error while handling gitspace infra event")
 	}
 
 	return nil

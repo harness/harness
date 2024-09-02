@@ -1,7 +1,7 @@
 #!/bin/sh
 
 username={{ .Username }}
-accessKey={{ .AccessKey }}
+accessKey="{{ .AccessKey }}"
 homeDir={{ .HomeDir }}
 accessType={{ .AccessType }}
 
@@ -29,6 +29,10 @@ if [ "ssh_key" = "$accessType" ] ; then
     echo $accessKey > $homeDir/.ssh/authorized_keys
     chmod 600 $homeDir/.ssh/authorized_keys
     chown -R $username:$username $homeDir/.ssh
-else
+    echo "$username:$username" | chpasswd
+elif [ "user_credentials" = "$accessType"  ] ; then
     echo "$username:$accessKey" | chpasswd
+else
+  echo "Unsupported accessType $accessType" >&2
+  exit 1
 fi

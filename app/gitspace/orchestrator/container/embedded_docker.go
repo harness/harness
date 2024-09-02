@@ -25,8 +25,9 @@ import (
 
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
+	"github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
-	"github.com/harness/gitness/app/gitspace/orchestrator/template"
+	"github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
@@ -43,29 +44,32 @@ import (
 var _ Orchestrator = (*EmbeddedDockerOrchestrator)(nil)
 
 const (
-	loggingKey              = "gitspace.container"
-	catchAllIP              = "0.0.0.0"
-	containerStateRunning   = "running"
-	containerStateRemoved   = "removed"
-	containerStateStopped   = "exited"
-	templateCloneGit        = "clone_git.sh"
-	templateAuthenticateGit = "authenticate_git.sh"
-	templateManageUser      = "manage_user.sh"
-	mountType               = mount.TypeVolume
+	loggingKey            = "gitspace.container"
+	catchAllIP            = "0.0.0.0"
+	containerStateRunning = "running"
+	containerStateRemoved = "removed"
+	containerStateStopped = "exited"
+	mountType             = mount.TypeVolume
 )
 
 type EmbeddedDockerOrchestrator struct {
 	dockerClientFactory *infraprovider.DockerClientFactory
 	statefulLogger      *logutil.StatefulLogger
+	gitService          git.Service
+	userService         user.Service
 }
 
 func NewEmbeddedDockerOrchestrator(
 	dockerClientFactory *infraprovider.DockerClientFactory,
 	statefulLogger *logutil.StatefulLogger,
+	gitService git.Service,
+	userService user.Service,
 ) Orchestrator {
 	return &EmbeddedDockerOrchestrator{
 		dockerClientFactory: dockerClientFactory,
 		statefulLogger:      statefulLogger,
+		gitService:          gitService,
+		userService:         userService,
 	}
 }
 
@@ -148,7 +152,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 		}
 
 		if resolvedRepoDetails.Credentials != nil {
-			authErr := e.authenticateGit(ctx, exec, resolvedRepoDetails, codeRepoDir)
+			authErr := e.setupGitCredentials(ctx, exec, resolvedRepoDetails, logStreamInstance)
 			if authErr != nil {
 				return nil, authErr
 			}
@@ -285,6 +289,18 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
+	err = e.installGit(ctx, exec, logStreamInstance)
+	if err != nil {
+		return err
+	}
+
+	if resolvedRepoDetails.Credentials != nil {
+		err = e.setupGitCredentials(ctx, exec, resolvedRepoDetails, logStreamInstance)
+		if err != nil {
+			return err
+		}
+	}
+
 	err = e.cloneCode(ctx, exec, defaultBaseImage, resolvedRepoDetails, logStreamInstance)
 	if err != nil {
 		return err
@@ -401,75 +417,77 @@ func (e *EmbeddedDockerOrchestrator) getContainerInfo(
 	return inspectResp.ID, usedPorts, nil
 }
 
-func (e *EmbeddedDockerOrchestrator) authenticateGit(
-	ctx context.Context,
-	exec *devcontainer.Exec,
-	resolvedRepoDetails scm.ResolvedDetails,
-	codeRepoDir string,
-) error {
-	data := &template.AuthenticateGitPayload{
-		Email:    resolvedRepoDetails.Credentials.Email,
-		Name:     resolvedRepoDetails.Credentials.Name,
-		Password: resolvedRepoDetails.Credentials.Password,
-		Host:     resolvedRepoDetails.Credentials.Host,
-		Protocol: resolvedRepoDetails.Credentials.Protocol,
-		Path:     resolvedRepoDetails.Credentials.Path,
-	}
-	gitAuthenticateScript, err := template.GenerateScriptFromTemplate(
-		templateAuthenticateGit, data)
-	if err != nil {
-		return fmt.Errorf("failed to generate scipt to authenticate git from template %s: %w", templateAuthenticateGit, err)
-	}
-
-	_, err = exec.ExecuteCommand(ctx, gitAuthenticateScript, false, false, codeRepoDir)
-	if err != nil {
-		err = fmt.Errorf("failed to authenticate git in container: %w", err)
-		return err
-	}
-
-	return nil
-}
-
 func (e *EmbeddedDockerOrchestrator) manageUser(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
-	data := template.SetupUserPayload{
-		Username:   exec.UserIdentifier,
-		AccessKey:  exec.AccessKey,
-		AccessType: exec.AccessType,
-		HomeDir:    exec.HomeDir,
-	}
-	manageUserScript, err := template.GenerateScriptFromTemplate(
-		templateManageUser, data)
+	output, err := e.userService.Manage(ctx, exec)
 	if err != nil {
-		return fmt.Errorf("failed to generate scipt to manage user from template %s: %w", templateManageUser, err)
-	}
-	loggingErr := logStreamInstance.Write(
-		"Creating user inside container: " + data.Username)
-	if loggingErr != nil {
-		return fmt.Errorf("logging error: %w", loggingErr)
-	}
+		loggingErr := logStreamInstance.Write("Error while creating user inside container: " + err.Error())
 
-	output, err := exec.ExecuteCommandInHomeDirectory(ctx, manageUserScript, true, false)
-	if err != nil {
-		loggingErr = logStreamInstance.Write("Error while creating user inside container : " + err.Error())
-
-		err = fmt.Errorf("failed to create user: %w", err)
+		err = fmt.Errorf("failed to create user gitspace %s: %w", exec.ContainerName, err)
 
 		if loggingErr != nil {
 			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
 		}
+
 		return err
 	}
 
-	loggingErr = logStreamInstance.Write("Managing user output...\n" + string(output))
+	loggingErr := logStreamInstance.Write("Managing user output...\n" + string(output))
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	loggingErr = logStreamInstance.Write("Successfully created user inside container")
+	return nil
+}
+
+func (e *EmbeddedDockerOrchestrator) installGit(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	logStreamInstance *logutil.LogStreamInstance,
+) error {
+	output, err := e.gitService.Install(ctx, exec)
+	if err != nil {
+		loggingErr := logStreamInstance.Write("Error while installing git inside container: " + err.Error())
+
+		err = fmt.Errorf("failed to install git for gitspace %s: %w", exec.ContainerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr := logStreamInstance.Write("Install git output...\n" + string(output))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	return nil
+}
+func (e *EmbeddedDockerOrchestrator) setupGitCredentials(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	resolvedRepoDetails scm.ResolvedDetails,
+	logStreamInstance *logutil.LogStreamInstance,
+) error {
+	output, err := e.gitService.SetupCredentials(ctx, exec, resolvedRepoDetails)
+	if err != nil {
+		loggingErr := logStreamInstance.Write("Error while setting up git credentials inside container: " + err.Error())
+
+		err = fmt.Errorf("failed to setup git credentials for gitspace %s: %w", exec.ContainerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr := logStreamInstance.Write("Setting up git credentials output...\n" + string(output))
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
@@ -484,35 +502,11 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 	resolvedRepoDetails scm.ResolvedDetails,
 	logStreamInstance *logutil.LogStreamInstance,
 ) error {
-	data := &template.CloneGitPayload{
-		RepoURL:  resolvedRepoDetails.CloneURL,
-		Image:    defaultBaseImage,
-		Branch:   resolvedRepoDetails.Branch,
-		RepoName: resolvedRepoDetails.RepoName,
-	}
-	if resolvedRepoDetails.Credentials != nil {
-		data.Email = resolvedRepoDetails.Credentials.Email
-		data.Name = resolvedRepoDetails.Credentials.Name
-		data.Password = resolvedRepoDetails.Credentials.Password
-		data.Host = resolvedRepoDetails.Credentials.Host
-		data.Protocol = resolvedRepoDetails.Credentials.Protocol
-		data.Path = resolvedRepoDetails.Credentials.Path
-	}
-	gitCloneScript, err := template.GenerateScriptFromTemplate(templateCloneGit, data)
+	output, err := e.gitService.CloneCode(ctx, exec, resolvedRepoDetails, defaultBaseImage)
 	if err != nil {
-		return fmt.Errorf("failed to generate scipt to clone git from template %s: %w", templateCloneGit, err)
-	}
-	loggingErr := logStreamInstance.Write(
-		"Cloning git repo inside container: " + resolvedRepoDetails.CloneURL + " branch: " + resolvedRepoDetails.Branch)
-	if loggingErr != nil {
-		return fmt.Errorf("logging error: %w", loggingErr)
-	}
+		loggingErr := logStreamInstance.Write("Error while cloning code inside container: " + err.Error())
 
-	output, err := exec.ExecuteCommandInHomeDirectory(ctx, gitCloneScript, false, false)
-	if err != nil {
-		loggingErr = logStreamInstance.Write("Error while cloning git repo inside container: " + err.Error())
-
-		err = fmt.Errorf("failed to clone code: %w", err)
+		err = fmt.Errorf("failed to clone code gitspace %s: %w", exec.ContainerName, err)
 
 		if loggingErr != nil {
 			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
@@ -521,12 +515,7 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 		return err
 	}
 
-	loggingErr = logStreamInstance.Write("Cloning git repo output...\n" + string(output))
-	if loggingErr != nil {
-		return fmt.Errorf("logging error: %w", loggingErr)
-	}
-
-	loggingErr = logStreamInstance.Write("Successfully cloned git repo inside container")
+	loggingErr := logStreamInstance.Write("Clone output...\n" + string(output))
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
@@ -744,7 +733,7 @@ func (e *EmbeddedDockerOrchestrator) pullImage(
 }
 
 // StopGitspace stops a container. If it is removed, it returns an error.
-func (e EmbeddedDockerOrchestrator) StopGitspace(
+func (e *EmbeddedDockerOrchestrator) StopGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
@@ -804,7 +793,7 @@ func (e EmbeddedDockerOrchestrator) StopGitspace(
 	return nil
 }
 
-func (e EmbeddedDockerOrchestrator) stopContainer(
+func (e *EmbeddedDockerOrchestrator) stopContainer(
 	ctx context.Context,
 	containerName string,
 	dockerClient *client.Client,
@@ -930,7 +919,7 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 	return nil
 }
 
-func (e EmbeddedDockerOrchestrator) removeContainer(
+func (e *EmbeddedDockerOrchestrator) removeContainer(
 	ctx context.Context,
 	containerName string,
 	dockerClient *client.Client,
