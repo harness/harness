@@ -26,6 +26,7 @@ import { getErrorMessage } from 'utils/Utils'
 import { GitspaceSelect } from 'cde-gitness/components/GitspaceSelect/GitspaceSelect'
 import harnessCode from 'cde-gitness/assests/harnessCode.svg?url'
 import genericGit from 'cde-gitness/assests/genericGit.svg?url'
+import gitnessIcon from 'cde-gitness/assests/gitness.svg?url'
 import github from 'cde-gitness/assests/github.svg?url'
 import gitlab from 'cde-gitness/assests/gitlab.svg?url'
 import bitbucket from 'cde-gitness/assests/bitbucket.svg?url'
@@ -58,6 +59,14 @@ export interface RepoQueryParams {
 }
 
 export const scmOptions: SCMType[] = [
+  { name: 'Harness Code', value: EnumGitspaceCodeRepoType.HARNESS_CODE, icon: harnessCode },
+  { name: 'GitHub Cloud', value: EnumGitspaceCodeRepoType.GITHUB, icon: github },
+  { name: 'GitLab Cloud', value: EnumGitspaceCodeRepoType.GITLAB, icon: gitlab },
+  { name: 'Bitbucket', value: EnumGitspaceCodeRepoType.BITBUCKET, icon: bitbucket },
+  { name: 'Any public Git repository', value: EnumGitspaceCodeRepoType.UNKNOWN, icon: genericGit },
+  { name: 'Gitness', value: EnumGitspaceCodeRepoType.GITNESS, icon: gitnessIcon }
+]
+export const scmOptionsCDE: SCMType[] = [
   { name: 'Harness Code', value: EnumGitspaceCodeRepoType.HARNESS_CODE, icon: harnessCode },
   { name: 'GitHub Cloud', value: EnumGitspaceCodeRepoType.GITHUB, icon: github },
   { name: 'GitLab Cloud', value: EnumGitspaceCodeRepoType.GITLAB, icon: gitlab },
@@ -145,7 +154,7 @@ export const CDECreateGitspace = () => {
       formName="importRepoForm"
       enableReinitialize>
       {formik => {
-        const scmOption = scmOptions.find(item => item.value === formik.values.code_repo_type) as SCMType
+        const scmOption = scmOptionsCDE.find(item => item.value === formik.values.code_repo_type) as SCMType
         return (
           <>
             <Layout.Horizontal
@@ -174,7 +183,7 @@ export const CDECreateGitspace = () => {
                     }
                     renderMenu={
                       <Menu>
-                        {scmOptions.map(item => (
+                        {scmOptionsCDE.map(item => (
                           <MenuItem
                             active={item.name === scmOption.name}
                             key={item.name}

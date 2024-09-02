@@ -34,7 +34,6 @@ import { Intent, Menu, MenuItem, PopoverInteractionKind, Position } from '@bluep
 import { useHistory } from 'react-router-dom'
 import type { IconName } from '@harnessio/icons'
 import moment from 'moment'
-import { defaultTo } from 'lodash-es'
 import RegionIcon from 'cde-gitness/assests/globe.svg?url'
 import { UseStringsReturn, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -42,7 +41,7 @@ import { getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import VSCode from 'cde-gitness/assests/VSCode.svg?url'
 import { GitspaceActionType, GitspaceStatus } from 'cde-gitness/constants'
-import type { EnumGitspaceStateType, EnumIDEType, TypesGitspaceConfig, EnumGitspaceCodeRepoType } from 'services/cde'
+import type { EnumGitspaceStateType, EnumIDEType, TypesGitspaceConfig } from 'services/cde'
 import gitspaceIcon from 'cde-gitness/assests/gitspace.svg?url'
 import { useModalHook } from 'hooks/useModalHook'
 import pause from 'cde-gitness/assests/pause.svg?url'
@@ -52,13 +51,8 @@ import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
-import { scmOptions } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
+import { getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
 import css from './ListGitspaces.module.scss'
-
-const getIconByRepoType = ({ repoType }: { repoType?: EnumGitspaceCodeRepoType }): React.ReactNode => {
-  const scmOption = scmOptions.find(option => option.value === repoType)
-  return <img height={24} width={24} src={defaultTo(scmOption?.icon, '')} style={{ marginRight: '10px' }} />
-}
 
 export const getStatusColor = (status?: EnumGitspaceStateType) => {
   switch (status) {
@@ -197,7 +191,7 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
         spacing={'small'}
         flex={{ alignItems: 'center', justifyContent: 'start' }}>
         <Container height={24} width={24}>
-          {getIconByRepoType({ repoType: code_repo_type })}
+          {getIconByRepoType({ repoType: code_repo_type, height: 24 })}
         </Container>
         <Text lineClamp={1} color={Color.PRIMARY_7} title={name} font={{ align: 'left', size: 'normal' }}>
           {name}

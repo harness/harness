@@ -15,9 +15,10 @@
  */
 
 import React from 'react'
-import { Bitbucket as BitbucketIcon, Code, GitLabFull, GithubCircle } from 'iconoir-react'
-import type { EnumCodeRepoType } from 'services/cde'
+import { defaultTo } from 'lodash-es'
 import type { EnumGitspaceCodeRepoType } from 'cde-gitness/services'
+import genericGit from 'cde-gitness/assests/genericGit.svg?url'
+import { scmOptions } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 
 export const isValidUrl = (url: string) => {
   const urlPattern = new RegExp(
@@ -58,20 +59,11 @@ export const getIconByRepoType = ({
   repoType,
   height = 40
 }: {
-  repoType?: EnumCodeRepoType | EnumGitspaceCodeRepoType
+  repoType?: EnumGitspaceCodeRepoType
   height?: number
 }): React.ReactNode => {
-  switch (repoType) {
-    case CodeRepoType.Github:
-      return <GithubCircle height={height} />
-    case CodeRepoType.Gitlab:
-      return <GitLabFull height={height} />
-    case CodeRepoType.Bitbucket:
-      return <BitbucketIcon height={height} />
-    default:
-    case CodeRepoType.Unknown:
-    case CodeRepoType.HarnessCode:
-    case 'harness_code':
-      return <Code height={height} />
-  }
+  const scmOption = scmOptions.find(option => option.value === repoType)
+  return (
+    <img height={height} width={height} src={defaultTo(scmOption?.icon, genericGit)} style={{ marginRight: '10px' }} />
+  )
 }

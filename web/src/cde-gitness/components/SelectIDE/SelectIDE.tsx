@@ -72,7 +72,7 @@ export const SelectIDE = () => {
                   text={
                     <Layout.Vertical spacing="small">
                       <Text font={{ size: 'normal', weight: 'bold' }}>{label}</Text>
-                      <Text font="small">1.2.3</Text>
+                      <Text font="small">1.81.0</Text>
                     </Layout.Vertical>
                   }
                   onClick={() => {
