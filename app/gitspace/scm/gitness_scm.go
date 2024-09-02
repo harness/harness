@@ -184,10 +184,17 @@ func (s GitnessSCM) ResolveCredentials(
 	if err != nil {
 		return nil, fmt.Errorf("failed to create JWT: %w", err)
 	}
+	modifiedURL, err := url.Parse(gitURL)
+	if err != nil {
+		return nil, fmt.Errorf("error while parsing the clone url: %s", gitURL)
+	}
 	credentials := &Credentials{
-		Password: jwtToken,
 		Email:    user.Email,
 		Name:     user.DisplayName,
+		Password: jwtToken,
+		Host:     modifiedURL.Host,
+		Protocol: modifiedURL.Scheme,
+		Path:     modifiedURL.Path,
 	}
 	resolvedCredentails.Credentials = credentials
 	return resolvedCredentails, nil

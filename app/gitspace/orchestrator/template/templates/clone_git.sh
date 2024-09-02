@@ -8,15 +8,9 @@ repo_name={{ .RepoName }}
 password={{ .Password }}
 email={{ .Email }}
 name={{ .Name }}
-
-# Create or overwrite the config file with new settings
-touch $HOME/.git-askpass
-cat > $HOME/.git-askpass <<EOF
-echo $password
-EOF
-chmod 700 $HOME/.git-askpass
-export GIT_ASKPASS=$HOME/.git-askpass
-git config --global credential.helper 'cache --timeout=2592000'
+host={{ .Host }}
+protocol={{ .Protocol }}
+path={{ .Path }}
 
 # Check if Git is installed
 if ! command -v git >/dev/null 2>&1; then
@@ -29,22 +23,34 @@ if ! command -v git >/dev/null 2>&1; then
     echo "Git is not installed. Exiting..."
     exit 1
 fi
+if [ -z "$password" ]; then
+    echo "setting up without credentials"
+else
+    git config --global credential.helper 'cache --timeout=2592000'
+    git config --global user.email "$email"
+    git config --global user.name "$name"
+    touch .gitcontext
+    echo "host="$host >> .gitcontext
+    echo "protocol="$protocol >> .gitcontext
+    echo "path="$path >> .gitcontext
+    echo "username="$email >> .gitcontext
+    echo "password="$password >> .gitcontext
+    echo "" >> .gitcontext
 
-git config --global user.email "$email"
-git config --global user.name "$name"
+    cat .gitcontext | git credential approve
+    rm .gitcontext
+fi
+
 # Clone the repository inside the working directory if it doesn't exist
 if [ ! -d "$HOME/$repo_name/.git" ]; then
     echo "Cloning the repository..."
     if ! git clone "$repo_url" --branch "$branch" "$HOME/$repo_name"; then
       echo "Failed to clone the repository. Exiting..."
-      rm $HOME/.git-askpass
       exit 1
     fi
 else
     echo "Repository already exists. Skipping clone."
 fi
-git ls-remote
-rm $HOME/.git-askpass
 
 git config --global --add safe.directory "$HOME/$repo_name"
 

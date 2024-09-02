@@ -47,6 +47,9 @@ type AuthenticateGitPayload struct {
 	Email    string
 	Name     string
 	Password string
+	Host     string
+	Protocol string
+	Path     string
 }
 
 type RunVSCodeWebPayload struct {

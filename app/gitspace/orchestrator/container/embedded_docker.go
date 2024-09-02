@@ -411,6 +411,9 @@ func (e *EmbeddedDockerOrchestrator) authenticateGit(
 		Email:    resolvedRepoDetails.Credentials.Email,
 		Name:     resolvedRepoDetails.Credentials.Name,
 		Password: resolvedRepoDetails.Credentials.Password,
+		Host:     resolvedRepoDetails.Credentials.Host,
+		Protocol: resolvedRepoDetails.Credentials.Protocol,
+		Path:     resolvedRepoDetails.Credentials.Path,
 	}
 	gitAuthenticateScript, err := template.GenerateScriptFromTemplate(
 		templateAuthenticateGit, data)
@@ -491,6 +494,9 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 		data.Email = resolvedRepoDetails.Credentials.Email
 		data.Name = resolvedRepoDetails.Credentials.Name
 		data.Password = resolvedRepoDetails.Credentials.Password
+		data.Host = resolvedRepoDetails.Credentials.Host
+		data.Protocol = resolvedRepoDetails.Credentials.Protocol
+		data.Path = resolvedRepoDetails.Credentials.Path
 	}
 	gitCloneScript, err := template.GenerateScriptFromTemplate(templateCloneGit, data)
 	if err != nil {
