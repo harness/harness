@@ -225,7 +225,7 @@ func (s *UserGroupStore) CreateOrUpdate(
 		,:usergroup_space_id	
 		,:usergroup_created
 		,:usergroup_updated
-	) ON CONFLICT (usergroup_identifier, usergroup_space_id) DO UPDATE SET
+	) ON CONFLICT (usergroup_space_id, LOWER(usergroup_identifier)) DO UPDATE SET
 		usergroup_name = EXCLUDED.usergroup_name,
 		usergroup_description = EXCLUDED.usergroup_description,
 		usergroup_updated = EXCLUDED.usergroup_updated
