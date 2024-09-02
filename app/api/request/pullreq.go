@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -28,6 +29,10 @@ const (
 	PathParamReviewerID       = "pullreq_reviewer_id"
 	PathParamUserGroupID      = "user_group_id"
 
+	QueryParamAuthorID           = "author_id"
+	QueryParamCommenterID        = "commenter_id"
+	QueryParamReviewerID         = "reviewer_id"
+	QueryParamReviewDecision     = "review_decision"
 	QueryParamIncludeDescription = "include_description"
 )
 
@@ -70,6 +75,24 @@ func parsePullReqStates(r *http.Request) []enum.PullReqState {
 	return states
 }
 
+// parseReviewDecisions extracts the pull request reviewer decisions from the url.
+func parseReviewDecisions(r *http.Request) []enum.PullReqReviewDecision {
+	strReviewDecisions, _ := QueryParamList(r, QueryParamReviewDecision)
+	m := make(map[enum.PullReqReviewDecision]struct{}) // use map to eliminate duplicates
+	for _, s := range strReviewDecisions {
+		if state, ok := enum.PullReqReviewDecision(s).Sanitize(); ok {
+			m[state] = struct{}{}
+		}
+	}
+
+	reviewDecisions := make([]enum.PullReqReviewDecision, 0, len(m))
+	for s := range m {
+		reviewDecisions = append(reviewDecisions, s)
+	}
+
+	return reviewDecisions
+}
+
 // ParsePullReqFilter extracts the pull request query parameter from the url.
 func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 	createdBy, err := QueryParamListAsPositiveInt64(r, QueryParamCreatedBy)
@@ -101,6 +124,26 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		return nil, fmt.Errorf("encountered error parsing include description filter: %w", err)
 	}
 
+	authorID, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamAuthorID, 0)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing author ID filter: %w", err)
+	}
+
+	commenterID, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamCommenterID, 0)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing commenter ID filter: %w", err)
+	}
+
+	reviewerID, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamReviewerID, 0)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing reviewer ID filter: %w", err)
+	}
+
+	reviewDecisions := parseReviewDecisions(r)
+	if len(reviewDecisions) > 0 && reviewerID <= 0 {
+		return nil, errors.InvalidArgument("Can't use review decisions without providing a reviewer ID")
+	}
+
 	return &types.PullReqFilter{
 		Page:               ParsePage(r),
 		Size:               ParseLimit(r),
@@ -114,6 +157,10 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		Order:              ParseOrder(r),
 		LabelID:            labelID,
 		ValueID:            valueID,
+		AuthorID:           authorID,
+		CommenterID:        commenterID,
+		ReviewerID:         reviewerID,
+		ReviewDecisions:    reviewDecisions,
 		IncludeDescription: includeDescription,
 		CreatedFilter:      createdAtFilter,
 		EditedFilter:       editedAtFilter,

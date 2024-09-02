@@ -547,7 +547,7 @@ func (s *PullReqStore) listQuery(opts *types.PullReqFilter) squirrel.SelectBuild
 		columns = pullReqColumns
 	}
 
-	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 {
+	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 || opts.CommenterID > 0 {
 		stmt = database.Builder.Select("DISTINCT " + columns)
 	} else {
 		stmt = database.Builder.Select(columns)
@@ -619,6 +619,26 @@ func (*PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.PullR
 		*stmt = stmt.Where("pullreq_target_repo_id <> ?", opts.RepoIDBlacklist[0])
 	} else if len(opts.RepoIDBlacklist) > 1 {
 		*stmt = stmt.Where(squirrel.NotEq{"pullreq_target_repo_id": opts.RepoIDBlacklist})
+	}
+
+	if opts.AuthorID > 0 {
+		*stmt = stmt.Where("pullreq_created_by = ?", opts.AuthorID)
+	}
+
+	if opts.CommenterID > 0 {
+		*stmt = stmt.InnerJoin("pullreq_activities ON pullreq_activity_pullreq_id = pullreq_id")
+		*stmt = stmt.Where("pullreq_activity_deleted IS NULL")
+		*stmt = stmt.Where("(pullreq_activity_kind = 'comment' OR pullreq_activity_kind = 'change-comment')")
+		*stmt = stmt.Where("pullreq_activity_created_by = ?", opts.CommenterID)
+	}
+
+	if opts.ReviewerID > 0 {
+		*stmt = stmt.InnerJoin(
+			fmt.Sprintf("pullreq_reviewers ON "+
+				"pullreq_reviewer_pullreq_id = pullreq_id AND pullreq_reviewer_principal_id = %d", opts.ReviewerID))
+		if len(opts.ReviewDecisions) > 0 {
+			*stmt = stmt.Where(squirrel.Eq{"pullreq_reviewer_review_decision": opts.ReviewDecisions})
+		}
 	}
 
 	// labels

@@ -94,21 +94,25 @@ type PullReqStats struct {
 
 // PullReqFilter stores pull request query parameters.
 type PullReqFilter struct {
-	Page               int                 `json:"page"`
-	Size               int                 `json:"size"`
-	Query              string              `json:"query"`
-	CreatedBy          []int64             `json:"created_by"`
-	SourceRepoID       int64               `json:"-"` // caller should use source_repo_ref
-	SourceRepoRef      string              `json:"source_repo_ref"`
-	SourceBranch       string              `json:"source_branch"`
-	TargetRepoID       int64               `json:"-"`
-	TargetBranch       string              `json:"target_branch"`
-	States             []enum.PullReqState `json:"state"`
-	Sort               enum.PullReqSort    `json:"sort"`
-	Order              enum.Order          `json:"order"`
-	LabelID            []int64             `json:"label_id"`
-	ValueID            []int64             `json:"value_id"`
-	IncludeDescription bool                `json:"include_description"`
+	Page               int                          `json:"page"`
+	Size               int                          `json:"size"`
+	Query              string                       `json:"query"`
+	CreatedBy          []int64                      `json:"created_by"`
+	SourceRepoID       int64                        `json:"-"` // caller should use source_repo_ref
+	SourceRepoRef      string                       `json:"source_repo_ref"`
+	SourceBranch       string                       `json:"source_branch"`
+	TargetRepoID       int64                        `json:"-"`
+	TargetBranch       string                       `json:"target_branch"`
+	States             []enum.PullReqState          `json:"state"`
+	Sort               enum.PullReqSort             `json:"sort"`
+	Order              enum.Order                   `json:"order"`
+	LabelID            []int64                      `json:"label_id"`
+	ValueID            []int64                      `json:"value_id"`
+	AuthorID           int64                        `json:"author_id"`
+	CommenterID        int64                        `json:"commenter_id"`
+	ReviewerID         int64                        `json:"reviewer_id"`
+	ReviewDecisions    []enum.PullReqReviewDecision `json:"review_decisions"`
+	IncludeDescription bool                         `json:"include_description"`
 	CreatedFilter
 	EditedFilter
 

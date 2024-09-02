@@ -393,6 +393,71 @@ var queryParameterIncludeDescription = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterAuthorID = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamAuthorID,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Return only pull requests where this user is the author."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
+var queryParameterCommenterID = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamCommenterID,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Return only pull requests where this user has created at least one comment."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
+var queryParameterReviewerID = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamReviewerID,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Return only pull requests where this user has been added as a reviewer."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
+var queryParameterReviewDecision = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamReviewDecision,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("Require only this review decision of the reviewer. " +
+			"Requires " + request.QueryParamReviewerID + " parameter."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+						Enum: enum.PullReqReviewDecision("").Enum(),
+					},
+				},
+			},
+		},
+		Style:   ptr.String(string(openapi3.EncodingStyleForm)),
+		Explode: ptr.Bool(true),
+	},
+}
+
 //nolint:funlen
 func pullReqOperations(reflector *openapi3.Reflector) {
 	createPullReq := openapi3.Operation{}
@@ -417,7 +482,8 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterCreatedLt, queryParameterCreatedGt, queryParameterEditedLt, queryParameterEditedGt,
 		queryParameterIncludeDescription,
 		QueryParameterPage, QueryParameterLimit,
-		QueryParameterLabelID, QueryParameterValueID)
+		QueryParameterLabelID, QueryParameterValueID,
+		queryParameterAuthorID, queryParameterCommenterID, queryParameterReviewerID, queryParameterReviewDecision)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
