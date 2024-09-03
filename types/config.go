@@ -92,7 +92,7 @@ type Config struct {
 
 		// Registry is used as a base to generate external facing URLs.
 		// Value is derived from HTTP.Server unless explicitly specified (e.g. http://host.docker.internal:3000).
-		Registry string `envconfig:"GITNESS_REGISTRY_URL"`
+		Registry string `envconfig:"GITNESS_URL_REGISTRY"`
 	}
 
 	// Git defines the git configuration parameters
