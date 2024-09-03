@@ -48,7 +48,7 @@ func (c *Controller) Delete(
 		log.Err(err).Msg(gitspaceConfigNotFound + identifier)
 		return err
 	}
-	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
+	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
 	gitspaceConfig.GitspaceInstance = instance
 	gitspaceConfig.SpacePath = space.Path
 	if instance == nil || instance.State.IsFinalStatus() {

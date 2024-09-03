@@ -27,7 +27,6 @@ type InfraProvisioner interface {
 	// infra providers.
 	TriggerProvision(
 		ctx context.Context,
-		infraProviderResource types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
 		requiredGitspacePorts []types.GitspacePort,
 	) error
@@ -56,7 +55,6 @@ type InfraProvisioner interface {
 	// TriggerDeprovision triggers deprovisionign of all the resources created for the Gitspace.
 	TriggerDeprovision(
 		ctx context.Context,
-		infraProviderResource types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
 		infra types.Infrastructure,
 	) error
@@ -71,7 +69,6 @@ type InfraProvisioner interface {
 	// Find finds the provisioned infra resources for the gitspace instance.
 	Find(
 		ctx context.Context,
-		infraProviderResource types.InfraProviderResource,
 		gitspaceConfig types.GitspaceConfig,
 		requiredGitspacePorts []types.GitspacePort,
 	) (*types.Infrastructure, error)

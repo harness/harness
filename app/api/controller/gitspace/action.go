@@ -105,7 +105,7 @@ func (c *Controller) startGitspaceAction(
 	ctx context.Context,
 	config *types.GitspaceConfig,
 ) error {
-	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
+	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return err
 	}
@@ -123,7 +123,7 @@ func (c *Controller) startGitspaceAction(
 			return fmt.Errorf("failed to create gitspace instance for %s %w", config.Identifier, err)
 		}
 	}
-	newGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
+	newGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID)
 	newGitspaceInstance.SpacePath = config.SpacePath
 	if err != nil {
 		return fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
@@ -264,7 +264,7 @@ func (c *Controller) stopGitspaceAction(
 	ctx context.Context,
 	config *types.GitspaceConfig,
 ) error {
-	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID, config.SpaceID)
+	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID)
 	if err != nil {
 		return fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
 	}

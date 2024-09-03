@@ -40,7 +40,7 @@ func (c *Service) Find(
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-		instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
+		instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
 		if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 			return err
 		}

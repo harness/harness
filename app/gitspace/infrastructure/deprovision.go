@@ -25,11 +25,10 @@ import (
 
 func (i infraProvisioner) TriggerDeprovision(
 	ctx context.Context,
-	infraProviderResource types.InfraProviderResource,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
 ) error {
-	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
+	infraProviderEntity, err := i.getConfigFromResource(ctx, gitspaceConfig.InfraProviderResource)
 	if err != nil {
 		return err
 	}

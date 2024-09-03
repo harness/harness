@@ -634,7 +634,6 @@ type (
 		FindLatestByGitspaceConfigID(
 			ctx context.Context,
 			gitspaceConfigID int64,
-			spaceID int64,
 		) (*types.GitspaceInstance, error)
 
 		// Create creates a new gitspace instance in the datastore.

@@ -184,13 +184,11 @@ func (g gitspaceInstanceStore) Update(
 func (g gitspaceInstanceStore) FindLatestByGitspaceConfigID(
 	ctx context.Context,
 	gitspaceConfigID int64,
-	spaceID int64,
 ) (*types.GitspaceInstance, error) {
 	stmt := database.Builder.
 		Select(gitspaceInstanceSelectColumns).
 		From(gitspaceInstanceTable).
 		Where("gits_gitspace_config_id = $1", gitspaceConfigID).
-		Where("gits_space_id = $2", spaceID).
 		OrderBy("gits_created DESC")
 
 	sql, args, err := stmt.ToSql()

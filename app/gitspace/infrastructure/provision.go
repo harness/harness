@@ -29,11 +29,10 @@ import (
 
 func (i infraProvisioner) TriggerProvision(
 	ctx context.Context,
-	infraProviderResource types.InfraProviderResource,
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
 ) error {
-	infraProviderEntity, err := i.getConfigFromResource(ctx, infraProviderResource)
+	infraProviderEntity, err := i.getConfigFromResource(ctx, gitspaceConfig.InfraProviderResource)
 	if err != nil {
 		return err
 	}
@@ -45,15 +44,14 @@ func (i infraProvisioner) TriggerProvision(
 
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
 		return i.triggerProvisionForNewProvisioning(
-			ctx, infraProviderResource, infraProvider, infraProviderEntity.Type, gitspaceConfig, requiredGitspacePorts)
+			ctx, infraProvider, infraProviderEntity.Type, gitspaceConfig, requiredGitspacePorts)
 	}
 	return i.triggerProvisionForExistingProvisioning(
-		ctx, infraProviderResource, infraProvider, gitspaceConfig, requiredGitspacePorts)
+		ctx, infraProvider, gitspaceConfig, requiredGitspacePorts)
 }
 
 func (i infraProvisioner) triggerProvisionForNewProvisioning(
 	ctx context.Context,
-	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
 	infraProviderType enum.InfraProviderType,
 	gitspaceConfig types.GitspaceConfig,
@@ -74,6 +72,7 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 		}
 	}
 
+	infraProviderResource := gitspaceConfig.InfraProviderResource
 	allParams, err := i.getAllParamsFromDB(ctx, infraProviderResource, infraProvider)
 	if err != nil {
 		return fmt.Errorf("could not get all params from DB while provisioning: %w", err)
@@ -137,19 +136,18 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 
 func (i infraProvisioner) triggerProvisionForExistingProvisioning(
 	ctx context.Context,
-	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
 ) error {
-	allParams, err := i.getAllParamsFromDB(ctx, infraProviderResource, infraProvider)
+	allParams, err := i.getAllParamsFromDB(ctx, gitspaceConfig.InfraProviderResource, infraProvider)
 	if err != nil {
 		return fmt.Errorf("could not get all params from DB while provisioning: %w", err)
 	}
 
 	err = infraProvider.ValidateParams(allParams)
 	if err != nil {
-		return fmt.Errorf("invalid provisioning params %v: %w", infraProviderResource.Metadata, err)
+		return fmt.Errorf("invalid provisioning params %v: %w", gitspaceConfig.InfraProviderResource.Metadata, err)
 	}
 
 	err = infraProvider.Provision(
