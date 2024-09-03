@@ -16,7 +16,7 @@
   "keywords": [],
   "scripts": {
     "prepare": "cd .. && husky install web/.husky",
-    "webpack": "NODE_ENV=development webpack serve --config config/webpack.dev.js",
+    "webpack": "NODE_ENV=development webpack serve --config src/cde-gitness/config/webpack.dev.js",
     "webpack:cde": "NODE_ENV=development MODULE=cde webpack serve --config config/webpack.dev.js",
     "typed-scss": "typed-scss-modules src --watch",
     "dev": "run-p webpack typed-scss",
@@ -26,7 +26,7 @@
     "test": "jest src --silent",
     "test:watch": "jest --watch",
     "build": "rm -rf dist && webpack --config config/webpack.prod.js",
-    "build:cde": "rm -rf dist && MODULE=cde webpack --config config/webpack.prod.js",
+    "build:cde": "rm -rf dist && MODULE=cde webpack --config src/cde-gitness/config/webpack.prod.js",
     "build:ar": "rm -rf dist && webpack --config src/ar/config/webpack.prod.js",
     "lint": "eslint --rulesdir ./scripts/eslint-rules --ext .ts --ext .tsx src",
     "prettier": "prettier --check \"./src/**/*.{ts,tsx,css,scss}\"",
