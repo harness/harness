@@ -159,7 +159,7 @@ func (s infraProviderResourceStore) Create(
 		Insert(infraProviderResourceTable).
 		Columns(infraProviderResourceInsertColumns).
 		Values(
-			infraProviderResource.Identifier,
+			infraProviderResource.UID,
 			infraProviderResource.Name,
 			infraProviderResource.InfraProviderConfigID,
 			infraProviderResource.InfraProviderType,
