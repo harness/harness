@@ -27,12 +27,16 @@ import (
 
 func (c *Service) Find(
 	ctx context.Context,
-	spaceID int64,
+	spaceRef string,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
 	var gitspaceConfigResult *types.GitspaceConfig
 	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, spaceID, identifier)
+		space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+		if err != nil {
+			return fmt.Errorf("failed to find space: %w", err)
+		}
+		gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, identifier)
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
@@ -52,6 +56,7 @@ func (c *Service) Find(
 			gitspaceConfig.State = enum.GitspaceStateUninitialized
 		}
 		gitspaceConfigResult = gitspaceConfig
+		gitspaceConfig.SpacePath = space.Path
 		return nil
 	}, dbtx.TxDefaultReadOnly)
 	if txErr != nil {

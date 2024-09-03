@@ -40,7 +40,7 @@ func (c *Controller) Find(
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	res, err := c.gitspaceSvc.Find(ctx, space.ID, identifier)
+	res, err := c.gitspaceSvc.Find(ctx, space.Path, identifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find gitspace: %w", err)
 	}
