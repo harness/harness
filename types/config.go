@@ -91,7 +91,7 @@ type Config struct {
 		Container string `envconfig:"GITNESS_URL_CONTAINER"`
 
 		// Registry is used as a base to generate external facing URLs.
-		// Value is derived from Base unless explicitly specified (e.g. http://localhost:3000).
+		// Value is derived from HTTP.Server unless explicitly specified (e.g. http://host.docker.internal:3000).
 		Registry string `envconfig:"GITNESS_REGISTRY_URL"`
 	}
 
