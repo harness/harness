@@ -195,7 +195,7 @@ func backfillURLs(config *types.Config) error {
 		config.URL.UI = baseURL.String()
 	}
 	if config.URL.Registry == "" {
-		config.URL.Registry = baseURL.String()
+		config.URL.Registry = combineToRawURL(scheme, "host.docker.internal", port, "")
 	}
 
 	return nil

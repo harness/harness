@@ -34,7 +34,6 @@ func init() {
 		log.Error().Stack().Err(err).Msgf("Register adapter factory for %s", adapterType)
 		return
 	}
-	log.Info().Msgf("Factory for adapter %s registered", adapterType)
 }
 
 func newAdapter(

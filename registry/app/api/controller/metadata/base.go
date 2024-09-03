@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/harness/gitness/app/paths"
 	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -184,7 +185,7 @@ func getManifestConfig(
 	driver storagedriver.StorageDriver,
 ) (*manifestConfig, error) {
 	var config manifestConfig
-	path, err := storage.PathFn(rootRef, digest)
+	path, err := storage.PathFn(strings.ToLower(rootRef), digest)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get path: %w", err)
 	}
