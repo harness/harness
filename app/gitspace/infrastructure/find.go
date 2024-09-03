@@ -16,8 +16,8 @@ package infrastructure
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
@@ -65,7 +65,7 @@ func (i infraProvisioner) Find(
 	}
 
 	if infra == nil { // fallback
-		infra, err = i.getInfraFromStoredInfo(ctx, gitspaceConfig, infraProviderEntity)
+		infra, err = i.getInfraFromStoredInfo(ctx, gitspaceConfig)
 		if err != nil {
 			return nil, fmt.Errorf("failed to build infrastructure from stored info: %w", err)
 		}
@@ -135,7 +135,6 @@ func (i infraProvisioner) getGitspaceScheme(ideType enum.IDEType, gitspaceScheme
 func (i infraProvisioner) getInfraFromStoredInfo(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-	infraProviderEntity *types.InfraProviderConfig,
 ) (*types.Infrastructure, error) {
 	infraProvisioned, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx,
@@ -145,18 +144,10 @@ func (i infraProvisioner) getInfraFromStoredInfo(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find infraProvisioned: %w", err)
 	}
-	serverHostPort, err := strconv.Atoi(infraProvisioned.ServerHostPort)
+	var infra types.Infrastructure
+	err = json.Unmarshal([]byte(*infraProvisioned.ResponseMetadata), &infra)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse server host port: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal response metadata: %w", err)
 	}
-	return &types.Infrastructure{
-		Identifier:                 gitspaceConfig.GitspaceInstance.Identifier,
-		SpaceID:                    gitspaceConfig.SpaceID,
-		SpacePath:                  gitspaceConfig.SpacePath,
-		GitspaceConfigIdentifier:   gitspaceConfig.Identifier,
-		GitspaceInstanceIdentifier: gitspaceConfig.GitspaceInstance.Identifier,
-		ProviderType:               infraProviderEntity.Type,
-		AgentHost:                  infraProvisioned.ServerHostIP,
-		AgentPort:                  serverHostPort,
-	}, nil
+	return &infra, nil
 }
