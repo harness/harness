@@ -134,6 +134,13 @@ type (
 		FindMany(ctx context.Context, ids []int64) ([]*types.PrincipalInfo, error)
 	}
 
+	// InfraProviderResourceView defines helper utility for fetching types.InfraProviderResource objects.
+	// It uses the same underlying data storage as InfraProviderResourceStore.
+	InfraProviderResourceView interface {
+		Find(ctx context.Context, id int64) (*types.InfraProviderResource, error)
+		FindMany(ctx context.Context, ids []int64) ([]*types.InfraProviderResource, error)
+	}
+
 	// SpacePathStore defines the path data storage for spaces.
 	SpacePathStore interface {
 		// InsertSegment inserts a space path segment to the table.

@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -103,7 +104,7 @@ func (s infraProviderResourceStore) List(ctx context.Context, infraProviderConfi
 	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list infraprovider resources")
 	}
-	return s.mapToInfraProviderResources(ctx, *dst)
+	return mapToInfraProviderResources(ctx, *dst)
 }
 
 func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
@@ -121,7 +122,7 @@ func (s infraProviderResourceStore) Find(ctx context.Context, id int64) (*types.
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %d", id)
 	}
-	return s.mapToInfraProviderResource(ctx, dst)
+	return mapToInfraProviderResource(ctx, dst)
 }
 
 func (s infraProviderResourceStore) FindByIdentifier(
@@ -143,7 +144,7 @@ func (s infraProviderResourceStore) FindByIdentifier(
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %s", identifier)
 	}
-	return s.mapToInfraProviderResource(ctx, dst)
+	return mapToInfraProviderResource(ctx, dst)
 }
 
 func (s infraProviderResourceStore) Create(
@@ -183,7 +184,7 @@ func (s infraProviderResourceStore) Create(
 	db := dbtx.GetAccessor(ctx, s.db)
 	if err = db.QueryRowContext(ctx, sql, args...).Scan(&infraProviderResource.ID); err != nil {
 		return database.ProcessSQLErrorf(
-			ctx, err, "infra provider resource create failed %s", infraProviderResource.Identifier)
+			ctx, err, "infra provider resource create failed %s", infraProviderResource.UID)
 	}
 	return nil
 }
@@ -195,7 +196,7 @@ func (s infraProviderResourceStore) Update(
 	dbinfraProviderResource, err := s.mapToInternalInfraProviderResource(ctx, infraProviderResource)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to map to DB Obj for infraprovider resource %s", infraProviderResource.Identifier)
+			"failed to map to DB Obj for infraprovider resource %s", infraProviderResource.UID)
 	}
 	stmt := database.Builder.
 		Update(infraProviderResourceTable).
@@ -214,7 +215,7 @@ func (s infraProviderResourceStore) Update(
 	db := dbtx.GetAccessor(ctx, s.db)
 	if _, err := db.ExecContext(ctx, sql, args...); err != nil {
 		return database.ProcessSQLErrorf(
-			ctx, err, "Failed to update infraprovider resource %s", infraProviderResource.Identifier)
+			ctx, err, "Failed to update infraprovider resource %s", infraProviderResource.UID)
 	}
 	return nil
 }
@@ -236,7 +237,7 @@ func (s infraProviderResourceStore) DeleteByIdentifier(ctx context.Context, spac
 	return nil
 }
 
-func (s infraProviderResourceStore) mapToInfraProviderResource(_ context.Context,
+func mapToInfraProviderResource(_ context.Context,
 	in *infraProviderResource) (*types.InfraProviderResource, error) {
 	openTofuParamsMap := make(map[string]string)
 	marshalErr := json.Unmarshal(in.OpenTofuParams, &openTofuParamsMap)
@@ -244,7 +245,7 @@ func (s infraProviderResourceStore) mapToInfraProviderResource(_ context.Context
 		return nil, marshalErr
 	}
 	return &types.InfraProviderResource{
-		Identifier:            in.Identifier,
+		UID:                   in.Identifier,
 		InfraProviderConfigID: in.InfraProviderConfigID,
 		ID:                    in.ID,
 		InfraProviderType:     in.InfraProviderType,
@@ -271,7 +272,7 @@ func (s infraProviderResourceStore) mapToInternalInfraProviderResource(_ context
 		return nil, marshalErr
 	}
 	return &infraProviderResource{
-		Identifier:            in.Identifier,
+		Identifier:            in.UID,
 		InfraProviderConfigID: in.InfraProviderConfigID,
 		InfraProviderType:     in.InfraProviderType,
 		Name:                  in.Name,
@@ -290,15 +291,65 @@ func (s infraProviderResourceStore) mapToInternalInfraProviderResource(_ context
 	}, nil
 }
 
-func (s infraProviderResourceStore) mapToInfraProviderResources(ctx context.Context,
+func mapToInfraProviderResources(ctx context.Context,
 	resources []infraProviderResource) ([]*types.InfraProviderResource, error) {
 	var err error
 	res := make([]*types.InfraProviderResource, len(resources))
 	for i := range resources {
-		res[i], err = s.mapToInfraProviderResource(ctx, &resources[i])
+		res[i], err = mapToInfraProviderResource(ctx, &resources[i])
 		if err != nil {
 			return nil, err
 		}
 	}
 	return res, nil
+}
+
+var _ store.InfraProviderResourceView = (*InfraProviderResourceView)(nil)
+
+// NewInfraProviderResourceView returns a new InfraProviderResourceView.
+// It's used by the infraprovider resource cache.
+func NewInfraProviderResourceView(db *sqlx.DB) *InfraProviderResourceView {
+	return &InfraProviderResourceView{
+		db: db,
+	}
+}
+
+type InfraProviderResourceView struct {
+	db *sqlx.DB
+}
+
+func (i InfraProviderResourceView) Find(ctx context.Context, id int64) (*types.InfraProviderResource, error) {
+	stmt := database.Builder.
+		Select(infraProviderResourceSelectColumns).
+		From(infraProviderResourceTable).
+		Where(infraProviderResourceIDColumn+" = $1", id)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	dst := new(infraProviderResource)
+	db := dbtx.GetAccessor(ctx, i.db)
+	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resource %d", id)
+	}
+	return mapToInfraProviderResource(ctx, dst)
+}
+
+func (i InfraProviderResourceView) FindMany(ctx context.Context, ids []int64) ([]*types.InfraProviderResource, error) {
+	stmt := database.Builder.
+		Select(infraProviderResourceSelectColumns).
+		From(infraProviderResourceTable).
+		Where(squirrel.Eq{infraProviderTemplateIDColumn: ids})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	dst := new([]infraProviderResource)
+	db := dbtx.GetAccessor(ctx, i.db)
+	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find infraprovider resources")
+	}
+	return mapToInfraProviderResources(ctx, *dst)
 }

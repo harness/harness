@@ -35,7 +35,7 @@ func (s *Service) handleGitspaceInfraEvent(
 	payload := event.Payload
 
 	config, fetchErr := s.getConfig(
-		ctx, payload.Infra.SpaceID, payload.Infra.SpacePath, payload.Infra.GitspaceConfigIdentifier)
+		ctx, payload.Infra.SpaceID, payload.Infra.GitspaceConfigIdentifier)
 	if fetchErr != nil {
 		return fetchErr
 	}
@@ -96,10 +96,9 @@ func (s *Service) handleGitspaceInfraEvent(
 func (s *Service) getConfig(
 	ctx context.Context,
 	spaceID int64,
-	spacePath string,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
-	config, err := s.gitspaceSvc.Find(ctx, spaceID, spacePath, identifier)
+	config, err := s.gitspaceSvc.Find(ctx, spaceID, identifier)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to find gitspace config during infra event handling, identifier %s: %w", identifier, err)

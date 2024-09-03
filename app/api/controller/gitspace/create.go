@@ -149,20 +149,19 @@ func (c *Controller) Create(
 			DisplayName: principal.DisplayName,
 			ID:          &principalID}
 		gitspaceConfig = &types.GitspaceConfig{
-			Identifier:                      identifier,
-			Name:                            in.Name,
-			IDE:                             in.IDE,
-			InfraProviderResourceID:         infraProviderResource.ID,
-			InfraProviderResourceIdentifier: infraProviderResource.Identifier,
-			State:                           enum.GitspaceStateUninitialized,
-			SpaceID:                         space.ID,
-			SpacePath:                       space.Path,
-			Created:                         now,
-			Updated:                         now,
-			SSHTokenIdentifier:              in.SSHTokenIdentifier,
-			CodeRepo:                        codeRepo,
-			GitspaceUser:                    user,
+			Identifier:         identifier,
+			Name:               in.Name,
+			IDE:                in.IDE,
+			State:              enum.GitspaceStateUninitialized,
+			SpaceID:            space.ID,
+			SpacePath:          space.Path,
+			Created:            now,
+			Updated:            now,
+			SSHTokenIdentifier: in.SSHTokenIdentifier,
+			CodeRepo:           codeRepo,
+			GitspaceUser:       user,
 		}
+		gitspaceConfig.InfraProviderResource = *infraProviderResource
 		err = c.gitspaceConfigStore.Create(ctx, gitspaceConfig)
 		if err != nil {
 			return fmt.Errorf("failed to create gitspace config for : %q %w", identifier, err)
@@ -209,7 +208,7 @@ func (c *Controller) autoCreateDefaultResource(ctx context.Context, parentSpace 
 		Updated:    now,
 	}
 	defaultResource := types.InfraProviderResource{
-		Identifier:                    defaultResourceIdentifier,
+		UID:                           defaultResourceIdentifier,
 		Name:                          "Standard Docker Resource",
 		InfraProviderConfigIdentifier: defaultDockerConfig.Identifier,
 		InfraProviderType:             enum.InfraProviderTypeDocker,

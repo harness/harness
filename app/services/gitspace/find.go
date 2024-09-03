@@ -28,7 +28,6 @@ import (
 func (c *Service) Find(
 	ctx context.Context,
 	spaceID int64,
-	spacePath string,
 	identifier string,
 ) (*types.GitspaceConfig, error) {
 	var gitspaceConfigResult *types.GitspaceConfig
@@ -37,12 +36,6 @@ func (c *Service) Find(
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-		infraProviderResource, err := c.infraProviderSvc.FindResource(ctx, gitspaceConfig.InfraProviderResourceID)
-		if err != nil {
-			return fmt.Errorf("failed to find infra provider resource for gitspace config: %w", err)
-		}
-		gitspaceConfig.SpacePath = spacePath
-		gitspaceConfig.InfraProviderResourceIdentifier = infraProviderResource.Identifier
 		instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID, gitspaceConfig.SpaceID)
 		if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 			return err

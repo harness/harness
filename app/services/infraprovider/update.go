@@ -59,7 +59,7 @@ func (c *Service) UpdateResource(ctx context.Context, resource types.InfraProvid
 		if err != nil {
 			return err
 		}
-		infraProviderResource, err := c.FindResourceByIdentifier(ctx, space.ID, resource.Identifier)
+		infraProviderResource, err := c.FindResourceByIdentifier(ctx, space.ID, resource.UID)
 		if err != nil {
 			return err
 		}

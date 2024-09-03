@@ -112,7 +112,7 @@ func mapToResourceEntity(in []ResourceInput, parentSpace types.Space, now int64)
 	var resources []types.InfraProviderResource
 	for _, res := range in {
 		infraProviderResource := types.InfraProviderResource{
-			Identifier:        res.Identifier,
+			UID:               res.Identifier,
 			InfraProviderType: res.InfraProviderType,
 			Name:              res.Name,
 			SpaceID:           parentSpace.ID,

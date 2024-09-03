@@ -33,6 +33,7 @@ var WireSet = wire.NewSet(
 	ProvideUserGroupStore,
 	ProvideUserGroupReviewerStore,
 	ProvidePrincipalInfoView,
+	ProvideInfraProviderResourceView,
 	ProvideSpacePathStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
@@ -114,6 +115,11 @@ func ProvidePrincipalInfoView(db *sqlx.DB) store.PrincipalInfoView {
 	return NewPrincipalInfoView(db)
 }
 
+// ProvideInfraProviderResourceView provides a principal info store.
+func ProvideInfraProviderResourceView(db *sqlx.DB) store.InfraProviderResourceView {
+	return NewInfraProviderResourceView(db)
+}
+
 // ProvideSpacePathStore provides a space path store.
 func ProvideSpacePathStore(
 	db *sqlx.DB,
@@ -170,8 +176,12 @@ func ProvideInfraProviderResourceStore(db *sqlx.DB) store.InfraProviderResourceS
 }
 
 // ProvideGitspaceConfigStore provides a gitspace config store.
-func ProvideGitspaceConfigStore(db *sqlx.DB, pCache store.PrincipalInfoCache) store.GitspaceConfigStore {
-	return NewGitspaceConfigStore(db, pCache)
+func ProvideGitspaceConfigStore(
+	db *sqlx.DB,
+	pCache store.PrincipalInfoCache,
+	rCache store.InfraProviderResourceCache,
+) store.GitspaceConfigStore {
+	return NewGitspaceConfigStore(db, pCache, rCache)
 }
 
 // ProvideGitspaceInstanceStore provides a gitspace instance store.

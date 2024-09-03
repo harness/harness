@@ -86,7 +86,7 @@ func (c *Service) createResources(ctx context.Context, resources []types.InfraPr
 		}
 		err = c.infraProviderResourceStore.Create(ctx, resource)
 		if err != nil {
-			return fmt.Errorf("failed to create infraprovider resource for : %q %w", resource.Identifier, err)
+			return fmt.Errorf("failed to create infraprovider resource for : %q %w", resource.UID, err)
 		}
 	}
 	return nil

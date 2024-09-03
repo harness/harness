@@ -33,7 +33,7 @@ type InfraProviderConfig struct {
 
 type InfraProviderResource struct {
 	ID                            int64             `json:"-"`
-	Identifier                    string            `json:"identifier"`
+	UID                           string            `json:"identifier"`
 	Name                          string            `json:"name"`
 	InfraProviderConfigID         int64             `json:"-"`
 	InfraProviderConfigIdentifier string            `json:"config_identifier"`
@@ -54,6 +54,10 @@ type InfraProviderResource struct {
 	InfraProviderType  enum.InfraProviderType `json:"infra_provider_type"`
 	Created            int64                  `json:"created"`
 	Updated            int64                  `json:"updated"`
+}
+
+func (i *InfraProviderResource) Identifier() int64 {
+	return i.ID
 }
 
 type InfraProviderTemplate struct {

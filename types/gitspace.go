@@ -19,20 +19,19 @@ import (
 )
 
 type GitspaceConfig struct {
-	ID                              int64                  `json:"-"`
-	Identifier                      string                 `json:"identifier"`
-	Name                            string                 `json:"name"`
-	IDE                             enum.IDEType           `json:"ide"`
-	State                           enum.GitspaceStateType `json:"state"`
-	InfraProviderResourceID         int64                  `json:"-"`
-	InfraProviderResourceIdentifier string                 `json:"resource_identifier"`
-	SpaceID                         int64                  `json:"-"`
-	IsDeleted                       bool                   `json:"-"`
-	GitspaceInstance                *GitspaceInstance      `json:"instance"`
-	SpacePath                       string                 `json:"space_path"`
-	Created                         int64                  `json:"created"`
-	Updated                         int64                  `json:"updated"`
-	SSHTokenIdentifier              string                 `json:"ssh_token_identifier"`
+	ID                    int64                  `json:"-"`
+	Identifier            string                 `json:"identifier"`
+	Name                  string                 `json:"name"`
+	IDE                   enum.IDEType           `json:"ide"`
+	State                 enum.GitspaceStateType `json:"state"`
+	SpaceID               int64                  `json:"-"`
+	IsDeleted             bool                   `json:"-"`
+	GitspaceInstance      *GitspaceInstance      `json:"instance"`
+	SpacePath             string                 `json:"space_path"`
+	Created               int64                  `json:"created"`
+	Updated               int64                  `json:"updated"`
+	SSHTokenIdentifier    string                 `json:"ssh_token_identifier"`
+	InfraProviderResource InfraProviderResource  `json:"resource"`
 	CodeRepo
 	GitspaceUser
 }

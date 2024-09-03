@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/harness/gitness/app/store"
@@ -84,16 +85,22 @@ type gitspaceConfig struct {
 var _ store.GitspaceConfigStore = (*gitspaceConfigStore)(nil)
 
 // NewGitspaceConfigStore returns a new GitspaceConfigStore.
-func NewGitspaceConfigStore(db *sqlx.DB, pCache store.PrincipalInfoCache) store.GitspaceConfigStore {
+func NewGitspaceConfigStore(
+	db *sqlx.DB,
+	pCache store.PrincipalInfoCache,
+	rCache store.InfraProviderResourceCache,
+) store.GitspaceConfigStore {
 	return &gitspaceConfigStore{
 		db:     db,
 		pCache: pCache,
+		rCache: rCache,
 	}
 }
 
 type gitspaceConfigStore struct {
 	db     *sqlx.DB
 	pCache store.PrincipalInfoCache
+	rCache store.InfraProviderResourceCache
 }
 
 func (s gitspaceConfigStore) Count(ctx context.Context, filter *types.GitspaceFilter) (int64, error) {
@@ -174,7 +181,7 @@ func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.G
 			gitspaceConfig.Identifier,
 			gitspaceConfig.Name,
 			gitspaceConfig.IDE,
-			gitspaceConfig.InfraProviderResourceID,
+			gitspaceConfig.InfraProviderResource.ID,
 			gitspaceConfig.CodeRepo.AuthType,
 			gitspaceConfig.CodeRepo.AuthID,
 			gitspaceConfig.CodeRepo.Type,
@@ -233,7 +240,7 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 		Identifier:              config.Identifier,
 		Name:                    config.Name,
 		IDE:                     config.IDE,
-		InfraProviderResourceID: config.InfraProviderResourceID,
+		InfraProviderResourceID: config.InfraProviderResource.ID,
 		CodeAuthType:            config.CodeRepo.AuthType,
 		CodeAuthID:              config.CodeRepo.AuthID,
 		CodeRepoIsPrivate:       config.CodeRepo.IsPrivate,
@@ -313,16 +320,15 @@ func (s *gitspaceConfigStore) mapToGitspaceConfig(
 		AuthID:           in.CodeAuthID,
 	}
 	var res = &types.GitspaceConfig{
-		ID:                      in.ID,
-		Identifier:              in.Identifier,
-		Name:                    in.Name,
-		InfraProviderResourceID: in.InfraProviderResourceID,
-		IDE:                     in.IDE,
-		SpaceID:                 in.SpaceID,
-		Created:                 in.Created,
-		Updated:                 in.Updated,
-		SSHTokenIdentifier:      in.SSHTokenIdentifier,
-		CodeRepo:                codeRepo,
+		ID:                 in.ID,
+		Identifier:         in.Identifier,
+		Name:               in.Name,
+		IDE:                in.IDE,
+		SpaceID:            in.SpaceID,
+		Created:            in.Created,
+		Updated:            in.Updated,
+		SSHTokenIdentifier: in.SSHTokenIdentifier,
+		CodeRepo:           codeRepo,
 		GitspaceUser: types.GitspaceUser{
 			ID:         in.CreatedBy.Ptr(),
 			Identifier: in.UserUID},
@@ -333,6 +339,12 @@ func (s *gitspaceConfigStore) mapToGitspaceConfig(
 			res.GitspaceUser.DisplayName = author.DisplayName
 			res.GitspaceUser.Email = author.Email
 		}
+	}
+
+	if resource, err := s.rCache.Get(ctx, in.InfraProviderResourceID); err == nil {
+		res.InfraProviderResource = *resource
+	} else {
+		return nil, fmt.Errorf("couldn't set resource to the config in DB: %s", in.Identifier)
 	}
 	return res, nil
 }

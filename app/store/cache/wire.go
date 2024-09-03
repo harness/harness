@@ -29,6 +29,7 @@ var WireSet = wire.NewSet(
 	ProvidePrincipalInfoCache,
 	ProvidePathCache,
 	ProvideRepoGitInfoCache,
+	ProvideInfraProviderResourceCache,
 )
 
 // ProvidePrincipalInfoCache provides a cache for storing types.PrincipalInfo objects.
@@ -47,4 +48,9 @@ func ProvidePathCache(
 // ProvideRepoGitInfoCache provides a cache for storing types.RepositoryGitInfo objects.
 func ProvideRepoGitInfoCache(getter store.RepoGitInfoView) store.RepoGitInfoCache {
 	return cache.New[int64, *types.RepositoryGitInfo](getter, 15*time.Minute)
+}
+
+// ProvideInfraProviderResourceCache provides a cache for storing types.InfraProviderResource objects.
+func ProvideInfraProviderResourceCache(getter store.InfraProviderResourceView) store.InfraProviderResourceCache {
+	return cache.NewExtended[int64, *types.InfraProviderResource](getter, 5*time.Minute)
 }
