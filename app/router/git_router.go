@@ -53,7 +53,7 @@ func (r *GitRouter) IsEligibleTraffic(req *http.Request) bool {
 
 	// git traffic is always reachable via the git mounting path.
 	p := req.URL.Path
-	if strings.HasPrefix(p, GitMount) {
+	if strings.HasPrefix(p, GitMount+"/") {
 		return true
 	}
 

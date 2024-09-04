@@ -50,7 +50,7 @@ func (r *APIRouter) Handle(w http.ResponseWriter, req *http.Request) {
 func (r *APIRouter) IsEligibleTraffic(req *http.Request) bool {
 	// All Rest API calls start with "/api/", and thus can be uniquely identified.
 	p := req.URL.Path
-	return strings.HasPrefix(p, APIMount)
+	return strings.HasPrefix(p, APIMount+"/")
 }
 
 func (r *APIRouter) Name() string {
