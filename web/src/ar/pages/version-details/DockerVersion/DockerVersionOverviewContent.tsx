@@ -20,7 +20,7 @@ import { Card, Container, Layout, Page, Text } from '@harnessio/uicore'
 import { useGetDockerArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { encodePathParams } from '@ar/routes/utils'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { getReadableDateTime } from '@ar/common/dateUtils'
@@ -47,7 +47,7 @@ export default function DockerVersionOverviewContent(): JSX.Element {
   } = useGetDockerArtifactDetailsQuery(
     {
       registry_ref: spaceRef,
-      artifact: encodePathParams(pathParams.artifactIdentifier),
+      artifact: encodeRef(pathParams.artifactIdentifier),
       version: pathParams.versionIdentifier,
       queryParams: {
         digest

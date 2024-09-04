@@ -19,7 +19,7 @@ import { defaultTo } from 'lodash-es'
 import { Page } from '@harnessio/uicore'
 import { useGetDockerArtifactManifestQuery } from '@harnessio/react-har-service-client'
 
-import { encodePathParams } from '@ar/routes/utils'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
@@ -42,7 +42,7 @@ export default function DockerManifestDetailsContent(): JSX.Element {
   } = useGetDockerArtifactManifestQuery(
     {
       registry_ref: spaceRef,
-      artifact: encodePathParams(pathParams.artifactIdentifier),
+      artifact: encodeRef(pathParams.artifactIdentifier),
       version: pathParams.versionIdentifier,
       queryParams: {
         digest

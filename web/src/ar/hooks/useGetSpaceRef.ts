@@ -15,9 +15,17 @@
  */
 
 import { isUndefined } from 'lodash-es'
-import { encodePathParams } from '@ar/routes/utils'
 import { useAppStore } from './useAppStore'
 import { useDecodedParams } from './useDecodedParams'
+
+export const encodeRef = (pattern: string): string => {
+  return pattern + '/+'
+}
+
+export const decodeRef = (pattern: string): string => {
+  if (pattern.endsWith('/+')) return pattern.replace('/+', '')
+  return pattern
+}
 
 export const useGetSpaceRef = (repoKey?: string): string => {
   const { scope } = useAppStore()
@@ -29,5 +37,6 @@ export const useGetSpaceRef = (repoKey?: string): string => {
   } else if (repositoryIdentifier) {
     url += `/${repositoryIdentifier}`
   }
-  return encodePathParams(url.replace(/^\/|\/$/g, ''))
+  url = url.replace(/^\/|\/$/g, '')
+  return encodeRef(url)
 }

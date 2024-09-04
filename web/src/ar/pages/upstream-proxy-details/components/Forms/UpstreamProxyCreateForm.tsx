@@ -31,6 +31,7 @@ import { Anonymous, UserPassword, useCreateRegistryMutation } from '@harnessio/r
 
 import { useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import { decodeRef } from '@ar/hooks/useGetSpaceRef'
 import { setFormikRef } from '@ar/common/utils'
 import { REPO_KEY_REGEX, URL_REGEX } from '@ar/constants'
 import { Separator } from '@ar/components/Separator/Separator'
@@ -138,7 +139,7 @@ function UpstreamProxyCreateForm(props: UpstreamProxyCreateFormProps, formikRef:
       const response = await createUpstreamProxy({
         body: {
           ...values,
-          parentRef: decodeURIComponent(spaceRef)
+          parentRef: decodeRef(spaceRef)
         }
       })
       if (response.content.status === 'SUCCESS') {

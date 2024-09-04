@@ -20,8 +20,8 @@ import { Expander } from '@blueprintjs/core'
 import { Button, ButtonVariation, ExpandingSearchInput, ExpandingSearchInputHandle, Page } from '@harnessio/uicore'
 import { PackageType, useGetAllArtifactVersionsQuery } from '@harnessio/react-har-service-client'
 
-import { encodePathParams } from '@ar/routes/utils'
 import { useStrings } from '@ar/frameworks/strings'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useParentHooks, useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
@@ -65,7 +65,7 @@ function VersionListPage(props: VersionListPageProps): JSX.Element {
     error
   } = useGetAllArtifactVersionsQuery({
     registry_ref: spaceRef,
-    artifact: encodePathParams(pathParams.artifactIdentifier),
+    artifact: encodeRef(pathParams.artifactIdentifier),
     queryParams: {
       page,
       size,

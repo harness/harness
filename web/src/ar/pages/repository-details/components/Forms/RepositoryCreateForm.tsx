@@ -35,6 +35,7 @@ import CreateRepositoryWidget from '@ar/frameworks/RepositoryStep/CreateReposito
 
 import { REPO_KEY_REGEX } from '@ar/constants'
 import { useStrings } from '@ar/frameworks/strings'
+import { decodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useGetSpaceRef } from '@ar/hooks'
 import type { FormikFowardRef } from '@ar/common/types'
 import { RepositoryPackageType, RepositoryConfigType } from '@ar/common/types'
@@ -137,7 +138,7 @@ function RepositoryCreateForm(props: RepositoryCreateFormProps, formikRef: Formi
         const response = await createRepository({
           body: {
             ...formattedValuesForCleanupPolicy,
-            parentRef: decodeURIComponent(parentRef)
+            parentRef: decodeRef(parentRef)
           } as RegistryRequestRequestBody
         })
         if (response.content.status === 'SUCCESS') {

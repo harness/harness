@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
+	"github.com/harness/gitness/app/api/middleware/encode"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	corestore "github.com/harness/gitness/app/store"
@@ -31,6 +32,18 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/go-chi/chi/v5"
+)
+
+var (
+	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
+	terminatedPathPrefixesAPI = []string{
+		"/api/v1/spaces/", "/api/v1/registry/",
+	}
+
+	// terminatedPathRegexPrefixesAPI is the list of regex prefixes that will require resolving terminated paths.
+	terminatedPathRegexPrefixesAPI = []string{
+		"^/api/v1/registry/([^/]+)/artifact/",
+	}
 )
 
 type APIHandler interface {
@@ -72,5 +85,9 @@ func NewAPIHandler(
 		auditService,
 	)
 	handler := artifact.NewStrictHandler(apiController, []artifact.StrictMiddlewareFunc{})
-	return artifact.HandlerFromMuxWithBaseURL(handler, r, baseURL)
+	muxHandler := artifact.HandlerFromMuxWithBaseURL(handler, r, baseURL)
+	return encode.TerminatedPathBefore(
+		terminatedPathPrefixesAPI,
+		encode.TerminatedRegexPathBefore(terminatedPathRegexPrefixesAPI, muxHandler),
+	)
 }

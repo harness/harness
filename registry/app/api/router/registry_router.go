@@ -17,6 +17,8 @@ package router
 import (
 	"net/http"
 	"strings"
+
+	"github.com/harness/gitness/registry/utils"
 )
 
 const RegistryMount = "/api/v1/registry"
@@ -35,11 +37,13 @@ func (r *RegistryRouter) Handle(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *RegistryRouter) IsEligibleTraffic(req *http.Request) bool {
-	if strings.HasPrefix(req.URL.Path, RegistryMount) || strings.HasPrefix(req.URL.Path, "/v2/") ||
-		strings.HasPrefix(req.URL.Path, "/registry/") ||
-		(strings.HasPrefix(req.URL.Path, APIMount+"/v1/spaces/") &&
-			(strings.HasSuffix(req.URL.Path, "/artifacts") ||
-				strings.HasSuffix(req.URL.Path, "/registries"))) {
+	urlPath := req.URL.Path
+	if req.URL.RawPath != "" {
+		urlPath = req.URL.RawPath
+	}
+	if utils.HasAnyPrefix(urlPath, []string{RegistryMount, "/v2/", "/registry/"}) ||
+		(strings.HasPrefix(urlPath, APIMount+"/v1/spaces/") &&
+			utils.HasAnySuffix(urlPath, []string{"/artifacts", "/registries"})) {
 		return true
 	}
 

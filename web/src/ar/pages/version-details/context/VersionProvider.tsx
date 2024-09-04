@@ -20,7 +20,7 @@ import { Page } from '@harnessio/uicore'
 import { ArtifactVersionSummary, useGetArtifactVersionSummaryQuery } from '@harnessio/react-har-service-client'
 
 import { useGetSpaceRef } from '@ar/hooks'
-import { encodePathParams } from '@ar/routes/utils'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 
 import css from '../VersionDetails.module.scss'
 
@@ -55,7 +55,7 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
     refetch
   } = useGetArtifactVersionSummaryQuery({
     registry_ref: spaceRef,
-    artifact: encodePathParams(artifactKey),
+    artifact: encodeRef(artifactKey),
     version: versionKey
   })
   const responseData = data?.content?.data

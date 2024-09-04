@@ -19,7 +19,7 @@ import { ArtifactSummary, useGetArtifactSummaryQuery } from '@harnessio/react-ha
 import { Page } from '@harnessio/uicore'
 
 import { useGetSpaceRef } from '@ar/hooks'
-import { encodePathParams } from '@ar/routes/utils'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 
 import css from './ArtifactProvider.module.scss'
 
@@ -44,7 +44,7 @@ const ArtifactProvider: FC<PropsWithChildren<{ repoKey: string; artifact: string
     refetch
   } = useGetArtifactSummaryQuery({
     registry_ref: spaceRef,
-    artifact: encodePathParams(artifact)
+    artifact: encodeRef(artifact)
   })
 
   const responseData = data?.content?.data

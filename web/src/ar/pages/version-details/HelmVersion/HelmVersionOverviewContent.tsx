@@ -20,8 +20,8 @@ import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Layout, Page, Text } from '@harnessio/uicore'
 import { useGetHelmArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
-import { encodePathParams } from '@ar/routes/utils'
 import { useStrings } from '@ar/frameworks/strings'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { DEFAULT_DATE_TIME_FORMAT } from '@ar/constants'
 import { getReadableDateTime } from '@ar/common/dateUtils'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
@@ -44,7 +44,7 @@ export default function HelmVersionOverviewContent(): JSX.Element {
     refetch
   } = useGetHelmArtifactDetailsQuery({
     registry_ref: spaceRef,
-    artifact: encodePathParams(pathParams.artifactIdentifier),
+    artifact: encodeRef(pathParams.artifactIdentifier),
     version: pathParams.versionIdentifier
   })
 

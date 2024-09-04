@@ -20,7 +20,7 @@ import { Card, Container, Layout, Page, Text } from '@harnessio/uicore'
 import { useGetDockerArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { encodePathParams } from '@ar/routes/utils'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
@@ -48,7 +48,7 @@ export default function DockerVersionOSSGeneralInfo({ className }: DockerVersion
   } = useGetDockerArtifactDetailsQuery(
     {
       registry_ref: spaceRef,
-      artifact: encodePathParams(pathParams.artifactIdentifier),
+      artifact: encodeRef(pathParams.artifactIdentifier),
       version: pathParams.versionIdentifier,
       queryParams: {
         digest

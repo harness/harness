@@ -16,6 +16,7 @@ package encode
 
 import (
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/harness/gitness/app/api/render"
@@ -32,39 +33,66 @@ const (
 // GitPathBefore wraps an http.HandlerFunc in a layer that encodes a path coming
 // as part of the GIT api (e.g. "space1/repo.git") before executing the provided http.HandlerFunc.
 func GitPathBefore(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		_, err := pathTerminatedWithMarker(r, "", ".git", "")
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			_, err := pathTerminatedWithMarker(r, "", ".git", "")
+			if err != nil {
+				render.TranslatedUserError(ctx, w, err)
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		},
+	)
 }
 
 // TerminatedPathBefore wraps an http.HandlerFunc in a layer that encodes a terminated path (e.g. "/space1/space2/+")
 // before executing the provided http.HandlerFunc. The first prefix that matches the URL.Path will
 // be used during encoding (prefix is ignored during encoding).
 func TerminatedPathBefore(prefixes []string, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		for _, p := range prefixes {
-			changed, err := pathTerminatedWithMarker(r, p, "/+", "")
-			if err != nil {
-				render.TranslatedUserError(ctx, w, err)
-				return
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			for _, p := range prefixes {
+				changed, err := pathTerminatedWithMarker(r, p, "/+", "")
+				if err != nil {
+					render.TranslatedUserError(ctx, w, err)
+					return
+				}
+
+				// first prefix that leads to success we can stop
+				if changed {
+					break
+				}
 			}
 
-			// first prefix that leads to success we can stop
-			if changed {
-				break
-			}
-		}
+			next.ServeHTTP(w, r)
+		},
+	)
+}
 
-		next.ServeHTTP(w, r)
-	})
+// TerminatedRegexPathBefore is similar to TerminatedPathBefore but supports regex prefixes.
+func TerminatedRegexPathBefore(regexPrefixes []string, next http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			for _, p := range regexPrefixes {
+				changed, err := regexPathTerminatedWithMarker(r, p, "/+", "")
+				if err != nil {
+					render.TranslatedUserError(ctx, w, err)
+					return
+				}
+
+				// first prefix that leads to success we can stop
+				if changed {
+					break
+				}
+			}
+
+			next.ServeHTTP(w, r)
+		},
+	)
 }
 
 // pathTerminatedWithMarker function encodes a path followed by a custom marker and returns a request with an
@@ -86,6 +114,12 @@ func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, mar
 		urlPath = r.URL.RawPath
 	}
 
+	return pathTerminatedWithMarkerAndURL(r, prefix, marker, markerReplacement, urlPath)
+}
+
+func pathTerminatedWithMarkerAndURL(
+	r *http.Request, prefix string, marker string, markerReplacement string, urlPath string,
+) (bool, error) {
 	// In case path doesn't start with prefix - nothing to encode
 	if len(urlPath) < len(prefix) || urlPath[0:len(prefix)] != prefix {
 		return false, nil
@@ -109,7 +143,8 @@ func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, mar
 		prefix,
 		marker,
 		prefixWithPath,
-		prefixWithEscapedPath)
+		prefixWithEscapedPath,
+	)
 
 	err := request.ReplacePrefix(r, prefixWithPath, prefixWithEscapedPath)
 	if err != nil {
@@ -117,6 +152,41 @@ func pathTerminatedWithMarker(r *http.Request, prefix string, marker string, mar
 	}
 
 	return true, nil
+}
+
+// regexPathTerminatedWithMarker is similar to pathTerminatedWithMarker but with regex prefix support.
+//
+// Example:
+// 1. Path: "/registry/app1%2Fremote2/artifact/foo/bar/+/summary"
+// Prefix: => "^/registry/([^/]+)/artifact/" Marker: => "/+" MarkerReplacement: => ""
+// ==> "/registry/app1%2Fremote2/artifact/foo%2Fbar/summary"
+//
+// 2. Path: "/registry/abc/artifact/foo/bar/+/summary"
+// Prefix: => "^/registry/([^/]+)/artifact/" Marker: => "/+" MarkerReplacement: => ""
+// ==> "/registry/abc/artifact/foo%2Fbar/summary"
+
+func regexPathTerminatedWithMarker(
+	r *http.Request,
+	regexPrefix string,
+	marker string,
+	markerReplacement string,
+) (bool, error) {
+	prefixPattern := regexp.MustCompile(regexPrefix)
+
+	matches := prefixPattern.FindStringSubmatch(r.URL.Path)
+	// In case path doesn't start with prefix - nothing to encode
+	if len(matches) == 0 {
+		return false, nil
+	}
+
+	// We only care about the first match as we provide prefix
+	prefix := matches[0]
+
+	urlPath := r.URL.Path
+	if r.URL.RawPath != "" {
+		urlPath = r.URL.RawPath
+	}
+	return pathTerminatedWithMarkerAndURL(r, prefix, marker, markerReplacement, urlPath)
 }
 
 // cutOutTerminatedPath cuts out the resource path terminated with the provided marker (path segment suffix).

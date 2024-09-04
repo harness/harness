@@ -19,8 +19,8 @@ import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Layout, Page, Text } from '@harnessio/uicore'
 import { useGetHelmArtifactDetailsQuery } from '@harnessio/react-har-service-client'
 
-import { encodePathParams } from '@ar/routes/utils'
 import { useStrings } from '@ar/frameworks/strings'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 
@@ -45,7 +45,7 @@ export default function HelmVersionOSSGeneralInfo(props: HelmVersionOSSGeneralIn
     refetch
   } = useGetHelmArtifactDetailsQuery({
     registry_ref: spaceRef,
-    artifact: encodePathParams(pathParams.artifactIdentifier),
+    artifact: encodeRef(pathParams.artifactIdentifier),
     version: pathParams.versionIdentifier
   })
 

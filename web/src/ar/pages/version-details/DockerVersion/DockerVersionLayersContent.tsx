@@ -21,7 +21,7 @@ import { Card, Layout, Page, Text } from '@harnessio/uicore'
 import { useGetDockerArtifactLayersQuery } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { encodePathParams } from '@ar/routes/utils'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import LayersTable from './components/LayersTable/LayersTable'
@@ -43,7 +43,7 @@ export default function DockerVersionLayersContent(): JSX.Element {
   } = useGetDockerArtifactLayersQuery(
     {
       registry_ref: spaceRef,
-      artifact: encodePathParams(pathParams.artifactIdentifier),
+      artifact: encodeRef(pathParams.artifactIdentifier),
       version: pathParams.versionIdentifier,
       queryParams: {
         digest

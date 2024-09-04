@@ -20,7 +20,7 @@ import { GetAllArtifactVersionsOkResponse, getAllArtifactVersions } from '@harne
 
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
-import { encodePathParams } from '@ar/routes/utils'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import HeaderTitle from '@ar/components/Header/Title'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 
@@ -41,7 +41,7 @@ export default function VersionSelector(props: VersionSelectorProps): JSX.Elemen
   const refetchAllVersions = (): Promise<GetAllArtifactVersionsOkResponse> => {
     return getAllArtifactVersions({
       registry_ref: spaceRef,
-      artifact: encodePathParams(artifactIdentifier),
+      artifact: encodeRef(artifactIdentifier),
       queryParams: {
         size: 100,
         page: 0,

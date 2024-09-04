@@ -19,7 +19,7 @@ import { debounce } from 'lodash-es'
 import { DropDown, SelectOption } from '@harnessio/uicore'
 import { useGetDockerArtifactManifestsQuery } from '@harnessio/react-har-service-client'
 
-import { encodePathParams } from '@ar/routes/utils'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import HeaderTitle from '@ar/components/Header/Title'
@@ -46,7 +46,7 @@ export default function ArchitectureSelector(props: ArchitectureSelectorProps): 
     error
   } = useGetDockerArtifactManifestsQuery({
     registry_ref: spaceRef,
-    artifact: encodePathParams(artifactIdentifier),
+    artifact: encodeRef(artifactIdentifier),
     version: version
   })
 

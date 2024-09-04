@@ -22,7 +22,7 @@ import { Button, ButtonVariation, Layout, getErrorInfoFromErrorObject, useToaste
 import { useUpdateArtifactLabelsMutation, type ArtifactSummary } from '@harnessio/react-har-service-client'
 
 import { useGetSpaceRef } from '@ar/hooks'
-import { encodePathParams } from '@ar/routes/utils'
+import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useStrings } from '@ar/frameworks/strings/String'
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
@@ -59,7 +59,7 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
       const response = await modifyArtifactLabels({
         body: { labels: newLabels },
         registry_ref: spaceRef,
-        artifact: encodePathParams(artifactIdentifier)
+        artifact: encodeRef(artifactIdentifier)
       })
       if (response.content.status === 'SUCCESS') {
         clear()
