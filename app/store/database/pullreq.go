@@ -547,7 +547,7 @@ func (s *PullReqStore) listQuery(opts *types.PullReqFilter) squirrel.SelectBuild
 		columns = pullReqColumns
 	}
 
-	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 || opts.CommenterID > 0 {
+	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 || opts.CommenterID > 0 || opts.MentionedID > 0 {
 		stmt = database.Builder.Select("DISTINCT " + columns)
 	} else {
 		stmt = database.Builder.Select(columns)
@@ -560,7 +560,8 @@ func (s *PullReqStore) listQuery(opts *types.PullReqFilter) squirrel.SelectBuild
 	return stmt
 }
 
-func (*PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.PullReqFilter) {
+//nolint:cyclop
+func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.PullReqFilter) {
 	if len(opts.States) == 1 {
 		*stmt = stmt.Where("pullreq_state = ?", opts.States[0])
 	} else if len(opts.States) > 1 {
@@ -626,10 +627,12 @@ func (*PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.PullR
 	}
 
 	if opts.CommenterID > 0 {
-		*stmt = stmt.InnerJoin("pullreq_activities ON pullreq_activity_pullreq_id = pullreq_id")
-		*stmt = stmt.Where("pullreq_activity_deleted IS NULL")
-		*stmt = stmt.Where("(pullreq_activity_kind = 'comment' OR pullreq_activity_kind = 'change-comment')")
-		*stmt = stmt.Where("pullreq_activity_created_by = ?", opts.CommenterID)
+		*stmt = stmt.InnerJoin("pullreq_activities act_com ON act_com.pullreq_activity_pullreq_id = pullreq_id")
+		*stmt = stmt.Where("act_com.pullreq_activity_deleted IS NULL")
+		*stmt = stmt.Where("(" +
+			"act_com.pullreq_activity_kind = '" + string(enum.PullReqActivityKindComment) + "' OR " +
+			"act_com.pullreq_activity_kind = '" + string(enum.PullReqActivityKindChangeComment) + "')")
+		*stmt = stmt.Where("act_com.pullreq_activity_created_by = ?", opts.CommenterID)
 	}
 
 	if opts.ReviewerID > 0 {
@@ -638,6 +641,25 @@ func (*PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.PullR
 				"pullreq_reviewer_pullreq_id = pullreq_id AND pullreq_reviewer_principal_id = %d", opts.ReviewerID))
 		if len(opts.ReviewDecisions) > 0 {
 			*stmt = stmt.Where(squirrel.Eq{"pullreq_reviewer_review_decision": opts.ReviewDecisions})
+		}
+	}
+
+	if opts.MentionedID > 0 {
+		*stmt = stmt.InnerJoin("pullreq_activities act_ment ON act_ment.pullreq_activity_pullreq_id = pullreq_id")
+		*stmt = stmt.Where("act_ment.pullreq_activity_deleted IS NULL")
+		*stmt = stmt.Where("(" +
+			"act_ment.pullreq_activity_kind = '" + string(enum.PullReqActivityKindComment) + "' OR " +
+			"act_ment.pullreq_activity_kind = '" + string(enum.PullReqActivityKindChangeComment) + "')")
+
+		switch s.db.DriverName() {
+		case SqliteDriverName:
+			*stmt = stmt.InnerJoin(
+				"json_each(json_extract(act_ment.pullreq_activity_metadata, '$.mentions.ids')) as mentions")
+			*stmt = stmt.Where("mentions.value = ?", opts.MentionedID)
+		case PostgresDriverName:
+			*stmt = stmt.Where(fmt.Sprintf(
+				"act_ment.pullreq_activity_metadata->'mentions'->'ids' @> ('[%d]')::jsonb",
+				opts.MentionedID))
 		}
 	}
 

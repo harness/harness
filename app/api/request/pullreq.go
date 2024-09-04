@@ -33,6 +33,7 @@ const (
 	QueryParamCommenterID        = "commenter_id"
 	QueryParamReviewerID         = "reviewer_id"
 	QueryParamReviewDecision     = "review_decision"
+	QueryParamMentionedID        = "mentioned_id"
 	QueryParamIncludeDescription = "include_description"
 )
 
@@ -144,6 +145,11 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		return nil, errors.InvalidArgument("Can't use review decisions without providing a reviewer ID")
 	}
 
+	mentionedID, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamMentionedID, 0)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing mentioned ID filter: %w", err)
+	}
+
 	return &types.PullReqFilter{
 		Page:               ParsePage(r),
 		Size:               ParseLimit(r),
@@ -161,6 +167,7 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		CommenterID:        commenterID,
 		ReviewerID:         reviewerID,
 		ReviewDecisions:    reviewDecisions,
+		MentionedID:        mentionedID,
 		IncludeDescription: includeDescription,
 		CreatedFilter:      createdAtFilter,
 		EditedFilter:       editedAtFilter,

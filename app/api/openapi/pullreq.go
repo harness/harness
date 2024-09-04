@@ -458,6 +458,20 @@ var queryParameterReviewDecision = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterMentionedID = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamMentionedID,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Return only pull requests where this user has been mentioned."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func pullReqOperations(reflector *openapi3.Reflector) {
 	createPullReq := openapi3.Operation{}
@@ -483,7 +497,8 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterIncludeDescription,
 		QueryParameterPage, QueryParameterLimit,
 		QueryParameterLabelID, QueryParameterValueID,
-		queryParameterAuthorID, queryParameterCommenterID, queryParameterReviewerID, queryParameterReviewDecision)
+		queryParameterAuthorID, queryParameterCommenterID, queryParameterMentionedID,
+		queryParameterReviewerID, queryParameterReviewDecision)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
