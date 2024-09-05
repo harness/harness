@@ -222,6 +222,15 @@ func (r *repoImportState) convertPullReq(
 	createdAt := timestampMillis(extPullReq.Created, now)
 	updatedAt := timestampMillis(extPullReq.Updated, now)
 
+	const maxTitleLen = 256
+	const maxDescriptionLen = 100000 // This limit is deliberately higher than the limit in our API.
+	if len(extPullReq.Title) > maxTitleLen {
+		extPullReq.Title = extPullReq.Title[:maxTitleLen]
+	}
+	if len(extPullReq.Body) > maxDescriptionLen {
+		extPullReq.Body = extPullReq.Body[:maxDescriptionLen]
+	}
+
 	pr := &types.PullReq{
 		ID:              0, // the ID will be populated in the data layer
 		Version:         0,
@@ -398,6 +407,11 @@ func (r *repoImportState) createComment(
 	if pullReq.State == enum.PullReqStateMerged {
 		resolved = &commentedAt
 		resolvedBy = &commenter.ID
+	}
+
+	const maxLenText = 64 << 10 // This limit is deliberately larger than the limit in our API.
+	if len(extComment.Body) > maxLenText {
+		extComment.Body = extComment.Body[:maxLenText]
 	}
 
 	comment := &types.PullReqActivity{
