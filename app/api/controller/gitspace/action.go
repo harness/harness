@@ -36,7 +36,7 @@ import (
 
 const defaultPasswordRef = "harness_password"
 const defaultMachineUser = "harness"
-const gitspaceTimedOutInMintues = 5
+const gitspaceTimedOutInMintues = 10
 
 type ActionInput struct {
 	Action     enum.GitspaceActionType `json:"action"`
@@ -163,12 +163,6 @@ func (c *Controller) asyncOperation(
 	}
 
 	if orchestrateErr != nil {
-		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
-		err := c.gitspaceSvc.UpdateInstance(ctxWithTimedOut, config.GitspaceInstance)
-		if err != nil {
-			log.Err(err).Msgf(
-				"failed to update gitspace instance during exec %q", config.GitspaceInstance.Identifier)
-		}
 		errChannel <- fmt.Errorf("failed to start/stop gitspace: %s %w", config.Identifier, orchestrateErr)
 	}
 }
@@ -197,11 +191,19 @@ func (c *Controller) submitAsyncOps(
 		}
 		if err != nil {
 			log.Err(err).Msgf("error during async execution for %s", config.GitspaceInstance.Identifier)
+
+			config.GitspaceInstance.State = enum.GitspaceInstanceStateError
+			updateErr := c.gitspaceSvc.UpdateInstance(submitCtx, config.GitspaceInstance)
+			if updateErr != nil {
+				log.Err(updateErr).Msgf(
+					"failed to update gitspace instance during exec %q", config.GitspaceInstance.Identifier)
+			}
+
 			switch action {
 			case enum.GitspaceActionTypeStart:
-				c.emitGitspaceConfigEvent(ttlExecuteContext, config, enum.GitspaceEventTypeGitspaceActionStartFailed)
+				c.emitGitspaceConfigEvent(submitCtx, config, enum.GitspaceEventTypeGitspaceActionStartFailed)
 			case enum.GitspaceActionTypeStop:
-				c.emitGitspaceConfigEvent(ttlExecuteContext, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
+				c.emitGitspaceConfigEvent(submitCtx, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
 			}
 		}
 
