@@ -15,6 +15,7 @@
 package database
 
 import (
+	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -22,9 +23,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func ProvideUpstreamDao(db *sqlx.DB,
-	registryDao store.RegistryRepository) store.UpstreamProxyConfigRepository {
-	return NewUpstreamproxyDao(db, registryDao)
+func ProvideUpstreamDao(
+	db *sqlx.DB,
+	registryDao store.RegistryRepository,
+	spacePathStore corestore.SpacePathStore,
+) store.UpstreamProxyConfigRepository {
+	return NewUpstreamproxyDao(db, registryDao, spacePathStore)
 }
 
 func ProvideRepoDao(db *sqlx.DB, mtRepository store.MediaTypesRepository) store.RegistryRepository {

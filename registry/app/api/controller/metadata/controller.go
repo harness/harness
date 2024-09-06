@@ -38,6 +38,7 @@ type APIController struct {
 	URLProvider        urlprovider.Provider
 	Authorizer         authz.Authorizer
 	AuditService       audit.Service
+	spacePathStore     corestore.SpacePathStore
 }
 
 func NewAPIController(
@@ -53,6 +54,7 @@ func NewAPIController(
 	urlProvider urlprovider.Provider,
 	authorizer authz.Authorizer,
 	auditService audit.Service,
+	spacePathStore corestore.SpacePathStore,
 ) *APIController {
 	return &APIController{
 		RegistryRepository: repositoryStore,
@@ -67,5 +69,6 @@ func NewAPIController(
 		URLProvider:        urlProvider,
 		Authorizer:         authorizer,
 		AuditService:       auditService,
+		spacePathStore:     spacePathStore,
 	}
 }

@@ -15,7 +15,6 @@
 package types
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
@@ -51,8 +50,9 @@ type UpstreamProxy struct {
 	RepoURL          string
 	RepoAuthType     string
 	UserName         string
-	SecretIdentifier sql.NullString
-	SecretSpaceID    sql.NullInt32
+	SecretIdentifier string
+	SecretSpaceID    int64
+	SecretSpacePath  string
 	Token            string
 	CreatedAt        time.Time
 	UpdatedAt        time.Time

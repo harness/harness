@@ -63,15 +63,8 @@ func getPwd(
 	ctx context.Context, spacePathStore store.SpacePathStore, secretService secret.Service, reg types.UpstreamProxy,
 ) string {
 	if api.AuthType(reg.RepoAuthType) == api.AuthTypeUserPassword {
-		secretSpaceID := int64(0)
-		if reg.SecretSpaceID.Valid {
-			secretSpaceID = int64(reg.SecretSpaceID.Int32)
-		}
-
-		secretIdentifier := ""
-		if reg.SecretIdentifier.Valid {
-			secretIdentifier = reg.SecretIdentifier.String
-		}
+		secretSpaceID := reg.SecretSpaceID
+		secretIdentifier := reg.SecretIdentifier
 
 		spacePath, err := spacePathStore.FindPrimaryBySpaceID(ctx, secretSpaceID)
 		if err != nil {

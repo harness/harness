@@ -75,7 +75,8 @@ func (c *APIController) CreateRegistry(
 	if registryRequest.Config.Type == artifact.RegistryTypeVIRTUAL {
 		return c.createVirtualRegistry(ctx, registryRequest, regInfo, session, parentRef)
 	}
-	registry, upstreamproxy, err := CreateUpstreamProxyEntity(
+	registry, upstreamproxy, err := c.CreateUpstreamProxyEntity(
+		ctx,
 		registryRequest,
 		regInfo.parentID, regInfo.rootIdentifierID,
 	)
@@ -254,10 +255,8 @@ func CreateRegistryEntity(
 	return entity, nil
 }
 
-func CreateUpstreamProxyEntity(
-	dto artifact.RegistryRequest,
-	parentID int64,
-	rootParentID int64,
+func (c *APIController) CreateUpstreamProxyEntity(
+	ctx context.Context, dto artifact.RegistryRequest, parentID int64, rootParentID int64,
 ) (*registrytypes.Registry, *registrytypes.UpstreamProxyConfig, error) {
 	allowedPattern := []string{}
 	if dto.AllowedPattern != nil {
@@ -311,11 +310,32 @@ func CreateUpstreamProxyEntity(
 			return nil, nil, err
 		}
 		upstreamProxyConfigEntity.UserName = res.UserName
-		if res.SecretIdentifier == nil || res.SecretSpaceId == nil {
-			return nil, nil, fmt.Errorf("failed to create upstream proxy: secret_identifier or secret_space_id missing")
+		if res.SecretIdentifier == nil {
+			return nil, nil, fmt.Errorf("failed to create upstream proxy: secret_identifier missing")
 		}
-		upstreamProxyConfigEntity.SecretIdentifier = *res.SecretIdentifier
+
+		upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretID(ctx, res.SecretSpaceId, res.SecretSpacePath)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		upstreamProxyConfigEntity.SecretSpaceID = *res.SecretSpaceId
 	}
 	return repoEntity, upstreamProxyConfigEntity, nil
+}
+
+func (c *APIController) getSecretID(ctx context.Context, secretSpaceID *int, secretSpacePath *string) (int, error) {
+	if secretSpaceID == nil && secretSpacePath == nil {
+		return -1, fmt.Errorf("failed to create upstream proxy: secret space missing")
+	}
+
+	if secretSpaceID != nil {
+		return *secretSpaceID, nil
+	}
+
+	path, err := c.spacePathStore.FindByPath(ctx, *secretSpacePath)
+	if err != nil {
+		return -1, fmt.Errorf("failed to get Space Path: %w", err)
+	}
+	return int(path.SpaceID), nil
 }

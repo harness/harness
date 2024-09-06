@@ -89,7 +89,8 @@ func (c *APIController) ModifyRegistry(
 	if err != nil {
 		return throwModifyRegistry500Error(err), err
 	}
-	registry, upstreamproxy, err := UpdateUpstreamProxyEntity(
+	registry, upstreamproxy, err := c.UpdateUpstreamProxyEntity(
+		ctx,
 		artifact.RegistryRequest(*r.Body),
 		regInfo.parentID, regInfo.rootIdentifierID, upstreamproxyEntity,
 	)
@@ -327,11 +328,8 @@ func UpdateRepoEntity(
 	return entity, nil
 }
 
-func UpdateUpstreamProxyEntity(
-	dto artifact.RegistryRequest,
-	parentID int64,
-	rootParentID int64,
-	u *types.UpstreamProxy,
+func (c *APIController) UpdateUpstreamProxyEntity(
+	ctx context.Context, dto artifact.RegistryRequest, parentID int64, rootParentID int64, u *types.UpstreamProxy,
 ) (*types.Registry, *types.UpstreamProxyConfig, error) {
 	allowedPattern := []string{}
 	if dto.AllowedPattern != nil {
@@ -387,7 +385,14 @@ func UpdateUpstreamProxyEntity(
 			return nil, nil, err
 		}
 		upstreamProxyConfigEntity.UserName = res.UserName
-		upstreamProxyConfigEntity.SecretIdentifier = *res.SecretIdentifier
+		if res.SecretIdentifier == nil {
+			return nil, nil, fmt.Errorf("failed to create upstream proxy: secret_identifier missing")
+		}
+
+		upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretID(ctx, res.SecretSpaceId, res.SecretSpacePath)
+		if err != nil {
+			return nil, nil, err
+		}
 		upstreamProxyConfigEntity.SecretSpaceID = *res.SecretSpaceId
 	} else {
 		upstreamProxyConfigEntity.UserName = ""

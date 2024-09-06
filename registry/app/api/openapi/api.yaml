@@ -1465,6 +1465,8 @@ components:
           type: string
         secretSpaceId:
           type: integer
+        secretSpacePath:
+          type: string
       required:
         - userName
         - password

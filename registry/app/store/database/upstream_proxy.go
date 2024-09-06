@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
+	corestore "github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/app/store/database/util"
@@ -35,14 +36,18 @@ import (
 )
 
 type UpstreamproxyDao struct {
-	registryDao store.RegistryRepository
-	db          *sqlx.DB
+	registryDao    store.RegistryRepository
+	db             *sqlx.DB
+	spacePathStore corestore.SpacePathStore
 }
 
-func NewUpstreamproxyDao(db *sqlx.DB, registryDao store.RegistryRepository) store.UpstreamProxyConfigRepository {
+func NewUpstreamproxyDao(
+	db *sqlx.DB, registryDao store.RegistryRepository, spacePathStore corestore.SpacePathStore,
+) store.UpstreamProxyConfigRepository {
 	return &UpstreamproxyDao{
-		registryDao: registryDao,
-		db:          db,
+		registryDao:    registryDao,
+		db:             db,
+		spacePathStore: spacePathStore,
 	}
 }
 
@@ -150,7 +155,8 @@ func (r UpstreamproxyDao) GetByRegistryIdentifier(
 }
 
 func (r UpstreamproxyDao) GetByParentID(ctx context.Context, parentID string) (
-	upstreamProxies *[]types.UpstreamProxy, err error) {
+	upstreamProxies *[]types.UpstreamProxy, err error,
+) {
 	q := getUpstreamProxyQuery()
 	q = q.Where("r.registry_parent_id = ? AND r.registry_type = 'UPSTREAM'",
 		parentID)
@@ -371,17 +377,35 @@ func (r UpstreamproxyDao) mapToInternalUpstreamProxy(
 }
 
 func (r UpstreamproxyDao) mapToUpstreamProxy(
-	_ context.Context,
+	ctx context.Context,
 	dst *upstreamProxyDB,
 ) (*types.UpstreamProxy, error) {
 	createdBy := int64(-1)
 	updatedBy := int64(-1)
+	secretIdentifier := ""
+	secretSpaceID := int64(-1)
 	if dst.CreatedBy.Valid {
 		createdBy = dst.CreatedBy.Int64
 	}
 	if dst.UpdatedBy.Valid {
 		updatedBy = dst.UpdatedBy.Int64
 	}
+	if dst.SecretIdentifier.Valid {
+		secretIdentifier = dst.SecretIdentifier.String
+	}
+	if dst.SecretSpaceID.Valid {
+		secretSpaceID = int64(dst.SecretSpaceID.Int32)
+	}
+
+	secretSpacePath := ""
+	if dst.SecretSpaceID.Valid {
+		primary, err := r.spacePathStore.FindPrimaryBySpaceID(ctx, int64(dst.SecretSpaceID.Int32))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get secret space path: %w", err)
+		}
+		secretSpacePath = primary.Value
+	}
+
 	return &types.UpstreamProxy{
 		ID:               dst.ID,
 		RegistryID:       dst.RegistryID,
@@ -394,8 +418,9 @@ func (r UpstreamproxyDao) mapToUpstreamProxy(
 		RepoURL:          dst.RepoURL,
 		RepoAuthType:     dst.RepoAuthType,
 		UserName:         dst.UserName,
-		SecretIdentifier: dst.SecretIdentifier,
-		SecretSpaceID:    dst.SecretSpaceID,
+		SecretIdentifier: secretIdentifier,
+		SecretSpaceID:    secretSpaceID,
+		SecretSpacePath:  secretSpacePath,
 		Token:            dst.Token,
 		CreatedAt:        time.UnixMilli(dst.CreatedAt),
 		UpdatedAt:        time.UnixMilli(dst.UpdatedAt),

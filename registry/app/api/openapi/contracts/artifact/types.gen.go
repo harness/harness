@@ -414,6 +414,7 @@ type UpstreamConfigSource string
 type UserPassword struct {
 	SecretIdentifier *string `json:"secretIdentifier,omitempty"`
 	SecretSpaceId    *int    `json:"secretSpaceId,omitempty"`
+	SecretSpacePath  *string `json:"secretSpacePath,omitempty"`
 	UserName         string  `json:"userName"`
 }
 
