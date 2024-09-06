@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/errors"
 	gittypes "github.com/harness/gitness/git/api"
 )
@@ -110,6 +111,13 @@ func HandleDiffStats(repoCtrl *repo.Controller) http.HandlerFunc {
 		path := request.GetOptionalRemainderFromPath(r)
 
 		output, err := repoCtrl.DiffStats(ctx, session, repoRef, path)
+		if uErr := gittypes.AsUnrelatedHistoriesError(err); uErr != nil {
+			render.JSON(w, http.StatusOK, &usererror.Error{
+				Message: uErr.Error(),
+				Values:  uErr.Map(),
+			})
+			return
+		}
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

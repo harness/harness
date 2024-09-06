@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/check"
@@ -37,6 +38,7 @@ func Translate(ctx context.Context, err error) *Error {
 		rError                   *Error
 		checkError               *check.ValidationError
 		appError                 *errors.Error
+		unrelatedHistoriesErr    *api.UnrelatedHistoriesError
 		maxBytesErr              *http.MaxBytesError
 		codeOwnersTooLargeError  *codeowners.TooLargeError
 		codeOwnersFileParseError *codeowners.FileParseError
@@ -95,6 +97,12 @@ func Translate(ctx context.Context, err error) *Error {
 			httpStatusCode(appError.Status),
 			appError.Message,
 			appError.Details,
+		)
+	case errors.As(err, &unrelatedHistoriesErr):
+		return NewWithPayload(
+			http.StatusBadRequest,
+			err.Error(),
+			unrelatedHistoriesErr.Map(),
 		)
 
 	// webhook errors

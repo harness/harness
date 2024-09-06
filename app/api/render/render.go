@@ -22,7 +22,9 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
@@ -75,6 +77,15 @@ func JSONArrayDynamic[T comparable](ctx context.Context, w http.ResponseWriter, 
 		}
 
 		if err != nil {
+			// based on discussion unrelated histories error should return
+			// StatusOK on diff.
+			if uErr := api.AsUnrelatedHistoriesError(err); uErr != nil {
+				JSON(w, http.StatusOK, &usererror.Error{
+					Message: uErr.Error(),
+					Values:  uErr.Map(),
+				})
+				return
+			}
 			// User canceled the request - no need to do anything
 			if errors.Is(err, context.Canceled) {
 				return

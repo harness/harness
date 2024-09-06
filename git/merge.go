@@ -184,12 +184,12 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	baseCommitSHA, err := s.git.GetFullCommitID(ctx, repoPath, params.BaseBranch)
 	if err != nil {
-		return MergeOutput{}, fmt.Errorf("failed to get merge base branch commit SHA: %w", err)
+		return MergeOutput{}, fmt.Errorf("failed to get base branch commit SHA: %w", err)
 	}
 
 	headCommitSHA, err := s.git.GetFullCommitID(ctx, repoPath, params.HeadBranch)
 	if err != nil {
-		return MergeOutput{}, fmt.Errorf("failed to get merge base branch commit SHA: %w", err)
+		return MergeOutput{}, fmt.Errorf("failed to get head branch commit SHA: %w", err)
 	}
 
 	if !params.HeadExpectedSHA.IsEmpty() && !params.HeadExpectedSHA.Equal(headCommitSHA) {

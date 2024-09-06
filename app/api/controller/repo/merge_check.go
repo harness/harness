@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -57,6 +58,14 @@ func (c *Controller) MergeCheck(
 		HeadBranch:  info.HeadRef,
 	})
 	if err != nil {
+		// git.Merge works with commits and error is not user-friendly
+		// and here we are modify base-ref and head-ref with user input
+		// values.
+		if uErr := api.AsUnrelatedHistoriesError(err); uErr != nil {
+			uErr.BaseRef = info.BaseRef
+			uErr.HeadRef = info.HeadRef
+			return MergeCheck{}, uErr
+		}
 		return MergeCheck{}, fmt.Errorf("merge check execution failed: %w", err)
 	}
 	if len(mergeOutput.ConflictFiles) > 0 {

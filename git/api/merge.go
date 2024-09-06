@@ -56,15 +56,26 @@ func (g *Git) GetMergeBase(
 		}
 	}
 
-	stdout := &bytes.Buffer{}
 	cmd := command.New("merge-base",
 		command.WithArg(base, head),
 	)
+
+	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 	err := cmd.Run(ctx,
 		command.WithDir(repoPath),
 		command.WithStdout(stdout),
+		command.WithStderr(stderr),
 	)
 	if err != nil {
+		// git merge-base rev1 rev2
+		// if there is unrelated history then stderr is empty with
+		// exit code 1. This cannot be handled in processGitErrorf because stderr is empty.
+		if command.AsError(err).IsExitCode(1) && stderr.Len() == 0 {
+			return sha.None, "", &UnrelatedHistoriesError{
+				BaseRef: base,
+				HeadRef: head,
+			}
+		}
 		return sha.None, "", processGitErrorf(err, "failed to get merge-base [%s, %s]", base, head)
 	}
 
