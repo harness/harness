@@ -141,8 +141,11 @@ func (a *PullRequestActivityPayloadReviewerDelete) ActivityType() enum.PullReqAc
 }
 
 type PullRequestActivityPayloadBranchUpdate struct {
-	Old string `json:"old"`
-	New string `json:"new"`
+	Old    string `json:"old"`
+	New    string `json:"new"`
+	Forced bool   `json:"forced"`
+
+	CommitTitle string `json:"commit_title"`
 }
 
 func (a *PullRequestActivityPayloadBranchUpdate) ActivityType() enum.PullReqActivityType {

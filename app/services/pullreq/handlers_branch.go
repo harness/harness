@@ -57,6 +57,30 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 		}
 	}
 
+	var commitTitle string
+	err := func() error {
+		repo, err := s.repoGitInfoCache.Get(ctx, event.Payload.RepoID)
+		if err != nil {
+			return fmt.Errorf("failed to get repo git info: %w", err)
+		}
+
+		commit, err := s.git.GetCommit(ctx, &git.GetCommitParams{
+			ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+			Revision:   event.Payload.NewSHA,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to get commit info: %w", err)
+		}
+
+		commitTitle = commit.Commit.Title
+
+		return nil
+	}()
+	if err != nil {
+		// non critical error
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to get commit info from git")
+	}
+
 	// TODO: This function is currently executed directly on branch update event.
 	// TODO: But it should be executed after the PR's head ref has been updated.
 	// TODO: This is to make sure the commit exists on the target repository for forked repositories.
@@ -65,7 +89,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 
 		targetRepo, err := s.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
 		if err != nil {
-			return fmt.Errorf("failed to get repo git info: %w", err)
+			return fmt.Errorf("failed to get target repo git info: %w", err)
 		}
 
 		mergeBaseInfo, err := s.git.MergeBase(ctx, git.MergeBaseParams{
@@ -116,8 +140,10 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 		}
 
 		payload := &types.PullRequestActivityPayloadBranchUpdate{
-			Old: event.Payload.OldSHA,
-			New: event.Payload.NewSHA,
+			Old:         event.Payload.OldSHA,
+			New:         event.Payload.NewSHA,
+			Forced:      event.Payload.Forced,
+			CommitTitle: commitTitle,
 		}
 
 		_, err = s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID, payload, nil)
