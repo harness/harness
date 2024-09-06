@@ -17,7 +17,7 @@
 import { useCallback, useEffect } from 'react'
 import type { CodeCommentState } from 'utils/Utils'
 
-const PR_COMMENT_STATUS_CHANGED_EVENT = 'PR_COMMENT_STATUS_CHANGED_EVENT'
+export const PR_COMMENT_STATUS_CHANGED_EVENT = 'PR_COMMENT_STATUS_CHANGED_EVENT'
 export const PULL_REQUEST_ALL_COMMENTS_ID = -99999
 
 interface UseEmitCodeCommentStatusProps {

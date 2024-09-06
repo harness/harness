@@ -32,6 +32,7 @@ import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { ButtonRoleProps, CodeCommentState } from 'utils/Utils'
 import { useResizeObserver } from 'hooks/useResizeObserver'
+import { PR_COMMENT_STATUS_CHANGED_EVENT } from 'hooks/useEmitCodeCommentStatus'
 import { useCustomEventListener } from 'hooks/useEventListener'
 import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
 import type { CommentRestorationTrackingState, DiffViewerExchangeState } from 'components/DiffViewer/DiffViewer'
@@ -430,6 +431,12 @@ const CommentsThread = <T = unknown,>({
   const domRef = useRef<HTMLElement>()
   const internalFlags = useRef({ initialized: false })
 
+  const handleCommentStatusChange = useCallback((e: any, toggleComments?: (e: KeyboardEvent | MouseEvent) => void) => {
+    if (commentItems[0].id === e.detail.id && e.detail.status === CodeCommentState.RESOLVED) {
+      toggleComments?.(e)
+    }
+  }, [])
+
   useEffect(
     function renderToggleCommentsButton() {
       // Get the row that contains the comment. If the comment is spanned for multiple lines, the
@@ -487,6 +494,7 @@ const CommentsThread = <T = unknown,>({
           button.title = getString('pr.toggleComments')
           button.dataset.toggleComment = 'true'
 
+          document.addEventListener(PR_COMMENT_STATUS_CHANGED_EVENT, e => handleCommentStatusChange(e, toggleComments))
           button.addEventListener('keydown', e => {
             if (e.key === 'Enter') toggleComments(e)
           })
@@ -519,9 +527,15 @@ const CommentsThread = <T = unknown,>({
           else delete button.dataset.threadsCount
         }
       }
+
+      // Cleanup the event listener on component unmount
+      return () => {
+        document.removeEventListener(PR_COMMENT_STATUS_CHANGED_EVENT, handleCommentStatusChange)
+      }
     },
     [isCommentThreadResolved, getString, commentsVisibilityAtLineNumber, memorizedState]
   )
+
   const viewRefs = useRef(
     Object.fromEntries(
       commentItems.map(commentItem => [commentItem.id, createRef() as React.MutableRefObject<EditorView | undefined>])
