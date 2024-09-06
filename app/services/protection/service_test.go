@@ -131,3 +131,149 @@ func TestManager_SanitizeJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateErrorMessageForBlockingViolations(t *testing.T) {
+	type testCase struct {
+		name       string
+		violations []types.RuleViolations
+		expected   string
+	}
+
+	tests := []testCase{
+		{
+			name:       "no violations",
+			violations: nil,
+			expected:   "No blocking rule violations found.",
+		},
+		{
+			name: "no blocking violations",
+			violations: []types.RuleViolations{
+				{
+					Bypassed: true,
+				},
+				{
+					Rule: types.RuleInfo{
+						State: enum.RuleStateDisabled,
+					},
+				},
+				{
+					Rule: types.RuleInfo{
+						State: enum.RuleStateMonitor,
+					},
+				},
+			},
+			expected: "No blocking rule violations found.",
+		},
+		{
+			name: "single violation without details",
+			violations: []types.RuleViolations{
+				{
+					Rule: types.RuleInfo{
+						Identifier: "rule1",
+						State:      enum.RuleStateActive,
+						Type:       "branch",
+						SpacePath:  "space/path1",
+					},
+				},
+			},
+			expected: `Operation violates branch protection rule "rule1" in space "space/path1"`,
+		},
+		{
+			name: "multiple violations without details",
+			violations: []types.RuleViolations{
+				{
+					Rule: types.RuleInfo{
+						Identifier: "rule1",
+						State:      enum.RuleStateActive,
+						Type:       "branch",
+						SpacePath:  "space/path1",
+					},
+				},
+				{
+					Rule: types.RuleInfo{
+						Identifier: "rule2",
+						State:      enum.RuleStateActive,
+						Type:       "other",
+						SpacePath:  "space/path2",
+					},
+				},
+			},
+			expected: `Operation violates 2 protection rules, including branch protection rule "rule1" ` +
+				`in space "space/path1"`,
+		}, {
+			name: "single violation with details",
+			violations: []types.RuleViolations{
+				{
+					Rule: types.RuleInfo{
+						Identifier: "rule1",
+						State:      enum.RuleStateActive,
+						Type:       "branch",
+						RepoPath:   "repo/path1",
+					},
+					Violations: []types.Violation{
+						{
+							Message: "violation1.1",
+						},
+						{
+							Message: "violation1.2",
+						},
+					},
+				},
+			},
+			expected: `Operation violates branch protection rule "rule1" ` +
+				`in repository "repo/path1" with violation: violation1.1`,
+		},
+		{
+			name: "multiple violations with details",
+			violations: []types.RuleViolations{
+				{
+					Rule: types.RuleInfo{
+						Identifier: "rule1",
+						State:      enum.RuleStateActive,
+						Type:       "other",
+						RepoPath:   "repo/path1",
+					},
+				},
+				{
+					Rule: types.RuleInfo{
+						Identifier: "rule2",
+						State:      enum.RuleStateActive,
+						Type:       "branch",
+						RepoPath:   "repo/path2",
+					},
+					Violations: []types.Violation{
+						{
+							Message: "violation2.1",
+						},
+						{
+							Message: "violation2.2",
+						},
+					},
+				},
+				{
+					Rule: types.RuleInfo{
+						Identifier: "rule3",
+						State:      enum.RuleStateActive,
+						Type:       "other",
+						RepoPath:   "repo/path3",
+					},
+					Violations: []types.Violation{
+						{
+							Message: "violation3.1",
+						},
+					},
+				},
+			},
+			expected: `Operation violates 3 protection rules, including branch protection rule "rule2" ` +
+				`in repository "repo/path2" with violation: violation2.1`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := GenerateErrorMessageForBlockingViolations(tt.violations)
+			if got != tt.expected {
+				t.Errorf("Want error message %q, got %q", tt.expected, got)
+			}
+		})
+	}
+}

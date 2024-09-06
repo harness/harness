@@ -328,7 +328,10 @@ func (c *Controller) Merge(
 
 		log.Ctx(ctx).Info().Msgf("aborting pull request merge because of rule violations: %s", sb.String())
 
-		return nil, &types.MergeViolations{RuleViolations: violations}, nil
+		return nil, &types.MergeViolations{
+			RuleViolations: violations,
+			Message:        protection.GenerateErrorMessageForBlockingViolations(violations),
+		}, nil
 	}
 
 	// commit details: author, committer and message
@@ -424,6 +427,8 @@ func (c *Controller) Merge(
 		return nil, &types.MergeViolations{
 			ConflictFiles:  mergeOutput.ConflictFiles,
 			RuleViolations: violations,
+			// In case of conflicting files we prioritize those for the error message.
+			Message: fmt.Sprintf("Merge blocked by conflicting files: %v", mergeOutput.ConflictFiles),
 		}, nil
 	}
 

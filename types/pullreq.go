@@ -211,6 +211,7 @@ type MergeResponse struct {
 }
 
 type MergeViolations struct {
+	Message        string           `json:"message,omitempty"`
 	ConflictFiles  []string         `json:"conflict_files,omitempty"`
 	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
 }

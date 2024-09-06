@@ -23,6 +23,7 @@ import (
 	"strconv"
 
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types"
@@ -130,6 +131,7 @@ func Unprocessable(w http.ResponseWriter, v any) {
 
 func Violations(w http.ResponseWriter, violations []types.RuleViolations) {
 	Unprocessable(w, types.RulesViolations{
+		Message:    protection.GenerateErrorMessageForBlockingViolations(violations),
 		Violations: violations,
 	})
 }

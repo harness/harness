@@ -202,5 +202,6 @@ type RuleInfoInternal struct {
 }
 
 type RulesViolations struct {
+	Message    string           `json:"message"`
 	Violations []RuleViolations `json:"violations"`
 }

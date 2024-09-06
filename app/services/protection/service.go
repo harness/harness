@@ -23,6 +23,7 @@ import (
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type (
@@ -142,4 +143,66 @@ func (m *Manager) ForRepository(ctx context.Context, repoID int64) (Protection, 
 		rules:   ruleInfos,
 		manager: m,
 	}, nil
+}
+
+// GenerateErrorMessageForBlockingViolations generates an error message for a given slice of rule violations.
+// It simply takes the first blocking rule that has a violation and prints that, with indication if further
+// rules were violated.
+func GenerateErrorMessageForBlockingViolations(ruleViolations []types.RuleViolations) string {
+	printRuleScope := func(r types.RuleInfo) string {
+		switch {
+		case r.RepoPath != "":
+			return fmt.Sprintf("repository %q", r.RepoPath)
+		case r.SpacePath != "":
+			return fmt.Sprintf("space %q", r.SpacePath)
+		default:
+			return "unknown scope"
+		}
+	}
+
+	selectedIDX := -1
+	blockingRuleViolationCnt := 0
+	for i := range ruleViolations {
+		// we don't care about bypassed or non-active rules
+		if ruleViolations[i].Bypassed || ruleViolations[i].Rule.State != enum.RuleStateActive {
+			continue
+		}
+
+		blockingRuleViolationCnt++
+
+		// We take the first blocking rule violation we find, unless a later one has additional details.
+		if selectedIDX >= 0 &&
+			(len(ruleViolations[selectedIDX].Violations) > 0 || len(ruleViolations[i].Violations) == 0) {
+			continue
+		}
+		selectedIDX = i
+	}
+
+	if blockingRuleViolationCnt == 0 {
+		return "No blocking rule violations found."
+	}
+
+	var msg string
+	if blockingRuleViolationCnt == 1 {
+		msg = fmt.Sprintf(
+			"Operation violates %s protection rule %q in %s",
+			ruleViolations[selectedIDX].Rule.Type,
+			ruleViolations[selectedIDX].Rule.Identifier,
+			printRuleScope(ruleViolations[selectedIDX].Rule),
+		)
+	} else {
+		msg = fmt.Sprintf(
+			"Operation violates %d protection rules, including %s protection rule %q in %s",
+			blockingRuleViolationCnt,
+			ruleViolations[selectedIDX].Rule.Type,
+			ruleViolations[selectedIDX].Rule.Identifier,
+			printRuleScope(ruleViolations[selectedIDX].Rule),
+		)
+	}
+
+	if len(ruleViolations[selectedIDX].Violations) > 0 {
+		msg += " with violation: " + ruleViolations[selectedIDX].Violations[0].Message
+	}
+
+	return msg
 }
