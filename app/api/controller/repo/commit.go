@@ -97,8 +97,10 @@ func (c *Controller) CommitFiles(ctx context.Context,
 
 	if in.DryRunRules {
 		return types.CommitFilesResponse{
-			DryRunRules:    true,
-			RuleViolations: violations,
+			DryRunRulesOutput: types.DryRunRulesOutput{
+				DryRunRules:    true,
+				RuleViolations: violations,
+			},
 		}, nil, nil
 	}
 
@@ -154,7 +156,9 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	}
 
 	return types.CommitFilesResponse{
-		CommitID:       commit.CommitID.String(),
-		RuleViolations: violations,
+		CommitID: commit.CommitID.String(),
+		DryRunRulesOutput: types.DryRunRulesOutput{
+			RuleViolations: violations,
+		},
 	}, nil, nil
 }

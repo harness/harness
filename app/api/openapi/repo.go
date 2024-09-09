@@ -542,6 +542,20 @@ var queryParameterDryRunRules = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterCommitSHA = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamCommitSHA,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Commit SHA the branch is at"),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
 var queryParameterDeletedAt = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamDeletedAt,
@@ -900,7 +914,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opCreateBranch.WithTags("repository")
 	opCreateBranch.WithMapOfAnything(map[string]interface{}{"operationId": "createBranch"})
 	_ = reflector.SetRequest(&opCreateBranch, new(createBranchRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCreateBranch, new(repo.Branch), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opCreateBranch, new(types.Branch), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusUnauthorized)
@@ -912,7 +926,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opGetBranch.WithTags("repository")
 	opGetBranch.WithMapOfAnything(map[string]interface{}{"operationId": "getBranch"})
 	_ = reflector.SetRequest(&opGetBranch, new(getBranchRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opGetBranch, new(repo.Branch), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opGetBranch, new(types.Branch), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opGetBranch, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opGetBranch, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opGetBranch, new(usererror.Error), http.StatusForbidden)
@@ -922,9 +936,9 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDeleteBranch := openapi3.Operation{}
 	opDeleteBranch.WithTags("repository")
 	opDeleteBranch.WithMapOfAnything(map[string]interface{}{"operationId": "deleteBranch"})
-	opDeleteBranch.WithParameters(queryParameterBypassRules, queryParameterDryRunRules)
+	opDeleteBranch.WithParameters(queryParameterBypassRules, queryParameterDryRunRules, queryParameterCommitSHA)
 	_ = reflector.SetRequest(&opDeleteBranch, new(deleteBranchRequest), http.MethodDelete)
-	_ = reflector.SetJSONResponse(&opDeleteBranch, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opDeleteBranch, new(types.DeleteBranchOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusForbidden)
@@ -939,7 +953,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		queryParameterQueryBranches, queryParameterOrder, queryParameterSortBranch,
 		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opListBranches, new(listBranchesRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListBranches, []repo.Branch{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListBranches, []types.Branch{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusForbidden)

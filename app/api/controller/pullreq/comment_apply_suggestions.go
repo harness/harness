@@ -84,9 +84,7 @@ func (i *CommentApplySuggestionsInput) sanitize() error {
 
 type CommentApplySuggestionsOutput struct {
 	CommitID string `json:"commit_id"`
-
-	DryRunRules    bool                   `json:"dry_run_rules,omitempty"`
-	RuleViolations []types.RuleViolations `json:"rule_violations,omitempty"`
+	types.DryRunRulesOutput
 }
 
 // CommentApplySuggestions applies suggestions for code comments.
@@ -138,8 +136,10 @@ func (c *Controller) CommentApplySuggestions(
 
 	if in.DryRunRules {
 		return CommentApplySuggestionsOutput{
-			DryRunRules:    true,
-			RuleViolations: violations,
+			DryRunRulesOutput: types.DryRunRulesOutput{
+				DryRunRules:    true,
+				RuleViolations: violations,
+			},
 		}, nil, nil
 	}
 
@@ -386,7 +386,9 @@ func (c *Controller) CommentApplySuggestions(
 	}
 
 	return CommentApplySuggestionsOutput{
-		CommitID:       commitOut.CommitID.String(),
-		RuleViolations: violations,
+		CommitID: commitOut.CommitID.String(),
+		DryRunRulesOutput: types.DryRunRulesOutput{
+			RuleViolations: violations,
+		},
 	}, nil, nil
 }

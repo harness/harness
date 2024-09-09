@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -28,7 +29,7 @@ func (c *Controller) GetBranch(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	branchName string,
-) (*Branch, error) {
+) (*types.Branch, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err

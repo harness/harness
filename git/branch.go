@@ -73,6 +73,7 @@ type DeleteBranchParams struct {
 	WriteParams
 	// BranchName is the name of the branch
 	BranchName string
+	SHA        string
 }
 
 type ListBranchesParams struct {
@@ -162,13 +163,14 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 	branchRef := api.GetReferenceFromBranchName(params.BranchName)
+	commitSha, _ := sha.NewOrEmpty(params.SHA)
 
 	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, branchRef)
 	if err != nil {
 		return fmt.Errorf("failed to create ref updater to create the branch: %w", err)
 	}
 
-	err = refUpdater.Do(ctx, sha.None, sha.Nil) // delete whatever is there
+	err = refUpdater.Do(ctx, commitSha, sha.Nil)
 	if errors.IsNotFound(err) {
 		return errors.NotFound("branch %q does not exist", params.BranchName)
 	}

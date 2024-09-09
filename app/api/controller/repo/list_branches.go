@@ -25,19 +25,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-type Branch struct {
-	Name   string        `json:"name"`
-	SHA    string        `json:"sha"`
-	Commit *types.Commit `json:"commit,omitempty"`
-}
-
 // ListBranches lists the branches of a repo.
 func (c *Controller) ListBranches(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	includeCommit bool,
 	filter *types.BranchFilter,
-) ([]Branch, error) {
+) ([]types.Branch, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
@@ -56,7 +50,7 @@ func (c *Controller) ListBranches(ctx context.Context,
 		return nil, err
 	}
 
-	branches := make([]Branch, len(rpcOut.Branches))
+	branches := make([]types.Branch, len(rpcOut.Branches))
 	for i := range rpcOut.Branches {
 		branches[i], err = mapBranch(rpcOut.Branches[i])
 		if err != nil {
@@ -95,16 +89,16 @@ func mapToRPCSortOrder(o enum.Order) git.SortOrder {
 	}
 }
 
-func mapBranch(b git.Branch) (Branch, error) {
+func mapBranch(b git.Branch) (types.Branch, error) {
 	var commit *types.Commit
 	if b.Commit != nil {
 		var err error
 		commit, err = controller.MapCommit(b.Commit)
 		if err != nil {
-			return Branch{}, err
+			return types.Branch{}, err
 		}
 	}
-	return Branch{
+	return types.Branch{
 		Name:   b.Name,
 		SHA:    b.SHA.String(),
 		Commit: commit,

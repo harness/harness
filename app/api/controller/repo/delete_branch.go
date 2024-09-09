@@ -34,10 +34,11 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	branchName string,
 	bypassRules bool,
 	dryRunRules bool,
-) ([]types.RuleViolations, error) {
+	commitSha string,
+) (types.DeleteBranchOutput, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
-		return nil, err
+		return types.DeleteBranchOutput{}, nil, err
 	}
 
 	// make sure user isn't deleting the default branch
@@ -45,12 +46,12 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	// and 'refs/heads/branch1' would fail if 'branch1' exists.
 	// TODO: Add functional test to ensure the scenario is covered!
 	if branchName == repo.DefaultBranch {
-		return nil, usererror.ErrDefaultBranchCantBeDeleted
+		return types.DeleteBranchOutput{}, nil, usererror.ErrDefaultBranchCantBeDeleted
 	}
 
 	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
-		return nil, err
+		return types.DeleteBranchOutput{}, nil, err
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
@@ -63,28 +64,38 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		RefNames:    []string{branchName},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to verify protection rules: %w", err)
-	}
-	if protection.IsCritical(violations) {
-		return violations, nil
+		return types.DeleteBranchOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
 	if dryRunRules {
-		return []types.RuleViolations{}, nil
+		return types.DeleteBranchOutput{
+			DryRunRulesOutput: types.DryRunRulesOutput{
+				DryRunRules:    true,
+				RuleViolations: violations,
+			},
+		}, nil, nil
+	}
+
+	if protection.IsCritical(violations) {
+		return types.DeleteBranchOutput{}, violations, nil
 	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
+		return types.DeleteBranchOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	err = c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
 		WriteParams: writeParams,
 		BranchName:  branchName,
+		SHA:         commitSha,
 	})
 	if err != nil {
-		return nil, err
+		return types.DeleteBranchOutput{}, nil, err
 	}
 
-	return nil, nil
+	return types.DeleteBranchOutput{
+		DryRunRulesOutput: types.DryRunRulesOutput{
+			RuleViolations: violations,
+		}}, nil, nil
 }

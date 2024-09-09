@@ -27,10 +27,13 @@ import (
 )
 
 const (
+	HeaderParamGitProtocol = "Git-Protocol"
+
+	PathParamCommitSHA = "commit_sha"
+
 	QueryParamGitRef             = "git_ref"
 	QueryParamIncludeCommit      = "include_commit"
 	QueryParamIncludeDirectories = "include_directories"
-	PathParamCommitSHA           = "commit_sha"
 	QueryParamLineFrom           = "line_from"
 	QueryParamLineTo             = "line_to"
 	QueryParamPath               = "path"
@@ -40,7 +43,7 @@ const (
 	QueryParamIncludeStats       = "include_stats"
 	QueryParamInternal           = "internal"
 	QueryParamService            = "service"
-	HeaderParamGitProtocol       = "Git-Protocol"
+	QueryParamCommitSHA          = "commit_sha"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -171,4 +174,8 @@ func GetFileDiffFromQuery(r *http.Request) (files gittypes.FileDiffRequests) {
 		})
 	}
 	return
+}
+
+func GetCommitSHAFromQueryOrDefault(r *http.Request) string {
+	return QueryParamOrDefault(r, QueryParamCommitSHA, "")
 }

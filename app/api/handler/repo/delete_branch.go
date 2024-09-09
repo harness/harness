@@ -52,15 +52,18 @@ func HandleDeleteBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		violations, err := repoCtrl.DeleteBranch(ctx, session, repoRef, branchName, bypassRules, dryRunRules)
+		commitSha := request.GetCommitSHAFromQueryOrDefault(r)
+
+		out, violations, err := repoCtrl.DeleteBranch(ctx, session, repoRef, branchName, bypassRules, dryRunRules, commitSha)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
+			return
 		}
 		if violations != nil {
 			render.Violations(w, violations)
 			return
 		}
 
-		render.DeleteSuccessful(w)
+		render.JSON(w, http.StatusOK, out)
 	}
 }

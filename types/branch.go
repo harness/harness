@@ -14,8 +14,12 @@
 
 package types
 
-// CommitFilesResponse holds commit id.
-type CommitFilesResponse struct {
-	CommitID string `json:"commit_id"`
+type Branch struct {
+	Name   string  `json:"name"`
+	SHA    string  `json:"sha"`
+	Commit *Commit `json:"commit,omitempty"`
+}
+
+type DeleteBranchOutput struct {
 	DryRunRulesOutput
 }

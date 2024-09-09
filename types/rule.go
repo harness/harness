@@ -205,3 +205,8 @@ type RulesViolations struct {
 	Message    string           `json:"message"`
 	Violations []RuleViolations `json:"violations"`
 }
+
+type DryRunRulesOutput struct {
+	DryRunRules    bool             `json:"dry_run_rules,omitempty"`
+	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
+}
