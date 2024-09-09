@@ -12,32 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aiagent
+package messaging
 
 import (
-	"context"
-	"fmt"
+	"os"
 
-	"github.com/harness/gitness/types"
+	"github.com/slack-go/slack"
 )
 
-type SuggestPipelineInput struct {
-	RepoRef  string `json:"repo_ref"`
-	Pipeline string `json:"pipeline"`
+const (
+	SlackBotToken = "HARNESS_INTELLIGENCE_SLACK_BOT_TOKEN"
+)
+
+type Slack struct {
+	Client     *slack.Client
+	SlackBotID string
 }
 
-func (c *Controller) SuggestPipeline(
-	ctx context.Context,
-	in *SuggestPipelineInput,
-) (*types.PipelineSuggestionsResponse, error) {
-	suggestionRequest := &types.PipelineSuggestionsRequest{
-		RepoRef:  in.RepoRef,
-		Pipeline: in.Pipeline,
-	}
+func NewSlack() *Slack {
+	token := os.Getenv(SlackBotToken)
+	api := slack.New(token)
 
-	output, err := c.pipeline.Suggest(ctx, suggestionRequest)
-	if err != nil {
-		return nil, fmt.Errorf("suggest pipeline: %w", err)
+	return &Slack{
+		Client: api,
 	}
-	return output, nil
 }

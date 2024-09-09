@@ -12,42 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aiagent
+package messaging
 
 import (
-	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/services/aiagent"
-	"github.com/harness/gitness/app/services/messaging"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
 
 	"github.com/google/wire"
 )
 
-// WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideController,
+	ProvideSlack,
 )
 
-func ProvideController(
-	authorizer authz.Authorizer,
-	aiagentPipeline *aiagent.HarnessIntelligence,
-	repoStore store.RepoStore,
-	pipelineStore store.PipelineStore,
-	executionStore store.ExecutionStore,
-	git git.Interface,
-	urlProvider url.Provider,
-	slackbot *messaging.Slack,
-) *Controller {
-	return NewController(
-		authorizer,
-		aiagentPipeline,
-		repoStore,
-		pipelineStore,
-		executionStore,
-		git,
-		urlProvider,
-		slackbot,
-	)
+func ProvideSlack(_ store.RepoStore, _ git.Interface) (*Slack, error) {
+	slack := NewSlack()
+	return slack, nil
 }

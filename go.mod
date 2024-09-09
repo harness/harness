@@ -64,6 +64,7 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/sercand/kuberesolver/v5 v5.1.1
 	github.com/sirupsen/logrus v1.9.3
+	github.com/slack-go/slack v0.14.0
 	github.com/stretchr/testify v1.9.0
 	github.com/swaggest/openapi-go v0.2.23
 	github.com/swaggest/swgui v1.8.1
@@ -121,6 +122,7 @@ require (
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/h2non/filetype v1.1.3 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/invopop/yaml v0.2.0 // indirect

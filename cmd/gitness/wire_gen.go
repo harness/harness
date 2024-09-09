@@ -84,6 +84,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/locker"
+	"github.com/harness/gitness/app/services/messaging"
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/notification"
@@ -413,7 +414,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	aiagentController := aiagent2.ProvideController(authorizer, harnessIntelligence, repoStore, pipelineStore, executionStore)
+	slack, err := messaging.ProvideSlack(repoStore, gitInterface)
+	if err != nil {
+		return nil, err
+	}
+	aiagentController := aiagent2.ProvideController(authorizer, harnessIntelligence, repoStore, pipelineStore, executionStore, gitInterface, provider, slack)
 	openapiService := openapi.ProvideOpenAPIService()
 	storageDriver, err := api2.BlobStorageProvider(config)
 	if err != nil {

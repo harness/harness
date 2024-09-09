@@ -186,6 +186,7 @@ func (s *HarnessIntelligence) Suggest(
 	_ context.Context,
 	_ *types.PipelineSuggestionsRequest) (*types.PipelineSuggestionsResponse, error) {
 	return &types.PipelineSuggestionsResponse{
+		// TODO Update to be V0 Yaml
 		Suggestions: []types.Suggestion{
 			{
 				ID:             "add-testing-stage",

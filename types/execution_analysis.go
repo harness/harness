@@ -21,5 +21,7 @@ type AnalyseExecutionInput struct {
 }
 
 type AnalyseExecutionOutput struct {
-	Yaml string `json:"yaml"`
+	// high level summary of the changes
+	Branch  string `json:"branch"`
+	Summary string `json:"summary"`
 }

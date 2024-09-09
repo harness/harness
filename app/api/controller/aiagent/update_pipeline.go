@@ -21,6 +21,11 @@ import (
 	"github.com/harness/gitness/types"
 )
 
+type UpdatePipelineOutput struct {
+	Status string       `json:"status"`
+	Data   PipelineData `json:"data"`
+}
+
 type UpdatePipelineInput struct {
 	Prompt   string `json:"prompt"`
 	RepoRef  string `json:"repo_ref"`
@@ -30,15 +35,21 @@ type UpdatePipelineInput struct {
 func (c *Controller) UpdatePipeline(
 	ctx context.Context,
 	in *UpdatePipelineInput,
-) (string, error) {
+) (*UpdatePipelineOutput, error) {
 	generateRequest := &types.PipelineUpdateRequest{
 		Prompt:   in.Prompt,
 		RepoRef:  in.RepoRef,
 		Pipeline: in.Pipeline,
 	}
+
 	output, err := c.pipeline.Update(ctx, generateRequest)
 	if err != nil {
-		return "", fmt.Errorf("update pipeline: %w", err)
+		return nil, fmt.Errorf("update pipeline: %w", err)
 	}
-	return output.YAML, nil
+	return &UpdatePipelineOutput{
+		Status: "SUCCESS",
+		Data: PipelineData{
+			YamlPipeline: output.YAML,
+		},
+	}, nil
 }

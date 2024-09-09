@@ -528,6 +528,7 @@ func setupAiAgent(r chi.Router, aiagentCtrl *aiagent.Controller, capabilitiesCtr
 		r.Post("/capabilities", handlercapabilities.HandleRunCapabilities(capabilitiesCtrl))
 		r.Post("/suggest-pipeline", handleraiagent.HandleSuggestPipelines(aiagentCtrl))
 		r.Post("/analyse-execution", handleraiagent.HandleAnalyse(aiagentCtrl))
+		r.Post("/slackbot", handleraiagent.HandleSlackMessage(aiagentCtrl))
 	})
 }
 

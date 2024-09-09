@@ -17,7 +17,10 @@ package aiagent
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/aiagent"
+	"github.com/harness/gitness/app/services/messaging"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/git"
 )
 
 type Controller struct {
@@ -26,6 +29,9 @@ type Controller struct {
 	repoStore      store.RepoStore
 	pipelineStore  store.PipelineStore
 	executionStore store.ExecutionStore
+	git            git.Interface
+	urlProvider    url.Provider
+	slackbot       *messaging.Slack
 }
 
 func NewController(
@@ -34,6 +40,9 @@ func NewController(
 	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
 	executionStore store.ExecutionStore,
+	git git.Interface,
+	urlProvider url.Provider,
+	slackbot *messaging.Slack,
 ) *Controller {
 	return &Controller{
 		authorizer:     authorizer,
@@ -41,5 +50,8 @@ func NewController(
 		repoStore:      repoStore,
 		pipelineStore:  pipelineStore,
 		executionStore: executionStore,
+		git:            git,
+		urlProvider:    urlProvider,
+		slackbot:       slackbot,
 	}
 }

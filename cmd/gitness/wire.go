@@ -93,6 +93,7 @@ import (
 	"github.com/harness/gitness/app/services/keywordsearch"
 	svclabel "github.com/harness/gitness/app/services/label"
 	locker "github.com/harness/gitness/app/services/locker"
+	messagingservice "github.com/harness/gitness/app/services/messaging"
 	"github.com/harness/gitness/app/services/metric"
 	migrateservice "github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/notification"
@@ -268,6 +269,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		secretservice.WireSet,
 		containerGit.WireSet,
 		containerUser.WireSet,
+		messagingservice.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

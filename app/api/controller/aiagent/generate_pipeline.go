@@ -26,8 +26,13 @@ type GeneratePipelineInput struct {
 	RepoRef string `json:"repo_ref"`
 }
 
+type PipelineData struct {
+	YamlPipeline string `json:"yaml_pipeline"`
+}
+
 type GeneratePipelineOutput struct {
-	Yaml string `json:"yaml"`
+	Status string       `json:"status"`
+	Data   PipelineData `json:"data"`
 }
 
 func (c *Controller) GeneratePipeline(
@@ -38,11 +43,15 @@ func (c *Controller) GeneratePipeline(
 		Prompt:  in.Prompt,
 		RepoRef: in.RepoRef,
 	}
+
 	output, err := c.pipeline.Generate(ctx, generateRequest)
 	if err != nil {
 		return nil, fmt.Errorf("generate pipeline: %w", err)
 	}
 	return &GeneratePipelineOutput{
-		Yaml: output.YAML,
+		Status: "SUCCESS",
+		Data: PipelineData{
+			YamlPipeline: output.YAML,
+		},
 	}, nil
 }

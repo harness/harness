@@ -40,8 +40,6 @@ func HandleUpdatePipeline(aiagentCtrl *aiagent.Controller) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/yaml; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(pipeline))
+		render.JSON(w, http.StatusOK, pipeline)
 	}
 }

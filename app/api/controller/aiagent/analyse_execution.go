@@ -17,10 +17,15 @@ package aiagent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/bootstrap"
+	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -36,6 +41,7 @@ func (c *Controller) GetAnalysis(
 	if err != nil {
 		return nil, usererror.BadRequestf("failed to find repo %s", repoRef)
 	}
+
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineView)
 	if err != nil {
 		return nil, usererror.Forbidden(fmt.Sprintf("not allowed to view pipeline %s", pipelineIdentifier))
@@ -55,5 +61,78 @@ func (c *Controller) GetAnalysis(
 		return nil, usererror.BadRequestf("execution %d is not a failed execution", executionNum)
 	}
 
-	return &types.AnalyseExecutionOutput{Yaml: "a:1"}, nil
+	// ToDo: put actual values
+	payload := &CommitPayload{}
+	branch := ""
+
+	_, err = c.commit(ctx, session, repo, payload)
+	if err != nil {
+		return &types.AnalyseExecutionOutput{}, err
+	}
+
+	return &types.AnalyseExecutionOutput{Branch: branch, Summary: ""}, nil
+}
+
+type CommitPayload struct {
+	Title     string
+	Message   string
+	Branch    string
+	NewBranch string
+	Files     []*Files
+}
+
+type Files struct {
+	action  git.FileAction
+	path    string
+	content string
+	SHA     sha.SHA
+}
+
+func (c *Controller) commit(ctx context.Context,
+	session *auth.Session,
+	repo *types.Repository,
+	payload *CommitPayload) (types.CommitFilesResponse, error) {
+	files := payload.Files
+	actions := make([]git.CommitFileAction, len(files))
+	for i, file := range files {
+		rawPayload := []byte(file.content)
+		actions[i] = git.CommitFileAction{
+			Action:  file.action,
+			Path:    file.path,
+			Payload: rawPayload,
+			SHA:     file.SHA,
+		}
+	}
+
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
+	if err != nil {
+		return types.CommitFilesResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+	}
+	now := time.Now()
+	commit, err := c.git.CommitFiles(ctx, &git.CommitFilesParams{
+		WriteParams:   writeParams,
+		Title:         payload.Title,
+		Message:       payload.Message,
+		Branch:        payload.Branch,
+		NewBranch:     payload.NewBranch,
+		Actions:       actions,
+		Committer:     identityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
+		CommitterDate: &now,
+		Author:        identityFromPrincipal(session.Principal),
+		AuthorDate:    &now,
+	})
+	if err != nil {
+		return types.CommitFilesResponse{}, err
+	}
+
+	return types.CommitFilesResponse{
+		CommitID: commit.CommitID.String(),
+	}, nil
+}
+
+func identityFromPrincipal(p types.Principal) *git.Identity {
+	return &git.Identity{
+		Name:  p.DisplayName,
+		Email: p.Email,
+	}
 }

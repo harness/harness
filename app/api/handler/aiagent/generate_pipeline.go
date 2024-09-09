@@ -39,8 +39,6 @@ func HandleGeneratePipeline(aiagentCtrl *aiagent.Controller) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "text/yaml; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(pipeline.Yaml))
+		render.JSON(w, http.StatusOK, pipeline)
 	}
 }
