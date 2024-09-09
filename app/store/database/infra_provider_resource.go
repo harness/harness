@@ -47,8 +47,6 @@ const (
 		ipreso_network,
 		ipreso_region,
 		ipreso_opentofu_params,
-		ipreso_gateway_host,
-		ipreso_gateway_port,
 		ipreso_infra_provider_template_id
 	`
 	infraProviderResourceSelectColumns = "ipreso_id," + infraProviderResourceInsertColumns
@@ -68,8 +66,6 @@ type infraProviderResource struct {
 	Network               null.String            `db:"ipreso_network"`
 	Region                string                 `db:"ipreso_region"` // need list maybe
 	OpenTofuParams        []byte                 `db:"ipreso_opentofu_params"`
-	GatewayHost           null.String            `db:"ipreso_gateway_host"`
-	GatewayPort           null.String            `db:"ipreso_gateway_port"`
 	TemplateID            null.Int               `db:"ipreso_infra_provider_template_id"`
 	Created               int64                  `db:"ipreso_created"`
 	Updated               int64                  `db:"ipreso_updated"`
@@ -172,8 +168,6 @@ func (s infraProviderResourceStore) Create(
 			infraProviderResource.Network,
 			infraProviderResource.Region,
 			jsonBytes,
-			infraProviderResource.GatewayHost,
-			infraProviderResource.GatewayPort,
 			infraProviderResource.TemplateID,
 		).
 		Suffix(ReturningClause + infraProviderResourceIDColumn)
@@ -257,8 +251,6 @@ func mapToInfraProviderResource(_ context.Context,
 		Network:               in.Network.Ptr(),
 		Region:                in.Region,
 		Metadata:              openTofuParamsMap,
-		GatewayHost:           in.GatewayHost.Ptr(),
-		GatewayPort:           in.GatewayPort.Ptr(),
 		TemplateID:            in.TemplateID.Ptr(),
 		Created:               in.Created,
 		Updated:               in.Updated,
@@ -283,8 +275,6 @@ func (s infraProviderResourceStore) mapToInternalInfraProviderResource(_ context
 		Network:               null.StringFromPtr(in.Network),
 		Region:                in.Region,
 		OpenTofuParams:        jsonBytes,
-		GatewayHost:           null.StringFromPtr(in.GatewayHost),
-		GatewayPort:           null.StringFromPtr(in.GatewayPort),
 		TemplateID:            null.IntFromPtr(in.TemplateID),
 		Created:               in.Created,
 		Updated:               in.Updated,

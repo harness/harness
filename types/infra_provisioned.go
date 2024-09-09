@@ -38,6 +38,7 @@ type InfraProvisionedGatewayView struct {
 	SpaceID                    int64
 	ServerHostIP               string
 	ServerHostPort             string
+	Infrastructure             *string
 }
 
 type InfraProvisionedUpdateGatewayRequest struct {
@@ -45,11 +46,4 @@ type InfraProvisionedUpdateGatewayRequest struct {
 	SpaceID                    int64  `json:"space_id"`
 	GatewayHost                string `json:"gateway_host"`
 	GatewayPort                int32  `json:"gateway_port"`
-}
-
-type InfraProvisionedResponse struct {
-	ServerHost                 string `json:"server_host"`
-	ServerPort                 string `json:"server_port"`
-	GitspaceInstanceIdentifier string `json:"gitspace_id"`
-	SpaceID                    int64  `json:"space_id"`
 }

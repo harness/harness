@@ -43,8 +43,6 @@ type InfraProviderResource struct {
 	Network                       *string           `json:"network"`
 	Region                        string            `json:"region"`
 	Metadata                      map[string]string `json:"metadata"`
-	GatewayHost                   *string           `json:"gateway_host"`
-	GatewayPort                   *string           `json:"gateway_port"`
 	// Deprecated. Set template identifier in Metadata.
 	TemplateID *int64 `json:"-"`
 	// Deprecated. Set template identifier in Metadata.

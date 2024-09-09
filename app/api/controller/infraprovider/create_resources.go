@@ -122,8 +122,6 @@ func mapToResourceEntity(in []ResourceInput, parentSpace types.Space, now int64)
 			Network:           res.Network,
 			Region:            strings.Join(res.Region, " "), // TODO fix
 			Metadata:          res.Metadata,
-			GatewayHost:       res.GatewayHost,
-			GatewayPort:       res.GatewayPort, // No template as of now
 			Created:           now,
 			Updated:           now,
 		}

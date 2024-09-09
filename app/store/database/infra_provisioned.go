@@ -74,10 +74,11 @@ type infraProvisioned struct {
 }
 
 type infraProvisionedGatewayView struct {
-	GitspaceInstanceIdentifier string `db:"iprov_gitspace_uid"`
-	SpaceID                    int64  `db:"iprov_space_id"`
-	ServerHostIP               string `db:"iprov_server_host_ip"`
-	ServerHostPort             string `db:"iprov_server_host_port"`
+	GitspaceInstanceIdentifier string  `db:"iprov_gitspace_uid"`
+	SpaceID                    int64   `db:"iprov_space_id"`
+	ServerHostIP               string  `db:"iprov_server_host_ip"`
+	ServerHostPort             string  `db:"iprov_server_host_port"`
+	Infrastructure             *string `db:"iprov_response_metadata"`
 }
 
 func NewInfraProvisionedStore(db *sqlx.DB) store.InfraProvisionedStore {
@@ -112,11 +113,14 @@ func (i infraProvisionedStore) FindAllLatestByGateway(
 	gatewayHost string,
 ) ([]*types.InfraProvisionedGatewayView, error) {
 	stmt := database.Builder.
-		Select("gits_uid as iprov_gitspace_uid, iprov_space_id, iprov_server_host_ip, iprov_server_host_port").
+		Select(`gits_uid as iprov_gitspace_uid, 
+			iprov_space_id, 
+			iprov_server_host_ip, 
+			iprov_server_host_port, 
+			iprov_response_metadata`).
 		From(infraProvisionedTable).
-		Join(fmt.Sprintf("%s ON iprov_infra_provider_resource_id = ipreso_id", infraProviderResourceTable)).
 		Join(fmt.Sprintf("%s ON iprov_gitspace_id = gits_id", gitspaceInstanceTable)).
-		Where("ipreso_gateway_host = ?", gatewayHost).
+		Where("iprov_proxy_host = ?", gatewayHost).
 		Where("iprov_infra_status = ?", enum.InfraStatusProvisioned).
 		OrderBy("iprov_created DESC")
 
@@ -140,6 +144,7 @@ func (i infraProvisionedStore) FindAllLatestByGateway(
 			SpaceID:                    entity.SpaceID,
 			ServerHostIP:               entity.ServerHostIP,
 			ServerHostPort:             entity.ServerHostPort,
+			Infrastructure:             entity.Infrastructure,
 		}
 	}
 
