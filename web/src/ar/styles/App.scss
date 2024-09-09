@@ -14,43 +14,19 @@
  * limitations under the License.
  */
 
-html,
-body,
-#react-root {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-}
+.arApp {
+  /* stylelint-disable  color-no-hex */
+  :root {
+    // AR Harness Artifact Registry
+    --har-foreground: #0095f7;
+    --har-border: #0095f7;
+    --har-background: #fff9fc;
+  }
 
-.ng-tooltip-native {
-  display: flex;
-  align-items: center;
-}
-
-body {
-  --font-family: 'Inter', sans-serif;
-  --font-family-mono: Monaco, 'Ubuntu Mono', 'Courier New', monospace;
-  --font-family-reenie-beanie: 'Reenie Beanie';
-  --font-size: var(--font-size-small);
-  min-width: 1280px;
-}
-
-/* stylelint-disable  color-no-hex */
-:root {
-  // AR Harness Artifact Registry
-  --har-foreground: #0095f7;
-  --har-border: #0095f7;
-  --har-background: #fff9fc;
-}
-/* stylelint-enable  color-no-hex */
-
-* {
-  outline: none !important;
-}
-
-[class*='PageBody--pageBody'] [class*='PageHeader--'] {
-  &:not([class*='PageHeader--standard--']) {
-    background-color: var(--ar-page-header-background-color, var(--primary-1)) !important;
+  [class*='PageBody--pageBody'] {
+    [class*='PageHeader--xlarge--'],
+    [class*='PageHeader--large--'] {
+      background-color: var(--ar-page-header-background-color, var(--primary-1)) !important;
+    }
   }
 }

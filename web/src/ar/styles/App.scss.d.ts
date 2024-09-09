@@ -16,5 +16,4 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const ngTooltipNative: string
-export declare const reactRoot: string
+export declare const arApp: string

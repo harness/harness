@@ -16,7 +16,7 @@
 
 import React, { createContext } from 'react'
 import { defaultTo, noop } from 'lodash-es'
-import { Button } from '@harnessio/uicore'
+import { Button, Container } from '@harnessio/uicore'
 
 import type { MFEAppProps } from '@ar/MFEAppTypes'
 
@@ -59,62 +59,64 @@ const GitnessApp = (props: Partial<MFEAppProps>): JSX.Element => {
     on401
   } = props
   return (
-    <PreferenceStoreProvider>
-      <App
-        parent={defaultTo(parent, Parent.OSS)}
-        parentContextObj={Object.assign(
-          {
-            appStoreContext: createContext({}) as any,
-            licenseStoreProvider: createContext({}) as any,
-            permissionsContext: createContext({}) as any
-          },
-          parentContextObj
-        )}
-        matchPath={defaultTo(matchPath, '/')}
-        renderUrl={defaultTo(renderUrl, '/')}
-        scope={defaultTo(scope, {})}
-        customScope={defaultTo(customScope, {})}
-        components={Object.assign(
-          { RbacButton: Button, NGBreadcrumbs, RbacMenuItem, SecretFormInput, VulnerabilityView, DependencyView },
-          components
-        )}
-        NavComponent={NavComponent}
-        hooks={Object.assign(
-          {
-            useDocumentTitle: () => ({ updateTitle: () => void 0 }),
-            useLogout: () => ({ forceLogout: () => void 0 }),
-            usePermission: () => [true]
-          },
-          hooks
-        )}
-        customHooks={Object.assign(
-          {
-            useQueryParams,
-            useUpdateQueryParams,
-            useQueryParamsOptions,
-            useDefaultPaginationProps,
-            usePreferenceStore,
-            useModalHook,
-            useConfirmationDialog
-          },
-          customHooks
-        )}
-        customComponents={Object.assign(
-          {
-            ModalProvider
-          },
-          customComponents
-        )}
-        customUtils={Object.assign(
-          {
-            getCustomHeaders,
-            getApiBaseUrl
-          },
-          customUtils
-        )}
-        on401={defaultTo(on401, noop)}
-      />
-    </PreferenceStoreProvider>
+    <Container className="arApp">
+      <PreferenceStoreProvider>
+        <App
+          parent={defaultTo(parent, Parent.OSS)}
+          parentContextObj={Object.assign(
+            {
+              appStoreContext: createContext({}) as any,
+              licenseStoreProvider: createContext({}) as any,
+              permissionsContext: createContext({}) as any
+            },
+            parentContextObj
+          )}
+          matchPath={defaultTo(matchPath, '/')}
+          renderUrl={defaultTo(renderUrl, '/')}
+          scope={defaultTo(scope, {})}
+          customScope={defaultTo(customScope, {})}
+          components={Object.assign(
+            { RbacButton: Button, NGBreadcrumbs, RbacMenuItem, SecretFormInput, VulnerabilityView, DependencyView },
+            components
+          )}
+          NavComponent={NavComponent}
+          hooks={Object.assign(
+            {
+              useDocumentTitle: () => ({ updateTitle: () => void 0 }),
+              useLogout: () => ({ forceLogout: () => void 0 }),
+              usePermission: () => [true]
+            },
+            hooks
+          )}
+          customHooks={Object.assign(
+            {
+              useQueryParams,
+              useUpdateQueryParams,
+              useQueryParamsOptions,
+              useDefaultPaginationProps,
+              usePreferenceStore,
+              useModalHook,
+              useConfirmationDialog
+            },
+            customHooks
+          )}
+          customComponents={Object.assign(
+            {
+              ModalProvider
+            },
+            customComponents
+          )}
+          customUtils={Object.assign(
+            {
+              getCustomHeaders,
+              getApiBaseUrl
+            },
+            customUtils
+          )}
+          on401={defaultTo(on401, noop)}
+        />
+      </PreferenceStoreProvider>
+    </Container>
   )
 }
 

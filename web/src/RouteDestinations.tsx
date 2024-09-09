@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { Route, Switch, BrowserRouter } from 'react-router-dom'
-import ArApp from '@ar/gitness/ArApp'
+import { Spinner } from '@blueprintjs/core'
 import { SignIn } from 'pages/SignIn/SignIn'
 import { SignUp } from 'pages/SignUp/SignUp'
 import Repository from 'pages/Repository/Repository'
@@ -56,6 +56,8 @@ import GitspaceDetails from 'cde-gitness/pages/GitspaceDetails/GitspaceDetails'
 import GitspaceListing from 'cde-gitness/pages/GitspaceListing/GitspaceListing'
 import GitspaceCreate from 'cde-gitness/pages/GitspaceCreate/GitspaceCreate'
 import ManageLabels from 'pages/ManageSpace/ManageLabels/ManageLabels'
+
+const ArApp = lazy(() => import('@ar/gitness/ArApp'))
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
@@ -97,7 +99,9 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         {standalone && (
           <Route path={routes.toAR({ space: pathProps.space })}>
             <LayoutWithSideNav title={getString('pageTitle.artifactRegistries')}>
-              <ArApp />
+              <Suspense fallback={<Spinner />}>
+                <ArApp />
+              </Suspense>
             </LayoutWithSideNav>
           </Route>
         )}

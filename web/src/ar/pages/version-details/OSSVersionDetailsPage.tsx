@@ -44,6 +44,7 @@ export default function OSSVersionDetailsPage() {
   const [showModal, hideModal] = useModalHook(() => {
     return (
       <Drawer
+        className="arApp"
         position={Position.RIGHT}
         isOpen={true}
         isCloseButtonShown={false}
