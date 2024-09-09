@@ -26,7 +26,7 @@ import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 
-import type { RepoBranch, RepoCommitTag, RepoRepositoryOutput } from 'services/code'
+import type { TypesBranch, RepoCommitTag, RepoRepositoryOutput } from 'services/code'
 import { formatDate, getErrorMessage, voidFn } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -38,7 +38,7 @@ import css from './TagsContent.module.scss'
 interface TagsContentProps {
   searchTerm?: string
   repoMetadata: RepoRepositoryOutput
-  branches: RepoBranch[]
+  branches: TypesBranch[]
   onDeleteSuccess: () => void
 }
 
@@ -49,7 +49,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
 
   const onSuccess = voidFn(noop)
 
-  const columns: Column<RepoBranch>[] = useMemo(
+  const columns: Column<TypesBranch>[] = useMemo(
     () => [
       {
         Header: getString('tag'),
@@ -139,7 +139,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
       {
         id: 'action',
         width: '30px',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranch>) => {
           const { mutate: deleteBranch } = useMutate({
             verb: 'DELETE',
             path: `/api/v1/repos/${repoMetadata.path}/+/tags/${row.original.name}`
@@ -235,7 +235,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
 
   return (
     <Container className={css.container}>
-      <Table<RepoBranch>
+      <Table<TypesBranch>
         className={css.table}
         columns={columns}
         data={branches || []}

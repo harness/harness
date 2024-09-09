@@ -41,7 +41,7 @@ import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { GitInfoProps, normalizeGitRef, isGitBranchNameValid } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
-import type { RepoBranch } from 'services/code'
+import type { TypesBranch } from 'services/code'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import css from './CreateTagModal.module.scss'
@@ -55,12 +55,12 @@ interface FormData {
 interface UseCreateTagModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
   suggestedBranchName?: string
   suggestedSourceBranch?: string
-  onSuccess: (data: RepoBranch) => void
+  onSuccess: (data: TypesBranch) => void
   showSuccessMessage?: boolean
 }
 
 interface CreateTagModalButtonProps extends Omit<ButtonProps, 'onClick'>, UseCreateTagModalProps {
-  onSuccess: (data: RepoBranch) => void
+  onSuccess: (data: TypesBranch) => void
   showSuccessMessage?: boolean
 }
 
@@ -76,7 +76,7 @@ export function useCreateTagModal({
     const { getString } = useStrings()
     const [sourceBranch, setSourceBranch] = useState(suggestedSourceBranch || (repoMetadata.default_branch as string))
     const { showError, showSuccess } = useToaster()
-    const { mutate: createTag, loading } = useMutate<RepoBranch>({
+    const { mutate: createTag, loading } = useMutate<TypesBranch>({
       verb: 'POST',
       path: `/api/v1/repos/${repoMetadata.path}/+/tags`
     })

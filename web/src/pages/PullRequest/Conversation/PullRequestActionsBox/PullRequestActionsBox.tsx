@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Avatar,
   Button,
@@ -31,25 +31,28 @@ import {
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
-import { useMutate } from 'restful-react'
+import { MutateMethod, useMutate } from 'restful-react'
 import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import type { OpenapiStatePullReqRequest, TypesPullReq, TypesRuleViolations } from 'services/code'
+import type {
+  OpenapiStatePullReqRequest,
+  TypesListCommitResponse,
+  TypesPullReq,
+  TypesRuleViolations
+} from 'services/code'
 import { useStrings } from 'framework/strings'
-import { CodeIcon, MergeStrategy, PullRequestFilterOption, PullRequestState, dryMerge } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps, MergeStrategy, PullRequestState, dryMerge } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
+import { getMergeOptions, PRDraftOption, type PRMergeOption } from 'pages/PullRequest/PullRequestUtils'
 import {
   extractInfoFromRuleViolationArr,
   getErrorMessage,
   inlineMergeFormRefType,
   MergeCheckStatus,
-  permissionProps,
-  PRDraftOption,
-  PRMergeOption,
-  PullRequestActionsBoxProps
+  permissionProps
 } from 'utils/Utils'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
@@ -57,6 +60,31 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { PullReqSuggestionsBatch } from 'components/PullReqSuggestionsBatch/PullReqSuggestionsBatch'
 import InlineMergeBox from './InlineMergeBox'
 import css from './PullRequestActionsBox.module.scss'
+
+export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
+  onPRStateChanged: () => void
+  refetchReviewers: () => void
+  allowedStrategy: string[]
+  pullReqCommits?: TypesListCommitResponse
+  PRStateLoading: boolean
+  conflictingFiles?: string[]
+  setConflictingFiles: React.Dispatch<React.SetStateAction<string[] | undefined>>
+  refetchPullReq: () => void
+  refetchActivities: () => void
+  deleteBranch: MutateMethod<
+    any,
+    any,
+    {
+      bypass_rules: boolean
+      dry_run_rules: boolean
+      commit_sha: string
+    },
+    unknown
+  >
+  showDeleteBranchButton: boolean
+  setShowDeleteBranchButton: React.Dispatch<React.SetStateAction<boolean>>
+  isSourceBranchDeleted: boolean
+}
 
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
@@ -66,10 +94,15 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   pullReqCommits,
   PRStateLoading,
   setConflictingFiles,
-  refetchPullReq
+  refetchPullReq,
+  refetchActivities,
+  deleteBranch,
+  showDeleteBranchButton,
+  setShowDeleteBranchButton,
+  isSourceBranchDeleted
 }) => {
   const { getString } = useStrings()
-  const { showError } = useToaster()
+  const { showSuccess, showError } = useToaster()
   const inlineMergeRef = useRef<inlineMergeFormRefType>(null)
   const { hooks, standalone } = useAppContext()
   const space = useGetSpaceParam()
@@ -89,6 +122,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   const mergeable = useMemo(() => pullReqMetadata.merge_check_status === MergeCheckStatus.MERGEABLE, [pullReqMetadata])
   const isClosed = pullReqMetadata.state === PullRequestState.CLOSED
   const isOpen = pullReqMetadata.state === PullRequestState.OPEN
+  const isMerged = pullReqMetadata.state === PullRequestState.MERGED
+  const isDraft = pullReqMetadata.is_draft
   const isConflict = pullReqMetadata.merge_check_status === MergeCheckStatus.CONFLICT
   const isMounted = useIsMounted()
 
@@ -96,20 +131,17 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     () => pullReqMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
     [pullReqMetadata, isClosed]
   )
-  const handleSubmit = useMemo(() => {
-    return () => {
-      if (inlineMergeRef.current) {
-        setPrMerged(true)
-        inlineMergeRef.current.handleSubmit()
-      }
+  const handleSubmit = useCallback(() => {
+    if (inlineMergeRef.current) {
+      inlineMergeRef.current.handleSubmit()
     }
   }, [])
   // Flags to optimize rendering
   const internalFlags = useRef({ dryRun: false })
   useEffect(() => {
     if (ruleViolationArr && !isDraft && ruleViolationArr.data.rule_violations) {
-      const { checkIfBypassAllowed } = extractInfoFromRuleViolationArr(ruleViolationArr.data.rule_violations)
-      setNotBypassable(checkIfBypassAllowed)
+      const { checkIfBypassNotAllowed } = extractInfoFromRuleViolationArr(ruleViolationArr.data.rule_violations)
+      setNotBypassable(checkIfBypassNotAllowed)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ruleViolationArr])
@@ -132,11 +164,10 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       refetchPullReq
     ) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unchecked, pullReqMetadata?.source_sha])
-  const [prMerged, setPrMerged] = useState(false)
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
-      if (!prMerged) {
+      if (!isMerged && !isClosed) {
         dryMerge(
           isMounted,
           isClosed,
@@ -152,39 +183,14 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
           refetchPullReq
         )
       }
-    }, POLLING_INTERVAL) // Poll every 20 seconds
+    }, POLLING_INTERVAL) // Poll every 10 seconds
     // Cleanup interval on component unmount
     return () => {
       clearInterval(intervalId)
     } // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onPRStateChanged, prMerged, pullReqMetadata?.source_sha])
-  const isDraft = pullReqMetadata.is_draft
-  const mergeOptions: PRMergeOption[] = [
-    {
-      method: MergeStrategy.SQUASH,
-      title: getString('pr.mergeOptions.squashAndMerge'),
-      desc: getString('pr.mergeOptions.squashAndMergeDesc'),
-      disabled: mergeable === false,
-      label: getString('pr.mergeOptions.squashAndMerge'),
-      value: MergeStrategy.SQUASH
-    },
-    {
-      method: 'merge',
-      title: getString('pr.mergeOptions.createMergeCommit'),
-      desc: getString('pr.mergeOptions.createMergeCommitDesc'),
-      disabled: mergeable === false,
-      label: getString('pr.mergeOptions.createMergeCommit'),
-      value: 'merge'
-    },
-    {
-      method: MergeStrategy.REBASE,
-      title: getString('pr.mergeOptions.rebaseAndMerge'),
-      desc: getString('pr.mergeOptions.rebaseAndMergeDesc'),
-      disabled: mergeable === false,
-      label: getString('pr.mergeOptions.rebaseAndMerge'),
-      value: MergeStrategy.REBASE
-    }
-  ]
+  }, [onPRStateChanged, isMerged, isClosed, pullReqMetadata?.source_sha])
+
+  const mergeOptions = useMemo(() => getMergeOptions(getString, mergeable).slice(0, 3), [mergeable])
   const [allowedStrats, setAllowedStrats] = useState<string[]>([
     mergeOptions[0].method,
     mergeOptions[1].method,
@@ -208,6 +214,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     mergeOptions[0],
     option => option.method !== 'close'
   )
+
   useEffect(() => {
     if (allowedStrats) {
       const matchingMethods = mergeOptions.filter(option => allowedStrats.includes(option.method))
@@ -252,8 +259,17 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pullReqCommits, mergeOption, pullReqMetadata])
 
-  if (pullReqMetadata.state === PullRequestFilterOption.MERGED) {
-    return <MergeInfo pullRequestMetadata={pullReqMetadata} />
+  if (isMerged) {
+    return (
+      <MergeInfo
+        pullRequestMetadata={pullReqMetadata}
+        showDeleteBranchButton={showDeleteBranchButton}
+        setShowDeleteBranchButton={setShowDeleteBranchButton}
+        deleteBranch={deleteBranch}
+        showSuccess={showSuccess}
+        showError={showError}
+      />
+    )
   }
 
   return (
@@ -351,9 +367,11 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                     <Match expr={pullReqMetadata.state}>
                       <Case val={PullRequestState.CLOSED}>
                         <Button
+                          margin={{ right: 'small' }}
                           className={css.secondaryButton}
                           text={getString('pr.openForReview')}
-                          variation={ButtonVariation.TERTIARY}
+                          variation={ButtonVariation.SECONDARY}
+                          disabled={isSourceBranchDeleted}
                           onClick={() => {
                             const payload: OpenapiStatePullReqRequest = { state: 'open' }
                             updatePRState(payload)
@@ -452,7 +470,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                               <Button
                                 type="submit"
                                 onClick={handleSubmit}
-                                disabled={prMerged}
+                                disabled={isMerged}
                                 variation={ButtonVariation.PRIMARY}
                                 text={getString('confirmStrat', { strat: mergeOption.title })}
                               />
@@ -511,9 +529,10 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
             mergeOption={mergeOption}
             onPRStateChanged={onPRStateChanged}
             initialValues={initialValues}
-            setPrMerged={setPrMerged}
             setRuleViolationArr={setRuleViolationArr}
             pullReqMetadata={pullReqMetadata}
+            refetchActivities={refetchActivities}
+            refetchPullReq={refetchPullReq}
           />
         )}
       </Layout.Vertical>
@@ -521,7 +540,30 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   )
 }
 
-const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullRequestMetadata }) => {
+const MergeInfo: React.FC<{
+  pullRequestMetadata: TypesPullReq
+  showDeleteBranchButton: boolean
+  setShowDeleteBranchButton: React.Dispatch<React.SetStateAction<boolean>>
+  deleteBranch: MutateMethod<
+    any,
+    any,
+    {
+      bypass_rules: boolean
+      dry_run_rules: boolean
+      commit_sha: string
+    },
+    unknown
+  >
+  showSuccess: (message: React.ReactNode, timeout?: number, key?: string) => void
+  showError: (message: React.ReactNode, timeout?: number, key?: string) => void
+}> = ({
+  pullRequestMetadata,
+  showDeleteBranchButton,
+  setShowDeleteBranchButton,
+  deleteBranch,
+  showSuccess,
+  showError
+}) => {
   const { getString } = useStrings()
 
   return (
@@ -564,6 +606,38 @@ const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullReques
           />
         </Text>
         <FlexExpander />
+        {showDeleteBranchButton && (
+          <Button
+            margin={{ right: 'small' }}
+            text={getString('deleteBranch')}
+            variation={ButtonVariation.SECONDARY}
+            onClick={() => {
+              deleteBranch(
+                {},
+                {
+                  queryParams: {
+                    bypass_rules: true,
+                    dry_run_rules: false,
+                    commit_sha: pullRequestMetadata?.source_sha || ''
+                  }
+                }
+              )
+                .then(() => {
+                  setShowDeleteBranchButton(false)
+                  showSuccess(
+                    <StringSubstitute
+                      str={getString('branchDeleted')}
+                      vars={{
+                        branch: pullRequestMetadata?.source_branch
+                      }}
+                    />,
+                    5000
+                  )
+                })
+                .catch(err => showError(getErrorMessage(err)))
+            }}
+          />
+        )}
       </Layout.Horizontal>
     </Container>
   )

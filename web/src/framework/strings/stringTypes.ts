@@ -865,6 +865,7 @@ export interface StringsMap {
   'pr.checkingToMerge': string
   'pr.checks': string
   'pr.checksFailure': string
+  'pr.closedPrBranchDelete': string
   'pr.collapseFullFile': string
   'pr.commentLineNumbers': string
   'pr.commitSuggestion': string

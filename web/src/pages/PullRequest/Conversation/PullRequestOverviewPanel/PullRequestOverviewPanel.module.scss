@@ -40,6 +40,11 @@
   background: var(--grey-0) !important;
 }
 
+.deleteBranchSectionContainer {
+  padding: var(--spacing-5) 2rem !important;
+  background: var(--grey-0) !important;
+}
+
 .borderRadius {
   border-radius: 4px;
 }
@@ -356,4 +361,26 @@
 .conflictingFileName {
   font-family: 'Roboto Mono' !important;
   font-weight: 600 !important;
+}
+
+.boldText {
+  color: var(--grey-500) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+}
+
+.branchContainer {
+  background: #f3f3fa !important;
+  padding: 2px 7px;
+  gap: 3px;
+  border-radius: 4px;
+  opacity: 0px;
+  display: flex;
+  align-items: center;
+}
+
+.widthContainer {
+  max-width: 220px !important;
+  min-width: min-content !important;
 }

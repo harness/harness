@@ -29,6 +29,7 @@ const PullRequestPanelSections = (props: PullRequestPanelSectionsProps) => {
       {outlets[PanelSectionOutletPosition.COMMENTS]}
       {outlets[PanelSectionOutletPosition.CHECKS]}
       {outlets[PanelSectionOutletPosition.MERGEABILITY]}
+      {outlets[PanelSectionOutletPosition.DELETE_BRANCH]}
     </Layout.Vertical>
   )
 }

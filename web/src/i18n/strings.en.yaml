@@ -175,7 +175,7 @@ failedToCreateBranch: Failed to create Branch. Please try again.
 branchCreated: Branch {branch} created.
 tagCreated: Tag {{tag}} created.
 confirmation: Confirmation
-deleteBranch: Delete Branches
+deleteBranch: Delete Branch
 deleteTag: Delete Tag
 deleteTagConfirm: Are you sure you want to delete tag <strong>{{name}}</strong>? You can't undo this action.
 deleteBranchConfirm: Are you sure you want to delete branch <strong>{{name}}</strong>? You can't undo this action.
@@ -308,6 +308,7 @@ pr:
   failedToUpdateCommentStatus: Failed to update comment status. Please try again.
   prMerged: This Pull Request was merged
   prClosed: This Pull Request was closed.
+  closedPrBranchDelete: '{source} branch has unmerged changes.'
   reviewSubmitted: Review submitted.
   requestSubmitted: Request for changes submitted.
   requestedChanges: '{{user}} requested changes to the pull request'

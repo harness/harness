@@ -80,7 +80,7 @@ export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | '
   prChecksDecisionResult?: PRChecksDecisionResult
   standalone: boolean
   routingId: string
-  pullReqCommits: TypesListCommitResponse | undefined
+  pullReqCommits?: TypesListCommitResponse
   refetchActivities: () => void
   refetchPullReq: () => void
 }
@@ -445,6 +445,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                         pullReqCommits={pullReqCommits}
                         setActivityFilter={setActivityFilter}
                         loadingReviewers={loadingReviewers}
+                        refetchActivities={refetchActivities}
                         refetchCodeOwners={refetchCodeOwners}
                         refetchPullReq={refetchPullReq}
                         activities={activities}

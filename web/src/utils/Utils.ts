@@ -22,18 +22,14 @@ import type { EditorDidMount } from 'react-monaco-editor'
 import type { editor } from 'monaco-editor'
 import type { EditorView } from '@codemirror/view'
 import type { FormikProps } from 'formik'
-import type { SelectOption } from '@harnessio/uicore'
 import type {
-  EnumMergeMethod,
   TypesRuleViolations,
   TypesViolation,
   TypesCodeOwnerEvaluationEntry,
-  TypesListCommitResponse,
   RepoRepositoryOutput,
   TypesLabel,
   TypesLabelValue
 } from 'services/code'
-import type { GitInfoProps } from './GitUtils'
 
 export enum ACCESS_MODES {
   VIEW,
@@ -112,11 +108,11 @@ export const extractInfoFromRuleViolationArr = (ruleViolationArr: TypesRuleViola
   const uniqueViolations = new Set(tempArray)
   const violationArr = [...uniqueViolations].map(violation => ({ violation: violation }))
 
-  const checkIfBypassAllowed = ruleViolationArr.some(ruleViolation => ruleViolation.bypassed === false)
+  const checkIfBypassNotAllowed = ruleViolationArr.some(ruleViolation => ruleViolation.bypassed === false)
 
   return {
     uniqueViolations,
-    checkIfBypassAllowed,
+    checkIfBypassNotAllowed,
     violationArr
   }
 }
@@ -163,34 +159,10 @@ export interface SourceCodeEditorProps {
   editorOptions?: editor.IStandaloneEditorConstructionOptions
 }
 
-export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
-  onPRStateChanged: () => void
-  refetchReviewers: () => void
-  allowedStrategy: string[]
-  pullReqCommits: TypesListCommitResponse | undefined
-  PRStateLoading: boolean
-  conflictingFiles: string[] | undefined
-  setConflictingFiles: React.Dispatch<React.SetStateAction<string[] | undefined>>
-  refetchPullReq: () => void
-}
-
-export interface PRMergeOption extends SelectOption {
-  method: EnumMergeMethod | 'close'
-  title: string
-  desc: string
-  disabled?: boolean
-}
-
 export type FieldCheck = {
   [key: string]: string
 }
 
-export interface PRDraftOption {
-  method: 'close' | 'open'
-  title: string
-  desc: string
-  disabled?: boolean
-}
 export const displayDateTime = (value: number): string | null => {
   return value ? moment.unix(value / 1000).format(DEFAULT_DATE_FORMAT) : null
 }

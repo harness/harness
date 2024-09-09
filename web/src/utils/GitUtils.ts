@@ -520,61 +520,57 @@ export const dryMerge = (
     internalFlags.current.dryRun = true
     mergePR({ bypass_rules: true, dry_run: true, source_sha: pullReqMetadata?.source_sha })
       .then(res => {
-        if (isMounted.current) {
-          if (res?.rule_violations?.length > 0) {
-            setRuleViolation(true)
-            setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
-            setAllowedStrats(res.allowed_methods)
-            setRequiresCommentApproval?.(res.requires_comment_resolution)
-            setAtLeastOneReviewerRule?.(res.requires_no_change_requests)
-            setReqCodeOwnerApproval?.(res.requires_code_owners_approval)
-            setMinApproval?.(res.minimum_required_approvals_count)
-            setReqCodeOwnerLatestApproval?.(res.requires_code_owners_approval_latest)
-            setMinReqLatestApproval?.(res.minimum_required_approvals_count_latest)
-            setConflictingFiles?.(res.conflict_files)
-          } else {
-            setRuleViolation(false)
-            setAllowedStrats(res.allowed_methods)
-            setRequiresCommentApproval?.(res.requires_comment_resolution)
-            setAtLeastOneReviewerRule?.(res.requires_no_change_requests)
-            setReqCodeOwnerApproval?.(res.requires_code_owners_approval)
-            setMinApproval?.(res.minimum_required_approvals_count)
-            setReqCodeOwnerLatestApproval?.(res.requires_code_owners_approval_latest)
-            setMinReqLatestApproval?.(res.minimum_required_approvals_count_latest)
-            setConflictingFiles?.(res.conflict_files)
-          }
+        if (res?.rule_violations?.length > 0) {
+          setRuleViolation(true)
+          setRuleViolationArr({ data: { rule_violations: res?.rule_violations } })
+          setAllowedStrats(res.allowed_methods)
+          setRequiresCommentApproval?.(res.requires_comment_resolution)
+          setAtLeastOneReviewerRule?.(res.requires_no_change_requests)
+          setReqCodeOwnerApproval?.(res.requires_code_owners_approval)
+          setMinApproval?.(res.minimum_required_approvals_count)
+          setReqCodeOwnerLatestApproval?.(res.requires_code_owners_approval_latest)
+          setMinReqLatestApproval?.(res.minimum_required_approvals_count_latest)
+          setConflictingFiles?.(res.conflict_files)
+        } else {
+          setRuleViolation(false)
+          setAllowedStrats(res.allowed_methods)
+          setRequiresCommentApproval?.(res.requires_comment_resolution)
+          setAtLeastOneReviewerRule?.(res.requires_no_change_requests)
+          setReqCodeOwnerApproval?.(res.requires_code_owners_approval)
+          setMinApproval?.(res.minimum_required_approvals_count)
+          setReqCodeOwnerLatestApproval?.(res.requires_code_owners_approval_latest)
+          setMinReqLatestApproval?.(res.minimum_required_approvals_count_latest)
+          setConflictingFiles?.(res.conflict_files)
         }
       })
       .catch(err => {
-        if (isMounted.current) {
-          if (err.status === 422) {
-            setRuleViolation(true)
-            setRuleViolationArr(err)
-            setAllowedStrats(err.allowed_methods)
-            setRequiresCommentApproval?.(err.requires_comment_resolution)
-            setAtLeastOneReviewerRule?.(err.requires_no_change_requests)
-            setReqCodeOwnerApproval?.(err.requires_code_owners_approval)
-            setMinApproval?.(err.minimum_required_approvals_count)
-            setReqCodeOwnerLatestApproval?.(err.requires_code_owners_approval_latest)
-            setMinReqLatestApproval?.(err.minimum_required_approvals_count_latest)
-            setConflictingFiles?.(err.conflict_files)
-          } else if (
-            err.status === 400 &&
-            (getErrorMessage(err) === oldCommitRefetchRequired || getErrorMessage(err) === prMergedRefetchRequired)
-          ) {
-            refetchPullReq()
-          } else if (
-            getErrorMessage(err) === codeOwnersNotFoundMessage ||
-            getErrorMessage(err) === codeOwnersNotFoundMessage2 ||
-            getErrorMessage(err) === codeOwnersNotFoundMessage3 ||
-            err.status === 423 // resource locked (merge / dry-run already ongoing)
-          ) {
-            return
-          } else if (pullRequestSection !== PullRequestSection.CONVERSATION) {
-            return
-          } else {
-            showError(getErrorMessage(err))
-          }
+        if (err.status === 422) {
+          setRuleViolation(true)
+          setRuleViolationArr(err)
+          setAllowedStrats(err.allowed_methods)
+          setRequiresCommentApproval?.(err.requires_comment_resolution)
+          setAtLeastOneReviewerRule?.(err.requires_no_change_requests)
+          setReqCodeOwnerApproval?.(err.requires_code_owners_approval)
+          setMinApproval?.(err.minimum_required_approvals_count)
+          setReqCodeOwnerLatestApproval?.(err.requires_code_owners_approval_latest)
+          setMinReqLatestApproval?.(err.minimum_required_approvals_count_latest)
+          setConflictingFiles?.(err.conflict_files)
+        } else if (
+          err.status === 400 &&
+          [oldCommitRefetchRequired, prMergedRefetchRequired].includes(getErrorMessage(err) || '')
+        ) {
+          refetchPullReq()
+        } else if (
+          [codeOwnersNotFoundMessage, codeOwnersNotFoundMessage2, codeOwnersNotFoundMessage3].includes(
+            getErrorMessage(err) || ''
+          ) ||
+          err.status === 423 // resource locked (merge / dry-run already ongoing)
+        ) {
+          return
+        } else if (pullRequestSection !== PullRequestSection.CONVERSATION) {
+          return
+        } else {
+          showError(getErrorMessage(err))
         }
       })
       .finally(() => {

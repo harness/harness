@@ -77,7 +77,7 @@ const MergeSection = (props: MergeSectionProps) => {
     [conflictingFiles]
   )
   return (
-    <Container>
+    <>
       <Container className={cx(css.sectionContainer, css.borderRadius)}>
         <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
           <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'start' }}>
@@ -163,7 +163,7 @@ const MergeSection = (props: MergeSectionProps) => {
           </Container>
         </Container>
       </Render>
-    </Container>
+    </>
   )
 }
 

@@ -19,7 +19,7 @@ import { Container } from '@harnessio/uicore'
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
-import type { RepoBranch, RepoRepositoryOutput } from 'services/code'
+import type { TypesBranch, RepoRepositoryOutput } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
@@ -48,7 +48,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Partial<Pick<GitInfo
     error,
     loading,
     refetch
-  } = useGet<RepoBranch[]>({
+  } = useGet<TypesBranch[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/branches`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,

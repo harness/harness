@@ -1503,7 +1503,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/RepoBranch'
+                  $ref: '#/components/schemas/TypesBranch'
                 type: array
           description: OK
         '401':
@@ -1550,7 +1550,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RepoBranch'
+                $ref: '#/components/schemas/TypesBranch'
           description: Created
         '400':
           content:
@@ -1595,6 +1595,19 @@ paths:
           schema:
             default: false
             type: boolean
+        - description: Dry run rules for operations
+          in: query
+          name: dry_run_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: Commit SHA the branch is at
+          in: query
+          name: commit_sha
+          required: false
+          schema:
+            type: string
         - in: path
           name: repo_ref
           required: true
@@ -1606,8 +1619,12 @@ paths:
           schema:
             type: string
       responses:
-        '204':
-          description: No Content
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesDeleteBranchOutput'
+          description: OK
         '401':
           content:
             application/json:
@@ -1658,7 +1675,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RepoBranch'
+                $ref: '#/components/schemas/TypesBranch'
           description: OK
         '401':
           content:
@@ -2311,6 +2328,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/default-branch:
+    post:
+      operationId: updateDefaultBranch
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateDefaultBranchRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoRepositoryOutput'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
         '500':
           content:
             application/json:
@@ -4268,6 +4332,30 @@ paths:
           schema:
             minimum: 0
             type: integer
+        - description: The result should contain only entries edited before this timestamp
+            (unix millis).
+          in: query
+          name: edited_lt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: The result should contain only entries edited after this timestamp
+            (unix millis).
+          in: query
+          name: edited_gt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: By providing this parameter the description would be included
+            in the response.
+          in: query
+          name: include_description
+          required: false
+          schema:
+            default: false
+            type: boolean
         - description: The page to return.
           in: query
           name: page
@@ -4303,6 +4391,48 @@ paths:
           schema:
             items:
               type: integer
+            type: array
+          style: form
+        - description: Return only pull requests where this user is the author.
+          in: query
+          name: author_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has created at least
+            one comment.
+          in: query
+          name: commenter_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has been mentioned.
+          in: query
+          name: mentioned_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has been added as a
+            reviewer.
+          in: query
+          name: reviewer_id
+          required: false
+          schema:
+            type: integer
+        - description: Require only this review decision of the reviewer. Requires reviewer_id
+            parameter.
+          explode: true
+          in: query
+          name: review_decision
+          required: false
+          schema:
+            items:
+              enum:
+                - approved
+                - changereq
+                - pending
+                - reviewed
+              type: string
             type: array
           style: form
         - in: path
@@ -7671,6 +7801,210 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{repo_ref}/pullreq:
+    get:
+      operationId: listSpacePullReq
+      parameters:
+        - description: The state of the pull requests to include in the result.
+          explode: true
+          in: query
+          name: state
+          required: false
+          schema:
+            items:
+              default: open
+              enum:
+                - closed
+                - merged
+                - open
+              type: string
+            type: array
+          style: form
+        - description: Source repository ref of the pull requests.
+          in: query
+          name: source_repo_ref
+          required: false
+          schema:
+            type: string
+        - description: Source branch of the pull requests.
+          in: query
+          name: source_branch
+          required: false
+          schema:
+            type: string
+        - description: Target branch of the pull requests.
+          in: query
+          name: target_branch
+          required: false
+          schema:
+            type: string
+        - description: The substring by which the pull requests are filtered.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: List of principal IDs who created pull requests.
+          explode: true
+          in: query
+          name: created_by
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: The result should contain only entries created before this timestamp
+            (unix millis).
+          in: query
+          name: created_lt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: The result should contain only entries created after this timestamp
+            (unix millis).
+          in: query
+          name: created_gt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: The result should contain only entries edited before this timestamp
+            (unix millis).
+          in: query
+          name: edited_lt
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+        - description: By providing this parameter the description would be included
+            in the response.
+          in: query
+          name: include_description
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: The result should contain entries from the desired space and
+            of its subspaces.
+          in: query
+          name: include_subspaces
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: List of label ids used to filter pull requests.
+          explode: true
+          in: query
+          name: label_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: List of label value ids used to filter pull requests.
+          explode: true
+          in: query
+          name: value_id
+          required: false
+          schema:
+            items:
+              type: integer
+            type: array
+          style: form
+        - description: Return only pull requests where this user is the author.
+          in: query
+          name: author_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has created at least
+            one comment.
+          in: query
+          name: commenter_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has been mentioned.
+          in: query
+          name: mentioned_id
+          required: false
+          schema:
+            type: integer
+        - description: Return only pull requests where this user has been added as a
+            reviewer.
+          in: query
+          name: reviewer_id
+          required: false
+          schema:
+            type: integer
+        - description: Require only this review decision of the reviewer. Requires reviewer_id
+            parameter.
+          explode: true
+          in: query
+          name: review_decision
+          required: false
+          schema:
+            items:
+              enum:
+                - approved
+                - changereq
+                - pending
+                - reviewed
+              type: string
+            type: array
+          style: form
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesPullReq'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /spaces/{space_ref}:
     delete:
       operationId: deleteSpace
@@ -9737,6 +10071,19 @@ components:
         start_line:
           type: integer
       type: object
+    EnumCIStatus:
+      enum:
+        - blocked
+        - declined
+        - error
+        - failure
+        - killed
+        - pending
+        - running
+        - skipped
+        - success
+        - waiting_on_dependencies
+      type: string
     EnumCheckPayloadKind:
       enum:
         - ''
@@ -9756,6 +10103,8 @@ components:
       enum:
         - base64
         - utf8
+      type: string
+    EnumFileDiffStatus:
       type: string
     EnumGitspaceAccessType:
       enum:
@@ -9851,8 +10200,6 @@ components:
       type: string
     EnumLabelColor:
       enum:
-        - accent
-        - background
         - blue
         - brown
         - cyan
@@ -9864,8 +10211,6 @@ components:
         - pink
         - purple
         - red
-        - stroke
-        - text
         - violet
         - yellow
       type: string
@@ -9880,6 +10225,8 @@ components:
         - executor
         - reader
         - space_owner
+      type: string
+    EnumMergeCheckStatus:
       type: string
     EnumMergeMethod:
       enum:
@@ -9945,12 +10292,18 @@ components:
         - merged
         - open
       type: string
+    EnumRepoState:
+      type: integer
+    EnumResolverType:
+      type: string
     EnumRuleState:
       enum:
         - active
         - disabled
         - monitor
       nullable: true
+      type: string
+    EnumTokenType:
       type: string
     EnumTriggerAction:
       enum:
@@ -9963,6 +10316,14 @@ components:
         - pullreq_reopened
         - tag_created
         - tag_updated
+      type: string
+    EnumTriggerEvent:
+      enum:
+        - cron
+        - manual
+        - pull_request
+        - push
+        - tag
       type: string
     EnumWebhookExecutionResult:
       enum:
@@ -10016,12 +10377,10 @@ components:
           type: string
         parent_shas:
           items:
-            description: Git object hash
-            type: string
+            $ref: '#/components/schemas/ShaSHA'
           type: array
         sha:
-          description: Git object hash
-          type: string
+          $ref: '#/components/schemas/ShaSHA'
         title:
           type: string
       type: object
@@ -10052,14 +10411,16 @@ components:
         old_sha:
           type: string
         patch:
-          format: base64
-          type: string
+          items:
+            minimum: 0
+            type: integer
+          type: array
         path:
           type: string
         sha:
           type: string
         status:
-          type: string
+          $ref: '#/components/schemas/EnumFileDiffStatus'
       type: object
     GitIdentity:
       properties:
@@ -10365,6 +10726,8 @@ components:
           type: string
         space_ref:
           type: string
+        ssh_token_identifier:
+          type: string
       type: object
     OpenapiCreateInfraProviderConfigRequest:
       properties:
@@ -10500,8 +10863,7 @@ components:
         identifier:
           type: string
         lifetime:
-          nullable: true
-          type: integer
+          $ref: '#/components/schemas/TimeDuration'
         uid:
           deprecated: true
           type: string
@@ -10606,6 +10968,8 @@ components:
       type: object
     OpenapiLookupRepoGitspaceRequest:
       properties:
+        repo_type:
+          $ref: '#/components/schemas/EnumGitspaceCodeRepoType'
         space_ref:
           type: string
         url:
@@ -10781,6 +11145,11 @@ components:
         uid:
           deprecated: true
           nullable: true
+          type: string
+      type: object
+    OpenapiUpdateDefaultBranchRequest:
+      properties:
+        name:
           type: string
       type: object
     OpenapiUpdatePipelineRequest:
@@ -11029,6 +11398,7 @@ components:
           type: array
       type: object
     ProtectionPattern:
+      nullable: true
       properties:
         default:
           type: boolean
@@ -11059,15 +11429,6 @@ components:
         comment_id:
           type: integer
       type: object
-    RepoBranch:
-      properties:
-        commit:
-          $ref: '#/components/schemas/TypesCommit'
-        name:
-          type: string
-        sha:
-          type: string
-      type: object
     RepoCommitDivergence:
       properties:
         ahead:
@@ -11093,8 +11454,7 @@ components:
         payload:
           type: string
         sha:
-          description: Git object hash
-          type: string
+          $ref: '#/components/schemas/ShaSHA'
       type: object
     RepoCommitTag:
       properties:
@@ -11125,8 +11485,10 @@ components:
         sha:
           type: string
         type:
-          type: string
+          $ref: '#/components/schemas/RepoContentType'
       type: object
+    RepoContentType:
+      type: string
     RepoFileContent:
       properties:
         data:
@@ -11214,7 +11576,7 @@ components:
         size_updated:
           type: integer
         state:
-          type: integer
+          $ref: '#/components/schemas/EnumRepoState'
         updated:
           type: integer
       type: object
@@ -11258,6 +11620,9 @@ components:
         url:
           type: string
       type: object
+    ShaSHA:
+      description: Git object hash
+      type: string
     SpaceExportProgressOutput:
       properties:
         repos:
@@ -11310,6 +11675,8 @@ components:
       type: object
     SystemConfigOutput:
       properties:
+        artifact_registry_enabled:
+          type: boolean
         gitspace_enabled:
           type: boolean
         public_resource_creation_enabled:
@@ -11318,6 +11685,18 @@ components:
           type: boolean
         user_signup_allowed:
           type: boolean
+      type: object
+    TimeDuration:
+      nullable: true
+      type: integer
+    TypesBranch:
+      properties:
+        commit:
+          $ref: '#/components/schemas/TypesCommit'
+        name:
+          type: string
+        sha:
+          type: string
       type: object
     TypesChangeStats:
       properties:
@@ -11440,7 +11819,7 @@ components:
         path:
           type: string
         status:
-          type: string
+          $ref: '#/components/schemas/EnumFileDiffStatus'
       type: object
     TypesCommitFilesResponse:
       properties:
@@ -11479,6 +11858,15 @@ components:
         updated:
           type: integer
       type: object
+    TypesDeleteBranchOutput:
+      properties:
+        dry_run_rules:
+          type: boolean
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
+          type: array
+      type: object
     TypesDiffStats:
       properties:
         additions:
@@ -11497,7 +11885,7 @@ components:
     TypesExecution:
       properties:
         action:
-          type: string
+          $ref: '#/components/schemas/EnumTriggerAction'
         after:
           type: string
         author_avatar:
@@ -11525,7 +11913,7 @@ components:
         error:
           type: string
         event:
-          type: string
+          $ref: '#/components/schemas/EnumTriggerEvent'
         finished:
           type: integer
         link:
@@ -11559,7 +11947,7 @@ components:
         started:
           type: integer
         status:
-          type: string
+          $ref: '#/components/schemas/EnumCIStatus'
         target:
           type: string
         timestamp:
@@ -11575,6 +11963,8 @@ components:
       properties:
         branch:
           type: string
+        code_repo_is_private:
+          type: boolean
         code_repo_ref:
           nullable: true
           type: string
@@ -11595,14 +11985,20 @@ components:
           $ref: '#/components/schemas/TypesGitspaceInstance'
         name:
           type: string
-        resource_identifier:
-          type: string
+        resource:
+          $ref: '#/components/schemas/TypesInfraProviderResource'
         space_path:
+          type: string
+        ssh_token_identifier:
           type: string
         state:
           $ref: '#/components/schemas/EnumGitspaceStateType'
         updated:
           type: integer
+        user_display_name:
+          type: string
+        user_email:
+          type: string
         user_id:
           type: string
       type: object
@@ -11624,8 +12020,12 @@ components:
           type: integer
       type: object
     TypesGitspaceInstance:
+      nullable: true
       properties:
         access_key:
+          nullable: true
+          type: string
+        access_key_ref:
           nullable: true
           type: string
         access_type:
@@ -11929,6 +12329,8 @@ components:
           items:
             type: string
           type: array
+        message:
+          type: string
         rule_violations:
           items:
             $ref: '#/components/schemas/TypesRuleViolations'
@@ -11965,6 +12367,8 @@ components:
           type: string
         repo_id:
           type: integer
+        repo_uid:
+          type: string
         seq:
           type: integer
         updated:
@@ -12042,7 +12446,7 @@ components:
         merge_base_sha:
           type: string
         merge_check_status:
-          type: string
+          $ref: '#/components/schemas/EnumMergeCheckStatus'
         merge_conflicts:
           items:
             type: string
@@ -12288,7 +12692,7 @@ components:
         size_updated:
           type: integer
         state:
-          type: integer
+          $ref: '#/components/schemas/EnumRepoState'
         updated:
           type: integer
       type: object
@@ -12323,8 +12727,10 @@ components:
         state:
           $ref: '#/components/schemas/EnumRuleState'
         type:
-          type: string
+          $ref: '#/components/schemas/TypesRuleType'
       type: object
+    TypesRuleType:
+      type: string
     TypesRuleViolations:
       properties:
         bypassable:
@@ -12341,6 +12747,8 @@ components:
       type: object
     TypesRulesViolations:
       properties:
+        message:
+          type: string
         violations:
           items:
             $ref: '#/components/schemas/TypesRuleViolations'
@@ -12500,7 +12908,7 @@ components:
         started:
           type: integer
         status:
-          type: string
+          $ref: '#/components/schemas/EnumCIStatus'
         steps:
           items:
             $ref: '#/components/schemas/TypesStep'
@@ -12539,7 +12947,7 @@ components:
         started:
           type: integer
         status:
-          type: string
+          $ref: '#/components/schemas/EnumCIStatus'
         stopped:
           type: integer
       type: object
@@ -12556,7 +12964,7 @@ components:
         space_id:
           type: integer
         type:
-          type: string
+          $ref: '#/components/schemas/EnumResolverType'
         updated:
           type: integer
       type: object
@@ -12574,7 +12982,7 @@ components:
         principal_id:
           type: integer
         type:
-          type: string
+          $ref: '#/components/schemas/EnumTokenType'
       type: object
     TypesTokenResponse:
       properties:

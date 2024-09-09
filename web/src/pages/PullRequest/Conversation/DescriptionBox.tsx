@@ -41,7 +41,7 @@ interface DescriptionBoxProps
     'onCancelEditDescription' | 'pullReqCommits' | 'refetchActivities' | 'refetchPullReq'
   > {
   onCancelEditDescription: () => void
-  pullReqCommits: TypesListCommitResponse | undefined
+  pullReqCommits?: TypesListCommitResponse
 }
 
 export const DescriptionBox: React.FC<DescriptionBoxProps> = ({

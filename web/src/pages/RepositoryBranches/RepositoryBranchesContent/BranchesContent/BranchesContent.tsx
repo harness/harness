@@ -39,7 +39,7 @@ import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type {
   OpenapiCalculateCommitDivergenceRequest,
-  RepoBranch,
+  TypesBranch,
   RepoCommitDivergence,
   RepoRepositoryOutput
 } from 'services/code'
@@ -55,7 +55,7 @@ import css from './BranchesContent.module.scss'
 interface BranchesContentProps {
   searchTerm?: string
   repoMetadata: RepoRepositoryOutput
-  branches: RepoBranch[]
+  branches: TypesBranch[]
   onDeleteSuccess: () => void
 }
 
@@ -89,12 +89,12 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
     }
   }, [getBranchDivergence, branchDivergenceRequestBody, isMounted])
 
-  const columns: Column<RepoBranch>[] = useMemo(
+  const columns: Column<TypesBranch>[] = useMemo(
     () => [
       {
         Header: getString('branch'),
         width: '30%',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranch>) => {
           return (
             <Text
               lineClamp={1}
@@ -119,7 +119,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         Header: getString('status'),
         Id: 'status',
         width: 'calc(70% - 230px)',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranch>) => {
           if (row.original?.name === repoMetadata.default_branch) {
             return (
               <Container flex={{ align: 'center-center' }} width={150}>
@@ -141,7 +141,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         Header: getString('commit'),
         Id: 'commit',
         width: '15%',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranch>) => {
           return (
             <CommitActions
               sha={row.original.commit?.sha as string}
@@ -157,7 +157,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
       {
         Header: getString('updated'),
         width: '200px',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranch>) => {
           return (
             <Text lineClamp={1} className={css.rowText} color={Color.BLACK} tag="div">
               <Avatar hoverCard={false} size="small" name={row.original.commit?.author?.identity?.name || ''} />
@@ -170,7 +170,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
       {
         id: 'action',
         width: '30px',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranch>) => {
           const { violation, bypassable, bypassed, setAllStates } = useRuleViolationCheck()
           const [persistModal, setPersistModal] = useState(true)
           const { mutate: deleteBranch } = useMutate({
@@ -277,7 +277,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
 
   return (
     <Container className={css.container}>
-      <Table<RepoBranch>
+      <Table<TypesBranch>
         className={css.table}
         columns={columns}
         data={branches || []}

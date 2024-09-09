@@ -35,7 +35,7 @@ import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
-import { BranchTargetType, SettingTypeMode, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
+import { BranchTargetType, MergeStrategy, SettingTypeMode, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { REGEX_VALID_REPO_NAME, getErrorMessage, permissionProps, rulesFormInitialPayload } from 'utils/Utils'
 import type {
@@ -152,13 +152,13 @@ const BranchProtectionForm = (props: {
       const minReviewerCheck =
         ((rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count as number) > 0 ? true : false
       const isMergePresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
-        'merge'
+        MergeStrategy.MERGE
       )
       const isSquashPresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
-        'squash'
+        MergeStrategy.SQUASH
       )
       const isRebasePresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
-        'rebase'
+        MergeStrategy.REBASE
       )
       // List of strings to be included in the final array
       const includeList = (rule?.pattern as ProtectionPattern)?.include ?? []
@@ -228,9 +228,9 @@ const BranchProtectionForm = (props: {
       })}
       onSubmit={async (formData, { resetForm }) => {
         const stratArray = [
-          formData.squashMerge && 'squash',
-          formData.rebaseMerge && 'rebase',
-          formData.mergeCommit && 'merge'
+          formData.squashMerge && MergeStrategy.SQUASH,
+          formData.rebaseMerge && MergeStrategy.REBASE,
+          formData.mergeCommit && MergeStrategy.MERGE
         ].filter(Boolean) as EnumMergeMethod[]
         const includeArray =
           formData?.targetList?.filter(([type]) => type === 'include').map(([, value]) => value) ?? []

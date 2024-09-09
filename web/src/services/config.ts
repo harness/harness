@@ -82,35 +82,13 @@ export const getUsingFetch = <
     const contentType = res.headers.get('content-type') || ''
 
     if (contentType.toLowerCase().indexOf('application/json') > -1) {
-      if (res.status === 401) {
+      if (res.status >= 400) {
         return res.json().then(json => Promise.reject(json))
-      }
-      if (res.status === 400) {
-        return res.text().then(text => Promise.reject(text))
-      }
-      if (res.status === 403) {
-        return res.text().then(text => Promise.reject(text))
       }
       return res.json()
     }
 
-    if (res.status === 401) {
-      return res.text().then(text => Promise.reject(text))
-    }
-
-    if (res.status === 504) {
-      return res.text().then(text => Promise.reject(text))
-    }
-
-    if (res.status === 404) {
-      return res.text().then(text => Promise.reject(text))
-    }
-
-    if (res.status === 403) {
-      return res.text().then(text => Promise.reject(text))
-    }
-
-    if (res.status === 400) {
+    if (res.status >= 400) {
       return res.text().then(text => Promise.reject(text))
     }
 

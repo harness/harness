@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React from 'react'
 import { Container, FormInput, FormikForm, Layout, Text, useToaster } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -5,17 +21,18 @@ import { Formik, FormikProps } from 'formik'
 import type { MutateRequestOptions } from 'restful-react/dist/Mutate'
 import type { EnumMergeMethod, OpenapiMergePullReq, TypesPullReq, TypesRuleViolations } from 'services/code'
 import { useStrings } from 'framework/strings'
-import { getErrorMessage, inlineMergeFormValues, type PRMergeOption } from 'utils/Utils'
+import type { PRMergeOption } from 'pages/PullRequest/PullRequestUtils'
+import { getErrorMessage, inlineMergeFormValues } from 'utils/Utils'
 import { MergeStrategy } from 'utils/GitUtils'
 import mergeVideo from '../../../../videos/merge.mp4'
 import squashVideo from '../../../../videos/squash.mp4'
 import rebaseVideo from '../../../../videos/rebase.mp4'
 import css from './PullRequestActionsBox.module.scss'
+
 interface InlineMergeBoxProps {
   inlineMergeRef: React.RefObject<FormikProps<inlineMergeFormValues>>
   mergeOption: PRMergeOption
   initialValues: { commitMessage: string; commitTitle: string }
-  setPrMerged: (value: React.SetStateAction<boolean>) => void
   onPRStateChanged: () => void
   setShowInlineMergeContainer: (value: React.SetStateAction<boolean>) => void
   mergePR: (
@@ -44,6 +61,8 @@ interface InlineMergeBoxProps {
       | undefined
     >
   >
+  refetchActivities: () => void
+  refetchPullReq: () => void
 }
 
 const InlineMergeBox = (props: InlineMergeBoxProps) => {
@@ -55,9 +74,10 @@ const InlineMergeBox = (props: InlineMergeBoxProps) => {
     pullReqMetadata,
     bypass,
     onPRStateChanged,
-    setPrMerged,
     setRuleViolationArr,
-    inlineMergeRef
+    inlineMergeRef,
+    refetchActivities,
+    refetchPullReq
   } = props
   const { getString } = useStrings()
   const { showError } = useToaster()
@@ -108,10 +128,11 @@ const InlineMergeBox = (props: InlineMergeBoxProps) => {
 
                   mergePR(payload)
                     .then(() => {
-                      setPrMerged(true)
+                      refetchPullReq()
                       onPRStateChanged()
                       setRuleViolationArr(undefined)
                       setShowInlineMergeContainer(false)
+                      refetchActivities()
                     })
                     .catch(exception => showError(getErrorMessage(exception)))
                 }}>
