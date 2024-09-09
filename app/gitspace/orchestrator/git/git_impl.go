@@ -17,6 +17,7 @@ package git
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
@@ -60,12 +61,7 @@ func (g *ServiceImpl) SetupCredentials(
 ) ([]byte, error) {
 	script, err := template.GenerateScriptFromTemplate(
 		templateSetupGitCredentials, &template.SetupGitCredentialsPayload{
-			Email:    resolvedRepoDetails.Credentials.Email,
-			Name:     resolvedRepoDetails.Credentials.Name,
-			Password: resolvedRepoDetails.Credentials.Password,
-			Host:     resolvedRepoDetails.Credentials.Host,
-			Protocol: resolvedRepoDetails.Credentials.Protocol,
-			Path:     resolvedRepoDetails.Credentials.Path,
+			CloneURLWithCreds: resolvedRepoDetails.CloneURL,
 		})
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -90,12 +86,20 @@ func (g *ServiceImpl) CloneCode(
 	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
 ) ([]byte, error) {
+	cloneURL, err := url.Parse(resolvedRepoDetails.CloneURL)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to parse clone url %s: %w", resolvedRepoDetails.CloneURL, err)
+	}
+	cloneURL.User = nil
 	script, err := template.GenerateScriptFromTemplate(
 		templateCloneCode, &template.CloneCodePayload{
-			RepoURL:  resolvedRepoDetails.CloneURL,
+			RepoURL:  cloneURL.String(),
 			Image:    defaultBaseImage,
 			Branch:   resolvedRepoDetails.Branch,
 			RepoName: resolvedRepoDetails.RepoName,
+			Email:    resolvedRepoDetails.Credentials.Email,
+			Name:     resolvedRepoDetails.Credentials.Name,
 		})
 	if err != nil {
 		return nil, fmt.Errorf(

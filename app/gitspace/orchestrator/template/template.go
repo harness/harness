@@ -40,15 +40,12 @@ type CloneCodePayload struct {
 	Image    string
 	Branch   string
 	RepoName string
+	Name     string
+	Email    string
 }
 
 type SetupGitCredentialsPayload struct {
-	Email    string
-	Name     string
-	Password string
-	Host     string
-	Protocol string
-	Path     string
+	CloneURLWithCreds string
 }
 
 type RunVSCodeWebPayload struct {

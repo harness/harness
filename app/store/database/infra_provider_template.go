@@ -147,9 +147,9 @@ func (i infraProviderTemplateStore) Update(
 ) error {
 	dbinfraProviderTemplate := i.mapToInternalInfraProviderTemplate(infraProviderTemplate)
 	stmt := database.Builder.
-		Update(infraProviderResourceTable).
+		Update(infraProviderTemplateTable).
 		Set("iptemp_description", dbinfraProviderTemplate.Description).
-		Set("ipreso_updated", dbinfraProviderTemplate.Updated).
+		Set("iptemp_updated", dbinfraProviderTemplate.Updated).
 		Set("iptemp_data", dbinfraProviderTemplate.Data).
 		Set("iptemp_version", dbinfraProviderTemplate.Version+1).
 		Where("iptemp_id = ?", infraProviderTemplate.ID)

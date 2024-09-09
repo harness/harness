@@ -157,7 +157,7 @@ func (s GitnessSCM) ResolveCredentials(
 	}
 	// Backfill clone URL
 	gitURL := s.urlProvider.GenerateContainerGITCloneURL(ctx, repo.Path)
-	resolvedCredentails := &ResolvedCredentials{Branch: gitspaceConfig.CodeRepo.Branch, CloneURL: gitURL}
+	resolvedCredentails := &ResolvedCredentials{Branch: gitspaceConfig.CodeRepo.Branch}
 	resolvedCredentails.RepoName = repoName
 	gitspacePrincipal := bootstrap.NewGitspaceServiceSession().Principal
 	user, err := findUserFromUID(ctx, s.principalStore, gitspaceConfig.GitspaceUser.Identifier)
@@ -188,13 +188,13 @@ func (s GitnessSCM) ResolveCredentials(
 	if err != nil {
 		return nil, fmt.Errorf("error while parsing the clone url: %s", gitURL)
 	}
+	userInfo := url.UserPassword("harness", jwtToken)
+	modifiedURL.User = userInfo
+	resolvedCredentails.CloneURL = modifiedURL.String()
 	credentials := &Credentials{
 		Email:    user.Email,
 		Name:     user.DisplayName,
 		Password: jwtToken,
-		Host:     modifiedURL.Host,
-		Protocol: modifiedURL.Scheme,
-		Path:     modifiedURL.Path,
 	}
 	resolvedCredentails.Credentials = credentials
 	return resolvedCredentails, nil

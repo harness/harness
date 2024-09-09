@@ -1,9 +1,11 @@
 #!/bin/sh
 
-repo_url={{ .RepoURL }}
-image={{ .Image }}
-branch={{ .Branch }}
-repo_name={{ .RepoName }}
+repo_url="{{ .RepoURL }}"
+image="{{ .Image }}"
+branch="{{ .Branch }}"
+repo_name="{{ .RepoName }}"
+name="{{ .Name }}"
+email="{{ .Email }}"
 
 # Clone the repository inside the working directory if it doesn't exist
 if [ ! -d "$HOME/$repo_name/.git" ]; then
@@ -30,4 +32,16 @@ EOL
     echo "devcontainer.json created."
 else
     echo ".devcontainer/devcontainer.json already exists. Skipping creation."
+fi
+
+if [ -z "$name" ]; then
+    echo "no user name configured"
+else
+    git config --global user.name "$name"
+fi
+
+if [ -z "$email" ]; then
+    echo "no user email configured"
+else
+    git config --global user.email "$email"
 fi
