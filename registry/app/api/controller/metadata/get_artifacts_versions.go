@@ -16,12 +16,20 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	ml "github.com/harness/gitness/registry/app/manifest/manifestlist"
+	os "github.com/harness/gitness/registry/app/manifest/ocischema"
+	s2 "github.com/harness/gitness/registry/app/manifest/schema2"
+	"github.com/harness/gitness/registry/app/pkg/docker"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (c *APIController) GetAllArtifactVersions(
@@ -73,17 +81,60 @@ func (c *APIController) GetAllArtifactVersions(
 	)
 
 	if err != nil {
-		return artifact.GetAllArtifactVersions500JSONResponse{
-			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
-				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
-			),
-		}, nil
+		return throw500Error(err)
+	}
+	err = setDigestCount(ctx, *tags)
+	if err != nil {
+		return throw500Error(err)
 	}
 
 	return artifact.GetAllArtifactVersions200JSONResponse{
 		ListArtifactVersionResponseJSONResponse: *GetAllArtifactVersionResponse(
 			ctx, tags, latestTag, image, count,
 			regInfo, regInfo.pageNumber, regInfo.limit, regInfo.rootIdentifier, c.URLProvider.RegistryURL(),
+		),
+	}, nil
+}
+
+func setDigestCount(ctx context.Context, tags []types.TagMetadata) error {
+	for i := range tags {
+		err := setDigestCountInTagMetadata(ctx, &tags[i])
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func setDigestCountInTagMetadata(ctx context.Context, t *types.TagMetadata) error {
+	m := types.Manifest{
+		SchemaVersion: t.SchemaVersion,
+		MediaType:     t.MediaType,
+		NonConformant: t.NonConformant,
+		Payload:       t.Payload,
+	}
+	manifest, err := docker.DBManifestToManifest(&m)
+	if err != nil {
+		log.Ctx(ctx).Error().Stack().Err(err).Msg("Failed to convert DBManifest to Manifest")
+		return err
+	}
+	switch reqManifest := manifest.(type) {
+	case *s2.DeserializedManifest, *os.DeserializedManifest:
+		t.DigestCount = 1
+	case *ml.DeserializedManifestList:
+		t.DigestCount = len(reqManifest.Manifests)
+	default:
+		err = fmt.Errorf("unknown manifest type: %T", manifest)
+		log.Ctx(ctx).Error().Stack().Err(err).Msg("Failed to set digest count")
+	}
+	return nil
+}
+
+func throw500Error(err error) (artifact.GetAllArtifactVersionsResponseObject, error) {
+	wrappedErr := fmt.Errorf("internal server error: %w", err)
+	return artifact.GetAllArtifactVersions500JSONResponse{
+		InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+			*GetErrorResponse(http.StatusInternalServerError, wrappedErr.Error()),
 		),
 	}, nil
 }

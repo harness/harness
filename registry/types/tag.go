@@ -51,6 +51,10 @@ type TagMetadata struct {
 	DigestCount     int
 	IsLatestVersion bool
 	ModifiedAt      time.Time
+	SchemaVersion   int
+	NonConformant   bool
+	Payload         Payload
+	MediaType       string
 }
 
 type TagDetail struct {

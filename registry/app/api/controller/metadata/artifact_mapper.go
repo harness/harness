@@ -73,10 +73,10 @@ func GetTagMetadata(
 	registryURL string,
 ) []artifactapi.ArtifactVersionMetadata {
 	artifactVersionMetadataList := []artifactapi.ArtifactVersionMetadata{}
-	digestCount := int64(1)
 	for _, tag := range *tags {
 		modifiedAt := GetTimeInMs(tag.ModifiedAt)
 		size := GetImageSize(tag.Size)
+		digestCount := tag.DigestCount
 		isLatestVersion := latestTag == tag.Name
 		command := GetPullCommand(rootIdentifier, regIdentifier, image, tag.Name, string(tag.PackageType), registryURL)
 		packageType, err := toPackageType(string(tag.PackageType))

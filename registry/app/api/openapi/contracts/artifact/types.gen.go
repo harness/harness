@@ -106,7 +106,7 @@ type ArtifactSummary struct {
 
 // ArtifactVersionMetadata Artifact Version Metadata
 type ArtifactVersionMetadata struct {
-	DigestCount     *int64  `json:"digestCount,omitempty"`
+	DigestCount     *int    `json:"digestCount,omitempty"`
 	DownloadsCount  *int64  `json:"downloadsCount,omitempty"`
 	IslatestVersion *bool   `json:"islatestVersion,omitempty"`
 	LastModified    *string `json:"lastModified,omitempty"`

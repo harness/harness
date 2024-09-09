@@ -86,6 +86,10 @@ type tagMetadataDB struct {
 	DigestCount     int                  `db:"digest_count"`
 	IsLatestVersion bool                 `db:"latest_version"`
 	ModifiedAt      int64                `db:"modified_at"`
+	SchemaVersion   int                  `db:"manifest_schema_version"`
+	NonConformant   bool                 `db:"manifest_non_conformant"`
+	Payload         []byte               `db:"manifest_payload"`
+	MediaType       string               `db:"mt_media_type"`
 }
 
 type tagDetailDB struct {
@@ -717,11 +721,14 @@ func (t tagDao) GetAllTagsByRepoAndImage(
 ) (*[]types.TagMetadata, error) {
 	q := databaseg.Builder.Select(
 		"t.tag_name as name, m.manifest_total_size as size,"+
-			" r.registry_package_type as package_type, t.tag_updated_at as modified_at",
+			" r.registry_package_type as package_type, t.tag_updated_at as modified_at, "+
+			" m.manifest_schema_version, m.manifest_non_conformant, m.manifest_payload, "+
+			" mt.mt_media_type ",
 	).
 		From("tags t").
 		Join("registries r ON t.tag_registry_id = r.registry_id").
 		Join("manifests m ON t.tag_manifest_id = m.manifest_id").
+		Join("media_types mt ON mt.mt_id = m.manifest_media_type_id").
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
 			parentID, repoKey, image,
@@ -919,6 +926,10 @@ func (t tagDao) mapToTagMetadata(
 		DigestCount:     dst.DigestCount,
 		IsLatestVersion: dst.IsLatestVersion,
 		ModifiedAt:      time.UnixMilli(dst.ModifiedAt),
+		SchemaVersion:   dst.SchemaVersion,
+		NonConformant:   dst.NonConformant,
+		MediaType:       dst.MediaType,
+		Payload:         dst.Payload,
 	}, nil
 }
 

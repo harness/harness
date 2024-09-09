@@ -1070,7 +1070,6 @@ components:
           type: string
         digestCount:
           type: integer
-          format: int64
         pullCommand:
           type: string
         downloadsCount:
