@@ -45,7 +45,8 @@ type Rule struct {
 
 	CreatedByInfo PrincipalInfo `json:"created_by"`
 
-	Users map[int64]*PrincipalInfo `json:"users"`
+	Users      map[int64]*PrincipalInfo `json:"users"`
+	UserGroups map[int64]*UserGroupInfo `json:"user_groups"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.

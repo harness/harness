@@ -71,13 +71,14 @@ func ProvideController(
 	publicAccess publicaccess.Service,
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
+	userGroupStore store.UserGroupStore,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
 		repoStore, spaceStore, pipelineStore,
 		principalStore, ruleStore, settings, principalInfoCache, protectionManager, rpcClient, importer,
 		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
-		repoChecks, publicAccess, labelSvc, instrumentation)
+		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore)
 }
 
 func ProvideRepoCheck() Check {

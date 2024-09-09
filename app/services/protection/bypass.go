@@ -23,8 +23,9 @@ import (
 )
 
 type DefBypass struct {
-	UserIDs    []int64 `json:"user_ids,omitempty"`
-	RepoOwners bool    `json:"repo_owners,omitempty"`
+	UserIDs      []int64 `json:"user_ids,omitempty"`
+	UserGroupIDs []int64 `json:"user_group_ids,omitempty"`
+	RepoOwners   bool    `json:"repo_owners,omitempty"`
 }
 
 func (v DefBypass) matches(actor *types.Principal, isRepoOwner bool) bool {

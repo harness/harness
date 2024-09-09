@@ -147,5 +147,10 @@ func (c *Controller) RuleCreate(ctx context.Context,
 		return nil, err
 	}
 
+	r.UserGroups, err = c.getRuleUserGroups(ctx, r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get rule user groups: %w", err)
+	}
+
 	return r, nil
 }

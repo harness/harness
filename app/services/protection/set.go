@@ -156,6 +156,32 @@ func (s ruleSet) UserIDs() ([]int64, error) {
 	return result, nil
 }
 
+func (s ruleSet) UserGroupIDs() ([]int64, error) {
+	mapIDs := make(map[int64]struct{})
+	err := s.forEachRule(func(_ *types.RuleInfoInternal, p Protection) error {
+		userGroupIDs, err := p.UserGroupIDs()
+		if err != nil {
+			return err
+		}
+
+		for _, userGroupID := range userGroupIDs {
+			mapIDs[userGroupID] = struct{}{}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]int64, 0, len(mapIDs))
+	for userGroupID := range mapIDs {
+		result = append(result, userGroupID)
+	}
+
+	return result, nil
+}
+
 func (s ruleSet) forEachRule(
 	fn func(r *types.RuleInfoInternal, p Protection) error,
 ) error {

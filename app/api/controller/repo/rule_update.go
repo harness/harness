@@ -106,6 +106,10 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
+		r.UserGroups, err = c.getRuleUserGroups(ctx, r)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get rule user groups: %w", err)
+		}
 		return r, nil
 	}
 
@@ -130,7 +134,12 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 
 	r.Users, err = c.getRuleUsers(ctx, r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get rule users: %w", err)
+	}
+
+	r.UserGroups, err = c.getRuleUserGroups(ctx, r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get rule user groups: %w", err)
 	}
 
 	err = c.ruleStore.Update(ctx, r)

@@ -81,6 +81,7 @@ type Controller struct {
 	ruleStore          store.RuleStore
 	settings           *settings.Service
 	principalInfoCache store.PrincipalInfoCache
+	userGroupStore     store.UserGroupStore
 	protectionManager  *protection.Manager
 	git                git.Interface
 	importer           *importer.Repository
@@ -125,6 +126,7 @@ func NewController(
 	publicAccess publicaccess.Service,
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
+	userGroupStore store.UserGroupStore,
 ) *Controller {
 	return &Controller{
 		defaultBranch:      config.Git.DefaultBranch,
@@ -153,6 +155,7 @@ func NewController(
 		publicAccess:       publicAccess,
 		labelSvc:           labelSvc,
 		instrumentation:    instrumentation,
+		userGroupStore:     userGroupStore,
 	}
 }
 
@@ -251,4 +254,32 @@ func (c *Controller) getRuleUsers(ctx context.Context, r *types.Rule) (map[int64
 	}
 
 	return userMap, nil
+}
+
+func (c *Controller) getRuleUserGroups(ctx context.Context, r *types.Rule) (map[int64]*types.UserGroupInfo, error) {
+	rule, err := c.protectionManager.FromJSON(r.Type, r.Definition, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse json rule definition: %w", err)
+	}
+
+	groupIDs, err := rule.UserGroupIDs()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get group IDs from rule: %w", err)
+	}
+
+	userGroupInfoMap := make(map[int64]*types.UserGroupInfo)
+
+	if len(groupIDs) == 0 {
+		return userGroupInfoMap, nil
+	}
+
+	groupMap, err := c.userGroupStore.Map(ctx, groupIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get userGroup infos: %w", err)
+	}
+
+	for k, v := range groupMap {
+		userGroupInfoMap[k] = v.ToUserGroupInfo()
+	}
+	return userGroupInfoMap, nil
 }
