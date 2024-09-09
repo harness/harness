@@ -1,5 +1,5 @@
 # Apply checks for artifact registry (ar) code
-'*': 'sh src/ar/scripts/license/stamp.sh'
+'src/ar/**/*': 'sh src/ar/scripts/license/stamp.sh'
 'src/ar/**/*.{ts,tsx,p1}': 'prettier --check'
 'src/ar/**/*.{ts,tsx,p2}': 'eslint --rulesdir src/ar/scripts/eslint-rules'
 'src/ar/**/*.{ts,tsx,p3}': 'sh src/ar/scripts/typecheck-staged.sh'
