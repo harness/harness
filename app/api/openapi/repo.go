@@ -1407,4 +1407,22 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdateLabelValue, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch,
 		"/repos/{repo_ref}/labels/{key}/values/{value}", opUpdateLabelValue)
+
+	opRebaseBranch := openapi3.Operation{}
+	opRebaseBranch.WithTags("repository")
+	opRebaseBranch.WithMapOfAnything(
+		map[string]interface{}{"operationId": "rebaseBranch"})
+	_ = reflector.SetRequest(&opRebaseBranch, &struct {
+		repoRequest
+		repo.RebaseInput
+	}{}, http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opRebaseBranch, new(types.RebaseResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRebaseBranch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opRebaseBranch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRebaseBranch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRebaseBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRebaseBranch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opRebaseBranch, new(types.MergeViolations), http.StatusUnprocessableEntity)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/rebase", opRebaseBranch)
 }

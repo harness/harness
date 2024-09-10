@@ -418,6 +418,8 @@ func setupRepos(r chi.Router,
 				r.Post("/*", handlerrepo.HandleMergeCheck(repoCtrl))
 			})
 
+			r.Post("/rebase", handlerrepo.HandleRebase(repoCtrl))
+
 			r.Get("/codeowners/validate", handlerrepo.HandleCodeOwnersValidate(repoCtrl))
 
 			r.Get(fmt.Sprintf("/archive/%s", request.PathParamArchiveGitRef), handlerrepo.HandleArchive(repoCtrl))
