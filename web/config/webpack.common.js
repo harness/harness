@@ -29,25 +29,8 @@ const GenerateArStringTypesPlugin =
 const { RetryChunkLoadPlugin } = require('webpack-retry-chunk-load-plugin')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const moduleFederationConfig = require('./moduleFederation.config')
-const moduleFederationConfigCDE = require('./cde/moduleFederation.config')
 const CONTEXT = process.cwd()
 const DEV = process.env.NODE_ENV === 'development'
-
-const getModuleFields = () => {
-  if (process.env.MODULE === 'cde') {
-    return {
-      moduleFederationConfigEntryName: moduleFederationConfigCDE.name,
-      moduleFederationPlugin: new ModuleFederationPlugin(moduleFederationConfigCDE)
-    }
-  } else {
-    return {
-      moduleFederationConfigEntryName: moduleFederationConfig.name,
-      moduleFederationPlugin: new ModuleFederationPlugin(moduleFederationConfig)
-    }
-  }
-}
-
-const { moduleFederationConfigEntryName, moduleFederationPlugin } = getModuleFields()
 
 module.exports = {
   target: 'web',
@@ -57,7 +40,7 @@ module.exports = {
     children: false
   },
   entry: {
-    [moduleFederationConfigEntryName]: './src/public-path'
+    [moduleFederationConfig.name]: './src/public-path'
   },
   output: {
     publicPath: 'auto',
@@ -229,7 +212,7 @@ module.exports = {
       minify: false,
       templateParameters: {}
     }),
-    moduleFederationPlugin,
+    new ModuleFederationPlugin(moduleFederationConfig),
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core
       __DEV__: DEV

@@ -40,7 +40,7 @@ import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import VSCode from 'cde-gitness/assests/VSCode.svg?url'
-import { GitspaceActionType, GitspaceStatus } from 'cde-gitness/constants'
+import { GitspaceActionType, GitspaceStatus, IDEType } from 'cde-gitness/constants'
 import type { EnumGitspaceStateType, EnumIDEType, TypesGitspaceConfig } from 'services/cde'
 import gitspaceIcon from 'cde-gitness/assests/gitspace.svg?url'
 import { useModalHook } from 'hooks/useModalHook'
@@ -87,11 +87,6 @@ export const getStatusText = (getString: UseStringsReturn['getString'], status?:
     default:
       return getString('cde.listing.offline')
   }
-}
-
-enum IDEType {
-  VSCODE = 'vs_code',
-  VSCODEWEB = 'vs_code_web'
 }
 
 const getUsageTemplate = (

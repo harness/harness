@@ -32,6 +32,7 @@ const CONTEXT = process.cwd()
 const devConfig = {
   mode: 'development',
   devtool: 'cheap-module-source-map',
+  entry: path.resolve(CONTEXT, '/src/index.tsx'),
   cache: { type: 'filesystem' },
   output: {
     filename: '[name].js',
@@ -216,12 +217,13 @@ const devConfig = {
       __ENABLE_CDN__: false
     }),
     new WatchIgnorePlugin({
-      paths: [/node_modules(?!\/@harness)/, /\.(d|test)\.tsx?$/, /types\.ts/, /\.snap$/]
+      paths: [/node_modules/, /stringTypes.ts/, /\.(d|test)\.tsx?$/, /types\.ts/, /\.snap$/]
     }),
     new ForkTsCheckerWebpackPlugin({
       typescript: {
         memoryLimit: 6144
-      }
+      },
+      logger: { infrastructure: 'console' }
     })
   ]
 }

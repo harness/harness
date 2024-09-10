@@ -61,7 +61,10 @@ const App: React.FC<AppProps> = React.memo(function App({
   const queryParams = useMemo(() => (!standalone ? { routingId } : {}), [standalone, routingId])
 
   useEffect(() => {
-    languageLoader(lang).then(setStrings)
+    const stringsMaps = languageLoader(lang)
+    if (stringsMaps) {
+      setStrings(stringsMaps)
+    }
   }, [lang, setStrings])
 
   const Wrapper: React.FC<{ fullPage: boolean }> = useCallback(

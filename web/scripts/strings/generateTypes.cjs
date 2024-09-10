@@ -48,11 +48,19 @@ function flattenKeys(data, parentPath = []) {
 
 async function generateTypes() {
   const i18nContent = await fs.promises.readFile(path.resolve(process.cwd(), `src/i18n/strings.en.yaml`), 'utf8')
+  const i18nCDEContent = await fs.promises.readFile(
+    path.resolve(process.cwd(), `src/cde-gitness/strings/strings.en.yaml`),
+    'utf8'
+  )
 
   const allData = [
     {
       moduleRef: null,
       keys: flattenKeys(yaml.parse(i18nContent))
+    },
+    {
+      moduleRef: 'cde',
+      keys: flattenKeys(yaml.parse(i18nCDEContent), ['cde'])
     }
   ]
 

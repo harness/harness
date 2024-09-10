@@ -21,14 +21,14 @@ import { useFormikContext } from 'formik'
 import { GitspaceSelect } from 'cde-gitness/components/GitspaceSelect/GitspaceSelect'
 import { useStrings, type UseStringsReturn } from 'framework/strings'
 import type { OpenapiCreateGitspaceRequest } from 'services/cde'
-import { StandaloneIDEType } from 'cde-gitness/constants'
+import { IDEType } from 'cde-gitness/constants'
 import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import VSCode from 'cde-gitness/assests/VSCode.svg?url'
 
 export const getIDESelectItems = (getString: UseStringsReturn['getString']) => {
   return [
-    { label: getString('cde.ide.desktop'), value: StandaloneIDEType.VSCODE },
-    { label: getString('cde.ide.browser'), value: StandaloneIDEType.VSCODEWEB }
+    { label: getString('cde.ide.desktop'), value: IDEType.VSCODE },
+    { label: getString('cde.ide.browser'), value: IDEType.VSCODEWEB }
   ]
 }
 
@@ -44,7 +44,7 @@ export const SelectIDE = () => {
       text={
         <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
           <img
-            src={ide === StandaloneIDEType.VSCODE ? VSCode : vsCodeWebIcon}
+            src={ide === IDEType.VSCODE ? VSCode : vsCodeWebIcon}
             height={20}
             width={20}
             style={{ marginRight: '12px' }}

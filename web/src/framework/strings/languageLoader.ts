@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
+import cdeStringRecords from 'cde-gitness/strings/strings.en.yaml'
+import stringsRecordsEN from '../../i18n/strings.en.yaml'
+import stringsRecordsES from '../../i18n/strings.es.yaml'
+
 export type LangLocale = 'es' | 'en' | 'en-IN' | 'en-US' | 'en-UK'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LanguageRecord = Record<string, Record<string, any>>
 
-export function languageLoader(langId: LangLocale = 'en'): Promise<LanguageRecord> {
+export function languageLoader(langId: LangLocale = 'en'): LanguageRecord {
   switch (langId) {
     case 'es':
-      return import('../../i18n/strings.es.yaml')
+      return stringsRecordsES
     case 'en':
     case 'en-US':
     case 'en-IN':
     case 'en-UK':
     default:
-      return import('../../i18n/strings.en.yaml')
+      return { stringsRecordsEN, cdeStringRecords }
   }
 }

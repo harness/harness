@@ -52,19 +52,13 @@ const GitspaceListing = () => {
 
   const { data = '', loading = false, error = undefined, refetch, response } = useLisitngApi({ page })
 
-  // useEffect(() => {
-  //   if (!data && !loading) {
-  //     history.push(routes.toCDEGitspacesCreate({ space }))
-  //   }
-  // }, [data, loading])
-
   return (
     <>
-      {data?.length !== 0 && (
+      {data && data?.length !== 0 && (
         <Page.Header
           title={
             <div className="ng-tooltip-native">
-              <h2 data-tooltip-id="artifactListPageHeading"> {getString('cde.gitspaces')}</h2>
+              <h2> {getString('cde.gitspaces')}</h2>
               <HarnessDocTooltip tooltipId="GitSpaceListPageHeading" useStandAlone={true} />
             </div>
           }

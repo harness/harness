@@ -18,7 +18,7 @@ import React from 'react'
 import { Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Code } from 'iconoir-react'
-import { StandaloneIDEType } from 'cde-gitness/constants'
+import { IDEType } from 'cde-gitness/constants'
 import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import vscodeIcon from 'cde-gitness/assests/VSCode.svg?url'
 import { useStrings } from 'framework/strings'
@@ -36,12 +36,12 @@ export const CDEIDESelect = ({
   const ideOptions = [
     {
       label: getString('cde.ide.desktop'),
-      value: StandaloneIDEType.VSCODE,
+      value: IDEType.VSCODE,
       img: vscodeIcon
     },
     {
       label: getString('cde.ide.browser'),
-      value: StandaloneIDEType.VSCODEWEB,
+      value: IDEType.VSCODEWEB,
       img: vsCodeWebIcon
     }
   ]
@@ -50,14 +50,6 @@ export const CDEIDESelect = ({
 
   return (
     <CDECustomDropdown
-      // leftElement={
-      //   <Layout.Vertical>
-      //     <Text icon="code">IDE</Text>
-      //     <Text margin={{ left: 'large' }} font="small">
-      //       Your Gitspace will open in the selected IDE to code
-      //     </Text>
-      //   </Layout.Vertical>
-      // }
       leftElement={
         <Layout.Horizontal>
           <Code height={20} width={20} style={{ marginRight: '8px', alignItems: 'center' }} />
@@ -68,7 +60,7 @@ export const CDEIDESelect = ({
         </Layout.Horizontal>
       }
       label={
-        <Layout.Horizontal width="90%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <Layout.Horizontal width="100%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>
           <img height={16} width={16} src={img} />
           <Text>{label}</Text>
         </Layout.Horizontal>
