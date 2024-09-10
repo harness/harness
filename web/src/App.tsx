@@ -63,7 +63,10 @@ const App: React.FC<AppProps> = React.memo(function App({
   useEffect(() => {
     const stringsMaps = languageLoader(lang)
     if (stringsMaps) {
-      setStrings(stringsMaps)
+      setStrings({
+        ...stringsMaps.stringsRecordsEN,
+        ...{ cde: stringsMaps.cdeStringRecords }
+      })
     }
   }, [lang, setStrings])
 
