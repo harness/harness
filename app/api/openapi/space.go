@@ -93,20 +93,6 @@ var queryParameterQueryRepo = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterRecursive = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamQuery,
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The boolean used to do space recursive op on repos."),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type: ptrSchemaType(openapi3.SchemaTypeBoolean),
-			},
-		},
-	},
-}
-
 var queryParameterSortSpace = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamSort,
@@ -331,7 +317,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opRepos.WithTags("space")
 	opRepos.WithMapOfAnything(map[string]interface{}{"operationId": "listRepos"})
 	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
-		QueryParameterPage, QueryParameterLimit, queryParameterRecursive)
+		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opRepos, []types.Repository{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusInternalServerError)
