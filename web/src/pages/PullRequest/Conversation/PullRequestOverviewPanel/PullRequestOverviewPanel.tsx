@@ -26,7 +26,8 @@ import type {
   TypesPullReqReviewer,
   RepoRepositoryOutput,
   TypesRuleViolations,
-  TypesBranch
+  TypesBranch,
+  DeleteBranchQueryParams
 } from 'services/code'
 import {
   PanelSectionOutletPosition,
@@ -44,7 +45,7 @@ import ChecksSection from './sections/ChecksSection'
 import MergeSection from './sections/MergeSection'
 import CommentsSection from './sections/CommentsSection'
 import ChangesSection from './sections/ChangesSection'
-import DeleteBranchSection from './sections/DeleteBranchSection'
+import BranchActionsSection from './sections/BranchActionsSection'
 import css from './PullRequestOverviewPanel.module.scss'
 
 interface PullRequestOverviewPanelProps {
@@ -113,6 +114,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     mergeOptions[3].method
   ])
   const [showDeleteBranchButton, setShowDeleteBranchButton] = useState(false)
+  const [showRestoreBranchButton, setShowRestoreBranchButton] = useState(false)
   const [isSourceBranchDeleted, setIsSourceBranchDeleted] = useState(false)
 
   const {
@@ -130,7 +132,12 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
   const { mutate: deleteBranch } = useMutate({
     verb: 'DELETE',
     path: `/api/v1/repos/${repoMetadata.path}/+/branches/${pullReqMetadata.source_branch}`,
-    queryParams: { bypass_rules: true, dry_run_rules: true }
+    queryParams: { bypass_rules: true, dry_run_rules: true } as DeleteBranchQueryParams
+  })
+  const { mutate: createBranch } = useMutate({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata.path}/+/branches`,
+    pathParams: { repo_ref: repoMetadata.path }
   })
   const { mutate: mergePR } = useMutate({
     verb: 'POST',
@@ -152,6 +159,23 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
   useEffect(() => {
     if (error && error.status === 404) {
       setIsSourceBranchDeleted(true)
+      createBranch({
+        name: pullReqMetadata.source_branch,
+        target: pullReqMetadata.source_sha,
+        bypass_rules: true,
+        dry_run_rules: true
+      }).then(res => {
+        if (res?.rule_violations) {
+          const { checkIfBypassNotAllowed } = extractInfoFromRuleViolationArr(res.rule_violations)
+          if (!checkIfBypassNotAllowed) {
+            setShowRestoreBranchButton(true)
+          } else {
+            setShowRestoreBranchButton(false)
+          }
+        } else {
+          setShowRestoreBranchButton(true)
+        }
+      })
     }
   }, [error])
 
@@ -165,6 +189,8 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
           } else {
             setShowDeleteBranchButton(false)
           }
+        } else {
+          setShowDeleteBranchButton(true)
         }
       })
     }
@@ -220,9 +246,13 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
           PRStateLoading={PRStateLoading || loadingReviewers}
           refetchPullReq={refetchPullReq}
           refetchActivities={refetchActivities}
+          createBranch={createBranch}
+          refetchBranch={refetchBranch}
           deleteBranch={deleteBranch}
+          showRestoreBranchButton={showRestoreBranchButton}
           showDeleteBranchButton={showDeleteBranchButton}
           setShowDeleteBranchButton={setShowDeleteBranchButton}
+          setShowRestoreBranchButton={setShowRestoreBranchButton}
           isSourceBranchDeleted={isSourceBranchDeleted}
         />
         {!isClosed ? (
@@ -274,11 +304,15 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
         ) : (
           <PullRequestPanelSections
             outlets={{
-              [PanelSectionOutletPosition.DELETE_BRANCH]: showDeleteBranchButton && (
-                <DeleteBranchSection
+              [PanelSectionOutletPosition.BRANCH_ACTIONS]: (showDeleteBranchButton || showRestoreBranchButton) && (
+                <BranchActionsSection
                   sourceSha={pullReqMetadata.source_sha || ''}
-                  sourceBranch={sourceBranch}
+                  sourceBranch={sourceBranch?.name || pullReqMetadata.source_branch || ''}
+                  createBranch={createBranch}
+                  refetchBranch={refetchBranch}
                   deleteBranch={deleteBranch}
+                  showDeleteBranchButton={showDeleteBranchButton}
+                  setShowRestoreBranchButton={setShowRestoreBranchButton}
                   setShowDeleteBranchButton={setShowDeleteBranchButton}
                   setIsSourceBranchDeleted={setIsSourceBranchDeleted}
                 />

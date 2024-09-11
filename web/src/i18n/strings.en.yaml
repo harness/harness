@@ -176,6 +176,7 @@ branchCreated: Branch {branch} created.
 tagCreated: Tag {{tag}} created.
 confirmation: Confirmation
 deleteBranch: Delete Branch
+restoreBranch: Restore Branch
 deleteTag: Delete Tag
 deleteTagConfirm: Are you sure you want to delete tag <strong>{{name}}</strong>? You can't undo this action.
 deleteBranchConfirm: Are you sure you want to delete branch <strong>{{name}}</strong>? You can't undo this action.
@@ -187,6 +188,7 @@ compare: Compare
 commitString: 'Commit  {commit}'
 repoDeleted: Repository {{repo}} deleted.
 branchDeleted: Branch {branch} deleted.
+branchRestored: Branch {branch} restored.
 tagDeleted: Tag {tag} deleted.
 failedToDeleteBranch: Failed to delete Branch. Please try again.
 createFile: Create __path__

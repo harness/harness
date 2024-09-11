@@ -347,6 +347,7 @@ export type OpenapiContentType = 'file' | 'dir' | 'symlink' | 'submodule'
 
 export interface OpenapiCreateBranchRequest {
   bypass_rules?: boolean
+  dry_run_rules?: boolean
   name?: string
   target?: string
 }
@@ -587,6 +588,9 @@ export interface OpenapiRule {
   state?: EnumRuleState
   type?: OpenapiRuleType
   updated?: number
+  user_groups?: {
+    [key: string]: TypesUserGroupInfo
+  } | null
   users?: {
     [key: string]: TypesPrincipalInfo
   } | null
@@ -718,6 +722,7 @@ export interface ProtectionDefApprovals {
 
 export interface ProtectionDefBypass {
   repo_owners?: boolean
+  user_group_ids?: number[]
   user_ids?: number[]
 }
 
@@ -1018,6 +1023,14 @@ export interface TypesConnector {
   updated?: number
 }
 
+export interface TypesCreateBranchOutput {
+  commit?: TypesCommit
+  dry_run_rules?: boolean
+  name?: string
+  rule_violations?: TypesRuleViolations[]
+  sha?: string
+}
+
 export interface TypesDeleteBranchOutput {
   dry_run_rules?: boolean
   rule_violations?: TypesRuleViolations[]
@@ -1142,8 +1155,6 @@ export interface TypesInfraProviderResource {
   cpu?: string | null
   created?: number
   disk?: string | null
-  gateway_host?: string | null
-  gateway_port?: string | null
   identifier?: string
   infra_provider_type?: EnumInfraProviderType
   memory?: string | null
@@ -1644,6 +1655,12 @@ export interface TypesUser {
   email?: string
   uid?: string
   updated?: number
+}
+
+export interface TypesUserGroupInfo {
+  description?: string
+  identifier?: string
+  name?: string
 }
 
 export interface TypesUserGroupOwnerEvaluation {
@@ -2757,7 +2774,7 @@ export interface CreateBranchPathParams {
 
 export type CreateBranchProps = Omit<
   MutateProps<
-    TypesBranch,
+    TypesCreateBranchOutput,
     UsererrorError | TypesRulesViolations,
     void,
     OpenapiCreateBranchRequest,
@@ -2768,7 +2785,13 @@ export type CreateBranchProps = Omit<
   CreateBranchPathParams
 
 export const CreateBranch = ({ repo_ref, ...props }: CreateBranchProps) => (
-  <Mutate<TypesBranch, UsererrorError | TypesRulesViolations, void, OpenapiCreateBranchRequest, CreateBranchPathParams>
+  <Mutate<
+    TypesCreateBranchOutput,
+    UsererrorError | TypesRulesViolations,
+    void,
+    OpenapiCreateBranchRequest,
+    CreateBranchPathParams
+  >
     verb="POST"
     path={`/repos/${repo_ref}/branches`}
     base={getConfig('code/api/v1')}
@@ -2778,7 +2801,7 @@ export const CreateBranch = ({ repo_ref, ...props }: CreateBranchProps) => (
 
 export type UseCreateBranchProps = Omit<
   UseMutateProps<
-    TypesBranch,
+    TypesCreateBranchOutput,
     UsererrorError | TypesRulesViolations,
     void,
     OpenapiCreateBranchRequest,
@@ -2790,7 +2813,7 @@ export type UseCreateBranchProps = Omit<
 
 export const useCreateBranch = ({ repo_ref, ...props }: UseCreateBranchProps) =>
   useMutate<
-    TypesBranch,
+    TypesCreateBranchOutput,
     UsererrorError | TypesRulesViolations,
     void,
     OpenapiCreateBranchRequest,

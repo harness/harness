@@ -127,6 +127,7 @@ export interface StringsMap {
   'branchProtection.targetPlaceholder': string
   'branchProtection.title': string
   branchProtectionRules: string
+  branchRestored: string
   branchSource: string
   branchSourceDesc: string
   branchTagCreation: string
@@ -908,6 +909,7 @@ export interface StringsMap {
   resolveComments: string
   resolved: string
   resolvedComments: string
+  restoreBranch: string
   results: string
   reviewProjectSettings: string
   reviewerNotFound: string

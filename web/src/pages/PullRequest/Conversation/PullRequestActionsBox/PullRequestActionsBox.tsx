@@ -37,6 +37,9 @@ import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
 import type {
+  CreateBranchPathParams,
+  DeleteBranchQueryParams,
+  OpenapiCreateBranchRequest,
   OpenapiStatePullReqRequest,
   TypesListCommitResponse,
   TypesPullReq,
@@ -58,6 +61,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { PullReqSuggestionsBatch } from 'components/PullReqSuggestionsBatch/PullReqSuggestionsBatch'
+import { BranchActionsButton } from '../PullRequestOverviewPanel/sections/BranchActionsSection'
 import InlineMergeBox from './InlineMergeBox'
 import css from './PullRequestActionsBox.module.scss'
 
@@ -71,18 +75,13 @@ export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMeta
   setConflictingFiles: React.Dispatch<React.SetStateAction<string[] | undefined>>
   refetchPullReq: () => void
   refetchActivities: () => void
-  deleteBranch: MutateMethod<
-    any,
-    any,
-    {
-      bypass_rules: boolean
-      dry_run_rules: boolean
-      commit_sha: string
-    },
-    unknown
-  >
+  createBranch: MutateMethod<any, any, OpenapiCreateBranchRequest, CreateBranchPathParams>
+  refetchBranch: () => Promise<void>
+  deleteBranch: MutateMethod<any, any, DeleteBranchQueryParams, unknown>
+  showRestoreBranchButton: boolean
   showDeleteBranchButton: boolean
   setShowDeleteBranchButton: React.Dispatch<React.SetStateAction<boolean>>
+  setShowRestoreBranchButton: React.Dispatch<React.SetStateAction<boolean>>
   isSourceBranchDeleted: boolean
 }
 
@@ -96,13 +95,17 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   setConflictingFiles,
   refetchPullReq,
   refetchActivities,
+  createBranch,
+  refetchBranch,
   deleteBranch,
+  showRestoreBranchButton,
   showDeleteBranchButton,
+  setShowRestoreBranchButton,
   setShowDeleteBranchButton,
   isSourceBranchDeleted
 }) => {
   const { getString } = useStrings()
-  const { showSuccess, showError } = useToaster()
+  const { showError } = useToaster()
   const inlineMergeRef = useRef<inlineMergeFormRefType>(null)
   const { hooks, standalone } = useAppContext()
   const space = useGetSpaceParam()
@@ -263,11 +266,13 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     return (
       <MergeInfo
         pullRequestMetadata={pullReqMetadata}
+        showRestoreBranchButton={showRestoreBranchButton}
         showDeleteBranchButton={showDeleteBranchButton}
         setShowDeleteBranchButton={setShowDeleteBranchButton}
+        setShowRestoreBranchButton={setShowRestoreBranchButton}
+        refetchBranch={refetchBranch}
+        createBranch={createBranch}
         deleteBranch={deleteBranch}
-        showSuccess={showSuccess}
-        showError={showError}
       />
     )
   }
@@ -542,28 +547,15 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
 
 const MergeInfo: React.FC<{
   pullRequestMetadata: TypesPullReq
+  showRestoreBranchButton: boolean
   showDeleteBranchButton: boolean
   setShowDeleteBranchButton: React.Dispatch<React.SetStateAction<boolean>>
-  deleteBranch: MutateMethod<
-    any,
-    any,
-    {
-      bypass_rules: boolean
-      dry_run_rules: boolean
-      commit_sha: string
-    },
-    unknown
-  >
-  showSuccess: (message: React.ReactNode, timeout?: number, key?: string) => void
-  showError: (message: React.ReactNode, timeout?: number, key?: string) => void
-}> = ({
-  pullRequestMetadata,
-  showDeleteBranchButton,
-  setShowDeleteBranchButton,
-  deleteBranch,
-  showSuccess,
-  showError
-}) => {
+  setShowRestoreBranchButton: React.Dispatch<React.SetStateAction<boolean>>
+  refetchBranch: () => Promise<void>
+  createBranch: MutateMethod<any, any, OpenapiCreateBranchRequest, CreateBranchPathParams>
+  deleteBranch: MutateMethod<any, any, DeleteBranchQueryParams, unknown>
+}> = props => {
+  const { pullRequestMetadata, showRestoreBranchButton, showDeleteBranchButton } = props
   const { getString } = useStrings()
 
   return (
@@ -606,36 +598,11 @@ const MergeInfo: React.FC<{
           />
         </Text>
         <FlexExpander />
-        {showDeleteBranchButton && (
-          <Button
-            margin={{ right: 'small' }}
-            text={getString('deleteBranch')}
-            variation={ButtonVariation.SECONDARY}
-            onClick={() => {
-              deleteBranch(
-                {},
-                {
-                  queryParams: {
-                    bypass_rules: true,
-                    dry_run_rules: false,
-                    commit_sha: pullRequestMetadata?.source_sha || ''
-                  }
-                }
-              )
-                .then(() => {
-                  setShowDeleteBranchButton(false)
-                  showSuccess(
-                    <StringSubstitute
-                      str={getString('branchDeleted')}
-                      vars={{
-                        branch: pullRequestMetadata?.source_branch
-                      }}
-                    />,
-                    5000
-                  )
-                })
-                .catch(err => showError(getErrorMessage(err)))
-            }}
+        {(showDeleteBranchButton || showRestoreBranchButton) && (
+          <BranchActionsButton
+            {...props}
+            sourceSha={pullRequestMetadata.source_sha || ''}
+            sourceBranch={pullRequestMetadata.source_branch || ''}
           />
         )}
       </Layout.Horizontal>

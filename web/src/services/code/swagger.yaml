@@ -1550,7 +1550,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TypesBranch'
+                $ref: '#/components/schemas/TypesCreateBranchOutput'
           description: Created
         '400':
           content:
@@ -10674,6 +10674,8 @@ components:
       properties:
         bypass_rules:
           type: boolean
+        dry_run_rules:
+          type: boolean
         name:
           type: string
         target:
@@ -11099,6 +11101,11 @@ components:
           $ref: '#/components/schemas/OpenapiRuleType'
         updated:
           type: integer
+        user_groups:
+          additionalProperties:
+            $ref: '#/components/schemas/TypesUserGroupInfo'
+          nullable: true
+          type: object
         users:
           additionalProperties:
             $ref: '#/components/schemas/TypesPrincipalInfo'
@@ -11351,6 +11358,10 @@ components:
       properties:
         repo_owners:
           type: boolean
+        user_group_ids:
+          items:
+            type: integer
+          type: array
         user_ids:
           items:
             type: integer
@@ -11858,6 +11869,21 @@ components:
         updated:
           type: integer
       type: object
+    TypesCreateBranchOutput:
+      properties:
+        commit:
+          $ref: '#/components/schemas/TypesCommit'
+        dry_run_rules:
+          type: boolean
+        name:
+          type: string
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
+          type: array
+        sha:
+          type: string
+      type: object
     TypesDeleteBranchOutput:
       properties:
         dry_run_rules:
@@ -12099,12 +12125,6 @@ components:
         created:
           type: integer
         disk:
-          nullable: true
-          type: string
-        gateway_host:
-          nullable: true
-          type: string
-        gateway_port:
           nullable: true
           type: string
         identifier:
@@ -13033,6 +13053,15 @@ components:
           type: string
         updated:
           type: integer
+      type: object
+    TypesUserGroupInfo:
+      properties:
+        description:
+          type: string
+        identifier:
+          type: string
+        name:
+          type: string
       type: object
     TypesUserGroupOwnerEvaluation:
       properties:

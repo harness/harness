@@ -84,7 +84,7 @@ export enum PanelSectionOutletPosition {
   COMMENTS = 'comments',
   CHECKS = 'checks',
   MERGEABILITY = 'mergeability',
-  DELETE_BRANCH = 'deleteBranch'
+  BRANCH_ACTIONS = 'branchActions'
 }
 
 export const getMergeOptions = (getString: UseStringsReturn['getString'], mergeable: boolean): PRMergeOption[] => [
