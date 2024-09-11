@@ -29,3 +29,7 @@ func (s *searchService) ListUsers(
 ) ([]string, error) {
 	return nil, fmt.Errorf("not implemented")
 }
+
+func (s *searchService) ListUserIDsByGroupIDs(_ context.Context, _ []int64) ([]int64, error) {
+	return nil, fmt.Errorf("not implemented")
+}

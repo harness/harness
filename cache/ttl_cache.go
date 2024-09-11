@@ -140,7 +140,7 @@ func (c *ExtendedTTLCache[K, V]) Map(ctx context.Context, keys []K) (map[K]V, er
 	m := make(map[K]V)
 	now := time.Now()
 
-	keys = deduplicate(keys)
+	keys = Deduplicate(keys)
 
 	// Check what's already available in the cache.
 
@@ -211,8 +211,8 @@ func (c *TTLCache[K, V]) Get(ctx context.Context, key K) (V, error) {
 	return item, nil
 }
 
-// deduplicate is a utility function that removes duplicates from slice.
-func deduplicate[V constraints.Ordered](slice []V) []V {
+// Deduplicate is a utility function that removes duplicates from slice.
+func Deduplicate[V constraints.Ordered](slice []V) []V {
 	if len(slice) <= 1 {
 		return slice
 	}

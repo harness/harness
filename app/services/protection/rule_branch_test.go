@@ -182,10 +182,11 @@ func TestBranch_MergeVerify(t *testing.T) {
 				},
 			},
 			in: MergeVerifyInput{
-				Actor:      user,
-				CodeOwners: &codeowners.Evaluation{},
-				PullReq:    &types.PullReq{},
-				Reviewers:  []*types.PullReqReviewer{},
+				Actor:              user,
+				ResolveUserGroupID: mockUserGroupResolver,
+				CodeOwners:         &codeowners.Evaluation{},
+				PullReq:            &types.PullReq{},
+				Reviewers:          []*types.PullReqReviewer{},
 			},
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch:            true,
@@ -480,6 +481,31 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "usergroup-bypass",
+			branch: Branch{
+				Bypass:    DefBypass{RepoOwners: true},
+				Lifecycle: DefLifecycle{DeleteForbidden: true},
+			},
+			in: RefChangeVerifyInput{
+				Actor:              &types.Principal{ID: 43},
+				ResolveUserGroupID: mockUserGroupResolver,
+				AllowBypass:        true,
+				IsRepoOwner:        false,
+				RefAction:          RefActionDelete,
+				RefType:            RefTypeBranch,
+				RefNames:           []string{"abc"},
+			},
+			expVs: []types.RuleViolations{
+				{
+					Bypassable: true,
+					Bypassed:   true,
+					Violations: []types.Violation{
+						{Code: codeLifecycleDelete},
+					},
+				},
+			},
+		},
 	}
 
 	ctx := context.Background()
@@ -526,4 +552,8 @@ func TestBranch_RefChangeVerify(t *testing.T) {
 			}
 		})
 	}
+}
+
+func mockUserGroupResolver(_ context.Context, _ []int64) ([]int64, error) {
+	return []int64{43}, nil
 }

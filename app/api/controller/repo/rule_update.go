@@ -102,14 +102,14 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 	}
 	oldRule := r.Clone()
 	if in.isEmpty() {
-		r.Users, err = c.getRuleUsers(ctx, r)
+		userMap, userGroupMap, err := c.getRuleUserAndUserGroups(ctx, r)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
 		}
-		r.UserGroups, err = c.getRuleUserGroups(ctx, r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get rule user groups: %w", err)
-		}
+
+		r.Users = userMap
+		r.UserGroups = userGroupMap
+
 		return r, nil
 	}
 
@@ -132,15 +132,13 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 		}
 	}
 
-	r.Users, err = c.getRuleUsers(ctx, r)
+	userMap, userGroupMap, err := c.getRuleUserAndUserGroups(ctx, r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get rule users: %w", err)
+		return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
 	}
 
-	r.UserGroups, err = c.getRuleUserGroups(ctx, r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get rule user groups: %w", err)
-	}
+	r.Users = userMap
+	r.UserGroups = userGroupMap
 
 	err = c.ruleStore.Update(ctx, r)
 	if err != nil {

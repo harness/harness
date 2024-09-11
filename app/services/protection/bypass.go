@@ -15,8 +15,10 @@
 package protection
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/harness/gitness/cache"
 	"github.com/harness/gitness/types"
 
 	"golang.org/x/exp/slices"
@@ -28,7 +30,21 @@ type DefBypass struct {
 	RepoOwners   bool    `json:"repo_owners,omitempty"`
 }
 
-func (v DefBypass) matches(actor *types.Principal, isRepoOwner bool) bool {
+func (v DefBypass) matches(
+	ctx context.Context,
+	actor *types.Principal,
+	isRepoOwner bool,
+	userGroupResolverFn func(context.Context, []int64) ([]int64, error),
+) bool {
+	if userGroupResolverFn != nil {
+		userIDs, err := userGroupResolverFn(ctx, v.UserGroupIDs)
+		if err != nil {
+			return false
+		}
+
+		v.UserIDs = append(v.UserIDs, userIDs...)
+		v.UserIDs = cache.Deduplicate(v.UserIDs)
+	}
 	return actor != nil &&
 		(v.RepoOwners && isRepoOwner ||
 			slices.Contains(v.UserIDs, actor.ID))

@@ -39,15 +39,13 @@ func (c *Controller) RuleFind(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repository-level protection rule by identifier: %w", err)
 	}
 
-	r.Users, err = c.getRuleUsers(ctx, r)
+	userMap, userGroupMap, err := c.getRuleUserAndUserGroups(ctx, r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
 	}
 
-	r.UserGroups, err = c.getRuleUserGroups(ctx, r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get rule user groups: %w", err)
-	}
+	r.Users = userMap
+	r.UserGroups = userGroupMap
 
 	return r, nil
 }

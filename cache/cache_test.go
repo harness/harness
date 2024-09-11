@@ -59,7 +59,7 @@ func TestDeduplicate(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			test.input = deduplicate(test.input)
+			test.input = Deduplicate(test.input)
 			if want, got := test.expected, test.input; !reflect.DeepEqual(want, got) {
 				t.Errorf("failed - want=%v, got=%v", want, got)
 				return

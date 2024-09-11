@@ -55,10 +55,11 @@ func (c *Controller) ListChecks(
 	}
 
 	reqChecks, err := protectionRules.RequiredChecks(ctx, protection.RequiredChecksInput{
-		Actor:       &session.Principal,
-		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
-		PullReq:     pr,
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		IsRepoOwner:        isRepoOwner,
+		Repo:               repo,
+		PullReq:            pr,
 	})
 	if err != nil {
 		return types.PullReqChecks{}, fmt.Errorf("failed to get identifiers of required checks: %w", err)

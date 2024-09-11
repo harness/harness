@@ -35,16 +35,17 @@ type (
 	}
 
 	MergeVerifyInput struct {
-		Actor        *types.Principal
-		AllowBypass  bool
-		IsRepoOwner  bool
-		TargetRepo   *types.Repository
-		SourceRepo   *types.Repository
-		PullReq      *types.PullReq
-		Reviewers    []*types.PullReqReviewer
-		Method       enum.MergeMethod
-		CheckResults []types.CheckResult
-		CodeOwners   *codeowners.Evaluation
+		ResolveUserGroupID func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
+		Actor              *types.Principal
+		AllowBypass        bool
+		IsRepoOwner        bool
+		TargetRepo         *types.Repository
+		SourceRepo         *types.Repository
+		PullReq            *types.PullReq
+		Reviewers          []*types.PullReqReviewer
+		Method             enum.MergeMethod
+		CheckResults       []types.CheckResult
+		CodeOwners         *codeowners.Evaluation
 	}
 
 	MergeVerifyOutput struct {
@@ -59,10 +60,11 @@ type (
 	}
 
 	RequiredChecksInput struct {
-		Actor       *types.Principal
-		IsRepoOwner bool
-		Repo        *types.Repository
-		PullReq     *types.PullReq
+		ResolveUserGroupID func(ctx context.Context, userGroupIDs []int64) ([]int64, error)
+		Actor              *types.Principal
+		IsRepoOwner        bool
+		Repo               *types.Repository
+		PullReq            *types.PullReq
 	}
 
 	RequiredChecksOutput struct {

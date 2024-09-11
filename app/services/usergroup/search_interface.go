@@ -32,4 +32,6 @@ type SearchService interface {
 		session *auth.Session,
 		userGroup *types.UserGroup,
 	) ([]string, error)
+
+	ListUserIDsByGroupIDs(ctx context.Context, userGroupIDs []int64) ([]int64, error)
 }

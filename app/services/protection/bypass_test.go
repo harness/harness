@@ -15,6 +15,7 @@
 package protection
 
 import (
+	"context"
 	"testing"
 
 	"github.com/harness/gitness/types"
@@ -78,7 +79,7 @@ func TestBranch_matches(t *testing.T) {
 				t.Errorf("invalid: %s", err.Error())
 			}
 
-			if want, got := test.exp, test.bypass.matches(test.actor, test.owner); want != got {
+			if want, got := test.exp, test.bypass.matches(context.TODO(), test.actor, test.owner, nil); want != got {
 				t.Errorf("want=%t got=%t", want, got)
 			}
 		})

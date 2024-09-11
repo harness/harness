@@ -41,10 +41,10 @@ func (v *Branch) MergeVerify(
 ) (out MergeVerifyOutput, violations []types.RuleViolations, err error) {
 	out, violations, err = v.PullReq.MergeVerify(ctx, in)
 	if err != nil {
-		return
+		return out, violations, fmt.Errorf("merge verify error: %w", err)
 	}
 
-	bypassable := v.Bypass.matches(in.Actor, in.IsRepoOwner)
+	bypassable := v.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID)
 	bypassed := in.AllowBypass && bypassable
 	for i := range violations {
 		violations[i].Bypassable = bypassable
@@ -73,7 +73,7 @@ func (v *Branch) RequiredChecks(
 		bypassableIDs map[string]struct{}
 	)
 
-	if bypassable := v.Bypass.matches(in.Actor, in.IsRepoOwner); bypassable {
+	if bypassable := v.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID); bypassable {
 		bypassableIDs = ids
 	} else {
 		requiredIDs = ids
@@ -94,8 +94,11 @@ func (v *Branch) RefChangeVerify(
 	}
 
 	violations, err = v.Lifecycle.RefChangeVerify(ctx, in)
+	if err != nil {
+		return nil, fmt.Errorf("lifecycle error: %w", err)
+	}
 
-	bypassable := v.Bypass.matches(in.Actor, in.IsRepoOwner)
+	bypassable := v.Bypass.matches(ctx, in.Actor, in.IsRepoOwner, in.ResolveUserGroupID)
 	bypassed := in.AllowBypass && bypassable
 	for i := range violations {
 		violations[i].Bypassable = bypassable

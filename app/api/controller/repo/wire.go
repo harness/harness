@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
@@ -72,13 +73,14 @@ func ProvideController(
 	labelSvc *label.Service,
 	instrumentation instrument.Service,
 	userGroupStore store.UserGroupStore,
+	userGroupService usergroup.SearchService,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
 		repoStore, spaceStore, pipelineStore,
 		principalStore, ruleStore, settings, principalInfoCache, protectionManager, rpcClient, importer,
 		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
-		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore)
+		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService)
 }
 
 func ProvideRepoCheck() Check {

@@ -83,13 +83,14 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:       &session.Principal,
-		AllowBypass: in.BypassRules,
-		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
-		RefAction:   refAction,
-		RefType:     protection.RefTypeBranch,
-		RefNames:    []string{branchName},
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		AllowBypass:        in.BypassRules,
+		IsRepoOwner:        isRepoOwner,
+		Repo:               repo,
+		RefAction:          refAction,
+		RefType:            protection.RefTypeBranch,
+		RefNames:           []string{branchName},
 	})
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)

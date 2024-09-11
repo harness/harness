@@ -61,7 +61,7 @@ func (c *Controller) RuleList(ctx context.Context,
 	}
 
 	for i := range list {
-		list[i].Users, err = c.getRuleUsers(ctx, &list[i])
+		list[i].Users, list[i].UserGroups, err = c.getRuleUserAndUserGroups(ctx, &list[i])
 		if err != nil {
 			return nil, 0, err
 		}

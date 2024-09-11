@@ -82,13 +82,14 @@ func (c *Controller) Rebase(
 	}
 
 	violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-		Actor:       &session.Principal,
-		AllowBypass: in.BypassRules,
-		IsRepoOwner: isRepoOwner,
-		Repo:        repo,
-		RefAction:   protection.RefActionUpdate,
-		RefType:     protection.RefTypeBranch,
-		RefNames:    []string{in.HeadBranch},
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		AllowBypass:        in.BypassRules,
+		IsRepoOwner:        isRepoOwner,
+		Repo:               repo,
+		RefAction:          protection.RefActionUpdate,
+		RefType:            protection.RefTypeBranch,
+		RefNames:           []string{in.HeadBranch},
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)

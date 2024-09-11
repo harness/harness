@@ -142,15 +142,13 @@ func (c *Controller) RuleCreate(ctx context.Context,
 		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for create branch rule operation: %s", err)
 	}
 
-	r.Users, err = c.getRuleUsers(ctx, r)
+	userMap, userGroupMap, err := c.getRuleUserAndUserGroups(ctx, r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
 	}
 
-	r.UserGroups, err = c.getRuleUserGroups(ctx, r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get rule user groups: %w", err)
-	}
+	r.Users = userMap
+	r.UserGroups = userGroupMap
 
 	return r, nil
 }

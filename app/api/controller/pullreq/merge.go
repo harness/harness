@@ -204,16 +204,17 @@ func (c *Controller) Merge(
 	}
 
 	ruleOut, violations, err := protectionRules.MergeVerify(ctx, protection.MergeVerifyInput{
-		Actor:        &session.Principal,
-		AllowBypass:  in.BypassRules,
-		IsRepoOwner:  isRepoOwner,
-		TargetRepo:   targetRepo,
-		SourceRepo:   sourceRepo,
-		PullReq:      pr,
-		Reviewers:    reviewers,
-		Method:       in.Method,
-		CheckResults: checkResults,
-		CodeOwners:   codeOwnerWithApproval,
+		ResolveUserGroupID: c.userGroupService.ListUserIDsByGroupIDs,
+		Actor:              &session.Principal,
+		AllowBypass:        in.BypassRules,
+		IsRepoOwner:        isRepoOwner,
+		TargetRepo:         targetRepo,
+		SourceRepo:         sourceRepo,
+		PullReq:            pr,
+		Reviewers:          reviewers,
+		Method:             in.Method,
+		CheckResults:       checkResults,
+		CodeOwners:         codeOwnerWithApproval,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
