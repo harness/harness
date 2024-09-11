@@ -914,7 +914,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opCreateBranch.WithTags("repository")
 	opCreateBranch.WithMapOfAnything(map[string]interface{}{"operationId": "createBranch"})
 	_ = reflector.SetRequest(&opCreateBranch, new(createBranchRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCreateBranch, new(types.Branch), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opCreateBranch, new(types.CreateBranchOutput), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusUnauthorized)

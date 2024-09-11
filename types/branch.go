@@ -20,6 +20,11 @@ type Branch struct {
 	Commit *Commit `json:"commit,omitempty"`
 }
 
+type CreateBranchOutput struct {
+	Branch
+	DryRunRulesOutput
+}
+
 type DeleteBranchOutput struct {
 	DryRunRulesOutput
 }

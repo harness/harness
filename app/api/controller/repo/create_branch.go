@@ -37,6 +37,7 @@ type CreateBranchInput struct {
 	// If no target is provided, the branch points to the same commit as the default branch of the repo.
 	Target string `json:"target"`
 
+	DryRunRules bool `json:"dry_run_rules"`
 	BypassRules bool `json:"bypass_rules"`
 }
 
@@ -45,10 +46,10 @@ func (c *Controller) CreateBranch(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *CreateBranchInput,
-) (*types.Branch, []types.RuleViolations, error) {
+) (types.CreateBranchOutput, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
-		return nil, nil, err
+		return types.CreateBranchOutput{}, nil, err
 	}
 
 	// set target to default branch in case no target was provided
@@ -58,7 +59,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 
 	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
-		return nil, nil, err
+		return types.CreateBranchOutput{}, nil, err
 	}
 
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
@@ -71,15 +72,25 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		RefNames:    []string{in.Name},
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
+		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
+
+	if in.DryRunRules {
+		return types.CreateBranchOutput{
+			DryRunRulesOutput: types.DryRunRulesOutput{
+				DryRunRules:    true,
+				RuleViolations: violations,
+			},
+		}, nil, nil
+	}
+
 	if protection.IsCritical(violations) {
-		return nil, violations, nil
+		return types.CreateBranchOutput{}, violations, nil
 	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
+		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	rpcOut, err := c.git.CreateBranch(ctx, &git.CreateBranchParams{
@@ -88,12 +99,12 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		Target:      in.Target,
 	})
 	if err != nil {
-		return nil, nil, err
+		return types.CreateBranchOutput{}, nil, err
 	}
 
 	branch, err := mapBranch(rpcOut.Branch)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to map branch: %w", err)
+		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to map branch: %w", err)
 	}
 
 	err = c.instrumentation.Track(ctx, instrument.Event{
@@ -109,5 +120,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for create branch operation: %s", err)
 	}
 
-	return &branch, nil, nil
+	return types.CreateBranchOutput{
+		Branch: branch,
+	}, nil, nil
 }
