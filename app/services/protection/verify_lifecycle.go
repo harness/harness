@@ -41,9 +41,10 @@ type (
 	RefAction int
 
 	DefLifecycle struct {
-		CreateForbidden bool `json:"create_forbidden,omitempty"`
-		DeleteForbidden bool `json:"delete_forbidden,omitempty"`
-		UpdateForbidden bool `json:"update_forbidden,omitempty"`
+		CreateForbidden      bool `json:"create_forbidden,omitempty"`
+		DeleteForbidden      bool `json:"delete_forbidden,omitempty"`
+		UpdateForbidden      bool `json:"update_forbidden,omitempty"`
+		UpdateForceForbidden bool `json:"update_force_forbidden,omitempty"`
 	}
 )
 
@@ -57,6 +58,7 @@ const (
 	RefActionCreate RefAction = iota
 	RefActionDelete
 	RefActionUpdate
+	RefActionUpdateForce
 )
 
 // ensures that the DefLifecycle type implements Sanitizer and RefChangeVerifier interfaces.
@@ -66,9 +68,10 @@ var (
 )
 
 const (
-	codeLifecycleCreate = "lifecycle.create"
-	codeLifecycleDelete = "lifecycle.delete"
-	codeLifecycleUpdate = "lifecycle.update"
+	codeLifecycleCreate      = "lifecycle.create"
+	codeLifecycleDelete      = "lifecycle.delete"
+	codeLifecycleUpdate      = "lifecycle.update"
+	codeLifecycleUpdateForce = "lifecycle.update.force"
 )
 
 func (v *DefLifecycle) RefChangeVerify(_ context.Context, in RefChangeVerifyInput) ([]types.RuleViolations, error) {
@@ -89,6 +92,11 @@ func (v *DefLifecycle) RefChangeVerify(_ context.Context, in RefChangeVerifyInpu
 		if v.UpdateForbidden {
 			violations.Addf(codeLifecycleUpdate,
 				"Push to branch %q is not allowed. Please use pull requests.", in.RefNames[0])
+		}
+	case RefActionUpdateForce:
+		if v.UpdateForceForbidden {
+			violations.Addf(codeLifecycleUpdateForce,
+				"Force push to branch %q is not allowed. Please use pull requests.", in.RefNames[0])
 		}
 	}
 

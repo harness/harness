@@ -56,6 +56,13 @@ func TestDefLifecycle_RefChangeVerify(t *testing.T) {
 			expCodes:  []string{"lifecycle.update"},
 			expParams: [][]any{{refName}},
 		},
+		{
+			name:      "lifecycle.update.force-fail",
+			def:       DefLifecycle{UpdateForceForbidden: true},
+			action:    RefActionUpdateForce,
+			expCodes:  []string{"lifecycle.update.force"},
+			expParams: [][]any{{refName}},
+		},
 	}
 
 	for _, test := range tests {

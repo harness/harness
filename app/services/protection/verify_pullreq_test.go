@@ -393,6 +393,23 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			expParams: [][]any{{"John"}},
 			expOut:    MergeVerifyOutput{RequiresNoChangeRequests: true},
 		},
+		{
+			name: codePullReqMergeBlock,
+			def: DefPullReq{
+				Merge: DefMerge{
+					Block: true,
+				},
+			},
+			in: MergeVerifyInput{
+				Method: enum.MergeMethodMerge,
+				PullReq: &types.PullReq{
+					TargetBranch: "abc",
+				},
+			},
+			expCodes:  []string{codePullReqMergeBlock},
+			expParams: [][]any{{"abc"}},
+			expOut:    MergeVerifyOutput{},
+		},
 	}
 
 	for _, test := range tests {

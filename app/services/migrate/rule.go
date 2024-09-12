@@ -162,10 +162,16 @@ func mapToBranchRules(
 			Merge: protection.DefMerge{
 				StrategiesAllowed: convertMergeMethods(rule.PullReq.Merge.StrategiesAllowed),
 				DeleteBranch:      rule.PullReq.Merge.DeleteBranch,
+				Block:             false,
 			},
 		},
 
-		Lifecycle: protection.DefLifecycle(rule.Lifecycle),
+		Lifecycle: protection.DefLifecycle{
+			CreateForbidden:      rule.Lifecycle.CreateForbidden,
+			DeleteForbidden:      rule.Lifecycle.DeleteForbidden,
+			UpdateForbidden:      rule.Lifecycle.UpdateForbidden,
+			UpdateForceForbidden: false,
+		},
 	}, nil
 }
 

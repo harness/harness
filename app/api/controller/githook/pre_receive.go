@@ -58,7 +58,17 @@ func (c *Controller) PreReceive(
 			limiter.ErrMaxRepoSizeReached)
 	}
 
-	refUpdates := groupRefsByAction(in.RefUpdates)
+	forced := make([]bool, len(in.RefUpdates))
+	for i, refUpdate := range in.RefUpdates {
+		forced[i], err = isForcePush(
+			ctx, rgit, repo.GitUID, in.Environment.AlternateObjectDirs, refUpdate,
+		)
+		if err != nil {
+			return hook.Output{}, fmt.Errorf("failed to check branch ancestor: %w", err)
+		}
+	}
+
+	refUpdates := groupRefsByAction(in.RefUpdates, forced)
 
 	if slices.Contains(refUpdates.branches.deleted, repo.DefaultBranch) {
 		// Default branch mustn't be deleted.
@@ -83,17 +93,26 @@ func (c *Controller) PreReceive(
 		dummySession := &auth.Session{Principal: *principal, Metadata: nil}
 
 		err = c.checkProtectionRules(ctx, dummySession, repo, refUpdates, &output)
+		if output.Error != nil {
+			return output, nil
+		}
 		if err != nil {
 			return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
 		}
 	}
 
 	err = c.scanSecrets(ctx, rgit, repo, in, &output)
+	if output.Error != nil {
+		return output, nil
+	}
 	if err != nil {
 		return hook.Output{}, err
 	}
 
 	err = c.preReceiveExtender.Extend(ctx, rgit, session, repo, in, &output)
+	if output.Error != nil {
+		return output, nil
+	}
 	if err != nil {
 		return hook.Output{}, fmt.Errorf("failed to extend pre-receive hook: %w", err)
 	}
@@ -120,7 +139,8 @@ func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state enum.Re
 
 	return slices.ContainsFunc(refUpdates.other.created, fn) ||
 		slices.ContainsFunc(refUpdates.other.deleted, fn) ||
-		slices.ContainsFunc(refUpdates.other.updated, fn)
+		slices.ContainsFunc(refUpdates.other.updated, fn) ||
+		slices.ContainsFunc(refUpdates.other.forced, fn)
 }
 
 func (c *Controller) checkProtectionRules(
@@ -143,6 +163,7 @@ func (c *Controller) checkProtectionRules(
 	var ruleViolations []types.RuleViolations
 	var errCheckAction error
 
+	//nolint:unparam
 	checkAction := func(refAction protection.RefAction, refType protection.RefType, names []string) {
 		if errCheckAction != nil || len(names) == 0 {
 			return
@@ -168,6 +189,7 @@ func (c *Controller) checkProtectionRules(
 	checkAction(protection.RefActionCreate, protection.RefTypeBranch, refUpdates.branches.created)
 	checkAction(protection.RefActionDelete, protection.RefTypeBranch, refUpdates.branches.deleted)
 	checkAction(protection.RefActionUpdate, protection.RefTypeBranch, refUpdates.branches.updated)
+	checkAction(protection.RefActionUpdateForce, protection.RefTypeBranch, refUpdates.branches.forced)
 
 	if errCheckAction != nil {
 		return errCheckAction
@@ -199,14 +221,21 @@ type changes struct {
 	created []string
 	deleted []string
 	updated []string
+	forced  []string
 }
 
-func (c *changes) groupByAction(refUpdate hook.ReferenceUpdate, name string) {
+func (c *changes) groupByAction(
+	refUpdate hook.ReferenceUpdate,
+	name string,
+	forced bool,
+) {
 	switch {
 	case refUpdate.Old.IsNil():
 		c.created = append(c.created, name)
 	case refUpdate.New.IsNil():
 		c.deleted = append(c.deleted, name)
+	case forced:
+		c.forced = append(c.forced, name)
 	default:
 		c.updated = append(c.updated, name)
 	}
@@ -218,17 +247,17 @@ type changedRefs struct {
 	other    changes
 }
 
-func groupRefsByAction(refUpdates []hook.ReferenceUpdate) (c changedRefs) {
-	for _, refUpdate := range refUpdates {
+func groupRefsByAction(refUpdates []hook.ReferenceUpdate, forced []bool) (c changedRefs) {
+	for i, refUpdate := range refUpdates {
 		switch {
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):
 			branchName := refUpdate.Ref[len(gitReferenceNamePrefixBranch):]
-			c.branches.groupByAction(refUpdate, branchName)
+			c.branches.groupByAction(refUpdate, branchName, forced[i])
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixTag):
 			tagName := refUpdate.Ref[len(gitReferenceNamePrefixTag):]
-			c.tags.groupByAction(refUpdate, tagName)
+			c.tags.groupByAction(refUpdate, tagName, false)
 		default:
-			c.other.groupByAction(refUpdate, refUpdate.Ref)
+			c.other.groupByAction(refUpdate, refUpdate.Ref, false)
 		}
 	}
 	return

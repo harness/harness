@@ -156,3 +156,29 @@ func GetBaseSHAForScanningChanges(
 
 	return dfltBranchOut.Branch.SHA, true, nil
 }
+
+func isForcePush(
+	ctx context.Context,
+	rgit RestrictedGIT,
+	gitUID string,
+	alternateObjectDirs []string,
+	branchUpdate hook.ReferenceUpdate,
+) (bool, error) {
+	if branchUpdate.Old.IsNil() || branchUpdate.New.IsNil() {
+		return false, nil
+	}
+
+	result, err := rgit.IsAncestor(ctx, git.IsAncestorParams{
+		ReadParams: git.ReadParams{
+			RepoUID:             gitUID,
+			AlternateObjectDirs: alternateObjectDirs,
+		},
+		AncestorCommitSHA:   branchUpdate.Old,
+		DescendantCommitSHA: branchUpdate.New,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return !result.Ancestor, nil
+}

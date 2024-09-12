@@ -92,12 +92,13 @@ const (
 
 	codePullReqMergeStrategiesAllowed = "pullreq.merge.strategies_allowed"
 	codePullReqMergeDeleteBranch      = "pullreq.merge.delete_branch"
+	codePullReqMergeBlock             = "pullreq.merge.blocked"
 
 	codePullReqCommentsReqResolveAll      = "pullreq.comments.require_resolve_all"
 	codePullReqStatusChecksReqIdentifiers = "pullreq.status_checks.required_identifiers"
 )
 
-//nolint:gocognit // well aware of this
+//nolint:gocognit,gocyclo,cyclop // well aware of this
 func (v *DefPullReq) MergeVerify(
 	_ context.Context,
 	in MergeVerifyInput,
@@ -246,6 +247,12 @@ func (v *DefPullReq) MergeVerify(
 		}
 	}
 
+	if v.Merge.Block {
+		violations.Addf(
+			codePullReqMergeBlock,
+			"The merge for the branch %s is not allowed.", in.PullReq.TargetBranch)
+	}
+
 	if len(violations.Violations) > 0 {
 		return out, []types.RuleViolations{violations}, nil
 	}
@@ -343,6 +350,7 @@ func (c *DefStatusChecks) Sanitize() error {
 type DefMerge struct {
 	StrategiesAllowed []enum.MergeMethod `json:"strategies_allowed,omitempty"`
 	DeleteBranch      bool               `json:"delete_branch,omitempty"`
+	Block             bool               `json:"block,omitempty"`
 }
 
 func (v *DefMerge) Sanitize() error {

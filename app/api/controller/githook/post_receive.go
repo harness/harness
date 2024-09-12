@@ -24,7 +24,6 @@ import (
 	"github.com/harness/gitness/app/bootstrap"
 	events "github.com/harness/gitness/app/events/git"
 	repoevents "github.com/harness/gitness/app/events/repo"
-	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -124,23 +123,18 @@ func (c *Controller) reportBranchEvent(
 			SHA:         branchUpdate.Old.String(),
 		})
 	default:
-		result, err := rgit.IsAncestor(ctx, git.IsAncestorParams{
-			ReadParams: git.ReadParams{
-				RepoUID:             repo.GitUID,
-				AlternateObjectDirs: env.AlternateObjectDirs,
-			},
-			AncestorCommitSHA:   branchUpdate.Old,
-			DescendantCommitSHA: branchUpdate.New,
-		})
+		// A force update event might trigger some additional operations that aren't required
+		// for ordinary updates (force pushes alter the commit history of a branch).
+		forced, err := isForcePush(ctx, rgit, repo.GitUID, env.AlternateObjectDirs, branchUpdate)
 		if err != nil {
-			log.Ctx(ctx).Err(err).
+			// In case of an error consider this a forced update. In post-update the branch has already been updated,
+			// so there's less harm in declaring the update as forced.
+			forced = true
+			log.Ctx(ctx).Warn().Err(err).
 				Str("ref", branchUpdate.Ref).
 				Msg("failed to check ancestor")
 		}
-		// In case of an error consider this a forced update. In post-update the branch has already been updated,
-		// so there's less harm in declaring the update as forced. A force update event might trigger some additional
-		// operations that aren't required for ordinary updates (force pushes alter the commit history of a branch).
-		forced := err != nil || !result.Ancestor
+
 		c.gitReporter.BranchUpdated(ctx, &events.BranchUpdatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
