@@ -21,3 +21,4 @@ export declare const main: string
 export declare const menuItem: string
 export declare const mergeText: string
 export declare const popover: string
+export declare const popoverClassname: string

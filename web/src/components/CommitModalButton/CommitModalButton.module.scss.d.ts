@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const commitDirectlyMessage: string
 export declare const directly: string
 export declare const extendedDescription: string
 export declare const formContainer: string

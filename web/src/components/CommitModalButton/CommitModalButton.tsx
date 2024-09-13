@@ -250,7 +250,13 @@ export function useCommitModal({
                       {
                         label: (
                           <Layout.Horizontal className={css.warningMessageLayout}>
-                            <String stringID="commitDirectlyTo" vars={{ gitRef }} useRichText />
+                            <String
+                              className={css.commitDirectlyMessage}
+                              stringID="commitDirectlyTo"
+                              vars={{ gitRef }}
+                              useRichText
+                            />
+
                             <Render when={violation && targetBranchOption === CommitToGitRefOption.DIRECTLY}>
                               <Layout.Horizontal className={css.warningMessage}>
                                 <Icon intent={Intent.WARNING} name="danger-icon" size={16} />

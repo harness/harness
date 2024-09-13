@@ -201,8 +201,8 @@ findOrCreateBranch: Find or create a branch
 findATag: Find a tag
 viewAllBranches: View all branches
 viewAllTags: View all tags
-createBranchFromBranch: "<strong>Create branch: {{newBranch}}</strong> from '{{target}}'</strong>"
-createBranchFromTag: "<strong>Create branch: {{newBranch}}</strong> from tag '{{target}}'</strong>"
+createBranchFromBranch: "Create branch: <strong>{{newBranch}}</strong> from <strong>'{{target}}'</strong>"
+createBranchFromTag: "Create branch: <strong>{{newBranch}}</strong> from tag <strong>'{{target}}'</strong>"
 tagNotFound: 'Tag <strong>{{tag}}</strong> not found.'
 branchNotFound: 'Branch <strong>{{branch}}</strong> not found.'
 branchUpToDate: Up to date with {{defaultBranch}}
@@ -492,6 +492,9 @@ license: LICENSE
 gitIgnore: .gitignore
 and: and
 error404Text: This is not the web page that you are looking for
+branchNotFoundError: Branch not found
+branchNotFoundMessage: The branch '{{gitRef}}' is missing or deleted
+goToDefaultBranch: Go to Default Branch
 branchDoesNotHaveFile: The "{repoName}" repository doesn't contain the "{fileName}" path in the "{branchName}" branch
 webhookDialogTitle: Turn ON/OFF Webhook
 webhookDialogContent: Please confirm you want to on/off this webhook

@@ -61,12 +61,18 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        width: 96%;
       }
 
       .warningMessage {
         display: flex;
         gap: 0.5rem;
         align-items: center;
+      }
+
+      .commitDirectlyMessage {
+        word-break: break-word;
+        overflow-wrap: break-word;
       }
     }
 

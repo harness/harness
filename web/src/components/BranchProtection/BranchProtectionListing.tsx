@@ -91,7 +91,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
     () => [
       {
         id: 'title',
-        width: 'calc(100% )',
+        width: '100%',
         Cell: ({ row }: CellProps<OpenapiRule>) => {
           const [checked, setChecked] = useState<boolean>(
             row.original.state === 'active' || row.original.state === 'monitor' ? true : false
@@ -203,14 +203,15 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                   }}
                   content={
                     <Container padding={'medium'} width={250}>
-                      <Layout.Vertical>
+                      <Layout.Vertical spacing={'medium'}>
                         <Text font={{ variation: FontVariation.H5, size: 'medium' }}>
                           {checked
                             ? getString('branchProtection.disableTheRule')
                             : getString('branchProtection.enableTheRule')}
                         </Text>
                         <Text
-                          padding={{ top: 'medium', bottom: 'medium' }}
+                          margin={{ bottom: 'medium' }}
+                          lineClamp={6}
                           font={{ variation: FontVariation.BODY2_SEMI }}>
                           <StringSubstitute
                             str={checked ? getString('disableWebhookContent') : getString('enableWebhookContent')}
@@ -219,7 +220,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                             }}
                           />
                         </Text>
-                        <Layout.Horizontal>
+                        <Layout.Horizontal spacing={'small'}>
                           <Button
                             variation={ButtonVariation.PRIMARY}
                             text={getString('confirm')}
@@ -237,6 +238,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                             }}></Button>
                           <Container>
                             <Button
+                              variation={ButtonVariation.TERTIARY}
                               text={getString('cancel')}
                               onClick={() => {
                                 setPopoverDialogOpen(false)
@@ -258,15 +260,21 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
               </Container>
               <Container padding={{ left: 'small' }} style={{ flexGrow: 1 }}>
                 <Layout.Horizontal spacing="small">
-                  <Text padding={{ right: 'small', top: 'xsmall' }} lineClamp={1} width={150} className={css.title}>
-                    {row.original.identifier}
-                  </Text>
-
-                  {!!row.original.description && (
-                    <Text padding={{ left: 'small', right: 'small', top: 'xsmall' }} className={css.text}>
-                      {row.original.description}
+                  <Layout.Vertical>
+                    <Text padding={{ right: 'small', top: 'xsmall' }} className={css.title}>
+                      {row.original.identifier}
                     </Text>
-                  )}
+
+                    {!!row.original.description && (
+                      <Text
+                        lineClamp={4}
+                        width={'70vw'}
+                        padding={{ right: 'small', top: 'medium' }}
+                        className={css.text}>
+                        {row.original.description}
+                      </Text>
+                    )}
+                  </Layout.Vertical>
                   <FlexExpander />
                   <Container margin={{ left: 'medium' }} onClick={Utils.stopEvent}>
                     <OptionsMenuButton

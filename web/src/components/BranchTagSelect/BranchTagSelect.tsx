@@ -17,8 +17,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Classes, Icon as BPIcon, Menu, MenuItem, PopoverPosition } from '@blueprintjs/core'
 import { Button, ButtonProps, Container, Layout, ButtonVariation, TextInput, Tabs, Text } from '@harnessio/uicore'
-import { FontVariation } from '@harnessio/design-system'
-import { Link } from 'react-router-dom'
+import { Color, FontVariation } from '@harnessio/design-system'
+import { useHistory } from 'react-router-dom'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { noop } from 'lodash-es'
@@ -109,6 +109,8 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
           disableBranchCreation={disableBranchCreation}
           disableViewAllBranches={disableViewAllBranches}
           onCreateBranch={() => onCreateBranch(query)}
+          className={className}
+          popoverClassname={popoverClassname}
         />
       }
       tooltipProps={{
@@ -138,7 +140,9 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
   forBranchesOnly,
   disableBranchCreation,
   disableViewAllBranches,
-  hidePopoverContent
+  hidePopoverContent,
+  className,
+  popoverClassname
 }) => {
   const { getString } = useStrings()
   const [activeTab, setActiveTab] = useState(gitRefType)
@@ -148,8 +152,8 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
   const [loading, setLoading] = useState(false)
 
   return !hidePopoverContent ? (
-    <Container padding="medium" className={css.main}>
-      <Layout.Vertical spacing="small">
+    <Container padding="small" className={cx(css.main, { [css.maxWidth]: !className || !popoverClassname })}>
+      <Layout.Vertical spacing="small" className={css.layout}>
         <TextInput
           className={css.input}
           inputRef={ref => (inputRef.current = ref)}
@@ -164,6 +168,11 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
             onQuery(_value)
           }}
           leftIcon={loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch}
+          leftIconProps={{
+            name: loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch,
+            size: 12,
+            color: Color.GREY_500
+          }}
         />
 
         <Container className={cx(css.tabContainer, forBranchesOnly && css.branchesOnly)}>
@@ -256,7 +265,7 @@ function GitRefList({
   useEffect(() => {
     setLoading(loading)
   }, [setLoading, loading])
-
+  const history = useHistory()
   return (
     <Container>
       {!!error && (
@@ -274,7 +283,7 @@ function GitRefList({
                 <MenuItem
                   key={name}
                   text={name}
-                  labelElement={isItemSelected ? <BPIcon icon="small-tick" /> : undefined}
+                  labelElement={isItemSelected ? <BPIcon icon="tick" /> : undefined}
                   disabled={isItemSelected}
                   onClick={() => onSelect(name as string, gitRefType)}
                 />
@@ -285,7 +294,7 @@ function GitRefList({
       )}
 
       {data?.length === 0 && (
-        <Container flex={{ align: 'center-center' }} padding="large">
+        <Container flex={{ align: 'center-center' }} padding="medium">
           {(gitRefType === GitRefType.BRANCH &&
             ((disableBranchCreation && (
               <Text padding={{ top: 'small' }}>
@@ -293,6 +302,7 @@ function GitRefList({
               </Text>
             )) || (
               <Button
+                padding={'xsmall'}
                 text={
                   <>
                     <String
@@ -310,7 +320,7 @@ function GitRefList({
                 icon={CodeIcon.BranchSmall}
                 variation={ButtonVariation.SECONDARY}
                 onClick={() => onCreateBranch()}
-                className={Classes.POPOVER_DISMISS}
+                className={cx(Classes.POPOVER_DISMISS, css.newBranchOption)}
               />
             ))) || (
             <Text padding={{ top: 'small' }}>
@@ -321,10 +331,12 @@ function GitRefList({
       )}
 
       {!disableViewAllBranches && gitRefType === GitRefType.BRANCH && (
-        <Container border={{ top: true }} flex={{ align: 'center-center' }} padding={{ top: 'small' }}>
-          <Link to={routes.toCODEBranches({ repoPath: repoMetadata.path as string })}>
-            {getString('viewAllBranches')}
-          </Link>
+        <Container border={{ top: true }} flex={{ align: 'center-center' }} padding={{ top: 'xsmall' }}>
+          <Button
+            variation={ButtonVariation.LINK}
+            text={getString('viewAllBranches')}
+            onClick={() => history.push(routes.toCODEBranches({ repoPath: repoMetadata.path as string }))}
+          />
         </Container>
       )}
     </Container>

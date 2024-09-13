@@ -511,6 +511,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                               }
                             ]}
                             tooltipProps={{
+                              interactionKind: 'click',
                               isDark: true,
                               position: PopoverPosition.RIGHT,
                               popoverClassName: css.overviewPopover

@@ -83,6 +83,7 @@ export function CompareContentHeader({
           labelPrefix={getString('prefixBase')}
           placeHolder={getString('selectBranchPlaceHolder')}
           className={css.branchTagDropdown}
+          popoverClassname={css.popoverClassname}
         />
         <Icon name="arrow-left" size={14} />
         <BranchTagSelect
@@ -94,6 +95,7 @@ export function CompareContentHeader({
           labelPrefix={getString('prefixCompare')}
           placeHolder={getString('selectBranchPlaceHolder')}
           className={css.branchTagDropdown}
+          popoverClassname={css.popoverClassname}
         />
         {!!targetGitRef && !!sourceGitRef && (
           <MergeableLabel repoMetadata={repoMetadata} targetGitRef={targetGitRef} sourceGitRef={sourceGitRef} />

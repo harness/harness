@@ -364,7 +364,6 @@ export default function PullRequests() {
     ],
     [getString] // eslint-disable-line react-hooks/exhaustive-deps
   )
-
   return (
     <Container className={css.main}>
       <RepositoryPageHeader
@@ -405,13 +404,15 @@ export default function PullRequests() {
                 <Layout.Horizontal
                   flex={{ alignItems: 'center', justifyContent: 'flex-start' }}
                   style={{ flexWrap: 'wrap', gap: '5px' }}>
-                  <Text color={Color.GREY_400}>
-                    {isEmpty(data)
-                      ? getString('labels.noResults')
-                      : (stringSubstitute(getString('labels.prCount'), {
-                          count: data?.length
-                        }) as string)}
-                  </Text>
+                  <Render when={!isEmpty(labelFilter) || !prLoading}>
+                    <Text color={Color.GREY_400}>
+                      {isEmpty(data)
+                        ? !isEmpty(labelFilter) && getString('labels.noResults')
+                        : (stringSubstitute(getString('labels.prCount'), {
+                            count: data?.length
+                          }) as string)}
+                    </Text>
+                  </Render>
 
                   {(isLabelEnabled || standalone) &&
                     labelFilter &&
@@ -468,7 +469,7 @@ export default function PullRequests() {
                 <Case val={0}>
                   <NoResultCard
                     forSearch={!!searchTerm}
-                    forFilter={!isEmpty(labelFilter) || !isEmpty(authorFilter)}
+                    forFilter={!isEmpty(labelFilter) || !isEmpty(authorFilter) || !isEmpty(filter)}
                     emptyFilterMessage={getString('pullRequestNotFoundforFilter')}
                     message={getString('pullRequestEmpty')}
                     buttonText={getString('newPullRequest')}

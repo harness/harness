@@ -28,7 +28,7 @@ import {
   Avatar,
   StringSubstitute
 } from '@harnessio/uicore'
-import { FontVariation } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
@@ -94,6 +94,11 @@ const PopoverContent: React.FC<ReviewerSelectProps> = ({ pullRequestMetadata, on
             setQuery(_value)
           }}
           leftIcon={loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch}
+          leftIconProps={{
+            name: loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch,
+            size: 12,
+            color: Color.GREY_500
+          }}
         />
 
         <Container className={cx(css.tabContainer)}>

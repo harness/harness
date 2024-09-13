@@ -34,9 +34,6 @@
 .bannerContainer {
   padding: var(--spacing-small) var(--spacing-xsmall) !important;
   background-color: var(--red-50) !important;
-  position: sticky;
-  top: 0;
-  z-index: 2;
   margin: var(--spacing-small) var(--spacing-xlarge) !important;
   border-radius: 5px;
 }

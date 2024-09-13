@@ -61,6 +61,8 @@ export interface StringsMap {
   branchDoesNotHaveFile: string
   branchName: string
   branchNotFound: string
+  branchNotFoundError: string
+  branchNotFoundMessage: string
   'branchProtection.allRepoOwners': string
   'branchProtection.autoDeleteText': string
   'branchProtection.autoDeleteTitle': string
@@ -435,6 +437,7 @@ export interface StringsMap {
   getMyCloneTitle: string
   gitIgnore: string
   gitness: string
+  goToDefaultBranch: string
   heading: string
   help: string
   hideCommitHistory: string

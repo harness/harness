@@ -335,7 +335,7 @@ const BranchProtectionForm = (props: {
                   disabled={editMode}
                   className={cx(css.widthContainer, css.label)}
                 />
-                <FormInput.Text
+                <FormInput.TextArea
                   name="desc"
                   label={getString('description')}
                   placeholder={getString('branchProtection.descPlaceholder')}

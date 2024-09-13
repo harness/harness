@@ -21,8 +21,11 @@ export declare const branchesOnly: string
 export declare const branchSpan: string
 export declare const button: string
 export declare const input: string
+export declare const layout: string
 export declare const listContainer: string
 export declare const main: string
+export declare const maxWidth: string
+export declare const newBranchOption: string
 export declare const newBtnText: string
 export declare const popover: string
 export declare const prefix: string
