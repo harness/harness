@@ -40,7 +40,7 @@ enum TimeZone {
 export function DateTimeWithLocalContentInline({ time }: { time: number }): JSX.Element {
   const { getString } = useStrings()
   return (
-    <Layout.Vertical>
+    <Layout.Vertical margin={{ right: '4px' }}>
       <Layout.Horizontal className={css.timeWrapper}>
         <Text color={Color.GREY_600} className={css.time}>
           {moment(time).format(DATE_PARSE_FORMAT)}

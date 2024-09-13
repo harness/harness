@@ -133,6 +133,16 @@ export enum SpaceSettingsTab {
   labels = 'labels'
 }
 
+export enum WebhookTabs {
+  DETAILS = 'details',
+  EXECUTIONS = 'executions'
+}
+
+export enum ExecutionTabs {
+  PAYLOAD = 'Payload',
+  SERVER_RESPONSE = 'Server Response'
+}
+
 export enum VulnerabilityScanningType {
   DETECT = 'detect',
   BLOCK = 'block',
@@ -578,4 +588,62 @@ export const dryMerge = (
         setPRStateLoading?.(false)
       })
   }
+}
+
+export enum WebhookEventType {
+  PUSH = 'push',
+  ALL = 'all',
+  INDIVIDUAL = 'individual'
+}
+
+export enum WebhookIndividualEvent {
+  BRANCH_CREATED = 'branch_created',
+  BRANCH_UPDATED = 'branch_updated',
+  BRANCH_DELETED = 'branch_deleted',
+  TAG_CREATED = 'tag_created',
+  TAG_UPDATED = 'tag_updated',
+  TAG_DELETED = 'tag_deleted',
+  PR_CREATED = 'pullreq_created',
+  PR_UPDATED = 'pullreq_updated',
+  PR_REOPENED = 'pullreq_reopened',
+  PR_BRANCH_UPDATED = 'pullreq_branch_updated',
+  PR_CLOSED = 'pullreq_closed',
+  PR_COMMENT_CREATED = 'pullreq_comment_created',
+  PR_MERGED = 'pullreq_merged'
+}
+
+export enum WebhookEventMap {
+  BRANCH_CREATED = 'Branch created',
+  BRANCH_UPDATED = 'Branch updated',
+  BRANCH_DELETED = 'Branch deleted',
+  TAG_CREATED = 'Tag created',
+  TAG_UPDATED = 'Tag updated',
+  TAG_DELETED = 'Tag deleted',
+  PR_CREATED = 'PR created',
+  PR_UPDATED = 'PR updated',
+  PR_REOPENED = 'PR reopened',
+  PR_BRANCH_UPDATED = 'PR updated',
+  PR_CLOSED = 'PR closed',
+  PR_COMMENT_CREATED = 'PR created',
+  PR_MERGED = 'PR merged'
+}
+
+export const eventMapping: Record<WebhookIndividualEvent, WebhookEventMap> = {
+  [WebhookIndividualEvent.BRANCH_CREATED]: WebhookEventMap.BRANCH_CREATED,
+  [WebhookIndividualEvent.BRANCH_UPDATED]: WebhookEventMap.BRANCH_UPDATED,
+  [WebhookIndividualEvent.BRANCH_DELETED]: WebhookEventMap.BRANCH_DELETED,
+  [WebhookIndividualEvent.TAG_CREATED]: WebhookEventMap.TAG_CREATED,
+  [WebhookIndividualEvent.TAG_UPDATED]: WebhookEventMap.TAG_UPDATED,
+  [WebhookIndividualEvent.TAG_DELETED]: WebhookEventMap.TAG_DELETED,
+  [WebhookIndividualEvent.PR_CREATED]: WebhookEventMap.PR_CREATED,
+  [WebhookIndividualEvent.PR_UPDATED]: WebhookEventMap.PR_UPDATED,
+  [WebhookIndividualEvent.PR_REOPENED]: WebhookEventMap.PR_REOPENED,
+  [WebhookIndividualEvent.PR_BRANCH_UPDATED]: WebhookEventMap.PR_BRANCH_UPDATED,
+  [WebhookIndividualEvent.PR_CLOSED]: WebhookEventMap.PR_CLOSED,
+  [WebhookIndividualEvent.PR_COMMENT_CREATED]: WebhookEventMap.PR_COMMENT_CREATED,
+  [WebhookIndividualEvent.PR_MERGED]: WebhookEventMap.PR_MERGED
+}
+
+export function getEventDescription(event: WebhookIndividualEvent): string {
+  return eventMapping[event]
 }

@@ -420,7 +420,22 @@ webhookPRClosed: PR closed
 webhookPRCommentCreated: PR comment created
 webhookPRMerged: PR merged
 nameYourWebhook: Name your webhook
+noExecutionsFound: No Executions found
+noExecutionsFoundForWebhook: No executions found for the given webhook
+executionHistory: Execution History
+serverResponse: Server Response
+requestPayload: Request Payload
+triggeredEvent: Triggered Event
+event: Event
+lastTriggeredAt: Last Triggered At
+executionId: Execution ID
 submitReview: Submit Review
+webhookPage: Webhook page
+webhookTabs: WebhookTabs
+reTriggeredExecution: Re-triggered Execution
+retriggerExecution: Re-trigger Execution
+atSubTitle: At
+notRetriggerableMessage: This webhook execution cannot be re-triggered
 approve: Approve
 requestChanges: Changes Requested
 repoEmptyMarkdown: |

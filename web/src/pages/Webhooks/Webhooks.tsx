@@ -50,7 +50,7 @@ import { ResourceListingPagination } from 'components/ResourceListingPagination/
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import type { OpenapiWebhookType } from 'services/code'
-import { formatTriggers } from 'utils/GitUtils'
+import { WebhookTabs, formatTriggers } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { WebhooksHeader } from './WebhooksHeader/WebhooksHeader'
 import css from './Webhooks.module.scss'
@@ -255,6 +255,20 @@ export default function Webhooks() {
                             })
                         }
                       })
+                    }
+                  },
+                  {
+                    hasIcon: true,
+                    iconName: 'execution',
+                    iconSize: 16,
+                    text: getString('executionHistory'),
+                    onClick: () => {
+                      history.push(
+                        `${routes.toCODEWebhookDetails({
+                          repoPath: repoMetadata?.path as string,
+                          webhookId: String(row.original?.identifier)
+                        })}?tab=${WebhookTabs.EXECUTIONS}`
+                      )
                     }
                   }
                 ]}

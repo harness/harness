@@ -108,9 +108,9 @@ const BranchProtectionForm = (props: {
   const { data: statuses } = useGet<string[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/checks/recent`,
     queryParams: {
-      query: searchStatusTerm,
-      debounce: 500
-    }
+      query: searchStatusTerm
+    },
+    debounce: 500
   })
   const statusOptions: SelectOption[] = useMemo(
     () =>

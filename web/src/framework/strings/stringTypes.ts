@@ -41,6 +41,7 @@ export interface StringsMap {
   ascending: string
   assignPeople: string
   at: string
+  atSubTitle: string
   attachText: string
   basedOn: string
   behindDivergence: string
@@ -358,6 +359,9 @@ export interface StringsMap {
   enterUser: string
   error: string
   error404Text: string
+  event: string
+  executionHistory: string
+  executionId: string
   'executions.canceledTime': string
   'executions.completedTime': string
   'executions.description': string
@@ -565,6 +569,7 @@ export interface StringsMap {
   'labels.updateLabel': string
   'labels.updated': string
   language: string
+  lastTriggeredAt: string
   leaveAComment: string
   license: string
   lineBreaks: string
@@ -626,6 +631,8 @@ export interface StringsMap {
   noCommits: string
   noCommitsMessage: string
   noCommitsPR: string
+  noExecutionsFound: string
+  noExecutionsFoundForWebhook: string
   noExpiration: string
   noExpirationDate: string
   noFilterResultMessage: string
@@ -637,6 +644,7 @@ export interface StringsMap {
   noWebHooks: string
   none: string
   noneYet: string
+  notRetriggerableMessage: string
   off: string
   ok: string
   on: string
@@ -855,6 +863,7 @@ export interface StringsMap {
   pullRequestalreadyExists: string
   pullRequests: string
   quote: string
+  reTriggeredExecution: string
   reactivate: string
   readMe: string
   reader: string
@@ -903,6 +912,7 @@ export interface StringsMap {
   repositoryName: string
   reqChanges: string
   requestChanges: string
+  requestPayload: string
   required: string
   resetZoom: string
   resolve: string
@@ -911,6 +921,7 @@ export interface StringsMap {
   resolvedComments: string
   restoreBranch: string
   results: string
+  retriggerExecution: string
   reviewProjectSettings: string
   reviewerNotFound: string
   reviewers: string
@@ -973,6 +984,7 @@ export interface StringsMap {
   selectToViewMore: string
   selectUsers: string
   'semanticSearch.sampleQueries': string
+  serverResponse: string
   setAsAdmin: string
   setting: string
   settings: string
@@ -1048,6 +1060,7 @@ export interface StringsMap {
   token: string
   tooltipRepoEdit: string
   top: string
+  triggeredEvent: string
   'triggers.actions': string
   'triggers.createSuccess': string
   'triggers.createTrigger': string
@@ -1142,9 +1155,11 @@ export interface StringsMap {
   webhookPRMerged: string
   webhookPRReopened: string
   webhookPRUpdated: string
+  webhookPage: string
   webhookSelectAllEvents: string
   webhookSelectIndividualEvents: string
   webhookSelectPushEvents: string
+  webhookTabs: string
   webhookTagCreated: string
   webhookTagDeleted: string
   webhookTagUpdated: string

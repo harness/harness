@@ -35,32 +35,10 @@ import React from 'react'
 import type { OpenapiUpdateWebhookRequest, EnumWebhookTrigger, OpenapiWebhookType } from 'services/code'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { WebhookIndividualEvent, type GitInfoProps, WebhookEventType } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import css from './WehookForm.module.scss'
-
-enum WebhookEventType {
-  PUSH = 'push',
-  ALL = 'all',
-  INDIVIDUAL = 'individual'
-}
-
-enum WebhookIndividualEvent {
-  BRANCH_CREATED = 'branch_created',
-  BRANCH_UPDATED = 'branch_updated',
-  BRANCH_DELETED = 'branch_deleted',
-  TAG_CREATED = 'tag_created',
-  TAG_UPDATED = 'tag_updated',
-  TAG_DELETED = 'tag_deleted',
-  PR_CREATED = 'pullreq_created',
-  PR_UPDATED = 'pullreq_updated',
-  PR_REOPENED = 'pullreq_reopened',
-  PR_BRANCH_UPDATED = 'pullreq_branch_updated',
-  PR_CLOSED = 'pullreq_closed',
-  PR_COMMENT_CREATED = 'pullreq_comment_created',
-  PR_MERGED = 'pullreq_merged'
-}
 
 const SECRET_MASK = '********'
 

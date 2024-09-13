@@ -14,52 +14,75 @@
  * limitations under the License.
  */
 
-import React from 'react'
-import { Container, PageBody } from '@harnessio/uicore'
-import { useGet } from 'restful-react'
+import React, { useEffect } from 'react'
+import cx from 'classnames'
+import { PageBody, Container, Tabs } from '@harnessio/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
-import type { OpenapiWebhookType } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { WehookForm } from 'pages/WebhookNew/WehookForm'
-import { useAppContext } from 'AppContext'
+import { PageBrowserProps, getErrorMessage, voidFn } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import { WebhookTabs } from 'utils/GitUtils'
+import WebhookDetailsTab from 'pages/WebhookDetailsTab/WebhookDetailsTab'
+import WebhookExecutions from 'pages/WebhookExecutions/WebhookExecutions'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
+import { useQueryParams } from 'hooks/useQueryParams'
+import css from './Webhook.module.scss'
 
 export default function WebhookDetails() {
+  const { repoMetadata, error, loading, refetch, webhookId } = useGetRepositoryMetadata()
+  const queryParams = useQueryParams<PageBrowserProps>()
+  const { replaceQueryParams } = useUpdateQueryParams()
   const { getString } = useStrings()
-  const { routes } = useAppContext()
-  const { repoMetadata, error, loading, webhookId, refetch: refreshMetadata } = useGetRepositoryMetadata()
-  const {
-    data,
-    loading: webhookLoading,
-    error: webhookError,
-    refetch: refetchWebhook
-  } = useGet<OpenapiWebhookType>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/webhooks/${webhookId}`,
-    lazy: !repoMetadata
+
+  useEffect(() => {
+    if (!queryParams.tab) {
+      replaceQueryParams({ ...queryParams, tab: WebhookTabs.DETAILS })
+    }
   })
 
+  const tabListArray = [
+    {
+      id: WebhookTabs.DETAILS,
+      title: getString('details'),
+      panel: (
+        <Container padding={'large'}>
+          <WebhookDetailsTab />
+        </Container>
+      )
+    },
+    {
+      id: WebhookTabs.EXECUTIONS,
+      title: getString('pageTitle.executions'),
+      panel: <WebhookExecutions />
+    }
+  ]
   return (
-    <Container>
+    <Container className={css.main}>
       <RepositoryPageHeader
+        className={css.headerContainer}
         repoMetadata={repoMetadata}
-        title={getString('webhookDetails')}
-        dataTooltipId="webhookDetails"
-        extraBreadcrumbLinks={
-          repoMetadata && [
-            {
-              label: getString('webhooks'),
-              url: routes.toCODEWebhooks({ repoPath: repoMetadata.path as string })
-            }
-          ]
-        }
+        title={`${getString('webhook')} : ${webhookId}`}
+        dataTooltipId={getString('webhookPage')}
       />
-      <PageBody
-        error={error || webhookError}
-        retryOnError={() => (repoMetadata ? refetchWebhook() : refreshMetadata())}>
-        <LoadingSpinner visible={loading || webhookLoading} withBorder={!!data && webhookLoading} />
-
-        {repoMetadata && data && <WehookForm isEdit webhook={data} repoMetadata={repoMetadata} />}
+      <PageBody error={getErrorMessage(error)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={loading} />
+        {repoMetadata && (
+          <Container className={cx(css.main, css.tabsContainer)}>
+            <Tabs
+              id={getString('webhookTabs')}
+              large={false}
+              selectedTabId={queryParams.tab}
+              animate={false}
+              onChange={(id: WebhookTabs) => {
+                if (id === WebhookTabs.DETAILS) {
+                  delete queryParams.page
+                }
+                replaceQueryParams({ ...queryParams, tab: id })
+              }}
+              tabList={tabListArray}></Tabs>
+          </Container>
+        )}
       </PageBody>
     </Container>
   )
