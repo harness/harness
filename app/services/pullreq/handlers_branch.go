@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	gitevents "github.com/harness/gitness/app/events/git"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
@@ -119,7 +118,6 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 					pr.Number, event.Payload.NewSHA, event.Payload.OldSHA, pr.SourceSHA)
 			}
 
-			pr.Edited = time.Now().UnixMilli()
 			pr.SourceSHA = event.Payload.NewSHA
 			pr.MergeBaseSHA = newMergeBase.String()
 

@@ -493,7 +493,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
 		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
 		queryParameterOrder, queryParameterSortPullRequest,
-		queryParameterCreatedLt, queryParameterCreatedGt, queryParameterEditedLt, queryParameterEditedGt,
+		queryParameterCreatedLt, queryParameterCreatedGt, queryParameterUpdatedLt, queryParameterUpdatedGt,
 		queryParameterIncludeDescription,
 		QueryParameterPage, QueryParameterLimit,
 		QueryParameterLabelID, QueryParameterValueID,

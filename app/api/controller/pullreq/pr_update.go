@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
@@ -96,7 +95,6 @@ func (c *Controller) Update(ctx context.Context,
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		pr.Title = in.Title
 		pr.Description = in.Description
-		pr.Edited = time.Now().UnixMilli()
 		if needToWriteActivity {
 			pr.ActivitySeq++
 		}

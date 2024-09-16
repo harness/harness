@@ -127,11 +127,11 @@ var queryParameterCreatedGt = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterEditedLt = openapi3.ParameterOrRef{
+var queryParameterUpdatedLt = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamEditedLt,
+		Name:        request.QueryParamUpdatedLt,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The result should contain only entries edited before this timestamp (unix millis)."),
+		Description: ptr.String("The result should contain only entries updated before this timestamp (unix millis)."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
@@ -142,11 +142,11 @@ var queryParameterEditedLt = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterEditedGt = openapi3.ParameterOrRef{
+var queryParameterUpdatedGt = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamEditedGt,
+		Name:        request.QueryParamUpdatedGt,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The result should contain only entries edited after this timestamp (unix millis)."),
+		Description: ptr.String("The result should contain only entries updated after this timestamp (unix millis)."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{

@@ -140,16 +140,17 @@ func (c *Controller) State(ctx context.Context,
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		pr.State = in.State
 		pr.IsDraft = in.IsDraft
-		pr.Edited = time.Now().UnixMilli()
 
 		switch stateChange {
 		case changeClose:
+			nowMilli := time.Now().UnixMilli()
+
 			// clear all merge (check) related fields
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
 			pr.MergeSHA = nil
 			pr.MergeConflicts = nil
 			pr.MergeTargetSHA = nil
-			pr.Closed = &pr.Edited
+			pr.Closed = &nowMilli
 		case changeReopen:
 			pr.SourceSHA = sourceSHA.String()
 			pr.MergeBaseSHA = mergeBaseSHA.String()

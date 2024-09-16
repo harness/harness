@@ -26,8 +26,8 @@ type PullReq struct {
 
 	CreatedBy int64  `json:"-"` // not returned, because the author info is in the Author field
 	Created   int64  `json:"created"`
-	Updated   int64  `json:"-"` // not returned, it's updated by the server internally. Clients should use EditedAt.
-	Edited    int64  `json:"edited"`
+	Updated   int64  `json:"updated"`
+	Edited    int64  `json:"edited"` // TODO: Remove. Field Edited is equal to Updated
 	Closed    *int64 `json:"closed,omitempty"`
 
 	State   enum.PullReqState `json:"state"`
@@ -115,6 +115,7 @@ type PullReqFilter struct {
 	MentionedID        int64                        `json:"mentioned_id"`
 	IncludeDescription bool                         `json:"include_description"`
 	CreatedFilter
+	UpdatedFilter
 	EditedFilter
 
 	// internal use only

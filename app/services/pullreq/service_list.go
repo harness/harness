@@ -77,10 +77,10 @@ func (c *ListService) ListForSpace(
 	filter *types.PullReqFilter,
 ) ([]types.PullReqRepo, error) {
 	// list of unsupported filter options
-	filter.Sort = enum.PullReqSortEdited // the only supported option, hardcoded in the SQL query
-	filter.Order = enum.OrderDesc        // the only supported option, hardcoded in the SQL query
-	filter.Page = 0                      // unsupported, pagination should be done with the EditedLt parameter
-	filter.EditedGt = 0                  // unsupported
+	filter.Sort = enum.PullReqSortUpdated // the only supported option, hardcoded in the SQL query
+	filter.Order = enum.OrderDesc         // the only supported option, hardcoded in the SQL query
+	filter.Page = 0                       // unsupported, pagination should be done with the UpdatedLt parameter
+	filter.UpdatedGt = 0                  // unsupported
 
 	if includeSubspaces {
 		subspaces, err := c.spaceStore.GetDescendantsData(ctx, space.ID)
@@ -112,7 +112,7 @@ func (c *ListService) ListForSpace(
 
 		loadMore = len(pullReqs) == prLimit || len(repoUnchecked) == repoLimit
 		if loadMore && len(pullReqs) > 0 {
-			filter.EditedLt = pullReqs[len(pullReqs)-1].Edited
+			filter.UpdatedLt = pullReqs[len(pullReqs)-1].Updated
 		}
 
 		for repoID := range repoUnchecked {

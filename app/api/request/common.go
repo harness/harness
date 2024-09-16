@@ -46,6 +46,8 @@ const (
 
 	QueryParamCreatedLt = "created_lt"
 	QueryParamCreatedGt = "created_gt"
+	QueryParamUpdatedLt = "updated_lt"
+	QueryParamUpdatedGt = "updated_gt"
 	QueryParamEditedLt  = "edited_lt"
 	QueryParamEditedGt  = "edited_gt"
 
@@ -148,6 +150,26 @@ func ParseCreated(r *http.Request) (types.CreatedFilter, error) {
 
 	filter.CreatedGt = createdGt
 	filter.CreatedLt = createdLt
+
+	return filter, nil
+}
+
+// ParseUpdated extracts the updated filter from the url query param.
+func ParseUpdated(r *http.Request) (types.UpdatedFilter, error) {
+	filter := types.UpdatedFilter{}
+
+	updatedLt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamUpdatedLt, 0)
+	if err != nil {
+		return filter, fmt.Errorf("encountered error parsing updated lt: %w", err)
+	}
+
+	updatedGt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamUpdatedGt, 0)
+	if err != nil {
+		return filter, fmt.Errorf("encountered error parsing updated gt: %w", err)
+	}
+
+	filter.UpdatedGt = updatedGt
+	filter.UpdatedLt = updatedLt
 
 	return filter, nil
 }

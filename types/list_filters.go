@@ -25,6 +25,11 @@ type CreatedFilter struct {
 	CreatedLt int64 `json:"created_lt"`
 }
 
+type UpdatedFilter struct {
+	UpdatedGt int64 `json:"updated_gt"`
+	UpdatedLt int64 `json:"updated_lt"`
+}
+
 type EditedFilter struct {
 	EditedGt int64 `json:"edited_gt"`
 	EditedLt int64 `json:"edited_lt"`

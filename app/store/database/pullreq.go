@@ -61,7 +61,7 @@ type pullReq struct {
 	CreatedBy int64    `db:"pullreq_created_by"`
 	Created   int64    `db:"pullreq_created"`
 	Updated   int64    `db:"pullreq_updated"`
-	Edited    int64    `db:"pullreq_edited"`
+	Edited    int64    `db:"pullreq_edited"` // TODO: Remove
 	Closed    null.Int `db:"pullreq_closed"`
 
 	State   enum.PullReqState `db:"pullreq_state"`
@@ -308,11 +308,12 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	updatedAt := time.Now()
+	updatedAt := time.Now().UnixMilli()
 
 	dbPR := mapInternalPullReq(pr)
 	dbPR.Version++
-	dbPR.Updated = updatedAt.UnixMilli()
+	dbPR.Updated = updatedAt
+	dbPR.Edited = updatedAt
 
 	query, arg, err := db.BindNamed(sqlQuery, dbPR)
 	if err != nil {
@@ -495,7 +496,7 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 func (s *PullReqStore) Stream(ctx context.Context, opts *types.PullReqFilter) (<-chan *types.PullReq, <-chan error) {
 	stmt := s.listQuery(opts)
 
-	stmt = stmt.OrderBy("pullreq_edited desc")
+	stmt = stmt.OrderBy("pullreq_updated desc")
 
 	chPRs := make(chan *types.PullReq)
 	chErr := make(chan error, 1)
@@ -560,7 +561,7 @@ func (s *PullReqStore) listQuery(opts *types.PullReqFilter) squirrel.SelectBuild
 	return stmt
 }
 
-//nolint:cyclop
+//nolint:cyclop,gocognit,gocyclo
 func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.PullReqFilter) {
 	if len(opts.States) == 1 {
 		*stmt = stmt.Where("pullreq_state = ?", opts.States[0])
@@ -598,6 +599,14 @@ func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.Pul
 
 	if opts.CreatedGt > 0 {
 		*stmt = stmt.Where("pullreq_created > ?", opts.CreatedGt)
+	}
+
+	if opts.UpdatedLt > 0 {
+		*stmt = stmt.Where("pullreq_updated < ?", opts.UpdatedLt)
+	}
+
+	if opts.UpdatedGt > 0 {
+		*stmt = stmt.Where("pullreq_updated > ?", opts.UpdatedGt)
 	}
 
 	if opts.EditedLt > 0 {
@@ -706,7 +715,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		CreatedBy:        pr.CreatedBy,
 		Created:          pr.Created,
 		Updated:          pr.Updated,
-		Edited:           pr.Edited,
+		Edited:           pr.Edited, // TODO: When we remove the DB column, make Edited equal to Updated
 		Closed:           pr.Closed.Ptr(),
 		State:            pr.State,
 		IsDraft:          pr.IsDraft,
@@ -752,7 +761,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		CreatedBy:        pr.CreatedBy,
 		Created:          pr.Created,
 		Updated:          pr.Updated,
-		Edited:           pr.Edited,
+		Edited:           pr.Edited, // TODO: When we remove the DB column, make Edited equal to Updated
 		Closed:           null.IntFromPtr(pr.Closed),
 		State:            pr.State,
 		IsDraft:          pr.IsDraft,

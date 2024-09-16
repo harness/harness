@@ -110,12 +110,17 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		return nil, fmt.Errorf("encountered error parsing valueid filter: %w", err)
 	}
 
-	createdAtFilter, err := ParseCreated(r)
+	createdFilter, err := ParseCreated(r)
 	if err != nil {
 		return nil, fmt.Errorf("encountered error parsing pr created filter: %w", err)
 	}
 
-	editedAtFilter, err := ParseEdited(r)
+	updatedFilter, err := ParseUpdated(r)
+	if err != nil {
+		return nil, fmt.Errorf("encountered error parsing pr updated filter: %w", err)
+	}
+
+	editedFilter, err := ParseEdited(r)
 	if err != nil {
 		return nil, fmt.Errorf("encountered error parsing pr edited filter: %w", err)
 	}
@@ -169,8 +174,9 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		ReviewDecisions:    reviewDecisions,
 		MentionedID:        mentionedID,
 		IncludeDescription: includeDescription,
-		CreatedFilter:      createdAtFilter,
-		EditedFilter:       editedAtFilter,
+		CreatedFilter:      createdFilter,
+		UpdatedFilter:      updatedFilter,
+		EditedFilter:       editedFilter,
 	}, nil
 }
 

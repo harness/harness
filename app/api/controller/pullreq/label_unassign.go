@@ -17,7 +17,6 @@ package pullreq
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
@@ -50,13 +49,9 @@ func (c *Controller) UnassignLabel(
 		return fmt.Errorf("failed to delete pullreq label: %w", err)
 	}
 
-	pullreq, err = c.pullreqStore.UpdateOptLock(ctx, pullreq, func(pullreq *types.PullReq) error {
-		pullreq.Edited = time.Now().UnixMilli()
-		pullreq.ActivitySeq++
-		return nil
-	})
+	pullreq, err = c.pullreqStore.UpdateActivitySeq(ctx, pullreq)
 	if err != nil {
-		return fmt.Errorf("failed to update pull request: %w", err)
+		return fmt.Errorf("failed to update pull request activity sequence: %w", err)
 	}
 
 	var value *string

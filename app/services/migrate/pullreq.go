@@ -272,7 +272,7 @@ func (r *repoImportState) convertPullReq(
 	case enum.PullReqStateMerged:
 		// For merged PR's assume the Head.Sha and Base.Sha point to commits at the time of merging.
 
-		pr.Merged = &pr.Edited
+		pr.Merged = &pr.Updated
 		pr.MergedBy = &author.ID             // Don't have real info for this - use the author.
 		mergeMethod := enum.MergeMethodMerge // Don't know
 		pr.MergeMethod = &mergeMethod
@@ -294,7 +294,7 @@ func (r *repoImportState) convertPullReq(
 		pr.MergeSHA = nil
 		pr.MergeConflicts = nil
 		pr.MergeTargetSHA = nil
-		pr.Closed = &pr.Edited
+		pr.Closed = &pr.Updated
 
 	case enum.PullReqStateOpen:
 		// For open PR we need to verify existence of branches and find to merge base.
