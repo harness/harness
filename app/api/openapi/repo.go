@@ -1415,7 +1415,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetRequest(&opRebaseBranch, &struct {
 		repoRequest
 		repo.RebaseInput
-	}{}, http.MethodPatch)
+	}{}, http.MethodPost)
 	_ = reflector.SetJSONResponse(&opRebaseBranch, new(types.RebaseResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRebaseBranch, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opRebaseBranch, new(usererror.Error), http.StatusInternalServerError)
