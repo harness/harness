@@ -98,6 +98,7 @@ func (c *Controller) ReviewerAdd(
 	}
 
 	var reviewer *types.PullReqReviewer
+	var added bool
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		reviewer, err = c.reviewerStore.Find(ctx, pr.ID, in.ReviewerID)
@@ -110,6 +111,7 @@ func (c *Controller) ReviewerAdd(
 		}
 
 		reviewer = newPullReqReviewer(session, pr, repo, reviewerInfo, addedByInfo, reviewerType, in)
+		added = true
 
 		return c.reviewerStore.Create(ctx, reviewer)
 	})
@@ -117,8 +119,38 @@ func (c *Controller) ReviewerAdd(
 		return nil, fmt.Errorf("failed to create pull request reviewer: %w", err)
 	}
 
+	if !added {
+		return reviewer, nil
+	}
+
+	err = func() error {
+		payload := &types.PullRequestActivityPayloadReviewerAdd{
+			PrincipalID:  reviewer.PrincipalID,
+			ReviewerType: reviewerType,
+		}
+
+		metadata := &types.PullReqActivityMetadata{
+			Mentions: &types.PullReqActivityMentionsMetadata{IDs: []int64{reviewer.PrincipalID}},
+		}
+
+		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {
+			return fmt.Errorf("failed to increment pull request activity sequence: %w", err)
+		}
+
+		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, metadata)
+		if err != nil {
+			return fmt.Errorf("failed to create pull request activity: %w", err)
+		}
+
+		return nil
+	}()
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to write pull request activity after adding a reviewer")
+	}
+
 	c.reportReviewerAddition(ctx, session, pr, reviewer)
-	return reviewer, err
+
+	return reviewer, nil
 }
 
 func (c *Controller) reportReviewerAddition(
@@ -134,9 +166,11 @@ func (c *Controller) reportReviewerAddition(
 }
 
 // newPullReqReviewer creates new pull request reviewer object.
-func newPullReqReviewer(session *auth.Session, pullReq *types.PullReq,
+func newPullReqReviewer(
+	session *auth.Session, pullReq *types.PullReq,
 	repo *types.Repository, reviewerInfo, addedByInfo *types.PrincipalInfo,
-	reviewerType enum.PullReqReviewerType, in *ReviewerAddInput) *types.PullReqReviewer {
+	reviewerType enum.PullReqReviewerType, in *ReviewerAddInput,
+) *types.PullReqReviewer {
 	now := time.Now().UnixMilli()
 	return &types.PullReqReviewer{
 		PullReqID:      pullReq.ID,

@@ -83,6 +83,7 @@ const (
 	PullReqActivityTypeTitleChange    PullReqActivityType = "title-change"
 	PullReqActivityTypeStateChange    PullReqActivityType = "state-change"
 	PullReqActivityTypeReviewSubmit   PullReqActivityType = "review-submit"
+	PullReqActivityTypeReviewerAdd    PullReqActivityType = "reviewer-add"
 	PullReqActivityTypeReviewerDelete PullReqActivityType = "reviewer-delete"
 	PullReqActivityTypeBranchUpdate   PullReqActivityType = "branch-update"
 	PullReqActivityTypeBranchDelete   PullReqActivityType = "branch-delete"

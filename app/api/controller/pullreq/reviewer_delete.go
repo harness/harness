@@ -74,27 +74,22 @@ func (c *Controller) ReviewerDelete(
 		return fmt.Errorf("failed to delete reviewer: %w", err)
 	}
 
-	if reviewer.ReviewDecision == enum.PullReqReviewDecisionPending {
-		// We create a pull request activity entry only if a review has actually been submitted.
-		return nil
-	}
-
-	activityPayload := &types.PullRequestActivityPayloadReviewerDelete{
-		CommitSHA:   reviewer.SHA,
-		Decision:    reviewer.ReviewDecision,
-		PrincipalID: reviewer.PrincipalID,
-	}
-
-	metadata := &types.PullReqActivityMetadata{
-		Mentions: &types.PullReqActivityMentionsMetadata{IDs: []int64{reviewer.PrincipalID}},
-	}
-
 	err = func() error {
+		payload := &types.PullRequestActivityPayloadReviewerDelete{
+			CommitSHA:   reviewer.SHA,
+			Decision:    reviewer.ReviewDecision,
+			PrincipalID: reviewer.PrincipalID,
+		}
+
+		metadata := &types.PullReqActivityMetadata{
+			Mentions: &types.PullReqActivityMentionsMetadata{IDs: []int64{reviewer.PrincipalID}},
+		}
+
 		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {
 			return fmt.Errorf("failed to increment pull request activity sequence: %w", err)
 		}
 
-		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, activityPayload, metadata)
+		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload, metadata)
 		if err != nil {
 			return fmt.Errorf("failed to create pull request activity: %w", err)
 		}
@@ -103,7 +98,7 @@ func (c *Controller) ReviewerDelete(
 	}()
 	if err != nil {
 		// non-critical error
-		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after reviewer removal")
+		log.Ctx(ctx).Err(err).Msg("failed to write pull request activity after reviewer removal")
 	}
 
 	return nil

@@ -130,6 +130,15 @@ func (a *PullRequestActivityPayloadReviewSubmit) ActivityType() enum.PullReqActi
 	return enum.PullReqActivityTypeReviewSubmit
 }
 
+type PullRequestActivityPayloadReviewerAdd struct {
+	PrincipalID  int64                    `json:"principal_id"`
+	ReviewerType enum.PullReqReviewerType `json:"reviewer_type"`
+}
+
+func (a *PullRequestActivityPayloadReviewerAdd) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeReviewerAdd
+}
+
 type PullRequestActivityPayloadReviewerDelete struct {
 	CommitSHA   string                     `json:"commit_sha"`
 	Decision    enum.PullReqReviewDecision `json:"decision"`
