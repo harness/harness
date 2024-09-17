@@ -18,13 +18,23 @@ import (
 	"time"
 )
 
-// Artifact DTO object.
-type Artifact struct {
+// Defines values for BandwidthType.
+const (
+	BandwidthTypeUPLOAD   BandwidthType = "UPLOAD"
+	BandwidthTypeDOWNLOAD BandwidthType = "DOWNLOAD"
+)
+
+// BandwidthStat DTO object.
+type BandwidthStat struct {
 	ID        int64
-	Version   string
 	ImageID   int64
+	Timestamp time.Time
+	Type      BandwidthType
+	Bytes     int64
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	CreatedBy int64
 	UpdatedBy int64
 }
+
+type BandwidthType string

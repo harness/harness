@@ -47,12 +47,20 @@ func ProvideRegistryBlobDao(db *sqlx.DB) store.RegistryBlobRepository {
 	return NewRegistryBlobDao(db)
 }
 
+func ProvideImageDao(db *sqlx.DB) store.ImageRepository {
+	return NewImageDao(db)
+}
+
 func ProvideArtifactDao(db *sqlx.DB) store.ArtifactRepository {
 	return NewArtifactDao(db)
 }
 
-func ProvideArtifactStatDao(db *sqlx.DB) store.ArtifactStatRepository {
-	return NewArtifactStatDao(db)
+func ProvideDownloadStatDao(db *sqlx.DB) store.DownloadStatRepository {
+	return NewDownloadStatDao(db)
+}
+
+func ProvideBandwidthStatDao(db *sqlx.DB) store.BandwidthStatRepository {
+	return NewBandwidthStatDao(db)
 }
 
 func ProvideTagDao(db *sqlx.DB) store.TagRepository {
@@ -86,6 +94,8 @@ var WireSet = wire.NewSet(
 	ProvideCleanupPolicyDao,
 	ProvideManifestRefDao,
 	ProvideLayerDao,
+	ProvideImageDao,
 	ProvideArtifactDao,
-	ProvideArtifactStatDao,
+	ProvideDownloadStatDao,
+	ProvideBandwidthStatDao,
 )

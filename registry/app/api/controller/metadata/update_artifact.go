@@ -60,7 +60,7 @@ func (c *APIController) UpdateArtifactLabels(
 
 	a := string(r.Artifact)
 
-	artifactEntity, err := c.ArtifactStore.GetByRepoAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, a)
+	artifactEntity, err := c.ImageStore.GetByRepoAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, a)
 
 	if len(artifactEntity.Name) == 0 {
 		return artifact.UpdateArtifactLabels404JSONResponse{
@@ -77,7 +77,7 @@ func (c *APIController) UpdateArtifactLabels(
 		return throwModifyArtifact400Error(err), nil
 	}
 
-	err = c.ArtifactStore.Update(ctx, existingArtifact)
+	err = c.ImageStore.Update(ctx, existingArtifact)
 
 	if err != nil {
 		return throwModifyArtifact400Error(err), nil
@@ -107,9 +107,9 @@ func throwModifyArtifact400Error(err error) artifact.UpdateArtifactLabels400JSON
 
 func AttachLabels(
 	dto artifact.ArtifactLabelRequest,
-	existingArtifact *types.Artifact,
-) (*types.Artifact, error) {
-	return &types.Artifact{
+	existingArtifact *types.Image,
+) (*types.Image, error) {
+	return &types.Image{
 		ID:         existingArtifact.ID,
 		RegistryID: existingArtifact.RegistryID,
 		Name:       existingArtifact.Name,

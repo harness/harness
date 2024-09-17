@@ -44,38 +44,38 @@ import (
 )
 
 type manifestService struct {
-	registryDao     store.RegistryRepository
-	manifestDao     store.ManifestRepository
-	layerDao        store.LayerRepository
-	blobRepo        store.BlobRepository
-	mtRepository    store.MediaTypesRepository
-	tagDao          store.TagRepository
-	artifactDao     store.ArtifactRepository
-	artifactStatDao store.ArtifactStatRepository
-	manifestRefDao  store.ManifestReferenceRepository
-	gcService       gc.Service
-	tx              dbtx.Transactor
+	registryDao    store.RegistryRepository
+	manifestDao    store.ManifestRepository
+	layerDao       store.LayerRepository
+	blobRepo       store.BlobRepository
+	mtRepository   store.MediaTypesRepository
+	tagDao         store.TagRepository
+	imageDao       store.ImageRepository
+	artifactDao    store.ArtifactRepository
+	manifestRefDao store.ManifestReferenceRepository
+	gcService      gc.Service
+	tx             dbtx.Transactor
 }
 
 func NewManifestService(
 	registryDao store.RegistryRepository, manifestDao store.ManifestRepository,
 	blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository, tagDao store.TagRepository,
-	artifactDao store.ArtifactRepository, artifactStatDao store.ArtifactStatRepository,
+	imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	layerDao store.LayerRepository, manifestRefDao store.ManifestReferenceRepository,
 	tx dbtx.Transactor, gcService gc.Service,
 ) ManifestService {
 	return &manifestService{
-		registryDao:     registryDao,
-		manifestDao:     manifestDao,
-		layerDao:        layerDao,
-		blobRepo:        blobRepo,
-		mtRepository:    mtRepository,
-		tagDao:          tagDao,
-		artifactDao:     artifactDao,
-		artifactStatDao: artifactStatDao,
-		manifestRefDao:  manifestRefDao,
-		gcService:       gcService,
-		tx:              tx,
+		registryDao:    registryDao,
+		manifestDao:    manifestDao,
+		layerDao:       layerDao,
+		blobRepo:       blobRepo,
+		mtRepository:   mtRepository,
+		tagDao:         tagDao,
+		artifactDao:    artifactDao,
+		imageDao:       imageDao,
+		manifestRefDao: manifestRefDao,
+		gcService:      gcService,
+		tx:             tx,
 	}
 }
 
@@ -201,10 +201,19 @@ func (l *manifestService) dbTagManifest(
 				return err
 			}
 
-			artifact := &types.Artifact{
+			image := &types.Image{
 				Name:       imageName,
 				RegistryID: dbRepo.ID,
 				Enabled:    true,
+			}
+
+			if err := l.imageDao.CreateOrUpdate(ctx, image); err != nil {
+				return err
+			}
+
+			artifact := &types.Artifact{
+				ImageID: image.ID,
+				Version: string(dgst),
 			}
 
 			if err := l.artifactDao.CreateOrUpdate(ctx, artifact); err != nil {
@@ -222,21 +231,7 @@ func (l *manifestService) dbTagManifest(
 				return err
 			}
 
-			a, err := l.artifactDao.GetByName(ctx, dbRepo.ID, imageName)
 			if err != nil {
-				return err
-			}
-			now := time.Now().UTC()
-
-			midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, time.UTC)
-
-			artifactStat := &types.ArtifactStat{
-				ArtifactID:    a.ID,
-				Date:          midnight.UnixMilli(),
-				DownloadCount: 1,
-			}
-
-			if err := l.artifactStatDao.CreateOrUpdate(ctx, artifactStat); err != nil {
 				return err
 			}
 

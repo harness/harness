@@ -71,7 +71,7 @@ func (c *APIController) GetClientSetupDetails(
 	}
 
 	if imageParam != nil {
-		_, err := c.ArtifactStore.GetByName(ctx, reg.ID, string(*imageParam))
+		_, err := c.ImageStore.GetByName(ctx, reg.ID, string(*imageParam))
 		if err != nil {
 			return artifact.GetClientSetupDetails404JSONResponse{
 				NotFoundJSONResponse: artifact.NotFoundJSONResponse(

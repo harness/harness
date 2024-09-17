@@ -34,6 +34,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/manifest"
@@ -108,38 +109,43 @@ func NewLocalRegistry(
 	app *App, ms ManifestService, manifestDao store.ManifestRepository,
 	registryDao store.RegistryRepository, registryBlobDao store.RegistryBlobRepository,
 	blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository,
-	tagDao store.TagRepository, artifactDao store.ArtifactRepository, artifactStatDao store.ArtifactStatRepository,
+	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
+	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor,
 ) Registry {
 	return &LocalRegistry{
-		App:             app,
-		ms:              ms,
-		registryDao:     registryDao,
-		manifestDao:     manifestDao,
-		registryBlobDao: registryBlobDao,
-		blobRepo:        blobRepo,
-		mtRepository:    mtRepository,
-		tagDao:          tagDao,
-		artifactDao:     artifactDao,
-		artifactStatDao: artifactStatDao,
-		gcService:       gcService,
-		tx:              tx,
+		App:              app,
+		ms:               ms,
+		registryDao:      registryDao,
+		manifestDao:      manifestDao,
+		registryBlobDao:  registryBlobDao,
+		blobRepo:         blobRepo,
+		mtRepository:     mtRepository,
+		tagDao:           tagDao,
+		imageDao:         imageDao,
+		artifactDao:      artifactDao,
+		bandwidthStatDao: bandwidthStatDao,
+		downloadStatDao:  downloadStatDao,
+		gcService:        gcService,
+		tx:               tx,
 	}
 }
 
 type LocalRegistry struct {
-	App             *App
-	ms              ManifestService
-	registryDao     store.RegistryRepository
-	manifestDao     store.ManifestRepository
-	registryBlobDao store.RegistryBlobRepository
-	blobRepo        store.BlobRepository
-	mtRepository    store.MediaTypesRepository
-	tagDao          store.TagRepository
-	artifactDao     store.ArtifactRepository
-	artifactStatDao store.ArtifactStatRepository
-	gcService       gc.Service
-	tx              dbtx.Transactor
+	App              *App
+	ms               ManifestService
+	registryDao      store.RegistryRepository
+	manifestDao      store.ManifestRepository
+	registryBlobDao  store.RegistryBlobRepository
+	blobRepo         store.BlobRepository
+	mtRepository     store.MediaTypesRepository
+	tagDao           store.TagRepository
+	imageDao         store.ImageRepository
+	artifactDao      store.ArtifactRepository
+	bandwidthStatDao store.BandwidthStatRepository
+	downloadStatDao  store.DownloadStatRepository
+	gcService        gc.Service
+	tx               dbtx.Transactor
 }
 
 func (r *LocalRegistry) Base() error {
@@ -397,6 +403,20 @@ func (r *LocalRegistry) fetchBlobInternal(
 		return responseHeaders, nil, -1, nil, "", errs
 	}
 
+	if http.MethodGet == method {
+		go func(art pkg.RegistryInfo, dgst digest.Digest) {
+			// Cloning Context.
+			session, _ := request.AuthSessionFrom(ctx)
+			ctx3 := request.WithAuthSession(context.Background(), session)
+			err := r.dbBlobDownloadComplete(ctx3, dgst, info)
+			if err != nil {
+				log.Error().Stack().Err(err).Msgf("error while putting bandwidth stat of artifact, %v", err)
+				return
+			}
+			log.Info().Msgf("Successfully updated the bandwidth stat metrics %s", art.Digest)
+		}(info, dgst)
+	}
+
 	if redirectURL != "" {
 		return responseHeaders, nil, -1, nil, redirectURL, errs
 	}
@@ -414,7 +434,19 @@ func (r *LocalRegistry) PullManifest(
 	acceptHeaders []string,
 	ifNoneMatchHeader []string,
 ) (responseHeaders *commons.ResponseHeaders, descriptor manifest.Descriptor, manifest manifest.Manifest, errs []error) {
-	return r.ManifestExist(ctx, artInfo, acceptHeaders, ifNoneMatchHeader)
+	responseHeaders, descriptor, manifest, errs = r.ManifestExist(ctx, artInfo, acceptHeaders, ifNoneMatchHeader)
+	go func(art pkg.RegistryInfo) {
+		// Cloning Context.
+		session, _ := request.AuthSessionFrom(ctx)
+		ctx2 := request.WithAuthSession(context.Background(), session)
+		err := r.dbGetManifestComplete(ctx2, artInfo)
+		if err != nil {
+			log.Error().Stack().Err(err).Msgf("error while putting download stat of artifact, %v", err)
+			return
+		}
+		log.Info().Msgf("Successfully updated the download stat metrics %s", art.Digest)
+	}(artInfo)
+	return responseHeaders, descriptor, manifest, errs
 }
 
 func (r *LocalRegistry) getDigestByTag(ctx context.Context, artInfo pkg.RegistryInfo) (digest.Digest, error) {
@@ -1572,6 +1604,89 @@ func (r *LocalRegistry) dbBlobLinkExists(
 	return nil
 }
 
+func (r *LocalRegistry) dbBlobDownloadComplete(
+	ctx context.Context,
+	dgst digest.Digest,
+	info pkg.RegistryInfo,
+) error {
+	err := r.tx.WithTx(
+		ctx, func(ctx context.Context) error {
+			registry, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
+			if err != nil {
+				return err
+			}
+
+			blob, err := r.blobRepo.FindByDigestAndRootParentID(ctx, dgst, info.RootParentID)
+			if err != nil {
+				return err
+			}
+
+			image, err := r.imageDao.GetByName(ctx, registry.ID, info.Image)
+			if err != nil {
+				return err
+			}
+
+			bandwidthStat := &types.BandwidthStat{
+				ImageID: image.ID,
+				Type:    types.BandwidthTypeDOWNLOAD,
+				Bytes:   blob.Size,
+			}
+
+			if err := r.bandwidthStatDao.Create(ctx, bandwidthStat); err != nil {
+				return err
+			}
+
+			return nil
+		}, dbtx.TxDefault,
+	)
+	if err != nil {
+		log.Error().Msgf("failed to put download bandwidth stat in database: %v", err)
+		return fmt.Errorf("committing database transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (r *LocalRegistry) dbGetManifestComplete(
+	ctx context.Context,
+	info pkg.RegistryInfo,
+) error {
+	err := r.tx.WithTx(
+		ctx, func(ctx context.Context) error {
+			registry, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
+			if err != nil {
+				return err
+			}
+
+			image, err := r.imageDao.GetByName(ctx, registry.ID, info.Image)
+			if err != nil {
+				return err
+			}
+
+			artifact, err := r.artifactDao.GetByName(ctx, image.ID, info.Digest)
+			if err != nil {
+				return err
+			}
+
+			downloadStat := &types.DownloadStat{
+				ArtifactID: artifact.ID,
+			}
+
+			if err := r.downloadStatDao.Create(ctx, downloadStat); err != nil {
+				return err
+			}
+
+			return nil
+		}, dbtx.TxDefault,
+	)
+	if err != nil {
+		log.Error().Msgf("failed to put download stat in database: %v", err)
+		return fmt.Errorf("committing database transaction: %w", err)
+	}
+
+	return nil
+}
+
 func (r *LocalRegistry) dbPutBlobUploadComplete(
 	ctx context.Context,
 	repoName string,
@@ -1604,27 +1719,23 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 				return err
 			}
 
-			artifact := &types.Artifact{
+			image := &types.Image{
 				Name:       info.Image,
 				RegistryID: registry.ID,
 				Enabled:    false,
 			}
 
-			if err := r.artifactDao.CreateOrUpdate(ctx, artifact); err != nil {
+			if err := r.imageDao.CreateOrUpdate(ctx, image); err != nil {
 				return err
 			}
 
-			now := time.Now().UTC()
-
-			midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 1, 0, time.UTC)
-
-			artifactStat := &types.ArtifactStat{
-				ArtifactID:  artifact.ID,
-				Date:        midnight.UnixMilli(),
-				UploadBytes: int64(size),
+			bandwidthStat := &types.BandwidthStat{
+				ImageID: image.ID,
+				Type:    types.BandwidthTypeUPLOAD,
+				Bytes:   int64(size),
 			}
 
-			if err := r.artifactStatDao.CreateOrUpdate(ctx, artifactStat); err != nil {
+			if err := r.bandwidthStatDao.Create(ctx, bandwidthStat); err != nil {
 				return err
 			}
 

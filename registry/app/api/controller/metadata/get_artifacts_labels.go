@@ -58,11 +58,11 @@ func (c *APIController) ListArtifactLabels(
 		}, nil
 	}
 
-	labels, err := c.ArtifactStore.GetLabelsByParentIDAndRepo(
+	labels, err := c.ImageStore.GetLabelsByParentIDAndRepo(
 		ctx, regInfo.parentID,
 		regInfo.RegistryIdentifier, regInfo.limit, regInfo.offset, regInfo.searchTerm,
 	)
-	count, _ := c.ArtifactStore.CountLabelsByParentIDAndRepo(
+	count, _ := c.ImageStore.CountLabelsByParentIDAndRepo(
 		ctx, regInfo.parentID,
 		regInfo.RegistryIdentifier, regInfo.searchTerm,
 	)

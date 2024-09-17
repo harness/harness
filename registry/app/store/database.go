@@ -382,14 +382,14 @@ type RegistryBlobRepository interface {
 	) (bool, error)
 }
 
-type ArtifactRepository interface {
+type ImageRepository interface {
 	// Get an Artifact specified by ID
-	Get(ctx context.Context, id int64) (*types.Artifact, error)
+	Get(ctx context.Context, id int64) (*types.Image, error)
 	// Get an Artifact specified by Artifact Name
 	GetByName(
-		ctx context.Context, repoID int64,
+		ctx context.Context, registryID int64,
 		name string,
-	) (*types.Artifact, error)
+	) (*types.Image, error)
 	// Get the Labels specified by Parent ID and Repo
 	GetLabelsByParentIDAndRepo(
 		ctx context.Context, parentID int64,
@@ -405,17 +405,26 @@ type ArtifactRepository interface {
 	GetByRepoAndName(
 		ctx context.Context, parentID int64,
 		repo string, name string,
-	) (*types.Artifact, error)
-	// Get the Labels specified by Parent ID
-	GetLabelsByParentID(ctx context.Context, parentID int64) (labels []string, err error)
+	) (*types.Image, error)
 	// Create an Artifact
-	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error
+	CreateOrUpdate(ctx context.Context, image *types.Image) error
 	// Update an Artifact
-	Update(ctx context.Context, artifact *types.Artifact) (err error)
+	Update(ctx context.Context, artifact *types.Image) (err error)
 }
 
-type ArtifactStatRepository interface {
-	CreateOrUpdate(ctx context.Context, artifactStat *types.ArtifactStat) error
+type ArtifactRepository interface {
+	// Get an Artifact specified by ID
+	GetByName(ctx context.Context, imageID int64, version string) (*types.Artifact, error)
+	// Create an Artifact
+	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error
+}
+
+type DownloadStatRepository interface {
+	Create(ctx context.Context, downloadStat *types.DownloadStat) error
+}
+
+type BandwidthStatRepository interface {
+	Create(ctx context.Context, bandwidthStat *types.BandwidthStat) error
 }
 
 type GCBlobTaskRepository interface {

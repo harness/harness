@@ -223,9 +223,9 @@ func (r registryDao) GetAll(
 		From("registries r").
 		LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
 		LeftJoin(
-			"(SELECT r.registry_id, count(a.artifact_id) as artifact_count FROM"+
-				" registries r LEFT JOIN artifacts a ON r.registry_id = a.artifact_registry_id"+
-				" WHERE r.registry_parent_id = ? AND a.artifact_enabled = true GROUP BY r.registry_id ) as t2"+
+			"(SELECT r.registry_id, count(a.image_id) as artifact_count FROM"+
+				" registries r LEFT JOIN images a ON r.registry_id = a.image_registry_id"+
+				" WHERE r.registry_parent_id = ? AND a.image_enabled = true GROUP BY r.registry_id ) as t2"+
 				" ON r.registry_id = t2.registry_id ", parentID,
 		).
 		LeftJoin(
@@ -235,15 +235,12 @@ func (r registryDao) GetAll(
 				"GROUP BY r.registry_id) as t3 ON r.registry_id = t3.registry_id ", parentID,
 		).
 		LeftJoin(
-			"(SELECT b.artifact_registry_id as registry_id,"+
-				" sum(COALESCE(a.artifact_stat_download_count,0)) as"+
-				" download_count FROM artifact_stats a "+
-				" LEFT JOIN artifacts b"+
-				" ON a.artifact_stat_artifact_id = b.artifact_id LEFT JOIN registries"+
-				" c ON b.artifact_registry_id = c.registry_id"+
-				" WHERE c.registry_parent_id = ? AND b.artifact_enabled = true GROUP BY b.artifact_registry_id)"+
-				" as t4 ON r.registry_id = t4.registry_id", parentID,
-		).
+			"(SELECT i.image_registry_id, COUNT(d.download_stat_id) as download_count "+
+				"FROM artifacts a "+
+				" JOIN images i on i.image_id = a.artifact_image_id"+
+				" JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id"+
+				" WHERE i.image_enabled = true GROUP BY i.image_registry_id ) as t4 "+
+				" ON r.registry_id = t4.image_registry_id").
 		Where("r.registry_parent_id = ?", parentID)
 
 	if search != "" {

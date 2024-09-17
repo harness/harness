@@ -34,25 +34,26 @@ func LocalRegistryProvider(
 	registryDao store.RegistryRepository, manifestDao store.ManifestRepository,
 	registryBlobDao store.RegistryBlobRepository,
 	mtRepository store.MediaTypesRepository,
-	tagDao store.TagRepository, artifactDao store.ArtifactRepository, artifactStatDao store.ArtifactStatRepository,
+	tagDao store.TagRepository, imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
+	bandwidthStatDao store.BandwidthStatRepository, downloadStatDao store.DownloadStatRepository,
 	gcService gc.Service, tx dbtx.Transactor,
 ) *LocalRegistry {
 	return NewLocalRegistry(
 		app, ms, manifestDao, registryDao, registryBlobDao, blobRepo,
-		mtRepository, tagDao, artifactDao, artifactStatDao, gcService, tx,
+		mtRepository, tagDao, imageDao, artifactDao, bandwidthStatDao, downloadStatDao, gcService, tx,
 	).(*LocalRegistry)
 }
 
 func ManifestServiceProvider(
 	registryDao store.RegistryRepository,
 	manifestDao store.ManifestRepository, blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository,
-	manifestRefDao store.ManifestReferenceRepository, tagDao store.TagRepository, artifactDao store.ArtifactRepository,
-	artifactStatDao store.ArtifactStatRepository, layerDao store.LayerRepository,
+	manifestRefDao store.ManifestReferenceRepository, tagDao store.TagRepository, imageDao store.ImageRepository,
+	artifactDao store.ArtifactRepository, layerDao store.LayerRepository,
 	gcService gc.Service, tx dbtx.Transactor,
 ) ManifestService {
 	return NewManifestService(
-		registryDao, manifestDao, blobRepo, mtRepository, tagDao,
-		artifactDao, artifactStatDao, layerDao, manifestRefDao, tx, gcService,
+		registryDao, manifestDao, blobRepo, mtRepository, tagDao, imageDao,
+		artifactDao, layerDao, manifestRefDao, tx, gcService,
 	)
 }
 

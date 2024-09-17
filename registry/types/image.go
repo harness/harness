@@ -18,16 +18,15 @@ import (
 	"time"
 )
 
-// ArtifactStat DTO object.
-type ArtifactStat struct {
-	ID            int64
-	ArtifactID    int64
-	Date          int64
-	DownloadCount int64
-	UploadBytes   int64
-	DownloadBytes int64
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	CreatedBy     int64
-	UpdatedBy     int64
+// Image DTO object.
+type Image struct {
+	ID         int64
+	Name       string
+	RegistryID int64
+	Enabled    bool
+	Labels     []string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	CreatedBy  int64
+	UpdatedBy  int64
 }

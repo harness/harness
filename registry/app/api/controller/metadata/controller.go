@@ -26,7 +26,7 @@ import (
 
 // APIController simple struct.
 type APIController struct {
-	ArtifactStore      store.ArtifactRepository
+	ImageStore         store.ImageRepository
 	RegistryRepository store.RegistryRepository
 	UpstreamProxyStore store.UpstreamProxyConfigRepository
 	TagStore           store.TagRepository
@@ -47,7 +47,7 @@ func NewAPIController(
 	tagStore store.TagRepository,
 	manifestStore store.ManifestRepository,
 	cleanupPolicyStore store.CleanupPolicyRepository,
-	artifactStore store.ArtifactRepository,
+	imageStore store.ImageRepository,
 	driver storagedriver.StorageDriver,
 	spaceStore corestore.SpaceStore,
 	tx dbtx.Transactor,
@@ -62,7 +62,7 @@ func NewAPIController(
 		TagStore:           tagStore,
 		ManifestStore:      manifestStore,
 		CleanupPolicyStore: cleanupPolicyStore,
-		ArtifactStore:      artifactStore,
+		ImageStore:         imageStore,
 		spaceStore:         spaceStore,
 		StorageDriver:      driver,
 		tx:                 tx,

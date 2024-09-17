@@ -18,13 +18,13 @@ import (
 	"time"
 )
 
-// Artifact DTO object.
-type Artifact struct {
-	ID        int64
-	Version   string
-	ImageID   int64
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	CreatedBy int64
-	UpdatedBy int64
+// DownloadStat DTO object.
+type DownloadStat struct {
+	ID         int64
+	ArtifactID int64
+	Timestamp  time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	CreatedBy  int64
+	UpdatedBy  int64
 }
