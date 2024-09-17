@@ -136,62 +136,56 @@ func ParseListQueryFilterFromRequest(r *http.Request) types.ListQueryFilter {
 
 // ParseCreated extracts the created filter from the url query param.
 func ParseCreated(r *http.Request) (types.CreatedFilter, error) {
-	filter := types.CreatedFilter{}
-
 	createdLt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamCreatedLt, 0)
 	if err != nil {
-		return filter, fmt.Errorf("encountered error parsing created lt: %w", err)
+		return types.CreatedFilter{}, fmt.Errorf("encountered error parsing created lt: %w", err)
 	}
 
 	createdGt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamCreatedGt, 0)
 	if err != nil {
-		return filter, fmt.Errorf("encountered error parsing created gt: %w", err)
+		return types.CreatedFilter{}, fmt.Errorf("encountered error parsing created gt: %w", err)
 	}
 
-	filter.CreatedGt = createdGt
-	filter.CreatedLt = createdLt
-
-	return filter, nil
+	return types.CreatedFilter{
+		CreatedGt: createdGt,
+		CreatedLt: createdLt,
+	}, nil
 }
 
 // ParseUpdated extracts the updated filter from the url query param.
 func ParseUpdated(r *http.Request) (types.UpdatedFilter, error) {
-	filter := types.UpdatedFilter{}
-
 	updatedLt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamUpdatedLt, 0)
 	if err != nil {
-		return filter, fmt.Errorf("encountered error parsing updated lt: %w", err)
+		return types.UpdatedFilter{}, fmt.Errorf("encountered error parsing updated lt: %w", err)
 	}
 
 	updatedGt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamUpdatedGt, 0)
 	if err != nil {
-		return filter, fmt.Errorf("encountered error parsing updated gt: %w", err)
+		return types.UpdatedFilter{}, fmt.Errorf("encountered error parsing updated gt: %w", err)
 	}
 
-	filter.UpdatedGt = updatedGt
-	filter.UpdatedLt = updatedLt
-
-	return filter, nil
+	return types.UpdatedFilter{
+		UpdatedGt: updatedGt,
+		UpdatedLt: updatedLt,
+	}, nil
 }
 
 // ParseEdited extracts the edited filter from the url query param.
 func ParseEdited(r *http.Request) (types.EditedFilter, error) {
-	filter := types.EditedFilter{}
-
 	editedLt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamEditedLt, 0)
 	if err != nil {
-		return filter, fmt.Errorf("encountered error parsing edited lt: %w", err)
+		return types.EditedFilter{}, fmt.Errorf("encountered error parsing edited lt: %w", err)
 	}
 
 	editedGt, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamEditedGt, 0)
 	if err != nil {
-		return filter, fmt.Errorf("encountered error parsing edited gt: %w", err)
+		return types.EditedFilter{}, fmt.Errorf("encountered error parsing edited gt: %w", err)
 	}
 
-	filter.EditedGt = editedGt
-	filter.EditedLt = editedLt
-
-	return filter, nil
+	return types.EditedFilter{
+		EditedGt: editedGt,
+		EditedLt: editedLt,
+	}, nil
 }
 
 // GetContentEncodingFromHeadersOrDefault returns the content encoding from the request headers.
