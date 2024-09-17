@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, ButtonVariation, Container, Dialog, FlexExpander, Layout, Text, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
@@ -53,6 +53,7 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
     [mutate, showError]
   )
   const tokenData = standalone ? false : hooks?.useGenerateToken?.(hash, currentUser?.uid, flag)
+  const displayName = useMemo(() => currentUser?.display_name?.split('@')[0] || '', [currentUser])
 
   useEffect(() => {
     if (tokenData) {
@@ -84,14 +85,9 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
         </Text>
         <Container padding={{ bottom: 'medium' }}>
           <Layout.Horizontal className={css.layout}>
-            <Text className={css.url}>{currentUser?.display_name || ''}</Text>
+            <Text className={css.url}>{displayName}</Text>
             <FlexExpander />
-            <CopyButton
-              content={currentUser?.display_name || ''}
-              id={css.cloneCopyButton}
-              icon={CodeIcon.Copy}
-              iconProps={{ size: 14 }}
-            />
+            <CopyButton content={displayName} id={css.cloneCopyButton} icon={CodeIcon.Copy} iconProps={{ size: 14 }} />
           </Layout.Horizontal>
         </Container>
         <Text padding={{ bottom: 'small' }} font={{ variation: FontVariation.FORM_LABEL, size: 'small' }}>
