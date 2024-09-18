@@ -99,7 +99,10 @@ func (c *Controller) Rebase(
 	}
 
 	if protection.IsCritical(violations) {
-		return nil, &types.MergeViolations{RuleViolations: violations}, nil
+		return nil, &types.MergeViolations{
+			RuleViolations: violations,
+			Message:        protection.GenerateErrorMessageForBlockingViolations(violations),
+		}, nil
 	}
 
 	readParams := git.CreateReadParams(repo)
@@ -162,10 +165,11 @@ func (c *Controller) Rebase(
 		return nil, nil, fmt.Errorf("rebase execution failed: %w", err)
 	}
 
-	if mergeOutput.MergeSHA.String() == "" || len(mergeOutput.ConflictFiles) > 0 {
+	if mergeOutput.MergeSHA.IsEmpty() || len(mergeOutput.ConflictFiles) > 0 {
 		return nil, &types.MergeViolations{
 			ConflictFiles:  mergeOutput.ConflictFiles,
 			RuleViolations: violations,
+			Message:        fmt.Sprintf("Rebase blocked by conflicting files: %v", mergeOutput.ConflictFiles),
 		}, nil
 	}
 
