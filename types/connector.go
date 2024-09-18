@@ -14,29 +14,24 @@
 
 package types
 
-import "encoding/json"
+import (
+	"github.com/harness/gitness/types/enum"
+)
 
 type Connector struct {
-	ID          int64  `db:"connector_id"              json:"-"`
-	Description string `db:"connector_description"     json:"description"`
-	SpaceID     int64  `db:"connector_space_id"        json:"space_id"`
-	Identifier  string `db:"connector_uid"             json:"identifier"`
-	Type        string `db:"connector_type"            json:"type"`
-	Data        string `db:"connector_data"            json:"data"`
-	Created     int64  `db:"connector_created"         json:"created"`
-	Updated     int64  `db:"connector_updated"         json:"updated"`
-	Version     int64  `db:"connector_version"         json:"-"`
-}
+	ID               int64                `json:"-"`
+	Description      string               `json:"description"`
+	SpaceID          int64                `json:"space_id"`
+	Identifier       string               `json:"identifier"`
+	CreatedBy        int64                `json:"created_by"`
+	Type             enum.ConnectorType   `json:"type"`
+	LastTestAttempt  int64                `json:"last_test_attempt"`
+	LastTestErrorMsg string               `json:"last_test_error_msg"`
+	LastTestStatus   enum.ConnectorStatus `json:"last_test_status"`
+	Created          int64                `json:"created"`
+	Updated          int64                `json:"updated"`
+	Version          int64                `json:"-"`
 
-// TODO [CODE-1363]: remove after identifier migration.
-func (s Connector) MarshalJSON() ([]byte, error) {
-	// alias allows us to embed the original object while avoiding an infinite loop of marshaling.
-	type alias Connector
-	return json.Marshal(&struct {
-		alias
-		UID string `json:"uid"`
-	}{
-		alias: (alias)(s),
-		UID:   s.Identifier,
-	})
+	// Pointers to connector specific data
+	ConnectorConfig
 }

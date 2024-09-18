@@ -15,8 +15,7 @@
 package connector
 
 import (
-	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/connector"
+	"github.com/harness/gitness/app/connector/scm"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -24,14 +23,20 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideController,
+	ProvideConnectorHandler,
+	ProvideSCMConnectorHandler,
 )
 
-func ProvideController(
-	connectorStore store.ConnectorStore,
-	connectorService *connector.Service,
-	authorizer authz.Authorizer,
-	spaceStore store.SpaceStore,
-) *Controller {
-	return NewController(authorizer, connectorStore, connectorService, spaceStore)
+// ProvideConnectorHandler provides a connector handler for handling connector-related ops.
+func ProvideConnectorHandler(
+	secretStore store.SecretStore,
+	scmService *scm.Service,
+) *Service {
+	return New(secretStore, scmService)
+}
+
+// ProvideSCMConnectorHandler provides a SCM connector handler for specifically handling
+// SCM connector related ops.
+func ProvideSCMConnectorHandler(secretStore store.SecretStore) *scm.Service {
+	return scm.NewService(secretStore)
 }

@@ -205,8 +205,8 @@ func ProvideSecretStore(db *sqlx.DB) store.SecretStore {
 }
 
 // ProvideConnectorStore provides a connector store.
-func ProvideConnectorStore(db *sqlx.DB) store.ConnectorStore {
-	return NewConnectorStore(db)
+func ProvideConnectorStore(db *sqlx.DB, secretStore store.SecretStore) store.ConnectorStore {
+	return NewConnectorStore(db, secretStore)
 }
 
 // ProvideTemplateStore provides a template store.

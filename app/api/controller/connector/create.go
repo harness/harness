@@ -36,13 +36,11 @@ var (
 )
 
 type CreateInput struct {
-	Description string `json:"description"`
-	SpaceRef    string `json:"space_ref"` // Ref of the parent space
-	// TODO [CODE-1363]: remove after identifier migration.
-	UID        string `json:"uid" deprecated:"true"`
-	Identifier string `json:"identifier"`
-	Type       string `json:"type"`
-	Data       string `json:"data"`
+	Description string             `json:"description"`
+	SpaceRef    string             `json:"space_ref"` // Ref of the parent space
+	Identifier  string             `json:"identifier"`
+	Type        enum.ConnectorType `json:"type"`
+	types.ConnectorConfig
 }
 
 func (c *Controller) Create(
@@ -50,7 +48,7 @@ func (c *Controller) Create(
 	session *auth.Session,
 	in *CreateInput,
 ) (*types.Connector, error) {
-	if err := c.sanitizeCreateInput(in); err != nil {
+	if err := in.validate(); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
@@ -72,16 +70,19 @@ func (c *Controller) Create(
 	}
 
 	now := time.Now().UnixMilli()
+
 	connector := &types.Connector{
-		Description: in.Description,
-		Data:        in.Data,
-		Type:        in.Type,
-		SpaceID:     parentSpace.ID,
-		Identifier:  in.Identifier,
-		Created:     now,
-		Updated:     now,
-		Version:     0,
+		Description:     in.Description,
+		CreatedBy:       session.Principal.ID,
+		Type:            in.Type,
+		SpaceID:         parentSpace.ID,
+		Identifier:      in.Identifier,
+		Created:         now,
+		Updated:         now,
+		Version:         0,
+		ConnectorConfig: in.ConnectorConfig,
 	}
+
 	err = c.connectorStore.Create(ctx, connector)
 	if err != nil {
 		return nil, fmt.Errorf("connector creation failed: %w", err)
@@ -90,16 +91,20 @@ func (c *Controller) Create(
 	return connector, nil
 }
 
-func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	// TODO [CODE-1363]: remove after identifier migration.
-	if in.Identifier == "" {
-		in.Identifier = in.UID
+func (in *CreateInput) validate() error {
+	parentRefAsID, err := strconv.ParseInt(in.SpaceRef, 10, 64)
+	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.SpaceRef)) == 0) {
+		return errConnectorRequiresParent
 	}
 
-	parentRefAsID, _ := strconv.ParseInt(in.SpaceRef, 10, 64)
+	// check that the connector type is valid
+	if _, ok := in.Type.Sanitize(); !ok {
+		return usererror.BadRequest("invalid connector type")
+	}
 
-	if parentRefAsID <= 0 || len(strings.TrimSpace(in.SpaceRef)) == 0 {
-		return errConnectorRequiresParent
+	// if the connector type is valid, validate the connector config
+	if err := in.ConnectorConfig.Validate(in.Type); err != nil {
+		return usererror.BadRequest(fmt.Sprintf("invalid connector config: %s", err.Error()))
 	}
 
 	if err := check.Identifier(in.Identifier); err != nil {

@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -28,11 +29,9 @@ import (
 
 // UpdateInput is used for updating a connector.
 type UpdateInput struct {
-	// TODO [CODE-1363]: remove after identifier migration.
-	UID         *string `json:"uid" deprecated:"true"`
 	Identifier  *string `json:"identifier"`
 	Description *string `json:"description"`
-	Data        *string `json:"data"`
+	*types.ConnectorConfig
 }
 
 func (c *Controller) Update(
@@ -42,7 +41,7 @@ func (c *Controller) Update(
 	identifier string,
 	in *UpdateInput,
 ) (*types.Connector, error) {
-	if err := c.sanitizeUpdateInput(in); err != nil {
+	if err := in.validate(); err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
@@ -68,20 +67,22 @@ func (c *Controller) Update(
 		if in.Description != nil {
 			original.Description = *in.Description
 		}
-		if in.Data != nil {
-			original.Data = *in.Data
+		// TODO: See if this can be made better. The PATCH API supports partial updates so
+		// currently we keep all the top level fields the same unless they are explicitly provided.
+		// The connector config is a nested field so we only check whether it's provided at the top level, and not
+		// all the fields inside the config. Maybe PUT/POST would be a better option here?
+		// We can revisit this once we start adding more connectors.
+		if in.ConnectorConfig != nil {
+			if err := in.ConnectorConfig.Validate(connector.Type); err != nil {
+				return usererror.BadRequestf("failed to validate connector config: %s", err.Error())
+			}
+			original.ConnectorConfig = *in.ConnectorConfig
 		}
-
 		return nil
 	})
 }
 
-func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
-	// TODO [CODE-1363]: remove after identifier migration.
-	if in.Identifier == nil {
-		in.Identifier = in.UID
-	}
-
+func (in *UpdateInput) validate() error {
 	if in.Identifier != nil {
 		if err := check.Identifier(*in.Identifier); err != nil {
 			return err
@@ -94,8 +95,6 @@ func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
 			return err
 		}
 	}
-
-	// TODO: Validate Data
 
 	return nil
 }

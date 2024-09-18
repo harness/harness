@@ -12,26 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package connector
+package types
 
 import (
-	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/connector"
-	"github.com/harness/gitness/app/store"
+	"fmt"
 
-	"github.com/google/wire"
+	"github.com/harness/gitness/types/enum"
 )
 
-// WireSet provides a wire set for this package.
-var WireSet = wire.NewSet(
-	ProvideController,
-)
+// ConnectorConfig is a list of all the connector and their associated config.
+type ConnectorConfig struct {
+	Github *GithubConnectorData `json:"github,omitempty"`
+}
 
-func ProvideController(
-	connectorStore store.ConnectorStore,
-	connectorService *connector.Service,
-	authorizer authz.Authorizer,
-	spaceStore store.SpaceStore,
-) *Controller {
-	return NewController(authorizer, connectorStore, connectorService, spaceStore)
+func (c ConnectorConfig) Validate(typ enum.ConnectorType) error {
+	switch typ {
+	case enum.ConnectorTypeGithub:
+		if c.Github != nil {
+			return c.Github.Validate()
+		}
+		return fmt.Errorf("github connector config is required")
+	default:
+		return fmt.Errorf("connector type %s is not supported", typ)
+	}
 }

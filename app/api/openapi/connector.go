@@ -86,4 +86,16 @@ func connectorOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/connectors/{connector_ref}", opUpdate)
+
+	opTest := openapi3.Operation{}
+	opTest.WithTags("connector")
+	opTest.WithMapOfAnything(map[string]interface{}{"operationId": "testConnector"})
+	_ = reflector.SetRequest(&opTest, nil, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opTest, new(types.ConnectorTestResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opTest, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opTest, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opTest, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opTest, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opTest, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/connectors/{connector_ref}/test", opTest)
 }

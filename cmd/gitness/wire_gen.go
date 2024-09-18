@@ -12,7 +12,7 @@ import (
 	aiagent2 "github.com/harness/gitness/app/api/controller/aiagent"
 	capabilities2 "github.com/harness/gitness/app/api/controller/capabilities"
 	check2 "github.com/harness/gitness/app/api/controller/check"
-	"github.com/harness/gitness/app/api/controller/connector"
+	connector2 "github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
 	"github.com/harness/gitness/app/api/controller/githook"
 	gitspace2 "github.com/harness/gitness/app/api/controller/gitspace"
@@ -42,6 +42,7 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
+	"github.com/harness/gitness/app/connector"
 	events6 "github.com/harness/gitness/app/events/git"
 	events7 "github.com/harness/gitness/app/events/gitspace"
 	events3 "github.com/harness/gitness/app/events/gitspaceinfra"
@@ -269,7 +270,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	logsController := logs2.ProvideController(authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)
 	spaceIdentifier := check.ProvideSpaceIdentifierCheck()
 	secretStore := database.ProvideSecretStore(db)
-	connectorStore := database.ProvideConnectorStore(db)
+	connectorStore := database.ProvideConnectorStore(db, secretStore)
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
@@ -306,7 +307,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	pipelineController := pipeline.ProvideController(repoStore, triggerStore, authorizer, pipelineStore, reporter2)
 	secretController := secret.ProvideController(encrypter, secretStore, authorizer, spaceStore)
 	triggerController := trigger.ProvideController(authorizer, triggerStore, pipelineStore, repoStore)
-	connectorController := connector.ProvideController(connectorStore, authorizer, spaceStore)
+	scmService := connector.ProvideSCMConnectorHandler(secretStore)
+	connectorService := connector.ProvideConnectorHandler(secretStore, scmService)
+	connectorController := connector2.ProvideController(connectorStore, connectorService, authorizer, spaceStore)
 	templateController := template.ProvideController(templateStore, authorizer, spaceStore)
 	pluginController := plugin.ProvideController(pluginStore)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)

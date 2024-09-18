@@ -12,26 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package connector
+package types
 
-import (
-	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/connector"
-	"github.com/harness/gitness/app/store"
-
-	"github.com/google/wire"
-)
-
-// WireSet provides a wire set for this package.
-var WireSet = wire.NewSet(
-	ProvideController,
-)
-
-func ProvideController(
-	connectorStore store.ConnectorStore,
-	connectorService *connector.Service,
-	authorizer authz.Authorizer,
-	spaceStore store.SpaceStore,
-) *Controller {
-	return NewController(authorizer, connectorStore, connectorService, spaceStore)
+type SecretRef struct {
+	Identifier string `json:"identifier"`
 }

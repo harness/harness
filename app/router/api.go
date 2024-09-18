@@ -503,6 +503,7 @@ func setupConnectors(
 			r.Get("/", handlerconnector.HandleFind(connectorCtrl))
 			r.Patch("/", handlerconnector.HandleUpdate(connectorCtrl))
 			r.Delete("/", handlerconnector.HandleDelete(connectorCtrl))
+			r.Post("/test", handlerconnector.HandleTest(connectorCtrl))
 		})
 	})
 }

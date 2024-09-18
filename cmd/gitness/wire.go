@@ -53,6 +53,7 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/bootstrap"
+	connectorservice "github.com/harness/gitness/app/connector"
 	gitevents "github.com/harness/gitness/app/events/git"
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	gitspaceinfraevents "github.com/harness/gitness/app/events/gitspaceinfra"
@@ -215,6 +216,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		controllerlogs.WireSet,
 		secret.WireSet,
 		connector.WireSet,
+		connectorservice.WireSet,
 		template.WireSet,
 		manager.WireSet,
 		triggerer.WireSet,

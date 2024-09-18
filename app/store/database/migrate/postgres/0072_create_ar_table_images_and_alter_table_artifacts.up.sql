@@ -23,7 +23,7 @@ ALTER TABLE artifacts DROP CONSTRAINT fk_registries_registry_id;
 
 ALTER TABLE artifacts DROP COLUMN artifact_name;
 ALTER TABLE artifacts DROP COLUMN artifact_registry_id;
-ALTER TABLE artifacts DROP COLUMN artifact_labels;..
+ALTER TABLE artifacts DROP COLUMN artifact_labels;
 ALTER TABLE artifacts DROP COLUMN artifact_enabled;
 
 ALTER TABLE artifacts ADD COLUMN artifact_version TEXT NOT NULL;
