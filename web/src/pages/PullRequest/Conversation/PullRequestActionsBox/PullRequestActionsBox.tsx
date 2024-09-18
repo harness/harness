@@ -118,7 +118,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   const [ruleViolationArr, setRuleViolationArr] = useState<{ data: { rule_violations: TypesRuleViolations[] } }>()
   const [notBypassable, setNotBypassable] = useState(false)
   const [bypass, setBypass] = useState(false)
-  const { mutate: updatePRState, loading: loadingState } = useMutate({
+  const { mutate: updatePRState } = useMutate({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/state`
   })
@@ -318,9 +318,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                 )}
               </Text>
               <FlexExpander />
-              <Render when={loading || loadingState}>
-                <Icon name={CodeIcon.InputSpinner} size={16} margin={{ right: 'xsmall' }} />
-              </Render>
               <PullReqSuggestionsBatch />
               <Match expr={isDraft}>
                 <Truthy>

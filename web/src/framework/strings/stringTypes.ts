@@ -806,6 +806,7 @@ export interface StringsMap {
   'pr.openForReview': string
   'pr.outdated': string
   'pr.prBranchDeleteInfo': string
+  'pr.prBranchForcePushInfo': string
   'pr.prBranchPushInfo': string
   'pr.prCanBeMerged': string
   'pr.prClosed': string
@@ -870,7 +871,11 @@ export interface StringsMap {
   reactivate: string
   readMe: string
   reader: string
+  rebase: string
+  rebaseBranch: string
   rebaseMerge: string
+  'rebaseSource.message': string
+  'rebaseSource.title': string
   recursiveSearchLabel: string
   recursiveSearchTooltip: string
   refresh: string
@@ -1089,7 +1094,9 @@ export interface StringsMap {
   updateLabel: string
   updateUser: string
   updateWebhook: string
+  updateWithRebase: string
   updated: string
+  updatedBranchMessageRebase: string
   upload: string
   uploadAFileError: string
   user: string

@@ -46,6 +46,7 @@ import MergeSection from './sections/MergeSection'
 import CommentsSection from './sections/CommentsSection'
 import ChangesSection from './sections/ChangesSection'
 import BranchActionsSection from './sections/BranchActionsSection'
+import RebaseSourceSection from './sections/RebaseSourceSection'
 import css from './PullRequestOverviewPanel.module.scss'
 
 interface PullRequestOverviewPanelProps {
@@ -139,7 +140,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     path: `/api/v1/repos/${repoMetadata.path}/+/branches`,
     pathParams: { repo_ref: repoMetadata.path }
   })
-  const { mutate: mergePR } = useMutate({
+  const { mutate: mergePR, loading: mergeLoading } = useMutate({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/merge`
   })
@@ -231,6 +232,11 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     ) // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unchecked, pullReqMetadata?.source_sha, activities])
 
+  const rebasePossible = useMemo(
+    () => pullReqMetadata.merge_target_sha !== pullReqMetadata.merge_base_sha,
+    [pullReqMetadata]
+  )
+
   return (
     <Container margin={{ bottom: 'medium' }} className={css.mainContainer}>
       <Layout.Vertical>
@@ -298,7 +304,16 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
                   mergeable={mergeable}
                   conflictingFiles={conflictingFiles}
                 />
-              )
+              ),
+              [PanelSectionOutletPosition.REBASE_SOURCE_BRANCH]: rebasePossible &&
+                !mergeLoading &&
+                !conflictingFiles?.length && (
+                  <RebaseSourceSection
+                    pullReqMetadata={pullReqMetadata}
+                    repoMetadata={repoMetadata}
+                    refetchActivities={refetchActivities}
+                  />
+                )
             }}
           />
         ) : (

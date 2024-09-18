@@ -81,6 +81,14 @@
   }
 }
 
+.blueTextColor {
+  :global {
+    .bp3-button-text {
+      color: var(--primary-7) !important;
+    }
+  }
+}
+
 .requiredText {
   font-size: 10px !important;
   font-style: normal !important;

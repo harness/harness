@@ -6070,6 +6070,76 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/rebase:
+    post:
+      operationId: rebaseBranch
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                base_branch:
+                  type: string
+                bypass_rules:
+                  type: boolean
+                dry_run_rules:
+                  type: boolean
+                head_branch:
+                  type: string
+                head_commit_sha:
+                  $ref: '#/components/schemas/ShaSHA'
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRebaseResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesMergeViolations'
+          description: Unprocessable Entity
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/restore:
     post:
       operationId: restoreRepository
@@ -9199,6 +9269,95 @@ paths:
       responses:
         '204':
           description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/repos:
+    get:
+      operationId: listRepos
+      parameters:
+        - description: The substring which is used to filter the repositories by their
+            path name.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The data by which the repositories are sorted.
+          in: query
+          name: sort
+          required: false
+          schema:
+            default: identifier
+            enum:
+              - identifier
+              - created
+              - updated
+            type: string
+        - description: The order of the output.
+          in: query
+          name: order
+          required: false
+          schema:
+            default: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesRepository'
+                type: array
+          description: OK
         '401':
           content:
             application/json:
@@ -12656,6 +12815,17 @@ components:
           type: integer
         unresolved_count:
           type: integer
+      type: object
+    TypesRebaseResponse:
+      properties:
+        dry_run_rules:
+          type: boolean
+        new_head_branch_sha:
+          $ref: '#/components/schemas/ShaSHA'
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
+          type: array
       type: object
     TypesRenameDetails:
       properties:

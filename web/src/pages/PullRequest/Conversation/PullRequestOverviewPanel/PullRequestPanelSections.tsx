@@ -30,6 +30,7 @@ const PullRequestPanelSections = (props: PullRequestPanelSectionsProps) => {
       {outlets[PanelSectionOutletPosition.CHECKS]}
       {outlets[PanelSectionOutletPosition.MERGEABILITY]}
       {outlets[PanelSectionOutletPosition.BRANCH_ACTIONS]}
+      {outlets[PanelSectionOutletPosition.REBASE_SOURCE_BRANCH]}
     </Layout.Vertical>
   )
 }

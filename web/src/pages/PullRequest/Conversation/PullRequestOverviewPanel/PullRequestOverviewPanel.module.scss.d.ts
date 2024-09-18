@@ -18,6 +18,7 @@
 // This is an auto-generated file
 export declare const blueCopyContainer: string
 export declare const blueText: string
+export declare const blueTextColor: string
 export declare const boldText: string
 export declare const borderContainer: string
 export declare const borderRadius: string

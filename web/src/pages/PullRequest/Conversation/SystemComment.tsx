@@ -31,6 +31,7 @@ import { CommitActions } from 'components/CommitActions/CommitActions'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { Label } from 'components/Label/Label'
+import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import css from './Conversation.module.scss'
 
 interface SystemCommentProps extends Pick<GitInfoProps, 'pullReqMetadata'> {
@@ -149,30 +150,83 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
             <Text flex tag="div">
-              <StringSubstitute
-                str={getString('pr.prBranchPushInfo')}
-                vars={{
-                  user: (
-                    <Text padding={{ right: 'small' }} inline>
-                      <strong>{payload?.author?.display_name}</strong>
-                    </Text>
-                  ),
-                  commit: (
-                    <Container className={css.commitContainer} padding={{ left: 'small' }}>
-                      <CommitActions
-                        enableCopy
-                        sha={(payload?.payload as Unknown)?.new}
-                        href={routes.toCODEPullRequest({
-                          repoPath: repoMetadataPath as string,
-                          pullRequestSection: PullRequestSection.FILES_CHANGED,
-                          pullRequestId: String(pullReqMetadata.number),
-                          commitSHA: (payload?.payload as Unknown)?.new as string
-                        })}
-                      />
-                    </Container>
-                  )
-                }}
-              />
+              {(payload?.payload as Unknown)?.forced ? (
+                <StringSubstitute
+                  str={getString('pr.prBranchForcePushInfo')}
+                  vars={{
+                    user: (
+                      <Text padding={{ right: 'small' }} inline>
+                        <strong>{payload?.author?.display_name}</strong>
+                      </Text>
+                    ),
+                    gitRef: (
+                      <Container padding={{ left: 'small', right: 'small' }}>
+                        <GitRefLink
+                          text={pullReqMetadata.source_branch as string}
+                          url={routes.toCODERepository({
+                            repoPath: repoMetadataPath as string,
+                            gitRef: pullReqMetadata.source_branch
+                          })}
+                          showCopy
+                        />
+                      </Container>
+                    ),
+                    oldCommit: (
+                      <Container className={css.commitContainer} padding={{ left: 'small', right: 'small' }}>
+                        <CommitActions
+                          enableCopy
+                          sha={(payload?.payload as Unknown)?.old}
+                          href={routes.toCODEPullRequest({
+                            repoPath: repoMetadataPath as string,
+                            pullRequestSection: PullRequestSection.FILES_CHANGED,
+                            pullRequestId: String(pullReqMetadata.number),
+                            commitSHA: (payload?.payload as Unknown)?.old as string
+                          })}
+                        />
+                      </Container>
+                    ),
+                    newCommit: (
+                      <Container className={css.commitContainer} padding={{ left: 'small' }}>
+                        <CommitActions
+                          enableCopy
+                          sha={(payload?.payload as Unknown)?.new}
+                          href={routes.toCODEPullRequest({
+                            repoPath: repoMetadataPath as string,
+                            pullRequestSection: PullRequestSection.FILES_CHANGED,
+                            pullRequestId: String(pullReqMetadata.number),
+                            commitSHA: (payload?.payload as Unknown)?.new as string
+                          })}
+                        />
+                      </Container>
+                    )
+                  }}
+                />
+              ) : (
+                <StringSubstitute
+                  str={getString('pr.prBranchPushInfo')}
+                  vars={{
+                    user: (
+                      <Text padding={{ right: 'small' }} inline>
+                        <strong>{payload?.author?.display_name}</strong>
+                      </Text>
+                    ),
+                    commit: (
+                      <Container className={css.commitContainer} padding={{ left: 'small' }}>
+                        <CommitActions
+                          enableCopy
+                          sha={(payload?.payload as Unknown)?.new}
+                          href={routes.toCODEPullRequest({
+                            repoPath: repoMetadataPath as string,
+                            pullRequestSection: PullRequestSection.FILES_CHANGED,
+                            pullRequestId: String(pullReqMetadata.number),
+                            commitSHA: (payload?.payload as Unknown)?.new as string
+                          })}
+                        />
+                      </Container>
+                    )
+                  }}
+                />
+              )}
             </Text>
             <PipeSeparator height={9} />
             <TimePopoverWithLocal

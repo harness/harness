@@ -319,6 +319,7 @@ pr:
   prMergedInfo: '{user} merged changes from {source} into {target} as {mergeSha} {time}'
   prRebasedInfo: '{user} rebased changes from branch {source} onto {target}, now at {mergeSha} {time}'
   prBranchPushInfo: '{user} pushed a new commit {commit}'
+  prBranchForcePushInfo: '{user} force-pushed the {gitRef} branch from {oldCommit} to {newCommit}'
   prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
   prStateChangedDraft: '{user} {changedToDraft|true:marked pull request as draft.,opened pull request for review.}'
@@ -1122,6 +1123,9 @@ checkSection:
   allReqChecksPassed: All required checks passed
   someChecksFailed: Some checks have failed
   someChecksRunning: Some checks are running
+rebaseSource:
+  title: This branch is out-of-date with the base branch
+  message: Merge the latest changes from {target} into {source}
 importFailed: Import Failed
 uploadAFileError: There is no image or video uploaded. Please upload an image or video.
 securitySettings:
@@ -1256,3 +1260,7 @@ labels:
   addaValue: Add a value
   stringMax: '{entity} must be 50 characters or less'
   noNewLine: '{entity} cannot contain new lines'
+rebase: Rebase
+rebaseBranch: Rebase branch
+updateWithRebase: Update with rebase
+updatedBranchMessageRebase: Updated branch with rebase

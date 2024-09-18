@@ -1436,6 +1436,12 @@ export interface TypesPullReqStats {
   unresolved_count?: number
 }
 
+export interface TypesRebaseResponse {
+  dry_run_rules?: boolean
+  new_head_branch_sha?: ShaSHA
+  rule_violations?: TypesRuleViolations[]
+}
+
 export interface TypesRenameDetails {
   commit_sha_after?: string
   commit_sha_before?: string
@@ -6047,6 +6053,70 @@ export const useGetRaw = ({ repo_ref, path, ...props }: UseGetRawProps) =>
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, path }, ...props }
   )
 
+export interface RebaseBranchPathParams {
+  repo_ref: string
+}
+
+export interface RebaseBranchRequestBody {
+  base_branch?: string
+  bypass_rules?: boolean
+  dry_run_rules?: boolean
+  head_branch?: string
+  head_commit_sha?: ShaSHA
+}
+
+export type RebaseBranchProps = Omit<
+  MutateProps<
+    TypesRebaseResponse,
+    UsererrorError | TypesMergeViolations,
+    void,
+    RebaseBranchRequestBody,
+    RebaseBranchPathParams
+  >,
+  'path' | 'verb'
+> &
+  RebaseBranchPathParams
+
+export const RebaseBranch = ({ repo_ref, ...props }: RebaseBranchProps) => (
+  <Mutate<
+    TypesRebaseResponse,
+    UsererrorError | TypesMergeViolations,
+    void,
+    RebaseBranchRequestBody,
+    RebaseBranchPathParams
+  >
+    verb="POST"
+    path={`/repos/${repo_ref}/rebase`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseRebaseBranchProps = Omit<
+  UseMutateProps<
+    TypesRebaseResponse,
+    UsererrorError | TypesMergeViolations,
+    void,
+    RebaseBranchRequestBody,
+    RebaseBranchPathParams
+  >,
+  'path' | 'verb'
+> &
+  RebaseBranchPathParams
+
+export const useRebaseBranch = ({ repo_ref, ...props }: UseRebaseBranchProps) =>
+  useMutate<
+    TypesRebaseResponse,
+    UsererrorError | TypesMergeViolations,
+    void,
+    RebaseBranchRequestBody,
+    RebaseBranchPathParams
+  >('POST', (paramsInPath: RebaseBranchPathParams) => `/repos/${paramsInPath.repo_ref}/rebase`, {
+    base: getConfig('code/api/v1'),
+    pathParams: { repo_ref },
+    ...props
+  })
+
 export interface RestoreRepositoryQueryParams {
   /**
    * The exact time the resource was delete at in epoch format.
@@ -8151,6 +8221,59 @@ export const usePurgeSpace = ({ space_ref, ...props }: UsePurgeSpaceProps) =>
   useMutate<void, UsererrorError, PurgeSpaceQueryParams, void, PurgeSpacePathParams>(
     'POST',
     (paramsInPath: PurgeSpacePathParams) => `/spaces/${paramsInPath.space_ref}/purge`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
+export interface ListReposQueryParams {
+  /**
+   * The substring which is used to filter the repositories by their path name.
+   */
+  query?: string
+  /**
+   * The data by which the repositories are sorted.
+   */
+  sort?: 'identifier' | 'created' | 'updated'
+  /**
+   * The order of the output.
+   */
+  order?: 'asc' | 'desc'
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export interface ListReposPathParams {
+  space_ref: string
+}
+
+export type ListReposProps = Omit<
+  GetProps<TypesRepository[], UsererrorError, ListReposQueryParams, ListReposPathParams>,
+  'path'
+> &
+  ListReposPathParams
+
+export const ListRepos = ({ space_ref, ...props }: ListReposProps) => (
+  <Get<TypesRepository[], UsererrorError, ListReposQueryParams, ListReposPathParams>
+    path={`/spaces/${space_ref}/repos`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListReposProps = Omit<
+  UseGetProps<TypesRepository[], UsererrorError, ListReposQueryParams, ListReposPathParams>,
+  'path'
+> &
+  ListReposPathParams
+
+export const useListRepos = ({ space_ref, ...props }: UseListReposProps) =>
+  useGet<TypesRepository[], UsererrorError, ListReposQueryParams, ListReposPathParams>(
+    (paramsInPath: ListReposPathParams) => `/spaces/${paramsInPath.space_ref}/repos`,
     { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
   )
 

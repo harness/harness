@@ -78,7 +78,7 @@ const MergeSection = (props: MergeSectionProps) => {
   )
   return (
     <>
-      <Container className={cx(css.sectionContainer, css.borderRadius)}>
+      <Container className={cx(css.sectionContainer, css.borderContainer)}>
         <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
           <Layout.Horizontal flex={{ alignItems: 'center', justifyContent: 'start' }}>
             {(unchecked && <img src={Images.PrUnchecked} width={25} height={25} />) || (
