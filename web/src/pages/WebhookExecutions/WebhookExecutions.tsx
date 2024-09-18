@@ -182,7 +182,7 @@ const WebhookExecutions = () => {
   return (
     <Container>
       <Container className={css.main} padding={{ bottom: 'large', right: 'xlarge', left: 'xlarge' }}>
-        {executionList && !executionListLoading && executionList.length && (
+        {executionList && !executionListLoading && !!executionList.length && (
           <TableV2<TypesWebhookExecution>
             className={css.table}
             columns={columns}

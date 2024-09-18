@@ -622,9 +622,9 @@ export enum WebhookEventMap {
   PR_CREATED = 'PR created',
   PR_UPDATED = 'PR updated',
   PR_REOPENED = 'PR reopened',
-  PR_BRANCH_UPDATED = 'PR updated',
+  PR_BRANCH_UPDATED = 'PR branch updated',
   PR_CLOSED = 'PR closed',
-  PR_COMMENT_CREATED = 'PR created',
+  PR_COMMENT_CREATED = 'PR comment created',
   PR_MERGED = 'PR merged'
 }
 
