@@ -12,36 +12,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package pullreq
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/pullreq"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleCreateBranch writes json-encoded branch information to the http response body.
-func HandleCreateBranch(repoCtrl *repo.Controller) http.HandlerFunc {
+// HandleDeleteBranch deletes the source branch of a PR.
+func HandleDeleteBranch(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
+
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		in := new(repo.CreateBranchInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		pullreqNumber, err := request.GetPullReqNumberFromPath(r)
 		if err != nil {
-			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
+			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		out, violations, err := repoCtrl.CreateBranch(ctx, session, repoRef, in)
+		bypassRules, err := request.ParseBypassRulesFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		dryRunRules, err := request.ParseDryRunRulesFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		out, violations, err := pullreqCtrl.DeleteBranch(ctx, session, repoRef, pullreqNumber, bypassRules, dryRunRules)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -51,6 +62,6 @@ func HandleCreateBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusCreated, out)
+		render.JSON(w, http.StatusOK, out)
 	}
 }

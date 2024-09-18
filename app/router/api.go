@@ -649,6 +649,10 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Post("/merge", handlerpullreq.HandleMerge(pullreqCtrl))
 			r.Get("/commits", handlerpullreq.HandleCommits(pullreqCtrl))
 			r.Get("/metadata", handlerpullreq.HandleMetadata(pullreqCtrl))
+			r.Route("/branch", func(r chi.Router) {
+				r.Post("/", handlerpullreq.HandleRestoreBranch(pullreqCtrl))
+				r.Delete("/", handlerpullreq.HandleDeleteBranch(pullreqCtrl))
+			})
 
 			r.Route("/file-views", func(r chi.Router) {
 				r.Put("/", handlerpullreq.HandleFileViewAdd(pullreqCtrl))

@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"sort"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/types"
@@ -44,14 +43,9 @@ func (c *Controller) ListChecks(
 		return types.PullReqChecks{}, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
+	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
-		return types.PullReqChecks{}, fmt.Errorf("failed to determine if user is repo owner: %w", err)
-	}
-
-	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
-	if err != nil {
-		return types.PullReqChecks{}, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
+		return types.PullReqChecks{}, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 
 	reqChecks, err := protectionRules.RequiredChecks(ctx, protection.RequiredChecksInput{

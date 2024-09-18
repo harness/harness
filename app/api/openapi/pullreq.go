@@ -702,6 +702,34 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMetaData, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/metadata", opMetaData)
 
+	opRestoreBranch := openapi3.Operation{}
+	opRestoreBranch.WithTags("pullreq")
+	opRestoreBranch.WithMapOfAnything(map[string]interface{}{"operationId": "restorePullReqSourceBranch"})
+	_ = reflector.SetRequest(&opRestoreBranch, struct {
+		pullReqRequest
+		pullreq.RestoreBranchInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opRestoreBranch, new(types.CreateBranchOutput), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRestoreBranch, new(types.RulesViolations), http.StatusUnprocessableEntity)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/pullreq/{pullreq_number}/branch", opRestoreBranch)
+
+	opDeleteBranch := openapi3.Operation{}
+	opDeleteBranch.WithTags("pullreq")
+	opDeleteBranch.WithMapOfAnything(map[string]interface{}{"operationId": "deletePullReqSourceBranch"})
+	opDeleteBranch.WithParameters(queryParameterBypassRules, queryParameterDryRunRules)
+	_ = reflector.SetRequest(&opDeleteBranch, new(pullReqRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opDeleteBranch, new(types.DeleteBranchOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opDeleteBranch, new(types.RulesViolations), http.StatusUnprocessableEntity)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/pullreq/{pullreq_number}/branch", opDeleteBranch)
+
 	fileViewAdd := openapi3.Operation{}
 	fileViewAdd.WithTags("pullreq")
 	fileViewAdd.WithMapOfAnything(map[string]interface{}{"operationId": "fileViewAddPullReq"})

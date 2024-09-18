@@ -52,7 +52,7 @@ func (c *Controller) ListBranches(ctx context.Context,
 
 	branches := make([]types.Branch, len(rpcOut.Branches))
 	for i := range rpcOut.Branches {
-		branches[i], err = mapBranch(rpcOut.Branches[i])
+		branches[i], err = controller.MapBranch(rpcOut.Branches[i])
 		if err != nil {
 			return nil, fmt.Errorf("failed to map branch: %w", err)
 		}
@@ -87,20 +87,4 @@ func mapToRPCSortOrder(o enum.Order) git.SortOrder {
 		// no need to error out - just use default for sorting
 		return git.SortOrderDefault
 	}
-}
-
-func mapBranch(b git.Branch) (types.Branch, error) {
-	var commit *types.Commit
-	if b.Commit != nil {
-		var err error
-		commit, err = controller.MapCommit(b.Commit)
-		if err != nil {
-			return types.Branch{}, err
-		}
-	}
-	return types.Branch{
-		Name:   b.Name,
-		SHA:    b.SHA.String(),
-		Commit: commit,
-	}, nil
 }

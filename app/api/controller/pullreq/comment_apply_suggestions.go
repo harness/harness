@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -112,14 +111,9 @@ func (c *Controller) CommentApplySuggestions(
 	}
 
 	// verify branch rules
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
+	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
-		return CommentApplySuggestionsOutput{}, nil, fmt.Errorf("failed to determine if user is repo owner: %w", err)
-	}
-	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
-	if err != nil {
-		return CommentApplySuggestionsOutput{}, nil, fmt.Errorf(
-			"failed to fetch protection rules for the repository: %w", err)
+		return CommentApplySuggestionsOutput{}, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 	violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:       &session.Principal,

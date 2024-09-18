@@ -87,6 +87,7 @@ const (
 	PullReqActivityTypeReviewerDelete PullReqActivityType = "reviewer-delete"
 	PullReqActivityTypeBranchUpdate   PullReqActivityType = "branch-update"
 	PullReqActivityTypeBranchDelete   PullReqActivityType = "branch-delete"
+	PullReqActivityTypeBranchRestore  PullReqActivityType = "branch-restore"
 	PullReqActivityTypeMerge          PullReqActivityType = "merge"
 	PullReqActivityTypeLabelModify    PullReqActivityType = "label-modify"
 )
@@ -100,6 +101,7 @@ var pullReqActivityTypes = sortEnum([]PullReqActivityType{
 	PullReqActivityTypeReviewerDelete,
 	PullReqActivityTypeBranchUpdate,
 	PullReqActivityTypeBranchDelete,
+	PullReqActivityTypeBranchRestore,
 	PullReqActivityTypeMerge,
 	PullReqActivityTypeLabelModify,
 })

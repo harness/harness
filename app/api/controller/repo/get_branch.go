@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
@@ -43,7 +44,7 @@ func (c *Controller) GetBranch(ctx context.Context,
 		return nil, fmt.Errorf("failed to get branch: %w", err)
 	}
 
-	branch, err := mapBranch(rpcOut.Branch)
+	branch, err := controller.MapBranch(rpcOut.Branch)
 	if err != nil {
 		return nil, fmt.Errorf("failed to map branch: %w", err)
 	}

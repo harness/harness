@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package pullreq
 
 import (
 	"context"
@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -29,39 +30,36 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// CreateBranchInput used for branch creation apis.
-type CreateBranchInput struct {
-	Name string `json:"name"`
-
-	// Target is the commit (or points to the commit) the new branch will be pointing to.
-	// If no target is provided, the branch points to the same commit as the default branch of the repo.
-	Target string `json:"target"`
-
+// RestoreBranchInput used for branch restoration apis.
+type RestoreBranchInput struct {
 	DryRunRules bool `json:"dry_run_rules"`
 	BypassRules bool `json:"bypass_rules"`
 }
 
-// CreateBranch creates a new branch for a repo.
-func (c *Controller) CreateBranch(ctx context.Context,
+// RestoreBranch restores branch for the merged/closed PR.
+func (c *Controller) RestoreBranch(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	in *CreateBranchInput,
+	pullreqNum int64,
+	in *RestoreBranchInput,
 ) (types.CreateBranchOutput, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
-		return types.CreateBranchOutput{}, nil, err
+		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	// set target to default branch in case no target was provided
-	if in.Target == "" {
-		in.Target = repo.DefaultBranch
+	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, pullreqNum)
+	if err != nil {
+		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to get pull request by number: %w", err)
+	}
+	if pr.State == enum.PullReqStateOpen {
+		return types.CreateBranchOutput{}, nil, errors.Conflict("source branch %q already exists", pr.SourceBranch)
 	}
 
 	rules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
-		return types.CreateBranchOutput{}, nil, err
+		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
-
 	violations, err := rules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
 		Actor:       &session.Principal,
 		AllowBypass: in.BypassRules,
@@ -69,7 +67,7 @@ func (c *Controller) CreateBranch(ctx context.Context,
 		Repo:        repo,
 		RefAction:   protection.RefActionCreate,
 		RefType:     protection.RefTypeBranch,
-		RefNames:    []string{in.Name},
+		RefNames:    []string{pr.SourceBranch},
 	})
 	if err != nil {
 		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
@@ -95,16 +93,28 @@ func (c *Controller) CreateBranch(ctx context.Context,
 
 	rpcOut, err := c.git.CreateBranch(ctx, &git.CreateBranchParams{
 		WriteParams: writeParams,
-		BranchName:  in.Name,
-		Target:      in.Target,
+		BranchName:  pr.SourceBranch,
+		Target:      pr.SourceSHA,
 	})
 	if err != nil {
 		return types.CreateBranchOutput{}, nil, err
 	}
-
 	branch, err := controller.MapBranch(rpcOut.Branch)
 	if err != nil {
 		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to map branch: %w", err)
+	}
+
+	err = func() error {
+		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {
+			return fmt.Errorf("failed to update pull request activity sequence: %w", err)
+		}
+
+		_, err := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID,
+			&types.PullRequestActivityPayloadBranchRestore{SHA: pr.SourceSHA}, nil)
+		return err
+	}()
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity for successful branch restore")
 	}
 
 	err = c.instrumentation.Track(ctx, instrument.Event{

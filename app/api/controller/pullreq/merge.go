@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -182,19 +181,14 @@ func (c *Controller) Merge(
 		}
 	}
 
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, targetRepo)
+	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, targetRepo)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to determine if user is repo owner: %w", err)
+		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 
 	checkResults, err := c.checkStore.ListResults(ctx, targetRepo.ID, pr.SourceSHA)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to list status checks: %w", err)
-	}
-
-	protectionRules, err := c.protectionManager.ForRepository(ctx, targetRepo.ID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
 	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, sourceRepo, pr, reviewers)

@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -71,14 +70,9 @@ func (c *Controller) Rebase(
 		return nil, nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, session, repo)
+	protectionRules, isRepoOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to determine if user is repo owner: %w", err)
-	}
-
-	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
+		return nil, nil, fmt.Errorf("failed to fetch rules: %w", err)
 	}
 
 	violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{

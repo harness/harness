@@ -79,6 +79,22 @@ func CreateRPCInternalWriteParams(
 	return createRPCWriteParams(ctx, urlProvider, session, repo, true)
 }
 
+func MapBranch(b git.Branch) (types.Branch, error) {
+	var commit *types.Commit
+	if b.Commit != nil {
+		var err error
+		commit, err = MapCommit(b.Commit)
+		if err != nil {
+			return types.Branch{}, err
+		}
+	}
+	return types.Branch{
+		Name:   b.Name,
+		SHA:    b.SHA.String(),
+		Commit: commit,
+	}, nil
+}
+
 func MapCommit(c *git.Commit) (*types.Commit, error) {
 	if c == nil {
 		return nil, fmt.Errorf("commit is nil")

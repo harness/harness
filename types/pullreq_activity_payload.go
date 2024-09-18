@@ -60,6 +60,7 @@ var allPullReqActivityPayloads = func(
 	func() PullReqActivityPayload { return &PullRequestActivityPayloadReviewSubmit{} },
 	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchUpdate{} },
 	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchDelete{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchRestore{} },
 })
 
 // newPayloadForActivity returns a new payload instance for the requested activity type.
@@ -167,6 +168,14 @@ type PullRequestActivityPayloadBranchDelete struct {
 
 func (a *PullRequestActivityPayloadBranchDelete) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeBranchDelete
+}
+
+type PullRequestActivityPayloadBranchRestore struct {
+	SHA string `json:"sha"`
+}
+
+func (a *PullRequestActivityPayloadBranchRestore) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeBranchRestore
 }
 
 type PullRequestActivityLabel struct {

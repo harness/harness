@@ -12,36 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package pullreq
 
 import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/pullreq"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleCreateBranch writes json-encoded branch information to the http response body.
-func HandleCreateBranch(repoCtrl *repo.Controller) http.HandlerFunc {
+// HandleRestoreBranch writes json-encoded branch information to the http response body.
+func HandleRestoreBranch(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
+
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		in := new(repo.CreateBranchInput)
+		pullreqNumber, err := request.GetPullReqNumberFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		in := new(pullreq.RestoreBranchInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid request body: %s.", err)
 			return
 		}
 
-		out, violations, err := repoCtrl.CreateBranch(ctx, session, repoRef, in)
+		out, violations, err := pullreqCtrl.RestoreBranch(ctx, session, repoRef, pullreqNumber, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
