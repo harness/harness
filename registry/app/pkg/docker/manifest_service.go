@@ -211,9 +211,13 @@ func (l *manifestService) dbTagManifest(
 				return err
 			}
 
+			digest, err := types.NewDigest(dgst)
+			if err != nil {
+				return err
+			}
 			artifact := &types.Artifact{
 				ImageID: image.ID,
-				Version: string(dgst),
+				Version: digest.String(),
 			}
 
 			if err := l.artifactDao.CreateOrUpdate(ctx, artifact); err != nil {
@@ -228,10 +232,6 @@ func (l *manifestService) dbTagManifest(
 			}
 
 			if err := l.tagDao.CreateOrUpdate(ctx, tag); err != nil {
-				return err
-			}
-
-			if err != nil {
 				return err
 			}
 

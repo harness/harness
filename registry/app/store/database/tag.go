@@ -505,7 +505,6 @@ func (t tagDao) GetLatestTagMetadata(
 			"images ar ON ar.image_registry_id = t.tag_registry_id "+
 				"AND ar.image_name = t.tag_image_name",
 		).
-		LeftJoin("(SELECT downlad)").
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ?"+
 				" AND t.tag_image_name = ?", parentID, repoKey, imageName,
@@ -638,7 +637,7 @@ func (t tagDao) GetAllArtifactsByRepo(
 				" AND ar.image_name = t.tag_image_name",
 		).
 		LeftJoin(
-			"( SELECT i.image_name, COALESCE(t1.download_count, 0) as download_count FROM"+
+			"( SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count FROM"+
 				" ( SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count"+
 				" FROM artifacts a "+
 				" JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id GROUP BY"+
