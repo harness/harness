@@ -15,9 +15,10 @@ CREATE TABLE images
     CONSTRAINT check_image_name_length CHECK ((LENGTH(image_name) <= 255))
 );
 
-INSERT INTO images (image_name, image_registry_id, image_labels, image_enabled, image_created_at,
+INSERT INTO images (image_id ,image_name, image_registry_id, image_labels, image_enabled, image_created_at,
                     image_updated_at, image_created_by, image_updated_by)
-SELECT artifact_name AS image_name,
+SELECT artifact_id AS image_id,
+       artifact_name AS image_name,
        artifact_registry_id AS image_registry_id,
        artifact_labels AS image_labels,
        artifact_enabled AS image_enabled,
@@ -52,14 +53,13 @@ SELECT encode(m.manifest_digest, 'hex') AS artifact_version,
        m.manifest_updated_by AS artifact_updated_by
 FROM artifacts a
          JOIN images i ON a.artifact_name = i.image_name AND a.artifact_registry_id = i.image_registry_id
-         JOIN manifests m ON a.artifact_name = m.manifest_image_name AND a.artifact_registry_id = m.manifest_registry_id;
+         JOIN manifests m ON a.artifact_name = m.manifest_image_name AND a.artifact_registry_id = m.manifest_registry_id
+         JOIN tags t on a.artifact_name = t.tag_image_name
+                   AND a.artifact_registry_id = t.tag_registry_id
+                   AND t.tag_manifest_id = m.manifest_id;
 
 
 DROP INDEX index_artifact_on_registry_id;
-
-CREATE TABLE temp_artifact_stats AS
-SELECT *
-FROM artifact_stats;
 
 DROP TABLE artifact_stats;
 
@@ -67,47 +67,3 @@ DROP TABLE artifacts;
 
 ALTER TABLE artifacts_temp
     RENAME TO artifacts;
-
-create table if not exists artifact_stats
-(
-    artifact_stat_id                               SERIAL primary key,
-    artifact_stat_artifact_id                      INTEGER not null
-    constraint fk_artifacts_artifact_id
-    references artifacts(artifact_id),
-    artifact_stat_date                             BIGINT,
-    artifact_stat_download_count                   BIGINT,
-    artifact_stat_upload_bytes                     BIGINT,
-    artifact_stat_download_bytes                   BIGINT,
-    artifact_stat_created_at                       BIGINT not null,
-    artifact_stat_updated_at                       BIGINT not null,
-    artifact_stat_created_by                       INTEGER not null,
-    artifact_stat_updated_by                       INTEGER not null,
-    constraint unique_artifact_stats_artifact_id_and_date unique (artifact_stat_artifact_id, artifact_stat_date)
-);
-
-INSERT INTO artifact_stats (
-    artifact_stat_id,
-    artifact_stat_artifact_id,
-    artifact_stat_date,
-    artifact_stat_download_count,
-    artifact_stat_upload_bytes,
-    artifact_stat_download_bytes,
-    artifact_stat_created_at,
-    artifact_stat_updated_at,
-    artifact_stat_created_by,
-    artifact_stat_updated_by
-)
-SELECT
-    artifact_stat_id,
-    artifact_stat_artifact_id,
-    artifact_stat_date,
-    artifact_stat_download_count,
-    artifact_stat_upload_bytes,
-    artifact_stat_download_bytes,
-    artifact_stat_created_at,
-    artifact_stat_updated_at,
-    artifact_stat_created_by,
-    artifact_stat_updated_by
-FROM temp_artifact_stats;
-
-DROP TABLE temp_artifact_stats;

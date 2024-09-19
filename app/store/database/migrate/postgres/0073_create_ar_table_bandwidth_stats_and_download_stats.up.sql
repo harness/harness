@@ -25,5 +25,3 @@ CREATE TABLE bandwidth_stats
     bandwidth_stat_created_by                       INTEGER,
     bandwidth_stat_updated_by                       INTEGER
 );
-
-ALTER TABLE artifact_stats RENAME TO artifact_stats_archive;
