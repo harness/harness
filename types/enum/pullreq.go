@@ -98,6 +98,7 @@ var pullReqActivityTypes = sortEnum([]PullReqActivityType{
 	PullReqActivityTypeTitleChange,
 	PullReqActivityTypeStateChange,
 	PullReqActivityTypeReviewSubmit,
+	PullReqActivityTypeReviewerAdd,
 	PullReqActivityTypeReviewerDelete,
 	PullReqActivityTypeBranchUpdate,
 	PullReqActivityTypeBranchDelete,
