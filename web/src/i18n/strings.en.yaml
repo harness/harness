@@ -321,6 +321,7 @@ pr:
   prBranchPushInfo: '{user} pushed a new commit {commit}'
   prBranchForcePushInfo: '{user} force-pushed the {gitRef} branch from {oldCommit} to {newCommit}'
   prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
+  prBranchRestoreInfo: '{user} restored the source branch with latest commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
   prStateChangedDraft: '{user} {changedToDraft|true:marked pull request as draft.,opened pull request for review.}'
   titleChanged: '{user} changed title from {old} to {new}.'

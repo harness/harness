@@ -32,9 +32,8 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	branchName string,
-	bypassRules bool,
+	bypassRules,
 	dryRunRules bool,
-	commitSha string,
 ) (types.DeleteBranchOutput, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
@@ -88,7 +87,6 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	err = c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
 		WriteParams: writeParams,
 		BranchName:  branchName,
-		SHA:         commitSha,
 	})
 	if err != nil {
 		return types.DeleteBranchOutput{}, nil, err

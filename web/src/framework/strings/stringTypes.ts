@@ -808,6 +808,7 @@ export interface StringsMap {
   'pr.prBranchDeleteInfo': string
   'pr.prBranchForcePushInfo': string
   'pr.prBranchPushInfo': string
+  'pr.prBranchRestoreInfo': string
   'pr.prCanBeMerged': string
   'pr.prClosed': string
   'pr.prMerged': string

@@ -1602,12 +1602,6 @@ paths:
           schema:
             default: false
             type: boolean
-        - description: Commit SHA the branch is at
-          in: query
-          name: commit_sha
-          required: false
-          schema:
-            type: string
         - in: path
           name: repo_ref
           required: true
@@ -4332,18 +4326,18 @@ paths:
           schema:
             minimum: 0
             type: integer
-        - description: The result should contain only entries edited before this timestamp
+        - description: The result should contain only entries updated before this timestamp
             (unix millis).
           in: query
-          name: edited_lt
+          name: updated_lt
           required: false
           schema:
             minimum: 0
             type: integer
-        - description: The result should contain only entries edited after this timestamp
+        - description: The result should contain only entries updated after this timestamp
             (unix millis).
           in: query
-          name: edited_gt
+          name: updated_gt
           required: false
           schema:
             minimum: 0
@@ -4643,6 +4637,7 @@ paths:
             items:
               enum:
                 - branch-delete
+                - branch-restore
                 - branch-update
                 - code-comment
                 - comment
@@ -4716,6 +4711,135 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/branch:
+    delete:
+      operationId: deletePullReqSourceBranch
+      parameters:
+        - description: Bypass rule violations if possible.
+          in: query
+          name: bypass_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: Dry run rules for operations
+          in: query
+          name: dry_run_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesDeleteBranchOutput'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRulesViolations'
+          description: Unprocessable Entity
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+    post:
+      operationId: restorePullReqSourceBranch
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                bypass_rules:
+                  type: boolean
+                dry_run_rules:
+                  type: boolean
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesCreateBranchOutput'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRulesViolations'
+          description: Unprocessable Entity
         '500':
           content:
             application/json:
@@ -7940,10 +8064,10 @@ paths:
           schema:
             minimum: 0
             type: integer
-        - description: The result should contain only entries edited before this timestamp
+        - description: The result should contain only entries updated before this timestamp
             (unix millis).
           in: query
-          name: edited_lt
+          name: updated_lt
           required: false
           schema:
             minimum: 0
@@ -10258,6 +10382,20 @@ components:
         - running
         - success
       type: string
+    EnumConnectorAuthType:
+      enum:
+        - basic
+        - bearer
+      type: string
+    EnumConnectorStatus:
+      enum:
+        - failed
+        - success
+      type: string
+    EnumConnectorType:
+      enum:
+        - github
+      type: string
     EnumContentEncodingType:
       enum:
         - base64
@@ -10417,6 +10555,7 @@ components:
     EnumPullReqActivityType:
       enum:
         - branch-delete
+        - branch-restore
         - branch-update
         - code-comment
         - comment
@@ -10842,19 +10981,16 @@ components:
       type: object
     OpenapiCreateConnectorRequest:
       properties:
-        data:
-          type: string
         description:
           type: string
+        github:
+          $ref: '#/components/schemas/TypesGithubConnectorData'
         identifier:
           type: string
         space_ref:
           type: string
         type:
-          type: string
-        uid:
-          deprecated: true
-          type: string
+          $ref: '#/components/schemas/EnumConnectorType'
       type: object
     OpenapiCreateGitspaceRequest:
       properties:
@@ -11299,17 +11435,10 @@ components:
       type: object
     OpenapiUpdateConnectorRequest:
       properties:
-        data:
-          nullable: true
-          type: string
         description:
           nullable: true
           type: string
         identifier:
-          nullable: true
-          type: string
-        uid:
-          deprecated: true
           nullable: true
           type: string
       type: object
@@ -11539,9 +11668,13 @@ components:
           type: boolean
         update_forbidden:
           type: boolean
+        update_force_forbidden:
+          type: boolean
       type: object
     ProtectionDefMerge:
       properties:
+        block:
+          type: boolean
         delete_branch:
           type: boolean
         strategies_allowed:
@@ -11859,6 +11992,18 @@ components:
     TimeDuration:
       nullable: true
       type: integer
+    TypesBasicAuthCreds:
+      properties:
+        password:
+          $ref: '#/components/schemas/TypesSecretRef'
+        username:
+          type: string
+      type: object
+    TypesBearerTokenCreds:
+      properties:
+        token:
+          $ref: '#/components/schemas/TypesSecretRef'
+      type: object
     TypesBranch:
       properties:
         commit:
@@ -12015,18 +12160,43 @@ components:
       properties:
         created:
           type: integer
-        data:
-          type: string
+        created_by:
+          type: integer
         description:
           type: string
+        github:
+          $ref: '#/components/schemas/TypesGithubConnectorData'
         identifier:
           type: string
+        last_test_attempt:
+          type: integer
+        last_test_error_msg:
+          type: string
+        last_test_status:
+          $ref: '#/components/schemas/EnumConnectorStatus'
         space_id:
           type: integer
         type:
-          type: string
+          $ref: '#/components/schemas/EnumConnectorType'
         updated:
           type: integer
+      type: object
+    TypesConnectorAuth:
+      nullable: true
+      properties:
+        basic:
+          $ref: '#/components/schemas/TypesBasicAuthCreds'
+        bearer:
+          $ref: '#/components/schemas/TypesBearerTokenCreds'
+        type:
+          $ref: '#/components/schemas/EnumConnectorAuthType'
+      type: object
+    TypesConnectorTestResponse:
+      properties:
+        error_msg:
+          type: string
+        status:
+          $ref: '#/components/schemas/EnumConnectorStatus'
       type: object
     TypesCreateBranchOutput:
       properties:
@@ -12143,6 +12313,15 @@ components:
           type: string
         updated:
           type: integer
+      type: object
+    TypesGithubConnectorData:
+      properties:
+        api_url:
+          type: string
+        auth:
+          $ref: '#/components/schemas/TypesConnectorAuth'
+        insecure:
+          type: boolean
       type: object
     TypesGitspaceConfig:
       properties:
@@ -12658,6 +12837,8 @@ components:
           type: integer
         title:
           type: string
+        updated:
+          type: integer
       type: object
     TypesPullReqActivity:
       properties:
@@ -13003,6 +13184,11 @@ components:
           type: integer
         updated:
           type: integer
+      type: object
+    TypesSecretRef:
+      properties:
+        identifier:
+          type: string
       type: object
     TypesServiceAccount:
       properties:

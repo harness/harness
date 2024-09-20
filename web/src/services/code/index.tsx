@@ -26,6 +26,12 @@ export type EnumCheckPayloadKind = '' | 'markdown' | 'pipeline' | 'raw'
 
 export type EnumCheckStatus = 'error' | 'failure' | 'pending' | 'running' | 'success'
 
+export type EnumConnectorAuthType = 'basic' | 'bearer'
+
+export type EnumConnectorStatus = 'failed' | 'success'
+
+export type EnumConnectorType = 'github'
+
 export type EnumContentEncodingType = 'base64' | 'utf8'
 
 export type EnumFileDiffStatus = string
@@ -122,6 +128,7 @@ export type EnumPullReqActivityKind = 'change-comment' | 'comment' | 'system'
 
 export type EnumPullReqActivityType =
   | 'branch-delete'
+  | 'branch-restore'
   | 'branch-update'
   | 'code-comment'
   | 'comment'
@@ -353,12 +360,11 @@ export interface OpenapiCreateBranchRequest {
 }
 
 export interface OpenapiCreateConnectorRequest {
-  data?: string
   description?: string
+  github?: TypesGithubConnectorData
   identifier?: string
   space_ref?: string
-  type?: string
-  uid?: string
+  type?: EnumConnectorType
 }
 
 export interface OpenapiCreateGitspaceRequest {
@@ -614,10 +620,8 @@ export interface OpenapiUpdateAdminRequest {
 }
 
 export interface OpenapiUpdateConnectorRequest {
-  data?: string | null
   description?: string | null
   identifier?: string | null
-  uid?: string | null
 }
 
 export interface OpenapiUpdateDefaultBranchRequest {
@@ -734,9 +738,11 @@ export interface ProtectionDefLifecycle {
   create_forbidden?: boolean
   delete_forbidden?: boolean
   update_forbidden?: boolean
+  update_force_forbidden?: boolean
 }
 
 export interface ProtectionDefMerge {
+  block?: boolean
   delete_branch?: boolean
   strategies_allowed?: EnumMergeMethod[]
 }
@@ -927,6 +933,15 @@ export interface SystemConfigOutput {
 
 export type TimeDuration = number | null
 
+export interface TypesBasicAuthCreds {
+  password?: TypesSecretRef
+  username?: string
+}
+
+export interface TypesBearerTokenCreds {
+  token?: TypesSecretRef
+}
+
 export interface TypesBranch {
   commit?: TypesCommit
   name?: string
@@ -1015,12 +1030,27 @@ export interface TypesCommitStats {
 
 export interface TypesConnector {
   created?: number
-  data?: string
+  created_by?: number
   description?: string
+  github?: TypesGithubConnectorData
   identifier?: string
+  last_test_attempt?: number
+  last_test_error_msg?: string
+  last_test_status?: EnumConnectorStatus
   space_id?: number
-  type?: string
+  type?: EnumConnectorType
   updated?: number
+}
+
+export type TypesConnectorAuth = {
+  basic?: TypesBasicAuthCreds
+  bearer?: TypesBearerTokenCreds
+  type?: EnumConnectorAuthType
+} | null
+
+export interface TypesConnectorTestResponse {
+  error_msg?: string
+  status?: EnumConnectorStatus
 }
 
 export interface TypesCreateBranchOutput {
@@ -1081,6 +1111,12 @@ export interface TypesExecution {
   title?: string
   trigger?: string
   updated?: number
+}
+
+export interface TypesGithubConnectorData {
+  api_url?: string
+  auth?: TypesConnectorAuth
+  insecure?: boolean
 }
 
 export interface TypesGitspaceConfig {
@@ -1347,6 +1383,7 @@ export interface TypesPullReq {
   target_branch?: string
   target_repo_id?: number
   title?: string
+  updated?: number
 }
 
 export interface TypesPullReqActivity {
@@ -1541,6 +1578,10 @@ export interface TypesSecret {
   identifier?: string
   space_id?: number
   updated?: number
+}
+
+export interface TypesSecretRef {
+  identifier?: string
 }
 
 export interface TypesServiceAccount {
@@ -2839,10 +2880,6 @@ export interface DeleteBranchQueryParams {
    * Dry run rules for operations
    */
   dry_run_rules?: boolean
-  /**
-   * Commit SHA the branch is at
-   */
-  commit_sha?: string
 }
 
 export interface DeleteBranchPathParams {
@@ -4773,13 +4810,13 @@ export interface ListPullReqQueryParams {
    */
   created_gt?: number
   /**
-   * The result should contain only entries edited before this timestamp (unix millis).
+   * The result should contain only entries updated before this timestamp (unix millis).
    */
-  edited_lt?: number
+  updated_lt?: number
   /**
-   * The result should contain only entries edited after this timestamp (unix millis).
+   * The result should contain only entries updated after this timestamp (unix millis).
    */
-  edited_gt?: number
+  updated_gt?: number
   /**
    * By providing this parameter the description would be included in the response.
    */
@@ -4952,6 +4989,7 @@ export interface ListPullReqActivitiesQueryParams {
    */
   type?: (
     | 'branch-delete'
+    | 'branch-restore'
     | 'branch-update'
     | 'code-comment'
     | 'comment'
@@ -5010,6 +5048,146 @@ export const useListPullReqActivities = ({ repo_ref, pullreq_number, ...props }:
   useGet<TypesPullReqActivity[], UsererrorError, ListPullReqActivitiesQueryParams, ListPullReqActivitiesPathParams>(
     (paramsInPath: ListPullReqActivitiesPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/activities`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface DeletePullReqSourceBranchQueryParams {
+  /**
+   * Bypass rule violations if possible.
+   */
+  bypass_rules?: boolean
+  /**
+   * Dry run rules for operations
+   */
+  dry_run_rules?: boolean
+}
+
+export interface DeletePullReqSourceBranchPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type DeletePullReqSourceBranchProps = Omit<
+  MutateProps<
+    TypesDeleteBranchOutput,
+    UsererrorError | TypesRulesViolations,
+    DeletePullReqSourceBranchQueryParams,
+    void,
+    DeletePullReqSourceBranchPathParams
+  >,
+  'path' | 'verb'
+> &
+  DeletePullReqSourceBranchPathParams
+
+export const DeletePullReqSourceBranch = ({ repo_ref, pullreq_number, ...props }: DeletePullReqSourceBranchProps) => (
+  <Mutate<
+    TypesDeleteBranchOutput,
+    UsererrorError | TypesRulesViolations,
+    DeletePullReqSourceBranchQueryParams,
+    void,
+    DeletePullReqSourceBranchPathParams
+  >
+    verb="DELETE"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/branch`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeletePullReqSourceBranchProps = Omit<
+  UseMutateProps<
+    TypesDeleteBranchOutput,
+    UsererrorError | TypesRulesViolations,
+    DeletePullReqSourceBranchQueryParams,
+    void,
+    DeletePullReqSourceBranchPathParams
+  >,
+  'path' | 'verb'
+> &
+  DeletePullReqSourceBranchPathParams
+
+export const useDeletePullReqSourceBranch = ({
+  repo_ref,
+  pullreq_number,
+  ...props
+}: UseDeletePullReqSourceBranchProps) =>
+  useMutate<
+    TypesDeleteBranchOutput,
+    UsererrorError | TypesRulesViolations,
+    DeletePullReqSourceBranchQueryParams,
+    void,
+    DeletePullReqSourceBranchPathParams
+  >(
+    'DELETE',
+    (paramsInPath: DeletePullReqSourceBranchPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/branch`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface RestorePullReqSourceBranchPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export interface RestorePullReqSourceBranchRequestBody {
+  bypass_rules?: boolean
+  dry_run_rules?: boolean
+}
+
+export type RestorePullReqSourceBranchProps = Omit<
+  MutateProps<
+    TypesCreateBranchOutput,
+    UsererrorError | TypesRulesViolations,
+    void,
+    RestorePullReqSourceBranchRequestBody,
+    RestorePullReqSourceBranchPathParams
+  >,
+  'path' | 'verb'
+> &
+  RestorePullReqSourceBranchPathParams
+
+export const RestorePullReqSourceBranch = ({ repo_ref, pullreq_number, ...props }: RestorePullReqSourceBranchProps) => (
+  <Mutate<
+    TypesCreateBranchOutput,
+    UsererrorError | TypesRulesViolations,
+    void,
+    RestorePullReqSourceBranchRequestBody,
+    RestorePullReqSourceBranchPathParams
+  >
+    verb="POST"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/branch`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseRestorePullReqSourceBranchProps = Omit<
+  UseMutateProps<
+    TypesCreateBranchOutput,
+    UsererrorError | TypesRulesViolations,
+    void,
+    RestorePullReqSourceBranchRequestBody,
+    RestorePullReqSourceBranchPathParams
+  >,
+  'path' | 'verb'
+> &
+  RestorePullReqSourceBranchPathParams
+
+export const useRestorePullReqSourceBranch = ({
+  repo_ref,
+  pullreq_number,
+  ...props
+}: UseRestorePullReqSourceBranchProps) =>
+  useMutate<
+    TypesCreateBranchOutput,
+    UsererrorError | TypesRulesViolations,
+    void,
+    RestorePullReqSourceBranchRequestBody,
+    RestorePullReqSourceBranchPathParams
+  >(
+    'POST',
+    (paramsInPath: RestorePullReqSourceBranchPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/branch`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
@@ -7321,9 +7499,9 @@ export interface ListSpacePullReqQueryParams {
    */
   created_gt?: number
   /**
-   * The result should contain only entries edited before this timestamp (unix millis).
+   * The result should contain only entries updated before this timestamp (unix millis).
    */
-  edited_lt?: number
+  updated_lt?: number
   /**
    * By providing this parameter the description would be included in the response.
    */

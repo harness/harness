@@ -21,15 +21,20 @@ import { Icon } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
 import { getErrorMessage } from 'utils/Utils'
-import type { CreateBranchPathParams, DeleteBranchQueryParams, OpenapiCreateBranchRequest } from 'services/code'
+import type {
+  CreateBranchPathParams,
+  DeletePullReqSourceBranchQueryParams,
+  OpenapiCreateBranchRequest
+} from 'services/code'
 import css from '../PullRequestOverviewPanel.module.scss'
 
 interface BranchActionsSectionProps {
   sourceSha: string
   sourceBranch: string
   createBranch: MutateMethod<any, any, OpenapiCreateBranchRequest, CreateBranchPathParams>
+  refetchActivities: () => void
   refetchBranch: () => Promise<void>
-  deleteBranch: MutateMethod<any, any, DeleteBranchQueryParams, unknown>
+  deleteBranch: MutateMethod<any, any, DeletePullReqSourceBranchQueryParams, unknown>
   showDeleteBranchButton: boolean
   setShowDeleteBranchButton: React.Dispatch<React.SetStateAction<boolean>>
   setShowRestoreBranchButton: React.Dispatch<React.SetStateAction<boolean>>
@@ -69,6 +74,7 @@ export const BranchActionsButton = ({
   sourceSha,
   sourceBranch,
   createBranch,
+  refetchActivities,
   refetchBranch,
   deleteBranch,
   showDeleteBranchButton,
@@ -85,11 +91,12 @@ export const BranchActionsButton = ({
       variation={ButtonVariation.SECONDARY}
       onClick={() => {
         showDeleteBranchButton
-          ? deleteBranch({}, { queryParams: { bypass_rules: true, dry_run_rules: false, commit_sha: sourceSha } })
+          ? deleteBranch({}, { queryParams: { bypass_rules: true, dry_run_rules: false } })
               .then(() => {
                 refetchBranch()
                 setIsSourceBranchDeleted?.(true)
                 setShowDeleteBranchButton(false)
+                refetchActivities()
                 showSuccess(
                   <StringSubstitute
                     str={getString('branchDeleted')}
@@ -106,6 +113,7 @@ export const BranchActionsButton = ({
                 refetchBranch()
                 setIsSourceBranchDeleted?.(false)
                 setShowRestoreBranchButton(false)
+                refetchActivities()
                 showSuccess(
                   <StringSubstitute
                     str={getString('branchRestored')}

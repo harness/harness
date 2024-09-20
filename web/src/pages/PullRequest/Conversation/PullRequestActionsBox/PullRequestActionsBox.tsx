@@ -38,7 +38,7 @@ import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
 import type {
   CreateBranchPathParams,
-  DeleteBranchQueryParams,
+  DeletePullReqSourceBranchQueryParams,
   OpenapiCreateBranchRequest,
   OpenapiStatePullReqRequest,
   TypesListCommitResponse,
@@ -77,7 +77,7 @@ export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMeta
   refetchActivities: () => void
   createBranch: MutateMethod<any, any, OpenapiCreateBranchRequest, CreateBranchPathParams>
   refetchBranch: () => Promise<void>
-  deleteBranch: MutateMethod<any, any, DeleteBranchQueryParams, unknown>
+  deleteBranch: MutateMethod<any, any, DeletePullReqSourceBranchQueryParams, unknown>
   showRestoreBranchButton: boolean
   showDeleteBranchButton: boolean
   setShowDeleteBranchButton: React.Dispatch<React.SetStateAction<boolean>>
@@ -270,6 +270,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
         showDeleteBranchButton={showDeleteBranchButton}
         setShowDeleteBranchButton={setShowDeleteBranchButton}
         setShowRestoreBranchButton={setShowRestoreBranchButton}
+        refetchActivities={refetchActivities}
         refetchBranch={refetchBranch}
         createBranch={createBranch}
         deleteBranch={deleteBranch}
@@ -549,9 +550,10 @@ const MergeInfo: React.FC<{
   showDeleteBranchButton: boolean
   setShowDeleteBranchButton: React.Dispatch<React.SetStateAction<boolean>>
   setShowRestoreBranchButton: React.Dispatch<React.SetStateAction<boolean>>
+  refetchActivities: () => void
   refetchBranch: () => Promise<void>
   createBranch: MutateMethod<any, any, OpenapiCreateBranchRequest, CreateBranchPathParams>
-  deleteBranch: MutateMethod<any, any, DeleteBranchQueryParams, unknown>
+  deleteBranch: MutateMethod<any, any, DeletePullReqSourceBranchQueryParams, unknown>
 }> = props => {
   const { pullRequestMetadata, showRestoreBranchButton, showDeleteBranchButton } = props
   const { getString } = useStrings()

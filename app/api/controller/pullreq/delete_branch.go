@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -34,7 +35,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	pullreqNum int64,
-	bypassRules bool,
+	bypassRules,
 	dryRunRules bool,
 ) (types.DeleteBranchOutput, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
@@ -88,10 +89,32 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return types.DeleteBranchOutput{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
+	branch, err := func() (types.Branch, error) {
+		rpcOut, err := c.git.GetBranch(ctx, &git.GetBranchParams{
+			ReadParams: git.CreateReadParams(repo),
+			BranchName: branchName,
+		})
+		if err != nil {
+			return types.Branch{}, fmt.Errorf("failed to fetch source branch: %w", err)
+		}
+
+		mappedBranch, err := controller.MapBranch(rpcOut.Branch)
+		if err != nil {
+			return types.Branch{}, fmt.Errorf("failed to map source branch: %w", err)
+		}
+		return mappedBranch, nil
+	}()
+	if err != nil {
+		return types.DeleteBranchOutput{}, nil, err
+	}
+	if pr.SourceSHA != branch.SHA {
+		return types.DeleteBranchOutput{}, nil, errors.Conflict("source branch SHA does not match pull request source SHA")
+	}
+
 	err = c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
 		WriteParams: writeParams,
 		BranchName:  branchName,
-		SHA:         pr.SourceSHA,
+		SHA:         branch.SHA,
 	})
 	if err != nil {
 		return types.DeleteBranchOutput{}, nil, err
@@ -103,7 +126,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		}
 
 		_, err := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID,
-			&types.PullRequestActivityPayloadBranchDelete{SHA: pr.SourceSHA}, nil)
+			&types.PullRequestActivityPayloadBranchDelete{SHA: branch.SHA}, nil)
 		return err
 	}()
 	if err != nil {

@@ -19,6 +19,7 @@ import cx from 'classnames'
 import { useGet, useMutate } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import type {
+  DeletePullReqSourceBranchQueryParams,
   TypesCodeOwnerEvaluation,
   TypesListCommitResponse,
   TypesPullReq,
@@ -26,8 +27,7 @@ import type {
   TypesPullReqReviewer,
   RepoRepositoryOutput,
   TypesRuleViolations,
-  TypesBranch,
-  DeleteBranchQueryParams
+  TypesBranch
 } from 'services/code'
 import {
   PanelSectionOutletPosition,
@@ -132,13 +132,12 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
   })
   const { mutate: deleteBranch } = useMutate({
     verb: 'DELETE',
-    path: `/api/v1/repos/${repoMetadata.path}/+/branches/${pullReqMetadata.source_branch}`,
-    queryParams: { bypass_rules: true, dry_run_rules: true } as DeleteBranchQueryParams
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/branch`,
+    queryParams: { bypass_rules: true, dry_run_rules: true } as DeletePullReqSourceBranchQueryParams
   })
   const { mutate: createBranch } = useMutate({
     verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/branches`,
-    pathParams: { repo_ref: repoMetadata.path }
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/branch`
   })
   const { mutate: mergePR, loading: mergeLoading } = useMutate({
     verb: 'POST',
@@ -325,6 +324,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
                   sourceBranch={sourceBranch?.name || pullReqMetadata.source_branch || ''}
                   createBranch={createBranch}
                   refetchBranch={refetchBranch}
+                  refetchActivities={refetchActivities}
                   deleteBranch={deleteBranch}
                   showDeleteBranchButton={showDeleteBranchButton}
                   setShowRestoreBranchButton={setShowRestoreBranchButton}

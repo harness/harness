@@ -34,6 +34,7 @@ export enum CommentType {
   MERGE = 'merge',
   BRANCH_UPDATE = 'branch-update',
   BRANCH_DELETE = 'branch-delete',
+  BRANCH_RESTORE = 'branch-restore',
   STATE_CHANGE = 'state-change',
   LABEL_MODIFY = 'label-modify'
 }

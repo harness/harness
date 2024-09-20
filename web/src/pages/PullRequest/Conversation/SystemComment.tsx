@@ -241,14 +241,16 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
       )
     }
 
-    case CommentType.BRANCH_DELETE: {
+    case CommentType.BRANCH_DELETE:
+    case CommentType.BRANCH_RESTORE: {
+      const isSourceBranchDeleted = type === CommentType.BRANCH_DELETE
       return (
         <Container>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
             <Text flex tag="div">
               <StringSubstitute
-                str={getString('pr.prBranchDeleteInfo')}
+                str={isSourceBranchDeleted ? getString('pr.prBranchDeleteInfo') : getString('pr.prBranchRestoreInfo')}
                 vars={{
                   user: (
                     <Text padding={{ right: 'small' }} inline>

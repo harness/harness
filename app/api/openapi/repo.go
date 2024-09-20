@@ -542,20 +542,6 @@ var queryParameterDryRunRules = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterCommitSHA = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamCommitSHA,
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("Commit SHA the branch is at"),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type: ptrSchemaType(openapi3.SchemaTypeString),
-			},
-		},
-	},
-}
-
 var queryParameterDeletedAt = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamDeletedAt,
@@ -936,7 +922,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDeleteBranch := openapi3.Operation{}
 	opDeleteBranch.WithTags("repository")
 	opDeleteBranch.WithMapOfAnything(map[string]interface{}{"operationId": "deleteBranch"})
-	opDeleteBranch.WithParameters(queryParameterBypassRules, queryParameterDryRunRules, queryParameterCommitSHA)
+	opDeleteBranch.WithParameters(queryParameterBypassRules, queryParameterDryRunRules)
 	_ = reflector.SetRequest(&opDeleteBranch, new(deleteBranchRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(types.DeleteBranchOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusInternalServerError)
