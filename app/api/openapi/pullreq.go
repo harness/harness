@@ -714,6 +714,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRestoreBranch, new(usererror.Error), http.StatusConflict)
 	_ = reflector.SetJSONResponse(&opRestoreBranch, new(types.RulesViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/pullreq/{pullreq_number}/branch", opRestoreBranch)
 
@@ -727,6 +728,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opDeleteBranch, new(usererror.Error), http.StatusConflict)
 	_ = reflector.SetJSONResponse(&opDeleteBranch, new(types.RulesViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/pullreq/{pullreq_number}/branch", opDeleteBranch)
 
