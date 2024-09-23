@@ -36,13 +36,21 @@ export enum CommentType {
   BRANCH_DELETE = 'branch-delete',
   BRANCH_RESTORE = 'branch-restore',
   STATE_CHANGE = 'state-change',
-  LABEL_MODIFY = 'label-modify'
+  LABEL_MODIFY = 'label-modify',
+  REVIEWER_ADD = 'reviewer-add',
+  REVIEWER_DELETE = 'reviewer-delete'
 }
 
 export enum LabelActivity {
   ASSIGN = 'assign',
   UN_ASSIGN = 'unassign',
   RE_ASSIGN = 'reassign'
+}
+
+export enum ReviewerAddActivity {
+  REQUESTED = 'requested',
+  ASSIGNED = 'assigned',
+  SELF_ASSIGNED = 'self_assigned'
 }
 
 /**

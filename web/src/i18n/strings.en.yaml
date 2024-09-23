@@ -367,6 +367,12 @@ prChecks:
   killed: '{count}/{total} {count|1:check,checks} killed.'
   notFound: No pipelines or external checks found for this repository.
   viewExternal: View Details
+prReview:
+  assigned: '{author} assigned {reviewer} as a reviewer'
+  requested: '{author} requested a review from {reviewer}'
+  selfAssigned: '{reviewer} self-requested a review'
+  removed: '{author} removed the request for review from {reviewer}'
+  selfRemoved: '{author} removed their request for review'
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'

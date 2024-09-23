@@ -851,6 +851,11 @@ export interface StringsMap {
   prGenSummary: string
   prHasNoConflicts: string
   prMustSelectSourceAndTargetBranches: string
+  'prReview.assigned': string
+  'prReview.removed': string
+  'prReview.requested': string
+  'prReview.selfAssigned': string
+  'prReview.selfRemoved': string
   prSourceAndTargetMustBeDifferent: string
   'prState.draftDesc': string
   'prState.draftHeading': string

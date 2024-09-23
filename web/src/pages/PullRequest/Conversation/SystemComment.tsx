@@ -19,13 +19,13 @@ import { Avatar, Container, Layout, StringSubstitute, Text } from '@harnessio/ui
 import { Icon, IconName } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { defaultTo } from 'lodash-es'
-import { Case, Match } from 'react-jsx-match'
+import { Case, Falsy, Match, Truthy } from 'react-jsx-match'
 import { CodeIcon, GitInfoProps, MergeStrategy } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import { PullRequestSection } from 'utils/Utils'
-import { CommentType, LabelActivity } from 'components/DiffViewer/DiffViewerUtils'
+import { CommentType, LabelActivity, ReviewerAddActivity } from 'components/DiffViewer/DiffViewerUtils'
 import { useAppContext } from 'AppContext'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
@@ -43,6 +43,10 @@ interface MergePayload {
   merge_sha: string
   merge_method: string
   rules_bypassed: boolean
+}
+
+interface ReviewerAddActivityPayload {
+  reviewer_type: ReviewerAddActivity
 }
 //ToDo : update all comment options with the correct payload type and remove Unknown
 export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, commentItems, repoMetadataPath }) => {
@@ -408,6 +412,99 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                   />
                   <span>{getString('labels.label')}</span>
                 </Case>
+              </Match>
+            </Text>
+            <PipeSeparator height={9} />
+
+            <TimePopoverWithLocal
+              time={defaultTo(payload?.created as number, 0)}
+              inline={true}
+              width={100}
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_400}
+            />
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
+    case CommentType.REVIEWER_ADD: {
+      const mentionId = payload?.metadata?.mentions?.ids?.[0] ?? 0
+      const mentionDisplayName = payload?.mentions?.[mentionId]?.display_name ?? ''
+      return (
+        <Container className={css.mergedBox}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text tag="div">
+              <Match expr={(payload?.payload as ReviewerAddActivityPayload).reviewer_type}>
+                <Case val={ReviewerAddActivity.ASSIGNED}>
+                  <StringSubstitute
+                    str={getString('prReview.assigned')}
+                    vars={{
+                      author: <strong>{payload?.author?.display_name}</strong>,
+                      reviewer: <strong>{mentionDisplayName}</strong>
+                    }}
+                  />
+                </Case>
+                <Case val={ReviewerAddActivity.REQUESTED}>
+                  <StringSubstitute
+                    str={getString('prReview.requested')}
+                    vars={{
+                      author: <strong>{payload?.author?.display_name}</strong>,
+                      reviewer: <strong>{mentionDisplayName}</strong>
+                    }}
+                  />
+                </Case>
+                <Case val={ReviewerAddActivity.SELF_ASSIGNED}>
+                  <StringSubstitute
+                    str={getString('prReview.selfAssigned')}
+                    vars={{
+                      reviewer: <strong>{mentionDisplayName}</strong>
+                    }}
+                  />
+                </Case>
+              </Match>
+            </Text>
+            <PipeSeparator height={9} />
+
+            <TimePopoverWithLocal
+              time={defaultTo(payload?.created as number, 0)}
+              inline={true}
+              width={100}
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_400}
+            />
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
+    case CommentType.REVIEWER_DELETE: {
+      const mentionId = payload?.metadata?.mentions?.ids?.[0] ?? 0
+      const mentionDisplayName = payload?.mentions?.[mentionId]?.display_name ?? ''
+      return (
+        <Container className={css.mergedBox}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text tag="div">
+              <Match expr={payload?.author?.id === mentionId}>
+                <Truthy>
+                  <StringSubstitute
+                    str={getString('prReview.selfRemoved')}
+                    vars={{
+                      author: <strong>{payload?.author?.display_name}</strong>
+                    }}
+                  />
+                </Truthy>
+                <Falsy>
+                  <StringSubstitute
+                    str={getString('prReview.removed')}
+                    vars={{
+                      author: <strong>{payload?.author?.display_name}</strong>,
+                      reviewer: <strong>{mentionDisplayName}</strong>
+                    }}
+                  />
+                </Falsy>
               </Match>
             </Text>
             <PipeSeparator height={9} />

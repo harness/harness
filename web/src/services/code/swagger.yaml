@@ -4644,6 +4644,7 @@ paths:
                 - label-modify
                 - merge
                 - review-submit
+                - reviewer-add
                 - reviewer-delete
                 - state-change
                 - title-change
@@ -4772,6 +4773,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Not Found
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Conflict
         '422':
           content:
             application/json:
@@ -4834,6 +4841,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Forbidden
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Conflict
         '422':
           content:
             application/json:
@@ -10562,6 +10575,7 @@ components:
         - label-modify
         - merge
         - review-submit
+        - reviewer-add
         - reviewer-delete
         - state-change
         - title-change
