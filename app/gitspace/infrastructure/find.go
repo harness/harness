@@ -76,7 +76,6 @@ func (i infraProvisioner) Find(
 		return nil, fmt.Errorf("failed to get gitspace_scheme: %w", err)
 	}
 	infra.GitspaceScheme = gitspaceScheme
-	infra.HostScheme = infraProviderResource.Metadata["host_scheme"]
 	return infra, nil
 }
 
