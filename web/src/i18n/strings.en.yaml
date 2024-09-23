@@ -243,6 +243,8 @@ webhookAllEventsSelected: 'All Events'
 branchTagCreation: 'Branch or tag creation'
 branchTagDeletion: 'Branch or tag deletion'
 branchProtectionRules: 'Branch protection rules'
+ruleBlockedMessage: 'All branch updates are blocked'
+pushBlockedMessage: 'All branch pushes are blocked'
 checkRuns: 'Check runs'
 checkSuites: 'Check suites'
 scanAlerts: 'Code scanning alerts'
@@ -1002,9 +1004,13 @@ branchProtection:
   autoDeleteTitle: Auto delete branch on merge
   autoDeleteText: Automatically delete the source branch of a pull request after it is merged
   blockBranchCreation: Block branch creation
+  blockBranchUpdate: Block branch update
+  blockBranchUpdateText: Only allow users with bypass permission to update matching branches
   blockBranchCreationText: Only allow users with bypass permission to create matching branches
   blockBranchDeletion: Block branch deletion
   blockBranchDeletionText: Only allow users with bypass permission to delete matching branches
+  blockForcePush: Block force push
+  blockForcePushText: Only allow users with bypass permission to force push to matching branches
   editRule: Edit Rule
   saveRule: Save Rule
   deleteRule: Delete Rule
@@ -1098,6 +1104,8 @@ checkStatus:
   pending: Pending...
   error: Errored in {time}
 changesSection:
+  prMergeBlockedTitle: Base branch does not allow updates
+  prMergeBlockedMessage: Read about Protected Branches
   reqChangeFromCodeOwners: Changes requested by code owner
   codeOwnerReqChanges: Code owner requested changes
   pendingAppFromCodeOwners: Approvals pending from code owners

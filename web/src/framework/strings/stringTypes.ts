@@ -70,6 +70,10 @@ export interface StringsMap {
   'branchProtection.blockBranchCreationText': string
   'branchProtection.blockBranchDeletion': string
   'branchProtection.blockBranchDeletionText': string
+  'branchProtection.blockBranchUpdate': string
+  'branchProtection.blockBranchUpdateText': string
+  'branchProtection.blockForcePush': string
+  'branchProtection.blockForcePushText': string
   'branchProtection.bypassList': string
   'branchProtection.commitDirectlyAlertBtn': string
   'branchProtection.commitDirectlyAlertText': string
@@ -169,6 +173,8 @@ export interface StringsMap {
   'changesSection.noReviewsReq': string
   'changesSection.pendingAppFromCodeOwners': string
   'changesSection.pendingLatestApprovalCodeOwners': string
+  'changesSection.prMergeBlockedMessage': string
+  'changesSection.prMergeBlockedTitle': string
   'changesSection.pullReqWithoutAnyReviews': string
   'changesSection.reqChangeFromCodeOwners': string
   'changesSection.someChangesWereAppByCodeOwner': string
@@ -872,6 +878,7 @@ export interface StringsMap {
   pullRequestNotFoundforFilter: string
   pullRequestalreadyExists: string
   pullRequests: string
+  pushBlockedMessage: string
   quote: string
   reTriggeredExecution: string
   reactivate: string
@@ -940,6 +947,7 @@ export interface StringsMap {
   reviewerNotFound: string
   reviewers: string
   role: string
+  ruleBlockedMessage: string
   run: string
   running: string
   samplePayloadUrl: string

@@ -59,6 +59,7 @@ interface ChangesSectionProps {
   reviewers: TypesPullReqReviewer[] | null
   minReqLatestApproval: number
   reqCodeOwnerLatestApproval: boolean
+  mergeBlockedRule: boolean
   loadingReviewers: boolean
   refetchReviewers: () => void
   refetchCodeOwners: () => void
@@ -76,6 +77,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
     reqCodeOwnerLatestApproval,
     minReqLatestApproval,
     loadingReviewers,
+    mergeBlockedRule,
     refetchReviewers,
     refetchCodeOwners
   } = props
@@ -91,7 +93,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
   const reviewers = useMemo(() => {
     refetchCodeOwners()
     return currReviewers // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currReviewers, refetchReviewers])
+  }, [currReviewers, refetchReviewers, mergeBlockedRule])
 
   const codeOwners = useMemo(() => {
     return currCodeOwners // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,9 +146,15 @@ const ChangesSection = (props: ChangesSectionProps) => {
       reqCodeOwnerApproval ||
       minApproval > 0 ||
       reqCodeOwnerLatestApproval ||
-      minReqLatestApproval > 0
+      minReqLatestApproval > 0 ||
+      mergeBlockedRule
     ) {
-      if (codeOwnerChangeReqEntries.length > 0 && (reqCodeOwnerApproval || reqCodeOwnerLatestApproval)) {
+      if (mergeBlockedRule) {
+        title = getString('changesSection.prMergeBlockedTitle')
+        // statusMessage = getString('changesSection.prMergeBlockedMessage')
+        statusColor = Color.RED_700
+        statusIcon = 'warning-icon'
+      } else if (codeOwnerChangeReqEntries.length > 0 && (reqCodeOwnerApproval || reqCodeOwnerLatestApproval)) {
         title = getString('changesSection.reqChangeFromCodeOwners')
         statusMessage = getString('changesSection.codeOwnerReqChanges')
         statusColor = Color.RED_700
@@ -258,7 +266,9 @@ const ChangesSection = (props: ChangesSectionProps) => {
     reqCodeOwnerLatestApproval,
     minReqLatestApproval,
     refetchReviewers,
-    refetchCodeOwners
+    refetchCodeOwners,
+    mergeBlockedRule,
+    approvedEvaluations
   ])
 
   function renderCodeOwnerStatus() {
@@ -376,13 +386,14 @@ const ChangesSection = (props: ChangesSectionProps) => {
     )
   }
   const viewBtn =
-    minApproval > minReqLatestApproval ||
-    (!isEmpty(approvedEvaluations) && minReqLatestApproval === 0) ||
-    (minApproval > 0 && minReqLatestApproval === undefined) ||
-    minReqLatestApproval > 0 ||
-    !isEmpty(changeReqEvaluations) ||
-    !isEmpty(codeOwners) ||
-    false
+    !mergeBlockedRule &&
+    (minApproval > minReqLatestApproval ||
+      (!isEmpty(approvedEvaluations) && minReqLatestApproval === 0) ||
+      (minApproval > 0 && minReqLatestApproval === undefined) ||
+      minReqLatestApproval > 0 ||
+      !isEmpty(changeReqEvaluations) ||
+      !isEmpty(codeOwners) ||
+      false)
   return (
     <Render when={!loading && !loadingReviewers && status}>
       <Container className={cx(css.sectionContainer, css.borderContainer)}>
@@ -399,7 +410,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
             )}
             <Layout.Vertical padding={{ left: 'medium' }}>
               <Text
-                padding={{ bottom: 'xsmall' }}
+                padding={contentText ? { bottom: 'xsmall' } : undefined}
                 className={css.sectionTitle}
                 color={
                   headerText === getString('changesSection.noReviewsReq')

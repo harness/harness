@@ -39,7 +39,16 @@ import { useHistory } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
-import { getErrorMessage, LIST_FETCHING_LIMIT, permissionProps, type PageBrowserProps } from 'utils/Utils'
+import {
+  getErrorMessage,
+  LIST_FETCHING_LIMIT,
+  permissionProps,
+  type PageBrowserProps,
+  Rule,
+  RuleFields,
+  BranchProtectionRulesMapType,
+  createRuleFieldsMap
+} from 'utils/Utils'
 import { SettingTypeMode } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
@@ -50,6 +59,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import type { OpenapiRule, ProtectionPattern } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import Include from '../../icons/Include.svg?url'
 import Exclude from '../../icons/Exclude.svg?url'
 import BranchProtectionForm from './BranchProtectionForm/BranchProtectionForm'
@@ -73,6 +83,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
   const {
     data: rules,
     refetch: refetchRules,
+    loading: loadingRules,
     response
   } = useGet<OpenapiRule[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/rules`,
@@ -86,6 +97,89 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
     debounce: 500,
     lazy: !repoMetadata || !!editRule
   })
+
+  const branchProtectionRules = {
+    requireMinReviewersTitle: {
+      title: getString('branchProtection.requireMinReviewersTitle'),
+      requiredRule: {
+        [RuleFields.APPROVALS_REQUIRE_MINIMUM_COUNT]: true
+      }
+    },
+    reqReviewFromCodeOwnerTitle: {
+      title: getString('branchProtection.reqReviewFromCodeOwnerTitle'),
+      requiredRule: {
+        [RuleFields.APPROVALS_REQUIRE_CODE_OWNERS]: true
+      }
+    },
+    reqResOfChanges: {
+      title: getString('branchProtection.reqResOfChanges'),
+      requiredRule: {
+        [RuleFields.APPROVALS_REQUIRE_NO_CHANGE_REQUEST]: true
+      }
+    },
+    reqNewChangesTitle: {
+      title: getString('branchProtection.reqNewChangesTitle'),
+      requiredRule: {
+        [RuleFields.APPROVALS_REQUIRE_LATEST_COMMIT]: true
+      }
+    },
+    reqCommentResolutionTitle: {
+      title: getString('branchProtection.reqCommentResolutionTitle'),
+      requiredRule: {
+        [RuleFields.COMMENTS_REQUIRE_RESOLVE_ALL]: true
+      }
+    },
+    reqStatusChecksTitle: {
+      title: getString('branchProtection.reqStatusChecksTitle'),
+      requiredRule: {
+        [RuleFields.STATUS_CHECKS_ALL_MUST_SUCCEED]: true
+      }
+    },
+    limitMergeStrategies: {
+      title: getString('branchProtection.limitMergeStrategies'),
+      requiredRule: {
+        [RuleFields.MERGE_STRATEGIES_ALLOWED]: true
+      }
+    },
+    autoDeleteTitle: {
+      title: getString('branchProtection.autoDeleteTitle'),
+      requiredRule: {
+        [RuleFields.MERGE_DELETE_BRANCH]: true
+      }
+    },
+    blockBranchCreation: {
+      title: getString('branchProtection.blockBranchCreation'),
+      requiredRule: {
+        [RuleFields.LIFECYCLE_CREATE_FORBIDDEN]: true
+      }
+    },
+    blockBranchDeletion: {
+      title: getString('branchProtection.blockBranchDeletion'),
+      requiredRule: {
+        [RuleFields.LIFECYCLE_DELETE_FORBIDDEN]: true
+      }
+    },
+    blockBranchUpdate: {
+      title: getString('branchProtection.blockBranchUpdate'),
+      requiredRule: {
+        [RuleFields.MERGE_BLOCK]: true,
+        [RuleFields.LIFECYCLE_UPDATE_FORBIDDEN]: true
+      }
+    },
+    requirePr: {
+      title: getString('branchProtection.requirePr'),
+      requiredRule: {
+        [RuleFields.LIFECYCLE_UPDATE_FORBIDDEN]: true,
+        [RuleFields.MERGE_BLOCK]: false
+      }
+    },
+    blockForcePush: {
+      title: getString('branchProtection.blockForcePush'),
+      requiredRule: {
+        [RuleFields.LIFECYCLE_UPDATE_FORCE_FORBIDDEN]: true
+      }
+    }
+  }
 
   const columns: Column<OpenapiRule>[] = useMemo(
     () => [
@@ -137,48 +231,35 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
             </Text>
           )
 
-          type Rule = {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            [key: string]: any
-          }
-
-          const fieldsToCheck = {
-            'pullreq.approvals.require_minimum_count': getString('branchProtection.requireMinReviewersTitle'),
-            'pullreq.approvals.require_code_owners': getString('branchProtection.reqReviewFromCodeOwnerTitle'),
-            'pullreq.approvals.require_no_change_request': getString('branchProtection.reqResOfChanges'),
-            'pullreq.approvals.require_latest_commit': getString('branchProtection.reqNewChangesTitle'),
-            'pullreq.comments.require_resolve_all': getString('branchProtection.reqCommentResolutionTitle'),
-            'pullreq.status_checks.all_must_succeed': getString('branchProtection.reqStatusChecksTitle'),
-            'pullreq.status_checks.require_identifiers': getString('branchProtection.reqStatusChecksTitle'),
-            'pullreq.merge.strategies_allowed': getString('branchProtection.limitMergeStrategies'),
-            'pullreq.merge.delete_branch': getString('branchProtection.autoDeleteTitle'),
-            'lifecycle.create_forbidden': getString('branchProtection.blockBranchCreation'),
-            'lifecycle.delete_forbidden': getString('branchProtection.blockBranchDeletion'),
-            'lifecycle.update_forbidden': getString('branchProtection.requirePr')
-          }
-
           type NonEmptyRule = {
             field: string // eslint-disable-next-line @typescript-eslint/no-explicit-any
             value: any
           }
 
-          const checkFieldsNotEmpty = (rulesArr: Rule, fields: { [key: string]: string }): NonEmptyRule[] => {
+          const checkAppliedRules = (rulesData: Rule, rulesList: BranchProtectionRulesMapType): NonEmptyRule[] => {
             const nonEmptyFields: NonEmptyRule[] = []
-            for (const field in fields) {
-              const keys = field.split('.')
-              let value = rulesArr
-              for (const key of keys) {
-                value = value[key]
-                if (value == null) break
-              }
-              if (value !== undefined && (Array.isArray(value) ? value.length > 0 : true)) {
-                nonEmptyFields.push({ field, value: fields[field] }) // Use value from fieldsToCheck
+            const rulesDefinitionData: Record<RuleFields, boolean> = createRuleFieldsMap(rulesData)
+            for (const [key, rule] of Object.entries(rulesList)) {
+              const { title, requiredRule } = rule
+              const isApplicable = Object.entries(requiredRule).every(([ruleField, requiredValue]) => {
+                const ruleFieldEnum = ruleField as RuleFields
+                const actualValue = rulesDefinitionData[ruleFieldEnum]
+                if (requiredValue) return actualValue
+                return !actualValue
+              })
+              if (isApplicable) {
+                nonEmptyFields.push({
+                  field: key,
+                  value: title
+                })
               }
             }
+
             return nonEmptyFields
           }
 
-          const nonEmptyRules = checkFieldsNotEmpty(row.original.definition as Rule, fieldsToCheck)
+          const nonEmptyRules = checkAppliedRules(row.original.definition as Rule, branchProtectionRules)
+
           const { hooks, standalone } = useAppContext()
 
           const space = useGetSpaceParam()
@@ -346,7 +427,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
                             {nonEmptyRules.map((rule: { value: string }) => {
                               return (
                                 <Text
-                                  key={`${row.original.identifier}-${rule}`}
+                                  key={`${row.original.identifier}-${rule.value}`}
                                   className={css.appliedRulesTextContainer}>
                                   {rule.value}
                                 </Text>
@@ -386,6 +467,7 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
   )
   return (
     <Container>
+      <LoadingSpinner visible={loadingRules} />
       {repoMetadata && !newRule && !editRule && (
         <BranchProtectionHeader
           activeTab={activeTab}

@@ -37,7 +37,13 @@ import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import { BranchTargetType, MergeStrategy, SettingTypeMode, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
-import { REGEX_VALID_REPO_NAME, getErrorMessage, permissionProps, rulesFormInitialPayload } from 'utils/Utils'
+import {
+  REGEX_VALID_REPO_NAME,
+  RulesFormPayload,
+  getErrorMessage,
+  permissionProps,
+  rulesFormInitialPayload
+} from 'utils/Utils'
 import type {
   RepoRepositoryOutput,
   OpenapiRule,
@@ -147,7 +153,7 @@ const BranchProtectionForm = (props: {
   }
   const history = useHistory()
 
-  const initialValues = useMemo(() => {
+  const initialValues = useMemo((): RulesFormPayload => {
     if (editMode && rule) {
       const minReviewerCheck =
         ((rule.definition as ProtectionBranch)?.pullreq?.approvals?.require_minimum_count as number) > 0 ? true : false
@@ -197,8 +203,16 @@ const BranchProtectionForm = (props: {
         rebaseMerge: isRebasePresent,
         autoDelete: (rule.definition as ProtectionBranch)?.pullreq?.merge?.delete_branch,
         blockBranchCreation: (rule.definition as ProtectionBranch)?.lifecycle?.create_forbidden,
+        blockBranchUpdate:
+          (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden &&
+          (rule.definition as ProtectionBranch)?.pullreq?.merge?.block,
         blockBranchDeletion: (rule.definition as ProtectionBranch)?.lifecycle?.delete_forbidden,
-        requirePr: (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden,
+        blockForcePush:
+          (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden ||
+          (rule.definition as ProtectionBranch)?.lifecycle?.update_force_forbidden,
+        requirePr:
+          (rule.definition as ProtectionBranch)?.lifecycle?.update_forbidden &&
+          !(rule.definition as ProtectionBranch)?.pullreq?.merge?.block,
         targetSet: false,
         bypassSet: false
       }
@@ -218,7 +232,7 @@ const BranchProtectionForm = (props: {
     [space]
   )
   return (
-    <Formik
+    <Formik<RulesFormPayload>
       formName="branchProtectionRulesNewEditForm"
       initialValues={initialValues}
       enableReinitialize
@@ -265,7 +279,8 @@ const BranchProtectionForm = (props: {
               },
               merge: {
                 strategies_allowed: stratArray,
-                delete_branch: formData.autoDelete
+                delete_branch: formData.autoDelete,
+                block: formData.blockBranchUpdate
               },
               status_checks: {
                 require_identifiers: formData.statusChecks
@@ -274,7 +289,8 @@ const BranchProtectionForm = (props: {
             lifecycle: {
               create_forbidden: formData.blockBranchCreation,
               delete_forbidden: formData.blockBranchDeletion,
-              update_forbidden: formData.requirePr
+              update_forbidden: formData.requirePr || formData.blockBranchUpdate,
+              update_force_forbidden: formData.blockForcePush && !formData.requirePr && !formData.blockBranchUpdate
             }
           }
         }
@@ -304,7 +320,7 @@ const BranchProtectionForm = (props: {
         const requireStatusChecks = formik.values.requireStatusChecks
 
         const filteredUserOptions = userOptions.filter(
-          (item: SelectOption) => !bypassList.includes(item.value as string)
+          (item: SelectOption) => !bypassList?.includes(item.value as string)
         )
 
         return (
@@ -394,7 +410,7 @@ const BranchProtectionForm = (props: {
                         if (formik.values.target !== '') {
                           formik.setFieldValue('targetSet', true)
 
-                          targetList.push([BranchTargetType.INCLUDE, formik.values.target])
+                          targetList.push([BranchTargetType.INCLUDE, formik.values.target ?? ''])
                           formik.setFieldValue('targetList', targetList)
                           formik.setFieldValue('target', '')
                         }
@@ -409,7 +425,7 @@ const BranchProtectionForm = (props: {
                               if (formik.values.target !== '') {
                                 formik.setFieldValue('targetSet', true)
 
-                                targetList.push([BranchTargetType.EXCLUDE, formik.values.target])
+                                targetList.push([BranchTargetType.EXCLUDE, formik.values.target ?? ''])
                                 formik.setFieldValue('targetList', targetList)
                                 formik.setFieldValue('target', '')
                               }
@@ -473,7 +489,7 @@ const BranchProtectionForm = (props: {
                 <BypassList bypassList={bypassList} setFieldValue={formik.setFieldValue} />
               </Container>
               <ProtectionRulesForm
-                setFieldValue={formik.setFieldValue}
+                formik={formik}
                 requireStatusChecks={requireStatusChecks}
                 minReviewers={minReviewers}
                 statusOptions={statusOptions}

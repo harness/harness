@@ -104,6 +104,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
   const [minReqLatestApproval, setMinReqLatestApproval] = useState(0)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [resolvedCommentArr, setResolvedCommentArr] = useState<any>()
+  const [mergeBlockedRule, setMergeBlockedRule] = useState<boolean>(false)
   const [PRStateLoading, setPRStateLoading] = useState(isClosed ? false : true)
   const { pullRequestSection } = useGetRepositoryMetadata()
   const mergeable = useMemo(() => pullReqMetadata.merge_check_status === MergeCheckStatus.MERGEABLE, [pullReqMetadata])
@@ -199,9 +200,13 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
   useEffect(() => {
     if (ruleViolationArr) {
       const requireResCommentRule = extractSpecificViolations(ruleViolationArr, 'pullreq.comments.require_resolve_all')
+      const mergeBlockedViaRule = extractSpecificViolations(ruleViolationArr, 'pullreq.merge.blocked')
       if (requireResCommentRule) {
         setResolvedCommentArr(requireResCommentRule[0])
       }
+      setMergeBlockedRule(mergeBlockedViaRule.length > 0)
+    } else {
+      setMergeBlockedRule(false)
     }
   }, [ruleViolationArr, pullReqMetadata, repoMetadata, data, ruleViolation])
 
@@ -232,7 +237,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
   }, [unchecked, pullReqMetadata?.source_sha, activities])
 
   const rebasePossible = useMemo(
-    () => pullReqMetadata.merge_target_sha !== pullReqMetadata.merge_base_sha,
+    () => pullReqMetadata.merge_target_sha !== pullReqMetadata.merge_base_sha && !pullReqMetadata.merged,
     [pullReqMetadata]
   )
 
@@ -278,6 +283,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
                     minReqLatestApproval={minReqLatestApproval}
                     reqCodeOwnerLatestApproval={reqCodeOwnerLatestApproval}
                     refetchCodeOwners={refetchCodeOwners}
+                    mergeBlockedRule={mergeBlockedRule}
                   />
                 </Render>
               ),

@@ -333,7 +333,7 @@ export interface Violation {
   violation: string
 }
 
-export const rulesFormInitialPayload = {
+export const rulesFormInitialPayload: RulesFormPayload = {
   name: '',
   desc: '',
   enable: true,
@@ -357,9 +357,42 @@ export const rulesFormInitialPayload = {
   autoDelete: false,
   blockBranchCreation: false,
   blockBranchDeletion: false,
+  blockBranchUpdate: false,
+  blockForcePush: false,
   requirePr: false,
   bypassSet: false,
   targetSet: false
+}
+
+export type RulesFormPayload = {
+  name?: string
+  desc?: string
+  enable: boolean
+  target?: string
+  targetDefault?: boolean
+  targetList: string[][]
+  allRepoOwners?: boolean
+  bypassList?: string[]
+  requireMinReviewers: boolean
+  minReviewers?: string | number
+  requireCodeOwner?: boolean
+  requireNewChanges?: boolean
+  reqResOfChanges?: boolean
+  requireCommentResolution?: boolean
+  requireStatusChecks: boolean
+  statusChecks: string[]
+  limitMergeStrategies: boolean
+  mergeCommit?: boolean
+  squashMerge?: boolean
+  rebaseMerge?: boolean
+  autoDelete?: boolean
+  blockBranchCreation?: boolean
+  blockBranchDeletion?: boolean
+  blockBranchUpdate?: boolean
+  blockForcePush?: boolean
+  requirePr?: boolean
+  bypassSet: boolean
+  targetSet: boolean
 }
 
 /**
@@ -850,4 +883,93 @@ export const getScopeData = (space: string, scope: number, standalone: boolean) 
     default:
       return { scopeRef: space, scopeIcon: 'nav-project' as IconName, scopeId: scope }
   }
+}
+
+export enum RuleFields {
+  APPROVALS_REQUIRE_MINIMUM_COUNT = 'pullreq.approvals.require_minimum_count',
+  APPROVALS_REQUIRE_CODE_OWNERS = 'pullreq.approvals.require_code_owners',
+  APPROVALS_REQUIRE_NO_CHANGE_REQUEST = 'pullreq.approvals.require_no_change_request',
+  APPROVALS_REQUIRE_LATEST_COMMIT = 'pullreq.approvals.require_latest_commit',
+  COMMENTS_REQUIRE_RESOLVE_ALL = 'pullreq.comments.require_resolve_all',
+  STATUS_CHECKS_ALL_MUST_SUCCEED = 'pullreq.status_checks.all_must_succeed',
+  STATUS_CHECKS_REQUIRE_IDENTIFIERS = 'pullreq.status_checks.require_identifiers',
+  MERGE_STRATEGIES_ALLOWED = 'pullreq.merge.strategies_allowed',
+  MERGE_DELETE_BRANCH = 'pullreq.merge.delete_branch',
+  LIFECYCLE_CREATE_FORBIDDEN = 'lifecycle.create_forbidden',
+  LIFECYCLE_DELETE_FORBIDDEN = 'lifecycle.delete_forbidden',
+  MERGE_BLOCK = 'pullreq.merge.block',
+  LIFECYCLE_UPDATE_FORBIDDEN = 'lifecycle.update_forbidden',
+  LIFECYCLE_UPDATE_FORCE_FORBIDDEN = 'lifecycle.update_force_forbidden'
+}
+export type RuleFieldsMap = Record<RuleFields, boolean>
+
+export type Rule = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any
+}
+
+export type BranchProtectionRule = {
+  title: string
+  requiredRule: {
+    [key in RuleFields]?: boolean
+  }
+}
+
+export type BranchProtectionRulesMapType = Record<string, BranchProtectionRule>
+
+export function createRuleFieldsMap(ruleDefinition: Rule): RuleFieldsMap {
+  const ruleFieldsMap: RuleFieldsMap = {
+    [RuleFields.APPROVALS_REQUIRE_MINIMUM_COUNT]: false,
+    [RuleFields.APPROVALS_REQUIRE_CODE_OWNERS]: false,
+    [RuleFields.APPROVALS_REQUIRE_NO_CHANGE_REQUEST]: false,
+    [RuleFields.APPROVALS_REQUIRE_LATEST_COMMIT]: false,
+    [RuleFields.COMMENTS_REQUIRE_RESOLVE_ALL]: false,
+    [RuleFields.STATUS_CHECKS_ALL_MUST_SUCCEED]: false,
+    [RuleFields.STATUS_CHECKS_REQUIRE_IDENTIFIERS]: false,
+    [RuleFields.MERGE_STRATEGIES_ALLOWED]: false,
+    [RuleFields.MERGE_DELETE_BRANCH]: false,
+    [RuleFields.LIFECYCLE_CREATE_FORBIDDEN]: false,
+    [RuleFields.LIFECYCLE_DELETE_FORBIDDEN]: false,
+    [RuleFields.MERGE_BLOCK]: false,
+    [RuleFields.LIFECYCLE_UPDATE_FORBIDDEN]: false,
+    [RuleFields.LIFECYCLE_UPDATE_FORCE_FORBIDDEN]: false
+  }
+  if (ruleDefinition.pullreq) {
+    if (ruleDefinition.pullreq.approvals) {
+      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_CODE_OWNERS] = !!ruleDefinition.pullreq.approvals.require_code_owners
+      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_LATEST_COMMIT] =
+        !!ruleDefinition.pullreq.approvals.require_latest_commit
+      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_MINIMUM_COUNT] =
+        typeof ruleDefinition.pullreq.approvals.require_minimum_count === 'number'
+      ruleFieldsMap[RuleFields.APPROVALS_REQUIRE_NO_CHANGE_REQUEST] =
+        !!ruleDefinition.pullreq.approvals.require_no_change_request
+    }
+
+    if (ruleDefinition.pullreq.comments) {
+      ruleFieldsMap[RuleFields.COMMENTS_REQUIRE_RESOLVE_ALL] = !!ruleDefinition.pullreq.comments.require_resolve_all
+    }
+
+    if (ruleDefinition.pullreq.merge) {
+      ruleFieldsMap[RuleFields.MERGE_BLOCK] = !!ruleDefinition.pullreq.merge.block
+      ruleFieldsMap[RuleFields.MERGE_DELETE_BRANCH] = !!ruleDefinition.pullreq.merge.delete_branch
+      ruleFieldsMap[RuleFields.MERGE_STRATEGIES_ALLOWED] =
+        Array.isArray(ruleDefinition.pullreq.merge.strategies_allowed) &&
+        ruleDefinition.pullreq.merge.strategies_allowed.length > 0
+    }
+
+    if (ruleDefinition.pullreq.status_checks) {
+      ruleFieldsMap[RuleFields.STATUS_CHECKS_REQUIRE_IDENTIFIERS] =
+        Array.isArray(ruleDefinition.pullreq.status_checks.require_identifiers) &&
+        ruleDefinition.pullreq.status_checks.require_identifiers.length > 0
+    }
+  }
+
+  if (ruleDefinition.lifecycle) {
+    ruleFieldsMap[RuleFields.LIFECYCLE_CREATE_FORBIDDEN] = !!ruleDefinition.lifecycle.create_forbidden
+    ruleFieldsMap[RuleFields.LIFECYCLE_DELETE_FORBIDDEN] = !!ruleDefinition.lifecycle.delete_forbidden
+    ruleFieldsMap[RuleFields.LIFECYCLE_UPDATE_FORBIDDEN] = !!ruleDefinition.lifecycle.update_forbidden
+    ruleFieldsMap[RuleFields.LIFECYCLE_UPDATE_FORCE_FORBIDDEN] = !!ruleDefinition.lifecycle.update_force_forbidden
+  }
+
+  return ruleFieldsMap
 }
