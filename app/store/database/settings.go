@@ -78,6 +78,8 @@ func (s *SettingsStore) Find(
 		stmt = stmt.Where("setting_space_id = ?", scopeID)
 	case enum.SettingsScopeRepo:
 		stmt = stmt.Where("setting_repo_id = ?", scopeID)
+	case enum.SettingsScopeSystem:
+		stmt = stmt.Where("setting_repo_id IS NULL AND setting_space_id IS NULL")
 	default:
 		return nil, fmt.Errorf("setting scope %q is not supported", scope)
 	}
@@ -122,6 +124,8 @@ func (s *SettingsStore) FindMany(
 		stmt = stmt.Where("setting_space_id = ?", scopeID)
 	case enum.SettingsScopeRepo:
 		stmt = stmt.Where("setting_repo_id = ?", scopeID)
+	case enum.SettingsScopeSystem:
+		stmt = stmt.Where("setting_repo_id IS NULL AND setting_space_id IS NULL")
 	default:
 		return nil, fmt.Errorf("setting scope %q is not supported", scope)
 	}
@@ -169,6 +173,10 @@ func (s *SettingsStore) Upsert(ctx context.Context,
 	case enum.SettingsScopeRepo:
 		stmt = stmt.Values(null.Int{}, null.IntFrom(scopeID), key, value)
 		stmt = stmt.Suffix(`ON CONFLICT (setting_repo_id, LOWER(setting_key)) WHERE setting_repo_id IS NOT NULL DO`)
+	case enum.SettingsScopeSystem:
+		stmt = stmt.Values(null.Int{}, null.Int{}, key, value)
+		stmt = stmt.Suffix(`ON CONFLICT (LOWER(setting_key)) 
+			WHERE setting_repo_id IS NULL AND setting_space_id IS NULL DO`)
 	default:
 		return fmt.Errorf("setting scope %q is not supported", scope)
 	}

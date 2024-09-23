@@ -22,10 +22,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/harness/gitness/app/services/system"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
+
+	"github.com/google/uuid"
 )
 
 const jobType = "metric-collector"
@@ -33,6 +36,7 @@ const jobType = "metric-collector"
 type metricData struct {
 	IP         string `json:"ip"`
 	Hostname   string `json:"hostname"`
+	InstallID  string `json:"install_id"`
 	Installer  string `json:"installed_by"`
 	Installed  string `json:"installed_at"`
 	Version    string `json:"version"`
@@ -54,13 +58,33 @@ type Collector struct {
 	executionStore      store.ExecutionStore
 	scheduler           *job.Scheduler
 	gitspaceConfigStore store.GitspaceConfigStore
+	system              *system.Service
+	systemSettings      *system.Settings
 }
 
 func (c *Collector) Register(ctx context.Context) error {
 	if !c.enabled {
 		return nil
 	}
-	err := c.scheduler.AddRecurring(ctx, jobType, jobType, "0 0 * * *", time.Minute)
+
+	settings, err := c.system.Find(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to find system settings: %w", err)
+	}
+
+	if settings.InstallID == nil || *settings.InstallID == "" {
+		id := uuid.New().String()
+		settings = &system.Settings{
+			InstallID: &id,
+		}
+		settings, err = c.system.Update(ctx, settings)
+		if err != nil {
+			return fmt.Errorf("failed to update system settings: %w", err)
+		}
+	}
+	c.systemSettings = settings
+
+	err = c.scheduler.AddRecurring(ctx, jobType, jobType, "0 0 * * *", time.Minute)
 	if err != nil {
 		return fmt.Errorf("failed to register recurring job for collector: %w", err)
 	}
@@ -117,6 +141,7 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 
 	data := metricData{
 		Hostname:   c.hostname,
+		InstallID:  *c.systemSettings.InstallID,
 		Installer:  users[0].Email,
 		Installed:  time.UnixMilli(users[0].Created).Format("2006-01-02 15:04:05"),
 		Version:    version.Version.String(),

@@ -27,11 +27,15 @@ var (
 
 	// SettingsScopeRepo defines settings stored on a repo level.
 	SettingsScopeRepo SettingsScope = "repo"
+
+	// SettingsScopeSystem defines settings stored on a system.
+	SettingsScopeSystem SettingsScope = "system"
 )
 
 func GetAllSettingsScopes() []SettingsScope {
 	return []SettingsScope{
 		SettingsScopeSpace,
 		SettingsScopeRepo,
+		SettingsScopeSystem,
 	}
 }

@@ -12,16 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package settings
+package system
 
-type Key string
+import "github.com/harness/gitness/app/services/settings"
 
-var (
-	// KeySecretScanningEnabled [bool] enables secret scanning if set to true.
-	KeySecretScanningEnabled     Key = "secret_scanning_enabled"
-	DefaultSecretScanningEnabled     = false
-	KeyFileSizeLimit             Key = "file_size_limit"
-	DefaultFileSizeLimit             = int64(1e+8) // 100 MB
-	KeyInstallID                 Key = "install_id"
-	DefaultInstallID                 = string("")
-)
+// Service is used to enhance interaction with the settings store.
+type Service struct {
+	settings *settings.Service
+}

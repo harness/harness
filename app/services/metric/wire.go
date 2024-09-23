@@ -15,6 +15,7 @@
 package metric
 
 import (
+	"github.com/harness/gitness/app/services/system"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/job"
 	"github.com/harness/gitness/types"
@@ -35,6 +36,7 @@ func ProvideCollector(
 	scheduler *job.Scheduler,
 	executor *job.Executor,
 	gitspaceConfigStore store.GitspaceConfigStore,
+	system *system.Service,
 ) (*Collector, error) {
 	job := &Collector{
 		hostname:            config.InstanceID,
@@ -47,6 +49,7 @@ func ProvideCollector(
 		executionStore:      executionStore,
 		scheduler:           scheduler,
 		gitspaceConfigStore: gitspaceConfigStore,
+		system:              system,
 	}
 
 	err := executor.Register(jobType, job)

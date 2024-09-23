@@ -106,6 +106,7 @@ import (
 	reposervice "github.com/harness/gitness/app/services/repo"
 	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
+	systemsvc "github.com/harness/gitness/app/services/system"
 	"github.com/harness/gitness/app/services/trigger"
 	usergroupservice "github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/services/webhook"
@@ -242,6 +243,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		keywordsearch.WireSet,
 		controllerkeywordsearch.WireSet,
 		settings.WireSet,
+		systemsvc.WireSet,
 		usergroup.WireSet,
 		openapi.WireSet,
 		repo.ProvideRepoCheck,
