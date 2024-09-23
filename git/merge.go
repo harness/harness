@@ -144,6 +144,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		mergeFunc = merge.Squash
 	case enum.MergeMethodRebase:
 		mergeFunc = merge.Rebase
+	case enum.MergeMethodFastForward:
+		mergeFunc = merge.FastForward
 	default:
 		// should not happen, the call to Sanitize above should handle this case.
 		panic("unsupported merge method")
@@ -295,6 +297,10 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		&author, &committer,
 		mergeMsg,
 		mergeBaseCommitSHA, baseCommitSHA, headCommitSHA)
+	if errors.IsConflict(err) {
+		return MergeOutput{}, fmt.Errorf("failed to merge %q to %q in %q using the %q merge method: %w",
+			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod, err)
+	}
 	if err != nil {
 		return MergeOutput{}, errors.Internal(err, "failed to merge %q to %q in %q using the %q merge method",
 			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod)

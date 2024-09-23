@@ -228,6 +228,7 @@ func TestBranch_MergeVerify(t *testing.T) {
 			},
 			expOut: MergeVerifyOutput{
 				AllowedMethods: []enum.MergeMethod{
+					enum.MergeMethodFastForward,
 					enum.MergeMethodMerge,
 					enum.MergeMethodRebase,
 					enum.MergeMethodSquash,

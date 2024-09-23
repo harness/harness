@@ -219,15 +219,17 @@ type MergeMethod gitenum.MergeMethod
 
 // MergeMethod enumeration.
 const (
-	MergeMethodMerge  = MergeMethod(gitenum.MergeMethodMerge)
-	MergeMethodSquash = MergeMethod(gitenum.MergeMethodSquash)
-	MergeMethodRebase = MergeMethod(gitenum.MergeMethodRebase)
+	MergeMethodMerge       = MergeMethod(gitenum.MergeMethodMerge)
+	MergeMethodSquash      = MergeMethod(gitenum.MergeMethodSquash)
+	MergeMethodRebase      = MergeMethod(gitenum.MergeMethodRebase)
+	MergeMethodFastForward = MergeMethod(gitenum.MergeMethodFastForward)
 )
 
 var MergeMethods = sortEnum([]MergeMethod{
 	MergeMethodMerge,
 	MergeMethodSquash,
 	MergeMethodRebase,
+	MergeMethodFastForward,
 })
 
 func (MergeMethod) Enum() []interface{} { return toInterfaceSlice(MergeMethods) }

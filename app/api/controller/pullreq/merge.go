@@ -71,8 +71,10 @@ func (in *MergeInput) sanitize() error {
 	in.Title = strings.TrimSpace(in.Title)
 	in.Message = strings.TrimSpace(in.Message)
 
-	if in.Method == enum.MergeMethodRebase && (in.Title != "" || in.Message != "") {
-		return usererror.BadRequest("rebase doesn't support customizing commit title and message")
+	if (in.Method == enum.MergeMethodRebase || in.Method == enum.MergeMethodFastForward) &&
+		(in.Title != "" || in.Message != "") {
+		return usererror.BadRequestf(
+			"merge method %q doesn't support customizing commit title and message", in.Method)
 	}
 
 	return nil
@@ -338,8 +340,8 @@ func (c *Controller) Merge(
 		author = identityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
 	case enum.MergeMethodSquash:
 		author = identityFromPrincipalInfo(pr.Author)
-	case enum.MergeMethodRebase:
-		author = nil // Not important for the rebase merge: the author info in the commits will be preserved.
+	case enum.MergeMethodRebase, enum.MergeMethodFastForward:
+		author = nil // Not important for these merge methods: the author info in the commits will be preserved.
 	}
 
 	var committer *git.Identity
@@ -349,6 +351,8 @@ func (c *Controller) Merge(
 		committer = identityFromPrincipalInfo(*bootstrap.NewSystemServiceSession().Principal.ToPrincipalInfo())
 	case enum.MergeMethodRebase:
 		committer = identityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
+	case enum.MergeMethodFastForward:
+		committer = nil // Not important for fast-forward merge
 	}
 
 	// backfill commit title if none provided
@@ -358,7 +362,7 @@ func (c *Controller) Merge(
 			in.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
 		case enum.MergeMethodSquash:
 			in.Title = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
-		case enum.MergeMethodRebase:
+		case enum.MergeMethodRebase, enum.MergeMethodFastForward:
 			// Not used.
 		}
 	}

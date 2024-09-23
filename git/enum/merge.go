@@ -24,17 +24,20 @@ const (
 	MergeMethodSquash MergeMethod = "squash"
 	// MergeMethodRebase rebase before merging.
 	MergeMethodRebase MergeMethod = "rebase"
+	// MergeMethodFastForward fast-forward merging.
+	MergeMethodFastForward MergeMethod = "fast-forward"
 )
 
 var MergeMethods = []MergeMethod{
 	MergeMethodMerge,
 	MergeMethodSquash,
 	MergeMethodRebase,
+	MergeMethodFastForward,
 }
 
 func (m MergeMethod) Sanitize() (MergeMethod, bool) {
 	switch m {
-	case MergeMethodMerge, MergeMethodSquash, MergeMethodRebase:
+	case MergeMethodMerge, MergeMethodSquash, MergeMethodRebase, MergeMethodFastForward:
 		return m, true
 	default:
 		return MergeMethodMerge, false

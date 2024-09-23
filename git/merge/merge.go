@@ -16,9 +16,9 @@ package merge
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/sha"
@@ -214,4 +214,28 @@ func Rebase(
 	}
 
 	return mergeSHA, conflicts, nil
+}
+
+// FastForward points the  is internal implementation of merge used for Merge and Squash methods.
+func FastForward(
+	ctx context.Context,
+	refUpdater *hook.RefUpdater,
+	repoPath, tmpDir string,
+	_, _ *api.Signature, // commit author and committer aren't used here
+	_ string, // commit message isn't used here
+	mergeBaseSHA, targetSHA, sourceSHA sha.SHA,
+) (mergeSHA sha.SHA, conflicts []string, err error) {
+	if targetSHA != mergeBaseSHA {
+		return sha.None, nil,
+			errors.Conflict("Target branch has diverged from the source branch. Fast-forward not possible.")
+	}
+
+	err = sharedrepo.Run(ctx, refUpdater, tmpDir, repoPath, func(*sharedrepo.SharedRepo) error {
+		return refUpdater.InitNew(ctx, sourceSHA)
+	})
+	if err != nil {
+		return sha.None, nil, fmt.Errorf("merge method=fast-forward: %w", err)
+	}
+
+	return sourceSHA, nil, nil
 }
