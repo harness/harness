@@ -389,7 +389,7 @@ func (c *Controller) Merge(
 		Method:          gitenum.MergeMethod(in.Method),
 	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
+		return nil, nil, fmt.Errorf("merge execution failed: %w", err)
 	}
 	//nolint:nestif
 	if mergeOutput.MergeSHA.String() == "" || len(mergeOutput.ConflictFiles) > 0 {

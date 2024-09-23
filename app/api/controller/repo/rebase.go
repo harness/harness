@@ -34,6 +34,7 @@ type RebaseInput struct {
 	HeadBranch    string  `json:"head_branch"`
 	HeadCommitSHA sha.SHA `json:"head_commit_sha"`
 
+	DryRun      bool `json:"dry_run"`
 	DryRunRules bool `json:"dry_run_rules"`
 	BypassRules bool `json:"bypass_rules"`
 }
@@ -90,11 +91,10 @@ func (c *Controller) Rebase(
 	}
 
 	if in.DryRunRules {
+		// DryRunRules is true: Just return rule violations and don't attempt to rebase.
 		return &types.RebaseResponse{
-			DryRunRulesOutput: types.DryRunRulesOutput{
-				DryRunRules:    true,
-				RuleViolations: violations,
-			},
+			RuleViolations: violations,
+			DryRunRules:    true,
 		}, nil, nil
 	}
 
@@ -125,7 +125,7 @@ func (c *Controller) Rebase(
 
 	if !headBranch.Branch.SHA.Equal(in.HeadCommitSHA) {
 		return nil, nil, usererror.BadRequestf("The commit %s isn't the latest commit on the branch %s",
-			in.HeadCommitSHA, headBranch.Branch.SHA.String())
+			in.HeadCommitSHA, headBranch.Branch.Name)
 	}
 
 	isAncestor, err := c.git.IsAncestor(ctx, git.IsAncestorParams{
@@ -140,9 +140,8 @@ func (c *Controller) Rebase(
 	if isAncestor.Ancestor {
 		// The head branch already contains the latest commit from the base branch - nothing to do.
 		return &types.RebaseResponse{
-			DryRunRulesOutput: types.DryRunRulesOutput{
-				RuleViolations: violations,
-			},
+			AlreadyAncestor: true,
+			RuleViolations:  violations,
 		}, nil, nil
 	}
 
@@ -151,18 +150,35 @@ func (c *Controller) Rebase(
 		return nil, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
+	refType := gitenum.RefTypeBranch
+	refName := in.HeadBranch
+	if in.DryRun {
+		refType = gitenum.RefTypeUndefined
+		refName = ""
+	}
+
 	mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
 		WriteParams:     writeParams,
 		BaseBranch:      in.BaseBranch,
 		HeadRepoUID:     repo.GitUID,
 		HeadBranch:      in.HeadBranch,
-		RefType:         gitenum.RefTypeBranch,
-		RefName:         in.HeadBranch,
+		RefType:         refType,
+		RefName:         refName,
 		HeadExpectedSHA: in.HeadCommitSHA,
 		Method:          gitenum.MergeMethodRebase,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("rebase execution failed: %w", err)
+	}
+
+	if in.DryRun {
+		// DryRun is true: Just return rule violations and list of conflicted files.
+		// No reference is updated, so don't return the resulting commit SHA.
+		return &types.RebaseResponse{
+			RuleViolations: violations,
+			DryRun:         true,
+			ConflictFiles:  mergeOutput.ConflictFiles,
+		}, nil, nil
 	}
 
 	if mergeOutput.MergeSHA.IsEmpty() || len(mergeOutput.ConflictFiles) > 0 {
@@ -174,9 +190,7 @@ func (c *Controller) Rebase(
 	}
 
 	return &types.RebaseResponse{
-		DryRunRulesOutput: types.DryRunRulesOutput{
-			RuleViolations: violations,
-		},
 		NewHeadBranchSHA: mergeOutput.MergeSHA,
+		RuleViolations:   violations,
 	}, nil, nil
 }

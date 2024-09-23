@@ -16,7 +16,6 @@ package usergroup
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
@@ -27,9 +26,9 @@ func (s *searchService) ListUsers(
 	_ *auth.Session,
 	_ *types.UserGroup,
 ) ([]string, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, nil
 }
 
 func (s *searchService) ListUserIDsByGroupIDs(_ context.Context, _ []int64) ([]int64, error) {
-	return nil, fmt.Errorf("not implemented")
+	return nil, nil
 }

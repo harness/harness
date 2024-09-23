@@ -130,6 +130,10 @@ func (u *RefUpdater) Init(ctx context.Context, oldValue, newValue sha.SHA) error
 }
 
 func (u *RefUpdater) InitOld(ctx context.Context, oldValue sha.SHA) error {
+	if u == nil {
+		return nil
+	}
+
 	if u.state != stateInitOld {
 		return fmt.Errorf("invalid operation order: init old requires state=%s, current state=%s",
 			stateInitOld, u.state)
@@ -154,6 +158,10 @@ func (u *RefUpdater) InitOld(ctx context.Context, oldValue sha.SHA) error {
 }
 
 func (u *RefUpdater) InitNew(_ context.Context, newValue sha.SHA) error {
+	if u == nil {
+		return nil
+	}
+
 	if u.state != stateInitNew {
 		return fmt.Errorf("invalid operation order: init new requires state=%s, current state=%s",
 			stateInitNew, u.state)

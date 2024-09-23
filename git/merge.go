@@ -227,7 +227,11 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	// handle simple merge check
 
-	if params.RefType == enum.RefTypeUndefined {
+	if params.RefType == enum.RefTypeUndefined && params.Method != enum.MergeMethodRebase {
+		// Merge method rebase can result in conflicts even if other methods do not.
+		// This is because commits are rebased one by one. And this is why for other merge method we just return
+		// list of conflicts, but for rebase we proceed with the rebasing (even if no ref would be updated).
+
 		_, _, conflicts, err := merge.FindConflicts(ctx, repoPath, baseCommitSHA.String(), headCommitSHA.String())
 		if err != nil {
 			return MergeOutput{}, errors.Internal(err,
@@ -281,13 +285,17 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	// merge
 
-	refUpdater, err := hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, refPath)
-	if err != nil {
-		return MergeOutput{}, errors.Internal(err, "failed to create ref updater object")
-	}
+	var refUpdater *hook.RefUpdater
 
-	if err := refUpdater.InitOld(ctx, refOldValue); err != nil {
-		return MergeOutput{}, errors.Internal(err, "failed to set old reference value for ref updater")
+	if params.RefType != enum.RefTypeUndefined {
+		refUpdater, err = hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, refPath)
+		if err != nil {
+			return MergeOutput{}, errors.Internal(err, "failed to create ref updater object")
+		}
+
+		if err := refUpdater.InitOld(ctx, refOldValue); err != nil {
+			return MergeOutput{}, errors.Internal(err, "failed to set old reference value for ref updater")
+		}
 	}
 
 	mergeCommitSHA, conflicts, err := mergeFunc(

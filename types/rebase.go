@@ -14,11 +14,14 @@
 
 package types
 
-import (
-	"github.com/harness/gitness/git/sha"
-)
+import "github.com/harness/gitness/git/sha"
 
 type RebaseResponse struct {
-	DryRunRulesOutput
-	NewHeadBranchSHA sha.SHA `json:"new_head_branch_sha"`
+	AlreadyAncestor  bool             `json:"already_ancestor,omitempty"`
+	NewHeadBranchSHA sha.SHA          `json:"new_head_branch_sha"`
+	RuleViolations   []RuleViolations `json:"rule_violations,omitempty"`
+
+	DryRunRules   bool     `json:"dry_run_rules,omitempty"`
+	DryRun        bool     `json:"dry_run,omitempty"`
+	ConflictFiles []string `json:"conflict_files,omitempty"`
 }
