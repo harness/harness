@@ -29,3 +29,4 @@ node_modules
 /gitness
 /registry/logs/*
 /distribution-spec
+/registry/distribution-spec
