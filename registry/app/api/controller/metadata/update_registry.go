@@ -43,7 +43,7 @@ func (c *APIController) ModifyRegistry(
 			),
 		}, err
 	}
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.ModifyRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -53,7 +53,7 @@ func (c *APIController) ModifyRegistry(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, gitnessenum.PermissionRegistryEdit)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, gitnessenum.PermissionRegistryEdit)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -102,14 +102,14 @@ func (c *APIController) ModifyRegistry(
 	}
 	err = c.tx.WithTx(
 		ctx, func(ctx context.Context) error {
-			err = c.updateRegistryWithAudit(ctx, repoEntity, registry, session.Principal, regInfo.parentRef)
+			err = c.updateRegistryWithAudit(ctx, repoEntity, registry, session.Principal, regInfo.ParentRef)
 
 			if err != nil {
 				return fmt.Errorf("failed to update registry: %w", err)
 			}
 
 			err = c.updateUpstreamProxyWithAudit(
-				ctx, upstreamproxy, session.Principal, regInfo.parentRef, registry.Name,
+				ctx, upstreamproxy, session.Principal, regInfo.ParentRef, registry.Name,
 			)
 
 			if err != nil {
@@ -161,7 +161,7 @@ func (c *APIController) updateVirtualRegistry(
 	if err != nil {
 		return throwModifyRegistry500Error(err), nil
 	}
-	err = c.updateRegistryWithAudit(ctx, repoEntity, registry, session.Principal, regInfo.parentRef)
+	err = c.updateRegistryWithAudit(ctx, repoEntity, registry, session.Principal, regInfo.ParentRef)
 
 	if err != nil {
 		return throwModifyRegistry500Error(err), nil
@@ -182,7 +182,7 @@ func (c *APIController) updateVirtualRegistry(
 		RegistryResponseJSONResponse: *CreateVirtualRepositoryResponse(
 			modifiedRepoEntity,
 			c.getUpstreamProxyKeys(ctx, modifiedRepoEntity.UpstreamProxies), cleanupPolicies,
-			regInfo.rootIdentifier, c.URLProvider.RegistryURL(),
+			regInfo.RootIdentifier, c.URLProvider.RegistryURL(),
 		),
 	}, nil
 }

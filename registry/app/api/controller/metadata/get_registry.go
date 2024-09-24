@@ -36,7 +36,7 @@ func (c *APIController) GetRegistry(
 			),
 		}, nil
 	}
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -46,7 +46,7 @@ func (c *APIController) GetRegistry(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -77,7 +77,7 @@ func (c *APIController) GetRegistry(
 				repoEntity, c.getUpstreamProxyKeys(
 					ctx,
 					repoEntity.UpstreamProxies,
-				), cleanupPolicies, regInfo.rootIdentifier, c.URLProvider.RegistryURL(),
+				), cleanupPolicies, regInfo.RootIdentifier, c.URLProvider.RegistryURL(),
 			),
 		}, nil
 	}

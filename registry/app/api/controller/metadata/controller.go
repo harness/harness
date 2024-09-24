@@ -32,7 +32,7 @@ type APIController struct {
 	TagStore           store.TagRepository
 	ManifestStore      store.ManifestRepository
 	CleanupPolicyStore store.CleanupPolicyRepository
-	spaceStore         corestore.SpaceStore
+	SpaceStore         corestore.SpaceStore
 	tx                 dbtx.Transactor
 	StorageDriver      storagedriver.StorageDriver
 	URLProvider        urlprovider.Provider
@@ -63,7 +63,7 @@ func NewAPIController(
 		ManifestStore:      manifestStore,
 		CleanupPolicyStore: cleanupPolicyStore,
 		ImageStore:         imageStore,
-		spaceStore:         spaceStore,
+		SpaceStore:         spaceStore,
 		StorageDriver:      driver,
 		tx:                 tx,
 		URLProvider:        urlProvider,

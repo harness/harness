@@ -47,7 +47,7 @@ func (c *APIController) CreateRegistry(
 		}, err
 	}
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.CreateRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -147,7 +147,7 @@ func (c *APIController) createVirtualRegistry(
 	return artifact.CreateRegistry201JSONResponse{
 		RegistryResponseJSONResponse: *CreateVirtualRepositoryResponse(
 			repoEntity, c.getUpstreamProxyKeys(ctx, repoEntity.UpstreamProxies),
-			cleanupPolicies, regInfo.rootIdentifier, c.URLProvider.RegistryURL(),
+			cleanupPolicies, regInfo.RootIdentifier, c.URLProvider.RegistryURL(),
 		),
 	}, nil
 }

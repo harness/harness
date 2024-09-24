@@ -393,7 +393,7 @@ func CleanURLPath(input *string) {
 	*input = u.String()
 }
 
-func getPermissionChecks(
+func GetPermissionChecks(
 	space *types.Space,
 	registryIdentifier string,
 	permission enum.Permission,

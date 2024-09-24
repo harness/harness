@@ -36,14 +36,14 @@ const MediaTypeImageConfig = "application/vnd.docker.container.image.v1+json"
 var _ api.StrictServerInterface = (*APIController)(nil)
 
 type RegistryRequestBaseInfo struct {
-	rootIdentifier   string
+	RootIdentifier   string
 	rootIdentifierID int64
 
-	registryRef        string
+	RegistryRef        string
 	RegistryIdentifier string
 	registryID         int64
 
-	parentRef string
+	ParentRef string
 	parentID  int64
 }
 
@@ -80,11 +80,11 @@ func (c *APIController) GetRegistryRequestBaseInfo(
 		return nil, fmt.Errorf("invalid parent reference: %w", err)
 	}
 
-	rootSpace, err := c.spaceStore.FindByRef(ctx, rootIdentifier)
+	rootSpace, err := c.SpaceStore.FindByRef(ctx, rootIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("root space not found: %w", err)
 	}
-	parentSpace, err := c.spaceStore.FindByRef(ctx, parentRef)
+	parentSpace, err := c.SpaceStore.FindByRef(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)
 	}
@@ -92,9 +92,9 @@ func (c *APIController) GetRegistryRequestBaseInfo(
 	parentID := parentSpace.ID
 
 	baseInfo := &RegistryRequestBaseInfo{
-		parentRef:        parentRef,
+		ParentRef:        parentRef,
 		parentID:         parentID,
-		rootIdentifier:   rootIdentifier,
+		RootIdentifier:   rootIdentifier,
 		rootIdentifierID: rootIdentifierID,
 	}
 
@@ -107,7 +107,7 @@ func (c *APIController) GetRegistryRequestBaseInfo(
 			return nil, fmt.Errorf("registry not found: %w", err)
 		}
 
-		baseInfo.registryRef = regRef
+		baseInfo.RegistryRef = regRef
 		baseInfo.RegistryIdentifier = regIdentifier
 		baseInfo.registryID = reg.ID
 	}

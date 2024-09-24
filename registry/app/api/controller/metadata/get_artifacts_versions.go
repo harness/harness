@@ -42,7 +42,7 @@ func (c *APIController) GetAllArtifactVersions(
 		nil, r.Params.SortOrder, r.Params.SortField,
 	)
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetAllArtifactVersions400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -52,7 +52,7 @@ func (c *APIController) GetAllArtifactVersions(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -91,7 +91,7 @@ func (c *APIController) GetAllArtifactVersions(
 	return artifact.GetAllArtifactVersions200JSONResponse{
 		ListArtifactVersionResponseJSONResponse: *GetAllArtifactVersionResponse(
 			ctx, tags, latestTag, image, count,
-			regInfo, regInfo.pageNumber, regInfo.limit, regInfo.rootIdentifier, c.URLProvider.RegistryURL(),
+			regInfo, regInfo.pageNumber, regInfo.limit, regInfo.RootIdentifier, c.URLProvider.RegistryURL(),
 		),
 	}, nil
 }

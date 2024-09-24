@@ -34,7 +34,7 @@ func (c *APIController) UpdateArtifactLabels(
 		ArtifactVersionResource, "", string(r.RegistryRef), nil, nil, nil,
 	)
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.UpdateArtifactLabels400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -44,7 +44,7 @@ func (c *APIController) UpdateArtifactLabels(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryEdit)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryEdit)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

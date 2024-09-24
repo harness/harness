@@ -181,7 +181,7 @@ func GetDockerArtifactDetails(
 	registryURL string,
 ) *artifactapi.DockerArtifactDetailResponseJSONResponse {
 	repoPath := getRepoPath(registry.Name, tag.ImageName, manifest.Digest.String())
-	pullCommand := GetDockerPullCommand(regInfo.rootIdentifier, registry.Name, tag.ImageName, tag.Name, registryURL)
+	pullCommand := GetDockerPullCommand(regInfo.RootIdentifier, registry.Name, tag.ImageName, tag.Name, registryURL)
 	createdAt := GetTimeInMs(tag.CreatedAt)
 	modifiedAt := GetTimeInMs(tag.UpdatedAt)
 	size := GetSize(manifest.TotalSize)
@@ -194,7 +194,7 @@ func GetDockerArtifactDetails(
 		ModifiedAt:      &modifiedAt,
 		RegistryPath:    repoPath,
 		PullCommand:     &pullCommand,
-		Url:             GetTagURL(regInfo.rootIdentifier, tag.ImageName, tag.Name, registry.Name, registryURL),
+		Url:             GetTagURL(regInfo.RootIdentifier, tag.ImageName, tag.Name, registry.Name, registryURL),
 		Size:            &size,
 	}
 

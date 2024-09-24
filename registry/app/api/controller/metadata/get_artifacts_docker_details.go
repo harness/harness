@@ -43,7 +43,7 @@ func (c *APIController) GetDockerArtifactDetails(
 		}, nil
 	}
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetDockerArtifactDetails400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -53,7 +53,7 @@ func (c *APIController) GetDockerArtifactDetails(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

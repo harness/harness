@@ -36,7 +36,7 @@ func (c *APIController) GetDockerArtifactLayers(
 ) (artifact.GetDockerArtifactLayersResponseObject, error) {
 	regInfo, _ := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetDockerArtifactLayers400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -46,7 +46,7 @@ func (c *APIController) GetDockerArtifactLayers(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -83,7 +83,7 @@ func (c *APIController) GetDockerArtifactLayers(
 		return getLayersErrorResponse(err)
 	}
 
-	mConfig, err := getManifestConfig(ctx, m.Configuration.Digest, regInfo.rootIdentifier, c.StorageDriver)
+	mConfig, err := getManifestConfig(ctx, m.Configuration.Digest, regInfo.RootIdentifier, c.StorageDriver)
 	if err != nil {
 		return getLayersErrorResponse(err)
 	}

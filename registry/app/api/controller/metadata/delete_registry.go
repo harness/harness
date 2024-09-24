@@ -42,7 +42,7 @@ func (c *APIController) DeleteRegistry(
 			),
 		}, err
 	}
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.DeleteRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -52,7 +52,7 @@ func (c *APIController) DeleteRegistry(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryDelete)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryDelete)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -79,19 +79,19 @@ func (c *APIController) DeleteRegistry(
 	}
 
 	if string(repoEntity.Type) == string(artifact.RegistryTypeVIRTUAL) {
-		err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.parentRef)
+		err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.ParentRef)
 	} else {
 		err = c.tx.WithTx(
 			ctx, func(ctx context.Context) error {
 				err = c.deleteUpstreamProxyWithAudit(
-					ctx, regInfo, session.Principal, regInfo.parentRef, repoEntity.Name,
+					ctx, regInfo, session.Principal, regInfo.ParentRef, repoEntity.Name,
 				)
 
 				if err != nil {
 					return fmt.Errorf("failed to delete upstream proxy: %w", err)
 				}
 
-				err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.parentRef)
+				err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.ParentRef)
 
 				if err != nil {
 					return fmt.Errorf("failed to delete registry: %w", err)

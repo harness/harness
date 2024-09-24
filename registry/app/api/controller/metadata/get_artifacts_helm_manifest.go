@@ -35,7 +35,7 @@ func (c *APIController) GetHelmArtifactManifest(
 		return c.get400Error(err)
 	}
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetHelmArtifactManifest400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -45,7 +45,7 @@ func (c *APIController) GetHelmArtifactManifest(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,

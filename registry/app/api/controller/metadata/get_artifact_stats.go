@@ -45,7 +45,7 @@ func (c *APIController) GetArtifactStatsForSpace(
 		}, nil
 	}
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetArtifactStatsForSpace400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -55,7 +55,7 @@ func (c *APIController) GetArtifactStatsForSpace(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -84,7 +84,7 @@ func (c *APIController) GetArtifactStatsForRegistry(
 		}, nil
 	}
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetArtifactStatsForRegistry400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(

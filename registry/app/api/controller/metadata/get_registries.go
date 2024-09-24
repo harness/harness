@@ -38,7 +38,7 @@ func (c *APIController) GetAllRegistries(
 		r.Params.SortOrder, r.Params.SortField,
 	)
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetAllRegistries400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -105,7 +105,7 @@ func (c *APIController) GetAllRegistries(
 	return artifact.GetAllRegistries200JSONResponse{
 		ListRegistryResponseJSONResponse: *GetAllRegistryResponse(
 			repos, count, regInfo.pageNumber,
-			regInfo.limit, regInfo.rootIdentifier, c.URLProvider.RegistryURL(),
+			regInfo.limit, regInfo.RootIdentifier, c.URLProvider.RegistryURL(),
 		),
 	}, nil
 }

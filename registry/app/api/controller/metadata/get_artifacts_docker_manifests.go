@@ -48,7 +48,7 @@ func (c *APIController) GetDockerArtifactManifests(
 		}, nil
 	}
 
-	space, err := c.spaceStore.FindByRef(ctx, regInfo.parentRef)
+	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
 		return artifact.GetDockerArtifactManifests400JSONResponse{
 			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
@@ -58,7 +58,7 @@ func (c *APIController) GetDockerArtifactManifests(
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
-	permissionChecks := getPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
+	permissionChecks := GetPermissionChecks(space, regInfo.RegistryIdentifier, enum.PermissionRegistryView)
 	if err = apiauth.CheckRegistry(
 		ctx,
 		c.Authorizer,
@@ -90,13 +90,13 @@ func (c *APIController) GetDockerArtifactManifests(
 	manifestDetailsList := []artifact.DockerManifestDetails{}
 	switch reqManifest := manifest.(type) {
 	case *s2.DeserializedManifest:
-		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.rootIdentifier, c.StorageDriver)
+		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier, c.StorageDriver)
 		if err != nil {
 			return artifactManifestsErrorRs(err), nil
 		}
 		manifestDetailsList = append(manifestDetailsList, getManifestDetails(m, mConfig))
 	case *os.DeserializedManifest:
-		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.rootIdentifier, c.StorageDriver)
+		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier, c.StorageDriver)
 		if err != nil {
 			return artifactManifestsErrorRs(err), nil
 		}
@@ -118,7 +118,7 @@ func (c *APIController) GetDockerArtifactManifests(
 			}
 			mConfig, err := getManifestConfig(
 				ctx, referencedManifest.Configuration.Digest,
-				regInfo.rootIdentifier, c.StorageDriver,
+				regInfo.RootIdentifier, c.StorageDriver,
 			)
 			if err != nil {
 				return artifactManifestsErrorRs(err), nil
