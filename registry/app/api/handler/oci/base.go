@@ -186,7 +186,7 @@ func (h *Handler) getRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 		return pkg.RegistryInfo{}, err
 	}
 
-	rootSpace, err := h.SpaceStore.FindByRef(ctx, rootIdentifier)
+	rootSpace, err := h.SpaceStore.FindByRefCaseInsensitive(ctx, rootIdentifier)
 	if err != nil {
 		log.Ctx(ctx).Error().Msgf("Root space not found: %s", rootIdentifier)
 		return pkg.RegistryInfo{}, errcode.ErrCodeRootNotFound
