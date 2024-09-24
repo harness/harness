@@ -94,7 +94,7 @@ func (v *DefLifecycle) RefChangeVerify(_ context.Context, in RefChangeVerifyInpu
 				"Push to branch %q is not allowed. Please use pull requests.", in.RefNames[0])
 		}
 	case RefActionUpdateForce:
-		if v.UpdateForceForbidden {
+		if v.UpdateForceForbidden || v.UpdateForbidden {
 			violations.Addf(codeLifecycleUpdateForce,
 				"Force push to branch %q is not allowed. Please use pull requests.", in.RefNames[0])
 		}
