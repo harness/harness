@@ -16,11 +16,13 @@ package metadata
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -28,15 +30,34 @@ func (c *APIController) GetArtifactVersionSummary(
 	ctx context.Context,
 	r artifact.GetArtifactVersionSummaryRequestObject,
 ) (artifact.GetArtifactVersionSummaryResponseObject, error) {
-	regInfo, _ := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+	image, tag, isLatestTag, err := c.FetchArtifactSummary(ctx, r)
+	if err != nil {
+		return artifact.GetArtifactVersionSummary500JSONResponse{
+			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
+				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
+			),
+		}, nil
+	}
+
+	return artifact.GetArtifactVersionSummary200JSONResponse{
+		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(tag, image, isLatestTag),
+	}, nil
+}
+
+// FetchArtifactSummary helper function for common logic.
+func (c *APIController) FetchArtifactSummary(
+	ctx context.Context,
+	r artifact.GetArtifactVersionSummaryRequestObject,
+) (string, *types.TagMetadata, bool, error) {
+	regInfo, err := c.GetRegistryRequestBaseInfo(ctx, "", string(r.RegistryRef))
+
+	if err != nil {
+		return "", nil, false, fmt.Errorf("failed to get registry request base info: %w", err)
+	}
 
 	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
-		return artifact.GetArtifactVersionSummary400JSONResponse{
-			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
-				*GetErrorResponse(http.StatusBadRequest, err.Error()),
-			),
-		}, nil
+		return "", nil, false, err
 	}
 
 	session, _ := request.AuthSessionFrom(ctx)
@@ -47,31 +68,19 @@ func (c *APIController) GetArtifactVersionSummary(
 		session,
 		permissionChecks...,
 	); err != nil {
-		return artifact.GetArtifactVersionSummary403JSONResponse{
-			UnauthorizedJSONResponse: artifact.UnauthorizedJSONResponse(
-				*GetErrorResponse(http.StatusForbidden, err.Error()),
-			),
-		}, nil
+		return "", nil, false, err
 	}
 
 	image := string(r.Artifact)
 	version := string(r.Version)
 
 	tag, err := c.TagStore.GetTagMetadata(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image, version)
-
 	if err != nil {
-		return artifact.GetArtifactVersionSummary500JSONResponse{
-			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
-				*GetErrorResponse(http.StatusInternalServerError, err.Error()),
-			),
-		}, nil
+		return "", nil, false, err
 	}
 
 	latestTag, _ := c.TagStore.GetLatestTagName(ctx, regInfo.parentID, regInfo.RegistryIdentifier, image)
-
 	isLatestTag := latestTag == version
 
-	return artifact.GetArtifactVersionSummary200JSONResponse{
-		ArtifactVersionSummaryResponseJSONResponse: *GetArtifactVersionSummary(tag, image, isLatestTag),
-	}, nil
+	return image, tag, isLatestTag, nil
 }
