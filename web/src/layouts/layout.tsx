@@ -23,7 +23,7 @@ import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { useDocumentTitle } from 'hooks/useDocumentTitle'
 import { NavMenuItem } from './menu/NavMenuItem'
-import { GitnessLogo } from '../components/GitnessLogo/GitnessLogo'
+import { HarnessLogo } from '../components/HarnessLogo/HarnessLogo'
 import { DefaultMenu } from './menu/DefaultMenu'
 import css from './layout.module.scss'
 
@@ -43,7 +43,7 @@ export const LayoutWithSideNav: React.FC<LayoutWithSideNavProps> = ({ title, chi
       <Layout.Horizontal className={css.layout}>
         <Container className={css.menu}>
           <Layout.Vertical spacing="small">
-            <GitnessLogo />
+            <HarnessLogo />
             <Container>{menu}</Container>
           </Layout.Vertical>
 
