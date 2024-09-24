@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
- .main {
-    margin: var(--spacing-large) var(--spacing-large) 0 !important;
-    padding-bottom: 6px !important;
-  
-    > a {
-      display: block;
-    }
-  
-    .layout {
-      display: inline-flex !important;
-      align-items: center !important;
-    }
-  
-    .text {
-      font-size: 20px;
-      font-style: normal;
-      font-weight: 600;
-      color: var(--black);
-    }
+.main {
+  margin: var(--spacing-large) var(--spacing-large) 0 !important;
+  padding-bottom: 6px !important;
+
+  > a {
+    display: block;
   }
-  
+
+  .layout {
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  .text {
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    color: var(--black);
+  }
+}
