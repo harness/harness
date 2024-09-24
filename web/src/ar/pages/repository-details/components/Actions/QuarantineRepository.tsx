@@ -32,10 +32,10 @@ export default function QuarantineRepositoryMenuItem({ data }: RepositoryActions
       onClick={noop}
       permission={{
         resource: {
-          resourceType: ResourceType.SERVICE,
+          resourceType: ResourceType.ARTIFACT_REGISTRY,
           resourceIdentifier: defaultTo(data?.identifier, '')
         },
-        permission: PermissionIdentifier.DELETE_SERVICE
+        permission: PermissionIdentifier.DELETE_ARTIFACT_REGISTRY
       }}
     />
   )

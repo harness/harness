@@ -15,10 +15,14 @@
  */
 
 export enum PermissionIdentifier {
-  DELETE_SERVICE = 'core_service_delete',
-  EDIT_SERVICE = 'core_service_edit'
+  VIEW_ARTIFACT_REGISTRY = 'artifact_artregistry_view',
+  EDIT_ARTIFACT_REGISTRY = 'artifact_artregistry_edit',
+  DELETE_ARTIFACT_REGISTRY = 'artifact_artregistry_delete',
+  DOWNLOAD_ARTIFACT = 'artifact_artregistry_downloadartifact',
+  UPLOAD_ARTIFACT = 'artifact_artregistry_uploadartifact',
+  DELETE_ARTIFACT = 'artifact_artregistry_deleteartifact'
 }
 
 export enum ResourceType {
-  SERVICE = 'SERVICE'
+  ARTIFACT_REGISTRY = 'ARTIFACT_REGISTRY'
 }

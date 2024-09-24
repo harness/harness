@@ -94,12 +94,16 @@ type (
 		DeleteServiceAccount(ctx context.Context, id int64) error
 
 		// ListServiceAccounts returns a list of service accounts for a specific parent.
-		ListServiceAccounts(ctx context.Context,
-			parentType enum.ParentResourceType, parentID int64) ([]*types.ServiceAccount, error)
+		ListServiceAccounts(
+			ctx context.Context,
+			parentType enum.ParentResourceType, parentID int64,
+		) ([]*types.ServiceAccount, error)
 
 		// CountServiceAccounts returns a count of service accounts for a specific parent.
-		CountServiceAccounts(ctx context.Context,
-			parentType enum.ParentResourceType, parentID int64) (int64, error)
+		CountServiceAccounts(
+			ctx context.Context,
+			parentType enum.ParentResourceType, parentID int64,
+		) (int64, error)
 
 		/*
 		 * SERVICE RELATED OPERATIONS.
@@ -167,6 +171,9 @@ type (
 		// FindByRef finds the space using the spaceRef as either the id or the space path.
 		FindByRef(ctx context.Context, spaceRef string) (*types.Space, error)
 
+		// FindByRefCaseInsensitive finds the space using the spaceRef.
+		FindByRefCaseInsensitive(ctx context.Context, spaceRef string) (*types.Space, error)
+
 		// FindByRefAndDeletedAt finds the space using the spaceRef and deleted timestamp.
 		FindByRefAndDeletedAt(ctx context.Context, spaceRef string, deletedAt int64) (*types.Space, error)
 
@@ -192,8 +199,10 @@ type (
 		Update(ctx context.Context, space *types.Space) error
 
 		// UpdateOptLock updates the space using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, space *types.Space,
-			mutateFn func(space *types.Space) error) (*types.Space, error)
+		UpdateOptLock(
+			ctx context.Context, space *types.Space,
+			mutateFn func(space *types.Space) error,
+		) (*types.Space, error)
 
 		// FindForUpdate finds the space and locks it for an update.
 		FindForUpdate(ctx context.Context, id int64) (*types.Space, error)
@@ -205,8 +214,10 @@ type (
 		Purge(ctx context.Context, id int64, deletedAt *int64) error
 
 		// Restore restores a soft deleted space.
-		Restore(ctx context.Context, space *types.Space,
-			newIdentifier *string, newParentID *int64) (*types.Space, error)
+		Restore(
+			ctx context.Context, space *types.Space,
+			newIdentifier *string, newParentID *int64,
+		) (*types.Space, error)
 
 		// Count the child spaces of a space.
 		Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error)
@@ -239,8 +250,10 @@ type (
 		GetSize(ctx context.Context, id int64) (int64, error)
 
 		// UpdateOptLock the repo details using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, repo *types.Repository,
-			mutateFn func(repository *types.Repository) error) (*types.Repository, error)
+		UpdateOptLock(
+			ctx context.Context, repo *types.Repository,
+			mutateFn func(repository *types.Repository) error,
+		) (*types.Repository, error)
 
 		// SoftDelete a repo.
 		SoftDelete(ctx context.Context, repo *types.Repository, deletedAt int64) error
@@ -249,8 +262,10 @@ type (
 		Purge(ctx context.Context, id int64, deletedAt *int64) error
 
 		// Restore a deleted repo using the optimistic locking mechanism.
-		Restore(ctx context.Context, repo *types.Repository,
-			newIdentifier *string, newParentID *int64) (*types.Repository, error)
+		Restore(
+			ctx context.Context, repo *types.Repository,
+			newIdentifier *string, newParentID *int64,
+		) (*types.Repository, error)
 
 		// Count of active repos in a space. With "DeletedBeforeOrAt" filter, counts deleted repos.
 		Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error)
@@ -308,7 +323,11 @@ type (
 		CountUsers(ctx context.Context, spaceID int64, filter types.MembershipUserFilter) (int64, error)
 		ListUsers(ctx context.Context, spaceID int64, filter types.MembershipUserFilter) ([]types.MembershipUser, error)
 		CountSpaces(ctx context.Context, userID int64, filter types.MembershipSpaceFilter) (int64, error)
-		ListSpaces(ctx context.Context, userID int64, filter types.MembershipSpaceFilter) ([]types.MembershipSpace, error)
+		ListSpaces(
+			ctx context.Context,
+			userID int64,
+			filter types.MembershipSpaceFilter,
+		) ([]types.MembershipSpace, error)
 	}
 
 	// PublicAccessStore defines the publicly accessible resources data storage.
@@ -362,8 +381,10 @@ type (
 		Update(ctx context.Context, pr *types.PullReq) error
 
 		// UpdateOptLock the pull request details using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, pr *types.PullReq,
-			mutateFn func(pr *types.PullReq) error) (*types.PullReq, error)
+		UpdateOptLock(
+			ctx context.Context, pr *types.PullReq,
+			mutateFn func(pr *types.PullReq) error,
+		) (*types.PullReq, error)
 
 		// UpdateActivitySeq the pull request's activity sequence number.
 		// It will set new values to the ActivitySeq, Version and Updated fields.
@@ -395,7 +416,8 @@ type (
 		Create(ctx context.Context, act *types.PullReqActivity) error
 
 		// CreateWithPayload create a new system activity from the provided payload.
-		CreateWithPayload(ctx context.Context,
+		CreateWithPayload(
+			ctx context.Context,
 			pr *types.PullReq,
 			principalID int64,
 			payload types.PullReqActivityPayload,
@@ -406,7 +428,8 @@ type (
 		Update(ctx context.Context, act *types.PullReqActivity) error
 
 		// UpdateOptLock updates the pull request activity using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context,
+		UpdateOptLock(
+			ctx context.Context,
 			act *types.PullReqActivity,
 			mutateFn func(act *types.PullReqActivity) error,
 		) (*types.PullReqActivity, error)
@@ -543,8 +566,10 @@ type (
 		Update(ctx context.Context, hook *types.Webhook) error
 
 		// UpdateOptLock updates the webhook using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, hook *types.Webhook,
-			mutateFn func(hook *types.Webhook) error) (*types.Webhook, error)
+		UpdateOptLock(
+			ctx context.Context, hook *types.Webhook,
+			mutateFn func(hook *types.Webhook) error,
+		) (*types.Webhook, error)
 
 		// Delete deletes the webhook for the given id.
 		Delete(ctx context.Context, id int64) error
@@ -553,12 +578,16 @@ type (
 		DeleteByIdentifier(ctx context.Context, parentType enum.WebhookParent, parentID int64, identifier string) error
 
 		// Count counts the webhooks for a given parent type and id.
-		Count(ctx context.Context, parentType enum.WebhookParent, parentID int64,
-			opts *types.WebhookFilter) (int64, error)
+		Count(
+			ctx context.Context, parentType enum.WebhookParent, parentID int64,
+			opts *types.WebhookFilter,
+		) (int64, error)
 
 		// List lists the webhooks for a given parent type and id.
-		List(ctx context.Context, parentType enum.WebhookParent, parentID int64,
-			opts *types.WebhookFilter) ([]*types.Webhook, error)
+		List(
+			ctx context.Context, parentType enum.WebhookParent, parentID int64,
+			opts *types.WebhookFilter,
+		) ([]*types.Webhook, error)
 	}
 
 	// WebhookExecutionStore defines the webhook execution data storage.
@@ -573,8 +602,10 @@ type (
 		DeleteOld(ctx context.Context, olderThan time.Time) (int64, error)
 
 		// ListForWebhook lists the webhook executions for a given webhook id.
-		ListForWebhook(ctx context.Context, webhookID int64,
-			opts *types.WebhookExecutionFilter) ([]*types.WebhookExecution, error)
+		ListForWebhook(
+			ctx context.Context, webhookID int64,
+			opts *types.WebhookExecutionFilter,
+		) ([]*types.WebhookExecution, error)
 
 		// ListForTrigger lists the webhook executions for a given trigger id.
 		ListForTrigger(ctx context.Context, triggerID string) ([]*types.WebhookExecution, error)
@@ -646,7 +677,10 @@ type (
 		List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceInstance, error)
 
 		// List lists the latest gitspace instance present for the gitspace configs in the datastore.
-		FindAllLatestByGitspaceConfigID(ctx context.Context, gitspaceConfigIDs []int64) ([]*types.GitspaceInstance, error)
+		FindAllLatestByGitspaceConfigID(
+			ctx context.Context,
+			gitspaceConfigIDs []int64,
+		) ([]*types.GitspaceInstance, error)
 	}
 
 	InfraProviderConfigStore interface {
@@ -677,7 +711,8 @@ type (
 		Update(ctx context.Context, infraProviderResource *types.InfraProviderResource) error
 
 		// List lists the infra provider resource present for the gitspace config in a parent space ID in the datastore.
-		List(ctx context.Context,
+		List(
+			ctx context.Context,
 			infraProviderConfigID int64,
 			filter types.ListQueryFilter,
 		) ([]*types.InfraProviderResource, error)
@@ -707,8 +742,10 @@ type (
 		ListLatest(ctx context.Context, repoID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
 
 		// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, pipeline *types.Pipeline,
-			mutateFn func(pipeline *types.Pipeline) error) (*types.Pipeline, error)
+		UpdateOptLock(
+			ctx context.Context, pipeline *types.Pipeline,
+			mutateFn func(pipeline *types.Pipeline) error,
+		) (*types.Pipeline, error)
 
 		// Delete deletes a pipeline ID from the datastore.
 		Delete(ctx context.Context, id int64) error
@@ -743,8 +780,10 @@ type (
 		Count(ctx context.Context, spaceID int64, pagination types.ListQueryFilter) (int64, error)
 
 		// UpdateOptLock updates the secret using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, secret *types.Secret,
-			mutateFn func(secret *types.Secret) error) (*types.Secret, error)
+		UpdateOptLock(
+			ctx context.Context, secret *types.Secret,
+			mutateFn func(secret *types.Secret) error,
+		) (*types.Secret, error)
 
 		// Update tries to update a secret.
 		Update(ctx context.Context, secret *types.Secret) error
@@ -837,8 +876,10 @@ type (
 		Count(ctx context.Context, spaceID int64, pagination types.ListQueryFilter) (int64, error)
 
 		// UpdateOptLock updates the connector using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, connector *types.Connector,
-			mutateFn func(connector *types.Connector) error) (*types.Connector, error)
+		UpdateOptLock(
+			ctx context.Context, connector *types.Connector,
+			mutateFn func(connector *types.Connector) error,
+		) (*types.Connector, error)
 
 		// Update tries to update a connector.
 		Update(ctx context.Context, connector *types.Connector) error
@@ -858,8 +899,10 @@ type (
 		Find(ctx context.Context, id int64) (*types.Template, error)
 
 		// FindByIdentifierAndType returns a template given a space ID, identifier and a type
-		FindByIdentifierAndType(ctx context.Context, spaceID int64,
-			identifier string, resolverType enum.ResolverType) (*types.Template, error)
+		FindByIdentifierAndType(
+			ctx context.Context, spaceID int64,
+			identifier string, resolverType enum.ResolverType,
+		) (*types.Template, error)
 
 		// Create creates a new template.
 		Create(ctx context.Context, template *types.Template) error
@@ -868,8 +911,10 @@ type (
 		Count(ctx context.Context, spaceID int64, pagination types.ListQueryFilter) (int64, error)
 
 		// UpdateOptLock updates the template using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, template *types.Template,
-			mutateFn func(template *types.Template) error) (*types.Template, error)
+		UpdateOptLock(
+			ctx context.Context, template *types.Template,
+			mutateFn func(template *types.Template) error,
+		) (*types.Template, error)
 
 		// Update tries to update a template.
 		Update(ctx context.Context, template *types.Template) error
@@ -878,7 +923,12 @@ type (
 		Delete(ctx context.Context, id int64) error
 
 		// DeleteByIdentifierAndType deletes a template given a space ID, identifier and a type.
-		DeleteByIdentifierAndType(ctx context.Context, spaceID int64, identifier string, resolverType enum.ResolverType) error
+		DeleteByIdentifierAndType(
+			ctx context.Context,
+			spaceID int64,
+			identifier string,
+			resolverType enum.ResolverType,
+		) error
 
 		// List lists the templates in a given space.
 		List(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Template, error)
@@ -895,8 +945,10 @@ type (
 		Update(ctx context.Context, trigger *types.Trigger) error
 
 		// UpdateOptLock updates the trigger using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, trigger *types.Trigger,
-			mutateFn func(trigger *types.Trigger) error) (*types.Trigger, error)
+		UpdateOptLock(
+			ctx context.Context, trigger *types.Trigger,
+			mutateFn func(trigger *types.Trigger) error,
+		) (*types.Trigger, error)
 
 		// List lists the triggers for a given pipeline ID.
 		List(ctx context.Context, pipelineID int64, filter types.ListQueryFilter) ([]*types.Trigger, error)
@@ -941,7 +993,11 @@ type (
 		Map(ctx context.Context, ids []int64) (map[int64]*types.UserGroup, error)
 
 		// FindManyByIdentifiersAndSpaceID returns a list of usergroups
-		FindManyByIdentifiersAndSpaceID(ctx context.Context, identifiers []string, spaceID int64) ([]*types.UserGroup, error)
+		FindManyByIdentifiersAndSpaceID(
+			ctx context.Context,
+			identifiers []string,
+			spaceID int64,
+		) ([]*types.UserGroup, error)
 
 		// FindManyByIDs returns a list of usergroups searching them via ids
 		FindManyByIDs(ctx context.Context, ids []int64) ([]*types.UserGroup, error)
@@ -1145,7 +1201,8 @@ type (
 			spaceID int64,
 			gitspaceInstanceID int64,
 		) (*types.InfraProvisioned, error)
-		FindLatestByGitspaceInstanceIdentifier(ctx context.Context,
+		FindLatestByGitspaceInstanceIdentifier(
+			ctx context.Context,
 			spaceID int64,
 			gitspaceInstanceIdentifier string,
 		) (*types.InfraProvisioned, error)

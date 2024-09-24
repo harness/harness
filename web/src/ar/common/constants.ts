@@ -16,7 +16,7 @@
 
 import type { IconName } from '@harnessio/icons'
 import type { StringsMap } from '@ar/frameworks/strings'
-import { RepositoryPackageType } from './types'
+import { EnvironmentType, RepositoryPackageType } from './types'
 
 export interface RepositoryTypeListItem {
   label: keyof StringsMap
@@ -78,5 +78,22 @@ export const RepositoryTypes: RepositoryTypeListItem[] = [
     icon: 'nuget-repository-type',
     tooltip: 'Coming Soon!',
     disabled: true
+  }
+]
+
+interface EnvironmentTypeListItem {
+  label: keyof StringsMap
+  value: EnvironmentType
+  disabled?: boolean
+}
+
+export const EnvironmentTypeList: EnvironmentTypeListItem[] = [
+  {
+    label: 'prod',
+    value: EnvironmentType.Prod
+  },
+  {
+    label: 'nonProd',
+    value: EnvironmentType.NonProd
   }
 ]

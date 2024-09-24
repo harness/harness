@@ -136,6 +136,9 @@ function RepositoryCreateForm(props: RepositoryCreateFormProps, formikRef: Formi
         const formattedValues = repositoryType.processRepositoryFormData(values) as VirtualRegistryRequest
         const formattedValuesForCleanupPolicy = getFormattedFormDataForCleanupPolicy(formattedValues)
         const response = await createRepository({
+          queryParams: {
+            space_ref: decodeRef(parentRef)
+          },
           body: {
             ...formattedValuesForCleanupPolicy,
             parentRef: decodeRef(parentRef)

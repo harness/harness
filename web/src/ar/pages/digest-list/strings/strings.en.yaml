@@ -6,5 +6,6 @@ table:
     digest: Digest
     osArch: OS/Arch
     size: Size
-    uploadedBy: Uploaded By
+    uploadedBy: Uploaded At
     downloads: Downloads/Last Download
+    scanStatus: Scan Status

@@ -29,7 +29,7 @@ import {
 } from '@harnessio/uicore'
 import { Anonymous, UserPassword, useCreateRegistryMutation } from '@harnessio/react-har-service-client'
 
-import { useGetSpaceRef } from '@ar/hooks'
+import { useAppStore, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { decodeRef } from '@ar/hooks/useGetSpaceRef'
 import { setFormikRef } from '@ar/common/utils'
@@ -127,6 +127,7 @@ function UpstreamProxyCreateForm(props: UpstreamProxyCreateFormProps, formikRef:
   const { showSuccess, showError, clear } = useToaster()
   const { getString } = useStrings()
   const spaceRef = useGetSpaceRef('')
+  const { parent, scope } = useAppStore()
 
   const { isLoading: loading, mutateAsync: createUpstreamProxy } = useCreateRegistryMutation()
 
@@ -137,6 +138,9 @@ function UpstreamProxyCreateForm(props: UpstreamProxyCreateFormProps, formikRef:
   const handleCreateUpstreamProxy = async (values: UpstreamRegistryRequest): Promise<void> => {
     try {
       const response = await createUpstreamProxy({
+        queryParams: {
+          space_ref: decodeRef(spaceRef)
+        },
         body: {
           ...values,
           parentRef: decodeRef(spaceRef)
@@ -155,7 +159,7 @@ function UpstreamProxyCreateForm(props: UpstreamProxyCreateFormProps, formikRef:
   const handleSubmit = (values: UpstreamRegistryRequest): void => {
     const repositoryType = factory.getRepositoryType(values.packageType)
     if (repositoryType) {
-      const transfomedAuthType = getFormattedFormDataForAuthType(values)
+      const transfomedAuthType = getFormattedFormDataForAuthType(values, parent, scope)
       const transformedCleanupPolicy = getFormattedFormDataForCleanupPolicy(transfomedAuthType)
       const transformedValues = repositoryType.processUpstreamProxyFormData(
         transformedCleanupPolicy
@@ -192,15 +196,17 @@ function UpstreamProxyCreateForm(props: UpstreamProxyCreateFormProps, formikRef:
           authType: Yup.string()
             .required()
             .oneOf([UpstreamProxyAuthenticationMode.ANONYMOUS, UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD]),
-          auth: Yup.object().when(['authType'], {
-            is: (authType: UpstreamProxyAuthenticationMode) =>
-              authType === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
-            then: (schema: Yup.ObjectSchema<UserPassword | Anonymous>) =>
-              schema.shape({
-                userName: Yup.string().trim().required(getString('validationMessages.userNameRequired')),
-                secretIdentifier: Yup.string().trim().required(getString('validationMessages.passwordRequired'))
-              })
-          }),
+          auth: Yup.object()
+            .when(['authType'], {
+              is: (authType: UpstreamProxyAuthenticationMode) =>
+                authType === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
+              then: (schema: Yup.ObjectSchema<UserPassword | Anonymous>) =>
+                schema.shape({
+                  userName: Yup.string().trim().required(getString('validationMessages.userNameRequired')),
+                  secretIdentifier: Yup.string().trim().required(getString('validationMessages.passwordRequired'))
+                })
+            })
+            .nullable(),
           url: Yup.string().when(['source'], {
             is: (source: DockerRepositoryURLInputSource) => source === DockerRepositoryURLInputSource.Custom,
             then: (schema: Yup.StringSchema) =>

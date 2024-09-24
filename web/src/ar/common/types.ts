@@ -29,8 +29,8 @@ export type FormikFowardRef<T = unknown> =
   | null
 
 export enum EnvironmentType {
-  Production = 'Production',
-  PreProduction = 'PreProduction'
+  Prod = 'Production',
+  NonProd = 'PreProduction'
 }
 
 export enum RepositoryPackageType {

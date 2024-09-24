@@ -23,10 +23,12 @@ import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-servic
 import { useStrings } from '@ar/frameworks/strings'
 import { useParentHooks } from '@ar/hooks'
 import {
+  ArtifactDeploymentsCell,
   ArtifactDownloadsCell,
+  ArtifactListPullCommandCell,
+  ArtifactListVulnerabilitiesCell,
   ArtifactNameCell,
-  LatestArtifactCell,
-  RepositoryNameCell
+  LatestArtifactCell
 } from './ArtifactListTableCell'
 import css from './ArtifactListTable.module.scss'
 
@@ -40,11 +42,10 @@ export interface ArtifactListTableProps extends ArtifactListColumnActions {
   setSortBy: (sortBy: string[]) => void
   sortBy: string[]
   minimal?: boolean
-  onClickLabel: (val: string) => void
 }
 
 export default function ArtifactListTable(props: ArtifactListTableProps): JSX.Element {
-  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy, onClickLabel } = props
+  const { data, gotoPage, onPageSizeChange, sortBy, setSortBy } = props
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
 
@@ -72,17 +73,16 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
     }
     return [
       {
-        Header: getString('artifactList.table.columns.name'),
+        Header: getString('artifactList.table.columns.artifactName'),
         accessor: 'name',
         Cell: ArtifactNameCell,
-        serverSortProps: getServerSortProps('name'),
-        onClickLabel
+        serverSortProps: getServerSortProps('name')
       },
       {
-        Header: getString('artifactList.table.columns.repository'),
-        accessor: 'registryIdentifier',
-        Cell: RepositoryNameCell,
-        serverSortProps: getServerSortProps('registryIdentifier')
+        Header: getString('artifactList.table.columns.pullCommand'),
+        accessor: 'pullCommand',
+        Cell: ArtifactListPullCommandCell,
+        disableSortBy: true
       },
       {
         Header: getString('artifactList.table.columns.downloads'),
@@ -91,13 +91,25 @@ export default function ArtifactListTable(props: ArtifactListTableProps): JSX.El
         serverSortProps: getServerSortProps('downloadsCount')
       },
       {
-        Header: getString('artifactList.table.columns.latestVersion'),
-        accessor: 'latestVersion',
+        Header: getString('artifactList.table.columns.environments'),
+        accessor: 'environments',
+        Cell: ArtifactDeploymentsCell,
+        disableSortBy: true
+      },
+      {
+        Header: getString('artifactList.table.columns.sto'),
+        accessor: 'sto',
+        Cell: ArtifactListVulnerabilitiesCell,
+        disableSortBy: true
+      },
+      {
+        Header: getString('artifactList.table.columns.lastUpdated'),
+        accessor: 'lastUpdated',
         Cell: LatestArtifactCell,
-        serverSortProps: getServerSortProps('latestVersion')
+        serverSortProps: getServerSortProps('lastUpdated')
       }
     ].filter(Boolean) as unknown as Column<ArtifactMetadata>[]
-  }, [currentOrder, currentSort, getString, onClickLabel])
+  }, [currentOrder, currentSort, getString])
 
   return (
     <TableV2<ArtifactMetadata>

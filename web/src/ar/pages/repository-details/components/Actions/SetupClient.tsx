@@ -39,10 +39,10 @@ export default function SetupClientMenuItem({ data }: RepositoryActionsProps): J
         onClick={showSetupClientModal}
         permission={{
           resource: {
-            resourceType: ResourceType.SERVICE,
+            resourceType: ResourceType.ARTIFACT_REGISTRY,
             resourceIdentifier: defaultTo(data?.identifier, '')
           },
-          permission: PermissionIdentifier.DELETE_SERVICE
+          permission: PermissionIdentifier.VIEW_ARTIFACT_REGISTRY
         }}
       />
     </>

@@ -36,11 +36,20 @@ func (c *APIController) GetAllArtifactVersions(
 	ctx context.Context,
 	r artifact.GetAllArtifactVersionsRequestObject,
 ) (artifact.GetAllArtifactVersionsResponseObject, error) {
-	regInfo, _ := c.GetRegistryRequestInfo(
-		ctx, nil, r.Params.Page, r.Params.Size,
-		r.Params.SearchTerm, ArtifactVersionResource, "", string(r.RegistryRef),
-		nil, r.Params.SortOrder, r.Params.SortField,
-	)
+	registryRequestParams := &RegistryRequestParams{
+		packageTypesParam: nil,
+		page:              r.Params.Page,
+		size:              r.Params.Size,
+		search:            r.Params.SearchTerm,
+		resource:          ArtifactVersionResource,
+		parentRef:         "",
+		regRef:            string(r.RegistryRef),
+		labelsParam:       nil,
+		sortOrder:         r.Params.SortOrder,
+		sortField:         r.Params.SortField,
+		registryIDsParam:  nil,
+	}
+	regInfo, _ := c.GetRegistryRequestInfo(ctx, *registryRequestParams)
 
 	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {

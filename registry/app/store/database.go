@@ -178,15 +178,15 @@ type TagRepository interface {
 
 	GetAllArtifactsByParentID(
 		ctx context.Context, parentID int64,
-		packageTypes *[]string, sortByField string,
+		registryIDs *[]string, sortByField string,
 		sortByOrder string, limit int, offset int, search string,
-		labels []string,
+		latestVersion bool,
 	) (*[]types.ArtifactMetadata, error)
 
 	CountAllArtifactsByParentID(
 		ctx context.Context, parentID int64,
-		packageTypes *[]string, search string,
-		labels []string,
+		registryIDs *[]string, search string,
+		latestVersion bool,
 	) (int64, error)
 
 	GetAllArtifactsByRepo(
@@ -460,4 +460,5 @@ type GCManifestTaskRepository interface {
 	Postpone(ctx context.Context, b *types.GCManifestTask, d time.Duration) error
 	IsDangling(ctx context.Context, b *types.GCManifestTask) (bool, error)
 	Delete(ctx context.Context, b *types.GCManifestTask) error
+	DeleteManifest(ctx context.Context, registryID, id int64) (*digest.Digest, error)
 }

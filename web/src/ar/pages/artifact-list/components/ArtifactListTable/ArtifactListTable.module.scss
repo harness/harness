@@ -34,7 +34,7 @@
   div[class*='TableV2--cells'],
   div[class*='TableV2--header'] {
     display: grid !important;
-    grid-template-columns: 1fr 15rem 20rem 15rem;
+    grid-template-columns: 1fr 10rem 10rem 15rem 15rem 15rem 50px;
   }
 }
 
@@ -44,4 +44,12 @@
 
 .nameCellContainer {
   align-items: center;
+}
+
+.cellBtn {
+  --padding: 0 !important;
+}
+
+.optionsMenu {
+  min-width: unset;
 }

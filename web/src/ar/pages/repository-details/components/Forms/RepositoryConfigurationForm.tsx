@@ -44,7 +44,7 @@ interface RepositoryConfigurationFormProps {
 
 function RepositoryConfigurationForm(props: RepositoryConfigurationFormProps, formikRef: FormikFowardRef): JSX.Element {
   const { readonly, factory = repositoryFactory } = props
-  const { data } = useContext(RepositoryProviderContext)
+  const { data, setIsUpdating } = useContext(RepositoryProviderContext)
   const { showSuccess, showError, clear } = useToaster()
   const { getString } = useStrings()
   const spaceRef = useGetSpaceRef()
@@ -54,6 +54,7 @@ function RepositoryConfigurationForm(props: RepositoryConfigurationFormProps, fo
 
   const handleModifyRepository = async (values: VirtualRegistryRequest): Promise<void> => {
     try {
+      setIsUpdating(true)
       const response = await modifyRepository({
         registry_ref: spaceRef,
         body: values as unknown as RegistryRequestRequestBody
@@ -65,6 +66,8 @@ function RepositoryConfigurationForm(props: RepositoryConfigurationFormProps, fo
       }
     } catch (e: any) {
       showError(getErrorInfoFromErrorObject(e, true))
+    } finally {
+      setIsUpdating(false)
     }
   }
 

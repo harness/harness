@@ -20,7 +20,7 @@
 
 .cardContainer {
   width: 60% !important;
-  min-width: 1040px;
+  min-width: 1120px;
   padding: var(--spacing-7) !important;
   background-color: var(--white);
   margin: var(--spacing-large);
@@ -56,4 +56,16 @@
 
 .margin0 {
   margin: 0px;
+}
+
+.deploymentTablePageBody {
+  --page-header-height: 350px;
+}
+
+.subHeaderItems {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-medium);
+  width: 100%;
 }

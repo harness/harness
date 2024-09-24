@@ -75,13 +75,14 @@ type ArtifactMetadata struct {
 	DownloadsCount *int64    `json:"downloadsCount,omitempty"`
 	Labels         *[]string `json:"labels,omitempty"`
 	LastModified   *string   `json:"lastModified,omitempty"`
-	LatestVersion  string    `json:"latestVersion"`
 	Name           string    `json:"name"`
 
 	// PackageType refers to package
 	PackageType        *PackageType `json:"packageType,omitempty"`
+	PullCommand        *string      `json:"pullCommand,omitempty"`
 	RegistryIdentifier string       `json:"registryIdentifier"`
 	RegistryPath       string       `json:"registryPath"`
+	Version            *string      `json:"version,omitempty"`
 }
 
 // ArtifactStats Harness Artifact Stats
@@ -321,6 +322,24 @@ type ListRegistry struct {
 	Registries []RegistryMetadata `json:"registries"`
 }
 
+// ListRegistryArtifact A list of Artifacts
+type ListRegistryArtifact struct {
+	// Artifacts A list of Artifact
+	Artifacts []RegistryArtifactMetadata `json:"artifacts"`
+
+	// ItemCount The total number of items
+	ItemCount *int64 `json:"itemCount,omitempty"`
+
+	// PageCount The total number of pages
+	PageCount *int64 `json:"pageCount,omitempty"`
+
+	// PageIndex The current page
+	PageIndex *int64 `json:"pageIndex,omitempty"`
+
+	// PageSize The number of items per page
+	PageSize *int `json:"pageSize,omitempty"`
+}
+
 // PackageType refers to package
 type PackageType string
 
@@ -341,6 +360,20 @@ type Registry struct {
 	// PackageType refers to package
 	PackageType PackageType `json:"packageType"`
 	Url         string      `json:"url"`
+}
+
+// RegistryArtifactMetadata Artifact Metadata
+type RegistryArtifactMetadata struct {
+	DownloadsCount *int64    `json:"downloadsCount,omitempty"`
+	Labels         *[]string `json:"labels,omitempty"`
+	LastModified   *string   `json:"lastModified,omitempty"`
+	LatestVersion  string    `json:"latestVersion"`
+	Name           string    `json:"name"`
+
+	// PackageType refers to package
+	PackageType        *PackageType `json:"packageType,omitempty"`
+	RegistryIdentifier string       `json:"registryIdentifier"`
+	RegistryPath       string       `json:"registryPath"`
 }
 
 // RegistryConfig SubConfig specific for Virtual or Upstream Registry
@@ -427,7 +460,7 @@ type VirtualConfig struct {
 type LabelsParam []string
 
 // RegistryIdentifierParam defines model for RegistryIdentifierParam.
-type RegistryIdentifierParam string
+type RegistryIdentifierParam []string
 
 // RegistryTypeParam defines model for RegistryTypeParam.
 type RegistryTypeParam string
@@ -443,6 +476,9 @@ type DigestParam string
 
 // FromDateParam defines model for fromDateParam.
 type FromDateParam string
+
+// LatestVersion defines model for latestVersion.
+type LatestVersion bool
 
 // PackageTypeParam defines model for packageTypeParam.
 type PackageTypeParam []string
@@ -612,6 +648,15 @@ type ListArtifactVersionResponse struct {
 	Status Status `json:"status"`
 }
 
+// ListRegistryArtifactResponse defines model for ListRegistryArtifactResponse.
+type ListRegistryArtifactResponse struct {
+	// Data A list of Artifacts
+	Data ListRegistryArtifact `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
 // ListRegistryResponse defines model for ListRegistryResponse.
 type ListRegistryResponse struct {
 	// Data A list of Harness Artifact Registries
@@ -717,6 +762,27 @@ type GetAllArtifactVersionsParams struct {
 	SearchTerm *SearchTerm `form:"search_term,omitempty" json:"search_term,omitempty"`
 }
 
+// GetAllArtifactsByRegistryParams defines parameters for GetAllArtifactsByRegistry.
+type GetAllArtifactsByRegistryParams struct {
+	// Label Label.
+	Label *LabelsParam `form:"label,omitempty" json:"label,omitempty"`
+
+	// Page Current page number
+	Page *PageNumber `form:"page,omitempty" json:"page,omitempty"`
+
+	// Size Number of items per page
+	Size *PageSize `form:"size,omitempty" json:"size,omitempty"`
+
+	// SortOrder sortOrder
+	SortOrder *SortOrder `form:"sort_order,omitempty" json:"sort_order,omitempty"`
+
+	// SortField sortField
+	SortField *SortField `form:"sort_field,omitempty" json:"sort_field,omitempty"`
+
+	// SearchTerm search Term.
+	SearchTerm *SearchTerm `form:"search_term,omitempty" json:"search_term,omitempty"`
+}
+
 // GetClientSetupDetailsParams defines parameters for GetClientSetupDetails.
 type GetClientSetupDetailsParams struct {
 	// Artifact Artifat
@@ -737,12 +803,6 @@ type GetArtifactStatsForSpaceParams struct {
 
 // GetAllArtifactsParams defines parameters for GetAllArtifacts.
 type GetAllArtifactsParams struct {
-	// Label Label.
-	Label *LabelsParam `form:"label,omitempty" json:"label,omitempty"`
-
-	// PackageType Registry Package Type
-	PackageType *PackageTypeParam `form:"package_type,omitempty" json:"package_type,omitempty"`
-
 	// RegIdentifier Registry Identifier
 	RegIdentifier *RegistryIdentifierParam `form:"reg_identifier,omitempty" json:"reg_identifier,omitempty"`
 
@@ -760,6 +820,9 @@ type GetAllArtifactsParams struct {
 
 	// SearchTerm search Term.
 	SearchTerm *SearchTerm `form:"search_term,omitempty" json:"search_term,omitempty"`
+
+	// LatestVersion Latest Version Filter.
+	LatestVersion *LatestVersion `form:"latest_version,omitempty" json:"latest_version,omitempty"`
 }
 
 // GetAllRegistriesParams defines parameters for GetAllRegistries.

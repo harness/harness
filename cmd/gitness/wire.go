@@ -129,6 +129,7 @@ import (
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/ssh"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -270,6 +271,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		aiagent.WireSet,
 		capabilities.WireSet,
 		capabilitiesservice.WireSet,
+		docker.ProvideReporter,
 		secretservice.WireSet,
 		containerGit.WireSet,
 		containerUser.WireSet,

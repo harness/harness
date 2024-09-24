@@ -43,10 +43,10 @@ export default function SetupClientMenuItem({ data, repoKey }: ArtifactActionPro
         onClick={showSetupClientModal}
         permission={{
           resource: {
-            resourceType: ResourceType.SERVICE,
+            resourceType: ResourceType.ARTIFACT_REGISTRY,
             resourceIdentifier: defaultTo(repoKey, '')
           },
-          permission: PermissionIdentifier.DELETE_SERVICE
+          permission: PermissionIdentifier.VIEW_ARTIFACT_REGISTRY
         }}
       />
     </>

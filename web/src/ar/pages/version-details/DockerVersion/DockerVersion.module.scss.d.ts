@@ -17,7 +17,9 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const cardContainer: string
+export declare const deploymentTablePageBody: string
 export declare const gridContainer: string
 export declare const manifestContainer: string
 export declare const margin0: string
 export declare const pageBody: string
+export declare const subHeaderItems: string

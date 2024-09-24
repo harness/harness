@@ -25,19 +25,53 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func GetArtifactMetadata(artifacts *[]types.ArtifactMetadata) []artifactapi.ArtifactMetadata {
-	artifactMetadataList := make([]artifactapi.ArtifactMetadata, 0, len(*artifacts))
-	for _, artifact := range *artifacts {
-		artifactMetadata := mapToArtifactMetadata(artifact)
+func GetArtifactMetadata(
+	artifacts []types.ArtifactMetadata,
+	rootIdentifier string,
+	registryURL string,
+) []artifactapi.ArtifactMetadata {
+	artifactMetadataList := make([]artifactapi.ArtifactMetadata, 0, len(artifacts))
+	for _, artifact := range artifacts {
+		artifactMetadata := mapToArtifactMetadata(artifact, rootIdentifier, registryURL)
 		artifactMetadataList = append(artifactMetadataList, *artifactMetadata)
 	}
 	return artifactMetadataList
 }
 
-func mapToArtifactMetadata(artifact types.ArtifactMetadata) *artifactapi.ArtifactMetadata {
+func GetRegistryArtifactMetadata(artifacts []types.ArtifactMetadata) []artifactapi.RegistryArtifactMetadata {
+	artifactMetadataList := make([]artifactapi.RegistryArtifactMetadata, 0, len(artifacts))
+	for _, artifact := range artifacts {
+		artifactMetadata := mapToRegistryArtifactMetadata(artifact)
+		artifactMetadataList = append(artifactMetadataList, *artifactMetadata)
+	}
+	return artifactMetadataList
+}
+
+func mapToArtifactMetadata(
+	artifact types.ArtifactMetadata,
+	rootIdentifier string,
+	registryURL string,
+) *artifactapi.ArtifactMetadata {
 	lastModified := GetTimeInMs(artifact.ModifiedAt)
 	packageType := artifact.PackageType
+	pullCommand := GetPullCommand(rootIdentifier, artifact.RepoName, artifact.Name, artifact.Version,
+		string(packageType), registryURL)
 	return &artifactapi.ArtifactMetadata{
+		RegistryIdentifier: artifact.RepoName,
+		Name:               artifact.Name,
+		Version:            &artifact.Version,
+		Labels:             &artifact.Labels,
+		LastModified:       &lastModified,
+		PackageType:        &packageType,
+		DownloadsCount:     &artifact.DownloadCount,
+		PullCommand:        &pullCommand,
+	}
+}
+
+func mapToRegistryArtifactMetadata(artifact types.ArtifactMetadata) *artifactapi.RegistryArtifactMetadata {
+	lastModified := GetTimeInMs(artifact.ModifiedAt)
+	packageType := artifact.PackageType
+	return &artifactapi.RegistryArtifactMetadata{
 		RegistryIdentifier: artifact.RepoName,
 		Name:               artifact.Name,
 		LatestVersion:      artifact.LatestVersion,
@@ -103,8 +137,15 @@ func GetAllArtifactResponse(
 	count int64,
 	pageNumber int64,
 	pageSize int,
+	rootIdentifier string,
+	registryURL string,
 ) *artifactapi.ListArtifactResponseJSONResponse {
-	artifactMetadataList := GetArtifactMetadata(artifacts)
+	var artifactMetadataList []artifactapi.ArtifactMetadata
+	if artifacts == nil {
+		artifactMetadataList = make([]artifactapi.ArtifactMetadata, 0)
+	} else {
+		artifactMetadataList = GetArtifactMetadata(*artifacts, rootIdentifier, registryURL)
+	}
 	pageCount := GetPageCount(count, pageSize)
 	listArtifact := &artifactapi.ListArtifact{
 		ItemCount: &count,
@@ -114,6 +155,33 @@ func GetAllArtifactResponse(
 		Artifacts: artifactMetadataList,
 	}
 	response := &artifactapi.ListArtifactResponseJSONResponse{
+		Data:   *listArtifact,
+		Status: artifactapi.StatusSUCCESS,
+	}
+	return response
+}
+
+func GetAllArtifactByRegistryResponse(
+	artifacts *[]types.ArtifactMetadata,
+	count int64,
+	pageNumber int64,
+	pageSize int,
+) *artifactapi.ListRegistryArtifactResponseJSONResponse {
+	var artifactMetadataList []artifactapi.RegistryArtifactMetadata
+	if artifacts == nil {
+		artifactMetadataList = make([]artifactapi.RegistryArtifactMetadata, 0)
+	} else {
+		artifactMetadataList = GetRegistryArtifactMetadata(*artifacts)
+	}
+	pageCount := GetPageCount(count, pageSize)
+	listArtifact := &artifactapi.ListRegistryArtifact{
+		ItemCount: &count,
+		PageCount: &pageCount,
+		PageIndex: &pageNumber,
+		PageSize:  &pageSize,
+		Artifacts: artifactMetadataList,
+	}
+	response := &artifactapi.ListRegistryArtifactResponseJSONResponse{
 		Data:   *listArtifact,
 		Status: artifactapi.StatusSUCCESS,
 	}

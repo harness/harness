@@ -17,4 +17,7 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const artifactTag: string
+export declare const nonProdTag: string
+export declare const prodTag: string
+export declare const tag: string
 export declare const versionTag: string

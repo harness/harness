@@ -41,44 +41,48 @@ export default function useCreateUpstreamProxyModal(props: useCreateUpstreamProx
     stepRef.current?.submitForm()
   }
 
-  const [showModal, hideModal] = useModalHook(() => (
-    <ModalDialog
-      isOpen={true}
-      enforceFocus={false}
-      canEscapeKeyClose
-      canOutsideClickClose
-      onClose={() => {
-        hideModal()
-      }}
-      title={getString('upstreamProxyDetails.createForm.title')}
-      footer={
-        <Layout.Horizontal spacing="small">
-          <Button
-            variation={ButtonVariation.PRIMARY}
-            type={'submit'}
-            text={getString('upstreamProxyDetails.createForm.create')}
-            data-id="upstreamProxy-save"
-            onClick={handleSubmitForm}
-          />
-          <Button variation={ButtonVariation.TERTIARY} text={getString('cancel')} onClick={hideModal} />
-        </Layout.Horizontal>
-      }
-      isCloseButtonShown
-      width={850}
-      showOverlay={showOverlay}>
-      <UpstreamProxyCreateForm
-        ref={stepRef}
-        isEdit={false}
-        setShowOverlay={setShowOverlay}
-        defaultPackageType={defaultPackageType}
-        isPackageTypeReadonly={isPackageTypeReadonly}
-        onSuccess={data => {
+  const [showModal, hideModal] = useModalHook(
+    () => (
+      <ModalDialog
+        isOpen={true}
+        enforceFocus={false}
+        canEscapeKeyClose
+        canOutsideClickClose
+        onClose={() => {
           hideModal()
-          onSuccess(data)
         }}
-      />
-    </ModalDialog>
-  ))
+        title={getString('upstreamProxyDetails.createForm.title')}
+        footer={
+          <Layout.Horizontal spacing="small">
+            <Button
+              variation={ButtonVariation.PRIMARY}
+              type={'submit'}
+              text={getString('upstreamProxyDetails.createForm.create')}
+              data-id="upstreamProxy-save"
+              onClick={handleSubmitForm}
+              disabled={showOverlay}
+            />
+            <Button variation={ButtonVariation.TERTIARY} text={getString('cancel')} onClick={hideModal} />
+          </Layout.Horizontal>
+        }
+        isCloseButtonShown
+        width={850}
+        showOverlay={showOverlay}>
+        <UpstreamProxyCreateForm
+          ref={stepRef}
+          isEdit={false}
+          setShowOverlay={setShowOverlay}
+          defaultPackageType={defaultPackageType}
+          isPackageTypeReadonly={isPackageTypeReadonly}
+          onSuccess={data => {
+            hideModal()
+            onSuccess(data)
+          }}
+        />
+      </ModalDialog>
+    ),
+    [showOverlay]
+  )
 
   return [showModal, hideModal]
 }

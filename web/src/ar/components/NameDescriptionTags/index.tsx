@@ -70,7 +70,7 @@ export const Description = (props: DescriptionComponentProps): JSX.Element => {
 }
 
 export const Tags = (props: TagsComponentProps): JSX.Element => {
-  const { tagsProps, hasValue, isOptional = true, disabled, name } = props
+  const { tagsProps = {}, hasValue, isOptional = true, disabled, name } = props
   const { getString } = useStrings()
   const [isTagsOpen, setTagsOpen] = useState<boolean>(hasValue || false)
 
@@ -96,7 +96,17 @@ export const Tags = (props: TagsComponentProps): JSX.Element => {
           />
         )}
       </Label>
-      {isTagsOpen && <FormInput.KVTagInput name={name} isArray tagsProps={tagsProps} disabled={disabled} />}
+      {isTagsOpen && (
+        <FormInput.KVTagInput
+          name={name}
+          isArray
+          tagsProps={{
+            ...tagsProps,
+            disabled
+          }}
+          disabled={disabled}
+        />
+      )}
     </Container>
   )
 }

@@ -57,6 +57,21 @@ type RegistryRequestInfo struct {
 	pageNumber   int64
 	searchTerm   string
 	labels       []string
+	registryIDs  []string
+}
+
+type RegistryRequestParams struct {
+	packageTypesParam *api.PackageTypeParam
+	page              *api.PageNumber
+	size              *api.PageSize
+	search            *api.SearchTerm
+	resource          string
+	parentRef         string
+	regRef            string
+	labelsParam       *api.LabelsParam
+	sortOrder         *api.SortOrder
+	sortField         *api.SortField
+	registryIDsParam  *api.RegistryIdentifierParam
 }
 
 // GetRegistryRequestBaseInfo returns the base info for the registry request
@@ -117,50 +132,45 @@ func (c *APIController) GetRegistryRequestBaseInfo(
 
 func (c *APIController) GetRegistryRequestInfo(
 	ctx context.Context,
-	packageTypesParam *api.PackageTypeParam,
-	page *api.PageNumber,
-	size *api.PageSize,
-	search *api.SearchTerm,
-	resource string,
-	parentRef string,
-	regRef string,
-	labelsParam *api.LabelsParam,
-	sortOrder *api.SortOrder,
-	sortField *api.SortField,
+	registryRequestParams RegistryRequestParams,
 ) (*RegistryRequestInfo, error) {
 	packageTypes := []string{}
-	if packageTypesParam != nil {
-		packageTypes = *packageTypesParam
+	if registryRequestParams.packageTypesParam != nil {
+		packageTypes = *registryRequestParams.packageTypesParam
+	}
+	registryIDs := []string{}
+	if registryRequestParams.registryIDsParam != nil {
+		registryIDs = *registryRequestParams.registryIDsParam
 	}
 	sortByField := ""
 	sortByOrder := ""
-	if sortOrder != nil {
-		sortByOrder = string(*sortOrder)
+	if registryRequestParams.sortOrder != nil {
+		sortByOrder = string(*registryRequestParams.sortOrder)
 	}
 
-	if sortField != nil {
-		sortByField = string(*sortField)
+	if registryRequestParams.sortField != nil {
+		sortByField = string(*registryRequestParams.sortField)
 	}
 
 	labels := []string{}
 
-	if labelsParam != nil {
-		labels = *labelsParam
+	if registryRequestParams.labelsParam != nil {
+		labels = *registryRequestParams.labelsParam
 	}
 
-	sortByField = GetSortByField(sortByField, resource)
+	sortByField = GetSortByField(sortByField, registryRequestParams.resource)
 	sortByOrder = GetSortByOrder(sortByOrder)
 
-	offset := GetOffset(size, page)
-	limit := GetPageLimit(size)
-	pageNumber := GetPageNumber(page)
+	offset := GetOffset(registryRequestParams.size, registryRequestParams.page)
+	limit := GetPageLimit(registryRequestParams.size)
+	pageNumber := GetPageNumber(registryRequestParams.page)
 
 	searchTerm := ""
-	if search != nil {
-		searchTerm = string(*search)
+	if registryRequestParams.search != nil {
+		searchTerm = string(*registryRequestParams.search)
 	}
 
-	baseInfo, err := c.GetRegistryRequestBaseInfo(ctx, parentRef, regRef)
+	baseInfo, err := c.GetRegistryRequestBaseInfo(ctx, registryRequestParams.parentRef, registryRequestParams.regRef)
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +185,7 @@ func (c *APIController) GetRegistryRequestInfo(
 		pageNumber:              pageNumber,
 		searchTerm:              searchTerm,
 		labels:                  labels,
+		registryIDs:             registryIDs,
 	}, nil
 }
 

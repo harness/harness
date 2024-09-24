@@ -15,13 +15,18 @@
  */
 
 import React from 'react'
+import { Link } from 'react-router-dom'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
+
+import { Text } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import type { DockerManifestDetails } from '@harnessio/react-har-service-client'
 
+import { useStrings } from '@ar/frameworks/strings'
 import { useDecodedParams, useRoutes } from '@ar/hooks'
-import type { ArtifactDetailsPathParams } from '@ar/routes/types'
-import TableCells from '@ar/components/TableCells/TableCells'
 import { getShortDigest } from '@ar/pages/digest-list/utils'
+import TableCells from '@ar/components/TableCells/TableCells'
+import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
@@ -70,6 +75,42 @@ export const UploadedByCell: CellType = ({ value }) => {
 
 export const DownloadsCell: CellType = ({ value }) => {
   return <TableCells.CountCell value={value} icon="download-box" iconProps={{ size: 12 }} />
+}
+
+export const ScanStatusCell: Renderer<{
+  row: Row<DockerManifestDetails>
+  column: ColumnInstance<DockerManifestDetails> & DigestNameColumnProps
+}> = ({ row, column }) => {
+  const { original } = row
+  const { version } = column
+  const router = useRoutes()
+  const { stoExecutionId, stoPipelineId, digest } = original
+  const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
+  const { getString } = useStrings()
+  if (!stoExecutionId || !stoPipelineId)
+    return <TableCells.TextCell value={getString('artifactList.table.actions.VulnerabilityStatus.nonScanned')} />
+
+  const linkTo = router.toARVersionDetailsTab({
+    repositoryIdentifier: pathParams.repositoryIdentifier,
+    artifactIdentifier: pathParams.artifactIdentifier,
+    versionIdentifier: version,
+    versionTab: VersionDetailsTab.SECURITY_TESTS,
+    pipelineIdentifier: stoPipelineId,
+    executionIdentifier: stoExecutionId
+  })
+  return (
+    <Link to={`${linkTo}?digest=${digest}`}>
+      <Text
+        color={Color.PRIMARY_7}
+        rightIcon="main-share"
+        rightIconProps={{
+          size: 12
+        }}
+        lineClamp={1}>
+        {getString('artifactList.table.actions.VulnerabilityStatus.scanned')}
+      </Text>
+    </Link>
+  )
 }
 
 export const DigestActionsCell: CellType = () => {

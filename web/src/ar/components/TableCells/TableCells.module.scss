@@ -20,16 +20,35 @@
 }
 
 .nameCellContainer {
-  align-items: center;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: var(--spacing-small);
+}
+
+.copyUrlBtn {
+  & :global(.bp3-button-text) {
+    padding-left: var(--spacing-xsmall);
+  }
+  & .copyUrlIcon {
+    --icon-padding: 0px !important;
+    rotate: 45deg;
+  }
 }
 
 .copyButton {
-  & :global(.bp3-button-text) {
-    margin-left: var(--spacing-small) !important;
-    font-size: 12px;
-  }
+  --font-size: 12px !important;
+  --font-weight: 500 !important;
+  --padding: 0px !important;
+}
 
-  & .copyUrlIcon {
-    rotate: 45deg;
+.deploymentsRow {
+  --typography-size: 11px;
+  --typography-weight: 700;
+  &.prod {
+    --intent-color: #2e2d96;
+  }
+  &.nonProd {
+    --intent-color: #07a0ab;
   }
 }

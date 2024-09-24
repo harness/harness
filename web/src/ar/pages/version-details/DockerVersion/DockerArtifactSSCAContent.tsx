@@ -15,9 +15,23 @@
  */
 
 import React from 'react'
-import { useParentComponents } from '@ar/hooks'
+import { Page } from '@harnessio/uicore'
+import { useStrings } from '@ar/frameworks/strings'
+import type { VersionDetailsTabPathParams } from '@ar/routes/types'
+import { useDecodedParams, useParentComponents } from '@ar/hooks'
 
 export default function DockerArtifactSSCAContent() {
+  const params = useDecodedParams<VersionDetailsTabPathParams>()
   const { DependencyView } = useParentComponents()
-  return <DependencyView />
+  const { getString } = useStrings()
+  return (
+    <Page.Body
+      noData={{
+        when: () => !params.artifactId || !params.sourceId,
+        icon: 'container',
+        messageTitle: getString('noResultsFound')
+      }}>
+      <DependencyView />
+    </Page.Body>
+  )
 }

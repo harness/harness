@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"time"
 
+	gitnessappstore "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/event"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
 	"github.com/harness/gitness/registry/app/manifest/ocischema"
@@ -33,7 +35,8 @@ import (
 	"github.com/harness/gitness/registry/app/store/database/util"
 	"github.com/harness/gitness/registry/gc"
 	"github.com/harness/gitness/registry/types"
-	store2 "github.com/harness/gitness/store"
+	gitnessstore "github.com/harness/gitness/store"
+	db "github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/distribution/distribution/v3"
@@ -53,8 +56,10 @@ type manifestService struct {
 	imageDao       store.ImageRepository
 	artifactDao    store.ArtifactRepository
 	manifestRefDao store.ManifestReferenceRepository
+	spacePathStore gitnessappstore.SpacePathStore
 	gcService      gc.Service
 	tx             dbtx.Transactor
+	reporter       event.Reporter
 }
 
 func NewManifestService(
@@ -62,7 +67,7 @@ func NewManifestService(
 	blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository, tagDao store.TagRepository,
 	imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	layerDao store.LayerRepository, manifestRefDao store.ManifestReferenceRepository,
-	tx dbtx.Transactor, gcService gc.Service,
+	tx dbtx.Transactor, gcService gc.Service, reporter event.Reporter, spacePathStore gitnessappstore.SpacePathStore,
 ) ManifestService {
 	return &manifestService{
 		registryDao:    registryDao,
@@ -76,6 +81,8 @@ func NewManifestService(
 		manifestRefDao: manifestRefDao,
 		gcService:      gcService,
 		tx:             tx,
+		reporter:       reporter,
+		spacePathStore: spacePathStore,
 	}
 }
 
@@ -166,78 +173,154 @@ func (l *manifestService) dbTagManifest(
 	tagName, imageName string,
 	info pkg.RegistryInfo,
 ) error {
-	dbRepo, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
+	dbRegistry, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
 	if err != nil {
-		return err
+		return formatFailedToTagErr(err)
 	}
 	newDigest, err := types.NewDigest(dgst)
 	if err != nil {
-		return err
+		return formatFailedToTagErr(err)
 	}
-	dbManifest, err := l.manifestDao.FindManifestByDigest(ctx, dbRepo.ID, info.Image, newDigest)
+	dbManifest, err := l.manifestDao.FindManifestByDigest(ctx, dbRegistry.ID, info.Image, newDigest)
+	if errors.Is(err, gitnessstore.ErrResourceNotFound) {
+		return fmt.Errorf("manifest %s not found in database", dgst)
+	}
 	if err != nil {
-		if errors.Is(err, store2.ErrResourceNotFound) {
-			return fmt.Errorf("manifest %s not found in database", dgst)
+		return formatFailedToTagErr(err)
+	}
+
+	err = l.tx.WithTx(ctx, func(ctx context.Context) error {
+		// Prevent long running transactions by setting an upper limit of manifestTagGCLockTimeout. If the GC is holding
+		// the lock of a related review record, the processing there should be fast enough to avoid this. Regardless, we
+		// should not let transactions open (and clients waiting) for too long. If this sensible timeout is exceeded, abort
+		// the tag creation and let the client retry. This will bubble up and lead to a 503 Service Unavailable response.
+		// Set timeout for the transaction to prevent long-running operations
+		ctx, cancel := context.WithTimeout(ctx, manifestTagGCLockTimeout)
+		defer cancel()
+
+		// Attempt to find and lock the manifest for GC review
+		if err := l.lockManifestForGC(ctx, dbRegistry.ID, dbManifest.ID); err != nil {
+			return formatFailedToTagErr(err)
 		}
+
+		// Create or update artifact and tag records
+		if err := l.createOrUpdateArtifactAndTag(ctx, dbRegistry.ID, dbManifest.ID, imageName, tagName, dgst); err != nil {
+			return formatFailedToTagErr(err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return formatFailedToTagErr(err)
+	}
+	spacePath, packageType, err := l.getSpacePathAndPackageType(ctx, dbRegistry)
+	if err == nil {
+		l.reportEventAsync(ctx, info.RegIdentifier, imageName, tagName, packageType, spacePath)
+	} else {
+		log.Ctx(ctx).Err(err).Msg("Failed to find spacePath, not publishing event")
+	}
+
+	return nil
+}
+
+func formatFailedToTagErr(err error) error {
+	return fmt.Errorf("failed to tag manifest: %w", err)
+}
+
+// Locks the manifest for GC review.
+func (l *manifestService) lockManifestForGC(ctx context.Context, repoID, manifestID int64) error {
+	_, err := l.gcService.ManifestFindAndLockBefore(
+		ctx, repoID, manifestID,
+		time.Now().Add(manifestTagGCReviewWindow),
+	)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		// Use ProcessSQLErrorf for handling the SQL error abstraction
+		return db.ProcessSQLErrorf(
+			ctx,
+			err,
+			"failed to lock manifest for GC review [repoID: %d, manifestID: %d]", repoID, manifestID,
+		)
+	}
+	return nil
+}
+
+// Creates or updates artifact and tag records.
+func (l *manifestService) createOrUpdateArtifactAndTag(
+	ctx context.Context,
+	registryID,
+	manifestID int64,
+	imageName,
+	tagName string,
+	dgst digest.Digest,
+) error {
+	image := &types.Image{
+		Name:       imageName,
+		RegistryID: registryID,
+		Enabled:    true,
+	}
+
+	if err := l.imageDao.CreateOrUpdate(ctx, image); err != nil {
 		return err
 	}
 
-	// We need to find and lock a GC manifest task that is related with the manifest that we're about to tag. This
-	// is needed to ensure we lock any related online GC tasks to prevent race conditions around the tag creation. See:
+	digest, err := types.NewDigest(dgst)
+	if err != nil {
+		return err
+	}
+	artifact := &types.Artifact{
+		ImageID: image.ID,
+		Version: digest.String(),
+	}
 
-	return l.tx.WithTx(
-		ctx, func(ctx context.Context) error {
-			// Prevent long running transactions by setting an upper limit of manifestTagGCLockTimeout. If the GC is holding
-			// the lock of a related review record, the processing there should be fast enough to avoid this. Regardless, we
-			// should not let transactions open (and clients waiting) for too long. If this sensible timeout is exceeded, abort
-			// the tag creation and let the client retry. This will bubble up and lead to a 503 Service Unavailable response.
-			ctx, cancel := context.WithTimeout(ctx, manifestTagGCLockTimeout)
-			defer cancel()
+	if err := l.artifactDao.CreateOrUpdate(ctx, artifact); err != nil {
+		return err
+	}
 
-			if _, err := l.gcService.ManifestFindAndLockBefore(
-				ctx, dbRepo.ID, dbManifest.ID,
-				time.Now().Add(manifestTagGCReviewWindow),
-			); err != nil && !errors.Is(err, sql.ErrNoRows) {
-				return err
-			}
+	tag := &types.Tag{
+		Name:       tagName,
+		ImageName:  imageName,
+		RegistryID: registryID,
+		ManifestID: manifestID,
+	}
 
-			image := &types.Image{
-				Name:       imageName,
-				RegistryID: dbRepo.ID,
-				Enabled:    true,
-			}
+	return l.tagDao.CreateOrUpdate(ctx, tag)
+}
 
-			if err := l.imageDao.CreateOrUpdate(ctx, image); err != nil {
-				return err
-			}
+// Retrieves the spacePath and packageType.
+func (l *manifestService) getSpacePathAndPackageType(
+	ctx context.Context,
+	dbRepo *types.Registry,
+) (string, event.PackageType, error) {
+	spacePath, err := l.spacePathStore.FindPrimaryBySpaceID(ctx, dbRepo.ParentID)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("Failed to find spacePath")
+		return "", event.PackageType(0), err
+	}
 
-			digest, err := types.NewDigest(dgst)
-			if err != nil {
-				return err
-			}
-			artifact := &types.Artifact{
-				ImageID: image.ID,
-				Version: digest.String(),
-			}
+	packageType, err := event.GetPackageTypeFromString(string(dbRepo.PackageType))
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("Failed to find packageType")
+		return "", event.PackageType(0), err
+	}
 
-			if err := l.artifactDao.CreateOrUpdate(ctx, artifact); err != nil {
-				return err
-			}
+	return spacePath.Value, packageType, nil
+}
 
-			tag := &types.Tag{
-				Name:       tagName,
-				ImageName:  imageName,
-				RegistryID: dbRepo.ID,
-				ManifestID: dbManifest.ID,
-			}
-
-			if err := l.tagDao.CreateOrUpdate(ctx, tag); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	)
+// Reports event asynchronously.
+func (l *manifestService) reportEventAsync(
+	ctx context.Context,
+	regID,
+	imageName,
+	tagName string,
+	packageType event.PackageType,
+	spacePath string,
+) {
+	go l.reporter.ReportEvent(ctx, &event.ArtifactDetails{
+		RegistryID:  regID,
+		ImagePath:   imageName + ":" + tagName,
+		PackageType: packageType,
+	}, spacePath)
 }
 
 func (l *manifestService) DBPut(
@@ -327,7 +410,7 @@ func (l *manifestService) dbPutManifestV2(
 	}
 
 	dbManifest, err := l.manifestDao.FindManifestByDigest(ctx, dbRepo.ID, info.Image, dgst)
-	if err != nil && !errors.Is(err, store2.ErrResourceNotFound) {
+	if err != nil && !errors.Is(err, gitnessstore.ErrResourceNotFound) {
 		return err
 	}
 
@@ -433,7 +516,7 @@ func (l *manifestService) DBFindRepositoryBlob(
 	image := info.Image
 	b, err := l.blobRepo.FindByDigestAndRepoID(ctx, desc.Digest, repoID, image)
 	if err != nil {
-		if errors.Is(err, store2.ErrResourceNotFound) {
+		if errors.Is(err, gitnessstore.ErrResourceNotFound) {
 			return nil, fmt.Errorf("blob not found in database")
 		}
 		return nil, err
@@ -453,11 +536,11 @@ func (l *manifestService) handleSubject(
 			return err
 		}
 		dbSubject, err := l.manifestDao.FindManifestByDigest(ctx, dbRepo.ID, info.Image, subjectDigest)
-		if err != nil && !errors.Is(err, store2.ErrResourceNotFound) {
+		if err != nil && !errors.Is(err, gitnessstore.ErrResourceNotFound) {
 			return err
 		}
 
-		if errors.Is(err, store2.ErrResourceNotFound) {
+		if errors.Is(err, gitnessstore.ErrResourceNotFound) {
 			// in case something happened to the referenced manifest after validation
 			// return distribution.ManifestBlobUnknownError{Digest: subject.Digest}
 			log.Ctx(ctx).Warn().Msgf("subject manifest not found in database")
@@ -516,7 +599,7 @@ func (l *manifestService) dbPutManifestList(
 	}
 
 	ml, err := l.manifestDao.FindManifestByDigest(ctx, r.ID, info.Image, dgst)
-	if err != nil && !errors.Is(err, store2.ErrResourceNotFound) {
+	if err != nil && !errors.Is(err, gitnessstore.ErrResourceNotFound) {
 		return err
 	}
 
@@ -625,7 +708,7 @@ func (l *manifestService) dbPutImageIndex(
 	}
 
 	mi, err := l.manifestDao.FindManifestByDigest(ctx, r.ID, info.Image, dgst)
-	if err != nil && !errors.Is(err, store2.ErrResourceNotFound) {
+	if err != nil && !errors.Is(err, gitnessstore.ErrResourceNotFound) {
 		return err
 	}
 
@@ -758,7 +841,7 @@ func (l *manifestService) dbFindManifestListManifest(
 		imageName, dgst,
 	)
 	if err != nil {
-		if errors.Is(err, store2.ErrResourceNotFound) {
+		if errors.Is(err, gitnessstore.ErrResourceNotFound) {
 			return nil, fmt.Errorf(
 				"manifest %s not found for %s/%s", digest.String(),
 				repository.Name, imageName,
@@ -849,7 +932,7 @@ func (l *manifestService) DeleteManifest(
 	}
 	m, err := l.manifestDao.FindManifestByDigest(ctx, registry.ID, imageName, newDigest)
 	if err != nil {
-		if errors.Is(err, store2.ErrResourceNotFound) {
+		if errors.Is(err, gitnessstore.ErrResourceNotFound) {
 			return util.ErrManifestNotFound
 		}
 		return err

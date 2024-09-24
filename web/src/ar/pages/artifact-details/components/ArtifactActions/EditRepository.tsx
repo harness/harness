@@ -47,10 +47,10 @@ export default function EditRepositoryMenuItem({ repoKey }: ArtifactActionProps)
         onClick={handleOpenRepository}
         permission={{
           resource: {
-            resourceType: ResourceType.SERVICE,
+            resourceType: ResourceType.ARTIFACT_REGISTRY,
             resourceIdentifier: repoKey
           },
-          permission: PermissionIdentifier.EDIT_SERVICE
+          permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY
         }}
       />
     </>

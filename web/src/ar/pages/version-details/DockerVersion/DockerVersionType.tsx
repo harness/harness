@@ -34,6 +34,7 @@ import DockerArtifactDetailsContent from './DockerArtifactDetailsContent'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import DockerArtifactSecurityTestsContent from './DockerArtifactSecurityTestsContent'
 import DockerVersionOSSContent from './DockerVersionOSSContent/DockerVersionOSSContent'
+import DockerDeploymentsContent from './DockerDeploymentsContent'
 
 export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.DOCKER
@@ -65,6 +66,8 @@ export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
         return <DockerArtifactSecurityTestsContent />
       case VersionDetailsTab.SUPPLY_CHAIN:
         return <DockerArtifactSSCAContent />
+      case VersionDetailsTab.DEPLOYMENTS:
+        return <DockerDeploymentsContent />
       default:
         return <String stringID="tabNotFound" />
     }

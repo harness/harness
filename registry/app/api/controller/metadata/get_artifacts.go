@@ -21,7 +21,6 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
-	"github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -29,20 +28,21 @@ func (c *APIController) GetAllArtifacts(
 	ctx context.Context,
 	r artifact.GetAllArtifactsRequestObject,
 ) (artifact.GetAllArtifactsResponseObject, error) {
-	ref := ""
-	if r.Params.RegIdentifier != nil {
-		ref2, err2 := GetRegRef(string(r.SpaceRef), string(*r.Params.RegIdentifier))
-		if err2 != nil {
-			return c.getAllArtifacts400JsonResponse(err2)
-		}
-		ref = ref2
+	registryRequestParams := &RegistryRequestParams{
+		packageTypesParam: nil,
+		page:              r.Params.Page,
+		size:              r.Params.Size,
+		search:            r.Params.SearchTerm,
+		resource:          ArtifactResource,
+		parentRef:         string(r.SpaceRef),
+		regRef:            "",
+		labelsParam:       nil,
+		sortOrder:         r.Params.SortOrder,
+		sortField:         r.Params.SortField,
+		registryIDsParam:  r.Params.RegIdentifier,
 	}
 
-	regInfo, err := c.GetRegistryRequestInfo(
-		ctx, r.Params.PackageType, r.Params.Page, r.Params.Size,
-		r.Params.SearchTerm, ArtifactResource, string(r.SpaceRef), ref, r.Params.Label,
-		r.Params.SortOrder, r.Params.SortField,
-	)
+	regInfo, err := c.GetRegistryRequestInfo(ctx, *registryRequestParams)
 	if err != nil {
 		return c.getAllArtifacts400JsonResponse(err)
 	}
@@ -70,28 +70,16 @@ func (c *APIController) GetAllArtifacts(
 			),
 		}, nil
 	}
-
-	var artifacts *[]types.ArtifactMetadata
-	var count int64
-	if len(regInfo.RegistryIdentifier) == 0 {
-		artifacts, err = c.TagStore.GetAllArtifactsByParentID(
-			ctx, regInfo.parentID, &regInfo.packageTypes,
-			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels,
-		)
-		count, _ = c.TagStore.CountAllArtifactsByParentID(
-			ctx, regInfo.parentID, &regInfo.packageTypes,
-			regInfo.searchTerm, regInfo.labels,
-		)
-	} else {
-		artifacts, err = c.TagStore.GetAllArtifactsByRepo(
-			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
-			regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, regInfo.labels,
-		)
-		count, _ = c.TagStore.CountAllArtifactsByRepo(
-			ctx, regInfo.parentID, regInfo.RegistryIdentifier,
-			regInfo.searchTerm, regInfo.labels,
-		)
+	latestVersion := false
+	if r.Params.LatestVersion != nil {
+		latestVersion = bool(*r.Params.LatestVersion)
 	}
+	artifacts, err := c.TagStore.GetAllArtifactsByParentID(
+		ctx, regInfo.parentID, &regInfo.registryIDs,
+		regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, latestVersion)
+	count, _ := c.TagStore.CountAllArtifactsByParentID(
+		ctx, regInfo.parentID, &regInfo.registryIDs,
+		regInfo.searchTerm, latestVersion)
 	if err != nil {
 		return artifact.GetAllArtifacts500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
@@ -100,7 +88,8 @@ func (c *APIController) GetAllArtifacts(
 		}, nil
 	}
 	return artifact.GetAllArtifacts200JSONResponse{
-		ListArtifactResponseJSONResponse: *GetAllArtifactResponse(artifacts, count, regInfo.pageNumber, regInfo.limit),
+		ListArtifactResponseJSONResponse: *GetAllArtifactResponse(artifacts, count, regInfo.pageNumber, regInfo.limit,
+			regInfo.RootIdentifier, c.URLProvider.RegistryURL()),
 	}, nil
 }
 

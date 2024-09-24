@@ -55,7 +55,6 @@ func NewApp(
 	ctx context.Context, sqlDB *sqlx.DB, storageDeleter storagedriver.StorageDeleter,
 	blobRepo store.BlobRepository, spaceStore corestore.SpaceStore,
 	cfg *types.Config, storageService *registrystorage.Service,
-	mtRepository store.MediaTypesRepository, manifestRepository store.ManifestRepository,
 	gcService gc.Service,
 ) *App {
 	app := &App{
@@ -64,7 +63,7 @@ func NewApp(
 		storageService: storageService,
 	}
 	app.configureSecret(cfg)
-	gcService.Start(ctx, sqlDB, spaceStore, blobRepo, storageDeleter, cfg, mtRepository, manifestRepository)
+	gcService.Start(ctx, sqlDB, spaceStore, blobRepo, storageDeleter, cfg)
 	return app
 }
 

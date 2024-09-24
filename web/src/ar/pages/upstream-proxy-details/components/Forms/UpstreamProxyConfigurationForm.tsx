@@ -20,7 +20,7 @@ import { Formik, FormikForm, getErrorInfoFromErrorObject, useToaster } from '@ha
 import { Anonymous, UserPassword, useModifyRegistryMutation } from '@harnessio/react-har-service-client'
 
 import { URL_REGEX } from '@ar/constants'
-import { useGetSpaceRef } from '@ar/hooks'
+import { useAppStore, useGetSpaceRef } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { queryClient } from '@ar/utils/queryClient'
 import type { FormikFowardRef } from '@ar/common/types'
@@ -41,6 +41,7 @@ import {
   type UpstreamRegistry,
   type UpstreamRegistryRequest
 } from '../../types'
+import { getFormattedFormDataForAuthType } from './utils'
 
 import css from './Forms.module.scss'
 
@@ -54,9 +55,10 @@ function UpstreamProxyConfigurationForm(
   formikRef: FormikFowardRef
 ): JSX.Element {
   const { readonly, factory = repositoryFactory } = props
-  const { data } = useContext(RepositoryProviderContext)
+  const { data, setIsUpdating } = useContext(RepositoryProviderContext)
   const { showSuccess, showError, clear } = useToaster()
   const { getString } = useStrings()
+  const { parent } = useAppStore()
   const spaceRef = useGetSpaceRef()
 
   const { mutateAsync: modifyUpstreamProxy } = useModifyRegistryMutation()
@@ -74,6 +76,7 @@ function UpstreamProxyConfigurationForm(
 
   const handleModifyUpstreamProxy = async (values: UpstreamRegistryRequest): Promise<void> => {
     try {
+      setIsUpdating(true)
       const response = await modifyUpstreamProxy({
         registry_ref: spaceRef,
         body: values
@@ -85,13 +88,16 @@ function UpstreamProxyConfigurationForm(
       }
     } catch (e: any) {
       showError(getErrorInfoFromErrorObject(e, true))
+    } finally {
+      setIsUpdating(false)
     }
   }
 
   const handleSubmit = async (values: UpstreamRegistryRequest): Promise<void> => {
     const repositoryType = factory.getRepositoryType(values.packageType)
     if (repositoryType) {
-      const transformedCleanupPolicy = getFormattedFormDataForCleanupPolicy(values)
+      const transfomedAuthType = getFormattedFormDataForAuthType(values, parent)
+      const transformedCleanupPolicy = getFormattedFormDataForCleanupPolicy(transfomedAuthType)
       const transformedValues = repositoryType.processUpstreamProxyFormData(
         transformedCleanupPolicy
       ) as UpstreamRegistryRequest
@@ -111,16 +117,18 @@ function UpstreamProxyConfigurationForm(
           authType: Yup.string()
             .required()
             .oneOf([UpstreamProxyAuthenticationMode.ANONYMOUS, UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD]),
-          auth: Yup.object().when(['authType'], {
-            is: (authType: UpstreamProxyAuthenticationMode) =>
-              authType === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
-            then: (schema: Yup.ObjectSchema<UserPassword | Anonymous>) =>
-              schema.shape({
-                userName: Yup.string().trim().required(getString('validationMessages.userNameRequired')),
-                secretIdentifier: Yup.string().trim().required(getString('validationMessages.passwordRequired'))
-              }),
-            otherwise: Yup.object().optional().nullable()
-          }),
+          auth: Yup.object()
+            .when(['authType'], {
+              is: (authType: UpstreamProxyAuthenticationMode) =>
+                authType === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD,
+              then: (schema: Yup.ObjectSchema<UserPassword | Anonymous>) =>
+                schema.shape({
+                  userName: Yup.string().trim().required(getString('validationMessages.userNameRequired')),
+                  secretIdentifier: Yup.string().trim().required(getString('validationMessages.passwordRequired'))
+                }),
+              otherwise: Yup.object().optional().nullable()
+            })
+            .nullable(),
           url: Yup.string().when(['source'], {
             is: (source: DockerRepositoryURLInputSource) => source === DockerRepositoryURLInputSource.Custom,
             then: (schema: Yup.StringSchema) =>

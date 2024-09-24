@@ -40,43 +40,47 @@ export function useCreateRepositoryModal(props: useCreateRepositoryModalProps) {
     stepRef.current?.submitForm()
   }
 
-  const [showModal, hideModal] = useModalHook(() => (
-    <ModalDialog
-      isOpen={true}
-      enforceFocus={false}
-      canEscapeKeyClose
-      canOutsideClickClose
-      onClose={() => {
-        hideModal()
-      }}
-      title={
-        <>
-          <Text font={{ variation: FontVariation.H3 }} margin={{ bottom: 'small' }}>
-            {getString('repositoryDetails.repositoryForm.modalTitle')}
-          </Text>
-          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
-            {getString('repositoryDetails.repositoryForm.modalSubTitle')}
-          </Text>
-        </>
-      }
-      isCloseButtonShown
-      width={800}
-      showOverlay={showOverlay}
-      footer={
-        <Layout.Horizontal spacing="small">
-          <Button
-            variation={ButtonVariation.PRIMARY}
-            type={'submit'}
-            text={getString('repositoryDetails.repositoryForm.create')}
-            data-id="service-save"
-            onClick={handleSubmitForm}
-          />
-          <Button variation={ButtonVariation.TERTIARY} text={getString('cancel')} onClick={hideModal} />
-        </Layout.Horizontal>
-      }>
-      <RepositoryCreateForm onSuccess={onSuccess} setShowOverlay={setShowOverlay} ref={stepRef} />
-    </ModalDialog>
-  ))
+  const [showModal, hideModal] = useModalHook(
+    () => (
+      <ModalDialog
+        isOpen={true}
+        enforceFocus={false}
+        canEscapeKeyClose
+        canOutsideClickClose
+        onClose={() => {
+          hideModal()
+        }}
+        title={
+          <>
+            <Text font={{ variation: FontVariation.H3 }} margin={{ bottom: 'small' }}>
+              {getString('repositoryDetails.repositoryForm.modalTitle')}
+            </Text>
+            <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
+              {getString('repositoryDetails.repositoryForm.modalSubTitle')}
+            </Text>
+          </>
+        }
+        isCloseButtonShown
+        width={800}
+        showOverlay={showOverlay}
+        footer={
+          <Layout.Horizontal spacing="small">
+            <Button
+              variation={ButtonVariation.PRIMARY}
+              type={'submit'}
+              text={getString('repositoryDetails.repositoryForm.create')}
+              data-id="service-save"
+              onClick={handleSubmitForm}
+              disabled={showOverlay}
+            />
+            <Button variation={ButtonVariation.TERTIARY} text={getString('cancel')} onClick={hideModal} />
+          </Layout.Horizontal>
+        }>
+        <RepositoryCreateForm onSuccess={onSuccess} setShowOverlay={setShowOverlay} ref={stepRef} />
+      </ModalDialog>
+    ),
+    [showOverlay]
+  )
 
   return [showModal, hideModal]
 }

@@ -31,7 +31,7 @@ type Service interface {
 	Start(
 		ctx context.Context, sqlDB *sqlx.DB, spaceStore corestore.SpaceStore,
 		blobRepo store.BlobRepository, storageDeleter storagedriver.StorageDeleter,
-		config *types.Config, mtRepository store.MediaTypesRepository, manifestRepository store.ManifestRepository,
+		config *types.Config,
 	)
 	BlobFindAndLockBefore(ctx context.Context, blobID int64, date time.Time) (*registrytypes.GCBlobTask, error)
 	BlobReschedule(ctx context.Context, b *registrytypes.GCBlobTask, d time.Duration) error

@@ -32,7 +32,7 @@ interface SupplyChainCardProps {
   totalComponents: number
   allowListCount: number
   denyListCount: number
-  sbomScore: number
+  sbomScore: string | number
   onClick?: () => void
 }
 

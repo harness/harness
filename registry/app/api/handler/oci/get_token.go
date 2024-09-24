@@ -16,6 +16,7 @@ package oci
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -33,6 +34,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 )
+
+type TokenResponseOCI struct {
+	Token string `json:"token"`
+}
 
 func (h *Handler) GetToken(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -79,8 +84,12 @@ func (h *Handler) GetToken(w http.ResponseWriter, r *http.Request) {
 	}
 	if jwtToken != "" {
 		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte(fmt.Sprintf("{\"token\":\"%s\"}", jwtToken)))
-		if err != nil {
+		enc := json.NewEncoder(w)
+		if err := enc.Encode(
+			TokenResponseOCI{
+				Token: jwtToken,
+			},
+		); err != nil {
 			log.Error().Msgf("failed to write token response: %v", err)
 		}
 		return

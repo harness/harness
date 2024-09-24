@@ -29,10 +29,20 @@ func (c *APIController) UpdateArtifactLabels(
 	ctx context.Context,
 	r artifact.UpdateArtifactLabelsRequestObject,
 ) (artifact.UpdateArtifactLabelsResponseObject, error) {
-	regInfo, _ := c.GetRegistryRequestInfo(
-		ctx, nil, nil, nil, nil,
-		ArtifactVersionResource, "", string(r.RegistryRef), nil, nil, nil,
-	)
+	registryRequestParams := &RegistryRequestParams{
+		packageTypesParam: nil,
+		page:              nil,
+		size:              nil,
+		search:            nil,
+		resource:          ArtifactVersionResource,
+		parentRef:         "",
+		regRef:            string(r.RegistryRef),
+		labelsParam:       nil,
+		sortOrder:         nil,
+		sortField:         nil,
+		registryIDsParam:  nil,
+	}
+	regInfo, _ := c.GetRegistryRequestInfo(ctx, *registryRequestParams)
 
 	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {

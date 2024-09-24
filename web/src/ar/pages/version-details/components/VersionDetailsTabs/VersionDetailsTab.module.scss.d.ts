@@ -16,8 +16,4 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const btnContainer: string
-export declare const discardBtn: string
-export declare const saveButton: string
 export declare const tabsContainer: string
-export declare const tagRender: string

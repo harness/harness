@@ -1654,10 +1654,10 @@
   resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.7.tgz#21c37bad4291e1ed4ea730f6ed1f7612934e8b3f"
   integrity sha512-+vugtcJR47pQZj2IMYRt7XSNpjW/m9iSeLjQMG2Hja3Hq9J+zfDsXh2aRor3ICrLSrkQtRWpBbWn+WmsoN3lVg==
 
-"@harnessio/react-har-service-client@^0.0.15":
-  version "0.0.15"
-  resolved "https://registry.yarnpkg.com/@harnessio/react-har-service-client/-/react-har-service-client-0.0.15.tgz#ee4536a27250ea6be6221e1c23ae148325012bb1"
-  integrity sha512-tDvUPsTLaxvlw+jiMiLJyi8an7g0lNHl2QcuZqHSwC/nQWP5GfzVmIg8zqN2sTz+PfbY9dXo/Y5c5FsIEghw9w==
+"@harnessio/react-har-service-client@^0.0.21":
+  version "0.0.21"
+  resolved "https://registry.yarnpkg.com/@harnessio/react-har-service-client/-/react-har-service-client-0.0.21.tgz#f5f54ce4855624b6355be591e15849aae189266a"
+  integrity sha512-rrRbLMTILxUEC4uYIJX8Otb/Jxy8We340ragJkmWcm5YVBK3z7IT+3uTe+jT9GSacs6Rjoqec0Tjkg0WQRkW0g==
 
 "@harnessio/uicore@^4.1.2":
   version "4.1.2"

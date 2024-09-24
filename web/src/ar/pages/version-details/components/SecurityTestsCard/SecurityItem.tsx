@@ -25,7 +25,7 @@ import css from './SecurityTestsCard.module.scss'
 interface SecurityTestItemProps {
   title: string
   status: SecurityTestSatus
-  value: number
+  value: number | string
 }
 
 export default function SecurityItem(props: SecurityTestItemProps) {

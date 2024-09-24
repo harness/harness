@@ -400,7 +400,7 @@ func GetPermissionChecks(
 ) []types.PermissionCheck {
 	var permissionChecks []types.PermissionCheck
 	permissionCheck := &types.PermissionCheck{
-		Scope:      types.Scope{SpacePath: space.Identifier},
+		Scope:      types.Scope{SpacePath: space.Path},
 		Resource:   types.Resource{Type: enum.ResourceTypeRegistry, Identifier: registryIdentifier},
 		Permission: permission,
 	}

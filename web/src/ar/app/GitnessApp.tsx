@@ -16,7 +16,7 @@
 
 import React, { createContext } from 'react'
 import { defaultTo, noop } from 'lodash-es'
-import { Button, Container } from '@harnessio/uicore'
+import { Container } from '@harnessio/uicore'
 
 import type { MFEAppProps } from '@ar/MFEAppTypes'
 
@@ -29,6 +29,7 @@ import {
   useQueryParamsOptions,
   useUpdateQueryParams
 } from '@ar/__mocks__/hooks'
+import RbacButton from '@ar/__mocks__/components/RbacButton'
 import RbacMenuItem from '@ar/__mocks__/components/RbacMenuItem'
 import NGBreadcrumbs from '@ar/__mocks__/components/NGBreadcrumbs'
 import DependencyView from '@ar/__mocks__/components/DependencyView'
@@ -76,7 +77,7 @@ const GitnessApp = (props: Partial<MFEAppProps>): JSX.Element => {
           scope={defaultTo(scope, {})}
           customScope={defaultTo(customScope, {})}
           components={Object.assign(
-            { RbacButton: Button, NGBreadcrumbs, RbacMenuItem, SecretFormInput, VulnerabilityView, DependencyView },
+            { RbacButton, NGBreadcrumbs, RbacMenuItem, SecretFormInput, VulnerabilityView, DependencyView },
             components
           )}
           NavComponent={NavComponent}

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import type { IconName, IconProps } from '@harnessio/icons'
 import type { StringsMap } from '@ar/frameworks/strings'
 
 export enum VersionDetailsTab {
@@ -30,57 +29,33 @@ export enum VersionDetailsTab {
 interface VersionDetailsTabListItem {
   label: keyof StringsMap
   value: VersionDetailsTab
-  icon: IconName
-  iconProps: Omit<IconProps, 'name'>
+  disabled?: boolean
 }
 
 export const VersionDetailsTabList: VersionDetailsTabListItem[] = [
   {
     label: 'versionDetails.tabs.overview',
-    value: VersionDetailsTab.OVERVIEW,
-    icon: 'store-artifact-bundle',
-    iconProps: {
-      size: 18
-    }
+    value: VersionDetailsTab.OVERVIEW
   },
   {
     label: 'versionDetails.tabs.artifactDetails',
-    value: VersionDetailsTab.ARTIFACT_DETAILS,
-    icon: 'layers',
-    iconProps: {
-      size: 16
-    }
+    value: VersionDetailsTab.ARTIFACT_DETAILS
   },
   {
     label: 'versionDetails.tabs.supplyChain',
-    value: VersionDetailsTab.SUPPLY_CHAIN,
-    icon: 'ssca-main',
-    iconProps: {
-      size: 16
-    }
+    value: VersionDetailsTab.SUPPLY_CHAIN
   },
   {
     label: 'versionDetails.tabs.securityTests',
-    value: VersionDetailsTab.SECURITY_TESTS,
-    icon: 'sto-color-filled',
-    iconProps: {
-      size: 16
-    }
+    value: VersionDetailsTab.SECURITY_TESTS
   },
   {
     label: 'versionDetails.tabs.deployments',
-    value: VersionDetailsTab.DEPLOYMENTS,
-    icon: 'cd-main',
-    iconProps: {
-      size: 16
-    }
+    value: VersionDetailsTab.DEPLOYMENTS
   },
   {
     label: 'versionDetails.tabs.code',
     value: VersionDetailsTab.CODE,
-    icon: 'code',
-    iconProps: {
-      size: 16
-    }
+    disabled: true
   }
 ]

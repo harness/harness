@@ -17,28 +17,21 @@
 import { useMemo } from 'react'
 
 import { useParentHooks } from '@ar/hooks'
-import type { RepositoryPackageType } from '@ar/common/types'
 import { DEFAULT_PAGE_INDEX, DEFAULT_PAGE_SIZE, DEFAULT_PIPELINE_LIST_TABLE_SORT } from '@ar/constants'
+import type { RepositoryPackageType } from '@ar/common/types'
 import type { UseQueryParamsOptions } from '@ar/__mocks__/hooks'
 
-type GetArtifactListQueryParams = {
-  accountIdentifier: string
-  orgIdentifier: string
-  projectIdentifier: string
+export type ArtifactListPageQueryParams = {
   page: number
   size: number
   sort: string[]
-  searchTerm?: string
-  isDeployedArtifacts: boolean
   packageTypes: RepositoryPackageType[]
-  repositoryKey?: string
   labels: string[]
+  latestVersion: boolean
+  isDeployedArtifacts: boolean
+  searchTerm?: string
+  repositoryKey?: string
 }
-
-export type ArtifactListPageQueryParams = Omit<
-  GetArtifactListQueryParams,
-  'accountIdentifier' | 'orgIdentifier' | 'projectIdentifier'
->
 
 export const useArtifactListQueryParamOptions = (): UseQueryParamsOptions<ArtifactListPageQueryParams> => {
   const { useQueryParamsOptions } = useParentHooks()
@@ -48,10 +41,11 @@ export const useArtifactListQueryParamOptions = (): UseQueryParamsOptions<Artifa
       size: DEFAULT_PAGE_SIZE,
       sort: DEFAULT_PIPELINE_LIST_TABLE_SORT,
       isDeployedArtifacts: false,
+      latestVersion: false,
       packageTypes: [],
       labels: []
     },
-    { ignoreEmptyString: false }
+    { ignoreEmptyString: true }
   )
   const options = useMemo(() => ({ ..._options, strictNullHandling: true }), [_options])
 

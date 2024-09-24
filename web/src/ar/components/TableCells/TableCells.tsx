@@ -15,13 +15,14 @@
  */
 
 import React, { FC, PropsWithChildren, useState } from 'react'
+import classNames from 'classnames'
 import { defaultTo } from 'lodash-es'
 import copy from 'clipboard-copy'
 import { Link } from 'react-router-dom'
 import type { TableExpandedToggleProps } from 'react-table'
-import { Button, ButtonVariation, Layout, Text } from '@harnessio/uicore'
+import { Button, ButtonProps, ButtonVariation, Layout, Text } from '@harnessio/uicore'
 import type { IconName, IconProps } from '@harnessio/icons'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 
 import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings/String'
@@ -31,6 +32,8 @@ import RepositoryLocationBadge from '@ar/components/Badge/RepositoryLocationBadg
 
 import { DefaultIconProps } from './constants'
 import { handleToggleExpandableRow } from './utils'
+import CommandBlock from '../CommandBlock/CommandBlock'
+import { NonProdTag, ProdTag } from '../Tag/Tags'
 
 import css from './TableCells.module.scss'
 
@@ -67,11 +70,52 @@ export const CopyUrlCell: FC<PropsWithChildren<CopyUrlCellProps>> = ({ value, ch
   }
   return (
     <Button
-      className={css.copyButton}
+      className={classNames(css.copyButton, css.copyUrlBtn)}
       intent="primary"
       minimal
       icon="link"
+      variation={ButtonVariation.LINK}
       iconProps={{ size: 12, className: css.copyUrlIcon }}
+      onClick={evt => {
+        killEvent(evt)
+        copy(value)
+        showCopySuccess()
+      }}
+      tooltip={getString('copied')}
+      tooltipProps={{ isOpen: openTooltip, isDark: true }}>
+      {children}
+    </Button>
+  )
+}
+
+interface CopyTextCellProps {
+  value: string
+  icon?: ButtonProps['rightIcon']
+  iconProps?: ButtonProps['iconProps']
+}
+
+export const CopyTextCell: FC<PropsWithChildren<CopyTextCellProps>> = ({
+  value,
+  icon,
+  iconProps,
+  children
+}): JSX.Element => {
+  const { getString } = useStrings()
+  const [openTooltip, setOpenTooltip] = useState(false)
+  const showCopySuccess = () => {
+    setOpenTooltip(true)
+    setTimeout(() => {
+      setOpenTooltip(false)
+    }, 1000)
+  }
+  return (
+    <Button
+      className={css.copyButton}
+      intent="primary"
+      minimal
+      variation={ButtonVariation.LINK}
+      rightIcon={defaultTo(icon, 'code-copy')}
+      iconProps={iconProps}
       onClick={evt => {
         killEvent(evt)
         copy(value)
@@ -158,24 +202,56 @@ const ToggleAccordionCell = (props: ToggleAccordionCellProps): JSX.Element => {
 
 interface LinkCellProps {
   label: string
+  subLabel?: string
   prefix?: React.ReactElement
   postfix?: React.ReactElement
   linkTo: string
 }
 
 const LinkCell = (props: LinkCellProps): JSX.Element => {
-  const { prefix, postfix, label, linkTo } = props
+  const { prefix, postfix, label, linkTo, subLabel } = props
   return (
-    <Layout.Horizontal className={css.nameCellContainer} spacing="small">
+    <Layout.Horizontal
+      className={css.nameCellContainer}
+      flex={{ justifyContent: 'flex-start', alignItems: 'flex-start' }}>
       {prefix}
-      <Link to={linkTo}>
-        <Text color={Color.PRIMARY_7} lineClamp={1}>
-          {label}
-        </Text>
-      </Link>
+      <Layout.Vertical>
+        <Link to={linkTo}>
+          <Text color={Color.PRIMARY_7} lineClamp={1}>
+            {label}
+          </Text>
+        </Link>
+        {subLabel && <Text lineClamp={1}>{subLabel}</Text>}
+      </Layout.Vertical>
       {postfix}
     </Layout.Horizontal>
   )
+}
+
+interface DeploymentsCellProps {
+  prodCount?: number
+  nonProdCount?: number
+}
+
+export const DeploymentsCell = ({ prodCount, nonProdCount }: DeploymentsCellProps) => {
+  return (
+    <Layout.Horizontal spacing="xsmall">
+      <Layout.Horizontal spacing="small">
+        <Text font={{ variation: FontVariation.BODY }}>{defaultTo(prodCount, 0)}</Text>
+        <ProdTag />
+      </Layout.Horizontal>
+      <Layout.Horizontal spacing="small">
+        <Text font={{ variation: FontVariation.BODY }}>{defaultTo(nonProdCount, 0)}</Text>
+        <NonProdTag />
+      </Layout.Horizontal>
+    </Layout.Horizontal>
+  )
+}
+
+export const PullCommandCell = ({ value }: CommonCellProps) => {
+  const { getString } = useStrings()
+  if (!value) return <>{getString('na')}</>
+  return <CommandBlock noWrap commandSnippet={value as string} allowCopy onCopy={killEvent} />
 }
 
 export default {
@@ -185,6 +261,9 @@ export default {
   LinkCell,
   TextCell,
   CopyUrlCell,
+  CopyTextCell,
+  DeploymentsCell,
+  PullCommandCell,
   LastModifiedCell,
   ToggleAccordionCell,
   RepositoryLocationBadgeCell

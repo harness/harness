@@ -15,9 +15,9 @@
  */
 
 import type React from 'react'
-import type { Button } from '@harnessio/uicore'
 
 import type { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
+import type RbacButton from '@ar/__mocks__/components/RbacButton'
 import type RbacMenuItem from '@ar/__mocks__/components/RbacMenuItem'
 import type NGBreadcrumbs from '@ar/__mocks__/components/NGBreadcrumbs'
 import type DependencyView from '@ar/__mocks__/components/DependencyView'
@@ -43,6 +43,16 @@ export interface Scope {
   space?: string
 }
 
+export interface PipelineExecutionPathProps {
+  executionIdentifier: string
+  pipelineIdentifier: string
+  module: 'ci' | 'cd'
+}
+
+export interface ServiceDetailsPathProps {
+  serviceId: string
+}
+
 export interface PermissionsRequest {
   resource: { resourceType: ResourceType; resourceIdentifier?: string }
   permissions: PermissionIdentifier[]
@@ -63,7 +73,7 @@ export interface ParentContextObj {
 }
 
 export interface Components {
-  RbacButton: typeof Button
+  RbacButton: typeof RbacButton
   NGBreadcrumbs: typeof NGBreadcrumbs
   RbacMenuItem: typeof RbacMenuItem
 }
@@ -96,6 +106,8 @@ export interface CustomUtils {
   getCustomHeaders: () => Record<string, string>
   getApiBaseUrl: (url: string) => string
   getRouteDefinitions?: (routeParams: Record<string, string>) => ARRouteDefinitionsReturn
+  getRouteToPipelineExecutionView?: (params: Scope & PipelineExecutionPathProps) => string
+  getRouteToServiceDetailsView?: (params: Scope & ServiceDetailsPathProps) => string
 }
 
 export interface MFEAppProps {

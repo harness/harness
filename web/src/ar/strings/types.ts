@@ -17,20 +17,33 @@ export interface StringsMap {
   'artifactList.deployedArtifacts': string
   'artifactList.page': string
   'artifactList.pageHeading': string
+  'artifactList.table.actions.VulnerabilityStatus.digestMenuItemText': string
+  'artifactList.table.actions.VulnerabilityStatus.nonScanned': string
+  'artifactList.table.actions.VulnerabilityStatus.partiallyScanned': string
+  'artifactList.table.actions.VulnerabilityStatus.scanStatus': string
+  'artifactList.table.actions.VulnerabilityStatus.scanned': string
   'artifactList.table.actions.deleteRepository': string
   'artifactList.table.actions.editRepository': string
   'artifactList.table.allRepositories': string
+  'artifactList.table.allVersions': string
+  'artifactList.table.columns.artifactName': string
   'artifactList.table.columns.downloads': string
+  'artifactList.table.columns.environments': string
+  'artifactList.table.columns.lastUpdated': string
   'artifactList.table.columns.latestVersion': string
   'artifactList.table.columns.name': string
+  'artifactList.table.columns.pullCommand': string
   'artifactList.table.columns.repository': string
+  'artifactList.table.columns.sto': string
   'artifactList.table.columns.tags': string
+  'artifactList.table.latestVersions': string
   'artifactList.table.noArtifactsTitle': string
   'digestList.page': string
   'digestList.table.aboutDigest': string
   'digestList.table.columns.digest': string
   'digestList.table.columns.downloads': string
   'digestList.table.columns.osArch': string
+  'digestList.table.columns.scanStatus': string
   'digestList.table.columns.size': string
   'digestList.table.columns.uploadedBy': string
   'digestList.table.noDigestTitle': string
@@ -132,6 +145,8 @@ export interface StringsMap {
   'versionDetails.artifactDetails.layers.size': string
   'versionDetails.artifactDetails.tabs.layers': string
   'versionDetails.artifactDetails.tabs.manifest': string
+  'versionDetails.cards.container.title': string
+  'versionDetails.cards.container.versionDigest': string
   'versionDetails.cards.deploymentsCard.buildTitle': string
   'versionDetails.cards.deploymentsCard.executionId': string
   'versionDetails.cards.deploymentsCard.title': string
@@ -149,6 +164,12 @@ export interface StringsMap {
   'versionDetails.cards.supplyChain.slsaProvenance': string
   'versionDetails.cards.supplyChain.title': string
   'versionDetails.cards.supplyChain.totalComponents': string
+  'versionDetails.deploymentsTable.columns.deploymentPipeline': string
+  'versionDetails.deploymentsTable.columns.environment': string
+  'versionDetails.deploymentsTable.columns.services': string
+  'versionDetails.deploymentsTable.columns.triggeredBy': string
+  'versionDetails.deploymentsTable.columns.type': string
+  'versionDetails.deploymentsTable.noDeploymentsTitle': string
   'versionDetails.overview.generalInformation.createdAndLastModifiedAt': string
   'versionDetails.overview.generalInformation.description': string
   'versionDetails.overview.generalInformation.downloads': string
@@ -205,6 +226,7 @@ export interface StringsMap {
   'cleanupPolicy.placeholder': string
   clearFilters: string
   copied: string
+  copy: string
   createdAt: string
   dateLabel: string
   delete: string
@@ -215,6 +237,8 @@ export interface StringsMap {
   enterPlaceholder: string
   failedToLoadData: string
   harLabel: string
+  harnessAI: string
+  id: string
   lastUpdated: string
   modifiedAt: string
   moduleName: string
@@ -224,11 +248,13 @@ export interface StringsMap {
   noMatchingFilterData: string
   noResultsFound: string
   nonProd: string
+  nonProdCount: string
   optionalField: string
   'packageTypes.dockerPackage': string
   'packageTypes.helmPackage': string
   plusNewName: string
   prod: string
+  prodCount: string
   'repositoryTypes.docker': string
   'repositoryTypes.generic': string
   'repositoryTypes.gradle': string

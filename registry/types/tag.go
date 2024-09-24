@@ -42,6 +42,7 @@ type ArtifactMetadata struct {
 	LatestVersion string
 	CreatedAt     time.Time
 	ModifiedAt    time.Time
+	Version       string
 }
 
 type TagMetadata struct {

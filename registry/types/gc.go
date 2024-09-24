@@ -14,15 +14,11 @@
 
 package types
 
-import (
-	"time"
-)
-
 type GCBlobTask struct {
 	BlobID      int64
-	ReviewAfter time.Time
+	ReviewAfter int64
 	ReviewCount int
-	CreatedAt   time.Time
+	CreatedAt   int64
 	Event       string
 }
 
@@ -30,14 +26,8 @@ type GCBlobTask struct {
 type GCManifestTask struct {
 	RegistryID  int64
 	ManifestID  int64
-	ReviewAfter time.Time
+	ReviewAfter int64
 	ReviewCount int
-	CreatedAt   time.Time
+	CreatedAt   int64
 	Event       string
-}
-
-// GCReviewAfterDefault represents a row in the gc_review_after_defaults table.
-type GCReviewAfterDefault struct {
-	Event string
-	Value time.Duration
 }

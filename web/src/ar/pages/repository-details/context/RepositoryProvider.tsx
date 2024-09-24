@@ -29,8 +29,10 @@ import type { Repository } from '@ar/pages/repository-details/types'
 export interface RepositoryProviderProps {
   data: Repository | undefined
   isDirty: boolean
+  isUpdating: boolean
   setIsDirty: (val: boolean) => void
   setIsLoading: (val: boolean) => void
+  setIsUpdating: (val: boolean) => void
   isReadonly: boolean
   refetch: () => void
 }
@@ -38,8 +40,10 @@ export interface RepositoryProviderProps {
 export const RepositoryProviderContext = createContext<RepositoryProviderProps>({
   data: undefined,
   isDirty: false,
+  isUpdating: false,
   setIsDirty: noop,
   setIsLoading: noop,
+  setIsUpdating: noop,
   isReadonly: false,
   refetch: noop
 })
@@ -48,6 +52,7 @@ const RepositoryProvider: FC<PropsWithChildren<{ className?: string }>> = ({ chi
   const { repositoryIdentifier } = useDecodedParams<RepositoryDetailsPathParams>()
   const [isDirty, setIsDirty] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
   const { usePermission } = useParentHooks()
   const spaceRef = useGetSpaceRef()
   const { scope } = useAppStore()
@@ -62,10 +67,10 @@ const RepositoryProvider: FC<PropsWithChildren<{ className?: string }>> = ({ chi
         projectIdentifier
       },
       resource: {
-        resourceType: ResourceType.SERVICE,
+        resourceType: ResourceType.ARTIFACT_REGISTRY,
         resourceIdentifier: repositoryIdentifier
       },
-      permissions: [PermissionIdentifier.EDIT_SERVICE]
+      permissions: [PermissionIdentifier.EDIT_ARTIFACT_REGISTRY]
     },
     [accountId, projectIdentifier, orgIdentifier, repositoryIdentifier]
   )
@@ -85,8 +90,10 @@ const RepositoryProvider: FC<PropsWithChildren<{ className?: string }>> = ({ chi
       value={{
         data: repositoryData?.content?.data as RepositoryProviderProps['data'],
         isDirty,
+        isUpdating,
         setIsDirty,
         setIsLoading,
+        setIsUpdating,
         isReadonly: !isEdit,
         refetch
       }}>

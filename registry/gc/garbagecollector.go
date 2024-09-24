@@ -36,7 +36,7 @@ func New() Service {
 func (s *Noop) Start(
 	_ context.Context, _ *sqlx.DB, _ corestore.SpaceStore,
 	_ store.BlobRepository, _ storagedriver.StorageDeleter,
-	_ *types.Config, _ store.MediaTypesRepository, _ store.ManifestRepository,
+	_ *types.Config,
 ) {
 	// NOOP
 }

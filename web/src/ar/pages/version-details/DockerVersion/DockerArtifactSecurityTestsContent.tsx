@@ -15,9 +15,23 @@
  */
 
 import React from 'react'
-import { useParentComponents } from '@ar/hooks'
+import { Page } from '@harnessio/uicore'
+import { useStrings } from '@ar/frameworks/strings'
+import type { VersionDetailsTabPathParams } from '@ar/routes/types'
+import { useDecodedParams, useParentComponents } from '@ar/hooks'
 
 export default function DockerArtifactSecurityTestsContent() {
+  const params = useDecodedParams<VersionDetailsTabPathParams>()
   const { VulnerabilityView } = useParentComponents()
-  return <VulnerabilityView />
+  const { getString } = useStrings()
+  return (
+    <Page.Body
+      noData={{
+        when: () => !params.pipelineIdentifier || !params.executionIdentifier,
+        icon: 'container',
+        messageTitle: getString('noResultsFound')
+      }}>
+      <VulnerabilityView />
+    </Page.Body>
+  )
 }

@@ -17,6 +17,10 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const copyButton: string
+export declare const copyUrlBtn: string
 export declare const copyUrlIcon: string
+export declare const deploymentsRow: string
 export declare const nameCellContainer: string
+export declare const nonProd: string
+export declare const prod: string
 export declare const toggleAccordion: string

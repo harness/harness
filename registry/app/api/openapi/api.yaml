@@ -173,9 +173,36 @@ paths:
         - Spaces
       parameters:
         - $ref: "#/components/parameters/spaceRefPathParam"
-        - $ref: "#/components/parameters/LabelsParam"
-        - $ref: "#/components/parameters/packageTypeParam"
         - $ref: "#/components/parameters/RegistryIdentifierParam"
+        - $ref: "#/components/parameters/pageNumber"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/sortOrder"
+        - $ref: "#/components/parameters/sortField"
+        - $ref: "#/components/parameters/searchTerm"
+        - $ref: "#/components/parameters/latestVersion"
+      responses:
+        200:
+          $ref: "#/components/responses/ListArtifactResponse"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifacts:
+    get:
+      summary: List Artifacts for Registry
+      description: Lists all the Artifacts for Registry
+      operationId: GetAllArtifactsByRegistry
+      tags:
+        - Registries
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/LabelsParam"
         - $ref: "#/components/parameters/pageNumber"
         - $ref: "#/components/parameters/pageSize"
         - $ref: "#/components/parameters/sortOrder"
@@ -183,7 +210,7 @@ paths:
         - $ref: "#/components/parameters/searchTerm"
       responses:
         200:
-          $ref: "#/components/responses/ListArtifactResponse"
+          $ref: "#/components/responses/ListRegistryArtifactResponse"
         400:
           $ref: "#/components/responses/BadRequest"
         401:
@@ -764,6 +791,20 @@ components:
             required:
               - status
               - data
+    ListRegistryArtifactResponse:
+      description: response for list artifact
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/Status"
+              data:
+                $ref: "#/components/schemas/ListRegistryArtifact"
+            required:
+              - status
+              - data
     ListArtifactVersionResponse:
       description: response for list versions of artifact
       content:
@@ -894,6 +935,36 @@ components:
           description: A list of Artifact
           items:
             $ref: "#/components/schemas/ArtifactMetadata"
+      required:
+        - artifacts
+    ListRegistryArtifact:
+      type: object
+      description: A list of Artifacts
+      properties:
+        pageCount:
+          type: integer
+          format: int64
+          description: The total number of pages
+          example: 100
+        itemCount:
+          type: integer
+          format: int64
+          description: The total number of items
+          example: 1
+        pageSize:
+          type: integer
+          description: The number of items per page
+          example: 1
+        pageIndex:
+          type: integer
+          format: int64
+          description: The current page
+          example: 0
+        artifacts:
+          type: array
+          description: A list of Artifact
+          items:
+            $ref: "#/components/schemas/RegistryArtifactMetadata"
       required:
         - artifacts
     ListArtifactVersion:
@@ -1029,6 +1100,36 @@ components:
         type:
           $ref: "#/components/schemas/ClientSetupStepType"
     ArtifactMetadata:
+      type: object
+      description: Artifact Metadata
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        registryIdentifier:
+          type: string
+        registryPath:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        downloadsCount:
+          type: integer
+          format: int64
+        lastModified:
+          type: string
+        pullCommand:
+          type: string
+        packageType:
+          $ref: "#/components/schemas/PackageType"
+      required:
+        - name
+        - registryIdentifier
+        - latestVersion
+        - registryPath
+    RegistryArtifactMetadata:
       type: object
       description: Artifact Metadata
       properties:
@@ -1397,7 +1498,7 @@ components:
       description: "ClientSetupStepType type"
       enum:
         - Static
-        - GenerateToken    
+        - GenerateToken
     Error:
       type: object
       properties:
@@ -1503,7 +1604,9 @@ components:
       required: false
       description: Registry Identifier
       schema:
-        type: string
+        type: array
+        items:
+          type: string
     spaceRefPathParam:
       name: space_ref
       in: path
@@ -1601,6 +1704,13 @@ components:
       description: sortField
       schema:
         type: string
+    latestVersion:
+      name: latest_version
+      in: query
+      required: false
+      description: Latest Version Filter.
+      schema:
+        type: boolean
     fromDateParam:
       name: from
       in: query
@@ -1614,4 +1724,4 @@ components:
       required: false
       description: Date. Format - MM/DD/YYYY
       schema:
-        type: string         
+        type: string

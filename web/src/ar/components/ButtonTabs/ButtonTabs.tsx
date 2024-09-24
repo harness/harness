@@ -40,13 +40,14 @@ interface ButtonTabsProps<T> {
   children: React.ReactElement<ButtonTabProps<T>, typeof ButtonTab>[]
   small?: boolean
   bold?: boolean
+  className?: string
 }
 
 export function ButtonTabs<T>(props: ButtonTabsProps<T>): JSX.Element {
-  const { children: tabs, small, id, selectedTabId, onChange, bold } = props
+  const { children: tabs, small, id, selectedTabId, onChange, bold, className } = props
   const selectedTabPannel = tabs.find(each => each.props.id === selectedTabId)
   return (
-    <Container data-testid={id}>
+    <Container className={className} data-testid={id}>
       <ButtonGroup className={css.btnGroup}>
         {tabs.map(each => (
           <Button

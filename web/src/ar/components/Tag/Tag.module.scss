@@ -31,3 +31,19 @@
     color: var(--grey-0) !important;
   }
 }
+
+.tag {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+}
+
+.prodTag {
+  background-color: var(--blue-50) !important;
+  color: var(--blue-900) !important;
+}
+
+.nonProdTag {
+  background-color: var(--teal-50) !important;
+  color: var(--team-900) !important;
+}

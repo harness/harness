@@ -32,10 +32,10 @@ export default function ScanUpstreamProxy({ data }: UpstreamProxyActionProps): J
       onClick={noop}
       permission={{
         resource: {
-          resourceType: ResourceType.SERVICE,
+          resourceType: ResourceType.ARTIFACT_REGISTRY,
           resourceIdentifier: data.identifier
         },
-        permission: PermissionIdentifier.DELETE_SERVICE
+        permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY
       }}
     />
   )

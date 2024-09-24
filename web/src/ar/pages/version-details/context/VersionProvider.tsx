@@ -19,8 +19,10 @@ import classNames from 'classnames'
 import { Page } from '@harnessio/uicore'
 import { ArtifactVersionSummary, useGetArtifactVersionSummaryQuery } from '@harnessio/react-har-service-client'
 
-import { useGetSpaceRef } from '@ar/hooks'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
+import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
+
+import type { DockerVersionDetailsQueryParams } from '../DockerVersion/types'
 
 import css from '../VersionDetails.module.scss'
 
@@ -47,6 +49,8 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
   className
 }): JSX.Element => {
   const spaceRef = useGetSpaceRef(repoKey)
+  const { useQueryParams } = useParentHooks()
+  const { digest } = useQueryParams<DockerVersionDetailsQueryParams>()
 
   const {
     data,
@@ -56,8 +60,12 @@ const VersionProvider: FC<PropsWithChildren<VersionProviderSpcs>> = ({
   } = useGetArtifactVersionSummaryQuery({
     registry_ref: spaceRef,
     artifact: encodeRef(artifactKey),
-    version: versionKey
+    version: versionKey,
+    queryParams: {
+      digest
+    }
   })
+
   const responseData = data?.content?.data
 
   return (

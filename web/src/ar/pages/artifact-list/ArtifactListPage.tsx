@@ -14,47 +14,38 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useMemo, useRef } from 'react'
+import React, { useMemo } from 'react'
 import classNames from 'classnames'
-import { flushSync } from 'react-dom'
-import { defaultTo } from 'lodash-es'
 import { Expander } from '@blueprintjs/core'
+import { HarnessDocTooltip, Page, Button, ButtonVariation } from '@harnessio/uicore'
 import {
-  ExpandingSearchInput,
-  HarnessDocTooltip,
-  Page,
-  type ExpandingSearchInputHandle,
-  Button,
-  ButtonVariation
-} from '@harnessio/uicore'
-import { useGetAllArtifactsQuery } from '@harnessio/react-har-service-client'
+  GetAllHarnessArtifactsQueryQueryParams,
+  useGetAllHarnessArtifactsQuery
+} from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
+import { ButtonTab, ButtonTabs } from '@ar/components/ButtonTabs/ButtonTabs'
 import { useGetSpaceRef, useParentComponents, useParentHooks } from '@ar/hooks'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
-import RepositorySelector from './components/RepositorySelector/RepositorySelector'
-import ArtifactListTable from './components/ArtifactListTable/ArtifactListTable'
+
+import { ArtifactListVersionFilter } from './constants'
 import LabelsSelector from './components/LabelsSelector/LabelsSelector'
+import ArtifactListTable from './components/ArtifactListTable/ArtifactListTable'
+import RepositorySelector from './components/RepositorySelector/RepositorySelector'
+import ArtifactSearchInput from './components/ArtifactSearchInput/ArtifactSearchInput'
 import { useArtifactListQueryParamOptions, type ArtifactListPageQueryParams } from './utils'
+
 import css from './ArtifactListPage.module.scss'
 
-interface ArtifactListPageProps {
-  withHeader?: boolean
-  parentRepoKey?: string
-  pageBodyClassName?: string
-}
-
-function ArtifactListPage({ withHeader = true, parentRepoKey, pageBodyClassName }: ArtifactListPageProps): JSX.Element {
+function ArtifactListPage(): JSX.Element {
   const { getString } = useStrings()
   const { NGBreadcrumbs } = useParentComponents()
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
-  const searchRef = useRef({} as ExpandingSearchInputHandle)
   const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactListPageQueryParams>>()
   const queryParams = useQueryParams<ArtifactListPageQueryParams>(useArtifactListQueryParamOptions())
-  const { searchTerm, isDeployedArtifacts, packageTypes, repositoryKey, page, size, labels } = queryParams
-  const shouldRenderRepositorySelectFilter = !parentRepoKey
-  const shouldRenderPackageTypeSelectFilter = !parentRepoKey
+  const { searchTerm, isDeployedArtifacts, repositoryKey, page, size, latestVersion, packageTypes, labels } =
+    queryParams
   const spaceRef = useGetSpaceRef('')
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
@@ -73,108 +64,108 @@ function ArtifactListPage({ withHeader = true, parentRepoKey, pageBodyClassName 
     refetch,
     isLoading: loading,
     error
-  } = useGetAllArtifactsQuery({
+  } = useGetAllHarnessArtifactsQuery({
     space_ref: spaceRef,
     queryParams: {
       page,
       size,
-      label: labels,
-      package_type: packageTypes,
       search_term: searchTerm,
       sort_field: sortField,
       sort_order: sortOrder,
-      reg_identifier: defaultTo(parentRepoKey, repositoryKey)
-    },
+      reg_identifier: repositoryKey ? [repositoryKey] : undefined,
+      latest_version: latestVersion,
+      deployed_artifact: isDeployedArtifacts,
+      package_type: packageTypes,
+      label: labels
+    } as GetAllHarnessArtifactsQueryQueryParams,
     stringifyQueryParamsOptions: {
       arrayFormat: 'repeat'
     }
   })
 
   const handleClearAllFilters = (): void => {
-    flushSync(searchRef.current.clear)
     updateQueryParams({
       page: 0,
       searchTerm: '',
-      packageTypes: [],
-      isDeployedArtifacts: false
+      isDeployedArtifacts: false,
+      latestVersion: false
     })
   }
 
-  const handleClickLabel = useCallback(
-    (val: string) => {
-      if (labels.includes(val)) return
-      updateQueryParams({
-        labels: [...labels, val],
-        page: DEFAULT_PAGE_INDEX
-      })
-    },
-    [labels]
-  )
-
-  const hasFilter = !!searchTerm || packageTypes.length || isDeployedArtifacts
+  const hasFilter = !!searchTerm || isDeployedArtifacts || latestVersion
   const responseData = data?.content?.data
 
   return (
     <>
-      {withHeader && (
-        <Page.Header
-          title={
-            <div className="ng-tooltip-native">
-              <h2 data-tooltip-id="artifactsPageHeading">{getString('artifactList.pageHeading')}</h2>
-              <HarnessDocTooltip tooltipId="artifactsPageHeading" useStandAlone={true} />
-            </div>
-          }
-          breadcrumbs={<NGBreadcrumbs links={[]} />}
-        />
-      )}
+      <Page.Header
+        title={
+          <div className="ng-tooltip-native">
+            <h2 data-tooltip-id="artifactsPageHeading">{getString('artifactList.pageHeading')}</h2>
+            <HarnessDocTooltip tooltipId="artifactsPageHeading" useStandAlone={true} />
+          </div>
+        }
+        breadcrumbs={<NGBreadcrumbs links={[]} />}
+      />
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>
-          {shouldRenderRepositorySelectFilter && (
-            <RepositorySelector
-              value={repositoryKey}
-              onChange={val => {
-                updateQueryParams({ repositoryKey: val, page: DEFAULT_PAGE_INDEX })
-              }}
-            />
-          )}
-          {shouldRenderPackageTypeSelectFilter && (
-            <PackageTypeSelector
-              value={packageTypes}
-              onChange={val => {
-                updateQueryParams({ packageTypes: val, page: DEFAULT_PAGE_INDEX })
-              }}
-            />
-          )}
+          <ArtifactSearchInput
+            searchTerm={searchTerm || ''}
+            onChange={text => {
+              updateQueryParams({ searchTerm: text || undefined, page: DEFAULT_PAGE_INDEX })
+            }}
+            placeholder={getString('search')}
+          />
+          <RepositorySelector
+            value={repositoryKey}
+            onChange={val => {
+              updateQueryParams({ repositoryKey: val, page: DEFAULT_PAGE_INDEX })
+            }}
+          />
+          <PackageTypeSelector
+            value={packageTypes}
+            onChange={val => {
+              updateQueryParams({ packageTypes: val, page: DEFAULT_PAGE_INDEX })
+            }}
+          />
           <LabelsSelector
             value={labels}
             onChange={val => {
               updateQueryParams({ labels: val, page: DEFAULT_PAGE_INDEX })
             }}
           />
-          {/* TODO: removed till BE support this filter */}
-          {/* <TableFilterCheckbox
-            value={isDeployedArtifacts}
-            label={getString('artifactList.deployedArtifacts')}
-            disabled={false}
-            onChange={val => {
-              updateQueryParams({ isDeployedArtifacts: val, page: DEFAULT_PAGE_INDEX })
-            }}
-          /> */}
           <Expander />
-          <ExpandingSearchInput
-            alwaysExpanded
-            width={200}
-            placeholder={getString('search')}
-            onChange={text => {
-              updateQueryParams({ searchTerm: text || undefined, page: DEFAULT_PAGE_INDEX })
-            }}
-            defaultValue={searchTerm}
-            ref={searchRef}
-          />
+          <ButtonTabs
+            className={css.filterTabContainer}
+            small
+            bold
+            selectedTabId={
+              latestVersion ? ArtifactListVersionFilter.LATEST_VERSION : ArtifactListVersionFilter.ALL_VERSION
+            }
+            onChange={newTab => {
+              updateQueryParams({
+                latestVersion: newTab === ArtifactListVersionFilter.LATEST_VERSION,
+                page: DEFAULT_PAGE_INDEX
+              })
+            }}>
+            <ButtonTab
+              id={ArtifactListVersionFilter.LATEST_VERSION}
+              icon="layers"
+              iconProps={{ size: 12 }}
+              panel={<></>}
+              title={getString('artifactList.table.latestVersions')}
+            />
+            <ButtonTab
+              id={ArtifactListVersionFilter.ALL_VERSION}
+              icon="document"
+              iconProps={{ size: 12 }}
+              panel={<></>}
+              title={getString('artifactList.table.allVersions')}
+            />
+          </ButtonTabs>
         </div>
       </Page.SubHeader>
       <Page.Body
-        className={classNames(css.pageBody, pageBodyClassName)}
+        className={classNames(css.pageBody)}
         loading={loading}
         error={error?.message}
         retryOnError={() => refetch()}
@@ -199,7 +190,6 @@ function ArtifactListPage({ withHeader = true, parentRepoKey, pageBodyClassName 
               setSortingPreference(JSON.stringify(sortArray))
               updateQueryParams({ sort: sortArray })
             }}
-            onClickLabel={handleClickLabel}
             sortBy={sort}
           />
         )}

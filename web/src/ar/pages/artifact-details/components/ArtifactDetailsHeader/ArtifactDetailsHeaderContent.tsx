@@ -30,6 +30,7 @@ import WeeklyDownloads from '@ar/components/PageTitle/WeeklyDownloads'
 import CreatedAndModifiedAt from '@ar/components/PageTitle/CreatedAndModifiedAt'
 import ArtifactTags from '@ar/components/PageTitle/ArtifactTags'
 import NameAndDescription from '@ar/components/PageTitle/NameAndDescription'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 import { useSetupClientModal } from '@ar/pages/repository-details/hooks/useSetupClientModal/useSetupClientModal'
 
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
@@ -109,6 +110,13 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
             onChange={handleUpdateArtifactLabels}
             labels={defaultTo(labels, [])}
             placeholder={getString('artifactDetails.artifactLabelInputPlaceholder')}
+            permission={{
+              permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY,
+              resource: {
+                resourceType: ResourceType.ARTIFACT_REGISTRY,
+                resourceIdentifier: repositoryIdentifier
+              }
+            }}
           />
         </Layout.Vertical>
       </Layout.Horizontal>

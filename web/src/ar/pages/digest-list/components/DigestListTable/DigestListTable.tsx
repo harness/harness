@@ -26,6 +26,7 @@ import {
   DigestNameCell,
   DownloadsCell,
   OsArchCell,
+  ScanStatusCell,
   SizeCell,
   UploadedByCell
 } from './DigestTableCells'
@@ -68,6 +69,12 @@ export default function DigestListTable(props: DigestListTableProps): JSX.Elemen
         Header: getString('digestList.table.columns.downloads'),
         accessor: 'downloadsCount',
         Cell: DownloadsCell
+      },
+      {
+        Header: getString('digestList.table.columns.scanStatus'),
+        accessor: 'scanStatus',
+        Cell: ScanStatusCell,
+        version
       },
       {
         Header: '',

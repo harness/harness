@@ -18,6 +18,12 @@
   flex: 1;
 }
 
+.container {
+  height: auto;
+  min-height: 200px;
+  width: 100%;
+}
+
 .card {
   cursor: pointer;
   &:hover {

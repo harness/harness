@@ -28,11 +28,21 @@ func (c *APIController) ListArtifactLabels(
 	ctx context.Context,
 	r artifact.ListArtifactLabelsRequestObject,
 ) (artifact.ListArtifactLabelsResponseObject, error) {
+	registryRequestParams := &RegistryRequestParams{
+		packageTypesParam: nil,
+		page:              r.Params.Page,
+		size:              r.Params.Size,
+		search:            r.Params.SearchTerm,
+		resource:          ArtifactResource,
+		parentRef:         "",
+		regRef:            string(r.RegistryRef),
+		labelsParam:       nil,
+		sortOrder:         nil,
+		sortField:         nil,
+		registryIDsParam:  nil,
+	}
 	regInfo, _ := c.GetRegistryRequestInfo(
-		ctx, nil, r.Params.Page, r.Params.Size,
-		r.Params.SearchTerm, ArtifactResource, "", string(r.RegistryRef),
-		nil, nil, nil,
-	)
+		ctx, *registryRequestParams)
 
 	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {

@@ -16,31 +16,33 @@
 
 import React, { useCallback, useContext } from 'react'
 import type { FormikProps } from 'formik'
-import { useParams } from 'react-router-dom'
 import { Expander } from '@blueprintjs/core'
 import { Button, ButtonVariation, Container, Layout, Tab, Tabs } from '@harnessio/uicore'
 
-import { useParentHooks } from '@ar/hooks'
-import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryDetailsPathParams } from '@ar/routes/types'
-import ArtifactListPage from '@ar/pages/artifact-list/ArtifactListPage'
+import { useDecodedParams, useParentComponents, useParentHooks } from '@ar/hooks'
+import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
+import { useStrings } from '@ar/frameworks/strings'
 import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import RepositoryDetailsHeaderWidget from '@ar/frameworks/RepositoryStep/RepositoryDetailsHeaderWidget'
 import RepositoryConfigurationFormWidget from '@ar/frameworks/RepositoryStep/RepositoryConfigurationFormWidget'
-import { RepositoryProviderContext } from './context/RepositoryProvider'
+
 import type { Repository } from './types'
 import { RepositoryDetailsTab } from './constants'
+import { RepositoryProviderContext } from './context/RepositoryProvider'
+import RegistryArtifactListPage from '../artifact-list/RegistryArtifactListPage'
 import css from './RepositoryDetailsPage.module.scss'
 
 export default function RepositoryDetails(): JSX.Element | null {
-  const pathParams = useParams<RepositoryDetailsPathParams>()
   const { useUpdateQueryParams, useQueryParams } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams()
+  const { RbacButton } = useParentComponents()
   const { getString } = useStrings()
+  const { repositoryIdentifier } = useDecodedParams<RepositoryDetailsPathParams>()
   const { tab: selectedTabId = RepositoryDetailsTab.PACKAGES } = useQueryParams<{ tab: RepositoryDetailsTab }>()
   const stepRef = React.useRef<FormikProps<unknown> | null>(null)
 
-  const { isDirty, data } = useContext(RepositoryProviderContext)
+  const { isDirty, data, isReadonly, isUpdating } = useContext(RepositoryProviderContext)
 
   const { config } = data as Repository
   const { type } = config
@@ -62,12 +64,19 @@ export default function RepositoryDetails(): JSX.Element | null {
 
   const renderActionBtns = (): JSX.Element => (
     <Layout.Horizontal className={css.btnContainer}>
-      <Button
-        variation={ButtonVariation.PRIMARY}
+      <RbacButton
         text={getString('save')}
         className={css.saveButton}
+        variation={ButtonVariation.PRIMARY}
         onClick={handleSubmitForm}
-        disabled={!isDirty}
+        disabled={!isDirty || isUpdating}
+        permission={{
+          permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY,
+          resource: {
+            resourceType: ResourceType.ARTIFACT_REGISTRY,
+            resourceIdentifier: repositoryIdentifier
+          }
+        }}
       />
       <Button
         className={css.discardBtn}
@@ -95,11 +104,7 @@ export default function RepositoryDetails(): JSX.Element | null {
             title={getString('repositoryDetails.tabs.packages')}
             panel={
               <Container>
-                <ArtifactListPage
-                  withHeader={false}
-                  parentRepoKey={pathParams.repositoryIdentifier}
-                  pageBodyClassName={css.packagesPageBody}
-                />
+                <RegistryArtifactListPage pageBodyClassName={css.packagesPageBody} />
               </Container>
             }
           />
@@ -111,7 +116,7 @@ export default function RepositoryDetails(): JSX.Element | null {
                 packageType={data.packageType as RepositoryPackageType}
                 type={type as RepositoryConfigType}
                 ref={stepRef}
-                readonly={false}
+                readonly={isReadonly}
               />
             }
           />

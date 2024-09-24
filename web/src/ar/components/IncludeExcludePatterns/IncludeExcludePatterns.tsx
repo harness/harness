@@ -83,11 +83,13 @@ export default function IncludeExcludePatterns<T>(props: IncludeExcludePatternsP
         label={includePatternListProps.label}
         name={includePatternListProps.name}
         placeholder={includePatternListProps.placeholder}
+        disabled={disabled}
       />
       <PatternInput
         label={excludePatternListProps.label}
         name={excludePatternListProps.name}
         placeholder={excludePatternListProps.placeholder}
+        disabled={disabled}
       />
     </Container>
   )

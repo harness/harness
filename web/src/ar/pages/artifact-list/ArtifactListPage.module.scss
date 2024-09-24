@@ -35,3 +35,12 @@
     width: 100%;
   }
 }
+
+.filterTabContainer {
+  display: flex;
+  align-items: center;
+
+  & button {
+    --button-height: 32px !important;
+  }
+}

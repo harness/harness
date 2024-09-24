@@ -3,13 +3,26 @@ pageHeading: Artifacts
 deployedArtifacts: Deployed Artifacts
 table:
   noArtifactsTitle: There are no artifact available.
-  allRepositories: All Registries
+  allRepositories: Registries
+  latestVersions: Latest Versions
+  allVersions: All Versions
   columns:
     name: Name
+    artifactName: Artifact Name
     repository: Registry
     tags: Labels
-    downloads: Downloads (In the last week)
+    downloads: Downloads
     latestVersion: Latest Version
+    pullCommand: Pull Command
+    environments: Environments
+    sto: Security Vulnerabilities
+    lastUpdated: Uploaded At
   actions:
     editRepository: Edit Registry
     deleteRepository: Delete Registry
+    VulnerabilityStatus:
+      scanned: Scanned
+      nonScanned: Not Scanned
+      scanStatus: Scan Status
+      partiallyScanned: '{{ scanned }}/{{ total }} Scanned'
+      digestMenuItemText: '{{archName}} (digest: {{digest}})'

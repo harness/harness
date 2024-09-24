@@ -51,10 +51,10 @@ export default function DeleteUpstreamProxy({ data }: UpstreamProxyActionProps):
       onClick={handleDeleteService}
       permission={{
         resource: {
-          resourceType: ResourceType.SERVICE,
+          resourceType: ResourceType.ARTIFACT_REGISTRY,
           resourceIdentifier: data.identifier
         },
-        permission: PermissionIdentifier.DELETE_SERVICE
+        permission: PermissionIdentifier.DELETE_ARTIFACT_REGISTRY
       }}
     />
   )

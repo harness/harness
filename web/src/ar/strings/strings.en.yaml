@@ -6,6 +6,10 @@ discard: Discard
 delete: Delete
 prod: Prod
 nonProd: Non-Prod
+id: 'ID: {{ id }}'
+prodCount: '{{count}} Prod'
+nonProdCount: '{{count}} Non-Prod'
+copy: Copy
 noMatchingFilterData: No results found matching the filter criteria
 stepNotFound: Step not found
 tabNotFound: Tab not found
@@ -14,6 +18,7 @@ copied: Copied
 download: download
 dateLabel: Date
 timeLabel: Time
+harnessAI: Harness AI
 new: NEW
 harLabel: '{{ $.repositoryList.artifactRegistry.label }}'
 na: N/A

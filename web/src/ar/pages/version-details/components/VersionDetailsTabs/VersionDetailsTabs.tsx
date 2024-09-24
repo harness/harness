@@ -16,7 +16,7 @@
 
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { Redirect, Switch, useHistory } from 'react-router-dom'
-import { Container, Tab, Tabs, Text } from '@harnessio/uicore'
+import { Container, Tab, Tabs } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useQueryParams } from '@ar/__mocks__/hooks'
@@ -64,16 +64,16 @@ export default function VersionDetailsTabs(): JSX.Element {
           newRoute = routes.toARVersionDetailsTab({
             ...pathParams,
             versionTab: nextTab,
-            sourceId: '665f0d7575339c1dd7e4a885', // TODO: Update this to correct values
-            artifactId: '66901cc218bcea4482549235' // TODO: Update this to correct values
+            sourceId: data?.sscaArtifactSourceId,
+            artifactId: data?.sscaArtifactId
           })
           break
         case VersionDetailsTab.SECURITY_TESTS:
           newRoute = routes.toARVersionDetailsTab({
             ...pathParams,
             versionTab: nextTab,
-            executionIdentifier: 'ZeRGcQCMSwu1cQhRQuFKFg', // TODO: Update this to correct values
-            pipelineIdentifier: 'SSCA_STO_Clone' // TODO: Update this to correct values
+            executionIdentifier: data?.stoExecutionId,
+            pipelineIdentifier: data?.stoPipelineId
           })
           break
         default:
@@ -93,15 +93,7 @@ export default function VersionDetailsTabs(): JSX.Element {
     <Container className={css.tabsContainer}>
       <Tabs id="versionDetailsTab" selectedTabId={tab} onChange={handleTabChange}>
         {tabList.map(each => (
-          <Tab
-            key={each.value}
-            id={each.value}
-            title={
-              <Text iconProps={each.iconProps} icon={each.icon}>
-                {getString(each.label)}
-              </Text>
-            }
-          />
+          <Tab key={each.value} id={each.value} disabled={each.disabled} title={getString(each.label)} />
         ))}
       </Tabs>
       <Switch>

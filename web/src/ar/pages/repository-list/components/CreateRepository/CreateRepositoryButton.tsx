@@ -39,14 +39,14 @@ export default function CreateRepositoryButton(props: CreateRepositoryButtonProp
 
   // CHANGE_ME: update permissions once we get actual premission for AR module
   const [canDoAction] = usePermission({
-    permissions: [PermissionIdentifier.EDIT_SERVICE],
+    permissions: [PermissionIdentifier.EDIT_ARTIFACT_REGISTRY],
     resourceScope: {
       accountIdentifier: scope.accountId,
       orgIdentifier: scope.orgIdentifier,
       projectIdentifier: scope.projectIdentifier
     },
     resource: {
-      resourceType: ResourceType.SERVICE
+      resourceType: ResourceType.ARTIFACT_REGISTRY
     }
   })
 

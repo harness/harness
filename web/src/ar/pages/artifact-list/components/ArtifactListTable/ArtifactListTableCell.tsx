@@ -14,22 +14,25 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useState } from 'react'
 import { defaultTo } from 'lodash-es'
-import { Position } from '@blueprintjs/core'
+import { Link, useHistory } from 'react-router-dom'
+import { Menu, Position } from '@blueprintjs/core'
+import { Color, FontVariation } from '@harnessio/design-system'
+import { Button, ButtonVariation, Layout, Text } from '@harnessio/uicore'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance } from 'react-table'
-import { Layout, Text } from '@harnessio/uicore'
-import { Color } from '@harnessio/design-system'
-import type { ArtifactMetadata } from '@harnessio/react-har-service-client'
+import type { ArtifactMetadata, StoDigestMetadata } from '@harnessio/react-har-service-client'
 
-import { useRoutes } from '@ar/hooks'
-import Tag from '@ar/components/Tag/Tag'
-import { useStrings } from '@ar/frameworks/strings'
+import { useParentComponents, useRoutes } from '@ar/hooks'
 import TableCells from '@ar/components/TableCells/TableCells'
+import type { RepositoryPackageType } from '@ar/common/types'
 import LabelsPopover from '@ar/components/LabelsPopover/LabelsPopover'
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
-import type { RepositoryPackageType } from '@ar/common/types'
-import { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import { useStrings } from '@ar/frameworks/strings'
+import { getShortDigest } from '@ar/pages/digest-list/utils'
+import { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
+
+import css from './ArtifactListTable.module.scss'
 
 type CellTypeWithActions<D extends Record<string, any>, V = any> = TableInstance<D> & {
   column: ColumnInstance<D>
@@ -51,62 +54,37 @@ export const ArtifactNameCell: Renderer<{
   const { original } = row
   const { onClickLabel } = column
   const routes = useRoutes()
-  const value = original.name
+  const { name: value, version } = original
   return (
-    <TableCells.LinkCell
-      prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} iconProps={{ size: 24 }} />}
-      linkTo={routes.toARArtifactDetails({
-        repositoryIdentifier: original.registryIdentifier,
-        artifactIdentifier: value
-      })}
-      label={value}
-      postfix={
-        <LabelsPopover
-          popoverProps={{
-            position: Position.RIGHT
-          }}
-          labels={defaultTo(original.labels, [])}
-          tagProps={{
-            interactive: true,
-            onClick: e => onClickLabel(e.currentTarget.ariaValueText as string)
-          }}
-        />
-      }
-    />
-  )
-}
-
-export const ArtifactTagsCell: CellType = ({ value }) => {
-  const { getString } = useStrings()
-  if (!Array.isArray(value) || !value.length) {
-    return (
-      <Text color={Color.GREY_900} font={{ size: 'small' }}>
-        {getString('na')}
-      </Text>
-    )
-  }
-  return (
-    <Layout.Horizontal spacing="small">
-      {Array.isArray(value) &&
-        value.map(each => (
-          <Tag key={each} isArtifactTag>
-            {each}
-          </Tag>
-        ))}
-    </Layout.Horizontal>
-  )
-}
-
-export const RepositoryNameCell: CellType = ({ value }) => {
-  const routes = useRoutes()
-  return (
-    <TableCells.LinkCell
-      linkTo={routes.toARRepositoryDetails({
-        repositoryIdentifier: value,
-        tab: RepositoryDetailsTab.PACKAGES
-      })}
-      label={value}
-    />
+    <Layout.Vertical>
+      <TableCells.LinkCell
+        prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} iconProps={{ size: 24 }} />}
+        linkTo={routes.toARVersionDetailsTab({
+          repositoryIdentifier: original.registryIdentifier,
+          artifactIdentifier: value,
+          versionIdentifier: defaultTo(version, ''),
+          versionTab: VersionDetailsTab.OVERVIEW
+        })}
+        label={value}
+        subLabel={version}
+        postfix={
+          <LabelsPopover
+            popoverProps={{
+              position: Position.RIGHT
+            }}
+            labels={defaultTo(original.labels, [])}
+            tagProps={{
+              interactive: true,
+              onClick: e => {
+                if (typeof onClickLabel === 'function') {
+                  onClickLabel(e.currentTarget.ariaValueText as string)
+                }
+              }
+            }}
+          />
+        }
+      />
+    </Layout.Vertical>
   )
 }
 
@@ -114,23 +92,107 @@ export const ArtifactDownloadsCell: CellType = ({ value }) => {
   return <TableCells.CountCell value={value} icon="download-box" iconProps={{ size: 12 }} />
 }
 
-export const LatestArtifactCell: CellType = ({ row }) => {
-  const { getString } = useStrings()
+export const ArtifactDeploymentsCell: CellType = ({ row }) => {
   const { original } = row
-  const { latestVersion, lastModified } = original || {}
-  if (!latestVersion) {
+  const { deploymentMetadata } = original
+  const { nonProdEnvCount, prodEnvCount } = deploymentMetadata || {}
+  return <TableCells.DeploymentsCell prodCount={prodEnvCount} nonProdCount={nonProdEnvCount} />
+}
+
+export const ArtifactListPullCommandCell: CellType = ({ value }) => {
+  const { getString } = useStrings()
+  return <TableCells.CopyTextCell value={value}>{getString('copy')}</TableCells.CopyTextCell>
+}
+
+export const ArtifactListVulnerabilitiesCell: CellType = ({ row }) => {
+  const { original } = row
+  const { stoMetadata, registryIdentifier, name, version } = original
+  const { scannedCount, totalCount, digestMetadata } = stoMetadata || {}
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false)
+  const { getString } = useStrings()
+  const { RbacMenuItem } = useParentComponents()
+  const routes = useRoutes()
+  const history = useHistory()
+
+  const handleRenderDigestMenuItem = (digest: StoDigestMetadata) => {
     return (
-      <Text color={Color.GREY_900} font={{ size: 'small' }}>
-        {getString('na')}
-      </Text>
+      <RbacMenuItem
+        text={getString('artifactList.table.actions.VulnerabilityStatus.digestMenuItemText', {
+          archName: digest.osArch,
+          digest: getShortDigest(digest.digest || '')
+        })}
+        onClick={() => {
+          const url = routes.toARVersionDetailsTab({
+            repositoryIdentifier: registryIdentifier,
+            artifactIdentifier: name,
+            versionIdentifier: version as string,
+            versionTab: VersionDetailsTab.SECURITY_TESTS,
+            pipelineIdentifier: digest.stoPipelineId,
+            executionIdentifier: digest.stoExecutionId
+          })
+          history.push(`${url}?digest=${digest.digest}`)
+        }}
+      />
     )
   }
+
+  if (!scannedCount) {
+    return <Text>{getString('artifactList.table.actions.VulnerabilityStatus.nonScanned')}</Text>
+  }
+
   return (
-    <Layout.Vertical spacing="small">
-      <Text color={Color.PRIMARY_7} font={{ size: 'small' }}>
-        {latestVersion}
+    <Button
+      className={css.cellBtn}
+      tooltip={
+        <Menu
+          className={css.optionsMenu}
+          onClick={e => {
+            e.stopPropagation()
+            setIsOptionsOpen(false)
+          }}>
+          {digestMetadata?.map(handleRenderDigestMenuItem)}
+        </Menu>
+      }
+      tooltipProps={{
+        interactionKind: 'click',
+        onInteraction: nextOpenState => {
+          setIsOptionsOpen(nextOpenState)
+        },
+        isOpen: isOptionsOpen,
+        position: Position.BOTTOM
+      }}
+      variation={ButtonVariation.LINK}>
+      <Text font={{ variation: FontVariation.BODY }} color={Color.PRIMARY_7}>
+        {getString('artifactList.table.actions.VulnerabilityStatus.partiallyScanned', {
+          total: defaultTo(totalCount, 0),
+          scanned: defaultTo(scannedCount, 0)
+        })}
       </Text>
-      <TableCells.LastModifiedCell value={defaultTo(lastModified, 0)} />
-    </Layout.Vertical>
+    </Button>
   )
+}
+
+export const ScanStatusCell: CellType = ({ row }) => {
+  const { original } = row
+  const router = useRoutes()
+  const { version = '', name, registryIdentifier } = original
+  const { getString } = useStrings()
+  const linkTo = router.toARVersionDetailsTab({
+    repositoryIdentifier: registryIdentifier,
+    artifactIdentifier: name,
+    versionIdentifier: version,
+    versionTab: VersionDetailsTab.OVERVIEW
+  })
+  return (
+    <Link to={linkTo} target="_blank">
+      <Text color={Color.PRIMARY_7} rightIcon="main-share" rightIconProps={{ size: 12, color: Color.PRIMARY_7 }}>
+        {getString('artifactList.table.actions.VulnerabilityStatus.scanStatus')}
+      </Text>
+    </Link>
+  )
+}
+
+export const LatestArtifactCell: CellType = ({ row }) => {
+  const { original } = row
+  return <TableCells.LastModifiedCell value={defaultTo(original.lastModified, 0)} />
 }

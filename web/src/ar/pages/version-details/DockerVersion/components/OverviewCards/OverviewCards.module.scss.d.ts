@@ -17,4 +17,5 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const card: string
+export declare const container: string
 export declare const securityTestsCard: string

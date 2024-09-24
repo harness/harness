@@ -38,6 +38,7 @@ function DockerRepositoryUrlInput(
       <FormInput.RadioGroup
         name="config.source"
         radioGroup={{ inline: true }}
+        disabled={readonly}
         label={getString('upstreamProxyDetails.createForm.source.title')}
         items={[
           {

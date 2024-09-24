@@ -74,6 +74,9 @@ type ServerInterface interface {
 	// List Artifact Versions
 	// (GET /registry/{registry_ref}/artifact/{artifact}/versions)
 	GetAllArtifactVersions(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params GetAllArtifactVersionsParams)
+	// List Artifacts for Registry
+	// (GET /registry/{registry_ref}/artifacts)
+	GetAllArtifactsByRegistry(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params GetAllArtifactsByRegistryParams)
 	// Returns CLI Client Setup Details
 	// (GET /registry/{registry_ref}/client-setup-details)
 	GetClientSetupDetails(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params GetClientSetupDetailsParams)
@@ -191,6 +194,12 @@ func (_ Unimplemented) GetArtifactVersionSummary(w http.ResponseWriter, r *http.
 // List Artifact Versions
 // (GET /registry/{registry_ref}/artifact/{artifact}/versions)
 func (_ Unimplemented) GetAllArtifactVersions(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, params GetAllArtifactVersionsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List Artifacts for Registry
+// (GET /registry/{registry_ref}/artifacts)
+func (_ Unimplemented) GetAllArtifactsByRegistry(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params GetAllArtifactsByRegistryParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -995,6 +1004,83 @@ func (siw *ServerInterfaceWrapper) GetAllArtifactVersions(w http.ResponseWriter,
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// GetAllArtifactsByRegistry operation middleware
+func (siw *ServerInterfaceWrapper) GetAllArtifactsByRegistry(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAllArtifactsByRegistryParams
+
+	// ------------- Optional query parameter "label" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "label", r.URL.Query(), &params.Label)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "label", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "page", r.URL.Query(), &params.Page)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "size" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "size", r.URL.Query(), &params.Size)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "size", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "sort_order" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sort_order", r.URL.Query(), &params.SortOrder)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort_order", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "sort_field" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sort_field", r.URL.Query(), &params.SortField)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort_field", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "search_term" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "search_term", r.URL.Query(), &params.SearchTerm)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "search_term", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAllArtifactsByRegistry(w, r, registryRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // GetClientSetupDetails operation middleware
 func (siw *ServerInterfaceWrapper) GetClientSetupDetails(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -1103,22 +1189,6 @@ func (siw *ServerInterfaceWrapper) GetAllArtifacts(w http.ResponseWriter, r *htt
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetAllArtifactsParams
 
-	// ------------- Optional query parameter "label" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "label", r.URL.Query(), &params.Label)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "label", Err: err})
-		return
-	}
-
-	// ------------- Optional query parameter "package_type" -------------
-
-	err = runtime.BindQueryParameter("form", true, false, "package_type", r.URL.Query(), &params.PackageType)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "package_type", Err: err})
-		return
-	}
-
 	// ------------- Optional query parameter "reg_identifier" -------------
 
 	err = runtime.BindQueryParameter("form", true, false, "reg_identifier", r.URL.Query(), &params.RegIdentifier)
@@ -1164,6 +1234,14 @@ func (siw *ServerInterfaceWrapper) GetAllArtifacts(w http.ResponseWriter, r *htt
 	err = runtime.BindQueryParameter("form", true, false, "search_term", r.URL.Query(), &params.SearchTerm)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "search_term", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "latest_version" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "latest_version", r.URL.Query(), &params.LatestVersion)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "latest_version", Err: err})
 		return
 	}
 
@@ -1428,6 +1506,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/registry/{registry_ref}/artifact/{artifact}/versions", wrapper.GetAllArtifactVersions)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/registry/{registry_ref}/artifacts", wrapper.GetAllArtifactsByRegistry)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/registry/{registry_ref}/client-setup-details", wrapper.GetClientSetupDetails)
 	})
 	r.Group(func(r chi.Router) {
@@ -1554,6 +1635,14 @@ type ListArtifactResponseJSONResponse struct {
 type ListArtifactVersionResponseJSONResponse struct {
 	// Data A list of Artifact versions
 	Data ListArtifactVersion `json:"data"`
+
+	// Status Indicates if the request was successful or not
+	Status Status `json:"status"`
+}
+
+type ListRegistryArtifactResponseJSONResponse struct {
+	// Data A list of Artifacts
+	Data ListRegistryArtifact `json:"data"`
 
 	// Status Indicates if the request was successful or not
 	Status Status `json:"status"`
@@ -2719,6 +2808,73 @@ func (response GetAllArtifactVersions500JSONResponse) VisitGetAllArtifactVersion
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetAllArtifactsByRegistryRequestObject struct {
+	RegistryRef RegistryRefPathParam `json:"registry_ref"`
+	Params      GetAllArtifactsByRegistryParams
+}
+
+type GetAllArtifactsByRegistryResponseObject interface {
+	VisitGetAllArtifactsByRegistryResponse(w http.ResponseWriter) error
+}
+
+type GetAllArtifactsByRegistry200JSONResponse struct {
+	ListRegistryArtifactResponseJSONResponse
+}
+
+func (response GetAllArtifactsByRegistry200JSONResponse) VisitGetAllArtifactsByRegistryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAllArtifactsByRegistry400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response GetAllArtifactsByRegistry400JSONResponse) VisitGetAllArtifactsByRegistryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAllArtifactsByRegistry401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response GetAllArtifactsByRegistry401JSONResponse) VisitGetAllArtifactsByRegistryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAllArtifactsByRegistry403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response GetAllArtifactsByRegistry403JSONResponse) VisitGetAllArtifactsByRegistryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAllArtifactsByRegistry404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response GetAllArtifactsByRegistry404JSONResponse) VisitGetAllArtifactsByRegistryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetAllArtifactsByRegistry500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response GetAllArtifactsByRegistry500JSONResponse) VisitGetAllArtifactsByRegistryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetClientSetupDetailsRequestObject struct {
 	RegistryRef RegistryRefPathParam `json:"registry_ref"`
 	Params      GetClientSetupDetailsParams
@@ -3040,6 +3196,9 @@ type StrictServerInterface interface {
 	// List Artifact Versions
 	// (GET /registry/{registry_ref}/artifact/{artifact}/versions)
 	GetAllArtifactVersions(ctx context.Context, request GetAllArtifactVersionsRequestObject) (GetAllArtifactVersionsResponseObject, error)
+	// List Artifacts for Registry
+	// (GET /registry/{registry_ref}/artifacts)
+	GetAllArtifactsByRegistry(ctx context.Context, request GetAllArtifactsByRegistryRequestObject) (GetAllArtifactsByRegistryResponseObject, error)
 	// Returns CLI Client Setup Details
 	// (GET /registry/{registry_ref}/client-setup-details)
 	GetClientSetupDetails(ctx context.Context, request GetClientSetupDetailsRequestObject) (GetClientSetupDetailsResponseObject, error)
@@ -3571,6 +3730,33 @@ func (sh *strictHandler) GetAllArtifactVersions(w http.ResponseWriter, r *http.R
 	}
 }
 
+// GetAllArtifactsByRegistry operation middleware
+func (sh *strictHandler) GetAllArtifactsByRegistry(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params GetAllArtifactsByRegistryParams) {
+	var request GetAllArtifactsByRegistryRequestObject
+
+	request.RegistryRef = registryRef
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAllArtifactsByRegistry(ctx, request.(GetAllArtifactsByRegistryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAllArtifactsByRegistry")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetAllArtifactsByRegistryResponseObject); ok {
+		if err := validResponse.VisitGetAllArtifactsByRegistryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetClientSetupDetails operation middleware
 func (sh *strictHandler) GetClientSetupDetails(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params GetClientSetupDetailsParams) {
 	var request GetClientSetupDetailsRequestObject
@@ -3682,69 +3868,70 @@ func (sh *strictHandler) GetAllRegistries(w http.ResponseWriter, r *http.Request
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"y6/L/wUAAP//B0v/XHmOAAA=",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

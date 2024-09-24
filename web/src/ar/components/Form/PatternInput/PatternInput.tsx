@@ -31,7 +31,7 @@ interface PatternInputProps extends StyledProps {
 }
 
 function PatternInput<T>(props: PatternInputProps & { formik: FormikContextType<T> }): JSX.Element {
-  const { label, name, placeholder, formik } = props
+  const { label, name, placeholder, formik, disabled } = props
 
   const formValue = get(formik.values, name, []) as string[]
 
@@ -53,6 +53,7 @@ function PatternInput<T>(props: PatternInputProps & { formik: FormikContextType<
         onChange={selectedItems => {
           formik.setFieldValue(name, selectedItems)
         }}
+        readonly={disabled}
       />
     </FormGroup>
   )

@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/app/store/database"
 	"github.com/harness/gitness/registry/config"
+	"github.com/harness/gitness/registry/gc"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -64,9 +65,11 @@ func BlobStorageProvider(c *types.Config) (storagedriver.StorageDriver, error) {
 	return d, err
 }
 
-func NewHandlerProvider(controller *docker.Controller, spaceStore corestore.SpaceStore,
+func NewHandlerProvider(
+	controller *docker.Controller, spaceStore corestore.SpaceStore,
 	tokenStore corestore.TokenStore, userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
-	urlProvider urlprovider.Provider, authorizer authz.Authorizer) *ocihandler.Handler {
+	urlProvider urlprovider.Provider, authorizer authz.Authorizer,
+) *ocihandler.Handler {
 	return ocihandler.NewHandler(controller, spaceStore, tokenStore, userCtrl, authenticator, urlProvider, authorizer)
 }
 
@@ -77,6 +80,7 @@ var WireSet = wire.NewSet(
 	pkg.WireSet,
 	docker.WireSet,
 	router.WireSet,
+	gc.WireSet,
 )
 
 func Wire(_ *types.Config) (RegistryApp, error) {

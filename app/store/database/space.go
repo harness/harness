@@ -125,6 +125,40 @@ func (s *SpaceStore) FindByRef(ctx context.Context, spaceRef string) (*types.Spa
 	return s.findByRef(ctx, spaceRef, nil)
 }
 
+// FindByRefCaseInsensitive finds the space using the spaceRef.
+func (s *SpaceStore) FindByRefCaseInsensitive(ctx context.Context, spaceRef string) (*types.Space, error) {
+	segments := paths.Segments(spaceRef)
+	if len(segments) < 1 {
+		return nil, fmt.Errorf("invalid space reference provided")
+	}
+
+	var stmt squirrel.SelectBuilder
+	switch {
+	case len(segments) == 1:
+		stmt = database.Builder.
+			Select("space_id").
+			From("spaces").
+			Where("LOWER(space_uid) = LOWER(?) ", segments[0])
+
+	case len(segments) > 1:
+		stmt = buildRecursiveSelectQueryUsingCaseInsensitivePath(segments)
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create sql query: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var spaceID int64
+	if err = db.GetContext(ctx, &spaceID, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom select query")
+	}
+
+	return s.find(ctx, spaceID, nil)
+}
+
 // FindByRefAndDeletedAt finds the space using the spaceRef as either the id or the space path and deleted timestamp.
 func (s *SpaceStore) FindByRefAndDeletedAt(
 	ctx context.Context,
@@ -701,7 +735,8 @@ func (s *SpaceStore) list(
 	return s.mapToSpaces(ctx, s.db, dst)
 }
 
-func (s *SpaceStore) listAll(ctx context.Context,
+func (s *SpaceStore) listAll(
+	ctx context.Context,
 	id int64,
 	opts *types.SpaceFilter,
 ) ([]*types.Space, error) {
@@ -901,7 +936,7 @@ func mapToInternalSpace(s *types.Space) *space {
 
 // buildRecursiveSelectQueryUsingPath builds the recursive select query using path among active or soft deleted spaces.
 func buildRecursiveSelectQueryUsingPath(segments []string, deletedAt int64) squirrel.SelectBuilder {
-	leaf := "s" + fmt.Sprint(len(segments)-1)
+	leaf := "s" + strconv.Itoa(len(segments)-1)
 
 	// add the current space (leaf)
 	stmt := database.Builder.
@@ -910,10 +945,37 @@ func buildRecursiveSelectQueryUsingPath(segments []string, deletedAt int64) squi
 		Where(leaf+".space_uid = ? AND "+leaf+".space_deleted = ?", segments[len(segments)-1], deletedAt)
 
 	for i := len(segments) - 2; i >= 0; i-- {
-		parentAlias := "s" + fmt.Sprint(i)
-		alias := "s" + fmt.Sprint(i+1)
+		parentAlias := "s" + strconv.Itoa(i)
+		alias := "s" + strconv.Itoa(i+1)
 
-		stmt = stmt.InnerJoin(fmt.Sprintf("spaces %s ON %s.space_id = %s.space_parent_id", parentAlias, parentAlias, alias)).
+		stmt = stmt.InnerJoin(fmt.Sprintf("spaces %s ON %s.space_id = %s.space_parent_id", parentAlias, parentAlias,
+			alias)).
+			Where(parentAlias+".space_uid = ?", segments[i])
+	}
+
+	// add parent check for root
+	stmt = stmt.Where("s0.space_parent_id IS NULL")
+
+	return stmt
+}
+
+// buildRecursiveSelectQueryUsingCaseInsensitivePath builds the recursive select query using path among active or soft
+// deleted spaces.
+func buildRecursiveSelectQueryUsingCaseInsensitivePath(segments []string) squirrel.SelectBuilder {
+	leaf := "s" + strconv.Itoa(len(segments)-1)
+
+	// add the current space (leaf)
+	stmt := database.Builder.
+		Select(leaf+".space_id").
+		From("spaces "+leaf).
+		Where("LOWER("+leaf+".space_uid) = LOWER(?)", segments[len(segments)-1])
+
+	for i := len(segments) - 2; i >= 0; i-- {
+		parentAlias := "s" + strconv.Itoa(i)
+		alias := "s" + strconv.Itoa(i+1)
+
+		stmt = stmt.InnerJoin(fmt.Sprintf("spaces %s ON %s.space_id = %s.space_parent_id", parentAlias, parentAlias,
+			alias)).
 			Where(parentAlias+".space_uid = ?", segments[i])
 	}
 

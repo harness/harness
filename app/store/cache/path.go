@@ -24,7 +24,7 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-// pathCacheGetter is used to hook a SpacePathStore as source of a PathCache.
+// pathCacheGetter is used to hook a spacePathStore as source of a PathCache.
 // IMPORTANT: It assumes that the pathCache already transformed the key.
 type pathCacheGetter struct {
 	spacePathStore store.SpacePathStore

@@ -16,8 +16,9 @@ package docker
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
-	corestore "github.com/harness/gitness/app/store"
+	gitnessstore "github.com/harness/gitness/app/store"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
+	"github.com/harness/gitness/registry/app/event"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
@@ -49,17 +50,17 @@ func ManifestServiceProvider(
 	manifestDao store.ManifestRepository, blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository,
 	manifestRefDao store.ManifestReferenceRepository, tagDao store.TagRepository, imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository, layerDao store.LayerRepository,
-	gcService gc.Service, tx dbtx.Transactor,
+	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter, spacePathStore gitnessstore.SpacePathStore,
 ) ManifestService {
 	return NewManifestService(
 		registryDao, manifestDao, blobRepo, mtRepository, tagDao, imageDao,
-		artifactDao, layerDao, manifestRefDao, tx, gcService,
+		artifactDao, layerDao, manifestRefDao, tx, gcService, reporter, spacePathStore,
 	)
 }
 
 func RemoteRegistryProvider(
 	local *LocalRegistry, app *App, upstreamProxyConfigRepo store.UpstreamProxyConfigRepository,
-	spacePathStore corestore.SpacePathStore, secretService secret.Service,
+	spacePathStore gitnessstore.SpacePathStore, secretService secret.Service,
 ) *RemoteRegistry {
 	return NewRemoteRegistry(local, app, upstreamProxyConfigRepo, spacePathStore, secretService).(*RemoteRegistry)
 }
@@ -68,7 +69,7 @@ func ControllerProvider(
 	local *LocalRegistry,
 	remote *RemoteRegistry,
 	controller *pkg.CoreController,
-	spaceStore corestore.SpaceStore,
+	spaceStore gitnessstore.SpaceStore,
 	authorizer authz.Authorizer,
 ) *Controller {
 	return NewController(local, remote, controller, spaceStore, authorizer)
@@ -78,8 +79,12 @@ func StorageServiceProvider(cfg *types.Config, driver storagedriver.StorageDrive
 	return GetStorageService(cfg, driver)
 }
 
+func ProvideReporter() event.Reporter {
+	return &event.Noop{}
+}
+
 var ControllerSet = wire.NewSet(ControllerProvider)
 var RegistrySet = wire.NewSet(LocalRegistryProvider, ManifestServiceProvider, RemoteRegistryProvider)
 var StorageServiceSet = wire.NewSet(StorageServiceProvider)
 var AppSet = wire.NewSet(NewApp)
-var WireSet = wire.NewSet(ControllerSet, RegistrySet, StorageServiceSet, AppSet, gc.WireSet)
+var WireSet = wire.NewSet(ControllerSet, RegistrySet, StorageServiceSet, AppSet)

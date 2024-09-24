@@ -18,7 +18,9 @@ import React, { useState } from 'react'
 import classNames from 'classnames'
 import { Button, ButtonVariation, Layout, useToggleOpen } from '@harnessio/uicore'
 
+import { useParentComponents } from '@ar/hooks'
 import TagIcon from '@ar/components/MultiTagsInput/TagIcon'
+import type { RbacButtonProps } from '@ar/__mocks__/components/RbacButton'
 import MultiTagsInput from '@ar/components/MultiTagsInput/MultiTagsInput'
 
 import css from './PageTitle.module.scss'
@@ -27,14 +29,16 @@ interface ArtifactTagsProps {
   labels: string[]
   placeholder?: string
   onChange: (items: string[]) => Promise<boolean>
+  permission?: RbacButtonProps['permission']
 }
 
 const EMPTY_TAG_VALUE = '+ Labels'
 
 export default function ArtifactTags(props: ArtifactTagsProps): JSX.Element | null {
-  const { labels, onChange, placeholder } = props
+  const { labels, onChange, placeholder, permission } = props
   const [selectedItems, setSelectedItems] = useState(labels)
   const [query, setQuery] = useState('')
+  const { RbacButton } = useParentComponents()
   const { isOpen: isEdit, open, close } = useToggleOpen(false)
 
   const handleOnSubmit = async () => {
@@ -83,13 +87,14 @@ export default function ArtifactTags(props: ArtifactTagsProps): JSX.Element | nu
         }}
       />
       {!isEdit && !!selectedItems.length && (
-        <Button
+        <RbacButton
           className={css.iconBtn}
           minimal
           iconProps={{ size: 20 }}
           variation={ButtonVariation.ICON}
           icon="code-edit"
           onClick={() => open()}
+          permission={permission}
         />
       )}
       {isEdit && (
@@ -107,13 +112,14 @@ export default function ArtifactTags(props: ArtifactTagsProps): JSX.Element | nu
               setQuery('')
             }}
           />
-          <Button
+          <RbacButton
             className={css.iconBtn}
             minimal
             variation={ButtonVariation.ICON}
             iconProps={{ size: 20 }}
             icon="small-tick"
             onClick={handleOnSubmit}
+            permission={permission}
           />
         </>
       )}

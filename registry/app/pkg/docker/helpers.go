@@ -52,7 +52,7 @@ func GetRegistryCheckAccess(
 	for i := range reqPermissions {
 		permissionCheck := types.PermissionCheck{
 			Permission: reqPermissions[i],
-			Scope:      types.Scope{SpacePath: space.Identifier},
+			Scope:      types.Scope{SpacePath: space.Path},
 			Resource: types.Resource{
 				Type:       enum.ResourceTypeRegistry,
 				Identifier: registry.Name,

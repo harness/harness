@@ -15,7 +15,7 @@
  */
 
 import React from 'react'
-import classNames from 'classnames'
+import { defaultTo } from 'lodash-es'
 import { Link } from 'react-router-dom'
 import type { Cell, CellValue, ColumnInstance, Renderer, Row, TableInstance, UseExpandedRowProps } from 'react-table'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -90,12 +90,13 @@ export const VersionSizeCell: CellType = ({ value }) => {
   return <TableCells.SizeCell value={value} />
 }
 
-export const VersionDeploymentsCell: CellType = () => {
+export const VersionDeploymentsCell: CellType = ({ row }) => {
+  const { original } = row
   return (
-    <Layout.Vertical spacing="xsmall">
-      <Text className={classNames(css.deploymentsRow, css.prod)}>0 Prod</Text>
-      <Text className={classNames(css.deploymentsRow, css.nonProd)}>0 Non-Prod</Text>
-    </Layout.Vertical>
+    <TableCells.DeploymentsCell
+      prodCount={defaultTo(original.deploymentMetadata?.prodEnvCount, 0)}
+      nonProdCount={defaultTo(original.deploymentMetadata?.nonProdEnvCount, 0)}
+    />
   )
 }
 

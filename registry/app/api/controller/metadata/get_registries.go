@@ -32,11 +32,20 @@ func (c *APIController) GetAllRegistries(
 	ctx context.Context,
 	r artifact.GetAllRegistriesRequestObject,
 ) (artifact.GetAllRegistriesResponseObject, error) {
-	regInfo, _ := c.GetRegistryRequestInfo(
-		ctx, r.Params.PackageType, r.Params.Page, r.Params.Size,
-		r.Params.SearchTerm, RepositoryResource, string(r.SpaceRef), "", nil,
-		r.Params.SortOrder, r.Params.SortField,
-	)
+	registryRequestParams := &RegistryRequestParams{
+		packageTypesParam: nil,
+		page:              r.Params.Page,
+		size:              r.Params.Size,
+		search:            r.Params.SearchTerm,
+		resource:          RepositoryResource,
+		parentRef:         string(r.SpaceRef),
+		regRef:            "",
+		labelsParam:       nil,
+		sortOrder:         r.Params.SortOrder,
+		sortField:         r.Params.SortField,
+		registryIDsParam:  nil,
+	}
+	regInfo, _ := c.GetRegistryRequestInfo(ctx, *registryRequestParams)
 
 	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {

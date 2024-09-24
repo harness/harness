@@ -32,10 +32,10 @@ export default function ScanRepositoryMenuItem({ data }: RepositoryActionsProps)
       onClick={noop}
       permission={{
         resource: {
-          resourceType: ResourceType.SERVICE,
+          resourceType: ResourceType.ARTIFACT_REGISTRY,
           resourceIdentifier: defaultTo(data?.identifier, '')
         },
-        permission: PermissionIdentifier.DELETE_SERVICE
+        permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY
       }}
     />
   )

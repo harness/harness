@@ -71,6 +71,7 @@ export default function UpstreamProxyAuthenticationFormContent({
             value: UpstreamProxyAuthenticationMode.ANONYMOUS
           }
         ]}
+        disabled={readonly}
       />
       {selectedRadioValue === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD && (
         <Container className={css.authContainer}>

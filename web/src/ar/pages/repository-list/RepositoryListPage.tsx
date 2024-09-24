@@ -43,7 +43,7 @@ function RepositoryListPage(): JSX.Element {
   const spaceRef = useGetSpaceRef()
   const queryParamOptions = useArtifactRepositoriesQueryParamOptions()
   const queryParams = useQueryParams<ArtifactRepositoryListPageQueryParams>(queryParamOptions)
-  const { searchTerm, page, size, environmentTypes, repositoryTypes } = queryParams
+  const { searchTerm, page, size, repositoryTypes } = queryParams
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
@@ -85,7 +85,7 @@ function RepositoryListPage(): JSX.Element {
     })
   }
 
-  const hasFilter = !!searchTerm || repositoryTypes.length || environmentTypes.length
+  const hasFilter = !!searchTerm || repositoryTypes.length
 
   const responseData = data?.content.data
 
