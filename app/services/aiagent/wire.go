@@ -18,8 +18,6 @@ import (
 	capabilitiesctrl "github.com/harness/gitness/app/api/controller/capabilities"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/capabilities"
-	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/git"
 
 	"github.com/google/wire"
 )
@@ -29,15 +27,11 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideAiAgent(
-	repoStore store.RepoStore,
-	git git.Interface,
 	authorizer authz.Authorizer,
 	cr *capabilities.Registry,
 	cc *capabilitiesctrl.Controller,
 ) (*HarnessIntelligence, error) {
 	return &HarnessIntelligence{
-		repoStore,
-		git,
 		authorizer,
 		cr,
 		cc,

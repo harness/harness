@@ -414,7 +414,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	capabilitiesController := capabilities2.ProvideController(registry)
-	harnessIntelligence, err := aiagent.ProvideAiAgent(repoStore, gitInterface, authorizer, registry, capabilitiesController)
+	harnessIntelligence, err := aiagent.ProvideAiAgent(authorizer, registry, capabilitiesController)
 	if err != nil {
 		return nil, err
 	}

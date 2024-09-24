@@ -44,7 +44,13 @@ func (c *Controller) GeneratePipeline(
 		RepoRef: in.RepoRef,
 	}
 
-	output, err := c.pipeline.Generate(ctx, generateRequest)
+	// do permission check on repo here?
+	repo, err := c.repoStore.FindByRef(ctx, in.RepoRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
+	}
+
+	output, err := c.intelligenceService.Generate(ctx, generateRequest, repo)
 	if err != nil {
 		return nil, fmt.Errorf("generate pipeline: %w", err)
 	}

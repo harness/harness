@@ -35,7 +35,7 @@ func (c *Controller) SuggestPipeline(
 		Pipeline: in.Pipeline,
 	}
 
-	output, err := c.pipeline.Suggest(ctx, suggestionRequest)
+	output, err := c.intelligenceService.Suggest(ctx, suggestionRequest)
 	if err != nil {
 		return nil, fmt.Errorf("suggest pipeline: %w", err)
 	}

@@ -21,9 +21,7 @@ import (
 	capabilitiesctrl "github.com/harness/gitness/app/api/controller/capabilities"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/capabilities"
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/genai"
-	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	capabilitytypes "github.com/harness/gitness/types/capabilities"
 
@@ -31,8 +29,6 @@ import (
 )
 
 type HarnessIntelligence struct {
-	repoStore  store.RepoStore
-	git        git.Interface
 	authorizer authz.Authorizer
 	cr         *capabilities.Registry
 	cc         *capabilitiesctrl.Controller
@@ -57,14 +53,11 @@ func capabilityResponseToChatContext(
 }
 
 func (s *HarnessIntelligence) Generate(
-	ctx context.Context, req *types.PipelineGenerateRequest) (*types.PipelineGenerateResponse, error) {
+	ctx context.Context,
+	req *types.PipelineGenerateRequest,
+	repo *types.Repository) (*types.PipelineGenerateResponse, error) {
 	if req.RepoRef == "" {
 		return nil, fmt.Errorf("no repo ref specified")
-	}
-	// do permission check on repo here?
-	repo, err := s.repoStore.FindByRef(ctx, req.RepoRef)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
 
 	conversationID := uuid.New()
@@ -137,14 +130,9 @@ func (s *HarnessIntelligence) CapabilitiesLoop(
 
 func (s *HarnessIntelligence) Update(
 	ctx context.Context,
-	req *types.PipelineUpdateRequest) (*types.PipelineUpdateResponse, error) {
+	req *types.PipelineUpdateRequest, repo *types.Repository) (*types.PipelineUpdateResponse, error) {
 	if req.RepoRef == "" {
 		return nil, fmt.Errorf("no repo ref specified")
-	}
-	// do permission check on repo here?
-	repo, err := s.repoStore.FindByRef(ctx, req.RepoRef)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
 
 	conversationID := uuid.New()
@@ -186,16 +174,6 @@ func (s *HarnessIntelligence) Suggest(
 	_ context.Context,
 	_ *types.PipelineSuggestionsRequest) (*types.PipelineSuggestionsResponse, error) {
 	return &types.PipelineSuggestionsResponse{
-		// TODO Update to be V0 Yaml
-		Suggestions: []types.Suggestion{
-			{
-				ID:             "add-testing-stage",
-				Prompt:         "add a testing stage",
-				UserSuggestion: "You should follow best practices by adding a testing stage",
-				Suggestion: "kind: pipeline\nstages:\n  - steps:\n    - name: build\n      " +
-					"timeout: 10m\n      run:\n        script: go build\n    - run:\n        " +
-					"script: go test\n      on-failure:\n        errors: all\n        action: ignore",
-			},
-		},
+		Suggestions: []types.Suggestion{},
 	}, nil
 }
