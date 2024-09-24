@@ -82,7 +82,7 @@ func (c *Controller) Rebase(
 		AllowBypass:        in.BypassRules,
 		IsRepoOwner:        isRepoOwner,
 		Repo:               repo,
-		RefAction:          protection.RefActionUpdate,
+		RefAction:          protection.RefActionUpdateForce,
 		RefType:            protection.RefTypeBranch,
 		RefNames:           []string{in.HeadBranch},
 	})
