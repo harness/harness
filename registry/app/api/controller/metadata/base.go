@@ -65,9 +65,9 @@ type RegistryRequestParams struct {
 	page              *api.PageNumber
 	size              *api.PageSize
 	search            *api.SearchTerm
-	resource          string
-	parentRef         string
-	regRef            string
+	Resource          string
+	ParentRef         string
+	RegRef            string
 	labelsParam       *api.LabelsParam
 	sortOrder         *api.SortOrder
 	sortField         *api.SortField
@@ -158,7 +158,7 @@ func (c *APIController) GetRegistryRequestInfo(
 		labels = *registryRequestParams.labelsParam
 	}
 
-	sortByField = GetSortByField(sortByField, registryRequestParams.resource)
+	sortByField = GetSortByField(sortByField, registryRequestParams.Resource)
 	sortByOrder = GetSortByOrder(sortByOrder)
 
 	offset := GetOffset(registryRequestParams.size, registryRequestParams.page)
@@ -170,7 +170,7 @@ func (c *APIController) GetRegistryRequestInfo(
 		searchTerm = string(*registryRequestParams.search)
 	}
 
-	baseInfo, err := c.GetRegistryRequestBaseInfo(ctx, registryRequestParams.parentRef, registryRequestParams.regRef)
+	baseInfo, err := c.GetRegistryRequestBaseInfo(ctx, registryRequestParams.ParentRef, registryRequestParams.RegRef)
 	if err != nil {
 		return nil, err
 	}
