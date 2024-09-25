@@ -25,6 +25,7 @@ import (
 )
 
 const (
+	//TODO: Update when ready to change repo and build
 	issuer = "Gitness"
 )
 
@@ -35,7 +36,7 @@ const (
 	OciSource Source = "oci"
 )
 
-// Claims defines gitness jwt claims.
+// Claims defines Harness jwt claims.
 type Claims struct {
 	jwt.StandardClaims
 

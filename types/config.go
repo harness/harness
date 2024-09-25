@@ -28,7 +28,7 @@ import (
 
 // Config stores the system configuration.
 type Config struct {
-	// InstanceID specifis the ID of the gitness instance.
+	// InstanceID specifis the ID of the Harness instance.
 	// NOTE: If the value is not provided the hostname of the machine is used.
 	InstanceID string `envconfig:"GITNESS_INSTANCE_ID"`
 
@@ -70,7 +70,7 @@ type Config struct {
 		GitSSH string `envconfig:"GITNESS_URL_GIT_SSH"`
 
 		// API defines the external URL via which the rest API is reachable.
-		// NOTE: for routing to work properly, the request path reaching gitness has to end with `/api`
+		// NOTE: for routing to work properly, the request path reaching Harness has to end with `/api`
 		// (this could be after proxy path rewrite).
 		// Value is derived from Base unless explicitly specified (e.g. http://localhost:3000/api).
 		API string `envconfig:"GITNESS_URL_API"`
@@ -84,7 +84,7 @@ type Config struct {
 		Internal string `envconfig:"GITNESS_URL_INTERNAL"`
 
 		// Container is the endpoint that can be used by running container builds to communicate
-		// with gitness (for example while performing a clone on a local repo).
+		// with Harness (for example while performing a clone on a local repo).
 		// host.docker.internal allows a running container to talk to services exposed on the host
 		// (either running directly or via a port exposed in a docker container).
 		// Value is derived from HTTP.Server unless explicitly specified (e.g. http://host.docker.internal:3000).
@@ -169,7 +169,7 @@ type Config struct {
 		// should be attached to.
 		// This can be needed when we don't want to use host.docker.internal (eg when a service mesh
 		// or proxy is being used) and instead want all the containers to run on the same network as
-		// the gitness container so that they can interact via the container name.
+		// the Harness container so that they can interact via the container name.
 		// In that case, GITNESS_URL_CONTAINER should also be changed
 		// (eg to http://<gitness_container_name>:<port>).
 		ContainerNetworks []string `envconfig:"GITNESS_CI_CONTAINER_NETWORKS"`

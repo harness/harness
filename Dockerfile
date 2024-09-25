@@ -16,7 +16,7 @@ COPY ./web .
 RUN yarn && yarn build && yarn cache clean
 
 # ---------------------------------------------------------#
-#                   Build gitness image                    #
+#                   Build Harness image                    #
 # ---------------------------------------------------------#
 FROM --platform=$BUILDPLATFORM golang:1.22-alpine3.18 as builder
 

@@ -351,7 +351,7 @@ func ProvideTriggerConfig(config *types.Config) trigger.Config {
 	}
 }
 
-// ProvideLockConfig generates the `lock` package config from the gitness config.
+// ProvideLockConfig generates the `lock` package config from the Harness config.
 func ProvideLockConfig(config *types.Config) lock.Config {
 	return lock.Config{
 		App:           config.Lock.AppNamespace,
@@ -414,7 +414,7 @@ func ProvideDockerConfig(config *types.Config) (*infraprovider.DockerConfig, err
 	if config.Docker.MachineHostName == "" {
 		gitnessBaseURL, err := url.Parse(config.URL.Base)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse Gitness base URL %s: %w", gitnessBaseURL, err)
+			return nil, fmt.Errorf("unable to parse Harness base URL %s: %w", gitnessBaseURL, err)
 		}
 		config.Docker.MachineHostName = gitnessBaseURL.Hostname()
 	}

@@ -1,6 +1,6 @@
 apiVersion: v2
-name: gitness
-description: A Helm chart for gitness
+name: harness-open-source
+description: A Helm chart for Harness Open Source
 
 # A chart can be either an 'application' or a 'library' chart.
 #

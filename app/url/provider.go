@@ -43,7 +43,7 @@ type Provider interface {
 	GetInternalAPIURL(ctx context.Context) string
 
 	// GenerateContainerGITCloneURL generates a URL that can be used by CI container builds to
-	// interact with gitness and clone a repo.
+	// interact with Harness and clone a repo.
 	GenerateContainerGITCloneURL(ctx context.Context, repoPath string) string
 
 	// GenerateGITCloneURL generates the public git clone URL for the provided repo path.
@@ -79,13 +79,13 @@ type Provider interface {
 	RegistryURL() string
 }
 
-// Provider provides the URLs of the gitness system.
+// Provider provides the URLs of the Harness system.
 type provider struct {
 	// internalURL stores the URL via which the service is reachable at internally
 	// (no need for internal services to go via public route).
 	internalURL *url.URL
 
-	// containerURL stores the URL that can be used to communicate with gitness from inside a
+	// containerURL stores the URL that can be used to communicate with Harness from inside a
 	// build container.
 	containerURL *url.URL
 

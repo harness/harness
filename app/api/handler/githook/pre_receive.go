@@ -41,7 +41,7 @@ func HandlePreReceive(
 			return
 		}
 
-		// gitness doesn't require any custom git connector.
+		// Harness doesn't require any custom git connector.
 		out, err := githookCtrl.PreReceive(ctx, git, session, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)

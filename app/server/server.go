@@ -19,7 +19,7 @@ import (
 	"github.com/harness/gitness/http"
 )
 
-// Server is the http server for gitness.
+// Server is the http server for Harness.
 type Server struct {
 	*http.Server
 }

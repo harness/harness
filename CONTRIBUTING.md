@@ -1,12 +1,12 @@
-# Contributing to Gitness
+# Contributing to Harness
 
-Thank you for your interest in contributing to the Gitness project. Gitnes uses GitHub to manage reviews of pull requests.
+Thank you for your interest in open source contributions to Harness. Harness uses GitHub to manage open source reviews of pull requests.
 
 * If you are a new contributor see: [Steps to Contribute](#steps-to-contribute)
 
 * If you have a minor fix or improvement, feel free to create a pull request. Please provide necessary details in the pull request description and use a meaningful title.
 
-* If you plan to do something more involved, first discuss your ideas by [raising an issue](https://github.com/harness/gitness/issues). This will avoid unnecessary work and surely give you and us a good deal of inspiration. 
+* If you plan to do something more involved, first discuss your ideas by [raising an issue](https://github.com/harness/harness/issues). This will avoid unnecessary work and surely give you and us a good deal of inspiration. 
 
 * Relevant coding style guidelines are 
 
@@ -19,11 +19,11 @@ Thank you for your interest in contributing to the Gitness project. Gitnes uses 
 
 Should you wish to work on an issue, please claim it first by commenting on the GitHub issue that you want to work on. This is to prevent duplicated efforts from contributors on the same issue.
 
-Please check the [`good-first-issue`](https://github.com/harness/gitness/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label to find issues that are good for getting started. If you have questions about one of the issues, with or without the tag, please comment on them and one of the maintainers will clarify it. For a quicker response, contact us over [slack](https://docs.gitness.com/support#slack) or join our [weekly office hours](https://docs.gitness.com/support#weekly-office-hours).
+Please check the [`good-first-issue`](https://github.com/harness/harness/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) label to find issues that are good for getting started. If you have questions about one of the issues, with or without the tag, please comment on them and one of the maintainers will clarify it. For a quicker response, contact us over [slack](https://developer.harness.io/docs/open-source/support#slack).
 
 ### Local Development
 
-Please review [Gitness development](https://github.com/harness/gitness/tree/main?tab=readme-ov-file#gitness-development) to build and test your code locally. 
+Please review [Harness development](https://github.com/harness/harness/tree/main?tab=readme-ov-file#harness-development) to build and test your code locally. 
 
 ### Pre-commit Hook
 
@@ -31,7 +31,7 @@ We have a pre-commit hook to ensure code quality before committing changes. This
 
 ### Lint Check
 
-Our CI Linter pipeline conducts automated checks for code quality, with [separate lint checks for Go and TypeScript](https://github.com/harness/gitness/blob/main/.github/workflows/ci-lint.yml). These checks help ensure adherence to coding standards and identify potential issues early in the development process. Thank you for contributing to our code quality efforts!
+Our CI Linter pipeline conducts automated checks for code quality, with [separate lint checks for Go and TypeScript](https://github.com/harness/harness/blob/main/.github/workflows/ci-lint.yml). These checks help ensure adherence to coding standards and identify potential issues early in the development process. Thank you for contributing to our code quality efforts!
 
 ## Pull Request Checklist
 
@@ -45,7 +45,7 @@ Our CI Linter pipeline conducts automated checks for code quality, with [separat
 
 ## Dependency management
 
-The Gitness project uses [Go modules](https://golang.org/cmd/go/#hdr-Modules__module_versions__and_more) to manage dependencies on external packages.
+Harness uses [Go modules](https://golang.org/cmd/go/#hdr-Modules__module_versions__and_more) to manage dependencies on external packages.
 
 To add or update a new dependency, use the `go get` command:
 

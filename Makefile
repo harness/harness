@@ -25,7 +25,7 @@ init: ## Install git hooks to perform pre-commit checks
 	git config core.hooksPath .githooks
 	git config commit.template .gitmessage
 
-dep: $(deps) ## Install the deps required to generate code and build gitness
+dep: $(deps) ## Install the deps required to generate code and build Harness
 	@echo "Installing dependencies"
 	@go mod download
 
@@ -34,12 +34,12 @@ tools: $(tools) ## Install tools required for the build
 
 ###############################################################################
 #
-# Gitness Build and testing rules
+# Harness Build and testing rules
 #
 ###############################################################################
 
-build: generate ## Build the all-in-one gitness binary
-	@echo "Building Gitness Server"
+build: generate ## Build the all-in-one Harness binary
+	@echo "Building Harness Server"
 	go build -o ./gitness ./cmd/gitness
 
 test: generate  ## Run the go tests

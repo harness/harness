@@ -22,7 +22,7 @@ import (
 
 type (
 	// Service provides access to commit information via
-	// the SCM provider. Today, this is gitness but it can
+	// the SCM provider. Today, this is Harness but it can
 	// be extendible to any SCM provider.
 	Service interface {
 		// ref is the ref to fetch the commit from, eg refs/heads/master

@@ -74,7 +74,7 @@ func (c *ControllerClient) PreReceive(
 
 	out, err := c.githookCtrl.PreReceive(
 		ctx,
-		c.git, // gitness doesn't require any custom git connector.
+		c.git, // Harness doesn't require any custom git connector.
 		nil,   // TODO: update once githooks are auth protected
 		types.GithookPreReceiveInput{
 			GithookInputBase: c.baseInput,
@@ -96,7 +96,7 @@ func (c *ControllerClient) Update(
 
 	out, err := c.githookCtrl.Update(
 		ctx,
-		c.git, // gitness doesn't require any custom git connector.
+		c.git, // Harness doesn't require any custom git connector.
 		nil,   // TODO: update once githooks are auth protected
 		types.GithookUpdateInput{
 			GithookInputBase: c.baseInput,
@@ -118,7 +118,7 @@ func (c *ControllerClient) PostReceive(
 
 	out, err := c.githookCtrl.PostReceive(
 		ctx,
-		c.git, // gitness doesn't require any custom git connector.
+		c.git, // Harness doesn't require any custom git connector.
 		nil,   // TODO: update once githooks are auth protected
 		types.GithookPostReceiveInput{
 			GithookInputBase: c.baseInput,

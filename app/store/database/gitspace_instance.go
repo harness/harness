@@ -59,7 +59,7 @@ type gitspaceInstance struct {
 	GitSpaceConfigID int64                          `db:"gits_gitspace_config_id"`
 	URL              null.String                    `db:"gits_url"`
 	State            enum.GitspaceInstanceStateType `db:"gits_state"`
-	// TODO: migrate to principal int64 id to use principal cache and consistent with gitness code.
+	// TODO: migrate to principal int64 id to use principal cache and consistent with Harness code.
 	UserUID        string                  `db:"gits_user_uid"`
 	ResourceUsage  null.String             `db:"gits_resource_usage"`
 	SpaceID        int64                   `db:"gits_space_id"`

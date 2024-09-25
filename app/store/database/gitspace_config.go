@@ -72,7 +72,7 @@ type gitspaceConfig struct {
 	CodeRepoURL             string                    `db:"gconf_code_repo_url"`
 	DevcontainerPath        null.String               `db:"gconf_devcontainer_path"`
 	Branch                  string                    `db:"gconf_branch"`
-	// TODO: migrate to principal int64 id to use principal cache and consistent with gitness code.
+	// TODO: migrate to principal int64 id to use principal cache and consistent with Harness code.
 	UserUID            string   `db:"gconf_user_uid"`
 	SpaceID            int64    `db:"gconf_space_id"`
 	Created            int64    `db:"gconf_created"`

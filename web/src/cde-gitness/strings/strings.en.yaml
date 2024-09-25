@@ -70,13 +70,13 @@ listing:
   ownerAndCreated: Owner & Created On
 create:
   repositoryDetails: Repository Details
-  gitnessRepositories: Gitness Repositories
+  gitnessRepositories: Harness Repositories
   thirdPartyGitRepositories: Other Public Git Repositories
   branchPlaceholder: Enter the Branch name
   selectBranchPlaceholder: Select branch
   searchRepositoryPlaceholder: Search for a repository
   searchBranchPlaceholder: Search for a branch
-  repoNotFound: 'Create a repo <strong>{{repo}}</strong> in Gitness'
+  repoNotFound: 'Create a repo <strong>{{repo}}</strong>'
   gitspaceCreateSuccess: Gitspace created successfully
   gitspaceCreateFailed: Gitspace creation failed
   subtext: Start Coding, no setup required. Dedicated cloud development environments with your favorite editor.

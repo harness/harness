@@ -28,8 +28,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// systemServicePrincipal is the principal representing gitness.
-// It is used for all operations executed by gitness itself.
+// systemServicePrincipal is the principal representing Harness.
+// It is used for all operations executed by Harness itself.
 var systemServicePrincipal *types.Principal
 
 var ErrAdminEmailRequired = errors.New("config.Principal.Admin.Email is required")
@@ -42,7 +42,7 @@ func NewSystemServiceSession() *auth.Session {
 }
 
 // pipelineServicePrincipal is the principal that is used during
-// pipeline executions for calling gitness APIs.
+// pipeline executions for calling Harness APIs.
 var pipelineServicePrincipal *types.Principal
 
 func NewPipelineServiceSession() *auth.Session {
@@ -53,7 +53,7 @@ func NewPipelineServiceSession() *auth.Session {
 }
 
 // gitspaceServicePrincipal is the principal that is used during
-// gitspace token injection for calling gitness APIs.
+// gitspace token injection for calling Harness APIs.
 var gitspaceServicePrincipal *types.Principal
 
 func NewGitspaceServiceSession() *auth.Session {
@@ -147,7 +147,7 @@ func createAdminUser(
 	return usr, nil
 }
 
-// SystemService sets up the gitness service principal that is used for
+// SystemService sets up the Harness service principal that is used for
 // resources that are automatically created by the system.
 func SystemService(
 	ctx context.Context,
@@ -181,7 +181,7 @@ func SystemService(
 }
 
 // PipelineService sets up the pipeline service principal that is used during
-// pipeline executions for calling gitness APIs.
+// pipeline executions for calling Harness APIs.
 func PipelineService(
 	ctx context.Context,
 	config *types.Config,
@@ -211,7 +211,7 @@ func PipelineService(
 }
 
 // GitspaceService sets up the gitspace service principal that is used during
-// gitspace credential injection for calling gitness APIs.
+// gitspace credential injection for calling Harness APIs.
 func GitspaceService(
 	ctx context.Context,
 	config *types.Config,

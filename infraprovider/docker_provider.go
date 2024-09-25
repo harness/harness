@@ -48,7 +48,7 @@ func NewDockerProvider(
 	}
 }
 
-// Provision assumes a docker engine is already running on the gitness host machine and re-uses that as infra.
+// Provision assumes a docker engine is already running on the Harness host machine and re-uses that as infra.
 // It does not start docker engine. It creates a docker volume using the given gitspace config identifier.
 func (d DockerProvider) Provision(
 	ctx context.Context,

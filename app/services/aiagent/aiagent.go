@@ -95,7 +95,7 @@ type PipelineYaml struct {
 	Yaml string `yaml:"yaml"`
 }
 
-// CapabilitiesLoop TODO: this should be replaced with an async model for Harness Enterprise, but remain for gitness.
+// CapabilitiesLoop TODO: this should be replaced with an async model for Harness Enterprise, but remain for Harness.
 func (s *HarnessIntelligence) CapabilitiesLoop(
 	ctx context.Context, req *genai.ChatRequest) (*genai.ChatRequest, error) {
 	returnToUser := false

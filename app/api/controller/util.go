@@ -69,7 +69,7 @@ func CreateRPCExternalWriteParams(
 }
 
 // CreateRPCInternalWriteParams creates base write parameters for git internal write operations.
-// Internal write operations are git pushes that originate from the Gitness server.
+// Internal write operations are git pushes that originate from the Harness server.
 func CreateRPCInternalWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,

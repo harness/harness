@@ -92,7 +92,7 @@ type CheckPayloadText struct {
 }
 
 // CheckPayloadInternal is for internal use for more seamless integration for
-// gitness CI status checks.
+// Harness CI status checks.
 type CheckPayloadInternal struct {
 	Number     int64 `json:"execution_number"`
 	RepoID     int64 `json:"repo_id"`

@@ -5,6 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
+            //TODO update this when we are ready to cutover
             "name": "Gitness",
             "type": "go",
             "request": "launch",

@@ -27,7 +27,7 @@ type Payload struct {
 	PrincipalID int64
 	RequestID   string
 	Disabled    bool
-	Internal    bool // Internal calls originate from Gitness, and external calls are direct git pushes.
+	Internal    bool // Internal calls originate from Harness, and external calls are direct git pushes.
 }
 
 func (p Payload) Validate() error {

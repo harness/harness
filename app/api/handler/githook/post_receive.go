@@ -40,8 +40,7 @@ func HandlePostReceive(
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
-
-		// gitness doesn't require any custom git connector.
+		// Harness doesn't require any custom git connector.
 		out, err := githookCtrl.PostReceive(ctx, git, session, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)

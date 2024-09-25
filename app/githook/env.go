@@ -33,7 +33,7 @@ var (
 
 // GenerateEnvironmentVariables generates the required environment variables for a payload
 // constructed from the provided parameters.
-// The parameter `internal` should be true if the call is coming from the Gitness
+// The parameter `internal` should be true if the call is coming from the Harness
 // and therefore protection from rules shouldn't be verified.
 func GenerateEnvironmentVariables(
 	ctx context.Context,

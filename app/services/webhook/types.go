@@ -281,7 +281,7 @@ func identityInfoFrom(identity git.Identity) IdentityInfo {
 	}
 }
 
-// ReferenceInfo describes a unique reference in gitness.
+// ReferenceInfo describes a unique reference in Harness.
 // It contains both the reference name as well as the repo the reference belongs to.
 type ReferenceInfo struct {
 	Name string         `json:"name"`

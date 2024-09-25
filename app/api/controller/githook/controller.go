@@ -99,7 +99,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repo with id %d: %w", repoID, err)
 	}
 
-	// TODO: execute permission check. block anything but gitness service?
+	// TODO: execute permission check. block anything but Harness service?
 
 	return repo, nil
 }

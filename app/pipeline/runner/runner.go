@@ -51,7 +51,7 @@ var Privileged = []string{
 }
 
 // dockerOpts returns back the options to be overridden from docker options set
-// in the environment. If values are specified in gitness, they get preference.
+// in the environment. If values are specified in Harness, they get preference.
 func dockerOpts(config *types.Config) []dockerclient.Opt {
 	var overrides []dockerclient.Opt
 
@@ -71,7 +71,7 @@ func NewExecutionRunner(
 	resolver *resolver.Manager,
 ) (*runtime2.Runner, error) {
 	// For linux/windows, containers need to have extra hosts set in order to interact with
-	// gitness. For docker desktop for mac, this is built in and not needed.
+	// Harness. For docker desktop for mac, this is built in and not needed.
 	extraHosts := []string{}
 	if goruntime.GOOS != "darwin" {
 		extraHosts = []string{"host.docker.internal:host-gateway"}

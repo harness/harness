@@ -41,7 +41,7 @@ const (
 	HTTPRequestPathUpdate = "update"
 )
 
-// RestClientFactory creates clients that make rest api calls to gitness to execute githooks.
+// RestClientFactory creates clients that make rest api calls to Harness to execute githooks.
 type RestClientFactory struct{}
 
 func (f *RestClientFactory) NewClient(envVars map[string]string) (hook.Client, error) {
@@ -62,7 +62,7 @@ func (f *RestClientFactory) NewClient(envVars map[string]string) (hook.Client, e
 	return NewRestClient(payload), nil
 }
 
-// RestClient is the hook.Client used to call the githooks api of gitness api server.
+// RestClient is the hook.Client used to call the githooks api of Harness api server.
 type RestClient struct {
 	httpClient *http.Client
 	baseURL    string
@@ -81,7 +81,7 @@ func NewRestClient(
 	}
 }
 
-// PreReceive calls the pre-receive githook api of the gitness api server.
+// PreReceive calls the pre-receive githook api of the Harness api server.
 func (c *RestClient) PreReceive(
 	ctx context.Context,
 	in hook.PreReceiveInput,
@@ -92,7 +92,7 @@ func (c *RestClient) PreReceive(
 	})
 }
 
-// Update calls the update githook api of the gitness api server.
+// Update calls the update githook api of the Harness api server.
 func (c *RestClient) Update(
 	ctx context.Context,
 	in hook.UpdateInput,
@@ -103,7 +103,7 @@ func (c *RestClient) Update(
 	})
 }
 
-// PostReceive calls the post-receive githook api of the gitness api server.
+// PostReceive calls the post-receive githook api of the Harness api server.
 func (c *RestClient) PostReceive(
 	ctx context.Context,
 	in hook.PostReceiveInput,

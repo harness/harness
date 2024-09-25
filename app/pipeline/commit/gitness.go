@@ -30,7 +30,7 @@ func newService(git git.Interface) Service {
 	return &service{git: git}
 }
 
-// FindRef finds information about a commit in gitness for the git ref.
+// FindRef finds information about a commit in Harness for the git ref.
 // This is using the branch only as the ref at the moment, can be changed
 // when needed to take any ref (like sha, tag).
 func (f *service) FindRef(
@@ -53,7 +53,7 @@ func (f *service) FindRef(
 	return controller.MapCommit(branchOutput.Branch.Commit)
 }
 
-// FindCommit finds information about a commit in gitness for the git SHA.
+// FindCommit finds information about a commit in Harness for the git SHA.
 func (f *service) FindCommit(
 	ctx context.Context,
 	repo *types.Repository,

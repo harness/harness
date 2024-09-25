@@ -878,12 +878,12 @@ importRepo:
   passwordReq: Password is required
 importRepos:
   title: Import Repositories
-  content: Import multiple repositories from GitLab Group, GitHub Org or Bitbucket Project to this project in Gitness.
+  content: Import multiple repositories from GitLab Group, GitHub Org or Bitbucket Project to this project.
 importSpace:
   title: Import Project
   createASpace: Create a project
   authorization: Authorization
-  content: Import a GitLab Group, GitHub Org or Bitbucket Project to a new Project in Gitness. Entities at the top level will be imported to the project.
+  content: Import a GitLab Group, GitHub Org or Bitbucket Project to a new Project. Entities at the top level will be imported to the project.
   next: Next step
   details: Details of target to import
   organizationName: Organization Name
@@ -948,7 +948,7 @@ exportSpace:
   exportRepo: Upgrading {repoCount} {repoCount|1:repository,repositories}
 spaceUpdate: Project Updated
 generate: Generate
-generateHelptext: Let Gitness build your Pipeline for you.
+generateHelptext: Let Harness build your Pipeline for you.
 enterAddress: Enter Address
 enterGitlabPlaceholder: https://gitlab.com/
 enterGithubPlaceholder: https://api.github.com/

@@ -28,9 +28,9 @@ type (
 	}
 
 	// Service provides access to contents of files in
-	// the SCM provider. Today, this is gitness but it should
+	// the SCM provider. Today, this is Harness but it should
 	// be extendible to any SCM provider.
-	// The plan is for all remote repos to be pointers inside gitness
+	// The plan is for all remote repos to be pointers inside Harness
 	// so a repo entry would always exist. If this changes, the interface
 	// can be updated.
 	Service interface {
