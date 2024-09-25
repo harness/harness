@@ -74,8 +74,9 @@ export const Label: React.FC<LabelProps> = props => {
       <Tag
         onClick={e => {
           if (onClick) {
-            onClick()
+            e.preventDefault()
             e.stopPropagation()
+            onClick()
           }
         }}
         className={cx(css.labelTag, className, { [css.removeBtnTag]: removeLabelBtn })}>
@@ -154,8 +155,9 @@ export const Label: React.FC<LabelProps> = props => {
       <Tag
         onClick={e => {
           if (onClick) {
-            onClick()
+            e.preventDefault()
             e.stopPropagation()
+            onClick()
           }
         }}
         className={cx(css.labelTag, className, { [css.removeBtnTag]: removeLabelBtn })}>

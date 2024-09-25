@@ -28,7 +28,7 @@ import {
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import { Case, Match, Render, Truthy } from 'react-jsx-match'
@@ -236,16 +236,12 @@ export default function PullRequests() {
         width: '100%',
         Cell: ({ row }: CellProps<TypesPullReq>) => {
           return (
-            <Container
+            <Link
               className={css.rowLink}
-              onClick={() =>
-                history.push(
-                  routes.toCODEPullRequest({
-                    repoPath: repoMetadata?.path as string,
-                    pullRequestId: String(row.original.number)
-                  })
-                )
-              }>
+              to={routes.toCODEPullRequest({
+                repoPath: repoMetadata?.path as string,
+                pullRequestId: String(row.original.number)
+              })}>
               <Layout.Horizontal className={css.titleRow} spacing="medium">
                 <PullRequestStateLabel iconSize={22} data={row.original} iconOnly />
                 <Container padding={{ left: 'small' }}>
@@ -357,7 +353,7 @@ export default function PullRequests() {
                 {/* TODO: Pass proper state when check api is fully implemented */}
                 {/* <ExecutionStatusLabel data={{ state: 'success' }} /> */}
               </Layout.Horizontal>
-            </Container>
+            </Link>
           )
         }
       }
