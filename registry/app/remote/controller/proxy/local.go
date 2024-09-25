@@ -86,4 +86,5 @@ type registryManifestInterface interface {
 		headers *commons.ResponseHeaders,
 		info pkg.RegistryInfo,
 	) error
+	AddManifestAssociation(ctx context.Context, repoKey string, digest digest.Digest, info pkg.RegistryInfo) error
 }

@@ -394,6 +394,7 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 			return nil, nil, err
 		}
 		upstreamProxyConfigEntity.SecretSpaceID = *res.SecretSpaceId
+		upstreamProxyConfigEntity.SecretIdentifier = *res.SecretIdentifier
 	} else {
 		upstreamProxyConfigEntity.UserName = ""
 		upstreamProxyConfigEntity.SecretIdentifier = ""

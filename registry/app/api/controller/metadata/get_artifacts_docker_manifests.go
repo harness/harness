@@ -102,28 +102,9 @@ func (c *APIController) GetDockerArtifactManifests(
 		}
 		manifestDetailsList = append(manifestDetailsList, getManifestDetails(m, mConfig))
 	case *ml.DeserializedManifestList:
-		for _, manifestEntry := range reqManifest.Manifests {
-			dgst, err := types.NewDigest(manifestEntry.Digest)
-			if err != nil {
-				return artifactManifestsErrorRs(err), nil
-			}
-			referencedManifest, err := c.ManifestStore.FindManifestByDigest(ctx, registry.ID, image, dgst)
-			if err != nil {
-				if errors.Is(err, store2.ErrResourceNotFound) {
-					return artifactManifestsErrorRs(
-						fmt.Errorf("manifest not found"),
-					), nil
-				}
-				return artifactManifestsErrorRs(err), nil
-			}
-			mConfig, err := getManifestConfig(
-				ctx, referencedManifest.Configuration.Digest,
-				regInfo.RootIdentifier, c.StorageDriver,
-			)
-			if err != nil {
-				return artifactManifestsErrorRs(err), nil
-			}
-			manifestDetailsList = append(manifestDetailsList, getManifestDetails(referencedManifest, mConfig))
+		manifestDetailsList, err = c.getManifestList(ctx, reqManifest, registry, image, regInfo)
+		if err != nil {
+			return artifactManifestsErrorRs(err), nil
 		}
 	default:
 		log.Ctx(ctx).Error().Stack().Err(err).Msgf("Unknown manifest type: %T", manifest)
@@ -139,6 +120,38 @@ func (c *APIController) GetDockerArtifactManifests(
 			Status: artifact.StatusSUCCESS,
 		},
 	}, nil
+}
+
+func (c *APIController) getManifestList(
+	ctx context.Context, reqManifest *ml.DeserializedManifestList, registry *types.Registry, image string,
+	regInfo *RegistryRequestBaseInfo,
+) ([]artifact.DockerManifestDetails, error) {
+	manifestDetailsList := []artifact.DockerManifestDetails{}
+	for _, manifestEntry := range reqManifest.Manifests {
+		dgst, err := types.NewDigest(manifestEntry.Digest)
+		if err != nil {
+			return nil, err
+		}
+		referencedManifest, err := c.ManifestStore.FindManifestByDigest(ctx, registry.ID, image, dgst)
+		if err != nil {
+			if errors.Is(err, store2.ErrResourceNotFound) {
+				if registry.Type == artifact.RegistryTypeUPSTREAM {
+					continue
+				}
+				return nil, fmt.Errorf("manifest: %s not found", dgst.String())
+			}
+			return nil, err
+		}
+		mConfig, err := getManifestConfig(
+			ctx, referencedManifest.Configuration.Digest,
+			regInfo.RootIdentifier, c.StorageDriver,
+		)
+		if err != nil {
+			return nil, err
+		}
+		manifestDetailsList = append(manifestDetailsList, getManifestDetails(referencedManifest, mConfig))
+	}
+	return manifestDetailsList, nil
 }
 
 func artifactManifestsErrorRs(err error) artifact.GetDockerArtifactManifestsResponseObject {
