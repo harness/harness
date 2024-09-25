@@ -16,6 +16,8 @@ docker run -d \
   -p 22:22 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/harness:/data \
+  -e GITNESS_PRINCIPAL_ADMIN_EMAIL="admin@gitness.io" \
+  -e GITNESS_PRINCIPAL_ADMIN_PASSWORD="changeit" \
   --name harness \
   --restart always \
   harness/harness
