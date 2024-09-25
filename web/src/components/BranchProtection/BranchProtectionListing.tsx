@@ -129,10 +129,16 @@ const BranchProtectionListing = (props: { activeTab: string }) => {
         [RuleFields.COMMENTS_REQUIRE_RESOLVE_ALL]: true
       }
     },
-    reqStatusChecksTitle: {
+    reqStatusChecksTitleAll: {
       title: getString('branchProtection.reqStatusChecksTitle'),
       requiredRule: {
         [RuleFields.STATUS_CHECKS_ALL_MUST_SUCCEED]: true
+      }
+    },
+    reqStatusChecksTitle: {
+      title: getString('branchProtection.reqStatusChecksTitle'),
+      requiredRule: {
+        [RuleFields.STATUS_CHECKS_REQUIRE_IDENTIFIERS]: true
       }
     },
     limitMergeStrategies: {

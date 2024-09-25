@@ -233,9 +233,11 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
             <ReviewerSelect
               pullRequestMetadata={pullRequestMetadata}
               onSelect={function (id: number): void {
-                updateCodeCommentStatus({ reviewer_id: id }).catch(err => {
-                  showError(getErrorMessage(err))
-                })
+                updateCodeCommentStatus({ reviewer_id: id })
+                  .then(() => refetchActivities())
+                  .catch(err => {
+                    showError(getErrorMessage(err))
+                  })
                 if (refetchReviewers) {
                   refetchReviewers()
                 }
@@ -312,9 +314,11 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                             isDanger: true,
                             text: getString('remove'),
                             onClick: () => {
-                              removeReviewer({}, { pathParams: { id: reviewer.reviewer.id } }).catch(err => {
-                                showError(getErrorMessage(err))
-                              })
+                              removeReviewer({}, { pathParams: { id: reviewer.reviewer.id } })
+                                .then(() => refetchActivities())
+                                .catch(err => {
+                                  showError(getErrorMessage(err))
+                                })
                               if (refetchReviewers) {
                                 refetchReviewers?.()
                               }
