@@ -21,15 +21,17 @@ import { Button, ButtonVariation, Layout, ModalDialog, Text } from '@harnessio/u
 
 import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
+import type { RepositoryPackageType } from '@ar/common/types'
 import RepositoryCreateForm from '@ar/pages/repository-details/components/Forms/RepositoryCreateForm'
 import type { Repository } from '@ar/pages/repository-details/types'
 
 interface useCreateRepositoryModalProps {
   onSuccess: (data: Repository) => void
+  allowedPackageTypes?: RepositoryPackageType[]
 }
 
 export function useCreateRepositoryModal(props: useCreateRepositoryModalProps) {
-  const { onSuccess } = props
+  const { onSuccess, allowedPackageTypes } = props
   const { getString } = useStrings()
   const { useModalHook } = useParentHooks()
   const [showOverlay, setShowOverlay] = useState(false)
@@ -62,7 +64,6 @@ export function useCreateRepositoryModal(props: useCreateRepositoryModalProps) {
         }
         isCloseButtonShown
         width={800}
-        showOverlay={showOverlay}
         footer={
           <Layout.Horizontal spacing="small">
             <Button
@@ -76,7 +77,12 @@ export function useCreateRepositoryModal(props: useCreateRepositoryModalProps) {
             <Button variation={ButtonVariation.TERTIARY} text={getString('cancel')} onClick={hideModal} />
           </Layout.Horizontal>
         }>
-        <RepositoryCreateForm onSuccess={onSuccess} setShowOverlay={setShowOverlay} ref={stepRef} />
+        <RepositoryCreateForm
+          allowedPackageTypes={allowedPackageTypes}
+          onSuccess={onSuccess}
+          setShowOverlay={setShowOverlay}
+          ref={stepRef}
+        />
       </ModalDialog>
     ),
     [showOverlay]

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { Suspense, useEffect, useRef } from 'react'
+import React, { PropsWithChildren, Suspense, useEffect, useRef } from 'react'
 import { Page } from '@harnessio/uicore'
 import { HARServiceAPIClient } from '@harnessio/react-har-service-client'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -35,7 +35,7 @@ import css from '@ar/app/app.module.scss'
 
 const RouteDestinations = React.lazy(() => import('@ar/routes/RouteDestinations'))
 
-export default function ChildApp(props: MFEAppProps): React.ReactElement {
+export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.ReactElement {
   const {
     renderUrl,
     parentContextObj,
@@ -105,16 +105,18 @@ export default function ChildApp(props: MFEAppProps): React.ReactElement {
               components={{ ...components, ...customComponents } as ParentProviderProps['components']}
               utils={{ ...customUtils }}>
               <ModalProvider>
-                <NavComponent>
-                  <Suspense
-                    fallback={
-                      <Page.Body className={css.pageBody}>
-                        <Page.Spinner fixed={false} />
-                      </Page.Body>
-                    }>
-                    <RouteDestinations />
-                  </Suspense>
-                </NavComponent>
+                {props.children ?? (
+                  <NavComponent>
+                    <Suspense
+                      fallback={
+                        <Page.Body className={css.pageBody}>
+                          <Page.Spinner fixed={false} />
+                        </Page.Body>
+                      }>
+                      <RouteDestinations />
+                    </Suspense>
+                  </NavComponent>
+                )}
               </ModalProvider>
             </ParentProvider>
           </StringsContextProvider>

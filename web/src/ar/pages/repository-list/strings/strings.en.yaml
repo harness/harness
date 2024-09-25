@@ -1,5 +1,6 @@
 pageHeading: Artifact Registries
 newRepository: New Artifact Registry
+newRegistry: New Registry
 artifactRegistry:
   label: Artifact Registry
   subLabel: Manage internal packages and external dependencies through a unified registry.

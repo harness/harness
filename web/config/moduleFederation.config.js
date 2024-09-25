@@ -55,7 +55,8 @@ module.exports = {
     './Labels': './src/pages/ManageSpace/ManageLabels/ManageLabels.tsx',
     './WebhookDetails': './src/pages/WebhookDetails/WebhookDetails.tsx',
     './NewRepoModalButton': './src/components/NewRepoModalButton/NewRepoModalButton.tsx',
-    './HAREnterpriseApp': './src/ar/app/EnterpriseApp.tsx'
+    './HAREnterpriseApp': './src/ar/app/EnterpriseApp.tsx',
+    './HARCreateRegistryButton': './src/ar/views/CreateRegistryButton/CreateRegistryButton.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],

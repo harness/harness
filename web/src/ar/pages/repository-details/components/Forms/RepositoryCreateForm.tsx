@@ -49,6 +49,7 @@ import css from './RepositoryDetailsForm.module.scss'
 
 interface FormContentProps {
   formikProps: FormikProps<VirtualRegistryRequest>
+  allowedPackageTypes?: RepositoryPackageType[]
   getDefaultValuesByRepositoryType: (
     type: RepositoryPackageType,
     defaultValue: VirtualRegistryRequest
@@ -56,7 +57,7 @@ interface FormContentProps {
 }
 
 function FormContent(props: FormContentProps): JSX.Element {
-  const { formikProps, getDefaultValuesByRepositoryType } = props
+  const { formikProps, getDefaultValuesByRepositoryType, allowedPackageTypes } = props
   const { getString } = useStrings()
   const { values } = formikProps
   const { packageType, config } = values
@@ -78,7 +79,8 @@ function FormContent(props: FormContentProps): JSX.Element {
             name="packageType"
             items={RepositoryTypes.map(each => ({
               ...each,
-              label: getString(each.label)
+              label: getString(each.label),
+              disabled: allowedPackageTypes?.length ? !allowedPackageTypes.includes(each.value) : each.disabled
             }))}
             staticItems
           />
@@ -97,12 +99,13 @@ function FormContent(props: FormContentProps): JSX.Element {
 interface RepositoryCreateFormProps {
   factory?: RepositoryAbstractFactory
   defaultType?: RepositoryPackageType
+  allowedPackageTypes?: RepositoryPackageType[]
   setShowOverlay: (show: boolean) => void
   onSuccess: (data: Repository) => void
 }
 
 function RepositoryCreateForm(props: RepositoryCreateFormProps, formikRef: FormikFowardRef): JSX.Element {
-  const { defaultType = RepositoryPackageType.DOCKER, factory = repositoryFactory, onSuccess, setShowOverlay } = props
+  const { defaultType, factory = repositoryFactory, onSuccess, setShowOverlay, allowedPackageTypes } = props
   const { getString } = useStrings()
   const parentRef = useGetSpaceRef()
   const { showSuccess, showError, clear } = useToaster()
@@ -125,7 +128,10 @@ function RepositoryCreateForm(props: RepositoryCreateFormProps, formikRef: Formi
   )
 
   const getInitialValues = (): VirtualRegistryRequest => {
-    return getDefaultValuesByRepositoryType(defaultType)
+    const defaultSelectedPackageType = allowedPackageTypes?.length
+      ? allowedPackageTypes[0]
+      : RepositoryPackageType.DOCKER
+    return getDefaultValuesByRepositoryType(defaultType ?? defaultSelectedPackageType)
   }
 
   const handleSubmit = async (values: VirtualRegistryRequest): Promise<void> => {
@@ -170,7 +176,11 @@ function RepositoryCreateForm(props: RepositoryCreateFormProps, formikRef: Formi
         setFormikRef(formikRef, formik)
         return (
           <Container className={css.formContainer}>
-            <FormContent formikProps={formik} getDefaultValuesByRepositoryType={getDefaultValuesByRepositoryType} />
+            <FormContent
+              allowedPackageTypes={allowedPackageTypes}
+              formikProps={formik}
+              getDefaultValuesByRepositoryType={getDefaultValuesByRepositoryType}
+            />
           </Container>
         )
       }}

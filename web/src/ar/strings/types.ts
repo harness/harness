@@ -94,6 +94,7 @@ export interface StringsMap {
   'repositoryList.artifactRegistry.subLabel': string
   'repositoryList.deleteModal.contentText': string
   'repositoryList.deleteModal.title': string
+  'repositoryList.newRegistry': string
   'repositoryList.newRepository': string
   'repositoryList.pageHeading': string
   'repositoryList.selectEnvironments': string
