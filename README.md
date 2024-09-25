@@ -1,8 +1,8 @@
 # Harness
-Harness is an open source development platform packed with the power of code hosting, automated DevOps pipelines, Gitspaces, and artifact registries.
+Harness Open Source is an open source development platform packed with the power of code hosting, automated DevOps pipelines, hosted development environments (Gitspaces), and artifact registries.
 
 ## Overview
-Harness is an open source development platform packed with the power of code hosting, automated DevOps pipelines, Gitspaces, and artifact registries.
+Harness Open source is an open source development platform packed with the power of code hosting, automated DevOps pipelines, Gitspaces, and artifact registries.
 
 
 ## Running Harness locally
@@ -22,7 +22,6 @@ docker run -d \
 ```
 > The Harness image uses a volume to store the database and repositories. It is highly recommended to use a bind mount or named volume as otherwise all data will be lost once the container is stopped.
 
-// TODO: @Dewan - let me know the correct doc URL
 See [developer.harness.com](https://developer.harness.io/docs/open-source) to learn how to get the most out of Harness.
 
 ## Where is Drone?
