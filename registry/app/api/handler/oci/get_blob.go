@@ -45,16 +45,27 @@ func (h *Handler) GetBlob(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		if response.Body != nil {
-			response.Body.Close()
+			err := response.Body.Close()
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("Failed to close body: %v", err)
+			}
 		}
 		if response.ReadCloser != nil {
-			response.ReadCloser.Close()
+			err := response.ReadCloser.Close()
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("Failed to close readCloser: %v", err)
+			}
 		}
 	}()
 
 	if commons.IsEmpty(response.GetErrors()) {
 		if !commons.IsEmpty(response.RedirectURL) {
 			http.Redirect(w, r, response.RedirectURL, http.StatusTemporaryRedirect)
+			return
+		}
+
+		if response.ResponseHeaders != nil && response.ResponseHeaders.Code == http.StatusMovedPermanently {
+			response.ResponseHeaders.WriteToResponse(w)
 			return
 		}
 		response.ResponseHeaders.WriteHeadersToResponse(w)

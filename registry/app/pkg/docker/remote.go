@@ -21,12 +21,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
 	store2 "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common/lib/errors"
 	"github.com/harness/gitness/registry/app/manifest"
+	"github.com/harness/gitness/registry/app/manifest/manifestlist"
+	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	proxy2 "github.com/harness/gitness/registry/app/remote/controller/proxy"
@@ -49,14 +53,26 @@ const (
 
 func NewRemoteRegistry(
 	local *LocalRegistry, app *App, upstreamProxyConfigRepo store.UpstreamProxyConfigRepository,
-	spacePathStore store2.SpacePathStore, secretService secret.Service,
+	spacePathStore store2.SpacePathStore, secretService secret.Service, proxyCtl proxy2.Controller,
 ) Registry {
+	cache := proxy2.GetManifestCache(local, local.ms)
+	listCache := proxy2.GetManifestListCache(local)
+
+	registry := map[string]proxy2.ManifestCacheHandler{
+		manifestlist.MediaTypeManifestList: listCache,
+		v1.MediaTypeImageIndex:             listCache,
+		schema2.MediaTypeManifest:          cache,
+		proxy2.DefaultHandler:              cache,
+	}
+
 	return &RemoteRegistry{
 		local:                   local,
 		App:                     app,
 		upstreamProxyConfigRepo: upstreamProxyConfigRepo,
 		spacePathStore:          spacePathStore,
 		secretService:           secretService,
+		manifestCacheHandlerMap: registry,
+		proxyCtl:                proxyCtl,
 	}
 }
 
@@ -70,21 +86,42 @@ type RemoteRegistry struct {
 	upstreamProxyConfigRepo store.UpstreamProxyConfigRepository
 	spacePathStore          store2.SpacePathStore
 	secretService           secret.Service
+	proxyCtl                proxy2.Controller
+	manifestCacheHandlerMap map[string]proxy2.ManifestCacheHandler
 }
 
 func (r *RemoteRegistry) Base() error {
 	panic("Not implemented yet, will be done during Replication flows")
 }
 
-func defaultLibrary() (bool, string, error) {
-	// get upstream Repository and check if the path contains library prefix. If yes, redirect to the correct path without
-	// library prefix.
-	return false, "", nil
+// defaultLibrary checks if we need to append "library/" to dockerhub images. For example, if the image is
+// "alpine" then we need to append "library/alpine" to the image.
+func (r *RemoteRegistry) defaultLibrary(ctx context.Context, artInfo pkg.RegistryInfo) (bool, error) {
+	upstreamProxy, err := r.upstreamProxyConfigRepo.GetByRegistryIdentifier(
+		ctx, artInfo.ParentID, artInfo.RegIdentifier,
+	)
+	if err != nil {
+		return false, err
+	}
+	if upstreamProxy.Source != string(artifact.UpstreamConfigSourceDockerhub) {
+		log.Ctx(ctx).Debug().Msg("upstream proxy source is not Dockerhub")
+		return false, nil
+	}
+	if strings.Contains(artInfo.Image, "/") {
+		log.Ctx(ctx).Debug().Msgf("image name %s contains a slash", artInfo.Image)
+		return false, nil
+	}
+	return true, nil
 }
 
 // defaultManifestURL return the real url for request with default project.
-func defaultManifestURL(regIdentifier string, name string, a pkg.RegistryInfo) string {
-	return fmt.Sprintf("/v2/%s/library/%s/manifests/%s", regIdentifier, name, a.Reference)
+func defaultManifestURL(rootIdentifier string, regIdentifier string, name string, a pkg.RegistryInfo) string {
+	return fmt.Sprintf("/v2/%s/%s/library/%s/manifests/%s", rootIdentifier, regIdentifier, name, a.Reference)
+}
+
+// defaultBlobURL return the real url for request with default project.
+func defaultBlobURL(rootIdentifier string, regIdentifier string, name string, digest string) string {
+	return fmt.Sprintf("/v2/%s/%s/library/%s/blobs/%s", rootIdentifier, regIdentifier, name, digest)
 }
 
 func proxyManifestHead(
@@ -106,6 +143,7 @@ func proxyManifestHead(
 		return errors.NotFoundError(fmt.Errorf("the tag %v:%v is not found", art.Image, art.Tag))
 	}
 
+	// This goRoutine is to update the tag of recently pulled manifest if required
 	if len(art.Tag) > 0 {
 		go func(art pkg.RegistryInfo) {
 			// Write function to update local storage.
@@ -119,12 +157,17 @@ func proxyManifestHead(
 			for i := 0; i < ensureTagMaxRetry; i++ {
 				time.Sleep(ensureTagInterval)
 				count++
-				log.Ctx(ctx).Info().Msgf("Ensure tag: %s for image: %s, retry: %d", tag, info.Image, count)
+				log.Ctx(ctx2).Info().Str("goRoutine", "EnsureTag").Msgf("Tag %s for image: %s, retry: %d", tag,
+					info.Image,
+					count)
 				e := ctl.EnsureTag(ctx2, responseHeaders, art, acceptHeaders, ifNoneMatchHeader)
 				if e != nil {
-					log.Ctx(ctx).Warn().Err(e).Msgf("Failed to update tag: ")
+					log.Ctx(ctx2).Warn().Str("goRoutine",
+						"EnsureTag").Err(e).Msgf("Failed to update tag: %s for image: %s",
+						tag, info.Image)
 				} else {
-					log.Ctx(ctx).Info().Msgf("Tag updated: %s for image: %s", tag, info.Image)
+					log.Ctx(ctx2).Info().Str("goRoutine", "EnsureTag").Msgf("Tag updated: %s for image: %s", tag,
+						info.Image)
 					return
 				}
 			}
@@ -147,20 +190,19 @@ func (r *RemoteRegistry) ManifestExist(
 	responseHeaders *commons.ResponseHeaders, descriptor manifest.Descriptor, manifestResult manifest.Manifest,
 	errs []error,
 ) {
-	proxyCtl := proxy2.ControllerInstance(r.local, r.local.ms, r.secretService, r.spacePathStore)
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 	}
-	defaultProj, name, err := defaultLibrary()
+	isDefault, err := r.defaultLibrary(ctx, artInfo)
 	if err != nil {
 		errs = append(errs, err)
 		return responseHeaders, descriptor, manifestResult, errs
 	}
 	registryInfo := artInfo
-	if defaultProj {
+	if isDefault {
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.RegIdentifier, name, registryInfo),
+			"Location": defaultManifestURL(artInfo.RootIdentifier, artInfo.RegIdentifier, artInfo.Image, registryInfo),
 		}
 		return responseHeaders, descriptor, manifestResult, errs
 	}
@@ -183,7 +225,7 @@ func (r *RemoteRegistry) ManifestExist(
 		errs = append(errs, errors.New("Proxy is down"))
 		return responseHeaders, descriptor, manifestResult, errs
 	}
-	useLocal, man, err := proxyCtl.UseLocalManifest(ctx, registryInfo, remoteHelper, acceptHeaders, ifNoneMatchHeader)
+	useLocal, man, err := r.proxyCtl.UseLocalManifest(ctx, registryInfo, remoteHelper, acceptHeaders, ifNoneMatchHeader)
 
 	if err != nil {
 		errs = append(errs, err)
@@ -210,7 +252,7 @@ func (r *RemoteRegistry) ManifestExist(
 	err = proxyManifestHead(
 		ctx,
 		responseHeaders,
-		proxyCtl,
+		r.proxyCtl,
 		registryInfo,
 		remoteHelper,
 		artInfo,
@@ -237,20 +279,19 @@ func (r *RemoteRegistry) PullManifest(
 	responseHeaders *commons.ResponseHeaders, descriptor manifest.Descriptor, manifestResult manifest.Manifest,
 	errs []error,
 ) {
-	proxyCtl := proxy2.ControllerInstance(r.local, r.local.ms, r.secretService, r.spacePathStore)
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 	}
-	defaultProj, name, err := defaultLibrary()
+	isDefault, err := r.defaultLibrary(ctx, artInfo)
 	if err != nil {
 		errs = append(errs, err)
 		return responseHeaders, descriptor, manifestResult, errs
 	}
 	registryInfo := artInfo
-	if defaultProj {
+	if isDefault {
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.RegIdentifier, name, registryInfo),
+			"Location": defaultManifestURL(artInfo.RootIdentifier, artInfo.RegIdentifier, artInfo.Image, registryInfo),
 		}
 		return responseHeaders, descriptor, manifestResult, errs
 	}
@@ -272,7 +313,7 @@ func (r *RemoteRegistry) PullManifest(
 		errs = append(errs, errors.New("Proxy is down"))
 		return responseHeaders, descriptor, manifestResult, errs
 	}
-	useLocal, man, err := proxyCtl.UseLocalManifest(ctx, registryInfo, remoteHelper, acceptHeaders, ifNoneMatchHeader)
+	useLocal, man, err := r.proxyCtl.UseLocalManifest(ctx, registryInfo, remoteHelper, acceptHeaders, ifNoneMatchHeader)
 
 	if err != nil {
 		errs = append(errs, err)
@@ -304,7 +345,7 @@ func (r *RemoteRegistry) PullManifest(
 	manifestResult, err = proxyManifestGet(
 		ctx,
 		responseHeaders,
-		proxyCtl,
+		r.proxyCtl,
 		registryInfo,
 		remoteHelper,
 		artInfo.RegIdentifier,
@@ -352,7 +393,6 @@ func (r *RemoteRegistry) fetchBlobInternal(
 	responseHeaders *commons.ResponseHeaders, fr *storage.FileReader, size int64, readCloser io.ReadCloser,
 	redirectURL string, errs []error,
 ) {
-	proxyCtl := proxy2.ControllerInstance(r.local, r.local.ms, r.secretService, r.spacePathStore)
 	responseHeaders = &commons.ResponseHeaders{
 		Headers: make(map[string]string),
 	}
@@ -360,7 +400,7 @@ func (r *RemoteRegistry) fetchBlobInternal(
 	log.Ctx(ctx).Info().Msgf("Proxy: %s", repoKey)
 
 	// Handle dockerhub request without library prefix.
-	isDefault, name, err := defaultLibrary()
+	isDefault, err := r.defaultLibrary(ctx, info)
 	if err != nil {
 		errs = append(errs, err)
 		return responseHeaders, fr, size, readCloser, redirectURL, errs
@@ -369,7 +409,7 @@ func (r *RemoteRegistry) fetchBlobInternal(
 	if isDefault {
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(repoKey, name, registryInfo),
+			"Location": defaultBlobURL(info.RootIdentifier, repoKey, info.Image, info.Digest),
 		}
 		return responseHeaders, fr, size, readCloser, redirectURL, errs
 	}
@@ -378,7 +418,7 @@ func (r *RemoteRegistry) fetchBlobInternal(
 		errs = append(errs, errors.New("Blob not found"))
 	}
 
-	if proxyCtl.UseLocalBlob(ctx, registryInfo) {
+	if r.proxyCtl.UseLocalBlob(ctx, registryInfo) {
 		switch method {
 		case http.MethodGet:
 			headers, reader, s, closer, url, e := r.local.GetBlob(ctx, info)
@@ -398,7 +438,7 @@ func (r *RemoteRegistry) fetchBlobInternal(
 	}
 
 	// This is start of proxy Code.
-	size, readCloser, err = proxyCtl.ProxyBlob(ctx, registryInfo, repoKey, *upstreamProxy)
+	size, readCloser, err = r.proxyCtl.ProxyBlob(ctx, registryInfo, repoKey, *upstreamProxy)
 	if err != nil {
 		errs = append(errs, err)
 		return responseHeaders, fr, size, readCloser, redirectURL, errs

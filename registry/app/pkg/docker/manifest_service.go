@@ -23,7 +23,8 @@ import (
 	"fmt"
 	"time"
 
-	gitnessappstore "github.com/harness/gitness/app/store"
+	gas "github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/event"
 	"github.com/harness/gitness/registry/app/manifest"
 	"github.com/harness/gitness/registry/app/manifest/manifestlist"
@@ -47,19 +48,20 @@ import (
 )
 
 type manifestService struct {
-	registryDao    store.RegistryRepository
-	manifestDao    store.ManifestRepository
-	layerDao       store.LayerRepository
-	blobRepo       store.BlobRepository
-	mtRepository   store.MediaTypesRepository
-	tagDao         store.TagRepository
-	imageDao       store.ImageRepository
-	artifactDao    store.ArtifactRepository
-	manifestRefDao store.ManifestReferenceRepository
-	spacePathStore gitnessappstore.SpacePathStore
-	gcService      gc.Service
-	tx             dbtx.Transactor
-	reporter       event.Reporter
+	registryDao             store.RegistryRepository
+	manifestDao             store.ManifestRepository
+	layerDao                store.LayerRepository
+	blobRepo                store.BlobRepository
+	mtRepository            store.MediaTypesRepository
+	tagDao                  store.TagRepository
+	imageDao                store.ImageRepository
+	artifactDao             store.ArtifactRepository
+	manifestRefDao          store.ManifestReferenceRepository
+	ociImageIndexMappingDao store.OCIImageIndexMappingRepository
+	spacePathStore          gas.SpacePathStore
+	gcService               gc.Service
+	tx                      dbtx.Transactor
+	reporter                event.Reporter
 }
 
 func NewManifestService(
@@ -67,22 +69,24 @@ func NewManifestService(
 	blobRepo store.BlobRepository, mtRepository store.MediaTypesRepository, tagDao store.TagRepository,
 	imageDao store.ImageRepository, artifactDao store.ArtifactRepository,
 	layerDao store.LayerRepository, manifestRefDao store.ManifestReferenceRepository,
-	tx dbtx.Transactor, gcService gc.Service, reporter event.Reporter, spacePathStore gitnessappstore.SpacePathStore,
+	tx dbtx.Transactor, gcService gc.Service, reporter event.Reporter, spacePathStore gas.SpacePathStore,
+	ociImageIndexMappingDao store.OCIImageIndexMappingRepository,
 ) ManifestService {
 	return &manifestService{
-		registryDao:    registryDao,
-		manifestDao:    manifestDao,
-		layerDao:       layerDao,
-		blobRepo:       blobRepo,
-		mtRepository:   mtRepository,
-		tagDao:         tagDao,
-		artifactDao:    artifactDao,
-		imageDao:       imageDao,
-		manifestRefDao: manifestRefDao,
-		gcService:      gcService,
-		tx:             tx,
-		reporter:       reporter,
-		spacePathStore: spacePathStore,
+		registryDao:             registryDao,
+		manifestDao:             manifestDao,
+		layerDao:                layerDao,
+		blobRepo:                blobRepo,
+		mtRepository:            mtRepository,
+		tagDao:                  tagDao,
+		artifactDao:             artifactDao,
+		imageDao:                imageDao,
+		manifestRefDao:          manifestRefDao,
+		gcService:               gcService,
+		tx:                      tx,
+		reporter:                reporter,
+		spacePathStore:          spacePathStore,
+		ociImageIndexMappingDao: ociImageIndexMappingDao,
 	}
 }
 
@@ -107,6 +111,7 @@ type ManifestService interface {
 	) error
 	DeleteTag(ctx context.Context, repoKey string, tag string, info pkg.RegistryInfo) (bool, error)
 	DeleteManifest(ctx context.Context, repoKey string, d digest.Digest, info pkg.RegistryInfo) error
+	AddManifestAssociation(ctx context.Context, repoKey string, digest digest.Digest, info pkg.RegistryInfo) error
 	DBFindRepositoryBlob(
 		ctx context.Context, desc manifest.Descriptor, repoID int64,
 		info pkg.RegistryInfo,
@@ -204,7 +209,8 @@ func (l *manifestService) dbTagManifest(
 		}
 
 		// Create or update artifact and tag records
-		if err := l.createOrUpdateArtifactAndTag(ctx, dbRegistry.ID, dbManifest.ID, imageName, tagName, dgst); err != nil {
+		if err := l.upsertArtifactAndTag(ctx, dbRegistry.ID, dbManifest.ID, imageName, tagName,
+			dgst); err != nil {
 			return formatFailedToTagErr(err)
 		}
 
@@ -246,7 +252,7 @@ func (l *manifestService) lockManifestForGC(ctx context.Context, repoID, manifes
 }
 
 // Creates or updates artifact and tag records.
-func (l *manifestService) createOrUpdateArtifactAndTag(
+func (l *manifestService) upsertArtifactAndTag(
 	ctx context.Context,
 	registryID,
 	manifestID int64,
@@ -418,7 +424,7 @@ func (l *manifestService) dbPutManifestV2(
 		return nil
 	}
 
-	log.Debug().Msgf("manifest not found in database")
+	log.Debug().Msgf("manifest %s not found in database", dgst.String())
 
 	cfg := &types.Configuration{
 		MediaType: mfst.Config().MediaType,
@@ -524,6 +530,56 @@ func (l *manifestService) DBFindRepositoryBlob(
 	return b, nil
 }
 
+// AddManifestAssociation This updates the manifestRefs for all new childDigests to their already existing parent
+// manifests. This is used when a manifest from a manifest list is pulled from the remote and manifest list already
+// exists in the database.
+func (l *manifestService) AddManifestAssociation(
+	ctx context.Context, repoKey string, childDigest digest.Digest, info pkg.RegistryInfo,
+) error {
+	newDigest, err2 := types.NewDigest(childDigest)
+	if err2 != nil {
+		return fmt.Errorf("failed to create digest: %s %w", childDigest, err2)
+	}
+	r, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
+	if err != nil {
+		return fmt.Errorf("failed to get registry: %s %w", repoKey, err)
+	}
+	childManifest, err2 := l.manifestDao.FindManifestByDigest(ctx, r.ID, info.Image, newDigest)
+	if err2 != nil {
+		return fmt.Errorf("failed to find manifest by digest. Repo: %d Image: %s %w", r.ID, info.Image, err2)
+	}
+	mappings, err := l.ociImageIndexMappingDao.GetAllByChildDigest(ctx, r.ID, childManifest.ImageName, newDigest)
+	if err != nil {
+		return fmt.Errorf("failed to get oci image index mappings. Repo: %d Image: %s %w",
+			r.ID,
+			childManifest.ImageName,
+			err)
+	}
+	for _, mapping := range mappings {
+		parentManifest, err := l.manifestDao.Get(ctx, mapping.ParentManifestID)
+		if err != nil {
+			return fmt.Errorf("failed to get manifest with ID: %d %w", mapping.ParentManifestID, err)
+		}
+		if err := l.manifestRefDao.AssociateManifest(ctx, parentManifest, childManifest); err != nil {
+			if errors.Is(err, util.ErrRefManifestNotFound) {
+				// This can only happen if the online GC deleted one
+				// of the referenced manifests (because they were
+				// untagged/unreferenced) between the call to
+				// `FindAndLockNBefore` and `AssociateManifest`. For now
+				// we need to return this error to mimic the behaviour
+				// of the corresponding filesystem validation.
+				log.Error().
+					Msgf("Failed to associate manifest Ref Manifest not found. parentDigest:%s childDigest:%s %v",
+						parentManifest.Digest.String(),
+						childManifest.Digest.String(),
+						err)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func (l *manifestService) handleSubject(
 	ctx context.Context, subject manifest.Descriptor,
 	artifactType string, annotations map[string]string, dbRepo *types.Registry,
@@ -620,15 +676,9 @@ func (l *manifestService) dbPutManifestList(
 		ImageName:     info.Image,
 	}
 
-	mm := make([]*types.Manifest, 0, len(manifestList.Manifests))
-	ids := make([]int64, 0, len(mm))
-	for _, desc := range manifestList.Manifests {
-		m, err := l.dbFindManifestListManifest(ctx, r, info.Image, desc.Digest)
-		if err != nil {
-			return err
-		}
-		mm = append(mm, m)
-		ids = append(ids, m.ID)
+	mm, ids, err2 := l.validateManifestList(ctx, manifestList, r, info)
+	if err2 != nil {
+		return err2
 	}
 
 	err = l.tx.WithTx(
@@ -675,14 +725,102 @@ func (l *manifestService) dbPutManifestList(
 					return err
 				}
 			}
+
+			err = l.mapManifestList(ctx, ml.ID, manifestList, r)
+			if err != nil {
+				return fmt.Errorf("failed to map manifest list: %w", err)
+			}
+
 			return nil
 		},
 	)
 
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msgf("failed to create manifest list in database")
+		log.Ctx(ctx).Error().Err(err).Msgf("failed to create manifest list in database: %v", err)
+		return fmt.Errorf("failed to create manifest list in database: %w", err)
 	}
-	return err
+	return nil
+}
+
+func (l *manifestService) validateManifestIndex(
+	ctx context.Context, manifestList *ocischema.DeserializedImageIndex, r *types.Registry, info pkg.RegistryInfo,
+) ([]*types.Manifest, []int64, error) {
+	mm := make([]*types.Manifest, 0, len(manifestList.Manifests))
+	ids := make([]int64, 0, len(manifestList.Manifests))
+	for _, desc := range manifestList.Manifests {
+		m, err := l.dbFindManifestListManifest(ctx, r, info.Image, desc.Digest)
+		if errors.Is(err, gitnessstore.ErrResourceNotFound) && r.Type == artifact.RegistryTypeUPSTREAM {
+			continue
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		mm = append(mm, m)
+		ids = append(ids, m.ID)
+	}
+	log.Ctx(ctx).Debug().Msgf("validated %d / %d manifests in index", len(mm), len(manifestList.Manifests))
+	return mm, ids, nil
+}
+
+func (l *manifestService) mapManifestIndex(
+	ctx context.Context, mi int64, manifestList *ocischema.DeserializedImageIndex, r *types.Registry,
+) error {
+	if r.Type != artifact.RegistryTypeUPSTREAM {
+		return nil
+	}
+	for _, desc := range manifestList.Manifests {
+		err := l.ociImageIndexMappingDao.Create(ctx, &types.OCIImageIndexMapping{
+			ParentManifestID:    mi,
+			ChildManifestDigest: desc.Digest,
+		})
+		if err != nil {
+			log.Ctx(ctx).Error().Err(err).
+				Msgf("failed to create oci image index manifest for digest %s", desc.Digest)
+			return fmt.Errorf("failed to create oci image index manifest: %w", err)
+		}
+	}
+	log.Ctx(ctx).Debug().Msgf("successfully mapped manifest index %d with its manifests", mi)
+	return nil
+}
+
+func (l *manifestService) validateManifestList(
+	ctx context.Context, manifestList *manifestlist.DeserializedManifestList, r *types.Registry, info pkg.RegistryInfo,
+) ([]*types.Manifest, []int64, error) {
+	mm := make([]*types.Manifest, 0, len(manifestList.Manifests))
+	ids := make([]int64, 0, len(manifestList.Manifests))
+	for _, desc := range manifestList.Manifests {
+		m, err := l.dbFindManifestListManifest(ctx, r, info.Image, desc.Digest)
+		if errors.Is(err, gitnessstore.ErrResourceNotFound) && r.Type == artifact.RegistryTypeUPSTREAM {
+			continue
+		}
+		if err != nil {
+			return nil, nil, err
+		}
+		mm = append(mm, m)
+		ids = append(ids, m.ID)
+	}
+	log.Ctx(ctx).Debug().Msgf("validated %d / %d manifests in list", len(mm), len(manifestList.Manifests))
+	return mm, ids, nil
+}
+
+func (l *manifestService) mapManifestList(
+	ctx context.Context, mi int64, manifestList *manifestlist.DeserializedManifestList, r *types.Registry,
+) error {
+	if r.Type != artifact.RegistryTypeUPSTREAM {
+		return nil
+	}
+	for _, desc := range manifestList.Manifests {
+		err := l.ociImageIndexMappingDao.Create(ctx, &types.OCIImageIndexMapping{
+			ParentManifestID:    mi,
+			ChildManifestDigest: desc.Digest,
+		})
+		if err != nil {
+			log.Ctx(ctx).Error().Err(err).Msgf("failed to create oci image index manifest for digest %s", desc.Digest)
+			return fmt.Errorf("failed to create oci image index manifest: %w", err)
+		}
+	}
+	log.Ctx(ctx).Debug().Msgf("successfully mapped manifest list %d with its manifests", mi)
+	return nil
 }
 
 func (l *manifestService) dbPutImageIndex(
@@ -738,15 +876,9 @@ func (l *manifestService) dbPutImageIndex(
 		return subjectHandlingError
 	}
 
-	mm := make([]*types.Manifest, 0, len(imageIndex.Manifests))
-	ids := make([]int64, 0, len(mm))
-	for _, desc := range imageIndex.Manifests {
-		m, err := l.dbFindManifestListManifest(ctx, r, info.Image, desc.Digest)
-		if err != nil {
-			return err
-		}
-		mm = append(mm, m)
-		ids = append(ids, m.ID)
+	mm, ids, err := l.validateManifestIndex(ctx, imageIndex, r, info)
+	if err != nil {
+		return fmt.Errorf("failed to map manifest index: %w", err)
 	}
 
 	err = l.tx.WithTx(
@@ -791,6 +923,11 @@ func (l *manifestService) dbPutImageIndex(
 					}
 					return err
 				}
+			}
+
+			err = l.mapManifestIndex(ctx, mi.ID, imageIndex, r)
+			if err != nil {
+				return fmt.Errorf("failed to map manifest index: %w", err)
 			}
 			return nil
 		},
@@ -843,8 +980,8 @@ func (l *manifestService) dbFindManifestListManifest(
 	if err != nil {
 		if errors.Is(err, gitnessstore.ErrResourceNotFound) {
 			return nil, fmt.Errorf(
-				"manifest %s not found for %s/%s", digest.String(),
-				repository.Name, imageName,
+				"manifest %s not found for %s/%s: %w", digest.String(),
+				repository.Name, imageName, err,
 			)
 		}
 		return nil, err
