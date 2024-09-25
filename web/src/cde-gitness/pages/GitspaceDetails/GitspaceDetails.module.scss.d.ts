@@ -18,6 +18,7 @@
 // This is an auto-generated file
 export declare const accordionnCustomSummary: string
 export declare const cardContainer: string
+export declare const containerlogsTitle: string
 export declare const customSubheader: string
 export declare const pageMain: string
 export declare const popover: string

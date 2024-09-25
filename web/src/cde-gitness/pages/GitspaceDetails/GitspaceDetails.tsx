@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Breadcrumbs,
   Button,
@@ -25,7 +25,8 @@ import {
   Accordion,
   Page,
   Text,
-  useToaster
+  useToaster,
+  AccordionHandle
 } from '@harnessio/uicore'
 import { Play } from 'iconoir-react'
 import { useHistory, useParams } from 'react-router-dom'
@@ -82,12 +83,15 @@ const GitspaceDetails = () => {
     data: responseData,
     refetch: refetchLogsData,
     response,
-    error: streamLogsError
+    error: streamLogsError,
+    loading: logsLoading
   } = useGitspacesLogs({ gitspaceId })
 
-  if (streamLogsError) {
-    showError(streamLogsError.message)
-  }
+  useEffect(() => {
+    if (streamLogsError?.message) {
+      showError(streamLogsError.message)
+    }
+  }, [streamLogsError?.message])
 
   const { mutate: actionMutate, loading: mutateLoading } = useGitspaceActions({ gitspaceId })
 
@@ -200,6 +204,16 @@ const GitspaceDetails = () => {
   const [accountIdentifier, orgIdentifier, projectIdentifier] = data?.space_path?.split('/') || []
 
   const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
+
+  const accordionRef = useRef<AccordionHandle | null>(null)
+
+  useEffect(() => {
+    if (standalone ? formattedlogsdata.data : responseData) {
+      accordionRef.current?.open('logsCard')
+    } else {
+      accordionRef.current?.close('logsCard')
+    }
+  }, [standalone, responseData, formattedlogsdata.data])
 
   return (
     <>
@@ -402,13 +416,16 @@ const GitspaceDetails = () => {
           </Card>
 
           <Card className={css.cardContainer}>
-            <Accordion activeId="logsCard">
+            <Accordion activeId={''} ref={accordionRef}>
               <Accordion.Panel
-                shouldRender
                 className={css.accordionnCustomSummary}
                 summary={
                   <Layout.Vertical spacing="small">
-                    <Text font={{ variation: FontVariation.CARD_TITLE }} margin={{ left: 'large' }}>
+                    <Text
+                      rightIcon={isStreamingLogs || logsLoading ? 'steps-spinner' : undefined}
+                      className={css.containerlogsTitle}
+                      font={{ variation: FontVariation.CARD_TITLE }}
+                      margin={{ left: 'large' }}>
                       {getString('cde.details.containerLogs')}
                     </Text>
                     <Text margin={{ left: 'large' }}>{getString('cde.details.containerLogsSubText')} </Text>
