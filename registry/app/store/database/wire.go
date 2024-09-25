@@ -75,6 +75,10 @@ func ProvideManifestRefDao(db *sqlx.DB) store.ManifestReferenceRepository {
 	return NewManifestReferenceDao(db)
 }
 
+func ProvideOCIImageIndexMappingDao(db *sqlx.DB) store.OCIImageIndexMappingRepository {
+	return NewOCIImageIndexMappingDao(db)
+}
+
 func ProvideLayerDao(db *sqlx.DB, mtRepository store.MediaTypesRepository) store.LayerRepository {
 	return NewLayersDao(db, mtRepository)
 }
@@ -93,6 +97,7 @@ var WireSet = wire.NewSet(
 	ProvideManifestDao,
 	ProvideCleanupPolicyDao,
 	ProvideManifestRefDao,
+	ProvideOCIImageIndexMappingDao,
 	ProvideLayerDao,
 	ProvideImageDao,
 	ProvideArtifactDao,

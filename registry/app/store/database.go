@@ -144,6 +144,13 @@ type ManifestReferenceRepository interface {
 	) error
 }
 
+type OCIImageIndexMappingRepository interface {
+	Create(ctx context.Context, ociManifest *types.OCIImageIndexMapping) error
+	GetAllByChildDigest(ctx context.Context, registryID int64, imageName string, childDigest types.Digest) (
+		[]*types.OCIImageIndexMapping, error,
+	)
+}
+
 type LayerRepository interface {
 	AssociateLayerBlob(ctx context.Context, m *types.Manifest, b *types.Blob) error
 }

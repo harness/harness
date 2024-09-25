@@ -404,16 +404,20 @@ func (r *LocalRegistry) fetchBlobInternal(
 	}
 
 	if http.MethodGet == method {
+		// This GoRoutine is used to update the bandwidth stat of the artifact
 		go func(art pkg.RegistryInfo, dgst digest.Digest) {
 			// Cloning Context.
 			session, _ := request.AuthSessionFrom(ctx)
 			ctx3 := request.WithAuthSession(context.Background(), session)
 			err := r.dbBlobDownloadComplete(ctx3, dgst, info)
 			if err != nil {
-				log.Error().Stack().Err(err).Msgf("error while putting bandwidth stat of artifact, %v", err)
+				log.Ctx(ctx3).Error().Stack().Str("goRoutine",
+					"UpdateBandwidth").Err(err).Msgf("error while putting bandwidth stat of artifact, %v",
+					err)
 				return
 			}
-			log.Info().Msgf("Successfully updated the bandwidth stat metrics %s", art.Digest)
+			log.Ctx(ctx3).Info().Str("goRoutine",
+				"UpdateBandwidth").Msgf("Successfully updated the bandwidth stat metrics %s", art.Digest)
 		}(info, dgst)
 	}
 
@@ -435,16 +439,23 @@ func (r *LocalRegistry) PullManifest(
 	ifNoneMatchHeader []string,
 ) (responseHeaders *commons.ResponseHeaders, descriptor manifest.Descriptor, manifest manifest.Manifest, errs []error) {
 	responseHeaders, descriptor, manifest, errs = r.ManifestExist(ctx, artInfo, acceptHeaders, ifNoneMatchHeader)
+
+	// This GoRoutine is used to update the download stat of the artifact when manifest is pulled
 	go func(art pkg.RegistryInfo) {
 		// Cloning Context.
 		session, _ := request.AuthSessionFrom(ctx)
 		ctx2 := request.WithAuthSession(context.Background(), session)
+		ctx2 = log.Ctx(ctx2).With().
+			Str("goRoutine", "UpdateDownload").
+			Logger().WithContext(ctx2)
 		err := r.dbGetManifestComplete(ctx2, artInfo)
 		if err != nil {
-			log.Error().Stack().Err(err).Msgf("error while putting download stat of artifact, %v", err)
+			log.Ctx(ctx2).Error().Str("goRoutine",
+				"UpdateDownload").Stack().Err(err).Msgf("error while putting download stat of artifact, %v", err)
 			return
 		}
-		log.Info().Msgf("Successfully updated the download stat metrics %s", art.Digest)
+		log.Ctx(ctx2).Info().Str("goRoutine",
+			"UpdateDownload").Msgf("Successfully updated the download stat metrics %s", art.Digest)
 	}(artInfo)
 	return responseHeaders, descriptor, manifest, errs
 }
@@ -821,7 +832,7 @@ func (r *LocalRegistry) PutManifest(
 	responseHeaders.Headers["Docker-Content-Digest"] = d.String()
 	responseHeaders.Code = http.StatusCreated
 
-	log.Debug().Msg("Succeeded in putting manifest!")
+	log.Ctx(ctx).Debug().Msgf("Succeeded in putting manifest: %s", d.String())
 	return responseHeaders, errs
 }
 
@@ -1651,6 +1662,11 @@ func (r *LocalRegistry) dbGetManifestComplete(
 	ctx context.Context,
 	info pkg.RegistryInfo,
 ) error {
+	// FIXME: Update logic incase requests are internal. Currently, we are updating the stats for all requests.
+	if info.Digest == "" {
+		return nil
+	}
+
 	err := r.tx.WithTx(
 		ctx, func(ctx context.Context) error {
 			registry, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
@@ -1663,7 +1679,11 @@ func (r *LocalRegistry) dbGetManifestComplete(
 				return err
 			}
 
-			artifact, err := r.artifactDao.GetByName(ctx, image.ID, info.Digest)
+			newDigest, err := types.NewDigest(digest.Digest(info.Digest))
+			if err != nil {
+				log.Ctx(ctx).Error().Stack().Err(err).Msgf("error parsing digest: %s %v", info.Digest, err)
+			}
+			artifact, err := r.artifactDao.GetByName(ctx, image.ID, newDigest.String())
 			if err != nil {
 				return err
 			}

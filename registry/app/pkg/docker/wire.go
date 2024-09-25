@@ -19,7 +19,10 @@ import (
 	gitnessstore "github.com/harness/gitness/app/store"
 	storagedriver "github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/event"
+	"github.com/harness/gitness/registry/app/manifest/manifestlist"
+	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg"
+	proxy2 "github.com/harness/gitness/registry/app/remote/controller/proxy"
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/registry/gc"
@@ -28,6 +31,7 @@ import (
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
+	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 func LocalRegistryProvider(
@@ -51,18 +55,21 @@ func ManifestServiceProvider(
 	manifestRefDao store.ManifestReferenceRepository, tagDao store.TagRepository, imageDao store.ImageRepository,
 	artifactDao store.ArtifactRepository, layerDao store.LayerRepository,
 	gcService gc.Service, tx dbtx.Transactor, reporter event.Reporter, spacePathStore gitnessstore.SpacePathStore,
+	ociImageIndexMappingDao store.OCIImageIndexMappingRepository,
 ) ManifestService {
 	return NewManifestService(
 		registryDao, manifestDao, blobRepo, mtRepository, tagDao, imageDao,
 		artifactDao, layerDao, manifestRefDao, tx, gcService, reporter, spacePathStore,
+		ociImageIndexMappingDao,
 	)
 }
 
 func RemoteRegistryProvider(
 	local *LocalRegistry, app *App, upstreamProxyConfigRepo store.UpstreamProxyConfigRepository,
-	spacePathStore gitnessstore.SpacePathStore, secretService secret.Service,
+	spacePathStore gitnessstore.SpacePathStore, secretService secret.Service, proxyCtrl proxy2.Controller,
 ) *RemoteRegistry {
-	return NewRemoteRegistry(local, app, upstreamProxyConfigRepo, spacePathStore, secretService).(*RemoteRegistry)
+	return NewRemoteRegistry(local, app, upstreamProxyConfigRepo, spacePathStore, secretService,
+		proxyCtrl).(*RemoteRegistry)
 }
 
 func ControllerProvider(
@@ -83,8 +90,31 @@ func ProvideReporter() event.Reporter {
 	return &event.Noop{}
 }
 
+func ProvideProxyController(
+	registry *LocalRegistry, ms ManifestService, secretService secret.Service,
+	spacePathStore gitnessstore.SpacePathStore,
+) proxy2.Controller {
+	manifestCacheHandler := getManifestCacheHandler(registry, ms)
+	return proxy2.NewProxyController(registry, ms, secretService, spacePathStore, manifestCacheHandler)
+}
+
+func getManifestCacheHandler(
+	registry *LocalRegistry, ms ManifestService,
+) map[string]proxy2.ManifestCacheHandler {
+	cache := proxy2.GetManifestCache(registry, ms)
+	listCache := proxy2.GetManifestListCache(registry)
+
+	return map[string]proxy2.ManifestCacheHandler{
+		manifestlist.MediaTypeManifestList: listCache,
+		v1.MediaTypeImageIndex:             listCache,
+		schema2.MediaTypeManifest:          cache,
+		proxy2.DefaultHandler:              cache,
+	}
+}
+
 var ControllerSet = wire.NewSet(ControllerProvider)
 var RegistrySet = wire.NewSet(LocalRegistryProvider, ManifestServiceProvider, RemoteRegistryProvider)
+var ProxySet = wire.NewSet(ProvideProxyController)
 var StorageServiceSet = wire.NewSet(StorageServiceProvider)
 var AppSet = wire.NewSet(NewApp)
-var WireSet = wire.NewSet(ControllerSet, RegistrySet, StorageServiceSet, AppSet)
+var WireSet = wire.NewSet(ControllerSet, RegistrySet, StorageServiceSet, AppSet, ProxySet)
