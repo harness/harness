@@ -30,6 +30,9 @@ import (
 
 //go:embed dist/*
 var UI embed.FS
+//go:embed *
+var _ embed.FS
+
 var remoteEntryContent []byte
 var fileMap map[string]bool
 
