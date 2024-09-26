@@ -87,12 +87,6 @@ const GitspaceDetails = () => {
     loading: logsLoading
   } = useGitspacesLogs({ gitspaceId })
 
-  useEffect(() => {
-    if (streamLogsError?.message) {
-      showError(streamLogsError.message)
-    }
-  }, [streamLogsError?.message])
-
   const { mutate: actionMutate, loading: mutateLoading } = useGitspaceActions({ gitspaceId })
 
   const { mutate: deleteGitspace, loading: deleteLoading } = useDeleteGitspaces({ gitspaceId })
