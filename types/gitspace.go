@@ -62,7 +62,7 @@ type GitspaceInstance struct {
 	State            enum.GitspaceInstanceStateType `json:"state"`
 	UserID           string                         `json:"-"`
 	ResourceUsage    *string                        `json:"resource_usage"`
-	LastUsed         int64                          `json:"last_used,omitempty"`
+	LastUsed         *int64                         `json:"last_used,omitempty"`
 	TotalTimeUsed    int64                          `json:"total_time_used"`
 	TrackedChanges   *string                        `json:"tracked_changes"`
 	AccessKey        *string                        `json:"access_key,omitempty"`
@@ -73,6 +73,7 @@ type GitspaceInstance struct {
 	SpaceID          int64                          `json:"-"`
 	Created          int64                          `json:"created"`
 	Updated          int64                          `json:"updated"`
+	LastHeartbeat    *int64                         `json:"last_heartbeat,omitempty"`
 }
 
 type GitspaceFilter struct {

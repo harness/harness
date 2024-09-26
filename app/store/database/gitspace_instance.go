@@ -49,7 +49,8 @@ const (
 		gits_access_type,
 		gits_machine_user,
 		gits_uid,
-		gits_access_key_ref`
+		gits_access_key_ref,
+        gits_last_heartbeat`
 	gitspaceInstanceSelectColumns = "gits_id," + gitspaceInstanceInsertColumns
 	gitspaceInstanceTable         = `gitspaces`
 )
@@ -63,7 +64,7 @@ type gitspaceInstance struct {
 	UserUID        string                  `db:"gits_user_uid"`
 	ResourceUsage  null.String             `db:"gits_resource_usage"`
 	SpaceID        int64                   `db:"gits_space_id"`
-	LastUsed       int64                   `db:"gits_last_used"`
+	LastUsed       null.Int                `db:"gits_last_used"`
 	TotalTimeUsed  int64                   `db:"gits_total_time_used"`
 	TrackedChanges null.String             `db:"gits_tracked_changes"`
 	AccessType     enum.GitspaceAccessType `db:"gits_access_type"`
@@ -72,6 +73,7 @@ type gitspaceInstance struct {
 	Identifier     string                  `db:"gits_uid"`
 	Created        int64                   `db:"gits_created"`
 	Updated        int64                   `db:"gits_updated"`
+	LastHeartbeat  null.Int                `db:"gits_last_heartbeat"`
 }
 
 // NewGitspaceInstanceStore returns a new GitspaceInstanceStore.
@@ -89,7 +91,7 @@ func (g gitspaceInstanceStore) Find(ctx context.Context, id int64) (*types.Gitsp
 	stmt := database.Builder.
 		Select(gitspaceInstanceSelectColumns).
 		From(gitspaceInstanceTable).
-		Where("gits_id = $1", id)
+		Where("gits_id = ?", id)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -110,7 +112,7 @@ func (g gitspaceInstanceStore) FindByIdentifier(
 	stmt := database.Builder.
 		Select(gitspaceInstanceSelectColumns).
 		From(gitspaceInstanceTable).
-		Where("gits_uid = $1", identifier)
+		Where("gits_uid = ?", identifier)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -144,6 +146,7 @@ func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *typ
 			gitspaceInstance.MachineUser,
 			gitspaceInstance.Identifier,
 			gitspaceInstance.AccessKeyRef,
+			gitspaceInstance.LastHeartbeat,
 		).
 		Suffix(ReturningClause + "gits_id")
 	sql, args, err := stmt.ToSql()
@@ -166,9 +169,10 @@ func (g gitspaceInstanceStore) Update(
 		Update(gitspaceInstanceTable).
 		Set("gits_state", gitspaceInstance.State).
 		Set("gits_last_used", gitspaceInstance.LastUsed).
+		Set("gits_last_heartbeat", gitspaceInstance.LastHeartbeat).
 		Set("gits_url", gitspaceInstance.URL).
 		Set("gits_updated", gitspaceInstance.Updated).
-		Where("gits_id = $5", gitspaceInstance.ID)
+		Where("gits_id = ?", gitspaceInstance.ID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -188,7 +192,7 @@ func (g gitspaceInstanceStore) FindLatestByGitspaceConfigID(
 	stmt := database.Builder.
 		Select(gitspaceInstanceSelectColumns).
 		From(gitspaceInstanceTable).
-		Where("gits_gitspace_config_id = $1", gitspaceConfigID).
+		Where("gits_gitspace_config_id = ?", gitspaceConfigID).
 		OrderBy("gits_created DESC")
 
 	sql, args, err := stmt.ToSql()
@@ -272,7 +276,7 @@ func (g gitspaceInstanceStore) mapToGitspaceInstance(
 		State:            in.State,
 		UserID:           in.UserUID,
 		ResourceUsage:    in.ResourceUsage.Ptr(),
-		LastUsed:         in.LastUsed,
+		LastUsed:         in.LastUsed.Ptr(),
 		TotalTimeUsed:    in.TotalTimeUsed,
 		TrackedChanges:   in.TrackedChanges.Ptr(),
 		AccessType:       in.AccessType,
@@ -281,6 +285,7 @@ func (g gitspaceInstanceStore) mapToGitspaceInstance(
 		SpaceID:          in.SpaceID,
 		Created:          in.Created,
 		Updated:          in.Updated,
+		LastHeartbeat:    in.LastHeartbeat.Ptr(),
 	}
 	return res, nil
 }

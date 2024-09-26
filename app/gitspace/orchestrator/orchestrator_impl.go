@@ -400,7 +400,8 @@ func (o orchestrator) ResumeStartGitspace(
 	ideURLString := ideURL.String()
 	gitspaceInstance.URL = &ideURLString
 
-	gitspaceInstance.LastUsed = time.Now().UnixMilli()
+	lastUsed := time.Now().UnixMilli()
+	gitspaceInstance.LastUsed = &lastUsed
 	gitspaceInstance.State = enum.GitspaceInstanceStateRunning
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStartCompleted)
