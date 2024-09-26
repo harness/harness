@@ -59,7 +59,7 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
   const [regionState, setRegionState] = useState<string | undefined>(metadata?.region)
 
   useEffect(() => {
-    if (!regionState && !disabled) {
+    if ((!regionState || metadata?.region !== regionState) && !disabled) {
       setRegionState(defaultValue?.label?.toLowerCase())
       onChange('metadata.region', defaultValue?.label?.toLowerCase())
     }
@@ -90,7 +90,7 @@ export const SelectRegion = ({ options, disabled, defaultValue }: SelectRegionIn
               return (
                 <MenuItem
                   key={label}
-                  active={label === regionState?.toLowerCase()}
+                  active={label === metadata?.region?.toLowerCase()}
                   text={<Text font={{ size: 'normal', weight: 'bold' }}>{label.toUpperCase()}</Text>}
                   onClick={() => {
                     onChange('metadata.region', label.toLowerCase())

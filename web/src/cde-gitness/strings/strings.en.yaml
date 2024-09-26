@@ -124,3 +124,5 @@ ide:
   vsCode: VS Code
   openVSCode: Open in VS Code Desktop
   openBrowser: Open in Browser
+regionMachineType: Region & Machine Type
+infraProvider: Infra Provider

@@ -24,11 +24,19 @@ import { useStrings } from 'framework/strings'
 import type { TypesGitspaceConfig } from 'cde-gitness/services'
 import { GitspaceStatus } from 'cde-gitness/constants'
 import { getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
+import type { TypesInfraProviderResource } from 'services/cde'
 import { getStatusColor, getStatusText } from '../GitspaceListing/ListGitspaces'
+import ResourceDetails from '../ResourceDetails/ResourceDetails'
+import css from './DetailsCard.module.scss'
 
-export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loading?: boolean }) => {
+export const DetailsCard = ({
+  data
+}: {
+  data: (TypesGitspaceConfig & { resource?: TypesInfraProviderResource }) | null
+  loading?: boolean
+}) => {
   const { getString } = useStrings()
-  const { branch, state, name, code_repo_url, code_repo_type, instance } = data || {}
+  const { branch, state, name, code_repo_url, code_repo_type, instance, resource } = data || {}
   const color = getStatusColor(state)
   const customProps =
     state === GitspaceStatus.STARTING
@@ -44,7 +52,7 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
         flex={{ justifyContent: 'space-between' }}
         padding={{ bottom: 'xlarge', top: 'xlarge' }}>
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text>{getString('cde.status')}</Text>
+          <Text className={css.rowHeaders}>{getString('cde.status')}</Text>
           <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
             {state !== GitspaceStatus.STARTING && <Circle height={10} width={10} color={color} fill={color} />}
             <Text
@@ -58,7 +66,7 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
         </Layout.Vertical>
 
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text>{getString('cde.repository.repo')}</Text>
+          <Text className={css.rowHeaders}>{getString('cde.repository.repo')}</Text>
           <Layout.Horizontal
             spacing="small"
             flex={{ alignItems: 'center', justifyContent: 'start' }}
@@ -80,7 +88,7 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
         </Layout.Vertical>
 
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text>{getString('branch')}</Text>
+          <Text className={css.rowHeaders}>{getString('branch')}</Text>
           <Text
             iconProps={{ size: 10 }}
             color={Color.PRIMARY_7}
@@ -92,7 +100,12 @@ export const DetailsCard = ({ data }: { data: TypesGitspaceConfig | null; loadin
         </Layout.Vertical>
 
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text>{getString('cde.lastActivated')}</Text>
+          <Text className={css.rowHeaders}>{getString('cde.regionMachineType')}</Text>
+          <ResourceDetails resource={resource} />
+        </Layout.Vertical>
+
+        <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
+          <Text className={css.rowHeaders}>{getString('cde.lastUsed')}</Text>
           {instance?.last_used ? (
             <ReactTimeago date={instance?.last_used || 0} />
           ) : (

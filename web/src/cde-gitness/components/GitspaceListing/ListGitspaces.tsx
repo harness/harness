@@ -34,14 +34,13 @@ import { Intent, Menu, MenuItem, PopoverInteractionKind, Position } from '@bluep
 import { useHistory } from 'react-router-dom'
 import type { IconName } from '@harnessio/icons'
 import moment from 'moment'
-import RegionIcon from 'cde-gitness/assests/globe.svg?url'
 import { UseStringsReturn, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import VSCode from 'cde-gitness/assests/VSCode.svg?url'
 import { GitspaceActionType, GitspaceStatus, IDEType } from 'cde-gitness/constants'
-import type { EnumGitspaceStateType, EnumIDEType, TypesGitspaceConfig } from 'services/cde'
+import type { EnumGitspaceStateType, EnumIDEType, TypesGitspaceConfig, TypesInfraProviderResource } from 'services/cde'
 import gitspaceIcon from 'cde-gitness/assests/gitspace.svg?url'
 import { useModalHook } from 'hooks/useModalHook'
 import pause from 'cde-gitness/assests/pause.svg?url'
@@ -52,6 +51,7 @@ import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import { getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
+import ResourceDetails from '../ResourceDetails/ResourceDetails'
 import css from './ListGitspaces.module.scss'
 
 export const getStatusColor = (status?: EnumGitspaceStateType) => {
@@ -109,10 +109,11 @@ const getUsageTemplate = (
   )
 }
 
-export const RenderGitspaceName: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
+export const RenderGitspaceName: Renderer<
+  CellProps<TypesGitspaceConfig & { resource?: TypesInfraProviderResource }>
+> = ({ row }) => {
   const details = row.original
-  const { name, ide } = details
-  const { getString } = useStrings()
+  const { name, ide, resource } = details
   const { standalone } = useAppContext()
   return standalone ? (
     <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
@@ -138,15 +139,7 @@ export const RenderGitspaceName: Renderer<CellProps<TypesGitspaceConfig>> = ({ r
           {name}
         </Text>
       </Layout.Horizontal>
-
-      <Layout.Horizontal spacing={'small'}>
-        <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center' }}>
-          <img height={12} width={12} src={RegionIcon} /> <Text font={{ size: 'small' }}>{getString('cde.na')}</Text>
-        </Layout.Horizontal>
-        <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center' }}>
-          <Cpu height={12} width={12} /> <Text font={{ size: 'small' }}>{getString('cde.na')}</Text>
-        </Layout.Horizontal>
-      </Layout.Horizontal>
+      <ResourceDetails resource={resource} />
     </Layout.Vertical>
   )
 }

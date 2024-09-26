@@ -148,7 +148,8 @@ export const CDECreateGitspace = () => {
       initialValues={{
         ...gitnessFormInitialValues,
         code_repo_type: EnumGitspaceCodeRepoType.HARNESS_CODE,
-        ...includeQueryParams
+        ...includeQueryParams,
+        metadata: { infraProvider: 'HARNESS_GCP' }
       }}
       validationSchema={validateGitnessForm(getString)}
       formName="importRepoForm"

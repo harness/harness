@@ -21,22 +21,22 @@ import { useFormikContext } from 'formik'
 import { useParams } from 'react-router-dom'
 import { CDEPathParams, useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { OpenapiCreateGitspaceRequest, useGetInfraProvider } from 'services/cde'
+import { useAppContext } from 'AppContext'
 import { SelectRegion } from '../SelectRegion/SelectRegion'
 import { SelectMachine } from '../SelectMachine/SelectMachine'
+import SelectInfraProviderType from '../SelectInfraProviderType/SelectInfraProviderType'
 
 export const SelectInfraProvider = () => {
+  const { hooks } = useAppContext()
+  const { CDE_OVH_ENABLED } = hooks?.useFeatureFlags()
   const { values, setFieldValue: onChange } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { accountIdentifier = '', projectIdentifier = '', orgIdentifier = '' } = useGetCDEAPIParams() as CDEPathParams
-  // const { data } = useListInfraProviderResourcesForAccount({
-  //   accountIdentifier,
-  //   infraProviderConfigIdentifier: 'HARNESS_GCP'
-  // })
 
   const { data } = useGetInfraProvider({
     accountIdentifier,
     projectIdentifier,
     orgIdentifier,
-    infraprovider_identifier: 'HARNESS_GCP'
+    infraprovider_identifier: values?.metadata?.infraProvider as string
   })
 
   const { gitspaceId = '' } = useParams<{ gitspaceId?: string }>()
@@ -65,6 +65,7 @@ export const SelectInfraProvider = () => {
 
   return (
     <Layout.Vertical spacing="medium">
+      {CDE_OVH_ENABLED && <SelectInfraProviderType />}
       <SelectRegion defaultValue={regionOptions?.[0]} options={regionOptions} disabled={!!gitspaceId} />
       <SelectMachine options={machineOptions} defaultValue={machineOptions?.[0]} />
     </Layout.Vertical>

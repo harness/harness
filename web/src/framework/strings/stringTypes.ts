@@ -1263,6 +1263,7 @@ export interface StringsMap {
   'cde.ide.title': string
   'cde.ide.vsCode': string
   'cde.importInto': string
+  'cde.infraProvider': string
   'cde.introText1': string
   'cde.introText2': string
   'cde.introText3': string
@@ -1287,6 +1288,7 @@ export interface StringsMap {
   'cde.noRepo': string
   'cde.or': string
   'cde.region': string
+  'cde.regionMachineType': string
   'cde.regionSelectWarning': string
   'cde.regionValidationMessage': string
   'cde.repoValidationMessage': string
