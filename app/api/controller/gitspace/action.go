@@ -89,6 +89,11 @@ func (c *Controller) Action(
 	// All the actions should be idempotent.
 	switch in.Action {
 	case enum.GitspaceActionTypeStart:
+		err = c.gitspaceLimiter.Usage(ctx, space.ID)
+		if err != nil {
+			return nil, fmt.Errorf("usage has exceeded limit, can not start any gitspaces: %w", err)
+		}
+
 		c.emitGitspaceConfigEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStart)
 		err = c.startGitspaceAction(ctx, gitspaceConfig)
 		return gitspaceConfig, err

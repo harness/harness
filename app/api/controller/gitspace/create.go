@@ -81,6 +81,12 @@ func (c *Controller) Create(
 		enum.PermissionGitspaceEdit); err != nil {
 		return nil, err
 	}
+
+	err = c.gitspaceLimiter.Usage(ctx, space.ID)
+	if err != nil {
+		return nil, fmt.Errorf("usage has exceeded limit, can not create any gitspaces: %w", err)
+	}
+
 	// check if it's an internal repo
 	if in.CodeRepoType == enum.CodeRepoTypeGitness && *in.CodeRepoRef != "" {
 		repo, err := c.repoStore.FindByRef(ctx, *in.CodeRepoRef)

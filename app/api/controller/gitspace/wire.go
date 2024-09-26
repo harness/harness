@@ -15,6 +15,7 @@
 package gitspace
 
 import (
+	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/auth/authz"
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	"github.com/harness/gitness/app/gitspace/logutil"
@@ -47,6 +48,7 @@ func ProvideController(
 	scm scm.SCM,
 	repoStore store.RepoStore,
 	gitspaceSvc *gitspace.Service,
+	gitspaceLimiter limiter.Gitspace,
 ) *Controller {
 	return NewController(
 		tx,
@@ -62,5 +64,6 @@ func ProvideController(
 		scm,
 		repoStore,
 		gitspaceSvc,
+		gitspaceLimiter,
 	)
 }

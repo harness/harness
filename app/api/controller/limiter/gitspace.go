@@ -15,18 +15,25 @@
 package limiter
 
 import (
-	"github.com/google/wire"
+	"context"
 )
 
-var WireSet = wire.NewSet(
-	ProvideLimiter,
-	ProvideGitspaceLimiter,
-)
-
-func ProvideLimiter() (ResourceLimiter, error) {
-	return NewResourceLimiter(), nil
+// Gitspace is an interface for managing gitspace limitations.
+type Gitspace interface {
+	// Usage checks if the total usage for the root space and all sub-spaces is under a limit.
+	Usage(ctx context.Context, spaceID int64) error
 }
 
-func ProvideGitspaceLimiter() Gitspace {
-	return NewUnlimitedUsage()
+var _ Gitspace = (*UnlimitedUsage)(nil)
+
+type UnlimitedUsage struct {
+}
+
+// NewUnlimitedUsage creates a new instance of UnlimitedGitspace.
+func NewUnlimitedUsage() Gitspace {
+	return UnlimitedUsage{}
+}
+
+func (UnlimitedUsage) Usage(_ context.Context, _ int64) error {
+	return nil
 }
