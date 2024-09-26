@@ -50,7 +50,9 @@ const (
 		gits_machine_user,
 		gits_uid,
 		gits_access_key_ref,
-        gits_last_heartbeat`
+        gits_last_heartbeat,
+		gits_active_time_started,
+		gits_active_time_ended`
 	gitspaceInstanceSelectColumns = "gits_id," + gitspaceInstanceInsertColumns
 	gitspaceInstanceTable         = `gitspaces`
 )
@@ -61,19 +63,21 @@ type gitspaceInstance struct {
 	URL              null.String                    `db:"gits_url"`
 	State            enum.GitspaceInstanceStateType `db:"gits_state"`
 	// TODO: migrate to principal int64 id to use principal cache and consistent with Harness code.
-	UserUID        string                  `db:"gits_user_uid"`
-	ResourceUsage  null.String             `db:"gits_resource_usage"`
-	SpaceID        int64                   `db:"gits_space_id"`
-	LastUsed       null.Int                `db:"gits_last_used"`
-	TotalTimeUsed  int64                   `db:"gits_total_time_used"`
-	TrackedChanges null.String             `db:"gits_tracked_changes"`
-	AccessType     enum.GitspaceAccessType `db:"gits_access_type"`
-	AccessKeyRef   null.String             `db:"gits_access_key_ref"`
-	MachineUser    null.String             `db:"gits_machine_user"`
-	Identifier     string                  `db:"gits_uid"`
-	Created        int64                   `db:"gits_created"`
-	Updated        int64                   `db:"gits_updated"`
-	LastHeartbeat  null.Int                `db:"gits_last_heartbeat"`
+	UserUID           string                  `db:"gits_user_uid"`
+	ResourceUsage     null.String             `db:"gits_resource_usage"`
+	SpaceID           int64                   `db:"gits_space_id"`
+	LastUsed          null.Int                `db:"gits_last_used"`
+	TotalTimeUsed     int64                   `db:"gits_total_time_used"`
+	TrackedChanges    null.String             `db:"gits_tracked_changes"`
+	AccessType        enum.GitspaceAccessType `db:"gits_access_type"`
+	AccessKeyRef      null.String             `db:"gits_access_key_ref"`
+	MachineUser       null.String             `db:"gits_machine_user"`
+	Identifier        string                  `db:"gits_uid"`
+	Created           int64                   `db:"gits_created"`
+	Updated           int64                   `db:"gits_updated"`
+	LastHeartbeat     null.Int                `db:"gits_last_heartbeat"`
+	ActiveTimeStarted null.Int                `db:"gits_active_time_started"`
+	ActiveTimeEnded   null.Int                `db:"gits_active_time_ended"`
 }
 
 // NewGitspaceInstanceStore returns a new GitspaceInstanceStore.
@@ -147,6 +151,8 @@ func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *typ
 			gitspaceInstance.Identifier,
 			gitspaceInstance.AccessKeyRef,
 			gitspaceInstance.LastHeartbeat,
+			gitspaceInstance.ActiveTimeStarted,
+			gitspaceInstance.ActiveTimeEnded,
 		).
 		Suffix(ReturningClause + "gits_id")
 	sql, args, err := stmt.ToSql()
@@ -171,6 +177,9 @@ func (g gitspaceInstanceStore) Update(
 		Set("gits_last_used", gitspaceInstance.LastUsed).
 		Set("gits_last_heartbeat", gitspaceInstance.LastHeartbeat).
 		Set("gits_url", gitspaceInstance.URL).
+		Set("gits_active_time_started", gitspaceInstance.ActiveTimeStarted).
+		Set("gits_active_time_ended", gitspaceInstance.ActiveTimeEnded).
+		Set("gits_total_time_used", gitspaceInstance.TotalTimeUsed).
 		Set("gits_updated", gitspaceInstance.Updated).
 		Where("gits_id = ?", gitspaceInstance.ID)
 	sql, args, err := stmt.ToSql()
@@ -269,23 +278,25 @@ func (g gitspaceInstanceStore) mapToGitspaceInstance(
 	in *gitspaceInstance,
 ) (*types.GitspaceInstance, error) {
 	var res = &types.GitspaceInstance{
-		ID:               in.ID,
-		Identifier:       in.Identifier,
-		GitSpaceConfigID: in.GitSpaceConfigID,
-		URL:              in.URL.Ptr(),
-		State:            in.State,
-		UserID:           in.UserUID,
-		ResourceUsage:    in.ResourceUsage.Ptr(),
-		LastUsed:         in.LastUsed.Ptr(),
-		TotalTimeUsed:    in.TotalTimeUsed,
-		TrackedChanges:   in.TrackedChanges.Ptr(),
-		AccessType:       in.AccessType,
-		AccessKeyRef:     in.AccessKeyRef.Ptr(),
-		MachineUser:      in.MachineUser.Ptr(),
-		SpaceID:          in.SpaceID,
-		Created:          in.Created,
-		Updated:          in.Updated,
-		LastHeartbeat:    in.LastHeartbeat.Ptr(),
+		ID:                in.ID,
+		Identifier:        in.Identifier,
+		GitSpaceConfigID:  in.GitSpaceConfigID,
+		URL:               in.URL.Ptr(),
+		State:             in.State,
+		UserID:            in.UserUID,
+		ResourceUsage:     in.ResourceUsage.Ptr(),
+		LastUsed:          in.LastUsed.Ptr(),
+		TotalTimeUsed:     in.TotalTimeUsed,
+		TrackedChanges:    in.TrackedChanges.Ptr(),
+		AccessType:        in.AccessType,
+		AccessKeyRef:      in.AccessKeyRef.Ptr(),
+		MachineUser:       in.MachineUser.Ptr(),
+		SpaceID:           in.SpaceID,
+		Created:           in.Created,
+		Updated:           in.Updated,
+		LastHeartbeat:     in.LastHeartbeat.Ptr(),
+		ActiveTimeEnded:   in.ActiveTimeEnded.Ptr(),
+		ActiveTimeStarted: in.ActiveTimeStarted.Ptr(),
 	}
 	return res, nil
 }

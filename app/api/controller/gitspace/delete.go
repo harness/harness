@@ -17,6 +17,7 @@ package gitspace
 import (
 	"context"
 	"fmt"
+	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
@@ -65,6 +66,10 @@ func (c *Controller) Delete(
 }
 
 func (c *Controller) stopRunningGitspace(ctx context.Context, config types.GitspaceConfig) {
+	activeTimeEnded := time.Now().UnixMilli()
+	config.GitspaceInstance.ActiveTimeEnded = &activeTimeEnded
+	config.GitspaceInstance.TotalTimeUsed =
+		*(config.GitspaceInstance.ActiveTimeEnded) - *(config.GitspaceInstance.ActiveTimeStarted)
 	config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
 	err := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
 	if err != nil {

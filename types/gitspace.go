@@ -55,25 +55,27 @@ type GitspaceUser struct {
 }
 
 type GitspaceInstance struct {
-	ID               int64                          `json:"-"`
-	GitSpaceConfigID int64                          `json:"-"`
-	Identifier       string                         `json:"identifier"`
-	URL              *string                        `json:"url,omitempty"`
-	State            enum.GitspaceInstanceStateType `json:"state"`
-	UserID           string                         `json:"-"`
-	ResourceUsage    *string                        `json:"resource_usage"`
-	LastUsed         *int64                         `json:"last_used,omitempty"`
-	TotalTimeUsed    int64                          `json:"total_time_used"`
-	TrackedChanges   *string                        `json:"tracked_changes"`
-	AccessKey        *string                        `json:"access_key,omitempty"`
-	AccessType       enum.GitspaceAccessType        `json:"access_type"`
-	AccessKeyRef     *string                        `json:"access_key_ref"`
-	MachineUser      *string                        `json:"machine_user,omitempty"`
-	SpacePath        string                         `json:"space_path"`
-	SpaceID          int64                          `json:"-"`
-	Created          int64                          `json:"created"`
-	Updated          int64                          `json:"updated"`
-	LastHeartbeat    *int64                         `json:"last_heartbeat,omitempty"`
+	ID                int64                          `json:"-"`
+	GitSpaceConfigID  int64                          `json:"-"`
+	Identifier        string                         `json:"identifier"`
+	URL               *string                        `json:"url,omitempty"`
+	State             enum.GitspaceInstanceStateType `json:"state"`
+	UserID            string                         `json:"-"`
+	ResourceUsage     *string                        `json:"resource_usage"`
+	LastUsed          *int64                         `json:"last_used,omitempty"`
+	TotalTimeUsed     int64                          `json:"total_time_used"`
+	TrackedChanges    *string                        `json:"tracked_changes"`
+	AccessKey         *string                        `json:"access_key,omitempty"`
+	AccessType        enum.GitspaceAccessType        `json:"access_type"`
+	AccessKeyRef      *string                        `json:"access_key_ref"`
+	MachineUser       *string                        `json:"machine_user,omitempty"`
+	SpacePath         string                         `json:"space_path"`
+	SpaceID           int64                          `json:"-"`
+	Created           int64                          `json:"created"`
+	Updated           int64                          `json:"updated"`
+	LastHeartbeat     *int64                         `json:"last_heartbeat,omitempty"`
+	ActiveTimeStarted *int64                         `json:"active_time_started,omitempty"`
+	ActiveTimeEnded   *int64                         `json:"active_time_ended,omitempty"`
 }
 
 type GitspaceFilter struct {

@@ -94,7 +94,7 @@ func (c *Controller) Action(
 		return gitspaceConfig, err
 	case enum.GitspaceActionTypeStop:
 		c.emitGitspaceConfigEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStop)
-		err = c.stopGitspaceAction(ctx, gitspaceConfig)
+		err = c.stopGitspaceAction(ctx, gitspaceConfig, time.Now())
 		return gitspaceConfig, err
 	default:
 		return nil, fmt.Errorf("unknown action %s on gitspace : %s", string(in.Action), gitspaceConfig.Identifier)
@@ -265,6 +265,7 @@ func (c *Controller) gitspaceBusyOperation(
 func (c *Controller) stopGitspaceAction(
 	ctx context.Context,
 	config *types.GitspaceConfig,
+	now time.Time,
 ) error {
 	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID)
 	if err != nil {
@@ -279,6 +280,11 @@ func (c *Controller) stopGitspaceAction(
 	if err != nil {
 		return err
 	}
+
+	activeTimeEnded := now.UnixMilli()
+	config.GitspaceInstance.ActiveTimeEnded = &activeTimeEnded
+	config.GitspaceInstance.TotalTimeUsed =
+		*(config.GitspaceInstance.ActiveTimeEnded) - *(config.GitspaceInstance.ActiveTimeStarted)
 	config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
 	if err = c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance); err != nil {
 		return fmt.Errorf("failed to update gitspace config for stopping %s %w", config.Identifier, err)
