@@ -16,6 +16,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -89,6 +90,64 @@ func NewGitspaceInstanceStore(db *sqlx.DB) store.GitspaceInstanceStore {
 
 type gitspaceInstanceStore struct {
 	db *sqlx.DB
+}
+
+func (g gitspaceInstanceStore) FindTotalUsage(
+	ctx context.Context,
+	fromTime int64,
+	toTime int64,
+	spaceIDs []int64,
+) (int64, error) {
+	var greatest = "MAX"
+	var least = "MIN"
+	if g.db.DriverName() == "postgres" {
+		greatest = "GREATEST"
+		least = "LEAST"
+	}
+	innerQuery := squirrel.Select(
+		greatest+"(gits_active_time_started, ?) AS effective_start_time",
+		least+"(COALESCE(gits_active_time_ended, ?), ?) AS effective_end_time",
+	).
+		From(gitspaceInstanceTable).
+		Where(
+			squirrel.And{
+				squirrel.Lt{"gits_active_time_started": toTime},
+				squirrel.Or{
+					squirrel.Expr("gits_active_time_ended IS NULL"),
+					squirrel.Gt{"gits_active_time_ended": fromTime},
+				},
+				squirrel.Eq{"gits_space_id": spaceIDs},
+			},
+		)
+
+	innerQry, innerArgs, err := innerQuery.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	query := squirrel.
+		Select("SUM(effective_end_time - effective_start_time) AS total_active_time").
+		From("(" + innerQry + ") AS subquery").PlaceholderFormat(squirrel.Dollar)
+
+	qry, _, err := query.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+
+	args := append([]any{fromTime, toTime, toTime}, innerArgs...)
+
+	var totalActiveTime sql.NullInt64
+	db := dbtx.GetAccessor(ctx, g.db)
+	err = db.GetContext(ctx, &totalActiveTime, qry, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	if totalActiveTime.Valid {
+		return totalActiveTime.Int64, nil
+	}
+
+	return 0, nil
 }
 
 func (g gitspaceInstanceStore) Find(ctx context.Context, id int64) (*types.GitspaceInstance, error) {

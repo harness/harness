@@ -681,6 +681,10 @@ type (
 			ctx context.Context,
 			gitspaceConfigIDs []int64,
 		) ([]*types.GitspaceInstance, error)
+
+		// FindTotalUsage calculates the total time used in millis for all the instances within the time window
+		// defined by fromTime and toTime.
+		FindTotalUsage(ctx context.Context, fromTime int64, toTime int64, spaceIDs []int64) (int64, error)
 	}
 
 	InfraProviderConfigStore interface {
