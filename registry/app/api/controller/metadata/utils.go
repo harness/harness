@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	api "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	a "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -93,19 +93,19 @@ var artifactVersionSortMap = map[string]string{
 }
 
 var validRepositoryTypes = []string{
-	string(api.RegistryTypeUPSTREAM),
-	string(api.RegistryTypeVIRTUAL),
+	string(a.RegistryTypeUPSTREAM),
+	string(a.RegistryTypeVIRTUAL),
 }
 
 var validPackageTypes = []string{
-	string(api.PackageTypeDOCKER),
-	string(api.PackageTypeHELM),
-	string(api.PackageTypeMAVEN),
+	string(a.PackageTypeDOCKER),
+	string(a.PackageTypeHELM),
+	string(a.PackageTypeMAVEN),
 }
 
 var validUpstreamSources = []string{
-	string(api.UpstreamConfigSourceCustom),
-	string(api.UpstreamConfigSourceDockerhub),
+	string(a.UpstreamConfigSourceCustom),
+	string(a.UpstreamConfigSourceDockerhub),
 }
 
 func ValidatePackageTypes(packageTypes []string) error {
@@ -155,13 +155,13 @@ func ValidateIdentifier(identifier string) error {
 	return nil
 }
 
-func ValidateUpstream(config *api.RegistryConfig) error {
+func ValidateUpstream(config *a.RegistryConfig) error {
 	upstreamConfig, err := config.AsUpstreamConfig()
 	if err != nil {
 		return err
 	}
-	if !commons.IsEmpty(config.Type) && config.Type == api.RegistryTypeUPSTREAM &&
-		*upstreamConfig.Source != api.UpstreamConfigSourceDockerhub {
+	if !commons.IsEmpty(config.Type) && config.Type == a.RegistryTypeUPSTREAM &&
+		*upstreamConfig.Source != a.UpstreamConfigSourceDockerhub {
 		if commons.IsEmpty(upstreamConfig.Url) {
 			return errors.New("URL is required for upstream repository")
 		}
@@ -223,8 +223,8 @@ func GetTimeInMs(t time.Time) string {
 	return fmt.Sprint(t.UnixMilli())
 }
 
-func GetErrorResponse(code int, message string) *api.Error {
-	return &api.Error{
+func GetErrorResponse(code int, message string) *a.Error {
+	return &a.Error{
 		Code:    fmt.Sprint(code),
 		Message: message,
 	}
@@ -266,7 +266,7 @@ func GetSortByField(sortByField string, resource string) string {
 	return "created_at"
 }
 
-func GetPageLimit(pageSize *api.PageSize) int {
+func GetPageLimit(pageSize *a.PageSize) int {
 	defaultPageSize := 10
 	if pageSize != nil {
 		return int(*pageSize)
@@ -274,7 +274,7 @@ func GetPageLimit(pageSize *api.PageSize) int {
 	return defaultPageSize
 }
 
-func GetOffset(pageSize *api.PageSize, pageNumber *api.PageNumber) int {
+func GetOffset(pageSize *a.PageSize, pageNumber *a.PageNumber) int {
 	defaultOffset := 0
 	if pageSize == nil || pageNumber == nil {
 		return defaultOffset
@@ -285,7 +285,7 @@ func GetOffset(pageSize *api.PageSize, pageNumber *api.PageNumber) int {
 	return (int(*pageSize)) * int(*pageNumber)
 }
 
-func GetPageNumber(pageNumber *api.PageNumber) int64 {
+func GetPageNumber(pageNumber *a.PageNumber) int64 {
 	defaultPageNumber := int64(1)
 	if pageNumber == nil {
 		return defaultPageNumber
@@ -293,9 +293,9 @@ func GetPageNumber(pageNumber *api.PageNumber) int64 {
 	return int64(*pageNumber)
 }
 
-func GetSuccessResponse() *api.Success {
-	return &api.Success{
-		Status: api.StatusSUCCESS,
+func GetSuccessResponse() *a.Success {
+	return &a.Success{
+		Status: a.StatusSUCCESS,
 	}
 }
 

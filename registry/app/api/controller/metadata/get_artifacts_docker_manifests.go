@@ -25,8 +25,8 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	ml "github.com/harness/gitness/registry/app/manifest/manifestlist"
-	os "github.com/harness/gitness/registry/app/manifest/ocischema"
-	s2 "github.com/harness/gitness/registry/app/manifest/schema2"
+	"github.com/harness/gitness/registry/app/manifest/ocischema"
+	"github.com/harness/gitness/registry/app/manifest/schema2"
 	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/types"
 	store2 "github.com/harness/gitness/store"
@@ -74,47 +74,16 @@ func (c *APIController) GetDockerArtifactManifests(
 
 	image := string(r.Artifact)
 	version := string(r.Version)
-	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	manifestDetailsList, err := c.ProcessManifest(ctx, regInfo, image, version)
 	if err != nil {
-		return nil, err
-	}
-	t, err := c.TagStore.FindTag(ctx, registry.ID, image, version)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return nil, err
-	}
-	m, err := c.ManifestStore.Get(ctx, t.ManifestID)
-	if err != nil {
-		return nil, err
-	}
-	manifest, err := docker.DBManifestToManifest(m)
-	manifestDetailsList := []artifact.DockerManifestDetails{}
-	switch reqManifest := manifest.(type) {
-	case *s2.DeserializedManifest:
-		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier, c.StorageDriver)
-		if err != nil {
-			return artifactManifestsErrorRs(err), nil
-		}
-		manifestDetailsList = append(manifestDetailsList, getManifestDetails(m, mConfig))
-	case *os.DeserializedManifest:
-		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier, c.StorageDriver)
-		if err != nil {
-			return artifactManifestsErrorRs(err), nil
-		}
-		manifestDetailsList = append(manifestDetailsList, getManifestDetails(m, mConfig))
-	case *ml.DeserializedManifestList:
-		manifestDetailsList, err = c.getManifestList(ctx, reqManifest, registry, image, regInfo)
-		if err != nil {
-			return artifactManifestsErrorRs(err), nil
-		}
-	default:
-		log.Ctx(ctx).Error().Stack().Err(err).Msgf("Unknown manifest type: %T", manifest)
+		return artifactManifestsErrorRs(err), nil
 	}
 
 	return artifact.GetDockerArtifactManifests200JSONResponse{
 		DockerManifestsResponseJSONResponse: artifact.DockerManifestsResponseJSONResponse{
 			Data: artifact.DockerManifests{
-				ImageName: t.ImageName,
-				Version:   t.Name,
+				ImageName: image,
+				Version:   version,
 				Manifests: &manifestDetailsList,
 			},
 			Status: artifact.StatusSUCCESS,
@@ -175,4 +144,54 @@ func getManifestDetails(m *types.Manifest, mConfig *manifestConfig) artifact.Doc
 		manifestDetails.OsArch = fmt.Sprintf("%s/%s", mConfig.Os, mConfig.Arch)
 	}
 	return manifestDetails
+}
+
+// ProcessManifest processes a Docker artifact manifest by retrieving the manifest details from the database,
+// converting it to the appropriate format, and extracting the necessary information based on the manifest type.
+// It handles different types of manifests, including schema2, OCI schema, and manifest lists, and returns a list
+// of Docker manifest details.
+func (c *APIController) ProcessManifest(
+	ctx context.Context,
+	regInfo *RegistryRequestBaseInfo,
+	image, version string,
+) ([]artifact.DockerManifestDetails, error) {
+	registry, err := c.RegistryRepository.Get(ctx, regInfo.rootIdentifierID)
+	if err != nil {
+		return nil, err
+	}
+	t, err := c.TagStore.FindTag(ctx, registry.ID, image, version)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
+	}
+	m, err := c.ManifestStore.Get(ctx, t.ManifestID)
+	if err != nil {
+		return nil, err
+	}
+	manifest, err := docker.DBManifestToManifest(m)
+	if err != nil {
+		return nil, err
+	}
+	manifestDetailsList := []artifact.DockerManifestDetails{}
+	switch reqManifest := manifest.(type) {
+	case *schema2.DeserializedManifest:
+		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier, c.StorageDriver)
+		if err != nil {
+			return nil, err
+		}
+		manifestDetailsList = append(manifestDetailsList, getManifestDetails(m, mConfig))
+	case *ocischema.DeserializedManifest:
+		mConfig, err := getManifestConfig(ctx, reqManifest.Config().Digest, regInfo.RootIdentifier, c.StorageDriver)
+		if err != nil {
+			return nil, err
+		}
+		manifestDetailsList = append(manifestDetailsList, getManifestDetails(m, mConfig))
+	case *ml.DeserializedManifestList:
+		manifestDetailsList, err = c.getManifestList(ctx, reqManifest, registry, image, regInfo)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		log.Ctx(ctx).Error().Stack().Err(err).Msgf("Unknown manifest type: %T", manifest)
+	}
+	return manifestDetailsList, nil
 }
