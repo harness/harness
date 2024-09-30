@@ -79,7 +79,7 @@ export const LabelFilter = (props: LabelFilterProps) => {
     spaceRef
   } = props
   const { showError } = useToaster()
-  const { standalone } = useAppContext()
+  const { standalone, routingId } = useAppContext()
   const [loadingLabels, setLoadingLabels] = useState(false)
   const [loadingLabelValues, setLoadingLabelValues] = useState(false)
   const [labelValues, setLabelValues] = useState<SelectOption[]>()
@@ -101,7 +101,8 @@ export const LabelFilter = (props: LabelFilterProps) => {
             page: 1,
             limit: LIST_FETCHING_LIMIT,
             inherited: true,
-            query: labelQuery?.trim()
+            query: labelQuery?.trim(),
+            accountIdentifier: routingId
           }
         }
       )
@@ -135,7 +136,9 @@ export const LabelFilter = (props: LabelFilterProps) => {
         : `/spaces/${encodeURIComponent(scopeRef)}/labels/${encodeURIComponent(key)}/values`
 
     try {
-      const fetchedValues: TypesLabelValue[] = await getUsingFetch(getConfig('code/api/v1'), getPath(), bearerToken, {})
+      const fetchedValues: TypesLabelValue[] = await getUsingFetch(getConfig('code/api/v1'), getPath(), bearerToken, {
+        queryParams: { accountIdentifier: routingId }
+      })
       const updatedValuesList = mapToSelectOptions(fetchedValues)
       setLoadingLabelValues(false)
       return updatedValuesList
