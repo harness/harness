@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
+	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -29,24 +31,33 @@ func NewService(
 	tx dbtx.Transactor,
 	gitspaceStore store.GitspaceConfigStore,
 	gitspaceInstanceStore store.GitspaceInstanceStore,
+	eventReporter *gitspaceevents.Reporter,
+	gitspaceEventStore store.GitspaceEventStore,
 	spaceStore store.SpaceStore,
 	infraProviderSvc *infraprovider.Service,
+	orchestrator orchestrator.Orchestrator,
 ) *Service {
 	return &Service{
 		tx:                    tx,
 		gitspaceConfigStore:   gitspaceStore,
 		gitspaceInstanceStore: gitspaceInstanceStore,
+		eventReporter:         eventReporter,
+		gitspaceEventStore:    gitspaceEventStore,
 		spaceStore:            spaceStore,
 		infraProviderSvc:      infraProviderSvc,
+		orchestrator:          orchestrator,
 	}
 }
 
 type Service struct {
 	gitspaceConfigStore   store.GitspaceConfigStore
 	gitspaceInstanceStore store.GitspaceInstanceStore
+	eventReporter         *gitspaceevents.Reporter
+	gitspaceEventStore    store.GitspaceEventStore
 	spaceStore            store.SpaceStore
 	tx                    dbtx.Transactor
 	infraProviderSvc      *infraprovider.Service
+	orchestrator          orchestrator.Orchestrator
 }
 
 func (c *Service) ListGitspacesForSpace(

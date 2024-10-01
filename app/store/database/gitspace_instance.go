@@ -298,6 +298,28 @@ func (g gitspaceInstanceStore) List(
 	return g.mapToGitspaceInstances(ctx, dst)
 }
 
+func (g gitspaceInstanceStore) ListInactive(
+	ctx context.Context,
+	filter *types.GitspaceFilter,
+) ([]int64, error) {
+	stmt := database.Builder.
+		Select("gits_gitspace_config_id").
+		From(gitspaceInstanceTable).
+		Where(squirrel.Lt{"gits_last_used": filter.LastUsedBefore}).
+		Where(squirrel.Eq{"gits_state": filter.State}).
+		OrderBy("gits_created ASC")
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, g.db)
+	var dst []int64
+	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace instance list query")
+	}
+	return dst, nil
+}
+
 func (g gitspaceInstanceStore) FindAllLatestByGitspaceConfigID(
 	ctx context.Context,
 	gitspaceConfigIDs []int64,

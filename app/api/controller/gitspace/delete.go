@@ -78,7 +78,7 @@ func (c *Controller) stopRunningGitspace(ctx context.Context, config types.Gitsp
 		return
 	}
 
-	err = c.orchestrator.TriggerDeleteGitspace(ctx, config)
+	err = c.gitspaceSvc.TriggerDelete(ctx, config)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msgf("error during triggering delete for gitspace instance %s",
 			config.GitspaceInstance.Identifier)

@@ -40,24 +40,58 @@ func (c *Service) Find(
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-		instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
-		if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		gitspaceConfigResult = gitspaceConfig
+		if err = c.setInstance(ctx, gitspaceConfigResult, space); err != nil {
 			return err
 		}
-		if instance != nil {
-			gitspaceConfig.GitspaceInstance = instance
-			instance.SpacePath = gitspaceConfig.SpacePath
-			gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State, instance.Updated)
-			if err != nil {
-				return err
-			}
-			gitspaceConfig.State = gitspaceStateType
-		} else {
-			gitspaceConfig.State = enum.GitspaceStateUninitialized
-		}
-		gitspaceConfigResult = gitspaceConfig
-		gitspaceConfig.SpacePath = space.Path
 		return nil
+	}, dbtx.TxDefaultReadOnly)
+	if txErr != nil {
+		return nil, txErr
+	}
+	return gitspaceConfigResult, nil
+}
+
+func (c *Service) setInstance(
+	ctx context.Context,
+	gitspaceConfig *types.GitspaceConfig,
+	space *types.Space,
+) error {
+	instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		return err
+	}
+	if instance != nil {
+		gitspaceConfig.GitspaceInstance = instance
+		instance.SpacePath = gitspaceConfig.SpacePath
+		gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State, instance.Updated)
+		if err != nil {
+			return err
+		}
+		gitspaceConfig.State = gitspaceStateType
+	} else {
+		gitspaceConfig.State = enum.GitspaceStateUninitialized
+	}
+	gitspaceConfig.SpacePath = space.Path
+	return nil
+}
+
+func (c *Service) FindByID(
+	ctx context.Context,
+	id int64,
+) (*types.GitspaceConfig, error) {
+	var gitspaceConfigResult *types.GitspaceConfig
+	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		gitspaceConfig, err := c.gitspaceConfigStore.Find(ctx, id)
+		gitspaceConfigResult = gitspaceConfig
+		if err != nil {
+			return fmt.Errorf("failed to find gitspace config: %w", err)
+		}
+		space, err := c.spaceStore.Find(ctx, gitspaceConfigResult.SpaceID)
+		if err != nil {
+			return fmt.Errorf("failed to find space: %w", err)
+		}
+		return c.setInstance(ctx, gitspaceConfigResult, space)
 	}, dbtx.TxDefaultReadOnly)
 	if txErr != nil {
 		return nil, txErr

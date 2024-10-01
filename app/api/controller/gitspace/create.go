@@ -24,6 +24,7 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -33,7 +34,6 @@ import (
 	gonanoid "github.com/matoous/go-nanoid"
 )
 
-const allowedUIDAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 const defaultResourceIdentifier = "default"
 
 var (
@@ -102,7 +102,7 @@ func (c *Controller) Create(
 			return nil, err
 		}
 	}
-	suffixUID, err := gonanoid.Generate(allowedUIDAlphabet, 6)
+	suffixUID, err := gonanoid.Generate(gitspace.AllowedUIDAlphabet, 6)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate UID for gitspace config : %q %w", in.Identifier, err)
 	}

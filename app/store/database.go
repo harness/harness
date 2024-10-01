@@ -676,6 +676,9 @@ type (
 		// List lists the gitspace instance present in a parent space ID in the datastore.
 		List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceInstance, error)
 
+		// List lists the inactive gitspace instance present in the datastore
+		ListInactive(ctx context.Context, filter *types.GitspaceFilter) ([]int64, error)
+
 		// List lists the latest gitspace instance present for the gitspace configs in the datastore.
 		FindAllLatestByGitspaceConfigID(
 			ctx context.Context,
