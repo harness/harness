@@ -84,7 +84,7 @@ func (c *Controller) Create(
 
 	err = c.gitspaceLimiter.Usage(ctx, space.ID)
 	if err != nil {
-		return nil, fmt.Errorf("usage has exceeded limit, can not create any gitspaces: %w", err)
+		return nil, err
 	}
 
 	// check if it's an internal repo

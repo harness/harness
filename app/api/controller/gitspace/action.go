@@ -81,7 +81,7 @@ func (c *Controller) Action(
 	case enum.GitspaceActionTypeStart:
 		err = c.gitspaceLimiter.Usage(ctx, space.ID)
 		if err != nil {
-			return nil, fmt.Errorf("usage has exceeded limit, can not start any gitspaces: %w", err)
+			return nil, err
 		}
 
 		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStart)
