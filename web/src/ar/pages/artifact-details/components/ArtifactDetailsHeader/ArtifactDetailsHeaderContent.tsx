@@ -16,12 +16,11 @@
 
 import React, { useContext } from 'react'
 import { defaultTo } from 'lodash-es'
-import { useParams } from 'react-router-dom'
 import { Expander } from '@blueprintjs/core'
 import { Button, ButtonVariation, Layout, getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { useUpdateArtifactLabelsMutation, type ArtifactSummary } from '@harnessio/react-har-service-client'
 
-import { useGetSpaceRef } from '@ar/hooks'
+import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import { useStrings } from '@ar/frameworks/strings/String'
 import type { RepositoryPackageType } from '@ar/common/types'
@@ -48,7 +47,7 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
   const spaceRef = useGetSpaceRef()
   const { getString } = useStrings()
   const { showSuccess, showError, clear } = useToaster()
-  const pathParams = useParams<ArtifactDetailsPathParams>()
+  const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
 
   const { repositoryIdentifier, artifactIdentifier } = pathParams
   const { packageType, imageName, modifiedAt, createdAt, downloadsCount, labels } = data as ArtifactSummary

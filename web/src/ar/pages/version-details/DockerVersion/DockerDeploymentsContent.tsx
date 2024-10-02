@@ -18,7 +18,6 @@ import React, { useMemo, useRef } from 'react'
 import { Expander } from '@blueprintjs/core'
 import { defaultTo } from 'lodash-es'
 import { flushSync } from 'react-dom'
-import { useParams } from 'react-router-dom'
 import { useGetArtifactDeploymentsQuery, useGetDockerArtifactManifestsQuery } from '@harnessio/react-har-service-client'
 import {
   Button,
@@ -29,7 +28,7 @@ import {
   Page
 } from '@harnessio/uicore'
 
-import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
+import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
 import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
@@ -54,7 +53,7 @@ export default function DockerDeploymentsContent() {
   const searchRef = useRef({} as ExpandingSearchInputHandle)
   const { getString } = useStrings()
   const registryRef = useGetSpaceRef()
-  const params = useParams<VersionDetailsPathParams>()
+  const params = useDecodedParams<VersionDetailsPathParams>()
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
