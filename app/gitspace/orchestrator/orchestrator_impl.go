@@ -114,8 +114,9 @@ func (o orchestrator) TriggerStopGitspace(
 			"unable to find provisioned infra while triggering stop for gitspace instance %s: %w",
 			gitspaceConfig.GitspaceInstance.Identifier, err)
 	}
-
-	err = o.stopGitspaceContainer(ctx, gitspaceConfig, *infra)
+	if gitspaceConfig.GitspaceInstance.State == enum.GitspaceInstanceStateRunning {
+		err = o.stopGitspaceContainer(ctx, gitspaceConfig, *infra)
+	}
 	if err != nil {
 		return err
 	}
@@ -207,12 +208,9 @@ func (o orchestrator) TriggerDeleteGitspace(
 			"unable to find provisioned infra while triggering delete for gitspace instance %s: %w",
 			gitspaceConfig.GitspaceInstance.Identifier, err)
 	}
-
-	err = o.stopAndRemoveGitspaceContainer(ctx, gitspaceConfig, *infra)
-	if err != nil {
+	if err = o.stopAndRemoveGitspaceContainer(ctx, gitspaceConfig, *infra); err != nil {
 		return err
 	}
-
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningStart)
 
 	err = o.infraProvisioner.TriggerDeprovision(ctx, gitspaceConfig, *infra)

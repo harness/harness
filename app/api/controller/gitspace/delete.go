@@ -43,56 +43,53 @@ func (c *Controller) Delete(
 	if err != nil {
 		return fmt.Errorf("failed to authorize: %w", err)
 	}
-
 	gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, identifier)
+	gitspaceConfig.SpacePath = space.Path
 	if err != nil || gitspaceConfig == nil {
 		log.Err(err).Msg(gitspaceConfigNotFound + identifier)
 		return err
 	}
 	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
 	gitspaceConfig.GitspaceInstance = instance
-	gitspaceConfig.SpacePath = space.Path
-	if instance == nil || instance.State.IsFinalStatus() {
+	if instance == nil || instance.State == enum.GitspaceInstanceStateUninitialized {
 		gitspaceConfig.IsDeleted = true
-		err = c.gitspaceSvc.UpdateConfig(ctx, gitspaceConfig)
-		if err != nil {
+		if err = c.gitspaceSvc.UpdateConfig(ctx, gitspaceConfig); err != nil {
 			return fmt.Errorf("failed to mark gitspace config as deleted: %w", err)
 		}
 	} else {
+		if instance.State.IsBusyStatus() {
+			return fmt.Errorf("in busy operation, please try again later")
+		}
 		ctxWithoutCancel := context.WithoutCancel(ctx)
-		go c.stopRunningGitspace(ctxWithoutCancel, *gitspaceConfig)
+		go c.removeGitspace(ctxWithoutCancel, *gitspaceConfig)
 	}
 	return nil
 }
 
-func (c *Controller) stopRunningGitspace(ctx context.Context, config types.GitspaceConfig) {
+func (c *Controller) removeGitspace(ctx context.Context, config types.GitspaceConfig) {
 	activeTimeEnded := time.Now().UnixMilli()
 	config.GitspaceInstance.ActiveTimeEnded = &activeTimeEnded
 	config.GitspaceInstance.TotalTimeUsed =
 		*(config.GitspaceInstance.ActiveTimeEnded) - *(config.GitspaceInstance.ActiveTimeStarted)
-	config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
-	err := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to update instance %s before triggering delete",
-			config.GitspaceInstance.Identifier)
-		return
+	if config.GitspaceInstance.State == enum.GitspaceInstanceStateRunning {
+		config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
+		err := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
+		if err != nil {
+			log.Ctx(ctx).Err(err).Msgf("failed to update instance %s before triggering delete",
+				config.GitspaceInstance.Identifier)
+			return
+		}
 	}
-
-	err = c.gitspaceSvc.TriggerDelete(ctx, config)
-	if err != nil {
+	if err := c.gitspaceSvc.TriggerDelete(ctx, config); err != nil {
 		log.Ctx(ctx).Err(err).Msgf("error during triggering delete for gitspace instance %s",
 			config.GitspaceInstance.Identifier)
-
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
-		updateErr := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
-		if updateErr != nil {
+		if updateErr := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance); updateErr != nil {
 			log.Ctx(ctx).Err(updateErr).Msgf("failed to update instance %s after error in triggering delete",
 				config.GitspaceInstance.Identifier)
 		}
-
 		return
 	}
-
 	log.Ctx(ctx).Debug().Msgf("successfully triggered delete for gitspace instance %s",
 		config.GitspaceInstance.Identifier)
 }
