@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/services/system"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/job"
+	store2 "github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 
@@ -34,17 +35,19 @@ import (
 const jobType = "metric-collector"
 
 type metricData struct {
-	IP         string `json:"ip"`
-	Hostname   string `json:"hostname"`
-	InstallID  string `json:"install_id"`
-	Installer  string `json:"installed_by"`
-	Installed  string `json:"installed_at"`
-	Version    string `json:"version"`
-	Users      int64  `json:"user_count"`
-	Repos      int64  `json:"repo_count"`
-	Pipelines  int64  `json:"pipeline_count"`
-	Executions int64  `json:"execution_count"`
-	Gitspaces  int64  `json:"gitspace_count"`
+	IP             string `json:"ip"`
+	Hostname       string `json:"hostname"`
+	InstallID      string `json:"install_id"`
+	Installer      string `json:"installed_by"`
+	Installed      string `json:"installed_at"`
+	Version        string `json:"version"`
+	Users          int64  `json:"user_count"`
+	RepoCount      int64  `json:"repo_count"`
+	PipelineCount  int64  `json:"pipeline_count"`
+	ExecutionCount int64  `json:"execution_count"`
+	GitspaceCount  int64  `json:"gitspace_count"`
+	RegistryCount  int64  `json:"registry_count"`
+	ArtifactCount  int64  `json:"artifact_count"`
 }
 
 type Collector struct {
@@ -58,6 +61,8 @@ type Collector struct {
 	executionStore      store.ExecutionStore
 	scheduler           *job.Scheduler
 	gitspaceConfigStore store.GitspaceConfigStore
+	registryStore       store2.RegistryRepository
+	artifactStore       store2.ArtifactRepository
 	system              *system.Service
 	systemSettings      *system.Settings
 }
@@ -112,44 +117,56 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 	// total users in the system
 	totalUsers, err := c.userStore.CountUsers(ctx, &types.UserFilter{})
 	if err != nil {
-		return "", fmt.Errorf("failed to get users total count: %w", err)
+		return "", fmt.Errorf("failed to get users count: %w", err)
 	}
 
 	// total repos in the system
 	totalRepos, err := c.repoStore.Count(ctx, 0, &types.RepoFilter{})
 	if err != nil {
-		return "", fmt.Errorf("failed to get repositories total count: %w", err)
+		return "", fmt.Errorf("failed to get repositories count: %w", err)
 	}
 
 	// total pipelines in the system
 	totalPipelines, err := c.pipelineStore.Count(ctx, 0, types.ListQueryFilter{})
 	if err != nil {
-		return "", fmt.Errorf("failed to get pipelines total count: %w", err)
+		return "", fmt.Errorf("failed to get pipelines count: %w", err)
 	}
 
 	// total executions in the system
 	totalExecutions, err := c.executionStore.Count(ctx, 0)
 	if err != nil {
-		return "", fmt.Errorf("failed to get executions total count: %w", err)
+		return "", fmt.Errorf("failed to get executions count: %w", err)
 	}
 
 	// total gitspaces (configs) in the system
 	totalGitspaces, err := c.gitspaceConfigStore.Count(ctx, &types.GitspaceFilter{IncludeDeleted: true})
 	if err != nil {
-		return "", fmt.Errorf("failed to get gitspace total count: %w", err)
+		return "", fmt.Errorf("failed to get gitspace count: %w", err)
+	}
+
+	totalRegistries, err := c.registryStore.Count(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get registries count: %w", err)
+	}
+
+	totalArtifacts, err := c.artifactStore.Count(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get artifacts count: %w", err)
 	}
 
 	data := metricData{
-		Hostname:   c.hostname,
-		InstallID:  *c.systemSettings.InstallID,
-		Installer:  users[0].Email,
-		Installed:  time.UnixMilli(users[0].Created).Format("2006-01-02 15:04:05"),
-		Version:    version.Version.String(),
-		Users:      totalUsers,
-		Repos:      totalRepos,
-		Pipelines:  totalPipelines,
-		Executions: totalExecutions,
-		Gitspaces:  totalGitspaces,
+		Hostname:       c.hostname,
+		InstallID:      *c.systemSettings.InstallID,
+		Installer:      users[0].Email,
+		Installed:      time.UnixMilli(users[0].Created).Format("2006-01-02 15:04:05"),
+		Version:        version.Version.String(),
+		Users:          totalUsers,
+		RepoCount:      totalRepos,
+		PipelineCount:  totalPipelines,
+		ExecutionCount: totalExecutions,
+		GitspaceCount:  totalGitspaces,
+		RegistryCount:  totalRegistries,
+		ArtifactCount:  totalArtifacts,
 	}
 
 	buf := new(bytes.Buffer)

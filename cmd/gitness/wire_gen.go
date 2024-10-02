@@ -478,7 +478,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	systemService := system2.ProvideService(settingsService)
-	collector, err := metric.ProvideCollector(config, principalStore, repoStore, pipelineStore, executionStore, jobScheduler, executor, gitspaceConfigStore, systemService)
+	collector, err := metric.ProvideCollector(config, principalStore, repoStore, pipelineStore, executionStore, jobScheduler, executor, gitspaceConfigStore, systemService, registryRepository, artifactRepository)
 	if err != nil {
 		return nil, err
 	}

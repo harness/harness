@@ -139,6 +139,25 @@ func (r registryDao) GetByRootParentIDAndName(
 	return r.mapToRegistry(ctx, dst)
 }
 
+func (r registryDao) Count(ctx context.Context) (int64, error) {
+	stmt := databaseg.Builder.Select("COUNT(*)").
+		From("registries")
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, r.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count, nil
+}
+
 func (r registryDao) FetchUpstreamProxyKeys(
 	ctx context.Context,
 	ids []int64,

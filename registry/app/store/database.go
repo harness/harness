@@ -376,6 +376,7 @@ type RegistryRepository interface {
 	) (ids []int64, err error)
 
 	FetchUpstreamProxyKeys(ctx context.Context, ids []int64) (repokeys []string, err error)
+	Count(ctx context.Context) (int64, error)
 }
 
 type RegistryBlobRepository interface {
@@ -424,6 +425,7 @@ type ArtifactRepository interface {
 	GetByName(ctx context.Context, imageID int64, version string) (*types.Artifact, error)
 	// Create an Artifact
 	CreateOrUpdate(ctx context.Context, artifact *types.Artifact) error
+	Count(ctx context.Context) (int64, error)
 }
 
 type DownloadStatRepository interface {

@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/services/system"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/job"
+	registrystore "github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -37,6 +38,8 @@ func ProvideCollector(
 	executor *job.Executor,
 	gitspaceConfigStore store.GitspaceConfigStore,
 	system *system.Service,
+	registryStore registrystore.RegistryRepository,
+	artifactStore registrystore.ArtifactRepository,
 ) (*Collector, error) {
 	job := &Collector{
 		hostname:            config.InstanceID,
@@ -49,6 +52,8 @@ func ProvideCollector(
 		executionStore:      executionStore,
 		scheduler:           scheduler,
 		gitspaceConfigStore: gitspaceConfigStore,
+		registryStore:       registryStore,
+		artifactStore:       artifactStore,
 		system:              system,
 	}
 

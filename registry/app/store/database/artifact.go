@@ -50,8 +50,7 @@ type artifactDB struct {
 	UpdatedBy int64  `db:"artifact_updated_by"`
 }
 
-func (a ArtifactDao) GetByName(ctx context.Context, imageID int64,
-	version string) (*types.Artifact, error) {
+func (a ArtifactDao) GetByName(ctx context.Context, imageID int64, version string) (*types.Artifact, error) {
 	q := databaseg.Builder.Select(util.ArrToStringByDelimiter(util.GetDBTagsFromStruct(artifactDB{}), ",")).
 		From("artifacts").
 		Where("artifact_image_id = ? AND artifact_version = ?", imageID, version)
@@ -101,6 +100,25 @@ func (a ArtifactDao) CreateOrUpdate(ctx context.Context, artifact *types.Artifac
 		return databaseg.ProcessSQLErrorf(ctx, err, "Insert query failed")
 	}
 	return nil
+}
+
+func (a ArtifactDao) Count(ctx context.Context) (int64, error) {
+	stmt := databaseg.Builder.Select("COUNT(*)").
+		From("artifacts")
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, a.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing count query")
+	}
+	return count, nil
 }
 
 func (a ArtifactDao) mapToInternalArtifact(ctx context.Context, in *types.Artifact) *artifactDB {
