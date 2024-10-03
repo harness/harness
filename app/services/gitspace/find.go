@@ -98,3 +98,23 @@ func (c *Service) FindByID(
 	}
 	return gitspaceConfigResult, nil
 }
+
+func (c *Service) FindAll(
+	ctx context.Context,
+	ids []int64,
+) ([]*types.GitspaceConfig, error) {
+	var gitspaceConfigResult []*types.GitspaceConfig
+	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		// TODO join and set gitspace instance, space from cache
+		gitspaceConfig, err := c.gitspaceConfigStore.FindAll(ctx, ids)
+		if err != nil {
+			return fmt.Errorf("failed to find gitspace config: %w", err)
+		}
+		gitspaceConfigResult = gitspaceConfig
+		return nil
+	}, dbtx.TxDefaultReadOnly)
+	if txErr != nil {
+		return nil, txErr
+	}
+	return gitspaceConfigResult, nil
+}

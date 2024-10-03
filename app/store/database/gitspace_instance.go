@@ -288,6 +288,9 @@ func (g gitspaceInstanceStore) List(
 		Where(squirrel.Eq{"gits_space_id": filter.SpaceIDs}).
 		Where(squirrel.Eq{"gits_user_uid": filter.UserID}).
 		OrderBy("gits_created ASC")
+	if filter.Limit > 0 {
+		stmt = stmt.Limit(database.Limit(filter.Limit))
+	}
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -300,7 +303,7 @@ func (g gitspaceInstanceStore) List(
 	return g.mapToGitspaceInstances(ctx, dst)
 }
 
-func (g gitspaceInstanceStore) ListInactive(
+func (g gitspaceInstanceStore) FetchInactiveGitspaceConfigs(
 	ctx context.Context,
 	filter *types.GitspaceFilter,
 ) ([]int64, error) {
@@ -310,6 +313,9 @@ func (g gitspaceInstanceStore) ListInactive(
 		Where(squirrel.Lt{"gits_last_used": filter.LastUsedBefore}).
 		Where(squirrel.Eq{"gits_state": filter.State}).
 		OrderBy("gits_created ASC")
+	if filter.Limit > 0 {
+		stmt = stmt.Limit(database.Limit(filter.Limit))
+	}
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")

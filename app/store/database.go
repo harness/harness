@@ -635,6 +635,9 @@ type (
 		// Find returns a gitspace config given a ID from the datastore.
 		Find(ctx context.Context, id int64) (*types.GitspaceConfig, error)
 
+		// FindAll returns list of gitspace configs given a IDs from the datastore.
+		FindAll(ctx context.Context, id []int64) ([]*types.GitspaceConfig, error)
+
 		// FindByIdentifier returns a gitspace config with a given UID in a space
 		FindByIdentifier(ctx context.Context, spaceID int64, identifier string) (*types.GitspaceConfig, error)
 
@@ -676,8 +679,8 @@ type (
 		// List lists the gitspace instance present in a parent space ID in the datastore.
 		List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceInstance, error)
 
-		// List lists the inactive gitspace instance present in the datastore
-		ListInactive(ctx context.Context, filter *types.GitspaceFilter) ([]int64, error)
+		// FetchInactiveGitspaceConfigs lists the inactive gitspace instance present in the datastore
+		FetchInactiveGitspaceConfigs(ctx context.Context, filter *types.GitspaceFilter) ([]int64, error)
 
 		// List lists the latest gitspace instance present for the gitspace configs in the datastore.
 		FindAllLatestByGitspaceConfigID(

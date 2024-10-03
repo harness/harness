@@ -305,6 +305,24 @@ func (s gitspaceConfigStore) ListAll(
 	return s.mapToGitspaceConfigs(ctx, dst)
 }
 
+func (s gitspaceConfigStore) FindAll(ctx context.Context, ids []int64) ([]*types.GitspaceConfig, error) {
+	stmt := database.Builder.
+		Select(gitspaceConfigSelectColumns).
+		From(gitspaceConfigsTable).
+		Where(squirrel.Eq{"gconf_id": ids}). //nolint:goconst
+		Where("gconf_is_deleted = ?", false)
+	var dst []*gitspaceConfig
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find all gitspace configs for %v", ids)
+	}
+	return s.mapToGitspaceConfigs(ctx, dst)
+}
+
 func (s *gitspaceConfigStore) mapToGitspaceConfig(
 	ctx context.Context,
 	in *gitspaceConfig,

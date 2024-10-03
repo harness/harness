@@ -57,9 +57,6 @@ func (c *Controller) Delete(
 			return fmt.Errorf("failed to mark gitspace config as deleted: %w", err)
 		}
 	} else {
-		if instance.State.IsBusyStatus() {
-			return fmt.Errorf("in busy operation, please try again later")
-		}
 		ctxWithoutCancel := context.WithoutCancel(ctx)
 		go c.removeGitspace(ctxWithoutCancel, *gitspaceConfig)
 	}
@@ -67,11 +64,11 @@ func (c *Controller) Delete(
 }
 
 func (c *Controller) removeGitspace(ctx context.Context, config types.GitspaceConfig) {
-	activeTimeEnded := time.Now().UnixMilli()
-	config.GitspaceInstance.ActiveTimeEnded = &activeTimeEnded
-	config.GitspaceInstance.TotalTimeUsed =
-		*(config.GitspaceInstance.ActiveTimeEnded) - *(config.GitspaceInstance.ActiveTimeStarted)
 	if config.GitspaceInstance.State == enum.GitspaceInstanceStateRunning {
+		activeTimeEnded := time.Now().UnixMilli()
+		config.GitspaceInstance.ActiveTimeEnded = &activeTimeEnded
+		config.GitspaceInstance.TotalTimeUsed =
+			*(config.GitspaceInstance.ActiveTimeEnded) - *(config.GitspaceInstance.ActiveTimeStarted)
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
 		err := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
 		if err != nil {

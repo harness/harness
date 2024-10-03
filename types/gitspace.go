@@ -85,4 +85,5 @@ type GitspaceFilter struct {
 	State          []enum.GitspaceInstanceStateType
 	SpaceIDs       []int64
 	IncludeDeleted bool
+	Limit          int
 }
