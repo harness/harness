@@ -6,7 +6,7 @@ Harness Open source is an open source development platform packed with the power
 
 
 ## Running Harness locally
-> The latest publicly released docker image can be found on [harness/harness](https://hub.docker.com/r/harness/harness).
+> The latest publicly released docker image can be found on [harness/harness](https://hub.docker.com/r/harness/harness).xa
 
 To install Harness yourself, simply run the command below. Once the container is up, you can visit http://localhost:3000 in your browser.
 
