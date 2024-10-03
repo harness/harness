@@ -47,14 +47,14 @@ const (
 		gits_updated, 
         gits_last_used,           
         gits_total_time_used,     
-        gits_tracked_changes,
 		gits_access_type,
 		gits_machine_user,
 		gits_uid,
 		gits_access_key_ref,
         gits_last_heartbeat,
 		gits_active_time_started,
-		gits_active_time_ended`
+		gits_active_time_ended,
+		gits_has_git_changes`
 	gitspaceInstanceSelectColumns = "gits_id," + gitspaceInstanceInsertColumns
 	gitspaceInstanceTable         = `gitspaces`
 )
@@ -70,7 +70,6 @@ type gitspaceInstance struct {
 	SpaceID           int64                   `db:"gits_space_id"`
 	LastUsed          null.Int                `db:"gits_last_used"`
 	TotalTimeUsed     int64                   `db:"gits_total_time_used"`
-	TrackedChanges    null.String             `db:"gits_tracked_changes"`
 	AccessType        enum.GitspaceAccessType `db:"gits_access_type"`
 	AccessKeyRef      null.String             `db:"gits_access_key_ref"`
 	MachineUser       null.String             `db:"gits_machine_user"`
@@ -80,6 +79,7 @@ type gitspaceInstance struct {
 	LastHeartbeat     null.Int                `db:"gits_last_heartbeat"`
 	ActiveTimeStarted null.Int                `db:"gits_active_time_started"`
 	ActiveTimeEnded   null.Int                `db:"gits_active_time_ended"`
+	HasGitChanges     null.Bool               `db:"gits_has_git_changes"`
 }
 
 // NewGitspaceInstanceStore returns a new GitspaceInstanceStore.
@@ -205,7 +205,6 @@ func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *typ
 			gitspaceInstance.Updated,
 			gitspaceInstance.LastUsed,
 			gitspaceInstance.TotalTimeUsed,
-			gitspaceInstance.TrackedChanges,
 			gitspaceInstance.AccessType,
 			gitspaceInstance.MachineUser,
 			gitspaceInstance.Identifier,
@@ -213,6 +212,7 @@ func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *typ
 			gitspaceInstance.LastHeartbeat,
 			gitspaceInstance.ActiveTimeStarted,
 			gitspaceInstance.ActiveTimeEnded,
+			gitspaceInstance.HasGitChanges,
 		).
 		Suffix(ReturningClause + "gits_id")
 	sql, args, err := stmt.ToSql()
@@ -241,6 +241,7 @@ func (g gitspaceInstanceStore) Update(
 		Set("gits_active_time_started", gitspaceInstance.ActiveTimeStarted).
 		Set("gits_active_time_ended", gitspaceInstance.ActiveTimeEnded).
 		Set("gits_total_time_used", gitspaceInstance.TotalTimeUsed).
+		Set("gits_has_git_changes", gitspaceInstance.HasGitChanges).
 		Set("gits_updated", gitspaceInstance.Updated).
 		Where("gits_id = ?", gitspaceInstance.ID)
 	sql, args, err := stmt.ToSql()
@@ -376,7 +377,6 @@ func (g gitspaceInstanceStore) mapToGitspaceInstance(
 		ResourceUsage:     in.ResourceUsage.Ptr(),
 		LastUsed:          in.LastUsed.Ptr(),
 		TotalTimeUsed:     in.TotalTimeUsed,
-		TrackedChanges:    in.TrackedChanges.Ptr(),
 		AccessType:        in.AccessType,
 		AccessKeyRef:      in.AccessKeyRef.Ptr(),
 		MachineUser:       in.MachineUser.Ptr(),
@@ -386,6 +386,7 @@ func (g gitspaceInstanceStore) mapToGitspaceInstance(
 		LastHeartbeat:     in.LastHeartbeat.Ptr(),
 		ActiveTimeEnded:   in.ActiveTimeEnded.Ptr(),
 		ActiveTimeStarted: in.ActiveTimeStarted.Ptr(),
+		HasGitChanges:     in.HasGitChanges.Ptr(),
 	}
 	return res, nil
 }

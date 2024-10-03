@@ -64,7 +64,6 @@ type GitspaceInstance struct {
 	ResourceUsage     *string                        `json:"resource_usage"`
 	LastUsed          *int64                         `json:"last_used,omitempty"`
 	TotalTimeUsed     int64                          `json:"total_time_used"`
-	TrackedChanges    *string                        `json:"tracked_changes"`
 	AccessKey         *string                        `json:"access_key,omitempty"`
 	AccessType        enum.GitspaceAccessType        `json:"access_type"`
 	AccessKeyRef      *string                        `json:"access_key_ref"`
@@ -76,6 +75,7 @@ type GitspaceInstance struct {
 	LastHeartbeat     *int64                         `json:"last_heartbeat,omitempty"`
 	ActiveTimeStarted *int64                         `json:"active_time_started,omitempty"`
 	ActiveTimeEnded   *int64                         `json:"active_time_ended,omitempty"`
+	HasGitChanges     *bool                          `json:"has_git_changes,omitempty"`
 }
 
 type GitspaceFilter struct {
