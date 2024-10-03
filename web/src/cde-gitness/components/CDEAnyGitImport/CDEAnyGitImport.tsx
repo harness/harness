@@ -27,7 +27,7 @@ import { useListRepos, useListBranches, useRepoLookupForGitspace } from 'service
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { scmOptions, SCMType, type RepoQueryParams } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import { useQueryParams } from 'hooks/useQueryParams'
-import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from './CDEAnyGitImport.utils'
+import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from 'cde-gitness/utils/SelectRepository.utils'
 import { GitspaceSelect } from '../GitspaceSelect/GitspaceSelect'
 import css from './CDEAnyGitImport.module.scss'
 

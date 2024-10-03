@@ -29,7 +29,7 @@ import { useRepoLookupForGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import type { RepoQueryParams } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import { useQueryParams } from 'hooks/useQueryParams'
-import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from './CDEAnyGitImport.utils'
+import { getRepoIdFromURL, getRepoNameFromURL, isValidUrl } from 'cde-gitness/utils/SelectRepository.utils'
 import css from './CDEAnyGitImport.module.scss'
 
 enum RepoCheckStatus {

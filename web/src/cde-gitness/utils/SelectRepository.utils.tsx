@@ -35,16 +35,14 @@ export const isValidUrl = (url: string) => {
 
 export const getRepoIdFromURL = (repoURL?: string) => {
   const repoURLSplit = repoURL?.split('/')
-  return repoURLSplit?.[repoURLSplit?.length - 1]
-    ?.replace(/-/g, '')
-    ?.replace(/_/g, '')
-    .replace(/\./g, '')
-    ?.toLowerCase()
+  const filtered = repoURLSplit?.filter(i => !!i)
+  return filtered?.[filtered?.length - 1]?.replace(/-/g, '')?.replace(/_/g, '').replace(/\./g, '')?.toLowerCase()
 }
 
 export const getRepoNameFromURL = (repoURL?: string) => {
   const repoURLSplit = repoURL?.split('/')
-  return repoURLSplit?.[repoURLSplit?.length - 1]
+  const filtered = repoURLSplit?.filter(i => !!i)
+  return filtered?.[filtered?.length - 1]
 }
 
 export enum CodeRepoType {
