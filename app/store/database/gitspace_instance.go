@@ -30,6 +30,7 @@ import (
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var _ store.GitspaceInstanceStore = (*gitspaceInstanceStore)(nil)
@@ -230,6 +231,7 @@ func (g gitspaceInstanceStore) Update(
 	ctx context.Context,
 	gitspaceInstance *types.GitspaceInstance,
 ) error {
+	validateActiveTimeDetails(gitspaceInstance)
 	stmt := database.Builder.
 		Update(gitspaceInstanceTable).
 		Set("gits_state", gitspaceInstance.State).
@@ -395,4 +397,37 @@ func (g gitspaceInstanceStore) mapToGitspaceInstances(
 		}
 	}
 	return res, nil
+}
+
+func validateActiveTimeDetails(gitspaceInstance *types.GitspaceInstance) {
+	if (gitspaceInstance.State == enum.GitspaceInstanceStateStarting ||
+		gitspaceInstance.State == enum.GitspaceInstanceStateUninitialized) &&
+		(gitspaceInstance.ActiveTimeStarted != nil ||
+			gitspaceInstance.ActiveTimeEnded != nil ||
+			gitspaceInstance.TotalTimeUsed != 0) {
+		log.Warn().Msgf("instance has incorrect active time, details: identifier %s state %s active time start "+
+			"%d active time end %d total time used %d", gitspaceInstance.Identifier, gitspaceInstance.State,
+			gitspaceInstance.ActiveTimeStarted, gitspaceInstance.ActiveTimeEnded, gitspaceInstance.TotalTimeUsed)
+	}
+	if (gitspaceInstance.State == enum.GitspaceInstanceStateRunning) &&
+		(gitspaceInstance.ActiveTimeStarted == nil ||
+			gitspaceInstance.ActiveTimeEnded != nil ||
+			gitspaceInstance.TotalTimeUsed != 0) {
+		log.Warn().Msgf(
+			"instance is missing active time start or has incorrect end/total timestamps, details: "+
+				" identifier %s state %s active time start %d active time end %d total time used %d",
+			gitspaceInstance.Identifier, gitspaceInstance.State, gitspaceInstance.ActiveTimeStarted,
+			gitspaceInstance.ActiveTimeEnded, gitspaceInstance.TotalTimeUsed)
+	}
+	if (gitspaceInstance.State == enum.GitspaceInstanceStateDeleted ||
+		gitspaceInstance.State == enum.GitspaceInstanceStateStopping ||
+		gitspaceInstance.State == enum.GitspaceInstanceStateError) &&
+		(gitspaceInstance.ActiveTimeStarted == nil ||
+			gitspaceInstance.ActiveTimeEnded == nil ||
+			gitspaceInstance.TotalTimeUsed == 0) {
+		log.Warn().Msgf("instance is missing active time start/end/total timestamp, details: "+
+			" identifier %s state %s active time start %d active time end %d total time used %d",
+			gitspaceInstance.Identifier, gitspaceInstance.State, gitspaceInstance.ActiveTimeStarted,
+			gitspaceInstance.ActiveTimeEnded, gitspaceInstance.TotalTimeUsed)
+	}
 }
