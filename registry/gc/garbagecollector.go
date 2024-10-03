@@ -23,8 +23,6 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	registrytypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Noop struct{}
@@ -34,25 +32,25 @@ func New() Service {
 }
 
 func (s *Noop) Start(
-	_ context.Context, _ *sqlx.DB, _ corestore.SpaceStore,
-	_ store.BlobRepository, _ storagedriver.StorageDeleter,
-	_ *types.Config,
+	context.Context, corestore.SpaceStore,
+	store.BlobRepository, storagedriver.StorageDeleter,
+	*types.Config,
 ) {
 	// NOOP
 }
 
-func (s *Noop) BlobFindAndLockBefore(_ context.Context, _ int64, _ time.Time) (*registrytypes.GCBlobTask, error) {
+func (s *Noop) BlobFindAndLockBefore(context.Context, int64, time.Time) (*registrytypes.GCBlobTask, error) {
 	// NOOP
 	//nolint:nilnil
 	return nil, nil
 }
 
-func (s *Noop) BlobReschedule(_ context.Context, _ *registrytypes.GCBlobTask, _ time.Duration) error {
+func (s *Noop) BlobReschedule(context.Context, *registrytypes.GCBlobTask, time.Duration) error {
 	// NOOP
 	return nil
 }
 
-func (s *Noop) ManifestFindAndLockBefore(_ context.Context, _, _ int64, _ time.Time) (
+func (s *Noop) ManifestFindAndLockBefore(context.Context, int64, int64, time.Time) (
 	*registrytypes.GCManifestTask, error,
 ) {
 	// NOOP
@@ -60,7 +58,7 @@ func (s *Noop) ManifestFindAndLockBefore(_ context.Context, _, _ int64, _ time.T
 	return nil, nil
 }
 
-func (s *Noop) ManifestFindAndLockNBefore(_ context.Context, _ int64, _ []int64, _ time.Time) (
+func (s *Noop) ManifestFindAndLockNBefore(context.Context, int64, []int64, time.Time) (
 	[]*registrytypes.GCManifestTask, error,
 ) {
 	// NOOP

@@ -31,7 +31,6 @@ import (
 	"github.com/harness/gitness/registry/gc"
 	"github.com/harness/gitness/types"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
@@ -52,7 +51,7 @@ type App struct {
 
 // NewApp takes a configuration and returns a configured app.
 func NewApp(
-	ctx context.Context, sqlDB *sqlx.DB, storageDeleter storagedriver.StorageDeleter,
+	ctx context.Context, storageDeleter storagedriver.StorageDeleter,
 	blobRepo store.BlobRepository, spaceStore corestore.SpaceStore,
 	cfg *types.Config, storageService *registrystorage.Service,
 	gcService gc.Service,
@@ -63,7 +62,7 @@ func NewApp(
 		storageService: storageService,
 	}
 	app.configureSecret(cfg)
-	gcService.Start(ctx, sqlDB, spaceStore, blobRepo, storageDeleter, cfg)
+	gcService.Start(ctx, spaceStore, blobRepo, storageDeleter, cfg)
 	return app
 }
 

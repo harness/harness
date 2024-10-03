@@ -451,7 +451,6 @@ type GCBlobTaskRepository interface {
 }
 
 type GCManifestTaskRepository interface {
-	FindAll(ctx context.Context) ([]*types.GCManifestTask, error)
 	FindAndLock(
 		ctx context.Context, registryID,
 		manifestID int64,
@@ -464,7 +463,6 @@ type GCManifestTaskRepository interface {
 		ctx context.Context, registryID int64,
 		manifestIDs []int64, date time.Time,
 	) ([]*types.GCManifestTask, error)
-	Count(ctx context.Context) (int, error)
 	Next(ctx context.Context) (*types.GCManifestTask, error)
 	Postpone(ctx context.Context, b *types.GCManifestTask, d time.Duration) error
 	IsDangling(ctx context.Context, b *types.GCManifestTask) (bool, error)

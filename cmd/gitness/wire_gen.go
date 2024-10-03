@@ -434,7 +434,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	blobRepository := database2.ProvideBlobDao(db, mediaTypesRepository)
 	storageService := docker.StorageServiceProvider(config, storageDriver)
 	gcService := gc.ServiceProvider()
-	app := docker.NewApp(ctx, db, storageDeleter, blobRepository, spaceStore, config, storageService, gcService)
+	app := docker.NewApp(ctx, storageDeleter, blobRepository, spaceStore, config, storageService, gcService)
 	registryRepository := database2.ProvideRepoDao(db, mediaTypesRepository)
 	manifestRepository := database2.ProvideManifestDao(db, mediaTypesRepository)
 	manifestReferenceRepository := database2.ProvideManifestRefDao(db)

@@ -23,13 +23,11 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	registrytypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Service interface {
 	Start(
-		ctx context.Context, sqlDB *sqlx.DB, spaceStore corestore.SpaceStore,
+		ctx context.Context, spaceStore corestore.SpaceStore,
 		blobRepo store.BlobRepository, storageDeleter storagedriver.StorageDeleter,
 		config *types.Config,
 	)
