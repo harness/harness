@@ -146,11 +146,11 @@ func (c *Controller) State(ctx context.Context,
 			nowMilli := time.Now().UnixMilli()
 
 			// clear all merge (check) related fields
-			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
 			pr.MergeSHA = nil
-			pr.MergeConflicts = nil
 			pr.MergeTargetSHA = nil
 			pr.Closed = &nowMilli
+			pr.MarkAsMergeUnchecked()
+
 		case changeReopen:
 			pr.SourceSHA = sourceSHA.String()
 			pr.MergeBaseSHA = mergeBaseSHA.String()

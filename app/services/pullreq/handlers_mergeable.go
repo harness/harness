@@ -221,19 +221,14 @@ func (s *Service) updateMergeData(
 			return events.NewDiscardEventErrorf("PR SHA %s is newer than %s", pr.SourceSHA, newSHA)
 		}
 
-		if len(mergeOutput.ConflictFiles) > 0 {
-			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
-			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
-			pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
+		pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
+		pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
+		if mergeOutput.MergeSHA.IsEmpty() {
 			pr.MergeSHA = nil
-			pr.MergeConflicts = mergeOutput.ConflictFiles
 		} else {
-			pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
-			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
-			pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
 			pr.MergeSHA = ptr.String(mergeOutput.MergeSHA.String())
-			pr.MergeConflicts = nil
 		}
+		pr.UpdateMergeOutcome(enum.MergeMethodMerge, mergeOutput.ConflictFiles)
 		pr.Stats.DiffStats = types.NewDiffStats(
 			mergeOutput.CommitCount,
 			mergeOutput.ChangedFileCount,

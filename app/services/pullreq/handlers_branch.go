@@ -122,11 +122,11 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			pr.MergeBaseSHA = newMergeBase.String()
 
 			// reset merge-check fields for new run
-			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
+
 			pr.MergeSHA = nil
-			pr.MergeConflicts = nil
 			pr.Stats.DiffStats.Commits = nil
 			pr.Stats.DiffStats.FilesChanged = nil
+			pr.MarkAsMergeUnchecked()
 
 			return nil
 		})
@@ -198,9 +198,8 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 			activitySeqPRClosed = pr.ActivitySeq
 
 			pr.State = enum.PullReqStateClosed
-			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
 			pr.MergeSHA = nil
-			pr.MergeConflicts = nil
+			pr.MarkAsMergeUnchecked()
 
 			return nil
 		})

@@ -26,8 +26,6 @@ import (
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/merge"
 	"github.com/harness/gitness/git/sha"
-
-	"github.com/rs/zerolog/log"
 )
 
 // MergeParams is input structure object for merging operation.
@@ -172,16 +170,6 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		}
 	}
 
-	// logger
-
-	log := log.Ctx(ctx).With().
-		Str("repo_uid", params.RepoUID).
-		Str("head", params.HeadBranch).
-		Str("base", params.BaseBranch).
-		Str("method", string(mergeMethod)).
-		Str("ref", refPath).
-		Logger()
-
 	// find the commit SHAs
 
 	baseCommitSHA, err := s.git.GetFullCommitID(ctx, repoPath, params.BaseBranch)
@@ -223,35 +211,6 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	commitCount, err := merge.CommitCount(ctx, repoPath, baseCommitSHA.String(), headCommitSHA.String())
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("failed to find commit count for merge check: %w", err)
-	}
-
-	// handle simple merge check
-
-	if params.RefType == enum.RefTypeUndefined && params.Method != enum.MergeMethodRebase {
-		// Merge method rebase can result in conflicts even if other methods do not.
-		// This is because commits are rebased one by one. And this is why for other merge method we just return
-		// list of conflicts, but for rebase we proceed with the rebasing (even if no ref would be updated).
-
-		_, _, conflicts, err := merge.FindConflicts(ctx, repoPath, baseCommitSHA.String(), headCommitSHA.String())
-		if err != nil {
-			return MergeOutput{}, errors.Internal(err,
-				"Merge check failed to find conflicts between commits %s and %s",
-				baseCommitSHA.String(), headCommitSHA.String())
-		}
-
-		log.Debug().Msg("merged check completed")
-
-		return MergeOutput{
-			BaseSHA:          baseCommitSHA,
-			HeadSHA:          headCommitSHA,
-			MergeBaseSHA:     mergeBaseCommitSHA,
-			MergeSHA:         sha.None,
-			CommitCount:      commitCount,
-			ChangedFileCount: shortStat.Files,
-			Additions:        shortStat.Additions,
-			Deletions:        shortStat.Deletions,
-			ConflictFiles:    conflicts,
-		}, nil
 	}
 
 	// author and committer

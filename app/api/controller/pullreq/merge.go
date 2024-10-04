@@ -58,14 +58,16 @@ func (in *MergeInput) sanitize() error {
 		return usererror.BadRequest("source SHA must be provided")
 	}
 
-	if in.Method != "" {
-		method, ok := in.Method.Sanitize()
-		if !ok {
-			return usererror.BadRequestf("unsupported merge method: %s", in.Method)
-		}
-
-		in.Method = method
+	if in.Method == "" {
+		in.Method = enum.MergeMethodMerge
 	}
+
+	method, ok := in.Method.Sanitize()
+	if !ok {
+		return usererror.BadRequestf("unsupported merge method: %s", in.Method)
+	}
+
+	in.Method = method
 
 	// cleanup title / message (NOTE: git doesn't support white space only)
 	in.Title = strings.TrimSpace(in.Title)
@@ -233,17 +235,44 @@ func (c *Controller) Merge(
 		// has advanced. It's possible that the merge base commit is different too.
 		// So, the next time the API gets called for the same PR the mergeability status will not be unchecked.
 		// Without dry-run the execution would proceed below and would either merge the PR or set the conflict status.
-		if pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked {
-			mergeOutput, err := c.git.Merge(ctx, &git.MergeParams{
+
+		var mergeOutput git.MergeOutput
+
+		// We distinguish two types when checking mergeability: Rebase and Non-Rebase.
+		// * Merge methods Merge and Squash will always have the same results.
+		// * Merge method Rebase is special because it must always check all commits, one at a time.
+		// * Merge method Fast-Forward can never have conflicts,
+		//   but for it the merge base SHA must be equal to target branch SHA.
+		// The result of the tests will be stored (think cached) in the database for these two types
+		// in the fields merge_check_status and rebase_check_status.
+
+		checkMergeability := func(method enum.MergeMethod) bool {
+			switch method {
+			case enum.MergeMethodMerge, enum.MergeMethodSquash:
+				return pr.MergeCheckStatus == enum.MergeCheckStatusUnchecked
+			case enum.MergeMethodRebase:
+				return pr.RebaseCheckStatus == enum.MergeCheckStatusUnchecked
+			case enum.MergeMethodFastForward:
+				// Always check for ff merge. There can never be conflicts,
+				// but we are interested in if it returns the conflict error and merge-output data.
+				return true
+			default:
+				return true // should not happen
+			}
+		}(in.Method)
+
+		if checkMergeability {
+			mergeOutput, err = c.git.Merge(ctx, &git.MergeParams{
 				WriteParams:     targetWriteParams,
 				BaseBranch:      pr.TargetBranch,
 				HeadRepoUID:     sourceRepo.GitUID,
 				HeadBranch:      pr.SourceBranch,
 				RefType:         gitenum.RefTypeUndefined, // update no refs -> no commit will be created
 				HeadExpectedSHA: sha.Must(in.SourceSHA),
+				Method:          gitenum.MergeMethod(in.Method),
 			})
 			if err != nil {
-				return nil, nil, fmt.Errorf("merge check execution failed: %w", err)
+				return nil, nil, fmt.Errorf("failed merge check with method=%s: %w", in.Method, err)
 			}
 
 			pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
@@ -255,25 +284,19 @@ func (c *Controller) Merge(
 					return usererror.BadRequest("Pull request must be open")
 				}
 
-				if len(mergeOutput.ConflictFiles) > 0 {
-					pr.MergeCheckStatus = enum.MergeCheckStatusConflict
-					pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
-					pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
-					pr.MergeSHA = nil
-					pr.MergeConflicts = mergeOutput.ConflictFiles
-				} else {
-					pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
-					pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
-					pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
-					pr.MergeSHA = nil // dry-run doesn't create a merge commit so output is empty.
-					pr.MergeConflicts = nil
-				}
+				pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
+				pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
+				pr.MergeSHA = nil // dry-run doesn't create a merge commit so output is empty.
+
+				pr.UpdateMergeOutcome(in.Method, mergeOutput.ConflictFiles)
+
 				pr.Stats.DiffStats = types.NewDiffStats(
 					mergeOutput.CommitCount,
 					mergeOutput.ChangedFileCount,
 					mergeOutput.Additions,
 					mergeOutput.Deletions,
 				)
+
 				return nil
 			})
 			if err != nil {
@@ -286,6 +309,13 @@ func (c *Controller) Merge(
 			}
 		}
 
+		var conflicts []string
+		if in.Method == enum.MergeMethodRebase {
+			conflicts = pr.RebaseConflicts
+		} else {
+			conflicts = pr.MergeConflicts
+		}
+
 		// With in.DryRun=true this function never returns types.MergeViolations
 		out := &types.MergeResponse{
 			BranchDeleted:  ruleOut.DeleteSourceBranch,
@@ -293,7 +323,8 @@ func (c *Controller) Merge(
 
 			// values only returned by dry run
 			DryRun:                              true,
-			ConflictFiles:                       pr.MergeConflicts,
+			Mergeable:                           len(conflicts) == 0,
+			ConflictFiles:                       conflicts,
 			AllowedMethods:                      ruleOut.AllowedMethods,
 			RequiresCodeOwnersApproval:          ruleOut.RequiresCodeOwnersApproval,
 			RequiresCodeOwnersApprovalLatest:    ruleOut.RequiresCodeOwnersApprovalLatest,
@@ -399,11 +430,10 @@ func (c *Controller) Merge(
 			}
 
 			// update all Merge specific information
-			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
 			pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
 			pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
 			pr.MergeSHA = nil
-			pr.MergeConflicts = mergeOutput.ConflictFiles
+			pr.UpdateMergeOutcome(in.Method, mergeOutput.ConflictFiles)
 			pr.Stats.DiffStats = types.NewDiffStats(
 				mergeOutput.CommitCount,
 				mergeOutput.ChangedFileCount,
@@ -447,12 +477,11 @@ func (c *Controller) Merge(
 
 		// update all Merge specific information (might be empty if previous merge check failed)
 		// since this is the final operation on the PR, we update any sha that might've changed by now.
-		pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
 		pr.SourceSHA = mergeOutput.HeadSHA.String()
 		pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
 		pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
 		pr.MergeSHA = ptr.String(mergeOutput.MergeSHA.String())
-		pr.MergeConflicts = nil
+		pr.MarkAsMerged()
 		pr.Stats.DiffStats = types.NewDiffStats(
 			mergeOutput.CommitCount,
 			mergeOutput.ChangedFileCount,

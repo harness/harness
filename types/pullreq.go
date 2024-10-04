@@ -51,17 +51,67 @@ type PullReq struct {
 	Merged      *int64            `json:"merged"`
 	MergeMethod *enum.MergeMethod `json:"merge_method"`
 
-	MergeCheckStatus enum.MergeCheckStatus `json:"merge_check_status"`
-	MergeTargetSHA   *string               `json:"merge_target_sha"`
-	MergeBaseSHA     string                `json:"merge_base_sha"`
-	MergeSHA         *string               `json:"-"` // TODO: either remove or ensure it's being set (merge dry-run)
-	MergeConflicts   []string              `json:"merge_conflicts,omitempty"`
+	MergeTargetSHA *string `json:"merge_target_sha"`
+	MergeBaseSHA   string  `json:"merge_base_sha"`
+	MergeSHA       *string `json:"-"` // TODO: either remove or ensure it's being set (merge dry-run)
+
+	MergeCheckStatus  enum.MergeCheckStatus `json:"merge_check_status"`
+	MergeConflicts    []string              `json:"merge_conflicts,omitempty"`
+	RebaseCheckStatus enum.MergeCheckStatus `json:"rebase_check_status"`
+	RebaseConflicts   []string              `json:"rebase_conflicts,omitempty"`
 
 	Author PrincipalInfo  `json:"author"`
 	Merger *PrincipalInfo `json:"merger"`
 	Stats  PullReqStats   `json:"stats"`
 
 	Labels []*LabelPullReqAssignmentInfo `json:"labels,omitempty"`
+}
+
+func (pr *PullReq) UpdateMergeOutcome(method enum.MergeMethod, conflictFiles []string) {
+	switch method {
+	case enum.MergeMethodMerge, enum.MergeMethodSquash:
+		if len(conflictFiles) > 0 {
+			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
+			pr.MergeConflicts = conflictFiles
+		} else {
+			pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
+			pr.MergeConflicts = nil
+		}
+	case enum.MergeMethodRebase:
+		if len(conflictFiles) > 0 {
+			pr.RebaseCheckStatus = enum.MergeCheckStatusConflict
+			pr.RebaseConflicts = conflictFiles
+		} else {
+			pr.RebaseCheckStatus = enum.MergeCheckStatusMergeable
+			pr.RebaseConflicts = nil
+		}
+	case enum.MergeMethodFastForward:
+		// fast-forward merge can't have conflicts
+	}
+}
+
+func (pr *PullReq) MarkAsMergeUnchecked() {
+	pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
+	pr.MergeConflicts = nil
+	pr.RebaseCheckStatus = enum.MergeCheckStatusUnchecked
+	pr.RebaseConflicts = nil
+}
+
+func (pr *PullReq) MarkAsMergeable() {
+	pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
+	pr.MergeConflicts = nil
+}
+
+func (pr *PullReq) MarkAsRebaseable() {
+	pr.RebaseCheckStatus = enum.MergeCheckStatusMergeable
+	pr.RebaseConflicts = nil
+}
+
+func (pr *PullReq) MarkAsMerged() {
+	pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
+	pr.MergeConflicts = nil
+	pr.RebaseCheckStatus = enum.MergeCheckStatusMergeable
+	pr.RebaseConflicts = nil
 }
 
 // DiffStats shows total number of commits and modified files.
@@ -201,6 +251,7 @@ type MergeResponse struct {
 
 	// values only returned on dryrun
 	DryRun                              bool               `json:"dry_run,omitempty"`
+	Mergeable                           bool               `json:"mergeable,omitempty"`
 	ConflictFiles                       []string           `json:"conflict_files,omitempty"`
 	AllowedMethods                      []enum.MergeMethod `json:"allowed_methods,omitempty"`
 	MinimumRequiredApprovalsCount       int                `json:"minimum_required_approvals_count,omitempty"`

@@ -277,12 +277,11 @@ func (r *repoImportState) convertPullReq(
 		mergeMethod := enum.MergeMethodMerge // Don't know
 		pr.MergeMethod = &mergeMethod
 
-		pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
 		pr.SourceSHA = extPullReq.Head.SHA
 		pr.MergeTargetSHA = &extPullReq.Base.SHA
 		pr.MergeBaseSHA = extPullReq.Base.SHA
 		pr.MergeSHA = nil // Don't have this.
-		pr.MergeConflicts = nil
+		pr.MarkAsMerged()
 
 	case enum.PullReqStateClosed:
 		// For closed PR's it's not important to verify existence of branches and commits.
@@ -290,10 +289,11 @@ func (r *repoImportState) convertPullReq(
 		pr.SourceSHA = extPullReq.Head.SHA
 		pr.MergeTargetSHA = &extPullReq.Base.SHA
 		pr.MergeBaseSHA = extPullReq.Base.SHA
-		pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
 		pr.MergeSHA = nil
 		pr.MergeConflicts = nil
 		pr.MergeTargetSHA = nil
+		pr.MarkAsMergeUnchecked()
+
 		pr.Closed = &pr.Updated
 
 	case enum.PullReqStateOpen:
@@ -330,7 +330,7 @@ func (r *repoImportState) convertPullReq(
 		pr.SourceSHA = sourceSHA
 		pr.MergeTargetSHA = &targetSHA
 		pr.MergeBaseSHA = mergeBase.MergeBaseSHA.String()
-		pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
+		pr.MarkAsMergeUnchecked()
 	}
 
 	log.Debug().Str("pullreq.state", string(pr.State)).Msg("importing pull request")
