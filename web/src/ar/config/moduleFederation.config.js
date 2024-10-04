@@ -26,10 +26,11 @@ const ExactSharedPackages = ['formik', 'react-dom', 'react', 'react-router-dom']
  * @type {import('webpack').ModuleFederationPluginOptions}
  */
 module.exports = {
-  name: 'har',
+  name: 'harRemote',
   filename: 'remoteEntry.js',
   exposes: {
-    './HAREnterpriseApp': '@ar/app/EnterpriseApp'
+    './HAREnterpriseApp': '@ar/app/EnterpriseApp',
+    './HARCreateRegistryButton': './src/ar/views/CreateRegistryButton/CreateRegistryButton.tsx'
   },
   shared: Object.assign(
     {},

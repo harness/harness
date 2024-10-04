@@ -26,9 +26,6 @@ import type {
   VersionDetailsTabPathParams
 } from './types'
 
-import '@ar/pages/version-details/VersionFactory'
-import '@ar/pages/repository-details/RepositoryFactory'
-
 const RepositoryListPage = React.lazy(() => import('@ar/pages/repository-list/RepositoryListPage'))
 const RepositoryDetailsPage = React.lazy(() => import('@ar/pages/repository-details/RepositoryDetailsPage'))
 const ArtifactListPage = React.lazy(() => import('@ar/pages/artifact-list/ArtifactListPage'))

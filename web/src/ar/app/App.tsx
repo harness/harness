@@ -31,6 +31,10 @@ import type { MFEAppProps } from '@ar/MFEAppTypes'
 import DefaultNavComponent from '@ar/__mocks__/components/DefaultNavComponent'
 import AppErrorBoundary from '@ar/components/AppErrorBoundary/AppErrorBoundary'
 
+// Start: Add all factory registractions here
+import '@ar/pages/version-details/VersionFactory'
+import '@ar/pages/repository-details/RepositoryFactory'
+
 import css from '@ar/app/app.module.scss'
 
 const RouteDestinations = React.lazy(() => import('@ar/routes/RouteDestinations'))

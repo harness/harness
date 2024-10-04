@@ -31,7 +31,6 @@ const prodConfig = {
   mode: 'production',
   devtool: 'hidden-source-map',
   output: {
-    path: path.resolve(CONTEXT, 'dist/static'),
     filename: '[name].[contenthash:6].js',
     chunkFilename: '[name].[id].[contenthash:6].js',
     pathinfo: false,
@@ -47,7 +46,7 @@ const prodConfig = {
     }),
     new HTMLWebpackPlugin({
       template: 'src/ar/index.html',
-      filename: '../index.html',
+      filename: 'index.html',
       minify: false,
       templateParameters: {
         __DEV__: false

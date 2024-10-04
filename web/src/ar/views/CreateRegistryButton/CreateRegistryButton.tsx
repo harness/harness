@@ -24,9 +24,6 @@ import type { Repository } from '@ar/pages/repository-details/types'
 import type { RbacButtonProps } from '@ar/__mocks__/components/RbacButton'
 import { useCreateRepositoryModal } from '@ar/pages/repository-details/hooks/useCreateRepositoryModal/useCreateRepositoryModal'
 
-import '@ar/pages/version-details/VersionFactory'
-import '@ar/pages/repository-details/RepositoryFactory'
-
 interface CreateRegistryButtonProps extends RbacButtonProps {
   onSuccess: (data: Repository) => void
   allowedPackageTypes?: RepositoryPackageType[]
