@@ -390,6 +390,15 @@ func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (j
 			return job.FailProgress(), nil
 		}
 
+		// if repo is importing through the migrator cli there is no job created for it, return state=progress
+		if repo.State == enum.RepoStateMigrateDataImport ||
+			repo.State == enum.RepoStateMigrateGitPush {
+			return job.Progress{
+				State:    job.JobStateRunning,
+				Progress: job.ProgressMin,
+			}, nil
+		}
+
 		// otherwise there either was no import, or it completed a long time ago (job cleaned up by now)
 		return job.Progress{}, ErrNotFound
 	}
