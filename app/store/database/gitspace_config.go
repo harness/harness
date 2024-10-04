@@ -317,7 +317,7 @@ func (s gitspaceConfigStore) FindAll(ctx context.Context, ids []int64) ([]*types
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
 	}
 	db := dbtx.GetAccessor(ctx, s.db)
-	if err := db.SelectContext(ctx, dst, sql, args...); err != nil {
+	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find all gitspace configs for %v", ids)
 	}
 	return s.mapToGitspaceConfigs(ctx, dst)
