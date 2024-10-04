@@ -147,6 +147,11 @@ func (c *Service) StartGitspaceAction(
 		if err != nil {
 			return err
 		}
+
+		if savedGitspaceInstance != nil {
+			gitspaceInstance.HasGitChanges = savedGitspaceInstance.HasGitChanges
+		}
+
 		if err = c.gitspaceInstanceStore.Create(ctx, gitspaceInstance); err != nil {
 			return fmt.Errorf("failed to create gitspace instance for %s %w", config.Identifier, err)
 		}
