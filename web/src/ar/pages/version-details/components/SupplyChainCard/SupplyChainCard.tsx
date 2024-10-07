@@ -16,10 +16,12 @@
 
 import React from 'react'
 import classNames from 'classnames'
-import { Card, Layout, Text } from '@harnessio/uicore'
+import { Button, ButtonSize, ButtonVariation, Card, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 
+import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
+import useDownloadSLSAProvenance from '@ar/pages/version-details/hooks/useDownloadSLSAProvenance'
 
 import SecurityItem from '../SecurityTestsCard/SecurityItem'
 import { SecurityTestSatus } from '../SecurityTestsCard/types'
@@ -33,12 +35,15 @@ interface SupplyChainCardProps {
   allowListCount: number
   denyListCount: number
   sbomScore: string | number
+  provenanceId: string
   onClick?: () => void
 }
 
 export default function SupplyChainCard(props: SupplyChainCardProps) {
-  const { title, totalComponents, allowListCount, denyListCount, className, sbomScore, onClick } = props
+  const { title, totalComponents, allowListCount, denyListCount, className, sbomScore, onClick, provenanceId } = props
   const { getString } = useStrings()
+
+  const { download, loading } = useDownloadSLSAProvenance()
 
   return (
     <Card className={className} onClick={onClick}>
@@ -59,13 +64,18 @@ export default function SupplyChainCard(props: SupplyChainCardProps) {
               value={sbomScore}
               status={SecurityTestSatus.Green}
             />
-            <Text
-              flex={{ alignItems: 'center' }}
-              font={{ variation: FontVariation.SMALL }}
+            <Button
+              className={css.downloadSlsaBtn}
+              size={ButtonSize.SMALL}
               rightIcon="download-manifests"
-              iconProps={{ size: 18 }}>
+              variation={ButtonVariation.LINK}
+              loading={loading}
+              onClick={evt => {
+                killEvent(evt)
+                download(provenanceId)
+              }}>
               {getString('versionDetails.cards.supplyChain.slsaProvenance')}
-            </Text>
+            </Button>
           </Layout.Vertical>
         </Layout.Horizontal>
         <Layout.Horizontal className={css.container}>

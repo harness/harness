@@ -161,6 +161,7 @@ export interface StringsMap {
   'versionDetails.cards.securityTests.totalCount': string
   'versionDetails.cards.supplyChain.allowList': string
   'versionDetails.cards.supplyChain.denyListViolation': string
+  'versionDetails.cards.supplyChain.provenanceDataNotAvailable': string
   'versionDetails.cards.supplyChain.sbomScore': string
   'versionDetails.cards.supplyChain.slsaProvenance': string
   'versionDetails.cards.supplyChain.title': string

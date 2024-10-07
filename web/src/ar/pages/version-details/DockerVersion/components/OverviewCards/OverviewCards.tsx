@@ -100,6 +100,7 @@ export default function DockerVersionOverviewCards() {
                 artifactId: responseData.sbomDetails?.artifactId
               })
             }}
+            provenanceId={defaultTo(responseData.slsaDetails?.provenanceId, '')}
             className={css.card}
             totalComponents={defaultTo(responseData.sbomDetails?.componentsCount, 0)}
             allowListCount={defaultTo(responseData.sbomDetails?.allowListViolations, 0)}

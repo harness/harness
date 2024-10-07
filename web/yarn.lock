@@ -1654,10 +1654,15 @@
   resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.7.tgz#21c37bad4291e1ed4ea730f6ed1f7612934e8b3f"
   integrity sha512-+vugtcJR47pQZj2IMYRt7XSNpjW/m9iSeLjQMG2Hja3Hq9J+zfDsXh2aRor3ICrLSrkQtRWpBbWn+WmsoN3lVg==
 
-"@harnessio/react-har-service-client@^0.0.22":
-  version "0.0.22"
-  resolved "https://registry.yarnpkg.com/@harnessio/react-har-service-client/-/react-har-service-client-0.0.22.tgz#f946ef4378fecc5ecbffa46ea664446b93b01f79"
-  integrity sha512-MzTcA3xcaQbuYVDe9v5gPaHSCUs+7gpLt4F5/Bh26hbhzPSpGK2nxqh37sxIq3fVNkpGWXpScrnCxV1FDGNHvw==
+"@harnessio/react-har-service-client@^0.0.23":
+  version "0.0.23"
+  resolved "https://registry.yarnpkg.com/@harnessio/react-har-service-client/-/react-har-service-client-0.0.23.tgz#ea4f5705155b9d7a87a475f5a45adb9d72c2d8ab"
+  integrity sha512-fXcW3WylHLCpPf1Ce/z1GoKcy/1jPk7tzlXMUzqTnooFlnhpOPV5fXOpVyGP8i8mmKIW17vsLLedgf+LgRhD3w==
+
+"@harnessio/react-ssca-manager-client@^0.65.0":
+  version "0.65.0"
+  resolved "https://registry.yarnpkg.com/@harnessio/react-ssca-manager-client/-/react-ssca-manager-client-0.65.0.tgz#8088869e282c5268bf1fefb9715652e0fc1a8940"
+  integrity sha512-sNLDf1lyBfdzD9TqlrsMib61YffrEpb5WJwhRKuPGKD9Po0peAqE6NGLHVFbyra4tRGvvg8gnNpzzp4hMBYeCQ==
 
 "@harnessio/uicore@^4.1.2":
   version "4.1.2"

@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-.container {
-  --layout-spacing: var(--spacing-medium) !important;
-  & .column:not(:first-child) {
-    margin-left: var(--spacing-medium) !important;
-    padding-left: var(--spacing-medium) !important;
-    border-left: 1px solid var(--grey-200);
-    &.primaryColumn {
-      border-left-color: var(--primary-700) !important;
+export const downloadRawFile = (content: string, filename: string, fileType = 'text/json') => {
+  return new Promise<void>((resolve, reject) => {
+    try {
+      const url = URL.createObjectURL(new Blob([content], { type: fileType }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+      setTimeout(() => {
+        URL.revokeObjectURL(url)
+        a.remove()
+      }, 150)
+      resolve()
+    } catch (err) {
+      reject(err)
     }
-  }
-}
-
-.downloadSlsaBtn {
-  --font-size: 12px !important;
-  --padding: 0 !important;
+  })
 }

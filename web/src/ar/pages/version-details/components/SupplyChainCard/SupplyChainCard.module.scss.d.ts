@@ -18,4 +18,5 @@
 // This is an auto-generated file
 export declare const column: string
 export declare const container: string
+export declare const downloadSlsaBtn: string
 export declare const primaryColumn: string

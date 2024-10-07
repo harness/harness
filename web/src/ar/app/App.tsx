@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import React, { PropsWithChildren, Suspense, useEffect, useRef } from 'react'
+import React, { PropsWithChildren, Suspense, useEffect, useMemo, useRef } from 'react'
 import { Page } from '@harnessio/uicore'
 import { HARServiceAPIClient } from '@harnessio/react-har-service-client'
+import { SSCAManagerAPIClient } from '@harnessio/react-ssca-manager-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 
 import { StringsContextProvider } from '@ar/frameworks/strings/StringsContextProvider'
@@ -57,10 +58,10 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
   } = props
 
   const { ModalProvider } = customComponents
-
   const appStoreData = React.useContext(parentContextObj.appStoreContext)
-  useRef<HARServiceAPIClient>(
-    new HARServiceAPIClient({
+
+  const apiClientOptions = useMemo(
+    () => ({
       responseInterceptor: (response: Response): Response => {
         if (!response.ok && response.status === 401) {
           on401()
@@ -71,7 +72,7 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
       urlInterceptor: (url: string) => {
         return customUtils.getApiBaseUrl(url)
       },
-      requestInterceptor(request) {
+      requestInterceptor(request: Request) {
         request.headers.delete('Authorization')
         // add custom headers if available
         const customHeader = customUtils.getCustomHeaders()
@@ -80,8 +81,12 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
         })
         return request
       }
-    })
+    }),
+    []
   )
+
+  useRef<HARServiceAPIClient>(new HARServiceAPIClient(apiClientOptions))
+  useRef<SSCAManagerAPIClient>(new SSCAManagerAPIClient(apiClientOptions))
 
   useEffect(
     () => () => {

@@ -25,6 +25,7 @@ cards:
     totalComponents: Total Dependencies
     sbomScore: SBOM Score
     slsaProvenance: SLSA Provenance
+    provenanceDataNotAvailable: Provenance data is not available
     allowList: Allow List
     denyListViolation: Deny List Violation
   container:
