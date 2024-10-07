@@ -256,6 +256,30 @@ func (g gitspaceInstanceStore) Update(
 	return nil
 }
 
+func (g gitspaceInstanceStore) BulkUpdateState(
+	ctx context.Context,
+	state enum.GitspaceInstanceStateType,
+	gitspaceInstanceIDs []int64,
+) error {
+	stmt := database.Builder.
+		Update(gitspaceInstanceTable).
+		Set("gits_state", state).
+		Where(squirrel.Eq{"gits_id": gitspaceInstanceIDs})
+
+	sqlStr, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, g.db)
+	if _, err = db.ExecContext(ctx, sqlStr, args...); err != nil {
+		return database.ProcessSQLErrorf(ctx, err,
+			"Failed to update gitspace instances for %v", gitspaceInstanceIDs)
+	}
+
+	return nil
+}
+
 func (g gitspaceInstanceStore) FindLatestByGitspaceConfigID(
 	ctx context.Context,
 	gitspaceConfigID int64,
@@ -302,6 +326,29 @@ func (g gitspaceInstanceStore) List(
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace instance list query")
 	}
 	return g.mapToGitspaceInstances(ctx, dst)
+}
+
+func (g gitspaceInstanceStore) ListDead(
+	ctx context.Context,
+	filter *types.GitspaceFilter,
+) (gitInstanceIDs []int64, err error) {
+	stmt := database.Builder.
+		Select("gits_id").
+		From(gitspaceInstanceTable).
+		Where(squirrel.Lt{"gits_last_heartbeat": filter.LastHeartBeatBefore}).
+		Where(squirrel.Eq{"gits_state": filter.State}).
+		OrderBy("gits_created ASC")
+
+	sqlStr, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, g.db)
+	if err = db.SelectContext(ctx, &gitInstanceIDs, sqlStr, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace instance list query")
+	}
+	return gitInstanceIDs, nil
 }
 
 func (g gitspaceInstanceStore) FetchInactiveGitspaceConfigs(

@@ -79,11 +79,12 @@ type GitspaceInstance struct {
 }
 
 type GitspaceFilter struct {
-	QueryFilter    ListQueryFilter
-	UserID         string
-	LastUsedBefore int64
-	State          []enum.GitspaceInstanceStateType
-	SpaceIDs       []int64
-	IncludeDeleted bool
-	Limit          int
+	QueryFilter         ListQueryFilter
+	UserID              string
+	LastUsedBefore      int64
+	LastHeartBeatBefore int64
+	State               []enum.GitspaceInstanceStateType
+	SpaceIDs            []int64
+	IncludeDeleted      bool
+	Limit               int
 }
