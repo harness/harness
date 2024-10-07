@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 func (c *Service) UpdateInstance(
@@ -30,6 +31,19 @@ func (c *Service) UpdateInstance(
 	err := c.gitspaceInstanceStore.Update(ctx, gitspaceInstance)
 	if err != nil {
 		return fmt.Errorf("failed to update gitspace instance: %w", err)
+	}
+	return nil
+}
+
+func (c *Service) UpdateAllStateInstance(
+	ctx context.Context,
+	status enum.GitspaceInstanceStateType,
+	instancesIDs []int64,
+) error {
+	updatedUnixTime := time.Now().UnixMilli()
+	err := c.gitspaceInstanceStore.BulkUpdateState(ctx, status, updatedUnixTime, instancesIDs)
+	if err != nil {
+		return fmt.Errorf("failed to update all statue of gitspace instances: %w", err)
 	}
 	return nil
 }

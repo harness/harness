@@ -677,7 +677,12 @@ type (
 		Update(ctx context.Context, gitspaceInstance *types.GitspaceInstance) error
 
 		// BulkUpdateState updates state of given gitspace instance IDs to given state
-		BulkUpdateState(ctx context.Context, state enum.GitspaceInstanceStateType, gitspaceInstanceIDs []int64) error
+		BulkUpdateState(
+			ctx context.Context,
+			state enum.GitspaceInstanceStateType,
+			updateTimeUnix int64,
+			gitspaceInstanceIDs []int64,
+		) error
 
 		// List lists the gitspace instance present in a parent space ID in the datastore.
 		List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceInstance, error)

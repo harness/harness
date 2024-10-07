@@ -259,11 +259,13 @@ func (g gitspaceInstanceStore) Update(
 func (g gitspaceInstanceStore) BulkUpdateState(
 	ctx context.Context,
 	state enum.GitspaceInstanceStateType,
+	updateTimeUnix int64,
 	gitspaceInstanceIDs []int64,
 ) error {
 	stmt := database.Builder.
 		Update(gitspaceInstanceTable).
 		Set("gits_state", state).
+		Set("gits_updated", updateTimeUnix).
 		Where(squirrel.Eq{"gits_id": gitspaceInstanceIDs})
 
 	sqlStr, args, err := stmt.ToSql()
