@@ -27,8 +27,8 @@ import (
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
-type createTokenRequest struct {
-	user.CreateTokenInput
+type tokensRequest struct {
+	Identifier string `path:"token_identifier"`
 }
 
 var queryParameterMembershipSpaces = openapi3.ParameterOrRef{
@@ -110,14 +110,6 @@ func buildUser(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/user", opUpdate)
 
-	opToken := openapi3.Operation{}
-	opToken.WithTags("user")
-	opToken.WithMapOfAnything(map[string]interface{}{"operationId": "createToken"})
-	_ = reflector.SetRequest(&opToken, new(createTokenRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opToken, new(types.TokenResponse), http.StatusCreated)
-	_ = reflector.SetJSONResponse(&opToken, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/token", opToken)
-
 	opMemberSpaces := openapi3.Operation{}
 	opMemberSpaces.WithTags("user")
 	opMemberSpaces.WithMapOfAnything(map[string]interface{}{"operationId": "membershipSpaces"})
@@ -160,4 +152,35 @@ func buildUser(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opKeyList, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opKeyList, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/user/keys", opKeyList)
+
+	opListTokens := openapi3.Operation{}
+	opListTokens.WithTags("user")
+	opListTokens.WithMapOfAnything(map[string]interface{}{"operationId": "listTokens"})
+	_ = reflector.SetRequest(&opListTokens, nil, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListTokens, new([]types.Token), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListTokens, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListTokens, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListTokens, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/user/tokens", opListTokens)
+
+	opCreateToken := openapi3.Operation{}
+	opCreateToken.WithTags("user")
+	opCreateToken.WithMapOfAnything(map[string]interface{}{"operationId": "createToken"})
+	_ = reflector.SetRequest(&opCreateToken, new(user.CreateTokenInput), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opCreateToken, new(types.TokenResponse), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opCreateToken, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCreateToken, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCreateToken, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/tokens", opCreateToken)
+
+	opDeleteToken := openapi3.Operation{}
+	opDeleteToken.WithTags("user")
+	opDeleteToken.WithMapOfAnything(map[string]interface{}{"operationId": "deleteToken"})
+	_ = reflector.SetRequest(&opDeleteToken, new(tokensRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opDeleteToken, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opDeleteToken, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opDeleteToken, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDeleteToken, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opDeleteToken, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/user/tokens/{token_identifier}", opDeleteToken)
 }
