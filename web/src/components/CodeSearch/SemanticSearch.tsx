@@ -77,7 +77,7 @@ const SemanticSearch = ({ repoMetadata }: Pick<GitInfoProps, 'repoMetadata'>) =>
       onClick={() => {
         setShowSearchModal(true)
       }}>
-      <SearchInputWithSpinner readOnly placeholder={getString('codeSearch') + ` (ctrl-k)`} query={''} setQuery={noop} />
+      <SearchInputWithSpinner readOnly placeholder={getString('codeSearch')} query={''} setQuery={noop} />
       {<img src={svg} width={95} height={22} />}
       {showSearchModal && (
         <Container onClick={Utils.stopEvent}>

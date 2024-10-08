@@ -116,7 +116,7 @@ const CodeSearch = ({ repoMetadata }: CodeSearchProps) => {
       onClick={() => {
         setShowSearchModal(true)
       }}>
-      <SearchInputWithSpinner readOnly placeholder={getString('codeSearch') + ` (ctrl-k)`} query={''} setQuery={noop} />
+      <SearchInputWithSpinner readOnly placeholder={getString('codeSearch')} query={''} setQuery={noop} />
       {isSemanticSearch && <img src={svg} width={95} height={22} />}
       {showSearchModal && (
         <Container onClick={Utils.stopEvent}>

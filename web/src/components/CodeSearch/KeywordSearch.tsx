@@ -89,7 +89,7 @@ const KeywordSearch = ({ repoMetadata }: KeywordSearchProps) => {
       onClick={() => {
         setShowSearchModal(true)
       }}>
-      <SearchInputWithSpinner readOnly placeholder={getString('codeSearch') + ` (ctrl-k)`} query={''} setQuery={noop} />
+      <SearchInputWithSpinner readOnly placeholder={getString('codeSearch')} query={''} setQuery={noop} />
       {showSearchModal && (
         <Container onClick={Utils.stopEvent}>
           <Dialog
