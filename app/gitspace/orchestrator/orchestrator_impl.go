@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 )
 
 const harnessUser = "harness"
@@ -108,7 +109,8 @@ func (o orchestrator) TriggerStopGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) error {
-	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig)
+	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig,
+		[]enum.InfraStatus{enum.InfraStatusProvisioned, enum.InfraStatusStopped})
 	if err != nil {
 		return fmt.Errorf(
 			"unable to find provisioned infra while triggering stop for gitspace instance %s: %w",
@@ -190,11 +192,10 @@ func (o orchestrator) stopAndRemoveGitspaceContainer(
 	err = o.containerOrchestrator.StopAndRemoveGitspace(ctx, gitspaceConfig, infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionFailed)
-
-		return fmt.Errorf("error stopping the Gitspace container: %w", err)
+		log.Err(err).Msgf("error stopping the Gitspace container")
+	} else {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionCompleted)
 	}
-
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceDeletionCompleted)
 	return nil
 }
 
@@ -202,7 +203,8 @@ func (o orchestrator) TriggerDeleteGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) error {
-	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig)
+	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig,
+		[]enum.InfraStatus{enum.InfraStatusProvisioned, enum.InfraStatusStopped, enum.InfraStatusDestroyed})
 	if err != nil {
 		return fmt.Errorf(
 			"unable to find provisioned infra while triggering delete for gitspace instance %s: %w",
@@ -502,7 +504,7 @@ func (o orchestrator) getPortsRequiredForGitspace(
 }
 
 func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig) (string, error) {
-	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig)
+	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig, []enum.InfraStatus{enum.InfraStatusProvisioned})
 	if err != nil {
 		return "", fmt.Errorf(
 			"unable to find provisioned infra while fetching logs for gitspace instance %s: %w",
@@ -522,6 +524,7 @@ func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.
 func (o orchestrator) getProvisionedInfra(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
+	expectedStatus []enum.InfraStatus,
 ) (*types.Infrastructure, error) {
 	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig)
 	if err != nil {
@@ -533,8 +536,8 @@ func (o orchestrator) getProvisionedInfra(
 		return nil, fmt.Errorf("cannot find the provisioned infra: %w", err)
 	}
 
-	if infra.Status != enum.InfraStatusProvisioned {
-		return nil, fmt.Errorf("expected infra state is provisioned, actual state is: %s", infra.Status)
+	if !slices.Contains(expectedStatus, infra.Status) {
+		return nil, fmt.Errorf("expected infra state in %v, actual state is: %s", expectedStatus, infra.Status)
 	}
 
 	if infra.Storage == "" {
