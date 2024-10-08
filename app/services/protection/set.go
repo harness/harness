@@ -39,9 +39,7 @@ func (s ruleSet) MergeVerify(
 	var out MergeVerifyOutput
 	var violations []types.RuleViolations
 
-	if in.Method == "" {
-		out.AllowedMethods = slices.Clone(enum.MergeMethods)
-	}
+	out.AllowedMethods = slices.Clone(enum.MergeMethods)
 
 	err := s.forEachRuleMatchBranch(in.TargetRepo.DefaultBranch, in.PullReq.TargetBranch,
 		func(r *types.RuleInfoInternal, p Protection) error {

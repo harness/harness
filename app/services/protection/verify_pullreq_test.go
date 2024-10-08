@@ -41,15 +41,15 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch: false,
-				AllowedMethods:     nil,
+				AllowedMethods:     enum.MergeMethods,
 			},
 		},
 		{
 			name: "empty-no-merge-method-specified",
 			in:   MergeVerifyInput{},
 			expOut: MergeVerifyOutput{
-				DeleteSourceBranch: false,
 				AllowedMethods:     enum.MergeMethods,
+				DeleteSourceBranch: false,
 			},
 		},
 		{
@@ -64,7 +64,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqMinCount},
 			expParams: [][]any{{0, 1}},
-			expOut:    MergeVerifyOutput{MinimumRequiredApprovalsCount: 1},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                enum.MergeMethods,
+				MinimumRequiredApprovalsCount: 1,
+			},
 		},
 		{
 			name: codePullReqApprovalReqMinCount + "-success",
@@ -77,7 +80,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{MinimumRequiredApprovalsCount: 2},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                enum.MergeMethods,
+				MinimumRequiredApprovalsCount: 2,
+			},
 		},
 		{
 			name: codePullReqApprovalReqLatestCommit + "-fail",
@@ -92,7 +98,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqMinCountLatest},
 			expParams: [][]any{{1, 2}},
-			expOut:    MergeVerifyOutput{MinimumRequiredApprovalsCountLatest: 2},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                      enum.MergeMethods,
+				MinimumRequiredApprovalsCountLatest: 2,
+			},
 		},
 		{
 			name: codePullReqApprovalReqLatestCommit + "-success",
@@ -106,7 +115,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{MinimumRequiredApprovalsCountLatest: 2},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                      enum.MergeMethods,
+				MinimumRequiredApprovalsCountLatest: 2,
+			},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoApproval + "-fail",
@@ -141,7 +153,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				codePullReqApprovalReqCodeOwnersNoApproval,
 			},
 			expParams: [][]any{{"app"}, {"data"}},
-			expOut:    MergeVerifyOutput{RequiresCodeOwnersApproval: true},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:             enum.MergeMethods,
+				RequiresCodeOwnersApproval: true,
+			},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoApproval + "-success",
@@ -167,7 +182,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{RequiresCodeOwnersApproval: true},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:             enum.MergeMethods,
+				RequiresCodeOwnersApproval: true,
+			},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersChangeRequested + "-fail",
@@ -197,7 +215,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqCodeOwnersChangeRequested},
 			expParams: [][]any{{"app"}},
-			expOut:    MergeVerifyOutput{RequiresCodeOwnersApproval: true},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:             enum.MergeMethods,
+				RequiresCodeOwnersApproval: true,
+			},
 		},
 		{
 			name: codePullReqApprovalReqCodeOwnersNoLatestApproval + "-fail",
@@ -226,7 +247,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqCodeOwnersNoLatestApproval},
 			expParams: [][]any{{"data"}},
-			expOut:    MergeVerifyOutput{RequiresCodeOwnersApprovalLatest: true},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:                   enum.MergeMethods,
+				RequiresCodeOwnersApprovalLatest: true,
+			},
 		},
 		{
 			name: codePullReqCommentsReqResolveAll + "-fail",
@@ -237,7 +261,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{"pullreq.comments.require_resolve_all"},
 			expParams: [][]any{{6}},
-			expOut:    MergeVerifyOutput{RequiresCommentResolution: true},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:            enum.MergeMethods,
+				RequiresCommentResolution: true,
+			},
 		},
 		{
 			name: codePullReqCommentsReqResolveAll + "-success",
@@ -246,7 +273,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				PullReq: &types.PullReq{UnresolvedCount: 0},
 				Method:  enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{RequiresCommentResolution: true},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:            enum.MergeMethods,
+				RequiresCommentResolution: true,
+			},
 		},
 		{
 			name: codePullReqStatusChecksReqIdentifiers + "-fail",
@@ -260,7 +290,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqStatusChecksReqIdentifiers},
 			expParams: [][]any{{"check1"}},
-			expOut:    MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+			},
 		},
 		{
 			name: codePullReqStatusChecksReqIdentifiers + "-missing",
@@ -273,7 +305,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqStatusChecksReqIdentifiers},
 			expParams: [][]any{{"check1"}},
-			expOut:    MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+			},
 		},
 		{
 			name: codePullReqStatusChecksReqIdentifiers + "-success",
@@ -285,7 +319,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+			},
 		},
 		{
 			name: codePullReqMergeStrategiesAllowed + "-fail",
@@ -304,7 +340,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 					enum.MergeMethodSquash,
 				}},
 			},
-			expOut: MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: []enum.MergeMethod{enum.MergeMethodRebase, enum.MergeMethodSquash},
+			},
 		},
 		{
 			name: codePullReqMergeStrategiesAllowed + "-success",
@@ -315,7 +353,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			in: MergeVerifyInput{
 				Method: enum.MergeMethodSquash,
 			},
-			expOut: MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: []enum.MergeMethod{enum.MergeMethodRebase, enum.MergeMethodSquash},
+			},
 		},
 		{
 			name: codePullReqMergeDeleteBranch,
@@ -324,8 +364,8 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				Method: enum.MergeMethodMerge,
 			},
 			expOut: MergeVerifyOutput{
+				AllowedMethods:     enum.MergeMethods,
 				DeleteSourceBranch: true,
-				AllowedMethods:     nil,
 			},
 		},
 		{
@@ -337,7 +377,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				PullReq: &types.PullReq{SourceSHA: "abc"},
 				Method:  enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{RequiresNoChangeRequests: true},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:           enum.MergeMethods,
+				RequiresNoChangeRequests: true,
+			},
 		},
 		{
 			name: codePullReqApprovalReqChangeRequested + "-false",
@@ -351,7 +394,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 				},
 				Method: enum.MergeMethodMerge,
 			},
-			expOut: MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+			},
 		},
 		{
 			name: codePullReqApprovalReqChangeRequested + "-sameSHA",
@@ -371,7 +416,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqChangeRequested},
 			expParams: [][]any{{"John"}},
-			expOut:    MergeVerifyOutput{RequiresNoChangeRequests: true},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:           enum.MergeMethods,
+				RequiresNoChangeRequests: true,
+			},
 		},
 		{
 			name: codePullReqApprovalReqChangeRequested + "-diffSHA",
@@ -391,7 +439,10 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqApprovalReqChangeRequestedOldSHA},
 			expParams: [][]any{{"John"}},
-			expOut:    MergeVerifyOutput{RequiresNoChangeRequests: true},
+			expOut: MergeVerifyOutput{
+				AllowedMethods:           enum.MergeMethods,
+				RequiresNoChangeRequests: true,
+			},
 		},
 		{
 			name: codePullReqMergeBlock,
@@ -408,7 +459,9 @@ func TestDefPullReq_MergeVerify(t *testing.T) {
 			},
 			expCodes:  []string{codePullReqMergeBlock},
 			expParams: [][]any{{"abc"}},
-			expOut:    MergeVerifyOutput{},
+			expOut: MergeVerifyOutput{
+				AllowedMethods: enum.MergeMethods,
+			},
 		},
 	}
 

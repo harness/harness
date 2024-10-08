@@ -228,12 +228,13 @@ func (v *DefPullReq) MergeVerify(
 
 	// pullreq.merge
 
-	if in.Method == "" {
-		out.AllowedMethods = enum.MergeMethods
-	}
+	out.AllowedMethods = enum.MergeMethods
 
 	// Note: Empty allowed strategies list means all are allowed
 	if len(v.Merge.StrategiesAllowed) > 0 {
+		// if the Method isn't provided return allowed strategies
+		out.AllowedMethods = v.Merge.StrategiesAllowed
+
 		if in.Method != "" {
 			// if the Method is provided report violations if any
 			if !slices.Contains(v.Merge.StrategiesAllowed, in.Method) {
@@ -241,9 +242,6 @@ func (v *DefPullReq) MergeVerify(
 					"The requested merge strategy %q is not allowed. Allowed strategies are %v.",
 					in.Method, v.Merge.StrategiesAllowed)
 			}
-		} else {
-			// if the Method isn't provided return allowed strategies
-			out.AllowedMethods = v.Merge.StrategiesAllowed
 		}
 	}
 

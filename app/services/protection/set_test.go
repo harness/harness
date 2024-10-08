@@ -44,7 +44,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			},
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch: false,
-				AllowedMethods:     nil,
+				AllowedMethods:     enum.MergeMethods,
 			},
 			expViol: nil,
 		},
@@ -99,7 +99,7 @@ func TestRuleSet_MergeVerify(t *testing.T) {
 			expOut: MergeVerifyOutput{
 				DeleteSourceBranch:            true,
 				MinimumRequiredApprovalsCount: 1,
-				AllowedMethods:                nil,
+				AllowedMethods:                []enum.MergeMethod{enum.MergeMethodMerge},
 			},
 			expViol: []types.RuleViolations{
 				{
