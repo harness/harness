@@ -23,12 +23,16 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // CommitFileAction holds file operation data.
@@ -154,6 +158,34 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	})
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, err
+	}
+
+	if protection.IsBypassed(violations) {
+		err = c.auditService.Log(ctx,
+			session.Principal,
+			audit.NewResource(
+				audit.ResourceTypeRepository,
+				repo.Identifier,
+				audit.RepoPath,
+				repo.Path,
+				audit.BypassAction,
+				audit.BypassActionCommitted,
+				audit.BypassedResourceType,
+				audit.BypassedResourceTypeCommit,
+				audit.BypassedResourceName,
+				commit.CommitID.String(),
+			),
+			audit.ActionBypassed,
+			paths.Parent(repo.Path),
+			audit.WithNewObject(audit.CommitObject{
+				CommitSHA:      commit.CommitID.String(),
+				RepoPath:       repo.Path,
+				RuleViolations: violations,
+			}),
+		)
+	}
+	if err != nil {
+		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for commit operation: %s", err)
 	}
 
 	return types.CommitFilesResponse{

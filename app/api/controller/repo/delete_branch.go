@@ -21,10 +21,14 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // DeleteBranch deletes a repo branch.
@@ -90,6 +94,34 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	})
 	if err != nil {
 		return types.DeleteBranchOutput{}, nil, err
+	}
+
+	if protection.IsBypassed(violations) {
+		err = c.auditService.Log(ctx,
+			session.Principal,
+			audit.NewResource(
+				audit.ResourceTypeRepository,
+				repo.Identifier,
+				audit.RepoPath,
+				repo.Path,
+				audit.BypassedResourceType,
+				audit.BypassedResourceTypeBranch,
+				audit.BypassedResourceName,
+				branchName,
+				audit.BypassAction,
+				audit.BypassActionDeleted,
+			),
+			audit.ActionBypassed,
+			paths.Parent(repo.Path),
+			audit.WithNewObject(audit.BranchObject{
+				BranchName:     branchName,
+				RepoPath:       repo.Path,
+				RuleViolations: violations,
+			}),
+		)
+		if err != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete branch operation: %s", err)
+		}
 	}
 
 	return types.DeleteBranchOutput{

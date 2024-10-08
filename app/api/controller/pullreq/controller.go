@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
@@ -49,6 +50,7 @@ type Controller struct {
 	tx                     dbtx.Transactor
 	urlProvider            url.Provider
 	authorizer             authz.Authorizer
+	auditService           audit.Service
 	pullreqStore           store.PullReqStore
 	activityStore          store.PullReqActivityStore
 	codeCommentView        store.CodeCommentView
@@ -81,6 +83,7 @@ func NewController(
 	tx dbtx.Transactor,
 	urlProvider url.Provider,
 	authorizer authz.Authorizer,
+	auditService audit.Service,
 	pullreqStore store.PullReqStore,
 	pullreqActivityStore store.PullReqActivityStore,
 	codeCommentView store.CodeCommentView,
@@ -112,6 +115,7 @@ func NewController(
 		tx:                     tx,
 		urlProvider:            urlProvider,
 		authorizer:             authorizer,
+		auditService:           auditService,
 		pullreqStore:           pullreqStore,
 		activityStore:          pullreqActivityStore,
 		codeCommentView:        codeCommentView,

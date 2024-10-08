@@ -31,20 +31,32 @@ var (
 )
 
 const (
-	RepoName = "repoName"
+	RepoName                        = "repoName"
+	BypassedResourceType            = "bypassedResourceType"
+	BypassedResourceName            = "bypassedResourceName"
+	RepoPath                        = "repoPath"
+	BypassedResourceTypePullRequest = "pull_request"
+	BypassedResourceTypeBranch      = "branch"
+	BypassedResourceTypeCommit      = "commit"
+	BypassAction                    = "bypass_action"
+	BypassActionDeleted             = "deleted"
+	BypassActionCreated             = "created"
+	BypassActionCommitted           = "committed"
+	BypassActionMerged              = "merged"
 )
 
 type Action string
 
 const (
-	ActionCreated Action = "created"
-	ActionUpdated Action = "updated" // update default branch, switching default branch, updating description
-	ActionDeleted Action = "deleted"
+	ActionCreated  Action = "created"
+	ActionUpdated  Action = "updated" // update default branch, switching default branch, updating description
+	ActionDeleted  Action = "deleted"
+	ActionBypassed Action = "bypassed"
 )
 
 func (a Action) Validate() error {
 	switch a {
-	case ActionCreated, ActionUpdated, ActionDeleted:
+	case ActionCreated, ActionUpdated, ActionDeleted, ActionBypassed:
 		return nil
 	default:
 		return ErrActionUndefined
@@ -56,6 +68,8 @@ type ResourceType string
 const (
 	ResourceTypeRepository            ResourceType = "repository"
 	ResourceTypeBranchRule            ResourceType = "branch_rule"
+	ResourceTypeBranch                ResourceType = "branch"
+	ResourceTypePullRequest           ResourceType = "pull_request"
 	ResourceTypeRepositorySettings    ResourceType = "repository_settings"
 	ResourceTypeRegistry              ResourceType = "registry"
 	ResourceTypeRegistryUpstreamProxy ResourceType = "registry_upstream_proxy"
@@ -65,6 +79,8 @@ func (a ResourceType) Validate() error {
 	switch a {
 	case ResourceTypeRepository,
 		ResourceTypeBranchRule,
+		ResourceTypeBranch,
+		ResourceTypePullRequest,
 		ResourceTypeRepositorySettings,
 		ResourceTypeRegistry,
 		ResourceTypeRegistryUpstreamProxy:

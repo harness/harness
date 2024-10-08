@@ -20,8 +20,10 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -105,6 +107,34 @@ func (c *Controller) CreateBranch(ctx context.Context,
 	branch, err := controller.MapBranch(rpcOut.Branch)
 	if err != nil {
 		return types.CreateBranchOutput{}, nil, fmt.Errorf("failed to map branch: %w", err)
+	}
+
+	if protection.IsBypassed(violations) {
+		err = c.auditService.Log(ctx,
+			session.Principal,
+			audit.NewResource(
+				audit.ResourceTypeRepository,
+				repo.Identifier,
+				audit.RepoPath,
+				repo.Path,
+				audit.BypassedResourceType,
+				audit.BypassedResourceTypeBranch,
+				audit.BypassedResourceName,
+				branch.Name,
+				audit.BypassAction,
+				audit.BypassActionCreated,
+			),
+			audit.ActionBypassed,
+			paths.Parent(repo.Path),
+			audit.WithNewObject(audit.BranchObject{
+				BranchName:     branch.Name,
+				RepoPath:       repo.Path,
+				RuleViolations: violations,
+			}),
+		)
+		if err != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert audit log for create branch operation: %s", err)
+		}
 	}
 
 	err = c.instrumentation.Track(ctx, instrument.Event{

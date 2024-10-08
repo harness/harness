@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -40,7 +41,11 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer authz.Authorizer,
+func ProvideController(
+	tx dbtx.Transactor,
+	urlProvider url.Provider,
+	authorizer authz.Authorizer,
+	auditService audit.Service,
 	pullReqStore store.PullReqStore, pullReqActivityStore store.PullReqActivityStore,
 	codeCommentsView store.CodeCommentView,
 	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,
@@ -63,6 +68,7 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 	return NewController(tx,
 		urlProvider,
 		authorizer,
+		auditService,
 		pullReqStore,
 		pullReqActivityStore,
 		codeCommentsView,

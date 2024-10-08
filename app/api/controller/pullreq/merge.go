@@ -17,6 +17,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,9 +26,11 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
+	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/contextutil"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
@@ -551,6 +554,34 @@ func (c *Controller) Merge(
 
 	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
+	}
+
+	if protection.IsBypassed(violations) {
+		err = c.auditService.Log(ctx,
+			session.Principal,
+			audit.NewResource(
+				audit.ResourceTypeRepository,
+				sourceRepo.Identifier,
+				audit.RepoPath,
+				sourceRepo.Path,
+				audit.BypassedResourceType,
+				audit.BypassedResourceTypePullRequest,
+				audit.BypassedResourceName,
+				strconv.FormatInt(pr.Number, 10),
+				audit.BypassAction,
+				audit.BypassActionMerged,
+			),
+			audit.ActionBypassed,
+			paths.Parent(sourceRepo.Path),
+			audit.WithNewObject(audit.PullRequestObject{
+				PullReq:        *pr,
+				RepoPath:       sourceRepo.Path,
+				RuleViolations: violations,
+			}),
+		)
+		if err != nil {
+			log.Ctx(ctx).Warn().Msgf("failed to insert audit log for merge pull request operation: %s", err)
+		}
 	}
 
 	err = c.instrumentation.Track(ctx, instrument.Event{

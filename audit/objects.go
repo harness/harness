@@ -31,6 +31,25 @@ type RepositoryObject struct {
 type RegistryObject struct {
 	registrytypes.Registry
 }
+
+type PullRequestObject struct {
+	PullReq        types.PullReq
+	RepoPath       string                 `yaml:"repo_path"`
+	RuleViolations []types.RuleViolations `yaml:"rule_violations"`
+}
+
+type CommitObject struct {
+	CommitSHA      string                 `yaml:"commit_sha"`
+	RepoPath       string                 `yaml:"repo_path"`
+	RuleViolations []types.RuleViolations `yaml:"rule_violations"`
+}
+
+type BranchObject struct {
+	BranchName     string                 `yaml:"branch_name"`
+	RepoPath       string                 `yaml:"repo_path"`
+	RuleViolations []types.RuleViolations `yaml:"rule_violations"`
+}
+
 type RegistryUpstreamProxyConfigObject struct {
 	ID         int64
 	RegistryID int64
