@@ -45,7 +45,7 @@ func GenerateAIContext(payloads ...capabilities2.AIContextPayload) []capabilitie
 }
 
 type PipelineContext struct {
-	Yaml string `json:"yaml"`
+	Yaml string `json:"pipeline_yaml"`
 }
 
 func (c PipelineContext) GetName() string {
