@@ -128,7 +128,7 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	log.Warn().Msgf("%v: [GIT] %v", fallbackErr, err)
 
 	switch {
-	case err.Error() == "no such file or directory":
+	case strings.Contains(err.Error(), "no such file or directory"):
 		return errors.NotFound("repository not found")
 	case strings.Contains(err.Error(), "reference already exists"):
 		return errors.Conflict("reference already exists")
