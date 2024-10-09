@@ -80,7 +80,7 @@ func (s *HarnessIntelligence) Generate(
 
 	var yaml string
 	for _, value := range resp.Context {
-		out, ok := value.Payload.(*capabilities.ReturnPipelineYamlOutput)
+		out, ok := value.Payload.(*capabilities.DisplayPipelineYamlOutput)
 		if ok {
 			yaml = out.Yaml
 		}
@@ -158,7 +158,7 @@ func (s *HarnessIntelligence) Update(
 
 	var yaml string
 	for _, value := range resp.Context {
-		out, ok := value.Payload.(*capabilities.ReturnPipelineYamlOutput)
+		out, ok := value.Payload.(*capabilities.DisplayPipelineYamlOutput)
 		if ok {
 			yaml = out.Yaml
 		}

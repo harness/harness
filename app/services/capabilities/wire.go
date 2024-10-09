@@ -35,6 +35,6 @@ func ProvideCapabilities(repoStore store.RepoStore, git git.Interface) (*Registr
 	registry := NewRegistry()
 	panicOnErr(registry.RegisterListFilesCapability(ListFiles(repoStore, git)))
 	panicOnErr(registry.RegisterGetFileCapability(GetFile(repoStore, git)))
-	panicOnErr(registry.RegisterReturnPipelineYamlCapability(ReturnPipelineYaml()))
+	panicOnErr(registry.RegisterDisplayPipelineYamlCapability(DisplayPipelineYaml()))
 	return registry, nil
 }
