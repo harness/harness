@@ -15,7 +15,7 @@
  */
 
 import type { IconName } from '@harnessio/icons'
-import type { FormikFowardRef, RepositoryPackageType, RepositoryConfigType, PageType } from '@ar/common/types'
+import type { FormikFowardRef, RepositoryPackageType, RepositoryConfigType, PageType, Scanners } from '@ar/common/types'
 
 export interface CreateRepositoryFormProps {
   type: RepositoryConfigType
@@ -54,9 +54,14 @@ export abstract class RepositoryStep<T, U = unknown> {
   protected abstract repositoryIcon: IconName
   protected repositoryIconColor?: string
   protected repositoryIconSize?: number
+  protected supportedScanners?: Scanners[]
 
   getPackageType(): string {
     return this.packageType
+  }
+
+  getSupportedScanners(): Scanners[] {
+    return this.supportedScanners ?? []
   }
 
   getDefaultValues(initialValues: T): T {

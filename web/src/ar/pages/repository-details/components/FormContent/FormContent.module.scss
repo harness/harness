@@ -40,3 +40,11 @@
 .includeExcludeWrapper {
   --typography-size: 13px !important;
 }
+
+.scannersContainer {
+  --layout-spacing: var(--spacing-medium) !important;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: var(--spacing-medium);
+  row-gap: var(--spacing-medium);
+}

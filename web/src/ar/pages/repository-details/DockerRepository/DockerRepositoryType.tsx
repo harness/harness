@@ -26,7 +26,7 @@ import type {
   RepositoySetupClientProps
 } from '@ar/frameworks/RepositoryStep/Repository'
 
-import { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
+import { RepositoryConfigType, RepositoryPackageType, Scanners } from '@ar/common/types'
 import UpstreamProxyDetailsHeader from '@ar/pages/upstream-proxy-details/components/UpstreamProxyDetailsHeader/UpstreamProxyDetailsHeader'
 import UpstreamProxyActions from '@ar/pages/upstream-proxy-details/components/UpstreamProxyActions/UpstreamProxyActions'
 import UpstreamProxyConfigurationForm from '@ar/pages/upstream-proxy-details/components/Forms/UpstreamProxyConfigurationForm'
@@ -48,6 +48,7 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
   protected packageType = RepositoryPackageType.DOCKER
   protected repositoryName = 'Docker Repository'
   protected repositoryIcon: IconName = 'docker-step'
+  protected supportedScanners = [Scanners.AQUA_TRIVY, Scanners.GRYPE]
 
   protected defaultValues: VirtualRegistryRequest = {
     packageType: RepositoryPackageType.DOCKER,
@@ -56,7 +57,8 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
       type: RepositoryConfigType.VIRTUAL,
       upstreamProxies: []
     },
-    cleanupPolicy: []
+    cleanupPolicy: [],
+    scanners: []
   }
 
   protected defaultUpstreamProxyValues: UpstreamRegistryRequest = {
@@ -68,7 +70,8 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
       url: '',
       authType: UpstreamProxyAuthenticationMode.ANONYMOUS
     },
-    cleanupPolicy: []
+    cleanupPolicy: [],
+    scanners: []
   }
 
   renderCreateForm(props: CreateRepositoryFormProps): JSX.Element {

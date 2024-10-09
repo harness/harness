@@ -29,6 +29,11 @@ repositoryForm:
   repositoryCreated: Registry created successfully
   repositoryUpdated: Registry updated successfully
   repositoryDeleted: Registry deleted successfully
+  securityScan:
+    title: Security Scan
+    containerScannerSelect:
+      cardTitle: Built-in Container Scanners
+      cardSubTitle: Container scanners detect vulnerabilities in your container images. Select scanner(s) below to add them in your pipeline.
 tabs:
   configuration: Configuration
   packages: '{{ $.artifactList.pageHeading }}'

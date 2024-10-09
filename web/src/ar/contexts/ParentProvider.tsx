@@ -22,12 +22,21 @@ export interface ParentProviderProps {
   hooks: MFEAppProps['customHooks'] & Required<MFEAppProps['hooks']>
   components: MFEAppProps['customComponents'] & Required<MFEAppProps['components']>
   utils: MFEAppProps['customUtils']
+  contextObj: MFEAppProps['parentContextObj']
 }
 
 export const ParentProviderContext = createContext<ParentProviderProps>({} as ParentProviderProps)
 
-const ParentProvider: FC<PropsWithChildren<ParentProviderProps>> = ({ children, hooks, components, utils }) => (
-  <ParentProviderContext.Provider value={{ hooks, components, utils }}>{children}</ParentProviderContext.Provider>
+const ParentProvider: FC<PropsWithChildren<ParentProviderProps>> = ({
+  children,
+  hooks,
+  components,
+  utils,
+  contextObj
+}) => (
+  <ParentProviderContext.Provider value={{ hooks, components, utils, contextObj }}>
+    {children}
+  </ParentProviderContext.Provider>
 )
 
 export default ParentProvider

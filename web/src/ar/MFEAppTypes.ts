@@ -35,6 +35,7 @@ import type {
 import type { usePreferenceStore } from '@ar/__mocks__/contexts/PreferenceStoreContext'
 import type { ARRouteDefinitionsReturn } from '@ar/routes/RouteDefinitions'
 import type { Parent } from '@ar/common/types'
+import type { LicenseStoreContextProps } from '@ar/common/LicenseTypes'
 
 export interface Scope {
   accountId?: string
@@ -67,7 +68,7 @@ export interface AppstoreContext {
 export interface ParentContextObj {
   appStoreContext: React.Context<AppstoreContext>
   permissionsContext: React.Context<Record<string, unknown>>
-  licenseStoreProvider: React.Context<Record<string, unknown>>
+  licenseStoreProvider: React.Context<LicenseStoreContextProps>
   tooltipContext?: React.Context<Record<string, unknown>>
   tokenContext?: React.Context<Record<string, unknown>>
 }

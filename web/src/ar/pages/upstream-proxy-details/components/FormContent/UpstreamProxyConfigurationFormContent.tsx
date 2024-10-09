@@ -21,11 +21,12 @@ import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Layout, Text } from '@harnessio/uicore'
 
 import { useAppStore } from '@ar/hooks'
-import { Parent } from '@ar/common/types'
+import { Parent, RepositoryPackageType } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import { Separator } from '@ar/components/Separator/Separator'
 import CollapseContainer from '@ar/components/CollapseContainer/CollapseContainer'
 import { RepositoryProviderContext } from '@ar/pages/repository-details/context/RepositoryProvider'
+import SelectContainerScannersFormSection from '@ar/pages/repository-details/components/FormContent/SelectContainerScannersFormSection'
 
 import UpstreamProxyDetailsFormContent from './UpstreamProxyDetailsFormContent'
 import UpstreamProxyAuthenticationFormContent from './UpstreamProxyAuthenticationFormContent'
@@ -75,19 +76,22 @@ export default function UpstreamProxyConfigurationFormContent(
         </Layout.Vertical>
       </Card>
       {parent === Parent.Enterprise && (
-        <CollapseContainer
-          className={css.marginTopLarge}
-          title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}
-          subTitle={getString('repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle')}
-          initialState={isCollapsedAdvancedConfig}>
-          <Card className={classNames(css.cardContainer)}>
-            <UpstreamProxyIncludeExcludePatternFormContent formikProps={formikProps} isEdit readonly={readonly} />
-            <Separator />
-            <Container className={css.cleanupPoliciesContainer}>
-              <UpstreamProxyCleanupPoliciesFormContent formikProps={formikProps} isEdit disabled={readonly} />
-            </Container>
-          </Card>
-        </CollapseContainer>
+        <>
+          <SelectContainerScannersFormSection packageType={values.packageType as RepositoryPackageType} />
+          <CollapseContainer
+            className={css.marginTopLarge}
+            title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}
+            subTitle={getString('repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle')}
+            initialState={isCollapsedAdvancedConfig}>
+            <Card className={classNames(css.cardContainer)}>
+              <UpstreamProxyIncludeExcludePatternFormContent formikProps={formikProps} isEdit readonly={readonly} />
+              <Separator />
+              <Container className={css.cleanupPoliciesContainer}>
+                <UpstreamProxyCleanupPoliciesFormContent formikProps={formikProps} isEdit disabled={readonly} />
+              </Container>
+            </Card>
+          </CollapseContainer>
+        </>
       )}
     </Container>
   )

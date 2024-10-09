@@ -21,16 +21,19 @@ import { FontVariation } from '@harnessio/design-system'
 import { Card, Container, Text } from '@harnessio/uicore'
 
 import { useAppStore } from '@ar/hooks'
-import { Parent } from '@ar/common/types'
 import { useStrings } from '@ar/frameworks/strings'
 import { Separator } from '@ar/components/Separator/Separator'
+import { Parent, RepositoryPackageType } from '@ar/common/types'
 import type { VirtualRegistryRequest } from '@ar/pages/repository-details/types'
 import CollapseContainer from '@ar/components/CollapseContainer/CollapseContainer'
-import { RepositoryProviderContext } from '../../context/RepositoryProvider'
+
 import RepositoryDetailsFormContent from './RepositoryDetailsFormContent'
-import RepositoryIncludeExcludePatternFormContent from './RepositoryIncludeExcludePatternFormContent'
+import { RepositoryProviderContext } from '../../context/RepositoryProvider'
+import SelectContainerScannersFormSection from './SelectContainerScannersFormSection'
 import RepositoryUpstreamProxiesFormContent from './RepositoryUpstreamProxiesFormContent'
 import RepositoryCleanupPoliciesFormContent from './RepositoryCleanupPoliciesFormContent'
+import RepositoryIncludeExcludePatternFormContent from './RepositoryIncludeExcludePatternFormContent'
+
 import css from './FormContent.module.scss'
 
 interface RepositoryConfigurationFormContentProps {
@@ -45,6 +48,7 @@ function RepositoryConfigurationFormContent(
   const { setIsDirty } = useContext(RepositoryProviderContext)
   const { parent } = useAppStore()
   const { dirty, values } = formik
+  const { packageType } = values
   const [isCollapsedAdvancedConfig] = useState(getInitialStateOfCollapse())
 
   useEffect(() => {
@@ -69,6 +73,9 @@ function RepositoryConfigurationFormContent(
       <Card className={classNames(css.cardContainer, css.marginTopLarge)}>
         <RepositoryDetailsFormContent isEdit readonly={readonly} />
       </Card>
+      {parent === Parent.Enterprise && (
+        <SelectContainerScannersFormSection packageType={packageType as RepositoryPackageType} />
+      )}
       <CollapseContainer
         className={css.marginTopLarge}
         title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}

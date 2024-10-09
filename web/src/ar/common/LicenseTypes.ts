@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-export { useAppStore } from './useAppStore'
-export { useParentComponents } from './useParentComponents'
-export { useParentHooks } from './useParentHooks'
-export { useDecodedParams } from './useDecodedParams'
-export { useLocalStorage } from './useLocalStorage'
-export { useRoutes } from './useRoutes'
-export { useDeepCompareEffect, useDeepCompareMemo } from './useDeepCompareEffect'
-export { useGetSpaceRef } from './useGetSpaceRef'
-export { useParentContextObj } from './useParentContextObj'
-export { useLicenseStore } from './useLicenseStore'
+export enum LICENSE_STATE_VALUES {
+  ACTIVE = 'ACTIVE',
+  DELETED = 'DELETED',
+  EXPIRED = 'EXPIRED',
+  NOT_STARTED = 'NOT_STARTED'
+}
+
+export interface LicenseStoreContextProps {
+  readonly licenseInformation: { [key: string]: Record<string, string> } | Record<string, undefined>
+  readonly versionMap: { [key: string]: number }
+  readonly STO_LICENSE_STATE: LICENSE_STATE_VALUES
+  readonly SSCA_LICENSE_STATE: LICENSE_STATE_VALUES
+  readonly CI_LICENSE_STATE: LICENSE_STATE_VALUES
+  readonly CD_LICENSE_STATE: LICENSE_STATE_VALUES
+}

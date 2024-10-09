@@ -48,13 +48,15 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected packageType = RepositoryPackageType.HELM
   protected repositoryName = 'Helm Repository'
   protected repositoryIcon: IconName = 'service-helm'
+  protected supportedScanners = []
 
   protected defaultValues: VirtualRegistryRequest = {
     packageType: RepositoryPackageType.HELM,
     identifier: '',
     config: {
       type: RepositoryConfigType.VIRTUAL
-    }
+    },
+    scanners: []
   }
 
   protected defaultUpstreamProxyValues: UpstreamRegistryRequest = {
@@ -66,7 +68,8 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
       source: DockerRepositoryURLInputSource.Custom,
       url: ''
     },
-    cleanupPolicy: []
+    cleanupPolicy: [],
+    scanners: []
   }
 
   renderCreateForm(props: CreateRepositoryFormProps): JSX.Element {

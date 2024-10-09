@@ -1,11 +1,11 @@
 /*
- * Copyright 2023 Harness, Inc.
+ * Copyright 2024 Harness, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-/* eslint-disable */
-// This is an auto-generated file
-export declare const cardContainer: string
-export declare const cardHeading: string
-export declare const includeExcludeWrapper: string
-export declare const marginTopLarge: string
-export declare const scannersContainer: string
-export declare const upstreamProxiesContainer: string
-export declare const upstreamProxiesWrapper: string
+import React from 'react'
+import type { LicenseStoreContextProps } from '@ar/common/LicenseTypes'
+import { useParentContextObj } from './useParentContextObj'
+
+export function useLicenseStore(): LicenseStoreContextProps {
+  const { licenseStoreProvider } = useParentContextObj()
+  return React.useContext(licenseStoreProvider)
+}

@@ -14,7 +14,32 @@
  * limitations under the License.
  */
 
+import type { IconName } from '@harnessio/icons'
+import type { Scanner } from '@harnessio/react-har-service-client'
+
+import type { Scanners } from '@ar/common/types'
+
 export enum RepositoryDetailsTab {
   PACKAGES = 'packages',
   CONFIGURATION = 'configuration'
+}
+
+export interface ScannerConfigSpec {
+  icon: IconName
+  label: string
+  value: Scanner['name']
+  tooltipId?: string
+}
+
+export const ContainerScannerConfig: Record<Scanners, ScannerConfigSpec> = {
+  AQUA_TRIVY: {
+    icon: 'AquaTrivy',
+    label: 'AquaTrivy',
+    value: 'AQUA_TRIVY'
+  },
+  GRYPE: {
+    icon: 'anchore-grype',
+    label: 'Grype',
+    value: 'GRYPE'
+  }
 }

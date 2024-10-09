@@ -53,3 +53,8 @@ export enum PageType {
   Details = 'Details',
   Table = 'Table'
 }
+
+export enum Scanners {
+  AQUA_TRIVY = 'AQUA_TRIVY',
+  GRYPE = 'GRYPE'
+}

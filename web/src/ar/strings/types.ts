@@ -78,6 +78,9 @@ export interface StringsMap {
   'repositoryDetails.repositoryForm.repositoryCreated': string
   'repositoryDetails.repositoryForm.repositoryDeleted': string
   'repositoryDetails.repositoryForm.repositoryUpdated': string
+  'repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardSubTitle': string
+  'repositoryDetails.repositoryForm.securityScan.containerScannerSelect.cardTitle': string
+  'repositoryDetails.repositoryForm.securityScan.title': string
   'repositoryDetails.repositoryForm.selectRepoType': string
   'repositoryDetails.repositoryForm.title': string
   'repositoryDetails.repositoryForm.upstreamProxiesSubTitle': string

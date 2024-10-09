@@ -112,7 +112,8 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
             <ParentProvider
               hooks={{ ...hooks, ...customHooks } as ParentProviderProps['hooks']}
               components={{ ...components, ...customComponents } as ParentProviderProps['components']}
-              utils={{ ...customUtils }}>
+              utils={{ ...customUtils }}
+              contextObj={{ ...parentContextObj }}>
               <ModalProvider>
                 {props.children ?? (
                   <NavComponent>
