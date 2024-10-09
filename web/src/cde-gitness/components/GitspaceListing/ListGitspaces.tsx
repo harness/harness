@@ -163,44 +163,52 @@ export const OwnerAndCreatedAt: Renderer<CellProps<TypesGitspaceConfig>> = ({ ro
 
 export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
   const details = row.original
-  const { name, branch, code_repo_url, code_repo_type } = details || {}
+  const { name, branch, code_repo_url, code_repo_type, instance } = details || {}
+  const { has_git_changes } = instance || {}
+
+  const { getString } = useStrings()
 
   return (
-    <Layout.Horizontal
-      spacing={'small'}
-      flex={{ alignItems: 'center', justifyContent: 'start' }}
-      onClick={e => {
-        e.preventDefault()
-        e.stopPropagation()
-        window.open(code_repo_url, '_blank')
-      }}>
+    <Layout.Vertical spacing="small">
       <Layout.Horizontal
-        className={css.repositoryCell}
         spacing={'small'}
-        flex={{ alignItems: 'center', justifyContent: 'start' }}>
-        <Container height={24} width={24}>
-          {getIconByRepoType({ repoType: code_repo_type, height: 24 })}
-        </Container>
-        <Text lineClamp={1} color={Color.PRIMARY_7} title={name} font={{ align: 'left', size: 'normal' }}>
-          {name}
-        </Text>
+        flex={{ alignItems: 'center', justifyContent: 'start' }}
+        onClick={e => {
+          e.preventDefault()
+          e.stopPropagation()
+          window.open(code_repo_url, '_blank')
+        }}>
+        <Layout.Horizontal
+          className={css.repositoryCell}
+          spacing={'small'}
+          flex={{ alignItems: 'center', justifyContent: 'start' }}>
+          <Container height={24} width={24}>
+            {getIconByRepoType({ repoType: code_repo_type, height: 24 })}
+          </Container>
+          <Text lineClamp={1} color={Color.PRIMARY_7} title={name} font={{ align: 'left', size: 'normal' }}>
+            {name}
+          </Text>
+        </Layout.Horizontal>
+        <Layout.Horizontal
+          className={css.branchCell}
+          spacing={'small'}
+          flex={{ alignItems: 'center', justifyContent: 'start' }}>
+          <Text color={Color.PRIMARY_7}>:</Text>
+          <Text
+            lineClamp={1}
+            icon="git-branch"
+            iconProps={{ size: 12 }}
+            color={Color.PRIMARY_7}
+            title={branch}
+            font={{ align: 'left', size: 'normal' }}>
+            {branch}
+          </Text>
+        </Layout.Horizontal>
       </Layout.Horizontal>
-      <Layout.Horizontal
-        className={css.branchCell}
-        spacing={'small'}
-        flex={{ alignItems: 'center', justifyContent: 'start' }}>
-        <Text color={Color.PRIMARY_7}>:</Text>
-        <Text
-          lineClamp={1}
-          icon="git-branch"
-          iconProps={{ size: 12 }}
-          color={Color.PRIMARY_7}
-          title={branch}
-          font={{ align: 'left', size: 'normal' }}>
-          {branch}
-        </Text>
-      </Layout.Horizontal>
-    </Layout.Horizontal>
+      <Text font={{ size: 'small' }} color={Color.GREY_450}>
+        {has_git_changes ? getString('cde.hasChange') : getString('cde.noChange')}
+      </Text>
+    </Layout.Vertical>
   )
 }
 

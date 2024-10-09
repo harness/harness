@@ -23,7 +23,7 @@ import { Menu, MenuItem } from '@blueprintjs/core'
 import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateGitspaceRequest } from 'services/cde'
-import { useListRepos, useListBranches, useRepoLookupForGitspace } from 'services/cde'
+import { useListGitspaceRepos, useListGitspaceBranches, useRepoLookupForGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { scmOptions, SCMType, type RepoQueryParams } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
 import { useQueryParams } from 'hooks/useQueryParams'
@@ -52,11 +52,10 @@ export const CDEAnyGitImport = () => {
     projectIdentifier
   })
 
-  const { data: repoData, loading: repoLoading } = useListRepos({
+  const { data: repoData, loading: repoLoading } = useListGitspaceRepos({
     accountIdentifier,
     orgIdentifier,
     projectIdentifier,
-    gitspace_identifier: '',
     queryParams: {
       search_term: searchTerm,
       repo_type: values?.code_repo_type as string
@@ -68,11 +67,10 @@ export const CDEAnyGitImport = () => {
     data: branchData,
     loading: branchLoading,
     refetch: refetchBranch
-  } = useListBranches({
+  } = useListGitspaceBranches({
     accountIdentifier,
     orgIdentifier,
     projectIdentifier,
-    gitspace_identifier: '',
     queryParams: {
       search_term: searchBranch,
       repo_type: values.code_repo_type || '',

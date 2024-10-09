@@ -21,10 +21,9 @@ import ReactTimeago from 'react-timeago'
 import { Circle } from 'iconoir-react'
 import type { IconName } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
-import type { TypesGitspaceConfig } from 'cde-gitness/services'
 import { GitspaceStatus } from 'cde-gitness/constants'
 import { getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
-import type { TypesInfraProviderResource } from 'services/cde'
+import type { TypesGitspaceConfig } from 'services/cde'
 import { getStatusColor, getStatusText } from '../GitspaceListing/ListGitspaces'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
 import css from './DetailsCard.module.scss'
@@ -32,7 +31,7 @@ import css from './DetailsCard.module.scss'
 export const DetailsCard = ({
   data
 }: {
-  data: (TypesGitspaceConfig & { resource?: TypesInfraProviderResource }) | null
+  data: TypesGitspaceConfig | TypesGitspaceConfig | null
   loading?: boolean
 }) => {
   const { getString } = useStrings()

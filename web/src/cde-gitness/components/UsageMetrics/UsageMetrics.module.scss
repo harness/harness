@@ -1,0 +1,40 @@
+.main {
+  height: 40px;
+  padding: 2px 2px !important;
+  border-radius: 20px;
+  box-shadow: 0px 0.5px 4px 0px rgba(96, 97, 112, 0.3215686275);
+}
+
+.errorAndNoDataContainer {
+  padding: 10px !important;
+  border-radius: 20px;
+  box-shadow: 0px 0.5px 4px 0px rgba(96, 97, 112, 0.3215686275) inset;
+}
+
+.innerContainer {
+  padding: 2px 10px !important;
+  border-radius: 20px;
+
+  box-shadow: 0px 0.5px 4px 0px rgba(96, 97, 112, 0.3215686275) inset;
+
+  :global(.bp3-popover-wrapper) {
+    margin: 0px !important;
+  }
+
+  :global(.Button--button--maDuR[class*='bp3-button']:not([class*='bp3-intent-']) > span svg path) {
+    fill: var(--white) !important;
+  }
+}
+
+.chartContainer {
+  border-radius: 20px;
+  padding: 4px 10px !important;
+}
+
+// .embossed {
+//   border: 1px solid #ccc; /* Light gray border */
+//   padding: 20px;
+//   background-color: #f5f5f5; /* Slightly lighter background */
+//   box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2),
+//     /* Shadow on top-left */ inset -2px -2px 5px rgba(255, 255, 255, 0.7); /* Highlight on bottom-right */
+// }

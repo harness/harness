@@ -1248,6 +1248,7 @@ export interface StringsMap {
   'cde.gitspaceDetail': string
   'cde.gitspaceUpdateSuccess': string
   'cde.gitspaces': string
+  'cde.hasChange': string
   'cde.homePage.getStartedNow': string
   'cde.homePage.learnMoreAboutGitspaces': string
   'cde.homePage.noSetupRequired': string
@@ -1280,6 +1281,7 @@ export interface StringsMap {
   'cde.machineValidationMessage': string
   'cde.manageGitspaces': string
   'cde.memory': string
+  'cde.minuteUsage': string
   'cde.na': string
   'cde.newGitspace': string
   'cde.noChange': string
@@ -1291,6 +1293,12 @@ export interface StringsMap {
   'cde.regionMachineType': string
   'cde.regionSelectWarning': string
   'cde.regionValidationMessage': string
+  'cde.remainingOfTotal': string
+  'cde.renewTooltip.contactUs': string
+  'cde.renewTooltip.haveQuestion': string
+  'cde.renewTooltip.line1': string
+  'cde.renewTooltip.line2': string
+  'cde.renewsEveryMonth': string
   'cde.repoValidationMessage': string
   'cde.repository.continueWith': string
   'cde.repository.pasteRepo': string

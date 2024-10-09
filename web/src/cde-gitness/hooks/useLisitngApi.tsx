@@ -17,14 +17,16 @@
 import { useGet } from 'restful-react'
 import { useEffect } from 'react'
 import type { TypesGitspaceConfig } from 'cde-gitness/services'
-import { LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { useAppContext } from 'AppContext'
 import { useListGitspaces } from 'services/cde'
+import { useQueryParams } from 'hooks/useQueryParams'
 
 export const useLisitngApi = ({ page }: { page: number }) => {
   const { standalone } = useAppContext()
 
+  const pageBrowser = useQueryParams<PageBrowserProps>()
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '', space } = useGetCDEAPIParams()
 
   const gitness = useGet<TypesGitspaceConfig[]>({
@@ -50,11 +52,11 @@ export const useLisitngApi = ({ page }: { page: number }) => {
 
   useEffect(() => {
     if (standalone) {
-      gitness.refetch()
+      gitness.refetch({ queryParams: { ...pageBrowser, page, limit: LIST_FETCHING_LIMIT } })
     } else {
-      cde.refetch()
+      cde.refetch({ queryParams: { ...pageBrowser, page, limit: LIST_FETCHING_LIMIT } })
     }
-  }, [])
+  }, [page])
 
   return standalone ? gitness : cde
 }

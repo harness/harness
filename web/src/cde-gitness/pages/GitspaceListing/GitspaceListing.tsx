@@ -37,6 +37,7 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ListGitspaces } from 'cde-gitness/components/GitspaceListing/ListGitspaces'
 import CDEHomePage from 'cde-gitness/components/CDEHomePage/CDEHomePage'
+import UsageMetrics from 'cde-gitness/components/UsageMetrics/UsageMetrics'
 import { useLisitngApi } from '../../hooks/useLisitngApi'
 import css from './GitspacesListing.module.scss'
 import zeroDayCss from 'cde-gitness/components/CDEHomePage/CDEHomePage.module.scss'
@@ -45,7 +46,7 @@ const GitspaceListing = () => {
   const space = useGetSpaceParam()
   const history = useHistory()
   const { getString } = useStrings()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
@@ -55,24 +56,39 @@ const GitspaceListing = () => {
   return (
     <>
       {data && data?.length !== 0 && (
-        <Page.Header
-          title={
-            <div className="ng-tooltip-native">
-              <h2> {getString('cde.gitspaces')}</h2>
-              <HarnessDocTooltip tooltipId="GitSpaceListPageHeading" useStandAlone={true} />
-            </div>
-          }
-          breadcrumbs={
-            <Breadcrumbs links={[{ url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') }]} />
-          }
-          toolbar={
-            <Button
-              onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
-              variation={ButtonVariation.PRIMARY}>
-              {getString('cde.newGitspace')}
-            </Button>
-          }
-        />
+        <>
+          <Page.Header
+            title={
+              <div className="ng-tooltip-native">
+                <h2> {getString('cde.manageGitspaces')}</h2>
+                <HarnessDocTooltip tooltipId="GitSpaceListPageHeading" useStandAlone={true} />
+              </div>
+            }
+            breadcrumbs={
+              <Breadcrumbs links={[{ url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') }]} />
+            }
+            toolbar={
+              standalone ? (
+                <Button
+                  onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
+                  variation={ButtonVariation.PRIMARY}>
+                  {getString('cde.newGitspace')}
+                </Button>
+              ) : (
+                <UsageMetrics />
+              )
+            }
+          />
+          {!standalone && (
+            <Page.SubHeader>
+              <Button
+                onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
+                variation={ButtonVariation.PRIMARY}>
+                {getString('cde.newGitspace')}
+              </Button>
+            </Page.SubHeader>
+          )}
+        </>
       )}
       <Container className={data?.length === 0 ? zeroDayCss.background : css.main}>
         <Layout.Vertical spacing={'large'}>

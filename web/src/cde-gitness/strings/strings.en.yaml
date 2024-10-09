@@ -22,6 +22,7 @@ or: OR
 logs: Logs
 noData: No Data
 noChange: No Change
+hasChange: The Gitspace has changes
 used: Used
 hours: Hours
 na: NA
@@ -126,3 +127,11 @@ ide:
   openBrowser: Open in Browser
 regionMachineType: Region & Machine Type
 infraProvider: Infra Provider
+minuteUsage: Minute Usage
+renewsEveryMonth: Renews 1st of every month
+remainingOfTotal: remaining of <strong>{{total}}</strong>
+renewTooltip:
+  line1: The amount of minutes for which a gitspace can run in the account.
+  line2: The amount is reset after every 30 days
+  haveQuestion: Have questions ?
+  contactUs: Contact Us
