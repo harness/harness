@@ -82,7 +82,7 @@ type ChatRequest struct {
 
 func CallAIFoundation(ctx context.Context, cr *capabilities.Registry,
 	req *ChatRequest) (*capabilitiesctrl.RunCapabilitiesRequest, error) {
-	url := "http://localhost:8000/chat/gitness"
+	url := "http://localhost:8000/chat/platform"
 
 	jsonData, err := json.Marshal(req)
 	if err != nil {
