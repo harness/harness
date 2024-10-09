@@ -185,8 +185,9 @@ func (c *ListService) streamPullReqs(
 	pullReqs := make([]*types.PullReq, 0, opts.Size)
 	ch, chErr := c.pullreqStore.Stream(ctx, opts)
 	for pr := range ch {
-		if pr == nil {
-			return pullReqs, repoUnchecked, nil
+		if len(pullReqs) >= pullReqLimit || len(repoUnchecked) >= newRepoLimit {
+			cancelFn() // the loop must be exited by canceling the context
+			continue
 		}
 
 		if _, ok := repoWhitelist[pr.TargetRepoID]; !ok {
@@ -194,13 +195,9 @@ func (c *ListService) streamPullReqs(
 		}
 
 		pullReqs = append(pullReqs, pr)
-
-		if len(pullReqs) >= pullReqLimit || len(repoUnchecked) >= newRepoLimit {
-			break
-		}
 	}
 
-	if err := <-chErr; err != nil {
+	if err := <-chErr; err != nil && !errors.Is(err, context.Canceled) {
 		return nil, nil, fmt.Errorf("failed to stream pull requests: %w", err)
 	}
 
