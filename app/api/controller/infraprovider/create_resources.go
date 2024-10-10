@@ -124,6 +124,7 @@ func mapToResourceEntity(in []ResourceInput, parentSpace types.Space, now int64)
 			Metadata:          res.Metadata,
 			Created:           now,
 			Updated:           now,
+			SpacePath:         parentSpace.Path,
 		}
 		resources = append(resources, infraProviderResource)
 	}
