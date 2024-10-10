@@ -18,3 +18,4 @@
 // This is an auto-generated file
 export declare const cursor: string
 export declare const header: string
+export declare const nameContainer: string

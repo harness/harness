@@ -32,6 +32,8 @@ import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
 import type { Repository } from '@ar/pages/repository-details/types'
 
+import css from './RepositoryDetailsHeader.module.scss'
+
 interface RepositoryDetailsHeaderContentProps {
   data: Repository
   iconSize?: number
@@ -49,7 +51,7 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
     <Container>
       <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }}>
         <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: iconSize }} />
-        <Layout.Vertical spacing="small">
+        <Layout.Vertical spacing="small" className={css.nameContainer}>
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <HeaderTitle>{identifier}</HeaderTitle>
             <RepositoryLocationBadge type={RepositoryConfigType.VIRTUAL} />

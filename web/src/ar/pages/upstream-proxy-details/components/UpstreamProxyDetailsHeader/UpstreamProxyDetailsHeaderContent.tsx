@@ -29,6 +29,8 @@ import RepositoryLocationBadge from '@ar/components/Badge/RepositoryLocationBadg
 import { PageType, RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import RepositoryActionsWidget from '@ar/frameworks/RepositoryStep/RepositoryActionsWidget'
 
+import css from './UpstreamProxyDetailsHeader.module.scss'
+
 interface UpstreamProxyDetailsHeaderContentProps {
   data: Repository
   iconSize?: number
@@ -42,7 +44,7 @@ export default function UpstreamProxyDetailsHeaderContent(props: UpstreamProxyDe
     <Container>
       <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }}>
         <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: iconSize }} />
-        <Layout.Vertical spacing="small">
+        <Layout.Vertical spacing="small" className={css.nameContainer}>
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
             <HeaderTitle>{identifier}</HeaderTitle>
             <RepositoryLocationBadge type={RepositoryConfigType.UPSTREAM} />

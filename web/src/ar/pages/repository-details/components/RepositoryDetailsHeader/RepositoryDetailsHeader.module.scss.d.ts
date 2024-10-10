@@ -20,5 +20,6 @@ export declare const cursor: string
 export declare const detailsSection: string
 export declare const detailsSectionForRemote: string
 export declare const header: string
+export declare const nameContainer: string
 export declare const serviceDetails: string
 export declare const textOverflow: string
