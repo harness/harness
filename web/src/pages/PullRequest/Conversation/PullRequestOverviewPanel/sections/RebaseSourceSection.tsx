@@ -33,7 +33,7 @@ import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
-import Fail from '../../../../../icons/code-fail-grey.svg?url'
+import FailRed from '../../../../../icons/code-fail.svg?url'
 import css from '../PullRequestOverviewPanel.module.scss'
 
 interface RebaseSourceSectionProps {
@@ -80,9 +80,9 @@ const RebaseSourceSection = (props: RebaseSourceSectionProps) => {
       <Container className={cx(css.sectionContainer, css.borderRadius)}>
         <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
           <Layout.Horizontal flex={{ alignItems: 'center' }}>
-            <img alt={getString('failed')} width={26} height={26} color={Color.GREY_500} src={Fail} />
+            <img alt={getString('failed')} width={26} height={26} src={FailRed} />
             <Layout.Vertical padding={{ left: 'medium' }}>
-              <Text padding={{ bottom: 'xsmall' }} className={css.sectionTitle} color={Color.GREY_600}>
+              <Text padding={{ bottom: 'xsmall' }} className={css.sectionTitle} color={Color.RED_500}>
                 {getString('rebaseSource.title')}
               </Text>
               <Text className={css.sectionSubheader} color={Color.GREY_450} font={{ variation: FontVariation.BODY }}>

@@ -424,6 +424,7 @@ export interface StringsMap {
   failedToFetchFileContent: string
   failedToImportSpace: string
   failedToSavePipeline: string
+  fastForwardMerge: string
   featureRoadmap: string
   fileDeleted: string
   fileTooLarge: string
@@ -801,6 +802,8 @@ export interface StringsMap {
   'pr.mergeOptions.createAMergeCommit': string
   'pr.mergeOptions.createMergeCommit': string
   'pr.mergeOptions.createMergeCommitDesc': string
+  'pr.mergeOptions.fastForwardMerge': string
+  'pr.mergeOptions.fastForwardMergeDesc': string
   'pr.mergeOptions.rebaseAndMerge': string
   'pr.mergeOptions.rebaseAndMergeDesc': string
   'pr.mergeOptions.squashAndMerge': string
@@ -825,6 +828,7 @@ export interface StringsMap {
   'pr.prStateChanged': string
   'pr.prStateChangedDraft': string
   'pr.readyForReview': string
+  'pr.rebaseMergePossible': string
   'pr.removeSuggestion': string
   'pr.requestSubmitted': string
   'pr.requestedChanges': string
@@ -995,6 +999,7 @@ export interface StringsMap {
   'securitySettings.vulnerabilityScanning': string
   'securitySettings.vulnerabilityScanningDesc': string
   seeNMoreMatches: string
+  selectAuthor: string
   selectBranchPlaceHolder: string
   selectLanguagePlaceholder: string
   selectMergeStrat: string

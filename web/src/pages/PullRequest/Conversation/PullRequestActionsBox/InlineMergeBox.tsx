@@ -27,6 +27,7 @@ import { MergeStrategy } from 'utils/GitUtils'
 import mergeVideo from '../../../../videos/merge.mp4'
 import squashVideo from '../../../../videos/squash.mp4'
 import rebaseVideo from '../../../../videos/rebase.mp4'
+import fastForward from '../../../../videos/fastForward.mp4'
 import css from './PullRequestActionsBox.module.scss'
 
 interface InlineMergeBoxProps {
@@ -96,6 +97,8 @@ const InlineMergeBox = (props: InlineMergeBoxProps) => {
                       <video height={36} width={148} src={rebaseVideo} autoPlay={true} loop={false} muted={true} />
                     ) : mergeOption.method === MergeStrategy.SQUASH ? (
                       <video height={36} width={148} src={squashVideo} autoPlay={true} loop={false} muted={true} />
+                    ) : mergeOption.method === MergeStrategy.FAST_FORWARD ? (
+                      <video height={36} width={148} src={fastForward} autoPlay={true} loop={false} muted={true} />
                     ) : (
                       <video height={36} width={148} src={mergeVideo} autoPlay={true} loop={false} muted={true} />
                     )}
@@ -142,11 +145,12 @@ const InlineMergeBox = (props: InlineMergeBoxProps) => {
                       {(mergeOption.method === MergeStrategy.SQUASH || mergeOption.method === MergeStrategy.MERGE) && (
                         <FormInput.Text name="commitTitle"></FormInput.Text>
                       )}
-                      {mergeOption.method !== MergeStrategy.REBASE && (
-                        <FormInput.TextArea
-                          placeholder={getString('addOptionalCommitMessage')}
-                          name="commitMessage"></FormInput.TextArea>
-                      )}
+                      {mergeOption.method !== MergeStrategy.REBASE &&
+                        mergeOption.method !== MergeStrategy.FAST_FORWARD && (
+                          <FormInput.TextArea
+                            placeholder={getString('addOptionalCommitMessage')}
+                            name="commitMessage"></FormInput.TextArea>
+                        )}
                     </FormikForm>
                   )
                 }}

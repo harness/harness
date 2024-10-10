@@ -233,7 +233,8 @@ export const PullRequestFilterOption = {
 export enum MergeStrategy {
   MERGE = 'merge',
   SQUASH = 'squash',
-  REBASE = 'rebase'
+  REBASE = 'rebase',
+  FAST_FORWARD = 'fast-forward'
 }
 
 export const CodeIcon = {

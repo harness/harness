@@ -269,6 +269,11 @@ const ProtectionRulesForm = (props: {
             <FormInput.CheckBox className={css.minText} label={getString('mergeCommit')} name={'mergeCommit'} />
             <FormInput.CheckBox className={css.minText} label={getString('squashMerge')} name={'squashMerge'} />
             <FormInput.CheckBox className={css.minText} label={getString('rebaseMerge')} name={'rebaseMerge'} />
+            <FormInput.CheckBox
+              className={css.minText}
+              label={getString('fastForwardMerge')}
+              name={'fastForwardMerge'}
+            />
           </Container>
         </Container>
       )}

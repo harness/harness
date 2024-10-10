@@ -30,15 +30,17 @@ import type {
   TypesBranch
 } from 'services/code'
 import {
+  PRMergeOption,
   PanelSectionOutletPosition,
   extractSpecificViolations,
   getMergeOptions
 } from 'pages/PullRequest/PullRequestUtils'
 import { MergeCheckStatus, extractInfoFromRuleViolationArr } from 'utils/Utils'
-import { PullRequestState, dryMerge } from 'utils/GitUtils'
+import { MergeStrategy, PullRequestState, dryMerge } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { PullRequestActionsBox } from '../PullRequestActionsBox/PullRequestActionsBox'
 import PullRequestPanelSections from './PullRequestPanelSections'
 import ChecksSection from './sections/ChecksSection'
@@ -241,6 +243,12 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     [pullReqMetadata]
   )
 
+  const [mergeOption, setMergeOption] = useUserPreference<PRMergeOption>(
+    UserPreference.PULL_REQUEST_MERGE_STRATEGY,
+    mergeOptions[0],
+    option => option.method !== 'close'
+  )
+
   return (
     <Container margin={{ bottom: 'medium' }} className={css.mainContainer}>
       <Layout.Vertical>
@@ -264,6 +272,9 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
           setShowDeleteBranchButton={setShowDeleteBranchButton}
           setShowRestoreBranchButton={setShowRestoreBranchButton}
           isSourceBranchDeleted={isSourceBranchDeleted}
+          mergeOption={mergeOption}
+          setMergeOption={setMergeOption}
+          rebasePossible={rebasePossible}
         />
         {!isClosed ? (
           <PullRequestPanelSections
@@ -312,7 +323,8 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
               ),
               [PanelSectionOutletPosition.REBASE_SOURCE_BRANCH]: rebasePossible &&
                 !mergeLoading &&
-                !conflictingFiles?.length && (
+                !conflictingFiles?.length &&
+                mergeOption.method === MergeStrategy.FAST_FORWARD && (
                   <RebaseSourceSection
                     pullReqMetadata={pullReqMetadata}
                     repoMetadata={repoMetadata}

@@ -209,7 +209,7 @@ export function PullRequestsContentHeader({
           popoverClassName={css.branchDropdown}
           icon="nav-user-profile"
           iconProps={{ size: 16 }}
-          placeholder="Select Authors"
+          placeholder={getString('selectAuthor')}
           addClearBtn={true}
           resetOnClose
           resetOnSelect

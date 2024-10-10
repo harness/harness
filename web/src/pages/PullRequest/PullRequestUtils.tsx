@@ -114,6 +114,14 @@ export const getMergeOptions = (getString: UseStringsReturn['getString'], mergea
     value: MergeStrategy.REBASE
   },
   {
+    method: MergeStrategy.FAST_FORWARD,
+    title: getString('pr.mergeOptions.fastForwardMerge'),
+    desc: getString('pr.mergeOptions.fastForwardMergeDesc'),
+    disabled: mergeable === false,
+    label: getString('pr.mergeOptions.fastForwardMerge'),
+    value: MergeStrategy.FAST_FORWARD
+  },
+  {
     method: 'close',
     title: getString('pr.mergeOptions.close'),
     desc: getString('pr.mergeOptions.closeDesc'),

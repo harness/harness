@@ -385,6 +385,7 @@ export type RulesFormPayload = {
   mergeCommit?: boolean
   squashMerge?: boolean
   rebaseMerge?: boolean
+  fastForwardMerge?: boolean
   autoDelete?: boolean
   blockBranchCreation?: boolean
   blockBranchDeletion?: boolean

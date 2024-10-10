@@ -89,6 +89,8 @@
     &.merged {
       font-weight: unset !important;
       color: var(--purple-700) !important;
+      white-space: nowrap !important;
+      font-size: 14px !important;
     }
 
     &.draft {
@@ -108,7 +110,7 @@
     .boldText {
       color: var(--purple-700) !important;
       font-weight: 600 !important;
-      font-size: 16px !important;
+      font-size: 14px !important;
       line-height: 24px !important;
     }
     .widthContainer {

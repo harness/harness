@@ -30,17 +30,18 @@ import {
   useToaster
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { MutateMethod, useMutate } from 'restful-react'
 import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import cx from 'classnames'
-import ReactTimeago from 'react-timeago'
+import { defaultTo } from 'lodash-es'
 import type {
   CreateBranchPathParams,
   DeletePullReqSourceBranchQueryParams,
   OpenapiCreateBranchRequest,
   OpenapiStatePullReqRequest,
+  RebaseBranchRequestBody,
   TypesListCommitResponse,
   TypesPullReq,
   TypesRuleViolations
@@ -58,9 +59,9 @@ import {
   permissionProps
 } from 'utils/Utils'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
-import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { PullReqSuggestionsBatch } from 'components/PullReqSuggestionsBatch/PullReqSuggestionsBatch'
+import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { BranchActionsButton } from '../PullRequestOverviewPanel/sections/BranchActionsSection'
 import InlineMergeBox from './InlineMergeBox'
 import css from './PullRequestActionsBox.module.scss'
@@ -83,6 +84,9 @@ export interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMeta
   setShowDeleteBranchButton: React.Dispatch<React.SetStateAction<boolean>>
   setShowRestoreBranchButton: React.Dispatch<React.SetStateAction<boolean>>
   isSourceBranchDeleted: boolean
+  mergeOption: PRMergeOption
+  setMergeOption: (val: PRMergeOption) => void
+  rebasePossible: boolean
 }
 
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
@@ -102,10 +106,13 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   showDeleteBranchButton,
   setShowRestoreBranchButton,
   setShowDeleteBranchButton,
-  isSourceBranchDeleted
+  isSourceBranchDeleted,
+  mergeOption,
+  setMergeOption,
+  rebasePossible
 }) => {
   const { getString } = useStrings()
-  const { showError } = useToaster()
+  const { showSuccess, showError } = useToaster()
   const inlineMergeRef = useRef<inlineMergeFormRefType>(null)
   const { hooks, standalone } = useAppContext()
   const space = useGetSpaceParam()
@@ -122,6 +129,19 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullReqMetadata.number}/state`
   })
+  const { mutate: rebase } = useMutate<RebaseBranchRequestBody>({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata.path}/+/rebase`
+  })
+
+  const rebaseRequestPayload = {
+    base_branch: pullReqMetadata.target_branch,
+    bypass_rules: true,
+    dry_run_rules: false,
+    head_branch: pullReqMetadata.source_branch,
+    head_commit_sha: pullReqMetadata.source_sha
+  }
+
   const mergeable = useMemo(() => pullReqMetadata.merge_check_status === MergeCheckStatus.MERGEABLE, [pullReqMetadata])
   const isClosed = pullReqMetadata.state === PullRequestState.CLOSED
   const isOpen = pullReqMetadata.state === PullRequestState.OPEN
@@ -193,11 +213,12 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onPRStateChanged, isMerged, isClosed, pullReqMetadata?.source_sha])
 
-  const mergeOptions = useMemo(() => getMergeOptions(getString, mergeable).slice(0, 3), [mergeable])
+  const mergeOptions = useMemo(() => getMergeOptions(getString, mergeable).slice(0, 4), [mergeable])
   const [allowedStrats, setAllowedStrats] = useState<string[]>([
     mergeOptions[0].method,
     mergeOptions[1].method,
-    mergeOptions[2].method
+    mergeOptions[2].method,
+    mergeOptions[3].method
   ])
   const draftOptions: PRDraftOption[] = [
     {
@@ -212,11 +233,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     }
   ]
   const [showInlineMergeContainer, setShowInlineMergeContainer] = useState(false)
-  const [mergeOption, setMergeOption] = useUserPreference<PRMergeOption>(
-    UserPreference.PULL_REQUEST_MERGE_STRATEGY,
-    mergeOptions[0],
-    option => option.method !== 'close'
-  )
 
   useEffect(() => {
     if (allowedStrats) {
@@ -283,6 +299,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       className={cx(css.main, {
         [css.primary]: !PRStateLoading,
         [css.error]: mergeable === false && !unchecked && !isClosed && !isDraft,
+        [css.error]: mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible,
         [css.unchecked]: unchecked,
         [css.closed]: isClosed,
         [css.draft]: isDraft,
@@ -302,6 +319,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                   [css.draft]: isDraft,
                   [css.closed]: isClosed,
                   [css.unmergeable]: mergeable === false && isOpen,
+                  [css.unmergeable]: mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible && isOpen,
                   [css.ruleViolate]: ruleViolation && !isClosed
                 })}>
                 {getString(
@@ -314,6 +332,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                     : mergeable === false && isOpen
                     ? 'branchProtection.prFailedText'
                     : ruleViolation
+                    ? 'branchProtection.prFailedText'
+                    : mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible
                     ? 'branchProtection.prFailedText'
                     : 'pr.branchHasNoConflicts'
                 )}
@@ -473,7 +493,9 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                               <Button
                                 type="submit"
                                 onClick={handleSubmit}
-                                disabled={isMerged}
+                                disabled={
+                                  isMerged || (mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible)
+                                }
                                 variation={ButtonVariation.PRIMARY}
                                 text={getString('confirmStrat', { strat: mergeOption.title })}
                               />
@@ -506,7 +528,25 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                     })
                                     .catch(exception => showError(getErrorMessage(exception)))
                                 }
-                              }
+                              },
+                              ...(rebasePossible
+                                ? [
+                                    {
+                                      hasIcon: true,
+                                      iconName: 'code-pull',
+                                      text: getString('rebase'),
+                                      onClick: () =>
+                                        rebase(rebaseRequestPayload)
+                                          .then(() => {
+                                            showSuccess(getString('updatedBranchMessageRebase'))
+                                            setTimeout(() => {
+                                              refetchActivities()
+                                            }, 1000)
+                                          })
+                                          .catch(err => showError(getErrorMessage(err)))
+                                    }
+                                  ]
+                                : [])
                             ]}
                             tooltipProps={{
                               interactionKind: 'click',
@@ -593,7 +633,15 @@ const MergeInfo: React.FC<{
                   </strong>
                 </Container>
               ),
-              time: <ReactTimeago className={css.dateText} date={pullRequestMetadata.merged as number} />
+              time: (
+                <TimePopoverWithLocal
+                  className={css.dateText}
+                  time={defaultTo(pullRequestMetadata.merged as number, 0)}
+                  inline={false}
+                  font={{ variation: FontVariation.SMALL }}
+                  color={Color.GREY_400}
+                />
+              )
             }}
           />
         </Text>

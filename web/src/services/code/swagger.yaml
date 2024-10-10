@@ -6225,6 +6225,8 @@ paths:
                   type: string
                 bypass_rules:
                   type: boolean
+                dry_run:
+                  type: boolean
                 dry_run_rules:
                   type: boolean
                 head_branch:
@@ -10540,6 +10542,7 @@ components:
       type: string
     EnumMergeMethod:
       enum:
+        - fast-forward
         - merge
         - rebase
         - squash
@@ -12408,11 +12411,21 @@ components:
           type: string
         access_type:
           $ref: '#/components/schemas/EnumGitspaceAccessType'
+        active_time_ended:
+          nullable: true
+          type: integer
+        active_time_started:
+          nullable: true
+          type: integer
         created:
           type: integer
         identifier:
           type: string
+        last_heartbeat:
+          nullable: true
+          type: integer
         last_used:
+          nullable: true
           type: integer
         machine_user:
           nullable: true
@@ -13013,6 +13026,14 @@ components:
       type: object
     TypesRebaseResponse:
       properties:
+        already_ancestor:
+          type: boolean
+        conflict_files:
+          items:
+            type: string
+          type: array
+        dry_run:
+          type: boolean
         dry_run_rules:
           type: boolean
         new_head_branch_sha:

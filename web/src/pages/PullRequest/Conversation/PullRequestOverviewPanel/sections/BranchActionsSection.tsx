@@ -87,6 +87,7 @@ export const BranchActionsButton = ({
 
   return (
     <Button
+      style={{ whiteSpace: 'nowrap' }}
       text={showDeleteBranchButton ? getString('deleteBranch') : getString('restoreBranch')}
       variation={ButtonVariation.SECONDARY}
       onClick={() => {

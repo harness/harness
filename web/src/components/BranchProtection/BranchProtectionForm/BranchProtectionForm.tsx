@@ -166,6 +166,9 @@ const BranchProtectionForm = (props: {
       const isRebasePresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
         MergeStrategy.REBASE
       )
+      const isFFMergePresent = (rule.definition as ProtectionBranch)?.pullreq?.merge?.strategies_allowed?.includes(
+        MergeStrategy.FAST_FORWARD
+      )
       // List of strings to be included in the final array
       const includeList = (rule?.pattern as ProtectionPattern)?.include ?? []
       const excludeList = (rule?.pattern as ProtectionPattern)?.exclude ?? []
@@ -201,6 +204,7 @@ const BranchProtectionForm = (props: {
         mergeCommit: isMergePresent,
         squashMerge: isSquashPresent,
         rebaseMerge: isRebasePresent,
+        fastForwardMerge: isFFMergePresent,
         autoDelete: (rule.definition as ProtectionBranch)?.pullreq?.merge?.delete_branch,
         blockBranchCreation: (rule.definition as ProtectionBranch)?.lifecycle?.create_forbidden,
         blockBranchUpdate:
@@ -244,7 +248,8 @@ const BranchProtectionForm = (props: {
         const stratArray = [
           formData.squashMerge && MergeStrategy.SQUASH,
           formData.rebaseMerge && MergeStrategy.REBASE,
-          formData.mergeCommit && MergeStrategy.MERGE
+          formData.mergeCommit && MergeStrategy.MERGE,
+          formData.fastForwardMerge && MergeStrategy.FAST_FORWARD
         ].filter(Boolean) as EnumMergeMethod[]
         const includeArray =
           formData?.targetList?.filter(([type]) => type === 'include').map(([, value]) => value) ?? []

@@ -116,7 +116,7 @@ export type EnumMembershipRole = 'contributor' | 'executor' | 'reader' | 'space_
 
 export type EnumMergeCheckStatus = string
 
-export type EnumMergeMethod = 'merge' | 'rebase' | 'squash'
+export type EnumMergeMethod = 'fast-forward' | 'merge' | 'rebase' | 'squash'
 
 export type EnumParentResourceType = 'space' | 'repo'
 
@@ -1156,9 +1156,12 @@ export type TypesGitspaceInstance = {
   access_key?: string | null
   access_key_ref?: string | null
   access_type?: EnumGitspaceAccessType
+  active_time_ended?: number | null
+  active_time_started?: number | null
   created?: number
   identifier?: string
-  last_used?: number
+  last_heartbeat?: number | null
+  last_used?: number | null
   machine_user?: string | null
   resource_usage?: string | null
   space_path?: string
@@ -1475,6 +1478,9 @@ export interface TypesPullReqStats {
 }
 
 export interface TypesRebaseResponse {
+  already_ancestor?: boolean
+  conflict_files?: string[]
+  dry_run?: boolean
   dry_run_rules?: boolean
   new_head_branch_sha?: ShaSHA
   rule_violations?: TypesRuleViolations[]
@@ -6240,6 +6246,7 @@ export interface RebaseBranchPathParams {
 export interface RebaseBranchRequestBody {
   base_branch?: string
   bypass_rules?: boolean
+  dry_run?: boolean
   dry_run_rules?: boolean
   head_branch?: string
   head_commit_sha?: ShaSHA

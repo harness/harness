@@ -65,7 +65,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
             </Container>
 
             <Avatar name={pullReqMetadata.merger?.display_name} size="small" hoverCard={false} />
-            <Text flex tag="div">
+            <Text flex tag="div" style={{ whiteSpace: 'nowrap' }}>
               <StringSubstitute
                 str={
                   (payload?.payload as MergePayload)?.merge_method === MergeStrategy.REBASE
@@ -74,8 +74,16 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                 }
                 vars={{
                   user: <strong className={css.rightTextPadding}>{pullReqMetadata.merger?.display_name}</strong>,
-                  source: <strong className={css.textPadding}>{pullReqMetadata.source_branch}</strong>,
-                  target: <strong className={css.textPadding}>{pullReqMetadata.target_branch}</strong>,
+                  source: (
+                    <Text lineClamp={1}>
+                      <strong className={css.textPadding}>{pullReqMetadata.source_branch}</strong>
+                    </Text>
+                  ),
+                  target: (
+                    <Text lineClamp={1}>
+                      <strong className={css.textPadding}>{pullReqMetadata.target_branch}</strong>
+                    </Text>
+                  ),
                   bypassed: (payload?.payload as MergePayload)?.rules_bypassed,
                   mergeSha: (
                     <Container className={css.commitContainer} padding={{ left: 'small', right: 'xsmall' }}>

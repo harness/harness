@@ -302,6 +302,7 @@ pr:
   reviewChanges: Review changes
   mergePR: Merge pull request
   branchHasNoConflicts: Pull request can be merged
+  rebaseMergePossible: Pull request can be merged after rebase
   checkingToMerge: Checking for ability to merge automatically...
   prCanBeMerged: Mergeing can be performed automatically.
   enterDesc: Enter description here
@@ -341,6 +342,8 @@ pr:
     createMergeCommitDesc: All commits from this branch will be added to the base branch via a merge commit.
     rebaseAndMerge: Rebase and merge
     rebaseAndMergeDesc: All commits from this branch will be rebased and added to the base branch.
+    fastForwardMerge: Fast-forward merge
+    fastForwardMergeDesc: All commits from this branch will be added to the base branch without a merge commit. Rebase may be required.
     close: Close pull request
     closeDesc: Close this pull request. You can still re-open the request after closing.
     createAMergeCommit: Create a merge commit
@@ -539,6 +542,7 @@ zoomIn: Zoom In
 zoomOut: Zoom Out
 checks: Checks
 blameCommitLine: '{author} committed {timestamp}'
+selectAuthor: Select Author
 tooltipRepoEdit: You are not authorized to {PERMS}
 missingPerms: 'You are missing the following permission:'
 createRepoPerms: 'Create / Edit Repository'
@@ -964,6 +968,7 @@ setting: Setting
 mergeCommit: Merge commit
 squashMerge: Squash and merge
 rebaseMerge: Rebase and merge
+fastForwardMerge: Fast-forward merge
 Enable: Enable
 imageUpload:
   title: Upload attachment
