@@ -60,13 +60,15 @@ import css from './RepositoriesListing.module.scss'
 interface TypesRepoExtended extends RepoRepositoryOutput {
   importing?: boolean
   importProgress?: string
+  importProgressErrorMessage?: string
 }
 
 enum ImportStatus {
-  FAILED = 'failed'
+  FAILED = 'failed',
+  FETCH_FAILED = 'fetch failed'
 }
 
-interface progessState {
+interface ProgressState {
   state: string
 }
 
@@ -82,6 +84,7 @@ export default function RepositoriesListing() {
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
+  const { showError, showSuccess } = useToaster()
   const [updatedRepositories, setUpdatedRepositories] = useState<RepoRepositoryOutput[]>()
 
   const {
@@ -129,17 +132,25 @@ export default function RepositoriesListing() {
     const updatedData = await Promise.all(
       repos.map(async repo => {
         if (repo.importing) {
-          const importProgress = await getUsingFetch(
-            getConfig('code/api/v1'),
-            `/repos/${repo.path}/+/import-progress`,
-            bearerToken,
-            {
-              queryParams: {
-                accountIdentifier: routingId
+          try {
+            const importProgress = await getUsingFetch(
+              getConfig('code/api/v1'),
+              `/repos/${repo.path}/+/import-progress`,
+              bearerToken,
+              {
+                queryParams: {
+                  accountIdentifier: routingId
+                }
               }
+            )
+            return { ...repo, importProgress: (importProgress as ProgressState).state }
+          } catch (err) {
+            return {
+              ...repo,
+              importProgress: ImportStatus.FETCH_FAILED,
+              importProgressErrorMessage: getErrorMessage(err) as string
             }
-          )
-          return { ...repo, importProgress: (importProgress as progessState).state }
+          }
         }
         return repo
       })
@@ -167,6 +178,19 @@ export default function RepositoriesListing() {
 
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
           const record = row.original
+          const renderImportProgressText = () => {
+            switch (record?.importProgress) {
+              case ImportStatus.FAILED:
+                return getString('importFailed')
+              case ImportStatus.FETCH_FAILED:
+                return record?.importProgressErrorMessage
+              default:
+                if (record?.importing) {
+                  return getString('importProgress')
+                }
+                return record?.description ?? null
+            }
+          }
           return (
             <Container className={css.nameContainer}>
               <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
@@ -176,21 +200,9 @@ export default function RepositoriesListing() {
                     <RepoPublicLabel isPublic={row.original.is_public} margin={{ left: 'small' }} />
                   </Text>
 
-                  {record?.importProgress === ImportStatus.FAILED ? (
-                    <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
-                      {getString('importFailed')}
-                    </Text>
-                  ) : record.importing ? (
-                    <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
-                      {getString('importProgress')}
-                    </Text>
-                  ) : (
-                    record.description && (
-                      <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
-                        {record.description}
-                      </Text>
-                    )
-                  )}
+                  <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
+                    {renderImportProgressText()}
+                  </Text>
                 </Layout.Vertical>
               </Layout.Horizontal>
             </Container>
@@ -201,7 +213,9 @@ export default function RepositoriesListing() {
         Header: getString('repos.updated'),
         width: '180px',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
-          return row?.original?.importProgress === ImportStatus.FAILED ? null : row.original.importing ? (
+          return [ImportStatus.FAILED, ImportStatus.FETCH_FAILED].includes(
+            row?.original?.importProgress as ImportStatus
+          ) ? null : row.original.importing ? (
             <Layout.Horizontal style={{ alignItems: 'center' }} padding={{ right: 'large' }}>
               <ProgressBar intent={Intent.PRIMARY} className={css.progressBar} />
             </Layout.Horizontal>
@@ -219,7 +233,6 @@ export default function RepositoriesListing() {
         id: 'action',
         width: '30px',
         Cell: ({ row }: CellProps<TypesRepoExtended>) => {
-          const { showSuccess, showError } = useToaster()
           const { mutate: deleteRepo } = useDeleteRepository({})
           const confirmCancelImport = useConfirmAct()
           return (
