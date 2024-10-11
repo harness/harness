@@ -37,7 +37,15 @@ const PlanAndRenewSection = () => {
               <Text font="small">{getString('cde.renewTooltip.line1')}</Text>
               <Text font="small">{getString('cde.renewTooltip.line2')}</Text>
               <Text font="small">{getString('cde.renewTooltip.haveQuestion')}</Text>
-              <Text color={Color.PRIMARY_7} font="small">
+              <Text
+                color={Color.PRIMARY_7}
+                font="small"
+                style={{ cursor: 'pointer' }}
+                onClick={() => {
+                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                  // @ts-ignore
+                  window?.document?.querySelector('#sidenav-footer [__type="SIDENAV_LINK"]')?.click()
+                }}>
                 {getString('cde.renewTooltip.contactUs')}
               </Text>
             </Layout.Vertical>

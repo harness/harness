@@ -89,7 +89,14 @@ export const CDESSHSelect = () => {
             <Text icon="info-messaging" font="small" iconProps={{ size: 24 }}>
               SSH key are used to connect securely to workspaces
             </Text>
-            <Text font="small" color={Color.PRIMARY_5}>
+            <Text
+              font="small"
+              color={Color.PRIMARY_5}
+              style={{ cursor: 'pointer' }}
+              onClick={e => {
+                e.preventDefault()
+                window.open('https://git-scm.com/book/en/v2/Git-on-the-Server-Generating-Your-SSH-Public-Key', '_blank')
+              }}>
               Learn how to create an SSH Key
             </Text>
           </Layout.Horizontal>

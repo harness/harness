@@ -62,7 +62,7 @@ const CDEHomePage = () => {
           <Button
             onClick={e => {
               e.preventDefault()
-              window.open('https://developer.harness.io/docs/', '_blank')
+              window.open('https://developer.harness.io/docs/cloud-development-environments/', '_blank')
             }}
             variation={ButtonVariation.LINK}
             rightIcon="launch">
