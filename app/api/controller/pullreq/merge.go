@@ -568,6 +568,12 @@ func (c *Controller) Merge(
 				audit.BypassedResourceTypePullRequest,
 				audit.BypassedResourceName,
 				strconv.FormatInt(pr.Number, 10),
+				audit.ResourceName,
+				fmt.Sprintf(
+					audit.BypassPullReqLabelFormat,
+					sourceRepo.Identifier,
+					strconv.FormatInt(pr.Number, 10),
+				),
 				audit.BypassAction,
 				audit.BypassActionMerged,
 			),

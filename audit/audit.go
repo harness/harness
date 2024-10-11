@@ -31,6 +31,7 @@ var (
 )
 
 const (
+	ResourceName                    = "resourceName"
 	RepoName                        = "repoName"
 	BypassedResourceType            = "bypassedResourceType"
 	BypassedResourceName            = "bypassedResourceName"
@@ -43,6 +44,8 @@ const (
 	BypassActionCreated             = "created"
 	BypassActionCommitted           = "committed"
 	BypassActionMerged              = "merged"
+	BypassSHALabelFormat            = "%s @%s"
+	BypassPullReqLabelFormat        = "%s #%s"
 )
 
 type Action string
