@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-import React, { PropsWithChildren, useState } from 'react'
+import React, { PropsWithChildren } from 'react'
 import { Button, ButtonVariation } from '@harnessio/uicore'
 import { Menu, Position } from '@blueprintjs/core'
 
-import type { RepositoryActionsProps } from './types'
-import css from './Actions.module.scss'
+import css from './ActionButton.module.scss'
 
-export default function RepositoryActionsWrapper({ children }: PropsWithChildren<RepositoryActionsProps>): JSX.Element {
-  const [menuOpen, setMenuOpen] = useState(false)
+interface ActionButtonProps {
+  isOpen: boolean
+  setOpen: (val: boolean) => void
+}
+
+export default function ActionButton({ children, isOpen, setOpen }: PropsWithChildren<ActionButtonProps>): JSX.Element {
   return (
     <Button
       variation={ButtonVariation.ICON}
@@ -39,14 +42,14 @@ export default function RepositoryActionsWrapper({ children }: PropsWithChildren
       tooltipProps={{
         interactionKind: 'click',
         onInteraction: nextOpenState => {
-          setMenuOpen(nextOpenState)
+          setOpen(nextOpenState)
         },
-        isOpen: menuOpen,
+        isOpen: isOpen,
         position: Position.BOTTOM
       }}
       onClick={e => {
         e.stopPropagation()
-        setMenuOpen(true)
+        setOpen(true)
       }}
     />
   )

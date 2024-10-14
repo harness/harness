@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useState } from 'react'
+
 import { PageType } from '@ar/common/types'
-import RepositoryActionsWrapper from './RepositoryActionsWrapper'
-import DeleteRepositoryMenuItem from './DeleteRepository'
+import ActionButton from '@ar/components/ActionButton/ActionButton'
+
 import SetupClientMenuItem from './SetupClient'
 import type { RepositoryActionsProps } from './types'
+import DeleteRepositoryMenuItem from './DeleteRepository'
 
 export default function RepositoryActions({ data, readonly, pageType }: RepositoryActionsProps): JSX.Element {
+  const [open, setOpen] = useState(false)
   return (
-    <RepositoryActionsWrapper data={data} readonly={readonly} pageType={pageType}>
-      <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} />
-      {pageType === PageType.Table && <SetupClientMenuItem data={data} readonly={readonly} pageType={pageType} />}
-    </RepositoryActionsWrapper>
+    <ActionButton isOpen={open} setOpen={setOpen}>
+      <DeleteRepositoryMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+      {pageType === PageType.Table && (
+        <SetupClientMenuItem data={data} readonly={readonly} pageType={pageType} onClose={() => setOpen(false)} />
+      )}
+    </ActionButton>
   )
 }

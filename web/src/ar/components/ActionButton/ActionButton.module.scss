@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-import type { PageType } from '@ar/common/types'
-import type { VirtualRegistry } from '@ar/pages/repository-details/types'
-
-export interface RepositoryActionsProps {
-  data: VirtualRegistry
-  readonly: boolean
-  pageType: PageType
-  onClose?: () => void
+.optionsMenu {
+  min-width: unset;
 }

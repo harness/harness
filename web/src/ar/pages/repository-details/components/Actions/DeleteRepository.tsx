@@ -26,7 +26,7 @@ import { queryClient } from '@ar/utils/queryClient'
 import useDeleteRepositoryModal from '@ar/pages/repository-details/hooks/useDeleteRepositoryModal/useDeleteRepositoryModal'
 import type { RepositoryActionsProps } from './types'
 
-export default function DeleteRepositoryMenuItem({ data }: RepositoryActionsProps): JSX.Element {
+export default function DeleteRepositoryMenuItem({ data, onClose }: RepositoryActionsProps): JSX.Element {
   const { getString } = useStrings()
   const { RbacMenuItem } = useParentComponents()
   const history = useHistory()
@@ -34,6 +34,7 @@ export default function DeleteRepositoryMenuItem({ data }: RepositoryActionsProp
 
   const handleAfterDeleteRepository = (): void => {
     queryClient.invalidateQueries(['GetAllRegistries'])
+    onClose?.()
     history.push(routes.toARRepositories())
   }
 
