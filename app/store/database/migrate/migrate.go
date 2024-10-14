@@ -27,7 +27,7 @@ import (
 )
 
 //go:embed postgres/*.sql
-var postgres embed.FS
+var Postgres embed.FS
 
 //go:embed sqlite/*.sql
 var sqlite embed.FS
@@ -147,7 +147,7 @@ func getMigrator(db *sqlx.DB) (migrate.Options, error) {
 		folder, _ := fs.Sub(sqlite, sqliteSourceDir)
 		opts.FS = folder
 	case postgresDriverName:
-		folder, _ := fs.Sub(postgres, postgresSourceDir)
+		folder, _ := fs.Sub(Postgres, postgresSourceDir)
 		opts.FS = folder
 
 	default:
