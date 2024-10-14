@@ -34,7 +34,7 @@ const (
 	QueryParamReviewerID         = "reviewer_id"
 	QueryParamReviewDecision     = "review_decision"
 	QueryParamMentionedID        = "mentioned_id"
-	QueryParamIncludeDescription = "include_description"
+	QueryParamExcludeDescription = "exclude_description"
 )
 
 func GetPullReqNumberFromPath(r *http.Request) (int64, error) {
@@ -125,7 +125,7 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		return nil, fmt.Errorf("encountered error parsing pr edited filter: %w", err)
 	}
 
-	includeDescription, err := QueryParamAsBoolOrDefault(r, QueryParamIncludeDescription, false)
+	excludeDescription, err := QueryParamAsBoolOrDefault(r, QueryParamExcludeDescription, false)
 	if err != nil {
 		return nil, fmt.Errorf("encountered error parsing include description filter: %w", err)
 	}
@@ -173,7 +173,7 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		ReviewerID:         reviewerID,
 		ReviewDecisions:    reviewDecisions,
 		MentionedID:        mentionedID,
-		IncludeDescription: includeDescription,
+		ExcludeDescription: excludeDescription,
 		CreatedFilter:      createdFilter,
 		UpdatedFilter:      updatedFilter,
 		EditedFilter:       editedFilter,

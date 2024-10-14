@@ -163,7 +163,7 @@ type PullReqFilter struct {
 	ReviewerID         int64                        `json:"reviewer_id"`
 	ReviewDecisions    []enum.PullReqReviewDecision `json:"review_decisions"`
 	MentionedID        int64                        `json:"mentioned_id"`
-	IncludeDescription bool                         `json:"include_description"`
+	ExcludeDescription bool                         `json:"exclude_description"`
 	CreatedFilter
 	UpdatedFilter
 	EditedFilter

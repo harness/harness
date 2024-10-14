@@ -288,14 +288,15 @@ func (c *Controller) checkIfAlreadyExists(ctx context.Context,
 	targetRepoID, sourceRepoID int64, targetBranch, sourceBranch string,
 ) error {
 	existing, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
-		SourceRepoID: sourceRepoID,
-		SourceBranch: sourceBranch,
-		TargetRepoID: targetRepoID,
-		TargetBranch: targetBranch,
-		States:       []enum.PullReqState{enum.PullReqStateOpen},
-		Size:         1,
-		Sort:         enum.PullReqSortNumber,
-		Order:        enum.OrderAsc,
+		SourceRepoID:       sourceRepoID,
+		SourceBranch:       sourceBranch,
+		TargetRepoID:       targetRepoID,
+		TargetBranch:       targetBranch,
+		States:             []enum.PullReqState{enum.PullReqStateOpen},
+		Size:               1,
+		Sort:               enum.PullReqSortNumber,
+		Order:              enum.OrderAsc,
+		ExcludeDescription: true,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to get existing pull requests: %w", err)

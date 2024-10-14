@@ -595,7 +595,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
 		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
 		queryParameterCreatedLt, queryParameterCreatedGt, queryParameterUpdatedLt,
-		queryParameterIncludeDescription, queryParameterIncludeSubspaces,
+		queryParameterExcludeDescription, queryParameterIncludeSubspaces,
 		QueryParameterLimit,
 		QueryParameterLabelID, QueryParameterValueID,
 		queryParameterAuthorID, queryParameterCommenterID, queryParameterMentionedID,

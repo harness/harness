@@ -225,6 +225,8 @@ func (c *Controller) suggestPullRequest(
 		States: []enum.PullReqState{enum.PullReqStateOpen},
 		Order:  enum.OrderAsc,
 		Sort:   enum.PullReqSortCreated,
+		// don't care about the PR description, omit it from the response
+		ExcludeDescription: true,
 	})
 	if err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msgf(

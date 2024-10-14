@@ -378,11 +378,11 @@ var QueryParameterValueID = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterIncludeDescription = openapi3.ParameterOrRef{
+var queryParameterExcludeDescription = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamIncludeDescription,
+		Name:        request.QueryParamExcludeDescription,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("By providing this parameter the description would be included in the response."),
+		Description: ptr.String("By providing this parameter the description would be excluded from the response."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
@@ -494,7 +494,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
 		queryParameterOrder, queryParameterSortPullRequest,
 		queryParameterCreatedLt, queryParameterCreatedGt, queryParameterUpdatedLt, queryParameterUpdatedGt,
-		queryParameterIncludeDescription,
+		queryParameterExcludeDescription,
 		QueryParameterPage, QueryParameterLimit,
 		QueryParameterLabelID, QueryParameterValueID,
 		queryParameterAuthorID, queryParameterCommenterID, queryParameterMentionedID,

@@ -556,9 +556,9 @@ func (s *PullReqStore) Stream(ctx context.Context, opts *types.PullReqFilter) (<
 func (s *PullReqStore) listQuery(opts *types.PullReqFilter) squirrel.SelectBuilder {
 	var stmt squirrel.SelectBuilder
 
-	columns := pullReqColumnsNoDescription
-	if opts.IncludeDescription {
-		columns = pullReqColumns
+	columns := pullReqColumns
+	if opts.ExcludeDescription {
+		columns = pullReqColumnsNoDescription
 	}
 
 	if len(opts.LabelID) > 0 || len(opts.ValueID) > 0 || opts.CommenterID > 0 || opts.MentionedID > 0 {
