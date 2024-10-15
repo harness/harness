@@ -25,8 +25,6 @@ import { useAppStore, useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import {
   PullCommandCell,
-  VersionDeploymentsCell,
-  VersionDigestsCell,
   VersionDownloadsCell,
   VersionNameCell,
   VersionPublishedAtCell,
@@ -83,23 +81,10 @@ function VersionListTable(props: VersionListTableProps): JSX.Element {
         serverSortProps: getServerSortProps('name')
       },
       {
-        Header: getString('versionList.table.columns.deployments'),
-        accessor: 'deployments',
-        Cell: VersionDeploymentsCell,
-        serverSortProps: getServerSortProps('deployments'),
-        hidden: parent === Parent.OSS
-      },
-      {
         Header: getString('versionList.table.columns.size'),
         accessor: 'size',
         Cell: VersionSizeCell,
         serverSortProps: getServerSortProps('size')
-      },
-      {
-        Header: getString('versionList.table.columns.digests'),
-        accessor: 'digestCount',
-        Cell: VersionDigestsCell,
-        serverSortProps: getServerSortProps('digestCount')
       },
       {
         Header: getString('versionList.table.columns.downloads'),
@@ -119,9 +104,7 @@ function VersionListTable(props: VersionListTableProps): JSX.Element {
         Cell: PullCommandCell,
         serverSortProps: getServerSortProps('pullCommand')
       }
-    ]
-      .filter(Boolean)
-      .filter(each => !each.hidden) as unknown as Column<ArtifactVersionMetadata>[]
+    ].filter(Boolean) as Column<ArtifactVersionMetadata>[]
   }, [currentOrder, currentSort, getString])
 
   return (

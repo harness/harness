@@ -27,7 +27,6 @@ import { getReadableDateTime } from '@ar/common/dateUtils'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
 
-import HelmVersionOverviewCards from './components/OverviewCards/OverviewCards'
 import { LabelValueContent } from '../components/LabelValueContent/LabelValueContent'
 
 import css from './HelmVersion.module.scss'
@@ -54,7 +53,6 @@ export default function HelmVersionOverviewContent(): JSX.Element {
     <Page.Body className={css.pageBody} loading={loading} error={error?.message} retryOnError={() => refetch()}>
       {response && (
         <Layout.Vertical className={css.cardContainer} spacing="medium">
-          <HelmVersionOverviewCards />
           <Card title="General Information">
             <Layout.Vertical spacing="medium">
               <Text font={{ variation: FontVariation.CARD_TITLE }}>

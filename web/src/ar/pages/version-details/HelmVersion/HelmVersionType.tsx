@@ -37,7 +37,6 @@ export class HelmVersionType extends VersionStep<ArtifactVersionSummary> {
   protected allowedVersionDetailsTabs: VersionDetailsTab[] = [
     VersionDetailsTab.OVERVIEW,
     VersionDetailsTab.ARTIFACT_DETAILS,
-    VersionDetailsTab.DEPLOYMENTS,
     VersionDetailsTab.CODE
   ]
 
