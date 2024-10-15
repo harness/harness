@@ -155,7 +155,7 @@ func (c *APIController) ProcessManifest(
 	regInfo *RegistryRequestBaseInfo,
 	image, version string,
 ) ([]artifact.DockerManifestDetails, error) {
-	registry, err := c.RegistryRepository.Get(ctx, regInfo.rootIdentifierID)
+	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return nil, err
 	}
