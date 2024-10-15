@@ -24,7 +24,6 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/bootstrap"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/services/codeowners"
@@ -371,9 +370,9 @@ func (c *Controller) Merge(
 
 	switch in.Method {
 	case enum.MergeMethodMerge:
-		author = identityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
+		author = controller.IdentityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
 	case enum.MergeMethodSquash:
-		author = identityFromPrincipalInfo(pr.Author)
+		author = controller.IdentityFromPrincipalInfo(pr.Author)
 	case enum.MergeMethodRebase, enum.MergeMethodFastForward:
 		author = nil // Not important for these merge methods: the author info in the commits will be preserved.
 	}
@@ -382,9 +381,9 @@ func (c *Controller) Merge(
 
 	switch in.Method {
 	case enum.MergeMethodMerge, enum.MergeMethodSquash:
-		committer = identityFromPrincipalInfo(*bootstrap.NewSystemServiceSession().Principal.ToPrincipalInfo())
+		committer = controller.SystemServicePrincipalInfo()
 	case enum.MergeMethodRebase:
-		committer = identityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
+		committer = controller.IdentityFromPrincipalInfo(*session.Principal.ToPrincipalInfo())
 	case enum.MergeMethodFastForward:
 		committer = nil // Not important for fast-forward merge
 	}

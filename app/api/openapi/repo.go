@@ -1411,4 +1411,22 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRebaseBranch, new(types.MergeViolations), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
 		"/repos/{repo_ref}/rebase", opRebaseBranch)
+
+	opSquashBranch := openapi3.Operation{}
+	opSquashBranch.WithTags("repository")
+	opSquashBranch.WithMapOfAnything(
+		map[string]interface{}{"operationId": "squashBranch"})
+	_ = reflector.SetRequest(&opSquashBranch, &struct {
+		repoRequest
+		repo.SquashInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opSquashBranch, new(types.SquashResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSquashBranch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opSquashBranch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSquashBranch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSquashBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSquashBranch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opSquashBranch, new(types.MergeViolations), http.StatusUnprocessableEntity)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/squash", opSquashBranch)
 }

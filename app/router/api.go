@@ -419,6 +419,7 @@ func setupRepos(r chi.Router,
 			})
 
 			r.Post("/rebase", handlerrepo.HandleRebase(repoCtrl))
+			r.Post("/squash", handlerrepo.HandleSquash(repoCtrl))
 
 			r.Get("/codeowners/validate", handlerrepo.HandleCodeOwnersValidate(repoCtrl))
 

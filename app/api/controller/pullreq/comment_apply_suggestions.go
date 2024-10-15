@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/contextutil"
@@ -304,9 +303,9 @@ func (c *Controller) CommentApplySuggestions(
 		Title:         in.Title,
 		Message:       in.Message,
 		Branch:        pr.SourceBranch,
-		Committer:     identityFromPrincipalInfo(*bootstrap.NewSystemServiceSession().Principal.ToPrincipalInfo()),
+		Committer:     controller.SystemServicePrincipalInfo(),
 		CommitterDate: &now,
-		Author:        identityFromPrincipalInfo(*session.Principal.ToPrincipalInfo()),
+		Author:        controller.IdentityFromPrincipalInfo(*session.Principal.ToPrincipalInfo()),
 		AuthorDate:    &now,
 		Actions:       actions,
 	})

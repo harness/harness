@@ -31,7 +31,10 @@ import (
 // MergeParams is input structure object for merging operation.
 type MergeParams struct {
 	WriteParams
+
+	BaseSHA    sha.SHA
 	BaseBranch string
+
 	// HeadRepoUID specifies the UID of the repo that contains the head branch (required for forking).
 	// WARNING: This field is currently not supported yet!
 	HeadRepoUID string
@@ -70,8 +73,8 @@ func (p *MergeParams) Validate() error {
 		return err
 	}
 
-	if p.BaseBranch == "" {
-		return errors.InvalidArgument("base branch is mandatory")
+	if p.BaseBranch == "" && p.BaseSHA.IsEmpty() {
+		return errors.InvalidArgument("either base branch or commit SHA is mandatory")
 	}
 
 	if p.HeadBranch == "" {
@@ -172,9 +175,12 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	// find the commit SHAs
 
-	baseCommitSHA, err := s.git.GetFullCommitID(ctx, repoPath, params.BaseBranch)
-	if err != nil {
-		return MergeOutput{}, fmt.Errorf("failed to get base branch commit SHA: %w", err)
+	baseCommitSHA := params.BaseSHA
+	if baseCommitSHA.IsEmpty() {
+		baseCommitSHA, err = s.git.GetFullCommitID(ctx, repoPath, params.BaseBranch)
+		if err != nil {
+			return MergeOutput{}, fmt.Errorf("failed to get base branch commit SHA: %w", err)
+		}
 	}
 
 	headCommitSHA, err := s.git.GetFullCommitID(ctx, repoPath, params.HeadBranch)

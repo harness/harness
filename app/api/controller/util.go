@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
@@ -192,4 +193,15 @@ func MapSignature(s *git.Signature) (*types.Signature, error) {
 		},
 		When: s.When,
 	}, nil
+}
+
+func IdentityFromPrincipalInfo(p types.PrincipalInfo) *git.Identity {
+	return &git.Identity{
+		Name:  p.DisplayName,
+		Email: p.Email,
+	}
+}
+
+func SystemServicePrincipalInfo() *git.Identity {
+	return IdentityFromPrincipalInfo(*bootstrap.NewSystemServiceSession().Principal.ToPrincipalInfo())
 }
