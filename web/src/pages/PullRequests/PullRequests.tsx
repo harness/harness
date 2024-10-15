@@ -106,6 +106,7 @@ export default function PullRequests() {
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`,
     queryParams: {
       limit: String(LIST_FETCHING_LIMIT),
+      exclude_description: true,
       page: browserParams.page,
       sort: filter == PullRequestFilterOption.MERGED ? 'merged' : 'number',
       order: 'desc',
