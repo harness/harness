@@ -174,6 +174,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 				audit.BypassedResourceTypeCommit,
 				audit.BypassedResourceName,
 				commit.CommitID.String(),
+				audit.ResourceName,
 				fmt.Sprintf(
 					audit.BypassSHALabelFormat,
 					repo.Identifier,
