@@ -320,12 +320,12 @@ func (g gitspaceInstanceStore) ListDead(
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
 	}
 
-	var gitspaceInstances []*types.GitspaceInstance
+	var dst []*gitspaceInstance
 	db := dbtx.GetAccessor(ctx, g.db)
-	if err = db.SelectContext(ctx, &gitspaceInstances, sqlStr, args...); err != nil {
+	if err = db.SelectContext(ctx, &dst, sqlStr, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace instance list query")
 	}
-	return gitspaceInstances, nil
+	return g.mapToGitspaceInstances(ctx, dst)
 }
 
 func (g gitspaceInstanceStore) FetchInactiveGitspaceConfigs(
