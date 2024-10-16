@@ -676,19 +676,11 @@ type (
 		// Update tries to update a gitspace instance in the datastore with optimistic locking.
 		Update(ctx context.Context, gitspaceInstance *types.GitspaceInstance) error
 
-		// BulkUpdateState updates state of given gitspace instance IDs to given state
-		BulkUpdateState(
-			ctx context.Context,
-			state enum.GitspaceInstanceStateType,
-			updateTimeUnix int64,
-			gitspaceInstanceIDs []int64,
-		) error
-
 		// List lists the gitspace instance present in a parent space ID in the datastore.
 		List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceInstance, error)
 
 		// ListDead lists dead gitspace instances whose heartbeat stopped coming after the given time.
-		ListDead(ctx context.Context, filter *types.GitspaceFilter) (gitInstanceIDs []int64, err error)
+		ListDead(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceInstance, error)
 
 		// FetchInactiveGitspaceConfigs lists the inactive gitspace instance present in the datastore
 		FetchInactiveGitspaceConfigs(ctx context.Context, filter *types.GitspaceFilter) ([]int64, error)
