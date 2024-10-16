@@ -33,7 +33,12 @@ const (
 var ErrInternalWebhookOperationNotAllowed = usererror.Forbidden("changes to internal webhooks are not allowed")
 
 // CheckURL validates the url of a webhook.
-func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool) error {
+func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool, internal bool) error {
+	// for internal webhooks skip URL validation as it is not used
+	if internal {
+		return nil
+	}
+
 	// check URL
 	if len(rawURL) > webhookMaxURLLength {
 		return check.NewValidationErrorf("The URL of a webhook can be at most %d characters long.",

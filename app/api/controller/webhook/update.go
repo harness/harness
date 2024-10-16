@@ -125,7 +125,8 @@ func sanitizeUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwor
 		}
 	}
 	if in.URL != nil {
-		if err := CheckURL(*in.URL, allowLoopback, allowPrivateNetwork); err != nil {
+		// internal is set to false as internal webhooks cannot be updated
+		if err := CheckURL(*in.URL, allowLoopback, allowPrivateNetwork, false); err != nil {
 			return err
 		}
 	}

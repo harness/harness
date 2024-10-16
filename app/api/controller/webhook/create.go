@@ -56,7 +56,7 @@ func (c *Controller) Create(
 	internal bool,
 ) (*types.Webhook, error) {
 	// validate input
-	err := sanitizeCreateInput(in, c.allowLoopback, c.allowPrivateNetwork || internal)
+	err := sanitizeCreateInput(in, c.allowLoopback, c.allowPrivateNetwork, internal)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,12 @@ func (c *Controller) Create(
 	return hook, nil
 }
 
-func sanitizeCreateInput(in *CreateInput, allowLoopback bool, allowPrivateNetwork bool) error {
+func sanitizeCreateInput(
+	in *CreateInput,
+	allowLoopback bool,
+	allowPrivateNetwork bool,
+	internal bool,
+) error {
 	// TODO [CODE-1363]: remove after identifier migration.
 	if in.Identifier == "" {
 		in.Identifier = in.UID
@@ -149,7 +154,7 @@ func sanitizeCreateInput(in *CreateInput, allowLoopback bool, allowPrivateNetwor
 	if err := check.Description(in.Description); err != nil {
 		return err
 	}
-	if err := CheckURL(in.URL, allowLoopback, allowPrivateNetwork); err != nil {
+	if err := CheckURL(in.URL, allowLoopback, allowPrivateNetwork, internal); err != nil {
 		return err
 	}
 	if err := checkSecret(in.Secret); err != nil {

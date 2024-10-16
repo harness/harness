@@ -117,7 +117,7 @@ func sanitizeWebhook(
 		return err
 	}
 
-	if err := webhookpkg.CheckURL(in.Target, allowLoopback, allowPrivateNetwork); err != nil {
+	if err := webhookpkg.CheckURL(in.Target, allowLoopback, allowPrivateNetwork, false); err != nil {
 		return err
 	}
 

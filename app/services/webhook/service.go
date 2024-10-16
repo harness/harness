@@ -47,6 +47,9 @@ type Config struct {
 	MaxRetries          int
 	AllowPrivateNetwork bool
 	AllowLoopback       bool
+
+	// InternalWebhooksURL specifies the internal webhook URL which will be used if webhook is marked internal
+	InternalWebhooksURL string
 }
 
 func (c *Config) Prepare() error {
