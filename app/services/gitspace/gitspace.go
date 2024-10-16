@@ -78,13 +78,9 @@ func (c *Service) ListGitspacesForSpace(
 		if err != nil {
 			return fmt.Errorf("failed to list gitspace configs: %w", err)
 		}
-		if len(gitspaceConfigs) >= gitspaceFilter.QueryFilter.Size {
-			count, err = c.gitspaceConfigStore.Count(ctx, gitspaceFilter)
-			if err != nil {
-				return fmt.Errorf("failed to count gitspaces in space: %w", err)
-			}
-		} else {
-			count = int64(len(gitspaceConfigs))
+		count, err = c.gitspaceConfigStore.Count(ctx, gitspaceFilter)
+		if err != nil {
+			return fmt.Errorf("failed to count gitspaces in space: %w", err)
 		}
 		gitspaceInstancesMap, err := c.getLatestInstanceMap(ctx, gitspaceConfigs)
 		if err != nil {
