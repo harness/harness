@@ -23,6 +23,7 @@ new: NEW
 harLabel: '{{ $.repositoryList.artifactRegistry.label }}'
 na: N/A
 cancel: Cancel
+comingSoon: Coming Soon.
 failedToLoadData: Failed to load data. Please try again!
 noResultsFound: No results found
 optionalField: '{{name}} (optional)'

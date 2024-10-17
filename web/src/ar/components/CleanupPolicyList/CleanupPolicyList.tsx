@@ -20,10 +20,10 @@ import type { FormikProps } from 'formik'
 import { FontVariation } from '@harnessio/design-system'
 import { Button, Card, Layout } from '@harnessio/uicore'
 
+import { useStrings } from '@ar/frameworks/strings'
 import CleanupPolicy from './CleanupPolicy'
 import css from './CleanupPolicyList.module.scss'
 
-// TODO: update type once BE support cleanup policy
 interface CleanupPolicyListProps<T> {
   name: string
   formikProps: FormikProps<T>
@@ -35,11 +35,11 @@ interface CleanupPolicyListProps<T> {
 }
 export default function CleanupPolicyList<T>(props: CleanupPolicyListProps<T>): JSX.Element {
   const { name, formikProps, disabled, onAdd, addButtonLabel, getDefaultValue, onRemove } = props
+  const { getString } = useStrings()
   const values = get(formikProps.values, name)
 
   return (
     <Layout.Vertical spacing="small">
-      {/* TODO: update type once BE support cleanup policy */}
       {values?.map((each: any, index: number) => (
         <CleanupPolicy key={each.id} disabled={disabled} name={`${name}[${index}]`} onRemove={() => onRemove(index)} />
       ))}
@@ -54,6 +54,7 @@ export default function CleanupPolicyList<T>(props: CleanupPolicyListProps<T>): 
           data-testid="add-patter"
           onClick={() => onAdd(getDefaultValue())}
           text={addButtonLabel}
+          tooltip={getString('comingSoon')}
           disabled={disabled}
         />
       </Card>

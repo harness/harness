@@ -83,7 +83,7 @@ export default function DockerVersionOverviewCards() {
       {responseData && (
         <Layout.Horizontal width="100%" spacing="medium">
           <DeploymentsCard
-            className={css.card}
+            className={classNames(css.card, css.deploymentsCard)}
             onClick={() => {
               handleRedirectToTab(VersionDetailsTab.DEPLOYMENTS)
             }}

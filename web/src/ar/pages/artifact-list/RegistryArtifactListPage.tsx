@@ -24,7 +24,6 @@ import { useGetAllArtifactsByRegistryQuery } from '@harnessio/react-har-service-
 import { useStrings } from '@ar/frameworks/strings'
 import { DEFAULT_PAGE_INDEX, PreferenceScope } from '@ar/constants'
 import { useGetSpaceRef, useParentHooks } from '@ar/hooks'
-import LabelsSelector from './components/LabelsSelector/LabelsSelector'
 import {
   useRegistryArtifactListQueryParamOptions,
   type RegistryArtifactListPageQueryParams
@@ -104,12 +103,13 @@ function RegistryArtifactListPage({ pageBodyClassName }: RegistryArtifactListPag
     <>
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>
-          <LabelsSelector
+          {/* TODO: remove for beta release. but support in future */}
+          {/* <LabelsSelector
             value={labels}
             onChange={val => {
               updateQueryParams({ labels: val, page: DEFAULT_PAGE_INDEX })
             }}
-          />
+          /> */}
           <Expander />
           <ExpandingSearchInput
             alwaysExpanded

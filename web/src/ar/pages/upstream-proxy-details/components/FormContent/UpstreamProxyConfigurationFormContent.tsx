@@ -87,7 +87,7 @@ export default function UpstreamProxyConfigurationFormContent(
               <UpstreamProxyIncludeExcludePatternFormContent formikProps={formikProps} isEdit readonly={readonly} />
               <Separator />
               <Container className={css.cleanupPoliciesContainer}>
-                <UpstreamProxyCleanupPoliciesFormContent formikProps={formikProps} isEdit disabled={readonly} />
+                <UpstreamProxyCleanupPoliciesFormContent formikProps={formikProps} isEdit disabled />
               </Container>
             </Card>
           </CollapseContainer>

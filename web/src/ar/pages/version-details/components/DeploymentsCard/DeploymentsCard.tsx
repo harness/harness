@@ -35,10 +35,11 @@ interface DeploymentsCardProps {
   executionId?: string
   className?: string
   onClick?: () => void
+  hideBuildDetails?: boolean
 }
 
 export default function DeploymentsCard(props: DeploymentsCardProps) {
-  const { prodCount, nonProdCount, pipelineName, executionId, onClick, className, pipelineId } = props
+  const { prodCount, nonProdCount, pipelineName, executionId, onClick, className, pipelineId, hideBuildDetails } = props
   const totalCount = defaultTo(prodCount, 0) + defaultTo(nonProdCount, 0)
   const { getString } = useStrings()
   const { scope } = useAppStore()
@@ -72,30 +73,36 @@ export default function DeploymentsCard(props: DeploymentsCardProps) {
             />
           </Layout.Horizontal>
         </Layout.Vertical>
-        {getRouteToPipelineExecutionView && pipelineName && executionId && pipelineId && (
+        {!hideBuildDetails && (
           <Layout.Vertical spacing="medium" flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <Text font={{ variation: FontVariation.CARD_TITLE }}>
               {getString('versionDetails.cards.deploymentsCard.buildTitle')}
             </Text>
-            <Layout.Vertical spacing="xsmall">
-              <Link
-                to={getRouteToPipelineExecutionView({
-                  accountId: scope.accountId,
-                  orgIdentifier: scope.orgIdentifier,
-                  projectIdentifier: scope.projectIdentifier,
-                  pipelineIdentifier: pipelineId,
-                  executionIdentifier: executionId,
-                  module: 'ci'
-                })}
-                onClick={evt => {
-                  evt.stopPropagation()
-                }}>
-                {pipelineName}
-              </Link>
+            {getRouteToPipelineExecutionView && pipelineName && executionId && pipelineId ? (
+              <Layout.Vertical spacing="xsmall">
+                <Link
+                  to={getRouteToPipelineExecutionView({
+                    accountId: scope.accountId,
+                    orgIdentifier: scope.orgIdentifier,
+                    projectIdentifier: scope.projectIdentifier,
+                    pipelineIdentifier: pipelineId,
+                    executionIdentifier: executionId,
+                    module: 'ci'
+                  })}
+                  onClick={evt => {
+                    evt.stopPropagation()
+                  }}>
+                  {pipelineName}
+                </Link>
+                <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+                  {getString('versionDetails.cards.deploymentsCard.executionId')}: {executionId}
+                </Text>
+              </Layout.Vertical>
+            ) : (
               <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
-                {getString('versionDetails.cards.deploymentsCard.executionId')}: {executionId}
+                {getString('na')}
               </Text>
-            </Layout.Vertical>
+            )}
           </Layout.Vertical>
         )}
       </Layout.Horizontal>

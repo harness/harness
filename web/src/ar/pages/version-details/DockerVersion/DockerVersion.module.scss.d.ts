@@ -16,6 +16,7 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const card: string
 export declare const cardContainer: string
 export declare const deploymentTablePageBody: string
 export declare const gridContainer: string

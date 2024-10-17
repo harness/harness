@@ -14,10 +14,18 @@
  * limitations under the License.
  */
 
-import React, { useMemo } from 'react'
+import React, { useMemo, useRef } from 'react'
 import classNames from 'classnames'
+import { flushSync } from 'react-dom'
 import { Expander } from '@blueprintjs/core'
-import { HarnessDocTooltip, Page, Button, ButtonVariation } from '@harnessio/uicore'
+import {
+  HarnessDocTooltip,
+  Page,
+  Button,
+  ButtonVariation,
+  ExpandingSearchInput,
+  ExpandingSearchInputHandle
+} from '@harnessio/uicore'
 import {
   GetAllHarnessArtifactsQueryQueryParams,
   useGetAllHarnessArtifactsQuery
@@ -30,10 +38,8 @@ import { useGetSpaceRef, useParentComponents, useParentHooks } from '@ar/hooks'
 import PackageTypeSelector from '@ar/components/PackageTypeSelector/PackageTypeSelector'
 
 import { ArtifactListVersionFilter } from './constants'
-import LabelsSelector from './components/LabelsSelector/LabelsSelector'
 import ArtifactListTable from './components/ArtifactListTable/ArtifactListTable'
 import RepositorySelector from './components/RepositorySelector/RepositorySelector'
-import ArtifactSearchInput from './components/ArtifactSearchInput/ArtifactSearchInput'
 import { useArtifactListQueryParamOptions, type ArtifactListPageQueryParams } from './utils'
 
 import css from './ArtifactListPage.module.scss'
@@ -47,6 +53,7 @@ function ArtifactListPage(): JSX.Element {
   const { searchTerm, isDeployedArtifacts, repositoryKey, page, size, latestVersion, packageTypes, labels } =
     queryParams
   const spaceRef = useGetSpaceRef('')
+  const searchRef = useRef({} as ExpandingSearchInputHandle)
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
@@ -84,6 +91,7 @@ function ArtifactListPage(): JSX.Element {
   })
 
   const handleClearAllFilters = (): void => {
+    flushSync(searchRef.current.clear)
     updateQueryParams({
       page: 0,
       searchTerm: '',
@@ -108,12 +116,23 @@ function ArtifactListPage(): JSX.Element {
       />
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>
-          <ArtifactSearchInput
+          {/* TODO: remove AI serach input as not implemented from BE and use normal search input */}
+          {/* <ArtifactSearchInput
             searchTerm={searchTerm || ''}
             onChange={text => {
               updateQueryParams({ searchTerm: text || undefined, page: DEFAULT_PAGE_INDEX })
             }}
             placeholder={getString('search')}
+          /> */}
+          <ExpandingSearchInput
+            alwaysExpanded
+            width={400}
+            placeholder={getString('search')}
+            onChange={text => {
+              updateQueryParams({ searchTerm: text || undefined, page: DEFAULT_PAGE_INDEX })
+            }}
+            defaultValue={searchTerm}
+            ref={searchRef}
           />
           <RepositorySelector
             value={repositoryKey}
@@ -127,12 +146,13 @@ function ArtifactListPage(): JSX.Element {
               updateQueryParams({ packageTypes: val, page: DEFAULT_PAGE_INDEX })
             }}
           />
-          <LabelsSelector
+          {/* TODO: remove for beta release. but support in future */}
+          {/* <LabelsSelector
             value={labels}
             onChange={val => {
               updateQueryParams({ labels: val, page: DEFAULT_PAGE_INDEX })
             }}
-          />
+          /> */}
           <Expander />
           <ButtonTabs
             className={css.filterTabContainer}

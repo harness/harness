@@ -14,6 +14,7 @@ export interface StringsMap {
   'artifactDetails.downloadsThisWeek': string
   'artifactDetails.labelsUpdated': string
   'artifactDetails.page': string
+  'artifactDetails.totalDownloads': string
   'artifactList.deployedArtifacts': string
   'artifactList.page': string
   'artifactList.pageHeading': string
@@ -230,6 +231,7 @@ export interface StringsMap {
   'cleanupPolicy.name': string
   'cleanupPolicy.placeholder': string
   clearFilters: string
+  comingSoon: string
   copied: string
   copy: string
   createdAt: string

@@ -24,6 +24,10 @@
   padding: var(--spacing-7) !important;
   background-color: var(--white);
   margin: var(--spacing-large);
+
+  & .card {
+    width: 100%;
+  }
 }
 
 .gridContainer {

@@ -15,21 +15,17 @@
  */
 
 import React, { useContext } from 'react'
-import { defaultTo } from 'lodash-es'
 import { Expander } from '@blueprintjs/core'
-import { Button, ButtonVariation, Layout, getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
-import { useUpdateArtifactLabelsMutation, type ArtifactSummary } from '@harnessio/react-har-service-client'
+import { Button, ButtonVariation, Layout } from '@harnessio/uicore'
+import type { ArtifactSummary } from '@harnessio/react-har-service-client'
 
-import { useDecodedParams, useGetSpaceRef } from '@ar/hooks'
-import { encodeRef } from '@ar/hooks/useGetSpaceRef'
+import { useDecodedParams } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings/String'
 import type { RepositoryPackageType } from '@ar/common/types'
 import type { ArtifactDetailsPathParams } from '@ar/routes/types'
 import WeeklyDownloads from '@ar/components/PageTitle/WeeklyDownloads'
 import CreatedAndModifiedAt from '@ar/components/PageTitle/CreatedAndModifiedAt'
-import ArtifactTags from '@ar/components/PageTitle/ArtifactTags'
 import NameAndDescription from '@ar/components/PageTitle/NameAndDescription'
-import { PermissionIdentifier, ResourceType } from '@ar/common/permissionTypes'
 import { useSetupClientModal } from '@ar/pages/repository-details/hooks/useSetupClientModal/useSetupClientModal'
 
 import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
@@ -44,33 +40,11 @@ interface ArtifactDetailsHeaderContentProps {
 function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps): JSX.Element {
   const { iconSize = 40 } = props
   const { data } = useContext(ArtifactProviderContext)
-  const spaceRef = useGetSpaceRef()
   const { getString } = useStrings()
-  const { showSuccess, showError, clear } = useToaster()
   const pathParams = useDecodedParams<ArtifactDetailsPathParams>()
 
   const { repositoryIdentifier, artifactIdentifier } = pathParams
-  const { packageType, imageName, modifiedAt, createdAt, downloadsCount, labels } = data as ArtifactSummary
-
-  const { mutateAsync: modifyArtifactLabels } = useUpdateArtifactLabelsMutation()
-
-  const handleUpdateArtifactLabels = async (newLabels: string[]) => {
-    try {
-      const response = await modifyArtifactLabels({
-        body: { labels: newLabels },
-        registry_ref: spaceRef,
-        artifact: encodeRef(artifactIdentifier)
-      })
-      if (response.content.status === 'SUCCESS') {
-        clear()
-        showSuccess(getString('artifactDetails.labelsUpdated'))
-      }
-      return true
-    } catch (e: any) {
-      showError(getErrorInfoFromErrorObject(e, true))
-      return false
-    }
-  }
+  const { packageType, imageName, modifiedAt, createdAt, downloadsCount } = data as ArtifactSummary
 
   const [showSetupClientModal] = useSetupClientModal({
     repoKey: repositoryIdentifier,
@@ -87,7 +61,7 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
           spacing="small"
           flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <NameAndDescription name={imageName} hideDescription />
-          <WeeklyDownloads downloads={downloadsCount} label={getString('artifactDetails.downloadsThisWeek')} />
+          <WeeklyDownloads downloads={downloadsCount} label={getString('artifactDetails.totalDownloads')} />
         </Layout.Vertical>
         <Expander />
         <Layout.Vertical
@@ -105,18 +79,6 @@ function ArtifactDetailsHeaderContent(props: ArtifactDetailsHeaderContentProps):
               icon="setting"
             />
           </Layout.Horizontal>
-          <ArtifactTags
-            onChange={handleUpdateArtifactLabels}
-            labels={defaultTo(labels, [])}
-            placeholder={getString('artifactDetails.artifactLabelInputPlaceholder')}
-            permission={{
-              permission: PermissionIdentifier.EDIT_ARTIFACT_REGISTRY,
-              resource: {
-                resourceType: ResourceType.ARTIFACT_REGISTRY,
-                resourceIdentifier: repositoryIdentifier
-              }
-            }}
-          />
         </Layout.Vertical>
       </Layout.Horizontal>
     </Layout.Vertical>

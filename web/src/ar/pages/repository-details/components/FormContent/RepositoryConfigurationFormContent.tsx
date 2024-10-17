@@ -95,7 +95,7 @@ function RepositoryConfigurationFormContent(
               <RepositoryIncludeExcludePatternFormContent isEdit disabled={readonly} />
               <Separator />
               <Container className={css.upstreamProxiesContainer}>
-                <RepositoryCleanupPoliciesFormContent isEdit disabled={readonly} />
+                <RepositoryCleanupPoliciesFormContent isEdit disabled />
               </Container>
             </>
           )}

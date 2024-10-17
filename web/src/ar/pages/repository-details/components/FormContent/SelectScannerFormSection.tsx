@@ -20,7 +20,7 @@ import { FontVariation } from '@harnessio/design-system'
 import { Checkbox, CheckboxVariant, Container, Layout, Text } from '@harnessio/uicore'
 
 import { useLicenseStore } from '@ar/hooks'
-import type { RepositoryPackageType } from '@ar/common/types'
+import { Scanners, type RepositoryPackageType } from '@ar/common/types'
 import { LICENSE_STATE_VALUES } from '@ar/common/LicenseTypes'
 import type { VirtualRegistryRequest } from '@ar/pages/repository-details/types'
 import type { ScannerConfigSpec } from '@ar/pages/repository-details/constants'
@@ -55,7 +55,8 @@ export default function SelectScannerFormSection(props: SelectScannerFormSection
   }
 
   const getCheckboxState = (value: ScannerConfigSpec['value']) => {
-    return values.scanners?.some(each => each.name === value) || false
+    return value === Scanners.AQUA_TRIVY
+    // return values.scanners?.some(each => each.name === value) || false
   }
 
   return (

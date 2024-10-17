@@ -69,7 +69,7 @@ export default function DockerVersionOverviewContent(): JSX.Element {
       {response && (
         <Layout.Vertical className={css.cardContainer} spacing="medium" flex={{ alignItems: 'flex-start' }}>
           <DockerVersionOverviewCards />
-          <Card title="General Information">
+          <Card title={getString('versionDetails.overview.generalInformation.title')} className={css.card}>
             <Layout.Vertical spacing="medium">
               <Text font={{ variation: FontVariation.CARD_TITLE }}>
                 {getString('versionDetails.overview.generalInformation.title')}

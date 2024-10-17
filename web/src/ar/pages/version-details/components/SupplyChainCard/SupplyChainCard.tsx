@@ -70,6 +70,7 @@ export default function SupplyChainCard(props: SupplyChainCardProps) {
               rightIcon="download-manifests"
               variation={ButtonVariation.LINK}
               loading={loading}
+              disabled={!provenanceId}
               onClick={evt => {
                 killEvent(evt)
                 download(provenanceId)

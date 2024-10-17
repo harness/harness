@@ -63,6 +63,7 @@ export default function DeploymentOverviewCards(props: DeploymentOverviewCardsPr
       <DeploymentsCard
         prodCount={defaultTo(deploymentStats?.Production, 0)}
         nonProdCount={defaultTo(deploymentStats?.PreProduction, 0)}
+        hideBuildDetails
       />
     </Layout.Horizontal>
   )
