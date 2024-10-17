@@ -488,8 +488,12 @@ func (s *Service) resolveUserGroupCodeOwner(
 		Name:       usrgrp.Name,
 	}
 	ownersEvaluations := make([]OwnerEvaluation, 0, len(usrgrp.Users))
-	for _, uid := range usrgrp.Users {
-		pullreqReviewer := findReviewerInList("", uid, reviewers)
+	principalInfos, err := s.principalStore.FindManyByUID(ctx, usrgrp.Users)
+	if err != nil {
+		return nil, fmt.Errorf("error finding user by uids %v for usergroup %s: %w", usrgrp.Users, usrgrp.Identifier, err)
+	}
+	for _, principalInfo := range principalInfos {
+		pullreqReviewer := findReviewerInList(principalInfo.Email, principalInfo.UID, reviewers)
 		// we don't append all the user of the user group in the owner evaluations and
 		// append it only if it is reviewed by a user.
 		if pullreqReviewer != nil {
