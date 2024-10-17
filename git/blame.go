@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/git/sha"
 )
 
 type BlameParams struct {
@@ -65,8 +66,14 @@ func (params *BlameParams) Validate() error {
 }
 
 type BlamePart struct {
-	Commit *Commit  `json:"commit"`
-	Lines  []string `json:"lines"`
+	Commit   *Commit            `json:"commit"`
+	Lines    []string           `json:"lines"`
+	Previous *BlamePartPrevious `json:"previous,omitempty"`
+}
+
+type BlamePartPrevious struct {
+	CommitSHA sha.SHA `json:"commit_sha"`
+	FileName  string  `json:"file_name"`
 }
 
 // Blame processes and streams the git blame output data.
@@ -94,7 +101,6 @@ func (s *Service) Blame(ctx context.Context, params *BlameParams) (<-chan *Blame
 
 		for {
 			part, errRead := reader.NextPart()
-
 			if part == nil {
 				return
 			}
@@ -108,7 +114,18 @@ func (s *Service) Blame(ctx context.Context, params *BlameParams) (<-chan *Blame
 			lines := make([]string, len(part.Lines))
 			copy(lines, part.Lines)
 
-			ch <- &BlamePart{Commit: commit, Lines: lines}
+			next := &BlamePart{
+				Commit: commit,
+				Lines:  lines,
+			}
+			if part.Previous != nil {
+				next.Previous = &BlamePartPrevious{
+					CommitSHA: part.Previous.CommitSHA,
+					FileName:  part.Previous.FileName,
+				}
+			}
+
+			ch <- next
 
 			if errRead != nil && errors.Is(errRead, io.EOF) {
 				return

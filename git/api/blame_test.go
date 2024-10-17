@@ -41,6 +41,7 @@ committer-mail <noreply@harness.io>
 committer-time 1669812989
 committer-tz +0100
 summary Pull request 1
+previous ec84ae5018520efdead481c81a31950b82196ec6 "\"\\n\\123\342\210\206'ex' \\\\t.\\ttxt\""
 filename file_name_before_rename.go
 	Line 10
 16f267ad4f731af1b2e36f42e170ed8921377398 12 11 1
@@ -55,7 +56,7 @@ committer-mail <noreply@harness.io>
 committer-time 1673952128
 committer-tz +0100
 summary Pull request 2
-previous 6561a7b86e1a5e74ea0e4e73ccdfc18b486a2826 file_name.go
+previous 6561a7b86e1a5e74ea0e4e73ccdfc18b486a2826  file_name.go 
 filename file_name.go
 	Line 12
 16f267ad4f731af1b2e36f42e170ed8921377398 13 13 2
@@ -86,6 +87,10 @@ filename file_name.go
 			When:     time.Unix(1669812989, 0),
 		},
 	}
+	previous1 := &BlamePartPrevious{
+		CommitSHA: sha.Must("ec84ae5018520efdead481c81a31950b82196ec6"),
+		FileName:  `"\n\123∆'ex' \\t.\ttxt"`,
+	}
 
 	commit2 := &Commit{
 		SHA:     sha.Must("dcb4b6b63e86f06ed4e4c52fbc825545dc0b6200"),
@@ -100,26 +105,33 @@ filename file_name.go
 			When:     time.Unix(1673952128, 0),
 		},
 	}
+	previous2 := &BlamePartPrevious{
+		CommitSHA: sha.Must("6561a7b86e1a5e74ea0e4e73ccdfc18b486a2826"),
+		FileName:  " file_name.go ",
+	}
 
 	want := []*BlamePart{
 		{
-			Commit: commit1,
-			Lines:  []string{"Line 10", "Line 11"},
+			Commit:   commit1,
+			Lines:    []string{"Line 10", "Line 11"},
+			Previous: previous1,
 		},
 		{
-			Commit: commit2,
-			Lines:  []string{"Line 12"},
+			Commit:   commit2,
+			Lines:    []string{"Line 12"},
+			Previous: previous2,
 		},
 		{
-			Commit: commit1,
-			Lines:  []string{"Line 13", "Line 14"},
+			Commit:   commit1,
+			Lines:    []string{"Line 13", "Line 14"},
+			Previous: previous1,
 		},
 	}
 
 	reader := BlameReader{
-		scanner:     bufio.NewScanner(strings.NewReader(blameOut)),
-		commitCache: make(map[string]*Commit),
-		errReader:   strings.NewReader(""),
+		scanner:   bufio.NewScanner(strings.NewReader(blameOut)),
+		cache:     make(map[string]blameReaderCacheItem),
+		errReader: strings.NewReader(""),
 	}
 
 	var got []*BlamePart
@@ -144,9 +156,9 @@ filename file_name.go
 
 func TestBlameReader_NextPart_UserError(t *testing.T) {
 	reader := BlameReader{
-		scanner:     bufio.NewScanner(strings.NewReader("")),
-		commitCache: make(map[string]*Commit),
-		errReader:   strings.NewReader("fatal: no such path\n"),
+		scanner:   bufio.NewScanner(strings.NewReader("")),
+		cache:     make(map[string]blameReaderCacheItem),
+		errReader: strings.NewReader("fatal: no such path\n"),
 	}
 
 	_, err := reader.NextPart()
@@ -157,9 +169,9 @@ func TestBlameReader_NextPart_UserError(t *testing.T) {
 
 func TestBlameReader_NextPart_CmdError(t *testing.T) {
 	reader := BlameReader{
-		scanner:     bufio.NewScanner(iotest.ErrReader(errors.New("dummy error"))),
-		commitCache: make(map[string]*Commit),
-		errReader:   strings.NewReader(""),
+		scanner:   bufio.NewScanner(iotest.ErrReader(errors.New("dummy error"))),
+		cache:     make(map[string]blameReaderCacheItem),
+		errReader: strings.NewReader(""),
 	}
 
 	_, err := reader.NextPart()

@@ -27,6 +27,8 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
 	"github.com/harness/gitness/git/sha"
+
+	"github.com/gotidy/ptr"
 )
 
 var (
@@ -37,8 +39,14 @@ var (
 )
 
 type BlamePart struct {
-	Commit *Commit  `json:"commit"`
-	Lines  []string `json:"lines"`
+	Commit   *Commit            `json:"commit"`
+	Lines    []string           `json:"lines"`
+	Previous *BlamePartPrevious `json:"previous,omitempty"`
+}
+
+type BlamePartPrevious struct {
+	CommitSHA sha.SHA `json:"commit_sha"`
+	FileName  string  `json:"file_name"`
 }
 
 type BlameNextReader interface {
@@ -92,17 +100,22 @@ func (g *Git) Blame(
 	}()
 
 	return &BlameReader{
-		scanner:     bufio.NewScanner(pipeRead),
-		commitCache: make(map[string]*Commit),
-		errReader:   stderr, // Any stderr output will cause the BlameReader to fail.
+		scanner:   bufio.NewScanner(pipeRead),
+		cache:     make(map[string]blameReaderCacheItem),
+		errReader: stderr, // Any stderr output will cause the BlameReader to fail.
 	}
 }
 
+type blameReaderCacheItem struct {
+	commit   *Commit
+	previous *BlamePartPrevious
+}
+
 type BlameReader struct {
-	scanner     *bufio.Scanner
-	lastLine    string
-	commitCache map[string]*Commit
-	errReader   io.Reader
+	scanner   *bufio.Scanner
+	lastLine  string
+	cache     map[string]blameReaderCacheItem
+	errReader io.Reader
 }
 
 func (r *BlameReader) nextLine() (string, error) {
@@ -132,6 +145,7 @@ func (r *BlameReader) unreadLine(line string) {
 //nolint:complexity,gocognit,nestif // it's ok
 func (r *BlameReader) NextPart() (*BlamePart, error) {
 	var commit *Commit
+	var previous *BlamePartPrevious
 	var lines []string
 	var err error
 
@@ -146,8 +160,10 @@ func (r *BlameReader) NextPart() (*BlamePart, error) {
 			commitSHA := sha.Must(matches[1])
 
 			if commit == nil {
-				commit = r.commitCache[commitSHA.String()]
-				if commit == nil {
+				if cacheItem, ok := r.cache[commitSHA.String()]; ok {
+					commit = cacheItem.commit
+					previous = cacheItem.previous
+				} else {
 					commit = &Commit{SHA: commitSHA}
 				}
 
@@ -164,11 +180,15 @@ func (r *BlameReader) NextPart() (*BlamePart, error) {
 
 			if !commit.SHA.Equal(commitSHA) {
 				r.unreadLine(line)
-				r.commitCache[commit.SHA.String()] = commit
+				r.cache[commit.SHA.String()] = blameReaderCacheItem{
+					commit:   commit,
+					previous: previous,
+				}
 
 				return &BlamePart{
-					Commit: commit,
-					Lines:  lines,
+					Commit:   commit,
+					Lines:    lines,
+					Previous: previous,
 				}, nil
 			}
 
@@ -187,7 +207,7 @@ func (r *BlameReader) NextPart() (*BlamePart, error) {
 			continue
 		}
 
-		parseBlameHeaders(line, commit)
+		parseBlameHeaders(line, commit, &previous)
 	}
 
 	// Check if there's something in the error buffer... If yes, that's the error!
@@ -223,15 +243,16 @@ func (r *BlameReader) NextPart() (*BlamePart, error) {
 
 	if commit != nil && len(lines) > 0 {
 		part = &BlamePart{
-			Commit: commit,
-			Lines:  lines,
+			Commit:   commit,
+			Lines:    lines,
+			Previous: previous,
 		}
 	}
 
 	return part, err
 }
 
-func parseBlameHeaders(line string, commit *Commit) {
+func parseBlameHeaders(line string, commit *Commit, previous **BlamePartPrevious) {
 	// This is the list of git blame headers that we process. Other headers we ignore.
 	const (
 		headerSummary       = "summary "
@@ -241,6 +262,7 @@ func parseBlameHeaders(line string, commit *Commit) {
 		headerCommitterName = "committer "
 		headerCommitterMail = "committer-mail "
 		headerCommitterTime = "committer-time "
+		headerPrevious      = "previous "
 	)
 
 	switch {
@@ -258,11 +280,26 @@ func parseBlameHeaders(line string, commit *Commit) {
 		commit.Committer.Identity.Email = extractEmail(line[len(headerCommitterMail):])
 	case strings.HasPrefix(line, headerCommitterTime):
 		commit.Committer.When = extractTime(line[len(headerCommitterTime):])
+	case strings.HasPrefix(line, headerPrevious):
+		*previous = ptr.Of(extractPrevious(line[len(headerPrevious):]))
 	}
 }
 
 func extractName(s string) string {
 	return s
+}
+
+// extractPrevious extracts the sha and filename of the previous commit.
+// example: previous 999d2ed306a916423d18e022abe258e92419ab9a README.md
+func extractPrevious(s string) BlamePartPrevious {
+	rawSHA, fileName, _ := strings.Cut(s, " ")
+	if len(fileName) > 0 && fileName[0] == '"' {
+		fileName, _ = strconv.Unquote(fileName)
+	}
+	return BlamePartPrevious{
+		CommitSHA: sha.Must(rawSHA),
+		FileName:  fileName,
+	}
 }
 
 // extractEmail extracts email from git blame output.
