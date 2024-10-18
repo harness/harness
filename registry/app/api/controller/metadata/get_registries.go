@@ -33,7 +33,7 @@ func (c *APIController) GetAllRegistries(
 	r artifact.GetAllRegistriesRequestObject,
 ) (artifact.GetAllRegistriesResponseObject, error) {
 	registryRequestParams := &RegistryRequestParams{
-		packageTypesParam: nil,
+		packageTypesParam: r.Params.PackageType,
 		page:              r.Params.Page,
 		size:              r.Params.Size,
 		search:            r.Params.SearchTerm,
