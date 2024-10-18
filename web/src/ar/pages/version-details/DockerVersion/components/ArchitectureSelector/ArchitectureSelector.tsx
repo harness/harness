@@ -89,7 +89,7 @@ export default function ArchitectureSelector(props: ArchitectureSelectorProps): 
       usePortal={true}
       addClearBtn={false}
       itemDisabled={item => !item.value}
-      placeholder={getString('artifactList.table.allRepositories')}
+      placeholder={loading ? getString('loading') : getString('versionDetails.selectDigestPlaceholder')}
       isLabel
       getCustomLabel={option => (
         <HeaderTitle tag="span" className={css.primaryColor}>

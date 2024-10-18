@@ -189,6 +189,7 @@ export interface StringsMap {
   'versionDetails.overview.generalInformation.url': string
   'versionDetails.overview.generalInformation.version': string
   'versionDetails.page': string
+  'versionDetails.selectDigestPlaceholder': string
   'versionDetails.tabs.artifactDetails': string
   'versionDetails.tabs.code': string
   'versionDetails.tabs.deployments': string
@@ -247,6 +248,7 @@ export interface StringsMap {
   harnessAI: string
   id: string
   lastUpdated: string
+  loading: string
   modifiedAt: string
   moduleName: string
   na: string

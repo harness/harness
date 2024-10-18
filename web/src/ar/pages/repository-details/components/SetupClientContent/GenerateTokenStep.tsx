@@ -16,7 +16,7 @@
 
 import React, { useState } from 'react'
 import { defaultTo } from 'lodash-es'
-import { Button, ButtonVariation, Container, Text, useToaster } from '@harnessio/uicore'
+import { Button, ButtonVariation, Container, getErrorInfoFromErrorObject, Text, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import type { ClientSetupStep } from '@harnessio/react-har-service-client'
 
@@ -43,7 +43,7 @@ export default function GenerateTokenStep({ stepIndex, step }: GenerateTokenStep
       })
       .catch(err => {
         clear()
-        showError(err?.message || getString('repositoryDetails.clientSetup.failedToGenerateToken'))
+        showError(getErrorInfoFromErrorObject(err) || getString('repositoryDetails.clientSetup.failedToGenerateToken'))
       })
   }
   return (

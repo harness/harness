@@ -30,7 +30,8 @@ export default function PackageTypeSelector(props: PackageTypeSelectorProps): JS
   const { getString } = useStrings()
   return (
     <MultiSelectDropdownList
-      buttonTestId="package-manager-select"
+      width={180}
+      buttonTestId="package-type-select"
       items={RepositoryTypes.filter(each => !each.disabled).map(each => ({ ...each, label: getString(each.label) }))}
       value={value}
       onSelect={onChange}

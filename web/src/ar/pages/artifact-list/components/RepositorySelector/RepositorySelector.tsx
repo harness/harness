@@ -54,8 +54,8 @@ export default function RepositorySelector(props: RepositorySelectorProps): JSX.
 
   return (
     <DropDown
-      minWidth={120}
-      buttonTestId="pipeline-select"
+      width={180}
+      buttonTestId="regitry-select"
       onChange={option => {
         props.onChange(option.value as string)
       }}

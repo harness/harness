@@ -1,4 +1,5 @@
 page: Version Details Page
+selectDigestPlaceholder: All Digest
 tabs:
   overview: Overview
   artifactDetails: Artifact Details
