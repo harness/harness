@@ -24,9 +24,10 @@ import (
 type PackageType int32
 
 type ArtifactDetails struct {
-	RegistryID  string      `json:"registry_id,omitempty"`
-	ImagePath   string      `json:"image_path,omitempty"` // format = image:tag
-	PackageType PackageType `json:"package_type,omitempty"`
+	RegistryID   int64       `json:"registry_id,omitempty"`
+	RegistryName string      `json:"registry_name,omitempty"`
+	ImagePath    string      `json:"image_path,omitempty"` // format = image:tag
+	PackageType  PackageType `json:"package_type,omitempty"`
 }
 
 // PackageType constants using iota.

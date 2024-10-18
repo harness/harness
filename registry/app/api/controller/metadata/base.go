@@ -41,7 +41,7 @@ type RegistryRequestBaseInfo struct {
 
 	RegistryRef        string
 	RegistryIdentifier string
-	registryID         int64
+	RegistryID         int64
 
 	ParentRef string
 	parentID  int64
@@ -124,7 +124,7 @@ func (c *APIController) GetRegistryRequestBaseInfo(
 
 		baseInfo.RegistryRef = regRef
 		baseInfo.RegistryIdentifier = regIdentifier
-		baseInfo.registryID = reg.ID
+		baseInfo.RegistryID = reg.ID
 	}
 
 	return baseInfo, nil

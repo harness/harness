@@ -222,7 +222,13 @@ func (l *manifestService) dbTagManifest(
 	}
 	spacePath, packageType, err := l.getSpacePathAndPackageType(ctx, dbRegistry)
 	if err == nil {
-		l.reportEventAsync(ctx, info.RegIdentifier, imageName, tagName, packageType, spacePath)
+		reg, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
+		if err != nil {
+			log.Ctx(ctx).Err(err).Msgf("Failed to get registry for parent_id=%d, registry_identifier=%s",
+				info.ParentID, info.RegIdentifier)
+			return err
+		}
+		l.reportEventAsync(ctx, reg.ID, info.RegIdentifier, imageName, tagName, packageType, spacePath)
 	} else {
 		log.Ctx(ctx).Err(err).Msg("Failed to find spacePath, not publishing event")
 	}
@@ -316,16 +322,18 @@ func (l *manifestService) getSpacePathAndPackageType(
 // Reports event asynchronously.
 func (l *manifestService) reportEventAsync(
 	ctx context.Context,
-	regID,
+	regID int64,
+	regName,
 	imageName,
 	tagName string,
 	packageType event.PackageType,
 	spacePath string,
 ) {
 	go l.reporter.ReportEvent(ctx, &event.ArtifactDetails{
-		RegistryID:  regID,
-		ImagePath:   imageName + ":" + tagName,
-		PackageType: packageType,
+		RegistryID:   regID,
+		RegistryName: regName,
+		ImagePath:    imageName + ":" + tagName,
+		PackageType:  packageType,
 	}, spacePath)
 }
 
