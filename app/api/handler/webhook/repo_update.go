@@ -21,10 +21,11 @@ import (
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/types"
 )
 
-// HandleCreate returns a http.HandlerFunc that creates a new webhook.
-func HandleCreate(webhookCtrl *webhook.Controller) http.HandlerFunc {
+// HandleUpdateRepo returns a http.HandlerFunc that updates an existing webhook.
+func HandleUpdateRepo(webhookCtrl *webhook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -35,19 +36,25 @@ func HandleCreate(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		in := new(webhook.CreateInput)
+		webhookIdentifier, err := request.GetWebhookIdentifierFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		in := new(types.WebhookUpdateInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		hook, err := webhookCtrl.Create(ctx, session, repoRef, in, false)
+		hook, err := webhookCtrl.UpdateRepo(ctx, session, repoRef, webhookIdentifier, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusCreated, hook)
+		render.JSON(w, http.StatusOK, hook)
 	}
 }

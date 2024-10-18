@@ -164,6 +164,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		reposettings.WireSet,
 		pullreq.WireSet,
 		controllerwebhook.WireSet,
+		controllerwebhook.ProvidePreprocessor,
 		svclabel.WireSet,
 		serviceaccount.WireSet,
 		user.WireSet,

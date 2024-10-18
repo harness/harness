@@ -15,16 +15,17 @@
 package webhook
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/types/enum"
+	"github.com/harness/gitness/types"
 )
 
-// HandleList returns a http.HandlerFunc that lists webhooks.
-func HandleList(webhookCtrl *webhook.Controller) http.HandlerFunc {
+// HandleCreateRepo returns a http.HandlerFunc that creates a new webhook.
+func HandleCreateRepo(webhookCtrl *webhook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -35,21 +36,19 @@ func HandleList(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		filter := request.ParseWebhookFilter(r)
-		if filter.Order == enum.OrderDefault {
-			filter.Order = enum.OrderAsc
+		in := new(types.WebhookCreateInput)
+		err = json.NewDecoder(r.Body).Decode(in)
+		if err != nil {
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
+			return
 		}
 
-		// always skip internal for requests from handler
-		filter.SkipInternal = true
-
-		webhooks, totalCount, err := webhookCtrl.List(ctx, session, repoRef, filter)
+		hook, err := webhookCtrl.CreateRepo(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
-		render.JSON(w, http.StatusOK, webhooks)
+		render.JSON(w, http.StatusCreated, hook)
 	}
 }

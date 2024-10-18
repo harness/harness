@@ -579,13 +579,15 @@ type (
 
 		// Count counts the webhooks for a given parent type and id.
 		Count(
-			ctx context.Context, parentType enum.WebhookParent, parentID int64,
+			ctx context.Context,
+			parents []types.WebhookParentInfo,
 			opts *types.WebhookFilter,
 		) (int64, error)
 
 		// List lists the webhooks for a given parent type and id.
 		List(
-			ctx context.Context, parentType enum.WebhookParent, parentID int64,
+			ctx context.Context,
+			parents []types.WebhookParentInfo,
 			opts *types.WebhookFilter,
 		) ([]*types.Webhook, error)
 	}
@@ -606,6 +608,8 @@ type (
 			ctx context.Context, webhookID int64,
 			opts *types.WebhookExecutionFilter,
 		) ([]*types.WebhookExecution, error)
+
+		CountForWebhook(ctx context.Context, webhookID int64) (int64, error)
 
 		// ListForTrigger lists the webhook executions for a given trigger id.
 		ListForTrigger(ctx context.Context, triggerID string) ([]*types.WebhookExecution, error)

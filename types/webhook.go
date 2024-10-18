@@ -66,6 +66,34 @@ func (w *Webhook) MarshalJSON() ([]byte, error) {
 	})
 }
 
+type WebhookCreateInput struct {
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        string `json:"uid" deprecated:"true"`
+	Identifier string `json:"identifier"`
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
+	DisplayName string                `json:"display_name"`
+	Description string                `json:"description"`
+	URL         string                `json:"url"`
+	Secret      string                `json:"secret"`
+	Enabled     bool                  `json:"enabled"`
+	Insecure    bool                  `json:"insecure"`
+	Triggers    []enum.WebhookTrigger `json:"triggers"`
+}
+
+type WebhookUpdateInput struct {
+	// TODO [CODE-1363]: remove after identifier migration.
+	UID        *string `json:"uid" deprecated:"true"`
+	Identifier *string `json:"identifier"`
+	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
+	DisplayName *string               `json:"display_name"`
+	Description *string               `json:"description"`
+	URL         *string               `json:"url"`
+	Secret      *string               `json:"secret"`
+	Enabled     *bool                 `json:"enabled"`
+	Insecure    *bool                 `json:"insecure"`
+	Triggers    []enum.WebhookTrigger `json:"triggers"`
+}
+
 // WebhookExecution represents a single execution of a webhook.
 type WebhookExecution struct {
 	ID            int64                       `json:"id"`
@@ -111,4 +139,9 @@ type WebhookFilter struct {
 type WebhookExecutionFilter struct {
 	Page int `json:"page"`
 	Size int `json:"size"`
+}
+
+type WebhookParentInfo struct {
+	Type enum.WebhookParent
+	ID   int64
 }

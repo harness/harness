@@ -17,31 +17,25 @@ package webhook
 import (
 	"context"
 
-	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types/enum"
 )
 
 // Delete deletes an existing webhook.
-func (c *Controller) Delete(
+func (s *Service) Delete(
 	ctx context.Context,
-	session *auth.Session,
-	repoRef string,
+	parentID int64,
+	parentType enum.WebhookParent,
 	webhookIdentifier string,
 	allowDeletingInternal bool,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	hook, err := s.GetWebhookVerifyOwnership(ctx, parentID, parentType, webhookIdentifier)
 	if err != nil {
 		return err
 	}
 
-	// get the webhook and ensure it belongs to us
-	webhook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookIdentifier)
-	if err != nil {
-		return err
-	}
-	if webhook.Internal && !allowDeletingInternal {
+	if hook.Internal && !allowDeletingInternal {
 		return ErrInternalWebhookOperationNotAllowed
 	}
-	// delete webhook
-	return c.webhookStore.Delete(ctx, webhook.ID)
+
+	return s.webhookStore.Delete(ctx, hook.ID)
 }

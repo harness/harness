@@ -66,14 +66,16 @@ func (r *TriggerResult) Skipped() bool {
 	return r.Execution == nil
 }
 
-func (s *Service) triggerWebhooksFor(ctx context.Context, parentType enum.WebhookParent, parentID int64,
-	triggerID string, triggerType enum.WebhookTrigger, body any) ([]TriggerResult, error) {
-	// get all webhooks for the given parent
-	// NOTE: there never should be even close to 1000 webhooks for a repo (that should be blocked in the future).
-	// We just use 1000 as a safe number to get all hooks
-	webhooks, err := s.webhookStore.List(ctx, parentType, parentID, &types.WebhookFilter{Size: 1000, Order: enum.OrderAsc})
+func (s *Service) triggerWebhooksFor(
+	ctx context.Context,
+	parents []types.WebhookParentInfo,
+	triggerID string,
+	triggerType enum.WebhookTrigger,
+	body any,
+) ([]TriggerResult, error) {
+	webhooks, err := s.webhookStore.List(ctx, parents, &types.WebhookFilter{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to list webhooks for %s %d: %w", parentType, parentID, err)
+		return nil, fmt.Errorf("failed to list webhooks for: %w", err)
 	}
 
 	return s.triggerWebhooks(ctx, webhooks, triggerID, triggerType, body)

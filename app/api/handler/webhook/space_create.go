@@ -15,43 +15,40 @@
 package webhook
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/types"
 )
 
-// HandleRetriggerExecution returns a http.HandlerFunc that retriggers a webhook executions.
-func HandleRetriggerExecution(webhookCtrl *webhook.Controller) http.HandlerFunc {
+// HandleCreateSpace returns a http.HandlerFunc that creates a new webhook.
+func HandleCreateSpace(webhookCtrl *webhook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		repoRef, err := request.GetRepoRefFromPath(r)
+		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		webhookIdentifier, err := request.GetWebhookIdentifierFromPath(r)
+		in := new(types.WebhookCreateInput)
+		err = json.NewDecoder(r.Body).Decode(in)
+		if err != nil {
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
+			return
+		}
+
+		hook, err := webhookCtrl.CreateSpace(ctx, session, spaceRef, in)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		webhookExecutionID, err := request.GetWebhookExecutionIDFromPath(r)
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-
-		execution, err := webhookCtrl.RetriggerExecution(ctx, session, repoRef, webhookIdentifier, webhookExecutionID)
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-
-		render.JSON(w, http.StatusOK, execution)
+		render.JSON(w, http.StatusCreated, hook)
 	}
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
 )
@@ -33,12 +34,15 @@ var WireSet = wire.NewSet(
 	ProvideService,
 )
 
-func ProvideService(ctx context.Context,
+func ProvideService(
+	ctx context.Context,
 	config Config,
+	tx dbtx.Transactor,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
+	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
@@ -47,7 +51,7 @@ func ProvideService(ctx context.Context,
 	git git.Interface,
 	encrypter encrypt.Encrypter,
 ) (*Service, error) {
-	return NewService(ctx, config, gitReaderFactory, prReaderFactory,
-		webhookStore, webhookExecutionStore, repoStore, pullreqStore, activityStore,
+	return NewService(ctx, config, tx, gitReaderFactory, prReaderFactory,
+		webhookStore, webhookExecutionStore, spaceStore, repoStore, pullreqStore, activityStore,
 		urlProvider, principalStore, git, encrypter)
 }

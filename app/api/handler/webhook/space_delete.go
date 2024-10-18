@@ -22,13 +22,13 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleFindExecution returns a http.HandlerFunc that finds a webhook execution.
-func HandleFindExecution(webhookCtrl *webhook.Controller) http.HandlerFunc {
+// HandleDeleteSpace returns a http.HandlerFunc that deletes a webhook.
+func HandleDeleteSpace(webhookCtrl *webhook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		repoRef, err := request.GetRepoRefFromPath(r)
+		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -40,18 +40,12 @@ func HandleFindExecution(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		webhookExecutionID, err := request.GetWebhookExecutionIDFromPath(r)
+		err = webhookCtrl.DeleteSpace(ctx, session, spaceRef, webhookIdentifier)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		execution, err := webhookCtrl.FindExecution(ctx, session, repoRef, webhookIdentifier, webhookExecutionID)
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-
-		render.JSON(w, http.StatusOK, execution)
+		render.DeleteSuccessful(w)
 	}
 }

@@ -28,12 +28,15 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(config webhook.Config, authorizer authz.Authorizer,
-	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore, webhookService *webhook.Service, encrypter encrypt.Encrypter,
+func ProvideController(authorizer authz.Authorizer,
+	spaceStore store.SpaceStore, repoStore store.RepoStore,
+	webhookService *webhook.Service, encrypter encrypt.Encrypter,
+	preprocessor Preprocessor,
 ) *Controller {
 	return NewController(
-		config.AllowLoopback, config.AllowPrivateNetwork, authorizer,
-		webhookStore, webhookExecutionStore,
-		repoStore, webhookService, encrypter)
+		authorizer, spaceStore, repoStore, webhookService, encrypter, preprocessor)
+}
+
+func ProvidePreprocessor() Preprocessor {
+	return NoopPreprocessor{}
 }

@@ -19,31 +19,23 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-// List returns the webhooks from the provided repository.
-func (c *Controller) List(
+// DeleteSpace deletes an existing webhook.
+func (c *Controller) DeleteSpace(
 	ctx context.Context,
 	session *auth.Session,
-	repoRef string,
-	filter *types.WebhookFilter,
-) ([]*types.Webhook, int64, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	spaceRef string,
+	webhookIdentifier string,
+) error {
+	space, err := c.getSpaceCheckAccess(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
-		return nil, 0, err
+		return fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	count, err := c.webhookStore.Count(ctx, enum.WebhookParentRepo, repo.ID, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count webhooks for repo with id %d: %w", repo.ID, err)
-	}
-
-	webhooks, err := c.webhookStore.List(ctx, enum.WebhookParentRepo, repo.ID, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list webhooks for repo with id %d: %w", repo.ID, err)
-	}
-
-	return webhooks, count, nil
+	return c.webhookService.Delete(
+		ctx, space.ID, enum.WebhookParentSpace, webhookIdentifier,
+		c.preprocessor.IsInternalCall(session.Principal.Type),
+	)
 }

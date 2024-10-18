@@ -22,13 +22,13 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleListExecutions returns a http.HandlerFunc that lists webhook executions.
-func HandleListExecutions(webhookCtrl *webhook.Controller) http.HandlerFunc {
+// HandleListExecutionsSpace returns a http.HandlerFunc that lists webhook executions.
+func HandleListExecutionsSpace(webhookCtrl *webhook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		repoRef, err := request.GetRepoRefFromPath(r)
+		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -42,15 +42,13 @@ func HandleListExecutions(webhookCtrl *webhook.Controller) http.HandlerFunc {
 
 		filter := request.ParseWebhookExecutionFilter(r)
 
-		executions, err := webhookCtrl.ListExecutions(ctx, session, repoRef, webhookIdentifier, filter)
+		executions, total, err := webhookCtrl.ListExecutionsSpace(ctx, session, spaceRef, webhookIdentifier, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		// TODO: get last page indicator explicitly - current check is wrong in case len % pageSize == 0
-		isLastPage := len(executions) < filter.Size
-		render.PaginationNoTotal(r, w, filter.Page, filter.Size, isLastPage)
+		render.Pagination(r, w, filter.Page, filter.Size, int(total))
 		render.JSON(w, http.StatusOK, executions)
 	}
 }

@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	webhookpkg "github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -62,7 +61,7 @@ func (migrate Webhook) Import(
 
 	// sanitize and convert webhooks
 	for i, whook := range extWebhooks {
-		triggers := webhookpkg.ConvertTriggers(whook.Events)
+		triggers := webhook.ConvertTriggers(whook.Events)
 		err := sanitizeWebhook(whook, triggers, migrate.allowLoopback, migrate.allowPrivateNetwork)
 		if err != nil {
 			return nil, fmt.Errorf("failed to sanitize external webhook input: %w", err)
@@ -84,7 +83,7 @@ func (migrate Webhook) Import(
 			URL:                   whook.Target,
 			Enabled:               whook.Active,
 			Insecure:              whook.SkipVerify,
-			Triggers:              webhookpkg.DeduplicateTriggers(triggers),
+			Triggers:              webhook.DeduplicateTriggers(triggers),
 			LatestExecutionResult: nil,
 		}
 
@@ -117,11 +116,11 @@ func sanitizeWebhook(
 		return err
 	}
 
-	if err := webhookpkg.CheckURL(in.Target, allowLoopback, allowPrivateNetwork, false); err != nil {
+	if err := webhook.CheckURL(in.Target, allowLoopback, allowPrivateNetwork, false); err != nil {
 		return err
 	}
 
-	if err := webhookpkg.CheckTriggers(triggers); err != nil { //nolint:revive
+	if err := webhook.CheckTriggers(triggers); err != nil { //nolint:revive
 		return err
 	}
 

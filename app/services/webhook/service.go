@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/stream"
 )
 
@@ -79,9 +80,12 @@ func (c *Config) Prepare() error {
 
 // Service is responsible for processing webhook events.
 type Service struct {
+	tx dbtx.Transactor
+
 	webhookStore          store.WebhookStore
 	webhookExecutionStore store.WebhookExecutionStore
 	urlProvider           url.Provider
+	spaceStore            store.SpaceStore
 	repoStore             store.RepoStore
 	pullreqStore          store.PullReqStore
 	principalStore        store.PrincipalStore
@@ -101,10 +105,12 @@ type Service struct {
 func NewService(
 	ctx context.Context,
 	config Config,
+	tx dbtx.Transactor,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
+	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
@@ -117,8 +123,10 @@ func NewService(
 		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
 	}
 	service := &Service{
+		tx:                    tx,
 		webhookStore:          webhookStore,
 		webhookExecutionStore: webhookExecutionStore,
+		spaceStore:            spaceStore,
 		repoStore:             repoStore,
 		pullreqStore:          pullreqStore,
 		activityStore:         activityStore,

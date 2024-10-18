@@ -213,6 +213,31 @@ func (s *WebhookExecutionStore) ListForWebhook(ctx context.Context, webhookID in
 	return mapToWebhookExecutions(dst), nil
 }
 
+// CountForWebhook counts the total number of webhook executions for a given webhook ID.
+func (s *WebhookExecutionStore) CountForWebhook(
+	ctx context.Context,
+	webhookID int64,
+) (int64, error) {
+	stmt := database.Builder.
+		Select("COUNT(*)").
+		From("webhook_executions").
+		Where("webhook_execution_webhook_id = ?", webhookID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	if err = db.GetContext(ctx, &count, sql, args...); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Count query failed")
+	}
+
+	return count, nil
+}
+
 // ListForTrigger lists the webhook executions for a given trigger id.
 func (s *WebhookExecutionStore) ListForTrigger(ctx context.Context,
 	triggerID string) ([]*types.WebhookExecution, error) {

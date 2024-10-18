@@ -22,8 +22,8 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleFind returns a http.HandlerFunc that finds a webhook.
-func HandleFind(webhookCtrl *webhook.Controller) http.HandlerFunc {
+// HandleRetriggerExecutionRepo returns a http.HandlerFunc that retriggers a webhook executions.
+func HandleRetriggerExecutionRepo(webhookCtrl *webhook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -40,12 +40,18 @@ func HandleFind(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		webhook, err := webhookCtrl.Find(ctx, session, repoRef, webhookIdentifier)
+		webhookExecutionID, err := request.GetWebhookExecutionIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, webhook)
+		execution, err := webhookCtrl.RetriggerExecutionRepo(ctx, session, repoRef, webhookIdentifier, webhookExecutionID)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, execution)
 	}
 }

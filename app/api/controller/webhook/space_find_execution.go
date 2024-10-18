@@ -23,30 +23,19 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// ListExecutions returns the executions of the webhook.
-func (c *Controller) ListExecutions(
+// FindExecutionSpace finds a webhook execution.
+func (c *Controller) FindExecutionSpace(
 	ctx context.Context,
 	session *auth.Session,
-	repoRef string,
+	spaceRef string,
 	webhookIdentifier string,
-	filter *types.WebhookExecutionFilter,
-) ([]*types.WebhookExecution, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	webhookExecutionID int64,
+) (*types.WebhookExecution, error) {
+	space, err := c.getSpaceCheckAccess(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	// get the webhook and ensure it belongs to us
-	webhook, err := c.getWebhookVerifyOwnership(ctx, repo.ID, webhookIdentifier)
-	if err != nil {
-		return nil, err
-	}
-
-	// get webhook executions
-	webhookExecutions, err := c.webhookExecutionStore.ListForWebhook(ctx, webhook.ID, filter)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list webhook executions for webhook %d: %w", webhook.ID, err)
-	}
-
-	return webhookExecutions, nil
+	return c.webhookService.FindExecution(
+		ctx, space.ID, enum.WebhookParentSpace, webhookIdentifier, webhookExecutionID)
 }

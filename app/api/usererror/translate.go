@@ -158,6 +158,7 @@ var codes = map[errors.Status]int{
 	errors.StatusNotImplemented:     http.StatusNotImplemented,
 	errors.StatusPreconditionFailed: http.StatusPreconditionFailed,
 	errors.StatusUnauthorized:       http.StatusUnauthorized,
+	errors.StatusForbidden:          http.StatusForbidden,
 	errors.StatusInternal:           http.StatusInternalServerError,
 }
 

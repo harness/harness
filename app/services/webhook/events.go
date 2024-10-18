@@ -36,9 +36,14 @@ func generateTriggerIDFromEventID(eventID string) string {
 // using the eventID to generate a deterministic triggerID and using the output of bodyFn as payload.
 // The method tries to find the repository and principal and provides both to the bodyFn to generate the body.
 // NOTE: technically we could avoid this call if we send the data via the event (though then events will get big).
-func (s *Service) triggerForEventWithRepo(ctx context.Context,
-	triggerType enum.WebhookTrigger, eventID string, principalID int64, repoID int64,
-	createBodyFn func(*types.Principal, *types.Repository) (any, error)) error {
+func (s *Service) triggerForEventWithRepo(
+	ctx context.Context,
+	triggerType enum.WebhookTrigger,
+	eventID string,
+	principalID int64,
+	repoID int64,
+	createBodyFn func(*types.Principal, *types.Repository) (any, error),
+) error {
 	principal, err := s.findPrincipalForEvent(ctx, principalID)
 	if err != nil {
 		return err
@@ -55,7 +60,12 @@ func (s *Service) triggerForEventWithRepo(ctx context.Context,
 		return fmt.Errorf("body creation function failed: %w", err)
 	}
 
-	return s.triggerForEvent(ctx, eventID, enum.WebhookParentRepo, repo.ID, triggerType, body)
+	parents, err := s.getParentInfoRepo(ctx, repo.ID, true)
+	if err != nil {
+		return fmt.Errorf("failed to get webhook parent info for parents: %w", err)
+	}
+
+	return s.triggerForEvent(ctx, eventID, parents, triggerType, body)
 }
 
 // triggerForEventWithPullReq triggers all webhooks for the given repo and triggerType
@@ -96,7 +106,12 @@ func (s *Service) triggerForEventWithPullReq(ctx context.Context,
 		return fmt.Errorf("body creation function failed: %w", err)
 	}
 
-	return s.triggerForEvent(ctx, eventID, enum.WebhookParentRepo, targetRepo.ID, triggerType, body)
+	parents, err := s.getParentInfoRepo(ctx, targetRepo.ID, true)
+	if err != nil {
+		return fmt.Errorf("failed to get webhook parent info: %w", err)
+	}
+
+	return s.triggerForEvent(ctx, eventID, parents, triggerType, body)
 }
 
 // findRepositoryForEvent finds the repository for the provided repoID.
@@ -149,16 +164,23 @@ func (s *Service) findPrincipalForEvent(ctx context.Context, principalID int64) 
 
 // triggerForEvent triggers all webhooks for the given parentType/ID and triggerType
 // using the eventID to generate a deterministic triggerID and sending the provided body as payload.
-func (s *Service) triggerForEvent(ctx context.Context, eventID string,
-	parentType enum.WebhookParent, parentID int64, triggerType enum.WebhookTrigger, body any) error {
+func (s *Service) triggerForEvent(
+	ctx context.Context,
+	eventID string,
+	parents []types.WebhookParentInfo,
+	triggerType enum.WebhookTrigger,
+	body any,
+) error {
 	triggerID := generateTriggerIDFromEventID(eventID)
 
-	results, err := s.triggerWebhooksFor(ctx, parentType, parentID, triggerID, triggerType, body)
+	results, err := s.triggerWebhooksFor(ctx, parents, triggerID, triggerType, body)
 
 	// return all errors and force the event to be reprocessed (it's not webhook execution specific!)
 	if err != nil {
-		return fmt.Errorf("failed to trigger %s (id: '%s') for webhooks of %s %d: %w",
-			triggerType, triggerID, parentType, parentID, err)
+		return fmt.Errorf(
+			"failed to trigger %s (id: '%s') for webhooks %#v: %w",
+			triggerType, triggerID, parents, err,
+		)
 	}
 
 	// go through all events and figure out if we need to retry the event.
@@ -172,8 +194,9 @@ func (s *Service) triggerForEvent(ctx context.Context, eventID string,
 
 		// combine errors of non-successful executions
 		if result.Execution.Result != enum.WebhookExecutionResultSuccess {
-			errs = multierr.Append(errs, fmt.Errorf("execution %d of webhook %d resulted in %s: %w",
-				result.Execution.ID, result.Webhook.ID, result.Execution.Result, result.Err))
+			errs = multierr.Append(errs,
+				fmt.Errorf("execution %d of webhook %d resulted in %s: %w",
+					result.Execution.ID, result.Webhook.ID, result.Execution.Result, result.Err))
 		}
 
 		if result.Execution.Result == enum.WebhookExecutionResultRetriableError {
@@ -183,12 +206,12 @@ func (s *Service) triggerForEvent(ctx context.Context, eventID string,
 
 	// in case there was at least one error, log error details in single log to reduce log flooding
 	if errs != nil {
-		log.Ctx(ctx).Warn().Err(errs).Msgf("webhook execution for %s %d had errors", parentType, parentID)
+		log.Ctx(ctx).Warn().Err(errs).Msgf("webhook execution for %#v had errors", parents)
 	}
 
 	// in case at least one webhook has to be retried, return an error to the event framework to have it reprocessed
 	if retryRequired {
-		return fmt.Errorf("at least one webhook execution resulted in a retry for %s %d", parentType, parentID)
+		return fmt.Errorf("at least one webhook execution resulted in a retry for %#v", parents)
 	}
 
 	return nil

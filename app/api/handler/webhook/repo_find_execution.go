@@ -22,8 +22,8 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleDelete returns a http.HandlerFunc that deletes a webhook.
-func HandleDelete(webhookCtrl *webhook.Controller) http.HandlerFunc {
+// HandleFindExecutionRepo returns a http.HandlerFunc that finds a webhook execution.
+func HandleFindExecutionRepo(webhookCtrl *webhook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -40,12 +40,18 @@ func HandleDelete(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = webhookCtrl.Delete(ctx, session, repoRef, webhookIdentifier, false)
+		webhookExecutionID, err := request.GetWebhookExecutionIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.DeleteSuccessful(w)
+		execution, err := webhookCtrl.FindExecutionRepo(ctx, session, repoRef, webhookIdentifier, webhookExecutionID)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, execution)
 	}
 }

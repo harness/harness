@@ -222,7 +222,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	capabilitiesCtrl *capabilities.Controller,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
-	setupSpaces(r, appCtx, spaceCtrl, userGroupCtrl)
+	setupSpaces(r, appCtx, spaceCtrl, userGroupCtrl, webhookCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
 		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl)
 	setupConnectors(r, connectorCtrl)
@@ -247,6 +247,7 @@ func setupSpaces(
 	appCtx context.Context,
 	spaceCtrl *space.Controller,
 	userGroupCtrl *usergroup.Controller,
+	webhookCtrl *webhook.Controller,
 
 ) {
 	r.Route("/spaces", func(r chi.Router) {
@@ -290,6 +291,7 @@ func setupSpaces(
 			})
 
 			SetupSpaceLabels(r, spaceCtrl)
+			SetupWebhookSpace(r, webhookCtrl)
 		})
 	})
 }
@@ -310,6 +312,28 @@ func SetupSpaceLabels(r chi.Router, spaceCtrl *space.Controller) {
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamLabelValue), func(r chi.Router) {
 					r.Delete("/", handlerspace.HandleDeleteLabelValue(spaceCtrl))
 					r.Patch("/", handlerspace.HandleUpdateLabelValue(spaceCtrl))
+				})
+			})
+		})
+	})
+}
+
+func SetupWebhookSpace(r chi.Router, webhookCtrl *webhook.Controller) {
+	r.Route("/webhooks", func(r chi.Router) {
+		r.Post("/", handlerwebhook.HandleCreateSpace(webhookCtrl))
+		r.Get("/", handlerwebhook.HandleListSpace(webhookCtrl))
+
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookIdentifier), func(r chi.Router) {
+			r.Get("/", handlerwebhook.HandleFindSpace(webhookCtrl))
+			r.Patch("/", handlerwebhook.HandleUpdateSpace(webhookCtrl))
+			r.Delete("/", handlerwebhook.HandleDeleteSpace(webhookCtrl))
+
+			r.Route("/executions", func(r chi.Router) {
+				r.Get("/", handlerwebhook.HandleListExecutionsSpace(webhookCtrl))
+
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookExecutionID), func(r chi.Router) {
+					r.Get("/", handlerwebhook.HandleFindExecutionSpace(webhookCtrl))
+					r.Post("/retrigger", handlerwebhook.HandleRetriggerExecutionSpace(webhookCtrl))
 				})
 			})
 		})
@@ -427,7 +451,7 @@ func setupRepos(r chi.Router,
 
 			SetupPullReq(r, pullreqCtrl)
 
-			SetupWebhook(r, webhookCtrl)
+			SetupWebhookRepo(r, webhookCtrl)
 
 			setupPipelines(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl)
 
@@ -681,22 +705,22 @@ func setupPullReqLabels(r chi.Router, pullreqCtrl *pullreq.Controller) {
 	})
 }
 
-func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
+func SetupWebhookRepo(r chi.Router, webhookCtrl *webhook.Controller) {
 	r.Route("/webhooks", func(r chi.Router) {
-		r.Post("/", handlerwebhook.HandleCreate(webhookCtrl))
-		r.Get("/", handlerwebhook.HandleList(webhookCtrl))
+		r.Post("/", handlerwebhook.HandleCreateRepo(webhookCtrl))
+		r.Get("/", handlerwebhook.HandleListRepo(webhookCtrl))
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookIdentifier), func(r chi.Router) {
-			r.Get("/", handlerwebhook.HandleFind(webhookCtrl))
-			r.Patch("/", handlerwebhook.HandleUpdate(webhookCtrl))
-			r.Delete("/", handlerwebhook.HandleDelete(webhookCtrl))
+			r.Get("/", handlerwebhook.HandleFindRepo(webhookCtrl))
+			r.Patch("/", handlerwebhook.HandleUpdateRepo(webhookCtrl))
+			r.Delete("/", handlerwebhook.HandleDeleteRepo(webhookCtrl))
 
 			r.Route("/executions", func(r chi.Router) {
-				r.Get("/", handlerwebhook.HandleListExecutions(webhookCtrl))
+				r.Get("/", handlerwebhook.HandleListExecutionsRepo(webhookCtrl))
 
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookExecutionID), func(r chi.Router) {
-					r.Get("/", handlerwebhook.HandleFindExecution(webhookCtrl))
-					r.Post("/retrigger", handlerwebhook.HandleRetriggerExecution(webhookCtrl))
+					r.Get("/", handlerwebhook.HandleFindExecutionRepo(webhookCtrl))
+					r.Post("/retrigger", handlerwebhook.HandleRetriggerExecutionRepo(webhookCtrl))
 				})
 			})
 		})

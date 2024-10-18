@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -342,24 +343,21 @@ func (s *WebhookStore) DeleteByIdentifier(
 }
 
 // Count counts the webhooks for a given parent type and id.
-func (s *WebhookStore) Count(ctx context.Context, parentType enum.WebhookParent, parentID int64,
-	opts *types.WebhookFilter) (int64, error) {
+func (s *WebhookStore) Count(
+	ctx context.Context,
+	parents []types.WebhookParentInfo,
+	opts *types.WebhookFilter,
+) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("webhooks")
 
-	switch parentType {
-	case enum.WebhookParentRepo:
-		stmt = stmt.Where("webhook_repo_id = ?", parentID)
-	case enum.WebhookParentSpace:
-		stmt = stmt.Where("webhook_space_id = ?", parentID)
-	default:
-		return 0, fmt.Errorf("webhook parent type '%s' is not supported", parentType)
+	err := selectParents(parents, &stmt)
+	if err != nil {
+		return 0, fmt.Errorf("failed to select parents: %w", err)
 	}
 
-	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(webhook_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
-	}
+	stmt = applyWebhookFilter(opts, stmt)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -377,29 +375,21 @@ func (s *WebhookStore) Count(ctx context.Context, parentType enum.WebhookParent,
 	return count, nil
 }
 
-// List lists the webhooks for a given parent type and id.
-func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, parentID int64,
-	opts *types.WebhookFilter) ([]*types.Webhook, error) {
+func (s *WebhookStore) List(
+	ctx context.Context,
+	parents []types.WebhookParentInfo,
+	opts *types.WebhookFilter,
+) ([]*types.Webhook, error) {
 	stmt := database.Builder.
 		Select(webhookColumns).
 		From("webhooks")
 
-	switch parentType {
-	case enum.WebhookParentRepo:
-		stmt = stmt.Where("webhook_repo_id = ?", parentID)
-	case enum.WebhookParentSpace:
-		stmt = stmt.Where("webhook_space_id = ?", parentID)
-	default:
-		return nil, fmt.Errorf("webhook parent type '%s' is not supported", parentType)
+	err := selectParents(parents, &stmt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select parents: %w", err)
 	}
 
-	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(webhook_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
-	}
-
-	if opts.SkipInternal {
-		stmt = stmt.Where("webhook_internal != ?", true)
-	}
+	stmt = applyWebhookFilter(opts, stmt)
 
 	stmt = stmt.Limit(database.Limit(opts.Size))
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
@@ -507,7 +497,7 @@ func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 	case enum.WebhookParentSpace:
 		res.SpaceID = null.IntFrom(hook.ParentID)
 	default:
-		return nil, fmt.Errorf("webhook parent type '%s' is not supported", hook.ParentType)
+		return nil, fmt.Errorf("webhook parent type %q is not supported", hook.ParentType)
 	}
 
 	return res, nil
@@ -552,4 +542,44 @@ func triggersToString(triggers []enum.WebhookTrigger) string {
 	}
 
 	return strings.Join(rawTriggers, triggersSeparator)
+}
+
+func applyWebhookFilter(
+	opts *types.WebhookFilter,
+	stmt squirrel.SelectBuilder,
+) squirrel.SelectBuilder {
+	if opts.Query != "" {
+		stmt = stmt.Where("LOWER(webhook_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+	}
+
+	if opts.SkipInternal {
+		stmt = stmt.Where("webhook_internal != ?", true)
+	}
+
+	return stmt
+}
+
+func selectParents(
+	parents []types.WebhookParentInfo,
+	stmt *squirrel.SelectBuilder,
+) error {
+	var parentSelector squirrel.Or
+	for _, parent := range parents {
+		switch parent.Type {
+		case enum.WebhookParentRepo:
+			parentSelector = append(parentSelector, squirrel.Eq{
+				"webhook_repo_id": parent.ID,
+			})
+		case enum.WebhookParentSpace:
+			parentSelector = append(parentSelector, squirrel.Eq{
+				"webhook_space_id": parent.ID,
+			})
+		default:
+			return fmt.Errorf("webhook parent type '%s' is not supported", parent.Type)
+		}
+	}
+
+	*stmt = stmt.Where(parentSelector)
+
+	return nil
 }

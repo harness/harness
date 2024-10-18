@@ -28,6 +28,7 @@ const (
 	StatusNotFound           Status = "not_found"
 	StatusNotImplemented     Status = "not_implemented"
 	StatusUnauthorized       Status = "unauthorized"
+	StatusForbidden          Status = "forbidden"
 	StatusFailed             Status = "failed"
 	StatusPreconditionFailed Status = "precondition_failed"
 	StatusAborted            Status = "aborted"
@@ -154,6 +155,16 @@ func Conflict(format string, args ...interface{}) *Error {
 // failed error.
 func PreconditionFailed(format string, args ...interface{}) *Error {
 	return Format(StatusPreconditionFailed, format, args...)
+}
+
+// Unauthorized is a helper function to return an unauthorized error.
+func Unauthorized(format string, args ...interface{}) *Error {
+	return Format(StatusUnauthorized, format, args...)
+}
+
+// Forbidden is a helper function to return a forbidden error.
+func Forbidden(format string, args ...interface{}) *Error {
+	return Format(StatusForbidden, format, args...)
 }
 
 // Failed is a helper function to return failed error status.

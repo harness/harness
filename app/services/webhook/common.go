@@ -18,7 +18,7 @@ import (
 	"net"
 	"net/url"
 
-	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
@@ -30,7 +30,7 @@ const (
 	webhookMaxSecretLength = 4096
 )
 
-var ErrInternalWebhookOperationNotAllowed = usererror.Forbidden("changes to internal webhooks are not allowed")
+var ErrInternalWebhookOperationNotAllowed = errors.Forbidden("changes to internal webhooks are not allowed")
 
 // CheckURL validates the url of a webhook.
 func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool, internal bool) error {
@@ -58,9 +58,9 @@ func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool, inter
 	// basic validation for loopback / private network addresses (only sanitary to give user an early error)
 	// IMPORTANT: during webook execution loopback / private network addresses are blocked (handles DNS resolution)
 
-	if host == "localhost" {
-		return check.NewValidationError("localhost is not allowed.")
-	}
+	// if host == "localhost" {
+	// 	return check.NewValidationError("localhost is not allowed.")
+	// }
 
 	if ip := net.ParseIP(host); ip != nil {
 		if !allowLoopback && ip.IsLoopback() {
@@ -80,7 +80,7 @@ func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool, inter
 }
 
 // checkSecret validates the secret of a webhook.
-func checkSecret(secret string) error {
+func CheckSecret(secret string) error {
 	if len(secret) > webhookMaxSecretLength {
 		return check.NewValidationErrorf("The secret of a webhook can be at most %d characters long.",
 			webhookMaxSecretLength)

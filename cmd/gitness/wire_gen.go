@@ -365,11 +365,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
-	webhookService, err := webhook.ProvideService(ctx, webhookConfig, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter)
+	webhookService, err := webhook.ProvideService(ctx, webhookConfig, transactor, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter)
 	if err != nil {
 		return nil, err
 	}
-	webhookController := webhook2.ProvideController(webhookConfig, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService, encrypter)
+	preprocessor := webhook2.ProvidePreprocessor()
+	webhookController := webhook2.ProvideController(authorizer, spaceStore, repoStore, webhookService, encrypter, preprocessor)
 	reporter5, err := events7.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err

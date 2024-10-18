@@ -19,54 +19,47 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/encrypt"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type Controller struct {
-	allowLoopback       bool
-	allowPrivateNetwork bool
-
-	authorizer            authz.Authorizer
-	webhookStore          store.WebhookStore
-	webhookExecutionStore store.WebhookExecutionStore
-	repoStore             store.RepoStore
-	webhookService        *webhook.Service
-	encrypter             encrypt.Encrypter
+	authorizer     authz.Authorizer
+	spaceStore     store.SpaceStore
+	repoStore      store.RepoStore
+	webhookService *webhook.Service
+	encrypter      encrypt.Encrypter
+	preprocessor   Preprocessor
 }
 
 func NewController(
-	allowLoopback bool,
-	allowPrivateNetwork bool,
 	authorizer authz.Authorizer,
-	webhookStore store.WebhookStore,
-	webhookExecutionStore store.WebhookExecutionStore,
+	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
 	webhookService *webhook.Service,
 	encrypter encrypt.Encrypter,
+	preprocessor Preprocessor,
 ) *Controller {
 	return &Controller{
-		allowLoopback:         allowLoopback,
-		allowPrivateNetwork:   allowPrivateNetwork,
-		authorizer:            authorizer,
-		webhookStore:          webhookStore,
-		webhookExecutionStore: webhookExecutionStore,
-		repoStore:             repoStore,
-		webhookService:        webhookService,
-		encrypter:             encrypter,
+		authorizer:     authorizer,
+		spaceStore:     spaceStore,
+		repoStore:      repoStore,
+		webhookService: webhookService,
+		encrypter:      encrypter,
+		preprocessor:   preprocessor,
 	}
 }
 
 func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	session *auth.Session, repoRef string, reqPermission enum.Permission) (*types.Repository, error) {
 	if repoRef == "" {
-		return nil, usererror.BadRequest("A valid repository reference must be provided.")
+		return nil, errors.InvalidArgument("A valid repository reference must be provided.")
 	}
 
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
@@ -79,4 +72,25 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	}
 
 	return repo, nil
+}
+
+func (c *Controller) getSpaceCheckAccess(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	permission enum.Permission,
+) (*types.Space, error) {
+	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return nil, fmt.Errorf("parent space not found: %w", err)
+	}
+
+	scope := &types.Scope{SpacePath: space.Path}
+	resource := &types.Resource{Type: enum.ResourceTypeRepo}
+	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, permission)
+	if err != nil {
+		return nil, fmt.Errorf("auth check failed: %w", err)
+	}
+
+	return space, nil
 }
