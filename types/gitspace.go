@@ -26,6 +26,7 @@ type GitspaceConfig struct {
 	State                 enum.GitspaceStateType `json:"state"`
 	SpaceID               int64                  `json:"-"`
 	IsDeleted             bool                   `json:"-"`
+	IsMarkedForDeletion   bool                   `json:"-"`
 	GitspaceInstance      *GitspaceInstance      `json:"instance"`
 	SpacePath             string                 `json:"space_path"`
 	Created               int64                  `json:"created"`

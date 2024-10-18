@@ -51,7 +51,8 @@ const (
         gconf_is_deleted,
         gconf_code_repo_ref,
 		gconf_ssh_token_identifier,
-        gconf_created_by
+        gconf_created_by,
+		gconf_is_marked_for_deletion
 	`
 	gitspaceConfigsTable        = `gitspace_configs`
 	ReturningClause             = "RETURNING "
@@ -73,13 +74,14 @@ type gitspaceConfig struct {
 	DevcontainerPath        null.String               `db:"gconf_devcontainer_path"`
 	Branch                  string                    `db:"gconf_branch"`
 	// TODO: migrate to principal int64 id to use principal cache and consistent with Harness code.
-	UserUID            string   `db:"gconf_user_uid"`
-	SpaceID            int64    `db:"gconf_space_id"`
-	Created            int64    `db:"gconf_created"`
-	Updated            int64    `db:"gconf_updated"`
-	IsDeleted          bool     `db:"gconf_is_deleted"`
-	SSHTokenIdentifier string   `db:"gconf_ssh_token_identifier"`
-	CreatedBy          null.Int `db:"gconf_created_by"`
+	UserUID             string   `db:"gconf_user_uid"`
+	SpaceID             int64    `db:"gconf_space_id"`
+	Created             int64    `db:"gconf_created"`
+	Updated             int64    `db:"gconf_updated"`
+	IsDeleted           bool     `db:"gconf_is_deleted"`
+	SSHTokenIdentifier  string   `db:"gconf_ssh_token_identifier"`
+	CreatedBy           null.Int `db:"gconf_created_by"`
+	IsMarkedForDeletion bool     `db:"gconf_is_marked_for_deletion"`
 }
 
 var _ store.GitspaceConfigStore = (*gitspaceConfigStore)(nil)
@@ -197,6 +199,7 @@ func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.G
 			gitspaceConfig.CodeRepo.Ref,
 			gitspaceConfig.SSHTokenIdentifier,
 			gitspaceConfig.GitspaceUser.ID,
+			gitspaceConfig.IsMarkedForDeletion,
 		).
 		Suffix(ReturningClause + "gconf_id")
 	sql, args, err := stmt.ToSql()
@@ -221,6 +224,7 @@ func (s gitspaceConfigStore) Update(ctx context.Context,
 		Set("gconf_updated", dbGitspaceConfig.Updated).
 		Set("gconf_infra_provider_resource_id", dbGitspaceConfig.InfraProviderResourceID).
 		Set("gconf_is_deleted", dbGitspaceConfig.IsDeleted).
+		Set("gconf_is_marked_for_deletion", dbGitspaceConfig.IsMarkedForDeletion).
 		Where("gconf_id = ?", gitspaceConfig.ID)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -252,6 +256,7 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 		UserUID:                 config.GitspaceUser.Identifier,
 		SpaceID:                 config.SpaceID,
 		IsDeleted:               config.IsDeleted,
+		IsMarkedForDeletion:     config.IsMarkedForDeletion,
 		Created:                 config.Created,
 		Updated:                 config.Updated,
 		SSHTokenIdentifier:      config.SSHTokenIdentifier,

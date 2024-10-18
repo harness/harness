@@ -39,16 +39,19 @@ func (c *Controller) Delete(
 	if err != nil {
 		return fmt.Errorf("failed to find space: %w", err)
 	}
+
 	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionGitspaceDelete)
 	if err != nil {
 		return fmt.Errorf("failed to authorize: %w", err)
 	}
+
 	gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, identifier)
 	gitspaceConfig.SpacePath = space.Path
 	if err != nil || gitspaceConfig == nil {
 		log.Err(err).Msg(gitspaceConfigNotFound + identifier)
 		return err
 	}
+
 	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
 	gitspaceConfig.GitspaceInstance = instance
 	if instance == nil || instance.State == enum.GitspaceInstanceStateUninitialized {
@@ -56,10 +59,18 @@ func (c *Controller) Delete(
 		if err = c.gitspaceSvc.UpdateConfig(ctx, gitspaceConfig); err != nil {
 			return fmt.Errorf("failed to mark gitspace config as deleted: %w", err)
 		}
-	} else {
-		ctxWithoutCancel := context.WithoutCancel(ctx)
-		go c.removeGitspace(ctxWithoutCancel, *gitspaceConfig)
+
+		return nil
 	}
+
+	// mark can_delete for gitconfig as true so that if delete operation fails, cron job can clean up resources.
+	gitspaceConfig.IsMarkedForDeletion = true
+	if err = c.gitspaceSvc.UpdateConfig(ctx, gitspaceConfig); err != nil {
+		return fmt.Errorf("failed to mark gitspace config is_marked_for_deletion column: %w", err)
+	}
+
+	ctxWithoutCancel := context.WithoutCancel(ctx)
+	go c.removeGitspace(ctxWithoutCancel, *gitspaceConfig)
 	return nil
 }
 
