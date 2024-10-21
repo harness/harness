@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/git/parser"
+	"github.com/harness/gitness/lock"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -37,44 +38,66 @@ import (
 
 // PullReq is pull request migrate.
 type PullReq struct {
-	urlProvider     url.Provider
-	git             git.Interface
-	principalStore  store.PrincipalStore
-	repoStore       store.RepoStore
-	pullReqStore    store.PullReqStore
-	pullReqActStore store.PullReqActivityStore
-	tx              dbtx.Transactor
+	urlProvider                 url.Provider
+	git                         git.Interface
+	principalStore              store.PrincipalStore
+	spaceStore                  store.SpaceStore
+	repoStore                   store.RepoStore
+	pullReqStore                store.PullReqStore
+	pullReqActStore             store.PullReqActivityStore
+	labelStore                  store.LabelStore
+	labelValueStore             store.LabelValueStore
+	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore
+	tx                          dbtx.Transactor
+	mtxManager                  lock.MutexManager
 }
 
 func NewPullReq(
 	urlProvider url.Provider,
 	git git.Interface,
 	principalStore store.PrincipalStore,
+	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
 	pullReqStore store.PullReqStore,
 	pullReqActStore store.PullReqActivityStore,
+	labelStore store.LabelStore,
+	labelValueStore store.LabelValueStore,
+	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore,
 	tx dbtx.Transactor,
+	mtxManager lock.MutexManager,
 ) *PullReq {
 	return &PullReq{
-		urlProvider:     urlProvider,
-		git:             git,
-		principalStore:  principalStore,
-		repoStore:       repoStore,
-		pullReqStore:    pullReqStore,
-		pullReqActStore: pullReqActStore,
-		tx:              tx,
+		urlProvider:                 urlProvider,
+		git:                         git,
+		principalStore:              principalStore,
+		spaceStore:                  spaceStore,
+		repoStore:                   repoStore,
+		pullReqStore:                pullReqStore,
+		pullReqActStore:             pullReqActStore,
+		labelStore:                  labelStore,
+		labelValueStore:             labelValueStore,
+		pullReqLabelAssignmentStore: pullReqLabelAssignmentStore,
+		tx:                          tx,
+		mtxManager:                  mtxManager,
 	}
 }
 
 type repoImportState struct {
-	git                  git.Interface
-	readParams           git.ReadParams
-	principalStore       store.PrincipalStore
-	pullReqActivityStore store.PullReqActivityStore
-	branchCheck          map[string]*git.Branch
-	principals           map[string]*types.Principal
-	unknownEmails        map[int]map[string]bool
-	migrator             types.Principal
+	git                         git.Interface
+	readParams                  git.ReadParams
+	principalStore              store.PrincipalStore
+	spaceStore                  store.SpaceStore
+	pullReqActivityStore        store.PullReqActivityStore
+	labelStore                  store.LabelStore
+	labelValueStore             store.LabelValueStore
+	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore
+	branchCheck                 map[string]*git.Branch
+	principals                  map[string]*types.Principal
+	unknownEmails               map[int]map[string]bool
+	labels                      map[string]int64            // map for labels {"label.key":label.id,}
+	labelValues                 map[int64]map[string]*int64 // map for label values {label.id:{"value-key":value-id,}}
+	migrator                    types.Principal
+	scope                       int64 // depth of space used for labels
 }
 
 // Import load provided pull requests in go-scm format and imports them.
@@ -89,17 +112,24 @@ func (migrate PullReq) Import(
 	readParams := git.ReadParams{RepoUID: repo.GitUID}
 
 	repoState := repoImportState{
-		git:                  migrate.git,
-		readParams:           readParams,
-		principalStore:       migrate.principalStore,
-		pullReqActivityStore: migrate.pullReqActStore,
-		branchCheck:          map[string]*git.Branch{},
-		principals:           map[string]*types.Principal{},
-		unknownEmails:        map[int]map[string]bool{},
-		migrator:             migrator,
+		git:                         migrate.git,
+		readParams:                  readParams,
+		principalStore:              migrate.principalStore,
+		spaceStore:                  migrate.spaceStore,
+		pullReqActivityStore:        migrate.pullReqActStore,
+		labelStore:                  migrate.labelStore,
+		labelValueStore:             migrate.labelValueStore,
+		pullReqLabelAssignmentStore: migrate.pullReqLabelAssignmentStore,
+		branchCheck:                 map[string]*git.Branch{},
+		principals:                  map[string]*types.Principal{},
+		unknownEmails:               map[int]map[string]bool{},
+		labels:                      map[string]int64{},
+		labelValues:                 map[int64]map[string]*int64{},
+		migrator:                    migrator,
+		scope:                       0,
 	}
 
-	pullReqUnique := map[int]struct{}{}
+	pullReqUnique := map[int]ExternalPullRequest{}
 	pullReqComments := map[*types.PullReq][]ExternalComment{}
 
 	pullReqs := make([]*types.PullReq, 0, len(extPullReqs))
@@ -110,7 +140,7 @@ func (migrate PullReq) Import(
 		if _, exists := pullReqUnique[extPullReq.Number]; exists {
 			return nil, errors.Conflict("duplicate pull request number %d", extPullReq.Number)
 		}
-		pullReqUnique[extPullReq.Number] = struct{}{}
+		pullReqUnique[extPullReq.Number] = *extPullReqData
 
 		pr, err := repoState.convertPullReq(ctx, repo, extPullReqData)
 		if err != nil {
@@ -163,7 +193,14 @@ func (migrate PullReq) Import(
 				}
 			}
 
-			if len(comments) == 0 { // no need to update the pull request object in the DB if there are no comments.
+			prLabels := pullReqUnique[int(pullReq.Number)].PullRequest.Labels
+			err = repoState.assignLabels(ctx, repo.ParentID, pullReq, prLabels)
+			if err != nil {
+				return fmt.Errorf("failed to assign pull request %d labels: %w", pullReq.Number, err)
+			}
+
+			// no need to update the pull request object in the DB if there are no comments.
+			if len(comments) == 0 && len(prLabels) == 0 {
 				continue
 			}
 
@@ -568,6 +605,156 @@ func (r *repoImportState) getPrincipalByEmail(
 	}
 
 	return &r.migrator, nil
+}
+
+func (r *repoImportState) assignLabels(
+	ctx context.Context,
+	spaceID int64,
+	pullreq *types.PullReq,
+	labels []ExternalLabel,
+) error {
+	if len(labels) == 0 {
+		return nil
+	}
+	now := time.Now().UnixMilli()
+	for _, l := range labels {
+		var label *types.Label
+		var err error
+		labelID, found := r.labels[l.Name]
+		if !found {
+			label, err = r.labelStore.Find(ctx, &spaceID, nil, l.Name)
+			if errors.Is(err, gitness_store.ErrResourceNotFound) {
+				label, err = r.defineLabel(ctx, spaceID, l)
+				if err != nil {
+					return fmt.Errorf("failed to define label: %w", err)
+				}
+			} else if err != nil {
+				return fmt.Errorf("failed to find the label with key %s in space %d: %w", l.Name, spaceID, err)
+			}
+
+			r.labels[l.Name], labelID = label.ID, label.ID
+		}
+
+		var valueID *int64
+		valueID, found = r.labelValues[labelID][l.Value]
+		if !found && l.Value != "" {
+			var labelValue *types.LabelValue
+			labelValue, err = r.labelValueStore.FindByLabelID(ctx, labelID, l.Value)
+			if errors.Is(err, gitness_store.ErrResourceNotFound) {
+				labelValue, err = r.defineLabelValue(ctx, labelID, l.Value)
+				if err != nil {
+					return fmt.Errorf("failed to define label values: %w", err)
+				}
+			} else if err != nil {
+				return fmt.Errorf("failed to find the label with value %s and key %s in space %d: %w",
+					l.Value, l.Name, spaceID, err)
+			}
+
+			valueID = &labelValue.ID
+		}
+
+		pullReqLabel := &types.PullReqLabel{
+			PullReqID: pullreq.ID,
+			LabelID:   labelID,
+			ValueID:   valueID,
+			Created:   now,
+			Updated:   now,
+			CreatedBy: r.migrator.ID,
+			UpdatedBy: r.migrator.ID,
+		}
+
+		err = r.pullReqLabelAssignmentStore.Assign(ctx, pullReqLabel)
+		if err != nil {
+			return fmt.Errorf("failed to assign label %s to pull request: %w", l.Name, err)
+		}
+		pullreq.ActivitySeq++
+	}
+
+	return nil
+}
+
+func (r *repoImportState) defineLabel(
+	ctx context.Context,
+	spaceID int64,
+	extLabel ExternalLabel,
+) (*types.Label, error) {
+	if r.scope == 0 {
+		spaceIDs, err := r.spaceStore.GetAncestorIDs(ctx, spaceID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get space ids hierarchy: %w", err)
+		}
+
+		r.scope = int64(len(spaceIDs))
+	}
+
+	label, err := convertLabelWithSanitization(ctx, r.migrator, spaceID, r.scope, extLabel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sanitize and convert external label input: %w", err)
+	}
+
+	label, err = r.labelStore.Find(ctx, &spaceID, nil, label.Key)
+	if errors.Is(err, gitness_store.ErrResourceNotFound) {
+		err = r.labelStore.Define(ctx, label)
+		if err != nil {
+			return nil, fmt.Errorf("failed to define and find the label: %w", err)
+		}
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to define and find the label: %w", err)
+	}
+
+	return label, nil
+}
+
+func (r *repoImportState) defineLabelValue(
+	ctx context.Context,
+	labelID int64,
+	value string,
+) (*types.LabelValue, error) {
+	valueIn := &types.DefineValueInput{
+		Value: value,
+		Color: defaultLabelValueColor,
+	}
+	if err := valueIn.Sanitize(); err != nil {
+		return nil, fmt.Errorf("failed to sanitize external label value input: %w", err)
+	}
+
+	if _, exists := r.labelValues[labelID]; !exists {
+		r.labelValues[labelID] = make(map[string]*int64)
+	}
+
+	labelValue, err := r.labelValueStore.FindByLabelID(ctx, labelID, valueIn.Value)
+	if err == nil {
+		r.labelValues[labelID][labelValue.Value] = &labelValue.ID
+		return labelValue, nil
+	}
+
+	if !errors.Is(err, gitness_store.ErrResourceNotFound) {
+		return nil, fmt.Errorf("failed to fine label value: %w", err)
+	}
+
+	// define the label value if not exists
+	now := time.Now().UnixMilli()
+	labelValue = &types.LabelValue{
+		LabelID:   labelID,
+		Value:     valueIn.Value,
+		Color:     defaultLabelValueColor,
+		Created:   now,
+		Updated:   now,
+		CreatedBy: r.migrator.ID,
+		UpdatedBy: r.migrator.ID,
+	}
+	err = r.labelValueStore.Define(ctx, labelValue)
+	if err != nil {
+		return nil, fmt.Errorf("failed to define label value: %w", err)
+	}
+	_, err = r.labelStore.IncrementValueCount(ctx, labelID, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update label value count: %w", err)
+	}
+
+	r.labelValues[labelID][labelValue.Value] = &labelValue.ID
+	return labelValue, nil
 }
 
 func timestampMillis(t time.Time, def int64) int64 {

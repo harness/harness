@@ -156,13 +156,12 @@ func mapToBranchRules(
 		},
 
 		PullReq: protection.DefPullReq{
-			Approvals:    protection.DefApprovals(rule.PullReq.Approvals),
-			Comments:     protection.DefComments(rule.PullReq.Comments),
-			StatusChecks: protection.DefStatusChecks(rule.PullReq.StatusChecks),
+			Approvals: protection.DefApprovals(rule.PullReq.Approvals),
+			Comments:  protection.DefComments(rule.PullReq.Comments),
 			Merge: protection.DefMerge{
 				StrategiesAllowed: convertMergeMethods(rule.PullReq.Merge.StrategiesAllowed),
 				DeleteBranch:      rule.PullReq.Merge.DeleteBranch,
-				Block:             false,
+				Block:             rule.PullReq.Merge.Block,
 			},
 		},
 
@@ -170,7 +169,7 @@ func mapToBranchRules(
 			CreateForbidden:      rule.Lifecycle.CreateForbidden,
 			DeleteForbidden:      rule.Lifecycle.DeleteForbidden,
 			UpdateForbidden:      rule.Lifecycle.UpdateForbidden,
-			UpdateForceForbidden: false,
+			UpdateForceForbidden: rule.Lifecycle.UpdateForceForbidden,
 		},
 	}, nil
 }

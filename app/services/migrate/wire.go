@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
@@ -28,18 +29,26 @@ var WireSet = wire.NewSet(
 	ProvidePullReqImporter,
 	ProvideRuleImporter,
 	ProvideWebhookImporter,
+	ProvideLabelImporter,
 )
 
 func ProvidePullReqImporter(
 	urlProvider url.Provider,
 	git git.Interface,
 	principalStore store.PrincipalStore,
+	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
 	pullReqStore store.PullReqStore,
 	pullReqActStore store.PullReqActivityStore,
+	labelStore store.LabelStore,
+	labelValueStore store.LabelValueStore,
+	pullReqLabelAssignmentStore store.PullReqLabelAssignmentStore,
 	tx dbtx.Transactor,
+	mtxManager lock.MutexManager,
 ) *PullReq {
-	return NewPullReq(urlProvider, git, principalStore, repoStore, pullReqStore, pullReqActStore, tx)
+	return NewPullReq(
+		urlProvider, git, principalStore, spaceStore, repoStore, pullReqStore, pullReqActStore,
+		labelStore, labelValueStore, pullReqLabelAssignmentStore, tx, mtxManager)
 }
 
 func ProvideRuleImporter(
@@ -56,4 +65,13 @@ func ProvideWebhookImporter(
 	webhookStore store.WebhookStore,
 ) *Webhook {
 	return NewWebhook(config, tx, webhookStore)
+}
+
+func ProvideLabelImporter(
+	tx dbtx.Transactor,
+	labelStore store.LabelStore,
+	labelValueStore store.LabelValueStore,
+	spaceStore store.SpaceStore,
+) *Label {
+	return NewLabel(labelStore, labelValueStore, spaceStore, tx)
 }

@@ -899,6 +899,12 @@ func setupAccountWithAuth(r chi.Router, userCtrl *user.Controller, config *types
 
 func setupMigrate(r chi.Router, migCtrl *migrate.Controller) {
 	r.Route("/migrate", func(r chi.Router) {
+		r.Route("/spaces", func(r chi.Router) {
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamSpaceRef), func(r chi.Router) {
+				r.Post("/labels", handlermigrate.HandleLabels(migCtrl))
+			})
+		})
+
 		r.Route("/repos", func(r chi.Router) {
 			r.Post("/", handlermigrate.HandleCreateRepo(migCtrl))
 			r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {

@@ -43,6 +43,7 @@ type Controller struct {
 	pullreqImporter *migrate.PullReq
 	ruleImporter    *migrate.Rule
 	webhookImporter *migrate.Webhook
+	labelImporter   *migrate.Label
 	resourceLimiter limiter.ResourceLimiter
 	auditService    audit.Service
 	identifierCheck check.RepoIdentifier
@@ -59,6 +60,7 @@ func NewController(
 	pullreqImporter *migrate.PullReq,
 	ruleImporter *migrate.Rule,
 	webhookImporter *migrate.Webhook,
+	labelImporter *migrate.Label,
 	resourceLimiter limiter.ResourceLimiter,
 	auditService audit.Service,
 	identifierCheck check.RepoIdentifier,
@@ -74,6 +76,7 @@ func NewController(
 		pullreqImporter: pullreqImporter,
 		ruleImporter:    ruleImporter,
 		webhookImporter: webhookImporter,
+		labelImporter:   labelImporter,
 		resourceLimiter: resourceLimiter,
 		auditService:    auditService,
 		identifierCheck: identifierCheck,
@@ -99,4 +102,30 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	}
 
 	return repo, nil
+}
+
+func (c *Controller) getSpaceCheckAccess(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+	reqPermission enum.Permission,
+) (*types.Space, error) {
+	space, err := c.spaceStore.FindByRef(ctx, parentRef)
+	if err != nil {
+		return nil, fmt.Errorf("parent space not found: %w", err)
+	}
+
+	err = apiauth.CheckSpaceScope(
+		ctx,
+		c.authorizer,
+		session,
+		space,
+		enum.ResourceTypeSpace,
+		reqPermission,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("auth check failed: %w", err)
+	}
+
+	return space, nil
 }
