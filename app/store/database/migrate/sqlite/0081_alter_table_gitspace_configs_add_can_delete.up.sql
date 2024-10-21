@@ -1,5 +1,1 @@
-ALTER TABLE gitspace_configs
-    ADD COLUMN gconf_is_marked_for_deletion BOOLEAN NOT NULL DEFAULT FALSE;
-
-UPDATE gitspace_configs
-SET gconf_is_marked_for_deletion = gconf_is_deleted;
+-- These files are empty due to issue with migration version. The changes in this version are present in 0082
