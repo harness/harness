@@ -286,12 +286,24 @@ func (g gitspaceInstanceStore) List(
 	stmt := database.Builder.
 		Select(gitspaceInstanceSelectColumns).
 		From(gitspaceInstanceTable).
-		Where(squirrel.Eq{"gits_space_id": filter.SpaceIDs}).
-		Where(squirrel.Eq{"gits_user_uid": filter.UserID}).
 		OrderBy("gits_created ASC")
+
+	if len(filter.SpaceIDs) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"gits_space_id": filter.SpaceIDs})
+	}
+
+	if filter.UserID != "" {
+		stmt = stmt.Where(squirrel.Eq{"gits_user_id": filter.UserID})
+	}
+
+	if len(filter.State) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"gits_state": filter.State})
+	}
+
 	if filter.Limit > 0 {
 		stmt = stmt.Limit(database.Limit(filter.Limit))
 	}
+
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
