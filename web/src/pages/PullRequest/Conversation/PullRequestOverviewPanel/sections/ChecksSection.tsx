@@ -309,7 +309,7 @@ const ChecksSection = (props: ChecksSectionProps) => {
                           : 'checkStatus.error'
                       )}
                       vars={{
-                        time: <>{timeDistance(check.check.created, check.check.updated)}</>
+                        time: <>{timeDistance(check.check.started, check.check.ended)}</>
                       }}
                     />
                   </Text>
