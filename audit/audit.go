@@ -76,6 +76,7 @@ const (
 	ResourceTypeRepositorySettings    ResourceType = "repository_settings"
 	ResourceTypeRegistry              ResourceType = "registry"
 	ResourceTypeRegistryUpstreamProxy ResourceType = "registry_upstream_proxy"
+	ResourceTypeRegistryArtifact      ResourceType = "registry_artifact"
 )
 
 func (a ResourceType) Validate() error {
@@ -86,7 +87,8 @@ func (a ResourceType) Validate() error {
 		ResourceTypePullRequest,
 		ResourceTypeRepositorySettings,
 		ResourceTypeRegistry,
-		ResourceTypeRegistryUpstreamProxy:
+		ResourceTypeRegistryUpstreamProxy,
+		ResourceTypeRegistryArtifact:
 		return nil
 
 	default:

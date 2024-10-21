@@ -131,6 +131,7 @@ type ManifestRepository interface {
 		ctx context.Context, repoID int64,
 		digest types.Digest,
 	) (types.Manifests, error)
+	DeleteManifestsByImageName(ctx context.Context, registryID int64, imageName string) (err error)
 }
 
 type ManifestReferenceRepository interface {
@@ -245,6 +246,8 @@ type TagRepository interface {
 		offset int,
 		search string,
 	) (*[]types.TagMetadata, error)
+
+	DeleteTag(ctx context.Context, registryID int64, imageName string, name string) (err error)
 
 	CountAllTagsByRepoAndImage(
 		ctx context.Context, parentID int64, repoKey string,
@@ -418,6 +421,8 @@ type ImageRepository interface {
 	CreateOrUpdate(ctx context.Context, image *types.Image) error
 	// Update an Artifact
 	Update(ctx context.Context, artifact *types.Image) (err error)
+
+	UpdateStatus(ctx context.Context, artifact *types.Image) (err error)
 }
 
 type ArtifactRepository interface {

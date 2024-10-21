@@ -294,6 +294,53 @@ paths:
           $ref: "#/components/responses/NotFound"
         500:
           $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}:
+    delete:
+      summary: Delete Artifact
+      description: Delete Artifact.
+      operationId: DeleteArtifact
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+  /registry/{registry_ref}/artifact/{artifact}/version/{version}:
+    delete:
+      summary: Delete an Artifact Version
+      description: Delete Artifact Version.
+      operationId: DeleteArtifactVersion
+      tags:
+        - Artifacts
+      parameters:
+        - $ref: "#/components/parameters/registryRefPathParam"
+        - $ref: "#/components/parameters/artifactPathParam"
+        - $ref: "#/components/parameters/versionPathParam"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthenticated"
+        403:
+          $ref: "#/components/responses/Unauthorized"
+        404:
+          $ref: "#/components/responses/NotFound"
+        500:
+          $ref: "#/components/responses/InternalServerError"
   /registry/{registry_ref}/artifact/{artifact}/summary:
     get:
       summary: Get Artifact Summary

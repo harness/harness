@@ -41,6 +41,9 @@ type ServerInterface interface {
 	// Get Artifact Stats
 	// (GET /registry/{registry_ref}/artifact/stats)
 	GetArtifactStatsForRegistry(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, params GetArtifactStatsForRegistryParams)
+	// Delete Artifact
+	// (DELETE /registry/{registry_ref}/artifact/{artifact})
+	DeleteArtifact(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam)
 	// Update Artifact Labels
 	// (PUT /registry/{registry_ref}/artifact/{artifact}/labels)
 	UpdateArtifactLabels(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam)
@@ -50,6 +53,9 @@ type ServerInterface interface {
 	// Get Artifact Summary
 	// (GET /registry/{registry_ref}/artifact/{artifact}/summary)
 	GetArtifactSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam)
+	// Delete an Artifact Version
+	// (DELETE /registry/{registry_ref}/artifact/{artifact}/version/{version})
+	DeleteArtifactVersion(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam)
 	// Describe Docker Artifact Detail
 	// (GET /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/details)
 	GetDockerArtifactDetails(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam, params GetDockerArtifactDetailsParams)
@@ -131,6 +137,12 @@ func (_ Unimplemented) GetArtifactStatsForRegistry(w http.ResponseWriter, r *htt
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Delete Artifact
+// (DELETE /registry/{registry_ref}/artifact/{artifact})
+func (_ Unimplemented) DeleteArtifact(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Update Artifact Labels
 // (PUT /registry/{registry_ref}/artifact/{artifact}/labels)
 func (_ Unimplemented) UpdateArtifactLabels(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
@@ -146,6 +158,12 @@ func (_ Unimplemented) GetArtifactStats(w http.ResponseWriter, r *http.Request, 
 // Get Artifact Summary
 // (GET /registry/{registry_ref}/artifact/{artifact}/summary)
 func (_ Unimplemented) GetArtifactSummary(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete an Artifact Version
+// (DELETE /registry/{registry_ref}/artifact/{artifact}/version/{version})
+func (_ Unimplemented) DeleteArtifactVersion(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -440,6 +458,41 @@ func (siw *ServerInterfaceWrapper) GetArtifactStatsForRegistry(w http.ResponseWr
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// DeleteArtifact operation middleware
+func (siw *ServerInterfaceWrapper) DeleteArtifact(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "artifact" -------------
+	var artifact ArtifactPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "artifact", chi.URLParam(r, "artifact"), &artifact, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteArtifact(w, r, registryRef, artifact)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // UpdateArtifactLabels operation middleware
 func (siw *ServerInterfaceWrapper) UpdateArtifactLabels(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -555,6 +608,50 @@ func (siw *ServerInterfaceWrapper) GetArtifactSummary(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetArtifactSummary(w, r, registryRef, artifact)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// DeleteArtifactVersion operation middleware
+func (siw *ServerInterfaceWrapper) DeleteArtifactVersion(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "registry_ref" -------------
+	var registryRef RegistryRefPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "registry_ref", chi.URLParam(r, "registry_ref"), &registryRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "registry_ref", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "artifact" -------------
+	var artifact ArtifactPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "artifact", chi.URLParam(r, "artifact"), &artifact, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifact", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "version" -------------
+	var version VersionPathParam
+
+	err = runtime.BindStyledParameterWithOptions("simple", "version", chi.URLParam(r, "version"), &version, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "version", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteArtifactVersion(w, r, registryRef, artifact, version)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -1473,6 +1570,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/registry/{registry_ref}/artifact/stats", wrapper.GetArtifactStatsForRegistry)
 	})
 	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/registry/{registry_ref}/artifact/{artifact}", wrapper.DeleteArtifact)
+	})
+	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/registry/{registry_ref}/artifact/{artifact}/labels", wrapper.UpdateArtifactLabels)
 	})
 	r.Group(func(r chi.Router) {
@@ -1480,6 +1580,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/registry/{registry_ref}/artifact/{artifact}/summary", wrapper.GetArtifactSummary)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/registry/{registry_ref}/artifact/{artifact}/version/{version}", wrapper.DeleteArtifactVersion)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/details", wrapper.GetDockerArtifactDetails)
@@ -2058,6 +2161,71 @@ func (response GetArtifactStatsForRegistry500JSONResponse) VisitGetArtifactStats
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteArtifactRequestObject struct {
+	RegistryRef RegistryRefPathParam `json:"registry_ref"`
+	Artifact    ArtifactPathParam    `json:"artifact"`
+}
+
+type DeleteArtifactResponseObject interface {
+	VisitDeleteArtifactResponse(w http.ResponseWriter) error
+}
+
+type DeleteArtifact200JSONResponse struct{ SuccessJSONResponse }
+
+func (response DeleteArtifact200JSONResponse) VisitDeleteArtifactResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifact400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response DeleteArtifact400JSONResponse) VisitDeleteArtifactResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifact401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response DeleteArtifact401JSONResponse) VisitDeleteArtifactResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifact403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DeleteArtifact403JSONResponse) VisitDeleteArtifactResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifact404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response DeleteArtifact404JSONResponse) VisitDeleteArtifactResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifact500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response DeleteArtifact500JSONResponse) VisitDeleteArtifactResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type UpdateArtifactLabelsRequestObject struct {
 	RegistryRef RegistryRefPathParam `json:"registry_ref"`
 	Artifact    ArtifactPathParam    `json:"artifact"`
@@ -2255,6 +2423,72 @@ type GetArtifactSummary500JSONResponse struct {
 }
 
 func (response GetArtifactSummary500JSONResponse) VisitGetArtifactSummaryResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifactVersionRequestObject struct {
+	RegistryRef RegistryRefPathParam `json:"registry_ref"`
+	Artifact    ArtifactPathParam    `json:"artifact"`
+	Version     VersionPathParam     `json:"version"`
+}
+
+type DeleteArtifactVersionResponseObject interface {
+	VisitDeleteArtifactVersionResponse(w http.ResponseWriter) error
+}
+
+type DeleteArtifactVersion200JSONResponse struct{ SuccessJSONResponse }
+
+func (response DeleteArtifactVersion200JSONResponse) VisitDeleteArtifactVersionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifactVersion400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response DeleteArtifactVersion400JSONResponse) VisitDeleteArtifactVersionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifactVersion401JSONResponse struct{ UnauthenticatedJSONResponse }
+
+func (response DeleteArtifactVersion401JSONResponse) VisitDeleteArtifactVersionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifactVersion403JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response DeleteArtifactVersion403JSONResponse) VisitDeleteArtifactVersionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifactVersion404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response DeleteArtifactVersion404JSONResponse) VisitDeleteArtifactVersionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteArtifactVersion500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response DeleteArtifactVersion500JSONResponse) VisitDeleteArtifactVersionResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -3163,6 +3397,9 @@ type StrictServerInterface interface {
 	// Get Artifact Stats
 	// (GET /registry/{registry_ref}/artifact/stats)
 	GetArtifactStatsForRegistry(ctx context.Context, request GetArtifactStatsForRegistryRequestObject) (GetArtifactStatsForRegistryResponseObject, error)
+	// Delete Artifact
+	// (DELETE /registry/{registry_ref}/artifact/{artifact})
+	DeleteArtifact(ctx context.Context, request DeleteArtifactRequestObject) (DeleteArtifactResponseObject, error)
 	// Update Artifact Labels
 	// (PUT /registry/{registry_ref}/artifact/{artifact}/labels)
 	UpdateArtifactLabels(ctx context.Context, request UpdateArtifactLabelsRequestObject) (UpdateArtifactLabelsResponseObject, error)
@@ -3172,6 +3409,9 @@ type StrictServerInterface interface {
 	// Get Artifact Summary
 	// (GET /registry/{registry_ref}/artifact/{artifact}/summary)
 	GetArtifactSummary(ctx context.Context, request GetArtifactSummaryRequestObject) (GetArtifactSummaryResponseObject, error)
+	// Delete an Artifact Version
+	// (DELETE /registry/{registry_ref}/artifact/{artifact}/version/{version})
+	DeleteArtifactVersion(ctx context.Context, request DeleteArtifactVersionRequestObject) (DeleteArtifactVersionResponseObject, error)
 	// Describe Docker Artifact Detail
 	// (GET /registry/{registry_ref}/artifact/{artifact}/version/{version}/docker/details)
 	GetDockerArtifactDetails(ctx context.Context, request GetDockerArtifactDetailsRequestObject) (GetDockerArtifactDetailsResponseObject, error)
@@ -3414,6 +3654,33 @@ func (sh *strictHandler) GetArtifactStatsForRegistry(w http.ResponseWriter, r *h
 	}
 }
 
+// DeleteArtifact operation middleware
+func (sh *strictHandler) DeleteArtifact(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
+	var request DeleteArtifactRequestObject
+
+	request.RegistryRef = registryRef
+	request.Artifact = artifact
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteArtifact(ctx, request.(DeleteArtifactRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteArtifact")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteArtifactResponseObject); ok {
+		if err := validResponse.VisitDeleteArtifactResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // UpdateArtifactLabels operation middleware
 func (sh *strictHandler) UpdateArtifactLabels(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam) {
 	var request UpdateArtifactLabelsRequestObject
@@ -3496,6 +3763,34 @@ func (sh *strictHandler) GetArtifactSummary(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetArtifactSummaryResponseObject); ok {
 		if err := validResponse.VisitGetArtifactSummaryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteArtifactVersion operation middleware
+func (sh *strictHandler) DeleteArtifactVersion(w http.ResponseWriter, r *http.Request, registryRef RegistryRefPathParam, artifact ArtifactPathParam, version VersionPathParam) {
+	var request DeleteArtifactVersionRequestObject
+
+	request.RegistryRef = registryRef
+	request.Artifact = artifact
+	request.Version = version
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteArtifactVersion(ctx, request.(DeleteArtifactVersionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteArtifactVersion")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteArtifactVersionResponseObject); ok {
+		if err := validResponse.VisitDeleteArtifactVersionResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -3868,70 +4163,71 @@ func (sh *strictHandler) GetAllRegistries(w http.ResponseWriter, r *http.Request
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xd33LUuNJ/FZe+79Jkwi7nXOQuJAFSJ4GchFBFbVGUYvfMePG/leSELDXvfkqSZcu2",
-	"ZMuTycyw+Iowbqlb6l+32lKr/QMFWZJnKaSMoqMfKMcEJ8CAiP9d4DuI6RX/jf83BBqQKGdRlqIj+fAA",
-	"+Sji//urAPKIfJTiBNARivlD5CMaLCHBvHHEIBGdssecU1BGonSBVr76AROCH9Fq5aNrWESUkcfzEFIW",
-	"zSMgFhEUoVdTWuQhsPga6URPEuzjYw5DInEaizBMPqpFgLRI0NEf6NP59cfb4wvko9urm4/XZ8eX6Ivf",
-	"lmvlI0xYNMcBs8hwLB4zC3fVuCFBHw+2tPB5jxPwsrmnSCsw5JgtjQwJ/FVEBEJ0xEgB/QKE0QKobYin",
-	"4qENfbLpSH5zkiWnmNkUyx8deG8ykmDmvfAuL2enp7PPnz9/tsjAuxuY4hgzoOwTECpYdA2MP/bK596b",
-	"KGZA7AbHib/el50ZGN9lWQw4FZxzHHzDC3DB8ZUk7cNz2dvXDq5HmFaOF/C+SO6AdGU5KQiBlHmcxksl",
-	"kU2SRVOCEOa4iBk6eumjudAdOkJRyv79ClVCRCmDBZBKjJvobzCAXfDlcBej8nIgXsnOJAnlnRgl+e3Q",
-	"TRRSauAa5j02eJtGfxXgKWKPm57FDhXNVwLzkbZBAZNg+RGIQQL5zOMPbeCUJF8Zbz/AKCPsTQRxaOBT",
-	"PbIwyQj7Oi8Jhnh8IKEJafWjHh5ZSdDLI8cBOGlOUPapTRCso7NShP/yIbjKYBu3JkMfT5Zt0IOybIBb",
-	"6ews7D5VrtDUeY+jNHEYXAOPy0VOuWuLMmu27qpcSWKg7HUWRiAcqmIngrBr+ZT/HmQpg1T8ifM8jgLM",
-	"5Zz9SeUCUzP5f67MI/R/szr+m8mndGbsXMjRHHsplccyr8hDzKCKBDwR/1GkxUybFrLdb49884x4AQEh",
-	"YBoqWZU7LJ0tzbOUGidXPhkleE6yHAgrlRVi5jznN0WSYC6UjyjDrKBDDW8klUKJhNQfqrEvmddRZHb3",
-	"JwSW2ZID5epcAGvp0lOPuWSVsAwzuu0J4jz3aXp4V9Q8PVKXE4JoLZKSsnSTu5miJvM9mKkwC74BqSes",
-	"XCb0iXuNw0270DNCMmIS7zUOPaL8qo9O4ghSdgOsyE+B4Sjels13Ge9SV2IZERJ5lIvkhbVMp0KBCl9S",
-	"2C1Nkon1HkI6rARrCnyJ02gOlO1kthTzPZyvRBNNCn2BH4HQrc6TZLmXMQkXrJ4bpcjtTk/FdT+n5h3E",
-	"yU5cUpfxHkzQEuLE5I50YbfsjEys926mdEd0njIgKY5vgNwDkfHDs0cjiqlHBVcPJKGPLiLKdvGu1uG7",
-	"66gkjigzvXvrgu5gbvZqWtrzUb4D7GBa1MbUPsxO+aJB9WMcNVNqh2UHCGqz3ksk1TtQW5+XvZgPognz",
-	"PmNvsiINn381+LgEj+YQRPMI+FsqzQoSgPeAqZdmzJsLKRr7jlvRzr5oRu5z+jIkNG12+uimCAKg9AkT",
-	"sokBuoyslNS71jbXblNcsCWkjAsLWwBcm2ElQ0aiv7cnQMlNnOzIFmKrOs3SxyQTytB219rHAk31lQHC",
-	"uANaXYVlB10V1hJcAsPKbkzZCQHzKhK/bW/ZQxpnOKQnWSFndfC81F9jULwNZZdZKFyJsYE8tTE80A7Q",
-	"h/R6pZHylkUcn2RJglMzS9JJfuklu8JsaSS4r9MKuudaujLFGI182xkKLa596pe79B3dv8Mk5QZdYUDS",
-	"2QAwRv+qjTq9d2jCMobjG5YR7dDfoVmRj+Kz6pumcmfFYaJKyvZUSX8fHjMjCNaypCjBC3hvQ/46dpaU",
-	"NmaRcl1jagG5lrvZZR9OS2g7eCuVhmP3WiLpqJpoO0LHKYN2soTa+Tz/bD9GSzvbgRNrHRN1Exrklm0H",
-	"IjZb7TesiF4Ma3p9fTmvB7oZ1ekKgwZVsKWSqmVBdfTEJ6dMElMpj7cUyBWm9CEjIfK1eKab+OijEz4N",
-	"RX6VxVFg0Ef52JPPRTjc8aNlnM410lYPfM8jAqf4kZrtd8iIrgjMo+/jPKNKMBnd1LSqGI7LDHMkDrAE",
-	"kaeo2jOR4Ch9Bzi02CyFoP8p59VcIhxP+W5k28EAVBNQF0dj/qV/fhSj/vlRVO35WfaMnkG+3tAZ5KPV",
-	"LBoNjIGTdKIG6bhHLuM9w2YODqkld7WGDw3Q7FYMRG3fwoPLKEA+egspEMzgY/YNUqNnMR6iDjr8km7n",
-	"MZnT0vFMQZh7JDB2ifdRQeKnvduY17KGQJLL8AJnOTgexEhF2XWydRf9o6go7XKJg9qzlDm9S8hTXZtT",
-	"eEIUpnoYkJMOvvZIMmsgVeb3m19PHsvLK04OuDN7BreX0WMSLIdHX0plH7yCgnVxdtZUv4Oxz451KK4a",
-	"rm5WxEqyssvhUfeMtyZ5hpA50fmPAEVbW/bobT0/ZJqx6kS1bZmhYQX8uARvyVguD0Q9QeQj+I6TPAZ0",
-	"9OrwlWGhC23YOw7DiP+JY5XX5OG7rGAeW0J55GoQOAFK8cIiHAFMecQv/ixTcXEUQ4j8QUcixqJ6N02V",
-	"Icegiy+Ik8HVujrWMSHsOZbyabF+9sXamFgxAI/nXqgbJ+Nd85NnatpNAmpFKnVpjnw3Z9fZsDf4Od5R",
-	"BfGunYt91PJiVnVBSndFLpev5N2rEVw4eZPL4aEzn/M0hO9mPoF220zv3r1z8wUy3ndqv0SmT5bxNlgN",
-	"sxoHQziT2Sk9aDFEHGJ7t7MObwUB6+wtT6hxRE3PoZ0pO8XBxVTZI1ZP9UkRjOxtlOdq7+FPDuznd2BV",
-	"OsUY39WztzsBYLcAqOI49Qa/lk6d3IKCjt0ftNCoSTYExz2M39qiTW7wH+IGr5rveO2crzkQ6rHMK1+F",
-	"tG3v0w8n/zm7Rj66PP509h756O3Z+7Pr8xPko3dnF5fG/W+7v7VZZHdXDsdx9gDhFWYMSDouiruLs+Db",
-	"mm2D9qmg49GL3srUbZbOo4Wr+Z1I6uEtA31yTVta/cfle5R9YXvjN5/MN4rvlOc0bu/yVgf3U2eW2bI6",
-	"njVnYzM5Gc+ZetEyp46Kb4o7+UjlAAfimP9TRFiBYy8j3m1OGQGc6H4qjHgfSZRiJrdXE5znfCxHP+pK",
-	"S5YpVP2VEvlVkSYLfSlK7Q9KBD6+14o/rXyUpfBhjo7+6Fdgu7d+6pasqy9t/Lsc0+pFrjrKZkNWardO",
-	"60JiN9dqgRyVCDjgYdfbtN28Wx50EU/Y5LVt3ir7u7Ft4o4HiOMyULp8fUytRYF304csazrzFHfsKrJ4",
-	"CkJ5bH7N6QePBQyRg2vMMBQ884Y8iq/KZ0UH4N3Xi0lROlTTGmLx66Nq+fnoprpK0b70GIr7BtSL5o0T",
-	"tAdMPSrvRcwLIWSaMT3p5fbk5OzmBvnozfH5xe31GfLR2fX1h2sj+9aK0c2yEb8XRObuGTPqVBdXJPtu",
-	"2nrBhXRGbgteIx9waL2rswVXX1a+4OSCxSpXURQDK0gAehFGefq7LO6Qj04KyrLEOHNOXq+SqANSH31/",
-	"0YDUi3scF5ygggtXjz4b3Ws4EBBgA8GcJLrJcQDnoTmxUSOxHvsVFIjlHL415oqSm2kpOtdOM5QZgTQV",
-	"3Lns8xUtMD4po5L/FKXzTF3xKTd+ylJe9njmhRfCPcRcLloubEdoyVhOj2azh4eHg6VsehBlQoyIxf0d",
-	"Hl+da2eiR+jlweHBoQgic0hxHqEj9Lv4SS79YrQzor3S55np/POkrIlVMTpAokupA46WkkR/5dcKxFpM",
-	"uSaZGWrQ8aC0Lmf2aLPVRsWzbrGvVsWu3w5f2jsq6WadG4ErH706PBxuqJXeEU0ceBkujb06/N21nbrr",
-	"5aN/uchnupUv7ompNCulaV3PDC+4CpFmTF94owo3sx96wciVhE8MzLCgnorfNSB5kUz7wEHAg2xhzvz/",
-	"i+geUu8bPHaAJrtYG2jGYpkSag2YOMymuh75E6Dj1eGr4UbV1dzNwamjbxuefLQAZiouywqS0houZY7V",
-	"eNi8BbYPmPkZXcuuwGNTvh1DeWHA0K242Eyf5HTE6/fjcwBo4+vbBMKNgrCLnjWWxJnan5rVL89Gf3cR",
-	"UdZOsenGWp3EHbohRPqD7bTq247UYgfJgVarHL2ea7UX+ZngbYW3CXAawOsjakd8U3Wd2wjvt8BaN7oP",
-	"TAt14274m4xs2O8OY7FZ4d+hgV7Oej30mivlTsi1IreLpafg9of6a6W56J5wYthJS7oduenuNznWijbM",
-	"9b2fAu/JMY+KOzbpmjWIb95L7xLZkz+f/Hkf2Os7hA5wl8T9gK8vG+7Uma8NyVYp9QmUjqCs9L4JWJab",
-	"9LMf5R+rmSzsPNMu3lnxar5fTk2oNV1Y33N33fmYikMb/SNg65lHb2X2yUZ69ng5Ou/AsxY9UObSItio",
-	"1dTXuZ2NprozPWAz9d3qyWRMJtMqNz+ZynhTqSC2DVPRr6k6G4t26XXAXPTrsZPB9K0xnSLyk+mMNx0N",
-	"bts0HrqW9VB38/npFpwnGET3oxyTJaxvCc++jiwhTpxeU0xlNYwm0K3R8WvAv+fDK5MFDFuApWyLAn/j",
-	"8Qah7xRAWWuG9IL/Zw2enoz+KRZ6Mv4NkdAzWMCo7dRWodvebdVWEd1fwQAGvnE5mYDbxmy3nPIGN2j7",
-	"k3Woh+NYJI+1pbEcmsXxcbvkyV4j/RkTfqpPqDsSy2+6bzuVqP35p8koHZOJNHyva45jbY+KVE4tXajP",
-	"/ujrx60nFslT/Mn4hozP+kWxyfrcrK9jCaNTVuUHjF+IDxi/GHrZV6naJxfnnqlwvHeHKYRelqoqJKoC",
-	"d8dADaXpt78+jo0C148Ae76YPUF98GaADW59eBc3zejsh/h3G9mr4rrk2hfipjynXznPqQeso2OjofcR",
-	"uh2MXnfKv/wy4dAwdbMMztNfXiaDHBs3acYoHHePJTYLFTqYYr0W2WyxeWH9+Y1RK48x2oBHNfrl32Qm",
-	"S3S0xIYJdE1RVKHgHUijaL+GVO87spbCDOfR7P6l0F/ZV6cW3NW5qPCivocrv4PrN75cLIUpyzloAnIQ",
-	"mXtbAPObH4PWeqidTW8H1ecVsrknsw9MnXVOeJ37bHy9X+uxdWiw+rL6XwAAAP//+v5kDP2XAAA=",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

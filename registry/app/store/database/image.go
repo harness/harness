@@ -245,6 +245,36 @@ func (i ImageDao) Update(ctx context.Context, image *types.Image) (err error) {
 	return nil
 }
 
+func (i ImageDao) UpdateStatus(ctx context.Context, image *types.Image) (err error) {
+	q := databaseg.Builder.Update("images").
+		Set("image_enabled", image.Enabled).
+		Set("image_updated_at", time.Now().UnixMilli()).
+		Where("image_registry_id = ? AND image_name = ?",
+			image.RegistryID, image.Name)
+
+	sql, args, err := q.ToSql()
+
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to bind images object")
+	}
+
+	result, err := i.db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to update images")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to get number of updated rows")
+	}
+
+	if count == 0 {
+		return gitness_store.ErrVersionConflict
+	}
+
+	return nil
+}
+
 func (i ImageDao) mapToInternalImage(ctx context.Context, in *types.Image) *imageDB {
 	session, _ := request.AuthSessionFrom(ctx)
 

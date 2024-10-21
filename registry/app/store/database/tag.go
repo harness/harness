@@ -484,6 +484,24 @@ func (t tagDao) GetTagDetail(
 	return t.mapToTagDetail(ctx, dst)
 }
 
+func (t tagDao) DeleteTag(ctx context.Context, registryID int64, imageName string, name string) (err error) {
+	stmt := databaseg.Builder.Delete("tags").
+		Where("tag_registry_id = ? AND tag_image_name = ? AND tag_name = ?", registryID, imageName, name)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge tags query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, t.db)
+
+	_, err = db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+	return nil
+}
+
 func (t tagDao) GetLatestTagMetadata(
 	ctx context.Context,
 	parentID int64,
