@@ -318,7 +318,11 @@ func (s *Service) handleEventPullReqComment(
 			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
 			activity, err := s.activityStore.Find(ctx, event.Payload.ActivityID)
 			if err != nil {
-				return nil, fmt.Errorf("failed to get activity by id for acitivity id %d: %w", event.Payload.ActivityID, err)
+				return nil, fmt.Errorf(
+					"failed to get activity by id for acitivity id %d: %w",
+					event.Payload.ActivityID,
+					err,
+				)
 			}
 			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
 			if err != nil {
@@ -355,6 +359,64 @@ func (s *Service) handleEventPullReqComment(
 						Text:     activity.Text,
 						ID:       activity.ID,
 						ParentID: activity.ParentID,
+					},
+				},
+			}, nil
+		})
+}
+
+// PullReqLabelAssignedPayload describes the body of the pullreq label assignment trigger.
+type PullReqLabelAssignedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqLabelSegment
+}
+
+func (s *Service) handleEventPullReqLabelAssigned(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.LabelAssignedPayload],
+) error {
+	return s.triggerForEventWithPullReq(
+		ctx,
+		enum.WebhookTriggerPullReqLabelAssigned,
+		event.ID, event.Payload.PrincipalID,
+		event.Payload.PullReqID,
+		func(
+			principal *types.Principal,
+			pr *types.PullReq,
+			targetRepo,
+			_ *types.Repository,
+		) (any, error) {
+			label, err := s.labelStore.FindByID(ctx, event.Payload.LabelID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to find label by id: %w", err)
+			}
+
+			var labelValueKey *string
+			if event.Payload.ValueID != nil {
+				value, err := s.labelStore.FindByID(ctx, *event.Payload.ValueID)
+				if err != nil {
+					return nil, fmt.Errorf("failed to find label value by id: %d %w", *event.Payload.ValueID, err)
+				}
+				labelValueKey = &value.Key
+			}
+
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			return &PullReqLabelAssignedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqCommentCreated,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
+				},
+				PullReqLabelSegment: PullReqLabelSegment{
+					LabelInfo: LabelInfo{
+						ID:      event.Payload.LabelID,
+						Key:     label.Key,
+						ValueID: event.Payload.ValueID,
+						Value:   labelValueKey,
 					},
 				},
 			}, nil

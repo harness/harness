@@ -80,6 +80,11 @@ type PullReqCommentSegment struct {
 	CommentInfo CommentInfo `json:"comment"`
 }
 
+// PullReqLabelSegment contains details for all pull req label related payloads for webhooks.
+type PullReqLabelSegment struct {
+	LabelInfo LabelInfo `json:"label"`
+}
+
 // PullReqUpdateSegment contains details what has been updated in the pull request.
 type PullReqUpdateSegment struct {
 	TitleChanged       bool   `json:"title_changed"`
@@ -292,4 +297,11 @@ type CommentInfo struct {
 	ID       int64  `json:"id"`
 	ParentID *int64 `json:"parent_id,omitempty"`
 	Text     string `json:"text"`
+}
+
+type LabelInfo struct {
+	ID      int64   `json:"id"`
+	Key     string  `json:"key"`
+	ValueID *int64  `json:"value_id,omitempty"`
+	Value   *string `json:"value,omitempty"`
 }

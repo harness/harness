@@ -91,6 +91,7 @@ type Service struct {
 	principalStore        store.PrincipalStore
 	git                   git.Interface
 	activityStore         store.PullReqActivityStore
+	labelStore            store.LabelStore
 	encrypter             encrypt.Encrypter
 
 	secureHTTPClient   *http.Client
@@ -118,6 +119,8 @@ func NewService(
 	principalStore store.PrincipalStore,
 	git git.Interface,
 	encrypter encrypt.Encrypter,
+	labelStore store.LabelStore,
+
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
@@ -142,6 +145,8 @@ func NewService(
 		insecureHTTPClientInternal: newHTTPClient(config.AllowLoopback, true, true),
 
 		config: config,
+
+		labelStore: labelStore,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
@@ -187,6 +192,7 @@ func NewService(
 			_ = r.RegisterCommentCreated(service.handleEventPullReqComment)
 			_ = r.RegisterMerged(service.handleEventPullReqMerged)
 			_ = r.RegisterUpdated(service.handleEventPullReqUpdated)
+			_ = r.RegisterLabelAssigned(service.handleEventPullReqLabelAssigned)
 
 			return nil
 		})

@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -68,6 +69,24 @@ func (c *Controller) AssignLabel(
 		ctx, pullreq, session.Principal.ID, payload, nil); err != nil {
 		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after label unassign")
 	}
+
+	// if the label has no value, the newValueID will be nil
+	var newValueID *int64
+	if out.NewLabelValue != nil {
+		newValueID = &out.NewLabelValue.ID
+	}
+
+	c.eventReporter.LabelAssigned(ctx, &events.LabelAssignedPayload{
+		Base: events.Base{
+			PullReqID:    pullreq.ID,
+			SourceRepoID: pullreq.SourceRepoID,
+			TargetRepoID: pullreq.TargetRepoID,
+			PrincipalID:  session.Principal.ID,
+			Number:       pullreq.Number,
+		},
+		LabelID: out.Label.ID,
+		ValueID: newValueID,
+	})
 
 	return out.PullReqLabel, nil
 }

@@ -50,8 +50,23 @@ func ProvideService(
 	principalStore store.PrincipalStore,
 	git git.Interface,
 	encrypter encrypt.Encrypter,
+	labelStore store.LabelStore,
 ) (*Service, error) {
-	return NewService(ctx, config, tx, gitReaderFactory, prReaderFactory,
-		webhookStore, webhookExecutionStore, spaceStore, repoStore, pullreqStore, activityStore,
-		urlProvider, principalStore, git, encrypter)
+	return NewService(
+		ctx,
+		config,
+		tx,
+		gitReaderFactory,
+		prReaderFactory,
+		webhookStore,
+		webhookExecutionStore,
+		spaceStore, repoStore,
+		pullreqStore,
+		activityStore,
+		urlProvider,
+		principalStore,
+		git,
+		encrypter,
+		labelStore,
+	)
 }
