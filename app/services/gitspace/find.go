@@ -118,8 +118,8 @@ func (c *Service) FindAll(
 				return fmt.Errorf("failed to find space: %w", err)
 			}
 			gitspaceConfig.SpacePath = space.Path
+			gitspaceConfigResult = append(gitspaceConfigResult, gitspaceConfig)
 		}
-		gitspaceConfigResult = gitspaceConfigs
 		return nil
 	}, dbtx.TxDefaultReadOnly)
 	if txErr != nil {
