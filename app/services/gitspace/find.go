@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -106,11 +107,19 @@ func (c *Service) FindAll(
 	var gitspaceConfigResult []*types.GitspaceConfig
 	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
 		// TODO join and set gitspace instance, space from cache
-		gitspaceConfig, err := c.gitspaceConfigStore.FindAll(ctx, ids)
+		gitspaceConfigs, err := c.gitspaceConfigStore.FindAll(ctx, ids)
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)
 		}
-		gitspaceConfigResult = gitspaceConfig
+		for _, gitspaceConfig := range gitspaceConfigs {
+			// FindByRef method is backed by cache as opposed to Find()
+			space, err := c.spaceStore.FindByRef(ctx, strconv.FormatInt(gitspaceConfig.SpaceID, 10))
+			if err != nil {
+				return fmt.Errorf("failed to find space: %w", err)
+			}
+			gitspaceConfig.SpacePath = space.Path
+		}
+		gitspaceConfigResult = gitspaceConfigs
 		return nil
 	}, dbtx.TxDefaultReadOnly)
 	if txErr != nil {
