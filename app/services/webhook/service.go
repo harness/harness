@@ -193,6 +193,7 @@ func NewService(
 			_ = r.RegisterMerged(service.handleEventPullReqMerged)
 			_ = r.RegisterUpdated(service.handleEventPullReqUpdated)
 			_ = r.RegisterLabelAssigned(service.handleEventPullReqLabelAssigned)
+			_ = r.RegisterReviewSubmitted(service.handleEventPullReqReviewSubmitted)
 
 			return nil
 		})

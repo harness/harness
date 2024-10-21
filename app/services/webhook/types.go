@@ -95,6 +95,11 @@ type PullReqUpdateSegment struct {
 	DescriptionNew     string `json:"description_new"`
 }
 
+type PullReqReviewSegment struct {
+	ReviewDecision enum.PullReqReviewDecision `json:"review_decision"`
+	ReviewerInfo   PrincipalInfo              `json:"reviewer"`
+}
+
 // RepositoryInfo describes the repo related info for a webhook payload.
 // NOTE: don't use types package as we want webhook payload to be independent from API calls.
 type RepositoryInfo struct {

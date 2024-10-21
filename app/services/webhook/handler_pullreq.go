@@ -476,3 +476,66 @@ func (s *Service) handleEventPullReqUpdated(
 			}, nil
 		})
 }
+
+// PullReqReviewSubmittedPayload describes the body of the pullreq review submitted trigger.
+type PullReqReviewSubmittedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqReviewSegment
+}
+
+// handleEventPullReqReviewSubmitted handles review events for pull requests
+// and triggers pullreq review submitted webhooks for the target repo.
+func (s *Service) handleEventPullReqReviewSubmitted(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.ReviewSubmittedPayload],
+) error {
+	return s.triggerForEventWithPullReq(
+		ctx,
+		enum.WebhookTriggerReviewSubmitted,
+		event.ID, event.Payload.PrincipalID,
+		event.Payload.PullReqID,
+		func(
+			principal *types.Principal,
+			pr *types.PullReq,
+			targetRepo,
+			sourceRepo *types.Repository,
+		) (any, error) {
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
+
+			reviewer, err := s.findPrincipalForEvent(ctx, event.Payload.ReviewerID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get reviewer by id for reviewer id %d: %w", event.Payload.ReviewerID, err)
+			}
+
+			return &PullReqReviewSubmittedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerReviewSubmitted,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				PullReqReviewSegment: PullReqReviewSegment{
+					ReviewDecision: event.Payload.Decision,
+					ReviewerInfo:   principalInfoFrom(reviewer.ToPrincipalInfo()),
+				},
+			}, nil
+		})
+}
