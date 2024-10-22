@@ -58,9 +58,8 @@ func (i infraProvisioner) triggerDeprovisionForNewProvisioning(
 			gitspaceConfig.GitspaceInstance.ID, err)
 	}
 
-	if infraProvisionedLatest.InfraStatus != enum.InfraStatusProvisioned &&
-		infraProvisionedLatest.InfraStatus != enum.InfraStatusUnknown {
-		return fmt.Errorf("the infrastructure with identifier %s doesn't exist", infra.Identifier)
+	if infraProvisionedLatest.InfraStatus == enum.InfraStatusDestroyed {
+		return nil
 	}
 
 	err = infraProvider.Deprovision(ctx, infra)
