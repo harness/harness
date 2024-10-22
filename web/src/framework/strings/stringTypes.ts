@@ -37,6 +37,7 @@ export interface StringsMap {
   applyChanges: string
   approve: string
   approved: string
+  approvedBy: string
   artifacts: string
   ascending: string
   assignPeople: string
@@ -156,6 +157,7 @@ export interface StringsMap {
   changeRole: string
   changedSinceLastView: string
   changes: string
+  changesRequested: string
   changesRequestedBy: string
   'changesSection.approvalPending': string
   'changesSection.changesAppByRev': string
@@ -665,6 +667,8 @@ export interface StringsMap {
   optionalExtendedDescription: string
   overview: string
   owner: string
+  owners: string
+  ownersHeading: string
   pageLoading: string
   pageNotFound: string
   'pageTitle.accessControl': string

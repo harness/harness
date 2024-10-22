@@ -39,10 +39,12 @@ import { useShowRequestError } from 'hooks/useShowRequestError'
 import type { TypesCodeOwnerEvaluation, TypesCodeOwnerEvaluationEntry } from 'services/code'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import { CodeOwnerReqDecision, findChangeReqDecisions, findWaitingDecisions } from 'utils/Utils'
+import { PullReqReviewDecision } from '../PullRequestUtils'
 import css from './CodeOwnersOverview.module.scss'
 
 interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   prChecksDecisionResult: PRChecksDecisionResult
+  reqCodeOwnerLatestApproval: boolean
   codeOwners?: TypesCodeOwnerEvaluation
   standalone: boolean
 }
@@ -52,6 +54,7 @@ export function CodeOwnersOverview({
   repoMetadata,
   pullReqMetadata,
   prChecksDecisionResult,
+  reqCodeOwnerLatestApproval,
   standalone
 }: ChecksOverviewProps) {
   const { getString } = useStrings()
@@ -61,7 +64,11 @@ export function CodeOwnersOverview({
   useShowRequestError(error)
 
   const changeReqEntries = findChangeReqDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.CHANGEREQ)
-  const waitingEntries = findWaitingDecisions(codeOwners?.evaluation_entries)
+  const waitingEntries = findWaitingDecisions(
+    codeOwners?.evaluation_entries,
+    pullReqMetadata,
+    reqCodeOwnerLatestApproval
+  )
 
   const approvalEntries = findChangeReqDecisions(codeOwners?.evaluation_entries, CodeOwnerReqDecision.APPROVED)
 
@@ -133,6 +140,7 @@ export function CodeOwnersOverview({
 
 interface CodeOwnerSectionsProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReqMetadata'> {
   data: TypesCodeOwnerEvaluation
+  reqCodeOwnerLatestApproval?: boolean
 }
 
 const CodeOwnerSections: React.FC<CodeOwnerSectionsProps> = ({ repoMetadata, pullReqMetadata, data }) => {
@@ -145,7 +153,11 @@ const CodeOwnerSections: React.FC<CodeOwnerSectionsProps> = ({ repoMetadata, pul
   )
 }
 
-export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => {
+export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({
+  data,
+  pullReqMetadata,
+  reqCodeOwnerLatestApproval
+}) => {
   const { getString } = useStrings()
 
   const columns = useMemo(
@@ -155,11 +167,15 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => 
           id: 'CODE',
           width: '45%',
           sort: true,
-          Header: 'CODE',
+          Header: getString('code'),
           accessor: 'CODE',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
             return (
-              <Text lineClamp={1} padding={{ left: 'small', right: 'small' }} color={Color.BLACK}>
+              <Text
+                lineClamp={1}
+                padding={{ left: 'small', right: 'small' }}
+                color={Color.BLACK}
+                flex={{ justifyContent: 'space-between' }}>
                 {row.original.pattern}
               </Text>
             )
@@ -169,7 +185,7 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => 
           id: 'Owners',
           width: '13%',
           sort: true,
-          Header: 'OWNERS',
+          Header: getString('ownersHeading'),
           accessor: 'OWNERS',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
             return (
@@ -233,7 +249,7 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => 
           accessor: 'ChangesRequested',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
             const changeReqEvaluations = row?.original?.owner_evaluations?.filter(
-              evaluation => evaluation.review_decision === 'changereq'
+              evaluation => evaluation.review_decision === PullReqReviewDecision.CHANGEREQ
             )
             return (
               <Layout.Horizontal className={css.ownerContainer} spacing="tiny">
@@ -279,13 +295,15 @@ export const CodeOwnerSection: React.FC<CodeOwnerSectionsProps> = ({ data }) => 
         },
         {
           id: 'approvedBy',
-          Header: 'APPROVED BY',
+          Header: getString('approvedBy'),
           sort: true,
           width: '15%',
           accessor: 'APPROVED BY',
           Cell: ({ row }: CellProps<TypesCodeOwnerEvaluationEntry>) => {
             const approvedEvaluations = row?.original?.owner_evaluations?.filter(
-              evaluation => evaluation.review_decision === 'approved'
+              evaluation =>
+                evaluation.review_decision === PullReqReviewDecision.APPROVED &&
+                (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata?.source_sha : true)
             )
             return (
               <Layout.Horizontal className={css.ownerContainer} spacing="tiny">

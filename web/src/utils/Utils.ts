@@ -28,8 +28,11 @@ import type {
   TypesCodeOwnerEvaluationEntry,
   RepoRepositoryOutput,
   TypesLabel,
-  TypesLabelValue
+  TypesLabelValue,
+  TypesPullReq,
+  TypesOwnerEvaluation
 } from 'services/code'
+import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
 
 export enum ACCESS_MODES {
   VIEW,
@@ -290,18 +293,28 @@ export const findChangeReqDecisions = (
   }
 }
 
-export const findWaitingDecisions = (entries: TypesCodeOwnerEvaluationEntry[] | null | undefined) => {
+export const findWaitingDecisions = (
+  entries: TypesCodeOwnerEvaluationEntry[] | null | undefined,
+  pullReqMetadata: TypesPullReq,
+  reqCodeOwnerLatestApproval: boolean
+) => {
   if (entries === null || entries === undefined) {
     return []
   } else {
     return entries.filter((entry: TypesCodeOwnerEvaluationEntry) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const hasEmptyDecision = entry?.owner_evaluations?.some((evaluation: any) => evaluation?.review_decision === '')
-      const hasNoApprovedDecision = !entry?.owner_evaluations?.some(
-        evaluation => evaluation.review_decision === 'approved'
+      // skip entry if all the owners have not given any review_decision yet
+      const hasNoReview = entry?.owner_evaluations?.every(
+        (evaluation: TypesOwnerEvaluation | { review_decision: string }) => evaluation.review_decision === ''
       )
-
-      return hasEmptyDecision && hasNoApprovedDecision
+      if (hasNoReview) return false
+      // add entry to waiting decision array if approved changes are outdated or no approvals are found for the given entry
+      // ( this will hence include pending or change requested entries)
+      const hasApprovedDecision = entry?.owner_evaluations?.some(
+        evaluation =>
+          evaluation.review_decision === PullReqReviewDecision.APPROVED &&
+          (reqCodeOwnerLatestApproval ? evaluation.review_sha === pullReqMetadata.source_sha : true)
+      )
+      return !hasApprovedDecision
     })
   }
 }

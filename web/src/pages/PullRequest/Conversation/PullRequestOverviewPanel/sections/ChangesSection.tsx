@@ -122,7 +122,11 @@ const ChangesSection = (props: ChangesSectionProps) => {
     }) // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .filter((entry: any) => entry !== null && entry !== undefined) // Filter out the null entries
 
-  const codeOwnerPendingEntries = findWaitingDecisions(codeOwners?.evaluation_entries)
+  const codeOwnerPendingEntries = findWaitingDecisions(
+    codeOwners?.evaluation_entries,
+    pullReqMetadata,
+    reqCodeOwnerLatestApproval
+  )
   const approvedEvaluations = reviewers?.filter(evaluation => evaluation.review_decision === 'approved')
   const latestApprovalArr = approvedEvaluations?.filter(
     approved => !checkIfOutdatedSha(approved.sha, pullReqMetadata?.source_sha as string)
@@ -610,7 +614,12 @@ const ChangesSection = (props: ChangesSectionProps) => {
           <Container
             className={css.codeOwnerContainer}
             padding={{ top: 'small', bottom: 'small', left: 'xxxlarge', right: 'small' }}>
-            <CodeOwnerSection data={codeOwners} pullReqMetadata={pullReqMetadata} repoMetadata={repoMetadata} />
+            <CodeOwnerSection
+              data={codeOwners}
+              pullReqMetadata={pullReqMetadata}
+              repoMetadata={repoMetadata}
+              reqCodeOwnerLatestApproval={reqCodeOwnerLatestApproval}
+            />
           </Container>
         )}
       </Render>

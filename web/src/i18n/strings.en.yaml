@@ -1167,11 +1167,15 @@ upload: Upload
 unorderedList: Unordered list
 checklist: Check list
 code: Code
+approvedBy: Approved By
+ownersHeading: OWNERS
+changesRequestedBy: Changes Requested By
+changesRequested: changesRequested
+owners: Owners
 showMoreText: Show More
 addOptionalCommitMessage: Add (optional) commit message
 confirmStrat: 'Confirm {{strat}}'
 waiting: Waiting
-changesRequestedBy: CHANGES REQUESTED BY
 mergeBranchTitle: Merge branch {{branchName}} of {{repoPath}} (#{{prNum}})
 http: HTTP
 ssh: SSH

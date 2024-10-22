@@ -55,7 +55,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
   const generateReviewDecisionInfo = (
-    reviewDecision: EnumPullReqReviewDecision | PullReqReviewDecision.outdated
+    reviewDecision: EnumPullReqReviewDecision | PullReqReviewDecision.OUTDATED
   ): {
     name: IconName
     color?: Color
@@ -76,7 +76,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
     }
 
     switch (reviewDecision) {
-      case PullReqReviewDecision.changeReq:
+      case PullReqReviewDecision.CHANGEREQ:
         info = {
           name: 'error-transparent-no-outline',
           color: Color.RED_700,
@@ -87,7 +87,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
           message: 'requested changes'
         }
         break
-      case PullReqReviewDecision.approved:
+      case PullReqReviewDecision.APPROVED:
         info = {
           name: 'tick-circle',
           color: Color.GREEN_700,
@@ -97,7 +97,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
           message: 'approved changes'
         }
         break
-      case PullReqReviewDecision.pending:
+      case PullReqReviewDecision.PENDING:
         info = {
           name: 'waiting',
           color: Color.GREY_700,
@@ -107,7 +107,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
           message: 'pending review'
         }
         break
-      case PullReqReviewDecision.outdated:
+      case PullReqReviewDecision.OUTDATED:
         info = {
           name: 'dot',
           color: Color.GREY_100,
@@ -273,7 +273,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                           </Text>
                         }
                         tooltipProps={{ isDark: true, interactionKind: PopoverInteractionKind.HOVER }}>
-                        {updatedReviewDecision === PullReqReviewDecision.outdated ? (
+                        {updatedReviewDecision === PullReqReviewDecision.OUTDATED ? (
                           <img className={css.svgOutdated} src={ignoreFailed} width={20} height={20} />
                         ) : (
                           <Icon {...omit(reviewerInfo, 'iconProps')} />
@@ -281,7 +281,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                       </Utils.WrapOptionalTooltip>
                       <Avatar
                         className={cx(css.reviewerAvatar, {
-                          [css.iconPadding]: updatedReviewDecision !== PullReqReviewDecision.changeReq
+                          [css.iconPadding]: updatedReviewDecision !== PullReqReviewDecision.CHANGEREQ
                         })}
                         name={reviewer.reviewer.display_name}
                         size="small"

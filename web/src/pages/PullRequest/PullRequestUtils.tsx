@@ -49,10 +49,10 @@ export function isSystemComment(commentItems: CommentItem<TypesPullReqActivity>[
 }
 
 export enum PullReqReviewDecision {
-  approved = 'approved',
-  changeReq = 'changereq',
-  pending = 'pending',
-  outdated = 'outdated'
+  APPROVED = 'approved',
+  CHANGEREQ = 'changereq',
+  PENDING = 'pending',
+  OUTDATED = 'outdated'
 }
 
 export const processReviewDecision = (
@@ -60,8 +60,8 @@ export const processReviewDecision = (
   reviewedSHA?: string,
   sourceSHA?: string
 ) =>
-  review_decision === PullReqReviewDecision.approved && reviewedSHA !== sourceSHA
-    ? PullReqReviewDecision.outdated
+  review_decision === PullReqReviewDecision.APPROVED && reviewedSHA !== sourceSHA
+    ? PullReqReviewDecision.OUTDATED
     : review_decision
 
 export function getActivePullReqPageSection(): PullRequestSection | undefined {
