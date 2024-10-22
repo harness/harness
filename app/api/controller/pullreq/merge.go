@@ -102,8 +102,14 @@ func (c *Controller) Merge(
 	pullreqNum int64,
 	in *MergeInput,
 ) (*types.MergeResponse, *types.MergeViolations, error) {
+	// keep track of original method in case it's empty, as it is optional for dry-run.
+	originalMergeMethod := in.Method
 	if err := in.sanitize(); err != nil {
 		return nil, nil, err
+	}
+	if originalMergeMethod != "" {
+		// use sanitized version if a non-empty merge method was provided.
+		originalMergeMethod = in.Method
 	}
 
 	requiredPermission := enum.PermissionRepoPush
@@ -212,7 +218,7 @@ func (c *Controller) Merge(
 		SourceRepo:         sourceRepo,
 		PullReq:            pr,
 		Reviewers:          reviewers,
-		Method:             in.Method,
+		Method:             originalMergeMethod,
 		CheckResults:       checkResults,
 		CodeOwners:         codeOwnerWithApproval,
 	})
