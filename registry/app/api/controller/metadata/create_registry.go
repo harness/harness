@@ -319,7 +319,6 @@ func (c *APIController) CreateUpstreamProxyEntity(
 			return nil, nil, err
 		}
 
-		upstreamProxyConfigEntity.SecretSpaceID = *res.SecretSpaceId
 		upstreamProxyConfigEntity.SecretIdentifier = *res.SecretIdentifier
 	}
 	return repoEntity, upstreamProxyConfigEntity, nil
