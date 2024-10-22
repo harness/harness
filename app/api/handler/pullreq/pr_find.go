@@ -49,3 +49,39 @@ func HandleFind(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 		render.JSON(w, http.StatusOK, pr)
 	}
 }
+
+// HandleFind returns a http.HandlerFunc that finds a pull request.
+func HandleFindByBranches(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+
+		repoRef, err := request.GetRepoRefFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		sourceRepoRef := request.GetSourceRepoRefFromQueryOrDefault(r, repoRef)
+
+		sourceBranch, err := request.GetPullReqSourceBranchFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		targetBranch, err := request.GetPullReqTargetBranchFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		pr, err := pullreqCtrl.FindByBranches(ctx, session, repoRef, sourceRepoRef, sourceBranch, targetBranch)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, pr)
+	}
+}

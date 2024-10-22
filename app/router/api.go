@@ -638,6 +638,10 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 	r.Route("/pullreq", func(r chi.Router) {
 		r.Post("/", handlerpullreq.HandleCreate(pullreqCtrl))
 		r.Get("/", handlerpullreq.HandleList(pullreqCtrl))
+		r.Get(
+			fmt.Sprintf("/{%s}...{%s}", request.PathParamTargetBranch, request.PathParamSourceBranch),
+			handlerpullreq.HandleFindByBranches(pullreqCtrl),
+		)
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqNumber), func(r chi.Router) {
 			r.Get("/", handlerpullreq.HandleFind(pullreqCtrl))

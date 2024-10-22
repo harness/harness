@@ -47,6 +47,12 @@ type getPullReqRequest struct {
 	pullReqRequest
 }
 
+type getPullReqByBranchesRequest struct {
+	repoRequest
+	SourceBranch string `path:"source_branch"`
+	TargetBranch string `path:"target_branch"`
+}
+
 type updatePullReqRequest struct {
 	pullReqRequest
 	pullreq.UpdateInput
@@ -163,7 +169,7 @@ var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
 
 var queryParameterSourceRepoRefPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        "source_repo_ref",
+		Name:        request.QueryParamSourceRepoRef,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Source repository ref of the pull requests."),
 		Required:    ptr.Bool(false),
@@ -517,6 +523,20 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}", getPullReq)
+
+	getPullReqByBranches := openapi3.Operation{}
+	getPullReqByBranches.WithTags("pullreq")
+	getPullReqByBranches.WithMapOfAnything(map[string]interface{}{"operationId": "getPullReqByBranches"})
+	getPullReqByBranches.WithParameters(queryParameterSourceRepoRefPullRequest)
+	_ = reflector.SetRequest(&getPullReqByBranches, new(getPullReqByBranchesRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&getPullReqByBranches, new(types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&getPullReqByBranches, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&getPullReqByBranches, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&getPullReqByBranches, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&getPullReqByBranches, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&getPullReqByBranches, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{target_branch}...{source_branch}", getPullReqByBranches)
 
 	putPullReq := openapi3.Operation{}
 	putPullReq.WithTags("pullreq")

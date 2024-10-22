@@ -58,3 +58,50 @@ func (c *Controller) Find(
 
 	return pr, nil
 }
+
+// Find returns a pull request from the provided repository.
+func (c *Controller) FindByBranches(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef,
+	sourceRepoRef,
+	sourceBranch,
+	targetBranch string,
+) (*types.PullReq, error) {
+	if sourceBranch == "" || targetBranch == "" {
+		return nil, usererror.BadRequest("A valid source/target branch must be provided.")
+	}
+
+	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	if err != nil {
+		return nil, fmt.Errorf("failed to acquire access to the repo: %w", err)
+	}
+
+	sourceRepo := targetRepo
+	if sourceRepoRef != repoRef {
+		sourceRepo, err = c.getRepoCheckAccess(ctx, session, sourceRepoRef, enum.PermissionRepoPush)
+		if err != nil {
+			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
+		}
+	}
+
+	prs, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
+		SourceRepoID: sourceRepo.ID,
+		SourceBranch: sourceBranch,
+		TargetRepoID: targetRepo.ID,
+		TargetBranch: targetBranch,
+		States:       []enum.PullReqState{enum.PullReqStateOpen},
+		Size:         1,
+		Sort:         enum.PullReqSortNumber,
+		Order:        enum.OrderAsc,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch existing pull request: %w", err)
+	}
+
+	if len(prs) == 0 {
+		return nil, usererror.ErrNotFound
+	}
+
+	return prs[0], nil
+}

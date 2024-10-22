@@ -28,6 +28,8 @@ const (
 	PathParamPullReqCommentID = "pullreq_comment_id"
 	PathParamReviewerID       = "pullreq_reviewer_id"
 	PathParamUserGroupID      = "user_group_id"
+	PathParamSourceBranch     = "source_branch"
+	PathParamTargetBranch     = "target_branch"
 
 	QueryParamAuthorID           = "author_id"
 	QueryParamCommenterID        = "commenter_id"
@@ -35,6 +37,7 @@ const (
 	QueryParamReviewDecision     = "review_decision"
 	QueryParamMentionedID        = "mentioned_id"
 	QueryParamExcludeDescription = "exclude_description"
+	QueryParamSourceRepoRef      = "source_repo_ref"
 )
 
 func GetPullReqNumberFromPath(r *http.Request) (int64, error) {
@@ -50,6 +53,18 @@ func GetUserGroupIDFromPath(r *http.Request) (int64, error) {
 
 func GetPullReqCommentIDPath(r *http.Request) (int64, error) {
 	return PathParamAsPositiveInt64(r, PathParamPullReqCommentID)
+}
+
+func GetPullReqSourceBranchFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamSourceBranch)
+}
+
+func GetPullReqTargetBranchFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamTargetBranch)
+}
+
+func GetSourceRepoRefFromQueryOrDefault(r *http.Request, deflt string) string {
+	return QueryParamOrDefault(r, QueryParamSourceRepoRef, deflt)
 }
 
 // ParseSortPullReq extracts the pull request sort parameter from the url.
