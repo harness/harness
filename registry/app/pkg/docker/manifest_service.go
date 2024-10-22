@@ -113,8 +113,7 @@ type ManifestService interface {
 	DeleteManifest(ctx context.Context, repoKey string, d digest.Digest, info pkg.RegistryInfo) error
 	AddManifestAssociation(ctx context.Context, repoKey string, digest digest.Digest, info pkg.RegistryInfo) error
 	DBFindRepositoryBlob(
-		ctx context.Context, desc manifest.Descriptor, repoID int64,
-		info pkg.RegistryInfo,
+		ctx context.Context, desc manifest.Descriptor, repoID int64, imageName string,
 	) (*types.Blob, error)
 }
 
@@ -413,7 +412,7 @@ func (l *manifestService) dbPutManifestV2(
 	}
 
 	// Find the config now to ensure that the config's blob is associated with the repository.
-	dbCfgBlob, err := l.DBFindRepositoryBlob(ctx, mfst.Config(), dbRepo.ID, info)
+	dbCfgBlob, err := l.DBFindRepositoryBlob(ctx, mfst.Config(), dbRepo.ID, info.Image)
 	if err != nil {
 		return err
 	}
@@ -501,7 +500,7 @@ func (l *manifestService) dbPutManifestV2(
 
 	// find and associate distributable manifest layer blobs
 	for _, reqLayer := range mfst.DistributableLayers() {
-		dbBlob, err := l.DBFindRepositoryBlob(ctx, reqLayer, dbRepo.ID, info)
+		dbBlob, err := l.DBFindRepositoryBlob(ctx, reqLayer, dbRepo.ID, info.Image)
 		if err != nil {
 			return err
 		}
@@ -525,10 +524,9 @@ func (l *manifestService) dbPutManifestV2(
 
 func (l *manifestService) DBFindRepositoryBlob(
 	ctx context.Context, desc manifest.Descriptor,
-	repoID int64, info pkg.RegistryInfo,
+	repoID int64, imageName string,
 ) (*types.Blob, error) {
-	image := info.Image
-	b, err := l.blobRepo.FindByDigestAndRepoID(ctx, desc.Digest, repoID, image)
+	b, err := l.blobRepo.FindByDigestAndRepoID(ctx, desc.Digest, repoID, imageName)
 	if err != nil {
 		if errors.Is(err, gitnessstore.ErrResourceNotFound) {
 			return nil, fmt.Errorf("blob not found in database")

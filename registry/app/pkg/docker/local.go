@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
 	"github.com/harness/gitness/registry/app/manifest"
@@ -1848,7 +1849,7 @@ func (r *LocalRegistry) dbGetTags(
 }
 
 func (r *LocalRegistry) dbMountBlob(
-	ctx context.Context, fromRepo, toRepo string,
+	ctx context.Context, fromImageRef, toRepo string,
 	d digest.Digest, info pkg.RegistryInfo,
 ) error {
 	log.Debug().Msgf("cross repository blob mounting")
@@ -1863,6 +1864,22 @@ func (r *LocalRegistry) dbMountBlob(
 			toRepo,
 		)
 	}
+
+	_, imageRef, err := paths.DisectRoot(fromImageRef)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to parse image reference from: [%s]",
+			fromImageRef,
+		)
+	}
+	fromRepo, fromImageName, err := paths.DisectRoot(imageRef)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to parse image name from: [%s]",
+			imageRef,
+		)
+	}
+
 	sourceRepo, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, fromRepo)
 	if err != nil {
 		return err
@@ -1876,7 +1893,7 @@ func (r *LocalRegistry) dbMountBlob(
 
 	b, err := r.ms.DBFindRepositoryBlob(
 		ctx, manifest.Descriptor{Digest: d},
-		sourceRepo.ID, info,
+		sourceRepo.ID, fromImageName,
 	)
 	if err != nil {
 		return err

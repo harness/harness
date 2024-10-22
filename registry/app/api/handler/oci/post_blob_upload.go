@@ -16,7 +16,6 @@ package oci
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/harness/gitness/registry/app/pkg/commons"
 )
@@ -28,13 +27,8 @@ func (h *Handler) InitiateUploadBlob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fromParam := r.FormValue("from")
-	fromParamParts := strings.Split(fromParam, "/")
-	fromRepo := ""
-	if len(fromParamParts) > 1 {
-		fromRepo = fromParamParts[1]
-	}
 	mountDigest := r.FormValue("mount")
-	headers, errs := h.Controller.InitiateUploadBlob(r.Context(), info, fromRepo, mountDigest)
+	headers, errs := h.Controller.InitiateUploadBlob(r.Context(), info, fromParam, mountDigest)
 	if commons.IsEmpty(errs) {
 		headers.WriteToResponse(w)
 	}

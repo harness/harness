@@ -236,7 +236,7 @@ func (c *Controller) GetBlob(ctx context.Context, info pkg.RegistryInfo) Respons
 func (c *Controller) InitiateUploadBlob(
 	ctx context.Context,
 	info pkg.RegistryInfo,
-	fromRepo string,
+	fromImageRef string,
 	mountDigest string,
 ) (*commons.ResponseHeaders, []error) {
 	err := GetRegistryCheckAccess(
@@ -246,7 +246,7 @@ func (c *Controller) InitiateUploadBlob(
 	if err != nil {
 		return nil, []error{errcode.ErrCodeDenied}
 	}
-	return c.local.InitBlobUpload(ctx, info, fromRepo, mountDigest)
+	return c.local.InitBlobUpload(ctx, info, fromImageRef, mountDigest)
 }
 
 func (c *Controller) GetUploadBlobStatus(
