@@ -21,9 +21,11 @@ import (
 
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/request"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/hlog"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -36,15 +38,64 @@ func GitPathBefore(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			_, err := pathTerminatedWithMarker(r, "", ".git", "")
+			ok, err := pathTerminatedWithMarker(r, "", ".git", "")
 			if err != nil {
 				render.TranslatedUserError(ctx, w, err)
 				return
+			}
+			if !ok {
+				if _, err = processGitRequest(r); err != nil {
+					render.TranslatedUserError(ctx, w, err)
+					return
+				}
 			}
 
 			next.ServeHTTP(w, r)
 		},
 	)
+}
+
+func processGitRequest(r *http.Request) (bool, error) {
+	const infoRefsPath = "/info/refs"
+	const uploadPack = "git-upload-pack"
+	const uploadPackPath = "/" + uploadPack
+	const receivePack = "git-receive-pack"
+	const receivePackPath = "/" + receivePack
+	const serviceParam = "service"
+
+	allowedServices := []string{
+		uploadPack,
+		receivePack,
+	}
+
+	urlPath := r.URL.Path
+	if r.URL.RawPath != "" {
+		urlPath = r.URL.RawPath
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		// check if request is coming from git client
+		if strings.HasSuffix(urlPath, infoRefsPath) && r.URL.Query().Has(serviceParam) {
+			service := r.URL.Query().Get(serviceParam)
+			if !slices.Contains(allowedServices, service) {
+				return false, errors.InvalidArgument("git request allows only %v service, got: %s",
+					allowedServices, service)
+			}
+			return pathTerminatedWithMarkerAndURL(r, "", infoRefsPath, infoRefsPath, urlPath)
+		}
+	case http.MethodPost:
+		if strings.HasSuffix(urlPath, uploadPackPath) {
+			return pathTerminatedWithMarkerAndURL(r, "", uploadPackPath, uploadPackPath, urlPath)
+		}
+
+		if strings.HasSuffix(urlPath, receivePackPath) {
+			return pathTerminatedWithMarkerAndURL(r, "", receivePackPath, receivePackPath, urlPath)
+		}
+	}
+
+	// no other APIs are called by git - just treat it as a full repo path.
+	return pathTerminatedWithMarkerAndURL(r, "", "", "", urlPath)
 }
 
 // TerminatedPathBefore wraps an http.HandlerFunc in a layer that encodes a terminated path (e.g. "/space1/space2/+")

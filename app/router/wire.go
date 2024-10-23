@@ -117,6 +117,7 @@ func ProvideRouter(
 
 	gitRoutingHost := GetGitRoutingHost(appCtx, urlProvider)
 	gitHandler := NewGitHandler(
+		config,
 		urlProvider,
 		authenticator,
 		repoCtrl,

@@ -23,10 +23,12 @@ import (
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
 	middlewareauthz "github.com/harness/gitness/app/api/middleware/authz"
 	"github.com/harness/gitness/app/api/middleware/encode"
+	"github.com/harness/gitness/app/api/middleware/goget"
 	"github.com/harness/gitness/app/api/middleware/logging"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/go-chi/chi"
@@ -36,6 +38,7 @@ import (
 
 // NewGitHandler returns a new GitHandler.
 func NewGitHandler(
+	config *types.Config,
 	urlProvider url.Provider,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
@@ -57,6 +60,7 @@ func NewGitHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
+		r.Use(goget.Middleware(config, repoCtrl, urlProvider))
 		// routes that aren't coming from git
 		r.Group(func(r chi.Router) {
 			// redirect to repo (meant for UI, in case user navigates to clone url in browser)
