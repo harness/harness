@@ -66,7 +66,7 @@ func Handler() http.HandlerFunc {
 
 		if RenderPublicAccessFrom(r.Context()) &&
 			(r.URL.Path == "/" || r.URL.Path == "/index.html") {
-			r.URL.Path = "./index_public.html"
+			r.URL.Path = "/index_public.html"
 		}
 
 		// Disable caching and sniffing via HTTP headers for UI main entry resources
