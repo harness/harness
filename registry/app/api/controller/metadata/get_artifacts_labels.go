@@ -41,8 +41,15 @@ func (c *APIController) ListArtifactLabels(
 		sortField:         nil,
 		registryIDsParam:  nil,
 	}
-	regInfo, _ := c.GetRegistryRequestInfo(
+	regInfo, err := c.GetRegistryRequestInfo(
 		ctx, *registryRequestParams)
+	if err != nil {
+		return artifact.ListArtifactLabels400JSONResponse{
+			BadRequestJSONResponse: artifact.BadRequestJSONResponse(
+				*GetErrorResponse(http.StatusBadRequest, err.Error()),
+			),
+		}, nil
+	}
 
 	space, err := c.SpaceStore.FindByRef(ctx, regInfo.ParentRef)
 	if err != nil {
