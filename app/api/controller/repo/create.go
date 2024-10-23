@@ -206,7 +206,7 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 		session,
 		space,
 		enum.ResourceTypeRepo,
-		enum.PermissionRepoEdit,
+		enum.PermissionRepoCreate,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("auth check failed: %w", err)

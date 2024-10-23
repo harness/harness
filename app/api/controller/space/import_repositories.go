@@ -82,7 +82,7 @@ func (c *Controller) ImportRepositories(
 	spaceRef string,
 	in *ImportRepositoriesInput,
 ) (ImportRepositoriesOutput, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoEdit)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoCreate)
 	if err != nil {
 		return ImportRepositoriesOutput{}, err
 	}

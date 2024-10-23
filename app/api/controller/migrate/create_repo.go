@@ -185,7 +185,7 @@ func (c *Controller) spaceCheckAuth(
 		Identifier: "",
 	}
 
-	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoEdit)
+	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoCreate)
 	if err != nil {
 		return nil, fmt.Errorf("auth check failed: %w", err)
 	}

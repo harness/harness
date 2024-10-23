@@ -49,6 +49,7 @@ const (
 		----- REPOSITORY -----
 	*/
 	PermissionRepoView              Permission = "repo_view"
+	PermissionRepoCreate            Permission = "repo_create"
 	PermissionRepoEdit              Permission = "repo_edit"
 	PermissionRepoDelete            Permission = "repo_delete"
 	PermissionRepoPush              Permission = "repo_push"

@@ -64,6 +64,7 @@ var membershipRoleContributorPermissions = slices.Clip(slices.Insert(membershipR
 ))
 
 var membershipRoleSpaceOwnerPermissions = slices.Clip(slices.Insert(membershipRoleReaderPermissions, 0,
+	PermissionRepoCreate,
 	PermissionRepoEdit,
 	PermissionRepoDelete,
 	PermissionRepoPush,
