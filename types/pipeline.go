@@ -28,10 +28,13 @@ type Pipeline struct {
 	DefaultBranch string `db:"pipeline_default_branch"  json:"default_branch"`
 	ConfigPath    string `db:"pipeline_config_path"     json:"config_path"`
 	Created       int64  `db:"pipeline_created"         json:"created"`
+
 	// Execution contains information about the latest execution if available
-	Execution *Execution `db:"-"                        json:"execution,omitempty"`
-	Updated   int64      `db:"pipeline_updated"         json:"updated"`
-	Version   int64      `db:"pipeline_version"         json:"-"`
+	Execution      *Execution       `db:"-" json:"execution,omitempty"`
+	LastExecutions []*ExecutionInfo `db:"-" json:"last_executions,omitempty"`
+
+	Updated int64 `db:"pipeline_updated"         json:"updated"`
+	Version int64 `db:"pipeline_version"         json:"-"`
 
 	// Repo specific information not stored with pipelines
 	RepoUID string `db:"-" json:"repo_uid,omitempty"`
@@ -48,4 +51,10 @@ func (s Pipeline) MarshalJSON() ([]byte, error) {
 		alias: (alias)(s),
 		UID:   s.Identifier,
 	})
+}
+
+type ListPipelinesFilter struct {
+	ListQueryFilter
+	Latest         bool
+	LastExecutions int64
 }

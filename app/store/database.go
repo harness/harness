@@ -752,11 +752,11 @@ type (
 		Update(ctx context.Context, pipeline *types.Pipeline) error
 
 		// List lists the pipelines present in a repository in the datastore.
-		List(ctx context.Context, repoID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
+		List(ctx context.Context, repoID int64, filter *types.ListPipelinesFilter) ([]*types.Pipeline, error)
 
 		// ListLatest lists the pipelines present in a repository in the datastore.
 		// It also returns latest build information for all the returned entries.
-		ListLatest(ctx context.Context, repoID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
+		ListLatest(ctx context.Context, repoID int64, filter *types.ListPipelinesFilter) ([]*types.Pipeline, error)
 
 		// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
 		UpdateOptLock(
@@ -768,7 +768,7 @@ type (
 		Delete(ctx context.Context, id int64) error
 
 		// Count the number of pipelines in a repository matching the given filter.
-		Count(ctx context.Context, repoID int64, filter types.ListQueryFilter) (int64, error)
+		Count(ctx context.Context, repoID int64, filter *types.ListPipelinesFilter) (int64, error)
 
 		// DeleteByIdentifier deletes a pipeline with a given identifier under a repo.
 		DeleteByIdentifier(ctx context.Context, repoID int64, identifier string) error
@@ -833,6 +833,12 @@ type (
 
 		// List lists the executions for a given pipeline ID
 		List(ctx context.Context, pipelineID int64, pagination types.Pagination) ([]*types.Execution, error)
+
+		ListByPipelineIDs(
+			ctx context.Context,
+			pipelineIDs []int64,
+			maxRows int64,
+		) (map[int64][]*types.ExecutionInfo, error)
 
 		// Delete deletes an execution given a pipeline ID and an execution number
 		Delete(ctx context.Context, pipelineID int64, num int64) error

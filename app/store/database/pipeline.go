@@ -187,7 +187,7 @@ func (s *pipelineStore) Update(ctx context.Context, p *types.Pipeline) error {
 func (s *pipelineStore) List(
 	ctx context.Context,
 	repoID int64,
-	filter types.ListQueryFilter,
+	filter *types.ListPipelinesFilter,
 ) ([]*types.Pipeline, error) {
 	stmt := database.Builder.
 		Select(pipelineColumns).
@@ -290,7 +290,7 @@ func (s *pipelineStore) CountInSpace(
 func (s *pipelineStore) ListLatest(
 	ctx context.Context,
 	repoID int64,
-	filter types.ListQueryFilter,
+	filter *types.ListPipelinesFilter,
 ) ([]*types.Pipeline, error) {
 	const pipelineExecutionColumns = pipelineColumns + `
 	,executions.execution_id
@@ -387,7 +387,11 @@ func (s *pipelineStore) UpdateOptLock(ctx context.Context,
 }
 
 // Count of pipelines under a repo, if repoID is zero it will count all pipelines in the system.
-func (s *pipelineStore) Count(ctx context.Context, repoID int64, filter types.ListQueryFilter) (int64, error) {
+func (s *pipelineStore) Count(
+	ctx context.Context,
+	repoID int64,
+	filter *types.ListPipelinesFilter,
+) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("pipelines")

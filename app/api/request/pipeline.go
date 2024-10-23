@@ -16,11 +16,14 @@ package request
 
 import (
 	"net/http"
+
+	"github.com/harness/gitness/types"
 )
 
 const (
 	PathParamPipelineIdentifier = "pipeline_identifier"
 	PathParamExecutionNumber    = "execution_number"
+	PathParamLastExecutions     = "last_executions"
 	PathParamStageNumber        = "stage_number"
 	PathParamStepNumber         = "step_number"
 	PathParamTriggerIdentifier  = "trigger_identifier"
@@ -55,4 +58,20 @@ func GetLatestFromPath(r *http.Request) bool {
 
 func GetTriggerIdentifierFromPath(r *http.Request) (string, error) {
 	return PathParamOrError(r, PathParamTriggerIdentifier)
+}
+
+func ParseListPipelinesFilterFromRequest(r *http.Request) (types.ListPipelinesFilter, error) {
+	lastExecs, err := QueryParamAsPositiveInt64OrDefault(r, PathParamLastExecutions, 10)
+	if err != nil {
+		return types.ListPipelinesFilter{}, err
+	}
+
+	return types.ListPipelinesFilter{
+		ListQueryFilter: types.ListQueryFilter{
+			Query:      ParseQuery(r),
+			Pagination: ParsePaginationFromRequest(r),
+		},
+		Latest:         GetLatestFromPath(r),
+		LastExecutions: lastExecs,
+	}, nil
 }

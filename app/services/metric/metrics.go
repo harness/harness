@@ -127,7 +127,7 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 	}
 
 	// total pipelines in the system
-	totalPipelines, err := c.pipelineStore.Count(ctx, 0, types.ListQueryFilter{})
+	totalPipelines, err := c.pipelineStore.Count(ctx, 0, &types.ListPipelinesFilter{})
 	if err != nil {
 		return "", fmt.Errorf("failed to get pipelines count: %w", err)
 	}

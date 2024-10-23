@@ -56,3 +56,9 @@ type Execution struct {
 	Version      int64              `json:"-"`
 	Stages       []*Stage           `json:"stages,omitempty"`
 }
+
+type ExecutionInfo struct {
+	Number     int64         `db:"execution_number"      json:"number"`
+	PipelineID int64         `db:"execution_pipeline_id" json:"pipeline_id"`
+	Status     enum.CIStatus `db:"execution_status"      json:"status"`
+}

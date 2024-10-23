@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	sqlxtypes "github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
@@ -332,6 +333,50 @@ func (s *executionStore) List(
 	}
 
 	return mapInternalToExecutionList(dst)
+}
+
+func (s executionStore) ListByPipelineIDs(
+	ctx context.Context,
+	pipelineIDs []int64,
+	maxRows int64,
+) (map[int64][]*types.ExecutionInfo, error) {
+	stmt := database.Builder.
+		Select("execution_number, execution_pipeline_id, execution_status").
+		FromSelect(
+			database.Builder.
+				Select(`
+					execution_number, execution_pipeline_id, execution_status, 
+					ROW_NUMBER() OVER (
+						PARTITION BY execution_pipeline_id
+						ORDER BY execution_number DESC
+					) AS row_num
+				`).
+				From("executions").
+				Where(squirrel.Eq{"execution_pipeline_id": pipelineIDs}),
+			"ranked",
+		).
+		Where("row_num <= ?", maxRows)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+	var dst []*types.ExecutionInfo
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to list executions by pipeline IDs")
+	}
+
+	executionInfosMap := make(map[int64][]*types.ExecutionInfo)
+	for _, info := range dst {
+		executionInfosMap[info.PipelineID] = append(
+			executionInfosMap[info.PipelineID],
+			info,
+		)
+	}
+
+	return executionInfosMap, nil
 }
 
 // Count of executions in a pipeline, if pipelineID is 0 then return total number of executions.

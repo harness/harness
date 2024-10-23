@@ -78,6 +78,7 @@ type Controller struct {
 	repoStore          store.RepoStore
 	spaceStore         store.SpaceStore
 	pipelineStore      store.PipelineStore
+	executionStore     store.ExecutionStore
 	principalStore     store.PrincipalStore
 	ruleStore          store.RuleStore
 	settings           *settings.Service
@@ -109,6 +110,7 @@ func NewController(
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
 	pipelineStore store.PipelineStore,
+	executionStore store.ExecutionStore,
 	principalStore store.PrincipalStore,
 	ruleStore store.RuleStore,
 	settings *settings.Service,
@@ -139,6 +141,7 @@ func NewController(
 		repoStore:          repoStore,
 		spaceStore:         spaceStore,
 		pipelineStore:      pipelineStore,
+		executionStore:     executionStore,
 		principalStore:     principalStore,
 		ruleStore:          ruleStore,
 		settings:           settings,

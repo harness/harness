@@ -54,6 +54,7 @@ func ProvideController(
 	spaceStore store.SpaceStore,
 	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
+	executionStore store.ExecutionStore,
 	ruleStore store.RuleStore,
 	settings *settings.Service,
 	principalInfoCache store.PrincipalInfoCache,
@@ -77,7 +78,7 @@ func ProvideController(
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
-		repoStore, spaceStore, pipelineStore,
+		repoStore, spaceStore, pipelineStore, executionStore,
 		principalStore, ruleStore, settings, principalInfoCache, protectionManager, rpcClient, importer,
 		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService)
