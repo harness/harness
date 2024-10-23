@@ -1552,7 +1552,7 @@ components:
         code:
           type: string
           description: The http error code
-          example: 404
+          example: "404"
         message:
           type: string
           description: The reason the request failed
