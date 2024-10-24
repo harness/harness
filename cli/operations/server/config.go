@@ -463,5 +463,6 @@ func ProvideGitspaceEventConfig(config *types.Config) *gitspaceevent.Config {
 		EventReaderName: config.InstanceID,
 		Concurrency:     config.Gitspace.Events.Concurrency,
 		MaxRetries:      config.Gitspace.Events.MaxRetries,
+		TimeoutInMins:   config.Gitspace.Events.TimeoutInMins,
 	}
 }

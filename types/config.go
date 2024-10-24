@@ -424,8 +424,9 @@ type Config struct {
 		AgentPort int `envconfig:"GITNESS_GITSPACE_AGENT_PORT" default:"8083"`
 
 		Events struct {
-			Concurrency int `envconfig:"GITNESS_GITSPACE_EVENTS_CONCURRENCY" default:"4"`
-			MaxRetries  int `envconfig:"GITNESS_GITSPACE_EVENTS_MAX_RETRIES" default:"3"`
+			Concurrency   int `envconfig:"GITNESS_GITSPACE_EVENTS_CONCURRENCY" default:"4"`
+			MaxRetries    int `envconfig:"GITNESS_GITSPACE_EVENTS_MAX_RETRIES" default:"3"`
+			TimeoutInMins int `envconfig:"GITNESS_GITSPACE_EVENTS_TIMEOUT_IN_MINS" default:"10"`
 		}
 	}
 

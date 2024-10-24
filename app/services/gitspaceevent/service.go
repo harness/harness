@@ -32,6 +32,7 @@ type Config struct {
 	EventReaderName string
 	Concurrency     int
 	MaxRetries      int
+	TimeoutInMins   int
 }
 
 func (c *Config) Sanitize() error {
@@ -71,7 +72,7 @@ func NewService(
 
 	_, err := gitspaceEventReaderFactory.Launch(ctx, groupGitspaceEvents, config.EventReaderName,
 		func(r *gitspaceevents.Reader) error {
-			const idleTimeout = 1 * time.Minute
+			var idleTimeout = time.Duration(config.TimeoutInMins) * time.Minute
 			r.Configure(
 				stream.WithConcurrency(config.Concurrency),
 				stream.WithHandlerOptions(

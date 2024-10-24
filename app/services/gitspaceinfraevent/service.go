@@ -57,7 +57,7 @@ func NewService(
 
 	_, err := gitspaceInfraEventReaderFactory.Launch(ctx, groupGitspaceInfraEvents, config.EventReaderName,
 		func(r *gitspaceinfraevents.Reader) error {
-			const idleTimeout = 1 * time.Minute
+			var idleTimeout = time.Duration(config.TimeoutInMins) * time.Minute
 			r.Configure(
 				stream.WithConcurrency(config.Concurrency),
 				stream.WithHandlerOptions(
