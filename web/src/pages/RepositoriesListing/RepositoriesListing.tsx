@@ -80,7 +80,7 @@ export default function RepositoriesListing() {
   const space = useGetSpaceParam()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const { routes, standalone, hooks, routingId } = useAppContext()
-  const { updateQueryParams } = useUpdateQueryParams()
+  const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
@@ -95,7 +95,7 @@ export default function RepositoriesListing() {
     response
   } = useGet<RepoRepositoryOutput[]>({
     path: `/api/v1/spaces/${space}/+/repos`,
-    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm },
+    queryParams: { page: pageBrowser.page, limit: LIST_FETCHING_LIMIT, query: searchTerm },
     debounce: 500
   })
 
@@ -120,11 +120,14 @@ export default function RepositoriesListing() {
   })
 
   useEffect(() => {
-    setSearchTerm(undefined)
     if (page > 1) {
       updateQueryParams({ page: page.toString() })
+    } else {
+      const params = { ...pageBrowser }
+      delete params.page
+      replaceQueryParams(params, undefined, true)
     }
-  }, [space, setPage]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [space, page]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const bearerToken = hooks?.useGetToken?.() || ''
 
@@ -379,7 +382,10 @@ export default function RepositoriesListing() {
                 <SearchInputWithSpinner
                   loading={loading && searchTerm !== undefined}
                   query={searchTerm}
-                  setQuery={setSearchTerm}
+                  setQuery={value => {
+                    setSearchTerm(value)
+                    setPage(1)
+                  }}
                 />
               </Layout.Horizontal>
 
