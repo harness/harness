@@ -22,9 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-/*
- * Writes json-encoded branch information to the http response body.
- */
+// HandleListBranches writes json-encoded branch list to the http response body.
 func HandleListBranches(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -35,15 +33,13 @@ func HandleListBranches(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		includeCommit, err := request.GetIncludeCommitFromQueryOrDefault(r, false)
+		filter, err := request.ParseBranchFilter(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		filter := request.ParseBranchFilter(r)
-
-		branches, err := repoCtrl.ListBranches(ctx, session, repoRef, includeCommit, filter)
+		branches, err := repoCtrl.ListBranches(ctx, session, repoRef, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

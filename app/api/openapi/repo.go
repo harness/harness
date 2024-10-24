@@ -312,6 +312,71 @@ var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterIncludeChecks = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamIncludeChecks,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String(
+			"If true, the summary of check for the branch commit SHA would be included in the response."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
+var queryParameterIncludeRules = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamIncludeRules,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String(
+			"If true, a list of rules that apply to this branch would be included in the response."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
+var queryParameterIncludePullReqs = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamIncludePullReqs,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String(
+			"If true, a list of pull requests from the branch would be included in the response."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
+var queryParameterMaxDivergence = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamMaxDivergence,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String(
+			"If greater than zero, branch divergence from the default branch will be included in the response. " +
+				"The divergence would be calculated up the this many commits."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Default: ptrptr(0),
+			},
+		},
+	},
+}
+
 var queryParameterIncludeDirectories = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamIncludeDirectories,
@@ -888,7 +953,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opCalulateCommitDivergence.WithTags("repository")
 	opCalulateCommitDivergence.WithMapOfAnything(map[string]interface{}{"operationId": "calculateCommitDivergence"})
 	_ = reflector.SetRequest(&opCalulateCommitDivergence, new(calculateCommitDivergenceRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, []repo.CommitDivergence{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, []types.CommitDivergence{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusForbidden)
@@ -911,8 +976,12 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opGetBranch := openapi3.Operation{}
 	opGetBranch.WithTags("repository")
 	opGetBranch.WithMapOfAnything(map[string]interface{}{"operationId": "getBranch"})
+	opGetBranch.WithParameters(
+		queryParameterIncludeChecks, queryParameterIncludeRules, queryParameterIncludePullReqs,
+		queryParameterMaxDivergence,
+	)
 	_ = reflector.SetRequest(&opGetBranch, new(getBranchRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opGetBranch, new(types.Branch), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opGetBranch, new(types.BranchExtended), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opGetBranch, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opGetBranch, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opGetBranch, new(usererror.Error), http.StatusForbidden)
@@ -935,11 +1004,15 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListBranches := openapi3.Operation{}
 	opListBranches.WithTags("repository")
 	opListBranches.WithMapOfAnything(map[string]interface{}{"operationId": "listBranches"})
-	opListBranches.WithParameters(queryParameterIncludeCommit,
+	opListBranches.WithParameters(
 		queryParameterQueryBranches, queryParameterOrder, queryParameterSortBranch,
-		QueryParameterPage, QueryParameterLimit)
+		QueryParameterPage, QueryParameterLimit,
+		queryParameterIncludeCommit,
+		queryParameterIncludeChecks, queryParameterIncludeRules, queryParameterIncludePullReqs,
+		queryParameterMaxDivergence,
+	)
 	_ = reflector.SetRequest(&opListBranches, new(listBranchesRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListBranches, []types.Branch{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListBranches, []types.BranchExtended{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusForbidden)

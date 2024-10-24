@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/errors"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -30,7 +31,6 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -457,7 +457,7 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return 0, errors.Wrap(err, "Failed to convert query to sql")
+		return 0, fmt.Errorf("failed to convert query to sql: %w", err)
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -486,7 +486,7 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
+		return nil, fmt.Errorf("failed to convert query to sql: %w", err)
 	}
 
 	dst := make([]*pullReq, 0)
@@ -520,7 +520,7 @@ func (s *PullReqStore) Stream(ctx context.Context, opts *types.PullReqFilter) (<
 
 		sql, args, err := stmt.ToSql()
 		if err != nil {
-			chErr <- errors.Wrap(err, "Failed to convert query to sql")
+			chErr <- fmt.Errorf("failed to convert query to sql: %w", err)
 			return
 		}
 
@@ -551,6 +551,42 @@ func (s *PullReqStore) Stream(ctx context.Context, opts *types.PullReqFilter) (<
 	}()
 
 	return chPRs, chErr
+}
+
+func (s *PullReqStore) ListOpenByBranchName(
+	ctx context.Context,
+	repoID int64,
+	branchNames []string,
+) (map[string][]*types.PullReq, error) {
+	columns := pullReqColumnsNoDescription
+	stmt := database.Builder.Select(columns)
+	stmt = stmt.From("pullreqs")
+	stmt = stmt.Where("pullreq_source_repo_id = ?", repoID)
+	stmt = stmt.Where("pullreq_state = ?", enum.PullReqStateOpen)
+	stmt = stmt.Where(squirrel.Eq{"pullreq_source_branch": branchNames})
+	stmt = stmt.OrderBy("pullreq_updated desc")
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := make([]*pullReq, 0)
+
+	err = db.SelectContext(ctx, &dst, sql, args...)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to fetch list of PRs by branch")
+	}
+
+	prMap := make(map[string][]*types.PullReq)
+	for _, prDB := range dst {
+		pr := s.mapPullReq(ctx, prDB)
+		prMap[prDB.SourceBranch] = append(prMap[prDB.SourceBranch], pr)
+	}
+
+	return prMap, nil
 }
 
 func (s *PullReqStore) listQuery(opts *types.PullReqFilter) squirrel.SelectBuilder {

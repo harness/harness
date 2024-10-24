@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -40,20 +41,12 @@ type CommitDivergenceRequest struct {
 	To string `json:"to"`
 }
 
-// CommitDivergence contains the information of the count of converging commits between two refs.
-type CommitDivergence struct {
-	// Ahead is the count of commits the 'From' ref is ahead of the 'To' ref.
-	Ahead int32 `json:"ahead"`
-	// Behind is the count of commits the 'From' ref is behind the 'To' ref.
-	Behind int32 `json:"behind"`
-}
-
 // GetCommitDivergences returns the commit divergences between reference pairs.
 func (c *Controller) GetCommitDivergences(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *GetCommitDivergencesInput,
-) ([]CommitDivergence, error) {
+) ([]types.CommitDivergence, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err
@@ -61,7 +54,7 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 
 	// if no requests were provided return an empty list
 	if in == nil || len(in.Requests) == 0 {
-		return []CommitDivergence{}, nil
+		return []types.CommitDivergence{}, nil
 	}
 
 	// if num of requests > page max return error
@@ -91,10 +84,9 @@ func (c *Controller) GetCommitDivergences(ctx context.Context,
 	}
 
 	// map to output type
-	divergences := make([]CommitDivergence, len(rpcOutput.Divergences))
+	divergences := make([]types.CommitDivergence, len(rpcOutput.Divergences))
 	for i := range rpcOutput.Divergences {
-		divergences[i].Ahead = rpcOutput.Divergences[i].Ahead
-		divergences[i].Behind = rpcOutput.Divergences[i].Behind
+		divergences[i] = types.CommitDivergence(rpcOutput.Divergences[i])
 	}
 
 	return divergences, nil

@@ -44,6 +44,11 @@ const (
 	QueryParamInternal           = "internal"
 	QueryParamService            = "service"
 	QueryParamCommitSHA          = "commit_sha"
+
+	QueryParamIncludeChecks   = "include_checks"
+	QueryParamIncludeRules    = "include_rules"
+	QueryParamIncludePullReqs = "include_pullreqs"
+	QueryParamMaxDivergence   = "max_divergence"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -52,6 +57,22 @@ func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
 
 func GetIncludeCommitFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamIncludeCommit, deflt)
+}
+
+func GetIncludeChecksFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamIncludeChecks, deflt)
+}
+
+func GetIncludeRulesFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamIncludeRules, deflt)
+}
+
+func GetIncludePullReqsFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamIncludePullReqs, deflt)
+}
+
+func GetMaxDivergenceFromQueryOrDefault(r *http.Request, deflt int64) (int64, error) {
+	return QueryParamAsPositiveInt64OrDefault(r, QueryParamMaxDivergence, deflt)
 }
 
 func GetIncludeDirectoriesFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
@@ -69,15 +90,56 @@ func ParseSortBranch(r *http.Request) enum.BranchSortOption {
 	)
 }
 
-// ParseBranchFilter extracts the branch filter from the url.
-func ParseBranchFilter(r *http.Request) *types.BranchFilter {
-	return &types.BranchFilter{
-		Query: ParseQuery(r),
-		Sort:  ParseSortBranch(r),
-		Order: ParseOrder(r),
-		Page:  ParsePage(r),
-		Size:  ParseLimit(r),
+func ParseBranchMetadataOptions(r *http.Request) (types.BranchMetadataOptions, error) {
+	includeChecks, err := GetIncludeChecksFromQueryOrDefault(r, false)
+	if err != nil {
+		return types.BranchMetadataOptions{}, err
 	}
+
+	includeRules, err := GetIncludeRulesFromQueryOrDefault(r, false)
+	if err != nil {
+		return types.BranchMetadataOptions{}, err
+	}
+
+	includePullReqs, err := GetIncludePullReqsFromQueryOrDefault(r, false)
+	if err != nil {
+		return types.BranchMetadataOptions{}, err
+	}
+
+	maxDivergence, err := GetMaxDivergenceFromQueryOrDefault(r, 0)
+	if err != nil {
+		return types.BranchMetadataOptions{}, err
+	}
+
+	return types.BranchMetadataOptions{
+		IncludeChecks:   includeChecks,
+		IncludeRules:    includeRules,
+		IncludePullReqs: includePullReqs,
+		MaxDivergence:   int(maxDivergence),
+	}, nil
+}
+
+// ParseBranchFilter extracts the branch filter from the url.
+func ParseBranchFilter(r *http.Request) (*types.BranchFilter, error) {
+	includeCommit, err := GetIncludeCommitFromQueryOrDefault(r, false)
+	if err != nil {
+		return nil, err
+	}
+
+	metadataOptions, err := ParseBranchMetadataOptions(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.BranchFilter{
+		Query:                 ParseQuery(r),
+		Sort:                  ParseSortBranch(r),
+		Order:                 ParseOrder(r),
+		Page:                  ParsePage(r),
+		Size:                  ParseLimit(r),
+		IncludeCommit:         includeCommit,
+		BranchMetadataOptions: metadataOptions,
+	}, nil
 }
 
 // ParseSortTag extracts the tag sort parameter from the url.

@@ -22,9 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-/*
- * Gets a given branch.
- */
+// HandleGetBranch returns a given branch.
 func HandleGetBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -34,13 +32,20 @@ func HandleGetBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
+
 		branchName, err := request.GetRemainderFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		branch, err := repoCtrl.GetBranch(ctx, session, repoRef, branchName)
+		options, err := request.ParseBranchMetadataOptions(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
+		branch, err := repoCtrl.GetBranch(ctx, session, repoRef, branchName, options)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

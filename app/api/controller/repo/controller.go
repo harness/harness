@@ -81,6 +81,8 @@ type Controller struct {
 	executionStore     store.ExecutionStore
 	principalStore     store.PrincipalStore
 	ruleStore          store.RuleStore
+	checkStore         store.CheckStore
+	pullReqStore       store.PullReqStore
 	settings           *settings.Service
 	principalInfoCache store.PrincipalInfoCache
 	userGroupStore     store.UserGroupStore
@@ -113,6 +115,8 @@ func NewController(
 	executionStore store.ExecutionStore,
 	principalStore store.PrincipalStore,
 	ruleStore store.RuleStore,
+	checkStore store.CheckStore,
+	pullReqStore store.PullReqStore,
 	settings *settings.Service,
 	principalInfoCache store.PrincipalInfoCache,
 	protectionManager *protection.Manager,
@@ -144,6 +148,8 @@ func NewController(
 		executionStore:     executionStore,
 		principalStore:     principalStore,
 		ruleStore:          ruleStore,
+		checkStore:         checkStore,
+		pullReqStore:       pullReqStore,
 		settings:           settings,
 		principalInfoCache: principalInfoCache,
 		protectionManager:  protectionManager,

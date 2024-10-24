@@ -14,10 +14,21 @@
 
 package types
 
+import "github.com/harness/gitness/git/sha"
+
 type Branch struct {
 	Name   string  `json:"name"`
-	SHA    string  `json:"sha"`
+	SHA    sha.SHA `json:"sha"`
 	Commit *Commit `json:"commit,omitempty"`
+}
+
+type BranchExtended struct {
+	Branch
+	IsDefault        bool               `json:"is_default"`
+	CheckSummary     *CheckCountSummary `json:"check_summary,omitempty"`
+	Rules            []RuleInfo         `json:"rules,omitempty"`
+	PullRequests     []*PullReq         `json:"pull_requests,omitempty"`
+	CommitDivergence *CommitDivergence  `json:"commit_divergence,omitempty"`
 }
 
 type CreateBranchOutput struct {
@@ -27,4 +38,12 @@ type CreateBranchOutput struct {
 
 type DeleteBranchOutput struct {
 	DryRunRulesOutput
+}
+
+// CommitDivergence contains the information of the count of converging commits between two refs.
+type CommitDivergence struct {
+	// Ahead is the count of commits the 'From' ref is ahead of the 'To' ref.
+	Ahead int32 `json:"ahead"`
+	// Behind is the count of commits the 'From' ref is behind the 'To' ref.
+	Behind int32 `json:"behind"`
 }

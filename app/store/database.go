@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -405,6 +406,9 @@ type (
 
 		// Stream returns streams pull requests from repositories.
 		Stream(ctx context.Context, opts *types.PullReqFilter) (<-chan *types.PullReq, <-chan error)
+
+		// ListOpenByBranchName returns open pull requests for each branch.
+		ListOpenByBranchName(ctx context.Context, repoID int64, branchNames []string) (map[string][]*types.PullReq, error)
 	}
 
 	PullReqActivityStore interface {
@@ -633,6 +637,13 @@ type (
 
 		// ListResults returns a list of status check results for a specific commit in a repo.
 		ListResults(ctx context.Context, repoID int64, commitSHA string) ([]types.CheckResult, error)
+
+		// ResultSummary returns a list of status check result summaries for the provided list of commits in a repo.
+		ResultSummary(
+			ctx context.Context,
+			repoID int64,
+			commitSHAs []string,
+		) (map[sha.SHA]types.CheckCountSummary, error)
 	}
 
 	GitspaceConfigStore interface {

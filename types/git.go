@@ -40,13 +40,22 @@ type CommitFilter struct {
 	IncludeStats bool   `json:"include_stats"`
 }
 
+type BranchMetadataOptions struct {
+	IncludeChecks   bool `json:"include_checks"`
+	IncludeRules    bool `json:"include_rules"`
+	IncludePullReqs bool `json:"include_pullreqs"`
+	MaxDivergence   int  `json:"max_divergence"`
+}
+
 // BranchFilter stores branch query parameters.
 type BranchFilter struct {
-	Query string                `json:"query"`
-	Sort  enum.BranchSortOption `json:"sort"`
-	Order enum.Order            `json:"order"`
-	Page  int                   `json:"page"`
-	Size  int                   `json:"size"`
+	Query         string                `json:"query"`
+	Sort          enum.BranchSortOption `json:"sort"`
+	Order         enum.Order            `json:"order"`
+	Page          int                   `json:"page"`
+	Size          int                   `json:"size"`
+	IncludeCommit bool                  `json:"include_commit"`
+	BranchMetadataOptions
 }
 
 // TagFilter stores commit tag query parameters.

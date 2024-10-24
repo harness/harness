@@ -56,6 +56,8 @@ func ProvideController(
 	principalStore store.PrincipalStore,
 	executionStore store.ExecutionStore,
 	ruleStore store.RuleStore,
+	checkStore store.CheckStore,
+	pullReqStore store.PullReqStore,
 	settings *settings.Service,
 	principalInfoCache store.PrincipalInfoCache,
 	protectionManager *protection.Manager,
@@ -79,7 +81,8 @@ func ProvideController(
 	return NewController(config, tx, urlProvider,
 		authorizer,
 		repoStore, spaceStore, pipelineStore, executionStore,
-		principalStore, ruleStore, settings, principalInfoCache, protectionManager, rpcClient, importer,
+		principalStore, ruleStore, checkStore, pullReqStore, settings,
+		principalInfoCache, protectionManager, rpcClient, importer,
 		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService)
 }

@@ -174,6 +174,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	pipelineStore := database.ProvidePipelineStore(db)
 	executionStore := database.ProvideExecutionStore(db)
 	ruleStore := database.ProvideRuleStore(db, principalInfoCache)
+	checkStore := database.ProvideCheckStore(db, principalInfoCache)
+	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	settingsStore := database.ProvideSettingsStore(db)
 	settingsService := settings.ProvideService(settingsStore)
 	protectionManager, err := protection.ProvideManager(ruleStore)
@@ -249,9 +251,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	instrumentService := instrument.ProvideService()
 	userGroupStore := database.ProvideUserGroupStore(db)
 	searchService := usergroup.ProvideSearchService()
-	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, settingsService, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, searchService)
+	repoController := repo.ProvideController(config, transactor, provider, authorizer, repoStore, spaceStore, pipelineStore, principalStore, executionStore, ruleStore, checkStore, pullReqStore, settingsService, principalInfoCache, protectionManager, gitInterface, repository, codeownersService, reporter, indexer, resourceLimiter, lockerLocker, auditService, mutexManager, repoIdentifier, repoCheck, publicaccessService, labelService, instrumentService, userGroupStore, searchService)
 	reposettingsController := reposettings.ProvideController(authorizer, repoStore, settingsService, auditService)
-	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	stageStore := database.ProvideStageStore(db)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
 	if err != nil {
@@ -274,7 +275,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	connectorStore := database.ProvideConnectorStore(db, secretStore)
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
-	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	listService := pullreq.ProvideListService(transactor, gitInterface, authorizer, spaceStore, repoStore, repoGitInfoCache, pullReqStore, labelService)
 	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
 	if err != nil {

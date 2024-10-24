@@ -107,14 +107,14 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	if err != nil {
 		return types.DeleteBranchOutput{}, nil, err
 	}
-	if pr.SourceSHA != branch.SHA {
+	if pr.SourceSHA != branch.SHA.String() {
 		return types.DeleteBranchOutput{}, nil, errors.Conflict("source branch SHA does not match pull request source SHA")
 	}
 
 	err = c.git.DeleteBranch(ctx, &git.DeleteBranchParams{
 		WriteParams: writeParams,
 		BranchName:  branchName,
-		SHA:         branch.SHA,
+		SHA:         branch.SHA.String(),
 	})
 	if err != nil {
 		return types.DeleteBranchOutput{}, nil, err
@@ -126,7 +126,7 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		}
 
 		_, err := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID,
-			&types.PullRequestActivityPayloadBranchDelete{SHA: branch.SHA}, nil)
+			&types.PullRequestActivityPayloadBranchDelete{SHA: branch.SHA.String()}, nil)
 		return err
 	}()
 	if err != nil {

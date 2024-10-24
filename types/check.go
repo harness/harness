@@ -109,3 +109,11 @@ type PullReqCheck struct {
 	Bypassable bool  `json:"bypassable"`
 	Check      Check `json:"check"`
 }
+
+type CheckCountSummary struct {
+	Pending int `json:"pending"`
+	Running int `json:"running"`
+	Success int `json:"success"`
+	Failure int `json:"failure"`
+	Error   int `json:"error"`
+}

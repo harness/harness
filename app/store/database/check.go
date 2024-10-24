@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -28,7 +29,6 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 var _ store.CheckStore = (*CheckStore)(nil)
@@ -194,7 +194,7 @@ func (s *CheckStore) Count(ctx context.Context,
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return 0, errors.Wrap(err, "Failed to convert query to sql")
+		return 0, fmt.Errorf("failed to convert query to sql: %w", err)
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -229,7 +229,7 @@ func (s *CheckStore) List(ctx context.Context,
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
+		return nil, fmt.Errorf("failed to convert query to sql: %w", err)
 	}
 
 	dst := make([]*check, 0)
@@ -265,7 +265,7 @@ func (s *CheckStore) ListRecent(ctx context.Context,
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert list recent status checks query to sql")
+		return nil, fmt.Errorf("failed to convert list recent status checks query to sql: %w", err)
 	}
 
 	dst := make([]string, 0)
@@ -293,7 +293,7 @@ func (s *CheckStore) ListResults(ctx context.Context,
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
+		return nil, fmt.Errorf("failed to convert query to sql: %w", err)
 	}
 
 	result := make([]types.CheckResult, 0)
@@ -302,6 +302,77 @@ func (s *CheckStore) ListResults(ctx context.Context,
 
 	if err = db.SelectContext(ctx, &result, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to execute list status checks results query")
+	}
+
+	return result, nil
+}
+
+// ResultSummary returns a list of status check result summaries for the provided list of commits in a repo.
+func (s *CheckStore) ResultSummary(ctx context.Context,
+	repoID int64,
+	commitSHAs []string,
+) (map[sha.SHA]types.CheckCountSummary, error) {
+	const selectColumns = `
+			check_commit_sha,
+			COUNT(check_status = 'pending') as "count_pending",
+			COUNT(check_status = 'running') as "count_running",
+			COUNT(check_status = 'success') as "count_success",
+			COUNT(check_status = 'failure') as "count_failure",
+			COUNT(check_status = 'error') as "count_error"`
+
+	stmt := database.Builder.
+		Select(selectColumns).
+		From("checks").
+		Where("check_repo_id = ?", repoID).
+		Where(squirrel.Eq{"check_commit_sha": commitSHAs}).
+		GroupBy("check_commit_sha")
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	rows, err := db.QueryxContext(ctx, sql, args...)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to execute status check summary query")
+	}
+
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	result := make(map[sha.SHA]types.CheckCountSummary)
+
+	for rows.Next() {
+		var commitSHAStr string
+		var countPending int
+		var countRunning int
+		var countSuccess int
+		var countFailure int
+		var countError int
+		err := rows.Scan(&commitSHAStr, &countPending, &countRunning, &countSuccess, &countFailure, &countError)
+		if err != nil {
+			return nil, database.ProcessSQLErrorf(ctx, err, "Failed to scan values of status check summary query")
+		}
+
+		commitSHA, err := sha.New(commitSHAStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid commit SHA read from DB: %s", commitSHAStr)
+		}
+
+		result[commitSHA] = types.CheckCountSummary{
+			Pending: countPending,
+			Running: countRunning,
+			Success: countSuccess,
+			Failure: countFailure,
+			Error:   countError,
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to read status chek summary")
 	}
 
 	return result, nil

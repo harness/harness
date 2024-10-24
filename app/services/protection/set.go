@@ -62,7 +62,7 @@ func (s ruleSet) MergeVerify(
 			return nil
 		})
 	if err != nil {
-		return out, nil, fmt.Errorf("failed to merge verify: %w", err)
+		return out, nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
 	}
 
 	return out, violations, nil
@@ -95,7 +95,7 @@ func (s ruleSet) RequiredChecks(
 			return nil
 		})
 	if err != nil {
-		return RequiredChecksOutput{}, err
+		return RequiredChecksOutput{}, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
 	}
 
 	return RequiredChecksOutput{
@@ -122,7 +122,7 @@ func (s ruleSet) RefChangeVerify(ctx context.Context, in RefChangeVerifyInput) (
 			return nil
 		})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
 	}
 
 	return violations, nil
@@ -143,7 +143,7 @@ func (s ruleSet) UserIDs() ([]int64, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
 	}
 
 	result := make([]int64, 0, len(mapIDs))
@@ -169,7 +169,7 @@ func (s ruleSet) UserGroupIDs() ([]int64, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to process each rule in ruleSet: %w", err)
 	}
 
 	result := make([]int64, 0, len(mapIDs))
