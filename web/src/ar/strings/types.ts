@@ -138,6 +138,7 @@ export interface StringsMap {
   'upstreamProxyDetails.createForm.title': string
   'upstreamProxyDetails.createForm.url': string
   'upstreamProxyDetails.createForm.urlPlaceholder': string
+  'upstreamProxyDetails.editForm.enterpriseAdvancedOptionsSubTitle': string
   'upstreamProxyDetails.editForm.title': string
   'upstreamProxyDetails.editForm.update': string
   'upstreamProxyDetails.form.title': string

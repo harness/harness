@@ -81,7 +81,7 @@ export default function UpstreamProxyConfigurationFormContent(
           <CollapseContainer
             className={css.marginTopLarge}
             title={getString('repositoryDetails.repositoryForm.advancedOptionsTitle')}
-            subTitle={getString('repositoryDetails.repositoryForm.enterpriseAdvancedOptionsSubTitle')}
+            subTitle={getString('upstreamProxyDetails.editForm.enterpriseAdvancedOptionsSubTitle')}
             initialState={isCollapsedAdvancedConfig}>
             <Card className={classNames(css.cardContainer)}>
               <UpstreamProxyIncludeExcludePatternFormContent formikProps={formikProps} isEdit readonly={readonly} />

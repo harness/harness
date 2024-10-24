@@ -2,7 +2,7 @@ page: Artifact List Page
 pageHeading: Artifacts
 deployedArtifacts: Deployed Artifacts
 table:
-  noArtifactsTitle: There are no artifact available.
+  noArtifactsTitle: There are no artifacts available.
   allRepositories: Registries
   latestVersions: Latest Versions
   allVersions: All Versions
