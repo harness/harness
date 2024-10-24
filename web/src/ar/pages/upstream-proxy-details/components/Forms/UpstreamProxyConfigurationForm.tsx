@@ -41,7 +41,7 @@ import {
   type UpstreamRegistry,
   type UpstreamRegistryRequest
 } from '../../types'
-import { getFormattedFormDataForAuthType } from './utils'
+import { getFormattedFormDataForAuthType, getFormattedInitialValuesForAuthType } from './utils'
 
 import css from './Forms.module.scss'
 
@@ -58,7 +58,7 @@ function UpstreamProxyConfigurationForm(
   const { data, setIsUpdating } = useContext(RepositoryProviderContext)
   const { showSuccess, showError, clear } = useToaster()
   const { getString } = useStrings()
-  const { parent } = useAppStore()
+  const { parent, scope } = useAppStore()
   const spaceRef = useGetSpaceRef()
 
   const { mutateAsync: modifyUpstreamProxy } = useModifyRegistryMutation()
@@ -66,7 +66,10 @@ function UpstreamProxyConfigurationForm(
   const getInitialValues = (repoData: UpstreamRegistry): UpstreamRegistryRequest => {
     const repositoryType = factory.getRepositoryType(repoData.packageType)
     if (repositoryType) {
-      const transformedInitialValuesForCleanupPolicy = getFormattedIntialValuesForCleanupPolicy(repoData)
+      const transformedIntialValuesForAuthType = getFormattedInitialValuesForAuthType(repoData, parent)
+      const transformedInitialValuesForCleanupPolicy = getFormattedIntialValuesForCleanupPolicy(
+        transformedIntialValuesForAuthType
+      )
       return repositoryType.getUpstreamProxyInitialValues(
         transformedInitialValuesForCleanupPolicy
       ) as UpstreamRegistryRequest
@@ -96,7 +99,7 @@ function UpstreamProxyConfigurationForm(
   const handleSubmit = async (values: UpstreamRegistryRequest): Promise<void> => {
     const repositoryType = factory.getRepositoryType(values.packageType)
     if (repositoryType) {
-      const transfomedAuthType = getFormattedFormDataForAuthType(values, parent)
+      const transfomedAuthType = getFormattedFormDataForAuthType(values, parent, scope)
       const transformedCleanupPolicy = getFormattedFormDataForCleanupPolicy(transfomedAuthType)
       const transformedValues = repositoryType.processUpstreamProxyFormData(
         transformedCleanupPolicy

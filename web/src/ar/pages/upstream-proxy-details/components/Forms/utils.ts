@@ -15,9 +15,11 @@
  */
 
 import produce from 'immer'
-import { compact, get, set } from 'lodash-es'
-import type { Scope } from '@ar/MFEAppTypes'
+import { compact, defaultTo, get, set } from 'lodash-es'
+
 import { Parent } from '@ar/common/types'
+import type { Scope } from '@ar/MFEAppTypes'
+
 import {
   DockerRepositoryURLInputSource,
   UpstreamProxyAuthenticationMode,
@@ -59,6 +61,30 @@ export function getFormattedFormDataForAuthType(
     }
     if (draft.config.source !== DockerRepositoryURLInputSource.Custom) {
       set(draft, 'config.url', '')
+    }
+  })
+}
+
+function getSecretScopeDetailsByIdentifier(identifier: string, secretSpacePath: string) {
+  const referenceString = getReferenceStringFromSecretSpacePath(identifier, secretSpacePath)
+  const [, orgIdentifier, projectIdentifier] = secretSpacePath.split('/')
+  return {
+    identifier: identifier,
+    name: identifier,
+    referenceString,
+    orgIdentifier,
+    projectIdentifier
+  }
+}
+
+export function getFormattedInitialValuesForAuthType(values: UpstreamRegistryRequest, parent?: Parent) {
+  return produce(values, (draft: UpstreamRegistryRequest) => {
+    if (draft.config.authType === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD) {
+      if (parent === Parent.Enterprise) {
+        const secretIdentifier = defaultTo(draft.config.auth?.secretIdentifier, '')
+        const secretSpacePath = defaultTo(draft.config.auth?.secretSpacePath, '')
+        set(draft, 'config.auth.secretIdentifier', getSecretScopeDetailsByIdentifier(secretIdentifier, secretSpacePath))
+      }
     }
   })
 }
