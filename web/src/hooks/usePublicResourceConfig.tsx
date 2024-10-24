@@ -42,10 +42,21 @@ export function usePublicResourceConfig() {
     return !!(systemConfig?.public_resource_creation_enabled && authSettings?.resource?.publicAccessEnabled)
   }, [authSettings, systemConfig, standalone, systemConfigLoading, fetchingAuthSettings])
 
+  const UIFlags = useMemo(() => {
+    if (systemConfigLoading) {
+      return false
+    }
+    if (standalone) {
+      return systemConfig?.ui
+    }
+    return false
+  }, [systemConfig, standalone, systemConfigLoading])
+
   return {
     allowPublicResourceCreation,
     configLoading: fetchingAuthSettings || systemConfigLoading,
     systemConfigError,
-    errorWhileFetchingAuthSettings
+    errorWhileFetchingAuthSettings,
+    UIFlags
   }
 }

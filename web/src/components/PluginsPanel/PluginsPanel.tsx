@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Formik, FormikContextType } from 'formik'
 import { parse } from 'yaml'
 import cx from 'classnames'
@@ -22,7 +22,7 @@ import { capitalize, get, has, isEmpty, isUndefined, pick, set } from 'lodash-es
 import type { IRange } from 'monaco-editor'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { Icon, IconProps } from '@harnessio/icons'
+import { Icon, IconName, IconProps } from '@harnessio/icons'
 import {
   Button,
   ButtonSize,
@@ -42,8 +42,8 @@ import { MultiList } from 'components/MultiList/MultiList'
 import MultiMap from 'components/MultiMap/MultiMap'
 import { PipelineEntity, Action, CodeLensClickMetaData } from 'components/PipelineConfigPanel/types'
 import { generateDefaultStepInsertionPath } from 'components/SourceCodeEditor/EditorUtils'
+import { usePublicResourceConfig } from 'hooks/usePublicResourceConfig'
 import { RunStep } from './Steps/HarnessSteps/RunStep/RunStep'
-
 import css from './PluginsPanel.module.scss'
 
 export interface EntityAddUpdateInterface extends Partial<CodeLensClickMetaData> {
@@ -122,21 +122,29 @@ export const PluginsPanel = (props: PluginsPanelInterface): JSX.Element => {
   const formikRef = useRef<FormikContextType<PluginFormDataInterface>>()
   const [showSyncToolbar, setShowSyncToolbar] = useState<boolean>(false)
   const [formInitialValues, setFormInitialValues] = useState<PluginFormDataInterface>()
+  const { UIFlags } = usePublicResourceConfig()
 
-  const PluginCategories: PluginCategoryInterface[] = [
-    {
-      category: PluginCategory.Harness,
-      name: capitalize(getString('run')),
-      description: getString('pluginsPanel.run.helptext'),
-      icon: { name: 'run-step', size: 15 }
-    },
-    {
-      category: PluginCategory.Drone,
-      name: capitalize(getString('plugins.title')),
-      description: getString('pluginsPanel.plugins.helptext'),
-      icon: { name: 'plugin-ci-step', size: 18 }
-    }
-  ]
+  const PluginCategories: PluginCategoryInterface[] = useMemo(
+    () => [
+      {
+        category: PluginCategory.Harness,
+        name: capitalize(getString('run')),
+        description: getString('pluginsPanel.run.helptext'),
+        icon: { name: 'run-step', size: 15 }
+      },
+      ...(UIFlags.show_plugin
+        ? [
+            {
+              category: PluginCategory.Drone,
+              name: capitalize(getString('plugins.title')),
+              description: getString('pluginsPanel.plugins.helptext'),
+              icon: { name: 'plugin-ci-step' as IconName, size: 18 }
+            }
+          ]
+        : [])
+    ],
+    [UIFlags]
+  )
 
   useEffect(() => {
     const { entity, action } = pluginDataFromYAML

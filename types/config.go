@@ -430,6 +430,10 @@ type Config struct {
 		}
 	}
 
+	UI struct {
+		ShowPlugin bool `envconfig:"GITNESS_UI_SHOW_PLUGIN" default:"false"`
+	}
+
 	Registry struct {
 		Enable  bool `envconfig:"GITNESS_REGISTRY_ENABLED" default:"true"`
 		Storage struct {

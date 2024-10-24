@@ -22,12 +22,17 @@ import (
 	"github.com/harness/gitness/types"
 )
 
+type UI struct {
+	ShowPlugin bool `json:"show_plugin"`
+}
+
 type ConfigOutput struct {
 	UserSignupAllowed             bool `json:"user_signup_allowed"`
 	PublicResourceCreationEnabled bool `json:"public_resource_creation_enabled"`
 	SSHEnabled                    bool `json:"ssh_enabled"`
 	GitspaceEnabled               bool `json:"gitspace_enabled"`
 	ArtifactRegistryEnabled       bool `json:"artifact_registry_enabled"`
+	UI                            UI   `json:"ui"`
 }
 
 // HandleGetConfig returns an http.HandlerFunc that processes an http.Request
@@ -48,6 +53,7 @@ func HandleGetConfig(config *types.Config, sysCtrl *system.Controller) http.Hand
 			PublicResourceCreationEnabled: config.PublicResourceCreationEnabled,
 			GitspaceEnabled:               config.Gitspace.Enable,
 			ArtifactRegistryEnabled:       config.Registry.Enable,
+			UI:                            UI{ShowPlugin: config.UI.ShowPlugin},
 		})
 	}
 }
