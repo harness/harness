@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/hook"
+	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/git/sharedrepo"
 )
@@ -56,7 +57,7 @@ type CommitFileAction struct {
 // CommitFilesParams holds the data for file operations.
 type CommitFilesParams struct {
 	WriteParams
-	Title     string
+	Title     string // Deprecated
 	Message   string
 	Branch    string
 	NewBranch string
@@ -190,11 +191,6 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 			return errors.InvalidArgument("No effective changes.")
 		}
 
-		message := strings.TrimSpace(params.Title)
-		if len(params.Message) > 0 {
-			message += "\n\n" + strings.TrimSpace(params.Message)
-		}
-
 		authorSig := &api.Signature{
 			Identity: api.Identity{
 				Name:  author.Name,
@@ -209,6 +205,14 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 				Email: committer.Email,
 			},
 			When: committerDate,
+		}
+
+		var message string
+		if params.Title != "" {
+			// Title is deprecated and should not be sent, but if it's sent assume we need to generate the full message.
+			message = parser.CleanUpWhitespace(CommitMessage(params.Title, params.Message))
+		} else {
+			message = parser.CleanUpWhitespace(params.Message)
 		}
 
 		commitSHA, err := r.CommitTree(ctx, authorSig, committerSig, treeSHA, message, false, parentCommits...)

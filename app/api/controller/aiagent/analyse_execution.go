@@ -111,8 +111,7 @@ func (c *Controller) commit(ctx context.Context,
 	now := time.Now()
 	commit, err := c.git.CommitFiles(ctx, &git.CommitFilesParams{
 		WriteParams:   writeParams,
-		Title:         payload.Title,
-		Message:       payload.Message,
+		Message:       git.CommitMessage(payload.Title, payload.Message),
 		Branch:        payload.Branch,
 		NewBranch:     payload.NewBranch,
 		Actions:       actions,

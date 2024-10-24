@@ -17,7 +17,6 @@ package git
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/errors"
@@ -25,6 +24,7 @@ import (
 	"github.com/harness/gitness/git/enum"
 	"github.com/harness/gitness/git/hook"
 	"github.com/harness/gitness/git/merge"
+	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
 )
 
@@ -39,8 +39,9 @@ type MergeParams struct {
 	// WARNING: This field is currently not supported yet!
 	HeadRepoUID string
 	HeadBranch  string
-	Title       string
-	Message     string
+
+	Title   string // Deprecated
+	Message string
 
 	// Committer overwrites the git committer used for committing the files
 	// (optional, default: actor)
@@ -243,9 +244,12 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	// merge message
 
-	mergeMsg := strings.TrimSpace(params.Title)
-	if len(params.Message) > 0 {
-		mergeMsg += "\n\n" + strings.TrimSpace(params.Message)
+	var message string
+	if params.Title != "" {
+		// Title is deprecated and should not be sent, but if it's sent assume we need to generate the full message.
+		message = parser.CleanUpWhitespace(CommitMessage(params.Title, params.Message))
+	} else {
+		message = parser.CleanUpWhitespace(params.Message)
 	}
 
 	// merge
@@ -268,7 +272,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 		refUpdater,
 		repoPath, s.tmpDir,
 		&author, &committer,
-		mergeMsg,
+		message,
 		mergeBaseCommitSHA, baseCommitSHA, headCommitSHA)
 	if errors.IsConflict(err) {
 		return MergeOutput{}, fmt.Errorf("failed to merge %q to %q in %q using the %q merge method: %w",

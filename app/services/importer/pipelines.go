@@ -75,8 +75,7 @@ func (r *Repository) processPipelines(ctx context.Context,
 
 	_, err = r.git.CommitFiles(ctx, &git.CommitFilesParams{
 		WriteParams:   writeParams,
-		Title:         commitMessage,
-		Message:       "",
+		Message:       commitMessage,
 		Branch:        repo.DefaultBranch,
 		NewBranch:     repo.DefaultBranch,
 		Actions:       actions,

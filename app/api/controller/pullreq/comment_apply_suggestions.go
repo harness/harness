@@ -300,8 +300,7 @@ func (c *Controller) CommentApplySuggestions(
 	now := time.Now()
 	commitOut, err := c.git.CommitFiles(ctx, &git.CommitFilesParams{
 		WriteParams:   writeParams,
-		Title:         in.Title,
-		Message:       in.Message,
+		Message:       git.CommitMessage(in.Title, in.Message),
 		Branch:        pr.SourceBranch,
 		Committer:     controller.SystemServicePrincipalInfo(),
 		CommitterDate: &now,

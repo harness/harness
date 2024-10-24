@@ -679,7 +679,6 @@ func parseLinesToSlice(output []byte) []string {
 }
 
 // getCommit returns info about a commit.
-// TODO: This function is used only for last used cache
 func getCommit(
 	ctx context.Context,
 	repoPath string,
@@ -696,7 +695,7 @@ func getCommit(
 		fmtCommitterEmail + fmtZero + // 6
 		fmtCommitterTime + fmtZero + // 7
 		fmtSubject + fmtZero + // 8
-		fmtBody // 9
+		fmtMessage // 9
 
 	cmd := command.New("log",
 		command.WithFlag("--max-count", "1"),
@@ -743,7 +742,7 @@ func getCommit(
 	committerEmail := commitData[6]
 	committerTimestamp := commitData[7]
 	subject := commitData[8]
-	body := commitData[9]
+	message := commitData[9]
 
 	authorTime, _ := time.Parse(time.RFC3339Nano, authorTimestamp)
 	committerTime, _ := time.Parse(time.RFC3339Nano, committerTimestamp)
@@ -752,7 +751,7 @@ func getCommit(
 		SHA:        commitSHA,
 		ParentSHAs: parentSHAs,
 		Title:      subject,
-		Message:    body,
+		Message:    message,
 		Author: Signature{
 			Identity: Identity{
 				Name:  authorName,

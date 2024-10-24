@@ -29,6 +29,13 @@ import (
 	"github.com/harness/gitness/git/sha"
 )
 
+func CommitMessage(subject, body string) string {
+	if body == "" {
+		return subject
+	}
+	return subject + "\n\n" + body
+}
+
 type GetCommitParams struct {
 	ReadParams
 	Revision string

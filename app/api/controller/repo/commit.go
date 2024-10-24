@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/controller"
@@ -61,6 +62,15 @@ type CommitFilesOptions struct {
 	BypassRules bool `json:"bypass_rules"`
 }
 
+func (in *CommitFilesOptions) Sanitize() error {
+	in.Title = strings.TrimSpace(in.Title)
+	in.Message = strings.TrimSpace(in.Message)
+
+	// TODO: Validate title and message length.
+
+	return nil
+}
+
 func (c *Controller) CommitFiles(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
@@ -68,6 +78,10 @@ func (c *Controller) CommitFiles(ctx context.Context,
 ) (types.CommitFilesResponse, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
+		return types.CommitFilesResponse{}, nil, err
+	}
+
+	if err := in.Sanitize(); err != nil {
 		return types.CommitFilesResponse{}, nil, err
 	}
 
@@ -146,8 +160,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	now := time.Now()
 	commit, err := c.git.CommitFiles(ctx, &git.CommitFilesParams{
 		WriteParams:   writeParams,
-		Title:         in.Title,
-		Message:       in.Message,
+		Message:       git.CommitMessage(in.Title, in.Message),
 		Branch:        in.Branch,
 		NewBranch:     in.NewBranch,
 		Actions:       actions,

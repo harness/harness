@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/git"
 	gitenum "github.com/harness/gitness/git/enum"
+	"github.com/harness/gitness/git/parser"
 	"github.com/harness/gitness/git/sha"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -186,17 +187,17 @@ func (c *Controller) Squash(
 		return nil, nil, usererror.BadRequest("Failed to find commits between head and base")
 	}
 
-	commit0Title, commit0Message := splitTitleAndMessage(commits.Commits[0].Message)
+	commit0Subject, commit0Body := parser.SplitMessage(commits.Commits[0].Message)
 
 	if in.Title == "" {
-		in.Title = commit0Title
+		in.Title = commit0Subject
 		if commitCount > 1 {
 			in.Title = fmt.Sprintf("Squashed %d commits", commits.TotalCommits)
 		}
 	}
 
 	if in.Message == "" {
-		in.Message = commit0Message
+		in.Message = commit0Body
 		if commitCount > 1 {
 			sb := strings.Builder{}
 			for i := range min(commitBulletLimit, len(commits.Commits)) {
@@ -221,8 +222,7 @@ func (c *Controller) Squash(
 		BaseSHA:         mergeBase.MergeBaseSHA,
 		HeadRepoUID:     repo.GitUID,
 		HeadBranch:      in.HeadBranch,
-		Title:           in.Title,
-		Message:         in.Message,
+		Message:         git.CommitMessage(in.Title, in.Message),
 		RefType:         refType,
 		RefName:         refName,
 		Committer:       committer,
@@ -258,15 +258,4 @@ func (c *Controller) Squash(
 		NewHeadBranchSHA: mergeOutput.MergeSHA,
 		RuleViolations:   violations,
 	}, nil, nil
-}
-
-func splitTitleAndMessage(message string) (string, string) {
-	message = strings.TrimSpace(message)
-
-	idx := strings.Index(message, "\n")
-	if idx < 0 {
-		return message, ""
-	}
-
-	return message[:idx], strings.TrimLeft(message[idx+1:], "\n")
 }

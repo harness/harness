@@ -34,7 +34,7 @@ const (
 	fmtCommitterUnix  = "%ct" // Unix timestamp
 
 	fmtSubject = "%s"
-	fmtBody    = "%B"
+	fmtMessage = "%B"
 
 	fmtFieldObjectType = "%(objecttype)"
 	fmtFieldPath       = "%(path)"
