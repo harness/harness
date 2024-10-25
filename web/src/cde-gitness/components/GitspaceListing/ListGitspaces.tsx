@@ -206,7 +206,11 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
         </Layout.Horizontal>
       </Layout.Horizontal>
       <Text font={{ size: 'small' }} color={Color.GREY_450}>
-        {has_git_changes ? getString('cde.hasChange') : getString('cde.noChange')}
+        {has_git_changes
+          ? getString('cde.hasChange')
+          : has_git_changes !== null && has_git_changes !== undefined
+          ? getString('cde.noChange')
+          : ''}
       </Text>
     </Layout.Vertical>
   )
