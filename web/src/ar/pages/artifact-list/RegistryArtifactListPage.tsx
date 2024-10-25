@@ -131,7 +131,7 @@ function RegistryArtifactListPage({ pageBodyClassName }: RegistryArtifactListPag
         noData={{
           when: () => !responseData?.artifacts?.length,
           // image: getEmptyStateIllustration(hasFilter, module),
-          icon: 'container',
+          icon: 'store-artifact-bundle',
           messageTitle: hasFilter ? getString('noResultsFound') : getString('artifactList.table.noArtifactsTitle'),
           button: hasFilter ? (
             <Button text={getString('clearFilters')} variation={ButtonVariation.LINK} onClick={handleClearAllFilters} />

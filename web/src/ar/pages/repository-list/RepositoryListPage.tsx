@@ -130,7 +130,7 @@ function RepositoryListPage(): JSX.Element {
         retryOnError={() => refetch()}
         noData={{
           when: () => !responseData?.registries?.length, // TODO: change to itemCount once BE fixes the issue with paginated response
-          icon: 'thinner-code-repos',
+          icon: 'registry',
           // image: getEmptyStateIllustration(hasFilter, module),
           messageTitle: hasFilter ? getString('noResultsFound') : getString('repositoryList.table.noRepositoriesTitle'),
           button: hasFilter ? (

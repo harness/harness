@@ -1649,10 +1649,10 @@
   resolved "https://registry.npmjs.org/@harnessio/design-system/-/design-system-2.1.1.tgz#2da3036602ed9b9446d8139c72009e6dc1e25642"
   integrity sha512-ZwAGM1srOZ49/6YkwyjkczUv4v91CN0rCecRYnV3/g+xdSV5ycrUvkJjl9nHub6jw2eCGC0GdyNgAtAJnLmGfQ==
 
-"@harnessio/icons@^2.1.8":
-  version "2.1.8"
-  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.8.tgz#0724964b440fb87383331b218c9fbe20b21e20fd"
-  integrity sha512-fWGdvIQq6TDZomIfb8sLjbP1QEFK6ygZlzqS1g14IxQCG5JHVD24pZjOcNOyItNcXcxpG8+/TXVUoYtlZ9Q0Cw==
+"@harnessio/icons@^2.1.9":
+  version "2.1.10"
+  resolved "https://registry.yarnpkg.com/@harnessio/icons/-/icons-2.1.10.tgz#2a849fbf41a00e2b0dac016bec74f9166e6e6fa2"
+  integrity sha512-LArSZWVxYUqkOM228t/fHUnws3PtVayBbqx+4zKODsbCpr4GdFDX/CIel6hpKREknk4YdfZvjeSBjvuLOw+KjQ==
 
 "@harnessio/react-har-service-client@^0.0.23":
   version "0.0.23"
