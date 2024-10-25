@@ -687,17 +687,18 @@ func (r *repoImportState) defineLabel(
 		r.scope = int64(len(spaceIDs))
 	}
 
-	label, err := convertLabelWithSanitization(ctx, r.migrator, spaceID, r.scope, extLabel)
+	labelIn, err := convertLabelWithSanitization(ctx, r.migrator, spaceID, r.scope, extLabel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sanitize and convert external label input: %w", err)
 	}
 
-	label, err = r.labelStore.Find(ctx, &spaceID, nil, label.Key)
+	label, err := r.labelStore.Find(ctx, &spaceID, nil, labelIn.Key)
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
-		err = r.labelStore.Define(ctx, label)
+		err = r.labelStore.Define(ctx, labelIn)
 		if err != nil {
 			return nil, fmt.Errorf("failed to define and find the label: %w", err)
 		}
+		return labelIn, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to define and find the label: %w", err)
