@@ -75,15 +75,17 @@ func (c *GCSStore) Upload(ctx context.Context, file io.Reader, filePath string) 
 	defer func() {
 		cErr := wc.Close()
 		if cErr != nil {
-			log.Ctx(ctx).Err(cErr).
-				Msgf("failed to close gcs blob writer for file '%s' in bucket '%s'", filePath, c.config.Bucket)
+			log.Ctx(ctx).Warn().Err(cErr).
+				Msgf("failed to close gcs blob writer for file %q in bucket %q", filePath, c.config.Bucket)
 		}
 	}()
 	if _, err := io.Copy(wc, file); err != nil {
-		// Remove the file if it was created.
+		// Best effort attempt to delete the file on upload failure.
 		deleteErr := gcsClient.Bucket(c.config.Bucket).Object(filePath).Delete(ctx)
 		if deleteErr != nil {
-			return fmt.Errorf("failed to delete file: %s from bucket: %s %w", filePath, c.config.Bucket, deleteErr)
+			log.Ctx(ctx).Warn().Err(deleteErr).Msgf(
+				"failed to cleanup file %q from bucket %q after write to gcs failed with %s",
+				filePath, c.config.Bucket, err)
 		}
 		return fmt.Errorf("failed to write file to GCS: %w", err)
 	}
@@ -103,7 +105,7 @@ func (c *GCSStore) GetSignedURL(ctx context.Context, filePath string) (string, e
 		Expires: time.Now().Add(1 * time.Hour),
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to create signed URL for file: %s %w", filePath, err)
+		return "", fmt.Errorf("failed to create signed URL for file %q: %w", filePath, err)
 	}
 	return signedURL, nil
 }
@@ -120,7 +122,7 @@ func createNewImpersonatedClient(ctx context.Context, cfg Config) (*storage.Clie
 		Lifetime:        cfg.ImpersonationLifetime,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to impersonate the client service account %s : %w", cfg.TargetPrincipal, err)
+		return nil, fmt.Errorf("failed to impersonate the client service account %q: %w", cfg.TargetPrincipal, err)
 	}
 
 	// Generate a new token

@@ -59,8 +59,8 @@ func (c FileSystemStore) Upload(ctx context.Context,
 	defer func() {
 		cErr := destinationFile.Close()
 		if cErr != nil {
-			log.Ctx(ctx).Err(cErr).
-				Msgf("failed to close destination file '%s' in directory '%s'", filePath, c.basePath)
+			log.Ctx(ctx).Warn().Err(cErr).
+				Msgf("failed to close destination file %q in directory %q", filePath, c.basePath)
 		}
 	}()
 
@@ -68,7 +68,10 @@ func (c FileSystemStore) Upload(ctx context.Context,
 		// Remove the file if it was created.
 		removeErr := os.Remove(fileDiskPath)
 		if removeErr != nil {
-			return fmt.Errorf("failed to remove file: %w", removeErr)
+			// Best effort attempt to remove the file on write failure.
+			log.Ctx(ctx).Warn().Err(removeErr).Msgf(
+				"failed to cleanup file %q in directory %q after write to filesystem failed with %s",
+				filePath, c.basePath, err)
 		}
 		return fmt.Errorf("failed to write file to filesystem: %w", err)
 	}
