@@ -43,16 +43,18 @@ import (
 )
 
 type MergeInput struct {
-	Method      enum.MergeMethod `json:"method"`
-	SourceSHA   string           `json:"source_sha"`
-	Title       string           `json:"title"`
-	Message     string           `json:"message"`
-	BypassRules bool             `json:"bypass_rules"`
-	DryRun      bool             `json:"dry_run"`
+	Method    enum.MergeMethod `json:"method"`
+	SourceSHA string           `json:"source_sha"`
+	Title     string           `json:"title"`
+	Message   string           `json:"message"`
+
+	BypassRules bool `json:"bypass_rules"`
+	DryRun      bool `json:"dry_run"`
+	DryRunRules bool `json:"dry_run_rules"`
 }
 
 func (in *MergeInput) sanitize() error {
-	if in.Method == "" && !in.DryRun {
+	if in.Method == "" && !in.DryRun && !in.DryRunRules {
 		return usererror.BadRequest("merge method must be provided if dry run is false")
 	}
 
@@ -60,16 +62,14 @@ func (in *MergeInput) sanitize() error {
 		return usererror.BadRequest("source SHA must be provided")
 	}
 
-	if in.Method == "" {
-		in.Method = enum.MergeMethodMerge
-	}
+	if in.Method != "" {
+		method, ok := in.Method.Sanitize()
+		if !ok {
+			return usererror.BadRequestf("unsupported merge method: %s", in.Method)
+		}
 
-	method, ok := in.Method.Sanitize()
-	if !ok {
-		return usererror.BadRequestf("unsupported merge method: %s", in.Method)
+		in.Method = method
 	}
-
-	in.Method = method
 
 	// cleanup title / message (NOTE: git doesn't support white space only)
 	in.Title = strings.TrimSpace(in.Title)
@@ -102,18 +102,12 @@ func (c *Controller) Merge(
 	pullreqNum int64,
 	in *MergeInput,
 ) (*types.MergeResponse, *types.MergeViolations, error) {
-	// keep track of original method in case it's empty, as it is optional for dry-run.
-	originalMergeMethod := in.Method
 	if err := in.sanitize(); err != nil {
 		return nil, nil, err
 	}
-	if originalMergeMethod != "" {
-		// use sanitized version if a non-empty merge method was provided.
-		originalMergeMethod = in.Method
-	}
 
 	requiredPermission := enum.PermissionRepoPush
-	if in.DryRun {
+	if in.DryRunRules || in.DryRun {
 		requiredPermission = enum.PermissionRepoView
 	}
 
@@ -125,25 +119,28 @@ func (c *Controller) Merge(
 	// the max time we give a merge to succeed
 	const timeout = 3 * time.Minute
 
-	var lockID int64 // 0 means locking repo level for prs (for actual merging)
-	if in.DryRun {
-		lockID = pullreqNum // dryrun doesn't need repo level lock
-	}
+	// lock the repo only if actual git merge would be attempted
+	if !in.DryRunRules {
+		var lockID int64 // 0 means locking repo level for prs (for actual merging)
+		if in.DryRun {
+			lockID = pullreqNum // dryrun doesn't need repo level lock
+		}
 
-	// if two requests for merging comes at the same time then unlock will lock
-	// first one and second one will wait, when first one is done then second one
-	// continue with latest data from db with state merged and return error that
-	// pr is already merged.
-	unlock, err := c.locker.LockPR(
-		ctx,
-		targetRepo.ID,
-		lockID,
-		timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
-	)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to lock repository for pull request merge: %w", err)
+		// if two requests for merging comes at the same time then unlock will lock
+		// first one and second one will wait, when first one is done then second one
+		// continue with latest data from db with state merged and return error that
+		// pr is already merged.
+		unlock, err := c.locker.LockPR(
+			ctx,
+			targetRepo.ID,
+			lockID,
+			timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
+		)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to lock repository for pull request merge: %w", err)
+		}
+		defer unlock()
 	}
-	defer unlock()
 
 	pr, err := c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
 	if err != nil {
@@ -163,7 +160,7 @@ func (c *Controller) Merge(
 			usererror.BadRequest("A newer commit is available. Only the latest commit can be merged.")
 	}
 
-	if pr.IsDraft && !in.DryRun {
+	if pr.IsDraft && !in.DryRunRules && !in.DryRun {
 		return nil, nil, usererror.BadRequest(
 			"Draft pull requests can't be merged. Clear the draft flag first.",
 		)
@@ -218,12 +215,28 @@ func (c *Controller) Merge(
 		SourceRepo:         sourceRepo,
 		PullReq:            pr,
 		Reviewers:          reviewers,
-		Method:             originalMergeMethod,
+		Method:             in.Method, // the method can be empty for dry run or dry run rules
 		CheckResults:       checkResults,
 		CodeOwners:         codeOwnerWithApproval,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
+
+	if in.DryRunRules {
+		return &types.MergeResponse{
+			BranchDeleted:  ruleOut.DeleteSourceBranch,
+			RuleViolations: violations,
+
+			DryRunRules:                         true,
+			AllowedMethods:                      ruleOut.AllowedMethods,
+			RequiresCodeOwnersApproval:          ruleOut.RequiresCodeOwnersApproval,
+			RequiresCodeOwnersApprovalLatest:    ruleOut.RequiresCodeOwnersApprovalLatest,
+			RequiresCommentResolution:           ruleOut.RequiresCommentResolution,
+			RequiresNoChangeRequests:            ruleOut.RequiresNoChangeRequests,
+			MinimumRequiredApprovalsCount:       ruleOut.MinimumRequiredApprovalsCount,
+			MinimumRequiredApprovalsCountLatest: ruleOut.MinimumRequiredApprovalsCountLatest,
+		}, nil, nil
 	}
 
 	// we want to complete the merge independent of request cancel - start with new, time restricted context.
@@ -253,6 +266,10 @@ func (c *Controller) Merge(
 		//   but for it the merge base SHA must be equal to target branch SHA.
 		// The result of the tests will be stored (think cached) in the database for these two types
 		// in the fields merge_check_status and rebase_check_status.
+
+		if in.Method == "" {
+			in.Method = enum.MergeMethodMerge
+		}
 
 		checkMergeability := func(method enum.MergeMethod) bool {
 			switch method {

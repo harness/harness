@@ -250,6 +250,7 @@ type MergeResponse struct {
 	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
 
 	// values only returned on dryrun
+	DryRunRules                         bool               `json:"dry_run_rules,omitempty"`
 	DryRun                              bool               `json:"dry_run,omitempty"`
 	Mergeable                           bool               `json:"mergeable,omitempty"`
 	ConflictFiles                       []string           `json:"conflict_files,omitempty"`
