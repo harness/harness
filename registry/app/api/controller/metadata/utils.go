@@ -30,7 +30,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
-	"github.com/dustin/go-humanize"
+	"github.com/inhies/go-bytesize"
 	"github.com/rs/zerolog/log"
 )
 
@@ -309,16 +309,8 @@ func GetImageSize(size string) string {
 }
 
 func GetSize(sizeVal int64) string {
-	humanReadable := humanize.Bytes(uint64(sizeVal))
-	return humanReadable
-}
-
-func GetRegRef(parentRef string, regIdentifier string) (string, error) {
-	result := ""
-	if commons.IsEmpty(parentRef) || commons.IsEmpty(regIdentifier) {
-		return result, errors.New("parentRef or regIdentifier is empty")
-	}
-	return parentRef + "/" + regIdentifier, nil
+	size := bytesize.New(float64(sizeVal))
+	return size.String()
 }
 
 func GetRepoURL(rootIdentifier, registry string, registryURL string) string {
