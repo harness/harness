@@ -1,10 +1,31 @@
 #!/bin/sh
 
+# Source the common OS info script
+. ../../common/script/os_info.sh
+
 # Install SSH if it's not already installed
 if ! command -v sshd >/dev/null 2>&1; then
     echo "OpenSSH server is not installed. Installing..."
-    apt-get update
-    apt-get install -y openssh-server
+
+    case "$(distro)" in
+        debian | ubuntu)
+            apt-get update
+            apt-get install -y openssh-server
+            ;;
+        fedora | centos | rhel)
+            dnf install -y openssh-server
+            ;;
+        opensuse)
+            zypper install -y openssh
+            ;;
+        alpine)
+            apk add openssh
+            ;;
+        *)
+            echo "Unsupported distribution for SSH installation. Exiting..."
+            exit 1
+            ;;
+    esac
 else
     echo "OpenSSH server is already installed."
 fi
