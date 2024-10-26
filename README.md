@@ -22,7 +22,7 @@ docker run -d \
 ```
 > The Harness image uses a volume to store the database and repositories. It is highly recommended to use a bind mount or named volume as otherwise all data will be lost once the container is stopped.
 
-See [developer.harness.com](https://developer.harness.io/docs/open-source) to learn how to get the most out of Harness.
+See [developer.harness.io](https://developer.harness.io/docs/open-source) to learn how to get the most out of Harness.
 
 ## Where is Drone?
 
@@ -34,7 +34,7 @@ But, we expect this to take some time, which is why we took a snapshot of Drone 
 
 As for Harness, the development is taking place on the [main](https://github.com/harness/harness/tree/main) branch.
 
-For more information on Harness, please visit [developer.harness.com](https://developer.harness.com/).
+For more information on Harness, please visit [developer.harness.io](https://developer.harness.io/).
 
 For more information on Drone, please visit [drone.io](https://www.drone.io/).
 
