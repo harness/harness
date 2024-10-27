@@ -53,15 +53,17 @@ type RunVSCodeWebPayload struct {
 }
 
 type SetupUserPayload struct {
-	Username   string
-	AccessKey  string
-	AccessType enum.GitspaceAccessType
-	HomeDir    string
+	Username     string
+	AccessKey    string
+	AccessType   enum.GitspaceAccessType
+	HomeDir      string
+	OSInfoScript string
 }
 
 type SetupSSHServerPayload struct {
-	Username   string
-	AccessType enum.GitspaceAccessType
+	Username     string
+	AccessType   enum.GitspaceAccessType
+	OSInfoScript string
 }
 
 type RunSSHServerPayload struct {

@@ -1,12 +1,12 @@
 #!/bin/sh
 
-# Source the common OS info script
-. ../../common/script/os_info.sh
-
 username={{ .Username }}
 accessKey="{{ .AccessKey }}"
 homeDir={{ .HomeDir }}
 accessType={{ .AccessType }}
+osInfoScript={{ .OSInfoScript }}
+
+eval "$osInfoScript"
 
 # Check if the user already exists
 if id "$username" >/dev/null 2>&1; then

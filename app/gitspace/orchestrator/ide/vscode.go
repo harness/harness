@@ -17,6 +17,7 @@ package ide
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
@@ -47,10 +48,15 @@ func (v *VSCode) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 ) ([]byte, error) {
+	osInfoScript, err := os.ReadFile("app/gitspace/orchestrator/common/script/os_info.sh")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read os_info.sh: %w", err)
+	}
 	sshServerScript, err := template.GenerateScriptFromTemplate(
 		templateSetupSSHServer, &template.SetupSSHServerPayload{
-			Username:   exec.UserIdentifier,
-			AccessType: exec.AccessType,
+			Username:     exec.UserIdentifier,
+			AccessType:   exec.AccessType,
+			OSInfoScript: string(osInfoScript),
 		})
 	if err != nil {
 		return nil, fmt.Errorf(

@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# Source the common OS info script
-. ../../common/script/os_info.sh
+osInfoScript={{ .OSInfoScript }}
+
+eval "$osInfoScript"
 
 # Install SSH if it's not already installed
 if ! command -v sshd >/dev/null 2>&1; then
