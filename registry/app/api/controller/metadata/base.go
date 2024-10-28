@@ -328,8 +328,6 @@ func CreateUpstreamProxyResponseJSONResponse(upstreamproxy *types.UpstreamProxy)
 		auth := api.UserPassword{}
 		auth.UserName = upstreamproxy.UserName
 		auth.SecretIdentifier = &upstreamproxy.SecretIdentifier
-		secretSpaceIDInt := int(upstreamproxy.SecretSpaceID)
-		auth.SecretSpaceId = &secretSpaceIDInt
 		auth.SecretSpacePath = &upstreamproxy.SecretSpacePath
 		_ = configAuth.FromUserPassword(auth)
 	}

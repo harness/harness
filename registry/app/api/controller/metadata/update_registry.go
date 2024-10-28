@@ -389,11 +389,10 @@ func (c *APIController) UpdateUpstreamProxyEntity(
 			return nil, nil, fmt.Errorf("failed to create upstream proxy: secret_identifier missing")
 		}
 
-		upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretID(ctx, res.SecretSpaceId, res.SecretSpacePath)
+		upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretID(ctx, res.SecretSpacePath)
 		if err != nil {
 			return nil, nil, err
 		}
-		upstreamProxyConfigEntity.SecretSpaceID = *res.SecretSpaceId
 		upstreamProxyConfigEntity.SecretIdentifier = *res.SecretIdentifier
 	} else {
 		upstreamProxyConfigEntity.UserName = ""

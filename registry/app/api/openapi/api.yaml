@@ -1610,8 +1610,6 @@ components:
           type: string
         secretIdentifier:
           type: string
-        secretSpaceId:
-          type: integer
         secretSpacePath:
           type: string
       required:

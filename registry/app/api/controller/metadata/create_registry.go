@@ -314,7 +314,7 @@ func (c *APIController) CreateUpstreamProxyEntity(
 			return nil, nil, fmt.Errorf("failed to create upstream proxy: secret_identifier missing")
 		}
 
-		upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretID(ctx, res.SecretSpaceId, res.SecretSpacePath)
+		upstreamProxyConfigEntity.SecretSpaceID, err = c.getSecretID(ctx, res.SecretSpacePath)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -324,13 +324,9 @@ func (c *APIController) CreateUpstreamProxyEntity(
 	return repoEntity, upstreamProxyConfigEntity, nil
 }
 
-func (c *APIController) getSecretID(ctx context.Context, secretSpaceID *int, secretSpacePath *string) (int, error) {
-	if secretSpaceID == nil && secretSpacePath == nil {
+func (c *APIController) getSecretID(ctx context.Context, secretSpacePath *string) (int, error) {
+	if secretSpacePath == nil {
 		return -1, fmt.Errorf("failed to create upstream proxy: secret space missing")
-	}
-
-	if secretSpaceID != nil {
-		return *secretSpaceID, nil
 	}
 
 	path, err := c.spacePathStore.FindByPath(ctx, *secretSpacePath)
