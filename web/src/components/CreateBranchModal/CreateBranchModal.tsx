@@ -43,7 +43,7 @@ import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { GitInfoProps, normalizeGitRef, isGitBranchNameValid } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
-import type { TypesBranch } from 'services/code'
+import type { TypesBranchExtended } from 'services/code'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useRuleViolationCheck } from 'hooks/useRuleViolationCheck'
 import { useAppContext } from 'AppContext'
@@ -57,14 +57,14 @@ interface FormData {
 interface UseCreateBranchModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
   suggestedBranchName?: string
   suggestedSourceBranch?: string
-  onSuccess: (data: TypesBranch) => void
+  onSuccess: (data: TypesBranchExtended) => void
   showSuccessMessage?: boolean
   showBranchTag?: boolean
   refIsATag?: boolean
 }
 
 interface CreateBranchModalButtonProps extends Omit<ButtonProps, 'onClick'>, UseCreateBranchModalProps {
-  onSuccess: (data: TypesBranch) => void
+  onSuccess: (data: TypesBranchExtended) => void
   showSuccessMessage?: boolean
 }
 
@@ -83,7 +83,7 @@ export function useCreateBranchModal({
     const [sourceBranch, setSourceBranch] = useState(suggestedSourceBranch || (repoMetadata.default_branch as string))
     const { showError, showSuccess } = useToaster()
     const { violation, bypassable, bypassed, setAllStates } = useRuleViolationCheck()
-    const { mutate: createBranch, loading } = useMutate<TypesBranch>({
+    const { mutate: createBranch, loading } = useMutate<TypesBranchExtended>({
       verb: 'POST',
       path: `/api/v1/repos/${repoMetadata.path}/+/branches`
     })

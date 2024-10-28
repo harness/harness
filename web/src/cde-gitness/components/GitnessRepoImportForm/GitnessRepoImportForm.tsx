@@ -22,7 +22,7 @@ import { Color } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
 import { Repository } from 'iconoir-react'
 import { useFormikContext } from 'formik'
-import type { TypesRepository } from 'services/code'
+import type { RepoRepositoryOutput } from 'services/code'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { String, useStrings } from 'framework/strings'
 import { LIST_FETCHING_LIMIT } from 'utils/Utils'
@@ -41,7 +41,7 @@ const RepositoryText = ({
   value,
   isCDE
 }: {
-  repoList: TypesRepository[] | null
+  repoList: RepoRepositoryOutput[] | null
   value?: string
   isCDE?: boolean
 }) => {
@@ -105,7 +105,7 @@ export const GitnessRepoImportForm = ({ isCDE }: { isCDE?: boolean }) => {
     data: repositories,
     loading,
     refetch: refetchRepos
-  } = useGet<TypesRepository[]>({
+  } = useGet<RepoRepositoryOutput[]>({
     path: `/api/v1/spaces/${space}/+/repos`,
     queryParams: { query: repoSearch },
     debounce: 500

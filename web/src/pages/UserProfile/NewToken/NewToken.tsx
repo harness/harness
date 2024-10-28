@@ -37,7 +37,7 @@ import { Else, Match, Render, Truthy } from 'react-jsx-match'
 import { omit } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
-import type { OpenapiCreateTokenRequest } from 'services/code'
+import type { UserCreateTokenInput } from 'services/code'
 import { REGEX_VALID_REPO_NAME, getErrorMessage } from 'utils/Utils'
 import { CodeIcon } from 'utils/GitUtils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
@@ -73,7 +73,7 @@ const useNewToken = ({ onClose }: { onClose: () => void }) => {
   const [openModal, hideModal] = useModalHook(() => {
     return (
       <Dialog isOpen enforceFocus={false} onClose={onModalClose} title={getString('createNewToken')}>
-        <Formik<OpenapiCreateTokenRequest>
+        <Formik<UserCreateTokenInput>
           initialValues={{
             identifier: ''
           }}

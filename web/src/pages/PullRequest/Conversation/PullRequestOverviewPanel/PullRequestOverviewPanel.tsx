@@ -27,7 +27,7 @@ import type {
   TypesPullReqReviewer,
   RepoRepositoryOutput,
   TypesRuleViolations,
-  TypesBranch
+  TypesBranchExtended
 } from 'services/code'
 import {
   PRMergeOption,
@@ -125,7 +125,7 @@ const PullRequestOverviewPanel = (props: PullRequestOverviewPanelProps) => {
     data: sourceBranch,
     error,
     refetch: refetchBranch
-  } = useGet<TypesBranch>({
+  } = useGet<TypesBranchExtended>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/branches/${pullReqMetadata?.source_branch}`,
     queryParams: {
       repo_ref: repoMetadata.path || '',

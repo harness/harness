@@ -75,7 +75,6 @@ import type {
   OpenapiCreateRepositoryRequest
 } from 'services/code'
 import { useAppContext } from 'AppContext'
-import type { TypesRepository } from 'cde-gitness/services'
 import { usePublicResourceConfig } from 'hooks/usePublicResourceConfig'
 import ImportForm from './ImportForm/ImportForm'
 import ImportReposForm from './ImportReposForm/ImportReposForm'
@@ -97,7 +96,7 @@ export interface NewRepoModalButtonProps extends Omit<ButtonProps, 'onClick' | '
   modalTitle: string
   submitButtonTitle?: string
   cancelButtonTitle?: string
-  onSubmit: (data: TypesRepository & RepoRepositoryOutput & SpaceImportRepositoriesOutput) => void
+  onSubmit: (data: RepoRepositoryOutput & SpaceImportRepositoriesOutput) => void
   repoCreationType?: RepoCreationType
   customRenderer?: (onChange: (event: any) => void) => React.ReactNode
 }

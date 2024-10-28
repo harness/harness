@@ -37,7 +37,7 @@ import { Icon } from '@harnessio/icons'
 import { useMutate } from 'restful-react'
 import type {
   OpenapiCalculateCommitDivergenceRequest,
-  RepoCommitDivergence,
+  TypesCommitDivergence,
   TypesCommit,
   RepoRepositoryOutput
 } from 'services/code'
@@ -59,7 +59,7 @@ interface LatestCommitProps extends Pick<GitInfoProps, 'repoMetadata' | 'gitRef'
 }
 
 interface DivergenceInfoProps {
-  commitDivergence: RepoCommitDivergence
+  commitDivergence: TypesCommitDivergence
   metadata: RepoRepositoryOutput
   currentGitRef: string
 }
@@ -75,7 +75,7 @@ export function LatestCommitForFolder({
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const { showError } = useToaster()
-  const [divergence, setDivergence] = useState<RepoCommitDivergence>({})
+  const [divergence, setDivergence] = useState<TypesCommitDivergence>({})
 
   const commitURL = routes.toCODECommit({
     repoPath: repoMetadata.path as string,
@@ -111,7 +111,7 @@ export function LatestCommitForFolder({
     if (isMounted.current && branchDivergenceRequestBody.requests?.length && gitRef !== repoMetadata.default_branch) {
       setDivergence({})
       getBranchDivergence(branchDivergenceRequestBody)
-        .then(([response]: RepoCommitDivergence[]) => {
+        .then(([response]: TypesCommitDivergence[]) => {
           if (isMounted.current) {
             setDivergence(response)
           }

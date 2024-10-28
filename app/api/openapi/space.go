@@ -17,6 +17,7 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
@@ -319,7 +320,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
 		QueryParameterPage, QueryParameterLimit)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opRepos, []types.Repository{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRepos, []repo.RepositoryOutput{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusForbidden)

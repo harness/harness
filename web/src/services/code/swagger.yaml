@@ -1441,14 +1441,6 @@ paths:
     get:
       operationId: listBranches
       parameters:
-        - description: Indicates whether optional commit information should be included
-            in the response.
-          in: query
-          name: include_commit
-          required: false
-          schema:
-            default: false
-            type: boolean
         - description: The substring by which the branches are filtered.
           in: query
           name: query
@@ -1492,6 +1484,47 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - description: Indicates whether optional commit information should be included
+            in the response.
+          in: query
+          name: include_commit
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, the summary of check for the branch commit SHA would
+            be included in the response.
+          in: query
+          name: include_checks
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, a list of rules that apply to this branch would be included
+            in the response.
+          in: query
+          name: include_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, a list of pull requests from the branch would be included
+            in the response.
+          in: query
+          name: include_pullreqs
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If greater than zero, branch divergence from the default branch
+            will be included in the response. The divergence would be calculated up
+            the this many commits.
+          in: query
+          name: max_divergence
+          required: false
+          schema:
+            default: 0
+            type: integer
         - in: path
           name: repo_ref
           required: true
@@ -1503,7 +1536,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/TypesBranch'
+                  $ref: '#/components/schemas/TypesBranchExtended'
                 type: array
           description: OK
         '401':
@@ -1654,6 +1687,39 @@ paths:
     get:
       operationId: getBranch
       parameters:
+        - description: If true, the summary of check for the branch commit SHA would
+            be included in the response.
+          in: query
+          name: include_checks
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, a list of rules that apply to this branch would be included
+            in the response.
+          in: query
+          name: include_rules
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If true, a list of pull requests from the branch would be included
+            in the response.
+          in: query
+          name: include_pullreqs
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: If greater than zero, branch divergence from the default branch
+            will be included in the response. The divergence would be calculated up
+            the this many commits.
+          in: query
+          name: max_divergence
+          required: false
+          schema:
+            default: 0
+            type: integer
         - in: path
           name: repo_ref
           required: true
@@ -1669,7 +1735,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TypesBranch'
+                $ref: '#/components/schemas/TypesBranchExtended'
           description: OK
         '401':
           content:
@@ -2237,7 +2303,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/RepoCommitDivergence'
+                  $ref: '#/components/schemas/TypesCommitDivergence'
                 type: array
           description: OK
         '401':
@@ -4342,10 +4408,10 @@ paths:
           schema:
             minimum: 0
             type: integer
-        - description: By providing this parameter the description would be included
-            in the response.
+        - description: By providing this parameter the description would be excluded
+            from the response.
           in: query
-          name: include_description
+          name: exclude_description
           required: false
           schema:
             default: false
@@ -6111,6 +6177,70 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
+  /repos/{repo_ref}/pullreq/{target_branch}...{source_branch}:
+    get:
+      operationId: getPullReqByBranches
+      parameters:
+        - description: Source repository ref of the pull requests.
+          in: query
+          name: source_repo_ref
+          required: false
+          schema:
+            type: string
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: source_branch
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: target_branch
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReq'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
   /repos/{repo_ref}/purge:
     post:
       operationId: purgeRepository
@@ -6223,6 +6353,8 @@ paths:
               properties:
                 base_branch:
                   type: string
+                base_commit_sha:
+                  $ref: '#/components/schemas/ShaSHA'
                 bypass_rules:
                   type: boolean
                 dry_run:
@@ -6892,6 +7024,84 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/squash:
+    post:
+      operationId: squashBranch
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                base_branch:
+                  type: string
+                base_commit_sha:
+                  $ref: '#/components/schemas/ShaSHA'
+                bypass_rules:
+                  type: boolean
+                dry_run:
+                  type: boolean
+                dry_run_rules:
+                  type: boolean
+                head_branch:
+                  type: string
+                head_commit_sha:
+                  $ref: '#/components/schemas/ShaSHA'
+                message:
+                  type: string
+                title:
+                  type: string
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesSquashResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesMergeViolations'
+          description: Unprocessable Entity
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/summary:
     get:
       operationId: summary
@@ -7254,7 +7464,7 @@ paths:
         - upload
   /repos/{repo_ref}/webhooks:
     get:
-      operationId: listWebhooks
+      operationId: listRepoWebhooks
       parameters:
         - description: The substring which is used to filter the webhooks by their identifier.
           in: query
@@ -7343,7 +7553,7 @@ paths:
       tags:
         - webhook
     post:
-      operationId: createWebhook
+      operationId: createRepoWebhook
       parameters:
         - in: path
           name: repo_ref
@@ -7354,7 +7564,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OpenapiCreateWebhookRequest'
+              $ref: '#/components/schemas/OpenapiCreateRepoWebhookRequest'
       responses:
         '201':
           content:
@@ -7390,7 +7600,7 @@ paths:
         - webhook
   /repos/{repo_ref}/webhooks/{webhook_identifier}:
     delete:
-      operationId: deleteWebhook
+      operationId: deleteRepoWebhook
       parameters:
         - in: path
           name: repo_ref
@@ -7432,7 +7642,7 @@ paths:
       tags:
         - webhook
     get:
-      operationId: getWebhook
+      operationId: getRepoWebhook
       parameters:
         - in: path
           name: repo_ref
@@ -7478,7 +7688,7 @@ paths:
       tags:
         - webhook
     patch:
-      operationId: updateWebhook
+      operationId: updateRepoWebhook
       parameters:
         - in: path
           name: repo_ref
@@ -7494,7 +7704,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OpenapiUpdateWebhookRequest'
+              $ref: '#/components/schemas/OpenapiUpdateRepoWebhookRequest'
       responses:
         '200':
           content:
@@ -7530,7 +7740,7 @@ paths:
         - webhook
   /repos/{repo_ref}/webhooks/{webhook_identifier}/executions:
     get:
-      operationId: listWebhookExecutions
+      operationId: listRepoWebhookExecutions
       parameters:
         - description: The page to return.
           in: query
@@ -7596,7 +7806,7 @@ paths:
         - webhook
   /repos/{repo_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}:
     get:
-      operationId: getWebhookExecution
+      operationId: getRepoWebhookExecution
       parameters:
         - description: The page to return.
           in: query
@@ -7615,6 +7825,58 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: webhook_identifier
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: webhook_execution_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesWebhookExecution'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - webhook
+  /repos/{repo_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}/retrigger:
+    post:
+      operationId: retriggerRepoWebhookExecution
+      parameters:
         - in: path
           name: repo_ref
           required: true
@@ -8087,10 +8349,10 @@ paths:
           schema:
             minimum: 0
             type: integer
-        - description: By providing this parameter the description would be included
-            in the response.
+        - description: By providing this parameter the description would be excluded
+            from the response.
           in: query
-          name: include_description
+          name: exclude_description
           required: false
           schema:
             default: false
@@ -9494,7 +9756,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/TypesRepository'
+                  $ref: '#/components/schemas/RepoRepositoryOutput'
                 type: array
           description: OK
         '401':
@@ -9851,6 +10113,469 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/webhooks:
+    get:
+      operationId: listSpaceWebhooks
+      parameters:
+        - description: The substring which is used to filter the webhooks by their identifier.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The data by which the webhooks are sorted.
+          in: query
+          name: sort
+          required: false
+          schema:
+            default: identifier
+            enum:
+              - id
+              - uid
+              - display_name
+              - created
+              - updated
+            type: string
+        - description: The order of the output.
+          in: query
+          name: order
+          required: false
+          schema:
+            default: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OpenapiWebhookType'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - webhook
+    post:
+      operationId: createSpaceWebhook
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateSpaceWebhookRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiWebhookType'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - webhook
+  /spaces/{space_ref}/webhooks/{webhook_identifier}:
+    delete:
+      operationId: deleteWebhook
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: webhook_identifier
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - webhook
+    get:
+      operationId: getSpaceWebhook
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: webhook_identifier
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiWebhookType'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - webhook
+    patch:
+      operationId: updateWebhook
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: webhook_identifier
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateSpaceWebhookRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiWebhookType'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - webhook
+  /spaces/{space_ref}/webhooks/{webhook_identifier}/executions:
+    get:
+      operationId: listSpaceWebhookExecutions
+      parameters:
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: webhook_identifier
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesWebhookExecution'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - webhook
+  /spaces/{space_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}:
+    get:
+      operationId: getSpaceWebhookExecution
+      parameters:
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: webhook_identifier
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: webhook_execution_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesWebhookExecution'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - webhook
+  /spaces/{space_ref}/webhooks/{webhook_identifier}/executions/{webhook_execution_id}/retrigger:
+    post:
+      operationId: retriggerSpaceWebhookExecution
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: webhook_identifier
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: webhook_execution_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesWebhookExecution'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - webhook
   /spaces/import:
     post:
       operationId: importSpace
@@ -10337,14 +11062,45 @@ paths:
           description: Internal Server Error
       tags:
         - user
-  /user/token:
+  /user/tokens:
+    get:
+      operationId: listTokens
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesToken'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - user
     post:
       operationId: createToken
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OpenapiCreateTokenRequest'
+              $ref: '#/components/schemas/UserCreateTokenInput'
       responses:
         '201':
           content:
@@ -10352,6 +11108,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/TypesTokenResponse'
           description: Created
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - user
+  /user/tokens/{token_identifier}:
+    delete:
+      operationId: deleteToken
+      parameters:
+        - in: path
+          name: token_identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
         '500':
           content:
             application/json:
@@ -10479,6 +11285,7 @@ components:
         - agent_gitspace_state_report_error
         - agent_gitspace_state_report_stopped
         - agent_gitspace_state_report_unknown
+        - gitspace_action_auto_stop
       type: string
     EnumGitspaceInstanceStateType:
       enum:
@@ -10661,6 +11468,7 @@ components:
         - pullreq_closed
         - pullreq_comment_created
         - pullreq_created
+        - pullreq_label_assigned
         - pullreq_merged
         - pullreq_reopened
         - pullreq_updated
@@ -10677,6 +11485,15 @@ components:
             type: string
           nullable: true
           type: array
+        previous:
+          $ref: '#/components/schemas/GitBlamePartPrevious'
+      type: object
+    GitBlamePartPrevious:
+      properties:
+        commit_sha:
+          $ref: '#/components/schemas/ShaSHA'
+        file_name:
+          type: string
       type: object
     GitCommit:
       properties:
@@ -11095,6 +11912,31 @@ components:
         title:
           type: string
       type: object
+    OpenapiCreateRepoWebhookRequest:
+      properties:
+        description:
+          type: string
+        display_name:
+          type: string
+        enabled:
+          type: boolean
+        identifier:
+          type: string
+        insecure:
+          type: boolean
+        secret:
+          type: string
+        triggers:
+          items:
+            $ref: '#/components/schemas/EnumWebhookTrigger'
+          nullable: true
+          type: array
+        uid:
+          deprecated: true
+          type: string
+        url:
+          type: string
+      type: object
     OpenapiCreateRepositoryRequest:
       properties:
         default_branch:
@@ -11147,6 +11989,31 @@ components:
           deprecated: true
           type: string
       type: object
+    OpenapiCreateSpaceWebhookRequest:
+      properties:
+        description:
+          type: string
+        display_name:
+          type: string
+        enabled:
+          type: boolean
+        identifier:
+          type: string
+        insecure:
+          type: boolean
+        secret:
+          type: string
+        triggers:
+          items:
+            $ref: '#/components/schemas/EnumWebhookTrigger'
+          nullable: true
+          type: array
+        uid:
+          deprecated: true
+          type: string
+        url:
+          type: string
+      type: object
     OpenapiCreateTagRequest:
       properties:
         bypass_rules:
@@ -11172,16 +12039,6 @@ components:
           deprecated: true
           type: string
       type: object
-    OpenapiCreateTokenRequest:
-      properties:
-        identifier:
-          type: string
-        lifetime:
-          $ref: '#/components/schemas/TimeDuration'
-        uid:
-          deprecated: true
-          type: string
-      type: object
     OpenapiCreateTriggerRequest:
       properties:
         actions:
@@ -11199,31 +12056,6 @@ components:
           type: string
         uid:
           deprecated: true
-          type: string
-      type: object
-    OpenapiCreateWebhookRequest:
-      properties:
-        description:
-          type: string
-        display_name:
-          type: string
-        enabled:
-          type: boolean
-        identifier:
-          type: string
-        insecure:
-          type: boolean
-        secret:
-          type: string
-        triggers:
-          items:
-            $ref: '#/components/schemas/EnumWebhookTrigger'
-          nullable: true
-          type: array
-        uid:
-          deprecated: true
-          type: string
-        url:
           type: string
       type: object
     OpenapiDirContent:
@@ -11294,6 +12126,8 @@ components:
         bypass_rules:
           type: boolean
         dry_run:
+          type: boolean
+        dry_run_rules:
           type: boolean
         message:
           type: string
@@ -11501,6 +12335,39 @@ components:
           nullable: true
           type: string
       type: object
+    OpenapiUpdateRepoWebhookRequest:
+      properties:
+        description:
+          nullable: true
+          type: string
+        display_name:
+          nullable: true
+          type: string
+        enabled:
+          nullable: true
+          type: boolean
+        identifier:
+          nullable: true
+          type: string
+        insecure:
+          nullable: true
+          type: boolean
+        secret:
+          nullable: true
+          type: string
+        triggers:
+          items:
+            $ref: '#/components/schemas/EnumWebhookTrigger'
+          nullable: true
+          type: array
+        uid:
+          deprecated: true
+          nullable: true
+          type: string
+        url:
+          nullable: true
+          type: string
+      type: object
     OpenapiUpdateSecretRequest:
       properties:
         data:
@@ -11525,6 +12392,39 @@ components:
     OpenapiUpdateSpaceRequest:
       properties:
         description:
+          nullable: true
+          type: string
+      type: object
+    OpenapiUpdateSpaceWebhookRequest:
+      properties:
+        description:
+          nullable: true
+          type: string
+        display_name:
+          nullable: true
+          type: string
+        enabled:
+          nullable: true
+          type: boolean
+        identifier:
+          nullable: true
+          type: string
+        insecure:
+          nullable: true
+          type: boolean
+        secret:
+          nullable: true
+          type: string
+        triggers:
+          items:
+            $ref: '#/components/schemas/EnumWebhookTrigger'
+          nullable: true
+          type: array
+        uid:
+          deprecated: true
+          nullable: true
+          type: string
+        url:
           nullable: true
           type: string
       type: object
@@ -11565,39 +12465,6 @@ components:
           type: string
         uid:
           deprecated: true
-          nullable: true
-          type: string
-      type: object
-    OpenapiUpdateWebhookRequest:
-      properties:
-        description:
-          nullable: true
-          type: string
-        display_name:
-          nullable: true
-          type: string
-        enabled:
-          nullable: true
-          type: boolean
-        identifier:
-          nullable: true
-          type: string
-        insecure:
-          nullable: true
-          type: boolean
-        secret:
-          nullable: true
-          type: string
-        triggers:
-          items:
-            $ref: '#/components/schemas/EnumWebhookTrigger'
-          nullable: true
-          type: array
-        uid:
-          deprecated: true
-          nullable: true
-          type: string
-        url:
           nullable: true
           type: string
       type: object
@@ -11747,13 +12614,6 @@ components:
         check_sum:
           type: string
         comment_id:
-          type: integer
-      type: object
-    RepoCommitDivergence:
-      properties:
-        ahead:
-          type: integer
-        behind:
           type: integer
       type: object
     RepoCommitDivergenceRequest:
@@ -12003,7 +12863,14 @@ components:
           type: boolean
         ssh_enabled:
           type: boolean
+        ui:
+          $ref: '#/components/schemas/SystemUI'
         user_signup_allowed:
+          type: boolean
+      type: object
+    SystemUI:
+      properties:
+        show_plugin:
           type: boolean
       type: object
     TimeDuration:
@@ -12021,14 +12888,28 @@ components:
         token:
           $ref: '#/components/schemas/TypesSecretRef'
       type: object
-    TypesBranch:
+    TypesBranchExtended:
       properties:
+        check_summary:
+          $ref: '#/components/schemas/TypesCheckCountSummary'
         commit:
           $ref: '#/components/schemas/TypesCommit'
+        commit_divergence:
+          $ref: '#/components/schemas/TypesCommitDivergence'
+        is_default:
+          type: boolean
         name:
           type: string
+        pull_requests:
+          items:
+            $ref: '#/components/schemas/TypesPullReq'
+          type: array
+        rules:
+          items:
+            $ref: '#/components/schemas/TypesRuleInfo'
+          type: array
         sha:
-          type: string
+          $ref: '#/components/schemas/ShaSHA'
       type: object
     TypesChangeStats:
       properties:
@@ -12063,6 +12944,19 @@ components:
         summary:
           type: string
         updated:
+          type: integer
+      type: object
+    TypesCheckCountSummary:
+      properties:
+        error:
+          type: integer
+        failure:
+          type: integer
+        pending:
+          type: integer
+        running:
+          type: integer
+        success:
           type: integer
       type: object
     TypesCheckPayload:
@@ -12137,6 +13031,13 @@ components:
           $ref: '#/components/schemas/TypesCommitStats'
         title:
           type: string
+      type: object
+    TypesCommitDivergence:
+      properties:
+        ahead:
+          type: integer
+        behind:
+          type: integer
       type: object
     TypesCommitFileStats:
       properties:
@@ -12228,7 +13129,7 @@ components:
             $ref: '#/components/schemas/TypesRuleViolations'
           type: array
         sha:
-          type: string
+          $ref: '#/components/schemas/ShaSHA'
       type: object
     TypesDeleteBranchOutput:
       properties:
@@ -12331,6 +13232,15 @@ components:
         updated:
           type: integer
       type: object
+    TypesExecutionInfo:
+      properties:
+        number:
+          type: integer
+        pipeline_id:
+          type: integer
+        status:
+          $ref: '#/components/schemas/EnumCIStatus'
+      type: object
     TypesGithubConnectorData:
       properties:
         api_url:
@@ -12419,6 +13329,9 @@ components:
           type: integer
         created:
           type: integer
+        has_git_changes:
+          nullable: true
+          type: boolean
         identifier:
           type: string
         last_heartbeat:
@@ -12439,9 +13352,6 @@ components:
           $ref: '#/components/schemas/EnumGitspaceInstanceStateType'
         total_time_used:
           type: integer
-        tracked_changes:
-          nullable: true
-          type: string
         updated:
           type: integer
         url:
@@ -12689,6 +13599,10 @@ components:
           type: array
         dry_run:
           type: boolean
+        dry_run_rules:
+          type: boolean
+        mergeable:
+          type: boolean
         minimum_required_approvals_count:
           type: integer
         minimum_required_approvals_count_latest:
@@ -12750,6 +13664,10 @@ components:
           type: integer
         identifier:
           type: string
+        last_executions:
+          items:
+            $ref: '#/components/schemas/TypesExecutionInfo'
+          type: array
         repo_id:
           type: integer
         repo_uid:
@@ -12848,6 +13766,12 @@ components:
           $ref: '#/components/schemas/TypesPrincipalInfo'
         number:
           type: integer
+        rebase_check_status:
+          $ref: '#/components/schemas/EnumMergeCheckStatus'
+        rebase_conflicts:
+          items:
+            type: string
+          type: array
         source_branch:
           type: string
         source_repo_id:
@@ -13276,6 +14200,23 @@ components:
         updated:
           type: integer
       type: object
+    TypesSquashResponse:
+      properties:
+        conflict_files:
+          items:
+            type: string
+          type: array
+        dry_run:
+          type: boolean
+        dry_run_rules:
+          type: boolean
+        new_head_branch_sha:
+          $ref: '#/components/schemas/ShaSHA'
+        rule_violations:
+          items:
+            $ref: '#/components/schemas/TypesRuleViolations'
+          type: array
+      type: object
     TypesStage:
       properties:
         arch:
@@ -13536,6 +14477,16 @@ components:
           type: string
         usage:
           $ref: '#/components/schemas/EnumPublicKeyUsage'
+      type: object
+    UserCreateTokenInput:
+      properties:
+        identifier:
+          type: string
+        lifetime:
+          $ref: '#/components/schemas/TimeDuration'
+        uid:
+          deprecated: true
+          type: string
       type: object
     UserUpdateInput:
       properties:

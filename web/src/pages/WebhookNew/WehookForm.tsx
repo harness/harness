@@ -32,7 +32,7 @@ import { FormGroup } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
 import * as yup from 'yup'
 import React from 'react'
-import type { OpenapiUpdateWebhookRequest, EnumWebhookTrigger, OpenapiWebhookType } from 'services/code'
+import type { OpenapiUpdateRepoWebhookRequest, EnumWebhookTrigger, OpenapiWebhookType } from 'services/code'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import { WebhookIndividualEvent, type GitInfoProps, WebhookEventType } from 'utils/GitUtils'
@@ -177,7 +177,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
 
             const secret = (formData.secret || '').trim()
 
-            const data: OpenapiUpdateWebhookRequest = {
+            const data: OpenapiUpdateRepoWebhookRequest = {
               identifier: formData.name,
               description: formData.description,
               url: formData.url,

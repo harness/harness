@@ -16,13 +16,13 @@
 
 import { useGet } from 'restful-react'
 import { useAtomValue } from 'jotai'
-import type { TypesBranch } from 'services/code'
+import type { TypesBranchExtended } from 'services/code'
 import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { repoMetadataAtom } from 'atoms/repoMetadata'
 
 export function useFindGitBranch(branchName?: string, includeCommit = false) {
   const repoMetadata = useAtomValue(repoMetadataAtom)
-  const { data } = useGet<TypesBranch[]>({
+  const { data } = useGet<TypesBranchExtended[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/branches`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,

@@ -39,8 +39,8 @@ import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type {
   OpenapiCalculateCommitDivergenceRequest,
-  TypesBranch,
-  RepoCommitDivergence,
+  TypesBranchExtended,
+  TypesCommitDivergence,
   RepoRepositoryOutput
 } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
@@ -55,7 +55,7 @@ import css from './BranchesContent.module.scss'
 interface BranchesContentProps {
   searchTerm?: string
   repoMetadata: RepoRepositoryOutput
-  branches: TypesBranch[]
+  branches: TypesBranchExtended[]
   onDeleteSuccess: () => void
 }
 
@@ -67,7 +67,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/commits/calculate-divergence`
   })
-  const [divergence, setDivergence] = useState<RepoCommitDivergence[]>([])
+  const [divergence, setDivergence] = useState<TypesCommitDivergence[]>([])
   const branchDivergenceRequestBody: OpenapiCalculateCommitDivergenceRequest = useMemo(() => {
     return {
       maxCount: 0,
@@ -80,7 +80,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
     if (isMounted.current && branchDivergenceRequestBody.requests?.length) {
       setDivergence([])
       getBranchDivergence(branchDivergenceRequestBody)
-        .then((response: RepoCommitDivergence[]) => {
+        .then((response: TypesCommitDivergence[]) => {
           if (isMounted.current) {
             setDivergence(response)
           }
@@ -89,12 +89,12 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
     }
   }, [getBranchDivergence, branchDivergenceRequestBody, isMounted])
 
-  const columns: Column<TypesBranch>[] = useMemo(
+  const columns: Column<TypesBranchExtended>[] = useMemo(
     () => [
       {
         Header: getString('branch'),
         width: '30%',
-        Cell: ({ row }: CellProps<TypesBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranchExtended>) => {
           return (
             <Text
               lineClamp={1}
@@ -119,7 +119,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         Header: getString('status'),
         Id: 'status',
         width: 'calc(70% - 230px)',
-        Cell: ({ row }: CellProps<TypesBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranchExtended>) => {
           if (row.original?.name === repoMetadata.default_branch) {
             return (
               <Container flex={{ align: 'center-center' }} width={150}>
@@ -141,7 +141,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         Header: getString('commit'),
         Id: 'commit',
         width: '15%',
-        Cell: ({ row }: CellProps<TypesBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranchExtended>) => {
           return (
             <CommitActions
               sha={row.original.commit?.sha as string}
@@ -157,7 +157,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
       {
         Header: getString('updated'),
         width: '200px',
-        Cell: ({ row }: CellProps<TypesBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranchExtended>) => {
           return (
             <Text lineClamp={1} className={css.rowText} color={Color.BLACK} tag="div">
               <Avatar hoverCard={false} size="small" name={row.original.commit?.author?.identity?.name || ''} />
@@ -170,7 +170,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
       {
         id: 'action',
         width: '30px',
-        Cell: ({ row }: CellProps<TypesBranch>) => {
+        Cell: ({ row }: CellProps<TypesBranchExtended>) => {
           const { violation, bypassable, bypassed, setAllStates } = useRuleViolationCheck()
           const [persistModal, setPersistModal] = useState(true)
           const { mutate: deleteBranch } = useMutate({
@@ -277,7 +277,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
 
   return (
     <Container className={css.container}>
-      <Table<TypesBranch>
+      <Table<TypesBranchExtended>
         className={css.table}
         columns={columns}
         data={branches || []}
