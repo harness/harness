@@ -55,6 +55,7 @@ func (c *Controller) Delete(
 	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
 	gitspaceConfig.GitspaceInstance = instance
 	if instance == nil || instance.State == enum.GitspaceInstanceStateUninitialized {
+		gitspaceConfig.IsMarkedForDeletion = true
 		gitspaceConfig.IsDeleted = true
 		if err = c.gitspaceSvc.UpdateConfig(ctx, gitspaceConfig); err != nil {
 			return fmt.Errorf("failed to mark gitspace config as deleted: %w", err)
@@ -87,6 +88,12 @@ func (c *Controller) removeGitspace(ctx context.Context, config types.GitspaceCo
 				config.GitspaceInstance.Identifier)
 			return
 		}
+	} else if config.GitspaceInstance.State == enum.GitSpaceInstanceStateCleaning &&
+		time.Since(time.UnixMilli(config.GitspaceInstance.Updated)).Milliseconds() <=
+			(gitspaceInstanceCleaningTimedOutMins*60*1000) {
+		log.Ctx(ctx).Warn().Msgf("gitspace start/stop is already pending for : %q",
+			config.GitspaceInstance.Identifier)
+		return
 	}
 	if err := c.gitspaceSvc.TriggerDelete(ctx, config); err != nil {
 		log.Ctx(ctx).Err(err).Msgf("error during triggering delete for gitspace instance %s",

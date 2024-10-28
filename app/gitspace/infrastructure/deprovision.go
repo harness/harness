@@ -27,6 +27,7 @@ func (i infraProvisioner) TriggerDeprovision(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
+	canDeleteUserData bool,
 ) error {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, gitspaceConfig.InfraProviderResource)
 	if err != nil {
@@ -39,9 +40,9 @@ func (i infraProvisioner) TriggerDeprovision(
 	}
 
 	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
-		return i.triggerDeprovisionForNewProvisioning(ctx, infraProvider, gitspaceConfig, infra)
+		return i.triggerDeprovisionForNewProvisioning(ctx, infraProvider, gitspaceConfig, infra, canDeleteUserData)
 	}
-	return i.triggerDeprovisionForExistingProvisioning(ctx, infraProvider, infra)
+	return i.triggerDeprovisionForExistingProvisioning(ctx, infraProvider, infra, canDeleteUserData)
 }
 
 func (i infraProvisioner) triggerDeprovisionForNewProvisioning(
@@ -49,6 +50,7 @@ func (i infraProvisioner) triggerDeprovisionForNewProvisioning(
 	infraProvider infraprovider.InfraProvider,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
+	canDeleteUserData bool,
 ) error {
 	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx, gitspaceConfig.SpaceID, gitspaceConfig.GitspaceInstance.ID)
@@ -62,7 +64,7 @@ func (i infraProvisioner) triggerDeprovisionForNewProvisioning(
 		return nil
 	}
 
-	err = infraProvider.Deprovision(ctx, infra)
+	err = infraProvider.Deprovision(ctx, infra, canDeleteUserData)
 	if err != nil {
 		return fmt.Errorf("unable to trigger deprovision infra %+v: %w", infra, err)
 	}
@@ -74,8 +76,9 @@ func (i infraProvisioner) triggerDeprovisionForExistingProvisioning(
 	ctx context.Context,
 	infraProvider infraprovider.InfraProvider,
 	infra types.Infrastructure,
+	canDeleteUserData bool,
 ) error {
-	err := infraProvider.Deprovision(ctx, infra)
+	err := infraProvider.Deprovision(ctx, infra, canDeleteUserData)
 	if err != nil {
 		return fmt.Errorf("unable to trigger deprovision infra %+v: %w", infra, err)
 	}

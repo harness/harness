@@ -27,5 +27,6 @@ var infraEvents = []InfraEvent{
 const (
 	InfraEventProvision   InfraEvent = "provision"
 	InfraEventStop        InfraEvent = "stop"
+	InfraEventCleanup     InfraEvent = "cleanup"
 	InfraEventDeprovision InfraEvent = "deprovision"
 )

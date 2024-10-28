@@ -25,6 +25,9 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 )
 
+// gitspaceInstanceCleaningTimedOutMins is timeout for which a gitspace instance can be in cleaning state.
+const gitspaceInstanceCleaningTimedOutMins = 10
+
 type Controller struct {
 	authorizer            authz.Authorizer
 	infraProviderSvc      *infraprovider.Service

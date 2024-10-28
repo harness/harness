@@ -182,8 +182,51 @@ func (d DockerProvider) Stop(ctx context.Context, infra types.Infrastructure) er
 	return nil
 }
 
-// Deprovision deletes the volume created by Provision. It does not stop the docker engine.
-func (d DockerProvider) Deprovision(ctx context.Context, infra types.Infrastructure) error {
+// CleanupInstanceResources is NOOP as this provider does not utilise infra exclusively associated to a gitspace
+// instance.
+func (d DockerProvider) CleanupInstanceResources(ctx context.Context, infra types.Infrastructure) error {
+	event := &events.GitspaceInfraEventPayload{
+		Infra: infra,
+		Type:  enum.InfraEventCleanup,
+	}
+
+	infra.Status = enum.InfraStatusStopped
+
+	err := d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
+	if err != nil {
+		return fmt.Errorf("error emitting gitspace infra event for cleanup: %w", err)
+	}
+
+	return nil
+}
+
+// Deprovision is NOOP if canDeleteUserData = false
+// Deprovision deletes the volume created by Provision method if canDeleteUserData = false.
+// Deprovision does not stop the docker engine in any case.
+func (d DockerProvider) Deprovision(ctx context.Context, infra types.Infrastructure, canDeleteUserData bool) error {
+	if canDeleteUserData {
+		err := d.deleteVolume(ctx, infra)
+		if err != nil {
+			return fmt.Errorf("couldn't delete volume for %s : %w", infra.Storage, err)
+		}
+	}
+
+	infra.Status = enum.InfraStatusDestroyed
+
+	event := &events.GitspaceInfraEventPayload{
+		Infra: infra,
+		Type:  enum.InfraEventDeprovision,
+	}
+
+	err := d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
+	if err != nil {
+		return fmt.Errorf("error emitting gitspace infra event for deprovisioning: %w", err)
+	}
+
+	return nil
+}
+
+func (d DockerProvider) deleteVolume(ctx context.Context, infra types.Infrastructure) error {
 	dockerClient, err := d.dockerClientFactory.NewDockerClient(ctx, types.Infrastructure{
 		ProviderType:    enum.InfraProviderTypeDocker,
 		InputParameters: infra.InputParameters,
@@ -199,24 +242,37 @@ func (d DockerProvider) Deprovision(ctx context.Context, infra types.Infrastruct
 		}
 	}()
 
+	// check if volume is available
+	volumeList, err := dockerClient.VolumeList(ctx, volume.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("couldn't list the volume: %w", err)
+	}
+
+	if !findVolume(infra.Storage, volumeList.Volumes) {
+		// given volume does not exist, return nil
+		return nil
+	}
+
 	err = dockerClient.VolumeRemove(ctx, infra.Storage, true)
 	if err != nil {
 		return fmt.Errorf("couldn't delete volume for %s : %w", infra.Storage, err)
 	}
 
-	infra.Status = enum.InfraStatusDestroyed
-
-	event := &events.GitspaceInfraEventPayload{
-		Infra: infra,
-		Type:  enum.InfraEventDeprovision,
-	}
-
-	err = d.eventReporter.EmitGitspaceInfraEvent(ctx, events.GitspaceInfraEvent, event)
-	if err != nil {
-		return fmt.Errorf("error emitting gitspace infra event for deprovisioning: %w", err)
-	}
-
 	return nil
+}
+
+func findVolume(target string, volumes []*volume.Volume) bool {
+	for _, vol := range volumes {
+		if vol == nil {
+			continue
+		}
+
+		if vol.Name == target {
+			return true
+		}
+	}
+
+	return false
 }
 
 // AvailableParams returns empty slice as no params are defined.

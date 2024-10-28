@@ -36,16 +36,19 @@ const (
 	GitspaceInstanceStateUnknown       GitspaceInstanceStateType = "unknown"
 	GitspaceInstanceStateError         GitspaceInstanceStateType = "error"
 	GitspaceInstanceStateDeleted       GitspaceInstanceStateType = "deleted"
+	GitspaceInstanceStateCleaned       GitspaceInstanceStateType = "cleaned"
 
 	GitspaceInstanceStateStarting GitspaceInstanceStateType = "starting"
 	GitspaceInstanceStateStopping GitspaceInstanceStateType = "stopping"
+	GitSpaceInstanceStateCleaning GitspaceInstanceStateType = "cleaning"
 )
 
 func (g GitspaceInstanceStateType) IsFinalStatus() bool {
 	//nolint:exhaustive
 	switch g {
 	case GitspaceInstanceStateDeleted,
-		GitspaceInstanceStateError:
+		GitspaceInstanceStateError,
+		GitspaceInstanceStateCleaned:
 		return true
 	default:
 		return false
@@ -56,7 +59,8 @@ func (g GitspaceInstanceStateType) IsBusyStatus() bool {
 	//nolint:exhaustive
 	switch g {
 	case GitspaceInstanceStateStarting,
-		GitspaceInstanceStateStopping:
+		GitspaceInstanceStateStopping,
+		GitSpaceInstanceStateCleaning:
 		return true
 	default:
 		return false

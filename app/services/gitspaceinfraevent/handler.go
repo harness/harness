@@ -68,12 +68,21 @@ func (s *Service) handleGitspaceInfraEvent(
 		instanceState, resumeDeleteErr := s.orchestrator.ResumeDeleteGitspace(ctx, *config, payload.Infra)
 		if resumeDeleteErr != nil {
 			err = fmt.Errorf("failed to resume delete gitspace: %w", resumeDeleteErr)
-		} else {
+		} else if config.IsMarkedForDeletion {
 			config.IsDeleted = true
 			updateErr := s.gitspaceSvc.UpdateConfig(ctx, config)
 			if updateErr != nil {
 				err = fmt.Errorf("failed to delete gitspace config with ID: %s %w", config.Identifier, updateErr)
 			}
+		}
+
+		instance.State = instanceState
+	case enum.InfraEventCleanup:
+		instanceState, resumeCleanupErr := s.orchestrator.ResumeCleanupInstanceResources(ctx, *config, payload.Infra)
+		if resumeCleanupErr != nil {
+			s.emitGitspaceConfigEvent(ctx, config, enum.GitspaceEventTypeInfraCleanupFailed)
+
+			err = fmt.Errorf("failed to resume cleanup gitspace: %w", resumeCleanupErr)
 		}
 
 		instance.State = instanceState

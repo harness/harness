@@ -49,8 +49,13 @@ type InfraProvider interface {
 	// Stop frees up the resources allocated against a gitspace, which can be freed.
 	Stop(ctx context.Context, infra types.Infrastructure) error
 
-	// Deprovision removes all infrastructure provisioned against the gitspace.
-	Deprovision(ctx context.Context, infra types.Infrastructure) error
+	// CleanupInstanceResources cleans up resources exclusively allocated to a gitspace instance.
+	CleanupInstanceResources(ctx context.Context, infra types.Infrastructure) error
+
+	// Deprovision removes infrastructure provisioned against a gitspace.
+	// canDeleteUserData = false -> remove all resources except storage where user has stored it's data.
+	// canDeleteUserData = true -> remove all resources including storage.
+	Deprovision(ctx context.Context, infra types.Infrastructure, canDeleteUserData bool) error
 
 	// AvailableParams provides a schema to define the infrastructure.
 	AvailableParams() []types.InfraProviderParameterSchema

@@ -52,15 +52,32 @@ type InfraProvisioner interface {
 		deprovisionedInfra types.Infrastructure,
 	) error
 
-	// TriggerDeprovision triggers deprovisionign of all the resources created for the Gitspace.
+	// TriggerDeprovision triggers deprovisionign of resources created for a Gitspace.
+	// canDeleteUserData = true -> triggers deprovision of all resources
+	// canDeleteUserData = false -> triggers deprovision of all resources except storage associated to user data.
 	TriggerDeprovision(
+		ctx context.Context,
+		gitspaceConfig types.GitspaceConfig,
+		infra types.Infrastructure,
+		canDeleteUserData bool,
+	) error
+
+	// ResumeDeprovision stores the deprovisioned infra details in the db depending on the provisioning type.
+	ResumeDeprovision(
+		ctx context.Context,
+		gitspaceConfig types.GitspaceConfig,
+		deprovisionedInfra types.Infrastructure,
+	) error
+
+	// TriggerCleanupInstance cleans up resources exclusive for a gitspace instance
+	TriggerCleanupInstance(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
 		infra types.Infrastructure,
 	) error
 
-	// ResumeDeprovision stores the deprovisioned infra details in the db depending on the provisioning type.
-	ResumeDeprovision(
+	// ResumeCleanupInstance stores the deprovisioned infra details in the db depending on the provisioning type.
+	ResumeCleanupInstance(
 		ctx context.Context,
 		gitspaceConfig types.GitspaceConfig,
 		deprovisionedInfra types.Infrastructure,

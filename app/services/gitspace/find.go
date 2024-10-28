@@ -80,10 +80,11 @@ func (c *Service) setInstance(
 func (c *Service) FindByID(
 	ctx context.Context,
 	id int64,
+	includeDeleted bool,
 ) (*types.GitspaceConfig, error) {
 	var gitspaceConfigResult *types.GitspaceConfig
 	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		gitspaceConfig, err := c.gitspaceConfigStore.Find(ctx, id)
+		gitspaceConfig, err := c.gitspaceConfigStore.Find(ctx, id, includeDeleted)
 		gitspaceConfigResult = gitspaceConfig
 		if err != nil {
 			return fmt.Errorf("failed to find gitspace config: %w", err)

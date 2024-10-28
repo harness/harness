@@ -67,6 +67,13 @@ func GetGitspaceStateFromInstance(
 			return GitspaceStateError, nil
 		}
 		return GitspaceStateStopping, nil
+	case GitSpaceInstanceStateCleaning:
+		if lastUpdateTimeExceeded(lastUpdateTime) {
+			return GitspaceStateError, nil
+		}
+		return GitspaceStateStopping, nil
+	case GitspaceInstanceStateCleaned:
+		return GitspaceStateStopped, nil
 	default:
 		return GitspaceStateError, fmt.Errorf("unsupported gitspace instance state %s", string(instanceState))
 	}

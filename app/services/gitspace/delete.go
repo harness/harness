@@ -24,5 +24,5 @@ func (c *Service) TriggerDelete(
 	ctx context.Context,
 	config types.GitspaceConfig,
 ) error {
-	return c.orchestrator.TriggerDeleteGitspace(ctx, config)
+	return c.orchestrator.TriggerDeleteGitspace(ctx, config, true)
 }

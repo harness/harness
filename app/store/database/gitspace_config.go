@@ -133,12 +133,16 @@ func (s gitspaceConfigStore) Count(ctx context.Context, filter *types.GitspaceFi
 	return count, nil
 }
 
-func (s gitspaceConfigStore) Find(ctx context.Context, id int64) (*types.GitspaceConfig, error) {
+func (s gitspaceConfigStore) Find(ctx context.Context, id int64, includeDeleted bool) (*types.GitspaceConfig, error) {
 	stmt := database.Builder.
 		Select(gitspaceConfigSelectColumns).
 		From(gitspaceConfigsTable).
-		Where("gconf_id = ?", id). //nolint:goconst
-		Where("gconf_is_deleted = ?", false)
+		Where("gconf_id = ?", id) //nolint:goconst
+
+	if !includeDeleted {
+		stmt = stmt.Where("gconf_is_deleted = ?", false)
+	}
+
 	dst := new(gitspaceConfig)
 	sql, args, err := stmt.ToSql()
 	if err != nil {

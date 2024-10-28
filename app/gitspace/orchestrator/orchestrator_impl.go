@@ -199,12 +199,89 @@ func (o orchestrator) stopAndRemoveGitspaceContainer(
 	return nil
 }
 
+func (o orchestrator) TriggerCleanupInstanceResources(ctx context.Context, gitspaceConfig types.GitspaceConfig) error {
+	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig,
+		[]enum.InfraStatus{
+			enum.InfraStatusProvisioned,
+			enum.InfraStatusStopped,
+			enum.InfraStatusPending,
+			enum.InfraStatusUnknown,
+			enum.InfraStatusDestroyed,
+		})
+	if err != nil {
+		return fmt.Errorf(
+			"unable to find provisioned infra while triggering cleanup for gitspace instance %s: %w",
+			gitspaceConfig.GitspaceInstance.Identifier, err)
+	}
+
+	if gitspaceConfig.GitspaceInstance.State != enum.GitSpaceInstanceStateCleaning {
+		return fmt.Errorf("cannot trigger cleanup, expected state: %s, actual state: %s ",
+			enum.GitSpaceInstanceStateCleaning,
+			gitspaceConfig.GitspaceInstance.State,
+		)
+	}
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraCleanupStart)
+
+	err = o.infraProvisioner.TriggerCleanupInstance(ctx, gitspaceConfig, *infra)
+	if err != nil {
+		return fmt.Errorf("cannot trigger cleanup infrastructure with ID %s: %w",
+			gitspaceConfig.InfraProviderResource.UID,
+			err,
+		)
+	}
+
+	return nil
+}
+
+func (o orchestrator) ResumeCleanupInstanceResources(
+	ctx context.Context,
+	gitspaceConfig types.GitspaceConfig,
+	cleanedUpInfra types.Infrastructure,
+) (enum.GitspaceInstanceStateType, error) {
+	instanceState := enum.GitspaceInstanceStateError
+
+	err := o.infraProvisioner.ResumeCleanupInstance(ctx, gitspaceConfig, cleanedUpInfra)
+	if err != nil {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraCleanupFailed)
+
+		return instanceState, fmt.Errorf(
+			"cannot clenup provisioned infrastructure with ID %s: %w",
+			gitspaceConfig.InfraProviderResource.UID,
+			err,
+		)
+	}
+
+	if cleanedUpInfra.Status != enum.InfraStatusDestroyed && cleanedUpInfra.Status != enum.InfraStatusStopped {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraCleanupFailed)
+
+		return instanceState, fmt.Errorf(
+			"infra state is %v, should be %v for gitspace instance identifier %s",
+			cleanedUpInfra.Status,
+			[]enum.InfraStatus{enum.InfraStatusDestroyed, enum.InfraStatusStopped},
+			gitspaceConfig.GitspaceInstance.Identifier)
+	}
+
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraCleanupCompleted)
+
+	instanceState = enum.GitspaceInstanceStateCleaned
+
+	return instanceState, nil
+}
+
 func (o orchestrator) TriggerDeleteGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
+	canDeleteUserData bool,
 ) error {
 	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig,
-		[]enum.InfraStatus{enum.InfraStatusProvisioned, enum.InfraStatusStopped, enum.InfraStatusDestroyed})
+		[]enum.InfraStatus{
+			enum.InfraStatusProvisioned,
+			enum.InfraStatusStopped,
+			enum.InfraStatusDestroyed,
+			enum.InfraStatusError,
+			enum.InfraStatusUnknown,
+		})
 	if err != nil {
 		return fmt.Errorf(
 			"unable to find provisioned infra while triggering delete for gitspace instance %s: %w",
@@ -217,7 +294,7 @@ func (o orchestrator) TriggerDeleteGitspace(
 	}
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningStart)
 
-	err = o.infraProvisioner.TriggerDeprovision(ctx, gitspaceConfig, *infra)
+	err = o.infraProvisioner.TriggerDeprovision(ctx, gitspaceConfig, *infra, canDeleteUserData)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
 

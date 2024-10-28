@@ -95,6 +95,11 @@ const (
 	GitspaceEventTypeInfraStopCompleted GitspaceEventType = "infra_stop_completed"
 	GitspaceEventTypeInfraStopFailed    GitspaceEventType = "infra_stop_failed"
 
+	// Infra cleanup events.
+	GitspaceEventTypeInfraCleanupStart     GitspaceEventType = "infra_cleanup_start"
+	GitspaceEventTypeInfraCleanupCompleted GitspaceEventType = "infra_cleanup_completed"
+	GitspaceEventTypeInfraCleanupFailed    GitspaceEventType = "infra_cleanup_failed"
+
 	// Infra deprovisioning events.
 	GitspaceEventTypeInfraDeprovisioningStart     GitspaceEventType = "infra_deprovisioning_start"
 	GitspaceEventTypeInfraDeprovisioningCompleted GitspaceEventType = "infra_deprovisioning_completed"

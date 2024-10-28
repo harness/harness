@@ -648,7 +648,7 @@ type (
 
 	GitspaceConfigStore interface {
 		// Find returns a gitspace config given a ID from the datastore.
-		Find(ctx context.Context, id int64) (*types.GitspaceConfig, error)
+		Find(ctx context.Context, id int64, includeDeleted bool) (*types.GitspaceConfig, error)
 
 		// FindAll returns list of gitspace configs given a IDs from the datastore.
 		FindAll(ctx context.Context, id []int64) ([]*types.GitspaceConfig, error)

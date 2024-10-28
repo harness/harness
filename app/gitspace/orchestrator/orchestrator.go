@@ -43,9 +43,21 @@ type Orchestrator interface {
 		stoppedInfra types.Infrastructure,
 	) (enum.GitspaceInstanceStateType, error)
 
+	// TriggerCleanupInstanceResources cleans up all the resources exclusive to gitspace instance.
+	TriggerCleanupInstanceResources(ctx context.Context, gitspaceConfig types.GitspaceConfig) error
+
+	// ResumeCleanupInstanceResources saves the cleaned up infra details.
+	ResumeCleanupInstanceResources(
+		ctx context.Context,
+		gitspaceConfig types.GitspaceConfig,
+		cleanedUpInfra types.Infrastructure,
+	) (enum.GitspaceInstanceStateType, error)
+
 	// TriggerDeleteGitspace removes the Gitspace container and triggers infra deprovisioning to deprovision
-	// all the infra resources.
-	TriggerDeleteGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) error
+	// the infra resources.
+	// canDeleteUserData = false -> trigger deprovision of all resources except storage associated to user data.
+	// canDeleteUserData = true -> trigger deprovision of all resources.
+	TriggerDeleteGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig, canDeleteUserData bool) error
 
 	// ResumeDeleteGitspace saves the deprovisioned infra details.
 	ResumeDeleteGitspace(
