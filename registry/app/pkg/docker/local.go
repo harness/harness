@@ -34,7 +34,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/registry/app/dist_temp/dcontext"
 	"github.com/harness/gitness/registry/app/dist_temp/errcode"
@@ -403,25 +402,6 @@ func (r *LocalRegistry) fetchBlobInternal(
 		}
 		return responseHeaders, nil, -1, nil, "", errs
 	}
-
-	if http.MethodGet == method {
-		// This GoRoutine is used to update the bandwidth stat of the artifact
-		go func(art pkg.RegistryInfo, dgst digest.Digest) {
-			// Cloning Context.
-			session, _ := request.AuthSessionFrom(ctx)
-			ctx3 := request.WithAuthSession(context.Background(), session)
-			err := r.dbBlobDownloadComplete(ctx3, dgst, info)
-			if err != nil {
-				log.Ctx(ctx3).Error().Stack().Str("goRoutine",
-					"UpdateBandwidth").Err(err).Msgf("error while putting bandwidth stat of artifact, %v",
-					err)
-				return
-			}
-			log.Ctx(ctx3).Info().Str("goRoutine",
-				"UpdateBandwidth").Msgf("Successfully updated the bandwidth stat metrics %s", art.Digest)
-		}(info, dgst)
-	}
-
 	if redirectURL != "" {
 		return responseHeaders, nil, -1, nil, redirectURL, errs
 	}
@@ -440,24 +420,6 @@ func (r *LocalRegistry) PullManifest(
 	ifNoneMatchHeader []string,
 ) (responseHeaders *commons.ResponseHeaders, descriptor manifest.Descriptor, manifest manifest.Manifest, errs []error) {
 	responseHeaders, descriptor, manifest, errs = r.ManifestExist(ctx, artInfo, acceptHeaders, ifNoneMatchHeader)
-
-	// This GoRoutine is used to update the download stat of the artifact when manifest is pulled
-	go func(art pkg.RegistryInfo) {
-		// Cloning Context.
-		session, _ := request.AuthSessionFrom(ctx)
-		ctx2 := request.WithAuthSession(context.Background(), session)
-		ctx2 = log.Ctx(ctx2).With().
-			Str("goRoutine", "UpdateDownload").
-			Logger().WithContext(ctx2)
-		err := r.dbGetManifestComplete(ctx2, artInfo)
-		if err != nil {
-			log.Ctx(ctx2).Error().Str("goRoutine",
-				"UpdateDownload").Stack().Err(err).Msgf("error while putting download stat of artifact, %v", err)
-			return
-		}
-		log.Ctx(ctx2).Info().Str("goRoutine",
-			"UpdateDownload").Msgf("Successfully updated the download stat metrics %s", art.Digest)
-	}(artInfo)
 	return responseHeaders, descriptor, manifest, errs
 }
 
@@ -1616,98 +1578,6 @@ func (r *LocalRegistry) dbBlobLinkExists(
 	return nil
 }
 
-func (r *LocalRegistry) dbBlobDownloadComplete(
-	ctx context.Context,
-	dgst digest.Digest,
-	info pkg.RegistryInfo,
-) error {
-	err := r.tx.WithTx(
-		ctx, func(ctx context.Context) error {
-			registry, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
-			if err != nil {
-				return err
-			}
-
-			blob, err := r.blobRepo.FindByDigestAndRootParentID(ctx, dgst, info.RootParentID)
-			if err != nil {
-				return err
-			}
-
-			image, err := r.imageDao.GetByName(ctx, registry.ID, info.Image)
-			if err != nil {
-				return err
-			}
-
-			bandwidthStat := &types.BandwidthStat{
-				ImageID: image.ID,
-				Type:    types.BandwidthTypeDOWNLOAD,
-				Bytes:   blob.Size,
-			}
-
-			if err := r.bandwidthStatDao.Create(ctx, bandwidthStat); err != nil {
-				return err
-			}
-
-			return nil
-		}, dbtx.TxDefault,
-	)
-	if err != nil {
-		log.Error().Msgf("failed to put download bandwidth stat in database: %v", err)
-		return fmt.Errorf("committing database transaction: %w", err)
-	}
-
-	return nil
-}
-
-func (r *LocalRegistry) dbGetManifestComplete(
-	ctx context.Context,
-	info pkg.RegistryInfo,
-) error {
-	// FIXME: Update logic incase requests are internal. Currently, we are updating the stats for all requests.
-	if info.Digest == "" {
-		return nil
-	}
-
-	err := r.tx.WithTx(
-		ctx, func(ctx context.Context) error {
-			registry, err := r.registryDao.GetByParentIDAndName(ctx, info.ParentID, info.RegIdentifier)
-			if err != nil {
-				return err
-			}
-
-			image, err := r.imageDao.GetByName(ctx, registry.ID, info.Image)
-			if err != nil {
-				return err
-			}
-
-			newDigest, err := types.NewDigest(digest.Digest(info.Digest))
-			if err != nil {
-				log.Ctx(ctx).Error().Stack().Err(err).Msgf("error parsing digest: %s %v", info.Digest, err)
-			}
-			artifact, err := r.artifactDao.GetByName(ctx, image.ID, newDigest.String())
-			if err != nil {
-				return err
-			}
-
-			downloadStat := &types.DownloadStat{
-				ArtifactID: artifact.ID,
-			}
-
-			if err := r.downloadStatDao.Create(ctx, downloadStat); err != nil {
-				return err
-			}
-
-			return nil
-		}, dbtx.TxDefault,
-	)
-	if err != nil {
-		log.Error().Msgf("failed to put download stat in database: %v", err)
-		return fmt.Errorf("committing database transaction: %w", err)
-	}
-
-	return nil
-}
-
 func (r *LocalRegistry) dbPutBlobUploadComplete(
 	ctx context.Context,
 	repoName string,
@@ -1740,23 +1610,8 @@ func (r *LocalRegistry) dbPutBlobUploadComplete(
 				return err
 			}
 
-			image := &types.Image{
-				Name:       info.Image,
-				RegistryID: registry.ID,
-				Enabled:    false,
-			}
-
-			if err := r.imageDao.CreateOrUpdate(ctx, image); err != nil {
-				return err
-			}
-
-			bandwidthStat := &types.BandwidthStat{
-				ImageID: image.ID,
-				Type:    types.BandwidthTypeUPLOAD,
-				Bytes:   int64(size),
-			}
-
-			if err := r.bandwidthStatDao.Create(ctx, bandwidthStat); err != nil {
+			err = r.ms.UpsertImage(ctx, repoName, info)
+			if err != nil {
 				return err
 			}
 

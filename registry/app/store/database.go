@@ -417,9 +417,9 @@ type ImageRepository interface {
 		ctx context.Context, parentID int64,
 		repo string, name string,
 	) (*types.Image, error)
-	// Create an Artifact
+	// Create an Image
 	CreateOrUpdate(ctx context.Context, image *types.Image) error
-	// Update an Artifact
+	// Update an Image
 	Update(ctx context.Context, artifact *types.Image) (err error)
 
 	UpdateStatus(ctx context.Context, artifact *types.Image) (err error)

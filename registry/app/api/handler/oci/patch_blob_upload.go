@@ -21,7 +21,7 @@ import (
 )
 
 func (h *Handler) PatchBlobUpload(w http.ResponseWriter, r *http.Request) {
-	info, err := h.getRegistryInfo(r, false)
+	info, err := h.GetRegistryInfo(r, false)
 	if err != nil {
 		handleErrors(r.Context(), []error{err}, w)
 		return

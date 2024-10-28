@@ -27,7 +27,7 @@ import (
 
 func (h *Handler) GetTags(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	info, err := h.getRegistryInfo(r, false)
+	info, err := h.GetRegistryInfo(r, false)
 	if err != nil {
 		handleErrors(ctx, []error{err}, w)
 		return

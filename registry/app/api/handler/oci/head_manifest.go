@@ -24,7 +24,7 @@ import (
 
 // HeadManifest fetches the image manifest from the storage backend, if it exists.
 func (h *Handler) HeadManifest(w http.ResponseWriter, r *http.Request) {
-	info, err := h.getRegistryInfo(r, true)
+	info, err := h.GetRegistryInfo(r, true)
 	if err != nil {
 		handleErrors(r.Context(), errcode.Errors{err}, w)
 		return

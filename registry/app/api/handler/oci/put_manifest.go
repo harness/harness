@@ -29,7 +29,7 @@ const (
 // PutManifest validates and stores a manifest in the registry.
 func (h *Handler) PutManifest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	info, err := h.getRegistryInfo(r, false)
+	info, err := h.GetRegistryInfo(r, false)
 	if err != nil {
 		handleErrors(r.Context(), []error{err}, w)
 		return

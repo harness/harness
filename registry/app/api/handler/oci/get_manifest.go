@@ -27,7 +27,7 @@ import (
 // GetManifest fetches the image manifest from the storage backend, if it exists.
 func (h *Handler) GetManifest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	info, err := h.getRegistryInfo(r, true)
+	info, err := h.GetRegistryInfo(r, true)
 	if err != nil {
 		handleErrors(ctx, errcode.Errors{err}, w)
 		return

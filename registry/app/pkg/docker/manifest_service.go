@@ -115,6 +115,7 @@ type ManifestService interface {
 	DBFindRepositoryBlob(
 		ctx context.Context, desc manifest.Descriptor, repoID int64, imageName string,
 	) (*types.Blob, error)
+	UpsertImage(ctx context.Context, repoKey string, info pkg.RegistryInfo) error
 }
 
 func (l *manifestService) DBTag(
@@ -208,8 +209,7 @@ func (l *manifestService) dbTagManifest(
 		}
 
 		// Create or update artifact and tag records
-		if err := l.upsertArtifactAndTag(ctx, dbRegistry.ID, dbManifest.ID, imageName, tagName,
-			dgst); err != nil {
+		if err := l.upsertTag(ctx, dbRegistry.ID, dbManifest.ID, imageName, tagName); err != nil {
 			return formatFailedToTagErr(err)
 		}
 
@@ -257,37 +257,13 @@ func (l *manifestService) lockManifestForGC(ctx context.Context, repoID, manifes
 }
 
 // Creates or updates artifact and tag records.
-func (l *manifestService) upsertArtifactAndTag(
+func (l *manifestService) upsertTag(
 	ctx context.Context,
 	registryID,
 	manifestID int64,
 	imageName,
 	tagName string,
-	dgst digest.Digest,
 ) error {
-	image := &types.Image{
-		Name:       imageName,
-		RegistryID: registryID,
-		Enabled:    true,
-	}
-
-	if err := l.imageDao.CreateOrUpdate(ctx, image); err != nil {
-		return err
-	}
-
-	digest, err := types.NewDigest(dgst)
-	if err != nil {
-		return err
-	}
-	artifact := &types.Artifact{
-		ImageID: image.ID,
-		Version: digest.String(),
-	}
-
-	if err := l.artifactDao.CreateOrUpdate(ctx, artifact); err != nil {
-		return err
-	}
-
 	tag := &types.Tag{
 		Name:       tagName,
 		ImageName:  imageName,
@@ -368,9 +344,15 @@ func (l *manifestService) dbPutManifest(
 ) error {
 	switch reqManifest := manifest.(type) {
 	case *schema2.DeserializedManifest:
-		return l.dbPutManifestSchema2(ctx, reqManifest, payload, d, repoKey, headers, info)
+		if err := l.dbPutManifestSchema2(ctx, reqManifest, payload, d, repoKey, headers, info); err != nil {
+			return err
+		}
+		return l.upsertImageAndArtifact(ctx, d, repoKey, info)
 	case *ocischema.DeserializedManifest:
-		return l.dbPutManifestOCI(ctx, reqManifest, payload, d, repoKey, headers, info)
+		if err := l.dbPutManifestOCI(ctx, reqManifest, payload, d, repoKey, headers, info); err != nil {
+			return err
+		}
+		return l.upsertImageAndArtifact(ctx, d, repoKey, info)
 	case *manifestlist.DeserializedManifestList:
 		return l.dbPutManifestList(ctx, reqManifest, payload, d, repoKey, headers, info)
 	case *ocischema.DeserializedImageIndex:
@@ -378,6 +360,68 @@ func (l *manifestService) dbPutManifest(
 	default:
 		return errcode.ErrorCodeManifestInvalid.WithDetail("manifest type unsupported")
 	}
+}
+
+func (l *manifestService) upsertImageAndArtifact(
+	ctx context.Context,
+	d digest.Digest,
+	repoKey string,
+	info pkg.RegistryInfo) error {
+	dbRepo, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
+	if err != nil {
+		return err
+	}
+	dbImage := &types.Image{
+		Name:       info.Image,
+		RegistryID: dbRepo.ID,
+		Enabled:    true,
+	}
+
+	if err := l.imageDao.CreateOrUpdate(ctx, dbImage); err != nil {
+		return err
+	}
+
+	dgst, err := types.NewDigest(d)
+	if err != nil {
+		return err
+	}
+	dbArtifact := &types.Artifact{
+		ImageID: dbImage.ID,
+		Version: dgst.String(),
+	}
+
+	if err := l.artifactDao.CreateOrUpdate(ctx, dbArtifact); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l *manifestService) UpsertImage(
+	ctx context.Context,
+	repoKey string,
+	info pkg.RegistryInfo) error {
+	dbRepo, err := l.registryDao.GetByParentIDAndName(ctx, info.ParentID, repoKey)
+	if err != nil {
+		return err
+	}
+
+	image, err := l.imageDao.GetByName(ctx, dbRepo.ID, info.Image)
+	if err != nil && !errors.Is(err, gitnessstore.ErrResourceNotFound) {
+		return err
+	} else if image != nil {
+		return nil
+	}
+
+	dbImage := &types.Image{
+		Name:       info.Image,
+		RegistryID: dbRepo.ID,
+		Enabled:    false,
+	}
+
+	if err := l.imageDao.CreateOrUpdate(ctx, dbImage); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (l *manifestService) dbPutManifestSchema2(

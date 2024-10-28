@@ -30,7 +30,7 @@ import (
 
 func (h *Handler) GetBlob(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	info, err := h.getRegistryInfo(r, true)
+	info, err := h.GetRegistryInfo(r, true)
 	if err != nil {
 		handleErrors(r.Context(), []error{err}, w)
 		return

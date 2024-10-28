@@ -176,7 +176,7 @@ func handleErrors(ctx context.Context, errors errcode.Errors, w http.ResponseWri
 	}
 }
 
-func (h *Handler) getRegistryInfo(r *http.Request, remoteSupport bool) (pkg.RegistryInfo, error) {
+func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.RegistryInfo, error) {
 	ctx := r.Context()
 	queryParams := r.URL.Query()
 	path := r.URL.Path

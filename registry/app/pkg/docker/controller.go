@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/registry/app/pkg"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/storage"
+	"github.com/harness/gitness/registry/app/store"
 	registrytypes "github.com/harness/gitness/registry/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -47,6 +48,15 @@ type Controller struct {
 	remote     *RemoteRegistry
 	spaceStore corestore.SpaceStore
 	authorizer authz.Authorizer
+	DBStore    *DBStore
+}
+
+type DBStore struct {
+	BlobRepo         store.BlobRepository
+	ImageDao         store.ImageRepository
+	ArtifactDao      store.ArtifactRepository
+	BandwidthStatDao store.BandwidthStatRepository
+	DownloadStatDao  store.DownloadStatRepository
 }
 
 type TagsAPIResponse struct {
@@ -63,6 +73,7 @@ func NewController(
 	coreController *pkg.CoreController,
 	spaceStore corestore.SpaceStore,
 	authorizer authz.Authorizer,
+	dBStore *DBStore,
 ) *Controller {
 	c := &Controller{
 		CoreController: coreController,
@@ -70,11 +81,28 @@ func NewController(
 		remote:         remote,
 		spaceStore:     spaceStore,
 		authorizer:     authorizer,
+		DBStore:        dBStore,
 	}
 
 	pkg.TypeRegistry[pkg.LocalRegistry] = local
 	pkg.TypeRegistry[pkg.RemoteRegistry] = remote
 	return c
+}
+
+func NewDBStore(
+	blobRepo store.BlobRepository,
+	imageDao store.ImageRepository,
+	artifactDao store.ArtifactRepository,
+	bandwidthStatDao store.BandwidthStatRepository,
+	downloadStatDao store.DownloadStatRepository,
+) *DBStore {
+	return &DBStore{
+		BlobRepo:         blobRepo,
+		ImageDao:         imageDao,
+		ArtifactDao:      artifactDao,
+		BandwidthStatDao: bandwidthStatDao,
+		DownloadStatDao:  downloadStatDao,
+	}
 }
 
 func isEmpty(slice interface{}) bool {

@@ -78,8 +78,19 @@ func ControllerProvider(
 	controller *pkg.CoreController,
 	spaceStore gitnessstore.SpaceStore,
 	authorizer authz.Authorizer,
+	dBStore *DBStore,
 ) *Controller {
-	return NewController(local, remote, controller, spaceStore, authorizer)
+	return NewController(local, remote, controller, spaceStore, authorizer, dBStore)
+}
+
+func DBStoreProvider(
+	blobRepo store.BlobRepository,
+	imageDao store.ImageRepository,
+	artifactDao store.ArtifactRepository,
+	bandwidthStatDao store.BandwidthStatRepository,
+	downloadStatDao store.DownloadStatRepository,
+) *DBStore {
+	return NewDBStore(blobRepo, imageDao, artifactDao, bandwidthStatDao, downloadStatDao)
 }
 
 func StorageServiceProvider(cfg *types.Config, driver storagedriver.StorageDriver) *storage.Service {
@@ -113,8 +124,9 @@ func getManifestCacheHandler(
 }
 
 var ControllerSet = wire.NewSet(ControllerProvider)
+var DBStoreSet = wire.NewSet(DBStoreProvider)
 var RegistrySet = wire.NewSet(LocalRegistryProvider, ManifestServiceProvider, RemoteRegistryProvider)
 var ProxySet = wire.NewSet(ProvideProxyController)
 var StorageServiceSet = wire.NewSet(StorageServiceProvider)
 var AppSet = wire.NewSet(NewApp)
-var WireSet = wire.NewSet(ControllerSet, RegistrySet, StorageServiceSet, AppSet, ProxySet)
+var WireSet = wire.NewSet(ControllerSet, DBStoreSet, RegistrySet, StorageServiceSet, AppSet, ProxySet)
