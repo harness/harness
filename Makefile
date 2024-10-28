@@ -55,16 +55,18 @@ test: generate  ## Run the go tests
 #
 ###############################################################################
 
-run: clean build
+run: ar-clean build
 	./gitness server .local.env || true
 
-ar-conformance-test: clean build
+ar-conformance-test: ar-clean build
 	./gitness server .local.env > logfile.log 2>&1 & echo $$! > server.PID
 	@sleep 10
-	./registry/tests/conformance_test.sh localhost:3000 || true
+	./registry/tests/conformance_test.sh localhost:3000
+	EXIT_CODE=$$?;
 	kill `cat server.PID`
 	@rm server.PID
 	@rm logfile.log
+	exit $$EXIT_CODE
 
 ar-hot-conformance-test:
 	rm -rf distribution-spec || true

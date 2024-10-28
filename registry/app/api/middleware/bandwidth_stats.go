@@ -81,7 +81,7 @@ func TrackBandwidthStat(h *oci.Handler) func(http.Handler) http.Handler {
 				info, err := h.GetRegistryInfo(r, true)
 				if err != nil {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
-						"TrackBandwidthStat").Err(err).Msgf("error while putting bandwidth stat of artifact, %v",
+						"TrackBandwidthStat").Err(err).Msgf("error while putting bandwidth stat for artifact, %v",
 						err)
 					return
 				}
@@ -89,8 +89,8 @@ func TrackBandwidthStat(h *oci.Handler) func(http.Handler) http.Handler {
 				err = dbBandwidthStat(ctx, h.Controller, info, bandwidthType)
 				if err != nil {
 					log.Ctx(ctx).Error().Stack().Str("middleware",
-						"TrackBandwidthStat").Err(err).Msgf("error while putting bandwidth stat of artifact, %v",
-						err)
+						"TrackBandwidthStat").Err(err).Msgf("error while putting bandwidth stat for artifact [%s:%s], %v",
+						info.RegIdentifier, info.Image, err)
 					return
 				}
 			},
@@ -147,6 +147,5 @@ func getImageFromUpstreamProxy(ctx context.Context, c *docker.Controller, info p
 			return image, nil
 		}
 	}
-	//nolint:nilnil
-	return nil, nil
+	return nil, errors.New("image not found in upstream proxy")
 }
