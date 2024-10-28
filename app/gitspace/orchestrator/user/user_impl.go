@@ -17,8 +17,8 @@ package user
 import (
 	"context"
 	"fmt"
-	"os"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
 )
@@ -35,17 +35,14 @@ func NewUserServiceImpl() Service {
 }
 
 func (u *ServiceImpl) Manage(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
-	osInfoScript, err := os.ReadFile("app/gitspace/orchestrator/common/script/os_info.sh")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read os_info.sh: %w", err)
-	}
+	osInfoScript := common.GetOSInfoScript()
 	script, err := template.GenerateScriptFromTemplate(
 		templateManagerUser, &template.SetupUserPayload{
 			Username:     exec.UserIdentifier,
 			AccessKey:    exec.AccessKey,
 			AccessType:   exec.AccessType,
 			HomeDir:      exec.HomeDir,
-			OSInfoScript: string(osInfoScript),
+			OSInfoScript: osInfoScript,
 		})
 	if err != nil {
 		return nil, fmt.Errorf(
