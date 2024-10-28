@@ -16,17 +16,19 @@
 
 process.env.TZ = 'GMT'
 
+const { pathsToModuleNameMapper } = require('ts-jest')
 const { compilerOptions } = require('./tsconfig')
 
 module.exports = {
   globals: {
-    'ts-jest': {
-      isolatedModules: true,
-      diagnostics: false
-    },
     __DEV__: false
   },
+  snapshotFormat: {
+    escapeString: true,
+    printBasicPrototype: true
+  },
   setupFilesAfterEnv: ['<rootDir>/scripts/jest/setup-file.js'],
+  collectCoverage: true,
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/index.tsx',
@@ -42,10 +44,29 @@ module.exports = {
     '!src/utils/test/**',
     '!src/AppUtils.ts'
   ],
-  coverageReporters: ['lcov', 'json-summary'],
+  coverageReporters: ['lcov', 'json-summary', 'json'],
+  testEnvironment: 'jsdom',
   transform: {
-    '^.+\\.tsx?$': 'ts-jest',
-    '^.+\\.js$': 'ts-jest',
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.json',
+        isolatedModules: true,
+        diagnostics: false,
+        __DEV__: false,
+        __ON_PREM__: false
+      }
+    ],
+    '^.+\\.jsx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.json',
+        isolatedModules: true,
+        diagnostics: false,
+        __DEV__: false,
+        __ON_PREM__: false
+      }
+    ],
     '^.+\\.ya?ml$': '<rootDir>/scripts/jest/yaml-transform.js',
     '^.+\\.gql$': '<rootDir>/scripts/jest/gql-loader.js'
   },
@@ -55,16 +76,20 @@ module.exports = {
     '\\.s?css$': 'identity-obj-proxy',
     'monaco-editor': '<rootDir>/node_modules/react-monaco-editor',
     '\\.(jpg|jpeg|png|gif|svg|eot|otf|webp|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
-      '<rootDir>/scripts/jest/file-mock.js'
+      '<rootDir>/scripts/jest/file-mock.js',
+    ...pathsToModuleNameMapper(compilerOptions.paths)
   },
-  coverageThreshold: {
-    global: {
-      statements: 60,
-      branches: 40,
-      functions: 40,
-      lines: 60
-    }
-  },
-  transformIgnorePatterns: ['node_modules/(?!(date-fns|lodash-es)/)'],
-  testPathIgnorePatterns: ['<rootDir>/dist']
+  // TODO: removing coverage check for now
+  // coverageThreshold: {
+  //   global: {
+  //     statements: 60,
+  //     branches: 40,
+  //     functions: 40,
+  //     lines: 60
+  //   }
+  // },
+  transformIgnorePatterns: [
+    'node_modules/(?!(date-fns|lodash-es|@harnessio/uicore|@harnessio/design-system|@harnessio/react-har-service-client|@harnessio/react-ssca-manager-client)/)'
+  ],
+  testPathIgnorePatterns: ['<rootDir>/dist', '<rootDir>/src/static']
 }

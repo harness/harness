@@ -18,14 +18,9 @@
  * This file contains utilities for testing.
  */
 import React from 'react'
-import { UseGetProps, UseGetReturn, RestfulProvider } from 'restful-react'
+import type { UseGetProps, UseGetReturn } from 'restful-react'
 import { queryByAttribute } from '@testing-library/react'
-import { compile } from 'path-to-regexp'
-import { createMemoryHistory } from 'history'
-import { Router, Route, Switch, useLocation, useHistory } from 'react-router-dom'
-import qs from 'qs'
-import { enableMapSet } from 'immer'
-import { StringsContext } from 'framework/strings'
+import { useLocation } from 'react-router-dom'
 import './testUtils.module.scss'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,15 +48,6 @@ export type UseGetReturnData<TData, TError = undefined, TQueryParams = undefined
 export const findDialogContainer = (): HTMLElement | null => document.querySelector('.bp3-dialog')
 export const findPopoverContainer = (): HTMLElement | null => document.querySelector('.bp3-popover-content')
 
-export interface TestWrapperProps {
-  path?: string
-  pathParams?: Record<string, string | number>
-  queryParams?: Record<string, unknown>
-  enableBrowserView?: boolean
-  stringsData?: Record<string, string>
-  getString?(key: string): string
-}
-
 export const CurrentLocation = (): JSX.Element => {
   const location = useLocation()
   return (
@@ -71,72 +57,6 @@ export const CurrentLocation = (): JSX.Element => {
         location.search ? `?${location.search.replace(/^\?/g, '')}` : ''
       }`}</div>
     </div>
-  )
-}
-
-export interface BrowserViewProps {
-  enable?: boolean
-  children: React.ReactNode
-}
-
-export function BrowserView(props: BrowserViewProps): React.ReactElement {
-  const { enable, children } = props
-  const location = useLocation()
-  const history = useHistory()
-
-  if (!enable) {
-    return <>{children}</>
-  }
-
-  function handlePathChange(e: React.ChangeEvent<HTMLInputElement>) {
-    history.replace(e.currentTarget.value)
-  }
-
-  const search = location.search ? `?${location.search.replace(/^\?/, '')}` : ''
-
-  return (
-    <div className="browser">
-      <div className="browser-header">
-        <input className="browser-path" value={location.pathname + search} onChange={handlePathChange} />
-      </div>
-      <div className="browser-content">{children}</div>
-    </div>
-  )
-}
-
-export const TestWrapper: React.FC<TestWrapperProps> = props => {
-  enableMapSet()
-  const { path = '/', pathParams = {}, queryParams = {}, stringsData = {}, getString = (key: string) => key } = props
-
-  const search = qs.stringify(queryParams, { addQueryPrefix: true })
-  const routePath = compile(path)(pathParams) + search
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const history = React.useMemo(() => createMemoryHistory({ initialEntries: [routePath] }), [])
-
-  /** TODO: Try fixing this later. This is causing some tests to fail */
-  // React.useEffect(() => {
-  //   history.replace(compile(path)(pathParams) + qs.stringify(queryParams, { addQueryPrefix: true }))
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [path, pathParams, queryParams])
-
-  return (
-    <StringsContext.Provider value={{ data: stringsData as UnknownType, getString }}>
-      <Router history={history}>
-        <RestfulProvider base="/">
-          <BrowserView enable={props.enableBrowserView}>
-            <Switch>
-              <Route exact path={path}>
-                {props.children}
-              </Route>
-              <Route>
-                <CurrentLocation />
-              </Route>
-            </Switch>
-          </BrowserView>
-        </RestfulProvider>
-      </Router>
-    </StringsContext.Provider>
   )
 }
 
