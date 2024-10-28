@@ -19,18 +19,15 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
 	"github.com/harness/gitness/app/gitspace/scm"
-
-	_ "embed"
 )
 
 var _ Service = (*ServiceImpl)(nil)
 
-//go:embed script/install_git.sh
-var installScript string
-
+const templateGitInstallScript string = "install_git.sh"
 const templateSetupGitCredentials = "setup_git_credentials.sh" // nolint:gosec
 const templateCloneCode = "clone_code.sh"
 
@@ -42,9 +39,16 @@ func NewGitServiceImpl() Service {
 }
 
 func (g *ServiceImpl) Install(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
+	script, err := template.GenerateScriptFromTemplate(
+		templateGitInstallScript, &template.SetupGitInstallPayload{
+			OSInfoScript: common.GetOSInfoScript(),
+		})
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to generate scipt to setup git install from template %s: %w", templateGitInstallScript, err)
+	}
 	output := "Setting up git inside container\n"
-
-	_, err := exec.ExecuteCommandInHomeDirectory(ctx, installScript, false, false)
+	_, err = exec.ExecuteCommandInHomeDirectory(ctx, script, false, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup git: %w", err)
 	}

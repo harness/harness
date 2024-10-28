@@ -44,6 +44,10 @@ type CloneCodePayload struct {
 	Email    string
 }
 
+type SetupGitInstallPayload struct {
+	OSInfoScript string
+}
+
 type SetupGitCredentialsPayload struct {
 	CloneURLWithCreds string
 }
