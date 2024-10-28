@@ -66,6 +66,18 @@ func (c *Service) StopGitspaceAction(
 	return nil
 }
 
+func (c *Service) GitspaceAutostopAction(
+	ctx context.Context,
+	config *types.GitspaceConfig,
+	now time.Time,
+) error {
+	c.EmitGitspaceConfigEvent(ctx, config, enum.GitspaceEventTypeGitspaceAutoStop)
+	if err := c.StopGitspaceAction(ctx, config, now); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *Service) gitspaceBusyOperation(
 	ctx context.Context,
 	config *types.GitspaceConfig,

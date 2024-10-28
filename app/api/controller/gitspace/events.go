@@ -77,7 +77,7 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStartCompleted] = "Started gitspace"
 	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStartFailed] = "Starting gitspace failed"
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStop] = "Stopping gitspace"
+	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStop] = "Stopping gitspace..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopCompleted] = "Stopped gitspace"
 	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceActionStopFailed] = "Stopping gitspace failed"
 
@@ -117,5 +117,7 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportStopped] = "Gitspace is stopped"
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportUnknown] = "Gitspace is in unknown state"
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportError] = "Gitspace has an error"
+
+	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceAutoStop] = "Triggering auto-stopping due to inactivity..."
 	return gitspaceConfigsMap
 }

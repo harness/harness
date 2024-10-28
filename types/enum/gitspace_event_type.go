@@ -65,6 +65,8 @@ var gitspaceEventTypes = []GitspaceEventType{
 	GitspaceEventTypeAgentGitspaceStateReportError,
 	GitspaceEventTypeAgentGitspaceStateReportStopped,
 	GitspaceEventTypeAgentGitspaceStateReportUnknown,
+
+	GitspaceEventTypeGitspaceAutoStop,
 }
 
 const (
@@ -123,4 +125,7 @@ const (
 	GitspaceEventTypeAgentGitspaceStateReportError   GitspaceEventType = "agent_gitspace_state_report_error"
 	GitspaceEventTypeAgentGitspaceStateReportStopped GitspaceEventType = "agent_gitspace_state_report_stopped"
 	GitspaceEventTypeAgentGitspaceStateReportUnknown GitspaceEventType = "agent_gitspace_state_report_unknown"
+
+	// AutoStop action events.
+	GitspaceEventTypeGitspaceAutoStop GitspaceEventType = "gitspace_action_auto_stop"
 )
