@@ -38,18 +38,17 @@ type CreateInput struct {
 }
 
 type ResourceInput struct {
-	Identifier         string                 `json:"identifier" yaml:"identifier"`
-	Name               string                 `json:"name" yaml:"name"`
-	InfraProviderType  enum.InfraProviderType `json:"infra_provider_type" yaml:"infra_provider_type"`
-	CPU                *string                `json:"cpu" yaml:"cpu"`
-	Memory             *string                `json:"memory" yaml:"memory"`
-	Disk               *string                `json:"disk" yaml:"disk"`
-	Network            *string                `json:"network" yaml:"network"`
-	Region             []string               `json:"region" yaml:"region"`
-	Metadata           map[string]string      `json:"metadata" yaml:"metadata"`
-	GatewayHost        *string                `json:"gateway_host" yaml:"gateway_host"`
-	GatewayPort        *string                `json:"gateway_port" yaml:"gateway_port"`
-	TemplateIdentifier *string                `json:"template_identifier" yaml:"template_identifier"`
+	Identifier        string                 `json:"identifier" yaml:"identifier"`
+	Name              string                 `json:"name" yaml:"name"`
+	InfraProviderType enum.InfraProviderType `json:"infra_provider_type" yaml:"infra_provider_type"`
+	CPU               *string                `json:"cpu" yaml:"cpu"`
+	Memory            *string                `json:"memory" yaml:"memory"`
+	Disk              *string                `json:"disk" yaml:"disk"`
+	Network           *string                `json:"network" yaml:"network"`
+	Region            []string               `json:"region" yaml:"region"`
+	Metadata          map[string]string      `json:"metadata" yaml:"metadata"`
+	GatewayHost       *string                `json:"gateway_host" yaml:"gateway_host"`
+	GatewayPort       *string                `json:"gateway_port" yaml:"gateway_port"`
 }
 
 type TemplateInput struct {

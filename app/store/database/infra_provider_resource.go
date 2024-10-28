@@ -46,8 +46,7 @@ const (
 		ipreso_disk,
 		ipreso_network,
 		ipreso_region,
-		ipreso_opentofu_params,
-		ipreso_infra_provider_template_id
+		ipreso_opentofu_params
 	`
 	infraProviderResourceSelectColumns = "ipreso_id," + infraProviderResourceInsertColumns
 	infraProviderResourceTable         = `infra_provider_resources`
@@ -66,7 +65,6 @@ type infraProviderResource struct {
 	Network               null.String            `db:"ipreso_network"`
 	Region                string                 `db:"ipreso_region"` // need list maybe
 	OpenTofuParams        []byte                 `db:"ipreso_opentofu_params"`
-	TemplateID            null.Int               `db:"ipreso_infra_provider_template_id"`
 	Created               int64                  `db:"ipreso_created"`
 	Updated               int64                  `db:"ipreso_updated"`
 }
@@ -168,7 +166,6 @@ func (s infraProviderResourceStore) Create(
 			infraProviderResource.Network,
 			infraProviderResource.Region,
 			jsonBytes,
-			infraProviderResource.TemplateID,
 		).
 		Suffix(ReturningClause + infraProviderResourceIDColumn)
 	sql, args, err := stmt.ToSql()
@@ -233,8 +230,8 @@ func (s infraProviderResourceStore) DeleteByIdentifier(ctx context.Context, spac
 
 func mapToInfraProviderResource(_ context.Context,
 	in *infraProviderResource) (*types.InfraProviderResource, error) {
-	openTofuParamsMap := make(map[string]string)
-	marshalErr := json.Unmarshal(in.OpenTofuParams, &openTofuParamsMap)
+	metadataParamsMap := make(map[string]string)
+	marshalErr := json.Unmarshal(in.OpenTofuParams, &metadataParamsMap)
 	if marshalErr != nil {
 		return nil, marshalErr
 	}
@@ -250,8 +247,7 @@ func mapToInfraProviderResource(_ context.Context,
 		Disk:                  in.Disk.Ptr(),
 		Network:               in.Network.Ptr(),
 		Region:                in.Region,
-		Metadata:              openTofuParamsMap,
-		TemplateID:            in.TemplateID.Ptr(),
+		Metadata:              metadataParamsMap,
 		Created:               in.Created,
 		Updated:               in.Updated,
 	}, nil
@@ -275,7 +271,6 @@ func (s infraProviderResourceStore) mapToInternalInfraProviderResource(_ context
 		Network:               null.StringFromPtr(in.Network),
 		Region:                in.Region,
 		OpenTofuParams:        jsonBytes,
-		TemplateID:            null.IntFromPtr(in.TemplateID),
 		Created:               in.Created,
 		Updated:               in.Updated,
 	}, nil
@@ -330,7 +325,7 @@ func (i InfraProviderResourceView) FindMany(ctx context.Context, ids []int64) ([
 	stmt := database.Builder.
 		Select(infraProviderResourceSelectColumns).
 		From(infraProviderResourceTable).
-		Where(squirrel.Eq{infraProviderTemplateIDColumn: ids})
+		Where(squirrel.Eq{infraProviderResourceIDColumn: ids})
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
