@@ -36,9 +36,10 @@ import (
 )
 
 const (
-	KB = 1024
-	MB = 1024 * KB
-	GB = 1024 * MB
+	KB          = 1024
+	MB          = 1024 * KB
+	GB          = 1024 * MB
+	DefaultSize = "0 B"
 )
 
 func (c *APIController) GetDockerArtifactLayers(
@@ -121,11 +122,12 @@ func (c *APIController) GetDockerArtifactLayers(
 			var layerEntry = &artifact.DockerLayerEntry{
 				Command: history.CreatedBy,
 			}
+			sizeString := DefaultSize
 			if !history.EmptyLayer && len(layers) > layerIndex {
-				sizeString := GetSizeString(layers[layerIndex].Size)
-				layerEntry.Size = &sizeString
+				sizeString = GetSizeString(layers[layerIndex].Size)
 				layerIndex++
 			}
+			layerEntry.Size = &sizeString
 			historyLayers = append(
 				historyLayers, *layerEntry,
 			)
@@ -185,6 +187,6 @@ func GetSizeString(size int64) string {
 	case size >= KB:
 		return fmt.Sprintf("%.2f KB", float64(size)/float64(KB))
 	default:
-		return fmt.Sprintf("%d bytes", size)
+		return fmt.Sprintf("%d B", size)
 	}
 }
