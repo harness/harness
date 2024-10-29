@@ -254,6 +254,7 @@ type manifestConfig struct {
 	ModifiedAt *string        `json:"modified,omitempty"`
 	Os         string         `json:"os"`
 	Arch       string         `json:"architecture,omitempty"`
+	RootFS     rootFS         `json:"rootfs,omitempty"`
 }
 
 type historyEntry struct {
@@ -261,6 +262,11 @@ type historyEntry struct {
 	CreatedBy  string `json:"created_by"`
 	EmptyLayer bool   `json:"empty_layer"`
 	Comment    string `json:"comment,omitempty"`
+}
+
+type rootFS struct {
+	RootFsType string   `json:"type"`
+	DiffIDs    []string `json:"diff_ids"`
 }
 
 func getRepoEntityFields(dto api.RegistryRequest) ([]string, []string, string, []string) {

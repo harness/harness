@@ -23,11 +23,22 @@ import (
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
+	m "github.com/harness/gitness/registry/app/manifest"
+	"github.com/harness/gitness/registry/app/manifest/ocischema"
+	"github.com/harness/gitness/registry/app/manifest/schema2"
+	"github.com/harness/gitness/registry/app/pkg/docker"
 	"github.com/harness/gitness/registry/types"
 	store2 "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/distribution/distribution/v3/registry/api/errcode"
 	"github.com/opencontainers/go-digest"
+)
+
+const (
+	KB = 1024
+	MB = 1024 * KB
+	GB = 1024 * MB
 )
 
 func (c *APIController) GetDockerArtifactLayers(
@@ -96,11 +107,27 @@ func (c *APIController) GetDockerArtifactLayers(
 		osArch := fmt.Sprintf("%s/%s", mConfig.Os, mConfig.Arch)
 		layersSummary.OsArch = &osArch
 		var historyLayers []artifact.DockerLayerEntry
+		manifest, err := docker.DBManifestToManifest(m)
+		if err != nil {
+			return nil, err
+		}
+		layers, err := getManifestLayers(manifest)
+		if err != nil {
+			return nil, err
+		}
+		layerIndex := 0
+
 		for _, history := range mConfig.History {
+			var layerEntry = &artifact.DockerLayerEntry{
+				Command: history.CreatedBy,
+			}
+			if !history.EmptyLayer && len(layers) > layerIndex {
+				sizeString := GetSizeString(layers[layerIndex].Size)
+				layerEntry.Size = &sizeString
+				layerIndex++
+			}
 			historyLayers = append(
-				historyLayers, artifact.DockerLayerEntry{
-					Command: history.CreatedBy,
-				},
+				historyLayers, *layerEntry,
 			)
 		}
 		layersSummary.Layers = &historyLayers
@@ -122,4 +149,42 @@ func getLayersErrorResponse(err error) (artifact.GetDockerArtifactLayersResponse
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
 		),
 	}, nil
+}
+
+func getManifestLayers(
+	manifest m.Manifest,
+) ([]m.Descriptor, error) {
+	switch manifest.(type) {
+	case *schema2.DeserializedManifest:
+		deserializedManifest := &schema2.DeserializedManifest{}
+		_, bytes, _ := manifest.Payload()
+		err := deserializedManifest.UnmarshalJSON(bytes)
+		if err != nil {
+			return nil, err
+		}
+		return deserializedManifest.Layers(), nil
+	case *ocischema.DeserializedManifest:
+		deserializedManifest := &ocischema.DeserializedManifest{}
+		_, bytes, _ := deserializedManifest.Payload()
+		err := deserializedManifest.UnmarshalJSON(bytes)
+		if err != nil {
+			return nil, err
+		}
+		return deserializedManifest.Layers(), nil
+	default:
+		return nil, errcode.ErrorCodeManifestInvalid.WithDetail("manifest type unsupported")
+	}
+}
+
+func GetSizeString(size int64) string {
+	switch {
+	case size >= GB:
+		return fmt.Sprintf("%.2f GB", float64(size)/float64(GB))
+	case size >= MB:
+		return fmt.Sprintf("%.2f MB", float64(size)/float64(MB))
+	case size >= KB:
+		return fmt.Sprintf("%.2f KB", float64(size)/float64(KB))
+	default:
+		return fmt.Sprintf("%d bytes", size)
+	}
 }
