@@ -18,9 +18,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/app/api/usererror"
 	events "github.com/harness/gitness/app/events/gitspace"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -45,8 +47,7 @@ func (c *Service) StopGitspaceAction(
 		return fmt.Errorf("failed to find gitspace with config ID : %s %w", config.Identifier, err)
 	}
 	if savedGitspaceInstance.State.IsFinalStatus() {
-		return fmt.Errorf(
-			"gitspace instance cannot be stopped with ID %s %w", savedGitspaceInstance.Identifier, err)
+		return fmt.Errorf("gitspace instance cannot be stopped with ID %s", savedGitspaceInstance.Identifier)
 	}
 	config.GitspaceInstance = savedGitspaceInstance
 	err = c.gitspaceBusyOperation(ctx, config)
@@ -82,18 +83,21 @@ func (c *Service) gitspaceBusyOperation(
 	ctx context.Context,
 	config *types.GitspaceConfig,
 ) error {
-	if config.GitspaceInstance == nil {
+	if config.GitspaceInstance == nil || !config.GitspaceInstance.State.IsBusyStatus() {
 		return nil
 	}
-	if config.GitspaceInstance.State.IsBusyStatus() &&
-		time.Since(time.UnixMilli(config.GitspaceInstance.Updated)).Milliseconds() <= (gitspaceTimedOutInMintues*60*1000) {
-		return fmt.Errorf("gitspace start/stop is already pending for : %q", config.Identifier)
-	} else if config.GitspaceInstance.State.IsBusyStatus() {
-		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
-		if err := c.UpdateInstance(ctx, config.GitspaceInstance); err != nil {
-			return fmt.Errorf("failed to update gitspace config for %s %w", config.Identifier, err)
-		}
+
+	var busyStateTimeoutInMillis int64 = gitspaceTimedOutInMintues * 60 * 1000
+	if time.Since(time.UnixMilli(config.GitspaceInstance.Updated)).Milliseconds() <= busyStateTimeoutInMillis {
+		return usererror.NewWithPayload(http.StatusForbidden, fmt.Sprintf(
+			"Last session for this gitspace is still %s", config.GitspaceInstance.State))
 	}
+
+	config.GitspaceInstance.State = enum.GitspaceInstanceStateError
+	if err := c.UpdateInstance(ctx, config.GitspaceInstance); err != nil {
+		return fmt.Errorf("failed to update gitspace config for %s: %w", config.Identifier, err)
+	}
+
 	return nil
 }
 
