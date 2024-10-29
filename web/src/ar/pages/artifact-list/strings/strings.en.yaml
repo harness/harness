@@ -13,7 +13,7 @@ table:
     tags: Labels
     downloads: Downloads
     latestVersion: Latest Version
-    pullCommand: Pull Command
+    pullCommand: Download Command
     environments: Environments
     sto: Security Vulnerabilities
     lastUpdated: Uploaded At
