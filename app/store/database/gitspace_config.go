@@ -117,8 +117,11 @@ func (s gitspaceConfigStore) Count(ctx context.Context, filter *types.GitspaceFi
 	if filter.UserID != "" {
 		countStmt = countStmt.Where(squirrel.Eq{"gconf_user_uid": filter.UserID})
 	}
-	if filter.SpaceIDs != nil {
+	if len(filter.SpaceIDs) > 0 {
 		countStmt = countStmt.Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
+	}
+	if filter.IncludeMarkedForDeletion {
+		countStmt = countStmt.Where(squirrel.Eq{"gconf_is_marked_for_deletion": true})
 	}
 
 	sql, args, err := countStmt.ToSql()
