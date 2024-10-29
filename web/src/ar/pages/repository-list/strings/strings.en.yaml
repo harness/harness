@@ -9,6 +9,7 @@ upstreamProxy:
   subLabel: Connect to an external registry to access additional packages and dependencies.
 selectEnvironments: Environments
 selectPackageTypes: Package Types
+selectRegistryType: Registry Type
 selectLabels: '{{ $.artifactList.table.columns.tags }}'
 deleteModal:
   title: '{{ $.artifactList.table.actions.deleteRepository }}'

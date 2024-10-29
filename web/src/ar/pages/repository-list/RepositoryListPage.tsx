@@ -30,6 +30,7 @@ import { CreateRepository } from './components/CreateRepository/CreateRepository
 import { RepositoryListTable } from './components/RepositoryListTable'
 import { useArtifactRepositoriesQueryParamOptions } from './utils'
 import type { ArtifactRepositoryListPageQueryParams } from './utils'
+import RepositoryTypeSelector from './components/RepositoryTypeSelector/RepositoryTypeSelector'
 
 import css from './RepositoryListPage.module.scss'
 
@@ -43,7 +44,7 @@ function RepositoryListPage(): JSX.Element {
   const spaceRef = useGetSpaceRef()
   const queryParamOptions = useArtifactRepositoriesQueryParamOptions()
   const queryParams = useQueryParams<ArtifactRepositoryListPageQueryParams>(queryParamOptions)
-  const { searchTerm, page, size, repositoryTypes } = queryParams
+  const { searchTerm, page, size, repositoryTypes, configType } = queryParams
 
   const { preference: sortingPreference, setPreference: setSortingPreference } = usePreferenceStore<string | undefined>(
     PreferenceScope.USER,
@@ -69,7 +70,8 @@ function RepositoryListPage(): JSX.Element {
       sort_field: sortField,
       sort_order: sortOrder,
       package_type: repositoryTypes,
-      search_term: searchTerm
+      search_term: searchTerm,
+      type: configType
     },
     stringifyQueryParamsOptions: {
       arrayFormat: 'repeat'
@@ -104,6 +106,12 @@ function RepositoryListPage(): JSX.Element {
       <Page.SubHeader className={css.subHeader}>
         <div className={css.subHeaderItems}>
           <CreateRepository />
+          <RepositoryTypeSelector
+            value={configType}
+            onChange={val => {
+              updateQueryParams({ configType: val, page: DEFAULT_PAGE_INDEX })
+            }}
+          />
           <PackageTypeSelector
             value={repositoryTypes}
             onChange={val => {

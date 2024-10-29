@@ -104,6 +104,7 @@ export interface StringsMap {
   'repositoryList.selectEnvironments': string
   'repositoryList.selectLabels': string
   'repositoryList.selectPackageTypes': string
+  'repositoryList.selectRegistryType': string
   'repositoryList.table.columns.artifacts': string
   'repositoryList.table.columns.downloads': string
   'repositoryList.table.columns.lastModified': string

@@ -16,7 +16,7 @@
 
 import type { IconName } from '@harnessio/icons'
 import type { StringsMap } from '@ar/frameworks/strings'
-import { EnvironmentType, RepositoryPackageType } from './types'
+import { EnvironmentType, RepositoryConfigType, RepositoryPackageType } from './types'
 
 export interface RepositoryTypeListItem {
   label: keyof StringsMap
@@ -95,5 +95,23 @@ export const EnvironmentTypeList: EnvironmentTypeListItem[] = [
   {
     label: 'nonProd',
     value: EnvironmentType.NonProd
+  }
+]
+
+interface RepositoryConfigTypesListItem {
+  label: keyof StringsMap
+  value: RepositoryConfigType
+  disabled?: boolean
+  tooltip?: string
+}
+
+export const RepositoryConfigTypes: RepositoryConfigTypesListItem[] = [
+  {
+    label: 'repositoryList.artifactRegistry.label',
+    value: RepositoryConfigType.VIRTUAL
+  },
+  {
+    label: 'repositoryList.upstreamProxy.label',
+    value: RepositoryConfigType.UPSTREAM
   }
 ]
