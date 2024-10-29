@@ -271,10 +271,23 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 func (s gitspaceConfigStore) List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceConfig, error) {
 	stmt := database.Builder.
 		Select(gitspaceConfigSelectColumns).
-		From(gitspaceConfigsTable).
-		Where(squirrel.Eq{"gconf_is_deleted": false}).
-		Where(squirrel.Eq{"gconf_user_uid": filter.UserID}).
-		Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
+		From(gitspaceConfigsTable)
+
+	if !filter.IncludeDeleted {
+		stmt = stmt.Where(squirrel.Eq{"gconf_is_deleted": false})
+	}
+
+	if filter.UserID != "" {
+		stmt = stmt.Where(squirrel.Eq{"gconf_user_uid": filter.UserID})
+	}
+
+	if len(filter.SpaceIDs) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
+	}
+
+	if filter.IncludeMarkedForDeletion {
+		stmt = stmt.Where(squirrel.Eq{"gconf_is_marked_for_deletion": true})
+	}
 
 	queryFilter := filter.QueryFilter
 	stmt = stmt.Limit(database.Limit(queryFilter.Size))
