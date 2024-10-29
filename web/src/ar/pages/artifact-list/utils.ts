@@ -30,7 +30,7 @@ export type ArtifactListPageQueryParams = {
   latestVersion: boolean
   isDeployedArtifacts: boolean
   searchTerm?: string
-  repositoryKey?: string
+  repositoryKey?: string[]
 }
 
 export const useArtifactListQueryParamOptions = (): UseQueryParamsOptions<ArtifactListPageQueryParams> => {
@@ -43,7 +43,8 @@ export const useArtifactListQueryParamOptions = (): UseQueryParamsOptions<Artifa
       isDeployedArtifacts: false,
       latestVersion: false,
       packageTypes: [],
-      labels: []
+      labels: [],
+      repositoryKey: []
     },
     { ignoreEmptyString: true }
   )

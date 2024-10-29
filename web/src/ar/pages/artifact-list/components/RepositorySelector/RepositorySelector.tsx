@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import type { SelectOption } from '@harnessio/uicore'
-import { DropDown } from '@harnessio/uicore'
+import { MultiSelectDropDown } from '@harnessio/uicore'
 import { getAllRegistries } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useGetSpaceRef } from '@ar/hooks'
 
 export interface RepositorySelectorProps {
-  value?: string
-  onChange(id: string): void
+  value?: string[]
+  onChange(ids: string[]): void
 }
 
 export default function RepositorySelector(props: RepositorySelectorProps): JSX.Element {
@@ -52,18 +52,32 @@ export default function RepositorySelector(props: RepositorySelectorProps): JSX.
       })
   }
 
+  const selectedValues = useMemo(() => {
+    if (Array.isArray(props.value)) {
+      return props.value.map(each => ({
+        label: each,
+        value: each
+      }))
+    }
+    return []
+  }, [props.value])
+
   return (
-    <DropDown
+    <MultiSelectDropDown
       width={180}
       buttonTestId="regitry-select"
-      onChange={option => {
-        props.onChange(option.value as string)
+      onChange={options => {
+        if (!Array.isArray(options)) {
+          props.onChange([])
+          return
+        }
+        props.onChange(options.map(each => each.value as string))
       }}
-      value={props.value}
+      value={selectedValues}
       items={queryRepositories}
       usePortal={true}
-      addClearBtn={true}
       query={query}
+      allowSearch
       onQueryChange={setQuery}
       placeholder={getString('artifactList.table.allRepositories')}
     />
