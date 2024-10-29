@@ -44,6 +44,6 @@ func ProvideFactory(gitness *GitnessSCM, genericSCM *GenericSCM) Factory {
 	return NewFactory(gitness, genericSCM)
 }
 
-func ProvideSCM(factory Factory) SCM {
+func ProvideSCM(factory Factory) *SCM {
 	return NewSCM(factory)
 }

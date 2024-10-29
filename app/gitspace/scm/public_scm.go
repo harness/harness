@@ -31,6 +31,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var _ Provider = (*GenericSCM)(nil)
+
 type GenericSCM struct {
 }
 
@@ -38,21 +40,24 @@ func NewGenericSCM() *GenericSCM {
 	return &GenericSCM{}
 }
 
-// ListBranches implements Provider.
-func (s *GenericSCM) ListBranches(_ context.Context,
+func (s *GenericSCM) ListBranches(
+	_ context.Context,
 	_ *BranchFilter,
-	_ *ResolvedCredentials) ([]Branch, error) {
+	_ *ResolvedCredentials,
+) ([]Branch, error) {
 	return []Branch{}, nil
 }
 
-// ListReporisotries implements Provider.
-func (s *GenericSCM) ListReporisotries(_ context.Context,
+func (s *GenericSCM) ListRepositories(
+	_ context.Context,
 	_ *RepositoryFilter,
-	_ *ResolvedCredentials) ([]Repository, error) {
+	_ *ResolvedCredentials,
+) ([]Repository, error) {
 	return []Repository{}, nil
 }
 
-func (s GenericSCM) GetFileContent(ctx context.Context,
+func (s *GenericSCM) GetFileContent(
+	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	filePath string,
 	_ *ResolvedCredentials,
@@ -115,7 +120,7 @@ func (s GenericSCM) GetFileContent(ctx context.Context,
 	return catFileOutput.Bytes(), nil
 }
 
-func (s GenericSCM) ResolveCredentials(
+func (s *GenericSCM) ResolveCredentials(
 	_ context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedCredentials, error) {
@@ -130,4 +135,8 @@ func (s GenericSCM) ResolveCredentials(
 	repoName := strings.TrimSuffix(path.Base(repoURL.Path), ".git")
 	resolvedCredentials.RepoName = repoName
 	return resolvedCredentials, err
+}
+
+func (s *GenericSCM) GetBranchURL(_ string, repoURL string, _ string) (string, error) {
+	return repoURL, nil
 }

@@ -152,15 +152,7 @@ func (d DockerProvider) Find(
 	infrastructure.SpaceID = spaceID
 	infrastructure.SpacePath = spacePath
 	infrastructure.GitspaceConfigIdentifier = gitspaceConfigIdentifier
-
-	name := volumeName(spacePath, gitspaceConfigIdentifier)
-
-	volumeInspect, err := dockerClient.VolumeInspect(ctx, name)
-	if err != nil {
-		log.Err(err).Msgf("couldn't find the volume for %s", name)
-	}
-
-	infrastructure.Storage = volumeInspect.Name
+	infrastructure.Storage = volumeName(spacePath, gitspaceConfigIdentifier)
 
 	return infrastructure, nil
 }

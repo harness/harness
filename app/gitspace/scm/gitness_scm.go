@@ -49,9 +49,11 @@ type GitnessSCM struct {
 }
 
 // ListBranches implements Provider.
-func (s *GitnessSCM) ListBranches(ctx context.Context,
+func (s *GitnessSCM) ListBranches(
+	ctx context.Context,
 	filter *BranchFilter,
-	_ *ResolvedCredentials) ([]Branch, error) {
+	_ *ResolvedCredentials,
+) ([]Branch, error) {
 	repo, err := s.repoStore.FindByRef(ctx, filter.Repository)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
@@ -83,10 +85,12 @@ func mapBranch(b git.Branch) Branch {
 	}
 }
 
-// ListReporisotries implements Provider.
-func (s *GitnessSCM) ListReporisotries(ctx context.Context,
+// ListRepositories implements Provider.
+func (s *GitnessSCM) ListRepositories(
+	ctx context.Context,
 	filter *RepositoryFilter,
-	_ *ResolvedCredentials) ([]Repository, error) {
+	_ *ResolvedCredentials,
+) ([]Repository, error) {
 	repos, err := s.repoStore.List(ctx, filter.SpaceID, &types.RepoFilter{
 		Page:  filter.Page,
 		Size:  filter.Size,
@@ -125,10 +129,12 @@ func mapRepository(repo *types.Repository) (Repository, error) {
 	}, nil
 }
 
-func NewGitnessSCM(repoStore store.RepoStore, git git.Interface,
+func NewGitnessSCM(
+	repoStore store.RepoStore, git git.Interface,
 	tokenStore store.TokenStore,
 	principalStore store.PrincipalStore,
-	urlProvider urlprovider.Provider) *GitnessSCM {
+	urlProvider urlprovider.Provider,
+) *GitnessSCM {
 	return &GitnessSCM{
 		repoStore:      repoStore,
 		git:            git,
@@ -138,7 +144,7 @@ func NewGitnessSCM(repoStore store.RepoStore, git git.Interface,
 	}
 }
 
-func (s GitnessSCM) ResolveCredentials(
+func (s *GitnessSCM) ResolveCredentials(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedCredentials, error) {
@@ -200,7 +206,8 @@ func (s GitnessSCM) ResolveCredentials(
 	return resolvedCredentails, nil
 }
 
-func (s GitnessSCM) GetFileContent(ctx context.Context,
+func (s *GitnessSCM) GetFileContent(
+	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	filePath string,
 	_ *ResolvedCredentials,
@@ -243,8 +250,13 @@ func (s GitnessSCM) GetFileContent(ctx context.Context,
 	return catFileOutput, nil
 }
 
-func findUserFromUID(ctx context.Context,
+func findUserFromUID(
+	ctx context.Context,
 	principalStore store.PrincipalStore, userUID string,
 ) (*types.User, error) {
 	return principalStore.FindUserByUID(ctx, userUID)
+}
+
+func (s *GitnessSCM) GetBranchURL(_ string, repoURL string, branch string) (string, error) {
+	return fmt.Sprintf("%s/files/%s", strings.TrimSuffix(repoURL, ".git"), branch), nil
 }

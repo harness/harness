@@ -75,6 +75,10 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 		return nil, err
 	}
 
+	for _, gitspaceConfig := range result {
+		gitspaceConfig.BranchURL = c.gitspaceSvc.GetBranchURL(ctx, gitspaceConfig)
+	}
+
 	return result, nil
 }
 

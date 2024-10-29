@@ -41,7 +41,7 @@ func ProvideController(
 	spaceStore store.SpaceStore,
 	eventStore store.GitspaceEventStore,
 	statefulLogger *logutil.StatefulLogger,
-	scm scm.SCM,
+	scm *scm.SCM,
 	repoStore store.RepoStore,
 	gitspaceSvc *gitspace.Service,
 	gitspaceLimiter limiter.Gitspace,

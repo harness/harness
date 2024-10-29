@@ -50,6 +50,7 @@ func (c *Service) Find(
 	if txErr != nil {
 		return nil, txErr
 	}
+	gitspaceConfigResult.BranchURL = c.GetBranchURL(ctx, gitspaceConfigResult)
 	return gitspaceConfigResult, nil
 }
 

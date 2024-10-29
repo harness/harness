@@ -20,11 +20,14 @@ import (
 
 	gitspaceevents "github.com/harness/gitness/app/events/gitspace"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
+	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func NewService(
@@ -36,6 +39,7 @@ func NewService(
 	spaceStore store.SpaceStore,
 	infraProviderSvc *infraprovider.Service,
 	orchestrator orchestrator.Orchestrator,
+	scm *scm.SCM,
 ) *Service {
 	return &Service{
 		tx:                    tx,
@@ -46,6 +50,7 @@ func NewService(
 		spaceStore:            spaceStore,
 		infraProviderSvc:      infraProviderSvc,
 		orchestrator:          orchestrator,
+		scm:                   scm,
 	}
 }
 
@@ -58,6 +63,7 @@ type Service struct {
 	tx                    dbtx.Transactor
 	infraProviderSvc      *infraprovider.Service
 	orchestrator          orchestrator.Orchestrator
+	scm                   *scm.SCM
 }
 
 func (c *Service) ListGitspacesForSpace(
@@ -100,6 +106,7 @@ func (c *Service) ListGitspacesForSpace(
 			} else {
 				gitspaceConfig.State = enum.GitspaceStateUninitialized
 			}
+			gitspaceConfig.BranchURL = c.GetBranchURL(ctx, gitspaceConfig)
 		}
 		return nil
 	}, dbtx.TxDefaultReadOnly)
@@ -126,4 +133,15 @@ func (c *Service) getLatestInstanceMap(
 		gitspaceInstancesMap[gitspaceEntry.GitSpaceConfigID] = gitspaceEntry
 	}
 	return gitspaceInstancesMap, nil
+}
+
+func (c *Service) GetBranchURL(ctx context.Context, config *types.GitspaceConfig) string {
+	branchURL, err := c.scm.GetBranchURL(config.SpacePath, config.CodeRepo.Type, config.CodeRepo.URL,
+		config.CodeRepo.Branch)
+	if err != nil {
+		log.Warn().Ctx(ctx).Err(err).Msgf("failed to get branch URL for gitspace config %s, returning repo url",
+			config.Identifier)
+		branchURL = config.CodeRepo.URL
+	}
+	return branchURL
 }

@@ -32,7 +32,7 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideOrchestrator(
-	scm scm.SCM,
+	scm *scm.SCM,
 	infraProviderResourceStore store.InfraProviderResourceStore,
 	infraProvisioner infrastructure.InfraProvisioner,
 	containerOrchestrator container.Orchestrator,

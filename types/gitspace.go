@@ -42,6 +42,7 @@ type CodeRepo struct {
 	Ref              *string                   `json:"code_repo_ref"`
 	Type             enum.GitspaceCodeRepoType `json:"code_repo_type"`
 	Branch           string                    `json:"branch"`
+	BranchURL        string                    `json:"branch_url,omitempty"`
 	DevcontainerPath *string                   `json:"devcontainer_path,omitempty"`
 	IsPrivate        bool                      `json:"code_repo_is_private"`
 	AuthType         string                    `json:"-"`

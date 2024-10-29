@@ -46,7 +46,7 @@ type Config struct {
 }
 
 type orchestrator struct {
-	scm                        scm.SCM
+	scm                        *scm.SCM
 	infraProviderResourceStore store.InfraProviderResourceStore
 	infraProvisioner           infrastructure.InfraProvisioner
 	containerOrchestrator      container.Orchestrator
@@ -60,7 +60,7 @@ type orchestrator struct {
 var _ Orchestrator = (*orchestrator)(nil)
 
 func NewOrchestrator(
-	scm scm.SCM,
+	scm *scm.SCM,
 	infraProviderResourceStore store.InfraProviderResourceStore,
 	infraProvisioner infrastructure.InfraProvisioner,
 	containerOrchestrator container.Orchestrator,

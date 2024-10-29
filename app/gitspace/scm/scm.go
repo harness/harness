@@ -34,29 +34,17 @@ var (
 
 const devcontainerDefaultPath = ".devcontainer/devcontainer.json"
 
-var _ SCM = (*scm)(nil)
-
-type SCM interface {
-	// GetSCMRepoDetails fetches repository name, credentials & devcontainer config file from the given repo and branch.
-	GetSCMRepoDetails(
-		ctx context.Context,
-		gitspaceConfig types.GitspaceConfig,
-	) (*ResolvedDetails, error)
-
-	// CheckValidCodeRepo checks if the current URL is a valid and accessible code repo,
-	// input can be connector info, user token etc.
-	CheckValidCodeRepo(ctx context.Context, request CodeRepositoryRequest) (*CodeRepositoryResponse, error)
-}
-
-type scm struct {
+type SCM struct {
 	scmProviderFactory Factory
 }
 
-func NewSCM(factory Factory) SCM {
-	return &scm{scmProviderFactory: factory}
+func NewSCM(factory Factory) *SCM {
+	return &SCM{scmProviderFactory: factory}
 }
 
-func (s scm) CheckValidCodeRepo(
+// CheckValidCodeRepo checks if the current URL is a valid and accessible code repo,
+// input can be connector info, user token etc.
+func (s *SCM) CheckValidCodeRepo(
 	ctx context.Context,
 	codeRepositoryRequest CodeRepositoryRequest,
 ) (*CodeRepositoryResponse, error) {
@@ -110,7 +98,8 @@ func (s scm) CheckValidCodeRepo(
 	return codeRepositoryResponse, nil
 }
 
-func (s scm) GetSCMRepoDetails(
+// GetSCMRepoDetails fetches repository name, credentials & devcontainer config file from the given repo and branch.
+func (s *SCM) GetSCMRepoDetails(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedDetails, error) {
@@ -171,4 +160,17 @@ func detectDefaultGitBranch(ctx context.Context, gitRepoDir string) (string, err
 		return "", ErrNoDefaultBranch
 	}
 	return match[1], nil
+}
+
+func (s *SCM) GetBranchURL(
+	spacePath string,
+	repoType enum.GitspaceCodeRepoType,
+	repoURL string,
+	branch string,
+) (string, error) {
+	scmProvider, err := s.scmProviderFactory.GetSCMProvider(repoType)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve scm provider while generating branch url: %w", err)
+	}
+	return scmProvider.GetBranchURL(spacePath, repoURL, branch)
 }

@@ -15,28 +15,10 @@
 package scm
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
-
-type Provider interface {
-	ResolveCredentials(ctx context.Context, gitspaceConfig types.GitspaceConfig) (*ResolvedCredentials, error)
-	GetFileContent(
-		ctx context.Context,
-		gitspaceConfig types.GitspaceConfig,
-		filePath string,
-		credentials *ResolvedCredentials,
-	) ([]byte, error)
-	ListReporisotries(ctx context.Context,
-		filter *RepositoryFilter,
-		credentials *ResolvedCredentials) ([]Repository, error)
-	ListBranches(ctx context.Context,
-		filter *BranchFilter,
-		credentials *ResolvedCredentials) ([]Branch, error)
-}
 
 type Factory struct {
 	providers map[enum.GitspaceCodeRepoType]Provider

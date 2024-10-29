@@ -76,6 +76,9 @@ func (c *Controller) Action(
 			return nil, err
 		}
 	}
+
+	gitspaceConfig.BranchURL = c.gitspaceSvc.GetBranchURL(ctx, gitspaceConfig)
+
 	// All the actions should be idempotent.
 	switch in.Action {
 	case enum.GitspaceActionTypeStart:

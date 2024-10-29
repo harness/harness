@@ -37,7 +37,7 @@ type Controller struct {
 	gitspaceEventStore    store.GitspaceEventStore
 	tx                    dbtx.Transactor
 	statefulLogger        *logutil.StatefulLogger
-	scm                   scm.SCM
+	scm                   *scm.SCM
 	repoStore             store.RepoStore
 	gitspaceSvc           *gitspace.Service
 	gitspaceLimiter       limiter.Gitspace
@@ -52,7 +52,7 @@ func NewController(
 	spaceStore store.SpaceStore,
 	gitspaceEventStore store.GitspaceEventStore,
 	statefulLogger *logutil.StatefulLogger,
-	scm scm.SCM,
+	scm *scm.SCM,
 	repoStore store.RepoStore,
 	gitspaceSvc *gitspace.Service,
 	gitspaceLimiter limiter.Gitspace,

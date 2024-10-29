@@ -177,6 +177,7 @@ func (c *Controller) Create(
 	if err != nil {
 		return nil, err
 	}
+	gitspaceConfig.BranchURL = c.gitspaceSvc.GetBranchURL(ctx, gitspaceConfig)
 	return gitspaceConfig, nil
 }
 
