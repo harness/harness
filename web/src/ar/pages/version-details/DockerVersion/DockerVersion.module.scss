@@ -73,3 +73,7 @@
   gap: var(--spacing-medium);
   width: 100%;
 }
+
+.setupClientBtn {
+  flex-shrink: 0;
+}

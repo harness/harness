@@ -75,6 +75,7 @@ export default function VersionSelector(props: VersionSelectorProps): JSX.Elemen
       onChange={option => {
         props.onChange(option.value as string)
       }}
+      minWidth={100}
       value={value}
       items={dummyPromise}
       usePortal={true}

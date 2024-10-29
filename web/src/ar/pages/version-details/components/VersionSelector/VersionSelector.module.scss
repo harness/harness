@@ -17,7 +17,6 @@
 .versionSelectorDropdown {
   :global([class*='DropDown--dropdownButton']) {
     padding: var(--spacing-small);
-    min-width: auto !important;
     column-gap: var(--spacing-medium) !important;
   }
 

@@ -215,7 +215,7 @@ const LinkCell = (props: LinkCellProps): JSX.Element => {
       className={css.nameCellContainer}
       flex={{ justifyContent: 'flex-start', alignItems: 'flex-start' }}>
       {prefix}
-      <Layout.Vertical>
+      <Layout.Vertical className={css.linkCellContent}>
         <Link to={linkTo}>
           <Text color={Color.PRIMARY_7} lineClamp={1}>
             {label}

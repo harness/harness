@@ -25,6 +25,8 @@ import HeaderTitle from '@ar/components/Header/Title'
 import VersionSelector from '../../../components/VersionSelector/VersionSelector'
 import ArchitectureSelector from '../ArchitectureSelector/ArchitectureSelector'
 
+import css from './DockerVersionName.module.scss'
+
 interface DockerVersionNameProps {
   name: string
   version: string
@@ -38,7 +40,7 @@ export default function DockerVersionName(props: DockerVersionNameProps): JSX.El
   const { getString } = useStrings()
 
   return (
-    <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+    <Layout.Horizontal spacing="small" className={css.headerWrapper}>
       <HeaderTitle>{name}:</HeaderTitle>
       <VersionSelector value={version} onChange={onChangeVersion} />
       <Icon name="chevron-right" size={18} />

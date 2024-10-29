@@ -84,6 +84,7 @@ export default function ArchitectureSelector(props: ArchitectureSelectorProps): 
       onChange={option => {
         props.onChange(option.value as string)
       }}
+      minWidth={200}
       value={value}
       items={listOptions}
       usePortal={true}

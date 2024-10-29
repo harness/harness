@@ -29,6 +29,7 @@ import RepositoryIcon from '@ar/frameworks/RepositoryStep/RepositoryIcon'
 
 import DockerVersionName from './components/DockerVersionName/DockerVersionName'
 import type { DockerVersionDetailsQueryParams } from './types'
+import css from './DockerVersion.module.scss'
 
 interface DockerVersionHeaderProps {
   data: ArtifactVersionSummary
@@ -82,6 +83,7 @@ export default function DockerVersionHeader(props: DockerVersionHeaderProps): JS
       />
       <Expander />
       <Button
+        className={css.setupClientBtn}
         variation={ButtonVariation.PRIMARY}
         text={getString('actions.setupClient')}
         icon="setting"

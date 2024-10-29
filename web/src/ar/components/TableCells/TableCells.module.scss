@@ -26,6 +26,10 @@
   gap: var(--spacing-small);
 }
 
+.linkCellContent {
+  flex-shrink: 1 !important;
+}
+
 .copyUrlBtn {
   & :global(.bp3-button-text) {
     padding-left: var(--spacing-xsmall);
