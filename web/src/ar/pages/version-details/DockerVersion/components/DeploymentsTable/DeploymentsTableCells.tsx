@@ -94,7 +94,7 @@ export const ServiceListCell: CellType = ({ row }) => {
 
 export const DeploymentPipelineCell: CellType = ({ row }) => {
   const { original } = row
-  const { pipelineId, lastPipelineExecutionName } = original || {}
+  const { pipelineId, lastPipelineExecutionId } = original || {}
   const { getString } = useStrings()
   const { scope } = useAppStore()
   const { getRouteToPipelineExecutionView } = useParentUtils()
@@ -107,14 +107,14 @@ export const DeploymentPipelineCell: CellType = ({ row }) => {
             orgIdentifier: scope.orgIdentifier,
             projectIdentifier: scope.projectIdentifier,
             pipelineIdentifier: defaultTo(pipelineId, ''),
-            executionIdentifier: defaultTo(lastPipelineExecutionName, ''),
+            executionIdentifier: defaultTo(lastPipelineExecutionId, ''),
             module: 'cd'
           })}>
-          {lastPipelineExecutionName}
+          {lastPipelineExecutionId}
         </Link>
       ) : (
         <Text color={Color.GREY_900} font={{ variation: FontVariation.BODY }}>
-          {lastPipelineExecutionName}
+          {lastPipelineExecutionId}
         </Text>
       )}
       <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
