@@ -34,6 +34,10 @@
     background-color: var(--red-50) !important;
   }
 
+  &.fferror {
+    background-color: var(--red-50) !important;
+  }
+
   &.ruleViolation {
     background-color: var(--red-50) !important;
   }
@@ -98,6 +102,10 @@
     }
 
     &.unmergeable {
+      color: var(--red-500) !important;
+    }
+
+    &.ffblock {
       color: var(--red-500) !important;
     }
 

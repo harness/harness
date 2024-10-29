@@ -99,8 +99,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
     return currCodeOwners // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currCodeOwners, refetchCodeOwners, refetchReviewers])
 
-  const checkIfOutdatedSha = (reviewedSHA?: string, sourceSHA?: string) =>
-    reviewedSHA !== sourceSHA || reviewedSHA !== sourceSHA ? true : false
+  const checkIfOutdatedSha = (reviewedSHA?: string, sourceSHA?: string) => reviewedSHA !== sourceSHA
   const codeOwnerChangeReqEntries = findChangeReqDecisions(
     codeOwners?.evaluation_entries,
     CodeOwnerReqDecision.CHANGEREQ
@@ -168,12 +167,7 @@ const ChangesSection = (props: ChangesSectionProps) => {
         statusMessage = getString('pr.requestedChanges', { user: changeReqReviewer })
         statusColor = Color.RED_700
         statusIcon = 'warning-icon'
-      } else if (
-        (codeOwnerPendingEntries && codeOwnerPendingEntries?.length > 0 && reqCodeOwnerLatestApproval) ||
-        (!isEmpty(latestCodeOwnerApprovalArr) &&
-          latestCodeOwnerApprovalArr?.length < minReqLatestApproval &&
-          reqCodeOwnerLatestApproval)
-      ) {
+      } else if (codeOwnerPendingEntries && codeOwnerPendingEntries?.length > 0 && reqCodeOwnerLatestApproval) {
         title = getString('changesSection.pendingAppFromCodeOwners')
         statusMessage = getString('changesSection.pendingLatestApprovalCodeOwners')
         statusColor = Color.ORANGE_500

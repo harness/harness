@@ -299,7 +299,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       className={cx(css.main, {
         [css.primary]: !PRStateLoading,
         [css.error]: mergeable === false && !unchecked && !isClosed && !isDraft,
-        [css.error]: mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible,
+        [css.fferror]: mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible,
         [css.unchecked]: unchecked,
         [css.closed]: isClosed,
         [css.draft]: isDraft,
@@ -319,7 +319,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                   [css.draft]: isDraft,
                   [css.closed]: isClosed,
                   [css.unmergeable]: mergeable === false && isOpen,
-                  [css.unmergeable]: mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible && isOpen,
+                  [css.ffblock]: mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible && isOpen,
                   [css.ruleViolate]: ruleViolation && !isClosed
                 })}>
                 {getString(

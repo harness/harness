@@ -302,13 +302,13 @@ export const findWaitingDecisions = (
     return []
   } else {
     return entries.filter((entry: TypesCodeOwnerEvaluationEntry) => {
-      // skip entry if all the owners have not given any review_decision yet
       const hasNoReview = entry?.owner_evaluations?.every(
         (evaluation: TypesOwnerEvaluation | { review_decision: string }) => evaluation.review_decision === ''
       )
-      if (hasNoReview) return false
+
+      // add entry if no review found from codeowners
+      if (hasNoReview) return true
       // add entry to waiting decision array if approved changes are outdated or no approvals are found for the given entry
-      // ( this will hence include pending or change requested entries)
       const hasApprovedDecision = entry?.owner_evaluations?.some(
         evaluation =>
           evaluation.review_decision === PullReqReviewDecision.APPROVED &&

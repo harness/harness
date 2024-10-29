@@ -32,6 +32,8 @@ export declare const disabled: string
 export declare const divider: string
 export declare const draft: string
 export declare const error: string
+export declare const ffblock: string
+export declare const fferror: string
 export declare const hasError: string
 export declare const hasRuleViolated: string
 export declare const heading: string
