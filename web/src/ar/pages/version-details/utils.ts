@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+export const DEFAULT_LAYER_SIZE = '0 B'
+
 export function prettifyManifestJSON(manifest: string): string {
   try {
     return JSON.stringify(JSON.parse(manifest), null, 2)

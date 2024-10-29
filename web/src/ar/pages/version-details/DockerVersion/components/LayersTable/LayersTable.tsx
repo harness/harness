@@ -16,10 +16,12 @@
 
 import React, { useMemo } from 'react'
 import classNames from 'classnames'
+import { defaultTo } from 'lodash-es'
 import type { Column } from 'react-table'
 import { TableV2 } from '@harnessio/uicore'
 import type { DockerLayerEntry } from '@harnessio/react-har-service-client'
 
+import { DEFAULT_LAYER_SIZE } from '@ar/pages/version-details/utils'
 import { LayerActionCell, LayerCodeCell, LayerIndexCell, LayerSizeCell } from './LayersTableCells'
 import css from './LayersTable.module.scss'
 
@@ -56,7 +58,7 @@ export default function LayersTable(props: LayersTableProps): JSX.Element {
       return data.map((each, index) => ({
         id: index + 1,
         code: each.command,
-        size: '0 B'
+        size: defaultTo(each.size, DEFAULT_LAYER_SIZE)
       }))
     }
     return []
