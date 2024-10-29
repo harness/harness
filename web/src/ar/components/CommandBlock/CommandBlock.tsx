@@ -76,7 +76,7 @@ const CommandBlock: React.FC<CommandBlockProps> = ({
   }
   return (
     <Layout.Horizontal
-      flex={{ justifyContent: 'space-between', alignItems: 'center' }}
+      flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}
       className={cx(css.commandBlock, { [css.darkmode]: darkmode })}>
       <Text
         color={darkmode ? Color.WHITE : undefined}
