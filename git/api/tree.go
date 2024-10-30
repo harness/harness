@@ -228,6 +228,7 @@ func lsDirectory(
 	rev string,
 	treePath string,
 	fetchSizes bool,
+	flattenDirectories bool,
 ) ([]TreeNode, error) {
 	treePath = path.Clean(treePath)
 	if treePath == "" {
@@ -236,7 +237,24 @@ func lsDirectory(
 		treePath += "/"
 	}
 
-	return lsTree(ctx, repoPath, rev, treePath, fetchSizes)
+	nodes, err := lsTree(ctx, repoPath, rev, treePath, fetchSizes)
+	if err != nil {
+		return nil, err
+	}
+
+	if flattenDirectories {
+		for i := range nodes {
+			if nodes[i].NodeType != TreeNodeTypeTree {
+				continue
+			}
+
+			if err := flattenDirectory(ctx, repoPath, rev, &nodes[i], fetchSizes); err != nil {
+				return nil, fmt.Errorf("failed to flatten directory: %w", err)
+			}
+		}
+	}
+
+	return nodes, nil
 }
 
 // lsFile returns one tree node entry.
@@ -258,6 +276,38 @@ func lsFile(
 	}
 
 	return list[0], nil
+}
+
+func flattenDirectory(
+	ctx context.Context,
+	repoPath string,
+	rev string,
+	node *TreeNode,
+	fetchSizes bool,
+) error {
+	nodes := []TreeNode{*node}
+	var pathPrefix string
+
+	// Go in depth for as long as there are subdirectories with just one subdirectory.
+	for len(nodes) == 1 && nodes[0].NodeType == TreeNodeTypeTree {
+		nodesTemp, err := lsTree(ctx, repoPath, rev, nodes[0].Path+"/", fetchSizes)
+		if err != nil {
+			return fmt.Errorf("failed to peek dir entries for flattening: %w", err)
+		}
+
+		// Abort when the subdirectory contains more than one entry or contains an entry which is not a directory.
+		// Git doesn't store empty directories. Every git tree must have at least one entry (except the sha.EmptyTree).
+		if len(nodesTemp) != 1 || (len(nodesTemp) == 1 && nodesTemp[0].NodeType != TreeNodeTypeTree) {
+			nodes[0].Name = path.Join(pathPrefix, nodes[0].Name)
+			*node = nodes[0]
+			break
+		}
+
+		pathPrefix = path.Join(pathPrefix, nodes[0].Name)
+		nodes = nodesTemp
+	}
+
+	return nil
 }
 
 // GetTreeNode returns the tree node at the given path as found for the provided reference.
@@ -309,13 +359,21 @@ func GetTreeNode(ctx context.Context, repoPath, rev, treePath string, fetchSize 
 }
 
 // ListTreeNodes lists the child nodes of a tree reachable from ref via the specified path.
-func (g *Git) ListTreeNodes(ctx context.Context, repoPath, rev, treePath string) ([]TreeNode, error) {
-	return ListTreeNodes(ctx, repoPath, rev, treePath, false)
+func (g *Git) ListTreeNodes(
+	ctx context.Context,
+	repoPath, rev, treePath string,
+	flattenDirectories bool,
+) ([]TreeNode, error) {
+	return ListTreeNodes(ctx, repoPath, rev, treePath, false, flattenDirectories)
 }
 
 // ListTreeNodes lists the child nodes of a tree reachable from ref via the specified path.
-func ListTreeNodes(ctx context.Context, repoPath, rev, treePath string, fetchSizes bool) ([]TreeNode, error) {
-	list, err := lsDirectory(ctx, repoPath, rev, treePath, fetchSizes)
+func ListTreeNodes(
+	ctx context.Context,
+	repoPath, rev, treePath string,
+	fetchSizes, flattenDirectories bool,
+) ([]TreeNode, error) {
+	list, err := lsDirectory(ctx, repoPath, rev, treePath, fetchSizes, flattenDirectories)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tree nodes: %w", err)
 	}

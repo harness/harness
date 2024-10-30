@@ -41,9 +41,15 @@ func HandleGetContent(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
+		flattenDirectories, err := request.GetFlattenDirectoriesFromQueryOrDefault(r, false)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+			return
+		}
+
 		repoPath := request.GetOptionalRemainderFromPath(r)
 
-		resp, err := repoCtrl.GetContent(ctx, session, repoRef, gitRef, repoPath, includeCommit)
+		resp, err := repoCtrl.GetContent(ctx, session, repoRef, gitRef, repoPath, includeCommit, flattenDirectories)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

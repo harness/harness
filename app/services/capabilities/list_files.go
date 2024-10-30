@@ -101,10 +101,9 @@ func listFiles(
 	files := make([]string, 0)
 	directories := make([]string, 0)
 	tree, err := gitI.ListTreeNodes(ctx, &git.ListTreeNodeParams{
-		ReadParams:          git.CreateReadParams(repo),
-		GitREF:              gitRef,
-		Path:                path,
-		IncludeLatestCommit: false,
+		ReadParams: git.CreateReadParams(repo),
+		GitREF:     gitRef,
+		Path:       path,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tree nodes: %w", err)

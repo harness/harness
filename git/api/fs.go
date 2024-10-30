@@ -164,7 +164,7 @@ func (f *FS) ReadFile(path string) ([]byte, error) {
 // ReadDir returns all entries for a directory.
 // It is part of the fs.ReadDirFS interface.
 func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
-	treeNodes, err := ListTreeNodes(f.ctx, f.dir, f.rev, name, true)
+	treeNodes, err := ListTreeNodes(f.ctx, f.dir, f.rev, name, true, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read git directory: %w", err)
 	}
@@ -225,7 +225,7 @@ func (d *fsDir) Close() error { return nil }
 // ReadDir lists entries in the directory. The integer parameter can be used for pagination.
 // It is part of the fs.ReadDirFile interface.
 func (d *fsDir) ReadDir(n int) ([]fs.DirEntry, error) {
-	treeNodes, err := ListTreeNodes(d.ctx, d.dir, d.treeSHA.String(), "", true)
+	treeNodes, err := ListTreeNodes(d.ctx, d.dir, d.treeSHA.String(), "", true, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read git directory: %w", err)
 	}

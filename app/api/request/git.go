@@ -34,6 +34,7 @@ const (
 	QueryParamGitRef             = "git_ref"
 	QueryParamIncludeCommit      = "include_commit"
 	QueryParamIncludeDirectories = "include_directories"
+	QueryParamFlattenDirectories = "flatten_directories"
 	QueryParamLineFrom           = "line_from"
 	QueryParamLineTo             = "line_to"
 	QueryParamPath               = "path"
@@ -77,6 +78,10 @@ func GetMaxDivergenceFromQueryOrDefault(r *http.Request, deflt int64) (int64, er
 
 func GetIncludeDirectoriesFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamIncludeDirectories, deflt)
+}
+
+func GetFlattenDirectoriesFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamFlattenDirectories, deflt)
 }
 
 func GetCommitSHAFromPath(r *http.Request) (string, error) {

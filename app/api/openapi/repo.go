@@ -297,6 +297,21 @@ var queryParameterUntil = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterFlattenDirectories = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamFlattenDirectories,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Flatten directories that contain just one subdirectory."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamIncludeCommit,
@@ -865,7 +880,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opGetContent := openapi3.Operation{}
 	opGetContent.WithTags("repository")
 	opGetContent.WithMapOfAnything(map[string]interface{}{"operationId": "getContent"})
-	opGetContent.WithParameters(queryParameterGitRef, queryParameterIncludeCommit)
+	opGetContent.WithParameters(queryParameterGitRef, queryParameterIncludeCommit, queryParameterFlattenDirectories)
 	_ = reflector.SetRequest(&opGetContent, new(getContentRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opGetContent, new(getContentOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusInternalServerError)

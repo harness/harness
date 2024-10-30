@@ -100,6 +100,7 @@ func (c *Controller) GetContent(ctx context.Context,
 	gitRef string,
 	repoPath string,
 	includeLatestCommit bool,
+	flattenDirectories bool,
 ) (*GetContentOutput, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
@@ -132,7 +133,7 @@ func (c *Controller) GetContent(ctx context.Context,
 	var content Content
 	switch info.Type {
 	case ContentTypeDir:
-		content, err = c.getDirContent(ctx, readParams, gitRef, repoPath, includeLatestCommit)
+		content, err = c.getDirContent(ctx, readParams, gitRef, repoPath, flattenDirectories)
 	case ContentTypeFile:
 		content, err = c.getFileContent(ctx, readParams, info.SHA)
 	case ContentTypeSymlink:
@@ -242,13 +243,13 @@ func (c *Controller) getDirContent(ctx context.Context,
 	readParams git.ReadParams,
 	gitRef string,
 	repoPath string,
-	includeLatestCommit bool,
+	flattenDirectories bool,
 ) (*DirContent, error) {
 	output, err := c.git.ListTreeNodes(ctx, &git.ListTreeNodeParams{
-		ReadParams:          readParams,
-		GitREF:              gitRef,
-		Path:                repoPath,
-		IncludeLatestCommit: includeLatestCommit,
+		ReadParams:         readParams,
+		GitREF:             gitRef,
+		Path:               repoPath,
+		FlattenDirectories: flattenDirectories,
 	})
 	if err != nil {
 		// TODO: handle not found error

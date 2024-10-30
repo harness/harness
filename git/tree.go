@@ -52,9 +52,9 @@ type TreeNode struct {
 type ListTreeNodeParams struct {
 	ReadParams
 	// GitREF is a git reference (branch / tag / commit SHA)
-	GitREF              string
-	Path                string
-	IncludeLatestCommit bool
+	GitREF             string
+	Path               string
+	FlattenDirectories bool
 }
 
 type ListTreeNodeOutput struct {
@@ -126,11 +126,7 @@ func (s *Service) ListTreeNodes(ctx context.Context, params *ListTreeNodeParams)
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	res, err := s.git.ListTreeNodes(
-		ctx,
-		repoPath,
-		params.GitREF,
-		params.Path)
+	res, err := s.git.ListTreeNodes(ctx, repoPath, params.GitREF, params.Path, params.FlattenDirectories)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tree nodes: %w", err)
 	}
