@@ -16,7 +16,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
-import { Container, Layout, Button, ButtonVariation } from '@harnessio/uicore'
+import { Container, Layout, Button, ButtonVariation, FormInput } from '@harnessio/uicore'
 import css from './CDECustomDropdown.module.scss'
 
 interface CDECustomDropdownProps {
@@ -24,9 +24,16 @@ interface CDECustomDropdownProps {
   label: React.ReactNode
   menu: React.ReactNode
   overridePopOverWidth?: boolean
+  formikName?: string
 }
 
-export const CDECustomDropdown = ({ label, menu, leftElement, overridePopOverWidth }: CDECustomDropdownProps) => {
+export const CDECustomDropdown = ({
+  label,
+  menu,
+  leftElement,
+  overridePopOverWidth,
+  formikName = ''
+}: CDECustomDropdownProps) => {
   const buttonRef = useRef<HTMLDivElement | null>(null)
   const [popoverWidth, setPopoverWidth] = useState(0)
 
@@ -43,25 +50,32 @@ export const CDECustomDropdown = ({ label, menu, leftElement, overridePopOverWid
     <Layout.Horizontal className={css.main}>
       <Container width="70%">{leftElement}</Container>
       <Container width="30%" ref={buttonRef}>
-        <Button
-          height="45px"
-          width="100%"
-          className={css.button}
-          text={label}
-          rightIcon={'chevron-down'}
-          variation={ButtonVariation.TERTIARY}
-          iconProps={{ size: 14 }}
-          tooltipProps={{
-            fill: true,
-            interactionKind: PopoverInteractionKind.CLICK,
-            position: PopoverPosition.BOTTOM_RIGHT,
-            popoverClassName: css.popover
+        <FormInput.CustomRender
+          name={formikName || ''}
+          render={() => {
+            return (
+              <Button
+                height="45px"
+                width="100%"
+                className={css.button}
+                text={label}
+                rightIcon={'chevron-down'}
+                variation={ButtonVariation.TERTIARY}
+                iconProps={{ size: 14 }}
+                tooltipProps={{
+                  fill: true,
+                  interactionKind: PopoverInteractionKind.CLICK,
+                  position: PopoverPosition.BOTTOM_RIGHT,
+                  popoverClassName: css.popover
+                }}
+                tooltip={
+                  <Container className={css.listContainer} width={overridePopOverWidth ? '100%' : popoverWidth}>
+                    {menu}
+                  </Container>
+                }
+              />
+            )
           }}
-          tooltip={
-            <Container className={css.listContainer} width={overridePopOverWidth ? '100%' : popoverWidth}>
-              {menu}
-            </Container>
-          }
         />
       </Container>
     </Layout.Horizontal>

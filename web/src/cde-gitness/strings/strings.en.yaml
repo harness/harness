@@ -37,6 +37,7 @@ regionValidationMessage: Region is required
 repoValidationMessage: Repository is required
 branchValidationMessage: Branch is required
 machineValidationMessage: Machine Type is required
+sshValidationMessage: SSH Key is required
 startingGitspace: Starting Gitspace
 stopingGitspace: Stopping Gitspace
 sessionDuration: Last Started

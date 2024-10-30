@@ -1325,6 +1325,7 @@ export interface StringsMap {
   'cde.sshSelect.90days': string
   'cde.sshSelect.deleteToken': string
   'cde.sshSelect.noexpiration': string
+  'cde.sshValidationMessage': string
   'cde.startingGitspace': string
   'cde.status': string
   'cde.stopingGitspace': string
