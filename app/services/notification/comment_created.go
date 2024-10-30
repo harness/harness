@@ -21,6 +21,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
+	gitnessenum "github.com/harness/gitness/types/enum"
 )
 
 type CommentPayload struct {
@@ -104,6 +105,10 @@ func (s *Service) processCommentCreatedEvent(
 	activity, err := s.pullReqActivityStore.Find(ctx, event.Payload.ActivityID)
 	if err != nil {
 		return nil, nil, nil, nil, fmt.Errorf("failed to fetch activity from pullReqActivityStore: %w", err)
+	}
+
+	if activity.Type != gitnessenum.PullReqActivityTypeComment {
+		return nil, nil, nil, nil, fmt.Errorf("code-comments are not supported currently")
 	}
 
 	commenter, err := s.principalInfoView.Find(ctx, activity.CreatedBy)

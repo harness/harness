@@ -359,6 +359,7 @@ func (s *Service) handleEventPullReqComment(
 						Text:     activity.Text,
 						ID:       activity.ID,
 						ParentID: activity.ParentID,
+						Kind:     activity.Kind,
 					},
 				},
 			}, nil

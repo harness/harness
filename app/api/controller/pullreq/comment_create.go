@@ -220,9 +220,14 @@ func (c *Controller) CommentCreate(
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
 
-	// if it's a regular comment publish a comment create event
-	if act.Type == enum.PullReqActivityTypeComment && act.Kind == enum.PullReqActivityKindComment {
-		c.reportCommentCreated(ctx, pr, session.Principal.ID, act.ID, act.IsReply())
+	// publish event for all comments
+	if act.Type == enum.PullReqActivityTypeComment || act.Type == enum.PullReqActivityTypeCodeComment {
+		c.reportCommentCreated(
+			ctx,
+			pr,
+			session.Principal.ID,
+			act.ID, act.IsReply(),
+		)
 	}
 
 	err = c.instrumentation.Track(ctx, instrument.Event{

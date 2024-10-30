@@ -299,9 +299,10 @@ type ReferenceInfo struct {
 }
 
 type CommentInfo struct {
-	ID       int64  `json:"id"`
-	ParentID *int64 `json:"parent_id,omitempty"`
-	Text     string `json:"text"`
+	ID       int64                    `json:"id"`
+	ParentID *int64                   `json:"parent_id,omitempty"`
+	Text     string                   `json:"text"`
+	Kind     enum.PullReqActivityKind `json:"kind"`
 }
 
 type LabelInfo struct {
