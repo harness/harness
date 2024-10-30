@@ -495,7 +495,7 @@ func (s *Service) handleEventPullReqReviewSubmitted(
 ) error {
 	return s.triggerForEventWithPullReq(
 		ctx,
-		enum.WebhookTriggerReviewSubmitted,
+		enum.WebhookTriggerPullReqReviewSubmitted,
 		event.ID, event.Payload.PrincipalID,
 		event.Payload.PullReqID,
 		func(
@@ -514,7 +514,7 @@ func (s *Service) handleEventPullReqReviewSubmitted(
 
 			return &PullReqReviewSubmittedPayload{
 				BaseSegment: BaseSegment{
-					Trigger:   enum.WebhookTriggerReviewSubmitted,
+					Trigger:   enum.WebhookTriggerPullReqReviewSubmitted,
 					Repo:      targetRepoInfo,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},

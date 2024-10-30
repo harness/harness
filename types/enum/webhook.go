@@ -163,7 +163,8 @@ const (
 	// WebhookTriggerPullReqLabelAssigned gets triggered when a label is assigned to a pull request.
 	WebhookTriggerPullReqLabelAssigned WebhookTrigger = "pullreq_label_assigned"
 
-	WebhookTriggerReviewSubmitted = "review_submitted"
+	// WebhookTriggerPullReqReviewSubmitted gets triggered when a pull request review is submitted.
+	WebhookTriggerPullReqReviewSubmitted = "pullreq_review_submitted"
 )
 
 var webhookTriggers = sortEnum([]WebhookTrigger{
