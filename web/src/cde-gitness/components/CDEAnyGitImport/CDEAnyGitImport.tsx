@@ -253,6 +253,12 @@ export const CDEAnyGitImport = () => {
                   onChange={async event => {
                     const target = event.target as HTMLInputElement
                     setSearchBranch(target?.value?.trim() || '')
+                    setValues((prvValues: any) => {
+                      return {
+                        ...prvValues,
+                        branch: target?.value?.trim() || ''
+                      }
+                    })
                   }}
                 />
               </Container>
