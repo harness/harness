@@ -1,4 +1,4 @@
-# Detect OS type
+
 os() {
   uname="$(uname)"
   case $uname in
@@ -9,7 +9,6 @@ os() {
   esac
 }
 
-# Detect Linux distro type
 distro() {
   local os_name
   os_name=$(os)
@@ -38,7 +37,6 @@ distro() {
   fi
 }
 
-# Print a human-readable name for the OS/distro
 distro_name() {
   if [ "$(uname)" = "Darwin" ]; then
     echo "macOS v$(sw_vers -productVersion)"

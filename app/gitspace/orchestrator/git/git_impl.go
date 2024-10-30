@@ -48,7 +48,7 @@ func (g *ServiceImpl) Install(ctx context.Context, exec *devcontainer.Exec) ([]b
 			"failed to generate scipt to setup git install from template %s: %w", templateGitInstallScript, err)
 	}
 	output := "Setting up git inside container\n"
-	_, err = exec.ExecuteCommandInHomeDirectory(ctx, script, false, false)
+	_, err = exec.ExecuteCommandInHomeDirectory(ctx, script, true, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup git: %w", err)
 	}

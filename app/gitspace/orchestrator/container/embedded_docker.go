@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/app/gitspace/logutil"
+	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
@@ -31,6 +32,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -274,7 +276,17 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		AccessType:     gitspaceConfig.GitspaceInstance.AccessType,
 	}
 
+	err = e.validateSupportedOS(ctx, exec, logStreamInstance)
+	if err != nil {
+		return err
+	}
+
 	err = e.manageUser(ctx, exec, logStreamInstance)
+	if err != nil {
+		return err
+	}
+
+	err = e.installTools(ctx, exec, logStreamInstance, gitspaceConfig.IDE)
 	if err != nil {
 		return err
 	}
@@ -544,9 +556,9 @@ func (e *EmbeddedDockerOrchestrator) executePostCreateCommand(
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}
 
-	output, err := exec.ExecuteCommand(ctx, devcontainerConfig.PostCreateCommand, false, false, codeRepoDir)
+	output, err := exec.ExecuteCommand(ctx, devcontainerConfig.PostCreateCommand, true, false, codeRepoDir)
 	if err != nil {
-		loggingErr = logStreamInstance.Write("Error while executing postCreate command")
+		loggingErr = logStreamInstance.Write("Error while executing postCreate command" + err.Error())
 
 		err = fmt.Errorf("failed to execute postCreate command %q: %w", devcontainerConfig.PostCreateCommand, err)
 
@@ -944,6 +956,59 @@ func (e *EmbeddedDockerOrchestrator) removeContainer(
 	}
 
 	loggingErr = logStreamInstance.Write("Successfully removed container")
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	return nil
+}
+
+func (e *EmbeddedDockerOrchestrator) validateSupportedOS(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	logStreamInstance *logutil.LogStreamInstance,
+) error {
+	output, err := common.ValidateSupportedOS(ctx, exec)
+	if err != nil {
+		loggingErr := logStreamInstance.Write("Error while detecting os inside container: " + err.Error())
+
+		err = fmt.Errorf("failed to detect os in %s: %w", exec.ContainerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr := logStreamInstance.Write("Validate supported OSes...\n" + string(output))
+	if loggingErr != nil {
+		return fmt.Errorf("logging error: %w", loggingErr)
+	}
+
+	return nil
+}
+
+func (e *EmbeddedDockerOrchestrator) installTools(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	logStreamInstance *logutil.LogStreamInstance,
+	ideType enum.IDEType,
+) error {
+	output, err := common.InstallTools(ctx, exec, ideType)
+	if err != nil {
+		loggingErr := logStreamInstance.Write("Error while installing tools inside container: " + err.Error())
+
+		err = fmt.Errorf("failed to install tools in %s: %w", exec.ContainerName, err)
+
+		if loggingErr != nil {
+			err = fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
+		}
+
+		return err
+	}
+
+	loggingErr := logStreamInstance.Write("Tools installation output...\n" + string(output))
 	if loggingErr != nil {
 		return fmt.Errorf("logging error: %w", loggingErr)
 	}

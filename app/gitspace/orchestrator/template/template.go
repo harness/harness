@@ -74,6 +74,14 @@ type RunSSHServerPayload struct {
 	Port string
 }
 
+type InstallToolsPayload struct {
+	OSInfoScript string
+}
+
+type SupportedOSDistributionPayload struct {
+	OSInfoScript string
+}
+
 func init() {
 	err := LoadTemplates()
 	if err != nil {

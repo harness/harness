@@ -9,24 +9,32 @@ if ! command -v sshd >/dev/null 2>&1; then
     echo "OpenSSH server is not installed. Installing..."
 
     case "$(distro)" in
-        debian | ubuntu)
+        debian)
             apt-get update
             apt-get install -y openssh-server
-            ;;
-        fedora | centos | rhel)
+          ;;
+        fedora)
             dnf install -y openssh-server
-            ;;
+          ;;
         opensuse)
             zypper install -y openssh
-            ;;
+          ;;
         alpine)
-            apk add openssh
-            ;;
+          apk add openssh
+          ;;
+        arch)
+          pacman -Syu --noconfirm openssh
+          ;;
+        freebsd)
+          pkg install -y openssh-portable
+          ;;
         *)
-            echo "Unsupported distribution for SSH installation. Exiting..."
-            exit 1
-            ;;
-    esac
+          echo "Unsupported distribution: $distro."
+          exit 1
+          ;;
+      esac
+
+
 else
     echo "OpenSSH server is already installed."
 fi

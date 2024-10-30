@@ -87,7 +87,7 @@ func (v *VSCode) Run(ctx context.Context, exec *devcontainer.Exec) ([]byte, erro
 
 	execOutput, err := exec.ExecuteCommandInHomeDirectory(ctx, runSSHScript, true, false)
 	if err != nil {
-		return nil, fmt.Errorf("failed to run SSH serverr: %w", err)
+		return nil, fmt.Errorf("failed to run SSH server: %w", err)
 	}
 
 	output += "SSH server run output...\n" + string(execOutput) + "\nSuccessfully run ssh-server\n"
