@@ -34,13 +34,13 @@ import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import EnvironmentTypeSelector from '@ar/components/EnvironmentTypeSelector/EnvironmentTypeSelector'
+import DockerVersionDeploymentsTable from '@ar/pages/version-details/components/DeploymentsTable/DeploymentsTable'
 
-import DockerVersionDeploymentsTable from './components/DeploymentsTable/DeploymentsTable'
 import DeploymentOverviewCards from './components/DeploymentOverviewCards/DeploymentOverviewCards'
 import {
   useArtifactVersionDeploymentsTableQueryParamOptions,
   type ArtifactVersionDeploymentsTableQueryParams
-} from './components/DeploymentsTable/utils'
+} from '../components/DeploymentsTable/utils'
 
 import css from './DockerVersion.module.scss'
 

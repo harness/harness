@@ -94,7 +94,7 @@ export const ServiceListCell: CellType = ({ row }) => {
 
 export const DeploymentPipelineCell: CellType = ({ row }) => {
   const { original } = row
-  const { pipelineId, lastPipelineExecutionId } = original || {}
+  const { pipelineId, lastPipelineExecutionId, lastPipelineExecutionName } = original || {}
   const { getString } = useStrings()
   const { scope } = useAppStore()
   const { getRouteToPipelineExecutionView } = useParentUtils()
@@ -110,11 +110,11 @@ export const DeploymentPipelineCell: CellType = ({ row }) => {
             executionIdentifier: defaultTo(lastPipelineExecutionId, ''),
             module: 'cd'
           })}>
-          {lastPipelineExecutionId}
+          {lastPipelineExecutionName}
         </Link>
       ) : (
         <Text color={Color.GREY_900} font={{ variation: FontVariation.BODY }}>
-          {lastPipelineExecutionId}
+          {lastPipelineExecutionName}
         </Text>
       )}
       <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
@@ -128,4 +128,14 @@ export const LastModifiedCell: CellType = ({ row }) => {
   const { original } = row
   const { lastDeployedAt } = original
   return <TableCells.LastModifiedCell value={defaultTo(lastDeployedAt, '')} />
+}
+
+export const InfrastructureNameCell: CellType = ({ row }) => {
+  const { original } = row
+  const { infraName, infraIdentifier } = original
+  return <TableCells.TextCell value={defaultTo(infraName, infraIdentifier)} />
+}
+
+export const InstanceCountCell: CellType = ({ value }) => {
+  return <TableCells.CountCell value={value} />
 }

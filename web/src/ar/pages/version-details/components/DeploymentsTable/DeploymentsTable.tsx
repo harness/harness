@@ -29,6 +29,8 @@ import {
   DeploymentPipelineCell,
   EnvironmentNameCell,
   EnvironmentTypeCell,
+  InfrastructureNameCell,
+  InstanceCountCell,
   LastModifiedCell,
   ServiceListCell
 } from './DeploymentsTableCells'
@@ -85,10 +87,22 @@ export default function DockerVersionDeploymentsTable(props: DockerVersionDeploy
         serverSortProps: getServerSortProps('envType')
       },
       {
+        Header: getString('versionDetails.deploymentsTable.columns.infra'),
+        accessor: 'infraName',
+        Cell: InfrastructureNameCell,
+        serverSortProps: getServerSortProps('infraIdentifier')
+      },
+      {
         Header: getString('versionDetails.deploymentsTable.columns.services'),
         accessor: 'serviceName',
         Cell: ServiceListCell,
-        serverSortProps: getServerSortProps('serviceName')
+        serverSortProps: getServerSortProps('serviceIdentifier')
+      },
+      {
+        Header: getString('versionDetails.deploymentsTable.columns.instanceCount'),
+        accessor: 'count',
+        Cell: InstanceCountCell,
+        serverSortProps: getServerSortProps('count')
       },
       {
         Header: getString('versionDetails.deploymentsTable.columns.deploymentPipeline'),

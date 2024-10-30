@@ -174,6 +174,8 @@ export interface StringsMap {
   'versionDetails.cards.supplyChain.totalComponents': string
   'versionDetails.deploymentsTable.columns.deploymentPipeline': string
   'versionDetails.deploymentsTable.columns.environment': string
+  'versionDetails.deploymentsTable.columns.infra': string
+  'versionDetails.deploymentsTable.columns.instanceCount': string
   'versionDetails.deploymentsTable.columns.services': string
   'versionDetails.deploymentsTable.columns.triggeredBy': string
   'versionDetails.deploymentsTable.columns.type': string

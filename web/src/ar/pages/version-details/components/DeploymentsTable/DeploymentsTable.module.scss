@@ -28,6 +28,6 @@
   div[class*='TableV2--cells'],
   div[class*='TableV2--header'] {
     display: grid !important;
-    grid-template-columns: minmax(var(--har-table-name-column-min-width), 1fr) 10rem 20rem 15rem 15rem;
+    grid-template-columns: minmax(var(--har-table-name-column-min-width), 1fr) 8rem 10rem 10rem 10rem 15rem 10rem;
   }
 }

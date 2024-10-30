@@ -65,3 +65,5 @@ deploymentsTable:
     services: Service/s
     deploymentPipeline: Deployment Pipeline
     triggeredBy: Triggered At
+    infra: Infrastructure
+    instanceCount: Instance Count

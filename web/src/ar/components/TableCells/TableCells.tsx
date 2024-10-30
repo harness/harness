@@ -150,7 +150,11 @@ export const CountCell = ({ value, icon, iconProps }: CountCellProps): JSX.Eleme
   )
 }
 
-export const TextCell = ({ value }: CommonCellProps): JSX.Element => {
+interface TextCellProps {
+  value: string | undefined
+}
+
+export const TextCell = ({ value }: TextCellProps): JSX.Element => {
   const { getString } = useStrings()
   return (
     <Text color={Color.GREY_900} lineClamp={1}>

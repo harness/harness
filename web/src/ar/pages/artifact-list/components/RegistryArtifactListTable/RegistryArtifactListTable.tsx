@@ -18,7 +18,7 @@ import React from 'react'
 import classNames from 'classnames'
 import type { Column } from 'react-table'
 import { PaginationProps, TableV2 } from '@harnessio/uicore'
-import type { ArtifactMetadata, ListArtifact } from '@harnessio/react-har-service-client'
+import type { ListRegistryArtifact, RegistryArtifactMetadata } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useParentHooks } from '@ar/hooks'
@@ -34,7 +34,7 @@ export interface RegistryArtifactListColumnActions {
   refetchList?: () => void
 }
 export interface RegistryArtifactListTableProps extends RegistryArtifactListColumnActions {
-  data: ListArtifact
+  data: ListRegistryArtifact
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
   setSortBy: (sortBy: string[]) => void
@@ -59,7 +59,7 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
   })
   const [currentSort, currentOrder] = sortBy
 
-  const columns: Column<ArtifactMetadata>[] = React.useMemo(() => {
+  const columns: Column<RegistryArtifactMetadata>[] = React.useMemo(() => {
     const getServerSortProps = (id: string) => {
       return {
         enableServerSort: true,
@@ -96,11 +96,11 @@ export default function RegistryArtifactListTable(props: RegistryArtifactListTab
         Cell: RegistryArtifactLatestUpdatedCell,
         serverSortProps: getServerSortProps('latestVersion')
       }
-    ].filter(Boolean) as unknown as Column<ArtifactMetadata>[]
+    ].filter(Boolean) as unknown as Column<RegistryArtifactMetadata>[]
   }, [currentOrder, currentSort, getString, onClickLabel])
 
   return (
-    <TableV2<ArtifactMetadata>
+    <TableV2<RegistryArtifactMetadata>
       className={classNames(css.table)}
       columns={columns}
       data={artifacts}
