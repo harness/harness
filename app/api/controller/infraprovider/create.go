@@ -97,6 +97,7 @@ func (c *Controller) MapToInfraProviderConfig(
 		Identifier: in.Identifier,
 		Name:       in.Name,
 		SpaceID:    parentSpace.ID,
+		SpacePath:  parentSpace.Path,
 		Type:       in.Type,
 		Created:    now,
 		Updated:    now,

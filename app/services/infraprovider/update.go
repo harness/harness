@@ -22,28 +22,6 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-func (c *Service) UpdateInfraProvider(
-	ctx context.Context,
-	infraProviderConfig *types.InfraProviderConfig,
-) error {
-	err := c.tx.WithTx(ctx, func(ctx context.Context) error {
-		err := c.updateConfig(ctx, infraProviderConfig)
-		if err != nil {
-			return fmt.Errorf("could not update the config: %q %w", infraProviderConfig.Identifier, err)
-		}
-		for _, resource := range infraProviderConfig.Resources {
-			if err = c.UpdateResource(ctx, resource); err != nil {
-				return fmt.Errorf("could not update the resources: %v %w", infraProviderConfig.Resources, err)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("failed to complete txn for the infraprovider %w", err)
-	}
-	return nil
-}
-
 func (c *Service) updateConfig(ctx context.Context, infraProviderConfig *types.InfraProviderConfig) error {
 	infraProviderConfig.Updated = time.Now().UnixMilli()
 	err := c.infraProviderConfigStore.Update(ctx, infraProviderConfig)

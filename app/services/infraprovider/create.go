@@ -40,7 +40,8 @@ func (c *Service) CreateInfraProvider(
 		if err != nil {
 			return fmt.Errorf("could not create the config: %q %w", infraProviderConfig.Identifier, err)
 		}
-		err = c.createResources(ctx, infraProviderConfig.Resources, infraProviderConfig.ID)
+		configID := infraProviderConfig.ID
+		err = c.createResources(ctx, infraProviderConfig.Resources, configID)
 		if err != nil {
 			return fmt.Errorf("could not create the resources: %v %w", infraProviderConfig.Resources, err)
 		}
@@ -90,6 +91,20 @@ func (c *Service) createResources(ctx context.Context, resources []types.InfraPr
 		}
 	}
 	return nil
+}
+
+func (c *Service) validate(ctx context.Context, resource *types.InfraProviderResource) error {
+	infraProvider, err := c.infraProviderFactory.GetInfraProvider(resource.InfraProviderType)
+	if err != nil {
+		return fmt.Errorf("failed to fetch infrastructure impl for type : %q %w", resource.InfraProviderType, err)
+	}
+	if len(infraProvider.TemplateParams()) > 0 {
+		err = c.validateTemplates(ctx, infraProvider, *resource)
+		if err != nil {
+			return err
+		}
+	}
+	return err
 }
 
 func (c *Service) validateTemplates(
