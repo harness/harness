@@ -314,11 +314,11 @@ func (s *CheckStore) ResultSummary(ctx context.Context,
 ) (map[sha.SHA]types.CheckCountSummary, error) {
 	const selectColumns = `
 			check_commit_sha,
-			COUNT(check_status = 'pending') as "count_pending",
-			COUNT(check_status = 'running') as "count_running",
-			COUNT(check_status = 'success') as "count_success",
-			COUNT(check_status = 'failure') as "count_failure",
-			COUNT(check_status = 'error') as "count_error"`
+			COUNT(*) FILTER (WHERE check_status = 'pending') as "count_pending",
+			COUNT(*) FILTER (WHERE check_status = 'running') as "count_running",
+			COUNT(*) FILTER (WHERE check_status = 'success') as "count_success",
+			COUNT(*) FILTER (WHERE check_status = 'failure') as "count_failure",
+			COUNT(*) FILTER (WHERE check_status = 'error') as "count_error"`
 
 	stmt := database.Builder.
 		Select(selectColumns).
