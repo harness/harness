@@ -29,6 +29,7 @@ import (
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -84,6 +85,12 @@ type gitspaceConfig struct {
 	IsMarkedForDeletion bool     `db:"gconf_is_marked_for_deletion"`
 }
 
+type gitspaceConfigWithLatestInstance struct {
+	gitspaceConfig
+	// gitspace instance information
+	gitspaceInstance
+}
+
 var _ store.GitspaceConfigStore = (*gitspaceConfigStore)(nil)
 
 // NewGitspaceConfigStore returns a new GitspaceConfigStore.
@@ -109,20 +116,10 @@ func (s gitspaceConfigStore) Count(ctx context.Context, filter *types.GitspaceFi
 	db := dbtx.GetAccessor(ctx, s.db)
 	countStmt := database.Builder.
 		Select("COUNT(*)").
-		From(gitspaceConfigsTable)
+		From(gitspaceConfigsTable).
+		PlaceholderFormat(squirrel.Dollar)
 
-	if !filter.IncludeDeleted {
-		countStmt = countStmt.Where(squirrel.Eq{"gconf_is_deleted": false})
-	}
-	if filter.UserID != "" {
-		countStmt = countStmt.Where(squirrel.Eq{"gconf_user_uid": filter.UserID})
-	}
-	if len(filter.SpaceIDs) > 0 {
-		countStmt = countStmt.Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
-	}
-	if filter.IncludeMarkedForDeletion {
-		countStmt = countStmt.Where(squirrel.Eq{"gconf_is_marked_for_deletion": true})
-	}
+	countStmt = addGitspaceFilter(countStmt, filter)
 
 	sql, args, err := countStmt.ToSql()
 	if err != nil {
@@ -155,7 +152,7 @@ func (s gitspaceConfigStore) Find(ctx context.Context, id int64, includeDeleted 
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace config for %d", id)
 	}
-	return s.mapToGitspaceConfig(ctx, dst)
+	return s.mapDBToGitspaceConfig(ctx, dst)
 }
 
 func (s gitspaceConfigStore) FindByIdentifier(
@@ -179,7 +176,7 @@ func (s gitspaceConfigStore) FindByIdentifier(
 	if err := db.GetContext(ctx, dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace config for %s", identifier)
 	}
-	return s.mapToGitspaceConfig(ctx, dst)
+	return s.mapDBToGitspaceConfig(ctx, dst)
 }
 
 func (s gitspaceConfigStore) Create(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error {
@@ -271,63 +268,75 @@ func mapToInternalGitspaceConfig(config *types.GitspaceConfig) *gitspaceConfig {
 	}
 }
 
-func (s gitspaceConfigStore) List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceConfig, error) {
-	stmt := database.Builder.
-		Select(gitspaceConfigSelectColumns).
-		From(gitspaceConfigsTable)
+// ListWithLatestInstance returns gitspace configs for the given filter with the latest gitspace instance information.
+func (s gitspaceConfigStore) ListWithLatestInstance(
+	ctx context.Context,
+	filter *types.GitspaceFilter,
+) ([]*types.GitspaceConfig, error) {
+	gitsSelectStr := getLatestInstanceQuery()
+	stmt := squirrel.Select(
+		gitspaceConfigSelectColumns,
+		gitspaceInstanceSelectColumns).
+		From(gitspaceConfigsTable).
+		LeftJoin("(" + gitsSelectStr +
+			") AS gits ON gitspace_configs.gconf_id = gits.gits_gitspace_config_id AND gits.rn = 1").
+		PlaceholderFormat(squirrel.Dollar)
 
+	stmt = addGitspaceFilter(stmt, filter)
+	stmt = addOrderBy(stmt, filter)
+	stmt = stmt.Limit(database.Limit(filter.QueryFilter.Size))
+	stmt = stmt.Offset(database.Offset(filter.QueryFilter.Page, filter.QueryFilter.Size))
+
+	sql, args, err := stmt.ToSql()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+	}
+	db := dbtx.GetAccessor(ctx, s.db)
+	var dst []*gitspaceConfigWithLatestInstance
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing list gitspace config query")
+	}
+	return s.ToGitspaceConfigs(ctx, dst)
+}
+
+func getLatestInstanceQuery() string {
+	return fmt.Sprintf("SELECT %s, %s FROM %s",
+		gitspaceInstanceSelectColumns,
+		"ROW_NUMBER() OVER (PARTITION BY gits_gitspace_config_id ORDER BY gits_created DESC) AS rn",
+		gitspaceInstanceTable,
+	)
+}
+
+func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter) squirrel.SelectBuilder {
 	if !filter.IncludeDeleted {
 		stmt = stmt.Where(squirrel.Eq{"gconf_is_deleted": false})
 	}
 
-	if filter.UserID != "" {
-		stmt = stmt.Where(squirrel.Eq{"gconf_user_uid": filter.UserID})
+	if filter.UserIdentifier != "" {
+		stmt = stmt.Where(squirrel.Eq{"gconf_user_uid": filter.UserIdentifier})
+	}
+
+	if !filter.IncludeMarkedForDeletion {
+		stmt = stmt.Where(squirrel.Eq{"gconf_is_marked_for_deletion": false})
 	}
 
 	if len(filter.SpaceIDs) > 0 {
 		stmt = stmt.Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
 	}
 
-	if filter.IncludeMarkedForDeletion {
-		stmt = stmt.Where(squirrel.Eq{"gconf_is_marked_for_deletion": true})
-	}
-
-	queryFilter := filter.QueryFilter
-	stmt = stmt.Limit(database.Limit(queryFilter.Size))
-	stmt = stmt.Offset(database.Offset(queryFilter.Page, queryFilter.Size))
-
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
-	}
-	db := dbtx.GetAccessor(ctx, s.db)
-	var dst []*gitspaceConfig
-	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace config list space query")
-	}
-	return s.mapToGitspaceConfigs(ctx, dst)
+	return stmt
 }
 
-func (s gitspaceConfigStore) ListAll(
-	ctx context.Context,
-	userUID string,
-) ([]*types.GitspaceConfig, error) {
-	stmt := database.Builder.
-		Select(gitspaceConfigSelectColumns).
-		From(gitspaceConfigsTable).
-		Where(squirrel.Eq{"gconf_is_deleted": false}).
-		Where(squirrel.Eq{"gconf_user_uid": userUID})
-
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+func addOrderBy(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter) squirrel.SelectBuilder {
+	switch filter.Sort {
+	case enum.GitspaceSortLastUsed:
+		return stmt.OrderBy("gits_last_used " + filter.Order.String())
+	case enum.GitspaceSortCreated:
+		return stmt.OrderBy("gconf_created " + filter.Order.String())
+	default:
+		return stmt.OrderBy("gits_last_used " + filter.Order.String())
 	}
-	db := dbtx.GetAccessor(ctx, s.db)
-	var dst []*gitspaceConfig
-	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace config list all query")
-	}
-	return s.mapToGitspaceConfigs(ctx, dst)
 }
 
 func (s gitspaceConfigStore) FindAll(ctx context.Context, ids []int64) ([]*types.GitspaceConfig, error) {
@@ -348,7 +357,7 @@ func (s gitspaceConfigStore) FindAll(ctx context.Context, ids []int64) ([]*types
 	return s.mapToGitspaceConfigs(ctx, dst)
 }
 
-func (s *gitspaceConfigStore) mapToGitspaceConfig(
+func (s gitspaceConfigStore) mapDBToGitspaceConfig(
 	ctx context.Context,
 	in *gitspaceConfig,
 ) (*types.GitspaceConfig, error) {
@@ -362,7 +371,7 @@ func (s *gitspaceConfigStore) mapToGitspaceConfig(
 		AuthType:         in.CodeAuthType,
 		AuthID:           in.CodeAuthID,
 	}
-	var res = &types.GitspaceConfig{
+	var result = &types.GitspaceConfig{
 		ID:                  in.ID,
 		Identifier:          in.Identifier,
 		Name:                in.Name,
@@ -378,30 +387,78 @@ func (s *gitspaceConfigStore) mapToGitspaceConfig(
 			ID:         in.CreatedBy.Ptr(),
 			Identifier: in.UserUID},
 	}
-	if res.GitspaceUser.ID != nil {
-		author, _ := s.pCache.Get(ctx, *res.GitspaceUser.ID)
+	if result.GitspaceUser.ID != nil {
+		author, _ := s.pCache.Get(ctx, *result.GitspaceUser.ID)
 		if author != nil {
-			res.GitspaceUser.DisplayName = author.DisplayName
-			res.GitspaceUser.Email = author.Email
+			result.GitspaceUser.DisplayName = author.DisplayName
+			result.GitspaceUser.Email = author.Email
 		}
 	}
 
 	if resource, err := s.rCache.Get(ctx, in.InfraProviderResourceID); err == nil {
-		res.InfraProviderResource = *resource
+		result.InfraProviderResource = *resource
 	} else {
 		return nil, fmt.Errorf("couldn't set resource to the config in DB: %s", in.Identifier)
 	}
-	return res, nil
+	return result, nil
 }
 
-func (s *gitspaceConfigStore) mapToGitspaceConfigs(
+func (s gitspaceConfigStore) ToGitspaceConfig(
+	ctx context.Context,
+	in *gitspaceConfigWithLatestInstance,
+) (*types.GitspaceConfig, error) {
+	var result, err = s.mapDBToGitspaceConfig(ctx, &in.gitspaceConfig)
+	if err != nil {
+		return nil, err
+	}
+	instance, err := mapDBToGitspaceInstance(ctx, &in.gitspaceInstance)
+	if err != nil {
+		log.Ctx(ctx).Error().Err(err).Msgf("Failed to convert to gitspace instance, gitspace configID: %d",
+			in.gitspaceInstance.ID,
+		)
+		instance = nil
+	}
+
+	if instance != nil {
+		gitspaceStateType, err2 := enum.GetGitspaceStateFromInstance(
+			instance.State,
+			instance.Updated,
+		)
+		if err2 != nil {
+			return nil, err2
+		}
+		result.State = gitspaceStateType
+	} else {
+		result.State = enum.GitspaceStateUninitialized
+	}
+	result.GitspaceInstance = instance
+
+	return result, nil
+}
+
+func (s gitspaceConfigStore) mapToGitspaceConfigs(
 	ctx context.Context,
 	configs []*gitspaceConfig,
 ) ([]*types.GitspaceConfig, error) {
 	var err error
 	res := make([]*types.GitspaceConfig, len(configs))
 	for i := range configs {
-		res[i], err = s.mapToGitspaceConfig(ctx, configs[i])
+		res[i], err = s.mapDBToGitspaceConfig(ctx, configs[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (s gitspaceConfigStore) ToGitspaceConfigs(
+	ctx context.Context,
+	configs []*gitspaceConfigWithLatestInstance,
+) ([]*types.GitspaceConfig, error) {
+	var err error
+	res := make([]*types.GitspaceConfig, len(configs))
+	for i := range configs {
+		res[i], err = s.ToGitspaceConfig(ctx, configs[i])
 		if err != nil {
 			return nil, err
 		}

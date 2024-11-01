@@ -28,7 +28,7 @@ func (c *Controller) ListGitspaces(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	filter types.ListQueryFilter,
+	filter types.GitspaceFilter,
 ) ([]*types.GitspaceConfig, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
@@ -38,5 +38,10 @@ func (c *Controller) ListGitspaces(
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to authorize gitspace: %w", err)
 	}
-	return c.gitspaceSvc.ListGitspacesForSpace(ctx, space, session.Principal.UID, filter)
+
+	filter.UserIdentifier = session.Principal.UID
+	filter.SpaceIDs = []int64{space.ID}
+	filter.IncludeMarkedForDeletion = false
+
+	return c.gitspaceSvc.ListGitspacesForSpace(ctx, space, filter)
 }

@@ -31,13 +31,13 @@ func HandleListGitspaces(spacesCtrl *space.Controller) http.HandlerFunc {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
-		filter := request.ParseListQueryFilterFromRequest(r)
+		filter := request.ParseGitspaceFilter(r)
 		repos, totalCount, err := spacesCtrl.ListGitspaces(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
-		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
+		render.Pagination(r, w, filter.QueryFilter.Page, filter.QueryFilter.Size, int(totalCount))
 		render.JSON(w, http.StatusOK, repos)
 	}
 }

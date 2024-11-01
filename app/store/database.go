@@ -662,14 +662,12 @@ type (
 		// Update tries to update a gitspace config in the datastore with optimistic locking.
 		Update(ctx context.Context, gitspaceConfig *types.GitspaceConfig) error
 
-		// List lists the gitspace configs present in a parent space ID in the datastore.
-		List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceConfig, error)
+		// ListWithLatestInstance returns gitspace configs for the given filter with the latest gitspace instance
+		// information.
+		ListWithLatestInstance(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceConfig, error)
 
 		// Count the number of gitspace configs in a space matching the given filter.
 		Count(ctx context.Context, filter *types.GitspaceFilter) (int64, error)
-
-		// ListAll lists all the gitspace configs present for a user in the given spaces in the datastore.
-		ListAll(ctx context.Context, userUID string) ([]*types.GitspaceConfig, error)
 	}
 
 	GitspaceInstanceStore interface {
@@ -692,13 +690,10 @@ type (
 		Update(ctx context.Context, gitspaceInstance *types.GitspaceInstance) error
 
 		// List lists the gitspace instance present in a parent space ID in the datastore.
-		List(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceInstance, error)
+		List(ctx context.Context, filter *types.GitspaceInstanceFilter) ([]*types.GitspaceInstance, error)
 
-		// ListDead lists dead gitspace instances whose heartbeat stopped coming after the given time.
-		ListDead(ctx context.Context, filter *types.GitspaceFilter) ([]*types.GitspaceInstance, error)
-
-		// FetchInactiveGitspaceConfigs lists the inactive gitspace instance present in the datastore
-		FetchInactiveGitspaceConfigs(ctx context.Context, filter *types.GitspaceFilter) ([]int64, error)
+		// Count the number of gitspace instances in a space matching the given filter.
+		Count(ctx context.Context, filter *types.GitspaceInstanceFilter) (int64, error)
 
 		// List lists the latest gitspace instance present for the gitspace configs in the datastore.
 		FindAllLatestByGitspaceConfigID(

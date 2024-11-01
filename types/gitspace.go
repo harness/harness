@@ -82,12 +82,18 @@ type GitspaceInstance struct {
 
 type GitspaceFilter struct {
 	QueryFilter              ListQueryFilter
-	UserID                   string
-	LastUsedBefore           int64
-	LastHeartBeatBefore      int64
-	State                    []enum.GitspaceInstanceStateType
-	SpaceIDs                 []int64
+	Sort                     enum.GitspaceSort `json:"sort"`
+	Order                    enum.Order        `json:"order"`
 	IncludeDeleted           bool
 	IncludeMarkedForDeletion bool
-	Limit                    int
+	GitspaceInstanceFilter
+}
+
+type GitspaceInstanceFilter struct {
+	UserIdentifier      string
+	LastUsedBefore      int64
+	LastHeartBeatBefore int64
+	States              []enum.GitspaceInstanceStateType
+	SpaceIDs            []int64
+	Limit               int
 }

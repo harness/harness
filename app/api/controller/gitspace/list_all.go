@@ -32,9 +32,13 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 	ctx context.Context,
 	session *auth.Session,
 ) ([]*types.GitspaceConfig, error) {
+	filter := &types.GitspaceFilter{
+		GitspaceInstanceFilter: types.GitspaceInstanceFilter{UserIdentifier: session.Principal.UID},
+	}
+
 	var result []*types.GitspaceConfig
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
-		allGitspaceConfigs, err := c.gitspaceConfigStore.ListAll(ctx, session.Principal.UID)
+		allGitspaceConfigs, err := c.gitspaceConfigStore.ListWithLatestInstance(ctx, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list gitspace configs: %w", err)
 		}
@@ -61,10 +65,7 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 			return err
 		}
 
-		finalGitspaceConfigs, err := c.filterAndPopulateInstanceDetails(ctx, allGitspaceConfigs, authorizedSpaceIDs)
-		if err != nil {
-			return err
-		}
+		finalGitspaceConfigs := c.filter(allGitspaceConfigs, authorizedSpaceIDs)
 
 		result = finalGitspaceConfigs
 
@@ -75,48 +76,14 @@ func (c *Controller) ListAllGitspaces( // nolint:gocognit
 		return nil, err
 	}
 
-	for _, gitspaceConfig := range result {
-		gitspaceConfig.BranchURL = c.gitspaceSvc.GetBranchURL(ctx, gitspaceConfig)
-	}
-
 	return result, nil
 }
 
-func (c *Controller) filterAndPopulateInstanceDetails(
-	ctx context.Context,
+func (c *Controller) filter(
 	allGitspaceConfigs []*types.GitspaceConfig,
 	authorizedSpaceIDs map[int64]bool,
-) ([]*types.GitspaceConfig, error) {
-	authorizedGitspaceConfigs := c.getAuthorizedGitspaceConfigs(allGitspaceConfigs, authorizedSpaceIDs)
-
-	gitspaceInstancesMap, err := c.getLatestInstanceMap(ctx, authorizedGitspaceConfigs)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*types.GitspaceConfig
-
-	for _, gitspaceConfig := range authorizedGitspaceConfigs {
-		instance := gitspaceInstancesMap[gitspaceConfig.ID]
-
-		gitspaceConfig.GitspaceInstance = instance
-
-		if instance != nil {
-			gitspaceStateType, stateErr := enum.GetGitspaceStateFromInstance(instance.State, instance.Updated)
-			if stateErr != nil {
-				return nil, stateErr
-			}
-
-			gitspaceConfig.State = gitspaceStateType
-
-			instance.SpacePath = gitspaceConfig.SpacePath
-		} else {
-			gitspaceConfig.State = enum.GitspaceStateUninitialized
-		}
-
-		result = append(result, gitspaceConfig)
-	}
-	return result, nil
+) []*types.GitspaceConfig {
+	return c.getAuthorizedGitspaceConfigs(allGitspaceConfigs, authorizedSpaceIDs)
 }
 
 func (c *Controller) getAuthorizedGitspaceConfigs(
@@ -149,27 +116,4 @@ func (c *Controller) getAuthorizedSpaces(
 	}
 
 	return authorizedSpaceIDs, nil
-}
-
-func (c *Controller) getLatestInstanceMap(
-	ctx context.Context,
-	authorizedGitspaceConfigs []*types.GitspaceConfig,
-) (map[int64]*types.GitspaceInstance, error) {
-	var authorizedConfigIDs = make([]int64, 0)
-	for _, config := range authorizedGitspaceConfigs {
-		authorizedConfigIDs = append(authorizedConfigIDs, config.ID)
-	}
-
-	var gitspaceInstances, err = c.gitspaceInstanceStore.FindAllLatestByGitspaceConfigID(ctx, authorizedConfigIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	var gitspaceInstancesMap = make(map[int64]*types.GitspaceInstance)
-
-	for _, gitspaceEntry := range gitspaceInstances {
-		gitspaceInstancesMap[gitspaceEntry.GitSpaceConfigID] = gitspaceEntry
-	}
-
-	return gitspaceInstancesMap, nil
 }

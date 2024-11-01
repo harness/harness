@@ -16,6 +16,9 @@ package request
 
 import (
 	"net/http"
+
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 const (
@@ -24,4 +27,20 @@ const (
 
 func GetGitspaceRefFromPath(r *http.Request) (string, error) {
 	return PathParamOrError(r, PathParamGitspaceIdentifier)
+}
+
+// ParseGitspaceSort extracts the gitspace sort parameter from the url.
+func ParseGitspaceSort(r *http.Request) enum.GitspaceSort {
+	return enum.ParseGitspaceSort(
+		r.URL.Query().Get(QueryParamSort),
+	)
+}
+
+// ParseGitspaceFilter extracts the gitspace filter from the url.
+func ParseGitspaceFilter(r *http.Request) types.GitspaceFilter {
+	return types.GitspaceFilter{
+		QueryFilter: ParseListQueryFilterFromRequest(r),
+		Sort:        ParseGitspaceSort(r),
+		Order:       ParseOrder(r),
+	}
 }

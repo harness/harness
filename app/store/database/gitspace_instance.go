@@ -166,7 +166,7 @@ func (g gitspaceInstanceStore) Find(ctx context.Context, id int64) (*types.Gitsp
 	if err := db.GetContext(ctx, gitspace, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace %d", id)
 	}
-	return g.mapToGitspaceInstance(ctx, gitspace)
+	return mapDBToGitspaceInstance(ctx, gitspace)
 }
 
 func (g gitspaceInstanceStore) FindByIdentifier(
@@ -187,7 +187,7 @@ func (g gitspaceInstanceStore) FindByIdentifier(
 	if err := db.GetContext(ctx, gitspace, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find gitspace %s", identifier)
 	}
-	return g.mapToGitspaceInstance(ctx, gitspace)
+	return mapDBToGitspaceInstance(ctx, gitspace)
 }
 
 func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *types.GitspaceInstance) error {
@@ -276,34 +276,18 @@ func (g gitspaceInstanceStore) FindLatestByGitspaceConfigID(
 		return nil, database.ProcessSQLErrorf(
 			ctx, err, "Failed to find latest gitspace instance for %d", gitspaceConfigID)
 	}
-	return g.mapToGitspaceInstance(ctx, gitspace)
+	return mapDBToGitspaceInstance(ctx, gitspace)
 }
 
 func (g gitspaceInstanceStore) List(
 	ctx context.Context,
-	filter *types.GitspaceFilter,
+	filter *types.GitspaceInstanceFilter,
 ) ([]*types.GitspaceInstance, error) {
 	stmt := database.Builder.
 		Select(gitspaceInstanceSelectColumns).
 		From(gitspaceInstanceTable).
 		OrderBy("gits_created ASC")
-
-	if len(filter.SpaceIDs) > 0 {
-		stmt = stmt.Where(squirrel.Eq{"gits_space_id": filter.SpaceIDs})
-	}
-
-	if filter.UserID != "" {
-		stmt = stmt.Where(squirrel.Eq{"gits_user_id": filter.UserID})
-	}
-
-	if len(filter.State) > 0 {
-		stmt = stmt.Where(squirrel.Eq{"gits_state": filter.State})
-	}
-
-	if filter.Limit > 0 {
-		stmt = stmt.Limit(database.Limit(filter.Limit))
-	}
-
+	stmt = addGitspaceInstanceFilter(stmt, filter)
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
@@ -316,53 +300,24 @@ func (g gitspaceInstanceStore) List(
 	return g.mapToGitspaceInstances(ctx, dst)
 }
 
-func (g gitspaceInstanceStore) ListDead(
-	ctx context.Context,
-	filter *types.GitspaceFilter,
-) ([]*types.GitspaceInstance, error) {
-	stmt := database.Builder.
-		Select(gitspaceInstanceSelectColumns).
-		From(gitspaceInstanceTable).
-		Where(squirrel.Lt{"gits_last_heartbeat": filter.LastHeartBeatBefore}).
-		Where(squirrel.Eq{"gits_state": filter.State}).
-		OrderBy("gits_created ASC")
-
-	sqlStr, args, err := stmt.ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
-	}
-
-	var dst []*gitspaceInstance
+func (g gitspaceInstanceStore) Count(ctx context.Context, filter *types.GitspaceInstanceFilter) (int64, error) {
 	db := dbtx.GetAccessor(ctx, g.db)
-	if err = db.SelectContext(ctx, &dst, sqlStr, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace instance list query")
-	}
-	return g.mapToGitspaceInstances(ctx, dst)
-}
+	countStmt := database.Builder.
+		Select("COUNT(*)").
+		From(gitspaceInstanceTable)
 
-func (g gitspaceInstanceStore) FetchInactiveGitspaceConfigs(
-	ctx context.Context,
-	filter *types.GitspaceFilter,
-) ([]int64, error) {
-	stmt := database.Builder.
-		Select("gits_gitspace_config_id").
-		From(gitspaceInstanceTable).
-		Where(squirrel.Lt{"gits_last_used": filter.LastUsedBefore}).
-		Where(squirrel.Eq{"gits_state": filter.State}).
-		OrderBy("gits_created ASC")
-	if filter.Limit > 0 {
-		stmt = stmt.Limit(database.Limit(filter.Limit))
-	}
-	sql, args, err := stmt.ToSql()
+	countStmt = addGitspaceInstanceFilter(countStmt, filter)
+
+	sql, args, err := countStmt.ToSql()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert squirrel builder to sql")
+		return 0, errors.Wrap(err, "Failed to convert squirrel builder to sql")
 	}
-	db := dbtx.GetAccessor(ctx, g.db)
-	var dst []int64
-	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing gitspace instance list query")
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "Failed executing custom count query")
 	}
-	return dst, nil
+	return count, nil
 }
 
 func (g gitspaceInstanceStore) FindAllLatestByGitspaceConfigID(
@@ -399,7 +354,33 @@ func (g gitspaceInstanceStore) FindAllLatestByGitspaceConfigID(
 	return g.mapToGitspaceInstances(ctx, dst)
 }
 
-func (g gitspaceInstanceStore) mapToGitspaceInstance(
+func addGitspaceInstanceFilter(
+	stmt squirrel.SelectBuilder,
+	filter *types.GitspaceInstanceFilter,
+) squirrel.SelectBuilder {
+	if len(filter.SpaceIDs) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"gits_space_id": filter.SpaceIDs})
+	}
+
+	if filter.UserIdentifier != "" {
+		stmt = stmt.Where(squirrel.Eq{"gits_user_id": filter.UserIdentifier})
+	}
+
+	if filter.LastHeartBeatBefore > 0 {
+		stmt = stmt.Where(squirrel.Lt{"gits_last_heartbeat": filter.LastHeartBeatBefore})
+	}
+
+	if len(filter.States) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"gits_state": filter.States})
+	}
+
+	if filter.Limit > 0 {
+		stmt = stmt.Limit(database.Limit(filter.Limit))
+	}
+	return stmt
+}
+
+func mapDBToGitspaceInstance(
 	_ context.Context,
 	in *gitspaceInstance,
 ) (*types.GitspaceInstance, error) {
@@ -434,7 +415,7 @@ func (g gitspaceInstanceStore) mapToGitspaceInstances(
 	var err error
 	res := make([]*types.GitspaceInstance, len(instances))
 	for i := range instances {
-		res[i], err = g.mapToGitspaceInstance(ctx, instances[i])
+		res[i], err = mapDBToGitspaceInstance(ctx, instances[i])
 		if err != nil {
 			return nil, err
 		}
