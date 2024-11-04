@@ -63,6 +63,7 @@ const (
 	descending    = "descending"
 	value         = "value"
 	lastUsed      = "last_used"
+	lastActivated = "last_activated"
 )
 
 func toInterfaceSlice[T interface{}](vals []T) []interface{} {

@@ -23,8 +23,9 @@ type GitspaceSort string
 
 // GitspaceSort enumeration.
 const (
-	GitspaceSortLastUsed GitspaceSort = lastUsed
-	GitspaceSortCreated  GitspaceSort = created
+	GitspaceSortLastUsed      GitspaceSort = lastUsed
+	GitspaceSortCreated       GitspaceSort = created
+	GitspaceSortLastActivated GitspaceSort = lastActivated
 )
 
 var GitspaceSorts = sortEnum([]GitspaceSort{
@@ -42,7 +43,36 @@ func ParseGitspaceSort(s string) GitspaceSort {
 		return GitspaceSortLastUsed
 	case created, createdAt:
 		return GitspaceSortCreated
+	case lastActivated:
+		return GitspaceSortLastActivated
 	default:
 		return GitspaceSortLastUsed
+	}
+}
+
+type GitspaceOwner string
+
+var GitspaceOwners = sortEnum([]GitspaceOwner{
+	GitspaceOwnerSelf,
+	GitspaceOwnerAll,
+})
+
+const (
+	GitspaceOwnerSelf GitspaceOwner = "self"
+	GitspaceOwnerAll  GitspaceOwner = "all"
+)
+
+func (GitspaceOwner) Enum() []interface{} { return toInterfaceSlice(GitspaceOwners) }
+
+// ParseGitspaceSort parses the gitspace sort attribute string
+// and returns the equivalent enumeration.
+func ParseGitspaceOwner(s string) GitspaceOwner {
+	switch strings.ToLower(s) {
+	case string(GitspaceOwnerSelf):
+		return GitspaceOwnerSelf
+	case string(GitspaceOwnerAll):
+		return GitspaceOwnerAll
+	default:
+		return GitspaceOwnerSelf
 	}
 }

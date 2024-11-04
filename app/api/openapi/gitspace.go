@@ -51,8 +51,9 @@ type getGitspaceRequest struct {
 }
 
 type gitspacesListRequest struct {
-	Sort  string `query:"sort"      enum:"id,created,updated"`
-	Order string `query:"order"     enum:"asc,desc"`
+	Sort          string `query:"sort"      enum:"created,last_used,last_activated"`
+	Order         string `query:"order"     enum:"asc,desc"`
+	GitspaceOwner string `query:"gitspace_owner"     enum:"self,all"`
 
 	// include pagination request
 	paginationRequest

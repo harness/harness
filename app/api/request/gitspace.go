@@ -23,6 +23,7 @@ import (
 
 const (
 	PathParamGitspaceIdentifier = "gitspace_identifier"
+	QueryParamGitspaceOwner     = "gitspace_owner"
 )
 
 func GetGitspaceRefFromPath(r *http.Request) (string, error) {
@@ -36,11 +37,19 @@ func ParseGitspaceSort(r *http.Request) enum.GitspaceSort {
 	)
 }
 
+// ParseGitspaceOwner extracts the gitspace owner type from the url.
+func ParseGitspaceOwner(r *http.Request) enum.GitspaceOwner {
+	return enum.ParseGitspaceOwner(
+		r.URL.Query().Get(QueryParamGitspaceOwner),
+	)
+}
+
 // ParseGitspaceFilter extracts the gitspace filter from the url.
 func ParseGitspaceFilter(r *http.Request) types.GitspaceFilter {
 	return types.GitspaceFilter{
 		QueryFilter: ParseListQueryFilterFromRequest(r),
 		Sort:        ParseGitspaceSort(r),
+		Owner:       ParseGitspaceOwner(r),
 		Order:       ParseOrder(r),
 	}
 }

@@ -313,7 +313,7 @@ func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter
 		stmt = stmt.Where(squirrel.Eq{"gconf_is_deleted": false})
 	}
 
-	if filter.UserIdentifier != "" {
+	if filter.Owner == enum.GitspaceOwnerSelf && filter.UserIdentifier != "" {
 		stmt = stmt.Where(squirrel.Eq{"gconf_user_uid": filter.UserIdentifier})
 	}
 
@@ -334,8 +334,10 @@ func addOrderBy(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter) squir
 		return stmt.OrderBy("gits_last_used " + filter.Order.String())
 	case enum.GitspaceSortCreated:
 		return stmt.OrderBy("gconf_created " + filter.Order.String())
+	case enum.GitspaceSortLastActivated:
+		return stmt.OrderBy("gits_active_time_started " + filter.Order.String())
 	default:
-		return stmt.OrderBy("gits_last_used " + filter.Order.String())
+		return stmt.OrderBy("gits_active_time_started " + filter.Order.String())
 	}
 }
 

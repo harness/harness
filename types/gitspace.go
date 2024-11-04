@@ -84,6 +84,7 @@ type GitspaceFilter struct {
 	QueryFilter              ListQueryFilter
 	Sort                     enum.GitspaceSort `json:"sort"`
 	Order                    enum.Order        `json:"order"`
+	Owner                    enum.GitspaceOwner
 	IncludeDeleted           bool
 	IncludeMarkedForDeletion bool
 	GitspaceInstanceFilter
