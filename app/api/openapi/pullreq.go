@@ -830,7 +830,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	opChecks.WithTags("pullreq")
 	opChecks.WithMapOfAnything(map[string]interface{}{"operationId": "checksPullReq"})
 	_ = reflector.SetRequest(&opChecks, new(getPullReqChecksRequest), http.MethodGet)
-	panicOnErr(reflector.SetJSONResponse(&opChecks, new([]types.PullReqChecks), http.StatusOK))
+	panicOnErr(reflector.SetJSONResponse(&opChecks, new(types.PullReqChecks), http.StatusOK))
 	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusInternalServerError))
 	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusUnauthorized))
 	panicOnErr(reflector.SetJSONResponse(&opChecks, new(usererror.Error), http.StatusForbidden))

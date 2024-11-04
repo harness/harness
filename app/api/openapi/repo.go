@@ -946,7 +946,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		queryParameterSince, queryParameterUntil, queryParameterCommitter,
 		QueryParameterPage, QueryParameterLimit, QueryParamIncludeStats)
 	_ = reflector.SetRequest(&opListCommits, new(listCommitsRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListCommits, []types.ListCommitResponse{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListCommits, new(types.ListCommitResponse), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusForbidden)
@@ -964,17 +964,17 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGetCommit, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/commits/{commit_sha}", opGetCommit)
 
-	opCalulateCommitDivergence := openapi3.Operation{}
-	opCalulateCommitDivergence.WithTags("repository")
-	opCalulateCommitDivergence.WithMapOfAnything(map[string]interface{}{"operationId": "calculateCommitDivergence"})
-	_ = reflector.SetRequest(&opCalulateCommitDivergence, new(calculateCommitDivergenceRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, []types.CommitDivergence{}, http.StatusOK)
-	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusNotFound)
+	opCalculateCommitDivergence := openapi3.Operation{}
+	opCalculateCommitDivergence.WithTags("repository")
+	opCalculateCommitDivergence.WithMapOfAnything(map[string]interface{}{"operationId": "calculateCommitDivergence"})
+	_ = reflector.SetRequest(&opCalculateCommitDivergence, new(calculateCommitDivergenceRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opCalculateCommitDivergence, []types.CommitDivergence{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCalculateCommitDivergence, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCalculateCommitDivergence, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCalculateCommitDivergence, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCalculateCommitDivergence, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/commits/calculate-divergence",
-		opCalulateCommitDivergence)
+		opCalculateCommitDivergence)
 
 	opCreateBranch := openapi3.Operation{}
 	opCreateBranch.WithTags("repository")

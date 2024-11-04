@@ -26,10 +26,7 @@ import (
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
-type principalRequest struct {
-}
-
-var queryParameterQueryPrincipals = openapi3.ParameterOrRef{
+var QueryParameterQueryPrincipals = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
 		In:          openapi3.ParameterInQuery,
@@ -43,7 +40,7 @@ var queryParameterQueryPrincipals = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterPrincipalTypes = openapi3.ParameterOrRef{
+var QueryParameterPrincipalTypes = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamType,
 		In:          openapi3.ParameterInQuery,
@@ -69,9 +66,9 @@ func buildPrincipals(reflector *openapi3.Reflector) {
 	opList := openapi3.Operation{}
 	opList.WithTags("principals")
 	opList.WithMapOfAnything(map[string]interface{}{"operationId": "listPrincipals"})
-	opList.WithParameters(queryParameterQueryPrincipals, QueryParameterPage,
-		QueryParameterLimit, queryParameterPrincipalTypes)
-	_ = reflector.SetRequest(&opList, new(principalRequest), http.MethodGet)
+	opList.WithParameters(QueryParameterQueryPrincipals, QueryParameterPage,
+		QueryParameterLimit, QueryParameterPrincipalTypes)
+	_ = reflector.SetRequest(&opList, nil, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opList, new([]types.PrincipalInfo), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusInternalServerError)
