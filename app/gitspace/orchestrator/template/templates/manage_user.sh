@@ -18,10 +18,12 @@ else
         apt-get update && apt-get install -y adduser
         adduser --disabled-password --home "$homeDir" --gecos "" "$username"
         usermod -aG sudo "$username"
+        echo "%sudo ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
         ;;
       fedora)
         useradd -m -d "$homeDir" "$username"
         usermod -aG wheel "$username"
+        echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
         ;;
       opensuse)
         useradd -m -d "$homeDir" "$username"

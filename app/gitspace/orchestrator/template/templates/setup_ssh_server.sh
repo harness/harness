@@ -73,4 +73,4 @@ if ! grep -q "^PasswordAuthentication yes" $config_file; then
 fi
 fi
 
-mkdir /var/run/sshd
+mkdir -p /var/run/sshd
