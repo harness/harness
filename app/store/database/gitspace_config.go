@@ -326,6 +326,14 @@ func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter
 	if len(filter.SpaceIDs) > 0 {
 		stmt = stmt.Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
 	}
+	if filter.LastHeartBeatBefore > 0 {
+		stmt = stmt.Where(squirrel.Lt{"gits_last_heartbeat": filter.LastHeartBeatBefore})
+	}
+
+	if filter.LastUsedBefore > 0 {
+		stmt = stmt.Where(squirrel.Lt{"gits_last_used": filter.LastUsedBefore})
+	}
+
 	if len(filter.GitspaceFilterStates) > 0 {
 		instanceStateTypes := make([]enum.GitspaceInstanceStateType, 0, len(filter.GitspaceFilterStates))
 		for _, state := range filter.GitspaceFilterStates {
