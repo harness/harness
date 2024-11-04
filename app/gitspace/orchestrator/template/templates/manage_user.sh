@@ -15,7 +15,7 @@ else
   # Create a new user
   case "$(distro)" in
       debian)
-        apt-get update && apt-get install -y adduser
+        apt-get update && apt-get install -y adduser && apt-get install -y sudo
         adduser --disabled-password --home "$homeDir" --gecos "" "$username"
         usermod -aG sudo "$username"
         echo "%sudo ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
@@ -23,6 +23,7 @@ else
       fedora)
         useradd -m -d "$homeDir" "$username"
         usermod -aG wheel "$username"
+        dnf install -y sudo
         echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
         ;;
       opensuse)
