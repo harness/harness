@@ -46,7 +46,7 @@ func ParseGitspaceSort(s string) GitspaceSort {
 	case lastActivated:
 		return GitspaceSortLastActivated
 	default:
-		return GitspaceSortLastUsed
+		return GitspaceSortLastActivated
 	}
 }
 
@@ -76,3 +76,25 @@ func ParseGitspaceOwner(s string) GitspaceOwner {
 		return GitspaceOwnerSelf
 	}
 }
+
+type GitspaceFilterState string
+
+func (GitspaceFilterState) Enum() []interface{} { return toInterfaceSlice(GitspaceFilterStates) }
+func (s GitspaceFilterState) Sanitize() (GitspaceFilterState, bool) {
+	return Sanitize(s, GetAllGitspaceFilterState)
+}
+func GetAllGitspaceFilterState() ([]GitspaceFilterState, GitspaceFilterState) {
+	return GitspaceFilterStates, ""
+}
+
+const (
+	GitspaceFilterStateRunning GitspaceFilterState = "running"
+	GitspaceFilterStateStopped GitspaceFilterState = "stopped"
+	GitspaceFilterStateError   GitspaceFilterState = "error"
+)
+
+var GitspaceFilterStates = sortEnum([]GitspaceFilterState{
+	GitspaceFilterStateRunning,
+	GitspaceFilterStateStopped,
+	GitspaceFilterStateError,
+})

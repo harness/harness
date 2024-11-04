@@ -114,9 +114,11 @@ type gitspaceConfigStore struct {
 
 func (s gitspaceConfigStore) Count(ctx context.Context, filter *types.GitspaceFilter) (int64, error) {
 	db := dbtx.GetAccessor(ctx, s.db)
-	countStmt := database.Builder.
-		Select("COUNT(*)").
+	gitsSelectStr := getLatestInstanceQuery()
+	countStmt := squirrel.Select("COUNT(*)").
 		From(gitspaceConfigsTable).
+		LeftJoin("(" + gitsSelectStr +
+			") AS gits ON gitspace_configs.gconf_id = gits.gits_gitspace_config_id AND gits.rn = 1").
 		PlaceholderFormat(squirrel.Dollar)
 
 	countStmt = addGitspaceFilter(countStmt, filter)
@@ -324,7 +326,22 @@ func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter
 	if len(filter.SpaceIDs) > 0 {
 		stmt = stmt.Where(squirrel.Eq{"gconf_space_id": filter.SpaceIDs})
 	}
-
+	if len(filter.GitspaceFilterStates) > 0 {
+		instanceStateTypes := make([]enum.GitspaceInstanceStateType, 0, len(filter.GitspaceFilterStates))
+		for _, state := range filter.GitspaceFilterStates {
+			switch state {
+			case enum.GitspaceFilterStateError:
+				instanceStateTypes =
+					append(instanceStateTypes, enum.GitspaceInstanceStateError, enum.GitspaceInstanceStateCleaned)
+			case enum.GitspaceFilterStateRunning:
+				instanceStateTypes =
+					append(instanceStateTypes, enum.GitspaceInstanceStateRunning)
+			case enum.GitspaceFilterStateStopped:
+				instanceStateTypes = append(instanceStateTypes, enum.GitspaceInstanceStateDeleted)
+			}
+		}
+		stmt = stmt.Where(squirrel.Eq{"gits_state": instanceStateTypes})
+	}
 	return stmt
 }
 
@@ -335,9 +352,9 @@ func addOrderBy(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter) squir
 	case enum.GitspaceSortCreated:
 		return stmt.OrderBy("gconf_created " + filter.Order.String())
 	case enum.GitspaceSortLastActivated:
-		return stmt.OrderBy("gits_active_time_started " + filter.Order.String())
+		return stmt.OrderBy("gits_created " + filter.Order.String())
 	default:
-		return stmt.OrderBy("gits_active_time_started " + filter.Order.String())
+		return stmt.OrderBy("gits_created " + filter.Order.String())
 	}
 }
 

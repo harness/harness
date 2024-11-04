@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/swaggest/openapi-go/openapi3"
 )
@@ -51,9 +52,10 @@ type getGitspaceRequest struct {
 }
 
 type gitspacesListRequest struct {
-	Sort          string `query:"sort"      enum:"created,last_used,last_activated"`
-	Order         string `query:"order"     enum:"asc,desc"`
-	GitspaceOwner string `query:"gitspace_owner"     enum:"self,all"`
+	Sort           enum.GitspaceSort          `query:"sort"`
+	Order          string                     `query:"order"     enum:"asc,desc"`
+	GitspaceOwner  enum.GitspaceOwner         `query:"gitspace_owner"`
+	GitspaceStates []enum.GitspaceFilterState `query:"gitspace_states"`
 
 	// include pagination request
 	paginationRequest

@@ -24,6 +24,7 @@ import (
 const (
 	PathParamGitspaceIdentifier = "gitspace_identifier"
 	QueryParamGitspaceOwner     = "gitspace_owner"
+	QueryParamGitspaceStates    = "gitspace_states"
 )
 
 func GetGitspaceRefFromPath(r *http.Request) (string, error) {
@@ -44,12 +45,31 @@ func ParseGitspaceOwner(r *http.Request) enum.GitspaceOwner {
 	)
 }
 
+// ParseGitspaceOwner extracts the gitspace owner type from the url.
+func ParseGitspaceStates(r *http.Request) []enum.GitspaceFilterState {
+	pTypesRaw := r.URL.Query()[QueryParamGitspaceStates]
+	m := make(map[enum.GitspaceFilterState]struct{}) // use map to eliminate duplicates
+	for _, pTypeRaw := range pTypesRaw {
+		if pType, ok := enum.GitspaceFilterState(pTypeRaw).Sanitize(); ok {
+			m[pType] = struct{}{}
+		}
+	}
+
+	res := make([]enum.GitspaceFilterState, 0, len(m))
+	for t := range m {
+		res = append(res, t)
+	}
+
+	return res
+}
+
 // ParseGitspaceFilter extracts the gitspace filter from the url.
 func ParseGitspaceFilter(r *http.Request) types.GitspaceFilter {
 	return types.GitspaceFilter{
-		QueryFilter: ParseListQueryFilterFromRequest(r),
-		Sort:        ParseGitspaceSort(r),
-		Owner:       ParseGitspaceOwner(r),
-		Order:       ParseOrder(r),
+		QueryFilter:          ParseListQueryFilterFromRequest(r),
+		GitspaceFilterStates: ParseGitspaceStates(r),
+		Sort:                 ParseGitspaceSort(r),
+		Owner:                ParseGitspaceOwner(r),
+		Order:                ParseOrder(r),
 	}
 }
