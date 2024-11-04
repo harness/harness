@@ -45,7 +45,7 @@ func ParseGitspaceOwner(r *http.Request) enum.GitspaceOwner {
 	)
 }
 
-// ParseGitspaceOwner extracts the gitspace owner type from the url.
+// ParseGitspaceStates extracts the gitspace owner type from the url.
 func ParseGitspaceStates(r *http.Request) []enum.GitspaceFilterState {
 	pTypesRaw := r.URL.Query()[QueryParamGitspaceStates]
 	m := make(map[enum.GitspaceFilterState]struct{}) // use map to eliminate duplicates

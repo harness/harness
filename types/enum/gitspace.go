@@ -31,6 +31,7 @@ const (
 var GitspaceSorts = sortEnum([]GitspaceSort{
 	GitspaceSortLastUsed,
 	GitspaceSortCreated,
+	GitspaceSortLastActivated,
 })
 
 func (GitspaceSort) Enum() []interface{} { return toInterfaceSlice(GitspaceSorts) }
