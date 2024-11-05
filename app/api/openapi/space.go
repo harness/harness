@@ -327,6 +327,18 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/repos", opRepos)
 
+	opPipelines := openapi3.Operation{}
+	opPipelines.WithTags("space")
+	opPipelines.WithMapOfAnything(map[string]interface{}{"operationId": "listPipelines"})
+	opPipelines.WithParameters(queryParameterQueryRepo, QueryParameterPage, QueryParameterLimit)
+	_ = reflector.SetRequest(&opPipelines, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opPipelines, []types.Pipeline{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/pipelines", opPipelines)
+
 	opTemplates := openapi3.Operation{}
 	opTemplates.WithTags("space")
 	opTemplates.WithMapOfAnything(map[string]interface{}{"operationId": "listTemplates"})

@@ -32,13 +32,13 @@ func HandleListPipelines(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 		filter := request.ParseListQueryFilterFromRequest(r)
-		repos, totalCount, err := spaceCtrl.ListPipelines(ctx, session, spaceRef, filter)
+		pipelines, totalCount, err := spaceCtrl.ListPipelines(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
-		render.JSON(w, http.StatusOK, repos)
+		render.JSON(w, http.StatusOK, pipelines)
 	}
 }
