@@ -184,7 +184,7 @@ func pathTerminatedWithMarkerAndURL(
 	}
 
 	// if marker was found - convert to escaped version (skip first character in case path starts with '/').
-	escapedPath := path[0:1] + strings.ReplaceAll(path[1:], types.PathSeparator, EncodedPathSeparator)
+	escapedPath := path[0:1] + strings.ReplaceAll(path[1:], types.PathSeparatorAsString, EncodedPathSeparator)
 
 	prefixWithPath := prefix + path + marker
 	prefixWithEscapedPath := prefix + escapedPath + markerReplacement

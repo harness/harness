@@ -17,7 +17,8 @@ package types
 import "encoding/json"
 
 const (
-	PathSeparator = "/"
+	PathSeparatorAsString = string(PathSeparator)
+	PathSeparator         = '/'
 )
 
 // SpacePath represents a full path to a space.

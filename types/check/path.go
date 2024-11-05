@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	maxPathSegmentsForSpace = 9
-	maxPathSegments         = 10
+	MaxSpacePathDepth = 9
+	MaxRepoPathDepth  = 10
 )
 
 var (
@@ -32,13 +32,13 @@ var (
 	}
 	ErrPathInvalidDepth = &ValidationError{
 		fmt.Sprintf("A path can have at most %d segments (%d for spaces).",
-			maxPathSegments, maxPathSegmentsForSpace),
+			MaxRepoPathDepth, MaxSpacePathDepth),
 	}
 	ErrEmptyPathSegment = &ValidationError{
 		"Empty segments are not allowed.",
 	}
 	ErrPathCantBeginOrEndWithSeparator = &ValidationError{
-		fmt.Sprintf("Path can't start or end with the separator ('%s').", types.PathSeparator),
+		fmt.Sprintf("Path can't start or end with the separator ('%s').", types.PathSeparatorAsString),
 	}
 )
 
@@ -49,7 +49,7 @@ func Path(path string, isSpace bool, identifierCheck SpaceIdentifier) error {
 	}
 
 	// ensure path doesn't begin or end with /
-	if path[:1] == types.PathSeparator || path[len(path)-1:] == types.PathSeparator {
+	if path[:1] == types.PathSeparatorAsString || path[len(path)-1:] == types.PathSeparatorAsString {
 		return ErrPathCantBeginOrEndWithSeparator
 	}
 
@@ -59,7 +59,7 @@ func Path(path string, isSpace bool, identifierCheck SpaceIdentifier) error {
 	}
 
 	// ensure all segments of the path are valid identifiers
-	segments := strings.Split(path, types.PathSeparator)
+	segments := strings.Split(path, types.PathSeparatorAsString)
 	for i, s := range segments {
 		if s == "" {
 			return ErrEmptyPathSegment
@@ -83,6 +83,6 @@ func PathDepth(path string, isSpace bool) error {
 // IsPathTooDeep Checks if the provided path is too long.
 // NOTE: A repository path can be one deeper than a space path (as otherwise the space would be useless).
 func IsPathTooDeep(path string, isSpace bool) bool {
-	l := strings.Count(path, types.PathSeparator) + 1
-	return (!isSpace && l > maxPathSegments) || (isSpace && l > maxPathSegmentsForSpace)
+	l := strings.Count(path, types.PathSeparatorAsString) + 1
+	return (!isSpace && l > MaxRepoPathDepth) || (isSpace && l > MaxSpacePathDepth)
 }

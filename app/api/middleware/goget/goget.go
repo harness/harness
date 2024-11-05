@@ -15,21 +15,28 @@
 package goget
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"regexp"
 	"strings"
 
+	"github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/store"
+
+	"github.com/rs/zerolog/log"
 )
 
-var goGetTmpl *template.Template
-var httpRegex = regexp.MustCompile("https?://")
+var (
+	goGetTmpl *template.Template
+	httpRegex = regexp.MustCompile("https?://")
+)
 
 func init() {
 	var err error
@@ -49,8 +56,10 @@ func init() {
 }
 
 // Middleware writes to response with html meta tags go-import and go-source.
+//
+//nolint:gocognit
 func Middleware(
-	config *types.Config,
+	maxRepoPathDepth int,
 	repoCtrl *repo.Controller,
 	urlProvider url.Provider,
 ) func(http.Handler) http.Handler {
@@ -64,27 +73,64 @@ func Middleware(
 				ctx := r.Context()
 
 				session, _ := request.AuthSessionFrom(ctx)
-				repoRef, err := request.GetRepoRefFromPath(r)
+				importPath, err := request.GetRepoRefFromPath(r)
 				if err != nil {
 					render.TranslatedUserError(ctx, w, err)
 					return
 				}
 
-				repository, err := repoCtrl.Find(ctx, session, repoRef)
-				if err != nil {
-					render.TranslatedUserError(ctx, w, err)
+				// go get can also be used with (sub)module suffixes (e.g 127.0.0.1/my-project/my-repo/v2)
+				// for which go expects us to return the import path corresponding to the repository root
+				// (e.g. 127.0.0.1/my-project/my-repo).
+				//
+				// WARNING: This can lead to ambiguities as we allow matching paths between spaces and repos:
+				//  1. (space)foo     + (repo)bar + (sufix)v2 = 127.0.0.1/my-project/my-repo/v2
+				//  2. (space)foo/bar + (repo)v2              = 127.0.0.1/my-project/my-repo/v2
+				//
+				// We handle ambiguities by always choosing the repo with the longest path (e.g. 2. case above).
+				// To solve go get related ambiguities users would have to move their repositories.
+				var repository *repo.RepositoryOutput
+				var repoRef string
+
+				pathSegments := paths.Segments(importPath)
+				if len(pathSegments) > maxRepoPathDepth {
+					pathSegments = pathSegments[:maxRepoPathDepth]
+				}
+
+				for l := len(pathSegments); l >= 2; l-- {
+					repoRef = paths.Concatenate(pathSegments[:l]...)
+
+					repository, err = repoCtrl.Find(ctx, session, repoRef)
+					if err == nil {
+						break
+					}
+					if errors.Is(err, store.ErrResourceNotFound) {
+						log.Ctx(ctx).Debug().Err(err).
+							Msgf("repository %q doesn't exist, assume submodule and try again", repoRef)
+						continue
+					}
+					if errors.Is(err, auth.ErrNotAuthorized) {
+						// To avoid leaking information about repos' existence we continue as if it wasn't found.
+						// WARNING: This can lead to different import results depending on access (very unlikely)
+						log.Ctx(ctx).Debug().Err(err).
+							Msgf("user has no access on repository %q, assume submodule and try again", repoRef)
+						continue
+					}
+
+					render.TranslatedUserError(ctx, w, fmt.Errorf("failed to find repo for path %q: %w", repoRef, err))
 					return
 				}
 
-				defaultBranch := config.Git.DefaultBranch
-				if repository.DefaultBranch != "" {
-					defaultBranch = repository.DefaultBranch
+				if repository == nil {
+					render.NotFound(ctx, w)
+					return
 				}
 
 				uiRepoURL := urlProvider.GenerateUIRepoURL(ctx, repoRef)
-				goImportURL := httpRegex.ReplaceAllString(uiRepoURL, "")
 				cloneURL := urlProvider.GenerateGITCloneURL(ctx, repoRef)
-				prefix := fmt.Sprintf("%s/files/%s/~", uiRepoURL, defaultBranch)
+				goImportURL := httpRegex.ReplaceAllString(cloneURL, "")
+				goImportURL = strings.TrimSuffix(goImportURL, ".git")
+				prefix := fmt.Sprintf("%s/files/%s/~", uiRepoURL, repository.DefaultBranch)
 
 				insecure := ""
 				if strings.HasPrefix(uiRepoURL, "http:") {

@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/go-chi/chi"
@@ -43,6 +44,12 @@ func NewGitHandler(
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
 ) http.Handler {
+	// maxRepoDepth depends on config
+	maxRepoDepth := check.MaxRepoPathDepth
+	if !config.NestedSpacesEnabled {
+		maxRepoDepth = 2
+	}
+
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
 
@@ -60,7 +67,7 @@ func NewGitHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
-		r.Use(goget.Middleware(config, repoCtrl, urlProvider))
+		r.Use(goget.Middleware(maxRepoDepth, repoCtrl, urlProvider))
 		// routes that aren't coming from git
 		r.Group(func(r chi.Router) {
 			// redirect to repo (meant for UI, in case user navigates to clone url in browser)

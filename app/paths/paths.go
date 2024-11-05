@@ -19,6 +19,8 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/types"
+
+	"github.com/gotidy/ptr"
 )
 
 var (
@@ -28,13 +30,13 @@ var (
 // DisectLeaf splits a path into its parent path and the leaf name
 // e.g. space1/space2/space3 -> (space1/space2, space3, nil).
 func DisectLeaf(path string) (string, string, error) {
-	path = strings.Trim(path, types.PathSeparator)
+	path = strings.Trim(path, types.PathSeparatorAsString)
 
 	if path == "" {
 		return "", "", ErrPathEmpty
 	}
 
-	i := strings.LastIndex(path, types.PathSeparator)
+	i := strings.LastIndex(path, types.PathSeparatorAsString)
 	if i == -1 {
 		return "", path, nil
 	}
@@ -45,13 +47,13 @@ func DisectLeaf(path string) (string, string, error) {
 // DisectRoot splits a path into its root space and sub-path
 // e.g. space1/space2/space3 -> (space1, space2/space3, nil).
 func DisectRoot(path string) (string, string, error) {
-	path = strings.Trim(path, types.PathSeparator)
+	path = strings.Trim(path, types.PathSeparatorAsString)
 
 	if path == "" {
 		return "", "", ErrPathEmpty
 	}
 
-	i := strings.Index(path, types.PathSeparator)
+	i := strings.Index(path, types.PathSeparatorAsString)
 	if i == -1 {
 		return path, "", nil
 	}
@@ -63,38 +65,62 @@ func DisectRoot(path string) (string, string, error) {
  * Concatenate two paths together (takes care of leading / trailing '/')
  * e.g. (space1/, /space2/) -> space1/space2
  *
- * NOTE: "//" is not a valid path, so all '/' will be trimmed.
+ * NOTE: All leading, trailing, and consecutive '/' will be trimmed to ensure correct paths.
  */
-func Concatenate(path1 string, path2 string) string {
-	path1 = strings.Trim(path1, types.PathSeparator)
-	path2 = strings.Trim(path2, types.PathSeparator)
-
-	if path1 == "" {
-		return path2
-	} else if path2 == "" {
-		return path1
+func Concatenate(paths ...string) string {
+	if len(paths) == 0 {
+		return ""
 	}
 
-	return path1 + types.PathSeparator + path2
+	sb := strings.Builder{}
+	for i := 0; i < len(paths); i++ {
+		// remove all leading, trailing, and consecutive '/'
+		var nextRune *rune
+		for _, r := range paths[i] {
+			// skip '/' if we already have '/' as next rune or we don't have anything other than '/' yet
+			if (nextRune == nil || *nextRune == types.PathSeparator) && r == types.PathSeparator {
+				continue
+			}
+
+			// first time we take a rune we have to make sure we add a separator if needed (guaranteed no '/').
+			if nextRune == nil && sb.Len() > 0 {
+				sb.WriteString(types.PathSeparatorAsString)
+			}
+
+			// flush the previous rune before storing the next rune
+			if nextRune != nil {
+				sb.WriteRune(*nextRune)
+			}
+
+			nextRune = ptr.Of(r)
+		}
+
+		// flush the final rune
+		if nextRune != nil && *nextRune != types.PathSeparator {
+			sb.WriteRune(*nextRune)
+		}
+	}
+
+	return sb.String()
 }
 
 // Segments returns all segments of the path
 // e.g. /space1/space2/space3 -> [space1, space2, space3].
 func Segments(path string) []string {
-	path = strings.Trim(path, types.PathSeparator)
-	return strings.Split(path, types.PathSeparator)
+	path = strings.Trim(path, types.PathSeparatorAsString)
+	return strings.Split(path, types.PathSeparatorAsString)
 }
 
 // IsAncesterOf returns true iff 'path' is an ancestor of 'other' or they are the same.
 // e.g. other = path(/.*).
 func IsAncesterOf(path string, other string) bool {
-	path = strings.Trim(path, types.PathSeparator)
-	other = strings.Trim(other, types.PathSeparator)
+	path = strings.Trim(path, types.PathSeparatorAsString)
+	other = strings.Trim(other, types.PathSeparatorAsString)
 
 	// add "/" to both to handle space1/inner and space1/in
 	return strings.Contains(
-		other+types.PathSeparator,
-		path+types.PathSeparator,
+		other+types.PathSeparatorAsString,
+		path+types.PathSeparatorAsString,
 	)
 }
 
