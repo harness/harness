@@ -19,6 +19,7 @@ import (
 	"errors"
 	"path/filepath"
 
+	"github.com/harness/gitness/app/url"
 	artifactapi "github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/types"
 
@@ -26,11 +27,14 @@ import (
 )
 
 func GetArtifactMetadata(
+	ctx context.Context,
 	artifacts []types.ArtifactMetadata,
-	registryURL string,
+	rootIdentifier string,
+	urlProvider url.Provider,
 ) []artifactapi.ArtifactMetadata {
 	artifactMetadataList := make([]artifactapi.ArtifactMetadata, 0, len(artifacts))
 	for _, artifact := range artifacts {
+		registryURL := urlProvider.RegistryRefURL(ctx, GetRegistryRef(rootIdentifier, artifact.RepoName))
 		artifactMetadata := mapToArtifactMetadata(artifact, registryURL)
 		artifactMetadataList = append(artifactMetadataList, *artifactMetadata)
 	}
@@ -129,17 +133,19 @@ func GetTagMetadata(
 }
 
 func GetAllArtifactResponse(
+	ctx context.Context,
 	artifacts *[]types.ArtifactMetadata,
 	count int64,
 	pageNumber int64,
 	pageSize int,
-	registryURL string,
+	rootIdentifier string,
+	urlProvider url.Provider,
 ) *artifactapi.ListArtifactResponseJSONResponse {
 	var artifactMetadataList []artifactapi.ArtifactMetadata
 	if artifacts == nil {
 		artifactMetadataList = make([]artifactapi.ArtifactMetadata, 0)
 	} else {
-		artifactMetadataList = GetArtifactMetadata(*artifacts, registryURL)
+		artifactMetadataList = GetArtifactMetadata(ctx, *artifacts, rootIdentifier, urlProvider)
 	}
 	pageCount := GetPageCount(count, pageSize)
 	listArtifact := &artifactapi.ListArtifact{

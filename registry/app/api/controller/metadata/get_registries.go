@@ -20,6 +20,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/pkg/commons"
 	"github.com/harness/gitness/registry/app/store"
@@ -112,21 +113,23 @@ func (c *APIController) GetAllRegistries(
 		}, nil
 	}
 	return artifact.GetAllRegistries200JSONResponse{
-		ListRegistryResponseJSONResponse: *GetAllRegistryResponse(
+		ListRegistryResponseJSONResponse: *GetAllRegistryResponse(ctx,
 			repos, count, regInfo.pageNumber,
-			regInfo.limit, c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
+			regInfo.limit, regInfo.RootIdentifier, c.URLProvider,
 		),
 	}, nil
 }
 
 func GetAllRegistryResponse(
+	ctx context.Context,
 	repos *[]store.RegistryMetadata,
 	count int64,
 	pageNumber int64,
 	pageSize int,
-	registryURL string,
+	rootIdentifier string,
+	urlProvider url.Provider,
 ) *artifact.ListRegistryResponseJSONResponse {
-	repoMetadataList := GetRegistryMetadata(repos, registryURL)
+	repoMetadataList := GetRegistryMetadata(ctx, repos, rootIdentifier, urlProvider)
 	pageCount := GetPageCount(count, pageSize)
 	listRepository := &artifact.ListRegistry{
 		ItemCount:  &count,
@@ -143,8 +146,10 @@ func GetAllRegistryResponse(
 }
 
 func GetRegistryMetadata(
+	ctx context.Context,
 	registryMetadatas *[]store.RegistryMetadata,
-	registryURL string,
+	rootIdentifier string,
+	urlProvider url.Provider,
 ) []artifact.RegistryMetadata {
 	repoMetadataList := []artifact.RegistryMetadata{}
 	for _, reg := range *registryMetadatas {
@@ -174,7 +179,7 @@ func GetRegistryMetadata(
 			PackageType:    reg.PackageType,
 			Type:           reg.Type,
 			LastModified:   &modifiedAt,
-			Url:            registryURL,
+			Url:            urlProvider.RegistryRefURL(ctx, GetRegistryRef(rootIdentifier, reg.RegIdentifier)),
 			ArtifactsCount: artifactCount,
 			DownloadsCount: downloadCount,
 			RegistrySize:   &size,

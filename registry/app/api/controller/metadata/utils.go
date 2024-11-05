@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"math"
 	"net/url"
-	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -313,14 +312,8 @@ func GetSize(sizeVal int64) string {
 	return size.String()
 }
 
-func GetRepoURL(rootIdentifier, registry string, registryURL string) string {
-	parsedURL, err := url.Parse(registryURL)
-	if err != nil {
-		log.Error().Err(err).Msgf("Error parsing URL: %s", registryURL)
-		return ""
-	}
-	parsedURL.Path = path.Join(parsedURL.Path, strings.ToLower(rootIdentifier), registry)
-	return parsedURL.String()
+func GetRegistryRef(rootIdentifier string, registryName string) string {
+	return rootIdentifier + "/" + registryName
 }
 
 func GetRepoURLWithoutProtocol(registryURL string) string {

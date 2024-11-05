@@ -88,8 +88,8 @@ func (c *APIController) GetAllArtifacts(
 		}, nil
 	}
 	return artifact.GetAllArtifacts200JSONResponse{
-		ListArtifactResponseJSONResponse: *GetAllArtifactResponse(artifacts, count, regInfo.pageNumber, regInfo.limit,
-			c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef)),
+		ListArtifactResponseJSONResponse: *GetAllArtifactResponse(ctx, artifacts, count, regInfo.pageNumber, regInfo.limit,
+			regInfo.RootIdentifier, c.URLProvider),
 	}, nil
 }
 
