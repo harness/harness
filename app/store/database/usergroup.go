@@ -198,7 +198,7 @@ func (s *UserGroupStore) Create(
 		return database.ProcessSQLErrorf(ctx, err, "Failed to bind usergroup object")
 	}
 
-	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&userGroup.ID); err != nil {
 		return database.ProcessSQLErrorf(ctx, err, "Failed to insert usergroup")
 	}
 

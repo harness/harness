@@ -27,6 +27,7 @@ type UserGroup struct {
 }
 
 type UserGroupInfo struct {
+	ID          int64  `json:"id"`
 	Identifier  string `json:"identifier"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -34,6 +35,7 @@ type UserGroupInfo struct {
 
 func (u *UserGroup) ToUserGroupInfo() *UserGroupInfo {
 	return &UserGroupInfo{
+		ID:          u.ID,
 		Identifier:  u.Identifier,
 		Name:        u.Name,
 		Description: u.Description,
