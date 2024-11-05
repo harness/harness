@@ -32,6 +32,7 @@ func (c *Controller) Find(
 	session *auth.Session,
 	repoRef string,
 	pullreqNum int64,
+	options types.PullReqMetadataOptions,
 ) (*types.PullReq, error) {
 	if pullreqNum <= 0 {
 		return nil, usererror.BadRequest("A valid pull request number must be provided.")
@@ -52,6 +53,10 @@ func (c *Controller) Find(
 		return nil, fmt.Errorf("failed to backfill labels assigned to pull request: %w", err)
 	}
 
+	if err := c.pullreqListService.BackfillMetadataForPullReq(ctx, repo, pr, options); err != nil {
+		return nil, fmt.Errorf("failed to backfill pull request metadata: %w", err)
+	}
+
 	if err := c.pullreqListService.BackfillStats(ctx, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to backfill PR stats")
 	}
@@ -59,7 +64,7 @@ func (c *Controller) Find(
 	return pr, nil
 }
 
-// Find returns a pull request from the provided repository.
+// FindByBranches returns a pull request from the provided branch pair.
 func (c *Controller) FindByBranches(
 	ctx context.Context,
 	session *auth.Session,
@@ -67,6 +72,7 @@ func (c *Controller) FindByBranches(
 	sourceRepoRef,
 	sourceBranch,
 	targetBranch string,
+	options types.PullReqMetadataOptions,
 ) (*types.PullReq, error) {
 	if sourceBranch == "" || targetBranch == "" {
 		return nil, usererror.BadRequest("A valid source/target branch must be provided.")
@@ -101,6 +107,10 @@ func (c *Controller) FindByBranches(
 
 	if len(prs) == 0 {
 		return nil, usererror.ErrNotFound
+	}
+
+	if err := c.pullreqListService.BackfillMetadataForPullReq(ctx, targetRepo, prs[0], options); err != nil {
+		return nil, fmt.Errorf("failed to backfill pull request metadata: %w", err)
 	}
 
 	return prs[0], nil

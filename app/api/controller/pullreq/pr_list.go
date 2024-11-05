@@ -81,6 +81,10 @@ func (c *Controller) List(
 		return nil, 0, err
 	}
 
+	if err := c.pullreqListService.BackfillMetadataForRepo(ctx, repo, list, filter.PullReqMetadataOptions); err != nil {
+		return nil, 0, fmt.Errorf("failed to backfill metadata for pull requests: %w", err)
+	}
+
 	for _, pr := range list {
 		if err := c.pullreqListService.BackfillStats(ctx, pr); err != nil {
 			log.Ctx(ctx).Warn().Err(err).Msg("failed to backfill PR stats")

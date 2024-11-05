@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/label"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
@@ -30,18 +31,21 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
 type ListService struct {
-	tx               dbtx.Transactor
-	git              git.Interface
-	authorizer       authz.Authorizer
-	spaceStore       store.SpaceStore
-	repoStore        store.RepoStore
-	repoGitInfoCache store.RepoGitInfoCache
-	pullreqStore     store.PullReqStore
-	labelSvc         *label.Service
+	tx                dbtx.Transactor
+	git               git.Interface
+	authorizer        authz.Authorizer
+	spaceStore        store.SpaceStore
+	repoStore         store.RepoStore
+	repoGitInfoCache  store.RepoGitInfoCache
+	pullreqStore      store.PullReqStore
+	checkStore        store.CheckStore
+	labelSvc          *label.Service
+	protectionManager *protection.Manager
 }
 
 func NewListService(
@@ -52,17 +56,21 @@ func NewListService(
 	repoStore store.RepoStore,
 	repoGitInfoCache store.RepoGitInfoCache,
 	pullreqStore store.PullReqStore,
+	checkStore store.CheckStore,
 	labelSvc *label.Service,
+	protectionManager *protection.Manager,
 ) *ListService {
 	return &ListService{
-		tx:               tx,
-		git:              git,
-		authorizer:       authorizer,
-		spaceStore:       spaceStore,
-		repoStore:        repoStore,
-		repoGitInfoCache: repoGitInfoCache,
-		pullreqStore:     pullreqStore,
-		labelSvc:         labelSvc,
+		tx:                tx,
+		git:               git,
+		authorizer:        authorizer,
+		spaceStore:        spaceStore,
+		repoStore:         repoStore,
+		repoGitInfoCache:  repoGitInfoCache,
+		pullreqStore:      pullreqStore,
+		checkStore:        checkStore,
+		labelSvc:          labelSvc,
+		protectionManager: protectionManager,
 	}
 }
 
@@ -166,6 +174,10 @@ func (c *ListService) ListForSpace(
 		}
 	}
 
+	if err := c.BackfillMetadata(ctx, response, filter.PullReqMetadataOptions); err != nil {
+		return nil, fmt.Errorf("failed to backfill metadata: %w", err)
+	}
+
 	return response, nil
 }
 
@@ -225,6 +237,191 @@ func (c *ListService) BackfillStats(ctx context.Context, pr *types.PullReq) erro
 	}
 
 	pr.Stats.DiffStats = types.NewDiffStats(output.Commits, output.FilesChanged, output.Additions, output.Deletions)
+
+	return nil
+}
+
+// BackfillChecks collects the check metadata for the provided list of pull requests.
+func (c *ListService) BackfillChecks(
+	ctx context.Context,
+	list []types.PullReqRepo,
+) error {
+	// prepare list of commit SHAs per repository
+
+	repoCommitSHAs := make(map[int64][]string)
+	for _, entry := range list {
+		repoID := entry.Repository.ID
+		commitSHAs := repoCommitSHAs[repoID]
+		repoCommitSHAs[repoID] = append(commitSHAs, entry.PullRequest.SourceSHA)
+	}
+
+	// fetch checks for every repository
+
+	type repoSHA struct {
+		repoID int64
+		sha    string
+	}
+
+	repoCheckSummaryMap := make(map[repoSHA]types.CheckCountSummary)
+	for repoID, commitSHAs := range repoCommitSHAs {
+		commitCheckSummaryMap, err := c.checkStore.ResultSummary(ctx, repoID, commitSHAs)
+		if err != nil {
+			return fmt.Errorf("fail to fetch check summary for commits: %w", err)
+		}
+
+		for commitSHA, checkSummary := range commitCheckSummaryMap {
+			repoCheckSummaryMap[repoSHA{repoID: repoID, sha: commitSHA.String()}] = checkSummary
+		}
+	}
+
+	// backfill the list with check count summary
+
+	for _, entry := range list {
+		entry.PullRequest.CheckSummary =
+			ptr.Of(repoCheckSummaryMap[repoSHA{repoID: entry.Repository.ID, sha: entry.PullRequest.SourceSHA}])
+	}
+
+	return nil
+}
+
+// BackfillRules collects the rule metadata for the provided list of pull requests.
+func (c *ListService) BackfillRules(
+	ctx context.Context,
+	list []types.PullReqRepo,
+) error {
+	// prepare list of branch names per repository
+
+	repoBranchNames := make(map[int64][]string)
+	repoDefaultBranch := make(map[int64]string)
+	for _, entry := range list {
+		repoID := entry.Repository.ID
+		branchNames := repoBranchNames[repoID]
+		repoBranchNames[repoID] = append(branchNames, entry.PullRequest.TargetBranch)
+		repoDefaultBranch[repoID] = entry.Repository.DefaultBranch
+	}
+
+	// fetch checks for every repository
+
+	type repoBranchName struct {
+		repoID     int64
+		branchName string
+	}
+
+	repoBranchNameMap := make(map[repoBranchName][]types.RuleInfo)
+	for repoID, branchNames := range repoBranchNames {
+		repoProtection, err := c.protectionManager.ForRepository(ctx, repoID)
+		if err != nil {
+			return fmt.Errorf("fail to fetch protection rules for repository: %w", err)
+		}
+
+		for _, branchName := range branchNames {
+			branchRuleInfos, err := protection.GetRuleInfos(
+				repoProtection,
+				repoDefaultBranch[repoID],
+				branchName,
+				protection.RuleInfoFilterStatusActive,
+				protection.RuleInfoFilterTypeBranch)
+			if err != nil {
+				return fmt.Errorf("fail to get rule infos for branch %s: %w", branchName, err)
+			}
+
+			repoBranchNameMap[repoBranchName{repoID: repoID, branchName: branchName}] = branchRuleInfos
+		}
+	}
+
+	// backfill the list with check count summary
+
+	for _, entry := range list {
+		key := repoBranchName{repoID: entry.Repository.ID, branchName: entry.PullRequest.TargetBranch}
+		entry.PullRequest.Rules = repoBranchNameMap[key]
+	}
+
+	return nil
+}
+
+func (c *ListService) BackfillMetadata(
+	ctx context.Context,
+	list []types.PullReqRepo,
+	options types.PullReqMetadataOptions,
+) error {
+	if options.IsAllFalse() {
+		return nil
+	}
+
+	if options.IncludeChecks {
+		if err := c.BackfillChecks(ctx, list); err != nil {
+			return fmt.Errorf("failed to backfill checks")
+		}
+	}
+
+	if options.IncludeRules {
+		if err := c.BackfillRules(ctx, list); err != nil {
+			return fmt.Errorf("failed to backfill rules")
+		}
+	}
+
+	return nil
+}
+
+func (c *ListService) BackfillMetadataForRepo(
+	ctx context.Context,
+	repo *types.Repository,
+	list []*types.PullReq,
+	options types.PullReqMetadataOptions,
+) error {
+	if options.IsAllFalse() {
+		return nil
+	}
+
+	listPullReqRepo := make([]types.PullReqRepo, len(list))
+	for i, pr := range list {
+		listPullReqRepo[i] = types.PullReqRepo{
+			PullRequest: pr,
+			Repository:  repo,
+		}
+	}
+
+	if options.IncludeChecks {
+		if err := c.BackfillChecks(ctx, listPullReqRepo); err != nil {
+			return fmt.Errorf("failed to backfill checks")
+		}
+	}
+
+	if options.IncludeRules {
+		if err := c.BackfillRules(ctx, listPullReqRepo); err != nil {
+			return fmt.Errorf("failed to backfill rules")
+		}
+	}
+
+	return nil
+}
+
+func (c *ListService) BackfillMetadataForPullReq(
+	ctx context.Context,
+	repo *types.Repository,
+	pr *types.PullReq,
+	options types.PullReqMetadataOptions,
+) error {
+	if options.IsAllFalse() {
+		return nil
+	}
+
+	list := []types.PullReqRepo{{
+		PullRequest: pr,
+		Repository:  repo,
+	}}
+
+	if options.IncludeChecks {
+		if err := c.BackfillChecks(ctx, list); err != nil {
+			return fmt.Errorf("failed to backfill checks")
+		}
+	}
+
+	if options.IncludeRules {
+		if err := c.BackfillRules(ctx, list); err != nil {
+			return fmt.Errorf("failed to backfill rules")
+		}
+	}
 
 	return nil
 }

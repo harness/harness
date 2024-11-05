@@ -22,6 +22,7 @@ import (
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/label"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
@@ -85,7 +86,9 @@ func ProvideListService(
 	repoStore store.RepoStore,
 	repoGitInfoCache store.RepoGitInfoCache,
 	pullreqStore store.PullReqStore,
+	checkStore store.CheckStore,
 	labelSvc *label.Service,
+	protectionManager *protection.Manager,
 ) *ListService {
 	return NewListService(
 		tx,
@@ -95,6 +98,8 @@ func ProvideListService(
 		repoStore,
 		repoGitInfoCache,
 		pullreqStore,
+		checkStore,
 		labelSvc,
+		protectionManager,
 	)
 }

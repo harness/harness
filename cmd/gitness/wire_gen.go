@@ -275,7 +275,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	connectorStore := database.ProvideConnectorStore(db, secretStore)
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
-	listService := pullreq.ProvideListService(transactor, gitInterface, authorizer, spaceStore, repoStore, repoGitInfoCache, pullReqStore, labelService)
+	listService := pullreq.ProvideListService(transactor, gitInterface, authorizer, spaceStore, repoStore, repoGitInfoCache, pullReqStore, checkStore, labelService, protectionManager)
 	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitInterface, repoStore, jobScheduler, executor, encrypter, streamer)
 	if err != nil {
 		return nil, err

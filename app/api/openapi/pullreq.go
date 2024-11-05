@@ -504,7 +504,8 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		QueryParameterPage, QueryParameterLimit,
 		QueryParameterLabelID, QueryParameterValueID,
 		queryParameterAuthorID, queryParameterCommenterID, queryParameterMentionedID,
-		queryParameterReviewerID, queryParameterReviewDecision)
+		queryParameterReviewerID, queryParameterReviewDecision,
+		queryParameterIncludeChecks, queryParameterIncludeRules)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
@@ -516,6 +517,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	getPullReq := openapi3.Operation{}
 	getPullReq.WithTags("pullreq")
 	getPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "getPullReq"})
+	getPullReq.WithParameters(queryParameterIncludeChecks, queryParameterIncludeRules)
 	_ = reflector.SetRequest(&getPullReq, new(getPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&getPullReq, new(types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusBadRequest)
@@ -527,7 +529,8 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	getPullReqByBranches := openapi3.Operation{}
 	getPullReqByBranches.WithTags("pullreq")
 	getPullReqByBranches.WithMapOfAnything(map[string]interface{}{"operationId": "getPullReqByBranches"})
-	getPullReqByBranches.WithParameters(queryParameterSourceRepoRefPullRequest)
+	getPullReqByBranches.WithParameters(queryParameterSourceRepoRefPullRequest,
+		queryParameterIncludeChecks, queryParameterIncludeRules)
 	_ = reflector.SetRequest(&getPullReqByBranches, new(getPullReqByBranchesRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&getPullReqByBranches, new(types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getPullReqByBranches, new(usererror.Error), http.StatusBadRequest)

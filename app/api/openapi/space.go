@@ -600,9 +600,10 @@ func spaceOperations(reflector *openapi3.Reflector) {
 		QueryParameterLimit,
 		QueryParameterLabelID, QueryParameterValueID,
 		queryParameterAuthorID, queryParameterCommenterID, queryParameterMentionedID,
-		queryParameterReviewerID, queryParameterReviewDecision)
+		queryParameterReviewerID, queryParameterReviewDecision,
+		queryParameterIncludeChecks, queryParameterIncludeRules)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReqRepo), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusUnauthorized)

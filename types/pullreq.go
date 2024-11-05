@@ -64,7 +64,9 @@ type PullReq struct {
 	Merger *PrincipalInfo `json:"merger"`
 	Stats  PullReqStats   `json:"stats"`
 
-	Labels []*LabelPullReqAssignmentInfo `json:"labels,omitempty"`
+	Labels       []*LabelPullReqAssignmentInfo `json:"labels,omitempty"`
+	CheckSummary *CheckCountSummary            `json:"check_summary,omitempty"`
+	Rules        []RuleInfo                    `json:"rules,omitempty"`
 }
 
 func (pr *PullReq) UpdateMergeOutcome(method enum.MergeMethod, conflictFiles []string) {
@@ -167,10 +169,20 @@ type PullReqFilter struct {
 	CreatedFilter
 	UpdatedFilter
 	EditedFilter
+	PullReqMetadataOptions
 
 	// internal use only
 	SpaceIDs        []int64
 	RepoIDBlacklist []int64
+}
+
+type PullReqMetadataOptions struct {
+	IncludeChecks bool `json:"include_checks"`
+	IncludeRules  bool `json:"include_rules"`
+}
+
+func (options PullReqMetadataOptions) IsAllFalse() bool {
+	return !options.IncludeChecks && !options.IncludeRules
 }
 
 // PullReqReview holds pull request review.

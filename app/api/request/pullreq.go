@@ -109,6 +109,23 @@ func parseReviewDecisions(r *http.Request) []enum.PullReqReviewDecision {
 	return reviewDecisions
 }
 
+func ParsePullReqMetadataOptions(r *http.Request) (types.PullReqMetadataOptions, error) {
+	includeChecks, err := GetIncludeChecksFromQueryOrDefault(r, false)
+	if err != nil {
+		return types.PullReqMetadataOptions{}, err
+	}
+
+	includeRules, err := GetIncludeRulesFromQueryOrDefault(r, false)
+	if err != nil {
+		return types.PullReqMetadataOptions{}, err
+	}
+
+	return types.PullReqMetadataOptions{
+		IncludeChecks: includeChecks,
+		IncludeRules:  includeRules,
+	}, nil
+}
+
 // ParsePullReqFilter extracts the pull request query parameter from the url.
 func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 	createdBy, err := QueryParamListAsPositiveInt64(r, QueryParamCreatedBy)
@@ -170,28 +187,34 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		return nil, fmt.Errorf("encountered error parsing mentioned ID filter: %w", err)
 	}
 
+	metadataOptions, err := ParsePullReqMetadataOptions(r)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.PullReqFilter{
-		Page:               ParsePage(r),
-		Size:               ParseLimit(r),
-		Query:              ParseQuery(r),
-		CreatedBy:          createdBy,
-		SourceRepoRef:      r.URL.Query().Get("source_repo_ref"),
-		SourceBranch:       r.URL.Query().Get("source_branch"),
-		TargetBranch:       r.URL.Query().Get("target_branch"),
-		States:             parsePullReqStates(r),
-		Sort:               ParseSortPullReq(r),
-		Order:              ParseOrder(r),
-		LabelID:            labelID,
-		ValueID:            valueID,
-		AuthorID:           authorID,
-		CommenterID:        commenterID,
-		ReviewerID:         reviewerID,
-		ReviewDecisions:    reviewDecisions,
-		MentionedID:        mentionedID,
-		ExcludeDescription: excludeDescription,
-		CreatedFilter:      createdFilter,
-		UpdatedFilter:      updatedFilter,
-		EditedFilter:       editedFilter,
+		Page:                   ParsePage(r),
+		Size:                   ParseLimit(r),
+		Query:                  ParseQuery(r),
+		CreatedBy:              createdBy,
+		SourceRepoRef:          r.URL.Query().Get("source_repo_ref"),
+		SourceBranch:           r.URL.Query().Get("source_branch"),
+		TargetBranch:           r.URL.Query().Get("target_branch"),
+		States:                 parsePullReqStates(r),
+		Sort:                   ParseSortPullReq(r),
+		Order:                  ParseOrder(r),
+		LabelID:                labelID,
+		ValueID:                valueID,
+		AuthorID:               authorID,
+		CommenterID:            commenterID,
+		ReviewerID:             reviewerID,
+		ReviewDecisions:        reviewDecisions,
+		MentionedID:            mentionedID,
+		ExcludeDescription:     excludeDescription,
+		CreatedFilter:          createdFilter,
+		UpdatedFilter:          updatedFilter,
+		EditedFilter:           editedFilter,
+		PullReqMetadataOptions: metadataOptions,
 	}, nil
 }
 
