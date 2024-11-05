@@ -26,7 +26,7 @@ import (
 )
 
 // gitspaceInstanceCleaningTimedOutMins is timeout for which a gitspace instance can be in cleaning state.
-const gitspaceInstanceCleaningTimedOutMins = 10
+const gitspaceInstanceCleaningTimedOutMins = 15
 
 type Controller struct {
 	authorizer            authz.Authorizer

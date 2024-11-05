@@ -34,7 +34,6 @@ import (
 
 const defaultPasswordRef = "harness_password"
 const defaultMachineUser = "harness"
-const gitspaceTimedOutInMintues = 10
 const AllowedUIDAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 func (c *Service) StopGitspaceAction(
@@ -87,7 +86,7 @@ func (c *Service) gitspaceBusyOperation(
 		return nil
 	}
 
-	var busyStateTimeoutInMillis int64 = gitspaceTimedOutInMintues * 60 * 1000
+	busyStateTimeoutInMillis := int64(c.config.Gitspace.BusyActionInMins * 60 * 1000)
 	if time.Since(time.UnixMilli(config.GitspaceInstance.Updated)).Milliseconds() <= busyStateTimeoutInMillis {
 		return usererror.NewWithPayload(http.StatusForbidden, fmt.Sprintf(
 			"Last session for this gitspace is still %s", config.GitspaceInstance.State))
@@ -109,7 +108,8 @@ func (c *Service) submitAsyncOps(
 	errChannel := make(chan error)
 
 	submitCtx := context.WithoutCancel(ctx)
-	ttlExecuteContext, cancel := context.WithTimeout(submitCtx, gitspaceTimedOutInMintues*time.Minute)
+	gitspaceTimedOutInMins := time.Duration(c.config.Gitspace.ProvisionTimeoutInMins) * time.Minute
+	ttlExecuteContext, cancel := context.WithTimeout(submitCtx, gitspaceTimedOutInMins)
 
 	go c.asyncOperation(ttlExecuteContext, *config, action, errChannel)
 

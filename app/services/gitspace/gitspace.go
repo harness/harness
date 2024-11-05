@@ -39,6 +39,7 @@ func NewService(
 	infraProviderSvc *infraprovider.Service,
 	orchestrator orchestrator.Orchestrator,
 	scm *scm.SCM,
+	config *types.Config,
 ) *Service {
 	return &Service{
 		tx:                    tx,
@@ -50,6 +51,7 @@ func NewService(
 		infraProviderSvc:      infraProviderSvc,
 		orchestrator:          orchestrator,
 		scm:                   scm,
+		config:                config,
 	}
 }
 
@@ -63,6 +65,7 @@ type Service struct {
 	infraProviderSvc      *infraprovider.Service
 	orchestrator          orchestrator.Orchestrator
 	scm                   *scm.SCM
+	config                *types.Config
 }
 
 func (c *Service) ListGitspacesForSpace(

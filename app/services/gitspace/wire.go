@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/services/infraprovider"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -39,7 +40,8 @@ func ProvideGitspace(
 	infraProviderSvc *infraprovider.Service,
 	orchestrator orchestrator.Orchestrator,
 	scm *scm.SCM,
+	config *types.Config,
 ) *Service {
 	return NewService(tx, gitspaceStore, gitspaceInstanceStore, eventReporter,
-		gitspaceEventStore, spaceStore, infraProviderSvc, orchestrator, scm)
+		gitspaceEventStore, spaceStore, infraProviderSvc, orchestrator, scm, config)
 }
