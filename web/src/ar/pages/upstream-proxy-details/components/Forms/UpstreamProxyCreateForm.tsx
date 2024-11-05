@@ -70,14 +70,6 @@ function FormContent(props: FormContentProps): JSX.Element {
   const { values } = formikProps
   const { packageType } = values
 
-  useEffect(() => {
-    const newDefaultValues = getDefaultValuesByRepositoryType(
-      packageType as UpstreamProxyPackageType,
-      {} as UpstreamRegistryRequest
-    )
-    formikProps.setValues(newDefaultValues)
-  }, [packageType, getDefaultValuesByRepositoryType])
-
   return (
     <Container>
       <Layout.Vertical spacing="small">
@@ -92,6 +84,12 @@ function FormContent(props: FormContentProps): JSX.Element {
               label: getString(each.label)
             }))}
             staticItems
+            onChange={(val: UpstreamProxyPackageType) => {
+              const newDefaultValues = getDefaultValuesByRepositoryType(val, {
+                identifier: values.identifier
+              } as UpstreamRegistryRequest)
+              formikProps.setValues(newDefaultValues)
+            }}
             isReadonly={isPackageTypeReadonly}
           />
         </Container>
