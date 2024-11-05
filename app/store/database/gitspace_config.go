@@ -334,6 +334,10 @@ func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter
 		stmt = stmt.Where(squirrel.Lt{"gits_last_used": filter.LastUsedBefore})
 	}
 
+	if len(filter.GitspaceFilterStates) > 0 && len(filter.States) > 0 {
+		log.Warn().Msgf("both view list filter and states are set for gitspace, the states[] are ignored")
+	}
+
 	if len(filter.GitspaceFilterStates) > 0 {
 		instanceStateTypes := make([]enum.GitspaceInstanceStateType, 0, len(filter.GitspaceFilterStates))
 		for _, state := range filter.GitspaceFilterStates {
@@ -349,6 +353,8 @@ func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter
 			}
 		}
 		stmt = stmt.Where(squirrel.Eq{"gits_state": instanceStateTypes})
+	} else if len(filter.States) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"gits_state": filter.States})
 	}
 	return stmt
 }

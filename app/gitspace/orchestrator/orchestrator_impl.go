@@ -583,6 +583,9 @@ func (o orchestrator) getPortsRequiredForGitspace(
 }
 
 func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig) (string, error) {
+	if gitspaceConfig.GitspaceInstance == nil {
+		return "", fmt.Errorf("gitspace %s is not setup yet, please try later", gitspaceConfig.Identifier)
+	}
 	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig, []enum.InfraStatus{enum.InfraStatusProvisioned})
 	if err != nil {
 		return "", fmt.Errorf(
