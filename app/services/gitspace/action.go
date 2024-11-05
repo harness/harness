@@ -234,6 +234,7 @@ func (c *Service) buildGitspaceInstance(config *types.GitspaceConfig) (*types.Gi
 		Created:          now,
 		Updated:          now,
 		TotalTimeUsed:    0,
+		LastUsed:         &now,
 	}
 	if config.IDE == enum.IDETypeVSCodeWeb || config.IDE == enum.IDETypeVSCode {
 		gitspaceInstance.MachineUser = &gitspaceMachineUser
