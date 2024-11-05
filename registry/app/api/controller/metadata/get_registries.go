@@ -114,7 +114,7 @@ func (c *APIController) GetAllRegistries(
 	return artifact.GetAllRegistries200JSONResponse{
 		ListRegistryResponseJSONResponse: *GetAllRegistryResponse(
 			repos, count, regInfo.pageNumber,
-			regInfo.limit, regInfo.RootIdentifier, c.URLProvider.RegistryURL(),
+			regInfo.limit, c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
 		),
 	}, nil
 }
@@ -124,10 +124,9 @@ func GetAllRegistryResponse(
 	count int64,
 	pageNumber int64,
 	pageSize int,
-	rootIdentifier string,
 	registryURL string,
 ) *artifact.ListRegistryResponseJSONResponse {
-	repoMetadataList := GetRegistryMetadata(repos, rootIdentifier, registryURL)
+	repoMetadataList := GetRegistryMetadata(repos, registryURL)
 	pageCount := GetPageCount(count, pageSize)
 	listRepository := &artifact.ListRegistry{
 		ItemCount:  &count,
@@ -145,7 +144,6 @@ func GetAllRegistryResponse(
 
 func GetRegistryMetadata(
 	registryMetadatas *[]store.RegistryMetadata,
-	rootIdentifier string,
 	registryURL string,
 ) []artifact.RegistryMetadata {
 	repoMetadataList := []artifact.RegistryMetadata{}
@@ -176,7 +174,7 @@ func GetRegistryMetadata(
 			PackageType:    reg.PackageType,
 			Type:           reg.Type,
 			LastModified:   &modifiedAt,
-			Url:            GetRepoURL(rootIdentifier, reg.RegIdentifier, registryURL),
+			Url:            registryURL,
 			ArtifactsCount: artifactCount,
 			DownloadsCount: downloadCount,
 			RegistrySize:   &size,

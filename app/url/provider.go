@@ -75,8 +75,11 @@ type Provider interface {
 	// GetAPIProto returns the proto for the API hostname
 	GetAPIProto(ctx context.Context) string
 
-	// RegistryURL returns the url for oci token endpoint
-	RegistryURL() string
+	// RegistryRefURL returns the registry url with registry ref.
+	RegistryRefURL(ctx context.Context, registryRef string) string
+
+	// RegistryBaseURL returns the registry base url.
+	RegistryBaseURL(ctx context.Context, hostnamePrefix string) string
 }
 
 // Provider provides the URLs of the Harness system.
@@ -235,7 +238,11 @@ func (p *provider) GetAPIProto(context.Context) string {
 	return p.apiURL.Scheme
 }
 
-func (p *provider) RegistryURL() string {
+func (p *provider) RegistryRefURL(_ context.Context, registryRef string) string {
+	return p.registryURL.JoinPath(registryRef).String()
+}
+
+func (p *provider) RegistryBaseURL(_ context.Context, _ string) string {
 	return p.registryURL.String()
 }
 

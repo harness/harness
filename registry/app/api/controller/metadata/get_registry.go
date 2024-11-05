@@ -77,7 +77,7 @@ func (c *APIController) GetRegistry(
 				repoEntity, c.getUpstreamProxyKeys(
 					ctx,
 					repoEntity.UpstreamProxies,
-				), cleanupPolicies, regInfo.RootIdentifier, c.URLProvider.RegistryURL(),
+				), cleanupPolicies, c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
 			),
 		}, nil
 	}

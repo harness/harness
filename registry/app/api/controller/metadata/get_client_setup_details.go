@@ -21,7 +21,6 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common"
 	"github.com/harness/gitness/types/enum"
@@ -95,8 +94,7 @@ func (c *APIController) GetClientSetupDetails(
 
 	return artifact.GetClientSetupDetails200JSONResponse{
 		ClientSetupDetailsResponseJSONResponse: *GetClientSetupDetails(
-			ctx, packageType, regInfo,
-			string(r.RegistryRef), imageParam, tagParam, c.URLProvider.RegistryURL(),
+			ctx, packageType, imageParam, tagParam, c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
 		),
 	}, nil
 }
@@ -104,16 +102,13 @@ func (c *APIController) GetClientSetupDetails(
 func GetClientSetupDetails(
 	ctx context.Context,
 	packageType string,
-	_ *RegistryRequestBaseInfo,
-	regRef string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
 	registryURL string,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	session, _ := request.AuthSessionFrom(ctx)
 	username := session.Principal.Email
-	hostname := common.GenerateSetupClientHostname(registryURL)
-	regRef = strings.ToLower(regRef)
+	hostname, regRef := common.GenerateSetupClientHostnameAndRegistry(registryURL)
 
 	// Fixme: Use ENUMS
 	if packageType == "HELM" {
@@ -264,8 +259,12 @@ func GetClientSetupDetails(
 }
 
 func replacePlaceholders(
-	clientSetupDetails artifact.ClientSetupDetails, username string, hostname string,
-	regRef string, image *artifact.ArtifactParam, tag *artifact.VersionParam,
+	clientSetupDetails artifact.ClientSetupDetails,
+	username string,
+	hostname string,
+	regRef string,
+	image *artifact.ArtifactParam,
+	tag *artifact.VersionParam,
 ) {
 	for _, s := range clientSetupDetails.Sections {
 		if s.Steps == nil {
@@ -291,9 +290,6 @@ func replaceText(
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
 ) {
-	rootSpace, _, _ := paths.DisectRoot(regRef)
-	_, registryName, _ := paths.DisectLeaf(regRef)
-	repoRef := rootSpace + "/" + registryName
 	if username != "" {
 		(*st.Commands)[i] = strings.ReplaceAll((*st.Commands)[i], "<USERNAME>", username)
 	}
@@ -303,7 +299,7 @@ func replaceText(
 	if regRef != "" {
 		(*st.Commands)[i] = strings.ReplaceAll(
 			(*st.Commands)[i],
-			"<REPOSITORY_REFERENCE>", repoRef,
+			"<REPOSITORY_REFERENCE>", regRef,
 		)
 	}
 	if image != nil {

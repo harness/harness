@@ -30,9 +30,8 @@ func NewAccessSet(accessItems ...Access) AccessSet {
 
 	for _, access := range accessItems {
 		resource := Resource{
-			Type:  access.Type,
-			Name:  access.Name,
-			Space: access.Space,
+			Type: access.Type,
+			Name: access.Name,
 		}
 
 		set, exists := accessSet[resource]
@@ -64,7 +63,7 @@ func (s AccessSet) ScopeParam() string {
 
 	for resource, actionSet := range s {
 		actions := strings.Join(actionSet.keys(), ",")
-		resourceName := strings.Join([]string{resource.Space, resource.Name}, "/")
+		resourceName := resource.Name
 		scopes = append(scopes, strings.Join([]string{resource.Type, resourceName, actions}, ":"))
 	}
 
@@ -73,9 +72,8 @@ func (s AccessSet) ScopeParam() string {
 
 // Resource describes a resource by type and name.
 type Resource struct {
-	Type  string
-	Name  string
-	Space string
+	Type string
+	Name string
 }
 
 // Access describes a specific action that is
@@ -85,11 +83,10 @@ type Access struct {
 	Action string
 }
 
-func AppendAccess(records []Access, method string, rootIdentifier string, repo string) []Access {
+func AppendAccess(records []Access, method string, name string) []Access {
 	resource := Resource{
-		Type:  "repository",
-		Name:  repo,
-		Space: rootIdentifier,
+		Type: "repository",
+		Name: name,
 	}
 
 	switch method {

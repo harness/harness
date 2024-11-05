@@ -458,7 +458,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	coreController := pkg.CoreControllerProvider(registryRepository)
 	dbStore := docker.DBStoreProvider(blobRepository, imageRepository, artifactRepository, bandwidthStatRepository, downloadStatRepository)
 	dockerController := docker.ControllerProvider(localRegistry, remoteRegistry, coreController, spaceStore, authorizer, dbStore)
-	handler := api2.NewHandlerProvider(dockerController, spaceStore, tokenStore, controller, authenticator, provider, authorizer)
+	handler := api2.NewHandlerProvider(dockerController, spaceStore, tokenStore, controller, authenticator, provider, authorizer, config)
 	registryOCIHandler := router.OCIHandlerProvider(handler)
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
 	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceStore, transactor, authenticator, provider, authorizer, auditService, spacePathStore)

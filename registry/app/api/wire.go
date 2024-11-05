@@ -68,9 +68,18 @@ func BlobStorageProvider(c *types.Config) (storagedriver.StorageDriver, error) {
 func NewHandlerProvider(
 	controller *docker.Controller, spaceStore corestore.SpaceStore,
 	tokenStore corestore.TokenStore, userCtrl *usercontroller.Controller, authenticator authn.Authenticator,
-	urlProvider urlprovider.Provider, authorizer authz.Authorizer,
+	urlProvider urlprovider.Provider, authorizer authz.Authorizer, config *types.Config,
 ) *ocihandler.Handler {
-	return ocihandler.NewHandler(controller, spaceStore, tokenStore, userCtrl, authenticator, urlProvider, authorizer)
+	return ocihandler.NewHandler(
+		controller,
+		spaceStore,
+		tokenStore,
+		userCtrl,
+		authenticator,
+		urlProvider,
+		authorizer,
+		config.Registry.HTTP.RelativeURL,
+	)
 }
 
 var WireSet = wire.NewSet(

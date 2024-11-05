@@ -21,7 +21,6 @@ import (
 	"github.com/harness/gitness/registry/app/api/handler/oci"
 	"github.com/harness/gitness/registry/app/api/middleware"
 	"github.com/harness/gitness/registry/app/api/router/utils"
-	"github.com/harness/gitness/registry/app/common"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
@@ -78,14 +77,14 @@ func NewOCIHandler(handlerV2 *oci.Handler) RegistryOCIHandler {
 			handlerV2.GetToken(w, req)
 		})
 
-		r.With(middleware.OciCheckAuth(common.GenerateOciTokenURL(handlerV2.URLProvider.RegistryURL()))).
+		r.With(middleware.OciCheckAuth(handlerV2.URLProvider)).
 			Get("/", func(w http.ResponseWriter, req *http.Request) {
 				handlerV2.APIBase(w, req)
 			})
 
 		r.Route("/{registryIdentifier}", func(r chi.Router) {
-			r.Use(middleware.OciCheckAuth(common.GenerateOciTokenURL(handlerV2.URLProvider.RegistryURL())))
-			r.Use(middleware.BlockNonOciSourceToken(handlerV2.URLProvider.RegistryURL()))
+			r.Use(middleware.OciCheckAuth(handlerV2.URLProvider))
+			r.Use(middleware.BlockNonOciSourceToken(handlerV2.URLProvider))
 			r.Use(middleware.TrackDownloadStat(handlerV2))
 			r.Use(middleware.TrackBandwidthStat(handlerV2))
 

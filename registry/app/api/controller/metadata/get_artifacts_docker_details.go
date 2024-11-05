@@ -106,7 +106,7 @@ func (c *APIController) GetDockerArtifactDetails(
 	return artifact.GetDockerArtifactDetails200JSONResponse{
 		DockerArtifactDetailResponseJSONResponse: *GetDockerArtifactDetails(
 			registry, tag, m,
-			latestTag.ID == tag.ID, regInfo, c.URLProvider.RegistryURL(),
+			latestTag.ID == tag.ID, c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
 		),
 	}, nil
 }

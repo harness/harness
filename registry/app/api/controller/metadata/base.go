@@ -293,7 +293,6 @@ func CreateVirtualRepositoryResponse(
 	registry *types.Registry,
 	upstreamProxyKeys []string,
 	cleanupPolicies *[]types.CleanupPolicy,
-	rootIdentifier string,
 	registryURL string,
 ) *api.RegistryResponseJSONResponse {
 	createdAt := GetTimeInMs(registry.CreatedAt)
@@ -308,7 +307,7 @@ func CreateVirtualRepositoryResponse(
 		Data: api.Registry{
 			Identifier:     registry.Name,
 			Description:    &registry.Description,
-			Url:            GetRepoURL(rootIdentifier, registry.Name, registryURL),
+			Url:            registryURL,
 			PackageType:    registry.PackageType,
 			AllowedPattern: &allowedPattern,
 			BlockedPattern: &blockedPattern,

@@ -323,8 +323,8 @@ func GetRepoURL(rootIdentifier, registry string, registryURL string) string {
 	return parsedURL.String()
 }
 
-func GetRepoURLWithoutProtocol(rootIdentifier string, registry string, registryURL string) string {
-	repoURL := GetRepoURL(rootIdentifier, registry, registryURL)
+func GetRepoURLWithoutProtocol(registryURL string) string {
+	repoURL := registryURL
 	parsedURL, err := url.Parse(repoURL)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("Error parsing URL: ")
@@ -334,34 +334,34 @@ func GetRepoURLWithoutProtocol(rootIdentifier string, registry string, registryU
 	return parsedURL.Host + parsedURL.Path
 }
 
-func GetTagURL(rootIdentifier string, artifact string, version string, registry string, registryURL string) string {
-	url := GetRepoURL(rootIdentifier, registry, registryURL)
+func GetTagURL(artifact string, version string, registryURL string) string {
+	url := registryURL
 	url += "/" + artifact + "/"
 	url += version
 	return url
 }
 
 func GetPullCommand(
-	rootIdentifier string, registry string, image string, tag string,
+	image string, tag string,
 	packageType string, registryURL string,
 ) string {
 	if packageType == "DOCKER" {
-		return GetDockerPullCommand(rootIdentifier, registry, image, tag, registryURL)
+		return GetDockerPullCommand(image, tag, registryURL)
 	} else if packageType == "HELM" {
-		return GetHelmPullCommand(rootIdentifier, registry, image, tag, registryURL)
+		return GetHelmPullCommand(image, tag, registryURL)
 	}
 	return ""
 }
 
 func GetDockerPullCommand(
-	rootIdentifier string, registry string, image string,
+	image string,
 	tag string, registryURL string,
 ) string {
-	return "docker pull " + GetRepoURLWithoutProtocol(rootIdentifier, registry, registryURL) + "/" + image + ":" + tag
+	return "docker pull " + GetRepoURLWithoutProtocol(registryURL) + "/" + image + ":" + tag
 }
 
-func GetHelmPullCommand(rootIdentifier string, registry string, image string, tag string, registryURL string) string {
-	return "helm install " + GetRepoURLWithoutProtocol(rootIdentifier, registry, registryURL) + "/" + image + ":" + tag
+func GetHelmPullCommand(image string, tag string, registryURL string) string {
+	return "helm install " + GetRepoURLWithoutProtocol(registryURL) + "/" + image + ":" + tag
 }
 
 // CleanURLPath removes leading and trailing spaces and trailing slashes from the given URL string.

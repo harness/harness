@@ -41,27 +41,29 @@ import (
 func NewHandler(
 	controller *docker.Controller, spaceStore corestore.SpaceStore, tokenStore corestore.TokenStore,
 	userCtrl *usercontroller.Controller, authenticator authn.Authenticator, urlProvider urlprovider.Provider,
-	authorizer authz.Authorizer,
+	authorizer authz.Authorizer, ociRelativeURL bool,
 ) *Handler {
 	return &Handler{
-		Controller:    controller,
-		SpaceStore:    spaceStore,
-		TokenStore:    tokenStore,
-		UserCtrl:      userCtrl,
-		Authenticator: authenticator,
-		URLProvider:   urlProvider,
-		Authorizer:    authorizer,
+		Controller:     controller,
+		SpaceStore:     spaceStore,
+		TokenStore:     tokenStore,
+		UserCtrl:       userCtrl,
+		Authenticator:  authenticator,
+		URLProvider:    urlProvider,
+		Authorizer:     authorizer,
+		OCIRelativeURL: ociRelativeURL,
 	}
 }
 
 type Handler struct {
-	Controller    *docker.Controller
-	SpaceStore    corestore.SpaceStore
-	TokenStore    corestore.TokenStore
-	UserCtrl      *usercontroller.Controller
-	Authenticator authn.Authenticator
-	URLProvider   urlprovider.Provider
-	Authorizer    authz.Authorizer
+	Controller     *docker.Controller
+	SpaceStore     corestore.SpaceStore
+	TokenStore     corestore.TokenStore
+	UserCtrl       *usercontroller.Controller
+	Authenticator  authn.Authenticator
+	URLProvider    urlprovider.Provider
+	Authorizer     authz.Authorizer
+	OCIRelativeURL bool
 }
 
 type routeType string
@@ -218,7 +220,7 @@ func (h *Handler) GetRegistryInfo(r *http.Request, remoteSupport bool) (pkg.Regi
 		Reference:  ref,
 		Digest:     dgst,
 		Tag:        tag,
-		URLBuilder: v2.NewURLBuilderFromRequest(r, false),
+		URLBuilder: v2.NewURLBuilderFromRequest(r, h.OCIRelativeURL),
 		Path:       r.URL.Path,
 	}
 

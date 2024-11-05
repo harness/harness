@@ -147,7 +147,7 @@ func (c *APIController) createVirtualRegistry(
 	return artifact.CreateRegistry201JSONResponse{
 		RegistryResponseJSONResponse: *CreateVirtualRepositoryResponse(
 			repoEntity, c.getUpstreamProxyKeys(ctx, repoEntity.UpstreamProxies),
-			cleanupPolicies, regInfo.RootIdentifier, c.URLProvider.RegistryURL(),
+			cleanupPolicies, c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
 		),
 	}, nil
 }

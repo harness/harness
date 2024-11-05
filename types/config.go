@@ -476,6 +476,8 @@ type Config struct {
 			// If not provided, a random secret will be generated. This may cause problems with uploads if multiple
 			// registries are behind a load-balancer
 			Secret string `envconfig:"GITNESS_REGISTRY_HTTP_SECRET"`
+
+			RelativeURL bool `envconfig:"GITNESS_OCI_RELATIVE_URL" default:"false"`
 		}
 
 		//nolint:lll

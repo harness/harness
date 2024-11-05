@@ -99,8 +99,8 @@ func (c *APIController) GetAllArtifactVersions(
 
 	return artifact.GetAllArtifactVersions200JSONResponse{
 		ListArtifactVersionResponseJSONResponse: *GetAllArtifactVersionResponse(
-			ctx, tags, latestTag, image, count,
-			regInfo, regInfo.pageNumber, regInfo.limit, regInfo.RootIdentifier, c.URLProvider.RegistryURL(),
+			ctx, tags, latestTag, image, count, regInfo.pageNumber, regInfo.limit,
+			c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
 		),
 	}, nil
 }

@@ -16,16 +16,17 @@ package common
 
 import (
 	"net/url"
+	"strings"
 )
 
 func GenerateOciTokenURL(registryURL string) string {
 	return registryURL + "/v2/token"
 }
 
-func GenerateSetupClientHostname(registryURL string) string {
+func GenerateSetupClientHostnameAndRegistry(registryURL string) (hostname string, registryRef string) {
 	regURL, err := url.Parse(registryURL)
 	if err != nil {
-		return ""
+		return "", ""
 	}
-	return regURL.Host
+	return regURL.Host, strings.Trim(regURL.Path, "/")
 }
