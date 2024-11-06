@@ -36,10 +36,16 @@ export const mockRepositoryListApiResponse: GetAllRegistriesOkResponse = {
           downloadsCount: 100,
           registrySize: '100 MB',
           artifactsCount: 100
+        },
+        {
+          identifier: 'upstream_1',
+          packageType: 'DOCKER',
+          type: 'UPSTREAM',
+          url: 'space/upstream_1'
         }
       ],
       itemCount: 2,
-      pageCount: 1,
+      pageCount: 10,
       pageIndex: 0,
       pageSize: 10
     },

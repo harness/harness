@@ -57,7 +57,7 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
   const history = useHistory()
   const routes = useRoutes()
 
-  const { registries = [], itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data
+  const { registries, itemCount = 0, pageCount = 0, pageIndex, pageSize = 0 } = data
   const paginationProps = useDefaultPaginationProps({
     itemCount,
     pageSize,
@@ -75,7 +75,6 @@ export function RepositoryListTable(props: RepositoryListTableProps): JSX.Elemen
         isServerSorted: currentSort === id,
         isServerSortedDesc: currentOrder === 'DESC',
         getSortedColumn: ({ sort }: RepositoryListSortBy) => {
-          if (!sort) return
           setSortBy([sort, currentOrder === 'DESC' ? 'ASC' : 'DESC'])
         }
       }

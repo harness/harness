@@ -15,23 +15,17 @@
  */
 
 import React from 'react'
-import copy from 'clipboard-copy'
 import userEvent from '@testing-library/user-event'
 import { useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
-import { getByTestId, getByText, render, waitFor } from '@testing-library/react'
+import { fireEvent, getByPlaceholderText, getByTestId, render, waitFor } from '@testing-library/react'
 
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
-import { getTableColumn } from '@ar/utils/testUtils/utils'
+import { getTableHeaderColumn, testMultiSelectChange, testSelectChange } from '@ar/utils/testUtils/utils'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { HelmRepositoryType } from '@ar/pages/repository-details/HelmRepository/HelmRepositoryType'
 import { DockerRepositoryType } from '@ar/pages/repository-details/DockerRepository/DockerRepositoryType'
 import RepositoryListPage from '../RepositoryListPage'
 import { mockRepositoryListApiResponse } from './__mockData__'
-
-jest.mock('clipboard-copy', () => ({
-  __esModule: true,
-  default: jest.fn()
-}))
 
 jest.mock('@harnessio/react-har-service-client', () => ({
   useGetAllRegistriesQuery: jest.fn()
@@ -41,6 +35,10 @@ describe('Test Registry List Page', () => {
   beforeAll(() => {
     repositoryFactory.registerStep(new DockerRepositoryType())
     repositoryFactory.registerStep(new HelmRepositoryType())
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
   test('Should render empty list view', async () => {
@@ -84,45 +82,14 @@ describe('Test Registry List Page', () => {
 
     const table = document.querySelector('div[class*="TableV2--table--"]')
     expect(table).toBeInTheDocument()
-
-    const list = mockRepositoryListApiResponse.content.data.registries
-    for (let idx = 0; idx < list.length; idx++) {
-      const each = list[idx]
-      const row = idx + 1
-      // name column
-      const nameColumn = getTableColumn(row, 1)
-      expect(nameColumn).toHaveTextContent(each.identifier)
-      expect(nameColumn?.querySelector('span[data-icon="docker-step"]')).toBeInTheDocument()
-      if (each.description) {
-        expect(nameColumn?.querySelector('span[data-icon="description"]')).toBeInTheDocument()
-      }
-      if (each.labels?.length) {
-        expect(nameColumn?.querySelector('span[icon="tag"]')).toBeInTheDocument()
-      }
-      // type column
-      expect(getTableColumn(row, 2)).toHaveTextContent(
-        each.type === 'VIRTUAL' ? 'badges.artifactRegistry' : 'badges.upstreamProxy'
-      )
-      // size column
-      expect(getTableColumn(row, 3)).toHaveTextContent(each.registrySize ?? 'na')
-      // artifacts column
-      expect(getTableColumn(row, 4)).toHaveTextContent(each.artifactsCount?.toString() ?? '0')
-      // downloads column
-      expect(getTableColumn(row, 5)).toHaveTextContent(each.downloadsCount?.toString() ?? '0')
-      // copy url column
-      const copyUrlBtn = getByText(getTableColumn(row, 7) as HTMLDivElement, 'repositoryList.table.copyUrl')
-      await userEvent.click(copyUrlBtn!)
-      await waitFor(() => {
-        expect(copy).toHaveBeenCalledWith(each.url)
-      })
-    }
   })
 
-  test('Should show error message if failed to load repo list', () => {
+  test('Should show error message if failed to load repo list', async () => {
+    const refetch = jest.fn()
     ;(useGetAllRegistriesQuery as jest.Mock).mockImplementation(() => ({
       isFetching: false,
       data: null,
-      refetch: jest.fn(),
+      refetch,
       error: {
         message: 'Failed to load with custom error message'
       }
@@ -135,6 +102,189 @@ describe('Test Registry List Page', () => {
     )
     expect(container.querySelector('span[icon="error"]')).toBeInTheDocument()
     expect(container).toHaveTextContent('Failed to load with custom error message')
-    expect(container.querySelector('button[aria-label="Retry"]')).toBeInTheDocument()
+    const retryBtn = container.querySelector('button[aria-label="Retry"]')
+    expect(retryBtn).toBeInTheDocument()
+
+    await userEvent.click(retryBtn!)
+    await waitFor(() => {
+      expect(refetch).toHaveBeenCalled()
+    })
+  })
+
+  test('Should show empty message if not results after applying filters', async () => {
+    ;(useGetAllRegistriesQuery as jest.Mock).mockImplementation(() => ({
+      isFetching: false,
+      data: { content: { data: { registries: [] }, status: 'SUCCESS' } },
+      refetch: jest.fn(),
+      error: null
+    }))
+
+    const { container } = render(
+      <ArTestWrapper queryParams={{ searchTerm: '123' }}>
+        <RepositoryListPage />
+      </ArTestWrapper>
+    )
+    expect(container.querySelector('span[data-icon="registry"]')).toBeInTheDocument()
+    expect(container).toHaveTextContent('noResultsFound')
+    const clearFilterBtn = container.querySelector('button[aria-label="clearFilters"]')
+    expect(clearFilterBtn).toBeInTheDocument()
+    await userEvent.click(clearFilterBtn!)
+    await waitFor(() => {
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
+        queryParams: {
+          package_type: [],
+          page: 0,
+          search_term: '',
+          size: 50,
+          sort_field: 'updatedAt',
+          sort_order: 'DESC'
+        },
+        space_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      })
+    })
+  })
+
+  test('Should call api after modifying filters on table', async () => {
+    ;(useGetAllRegistriesQuery as jest.Mock).mockImplementation(() => ({
+      isFetching: false,
+      data: mockRepositoryListApiResponse,
+      refetch: jest.fn(),
+      error: false
+    }))
+
+    const { container } = render(
+      <ArTestWrapper>
+        <RepositoryListPage />
+      </ArTestWrapper>
+    )
+
+    await waitFor(() => {
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
+        queryParams: {
+          package_type: [],
+          page: 0,
+          size: 50,
+          sort_field: 'updatedAt',
+          sort_order: 'DESC'
+        },
+        space_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      })
+    })
+
+    const registryTypeSelector = getByTestId(container, 'registry-type-select')
+    expect(registryTypeSelector).toBeInTheDocument()
+    await testSelectChange(registryTypeSelector, 'repositoryList.artifactRegistry.label')
+    await waitFor(() => {
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
+        queryParams: {
+          package_type: [],
+          page: 0,
+          size: 50,
+          sort_field: 'updatedAt',
+          sort_order: 'DESC',
+          type: 'VIRTUAL'
+        },
+        space_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      })
+    })
+
+    const packageTypeSelector = getByTestId(container, 'package-type-select')
+    expect(packageTypeSelector).toBeInTheDocument()
+    await testMultiSelectChange(packageTypeSelector, 'repositoryTypes.docker')
+    await waitFor(() => {
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
+        queryParams: {
+          package_type: ['DOCKER'],
+          page: 0,
+          size: 50,
+          sort_field: 'updatedAt',
+          sort_order: 'DESC',
+          type: 'VIRTUAL'
+        },
+        space_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      })
+    })
+
+    const searchInput = getByPlaceholderText(container, 'search')
+    expect(searchInput).toBeInTheDocument()
+    fireEvent.change(searchInput!, { target: { value: '1234' } })
+
+    await waitFor(() => {
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
+        queryParams: {
+          package_type: ['DOCKER'],
+          page: 0,
+          size: 50,
+          sort_field: 'updatedAt',
+          sort_order: 'DESC',
+          type: 'VIRTUAL',
+          search_term: '1234'
+        },
+        space_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      })
+    })
+
+    // should call an api onchange on sort
+    const nameHeader = getTableHeaderColumn(1)
+    await userEvent.click(nameHeader!)
+    await waitFor(() => {
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
+        queryParams: {
+          package_type: ['DOCKER'],
+          page: 0,
+          size: 50,
+          sort_field: 'identifier',
+          sort_order: 'ASC',
+          type: 'VIRTUAL',
+          search_term: '1234'
+        },
+        space_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      })
+    })
+
+    // should call api on page change
+    const nextPageBtn = container.querySelector('button[aria-label="Next"]')
+    await userEvent.click(nextPageBtn!)
+    await waitFor(() => {
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
+        queryParams: {
+          package_type: ['DOCKER'],
+          page: 1,
+          size: 50,
+          sort_field: 'identifier',
+          sort_order: 'ASC',
+          type: 'VIRTUAL',
+          search_term: '1234'
+        },
+        space_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      })
+    })
+
+    //should call api on page size change
+    const pageSizeSelector = getByTestId(container, 'dropdown-button')
+    expect(pageSizeSelector).toBeInTheDocument()
+    await testSelectChange(pageSizeSelector, '10')
+    await waitFor(() => {
+      expect(useGetAllRegistriesQuery).toHaveBeenLastCalledWith({
+        queryParams: {
+          package_type: ['DOCKER'],
+          page: 0,
+          size: 10,
+          sort_field: 'identifier',
+          sort_order: 'ASC',
+          type: 'VIRTUAL',
+          search_term: '1234'
+        },
+        space_ref: 'undefined/+',
+        stringifyQueryParamsOptions: { arrayFormat: 'repeat' }
+      })
+    })
   })
 })

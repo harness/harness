@@ -76,10 +76,6 @@ export const RepositoryArtifactsCell: CellType = ({ value }) => {
   return <TableCells.CountCell value={value} icon="store-artifact-bundle" />
 }
 
-export const RepositoryUpstreamProxiesCell: CellType = ({ value }) => {
-  return <TableCells.CountCell value={value} icon="upstream-proxies-icon" />
-}
-
 export const RepositoryDownloadsCell: CellType = ({ value }) => {
   return <TableCells.CountCell value={value} icon="download-box" />
 }
