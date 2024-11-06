@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+import { useToaster } from '@harnessio/uicore'
 import { useEffect, useState } from 'react'
 import { OpenapiGetTokenResponse, useGetToken } from 'services/cde'
 
 export const useOpenVSCodeBrowserURL = () => {
+  const { showError } = useToaster()
   const { data: tokenData, refetch: refetchToken } = useGetToken({
     accountIdentifier: '',
     projectIdentifier: '',
@@ -33,7 +35,11 @@ export const useOpenVSCodeBrowserURL = () => {
 
   useEffect(() => {
     if (temporaryToken?.gitspace_token) {
-      window.open(`${selectedRowUrl}&token=${temporaryToken?.gitspace_token}`, '_blank')
+      if (selectedRowUrl === '') {
+        showError('Base URL not set, refresh and try again')
+      } else {
+        window.open(`${selectedRowUrl}&token=${temporaryToken?.gitspace_token}`, '_blank')
+      }
     }
   }, [temporaryToken, selectedRowUrl])
 

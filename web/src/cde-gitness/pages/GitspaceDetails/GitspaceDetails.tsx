@@ -330,7 +330,8 @@ const GitspaceDetails = () => {
                             We are provisioning the Gitspace
                           </Text>
                           <Text color={Color.WHITE} font="small">
-                            Please wait for a few minutes before the VS Code Desktop can be launched
+                            Please wait for a few minutes before the{' '}
+                            {data.ide === 'vs_code_web' ? `VS Code Online` : `VS Code Desktop`} can be launched
                           </Text>
                         </Layout.Vertical>
                       </Container>

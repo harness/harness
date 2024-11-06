@@ -16,13 +16,12 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Container, FormikForm, Layout, Text, TextInput } from '@harnessio/uicore'
-import { debounce, defaultTo, get } from 'lodash-es'
+import { debounce, defaultTo, get, isEqual } from 'lodash-es'
 import { useFormikContext } from 'formik'
 import { GitFork, Repository } from 'iconoir-react'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Color } from '@harnessio/design-system'
-import { useStrings } from 'framework/strings'
-import type { OpenapiCreateGitspaceRequest } from 'services/cde'
+import type { OpenapiCreateGitspaceRequest, TypesRepoResponse } from 'services/cde'
 import { useListGitspaceRepos, useListGitspaceBranches, useRepoLookupForGitspace } from 'services/cde'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { scmOptions, SCMType, type RepoQueryParams } from 'cde-gitness/pages/GitspaceCreate/CDECreateGitspace'
@@ -37,14 +36,13 @@ enum RepoCheckStatus {
 }
 
 export const CDEAnyGitImport = () => {
-  const { getString } = useStrings()
   const repoQueryParams = useQueryParams<RepoQueryParams>()
 
   const { setValues, setFieldError, values } = useFormikContext<OpenapiCreateGitspaceRequest>()
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '' } = useGetCDEAPIParams()
 
-  const [searchTerm, setSearchTerm] = useState(values?.code_repo_url as string)
-  const [searchBranch, setSearchBranch] = useState(values?.branch as string)
+  const [searchTerm, setSearchTerm] = useState<string | undefined>(values?.code_repo_url as string)
+  const [searchBranch, setSearchBranch] = useState<string | undefined>(values?.branch as string)
 
   const { mutate, loading } = useRepoLookupForGitspace({
     accountIdentifier,
@@ -57,7 +55,7 @@ export const CDEAnyGitImport = () => {
     orgIdentifier,
     projectIdentifier,
     queryParams: {
-      search_term: searchTerm,
+      search_term: defaultTo(searchTerm, ''),
       repo_type: values?.code_repo_type as string
     },
     debounce: 1000
@@ -72,7 +70,7 @@ export const CDEAnyGitImport = () => {
     orgIdentifier,
     projectIdentifier,
     queryParams: {
-      search_term: searchBranch,
+      search_term: defaultTo(searchBranch, ''),
       repo_type: values.code_repo_type || '',
       repo_url: values.code_repo_url || ''
     },
@@ -81,12 +79,22 @@ export const CDEAnyGitImport = () => {
   })
 
   const [repoCheckState, setRepoCheckState] = useState<RepoCheckStatus | undefined>()
+  const [repoOptions, setRepoOptions] = useState<TypesRepoResponse[] | null | undefined>(repoData?.repositories)
 
   useEffect(() => {
     if (values?.code_repo_type) {
       setRepoCheckState(undefined)
+      setSearchTerm(undefined)
+      setSearchBranch(undefined)
+      setRepoOptions(undefined)
     }
   }, [values?.code_repo_type])
+
+  useEffect(() => {
+    if (!isEqual(repoOptions, repoData?.repositories)) {
+      setRepoOptions(repoData?.repositories)
+    }
+  }, [repoOptions, repoData?.repositories])
 
   useEffect(() => {
     if (values.code_repo_url === repoQueryParams.codeRepoURL && repoQueryParams.codeRepoURL) {
@@ -110,39 +118,21 @@ export const CDEAnyGitImport = () => {
             branch: string
             url: string
           }
-          if (!response?.branch) {
-            errorMessage = getString('cde.repository.privateRepoWarning')
-            setRepoCheckState(RepoCheckStatus.InValid)
-            setValues((prvValues: any) => {
-              return {
-                ...prvValues,
-                code_repo_url: response.url,
-                branch: undefined,
-                identifier: undefined,
-                name: undefined,
-                code_repo_type: values?.code_repo_type
-              }
-            })
-            setTimeout(() => {
-              setFieldError('code_repo_url', errorMessage)
-            }, 500)
-          } else {
-            const branchValue = skipBranchUpdate ? {} : { branch: response.branch }
-            setValues((prvValues: any) => {
-              return {
-                ...prvValues,
-                code_repo_url: response.url,
-                ...branchValue,
-                identifier: getRepoIdFromURL(response.url),
-                name: getRepoNameFromURL(response.url),
-                code_repo_type: values?.code_repo_type
-              }
-            })
-            if (!skipBranchUpdate) {
-              setSearchBranch(response.branch)
+          const branchValue = skipBranchUpdate ? {} : { branch: response.branch }
+          setValues((prvValues: any) => {
+            return {
+              ...prvValues,
+              code_repo_url: response.url,
+              ...branchValue,
+              identifier: getRepoIdFromURL(response.url),
+              name: getRepoNameFromURL(response.url),
+              code_repo_type: values?.code_repo_type
             }
-            setRepoCheckState(RepoCheckStatus.Valid)
+          })
+          if (!skipBranchUpdate) {
+            setSearchBranch(response.branch)
           }
+          setRepoCheckState(RepoCheckStatus.Valid)
         }
       } catch (err) {
         errorMessage = get(err, 'message') || ''
@@ -162,7 +152,7 @@ export const CDEAnyGitImport = () => {
       <Layout.Horizontal spacing="medium">
         <Container width="63%" className={css.formFields}>
           <GitspaceSelect
-            hideMenu={isValidUrl(searchTerm)}
+            hideMenu={isValidUrl(defaultTo(searchTerm, ''))}
             text={
               <Container flex={{ alignItems: 'center' }} className={css.customTextInput}>
                 <Repository height={32} width={32} />
@@ -182,7 +172,7 @@ export const CDEAnyGitImport = () => {
             rightIcon={
               loading || repoLoading
                 ? 'loading'
-                : repoCheckState && isValidUrl(searchTerm)
+                : repoCheckState && isValidUrl(defaultTo(searchTerm, ''))
                 ? repoCheckState === RepoCheckStatus.Valid
                   ? 'tick-circle'
                   : 'warning-sign'
@@ -192,8 +182,10 @@ export const CDEAnyGitImport = () => {
             formikName="code_repo_url"
             renderMenu={
               <Menu>
-                {repoData?.repositories?.length ? (
-                  repoData?.repositories?.map(item => {
+                {loading || repoLoading ? (
+                  <MenuItem text={<Text>Fetching Repositories</Text>} />
+                ) : repoOptions?.length ? (
+                  repoOptions?.map(item => {
                     return (
                       <MenuItem
                         key={item.name}
@@ -232,8 +224,6 @@ export const CDEAnyGitImport = () => {
                       />
                     )
                   })
-                ) : loading || repoLoading ? (
-                  <MenuItem text={<Text>Fetching Repositories</Text>} />
                 ) : (
                   <MenuItem text={<Text>No Repositories Found</Text>} />
                 )}
