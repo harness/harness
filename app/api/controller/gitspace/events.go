@@ -119,5 +119,9 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeAgentGitspaceStateReportError] = "Gitspace has an error"
 
 	gitspaceConfigsMap[enum.GitspaceEventTypeGitspaceAutoStop] = "Triggering auto-stopping due to inactivity..."
+
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraCleanupStart] = "Cleaning up infrastructure..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraCleanupCompleted] = "Successfully cleaned up infrastructure"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraCleanupFailed] = "Failed to cleaned up infrastructure"
 	return gitspaceConfigsMap
 }
