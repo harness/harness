@@ -40,7 +40,21 @@ func (s *Service) handleGitspaceInfraEvent(
 		return fetchErr
 	}
 
-	var instance = config.GitspaceInstance
+	instance := config.GitspaceInstance
+	if payload.Infra.GitspaceInstanceIdentifier != "" {
+		gitspaceInstance, err := s.gitspaceSvc.FindInstanceByIdentifier(
+			ctx,
+			payload.Infra.GitspaceInstanceIdentifier,
+			payload.Infra.SpacePath,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to fetch gitspace instance: %w", err)
+		}
+
+		instance = gitspaceInstance
+		config.GitspaceInstance = instance
+	}
+
 	var err error
 
 	switch payload.Type {

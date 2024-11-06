@@ -129,3 +129,29 @@ func (c *Service) FindAll(
 	}
 	return gitspaceConfigResult, nil
 }
+
+func (c *Service) FindInstanceByIdentifier(
+	ctx context.Context,
+	identifier string,
+	spaceRef string,
+) (*types.GitspaceInstance, error) {
+	var gitspaceInstanceResult *types.GitspaceInstance
+	txErr := c.tx.WithTx(ctx, func(ctx context.Context) error {
+		space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+		if err != nil {
+			return fmt.Errorf("failed to find space: %w", err)
+		}
+		gitspaceInstance, err := c.gitspaceInstanceStore.FindByIdentifier(ctx, identifier)
+		if err != nil {
+			return fmt.Errorf("failed to find gitspace instance: %w", err)
+		}
+		gitspaceInstanceResult = gitspaceInstance
+		gitspaceInstanceResult.SpacePath = space.Path
+
+		return nil
+	}, dbtx.TxDefaultReadOnly)
+	if txErr != nil {
+		return nil, txErr
+	}
+	return gitspaceInstanceResult, nil
+}
