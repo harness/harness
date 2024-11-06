@@ -143,7 +143,7 @@ func (c *APIController) createVirtualRegistry(
 	if err != nil {
 		return throwCreateRegistry400Error(err), nil
 	}
-	repoURL := c.URLProvider.RegistryRefURL(ctx, GetRegistryRef(regInfo.RootIdentifier, repoEntity.Name))
+	repoURL := c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, repoEntity.Name)
 	return artifact.CreateRegistry201JSONResponse{
 		RegistryResponseJSONResponse: *CreateVirtualRepositoryResponse(
 			repoEntity, c.getUpstreamProxyKeys(ctx, repoEntity.UpstreamProxies),

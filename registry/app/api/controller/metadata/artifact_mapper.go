@@ -34,7 +34,7 @@ func GetArtifactMetadata(
 ) []artifactapi.ArtifactMetadata {
 	artifactMetadataList := make([]artifactapi.ArtifactMetadata, 0, len(artifacts))
 	for _, artifact := range artifacts {
-		registryURL := urlProvider.RegistryRefURL(ctx, GetRegistryRef(rootIdentifier, artifact.RepoName))
+		registryURL := urlProvider.RegistryURL(ctx, rootIdentifier, artifact.RepoName)
 		artifactMetadata := mapToArtifactMetadata(artifact, registryURL)
 		artifactMetadataList = append(artifactMetadataList, *artifactMetadata)
 	}

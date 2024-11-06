@@ -94,7 +94,7 @@ func (c *APIController) GetHelmArtifactDetails(
 	return artifact.GetHelmArtifactDetails200JSONResponse{
 		HelmArtifactDetailResponseJSONResponse: *GetHelmArtifactDetails(
 			registry, tag, m,
-			latestTag.ID == tag.ID, c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
+			latestTag.ID == tag.ID, c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
 		),
 	}, nil
 }

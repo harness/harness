@@ -182,7 +182,7 @@ func (c *APIController) updateVirtualRegistry(
 		RegistryResponseJSONResponse: *CreateVirtualRepositoryResponse(
 			modifiedRepoEntity,
 			c.getUpstreamProxyKeys(ctx, modifiedRepoEntity.UpstreamProxies), cleanupPolicies,
-			c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
+			c.URLProvider.RegistryURL(ctx, regInfo.RootIdentifier, regInfo.RegistryIdentifier),
 		),
 	}, nil
 }

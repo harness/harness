@@ -179,7 +179,7 @@ func GetRegistryMetadata(
 			PackageType:    reg.PackageType,
 			Type:           reg.Type,
 			LastModified:   &modifiedAt,
-			Url:            urlProvider.RegistryRefURL(ctx, GetRegistryRef(rootIdentifier, reg.RegIdentifier)),
+			Url:            urlProvider.RegistryURL(ctx, rootIdentifier, reg.RegIdentifier),
 			ArtifactsCount: artifactCount,
 			DownloadsCount: downloadCount,
 			RegistrySize:   &size,

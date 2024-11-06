@@ -21,6 +21,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/registry/app/api/openapi/contracts/artifact"
 	"github.com/harness/gitness/registry/app/common"
 	"github.com/harness/gitness/types/enum"
@@ -93,28 +94,27 @@ func (c *APIController) GetClientSetupDetails(
 	packageType := string(reg.PackageType)
 
 	return artifact.GetClientSetupDetails200JSONResponse{
-		ClientSetupDetailsResponseJSONResponse: *GetClientSetupDetails(
-			ctx, packageType, imageParam, tagParam, c.URLProvider.RegistryRefURL(ctx, regInfo.RegistryRef),
+		ClientSetupDetailsResponseJSONResponse: *c.GenerateClientSetupDetails(
+			ctx, packageType, imageParam, tagParam, regInfo.RegistryRef,
 		),
 	}, nil
 }
 
-func GetClientSetupDetails(
+func (c *APIController) GenerateClientSetupDetails(
 	ctx context.Context,
 	packageType string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
-	registryURL string,
+	registryRef string,
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	session, _ := request.AuthSessionFrom(ctx)
 	username := session.Principal.Email
-	hostname, regRef := common.GenerateSetupClientHostnameAndRegistry(registryURL)
 
 	// Fixme: Use ENUMS
 	if packageType == "HELM" {
 		header1 := "Login to Helm"
 		section1step1Header := "Run this Helm command in your terminal to authenticate the client."
-		section1step1Commands := []string{"helm registry login <HOSTNAME>"}
+		section1step1Commands := []string{"helm registry login <LOGIN_HOSTNAME>"}
 		section1step1Type := artifact.ClientSetupStepTypeStatic
 		section1step2Header := "For the Password field above, generate an identity token"
 		section1step2Type := artifact.ClientSetupStepTypeGenerateToken
@@ -133,7 +133,7 @@ func GetClientSetupDetails(
 		header2 := "Push a version"
 		section2step1Header := "Run this Helm push command in your terminal to push a chart in OCI form." +
 			" Note: Make sure you add oci:// prefix to the repository URL."
-		section2step1Commands := []string{"helm push <CHART_TGZ_FILE> oci://<HOSTNAME>/<REPOSITORY_REFERENCE>"}
+		section2step1Commands := []string{"helm push <CHART_TGZ_FILE> oci://<HOSTNAME>/<REGISTRY_NAME>"}
 		section2step1Type := artifact.ClientSetupStepTypeStatic
 		section2 := []artifact.ClientSetupStep{
 			{
@@ -146,7 +146,7 @@ func GetClientSetupDetails(
 		header3 := "Pull a version"
 		section3step1Header := "Run this Helm command in your terminal to pull a specific chart version."
 		section3step1Commands := []string{
-			"helm pull oci://<HOSTNAME>/<REPOSITORY_REFERENCE>/<IMAGE_NAME> --version <TAG>",
+			"helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME> --version <TAG>",
 		}
 		section3step1Type := artifact.ClientSetupStepTypeStatic
 		section3 := []artifact.ClientSetupStep{
@@ -175,7 +175,7 @@ func GetClientSetupDetails(
 			},
 		}
 
-		replacePlaceholders(clientSetupDetails, username, hostname, regRef, image, tag)
+		c.replacePlaceholders(ctx, clientSetupDetails, username, registryRef, image, tag)
 
 		return &artifact.ClientSetupDetailsResponseJSONResponse{
 			Data:   clientSetupDetails,
@@ -184,7 +184,7 @@ func GetClientSetupDetails(
 	}
 	header1 := "Login to Docker"
 	section1step1Header := "Run this Docker command in your terminal to authenticate the client."
-	section1step1Commands := []string{"docker login <HOSTNAME>", "Username: <USERNAME>", "Password: *see step 2*"}
+	section1step1Commands := []string{"docker login <LOGIN_HOSTNAME>", "Username: <USERNAME>", "Password: *see step 2*"}
 	section1step1Type := artifact.ClientSetupStepTypeStatic
 	section1step2Header := "For the Password field above, generate an identity token"
 	section1step2Type := artifact.ClientSetupStepTypeGenerateToken
@@ -201,7 +201,7 @@ func GetClientSetupDetails(
 	}
 	header2 := "Pull an image"
 	section2step1Header := "Run this Docker command in your terminal to pull image."
-	section2step1Commands := []string{"docker pull <HOSTNAME>/<REPOSITORY_REFERENCE>/<IMAGE_NAME>:<TAG>"}
+	section2step1Commands := []string{"docker pull <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"}
 	section2step1Type := artifact.ClientSetupStepTypeStatic
 	section2 := []artifact.ClientSetupStep{
 		{
@@ -213,11 +213,11 @@ func GetClientSetupDetails(
 	header3 := "Retag and Push the image"
 	section3step1Header := "Run this Docker command in your terminal to tag the image."
 	section3step1Commands := []string{
-		"docker tag <IMAGE_NAME>:<TAG> <HOSTNAME>/<REPOSITORY_REFERENCE>/<IMAGE_NAME>:<TAG>",
+		"docker tag <IMAGE_NAME>:<TAG> <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>",
 	}
 	section3step1Type := artifact.ClientSetupStepTypeStatic
 	section3step2Header := "Run this Docker command in your terminal to push the image."
-	section3step2Commands := []string{"docker push <HOSTNAME>/<REPOSITORY_REFERENCE>/<IMAGE_NAME>:<TAG>"}
+	section3step2Commands := []string{"docker push <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"}
 	section3step2Type := artifact.ClientSetupStepTypeStatic
 	section3 := []artifact.ClientSetupStep{
 		{
@@ -250,7 +250,7 @@ func GetClientSetupDetails(
 		},
 	}
 
-	replacePlaceholders(clientSetupDetails, username, hostname, regRef, image, tag)
+	c.replacePlaceholders(ctx, clientSetupDetails, username, registryRef, image, tag)
 
 	return &artifact.ClientSetupDetailsResponseJSONResponse{
 		Data:   clientSetupDetails,
@@ -258,14 +258,18 @@ func GetClientSetupDetails(
 	}
 }
 
-func replacePlaceholders(
+func (c *APIController) replacePlaceholders(
+	ctx context.Context,
 	clientSetupDetails artifact.ClientSetupDetails,
 	username string,
-	hostname string,
 	regRef string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
 ) {
+	rootSpace, _, _ := paths.DisectRoot(regRef)
+	_, registryName, _ := paths.DisectLeaf(regRef)
+	hostname := common.TrimURLScheme(c.URLProvider.RegistryURL(ctx, rootSpace))
+
 	for _, s := range clientSetupDetails.Sections {
 		if s.Steps == nil {
 			continue
@@ -275,7 +279,7 @@ func replacePlaceholders(
 				continue
 			}
 			for i := range *st.Commands {
-				replaceText(username, st, i, hostname, regRef, image, tag)
+				replaceText(username, st, i, hostname, registryName, image, tag)
 			}
 		}
 	}
@@ -286,7 +290,7 @@ func replaceText(
 	st artifact.ClientSetupStep,
 	i int,
 	hostname string,
-	regRef string,
+	repoName string,
 	image *artifact.ArtifactParam,
 	tag *artifact.VersionParam,
 ) {
@@ -296,10 +300,13 @@ func replaceText(
 	if hostname != "" {
 		(*st.Commands)[i] = strings.ReplaceAll((*st.Commands)[i], "<HOSTNAME>", hostname)
 	}
-	if regRef != "" {
+	if hostname != "" {
+		(*st.Commands)[i] = strings.ReplaceAll((*st.Commands)[i], "<LOGIN_HOSTNAME>", common.GetHost(hostname))
+	}
+	if repoName != "" {
 		(*st.Commands)[i] = strings.ReplaceAll(
 			(*st.Commands)[i],
-			"<REPOSITORY_REFERENCE>", regRef,
+			"<REGISTRY_NAME>", repoName,
 		)
 	}
 	if image != nil {

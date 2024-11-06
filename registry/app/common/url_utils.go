@@ -17,6 +17,8 @@ package common
 import (
 	"net/url"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 func GenerateOciTokenURL(registryURL string) string {
@@ -29,4 +31,30 @@ func GenerateSetupClientHostnameAndRegistry(registryURL string) (hostname string
 		return "", ""
 	}
 	return regURL.Host, strings.Trim(regURL.Path, "/")
+}
+
+func GetHost(urlStr string) string {
+	if !strings.Contains(urlStr, "://") {
+		urlStr = "https://" + urlStr
+	}
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		log.Warn().Msgf("Failed to parse URL: %s", urlStr)
+		return ""
+	}
+	return u.Host
+}
+
+func TrimURLScheme(urlStr string) string {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		// Return the original URL if parsing fails
+		return urlStr
+	}
+
+	// Clear the scheme
+	u.Scheme = ""
+
+	// Reconstruct the URL string without the scheme
+	return strings.TrimPrefix(u.String(), "//")
 }

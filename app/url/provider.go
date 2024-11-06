@@ -22,6 +22,8 @@ import (
 	"path"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -75,11 +77,7 @@ type Provider interface {
 	// GetAPIProto returns the proto for the API hostname
 	GetAPIProto(ctx context.Context) string
 
-	// RegistryRefURL returns the registry url with registry ref.
-	RegistryRefURL(ctx context.Context, registryRef string) string
-
-	// RegistryBaseURL returns the registry base url.
-	RegistryBaseURL(ctx context.Context, hostnamePrefix string) string
+	RegistryURL(ctx context.Context, params ...string) string
 }
 
 // Provider provides the URLs of the Harness system.
@@ -238,12 +236,18 @@ func (p *provider) GetAPIProto(context.Context) string {
 	return p.apiURL.Scheme
 }
 
-func (p *provider) RegistryRefURL(_ context.Context, registryRef string) string {
-	return p.registryURL.JoinPath(registryRef).String()
-}
+func (p *provider) RegistryURL(_ context.Context, params ...string) string {
+	u, err := url.Parse(p.registryURL.String())
+	if err != nil {
+		log.Warn().Msgf("failed to parse registry url: %v", err)
+		return p.registryURL.String()
+	}
 
-func (p *provider) RegistryBaseURL(_ context.Context, _ string) string {
-	return p.registryURL.String()
+	segments := []string{u.Path}
+	segments = append(segments, params...)
+	fullPath := path.Join(segments...)
+	u.Path = fullPath
+	return strings.TrimRight(u.String(), "/")
 }
 
 func BuildGITCloneSSHURL(user string, sshURL *url.URL, repoPath string) string {

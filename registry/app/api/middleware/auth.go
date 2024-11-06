@@ -38,7 +38,7 @@ func OciCheckAuth(urlProvider url.Provider) func(http.Handler) http.Handler {
 			func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
 				session, _ := request.AuthSessionFrom(ctx)
-				url := common.GenerateOciTokenURL(urlProvider.RegistryBaseURL(ctx, ""))
+				url := common.GenerateOciTokenURL(urlProvider.RegistryURL(ctx))
 				if session.Principal == auth.AnonymousPrincipal {
 					scope := getScope(r)
 					returnUnauthorised(ctx, w, url, scope)
@@ -62,7 +62,7 @@ func BlockNonOciSourceToken(urlProvider url.Provider) func(http.Handler) http.Ha
 						log.Ctx(ctx).Warn().
 							Msg("blocking request - non OCI source tokens are not allowed for usage with oci endpoints")
 						scope := getScope(r)
-						url := common.GenerateOciTokenURL(urlProvider.RegistryBaseURL(ctx, ""))
+						url := common.GenerateOciTokenURL(urlProvider.RegistryURL(ctx))
 						returnUnauthorised(ctx, w, url, scope)
 						return
 					}
