@@ -41,7 +41,10 @@ func (c *Controller) ListGitspaces(
 
 	filter.UserIdentifier = session.Principal.UID
 	filter.SpaceIDs = []int64{space.ID}
-	filter.IncludeMarkedForDeletion = false
+	deleted := false
+	markedForDeletion := false
+	filter.Deleted = &deleted
+	filter.MarkedForDeletion = &markedForDeletion
 
 	return c.gitspaceSvc.ListGitspacesForSpace(ctx, space, filter)
 }

@@ -311,16 +311,16 @@ func getLatestInstanceQuery() string {
 }
 
 func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter) squirrel.SelectBuilder {
-	if !filter.IncludeDeleted {
-		stmt = stmt.Where(squirrel.Eq{"gconf_is_deleted": false})
+	if filter.Deleted != nil {
+		stmt = stmt.Where(squirrel.Eq{"gconf_is_deleted": filter.Deleted})
 	}
 
 	if filter.Owner == enum.GitspaceOwnerSelf && filter.UserIdentifier != "" {
 		stmt = stmt.Where(squirrel.Eq{"gconf_user_uid": filter.UserIdentifier})
 	}
 
-	if !filter.IncludeMarkedForDeletion {
-		stmt = stmt.Where(squirrel.Eq{"gconf_is_marked_for_deletion": false})
+	if filter.MarkedForDeletion != nil {
+		stmt = stmt.Where(squirrel.Eq{"gconf_is_marked_for_deletion": filter.MarkedForDeletion})
 	}
 
 	if len(filter.SpaceIDs) > 0 {

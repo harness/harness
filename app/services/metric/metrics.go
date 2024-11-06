@@ -139,7 +139,7 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 	}
 
 	// total gitspaces (configs) in the system
-	totalGitspaces, err := c.gitspaceConfigStore.Count(ctx, &types.GitspaceFilter{IncludeDeleted: true})
+	totalGitspaces, err := c.gitspaceConfigStore.Count(ctx, &types.GitspaceFilter{})
 	if err != nil {
 		return "", fmt.Errorf("failed to get gitspace count: %w", err)
 	}

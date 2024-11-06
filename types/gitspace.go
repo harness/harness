@@ -81,13 +81,13 @@ type GitspaceInstance struct {
 }
 
 type GitspaceFilter struct {
-	QueryFilter              ListQueryFilter
-	Sort                     enum.GitspaceSort `json:"sort"`
-	Order                    enum.Order        `json:"order"`
-	Owner                    enum.GitspaceOwner
-	GitspaceFilterStates     []enum.GitspaceFilterState
-	IncludeDeleted           bool
-	IncludeMarkedForDeletion bool
+	QueryFilter          ListQueryFilter
+	Sort                 enum.GitspaceSort `json:"sort"`
+	Order                enum.Order        `json:"order"`
+	Owner                enum.GitspaceOwner
+	GitspaceFilterStates []enum.GitspaceFilterState
+	Deleted              *bool // not nil when we want to add this filter
+	MarkedForDeletion    *bool // not nil when we want to add this filter
 	GitspaceInstanceFilter
 }
 
