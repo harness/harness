@@ -44,6 +44,10 @@
   }
 }
 
+.buttonIcon {
+  margin-right: var(--spacing-medium);
+}
+
 .popover {
   > div[class*='popover-arrow'] {
     display: none;

@@ -163,7 +163,7 @@ export const OwnerAndCreatedAt: Renderer<CellProps<TypesGitspaceConfig>> = ({ ro
 
 export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
   const details = row.original
-  const { name, branch, code_repo_url, code_repo_type, instance } = details || {}
+  const { name, branch, branch_url, code_repo_type, instance } = details || {}
   const { has_git_changes } = instance || {}
 
   const { getString } = useStrings()
@@ -176,7 +176,7 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
         onClick={e => {
           e.preventDefault()
           e.stopPropagation()
-          window.open(code_repo_url, '_blank')
+          window.open(branch_url, '_blank')
         }}>
         <Layout.Horizontal
           className={css.repositoryCell}

@@ -216,9 +216,7 @@ export const CDESSHSelect = () => {
           </Layout.Vertical>
         </Layout.Horizontal>
       }
-      label={
-        <Text icon={loading ? 'loading' : undefined}>{values?.ssh_token_identifier || '-- Select SSH Key --'}</Text>
-      }
+      label={<Text icon={loading ? 'loading' : undefined}>{values?.ssh_token_identifier || 'Select SSH Key'}</Text>}
       formikName="ssh_token_identifier"
       menu={
         <Menu>

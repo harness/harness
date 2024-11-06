@@ -48,6 +48,9 @@ export type EnumGitspaceEventType =
   | 'agent_gitspace_state_report_error'
   | 'agent_gitspace_state_report_stopped'
   | 'agent_gitspace_state_report_unknown'
+  | 'gitspace_action_auto_stop'
+
+export type EnumGitspaceFilterState = 'error' | 'running' | 'stopped'
 
 export type EnumGitspaceInstanceStateType =
   | 'running'
@@ -57,6 +60,10 @@ export type EnumGitspaceInstanceStateType =
   | 'deleted'
   | 'starting'
   | 'stopping'
+
+export type EnumGitspaceOwner = 'all' | 'self'
+
+export type EnumGitspaceSort = 'created' | 'last_activated' | 'last_used'
 
 export type EnumGitspaceStateType = 'running' | 'stopped' | 'error' | 'uninitialized' | 'starting' | 'stopping'
 
@@ -78,7 +85,6 @@ export interface InfraproviderResourceInput {
   name?: string
   network?: string | null
   region?: string[] | null
-  template_identifier?: string | null
 }
 
 export interface OpenapiCreateGitspaceRequest {
@@ -156,6 +162,7 @@ export interface TypesBranchResponse {
 
 export interface TypesGitspaceConfig {
   branch?: string
+  branch_url?: string
   code_repo_is_private?: boolean
   code_repo_ref?: string | null
   code_repo_type?: EnumGitspaceCodeRepoType
@@ -234,7 +241,6 @@ export interface TypesInfraProviderResource {
   network?: string | null
   region?: string
   space_path?: string
-  template_identifier?: string | null
   updated?: number
 }
 
@@ -357,6 +363,10 @@ export interface ListGitspacesQueryParams {
    * The maximum number of results to return.
    */
   limit?: number
+  gitspace_owner?: EnumGitspaceOwner
+  gitspace_states?: EnumGitspaceFilterState[]
+  sort?: EnumGitspaceSort
+  order?: 'asc' | 'desc'
 }
 
 export interface ListGitspacesPathParams {

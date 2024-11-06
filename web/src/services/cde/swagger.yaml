@@ -89,6 +89,27 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - in: query
+          name: gitspace_owner
+          schema:
+            $ref: '#/components/schemas/EnumGitspaceOwner'
+        - in: query
+          name: gitspace_states
+          schema:
+            items:
+              $ref: '#/components/schemas/EnumGitspaceFilterState'
+            type: array
+        - in: query
+          name: sort
+          schema:
+            $ref: '#/components/schemas/EnumGitspaceSort'
+        - in: query
+          name: order
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
       responses:
         '200':
           content:
@@ -967,6 +988,13 @@ components:
         - agent_gitspace_state_report_error
         - agent_gitspace_state_report_stopped
         - agent_gitspace_state_report_unknown
+        - gitspace_action_auto_stop
+      type: string
+    EnumGitspaceFilterState:
+      enum:
+        - error
+        - running
+        - stopped
       type: string
     EnumGitspaceInstanceStateType:
       enum:
@@ -977,6 +1005,17 @@ components:
         - deleted
         - starting
         - stopping
+      type: string
+    EnumGitspaceOwner:
+      enum:
+        - all
+        - self
+      type: string
+    EnumGitspaceSort:
+      enum:
+        - created
+        - last_activated
+        - last_used
       type: string
     EnumGitspaceStateType:
       enum:
@@ -1034,9 +1073,6 @@ components:
             type: string
           nullable: true
           type: array
-        template_identifier:
-          nullable: true
-          type: string
       type: object
     OpenapiCreateGitspaceRequest:
       properties:
@@ -1161,6 +1197,8 @@ components:
     TypesGitspaceConfig:
       properties:
         branch:
+          type: string
+        branch_url:
           type: string
         code_repo_is_private:
           type: boolean
@@ -1323,9 +1361,6 @@ components:
         region:
           type: string
         space_path:
-          type: string
-        template_identifier:
-          nullable: true
           type: string
         updated:
           type: integer

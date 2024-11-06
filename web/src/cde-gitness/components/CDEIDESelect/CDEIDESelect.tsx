@@ -23,6 +23,7 @@ import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import vscodeIcon from 'cde-gitness/assests/VSCode.svg?url'
 import { useStrings } from 'framework/strings'
 import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
+import css from './CDEIDESelect.module.scss'
 
 export const CDEIDESelect = ({
   onChange,
@@ -61,7 +62,7 @@ export const CDEIDESelect = ({
       }
       label={
         <Layout.Horizontal width="100%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>
-          <img height={16} width={16} src={img} />
+          <img height={16} width={16} src={img} className={css.buttonIcon} />
           <Text>{label}</Text>
         </Layout.Horizontal>
       }

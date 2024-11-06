@@ -35,7 +35,7 @@ export const DetailsCard = ({
   loading?: boolean
 }) => {
   const { getString } = useStrings()
-  const { branch, state, name, code_repo_url, code_repo_type, instance, resource } = data || {}
+  const { branch, state, name, branch_url, code_repo_type, instance, resource } = data || {}
   const color = getStatusColor(state)
   const customProps =
     state === GitspaceStatus.STARTING
@@ -80,7 +80,7 @@ export const DetailsCard = ({
               margin={{ left: 'small' }}
               style={{ cursor: 'pointer' }}
               font={{ align: 'left', size: 'normal' }}
-              onClick={() => window.open(code_repo_url, '_blank')}>
+              onClick={() => window.open(branch_url, '_blank')}>
               {name}
             </Text>
           </Layout.Horizontal>
@@ -93,7 +93,7 @@ export const DetailsCard = ({
             color={Color.PRIMARY_7}
             icon="git-branch"
             style={{ cursor: 'pointer' }}
-            onClick={() => window.open(code_repo_url, '_blank')}>
+            onClick={() => window.open(branch_url, '_blank')}>
             {branch}
           </Text>
         </Layout.Vertical>
