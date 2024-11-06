@@ -104,6 +104,15 @@ export const DetailsCard = ({
         </Layout.Vertical>
 
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
+          <Text className={css.rowHeaders}>{getString('cde.lastActivated')}</Text>
+          {instance?.active_time_started ? (
+            <ReactTimeago date={instance?.active_time_started || 0} />
+          ) : (
+            <Text color={Color.GREY_500}>{getString('cde.na')}</Text>
+          )}
+        </Layout.Vertical>
+
+        <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
           <Text className={css.rowHeaders}>{getString('cde.lastUsed')}</Text>
           {instance?.last_used ? (
             <ReactTimeago date={instance?.last_used || 0} />

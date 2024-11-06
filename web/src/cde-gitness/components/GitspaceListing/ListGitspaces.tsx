@@ -235,12 +235,12 @@ export const RenderStorageUsage: Renderer<CellProps<TypesGitspaceConfig>> = ({ r
 export const RenderLastActivity: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
   const { getString } = useStrings()
   const instance = row.original.instance
-  const { last_used } = instance || {}
+  const { active_time_started } = instance || {}
   return (
     <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
       <Clock />
-      {last_used ? (
-        <ReactTimeago date={last_used} />
+      {active_time_started ? (
+        <ReactTimeago date={active_time_started} />
       ) : (
         <Text color={Color.GREY_500} font={{ align: 'left', size: 'normal' }}>
           {getString('cde.na')}
