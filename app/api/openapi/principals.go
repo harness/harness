@@ -26,6 +26,10 @@ import (
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
+type principalInfoRequest struct {
+	ID int64 `path:"id"`
+}
+
 var QueryParameterQueryPrincipals = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -74,4 +78,16 @@ func buildPrincipals(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/principals", opList)
+
+	getPrincipal := openapi3.Operation{}
+	getPrincipal.WithTags("principals")
+	getPrincipal.WithMapOfAnything(map[string]interface{}{"operationId": "getPrincipal"})
+	_ = reflector.SetRequest(&getPrincipal, new(principalInfoRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&getPrincipal, new(types.PrincipalInfo), http.StatusOK)
+	_ = reflector.SetJSONResponse(&getPrincipal, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&getPrincipal, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&getPrincipal, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&getPrincipal, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&getPrincipal, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/principals/{id}", getPrincipal)
 }

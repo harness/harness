@@ -99,6 +99,7 @@ export const getErrorMessage = (error: Unknown): string | undefined =>
   error ? get(error, 'data.error', get(error, 'data.message', get(error, 'message', error))) : undefined
 
 export interface PageBrowserProps {
+  author?: string
   page?: string
   state?: string
   tab?: string

@@ -52,7 +52,12 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useQueryParams } from 'hooks/useQueryParams'
-import type { TypesPullReq, RepoRepositoryOutput, TypesLabelPullReqAssignmentInfo } from 'services/code'
+import type {
+  TypesPullReq,
+  RepoRepositoryOutput,
+  TypesLabelPullReqAssignmentInfo,
+  TypesPrincipalInfo
+} from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
@@ -62,6 +67,7 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { Label } from 'components/Label/Label'
+import { getConfig } from 'services/config'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import css from './PullRequests.module.scss'
 
@@ -70,20 +76,32 @@ const SSE_EVENTS = ['pullreq_updated']
 export default function PullRequests() {
   const { getString } = useStrings()
   const history = useHistory()
-  const { routes, hooks, standalone } = useAppContext()
+  const { routes, hooks, standalone, routingId } = useAppContext()
   const { CODE_PULLREQ_LABELS: isLabelEnabled } = hooks?.useFeatureFlags()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const browserParams = useQueryParams<PageBrowserProps>()
   const [filter, setFilter] = useState(browserParams?.state || (PullRequestFilterOption.OPEN as string))
-  const [authorFilter, setAuthorFilter] = useState<string>()
+  const [authorFilter, setAuthorFilter] = useState<string>(browserParams?.author ?? '')
   const [labelFilter, setLabelFilter] = useState<LabelFilterObj[]>([])
   const space = useGetSpaceParam()
   const { updateQueryParams, replaceQueryParams } = useUpdateQueryParams()
   const pageInit = browserParams.page ? parseInt(browserParams.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
+
+  const { data: principal, refetch: refetchPrincipal } = useGet<TypesPrincipalInfo>({
+    base: getConfig('code/api/v1'),
+    path: `/principals/${browserParams.author}`,
+    queryParams: {
+      accountIdentifier: routingId
+    },
+    lazy: true,
+    debounce: 500
+  })
+
   useEffect(() => {
     const params = {
       ...browserParams,
+      ...(Boolean(authorFilter) && { author: authorFilter }),
       ...(page > 1 && { page: page.toString() }),
       ...(filter && { state: filter })
     }
@@ -94,7 +112,18 @@ export default function PullRequests() {
       delete updateParams.page
       replaceQueryParams(updateParams, undefined, true)
     }
-  }, [page, filter]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    if (!authorFilter && browserParams.author) {
+      const paramList = { ...params }
+      delete paramList.author
+      replaceQueryParams(paramList, undefined, true)
+    }
+
+    if (browserParams.author) {
+      refetchPrincipal()
+    }
+  }, [page, filter, authorFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
     data,
@@ -385,6 +414,7 @@ export default function PullRequests() {
                 setSearchTerm(value)
                 setPage(1)
               }}
+              activePullRequestAuthorObj={principal}
               activePullRequestAuthorFilterOption={authorFilter}
               activePullRequestLabelFilterOption={labelFilter}
               onPullRequestAuthorFilterChanged={_authorFilter => {

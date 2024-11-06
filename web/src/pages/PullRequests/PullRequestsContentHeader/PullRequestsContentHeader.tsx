@@ -45,6 +45,7 @@ interface PullRequestsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadat
   loading?: boolean
   activePullRequestFilterOption?: string
   activePullRequestAuthorFilterOption?: string
+  activePullRequestAuthorObj?: TypesPrincipalInfo | null
   activePullRequestLabelFilterOption?: LabelFilterObj[]
   onPullRequestFilterChanged: React.Dispatch<React.SetStateAction<string>>
   onPullRequestAuthorFilterChanged: (authorFilter: string) => void
@@ -60,6 +61,7 @@ export function PullRequestsContentHeader({
   onSearchTermChanged,
   activePullRequestFilterOption = PullRequestFilterOption.OPEN,
   activePullRequestAuthorFilterOption,
+  activePullRequestAuthorObj,
   activePullRequestLabelFilterOption,
   repoMetadata
 }: PullRequestsContentHeaderProps) {
@@ -158,7 +160,11 @@ export function PullRequestsContentHeader({
           }
         }
       )
-      const authorsList = await moveCurrentUserToTop(fetchedAuthors, currentUser, query)
+
+      const authors = [...fetchedAuthors, ...(activePullRequestAuthorObj ? [activePullRequestAuthorObj] : [])]
+
+      const authorsList = await moveCurrentUserToTop(authors, currentUser, query)
+
       const updatedAuthorsList = Array.isArray(authorsList)
         ? ([
             ...(authorsList || []).map(item => ({

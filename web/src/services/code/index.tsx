@@ -2580,6 +2580,36 @@ export const useListPrincipals = (props: UseListPrincipalsProps) =>
     ...props
   })
 
+export interface GetPrincipalPathParams {
+  id: number
+}
+
+export type GetPrincipalProps = Omit<
+  GetProps<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>,
+  'path'
+> &
+  GetPrincipalPathParams
+
+export const GetPrincipal = ({ id, ...props }: GetPrincipalProps) => (
+  <Get<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>
+    path={`/principals/${id}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseGetPrincipalProps = Omit<
+  UseGetProps<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>,
+  'path'
+> &
+  GetPrincipalPathParams
+
+export const useGetPrincipal = ({ id, ...props }: UseGetPrincipalProps) =>
+  useGet<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>(
+    (paramsInPath: GetPrincipalPathParams) => `/principals/${paramsInPath.id}`,
+    { base: getConfig('code/api/v1'), pathParams: { id }, ...props }
+  )
+
 export interface OnRegisterQueryParams {
   /**
    * If set to true the token is also returned as a cookie.
