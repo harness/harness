@@ -17,11 +17,9 @@ package gitspace
 import (
 	"context"
 	"fmt"
-	"time"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -71,40 +69,6 @@ func (c *Controller) Delete(
 	}
 
 	ctxWithoutCancel := context.WithoutCancel(ctx)
-	go c.removeGitspace(ctxWithoutCancel, *gitspaceConfig)
+	go c.gitspaceSvc.RemoveGitspace(ctxWithoutCancel, *gitspaceConfig, true)
 	return nil
-}
-
-func (c *Controller) removeGitspace(ctx context.Context, config types.GitspaceConfig) {
-	if config.GitspaceInstance.State == enum.GitspaceInstanceStateRunning {
-		activeTimeEnded := time.Now().UnixMilli()
-		config.GitspaceInstance.ActiveTimeEnded = &activeTimeEnded
-		config.GitspaceInstance.TotalTimeUsed =
-			*(config.GitspaceInstance.ActiveTimeEnded) - *(config.GitspaceInstance.ActiveTimeStarted)
-		config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
-		err := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance)
-		if err != nil {
-			log.Ctx(ctx).Err(err).Msgf("failed to update instance %s before triggering delete",
-				config.GitspaceInstance.Identifier)
-			return
-		}
-	} else if config.GitspaceInstance.State == enum.GitSpaceInstanceStateCleaning &&
-		time.Since(time.UnixMilli(config.GitspaceInstance.Updated)).Milliseconds() <=
-			(gitspaceInstanceCleaningTimedOutMins*60*1000) {
-		log.Ctx(ctx).Warn().Msgf("gitspace start/stop is already pending for : %q",
-			config.GitspaceInstance.Identifier)
-		return
-	}
-	if err := c.gitspaceSvc.TriggerDelete(ctx, config); err != nil {
-		log.Ctx(ctx).Err(err).Msgf("error during triggering delete for gitspace instance %s",
-			config.GitspaceInstance.Identifier)
-		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
-		if updateErr := c.gitspaceSvc.UpdateInstance(ctx, config.GitspaceInstance); updateErr != nil {
-			log.Ctx(ctx).Err(updateErr).Msgf("failed to update instance %s after error in triggering delete",
-				config.GitspaceInstance.Identifier)
-		}
-		return
-	}
-	log.Ctx(ctx).Debug().Msgf("successfully triggered delete for gitspace instance %s",
-		config.GitspaceInstance.Identifier)
 }
