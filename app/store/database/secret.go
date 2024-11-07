@@ -17,7 +17,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -203,7 +202,7 @@ func (s *secretStore) List(ctx context.Context, parentID int64, filter types.Lis
 		Where("secret_space_id = ?", fmt.Sprint(parentID))
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(secret_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("secret_uid", filter.Query))
 	}
 
 	stmt = stmt.Limit(database.Limit(filter.Size))
@@ -286,7 +285,7 @@ func (s *secretStore) Count(ctx context.Context, parentID int64, filter types.Li
 		Where("secret_space_id = ?", parentID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(secret_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("secret_uid", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()

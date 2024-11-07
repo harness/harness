@@ -635,7 +635,7 @@ func (s *PullReqStore) applyFilter(stmt *squirrel.SelectBuilder, opts *types.Pul
 	}
 
 	if opts.Query != "" {
-		*stmt = stmt.Where("LOWER(pullreq_title) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+		*stmt = stmt.Where(PartialMatch("pullreq_title", opts.Query))
 	}
 
 	if len(opts.CreatedBy) > 0 {

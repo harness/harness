@@ -17,7 +17,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -282,8 +281,7 @@ func applyMembershipUserFilter(
 	opts types.MembershipUserFilter,
 ) squirrel.SelectBuilder {
 	if opts.Query != "" {
-		searchTerm := "%%" + strings.ToLower(opts.Query) + "%%"
-		stmt = stmt.Where("LOWER(principal_display_name) LIKE ?", searchTerm)
+		stmt = stmt.Where(PartialMatch("principal_display_name", opts.Query))
 	}
 
 	return stmt
@@ -371,8 +369,7 @@ func applyMembershipSpaceFilter(
 	opts types.MembershipSpaceFilter,
 ) squirrel.SelectBuilder {
 	if opts.Query != "" {
-		searchTerm := "%%" + strings.ToLower(opts.Query) + "%%"
-		stmt = stmt.Where("LOWER(space_uid) LIKE ?", searchTerm)
+		stmt = stmt.Where(PartialMatch("space_uid", opts.Query))
 	}
 
 	return stmt

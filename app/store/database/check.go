@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/git/sha"
@@ -380,7 +379,7 @@ func (s *CheckStore) ResultSummary(ctx context.Context,
 
 func (*CheckStore) applyOpts(stmt squirrel.SelectBuilder, query string) squirrel.SelectBuilder {
 	if query != "" {
-		stmt = stmt.Where("LOWER(check_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(query)))
+		stmt = stmt.Where(PartialMatch("check_uid", query))
 	}
 
 	return stmt

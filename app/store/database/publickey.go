@@ -286,8 +286,7 @@ func (PublicKeyStore) applyQueryFilter(
 	filter *types.PublicKeyFilter,
 ) squirrel.SelectBuilder {
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(public_key_identifier) LIKE ?",
-			fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("public_key_identifier", filter.Query))
 	}
 
 	return stmt

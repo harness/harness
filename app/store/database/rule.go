@@ -453,7 +453,7 @@ func (*RuleStore) applyFilter(
 	}
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(rule_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("rule_uid", filter.Query))
 	}
 
 	return stmt

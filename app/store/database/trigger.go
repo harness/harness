@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -280,7 +279,7 @@ func (s *triggerStore) List(
 	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(trigger_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("trigger_uid", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -331,7 +330,7 @@ func (s *triggerStore) Count(ctx context.Context, pipelineID int64, filter types
 		Where("trigger_pipeline_id = ?", pipelineID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(trigger_uid) LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
+		stmt = stmt.Where(PartialMatch("trigger_uid", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()

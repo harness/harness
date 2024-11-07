@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -505,7 +504,7 @@ func (s *connectorStore) List(
 		Where("connector_space_id = ?", fmt.Sprint(parentID))
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(connector_identifier) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("connector_identifier", filter.Query))
 	}
 
 	stmt = stmt.Limit(database.Limit(filter.Size))
@@ -564,7 +563,7 @@ func (s *connectorStore) Count(ctx context.Context, parentID int64, filter types
 		Where("connector_space_id = ?", parentID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(connector_identifier) LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
+		stmt = stmt.Where(PartialMatch("connector_identifier", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()

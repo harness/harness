@@ -866,7 +866,7 @@ func mapToInternalRepo(in *types.Repository) *repository {
 
 func applyQueryFilter(stmt squirrel.SelectBuilder, filter *types.RepoFilter) squirrel.SelectBuilder {
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("repo_uid", filter.Query))
 	}
 	//nolint:gocritic
 	if filter.DeletedAt != nil {

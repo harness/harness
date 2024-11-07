@@ -634,7 +634,7 @@ func (s *SpaceStore) count(
 		Where("space_parent_id = ?", id)
 
 	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(space_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+		stmt = stmt.Where(PartialMatch("space_uid", opts.Query))
 	}
 
 	stmt = s.applyQueryFilter(stmt, opts)
@@ -781,7 +781,7 @@ func (s *SpaceStore) applyQueryFilter(
 	opts *types.SpaceFilter,
 ) squirrel.SelectBuilder {
 	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(space_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+		stmt = stmt.Where(PartialMatch("space_uid", opts.Query))
 	}
 	//nolint:gocritic
 	if opts.DeletedAt != nil {

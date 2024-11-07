@@ -14,7 +14,45 @@
 
 package database
 
+import (
+	"strings"
+)
+
 const (
 	PostgresDriverName = "postgres"
 	SqliteDriverName   = "sqlite3"
 )
+
+// PartialMatch builds a string pair that can be passed as a parameter to squirrel's Where() function
+// for a SQL "LIKE" expression. Besides surrounding the input value with '%' wildcard characters for a partial match,
+// this function also escapes the '_' and '%' metacharacters supported in SQL "LIKE" expressions.
+// The "ESCAPE" clause isn't needed for Postgres, but is necessary for SQLite.
+// It will be used only if '_' and '%' are present in the value string.
+//
+// See:
+// https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
+// https://www.sqlite.org/lang_expr.html#the_like_glob_regexp_match_and_extract_operators
+//
+//nolint:goconst
+func PartialMatch(column, value string) (string, string) {
+	var (
+		n       int
+		escaped bool
+	)
+
+	if n, value = len(value), strings.ReplaceAll(value, `\`, `\\`); n < len(value) {
+		escaped = true
+	}
+	if n, value = len(value), strings.ReplaceAll(value, "_", `\_`); n < len(value) {
+		escaped = true
+	}
+	if n, value = len(value), strings.ReplaceAll(value, "%", `\%`); n < len(value) {
+		escaped = true
+	}
+
+	if escaped {
+		return "LOWER(" + column + ") LIKE ? ESCAPE '\\'", "%" + strings.ToLower(value) + "%"
+	}
+
+	return "LOWER(" + column + ") LIKE ?", "%" + strings.ToLower(value) + "%"
+}
