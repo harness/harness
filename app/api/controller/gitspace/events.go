@@ -53,6 +53,11 @@ func (c *Controller) Events(
 	filter.QueryKey = identifier
 	filter.Page = page
 	filter.Size = limit
+	filter.SkipEvents = []enum.GitspaceEventType{
+		enum.GitspaceEventTypeInfraCleanupStart,
+		enum.GitspaceEventTypeInfraCleanupCompleted,
+		enum.GitspaceEventTypeInfraCleanupFailed,
+	}
 	events, count, err := c.gitspaceEventStore.List(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list gitspace events for identifier %s: %w", identifier, err)

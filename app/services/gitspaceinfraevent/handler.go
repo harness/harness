@@ -55,6 +55,13 @@ func (s *Service) handleGitspaceInfraEvent(
 		config.GitspaceInstance = instance
 	}
 
+	defer func() {
+		updateErr := s.gitspaceSvc.UpdateInstance(ctx, instance)
+		if updateErr != nil {
+			log.Err(updateErr).Msgf("failed to update gitspace instance")
+		}
+	}()
+
 	var err error
 
 	switch payload.Type {
@@ -101,12 +108,8 @@ func (s *Service) handleGitspaceInfraEvent(
 
 		instance.State = instanceState
 	default:
+		instance.State = enum.GitspaceInstanceStateError
 		return fmt.Errorf("unknown event type: %s", event.Payload.Type)
-	}
-
-	updateErr := s.gitspaceSvc.UpdateInstance(ctx, instance)
-	if updateErr != nil {
-		log.Err(updateErr).Msgf("failed to update gitspace instance")
 	}
 
 	if err != nil {

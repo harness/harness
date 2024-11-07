@@ -37,4 +37,5 @@ type GitspaceEventFilter struct {
 	QueryKey   string
 	EntityID   int64
 	EntityType enum.GitspaceEntityType
+	SkipEvents []enum.GitspaceEventType // not include events
 }

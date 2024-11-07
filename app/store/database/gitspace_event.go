@@ -173,6 +173,11 @@ func (g gitspaceEventStore) setQueryFilter(
 	if filter.EntityID != 0 {
 		stmt = stmt.Where(squirrel.Eq{"geven_entity_id": filter.EntityID})
 	}
+
+	if len(filter.SkipEvents) != 0 {
+		stmt = stmt.Where(squirrel.NotEq{"geven_event": filter.SkipEvents})
+	}
+
 	return stmt
 }
 
