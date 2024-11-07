@@ -73,6 +73,8 @@ var (
 		fmt.Sprintf("The following identifiers are not allowed for a root space: %v", illegalRootSpaceIdentifiers),
 	}
 
+	ErrIllegalRootSpaceIdentifierNumber = &ValidationError{"The identifier of a root space can't be numeric."}
+
 	ErrIllegalRepoSpaceIdentifierSuffix = &ValidationError{
 		fmt.Sprintf("Space and repository identifiers cannot end with %q.", illegalRepoSpaceIdentifierSuffix),
 	}
@@ -177,6 +179,11 @@ func SpaceIdentifierDefault(identifier string, isRoot bool) error {
 	}
 
 	if isRoot {
+		// root space identifier can't be numeric as it would cause conflicts of space path and space id.
+		if strings.TrimLeftFunc(identifier, func(r rune) bool { return r >= '0' && r <= '9' }) == "" {
+			return ErrIllegalRootSpaceIdentifierNumber
+		}
+
 		for _, p := range illegalRootSpaceIdentifiers {
 			if p == identifierLower {
 				return ErrIllegalRootSpaceIdentifier
