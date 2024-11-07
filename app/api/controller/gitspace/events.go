@@ -123,5 +123,8 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraCleanupStart] = "Cleaning up infrastructure..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraCleanupCompleted] = "Successfully cleaned up infrastructure"
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraCleanupFailed] = "Failed to cleaned up infrastructure"
+
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraResetStart] = "Resetting the gitspace infrastructure..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraResetFailed] = "Failed to reset the gitspace infrastructure"
 	return gitspaceConfigsMap
 }

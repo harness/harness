@@ -292,12 +292,19 @@ func (o orchestrator) TriggerDeleteGitspace(
 			return err
 		}
 	}
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningStart)
+	if canDeleteUserData {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningStart)
+	} else {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraResetStart)
+	}
 
 	err = o.infraProvisioner.TriggerDeprovision(ctx, gitspaceConfig, *infra, canDeleteUserData)
 	if err != nil {
-		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
-
+		if canDeleteUserData {
+			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
+		} else {
+			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraResetFailed)
+		}
 		return fmt.Errorf(
 			"cannot trigger deprovision infrastructure with ID %s: %w", gitspaceConfig.InfraProviderResource.UID, err)
 	}

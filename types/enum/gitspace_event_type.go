@@ -133,4 +133,8 @@ const (
 
 	// AutoStop action events.
 	GitspaceEventTypeGitspaceAutoStop GitspaceEventType = "gitspace_action_auto_stop"
+
+	// Infra reset events.
+	GitspaceEventTypeInfraResetStart  GitspaceEventType = "infra_reset_start"
+	GitspaceEventTypeInfraResetFailed GitspaceEventType = "infra_reset_failed"
 )
