@@ -840,6 +840,9 @@ type (
 		// List lists the executions for a given pipeline ID
 		List(ctx context.Context, pipelineID int64, pagination types.Pagination) ([]*types.Execution, error)
 
+		// ListInSpace lists the executions in a given space.
+		ListInSpace(ctx context.Context, spaceID int64, filter types.ListExecutionsFilter) ([]*types.Execution, error)
+
 		ListByPipelineIDs(
 			ctx context.Context,
 			pipelineIDs []int64,
@@ -851,6 +854,9 @@ type (
 
 		// Count the number of executions in a space
 		Count(ctx context.Context, parentID int64) (int64, error)
+
+		// CountInSpace counts the number of executions in a given space.
+		CountInSpace(ctx context.Context, spaceID int64, filter types.ListExecutionsFilter) (int64, error)
 	}
 
 	StageStore interface {

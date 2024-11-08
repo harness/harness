@@ -269,6 +269,7 @@ func setupSpaces(
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
 			r.Get("/pipelines", handlerspace.HandleListPipelines(spaceCtrl))
+			r.Get("/executions", handlerspace.HandleListExecutions(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
 			r.Get("/usergroups", handlerUserGroup.HandleList(userGroupCtrl))
 			r.Get("/service-accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))

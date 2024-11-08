@@ -12,38 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package space
 
 import (
 	"net/http"
 
-	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
 )
 
-func HandleListPipelines(repoCtrl *repo.Controller) http.HandlerFunc {
+func HandleListExecutions(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		repoRef, err := request.GetRepoRefFromPath(r)
+
+		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		filter, err := request.ParseListPipelinesFilterFromRequest(r)
+		filter, err := request.ParseListExecutionsFilterFromRequest(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
+			return
 		}
 
-		pipelines, totalCount, err := repoCtrl.ListPipelines(ctx, session, repoRef, &filter)
+		executions, totalCount, err := spaceCtrl.ListExecutions(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
 		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
-		render.JSON(w, http.StatusOK, pipelines)
+		render.JSON(w, http.StatusOK, executions)
 	}
 }

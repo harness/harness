@@ -158,6 +158,50 @@ var queryParameterSortMembershipUsers = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterQueryExecution = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter the execution by their pipeline names."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSortExecution = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The data by which the executions are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.ExecutionSortStarted),
+				Enum:    enum.ExecutionSort("").Enum(),
+			},
+		},
+	},
+}
+
+var queryParameterPipelineIdentifier = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamPipelineIdentifier,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The pipeline identifier whose executions are to be returned"),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
 //nolint:funlen // api spec generation no need for checking func complexity
 func spaceOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
@@ -338,6 +382,19 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/pipelines", opPipelines)
+
+	opExecutions := openapi3.Operation{}
+	opExecutions.WithTags("space")
+	opExecutions.WithMapOfAnything(map[string]interface{}{"operationId": "listSpaceExecutions"})
+	opExecutions.WithParameters(queryParameterQueryExecution, QueryParameterPage, QueryParameterLimit,
+		queryParameterSortExecution, queryParameterOrder, queryParameterPipelineIdentifier)
+	_ = reflector.SetRequest(&opExecutions, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opExecutions, []types.Execution{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opExecutions, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opExecutions, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opExecutions, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opExecutions, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/executions", opExecutions)
 
 	opTemplates := openapi3.Operation{}
 	opTemplates.WithTags("space")

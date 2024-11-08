@@ -89,6 +89,7 @@ type Controller struct {
 	gitspaceSvc     *gitspace.Service
 	labelSvc        *label.Service
 	instrumentation instrument.Service
+	executionStore  store.ExecutionStore
 }
 
 func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
@@ -100,7 +101,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	importer *importer.Repository, exporter *exporter.Repository,
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
-	instrumentation instrument.Service,
+	instrumentation instrument.Service, executionStore store.ExecutionStore,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled: config.NestedSpacesEnabled,
@@ -128,5 +129,6 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		gitspaceSvc:         gitspaceSvc,
 		labelSvc:            labelSvc,
 		instrumentation:     instrumentation,
+		executionStore:      executionStore,
 	}
 }

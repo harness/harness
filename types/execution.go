@@ -16,6 +16,14 @@ package types
 
 import "github.com/harness/gitness/types/enum"
 
+// ExecutionFilter stores execution query parameters.
+type ListExecutionsFilter struct {
+	ListQueryFilter
+	PipelineIdentifier string             `json:"pipeline_identifier"`
+	Sort               enum.ExecutionSort `json:"sort"`
+	Order              enum.Order         `json:"order"`
+}
+
 // Execution represents an instance of a pipeline execution.
 type Execution struct {
 	ID           int64              `json:"-"`
@@ -55,6 +63,12 @@ type Execution struct {
 	Updated      int64              `json:"updated"`
 	Version      int64              `json:"-"`
 	Stages       []*Stage           `json:"stages,omitempty"`
+
+	// Pipeline specific information not stored with executions
+	PipelineUID string `json:"pipeline_uid,omitempty"`
+
+	// Repo specific information not stored with executions
+	RepoUID string `json:"repo_uid,omitempty"`
 }
 
 type ExecutionInfo struct {

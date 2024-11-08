@@ -55,7 +55,7 @@ var queryParameterOrder = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
-				Default: ptrptr(enum.OrderAsc.String()),
+				Default: ptrptr(enum.OrderDesc.String()),
 				Enum: []interface{}{
 					ptr.String(enum.OrderAsc.String()),
 					ptr.String(enum.OrderDesc.String()),

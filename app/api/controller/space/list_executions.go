@@ -25,13 +25,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// ListPipelines lists the pipelines in a space.
-func (c *Controller) ListPipelines(
+// ListExecutions lists the executions in a space.
+func (c *Controller) ListExecutions(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	filter types.ListQueryFilter,
-) ([]*types.Pipeline, int64, error) {
+	filter types.ListExecutionsFilter,
+) ([]*types.Execution, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find space: %w", err)
@@ -41,29 +41,29 @@ func (c *Controller) ListPipelines(
 	}
 
 	var count int64
-	var pipelines []*types.Pipeline
+	var executions []*types.Execution
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
-		pipelines, err = c.pipelineStore.ListInSpace(ctx, space.ID, filter)
+		executions, err = c.executionStore.ListInSpace(ctx, space.ID, filter)
 		if err != nil {
-			return fmt.Errorf("failed to list pipelines in space: %w", err)
+			return fmt.Errorf("failed to list executions in space: %w", err)
 		}
 
-		if filter.Page == 1 && len(pipelines) < filter.Size {
-			count = int64(len(pipelines))
+		if filter.Page == 1 && len(executions) < filter.Size {
+			count = int64(len(executions))
 			return nil
 		}
 
-		count, err = c.pipelineStore.CountInSpace(ctx, space.ID, filter)
+		count, err = c.executionStore.CountInSpace(ctx, space.ID, filter)
 		if err != nil {
-			return fmt.Errorf("failed to count pipelines in space: %w", err)
+			return fmt.Errorf("failed to count executions in space: %w", err)
 		}
 
 		return
 	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return pipelines, count, fmt.Errorf("failed to list pipelines in space: %w", err)
+		return nil, 0, fmt.Errorf("failed to list executions in space: %w", err)
 	}
 
-	return pipelines, count, nil
+	return executions, count, nil
 }
