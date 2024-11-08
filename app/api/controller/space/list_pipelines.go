@@ -30,7 +30,7 @@ func (c *Controller) ListPipelines(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	filter types.ListQueryFilter,
+	filter types.ListPipelinesFilter,
 ) ([]*types.Pipeline, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
@@ -47,6 +47,18 @@ func (c *Controller) ListPipelines(
 		pipelines, err = c.pipelineStore.ListInSpace(ctx, space.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list pipelines in space: %w", err)
+		}
+
+		pipelineIDs := make([]int64, len(pipelines))
+		for i, pipeline := range pipelines {
+			pipelineIDs[i] = pipeline.ID
+		}
+		execs, err := c.executionStore.ListByPipelineIDs(ctx, pipelineIDs, filter.LastExecutions)
+		if err != nil {
+			return fmt.Errorf("failed to list executions by pipeline IDs: %w", err)
+		}
+		for _, pipeline := range pipelines {
+			pipeline.LastExecutions = execs[pipeline.ID]
 		}
 
 		if filter.Page == 1 && len(pipelines) < filter.Size {

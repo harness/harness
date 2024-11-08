@@ -85,6 +85,20 @@ type updatePipelineRequest struct {
 	pipeline.UpdateInput
 }
 
+var queryParameterQueryPipeline = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter the pipelines by their names."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
 var queryParameterLatest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamLatest,
@@ -93,7 +107,24 @@ var queryParameterLatest = openapi3.ParameterOrRef{
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
-				Type: ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
+var queryParameterLastExecutions = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamLastExecutions,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The number of last executions to be returned"),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Default: ptrptr(10),
+				Minimum: ptr.Float64(1),
 			},
 		},
 	},
@@ -128,7 +159,8 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	opPipelines := openapi3.Operation{}
 	opPipelines.WithTags("pipeline")
 	opPipelines.WithMapOfAnything(map[string]interface{}{"operationId": "listPipelines"})
-	opPipelines.WithParameters(queryParameterQueryRepo, QueryParameterPage, QueryParameterLimit, queryParameterLatest)
+	opPipelines.WithParameters(queryParameterQueryPipeline, QueryParameterPage,
+		QueryParameterLimit, queryParameterLatest, queryParameterLastExecutions)
 	_ = reflector.SetRequest(&opPipelines, new(repoRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opPipelines, []types.Pipeline{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusInternalServerError)

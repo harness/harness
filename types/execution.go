@@ -72,7 +72,12 @@ type Execution struct {
 }
 
 type ExecutionInfo struct {
-	Number     int64         `db:"execution_number"      json:"number"`
-	PipelineID int64         `db:"execution_pipeline_id" json:"pipeline_id"`
-	Status     enum.CIStatus `db:"execution_status"      json:"status"`
+	Number     int64             `db:"execution_number"      json:"number"`
+	PipelineID int64             `db:"execution_pipeline_id" json:"pipeline_id"`
+	Status     enum.CIStatus     `db:"execution_status"      json:"status"`
+	CreatedBy  int64             `db:"execution_created_by"  json:"created_by"`
+	Trigger    string            `db:"execution_trigger"     json:"trigger,omitempty"`
+	Event      enum.TriggerEvent `db:"execution_event"       json:"event,omitempty"`
+	Started    int64             `db:"execution_started"     json:"started,omitempty"`
+	Finished   int64             `db:"execution_finished"    json:"finished,omitempty"`
 }

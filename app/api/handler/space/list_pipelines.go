@@ -31,7 +31,12 @@ func HandleListPipelines(spaceCtrl *space.Controller) http.HandlerFunc {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
-		filter := request.ParseListQueryFilterFromRequest(r)
+
+		filter, err := request.ParseListPipelinesFilterFromRequest(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+		}
+
 		pipelines, totalCount, err := spaceCtrl.ListPipelines(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)

@@ -783,10 +783,10 @@ type (
 		IncrementSeqNum(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
 
 		// ListInSpace lists pipelines in a particular space.
-		ListInSpace(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Pipeline, error)
+		ListInSpace(ctx context.Context, spaceID int64, filter types.ListPipelinesFilter) ([]*types.Pipeline, error)
 
 		// CountInSpace counts pipelines in a particular space.
-		CountInSpace(ctx context.Context, spaceID int64, filter types.ListQueryFilter) (int64, error)
+		CountInSpace(ctx context.Context, spaceID int64, filter types.ListPipelinesFilter) (int64, error)
 	}
 
 	SecretStore interface {

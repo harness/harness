@@ -219,7 +219,7 @@ func (s *pipelineStore) List(
 func (s *pipelineStore) ListInSpace(
 	ctx context.Context,
 	spaceID int64,
-	filter types.ListQueryFilter,
+	filter types.ListPipelinesFilter,
 ) ([]*types.Pipeline, error) {
 	const pipelineWithRepoColumns = pipelineColumns + `
 	,repo_id
@@ -391,7 +391,7 @@ func (s *pipelineStore) Count(
 func (s *pipelineStore) CountInSpace(
 	ctx context.Context,
 	spaceID int64,
-	filter types.ListQueryFilter,
+	filter types.ListPipelinesFilter,
 ) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").

@@ -23,11 +23,11 @@ import (
 const (
 	PathParamPipelineIdentifier = "pipeline_identifier"
 	PathParamExecutionNumber    = "execution_number"
-	PathParamLastExecutions     = "last_executions"
 	PathParamStageNumber        = "stage_number"
 	PathParamStepNumber         = "step_number"
 	PathParamTriggerIdentifier  = "trigger_identifier"
 	QueryParamLatest            = "latest"
+	QueryParamLastExecutions    = "last_executions"
 	QueryParamBranch            = "branch"
 )
 
@@ -52,8 +52,8 @@ func GetStepNumberFromPath(r *http.Request) (int64, error) {
 }
 
 func GetLatestFromPath(r *http.Request) bool {
-	v, _ := QueryParam(r, QueryParamLatest)
-	return v == "true"
+	l, _ := QueryParamAsBoolOrDefault(r, QueryParamLatest, false)
+	return l
 }
 
 func GetTriggerIdentifierFromPath(r *http.Request) (string, error) {
@@ -61,7 +61,7 @@ func GetTriggerIdentifierFromPath(r *http.Request) (string, error) {
 }
 
 func ParseListPipelinesFilterFromRequest(r *http.Request) (types.ListPipelinesFilter, error) {
-	lastExecs, err := QueryParamAsPositiveInt64OrDefault(r, PathParamLastExecutions, 10)
+	lastExecs, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamLastExecutions, 10)
 	if err != nil {
 		return types.ListPipelinesFilter{}, err
 	}

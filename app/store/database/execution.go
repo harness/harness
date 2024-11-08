@@ -131,6 +131,17 @@ const (
 		,execution_updated
 		,execution_version
 	`
+
+	executionInfoColumns = `
+		execution_number
+		,execution_pipeline_id
+		,execution_status
+		,execution_created_by
+		,execution_trigger
+		,execution_event
+		,execution_started
+		,execution_finished
+	`
 )
 
 // Find returns an execution given an execution ID.
@@ -393,11 +404,10 @@ func (s executionStore) ListByPipelineIDs(
 	maxRows int64,
 ) (map[int64][]*types.ExecutionInfo, error) {
 	stmt := database.Builder.
-		Select("execution_number, execution_pipeline_id, execution_status").
+		Select(executionInfoColumns).
 		FromSelect(
 			database.Builder.
-				Select(`
-					execution_number, execution_pipeline_id, execution_status, 
+				Select(executionInfoColumns+`,
 					ROW_NUMBER() OVER (
 						PARTITION BY execution_pipeline_id
 						ORDER BY execution_number DESC
