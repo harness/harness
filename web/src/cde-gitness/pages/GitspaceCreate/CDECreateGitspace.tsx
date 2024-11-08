@@ -151,7 +151,7 @@ export const CDECreateGitspace = () => {
         ...includeQueryParams,
         metadata: { infraProvider: 'HARNESS_GCP' }
       }}
-      validationSchema={validateGitnessForm(getString)}
+      validationSchema={validateGitnessForm(getString, true)}
       formName="importRepoForm"
       enableReinitialize>
       {formik => {
