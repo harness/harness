@@ -311,6 +311,8 @@ func getLatestInstanceQuery() string {
 }
 
 func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter) squirrel.SelectBuilder {
+	stmt = stmt.Where(squirrel.Gt{"gits_id": 0})
+
 	if filter.Deleted != nil {
 		stmt = stmt.Where(squirrel.Eq{"gconf_is_deleted": filter.Deleted})
 	}

@@ -52,48 +52,26 @@ func (s *SCM) CheckValidCodeRepo(
 		URL:               codeRepositoryRequest.URL,
 		CodeRepoIsPrivate: true,
 	}
-	defaultBranch, err := detectDefaultGitBranch(ctx, codeRepositoryRequest.URL)
+
+	branch, err := s.detectBranch(ctx, codeRepositoryRequest.URL)
 	if err == nil {
-		branch := "main"
-		if defaultBranch != "" {
-			branch = defaultBranch
-		}
-		return &CodeRepositoryResponse{
-			URL:               codeRepositoryRequest.URL,
-			Branch:            branch,
-			CodeRepoIsPrivate: false,
-		}, nil
+		codeRepositoryResponse.Branch = branch
+		codeRepositoryResponse.CodeRepoIsPrivate = false
+		return codeRepositoryResponse, nil
 	}
-	repoType := enum.CodeRepoTypeUnknown
-	if codeRepositoryRequest.RepoType != "" {
-		repoType = codeRepositoryRequest.RepoType
-	}
-	scmProvider, err := s.scmProviderFactory.GetSCMProvider(repoType)
+
+	scmProvider, err := s.getSCMProvider(codeRepositoryRequest.RepoType)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve scm provider: %w", err)
+		return nil, fmt.Errorf("failed to resolve SCM provider: %w", err)
 	}
-	codeRepo := types.CodeRepo{URL: codeRepositoryRequest.URL}
-	gitspaceUser := types.GitspaceUser{Identifier: codeRepositoryRequest.UserIdentifier}
-	gitspaceConfig := types.GitspaceConfig{
-		CodeRepo:     codeRepo,
-		SpacePath:    codeRepositoryRequest.SpacePath,
-		GitspaceUser: gitspaceUser,
-	}
-	resolvedCreds, err := scmProvider.ResolveCredentials(ctx, gitspaceConfig)
+
+	resolvedCreds, err := s.resolveRepoCredentials(ctx, scmProvider, codeRepositoryRequest)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve repo credentials and url: %w", err)
+		return nil, fmt.Errorf("failed to resolve repo credentials and URL: %w", err)
 	}
-	defaultBranch, err = detectDefaultGitBranch(ctx, resolvedCreds.CloneURL)
-	if err == nil {
-		branch := "main"
-		if defaultBranch != "" {
-			branch = defaultBranch
-		}
-		codeRepositoryResponse = &CodeRepositoryResponse{
-			URL:               codeRepositoryRequest.URL,
-			Branch:            branch,
-			CodeRepoIsPrivate: true,
-		}
+
+	if branch, err = s.detectBranch(ctx, resolvedCreds.CloneURL); err == nil {
+		codeRepositoryResponse.Branch = branch
 	}
 	return codeRepositoryResponse, nil
 }
@@ -103,35 +81,23 @@ func (s *SCM) GetSCMRepoDetails(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) (*ResolvedDetails, error) {
-	filePath := devcontainerDefaultPath
-	if gitspaceConfig.CodeRepo.Type == "" {
-		gitspaceConfig.CodeRepo.Type = enum.CodeRepoTypeUnknown
-	}
-	scmProvider, err := s.scmProviderFactory.GetSCMProvider(gitspaceConfig.CodeRepo.Type)
+	scmProvider, err := s.getSCMProvider(gitspaceConfig.CodeRepo.Type)
 	if err != nil {
-		return nil, fmt.Errorf("failed to resolve scm provider: %w", err)
+		return nil, fmt.Errorf("failed to resolve SCM provider: %w", err)
 	}
+
 	resolvedCredentials, err := scmProvider.ResolveCredentials(ctx, gitspaceConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve repo credentials and url: %w", err)
 	}
-	var resolvedDetails = &ResolvedDetails{
-		ResolvedCredentials: resolvedCredentials,
-	}
 
-	catFileOutputBytes, err := scmProvider.GetFileContent(ctx, gitspaceConfig, filePath, resolvedCredentials)
+	devcontainerConfig, err := s.getDevcontainerConfig(ctx, scmProvider, gitspaceConfig, resolvedCredentials)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read devcontainer file : %w", err)
+		return nil, fmt.Errorf("failed to read or parse devcontainer config: %w", err)
 	}
-	if len(catFileOutputBytes) == 0 {
-		resolvedDetails.DevcontainerConfig = &types.DevcontainerConfig{}
-	} else {
-		sanitizedJSON := removeComments(catFileOutputBytes)
-		var config *types.DevcontainerConfig
-		if err = json.Unmarshal(sanitizedJSON, &config); err != nil {
-			return nil, fmt.Errorf("failed to parse devcontainer json: %w", err)
-		}
-		resolvedDetails.DevcontainerConfig = config
+	var resolvedDetails = &ResolvedDetails{
+		ResolvedCredentials: *resolvedCredentials,
+		DevcontainerConfig:  devcontainerConfig,
 	}
 	return resolvedDetails, nil
 }
@@ -173,4 +139,63 @@ func (s *SCM) GetBranchURL(
 		return "", fmt.Errorf("failed to resolve scm provider while generating branch url: %w", err)
 	}
 	return scmProvider.GetBranchURL(spacePath, repoURL, branch)
+}
+
+// detectBranch tries to detect the default Git branch for a given URL.
+func (s *SCM) detectBranch(ctx context.Context, repoURL string) (string, error) {
+	defaultBranch, err := detectDefaultGitBranch(ctx, repoURL)
+	if err != nil {
+		return "", err
+	}
+	if defaultBranch == "" {
+		return "main", nil
+	}
+	return defaultBranch, nil
+}
+
+func (s *SCM) getSCMProvider(repoType enum.GitspaceCodeRepoType) (Provider, error) {
+	if repoType == "" {
+		repoType = enum.CodeRepoTypeUnknown
+	}
+	return s.scmProviderFactory.GetSCMProvider(repoType)
+}
+
+func (s *SCM) resolveRepoCredentials(
+	ctx context.Context,
+	scmProvider Provider,
+	codeRepositoryRequest CodeRepositoryRequest,
+) (*ResolvedCredentials, error) {
+	codeRepo := types.CodeRepo{URL: codeRepositoryRequest.URL}
+	gitspaceUser := types.GitspaceUser{Identifier: codeRepositoryRequest.UserIdentifier}
+	gitspaceConfig := types.GitspaceConfig{
+		CodeRepo:     codeRepo,
+		SpacePath:    codeRepositoryRequest.SpacePath,
+		GitspaceUser: gitspaceUser,
+	}
+	return scmProvider.ResolveCredentials(ctx, gitspaceConfig)
+}
+
+func (s *SCM) getDevcontainerConfig(
+	ctx context.Context,
+	scmProvider Provider,
+	gitspaceConfig types.GitspaceConfig,
+	resolvedCredentials *ResolvedCredentials,
+) (types.DevcontainerConfig, error) {
+	config := types.DevcontainerConfig{}
+	filePath := devcontainerDefaultPath
+	catFileOutputBytes, err := scmProvider.GetFileContent(ctx, gitspaceConfig, filePath, resolvedCredentials)
+	if err != nil {
+		return config, fmt.Errorf("failed to read devcontainer file: %w", err)
+	}
+
+	if len(catFileOutputBytes) == 0 {
+		return config, nil // Return an empty config if the file is empty
+	}
+
+	sanitizedJSON := removeComments(catFileOutputBytes)
+	if err = json.Unmarshal(sanitizedJSON, &config); err != nil {
+		return config, fmt.Errorf("failed to parse devcontainer JSON: %w", err)
+	}
+
+	return config, nil
 }

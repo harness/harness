@@ -306,7 +306,7 @@ func (e *EmbeddedDockerOrchestrator) startGitspace(
 		return err
 	}
 
-	if resolvedRepoDetails.Credentials != nil {
+	if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
 		err = e.setupGitCredentials(ctx, exec, resolvedRepoDetails, logStreamInstance)
 		if err != nil {
 			return err
@@ -537,7 +537,7 @@ func (e *EmbeddedDockerOrchestrator) cloneCode(
 
 func (e *EmbeddedDockerOrchestrator) executePostCreateCommand(
 	ctx context.Context,
-	devcontainerConfig *types.DevcontainerConfig,
+	devcontainerConfig types.DevcontainerConfig,
 	exec *devcontainer.Exec,
 	codeRepoDir string,
 	logStreamInstance *logutil.LogStreamInstance,

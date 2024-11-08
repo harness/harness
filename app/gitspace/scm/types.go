@@ -35,8 +35,8 @@ type CodeRepositoryResponse struct {
 
 type (
 	ResolvedDetails struct {
-		*ResolvedCredentials
-		DevcontainerConfig *types.DevcontainerConfig
+		ResolvedCredentials
+		DevcontainerConfig types.DevcontainerConfig
 	}
 
 	// Credentials contains login and initialization information used

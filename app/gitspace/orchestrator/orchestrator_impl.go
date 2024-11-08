@@ -412,11 +412,6 @@ func (o orchestrator) ResumeStartGitspace(
 		return *gitspaceInstance, fmt.Errorf(
 			"failed to fetch code repo details for gitspace config ID %w %d", err, gitspaceConfig.ID)
 	}
-	devcontainerConfig := scmResolvedDetails.DevcontainerConfig
-
-	if devcontainerConfig == nil {
-		log.Warn().Err(err).Msg("devcontainer config is nil, using empty config")
-	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerCompleted)
 

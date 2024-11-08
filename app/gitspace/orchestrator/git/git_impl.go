@@ -96,15 +96,18 @@ func (g *ServiceImpl) CloneCode(
 			"failed to parse clone url %s: %w", resolvedRepoDetails.CloneURL, err)
 	}
 	cloneURL.User = nil
+	data := &template.CloneCodePayload{
+		RepoURL:  cloneURL.String(),
+		Image:    defaultBaseImage,
+		Branch:   resolvedRepoDetails.Branch,
+		RepoName: resolvedRepoDetails.RepoName,
+	}
+	if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
+		data.Email = resolvedRepoDetails.Credentials.Email
+		data.Name = resolvedRepoDetails.Credentials.Name
+	}
 	script, err := template.GenerateScriptFromTemplate(
-		templateCloneCode, &template.CloneCodePayload{
-			RepoURL:  cloneURL.String(),
-			Image:    defaultBaseImage,
-			Branch:   resolvedRepoDetails.Branch,
-			RepoName: resolvedRepoDetails.RepoName,
-			Email:    resolvedRepoDetails.Credentials.Email,
-			Name:     resolvedRepoDetails.Credentials.Name,
-		})
+		templateCloneCode, data)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to generate scipt to clone code from template %s: %w", templateCloneCode, err)
