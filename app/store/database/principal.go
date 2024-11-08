@@ -16,7 +16,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/harness/gitness/app/store"
@@ -179,13 +178,11 @@ func (s *PrincipalStore) List(ctx context.Context,
 	if opts.Query != "" {
 		// TODO: optimize performance
 		// https://harness.atlassian.net/browse/CODE-522
-		searchTerm := fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query))
-		stmt = stmt.Where(
-			"(LOWER(principal_uid) LIKE ? OR LOWER(principal_email) LIKE ? OR LOWER(principal_display_name) LIKE ?)",
-			searchTerm,
-			searchTerm,
-			searchTerm,
-		)
+		stmt = stmt.Where(squirrel.Or{
+			squirrel.Expr(PartialMatch("principal_uid", opts.Query)),
+			squirrel.Expr(PartialMatch("principal_email", opts.Query)),
+			squirrel.Expr(PartialMatch("principal_display_name", opts.Query)),
+		})
 	}
 
 	stmt = stmt.Limit(database.Limit(opts.Size))

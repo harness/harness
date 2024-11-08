@@ -16,8 +16,6 @@ package database
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -112,7 +110,7 @@ func (s *pluginStore) List(
 		From("plugins")
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(plugin_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("plugin_uid", filter.Query))
 	}
 
 	stmt = stmt.Limit(database.Limit(filter.Size))
@@ -163,7 +161,7 @@ func (s *pluginStore) Count(ctx context.Context, filter types.ListQueryFilter) (
 		From("plugins")
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(plugin_uid) LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
+		stmt = stmt.Where(PartialMatch("plugin_uid", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()

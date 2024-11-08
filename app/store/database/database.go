@@ -32,8 +32,6 @@ const (
 // See:
 // https://www.postgresql.org/docs/current/functions-matching.html#FUNCTIONS-LIKE
 // https://www.sqlite.org/lang_expr.html#the_like_glob_regexp_match_and_extract_operators
-//
-//nolint:goconst
 func PartialMatch(column, value string) (string, string) {
 	var (
 		n       int
@@ -50,9 +48,13 @@ func PartialMatch(column, value string) (string, string) {
 		escaped = true
 	}
 
+	sb := strings.Builder{}
+	sb.WriteString("LOWER(")
+	sb.WriteString(column)
+	sb.WriteString(") LIKE '%' || LOWER(?) || '%'")
 	if escaped {
-		return "LOWER(" + column + ") LIKE ? ESCAPE '\\'", "%" + strings.ToLower(value) + "%"
+		sb.WriteString(` ESCAPE '\'`)
 	}
 
-	return "LOWER(" + column + ") LIKE ?", "%" + strings.ToLower(value) + "%"
+	return sb.String(), value
 }

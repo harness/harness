@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -366,7 +365,7 @@ func (s *executionStore) ListInSpace(
 	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("pipeline_uid", filter.Query))
 	}
 
 	if filter.PipelineIdentifier != "" {
@@ -471,7 +470,7 @@ func (s *executionStore) CountInSpace(
 		Where("repo_parent_id = ?", spaceID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("pipeline_uid", filter.Query))
 	}
 
 	if filter.PipelineIdentifier != "" {

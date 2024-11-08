@@ -549,7 +549,7 @@ func applyWebhookFilter(
 	stmt squirrel.SelectBuilder,
 ) squirrel.SelectBuilder {
 	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(webhook_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+		stmt = stmt.Where(PartialMatch("webhook_uid", opts.Query))
 	}
 
 	if opts.SkipInternal {

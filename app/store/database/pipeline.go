@@ -17,7 +17,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/store"
@@ -195,7 +194,7 @@ func (s *pipelineStore) List(
 		Where("pipeline_repo_id = ?", fmt.Sprint(repoID))
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("pipeline_uid", filter.Query))
 	}
 
 	stmt = stmt.Limit(database.Limit(filter.Size))
@@ -233,7 +232,7 @@ func (s *pipelineStore) ListInSpace(
 		Where("repo_parent_id = ?", spaceID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("pipeline_uid", filter.Query))
 	}
 
 	stmt = stmt.Limit(database.Limit(filter.Size))
@@ -308,7 +307,7 @@ func (s *pipelineStore) ListLatest(
 		Where("pipeline_repo_id = ?", fmt.Sprint(repoID))
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("pipeline_uid", filter.Query))
 	}
 	stmt = stmt.Limit(database.Limit(filter.Size))
 	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
@@ -370,7 +369,7 @@ func (s *pipelineStore) Count(
 	}
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("pipeline_uid", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -401,7 +400,7 @@ func (s *pipelineStore) CountInSpace(
 		Where("repo_parent_id = ?", spaceID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+		stmt = stmt.Where(PartialMatch("pipeline_uid", filter.Query))
 	}
 
 	var count int64
