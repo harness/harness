@@ -100,7 +100,8 @@ type Service struct {
 	secureHTTPClientInternal   *http.Client
 	insecureHTTPClientInternal *http.Client
 
-	config Config
+	config             Config
+	webhookURLProvider URLProvider
 }
 
 func NewService(
@@ -120,7 +121,7 @@ func NewService(
 	git git.Interface,
 	encrypter encrypt.Encrypter,
 	labelStore store.LabelStore,
-
+	webhookURLProvider URLProvider,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
@@ -146,7 +147,8 @@ func NewService(
 
 		config: config,
 
-		labelStore: labelStore,
+		labelStore:         labelStore,
+		webhookURLProvider: webhookURLProvider,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,

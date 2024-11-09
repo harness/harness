@@ -287,7 +287,11 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 // NOTE: if the body is an io.Reader, the value is used as response body as is, otherwise it'll be JSON serialized.
 func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
 	triggerType enum.WebhookTrigger, webhook *types.Webhook, body any) (*http.Request, error) {
-	execution.Request.URL = s.getWebhookURL(ctx, webhook)
+	url, err := s.webhookURLProvider.GetWebhookURL(ctx, webhook)
+	if err != nil {
+		return nil, fmt.Errorf("webhook url is not resolvable: %w", err)
+	}
+	execution.Request.URL = url
 
 	// Serialize body before anything else.
 	// This allows the user to retrigger the execution even in case of bad URL.
@@ -368,19 +372,6 @@ func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.Webho
 	execution.Request.Headers = hBuffer.String()
 
 	return req, nil
-}
-
-func (s *Service) getWebhookURL(ctx context.Context, webhook *types.Webhook) string {
-	// in case a webhook is internal use the specified URL if not empty instead of using one saved in db.
-	if webhook.Internal && s.config.InternalWebhooksURL != "" {
-		return s.config.InternalWebhooksURL
-	}
-
-	if webhook.Internal && s.config.InternalWebhooksURL == "" {
-		log.Ctx(ctx).Error().Msg("internal webhook URL is empty, falling back to one in db")
-	}
-	// set URL as is (already has been validated, any other error will be caught in request creation)
-	return webhook.URL
 }
 
 func (s *Service) toXHeader(name string) string {

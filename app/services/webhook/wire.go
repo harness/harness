@@ -32,6 +32,7 @@ import (
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideService,
+	ProvideURLProvider,
 )
 
 func ProvideService(
@@ -51,6 +52,7 @@ func ProvideService(
 	git git.Interface,
 	encrypter encrypt.Encrypter,
 	labelStore store.LabelStore,
+	webhookURLProvider URLProvider,
 ) (*Service, error) {
 	return NewService(
 		ctx,
@@ -68,5 +70,10 @@ func ProvideService(
 		git,
 		encrypter,
 		labelStore,
+		webhookURLProvider,
 	)
+}
+
+func ProvideURLProvider(ctx context.Context) URLProvider {
+	return NewURLProvider(ctx)
 }

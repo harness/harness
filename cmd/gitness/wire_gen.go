@@ -365,7 +365,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
-	webhookService, err := webhook.ProvideService(ctx, webhookConfig, transactor, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter, labelStore)
+	urlProvider := webhook.ProvideURLProvider(ctx)
+	webhookService, err := webhook.ProvideService(ctx, webhookConfig, transactor, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, spaceStore, repoStore, pullReqStore, pullReqActivityStore, provider, principalStore, gitInterface, encrypter, labelStore, urlProvider)
 	if err != nil {
 		return nil, err
 	}
