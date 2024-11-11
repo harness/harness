@@ -22,10 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
-	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	orchestratorTypes "github.com/harness/gitness/app/gitspace/orchestrator/types"
-	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/types"
 
 	"github.com/docker/docker/api/types/container"
@@ -42,6 +39,14 @@ const (
 	catchAllIP = "0.0.0.0"
 )
 
+var containerStateMapping = map[string]State{
+	"running": ContainerStateRunning,
+	"exited":  ContainerStateStopped,
+	"dead":    ContainerStateDead,
+	"created": ContainerStateCreated,
+	"paused":  ContainerStatePaused,
+}
+
 // Helper function to log messages and handle error wrapping.
 func logStreamWrapError(gitspaceLogger orchestratorTypes.GitspaceLogger, msg string, err error) error {
 	gitspaceLogger.Error(msg, err)
@@ -49,7 +54,7 @@ func logStreamWrapError(gitspaceLogger orchestratorTypes.GitspaceLogger, msg str
 }
 
 // Generalized Docker Container Management.
-func (e *EmbeddedDockerOrchestrator) manageContainer(
+func ManageContainer(
 	ctx context.Context,
 	action Action,
 	containerName string,
@@ -83,7 +88,7 @@ func (e *EmbeddedDockerOrchestrator) manageContainer(
 	return nil
 }
 
-func (e *EmbeddedDockerOrchestrator) containerState(
+func FetchContainerState(
 	ctx context.Context,
 	containerName string,
 	dockerClient *client.Client,
@@ -99,12 +104,22 @@ func (e *EmbeddedDockerOrchestrator) containerState(
 	if len(containers) == 0 {
 		return ContainerStateRemoved, nil
 	}
+	containerState := ContainerStateUnknown
+	for _, value := range containers {
+		name, _ := strings.CutPrefix(value.Names[0], "/")
+		if name == containerName {
+			if state, ok := containerStateMapping[value.State]; ok {
+				containerState = state
+			}
+			break
+		}
+	}
 
-	return State(containers[0].State), nil
+	return containerState, nil
 }
 
 // Create a new Docker container.
-func (e *EmbeddedDockerOrchestrator) createContainer(
+func CreateContainer(
 	ctx context.Context,
 	dockerClient *client.Client,
 	imageName string,
@@ -174,7 +189,7 @@ func prepareHostConfig(volumeName, homeDir string, portBindings nat.PortMap) *co
 
 	return hostConfig
 }
-func (e *EmbeddedDockerOrchestrator) getContainerInfo(
+func GetContainerInfo(
 	ctx context.Context,
 	containerName string,
 	dockerClient *client.Client,
@@ -201,7 +216,7 @@ func (e *EmbeddedDockerOrchestrator) getContainerInfo(
 	return inspectResp.ID, usedPorts, nil
 }
 
-func (e *EmbeddedDockerOrchestrator) pullImage(
+func PullImage(
 	ctx context.Context,
 	imageName string,
 	dockerClient *client.Client,
@@ -230,101 +245,15 @@ func (e *EmbeddedDockerOrchestrator) pullImage(
 	return nil
 }
 
-func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
-	ctx context.Context,
-	gitspaceConfig types.GitspaceConfig,
-	dockerClient *client.Client,
-	ideService ide.IDE,
-	infrastructure types.Infrastructure,
-	resolvedRepoDetails scm.ResolvedDetails,
-	defaultBaseImage string,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
-) error {
-	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
-	containerName := GetGitspaceContainerName(gitspaceConfig)
-
-	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
-	imageName := devcontainerConfig.Image
-	if imageName == "" {
-		imageName = defaultBaseImage
-	}
-
-	// Pull the required image
-	if err := e.pullImage(ctx, imageName, dockerClient, gitspaceLogger); err != nil {
-		return err
-	}
-	portMappings := infrastructure.GitspacePortMappings
-	forwardPorts := ExtractForwardPorts(devcontainerConfig)
-	if len(forwardPorts) > 0 {
-		for _, port := range forwardPorts {
-			portMappings[port] = &types.PortMapping{
-				PublishedPort: port,
-				ForwardedPort: port,
-			}
-		}
-		gitspaceLogger.Info(fmt.Sprintf("Forwarding ports : %v", forwardPorts))
-	}
-
-	storage := infrastructure.Storage
-	environment := ExtractEnv(devcontainerConfig)
-	if len(environment) > 0 {
-		gitspaceLogger.Info(fmt.Sprintf("Setting Environment : %v", environment))
-	}
-	// Create the container
-	err := e.createContainer(
-		ctx,
-		dockerClient,
-		imageName,
-		containerName,
-		gitspaceLogger,
-		storage,
-		homeDir,
-		portMappings,
-		environment,
-	)
-	if err != nil {
-		return err
-	}
-
-	// Start the container
-	if err := e.manageContainer(ctx, ContainerActionStart, containerName, dockerClient, gitspaceLogger); err != nil {
-		return err
-	}
-
-	// Setup and run commands
-	exec := &devcontainer.Exec{
-		ContainerName:  containerName,
-		DockerClient:   dockerClient,
-		HomeDir:        homeDir,
-		UserIdentifier: gitspaceConfig.GitspaceUser.Identifier,
-		AccessKey:      *gitspaceConfig.GitspaceInstance.AccessKey,
-		AccessType:     gitspaceConfig.GitspaceInstance.AccessType,
-	}
-
-	if err := e.setupGitspaceAndIDE(
-		ctx,
-		exec,
-		gitspaceLogger,
-		ideService,
-		gitspaceConfig,
-		resolvedRepoDetails,
-		defaultBaseImage,
-	); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // getContainerResponse retrieves container information and prepares the start response.
-func (e *EmbeddedDockerOrchestrator) getContainerResponse(
+func GetContainerResponse(
 	ctx context.Context,
 	dockerClient *client.Client,
 	containerName string,
 	portMappings map[int]*types.PortMapping,
 	codeRepoDir string,
 ) (*StartResponse, error) {
-	id, ports, err := e.getContainerInfo(ctx, containerName, dockerClient, portMappings)
+	id, ports, err := GetContainerInfo(ctx, containerName, dockerClient, portMappings)
 	if err != nil {
 		return nil, err
 	}

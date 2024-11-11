@@ -156,6 +156,9 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			ideService); err != nil {
 			return nil, err
 		}
+	case ContainerStatePaused, ContainerStateCreated, ContainerStateUnknown, ContainerStateDead:
+		// TODO handle the following states
+		return nil, fmt.Errorf("gitspace %s is in a unhandled state: %s", containerName, state)
 
 	default:
 		return nil, fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
@@ -165,7 +168,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	codeRepoDir := filepath.Join(homeDir, resolvedRepoDetails.RepoName)
 
 	// Step 5: Retrieve container information and return response
-	return e.getContainerResponse(ctx, dockerClient, containerName, infra.GitspacePortMappings, codeRepoDir)
+	return GetContainerResponse(ctx, dockerClient, containerName, infra.GitspacePortMappings, codeRepoDir)
 }
 
 // startStoppedGitspace starts the Gitspace container if it was stopped.
@@ -185,7 +188,7 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 	}
 	defer e.flushLogStream(logStreamInstance, gitspaceConfig.ID)
 
-	startErr := e.manageContainer(ctx, ContainerActionStart, containerName, dockerClient, logStreamInstance)
+	startErr := ManageContainer(ctx, ContainerActionStart, containerName, dockerClient, logStreamInstance)
 	if startErr != nil {
 		return startErr
 	}
@@ -260,7 +263,9 @@ func (e *EmbeddedDockerOrchestrator) StopGitspace(
 		if err := e.stopRunningGitspace(ctx, gitspaceConfig, containerName, dockerClient); err != nil {
 			return err
 		}
-
+	case ContainerStatePaused, ContainerStateCreated, ContainerStateUnknown, ContainerStateDead:
+		// TODO handle the following states
+		return fmt.Errorf("gitspace %s is in a unhandled state: %s", containerName, state)
 	default:
 		return fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
 	}
@@ -284,7 +289,7 @@ func (e *EmbeddedDockerOrchestrator) stopRunningGitspace(
 	defer e.flushLogStream(logStreamInstance, gitspaceConfig.ID)
 
 	// Step 5: Stop the container
-	return e.manageContainer(ctx, ContainerActionStop, containerName, dockerClient, logStreamInstance)
+	return ManageContainer(ctx, ContainerActionStop, containerName, dockerClient, logStreamInstance)
 }
 
 // Status is NOOP for EmbeddedDockerOrchestrator as the docker host is verified by the infra provisioner.
@@ -331,7 +336,7 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 	// Step 5: Stop the container if it's not already stopped
 	if state != ContainerStateStopped {
 		logger.Debug().Msg("stopping gitspace")
-		if err := e.manageContainer(
+		if err := ManageContainer(
 			ctx, ContainerActionStop, containerName, dockerClient, logStreamInstance); err != nil {
 			return fmt.Errorf("failed to stop gitspace %s: %w", containerName, err)
 		}
@@ -340,7 +345,7 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 
 	// Step 6: Remove the container
 	logger.Debug().Msg("removing gitspace")
-	if err := e.manageContainer(
+	if err := ManageContainer(
 		ctx, ContainerActionRemove, containerName, dockerClient, logStreamInstance); err != nil {
 		return fmt.Errorf("failed to remove gitspace %s: %w", containerName, err)
 	}
@@ -362,6 +367,92 @@ func (e *EmbeddedDockerOrchestrator) getAccessKey(gitspaceConfig types.GitspaceC
 		return *gitspaceConfig.GitspaceInstance.AccessKey, nil
 	}
 	return "", fmt.Errorf("no access key is configured: %s", gitspaceConfig.Identifier)
+}
+
+func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
+	ctx context.Context,
+	gitspaceConfig types.GitspaceConfig,
+	dockerClient *client.Client,
+	ideService ide.IDE,
+	infrastructure types.Infrastructure,
+	resolvedRepoDetails scm.ResolvedDetails,
+	defaultBaseImage string,
+	gitspaceLogger orchestratorTypes.GitspaceLogger,
+) error {
+	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
+	containerName := GetGitspaceContainerName(gitspaceConfig)
+
+	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
+	imageName := devcontainerConfig.Image
+	if imageName == "" {
+		imageName = defaultBaseImage
+	}
+
+	// Pull the required image
+	if err := PullImage(ctx, imageName, dockerClient, gitspaceLogger); err != nil {
+		return err
+	}
+	portMappings := infrastructure.GitspacePortMappings
+	forwardPorts := ExtractForwardPorts(devcontainerConfig)
+	if len(forwardPorts) > 0 {
+		for _, port := range forwardPorts {
+			portMappings[port] = &types.PortMapping{
+				PublishedPort: port,
+				ForwardedPort: port,
+			}
+		}
+		gitspaceLogger.Info(fmt.Sprintf("Forwarding ports : %v", forwardPorts))
+	}
+
+	storage := infrastructure.Storage
+	environment := ExtractEnv(devcontainerConfig)
+	if len(environment) > 0 {
+		gitspaceLogger.Info(fmt.Sprintf("Setting Environment : %v", environment))
+	}
+	// Create the container
+	err := CreateContainer(
+		ctx,
+		dockerClient,
+		imageName,
+		containerName,
+		gitspaceLogger,
+		storage,
+		homeDir,
+		portMappings,
+		environment,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Start the container
+	if err := ManageContainer(ctx, ContainerActionStart, containerName, dockerClient, gitspaceLogger); err != nil {
+		return err
+	}
+
+	// Setup and run commands
+	exec := &devcontainer.Exec{
+		ContainerName:  containerName,
+		DockerClient:   dockerClient,
+		HomeDir:        homeDir,
+		UserIdentifier: gitspaceConfig.GitspaceUser.Identifier,
+		AccessKey:      *gitspaceConfig.GitspaceInstance.AccessKey,
+		AccessType:     gitspaceConfig.GitspaceInstance.AccessType,
+	}
+
+	if err := e.setupGitspaceAndIDE(
+		ctx,
+		exec,
+		gitspaceLogger,
+		ideService,
+		gitspaceConfig,
+		resolvedRepoDetails,
+		defaultBaseImage,
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // getDockerClient creates and returns a new Docker client using the factory.
@@ -390,7 +481,7 @@ func (e *EmbeddedDockerOrchestrator) checkContainerState(
 	containerName string,
 ) (State, error) {
 	log.Debug().Msg("checking current state of gitspace")
-	state, err := e.containerState(ctx, containerName, dockerClient)
+	state, err := FetchContainerState(ctx, containerName, dockerClient)
 	if err != nil {
 		return "", err
 	}

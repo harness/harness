@@ -33,7 +33,11 @@ type State string
 const (
 	ContainerStateRunning = State("running")
 	ContainerStateRemoved = State("removed")
+	ContainerStateDead    = State("dead")
 	ContainerStateStopped = State("exited")
+	ContainerStatePaused  = State("paused")
+	ContainerStateUnknown = State("unknown")
+	ContainerStateCreated = State("created")
 )
 
 type Action string
