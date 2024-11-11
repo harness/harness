@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
 
 	"github.com/rs/zerolog/log"
@@ -98,27 +99,28 @@ func (g *Git) SetDefaultBranch(
 	ctx context.Context,
 	repoPath string,
 	defaultBranch string,
-	allowEmpty bool,
+	ignoreBranchExistance bool,
 ) error {
 	if repoPath == "" {
 		return ErrRepositoryPathEmpty
 	}
 
-	// if requested, error out if branch doesn't exist. Otherwise, blindly set it.
-	exist, err := g.IsBranchExist(ctx, repoPath, defaultBranch)
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to set default branch")
-	}
-	if !allowEmpty && !exist {
-		// TODO: ensure this returns not found error to caller
-		return fmt.Errorf("branch '%s' does not exist", defaultBranch)
+	if !ignoreBranchExistance {
+		// best effort try to check for existence - technically someone else could delete it in the meanwhile.
+		exist, err := g.IsBranchExist(ctx, repoPath, defaultBranch)
+		if err != nil {
+			return fmt.Errorf("failed to check if branch exists: %w", err)
+		}
+		if !exist {
+			return errors.NotFound("branch %q does not exist", defaultBranch)
+		}
 	}
 
 	// change default branch
 	cmd := command.New("symbolic-ref",
 		command.WithArg("HEAD", gitReferenceNamePrefixBranch+defaultBranch),
 	)
-	err = cmd.Run(ctx, command.WithDir(repoPath))
+	err := cmd.Run(ctx, command.WithDir(repoPath))
 	if err != nil {
 		return processGitErrorf(err, "failed to set new default branch")
 	}
@@ -128,6 +130,26 @@ func (g *Git) SetDefaultBranch(
 
 // GetDefaultBranch gets the default branch of a repo.
 func (g *Git) GetDefaultBranch(
+	ctx context.Context,
+	repoPath string,
+) (string, error) {
+	rawBranchRef, err := g.GetSymbolicRefHeadRaw(ctx, repoPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to get raw symbolic ref HEAD: %w", err)
+	}
+
+	branchName := strings.TrimPrefix(
+		strings.TrimSpace(
+			rawBranchRef,
+		),
+		BranchPrefix,
+	)
+
+	return branchName, nil
+}
+
+// GetSymbolicRefHeadRaw returns the raw output of the symolic-ref command for HEAD.
+func (g *Git) GetSymbolicRefHeadRaw(
 	ctx context.Context,
 	repoPath string,
 ) (string, error) {
@@ -144,7 +166,7 @@ func (g *Git) GetDefaultBranch(
 		command.WithDir(repoPath),
 		command.WithStdout(output))
 	if err != nil {
-		return "", processGitErrorf(err, "failed to get default branch")
+		return "", processGitErrorf(err, "failed to get value of symbolic ref HEAD from git")
 	}
 
 	return output.String(), nil

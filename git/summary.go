@@ -17,8 +17,8 @@ package git
 import (
 	"context"
 	"fmt"
-	"strings"
 
+	"github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/git/merge"
 
 	"golang.org/x/sync/errgroup"
@@ -44,7 +44,7 @@ func (s *Service) Summary(
 	if err != nil {
 		return SummaryOutput{}, err
 	}
-	defaultBranch = strings.TrimSpace(defaultBranch)
+	defaultBranchRef := api.GetReferenceFromBranchName(defaultBranch)
 
 	g, ctx := errgroup.WithContext(ctx)
 
@@ -52,7 +52,7 @@ func (s *Service) Summary(
 
 	g.Go(func() error {
 		var err error
-		commitCount, err = merge.CommitCount(ctx, repoPath, "", defaultBranch)
+		commitCount, err = merge.CommitCount(ctx, repoPath, "", defaultBranchRef)
 		return err
 	})
 

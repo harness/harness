@@ -314,16 +314,12 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 
 		log.Info().Msg("sync repository")
 
-		defaultBranch, err := r.syncGitRepository(ctx, &systemPrincipal, repo, cloneURLWithAuth)
+		err = r.syncGitRepository(ctx, &systemPrincipal, repo, cloneURLWithAuth)
 		if err != nil {
 			return fmt.Errorf("failed to sync git repository from '%s': %w", input.CloneURL, err)
 		}
 
-		log.Info().Msgf("successfully synced repository (returned default branch: '%s')", defaultBranch)
-
-		if defaultBranch == "" {
-			defaultBranch = r.defaultBranch
-		}
+		log.Info().Msgf("successfully synced repository (with default branch: %q)", repo.DefaultBranch)
 
 		log.Info().Msg("update repo in DB")
 
@@ -333,7 +329,6 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 			}
 
 			repo.GitUID = gitUID
-			repo.DefaultBranch = defaultBranch
 			repo.State = enum.RepoStateActive
 
 			return nil
@@ -463,23 +458,24 @@ func (r *Repository) syncGitRepository(ctx context.Context,
 	principal *types.Principal,
 	repo *types.Repository,
 	sourceCloneURL string,
-) (string, error) {
+) error {
 	writeParams, err := r.createRPCWriteParams(ctx, principal, repo)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	syncOut, err := r.git.SyncRepository(ctx, &git.SyncRepositoryParams{
+	_, err = r.git.SyncRepository(ctx, &git.SyncRepositoryParams{
 		WriteParams:       writeParams,
 		Source:            sourceCloneURL,
 		CreateIfNotExists: false,
 		RefSpecs:          []string{"refs/heads/*:refs/heads/*", "refs/tags/*:refs/tags/*"},
+		DefaultBranch:     repo.DefaultBranch,
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to sync repository: %w", err)
+		return fmt.Errorf("failed to sync repository: %w", err)
 	}
 
-	return syncOut.DefaultBranch, nil
+	return nil
 }
 
 func (r *Repository) deleteGitRepository(ctx context.Context,

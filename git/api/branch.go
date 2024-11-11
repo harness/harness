@@ -96,14 +96,22 @@ func (g *Git) HasBranches(
 
 func (g *Git) IsBranchExist(ctx context.Context, repoPath, name string) (bool, error) {
 	cmd := command.New("show-ref",
-		command.WithFlag("--verify", BranchPrefix+name),
+		command.WithFlag("--exists", BranchPrefix+name),
 	)
 	err := cmd.Run(ctx,
 		command.WithDir(repoPath),
 	)
-	if err != nil {
-		return false, fmt.Errorf("failed to check if branch '%s' exist: %w", name, err)
+	if cmdERR := command.AsError(err); cmdERR != nil && cmdERR.IsExitCode(2) {
+		// git returns exit code 2 in case the ref doesn't exist.
+		// On success it would be 0 and no error would be returned in the first place.
+		// Any other exit code we fall through to default error handling.
+		// https://git-scm.com/docs/git-show-ref#Documentation/git-show-ref.txt---exists
+		return false, nil
 	}
+	if err != nil {
+		return false, processGitErrorf(err, "failed to check if branch %q exist", name)
+	}
+
 	return true, nil
 }
 

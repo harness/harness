@@ -109,6 +109,10 @@ type SyncRepositoryParams struct {
 	// RefSpecs [OPTIONAL] allows to override the refspecs that are being synced from the remote repository.
 	// By default all references present on the remote repository will be fetched (including scm internal ones).
 	RefSpecs []string
+	// DefaultBranch [OPTIONAL] allows to override the default branch of the repository.
+	// If empty, the default branch will be set to match the remote repository's default branch.
+	// WARNING: If the remote repo is empty and no value is provided, an api.ErrNoDefaultBranch error is returned.
+	DefaultBranch string
 }
 
 type SyncRepositoryOutput struct {
@@ -130,7 +134,15 @@ type HashRepositoryOutput struct {
 }
 type UpdateDefaultBranchParams struct {
 	WriteParams
-	// BranchName is the name of the branch
+	// BranchName is the name of the branch (not the full reference).
+	BranchName string
+}
+
+type GetDefaultBranchParams struct {
+	ReadParams
+}
+type GetDefaultBranchOutput struct {
+	// BranchName is the name of the branch (not the full reference).
 	BranchName string
 }
 
@@ -259,7 +271,7 @@ func (s *Service) SyncRepository(
 		}
 
 		// the default branch doesn't matter for a sync,
-		// we create an empty repo and the head will by updated as part of the Sync.
+		// we create an empty repo and the head will by updated later.
 		const syncDefaultBranch = "main"
 		if err = s.createRepositoryInternal(
 			ctx,
@@ -278,24 +290,22 @@ func (s *Service) SyncRepository(
 	// sync repo content
 	err = s.git.Sync(ctx, repoPath, params.Source, params.RefSpecs)
 	if err != nil {
-		return nil, fmt.Errorf("SyncRepository: failed to sync git repo: %w", err)
+		return nil, fmt.Errorf("failed to sync from source repo: %w", err)
 	}
 
-	// get remote default branch
-	defaultBranch, err := s.git.GetRemoteDefaultBranch(ctx, params.Source)
-	if errors.Is(err, api.ErrNoDefaultBranch) {
-		return &SyncRepositoryOutput{
-			DefaultBranch: "",
-		}, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("SyncRepository: failed to get default branch from repo: %w", err)
+	defaultBranch := params.DefaultBranch
+	if defaultBranch == "" {
+		// get default branch from remote repo (returns api.ErrNoDefaultBranch if repo is empty!)
+		defaultBranch, err = s.git.GetRemoteDefaultBranch(ctx, params.Source)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get default branch from source repo: %w", err)
+		}
 	}
 
 	// set default branch
 	err = s.git.SetDefaultBranch(ctx, repoPath, defaultBranch, true)
 	if err != nil {
-		return nil, fmt.Errorf("SyncRepository: failed to set default branch of repo: %w", err)
+		return nil, fmt.Errorf("failed to set default branch of repo: %w", err)
 	}
 
 	return &SyncRepositoryOutput{
@@ -329,7 +339,8 @@ func (s *Service) HashRepository(ctx context.Context, params *HashRepositoryPara
 		}()
 
 		// add default branch to hash
-		defaultBranch, err := s.git.GetDefaultBranch(goCtx, repoPath)
+		// IMPORTANT: Has to stay as is to ensure hash consistency! (e.g. "refs/heads/main/n")
+		defaultBranchRef, err := s.git.GetSymbolicRefHeadRaw(goCtx, repoPath)
 		if err != nil {
 			hashChan <- hash.SourceNext{
 				Err: fmt.Errorf("HashRepository: failed to get default branch: %w", err),
@@ -338,7 +349,7 @@ func (s *Service) HashRepository(ctx context.Context, params *HashRepositoryPara
 		}
 
 		hashChan <- hash.SourceNext{
-			Data: hash.SerializeHead(defaultBranch),
+			Data: hash.SerializeHead(defaultBranchRef),
 		}
 
 		err = s.git.WalkReferences(goCtx, repoPath, func(wre api.WalkReferencesEntry) error {
@@ -515,6 +526,26 @@ func (s *Service) GetRepositorySize(
 	}, nil
 }
 
+// GetDefaultBranch returns the default branch of the repo.
+func (s *Service) GetDefaultBranch(
+	ctx context.Context,
+	params *GetDefaultBranchParams,
+) (*GetDefaultBranchOutput, error) {
+	if err := params.Validate(); err != nil {
+		return nil, err
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	dfltBranch, err := s.git.GetDefaultBranch(ctx, repoPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo default branch: %w", err)
+	}
+	return &GetDefaultBranchOutput{
+		BranchName: dfltBranch,
+	}, nil
+}
+
 // UpdateDefaultBranch updates the default branch of the repo.
 func (s *Service) UpdateDefaultBranch(
 	ctx context.Context,
@@ -531,7 +562,7 @@ func (s *Service) UpdateDefaultBranch(
 
 	err := s.git.SetDefaultBranch(ctx, repoPath, params.BranchName, false)
 	if err != nil {
-		return fmt.Errorf("UpdateDefaultBranch: failed to update repo default branch %q: %w",
+		return fmt.Errorf("failed to update repo default branch %q: %w",
 			params.BranchName, err)
 	}
 	return nil
