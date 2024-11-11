@@ -115,3 +115,15 @@ func (l *LogStreamInstance) Flush() error {
 
 	return nil
 }
+
+func (l *LogStreamInstance) Info(msg string) {
+	l.Write("INFO: " + msg) //nolint:errcheck
+}
+
+func (l *LogStreamInstance) Debug(msg string) {
+	l.Write("DEBUG: " + msg) //nolint:errcheck
+}
+
+func (l *LogStreamInstance) Error(msg string, err error) {
+	l.Write("ERROR: " + msg + ": " + err.Error()) //nolint:errcheck
+}

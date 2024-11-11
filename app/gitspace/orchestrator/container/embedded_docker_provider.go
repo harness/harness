@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	orchestratorTypes "github.com/harness/gitness/app/gitspace/orchestrator/types"
 	"github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/infraprovider"
@@ -38,15 +39,8 @@ const (
 	loggingKey = "gitspace.container"
 )
 
-// Step represents a single setup action.
-type Step struct {
-	Name          string
-	Execute       func(ctx context.Context, exec *devcontainer.Exec, logStreamInstance *logutil.LogStreamInstance) error
-	StopOnFailure bool // Flag to control whether execution should stop on failure
-}
-
 type EmbeddedDockerOrchestrator struct {
-	steps               []Step // Steps registry
+	steps               []orchestratorTypes.Step // Steps registry
 	dockerClientFactory *infraprovider.DockerClientFactory
 	statefulLogger      *logutil.StatefulLogger
 	gitService          git.Service
@@ -56,10 +50,10 @@ type EmbeddedDockerOrchestrator struct {
 // RegisterStep registers a new setup step with an option to stop or continue on failure.
 func (e *EmbeddedDockerOrchestrator) RegisterStep(
 	name string,
-	execute func(ctx context.Context, exec *devcontainer.Exec, logStreamInstance *logutil.LogStreamInstance) error,
+	execute func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error,
 	stopOnFailure bool,
 ) {
-	step := Step{
+	step := orchestratorTypes.Step{
 		Name:          name,
 		Execute:       execute,
 		StopOnFailure: stopOnFailure,
@@ -71,20 +65,17 @@ func (e *EmbeddedDockerOrchestrator) RegisterStep(
 func (e *EmbeddedDockerOrchestrator) ExecuteSteps(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	logStreamInstance *logutil.LogStreamInstance,
+	gitspaceLogger orchestratorTypes.GitspaceLogger,
 ) error {
 	for _, step := range e.steps {
 		// Execute the step
-		if err := step.Execute(ctx, exec, logStreamInstance); err != nil {
+		if err := step.Execute(ctx, exec, gitspaceLogger); err != nil {
 			// Log the error and decide whether to stop or continue based on stopOnFailure flag
 			if step.StopOnFailure {
 				return fmt.Errorf("error executing step %s: %w (stopping due to failure)", step.Name, err)
 			}
 			// Log that we continue despite the failure
-			if err := logStreamSuccess(logStreamInstance,
-				fmt.Sprintf("Step %s failed:", step.Name)); err != nil {
-				return err
-			}
+			gitspaceLogger.Info(fmt.Sprintf("Step %s failed:", step.Name))
 		}
 	}
 	return nil

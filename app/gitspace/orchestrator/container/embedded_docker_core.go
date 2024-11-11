@@ -22,9 +22,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	orchestratorTypes "github.com/harness/gitness/app/gitspace/orchestrator/types"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/types"
 
@@ -43,19 +43,9 @@ const (
 )
 
 // Helper function to log messages and handle error wrapping.
-func logStreamWrapError(logStreamInstance *logutil.LogStreamInstance, msg string, err error) error {
-	if loggingErr := logStreamInstance.Write(msg + ": " + err.Error()); loggingErr != nil {
-		return fmt.Errorf("original error: %w; logging error: %w", err, loggingErr)
-	}
+func logStreamWrapError(gitspaceLogger orchestratorTypes.GitspaceLogger, msg string, err error) error {
+	gitspaceLogger.Error(msg, err)
 	return fmt.Errorf("%s: %w", msg, err)
-}
-
-// Helper function to log success messages.
-func logStreamSuccess(logStreamInstance *logutil.LogStreamInstance, message string) error {
-	if loggingErr := logStreamInstance.Write(message); loggingErr != nil {
-		return fmt.Errorf("logging error: %w", loggingErr)
-	}
-	return nil
 }
 
 // Generalized Docker Container Management.
@@ -64,32 +54,33 @@ func (e *EmbeddedDockerOrchestrator) manageContainer(
 	action Action,
 	containerName string,
 	dockerClient *client.Client,
-	logStreamInstance *logutil.LogStreamInstance,
+	gitspaceLogger orchestratorTypes.GitspaceLogger,
 ) error {
 	var err error
 	switch action {
 	case ContainerActionStop:
 		err = dockerClient.ContainerStop(ctx, containerName, container.StopOptions{})
 		if err != nil {
-			return logStreamWrapError(logStreamInstance, "Error while stopping container", err)
+			return logStreamWrapError(gitspaceLogger, "Error while stopping container", err)
 		}
-		return logStreamSuccess(logStreamInstance, "Successfully stopped container")
+		gitspaceLogger.Info("Successfully stopped container")
 
 	case ContainerActionStart:
 		err = dockerClient.ContainerStart(ctx, containerName, container.StartOptions{})
 		if err != nil {
-			return logStreamWrapError(logStreamInstance, "Error while starting container", err)
+			return logStreamWrapError(gitspaceLogger, "Error while starting container", err)
 		}
-		return logStreamSuccess(logStreamInstance, "Successfully started container")
+		gitspaceLogger.Info("Successfully started container")
 	case ContainerActionRemove:
 		err = dockerClient.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true})
 		if err != nil {
-			return logStreamWrapError(logStreamInstance, "Error while removing container", err)
+			return logStreamWrapError(gitspaceLogger, "Error while removing container", err)
 		}
-		return logStreamSuccess(logStreamInstance, "Successfully removed container")
+		gitspaceLogger.Info("Successfully removed container")
 	default:
 		return fmt.Errorf("unknown action: %s", action)
 	}
+	return nil
 }
 
 func (e *EmbeddedDockerOrchestrator) containerState(
@@ -118,7 +109,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 	dockerClient *client.Client,
 	imageName string,
 	containerName string,
-	logStreamInstance *logutil.LogStreamInstance,
+	gitspaceLogger orchestratorTypes.GitspaceLogger,
 	volumeName string,
 	homeDir string,
 	portMappings map[int]*types.PortMapping,
@@ -126,10 +117,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 ) error {
 	exposedPorts, portBindings := applyPortMappings(portMappings)
 
-	// Log the creation process
-	if err := logStreamInstance.Write("Creating container: " + containerName); err != nil {
-		return fmt.Errorf("logging error: %w", err)
-	}
+	gitspaceLogger.Info("Creating container: " + containerName)
 
 	hostConfig := prepareHostConfig(volumeName, homeDir, portBindings)
 
@@ -143,7 +131,7 @@ func (e *EmbeddedDockerOrchestrator) createContainer(
 	}
 	_, err := dockerClient.ContainerCreate(ctx, containerConfig, hostConfig, nil, nil, containerName)
 	if err != nil {
-		return logStreamWrapError(logStreamInstance, "Error while creating container", err)
+		return logStreamWrapError(gitspaceLogger, "Error while creating container", err)
 	}
 
 	return nil
@@ -217,11 +205,9 @@ func (e *EmbeddedDockerOrchestrator) pullImage(
 	ctx context.Context,
 	imageName string,
 	dockerClient *client.Client,
-	logStreamInstance *logutil.LogStreamInstance,
+	gitspaceLogger orchestratorTypes.GitspaceLogger,
 ) error {
-	if err := logStreamSuccess(logStreamInstance, "Pulling image: "+imageName); err != nil {
-		return err
-	}
+	gitspaceLogger.Info("Pulling image: " + imageName)
 
 	pullResponse, err := dockerClient.ImagePull(ctx, imageName, image.PullOptions{})
 	defer func() {
@@ -231,16 +217,17 @@ func (e *EmbeddedDockerOrchestrator) pullImage(
 	}()
 
 	if err != nil {
-		return logStreamWrapError(logStreamInstance, "Error while pulling image", err)
+		return logStreamWrapError(gitspaceLogger, "Error while pulling image", err)
 	}
 
 	// Ensure the image has been fully pulled by reading the response
 	output, err := io.ReadAll(pullResponse)
 	if err != nil {
-		return logStreamWrapError(logStreamInstance, "Error while parsing image pull response", err)
+		return logStreamWrapError(gitspaceLogger, "Error while parsing image pull response", err)
 	}
 
-	return logStreamSuccess(logStreamInstance, string(output))
+	gitspaceLogger.Info(string(output))
+	return nil
 }
 
 func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
@@ -251,7 +238,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	infrastructure types.Infrastructure,
 	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
-	logStreamInstance *logutil.LogStreamInstance,
+	gitspaceLogger orchestratorTypes.GitspaceLogger,
 ) error {
 	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
 	containerName := GetGitspaceContainerName(gitspaceConfig)
@@ -263,27 +250,33 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	}
 
 	// Pull the required image
-	if err := e.pullImage(ctx, imageName, dockerClient, logStreamInstance); err != nil {
+	if err := e.pullImage(ctx, imageName, dockerClient, gitspaceLogger); err != nil {
 		return err
 	}
-
-	forwardPorts := ExtractForwardPorts(devcontainerConfig)
 	portMappings := infrastructure.GitspacePortMappings
-	for _, port := range forwardPorts {
-		portMappings[port] = &types.PortMapping{
-			PublishedPort: port,
-			ForwardedPort: port,
+	forwardPorts := ExtractForwardPorts(devcontainerConfig)
+	if len(forwardPorts) > 0 {
+		for _, port := range forwardPorts {
+			portMappings[port] = &types.PortMapping{
+				PublishedPort: port,
+				ForwardedPort: port,
+			}
 		}
+		gitspaceLogger.Info(fmt.Sprintf("Forwarding ports : %v", forwardPorts))
 	}
+
 	storage := infrastructure.Storage
 	environment := ExtractEnv(devcontainerConfig)
+	if len(environment) > 0 {
+		gitspaceLogger.Info(fmt.Sprintf("Setting Environment : %v", environment))
+	}
 	// Create the container
 	err := e.createContainer(
 		ctx,
 		dockerClient,
 		imageName,
 		containerName,
-		logStreamInstance,
+		gitspaceLogger,
 		storage,
 		homeDir,
 		portMappings,
@@ -294,7 +287,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	}
 
 	// Start the container
-	if err := e.manageContainer(ctx, ContainerActionStart, containerName, dockerClient, logStreamInstance); err != nil {
+	if err := e.manageContainer(ctx, ContainerActionStart, containerName, dockerClient, gitspaceLogger); err != nil {
 		return err
 	}
 
@@ -311,7 +304,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	if err := e.setupGitspaceAndIDE(
 		ctx,
 		exec,
-		logStreamInstance,
+		gitspaceLogger,
 		ideService,
 		gitspaceConfig,
 		resolvedRepoDetails,
