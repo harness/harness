@@ -354,7 +354,7 @@ func GetDockerPullCommand(
 }
 
 func GetHelmPullCommand(image string, tag string, registryURL string) string {
-	return "helm install " + GetRepoURLWithoutProtocol(registryURL) + "/" + image + ":" + tag
+	return "helm pull oci://" + GetRepoURLWithoutProtocol(registryURL) + "/" + image + ":" + tag
 }
 
 // CleanURLPath removes leading and trailing spaces and trailing slashes from the given URL string.
