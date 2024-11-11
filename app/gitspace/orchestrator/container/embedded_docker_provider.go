@@ -204,20 +204,20 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 
 	// Set up git credentials if needed
 	if resolvedRepoDetails.Credentials != nil {
-		if err := e.setupGitCredentials(ctx, exec, resolvedRepoDetails, logStreamInstance); err != nil {
+		if err := SetupGitCredentials(ctx, exec, resolvedRepoDetails, e.gitService, logStreamInstance); err != nil {
 			return err
 		}
 	}
 
 	// Run IDE setup
-	if err := e.runIDE(ctx, exec, ideService, logStreamInstance); err != nil {
+	if err := RunIDE(ctx, exec, ideService, logStreamInstance); err != nil {
 		return err
 	}
 
 	// Execute post-start command
 	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
 	command := ExtractCommand(PostStartAction, devcontainerConfig)
-	startErr = e.executeCommand(ctx, exec, codeRepoDir, logStreamInstance, command, PostStartAction)
+	startErr = ExecuteCommand(ctx, exec, codeRepoDir, logStreamInstance, command, PostStartAction)
 	if startErr != nil {
 		log.Warn().Msgf("Error is post-start command, continuing : %s", startErr.Error())
 	}
