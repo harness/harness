@@ -20,3 +20,26 @@ type StartResponse struct {
 	PublishedPorts   map[int]string
 	AbsoluteRepoPath string
 }
+
+type PostAction string
+
+const (
+	PostCreateAction PostAction = "post-create"
+	PostStartAction  PostAction = "post-start"
+)
+
+type State string
+
+const (
+	ContainerStateRunning = State("running")
+	ContainerStateRemoved = State("removed")
+	ContainerStateStopped = State("exited")
+)
+
+type Action string
+
+const (
+	ContainerActionStop   = Action("stop")
+	ContainerActionStart  = Action("start")
+	ContainerActionRemove = Action("remove")
+)

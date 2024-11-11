@@ -14,8 +14,13 @@
 
 package types
 
+import "encoding/json"
+
 // DevcontainerConfig is parsed from code repos and follows the devcontainer.json spec. It uses camelCase.
 type DevcontainerConfig struct {
-	Image             string `json:"image"`
-	PostCreateCommand string `json:"postCreateCommand"` //nolint:tagliatelle
+	Image             string            `json:"image"`
+	PostCreateCommand string            `json:"postCreateCommand"` //nolint:tagliatelle
+	PostStartCommand  string            `json:"postStartCommand"`  //nolint:tagliatelle
+	ForwardPorts      []json.Number     `json:"forwardPorts"`      //nolint:tagliatelle
+	ContainerEnv      map[string]string `json:"containerEnv"`      //nolint:tagliatelle
 }
