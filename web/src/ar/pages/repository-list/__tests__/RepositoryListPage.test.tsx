@@ -134,7 +134,6 @@ describe('Test Registry List Page', () => {
         queryParams: {
           package_type: [],
           page: 0,
-          search_term: '',
           size: 50,
           sort_field: 'updatedAt',
           sort_order: 'DESC'

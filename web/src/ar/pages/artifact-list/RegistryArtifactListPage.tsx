@@ -78,10 +78,10 @@ function RegistryArtifactListPage({ pageBodyClassName }: RegistryArtifactListPag
   const handleClearAllFilters = (): void => {
     flushSync(searchRef.current.clear)
     updateQueryParams({
-      page: 0,
-      searchTerm: '',
-      packageTypes: [],
-      isDeployedArtifacts: false
+      page: undefined,
+      searchTerm: undefined,
+      packageTypes: undefined,
+      isDeployedArtifacts: undefined
     })
   }
 
@@ -96,7 +96,7 @@ function RegistryArtifactListPage({ pageBodyClassName }: RegistryArtifactListPag
     [labels]
   )
 
-  const hasFilter = !!searchTerm || packageTypes.length || isDeployedArtifacts
+  const hasFilter = !!searchTerm || packageTypes?.length || isDeployedArtifacts
   const responseData = data?.content?.data
 
   return (

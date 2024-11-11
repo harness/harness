@@ -79,7 +79,7 @@ function ArtifactListPage(): JSX.Element {
       search_term: searchTerm,
       sort_field: sortField,
       sort_order: sortOrder,
-      reg_identifier: repositoryKey ? [repositoryKey] : undefined,
+      reg_identifier: repositoryKey,
       latest_version: latestVersion,
       deployed_artifact: isDeployedArtifacts,
       package_type: packageTypes,
@@ -93,14 +93,17 @@ function ArtifactListPage(): JSX.Element {
   const handleClearAllFilters = (): void => {
     flushSync(searchRef.current.clear)
     updateQueryParams({
-      page: 0,
-      searchTerm: '',
-      isDeployedArtifacts: false,
-      latestVersion: false
+      page: undefined,
+      searchTerm: undefined,
+      isDeployedArtifacts: undefined,
+      latestVersion: undefined,
+      packageTypes: undefined,
+      repositoryKey: undefined
     })
   }
 
-  const hasFilter = !!searchTerm || isDeployedArtifacts || latestVersion
+  const hasFilter =
+    !!searchTerm || isDeployedArtifacts || latestVersion || repositoryKey?.length || packageTypes?.length
   const responseData = data?.content?.data
 
   return (

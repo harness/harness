@@ -81,13 +81,14 @@ function RepositoryListPage(): JSX.Element {
   const handleClearFilters = (): void => {
     flushSync(searchRef.current.clear)
     updateQueryParams({
-      page: 0,
-      searchTerm: '',
-      repositoryTypes: []
+      page: undefined,
+      searchTerm: undefined,
+      repositoryTypes: undefined,
+      configType: undefined
     })
   }
 
-  const hasFilter = !!searchTerm || repositoryTypes.length
+  const hasFilter = !!searchTerm || repositoryTypes?.length || configType?.length
 
   const responseData = data?.content.data
 
