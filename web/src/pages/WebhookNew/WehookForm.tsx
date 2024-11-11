@@ -63,6 +63,7 @@ interface FormData {
   prClosed: boolean
   prCommentCreated: boolean
   prMerged: boolean
+  prLabelAssigned: boolean
 }
 
 interface WebHookFormProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -115,6 +116,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             prClosed: webhook?.triggers?.includes(WebhookIndividualEvent.PR_CLOSED) || false,
             prCommentCreated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_COMMENT_CREATED) || false,
             prMerged: webhook?.triggers?.includes(WebhookIndividualEvent.PR_MERGED) || false,
+            prLabelAssigned: webhook?.triggers?.includes(WebhookIndividualEvent.PR_LABEL_ASSIGNED) || false,
             events: (webhook?.triggers?.length || 0) > 0 ? WebhookEventType.INDIVIDUAL : WebhookEventType.ALL
           }}
           formName="create-webhook-form"
@@ -169,6 +171,9 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
               }
               if (formData.prMerged) {
                 triggers.push(WebhookIndividualEvent.PR_MERGED)
+              }
+              if (formData.prLabelAssigned) {
+                triggers.push(WebhookIndividualEvent.PR_LABEL_ASSIGNED)
               }
               if (!triggers.length) {
                 return showError(getString('oneMustBeSelected'))
@@ -316,6 +321,11 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                         <FormInput.CheckBox
                           label={getString('webhookPRMerged')}
                           name="prMerged"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookPRLabelAssigned')}
+                          name="prLabelAssigned"
                           className={css.checkbox}
                         />
                       </section>

@@ -1185,6 +1185,7 @@ export interface StringsMap {
   webhookPRClosed: string
   webhookPRCommentCreated: string
   webhookPRCreated: string
+  webhookPRLabelAssigned: string
   webhookPRMerged: string
   webhookPRReopened: string
   webhookPRUpdated: string

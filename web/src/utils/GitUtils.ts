@@ -610,7 +610,8 @@ export enum WebhookIndividualEvent {
   PR_BRANCH_UPDATED = 'pullreq_branch_updated',
   PR_CLOSED = 'pullreq_closed',
   PR_COMMENT_CREATED = 'pullreq_comment_created',
-  PR_MERGED = 'pullreq_merged'
+  PR_MERGED = 'pullreq_merged',
+  PR_LABEL_ASSIGNED = 'pullreq_label_assigned'
 }
 
 export enum WebhookEventMap {
@@ -626,7 +627,8 @@ export enum WebhookEventMap {
   PR_BRANCH_UPDATED = 'PR branch updated',
   PR_CLOSED = 'PR closed',
   PR_COMMENT_CREATED = 'PR comment created',
-  PR_MERGED = 'PR merged'
+  PR_MERGED = 'PR merged',
+  PR_LABEL_ASSIGNED = 'PR label assigned'
 }
 
 export const eventMapping: Record<WebhookIndividualEvent, WebhookEventMap> = {
@@ -642,7 +644,8 @@ export const eventMapping: Record<WebhookIndividualEvent, WebhookEventMap> = {
   [WebhookIndividualEvent.PR_BRANCH_UPDATED]: WebhookEventMap.PR_BRANCH_UPDATED,
   [WebhookIndividualEvent.PR_CLOSED]: WebhookEventMap.PR_CLOSED,
   [WebhookIndividualEvent.PR_COMMENT_CREATED]: WebhookEventMap.PR_COMMENT_CREATED,
-  [WebhookIndividualEvent.PR_MERGED]: WebhookEventMap.PR_MERGED
+  [WebhookIndividualEvent.PR_MERGED]: WebhookEventMap.PR_MERGED,
+  [WebhookIndividualEvent.PR_LABEL_ASSIGNED]: WebhookEventMap.PR_LABEL_ASSIGNED
 }
 
 export function getEventDescription(event: WebhookIndividualEvent): string {
