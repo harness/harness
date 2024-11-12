@@ -24,3 +24,4 @@ export { useDeepCompareEffect, useDeepCompareMemo } from './useDeepCompareEffect
 export { useGetSpaceRef } from './useGetSpaceRef'
 export { useParentContextObj } from './useParentContextObj'
 export { useLicenseStore } from './useLicenseStore'
+export { useFeatureFlags, useFeatureFlag } from './useFeatureFlag'

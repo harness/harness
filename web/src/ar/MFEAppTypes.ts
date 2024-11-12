@@ -60,9 +60,11 @@ export interface PermissionsRequest {
   [key: string]: unknown
 }
 
+export type FeatureFlagMap = Partial<Record<FeatureFlags, boolean>>
+
 export interface AppstoreContext {
   updateAppStore: (value: Record<string, unknown>) => void
-  featureFlags: Record<string, boolean>
+  featureFlags: FeatureFlagMap
 }
 
 export interface ParentContextObj {
@@ -127,4 +129,8 @@ export interface MFEAppProps {
   hooks: Hooks
   parent: Parent
   routingId?: string
+}
+
+export enum FeatureFlags {
+  HAR_GENERIC_ARTIFACT_ENABLED = 'HAR_GENERIC_ARTIFACT_ENABLED'
 }
