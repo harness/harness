@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 )
@@ -80,13 +81,16 @@ func NewOrchestrator(
 func (o orchestrator) TriggerStartGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-) error {
+) *types.GitspaceError {
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerStart)
 	scmResolvedDetails, err := o.scm.GetSCMRepoDetails(ctx, gitspaceConfig)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerFailed)
-		return fmt.Errorf(
-			"failed to fetch code repo details for gitspace config ID %w %d", err, gitspaceConfig.ID)
+		return &types.GitspaceError{
+			Error: fmt.Errorf("failed to fetch code repo details for gitspace config ID %d: %w",
+				gitspaceConfig.ID, err),
+			ErrorMessage: ptr.String(err.Error()),
+		}
 	}
 	devcontainerConfig := scmResolvedDetails.DevcontainerConfig
 
@@ -94,7 +98,11 @@ func (o orchestrator) TriggerStartGitspace(
 
 	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig, devcontainerConfig)
 	if err != nil {
-		return fmt.Errorf("cannot get the ports required for gitspace during start: %w", err)
+		err = fmt.Errorf("cannot get the ports required for gitspace during start: %w", err)
+		return &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningStart)
@@ -102,9 +110,11 @@ func (o orchestrator) TriggerStartGitspace(
 	err = o.infraProvisioner.TriggerProvision(ctx, gitspaceConfig, requiredGitspacePorts)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
-
-		return fmt.Errorf(
-			"cannot trigger provision infrastructure for ID %s: %w", gitspaceConfig.InfraProviderResource.UID, err)
+		return &types.GitspaceError{
+			Error: fmt.Errorf("cannot trigger provision infrastructure for ID %s: %w",
+				gitspaceConfig.InfraProviderResource.UID, err),
+			ErrorMessage: ptr.String(err.Error()), // TODO: Fetch explicit error msg from infra provisioner.
+		}
 	}
 
 	return nil
@@ -113,20 +123,26 @@ func (o orchestrator) TriggerStartGitspace(
 func (o orchestrator) TriggerStopGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
-) error {
+) *types.GitspaceError {
 	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig,
 		[]enum.InfraStatus{enum.InfraStatusProvisioned, enum.InfraStatusStopped})
 	if err != nil {
-		return fmt.Errorf(
-			"unable to find provisioned infra while triggering stop for gitspace instance %s: %w",
-			gitspaceConfig.GitspaceInstance.Identifier, err)
+		infraNotFoundErr := fmt.Errorf("unable to find provisioned infra while triggering stop for gitspace "+
+			"instance %s: %w", gitspaceConfig.GitspaceInstance.Identifier, err)
+		return &types.GitspaceError{
+			Error:        infraNotFoundErr,
+			ErrorMessage: ptr.String(infraNotFoundErr.Error()), // TODO: Fetch explicit error msg
+		}
 	}
 	if gitspaceConfig.GitspaceInstance.State == enum.GitspaceInstanceStateRunning ||
 		gitspaceConfig.GitspaceInstance.State == enum.GitspaceInstanceStateStopping {
 		err = o.stopGitspaceContainer(ctx, gitspaceConfig, *infra)
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return &types.GitspaceError{
+				Error:        err,
+				ErrorMessage: ptr.String(err.Error()), // TODO: Fetch explicit error msg
+			}
+		}
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopStart)
@@ -134,9 +150,12 @@ func (o orchestrator) TriggerStopGitspace(
 	err = o.infraProvisioner.TriggerStop(ctx, gitspaceConfig.InfraProviderResource, *infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
-
-		return fmt.Errorf(
-			"cannot trigger stop infrastructure with ID %s: %w", gitspaceConfig.InfraProviderResource.UID, err)
+		infraStopErr := fmt.Errorf("cannot trigger stop infrastructure with ID %s: %w",
+			gitspaceConfig.InfraProviderResource.UID, err)
+		return &types.GitspaceError{
+			Error:        infraStopErr,
+			ErrorMessage: ptr.String(infraStopErr.Error()), // TODO: Fetch explicit error msg
+		}
 	}
 
 	return nil

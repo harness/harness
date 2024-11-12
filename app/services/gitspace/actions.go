@@ -61,7 +61,7 @@ func (c *Service) submitAsyncOps(
 	config *types.GitspaceConfig,
 	action enum.GitspaceActionType,
 ) {
-	errChannel := make(chan error)
+	errChannel := make(chan *types.GitspaceError)
 
 	submitCtx := context.WithoutCancel(ctx)
 	gitspaceTimedOutInMins := time.Duration(c.config.Gitspace.ProvisionTimeoutInMins) * time.Minute
@@ -69,20 +69,22 @@ func (c *Service) submitAsyncOps(
 
 	go c.asyncOperation(ttlExecuteContext, *config, action, errChannel)
 
-	var err error
+	var err *types.GitspaceError
 
 	go func() {
 		select {
 		case <-ttlExecuteContext.Done():
 			if ttlExecuteContext.Err() != nil {
-				err = ttlExecuteContext.Err()
+				err = &types.GitspaceError{
+					Error: ttlExecuteContext.Err(),
+				}
 			}
 		case err = <-errChannel:
 		}
 		if err != nil {
-			log.Err(err).Msgf("error during async execution for %s", config.GitspaceInstance.Identifier)
-
+			log.Err(err.Error).Msgf("error during async execution for %s", config.GitspaceInstance.Identifier)
 			config.GitspaceInstance.State = enum.GitspaceInstanceStateError
+			config.GitspaceInstance.ErrorMessage = err.ErrorMessage
 			updateErr := c.UpdateInstance(submitCtx, config.GitspaceInstance)
 			if updateErr != nil {
 				log.Err(updateErr).Msgf(
@@ -105,11 +107,11 @@ func (c *Service) asyncOperation(
 	ctxWithTimedOut context.Context,
 	config types.GitspaceConfig,
 	action enum.GitspaceActionType,
-	errChannel chan error,
+	errChannel chan *types.GitspaceError,
 ) {
 	defer close(errChannel)
 
-	var orchestrateErr error
+	var orchestrateErr *types.GitspaceError
 
 	switch action {
 	case enum.GitspaceActionTypeStart:
@@ -117,7 +119,7 @@ func (c *Service) asyncOperation(
 		err := c.UpdateInstance(ctxWithTimedOut, config.GitspaceInstance)
 		if err != nil {
 			log.Err(err).Msgf(
-				"failed to update gitspace instance during exec %q", config.GitspaceInstance.Identifier)
+				"failed to update gitspace instance during exec %s", config.GitspaceInstance.Identifier)
 		}
 		orchestrateErr = c.orchestrator.TriggerStartGitspace(ctxWithTimedOut, config)
 	case enum.GitspaceActionTypeStop:
@@ -125,13 +127,15 @@ func (c *Service) asyncOperation(
 		err := c.UpdateInstance(ctxWithTimedOut, config.GitspaceInstance)
 		if err != nil {
 			log.Err(err).Msgf(
-				"failed to update gitspace instance during exec %q", config.GitspaceInstance.Identifier)
+				"failed to update gitspace instance during exec %s", config.GitspaceInstance.Identifier)
 		}
 		orchestrateErr = c.orchestrator.TriggerStopGitspace(ctxWithTimedOut, config)
 	}
 
 	if orchestrateErr != nil {
-		errChannel <- fmt.Errorf("failed to start/stop gitspace: %s %w", config.Identifier, orchestrateErr)
+		orchestrateErr.Error =
+			fmt.Errorf("failed to start/stop gitspace: %s %w", config.Identifier, orchestrateErr.Error)
+		errChannel <- orchestrateErr
 	}
 }
 

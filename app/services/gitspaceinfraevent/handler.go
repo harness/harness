@@ -69,8 +69,8 @@ func (s *Service) handleGitspaceInfraEvent(
 		updatedInstance, resumeStartErr := s.orchestrator.ResumeStartGitspace(ctx, *config, payload.Infra)
 		if resumeStartErr != nil {
 			s.emitGitspaceConfigEvent(ctx, config, enum.GitspaceEventTypeGitspaceActionStartFailed)
-
-			err = fmt.Errorf("failed to resume start gitspace: %w", resumeStartErr)
+			updatedInstance.ErrorMessage = resumeStartErr.ErrorMessage
+			err = fmt.Errorf("failed to resume start gitspace: %w", resumeStartErr.Error)
 		}
 
 		instance = &updatedInstance
@@ -79,8 +79,8 @@ func (s *Service) handleGitspaceInfraEvent(
 		instanceState, resumeStopErr := s.orchestrator.ResumeStopGitspace(ctx, *config, payload.Infra)
 		if resumeStopErr != nil {
 			s.emitGitspaceConfigEvent(ctx, config, enum.GitspaceEventTypeGitspaceActionStopFailed)
-
-			err = fmt.Errorf("failed to resume stop gitspace: %w", resumeStopErr)
+			instance.ErrorMessage = resumeStopErr.ErrorMessage
+			err = fmt.Errorf("failed to resume stop gitspace: %w", resumeStopErr.Error)
 		}
 
 		instance.State = instanceState

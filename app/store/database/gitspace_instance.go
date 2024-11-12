@@ -54,7 +54,8 @@ const (
         gits_last_heartbeat,
 		gits_active_time_started,
 		gits_active_time_ended,
-		gits_has_git_changes`
+		gits_has_git_changes,
+		gits_error_message`
 	gitspaceInstanceSelectColumns = "gits_id," + gitspaceInstanceInsertColumns
 	gitspaceInstanceTable         = `gitspaces`
 )
@@ -80,6 +81,7 @@ type gitspaceInstance struct {
 	ActiveTimeStarted null.Int                `db:"gits_active_time_started"`
 	ActiveTimeEnded   null.Int                `db:"gits_active_time_ended"`
 	HasGitChanges     null.Bool               `db:"gits_has_git_changes"`
+	ErrorMessage      null.String             `db:"gits_error_message"`
 }
 
 // NewGitspaceInstanceStore returns a new GitspaceInstanceStore.
@@ -213,6 +215,7 @@ func (g gitspaceInstanceStore) Create(ctx context.Context, gitspaceInstance *typ
 			gitspaceInstance.ActiveTimeStarted,
 			gitspaceInstance.ActiveTimeEnded,
 			gitspaceInstance.HasGitChanges,
+			gitspaceInstance.ErrorMessage,
 		).
 		Suffix(ReturningClause + "gits_id")
 	sql, args, err := stmt.ToSql()
@@ -242,6 +245,7 @@ func (g gitspaceInstanceStore) Update(
 		Set("gits_active_time_ended", gitspaceInstance.ActiveTimeEnded).
 		Set("gits_total_time_used", gitspaceInstance.TotalTimeUsed).
 		Set("gits_has_git_changes", gitspaceInstance.HasGitChanges).
+		Set("gits_error_message", gitspaceInstance.ErrorMessage).
 		Set("gits_updated", gitspaceInstance.Updated).
 		Where("gits_id = ?", gitspaceInstance.ID)
 	sql, args, err := stmt.ToSql()
@@ -408,6 +412,7 @@ func mapDBToGitspaceInstance(
 		ActiveTimeEnded:   in.ActiveTimeEnded.Ptr(),
 		ActiveTimeStarted: in.ActiveTimeStarted.Ptr(),
 		HasGitChanges:     in.HasGitChanges.Ptr(),
+		ErrorMessage:      in.ErrorMessage.Ptr(),
 	}
 	return res, nil
 }
@@ -443,18 +448,24 @@ func validateActiveTimeDetails(gitspaceInstance *types.GitspaceInstance) {
 			gitspaceInstance.TotalTimeUsed != 0) {
 		log.Warn().Msgf(
 			"instance is missing active time start or has incorrect end/total timestamps, details: "+
-				" identifier %s state %s active time start %d active time end %d total time used %d",
+				" identifier %s state %s active time start %d active time end %d total time used %d", // nolint:goconst
 			gitspaceInstance.Identifier, gitspaceInstance.State, gitspaceInstance.ActiveTimeStarted,
 			gitspaceInstance.ActiveTimeEnded, gitspaceInstance.TotalTimeUsed)
 	}
 	if (gitspaceInstance.State == enum.GitspaceInstanceStateDeleted ||
-		gitspaceInstance.State == enum.GitspaceInstanceStateStopping ||
-		gitspaceInstance.State == enum.GitspaceInstanceStateError) &&
+		gitspaceInstance.State == enum.GitspaceInstanceStateStopping) &&
 		(gitspaceInstance.ActiveTimeStarted == nil ||
 			gitspaceInstance.ActiveTimeEnded == nil ||
 			gitspaceInstance.TotalTimeUsed == 0) {
 		log.Warn().Msgf("instance is missing active time start/end/total timestamp, details: "+
-			" identifier %s state %s active time start %d active time end %d total time used %d",
+			" identifier %s state %s active time start %d active time end %d total time used %d", // nolint:goconst
+			gitspaceInstance.Identifier, gitspaceInstance.State, gitspaceInstance.ActiveTimeStarted,
+			gitspaceInstance.ActiveTimeEnded, gitspaceInstance.TotalTimeUsed)
+	}
+	if gitspaceInstance.State == enum.GitspaceInstanceStateError &&
+		(gitspaceInstance.ActiveTimeStarted == nil) != (gitspaceInstance.ActiveTimeEnded == nil) {
+		log.Warn().Msgf("instance has incorrect active time start/end/total timestamp, details: "+
+			" identifier %s state %s active time start %d active time end %d total time used %d", // nolint:goconst
 			gitspaceInstance.Identifier, gitspaceInstance.State, gitspaceInstance.ActiveTimeStarted,
 			gitspaceInstance.ActiveTimeEnded, gitspaceInstance.TotalTimeUsed)
 	}

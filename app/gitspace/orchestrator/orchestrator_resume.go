@@ -30,6 +30,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/rs/zerolog/log"
 )
 
@@ -37,19 +38,25 @@ func (o orchestrator) ResumeStartGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	provisionedInfra types.Infrastructure,
-) (types.GitspaceInstance, error) {
+) (types.GitspaceInstance, *types.GitspaceError) {
 	gitspaceInstance := gitspaceConfig.GitspaceInstance
 	gitspaceInstance.State = enum.GitspaceInstanceStateError
 
 	secretResolver, err := o.getSecretResolver(gitspaceInstance.AccessType)
 	if err != nil {
 		log.Err(err).Msgf("could not find secret resolver for type: %s", gitspaceInstance.AccessType)
-		return *gitspaceInstance, err
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
 	}
 	rootSpaceID, _, err := paths.DisectRoot(gitspaceConfig.SpacePath)
 	if err != nil {
 		log.Err(err).Msgf("unable to find root space id from space path: %s", gitspaceConfig.SpacePath)
-		return *gitspaceInstance, err
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
 	}
 	resolvedSecret, err := secretResolver.Resolve(ctx, secret.ResolutionContext{
 		UserIdentifier:     gitspaceConfig.GitspaceUser.Identifier,
@@ -60,13 +67,19 @@ func (o orchestrator) ResumeStartGitspace(
 	if err != nil {
 		log.Err(err).Msgf("could not resolve secret type: %s, ref: %s",
 			gitspaceInstance.AccessType, *gitspaceInstance.AccessKeyRef)
-		return *gitspaceInstance, err
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
 	}
 	gitspaceInstance.AccessKey = &resolvedSecret.SecretValue
 
 	ideSvc, err := o.getIDEService(gitspaceConfig)
 	if err != nil {
-		return *gitspaceInstance, err
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        err,
+			ErrorMessage: ptr.String(err.Error()),
+		}
 	}
 
 	idePort := ideSvc.Port()
@@ -75,35 +88,47 @@ func (o orchestrator) ResumeStartGitspace(
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 
-		return *gitspaceInstance, fmt.Errorf(
-			"cannot provision infrastructure for ID %s: %w", gitspaceConfig.InfraProviderResource.UID, err)
+		return *gitspaceInstance, &types.GitspaceError{
+			Error: fmt.Errorf("cannot provision infrastructure for ID %s: %w",
+				gitspaceConfig.InfraProviderResource.UID, err),
+			ErrorMessage: ptr.String(err.Error()),
+		}
 	}
 
 	if provisionedInfra.Status != enum.InfraStatusProvisioned {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
-
-		return *gitspaceInstance, fmt.Errorf(
+		infraStateErr := fmt.Errorf(
 			"infra state is %v, should be %v for gitspace instance identifier %s",
 			provisionedInfra.Status,
 			enum.InfraStatusProvisioned,
 			gitspaceConfig.GitspaceInstance.Identifier,
 		)
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        infraStateErr,
+			ErrorMessage: ptr.String(infraStateErr.Error()),
+		}
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningCompleted)
 
 	scmResolvedDetails, err := o.scm.GetSCMRepoDetails(ctx, gitspaceConfig)
 	if err != nil {
-		return *gitspaceInstance, fmt.Errorf(
-			"failed to fetch code repo details for gitspace config ID %w %d", err, gitspaceConfig.ID)
+		return *gitspaceInstance, &types.GitspaceError{
+			Error: fmt.Errorf("failed to fetch code repo details for gitspace config ID %d: %w",
+				gitspaceConfig.ID, err),
+			ErrorMessage: ptr.String(err.Error()),
+		}
 	}
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectStart)
 
 	err = o.containerOrchestrator.Status(ctx, provisionedInfra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectFailed)
-
-		return *gitspaceInstance, fmt.Errorf("couldn't call the agent health API: %w", err)
+		agentUnreachableErr := fmt.Errorf("couldn't call the agent health API: %w", err)
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        agentUnreachableErr,
+			ErrorMessage: ptr.String(agentUnreachableErr.Error()),
+		}
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentConnectCompleted)
@@ -118,7 +143,10 @@ func (o orchestrator) ResumeStartGitspace(
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationFailed)
 
-		return *gitspaceInstance, fmt.Errorf("couldn't call the agent start API: %w", err)
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        fmt.Errorf("couldn't call the agent start API: %w", err),
+			ErrorMessage: ptr.String(err.Error()), // TODO: Fetch explicit error msg from container orchestrator
+		}
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationCompleted)
@@ -200,26 +228,32 @@ func (o orchestrator) ResumeStopGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	stoppedInfra types.Infrastructure,
-) (enum.GitspaceInstanceStateType, error) {
+) (enum.GitspaceInstanceStateType, *types.GitspaceError) {
 	instanceState := enum.GitspaceInstanceStateError
 
 	err := o.infraProvisioner.ResumeStop(ctx, gitspaceConfig, stoppedInfra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
-
-		return instanceState, fmt.Errorf(
-			"cannot stop provisioned infrastructure with ID %s: %w", gitspaceConfig.InfraProviderResource.UID, err)
+		infraStopErr := fmt.Errorf("cannot stop provisioned infrastructure with ID %s: %w",
+			gitspaceConfig.InfraProviderResource.UID, err)
+		return instanceState, &types.GitspaceError{
+			Error:        infraStopErr,
+			ErrorMessage: ptr.String(infraStopErr.Error()), // TODO: Fetch explicit error msg
+		}
 	}
 
 	if stoppedInfra.Status != enum.InfraStatusDestroyed &&
 		stoppedInfra.Status != enum.InfraStatusStopped {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
-
-		return instanceState, fmt.Errorf(
+		incorrectInfraStateErr := fmt.Errorf(
 			"infra state is %v, should be %v for gitspace instance identifier %s",
 			stoppedInfra.Status,
 			enum.InfraStatusDestroyed,
 			gitspaceConfig.GitspaceInstance.Identifier)
+		return instanceState, &types.GitspaceError{
+			Error:        incorrectInfraStateErr,
+			ErrorMessage: ptr.String(incorrectInfraStateErr.Error()), // TODO: Fetch explicit error msg
+		}
 	}
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopCompleted)

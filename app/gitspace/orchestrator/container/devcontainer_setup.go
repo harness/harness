@@ -226,7 +226,11 @@ func PullImage(
 
 	pullResponse, err := dockerClient.ImagePull(ctx, imageName, image.PullOptions{})
 	defer func() {
-		if closingErr := pullResponse.Close(); closingErr != nil {
+		if pullResponse == nil {
+			return
+		}
+		closingErr := pullResponse.Close()
+		if closingErr != nil {
 			log.Warn().Err(closingErr).Msg("failed to close image pull response")
 		}
 	}()

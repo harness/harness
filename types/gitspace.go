@@ -78,6 +78,7 @@ type GitspaceInstance struct {
 	ActiveTimeStarted *int64                         `json:"active_time_started,omitempty"`
 	ActiveTimeEnded   *int64                         `json:"active_time_ended,omitempty"`
 	HasGitChanges     *bool                          `json:"has_git_changes,omitempty"`
+	ErrorMessage      *string                        `json:"error_message,omitempty"`
 }
 
 type GitspaceFilter struct {
