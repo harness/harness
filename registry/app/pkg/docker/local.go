@@ -78,7 +78,7 @@ const (
 const (
 	manifestListCreateGCReviewWindow = 1 * time.Hour
 	manifestListCreateGCLockTimeout  = 10 * time.Second
-	manifestTagGCLockTimeout         = 10 * time.Second
+	manifestTagGCLockTimeout         = 30 * time.Second
 	tagDeleteGCLockTimeout           = 10 * time.Second
 	manifestTagGCReviewWindow        = 1 * time.Hour
 	manifestDeleteGCReviewWindow     = 1 * time.Hour
