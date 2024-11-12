@@ -23,13 +23,13 @@ func NewZerologAdapter(logger *zerolog.Logger) *ZerologAdapter {
 
 // Implement the Logger interface for ZerologAdapter.
 func (z *ZerologAdapter) Info(msg string) {
-	z.logger.Info().Msg(msg)
+	z.logger.Info().Msg("INFO: " + msg)
 }
 
 func (z *ZerologAdapter) Debug(msg string) {
-	z.logger.Debug().Msg(msg)
+	z.logger.Debug().Msg("DEBUG: " + msg)
 }
 
 func (z *ZerologAdapter) Error(msg string, err error) {
-	z.logger.Err(err).Msg(msg)
+	z.logger.Err(err).Msg("ERROR: " + msg)
 }
