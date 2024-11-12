@@ -1,9 +1,9 @@
 # docker build --rm -f docker/Dockerfile -t drone/drone .
 
-FROM alpine:3.11 as alpine
+FROM alpine:3.20 as alpine
 RUN apk add -U --no-cache ca-certificates tzdata
 
-FROM alpine:3.11
+FROM alpine:3.20
 EXPOSE 80 443
 VOLUME /data
 
