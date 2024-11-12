@@ -121,7 +121,8 @@ func (o orchestrator) TriggerStopGitspace(
 			"unable to find provisioned infra while triggering stop for gitspace instance %s: %w",
 			gitspaceConfig.GitspaceInstance.Identifier, err)
 	}
-	if gitspaceConfig.GitspaceInstance.State == enum.GitspaceInstanceStateRunning {
+	if gitspaceConfig.GitspaceInstance.State == enum.GitspaceInstanceStateRunning ||
+		gitspaceConfig.GitspaceInstance.State == enum.GitspaceInstanceStateStopping {
 		err = o.stopGitspaceContainer(ctx, gitspaceConfig, *infra)
 	}
 	if err != nil {

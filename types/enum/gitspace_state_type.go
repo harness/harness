@@ -62,12 +62,8 @@ func GetGitspaceStateFromInstance(
 			return GitspaceStateError, nil
 		}
 		return GitspaceStateStarting, nil
-	case GitspaceInstanceStateStopping:
-		if lastUpdateTimeExceeded(lastUpdateTime) {
-			return GitspaceStateError, nil
-		}
-		return GitspaceStateStopping, nil
-	case GitSpaceInstanceStateCleaning:
+	case GitspaceInstanceStateStopping,
+		GitSpaceInstanceStateCleaning:
 		if lastUpdateTimeExceeded(lastUpdateTime) {
 			return GitspaceStateError, nil
 		}
