@@ -610,7 +610,15 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
   )
 }
 
-export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig[]; refreshList: () => void }) => {
+export const ListGitspaces = ({
+  data,
+  refreshList,
+  hasFilter
+}: {
+  data: TypesGitspaceConfig[]
+  refreshList: () => void
+  hasFilter: boolean
+}) => {
   const history = useHistory()
   const { getString } = useStrings()
   const { routes, standalone } = useAppContext()
@@ -700,7 +708,7 @@ export const ListGitspaces = ({ data, refreshList }: { data: TypesGitspaceConfig
 
   return (
     <Container>
-      {data && (
+      {(data || hasFilter) && (
         <TableV2<TypesGitspaceConfig>
           className={standalone ? css.table : css.cdeTable}
           onRowClick={row => {

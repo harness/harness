@@ -17,16 +17,22 @@
 import { useGet } from 'restful-react'
 import { useEffect } from 'react'
 import type { TypesGitspaceConfig } from 'cde-gitness/services'
-import { LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { useAppContext } from 'AppContext'
 import { useListGitspaces } from 'services/cde'
 import { useQueryParams } from 'hooks/useQueryParams'
 
-export const useLisitngApi = ({ page }: { page: number }) => {
+interface pageCDEBrowser {
+  page?: string
+  gitspace_states?: string
+  gitspace_owner?: string
+}
+
+export const useLisitngApi = ({ page, filter }: { page: number; filter: any }) => {
   const { standalone } = useAppContext()
 
-  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageBrowser = useQueryParams<pageCDEBrowser>()
   const { accountIdentifier = '', orgIdentifier = '', projectIdentifier = '', space } = useGetCDEAPIParams()
 
   const gitness = useGet<TypesGitspaceConfig[]>({
@@ -43,7 +49,15 @@ export const useLisitngApi = ({ page }: { page: number }) => {
   // })
 
   const cde = useListGitspaces({
-    queryParams: { page, limit: LIST_FETCHING_LIMIT },
+    queryParams: {
+      page,
+      limit: LIST_FETCHING_LIMIT,
+      gitspace_owner: filter.gitspace_owner || undefined,
+      gitspace_states: filter.gitspace_states.length ? filter.gitspace_states : undefined
+    },
+    queryParamStringifyOptions: {
+      arrayFormat: 'repeat'
+    },
     accountIdentifier,
     orgIdentifier,
     projectIdentifier,
@@ -54,9 +68,21 @@ export const useLisitngApi = ({ page }: { page: number }) => {
     if (standalone) {
       gitness.refetch({ queryParams: { ...pageBrowser, page, limit: LIST_FETCHING_LIMIT } })
     } else {
-      cde.refetch({ queryParams: { ...pageBrowser, page, limit: LIST_FETCHING_LIMIT } })
+      const queryParams = {
+        ...pageBrowser,
+        page,
+        limit: LIST_FETCHING_LIMIT,
+        gitspace_owner: filter.gitspace_owner || undefined,
+        gitspace_states: filter.gitspace_states.length ? filter.gitspace_states : undefined
+      }
+      cde.refetch({
+        queryParams,
+        queryParamStringifyOptions: {
+          arrayFormat: 'repeat'
+        }
+      })
     }
-  }, [page])
+  }, [page, filter])
 
   return standalone ? gitness : cde
 }

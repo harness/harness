@@ -1256,6 +1256,11 @@ export interface StringsMap {
   'cde.eventTimeline': string
   'cde.getStarted': string
   'cde.gitspaceDetail': string
+  'cde.gitspaceOwners.allGitspaces': string
+  'cde.gitspaceOwners.myGitspaces': string
+  'cde.gitspaceStatus.error': string
+  'cde.gitspaceStatus.running': string
+  'cde.gitspaceStatus.stopped': string
   'cde.gitspaceUpdateSuccess': string
   'cde.gitspaces': string
   'cde.hasChange': string
@@ -1299,6 +1304,7 @@ export interface StringsMap {
   'cde.noGitspaces': string
   'cde.noRepo': string
   'cde.or': string
+  'cde.owners': string
   'cde.region': string
   'cde.regionMachineType': string
   'cde.regionSelectWarning': string

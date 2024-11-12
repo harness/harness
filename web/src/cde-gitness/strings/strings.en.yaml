@@ -136,3 +136,11 @@ renewTooltip:
   line2: The amount is reset after every 30 days
   haveQuestion: Have questions ?
   contactUs: Contact Us
+gitspaceStatus:
+  running: Running
+  stopped: Stopped
+  error: Error
+owners: Owners
+gitspaceOwners:
+  allGitspaces: All Gitspaces
+  myGitspaces: Only My Gitspaces

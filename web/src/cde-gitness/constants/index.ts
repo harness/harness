@@ -38,6 +38,47 @@ export enum GitspaceStatus {
   UNINITIALIZED = 'uninitialized'
 }
 
+export interface GitspaceStatusTypesListItem {
+  label: string
+  value: GitspaceStatus
+}
+
+export const GitspaceStatusTypes = (getString: any) => [
+  {
+    label: getString('cde.gitspaceStatus.error'),
+    value: GitspaceStatus.ERROR
+  },
+  {
+    label: getString('cde.gitspaceStatus.running'),
+    value: GitspaceStatus.RUNNING
+  },
+  {
+    label: getString('cde.gitspaceStatus.stopped'),
+    value: GitspaceStatus.STOPPED
+  }
+]
+
+export enum GitspaceOwnerType {
+  SELF = 'self',
+  ALL = 'all'
+}
+
+export interface GitspaceOwnerTypeListItem {
+  label: string
+  value: GitspaceOwnerType
+}
+
+export const GitspaceOwnerTypes = (getString: any) => [
+  {
+    label: getString('cde.gitspaceOwners.allGitspaces'),
+    value: GitspaceOwnerType.ALL
+  },
+  {
+    label: getString('cde.gitspaceOwners.myGitspaces'),
+    value: GitspaceOwnerType.SELF
+  }
+]
+
 export enum GitspaceActionType {
   START = 'start',
   STOP = 'stop'

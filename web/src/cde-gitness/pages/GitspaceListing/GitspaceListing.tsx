@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Button,
   Page,
@@ -30,32 +30,70 @@ import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { PageBrowserProps, getErrorMessage } from 'utils/Utils'
+import { getErrorMessage } from 'utils/Utils'
 import noSpace from 'cde-gitness/assests/no-gitspace.svg?url'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ListGitspaces } from 'cde-gitness/components/GitspaceListing/ListGitspaces'
 import CDEHomePage from 'cde-gitness/components/CDEHomePage/CDEHomePage'
 import UsageMetrics from 'cde-gitness/components/UsageMetrics/UsageMetrics'
+
+import StatusDropdown from 'cde-gitness/components/StatusDropdown/StatusDropdown'
+import GitspaceOwnerDropdown from 'cde-gitness/components/GitspaceOwnerDropdown/GitspaceOwnerDropdown'
+import { GitspaceOwnerType } from 'cde-gitness/constants'
+
 import { useLisitngApi } from '../../hooks/useLisitngApi'
-import css from './GitspacesListing.module.scss'
 import zeroDayCss from 'cde-gitness/components/CDEHomePage/CDEHomePage.module.scss'
+import css from './GitspacesListing.module.scss'
+
+interface pageCDEBrowser {
+  page?: string
+  gitspace_states?: string
+  gitspace_owner?: string
+}
 
 const GitspaceListing = () => {
   const space = useGetSpaceParam()
+  const { replaceQueryParams } = useUpdateQueryParams()
   const history = useHistory()
   const { getString } = useStrings()
   const { routes, standalone } = useAppContext()
-  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageBrowser = useQueryParams<pageCDEBrowser>()
+  const filterInit = {
+    gitspace_states: pageBrowser.gitspace_states?.split(',') ?? [],
+    gitspace_owner: pageBrowser.gitspace_owner ?? GitspaceOwnerType.SELF
+  }
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
+  const [filter, setFilter] = useState(filterInit)
+  const [hasFilter, setHasFilter] = useState(!!(pageBrowser.gitspace_states || pageBrowser.gitspace_owner))
 
-  const { data = '', loading = false, error = undefined, refetch, response } = useLisitngApi({ page })
+  const { data = '', loading = false, error = undefined, refetch, response } = useLisitngApi({ page, filter })
+
+  const handleFilterChange = (key: string, value: any) => {
+    const payload: any = { ...filter }
+    payload[key] = value
+    setFilter(payload)
+    const queryParams: any = {}
+    Object.keys(payload).forEach((entity: string) => {
+      const val = payload[entity]
+      if (val && typeof val === 'string') {
+        queryParams[entity] = val
+      } else if (Array.isArray(val) && val?.length) {
+        queryParams[entity] = val?.toString()
+      }
+    })
+    if (queryParams.gitspace_states?.length) {
+      setHasFilter(true)
+    }
+    replaceQueryParams(queryParams)
+  }
 
   return (
     <>
-      {data && data?.length !== 0 && (
+      {((data && data?.length !== 0) || hasFilter) && (
         <>
           <Page.Header
             title={
@@ -81,18 +119,28 @@ const GitspaceListing = () => {
           />
           {!standalone && (
             <Page.SubHeader>
-              <Button
-                onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
-                variation={ButtonVariation.PRIMARY}>
-                {getString('cde.newGitspace')}
-              </Button>
+              <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+                <Button
+                  onClick={() => history.push(routes.toCDEGitspacesCreate({ space }))}
+                  variation={ButtonVariation.PRIMARY}>
+                  {getString('cde.newGitspace')}
+                </Button>
+                <StatusDropdown
+                  value={filter.gitspace_states}
+                  onChange={(val: any) => handleFilterChange('gitspace_states', val)}
+                />
+                <GitspaceOwnerDropdown
+                  value={filter?.gitspace_owner}
+                  onChange={(val: any) => handleFilterChange('gitspace_owner', val)}
+                />
+              </Layout.Horizontal>
             </Page.SubHeader>
           )}
         </>
       )}
-      <Container className={data?.length === 0 ? zeroDayCss.background : css.main}>
+      <Container className={data?.length === 0 && !hasFilter ? zeroDayCss.background : css.main}>
         <Layout.Vertical spacing={'large'}>
-          {data && data?.length === 0 ? (
+          {data && data?.length === 0 && !hasFilter ? (
             <CDEHomePage />
           ) : (
             <Page.Body
@@ -110,13 +158,13 @@ const GitspaceListing = () => {
                 ) : null
               }
               noData={{
-                when: () => data?.length === 0,
+                when: () => data?.length === 0 && !hasFilter,
                 image: noSpace,
                 message: getString('cde.noGitspaces')
               }}>
-              {data?.length && (
+              {(data?.length || hasFilter) && (
                 <>
-                  <ListGitspaces data={(data as Unknown) || []} refreshList={refetch} />
+                  <ListGitspaces data={(data as Unknown) || []} hasFilter={hasFilter} refreshList={refetch} />
                   <ResourceListingPagination response={response} page={page} setPage={setPage} />
                 </>
               )}
