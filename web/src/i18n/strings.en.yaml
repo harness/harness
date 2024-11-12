@@ -322,7 +322,7 @@ pr:
   prMergedInfo: '{user} merged changes from {source} into {target} as {mergeSha} {time}'
   prRebasedInfo: '{user} rebased changes from branch {source} onto {target}, now at {mergeSha} {time}'
   prBranchPushInfo: '{user} pushed a new commit {commit}'
-  prBranchForcePushInfo: '{user} force-pushed the {gitRef} branch from {oldCommit} to {newCommit}'
+  prBranchForcePushInfo: '{user} force-pushed from {oldCommit} to {newCommit}'
   prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
   prBranchRestoreInfo: '{user} restored the source branch with latest commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'

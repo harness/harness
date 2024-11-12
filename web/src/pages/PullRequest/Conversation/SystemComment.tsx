@@ -31,7 +31,6 @@ import { CommitActions } from 'components/CommitActions/CommitActions'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { TimePopoverWithLocal } from 'utils/timePopoverLocal/TimePopoverWithLocal'
 import { Label } from 'components/Label/Label'
-import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import css from './Conversation.module.scss'
 
 interface SystemCommentProps extends Pick<GitInfoProps, 'pullReqMetadata'> {
@@ -170,18 +169,6 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullReqMetadata, c
                       <Text padding={{ right: 'small' }} inline>
                         <strong>{payload?.author?.display_name}</strong>
                       </Text>
-                    ),
-                    gitRef: (
-                      <Container padding={{ left: 'small', right: 'small' }}>
-                        <GitRefLink
-                          text={pullReqMetadata.source_branch as string}
-                          url={routes.toCODERepository({
-                            repoPath: repoMetadataPath as string,
-                            gitRef: pullReqMetadata.source_branch
-                          })}
-                          showCopy
-                        />
-                      </Container>
                     ),
                     oldCommit: (
                       <Container className={css.commitContainer} padding={{ left: 'small', right: 'small' }}>
