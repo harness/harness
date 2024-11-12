@@ -35,7 +35,6 @@ import (
 )
 
 const (
-	mountType  = mount.TypeVolume
 	catchAllIP = "0.0.0.0"
 )
 
@@ -125,8 +124,9 @@ func CreateContainer(
 	imageName string,
 	containerName string,
 	gitspaceLogger orchestratorTypes.GitspaceLogger,
-	volumeName string,
-	homeDir string,
+	bindMountSource string,
+	bindMountTarget string,
+	mountType mount.Type,
 	portMappings map[int]*types.PortMapping,
 	env []string,
 ) error {
@@ -134,7 +134,7 @@ func CreateContainer(
 
 	gitspaceLogger.Info("Creating container: " + containerName)
 
-	hostConfig := prepareHostConfig(volumeName, homeDir, portBindings)
+	hostConfig := prepareHostConfig(bindMountSource, bindMountTarget, mountType, portBindings)
 
 	// Create the container
 	containerConfig := &container.Config{
@@ -171,14 +171,19 @@ func applyPortMappings(portMappings map[int]*types.PortMapping) (nat.PortSet, na
 }
 
 // Prepare the host configuration for container creation.
-func prepareHostConfig(volumeName, homeDir string, portBindings nat.PortMap) *container.HostConfig {
+func prepareHostConfig(
+	bindMountSource string,
+	bindMountTarget string,
+	mountType mount.Type,
+	portBindings nat.PortMap,
+) *container.HostConfig {
 	hostConfig := &container.HostConfig{
 		PortBindings: portBindings,
 		Mounts: []mount.Mount{
 			{
 				Type:   mountType,
-				Source: volumeName,
-				Target: homeDir,
+				Source: bindMountSource,
+				Target: bindMountTarget,
 			},
 		},
 	}

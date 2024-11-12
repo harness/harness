@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/rs/zerolog/log"
 )
@@ -418,6 +419,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		gitspaceLogger,
 		storage,
 		homeDir,
+		mount.TypeVolume,
 		portMappings,
 		environment,
 	)
