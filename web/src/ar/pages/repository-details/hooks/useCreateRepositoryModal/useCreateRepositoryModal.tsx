@@ -25,7 +25,7 @@ import type { RepositoryPackageType } from '@ar/common/types'
 import RepositoryCreateForm from '@ar/pages/repository-details/components/Forms/RepositoryCreateForm'
 import type { Repository } from '@ar/pages/repository-details/types'
 
-interface useCreateRepositoryModalProps {
+export interface useCreateRepositoryModalProps {
   onSuccess: (data: Repository) => void
   allowedPackageTypes?: RepositoryPackageType[]
 }

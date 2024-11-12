@@ -61,7 +61,7 @@ function FormContent(props: FormContentProps): JSX.Element {
   const { getString } = useStrings()
   const { values } = formikProps
   const { packageType, config } = values
-  const { type } = config
+  const { type } = config || {}
 
   useEffect(() => {
     const newDefaultValues = getDefaultValuesByRepositoryType(packageType as RepositoryPackageType, values)
@@ -113,7 +113,7 @@ function RepositoryCreateForm(props: RepositoryCreateFormProps, formikRef: Formi
   const { isLoading: createLoading, mutateAsync: createRepository } = useCreateRegistryMutation()
 
   useEffect(() => {
-    setShowOverlay?.(createLoading)
+    setShowOverlay(createLoading)
   }, [createLoading])
 
   const getDefaultValuesByRepositoryType = useCallback(
@@ -136,7 +136,7 @@ function RepositoryCreateForm(props: RepositoryCreateFormProps, formikRef: Formi
 
   const handleSubmit = async (values: VirtualRegistryRequest): Promise<void> => {
     try {
-      const packageType = values?.packageType
+      const packageType = values.packageType
       const repositoryType = factory.getRepositoryType(packageType)
       if (repositoryType) {
         const formattedValues = repositoryType.processRepositoryFormData(values) as VirtualRegistryRequest

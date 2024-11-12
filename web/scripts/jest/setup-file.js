@@ -59,3 +59,27 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 jest.mock('react-timeago', () => () => 'dummy date')
+
+class MockIntersectionObserver {
+  constructor() {
+    this.root = null
+    this.rootMargin = ''
+    this.thresholds = []
+    this.disconnect = () => null
+    this.observe = () => null
+    this.takeRecords = () => []
+    this.unobserve = () => null
+  }
+}
+
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  configurable: true,
+  value: MockIntersectionObserver
+})
+
+Object.defineProperty(global, 'IntersectionObserver', {
+  writable: true,
+  configurable: true,
+  value: MockIntersectionObserver
+})
