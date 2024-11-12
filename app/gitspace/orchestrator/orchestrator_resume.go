@@ -157,6 +157,7 @@ func (o orchestrator) ResumeStartGitspace(
 	now := time.Now().UnixMilli()
 	gitspaceInstance.LastUsed = &now
 	gitspaceInstance.ActiveTimeStarted = &now
+	gitspaceInstance.LastHeartbeat = &now
 	gitspaceInstance.State = enum.GitspaceInstanceStateRunning
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStartCompleted)
