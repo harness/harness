@@ -29,7 +29,7 @@ require (
 	github.com/go-sql-driver/mysql v1.4.0
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.6
-	github.com/google/go-jsonnet v0.20.0
+	github.com/google/go-jsonnet v0.17.0
 	github.com/google/wire v0.2.1
 	github.com/gosimple/slug v1.3.0
 	github.com/h2non/gock v1.0.15
@@ -93,7 +93,6 @@ require (
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/grpc v1.43.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
 replace github.com/h2non/gock => gopkg.in/h2non/gock.v1 v1.0.14
