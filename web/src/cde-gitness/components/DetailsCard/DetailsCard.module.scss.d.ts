@@ -16,4 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const horizontalContainer: string
+export declare const infoButton: string
 export declare const rowHeaders: string

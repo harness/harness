@@ -21,6 +21,7 @@ region: Region
 or: OR
 logs: Logs
 noData: No Data
+changes: Changes
 noChange: No Change
 hasChange: The Gitspace has changes
 used: Used
@@ -136,6 +137,9 @@ renewTooltip:
   line2: The amount is reset after every 30 days
   haveQuestion: Have questions ?
   contactUs: Contact Us
+changesTooltip:
+  description: A gitspace is meant to be used just like a user might use an IDE locally in their laptop. To check if a gitspace has any changes which a user might want to save/sync with the remote repo before deleting it, the user needs to start the gitspace and check.
+  learnMore: Learn more about Gitspace changes
 gitspaceStatus:
   running: Running
   stopped: Stopped

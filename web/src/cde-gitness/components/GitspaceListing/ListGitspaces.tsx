@@ -50,7 +50,7 @@ import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
-import { getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
+import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
 import css from './ListGitspaces.module.scss'
 
@@ -167,6 +167,7 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
   const { has_git_changes } = instance || {}
 
   const { getString } = useStrings()
+  const gitChanges = getGitspaceChanges(has_git_changes, getString)
 
   return (
     <Layout.Vertical spacing="small">
@@ -206,11 +207,7 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
         </Layout.Horizontal>
       </Layout.Horizontal>
       <Text font={{ size: 'small' }} color={Color.GREY_450}>
-        {has_git_changes
-          ? getString('cde.hasChange')
-          : has_git_changes !== null && has_git_changes !== undefined
-          ? getString('cde.noChange')
-          : ''}
+        {gitChanges}
       </Text>
     </Layout.Vertical>
   )

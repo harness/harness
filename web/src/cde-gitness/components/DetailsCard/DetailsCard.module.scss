@@ -1,3 +1,13 @@
 .rowHeaders {
   font-size: 12px !important;
 }
+
+.infoButton {
+  --button-height: 0 !important;
+}
+
+.horizontalContainer {
+  :global(.Button--button--maDuR[class*='bp3-button']:not([class*='bp3-intent-']) > span svg path) {
+    fill: var(--white) !important;
+  }
+}

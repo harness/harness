@@ -65,3 +65,11 @@ export const getIconByRepoType = ({
     <img height={height} width={height} src={defaultTo(scmOption?.icon, genericGit)} style={{ marginRight: '10px' }} />
   )
 }
+
+export const getGitspaceChanges = (has_git_changes: any, getString: any, returnValue = '') => {
+  return has_git_changes
+    ? getString('cde.hasChange')
+    : has_git_changes !== null && has_git_changes !== undefined
+    ? getString('cde.noChange')
+    : returnValue
+}

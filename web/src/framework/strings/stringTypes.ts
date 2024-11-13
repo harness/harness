@@ -1208,6 +1208,9 @@ export interface StringsMap {
   zoomOut: string
   'cde.branchPlaceholder': string
   'cde.branchValidationMessage': string
+  'cde.changes': string
+  'cde.changesTooltip.description': string
+  'cde.changesTooltip.learnMore': string
   'cde.cloudDeveloperExperience': string
   'cde.cpu': string
   'cde.create.branchPlaceholder': string

@@ -15,14 +15,15 @@
  */
 
 import { Color } from '@harnessio/design-system'
-import { Layout, Text } from '@harnessio/uicore'
+import { Button, Layout, Text, ButtonVariation, Container } from '@harnessio/uicore'
 import React from 'react'
 import ReactTimeago from 'react-timeago'
-import { Circle } from 'iconoir-react'
+import { PopoverPosition } from '@blueprintjs/core'
+import { InfoEmpty, Circle } from 'iconoir-react'
 import type { IconName } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
 import { GitspaceStatus } from 'cde-gitness/constants'
-import { getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
+import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
 import type { TypesGitspaceConfig } from 'services/cde'
 import { getStatusColor, getStatusText } from '../GitspaceListing/ListGitspaces'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
@@ -36,6 +37,8 @@ export const DetailsCard = ({
 }) => {
   const { getString } = useStrings()
   const { branch, state, name, branch_url, code_repo_type, instance, resource } = data || {}
+  const { has_git_changes } = instance || {}
+  const gitChanges = getGitspaceChanges(has_git_changes, getString, '--')
   const color = getStatusColor(state)
   const customProps =
     state === GitspaceStatus.STARTING
@@ -47,7 +50,7 @@ export const DetailsCard = ({
   return (
     <>
       <Layout.Horizontal
-        width={'80%'}
+        width={'90%'}
         flex={{ justifyContent: 'space-between' }}
         padding={{ bottom: 'xlarge', top: 'xlarge' }}>
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
@@ -119,6 +122,33 @@ export const DetailsCard = ({
           ) : (
             <Text color={Color.GREY_500}>{getString('cde.na')}</Text>
           )}
+        </Layout.Vertical>
+
+        <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
+          <Layout.Horizontal
+            flex={{ alignItems: 'center', justifyContent: 'start' }}
+            className={css.horizontalContainer}>
+            <Text className={css.rowHeaders}>{getString('cde.changes')}</Text>
+            <Button
+              className={css.infoButton}
+              variation={ButtonVariation.ICON}
+              tooltip={
+                <Container width={300} padding="medium">
+                  <Layout.Vertical spacing="small">
+                    <Text font="small" color={Color.WHITE}>
+                      {getString('cde.changesTooltip.description')}
+                    </Text>
+                    <Text color={Color.PRIMARY_7} font="small" style={{ cursor: 'pointer' }}>
+                      {getString('cde.changesTooltip.learnMore')}
+                    </Text>
+                  </Layout.Vertical>
+                </Container>
+              }
+              tooltipProps={{ isDark: true, position: PopoverPosition.AUTO }}>
+              <InfoEmpty height={14} color="#0278D5" fill="white" />
+            </Button>
+          </Layout.Horizontal>
+          <Text color={Color.GREY_500}>{gitChanges}</Text>
         </Layout.Vertical>
       </Layout.Horizontal>
     </>
