@@ -134,6 +134,7 @@ func ExecuteCommand(
 ) error {
 	if command == "" {
 		gitspaceLogger.Info(fmt.Sprintf("No %s command provided, skipping execution", actionType))
+		return nil
 	}
 	gitspaceLogger.Info(fmt.Sprintf("Executing %s command: %s", actionType, command))
 	output, err := exec.ExecuteCommand(ctx, command, true, false, codeRepoDir)
@@ -141,7 +142,7 @@ func ExecuteCommand(
 		return logStreamWrapError(
 			gitspaceLogger, fmt.Sprintf("Error while executing %s command", actionType), err)
 	}
-	gitspaceLogger.Info("Post create command execution output...\n" + string(output))
+	gitspaceLogger.Info(fmt.Sprintf("%s command execution output...\n %s", actionType, string(output)))
 	gitspaceLogger.Info(fmt.Sprintf("Successfully executed %s command", actionType))
 	return nil
 }
