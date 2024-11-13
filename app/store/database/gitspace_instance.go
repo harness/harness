@@ -378,6 +378,10 @@ func addGitspaceInstanceFilter(
 		stmt = stmt.Where(squirrel.Lt{"gits_last_used": filter.LastUsedBefore})
 	}
 
+	if filter.LastUpdatedBefore > 0 {
+		stmt = stmt.Where(squirrel.Lt{"gits_updated": filter.LastUpdatedBefore})
+	}
+
 	if len(filter.States) > 0 {
 		stmt = stmt.Where(squirrel.Eq{"gits_state": filter.States})
 	}

@@ -96,6 +96,7 @@ type GitspaceInstanceFilter struct {
 	UserIdentifier      string
 	LastUsedBefore      int64
 	LastHeartBeatBefore int64
+	LastUpdatedBefore   int64
 	States              []enum.GitspaceInstanceStateType
 	SpaceIDs            []int64
 	Limit               int

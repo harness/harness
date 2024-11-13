@@ -336,6 +336,10 @@ func addGitspaceFilter(stmt squirrel.SelectBuilder, filter *types.GitspaceFilter
 		stmt = stmt.Where(squirrel.Lt{"gits_last_used": filter.LastUsedBefore})
 	}
 
+	if filter.LastUpdatedBefore > 0 {
+		stmt = stmt.Where(squirrel.Lt{"gits_updated": filter.LastUpdatedBefore})
+	}
+
 	if len(filter.GitspaceFilterStates) > 0 && len(filter.States) > 0 {
 		log.Warn().Msgf("both view list filter and states are set for gitspace, the states[] are ignored")
 	}
