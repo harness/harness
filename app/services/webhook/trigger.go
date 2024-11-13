@@ -328,7 +328,7 @@ func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.Webho
 	execution.Retriggerable = true
 
 	// create request (url + body)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhook.URL, bBuff)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bBuff)
 	if err != nil {
 		// ASSUMPTION: there was an issue with the static user input, not retriable
 		tErr := fmt.Errorf("failed to create request: %w", err)
