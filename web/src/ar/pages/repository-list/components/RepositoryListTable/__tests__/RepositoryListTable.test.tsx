@@ -25,6 +25,7 @@ import { mockRepositoryListApiResponse } from '@ar/pages/repository-list/__tests
 import { HelmRepositoryType } from '@ar/pages/repository-details/HelmRepository/HelmRepositoryType'
 import { DockerRepositoryType } from '@ar/pages/repository-details/DockerRepository/DockerRepositoryType'
 import { getTableColumn, getTableHeaderColumn, getTableRow, testSelectChange } from '@ar/utils/testUtils/utils'
+import { GenericRepositoryType } from '@ar/pages/repository-details/GenericRepository/GenericRepositoryType'
 
 import { RepositoryListTable } from '..'
 
@@ -46,6 +47,7 @@ describe('Verify Reppository List Table', () => {
   beforeAll(() => {
     repositoryFactory.registerStep(new DockerRepositoryType())
     repositoryFactory.registerStep(new HelmRepositoryType())
+    repositoryFactory.registerStep(new GenericRepositoryType())
   })
 
   beforeEach(() => {

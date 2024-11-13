@@ -22,7 +22,7 @@ import { Route, Router, Switch } from 'react-router-dom'
 import { createMemoryHistory } from 'history'
 import { PropsWithChildren, useMemo } from 'react'
 
-import type { Scope } from '@ar/MFEAppTypes'
+import type { FeatureFlags, Scope } from '@ar/MFEAppTypes'
 import { Parent } from '@ar/common/types'
 import { ModalProvider } from '@ar/__mocks__/hooks'
 import type { UseStringsReturn } from '@ar/frameworks/strings'
@@ -48,7 +48,7 @@ interface TestWrapperProps {
   queryParams?: Record<string, unknown>
   stringsData?: Record<string, string>
   getString?: UseStringsReturn['getString']
-  featureFlags?: Record<string, boolean>
+  featureFlags?: Partial<Record<FeatureFlags, boolean>>
   baseUrl?: string
   matchPath?: string
   scope?: Scope & Record<string, string>

@@ -25,6 +25,7 @@ import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { DockerRepositoryType } from '@ar/pages/repository-details/DockerRepository/DockerRepositoryType'
 import { HelmRepositoryType } from '@ar/pages/repository-details/HelmRepository/HelmRepositoryType'
+import { GenericRepositoryType } from '@ar/pages/repository-details/GenericRepository/GenericRepositoryType'
 import ArtifactListPage from '../ArtifactListPage'
 import {
   mockGetAllRegistriesResponse,
@@ -46,6 +47,7 @@ describe('Test Artifact List Page', () => {
   beforeAll(() => {
     repositoryFactory.registerStep(new DockerRepositoryType())
     repositoryFactory.registerStep(new HelmRepositoryType())
+    repositoryFactory.registerStep(new GenericRepositoryType())
 
     useGetAllHarnessArtifactsQuery.mockImplementation(() => {
       return mockUseGetAllHarnessArtifactsQueryResponse

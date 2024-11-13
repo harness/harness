@@ -23,6 +23,7 @@ import { RepositoryPackageType } from '@ar/common/types'
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { CreateRepository } from '@ar/pages/repository-list/components/CreateRepository/CreateRepository'
+import { FeatureFlags } from '@ar/MFEAppTypes'
 
 import { queryByNameAttribute } from 'utils/test/testUtils'
 import { HelmRepositoryType } from '../../HelmRepository/HelmRepositoryType'
@@ -31,6 +32,7 @@ import {
   useCreateRepositoryModal,
   useCreateRepositoryModalProps
 } from '../useCreateRepositoryModal/useCreateRepositoryModal'
+import { GenericRepositoryType } from '../../GenericRepository/GenericRepositoryType'
 
 const mutateCreateRegistry = jest.fn().mockImplementation(
   () =>
@@ -72,6 +74,7 @@ describe('Verify CreateRepositoryModal', () => {
   beforeAll(() => {
     repositoryFactory.registerStep(new DockerRepositoryType())
     repositoryFactory.registerStep(new HelmRepositoryType())
+    repositoryFactory.registerStep(new GenericRepositoryType())
   })
 
   beforeEach(() => {
@@ -140,13 +143,15 @@ describe('Verify CreateRepositoryModal', () => {
 
   test('should render modal with allowed types correctly', async () => {
     const { container } = render(
-      <ArTestWrapper>
+      <ArTestWrapper featureFlags={{ [FeatureFlags.HAR_GENERIC_ARTIFACT_ENABLED]: true }}>
         <CustomCreateRepositoryModal onSuccess={jest.fn()} allowedPackageTypes={[RepositoryPackageType.HELM]} />
       </ArTestWrapper>
     )
     const dialog = await openModalDialog(container)
     const dockerType = dialog.querySelector('input[type="checkbox"][name="packageType"][value="DOCKER"]')
     expect(dockerType).toBeDisabled()
+    const genericType = dialog.querySelector('input[type="checkbox"][name="packageType"][value="GENERIC"]')
+    expect(genericType).toBeDisabled()
     const helmType = dialog.querySelector('input[type="checkbox"][name="packageType"][value="HELM"]')
     expect(helmType).not.toBeDisabled()
   })

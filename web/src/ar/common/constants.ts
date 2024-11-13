@@ -14,72 +14,8 @@
  * limitations under the License.
  */
 
-import type { IconName } from '@harnessio/icons'
 import type { StringsMap } from '@ar/frameworks/strings'
-import { EnvironmentType, RepositoryConfigType, RepositoryPackageType } from './types'
-
-export interface RepositoryTypeListItem {
-  label: keyof StringsMap
-  value: RepositoryPackageType
-  icon: IconName
-  disabled?: boolean
-  tooltip?: string
-}
-
-export const RepositoryTypes: RepositoryTypeListItem[] = [
-  {
-    label: 'repositoryTypes.docker',
-    value: RepositoryPackageType.DOCKER,
-    icon: 'docker-step'
-  },
-  {
-    label: 'repositoryTypes.helm',
-    value: RepositoryPackageType.HELM,
-    icon: 'service-helm'
-  },
-  {
-    label: 'repositoryTypes.generic',
-    value: RepositoryPackageType.GENERIC,
-    icon: 'generic-repository-type',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.maven',
-    value: RepositoryPackageType.MAVEN,
-    icon: 'maven-repository-type',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.npm',
-    value: RepositoryPackageType.NPM,
-    icon: 'npm-repository-type',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.gradle',
-    value: RepositoryPackageType.GRADLE,
-    icon: 'gradle-repository-type',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.pypi',
-    value: RepositoryPackageType.PYPI,
-    icon: 'python',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  },
-  {
-    label: 'repositoryTypes.nuget',
-    value: RepositoryPackageType.NUGET,
-    icon: 'nuget-repository-type',
-    tooltip: 'Coming Soon!',
-    disabled: true
-  }
-]
+import { EnvironmentType, RepositoryConfigType } from './types'
 
 interface EnvironmentTypeListItem {
   label: keyof StringsMap

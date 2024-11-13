@@ -17,9 +17,9 @@
 import React from 'react'
 
 import { useStrings } from '@ar/frameworks/strings'
-import { RepositoryTypes } from '@ar/common/constants'
 import MultiSelectDropdownList from '@ar/components/MultiDropdownSelect/MultiDropdownSelect'
 import type { RepositoryPackageType } from '@ar/common/types'
+import { useGetRepositoryTypes } from '@ar/hooks/useGetRepositoryTypes'
 
 interface PackageTypeSelectorProps {
   value: RepositoryPackageType[]
@@ -28,11 +28,13 @@ interface PackageTypeSelectorProps {
 export default function PackageTypeSelector(props: PackageTypeSelectorProps): JSX.Element {
   const { value, onChange } = props
   const { getString } = useStrings()
+  const repositoryTypes = useGetRepositoryTypes()
+
   return (
     <MultiSelectDropdownList
       width={180}
       buttonTestId="package-type-select"
-      items={RepositoryTypes.filter(each => !each.disabled).map(each => ({ ...each, label: getString(each.label) }))}
+      items={repositoryTypes.filter(each => !each.disabled).map(each => ({ ...each, label: getString(each.label) }))}
       value={value}
       onSelect={onChange}
       placeholder={getString('repositoryList.selectPackageTypes')}

@@ -26,6 +26,7 @@ import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 import { HelmRepositoryType } from '@ar/pages/repository-details/HelmRepository/HelmRepositoryType'
 import { DockerRepositoryType } from '@ar/pages/repository-details/DockerRepository/DockerRepositoryType'
+import { GenericRepositoryType } from '@ar/pages/repository-details/GenericRepository/GenericRepositoryType'
 
 import { queryByNameAttribute } from 'utils/test/testUtils'
 import RepositoryCreateForm from '../RepositoryCreateForm'
@@ -68,6 +69,7 @@ describe('Verify RepositoryCreateForm', () => {
   beforeAll(() => {
     repositoryFactory.registerStep(new DockerRepositoryType())
     repositoryFactory.registerStep(new HelmRepositoryType())
+    repositoryFactory.registerStep(new GenericRepositoryType())
   })
 
   beforeEach(() => {
@@ -85,7 +87,7 @@ describe('Verify RepositoryCreateForm', () => {
     const formikRef = React.createRef<FormikProps<unknown>>()
 
     const { container } = render(
-      <ArTestWrapper>
+      <ArTestWrapper featureFlags={{ HAR_GENERIC_ARTIFACT_ENABLED: true }}>
         <RepositoryCreateForm setShowOverlay={setShowOverlay} onSuccess={onSuccess} ref={formikRef} />
       </ArTestWrapper>
     )
@@ -98,6 +100,11 @@ describe('Verify RepositoryCreateForm', () => {
 
     const helmType = container.querySelector('input[type="checkbox"][name="packageType"][value="HELM"]')
     expect(helmType).not.toBeChecked()
+
+    const genericType = container.querySelector('input[type="checkbox"][name="packageType"][value="GENERIC"]')
+    expect(genericType).not.toBeDisabled()
+    expect(genericType).not.toBeChecked()
+
     await userEvent.click(container.querySelector('span[data-icon="service-helm"]')!)
     await waitFor(() => {
       expect(helmType).toBeChecked()
@@ -124,6 +131,19 @@ describe('Verify RepositoryCreateForm', () => {
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledWith({ identifier: '1234' })
     })
+  })
+
+  test('Should disable Generic type artifact option if HAR_GENERIC_ARTIFACT_ENABLED is false', async () => {
+    const setShowOverlay = jest.fn()
+    const onSuccess = jest.fn()
+    const { container } = render(
+      <ArTestWrapper featureFlags={{ HAR_GENERIC_ARTIFACT_ENABLED: false }}>
+        <RepositoryCreateForm setShowOverlay={setShowOverlay} onSuccess={onSuccess} />
+      </ArTestWrapper>
+    )
+
+    const genericType = container.querySelector('input[type="checkbox"][name="packageType"][value="GENERIC"]')
+    expect(genericType).toBeDisabled()
   })
 
   test('Should work form validations correctly', async () => {

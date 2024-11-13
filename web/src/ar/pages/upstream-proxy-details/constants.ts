@@ -37,13 +37,6 @@ export const UpstreamProxyPackageTypeList: UpstreamProxyPackageTypeListType[] = 
     icon: 'service-helm'
   },
   {
-    label: 'repositoryTypes.generic',
-    value: UpstreamProxyPackageType.GENERIC,
-    icon: 'generic-repository-type',
-    tooltip: 'Comming Soon!',
-    disabled: true
-  },
-  {
     label: 'repositoryTypes.maven',
     value: UpstreamProxyPackageType.MAVEN,
     icon: 'maven-repository-type',

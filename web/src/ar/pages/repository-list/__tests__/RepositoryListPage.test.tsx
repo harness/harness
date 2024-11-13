@@ -18,6 +18,7 @@ import React from 'react'
 import userEvent from '@testing-library/user-event'
 import { useGetAllRegistriesQuery } from '@harnessio/react-har-service-client'
 import { fireEvent, getByPlaceholderText, getByTestId, render, waitFor } from '@testing-library/react'
+import { GenericRepositoryType } from '@ar/pages/repository-details/GenericRepository/GenericRepositoryType'
 
 import ArTestWrapper from '@ar/utils/testUtils/ArTestWrapper'
 import { getTableHeaderColumn, testMultiSelectChange, testSelectChange } from '@ar/utils/testUtils/utils'
@@ -35,6 +36,7 @@ describe('Test Registry List Page', () => {
   beforeAll(() => {
     repositoryFactory.registerStep(new DockerRepositoryType())
     repositoryFactory.registerStep(new HelmRepositoryType())
+    repositoryFactory.registerStep(new GenericRepositoryType())
   })
 
   beforeEach(() => {
