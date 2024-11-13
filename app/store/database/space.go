@@ -138,7 +138,8 @@ func (s *SpaceStore) FindByRefCaseInsensitive(ctx context.Context, spaceRef stri
 		stmt = database.Builder.
 			Select("space_id").
 			From("spaces").
-			Where("LOWER(space_uid) = LOWER(?) ", segments[0])
+			Where("LOWER(space_uid) = ? ", strings.ToLower(segments[0])).
+			Limit(1)
 
 	case len(segments) > 1:
 		stmt = buildRecursiveSelectQueryUsingCaseInsensitivePath(segments)
