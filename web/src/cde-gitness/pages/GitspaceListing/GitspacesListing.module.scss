@@ -17,3 +17,13 @@
 .main {
   margin: var(--spacing-xxlarge) !important;
 }
+
+.sortOrder {
+  border: 1px solid silver !important;
+}
+
+.totalItems {
+  font-size: var(--font-size-normal) !important;
+  font-weight: bold !important;
+  color: black !important;
+}

@@ -32,6 +32,7 @@ eventTimeline: Event Timeline
 cpu: CPU
 memory: Memory
 disk: Disk
+created: Created
 regionSelectWarning: Select a region first
 gitspaceUpdateSuccess: Gitspace updated successfully
 regionValidationMessage: Region is required
@@ -141,10 +142,12 @@ changesTooltip:
   description: A gitspace is meant to be used just like a user might use an IDE locally in their laptop. To check if a gitspace has any changes which a user might want to save/sync with the remote repo before deleting it, the user needs to start the gitspace and check.
   learnMore: Learn more about Gitspace changes
 gitspaceStatus:
-  running: Running
+  active: Active
   stopped: Stopped
   error: Error
 owners: Owners
 gitspaceOwners:
   allGitspaces: All Gitspaces
-  myGitspaces: Only My Gitspaces
+  myGitspaces: My Gitspaces
+sortBy: Sort By
+total: Total

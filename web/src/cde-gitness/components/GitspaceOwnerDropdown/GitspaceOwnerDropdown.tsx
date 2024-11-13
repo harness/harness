@@ -16,7 +16,7 @@
 
 import React from 'react'
 import { DropDown } from '@harnessio/uicore'
-import { GitspaceOwnerType, GitspaceOwnerTypeListItem, GitspaceOwnerTypes } from 'cde-gitness/constants'
+import { GitspaceOwnerType, GitspaceOwnerTypes } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 
 interface GitspaceOwnerDropdownProps {
@@ -31,16 +31,12 @@ export default function GitspaceOwnerDropdown(props: GitspaceOwnerDropdownProps)
     <DropDown
       width={180}
       buttonTestId="gitspace-owner-select"
-      items={dropdownList.map((each: GitspaceOwnerTypeListItem) => ({
-        ...each,
-        label: each.label
-      }))}
+      items={dropdownList}
       value={value}
       onChange={option => {
         onChange(option.value as GitspaceOwnerType)
       }}
       placeholder={getString('cde.owners')}
-      addClearBtn
     />
   )
 }

@@ -20,16 +20,23 @@ import type { TypesGitspaceConfig } from 'cde-gitness/services'
 import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { useAppContext } from 'AppContext'
-import { useListGitspaces } from 'services/cde'
+import { type EnumGitspaceSort, useListGitspaces } from 'services/cde'
 import { useQueryParams } from 'hooks/useQueryParams'
 
 interface pageCDEBrowser {
   page?: string
   gitspace_states?: string
   gitspace_owner?: string
+  sort?: EnumGitspaceSort
+  order: 'asc' | 'desc'
 }
 
-export const useLisitngApi = ({ page, filter }: { page: number; filter: any }) => {
+interface sortProps {
+  sort: EnumGitspaceSort
+  order: 'asc' | 'desc'
+}
+
+export const useLisitngApi = ({ page, filter, sortConfig }: { page: number; filter: any; sortConfig: sortProps }) => {
   const { standalone } = useAppContext()
 
   const pageBrowser = useQueryParams<pageCDEBrowser>()
@@ -53,7 +60,9 @@ export const useLisitngApi = ({ page, filter }: { page: number; filter: any }) =
       page,
       limit: LIST_FETCHING_LIMIT,
       gitspace_owner: filter.gitspace_owner || undefined,
-      gitspace_states: filter.gitspace_states.length ? filter.gitspace_states : undefined
+      gitspace_states: filter.gitspace_states.length ? filter.gitspace_states : undefined,
+      order: sortConfig.sort ? sortConfig.order : undefined,
+      sort: sortConfig.sort
     },
     queryParamStringifyOptions: {
       arrayFormat: 'repeat'
@@ -73,7 +82,9 @@ export const useLisitngApi = ({ page, filter }: { page: number; filter: any }) =
         page,
         limit: LIST_FETCHING_LIMIT,
         gitspace_owner: filter.gitspace_owner || undefined,
-        gitspace_states: filter.gitspace_states.length ? filter.gitspace_states : undefined
+        gitspace_states: filter?.gitspace_states?.length ? filter.gitspace_states : undefined,
+        order: sortConfig.sort ? sortConfig.order : undefined,
+        sort: sortConfig.sort
       }
       cde.refetch({
         queryParams,
@@ -82,7 +93,7 @@ export const useLisitngApi = ({ page, filter }: { page: number; filter: any }) =
         }
       })
     }
-  }, [page, filter])
+  }, [page, filter, sortConfig])
 
   return standalone ? gitness : cde
 }

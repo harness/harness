@@ -1230,6 +1230,7 @@ export interface StringsMap {
   'cde.createGitspace': string
   'cde.createImport': string
   'cde.createRepo': string
+  'cde.created': string
   'cde.deleteGitspace': string
   'cde.deleteGitspaceText': string
   'cde.deleteGitspaceTitle': string
@@ -1261,8 +1262,8 @@ export interface StringsMap {
   'cde.gitspaceDetail': string
   'cde.gitspaceOwners.allGitspaces': string
   'cde.gitspaceOwners.myGitspaces': string
+  'cde.gitspaceStatus.active': string
   'cde.gitspaceStatus.error': string
-  'cde.gitspaceStatus.running': string
   'cde.gitspaceStatus.stopped': string
   'cde.gitspaceUpdateSuccess': string
   'cde.gitspaces': string
@@ -1330,6 +1331,7 @@ export interface StringsMap {
   'cde.repositoryAndBranch': string
   'cde.retry': string
   'cde.sessionDuration': string
+  'cde.sortBy': string
   'cde.sshSelect.180days': string
   'cde.sshSelect.30days': string
   'cde.sshSelect.90days': string
@@ -1339,6 +1341,7 @@ export interface StringsMap {
   'cde.startingGitspace': string
   'cde.status': string
   'cde.stopingGitspace': string
+  'cde.total': string
   'cde.updateGitspace': string
   'cde.used': string
   'cde.viewGitspace': string

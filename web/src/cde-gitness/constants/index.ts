@@ -49,7 +49,7 @@ export const GitspaceStatusTypes = (getString: any) => [
     value: GitspaceStatus.ERROR
   },
   {
-    label: getString('cde.gitspaceStatus.running'),
+    label: getString('cde.gitspaceStatus.active'),
     value: GitspaceStatus.RUNNING
   },
   {
@@ -90,3 +90,29 @@ export enum GitspaceRegion {
   Europe = 'Europe',
   Australia = 'Australia'
 }
+
+export enum SortByType {
+  CREATED = 'created',
+  LAST_USED = 'last_used',
+  LAST_ACTIVATED = 'last_activated'
+}
+
+export interface SortByTypeListItem {
+  label: string
+  value: SortByType
+}
+
+export const SortByTypes = (getString: any) => [
+  {
+    label: getString('cde.created'),
+    value: SortByType.CREATED
+  },
+  {
+    label: getString('cde.lastUsed'),
+    value: SortByType.LAST_USED
+  },
+  {
+    label: getString('cde.lastActivated'),
+    value: SortByType.LAST_ACTIVATED
+  }
+]

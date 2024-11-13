@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Button,
   Page,
@@ -42,8 +42,10 @@ import UsageMetrics from 'cde-gitness/components/UsageMetrics/UsageMetrics'
 
 import StatusDropdown from 'cde-gitness/components/StatusDropdown/StatusDropdown'
 import GitspaceOwnerDropdown from 'cde-gitness/components/GitspaceOwnerDropdown/GitspaceOwnerDropdown'
-import { GitspaceOwnerType } from 'cde-gitness/constants'
+import { GitspaceOwnerType, GitspaceStatus } from 'cde-gitness/constants'
 
+import SortByDropdown from 'cde-gitness/components/SortByDropdown/SortByDropdown'
+import type { EnumGitspaceSort } from 'services/cde'
 import { useLisitngApi } from '../../hooks/useLisitngApi'
 import zeroDayCss from 'cde-gitness/components/CDEHomePage/CDEHomePage.module.scss'
 import css from './GitspacesListing.module.scss'
@@ -51,44 +53,77 @@ import css from './GitspacesListing.module.scss'
 interface pageCDEBrowser {
   page?: string
   gitspace_states?: string
-  gitspace_owner?: string
+  gitspace_owner?: GitspaceOwnerType
+  sort?: EnumGitspaceSort
+  order?: 'asc' | 'desc'
+}
+
+interface filterProps {
+  gitspace_states: GitspaceStatus[]
+  gitspace_owner: GitspaceOwnerType
+}
+
+interface sortProps {
+  sort: EnumGitspaceSort
+  order: 'asc' | 'desc'
 }
 
 const GitspaceListing = () => {
   const space = useGetSpaceParam()
-  const { replaceQueryParams } = useUpdateQueryParams()
+  const { updateQueryParams } = useUpdateQueryParams()
+
   const history = useHistory()
   const { getString } = useStrings()
   const { routes, standalone } = useAppContext()
   const pageBrowser = useQueryParams<pageCDEBrowser>()
-  const filterInit = {
-    gitspace_states: pageBrowser.gitspace_states?.split(',') ?? [],
+  const statesString: any = pageBrowser.gitspace_states
+  const filterInit: filterProps = {
+    gitspace_states: statesString?.split(',')?.map((state: string) => state.trim() as GitspaceStatus) ?? [],
     gitspace_owner: pageBrowser.gitspace_owner ?? GitspaceOwnerType.SELF
   }
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const [filter, setFilter] = useState(filterInit)
+
+  const sortInit: sortProps = { sort: (pageBrowser.sort as EnumGitspaceSort) ?? '', order: 'desc' }
+  const [sortConfig, setSortConfig] = useState(sortInit)
   const [hasFilter, setHasFilter] = useState(!!(pageBrowser.gitspace_states || pageBrowser.gitspace_owner))
 
-  const { data = '', loading = false, error = undefined, refetch, response } = useLisitngApi({ page, filter })
+  const {
+    data = '',
+    loading = false,
+    error = undefined,
+    refetch,
+    response
+  } = useLisitngApi({ page, filter, sortConfig })
+
+  function useParsePaginationInfo(responseData: Nullable<Response>) {
+    const totalData = useMemo(() => parseInt(responseData?.headers?.get('x-total') || '0'), [responseData])
+
+    return totalData
+  }
+  const totalItems = useParsePaginationInfo(response)
 
   const handleFilterChange = (key: string, value: any) => {
     const payload: any = { ...filter }
     payload[key] = value
     setFilter(payload)
-    const queryParams: any = {}
-    Object.keys(payload).forEach((entity: string) => {
-      const val = payload[entity]
-      if (val && typeof val === 'string') {
-        queryParams[entity] = val
-      } else if (Array.isArray(val) && val?.length) {
-        queryParams[entity] = val?.toString()
-      }
-    })
-    if (queryParams.gitspace_states?.length) {
+    if (typeof value === 'string') {
+      updateQueryParams({ [key]: value })
+    } else if (Array.isArray(value)) {
+      updateQueryParams({ [key]: value?.toString() })
+    }
+    if (payload.gitspace_states?.length || payload.gitspace_owner) {
       setHasFilter(true)
     }
-    replaceQueryParams(queryParams)
+  }
+
+  const handleSort = (key: string, value: string) => {
+    updateQueryParams({ [key]: value })
+    setSortConfig({
+      ...sortConfig,
+      [key]: value
+    })
   }
 
   return (
@@ -134,6 +169,18 @@ const GitspaceListing = () => {
                   onChange={(val: any) => handleFilterChange('gitspace_owner', val)}
                 />
               </Layout.Horizontal>
+
+              <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
+                <SortByDropdown value={sortConfig?.sort} onChange={(val: any) => handleSort('sort', val)} />
+                <Button
+                  icon={sortConfig.order === 'asc' ? 'sort-asc' : 'sort-desc'}
+                  className={css.sortOrder}
+                  minimal
+                  withoutBoxShadow
+                  onClick={() => handleSort('order', sortConfig.order === 'asc' ? 'desc' : 'asc')}
+                  disabled={!sortConfig.sort}
+                />
+              </Layout.Horizontal>
             </Page.SubHeader>
           )}
         </>
@@ -164,6 +211,9 @@ const GitspaceListing = () => {
               }}>
               {(data?.length || hasFilter) && (
                 <>
+                  <Text className={css.totalItems}>
+                    {getString('cde.total')}: {totalItems}
+                  </Text>
                   <ListGitspaces data={(data as Unknown) || []} hasFilter={hasFilter} refreshList={refetch} />
                   <ResourceListingPagination response={response} page={page} setPage={setPage} />
                 </>

@@ -15,29 +15,30 @@
  */
 
 import React from 'react'
-import { GitspaceStatus, GitspaceStatusTypes, GitspaceStatusTypesListItem } from 'cde-gitness/constants'
+import { DropDown } from '@harnessio/uicore'
+import { SortByTypes } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
-import MultiSelectDropdownList from '../MultiDropdownSelect/MultiDropdownSelect'
+import type { EnumGitspaceSort } from 'services/cde'
 
-interface StatusDropdownProps {
-  value: GitspaceStatus[]
-  onChange: (val: GitspaceStatus[]) => void
+interface SortByDropdownProps {
+  value?: EnumGitspaceSort
+  onChange: (val: EnumGitspaceSort) => void
 }
-export default function StatusDropdown(props: StatusDropdownProps): JSX.Element {
+export default function SortByDropdown(props: SortByDropdownProps): JSX.Element {
   const { value, onChange } = props
   const { getString } = useStrings()
-  const dropdownList: GitspaceStatusTypesListItem[] = GitspaceStatusTypes(getString)
+  const dropdownList = SortByTypes(getString)
   return (
-    <MultiSelectDropdownList<GitspaceStatus>
-      width={120}
-      buttonTestId="gitspace-status-select"
-      items={dropdownList.map((each: GitspaceStatusTypesListItem) => ({
-        ...each,
-        label: each.label
-      }))}
+    <DropDown
+      width={180}
+      buttonTestId="gitspace-sort-select"
+      items={dropdownList}
       value={value}
-      onSelect={onChange}
-      placeholder={getString('status')}
+      onChange={option => {
+        onChange(option.value as EnumGitspaceSort)
+      }}
+      placeholder={getString('cde.sortBy')}
+      addClearBtn
     />
   )
 }
