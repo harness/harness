@@ -25,7 +25,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (c *Service) RemoveGitspace(ctx context.Context, config types.GitspaceConfig, canDeleteUserData bool) error {
+func (c *Service) CleanupGitspace(ctx context.Context, config types.GitspaceConfig) error {
 	if config.GitspaceInstance.State == enum.GitSpaceInstanceStateCleaning &&
 		time.Since(time.UnixMilli(config.GitspaceInstance.Updated)).Milliseconds() <=
 			(gitspaceInstanceCleaningTimedOutMins*60*1000) {
@@ -34,42 +34,36 @@ func (c *Service) RemoveGitspace(ctx context.Context, config types.GitspaceConfi
 		return fmt.Errorf("gitspace is already pending for : %q", config.GitspaceInstance.Identifier)
 	}
 
-	if config.GitspaceInstance.State == enum.GitspaceInstanceStateRunning {
-		activeTimeEnded := time.Now().UnixMilli()
-		config.GitspaceInstance.ActiveTimeEnded = &activeTimeEnded
-		config.GitspaceInstance.TotalTimeUsed =
-			*(config.GitspaceInstance.ActiveTimeEnded) - *(config.GitspaceInstance.ActiveTimeStarted)
-		config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
-	} else {
-		config.GitspaceInstance.State = enum.GitSpaceInstanceStateCleaning
-	}
+	config.GitspaceInstance.State = enum.GitSpaceInstanceStateCleaning
 
 	err := c.UpdateInstance(ctx, config.GitspaceInstance)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to update instance %s before triggering delete",
+		log.Ctx(ctx).Err(err).Msgf("failed to update instance %s before triggering cleanup",
 			config.GitspaceInstance.Identifier)
-		return fmt.Errorf("failed to update instance %s before triggering delete: %w",
+		return fmt.Errorf("failed to update instance %s before triggering cleanup: %w",
 			config.GitspaceInstance.Identifier,
 			err,
 		)
 	}
 
-	if err := c.orchestrator.TriggerDeleteGitspace(ctx, config, canDeleteUserData); err != nil {
-		log.Ctx(ctx).Err(err).Msgf("error during triggering delete for gitspace instance %s",
+	err = c.orchestrator.TriggerCleanupInstanceResources(ctx, config)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msgf("error during triggering cleanup for gitspace instance %s",
 			config.GitspaceInstance.Identifier)
+
 		config.GitspaceInstance.State = enum.GitspaceInstanceStateError
 		if updateErr := c.UpdateInstance(ctx, config.GitspaceInstance); updateErr != nil {
 			log.Ctx(ctx).Err(updateErr).Msgf("failed to update instance %s after error in triggering delete",
 				config.GitspaceInstance.Identifier)
 		}
 
-		return fmt.Errorf("failed to trigger delete for gitspace instance %s: %w",
+		return fmt.Errorf("failed to trigger cleanup for gitspace instance %s: %w",
 			config.GitspaceInstance.Identifier,
 			err,
 		)
 	}
 
-	log.Ctx(ctx).Debug().Msgf("successfully triggered delete for gitspace instance %s",
+	log.Ctx(ctx).Debug().Msgf("successfully triggered cleanup for gitspace instance %s",
 		config.GitspaceInstance.Identifier)
 
 	return nil

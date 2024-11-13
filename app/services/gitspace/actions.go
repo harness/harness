@@ -34,6 +34,9 @@ const defaultPasswordRef = "harness_password"
 const defaultMachineUser = "harness"
 const AllowedUIDAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 
+// gitspaceInstanceCleaningTimedOutMins is timeout for which a gitspace instance can be in cleaning state.
+const gitspaceInstanceCleaningTimedOutMins = 15
+
 func (c *Service) gitspaceBusyOperation(
 	ctx context.Context,
 	config *types.GitspaceConfig,
