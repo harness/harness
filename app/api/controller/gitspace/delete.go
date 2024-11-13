@@ -69,6 +69,11 @@ func (c *Controller) Delete(
 	}
 
 	ctxWithoutCancel := context.WithoutCancel(ctx)
-	go c.gitspaceSvc.RemoveGitspace(ctxWithoutCancel, *gitspaceConfig, true)
+	go func() {
+		err2 := c.gitspaceSvc.RemoveGitspace(ctxWithoutCancel, *gitspaceConfig, true)
+		if err2 != nil {
+			log.Debug().Err(err2).Msgf("unable to Delete gitspace: " + identifier)
+		}
+	}()
 	return nil
 }

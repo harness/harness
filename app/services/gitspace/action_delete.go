@@ -16,6 +16,7 @@ package gitspace
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/types"
@@ -27,13 +28,13 @@ import (
 // gitspaceInstanceCleaningTimedOutMins is timeout for which a gitspace instance can be in cleaning state.
 const gitspaceInstanceCleaningTimedOutMins = 15
 
-func (c *Service) RemoveGitspace(ctx context.Context, config types.GitspaceConfig, canDeleteUserData bool) {
+func (c *Service) RemoveGitspace(ctx context.Context, config types.GitspaceConfig, canDeleteUserData bool) error {
 	if config.GitspaceInstance.State == enum.GitSpaceInstanceStateCleaning &&
 		time.Since(time.UnixMilli(config.GitspaceInstance.Updated)).Milliseconds() <=
 			(gitspaceInstanceCleaningTimedOutMins*60*1000) {
 		log.Ctx(ctx).Warn().Msgf("gitspace start/stop is already pending for : %q",
 			config.GitspaceInstance.Identifier)
-		return
+		return fmt.Errorf("gitspace is already pending for : %q", config.GitspaceInstance.Identifier)
 	}
 
 	if config.GitspaceInstance.State == enum.GitspaceInstanceStateRunning {
@@ -50,7 +51,10 @@ func (c *Service) RemoveGitspace(ctx context.Context, config types.GitspaceConfi
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msgf("failed to update instance %s before triggering delete",
 			config.GitspaceInstance.Identifier)
-		return
+		return fmt.Errorf("failed to update instance %s before triggering delete: %w",
+			config.GitspaceInstance.Identifier,
+			err,
+		)
 	}
 
 	if err := c.TriggerDelete(ctx, config, canDeleteUserData); err != nil {
@@ -61,10 +65,17 @@ func (c *Service) RemoveGitspace(ctx context.Context, config types.GitspaceConfi
 			log.Ctx(ctx).Err(updateErr).Msgf("failed to update instance %s after error in triggering delete",
 				config.GitspaceInstance.Identifier)
 		}
-		return
+
+		return fmt.Errorf("failed to trigger delete for gitspace instance %s: %w",
+			config.GitspaceInstance.Identifier,
+			err,
+		)
 	}
+
 	log.Ctx(ctx).Debug().Msgf("successfully triggered delete for gitspace instance %s",
 		config.GitspaceInstance.Identifier)
+
+	return nil
 }
 
 func (c *Service) TriggerDelete(
