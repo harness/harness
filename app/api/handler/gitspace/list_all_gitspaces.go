@@ -20,13 +20,23 @@ import (
 	"github.com/harness/gitness/app/api/controller/gitspace"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 func HandleListAllGitspaces(gitspaceCtrl *gitspace.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		gitspaces, err := gitspaceCtrl.ListAllGitspaces(ctx, session)
+		deleted := false
+		markedForDeletion := false
+		filter := &types.GitspaceFilter{
+			GitspaceInstanceFilter: types.GitspaceInstanceFilter{UserIdentifier: session.Principal.UID},
+			Deleted:                &deleted,
+			MarkedForDeletion:      &markedForDeletion,
+		}
+		filter.Owner = enum.GitspaceOwnerSelf
+		gitspaces, err := gitspaceCtrl.ListAllGitspaces(ctx, session, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

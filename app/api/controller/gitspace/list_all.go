@@ -31,15 +31,8 @@ const spaceIsDeleted = "Failed to find space: resource not found"
 func (c *Controller) ListAllGitspaces( // nolint:gocognit
 	ctx context.Context,
 	session *auth.Session,
+	filter *types.GitspaceFilter,
 ) ([]*types.GitspaceConfig, error) {
-	deleted := false
-	markedForDeletion := false
-	filter := &types.GitspaceFilter{
-		GitspaceInstanceFilter: types.GitspaceInstanceFilter{UserIdentifier: session.Principal.UID},
-		Deleted:                &deleted,
-		MarkedForDeletion:      &markedForDeletion,
-	}
-
 	var result []*types.GitspaceConfig
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		allGitspaceConfigs, err := c.gitspaceConfigStore.ListWithLatestInstance(ctx, filter)
