@@ -51,6 +51,7 @@ import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
+import { usePaginationProps } from 'cde-gitness/hooks/usePaginationProps'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
 import css from './ListGitspaces.module.scss'
 
@@ -607,14 +608,27 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
   )
 }
 
+interface pageConfigProps {
+  page: number
+  pageSize: number
+  totalItems: number
+  totalPages: number
+}
+
 export const ListGitspaces = ({
   data,
   refreshList,
-  hasFilter
+  hasFilter,
+  gotoPage,
+  onPageSizeChange,
+  pageConfig
 }: {
   data: TypesGitspaceConfig[]
   refreshList: () => void
   hasFilter: boolean
+  gotoPage: (pageNumber: number) => void
+  onPageSizeChange?: (newSize: number) => void
+  pageConfig: pageConfigProps
 }) => {
   const history = useHistory()
   const { getString } = useStrings()
@@ -702,6 +716,16 @@ export const ListGitspaces = ({
       ]
 
   const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
+  const { page, pageSize, totalItems, totalPages } = pageConfig
+
+  const paginationProps = usePaginationProps({
+    itemCount: totalItems,
+    pageSize: pageSize,
+    pageCount: totalPages,
+    pageIndex: page - 1,
+    gotoPage,
+    onPageSizeChange
+  })
 
   return (
     <Container>
@@ -762,7 +786,7 @@ export const ListGitspaces = ({
             },
             {
               id: 'lastactivity',
-              Header: getString('cde.lastActivated'),
+              Header: getString('cde.lastStarted'),
               Cell: RenderLastActivity
             },
             ...extraColumns,
@@ -772,6 +796,7 @@ export const ListGitspaces = ({
             }
           ]}
           data={data}
+          pagination={paginationProps}
         />
       )}
     </Container>

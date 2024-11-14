@@ -1288,7 +1288,10 @@ export interface StringsMap {
   'cde.introText2': string
   'cde.introText3': string
   'cde.lastActivated': string
+  'cde.lastStarted': string
+  'cde.lastStartedTooltip': string
   'cde.lastUsed': string
+  'cde.lastUsedTooltip': string
   'cde.listing.error': string
   'cde.listing.offline': string
   'cde.listing.online': string

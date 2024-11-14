@@ -107,7 +107,26 @@ export const DetailsCard = ({
         </Layout.Vertical>
 
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text className={css.rowHeaders}>{getString('cde.lastActivated')}</Text>
+          <Layout.Horizontal
+            flex={{ alignItems: 'center', justifyContent: 'start' }}
+            className={css.horizontalContainer}>
+            <Text className={css.rowHeaders}>{getString('cde.lastStarted')}</Text>
+            <Button
+              className={css.infoButton}
+              variation={ButtonVariation.ICON}
+              tooltip={
+                <Container width={300} padding="medium">
+                  <Layout.Vertical spacing="small">
+                    <Text font="small" color={Color.WHITE}>
+                      {getString('cde.lastStartedTooltip')}
+                    </Text>
+                  </Layout.Vertical>
+                </Container>
+              }
+              tooltipProps={{ isDark: true, position: PopoverPosition.AUTO }}>
+              <InfoEmpty height={14} color="#0278D5" fill="white" />
+            </Button>
+          </Layout.Horizontal>
           {instance?.active_time_started ? (
             <ReactTimeago date={instance?.active_time_started || 0} />
           ) : (
@@ -116,7 +135,26 @@ export const DetailsCard = ({
         </Layout.Vertical>
 
         <Layout.Vertical spacing="small" flex={{ justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Text className={css.rowHeaders}>{getString('cde.lastUsed')}</Text>
+          <Layout.Horizontal
+            flex={{ alignItems: 'center', justifyContent: 'start' }}
+            className={css.horizontalContainer}>
+            <Text className={css.rowHeaders}>{getString('cde.lastUsed')}</Text>
+            <Button
+              className={css.infoButton}
+              variation={ButtonVariation.ICON}
+              tooltip={
+                <Container width={300} padding="medium">
+                  <Layout.Vertical spacing="small">
+                    <Text font="small" color={Color.WHITE}>
+                      {getString('cde.lastUsedTooltip')}
+                    </Text>
+                  </Layout.Vertical>
+                </Container>
+              }
+              tooltipProps={{ isDark: true, position: PopoverPosition.AUTO }}>
+              <InfoEmpty height={14} color="#0278D5" fill="white" />
+            </Button>
+          </Layout.Horizontal>
           {instance?.last_used ? (
             <ReactTimeago date={instance?.last_used || 0} />
           ) : (

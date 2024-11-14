@@ -112,7 +112,7 @@ export const SortByTypes = (getString: any) => [
     value: SortByType.LAST_USED
   },
   {
-    label: getString('cde.lastActivated'),
+    label: getString('cde.lastStarted'),
     value: SortByType.LAST_ACTIVATED
   }
 ]

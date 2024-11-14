@@ -141,6 +141,9 @@ renewTooltip:
 changesTooltip:
   description: A gitspace is meant to be used just like a user might use an IDE locally in their laptop. To check if a gitspace has any changes which a user might want to save/sync with the remote repo before deleting it, the user needs to start the gitspace and check.
   learnMore: Learn more about Gitspace changes
+lastUsedTooltip: Timestamp indicating when the Gitspace was last used.
+lastStartedTooltip: Timestamp indicating when the Gitspace was most recently started.
+lastStarted: Last Started
 gitspaceStatus:
   active: Active
   stopped: Stopped

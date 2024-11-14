@@ -17,7 +17,6 @@
 import { useGet } from 'restful-react'
 import { useEffect } from 'react'
 import type { TypesGitspaceConfig } from 'cde-gitness/services'
-import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useGetCDEAPIParams } from 'cde-gitness/hooks/useGetCDEAPIParams'
 import { useAppContext } from 'AppContext'
 import { type EnumGitspaceSort, useListGitspaces } from 'services/cde'
@@ -36,7 +35,17 @@ interface sortProps {
   order: 'asc' | 'desc'
 }
 
-export const useLisitngApi = ({ page, filter, sortConfig }: { page: number; filter: any; sortConfig: sortProps }) => {
+export const useLisitngApi = ({
+  page,
+  limit,
+  filter,
+  sortConfig
+}: {
+  page: number
+  limit: number
+  filter: any
+  sortConfig: sortProps
+}) => {
   const { standalone } = useAppContext()
 
   const pageBrowser = useQueryParams<pageCDEBrowser>()
@@ -44,7 +53,7 @@ export const useLisitngApi = ({ page, filter, sortConfig }: { page: number; filt
 
   const gitness = useGet<TypesGitspaceConfig[]>({
     path: `/api/v1/spaces/${space}/+/gitspaces`,
-    queryParams: { page, limit: LIST_FETCHING_LIMIT },
+    queryParams: { page, limit },
     debounce: 500,
     lazy: true
   })
@@ -58,7 +67,7 @@ export const useLisitngApi = ({ page, filter, sortConfig }: { page: number; filt
   const cde = useListGitspaces({
     queryParams: {
       page,
-      limit: LIST_FETCHING_LIMIT,
+      limit,
       gitspace_owner: filter.gitspace_owner || undefined,
       gitspace_states: filter.gitspace_states.length ? filter.gitspace_states : undefined,
       order: sortConfig.sort ? sortConfig.order : undefined,
@@ -75,12 +84,12 @@ export const useLisitngApi = ({ page, filter, sortConfig }: { page: number; filt
 
   useEffect(() => {
     if (standalone) {
-      gitness.refetch({ queryParams: { ...pageBrowser, page, limit: LIST_FETCHING_LIMIT } })
+      gitness.refetch({ queryParams: { ...pageBrowser, page, limit } })
     } else {
       const queryParams = {
         ...pageBrowser,
         page,
-        limit: LIST_FETCHING_LIMIT,
+        limit,
         gitspace_owner: filter.gitspace_owner || undefined,
         gitspace_states: filter?.gitspace_states?.length ? filter.gitspace_states : undefined,
         order: sortConfig.sort ? sortConfig.order : undefined,
@@ -93,7 +102,7 @@ export const useLisitngApi = ({ page, filter, sortConfig }: { page: number; filt
         }
       })
     }
-  }, [page, filter, sortConfig])
+  }, [page, limit, filter, sortConfig])
 
   return standalone ? gitness : cde
 }

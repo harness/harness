@@ -30,12 +30,10 @@ import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { getErrorMessage } from 'utils/Utils'
+import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import noSpace from 'cde-gitness/assests/no-gitspace.svg?url'
-import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useQueryParams } from 'hooks/useQueryParams'
-import { usePageIndex } from 'hooks/usePageIndex'
 import { ListGitspaces } from 'cde-gitness/components/GitspaceListing/ListGitspaces'
 import CDEHomePage from 'cde-gitness/components/CDEHomePage/CDEHomePage'
 import UsageMetrics from 'cde-gitness/components/UsageMetrics/UsageMetrics'
@@ -52,6 +50,7 @@ import css from './GitspacesListing.module.scss'
 
 interface pageCDEBrowser {
   page?: string
+  limit?: string
   gitspace_states?: string
   gitspace_owner?: GitspaceOwnerType
   sort?: EnumGitspaceSort
@@ -68,6 +67,11 @@ interface sortProps {
   order: 'asc' | 'desc'
 }
 
+interface pageConfigProps {
+  page: number
+  limit: number
+}
+
 const GitspaceListing = () => {
   const space = useGetSpaceParam()
   const { updateQueryParams } = useUpdateQueryParams()
@@ -81,8 +85,11 @@ const GitspaceListing = () => {
     gitspace_states: statesString?.split(',')?.map((state: string) => state.trim() as GitspaceStatus) ?? [],
     gitspace_owner: pageBrowser.gitspace_owner ?? GitspaceOwnerType.SELF
   }
-  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
-  const [page, setPage] = usePageIndex(pageInit)
+  const pageInit: pageConfigProps = {
+    page: pageBrowser.page ? parseInt(pageBrowser.page) : 1,
+    limit: pageBrowser.limit ? parseInt(pageBrowser.limit) : LIST_FETCHING_LIMIT
+  }
+  const [pageConfig, setPageConfig] = useState(pageInit)
   const [filter, setFilter] = useState(filterInit)
 
   const sortInit: sortProps = { sort: (pageBrowser.sort as EnumGitspaceSort) ?? '', order: 'desc' }
@@ -95,14 +102,15 @@ const GitspaceListing = () => {
     error = undefined,
     refetch,
     response
-  } = useLisitngApi({ page, filter, sortConfig })
+  } = useLisitngApi({ page: pageConfig.page, limit: pageConfig.limit, filter, sortConfig })
 
   function useParsePaginationInfo(responseData: Nullable<Response>) {
     const totalData = useMemo(() => parseInt(responseData?.headers?.get('x-total') || '0'), [responseData])
+    const totalPages = useMemo(() => parseInt(responseData?.headers?.get('x-total-pages') || '0'), [responseData])
 
-    return totalData
+    return { totalItems: totalData, totalPages }
   }
-  const totalItems = useParsePaginationInfo(response)
+  const { totalItems, totalPages } = useParsePaginationInfo(response)
 
   const handleFilterChange = (key: string, value: any) => {
     const payload: any = { ...filter }
@@ -124,6 +132,18 @@ const GitspaceListing = () => {
       ...sortConfig,
       [key]: value
     })
+  }
+
+  const handlePagination = (key: string, value: number) => {
+    const payload = {
+      ...pageConfig,
+      [key]: value
+    }
+    if (key === 'limit') {
+      payload['page'] = 1
+    }
+    updateQueryParams({ page: payload?.page?.toString(), limit: payload?.limit?.toString() })
+    setPageConfig(payload)
   }
 
   return (
@@ -214,8 +234,19 @@ const GitspaceListing = () => {
                   <Text className={css.totalItems}>
                     {getString('cde.total')}: {totalItems}
                   </Text>
-                  <ListGitspaces data={(data as Unknown) || []} hasFilter={hasFilter} refreshList={refetch} />
-                  <ResourceListingPagination response={response} page={page} setPage={setPage} />
+                  <ListGitspaces
+                    data={(data as Unknown) || []}
+                    hasFilter={hasFilter}
+                    refreshList={refetch}
+                    gotoPage={(pageNumber: number) => handlePagination('page', pageNumber + 1)}
+                    onPageSizeChange={(newSize: number) => handlePagination('limit', newSize)}
+                    pageConfig={{
+                      page: pageConfig.page,
+                      pageSize: pageConfig.limit,
+                      totalItems,
+                      totalPages
+                    }}
+                  />
                 </>
               )}
             </Page.Body>
