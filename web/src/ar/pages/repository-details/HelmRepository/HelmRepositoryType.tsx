@@ -49,6 +49,7 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected repositoryName = 'Helm Repository'
   protected repositoryIcon: IconName = 'service-helm'
   protected supportedScanners = []
+  protected supportsUpstreamProxy = true
 
   protected defaultValues: VirtualRegistryRequest = {
     packageType: RepositoryPackageType.HELM,

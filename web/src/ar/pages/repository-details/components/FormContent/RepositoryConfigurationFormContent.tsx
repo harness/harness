@@ -26,6 +26,7 @@ import { Separator } from '@ar/components/Separator/Separator'
 import { Parent, RepositoryPackageType } from '@ar/common/types'
 import type { VirtualRegistryRequest } from '@ar/pages/repository-details/types'
 import CollapseContainer from '@ar/components/CollapseContainer/CollapseContainer'
+import repositoryFactory from '@ar/frameworks/RepositoryStep/RepositoryFactory'
 
 import RepositoryDetailsFormContent from './RepositoryDetailsFormContent'
 import { RepositoryProviderContext } from '../../context/RepositoryProvider'
@@ -50,6 +51,7 @@ function RepositoryConfigurationFormContent(
   const { dirty, values } = formik
   const { packageType } = values
   const [isCollapsedAdvancedConfig] = useState(getInitialStateOfCollapse())
+  const repositoryType = repositoryFactory.getRepositoryType(packageType)
 
   useEffect(() => {
     setIsDirty(dirty)
@@ -86,9 +88,11 @@ function RepositoryConfigurationFormContent(
         }
         initialState={isCollapsedAdvancedConfig}>
         <Card className={classNames(css.cardContainer)}>
-          <Container className={css.upstreamProxiesContainer}>
-            <RepositoryUpstreamProxiesFormContent isEdit disabled={readonly} />
-          </Container>
+          {repositoryType?.getSupportsUpstreamProxy() && (
+            <Container className={css.upstreamProxiesContainer}>
+              <RepositoryUpstreamProxiesFormContent isEdit disabled={readonly} />
+            </Container>
+          )}
           {parent === Parent.Enterprise && (
             <>
               <Separator />

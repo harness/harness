@@ -49,6 +49,7 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
   protected repositoryName = 'Docker Repository'
   protected repositoryIcon: IconName = 'docker-step'
   protected supportedScanners = [Scanners.AQUA_TRIVY]
+  protected supportsUpstreamProxy = true
 
   protected defaultValues: VirtualRegistryRequest = {
     packageType: RepositoryPackageType.DOCKER,

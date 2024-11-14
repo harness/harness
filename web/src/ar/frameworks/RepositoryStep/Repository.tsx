@@ -52,6 +52,7 @@ export abstract class RepositoryStep<T, U = unknown> {
   protected abstract defaultValues: T
   protected abstract defaultUpstreamProxyValues: U
   protected abstract repositoryIcon: IconName
+  protected abstract supportsUpstreamProxy: boolean
   protected repositoryIconColor?: string
   protected repositoryIconSize?: number
   protected supportedScanners?: Scanners[]
@@ -97,6 +98,10 @@ export abstract class RepositoryStep<T, U = unknown> {
 
   getUpstreamProxyInitialValues(data: U): U {
     return data
+  }
+
+  getSupportsUpstreamProxy(): boolean {
+    return this.supportsUpstreamProxy
   }
 
   processRepositoryFormData(values: U): U {

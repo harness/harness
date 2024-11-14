@@ -18,15 +18,27 @@ import React from 'react'
 import type { IconName } from '@harnessio/icons'
 import UpstreamProxyCreateFormContent from '@ar/pages/upstream-proxy-details/components/FormContent/UpstreamProxyCreateFormContent'
 import { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
-import { CreateRepositoryFormProps, RepositoryStep } from '@ar/frameworks/RepositoryStep/Repository'
-import type { VirtualRegistryRequest } from '../types'
+import {
+  CreateRepositoryFormProps,
+  RepositoryConfigurationFormProps,
+  RepositoryDetailsHeaderProps,
+  RepositoryStep,
+  RepositoySetupClientProps
+} from '@ar/frameworks/RepositoryStep/Repository'
+import UpstreamProxyConfigurationForm from '@ar/pages/upstream-proxy-details/components/Forms/UpstreamProxyConfigurationForm'
+import UpstreamProxyDetailsHeader from '@ar/pages/upstream-proxy-details/components/UpstreamProxyDetailsHeader/UpstreamProxyDetailsHeader'
+import type { Repository, VirtualRegistryRequest } from '../types'
 import RepositoryCreateFormContent from '../components/FormContent/RepositoryCreateFormContent'
+import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigurationForm'
+import RepositoryDetailsHeader from '../components/RepositoryDetailsHeader/RepositoryDetailsHeader'
+import SetupClientContent from '../components/SetupClientContent/SetupClientContent'
 
 export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected packageType = RepositoryPackageType.GENERIC
   protected repositoryName = 'Generic Repository'
   protected repositoryIcon: IconName = 'generic-repository-type'
   protected supportedScanners = []
+  protected supportsUpstreamProxy = false
 
   protected defaultValues: VirtualRegistryRequest = {
     packageType: RepositoryPackageType.GENERIC,
@@ -48,19 +60,38 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
     }
   }
 
-  renderCofigurationForm(): JSX.Element {
-    return <></>
+  renderCofigurationForm(props: RepositoryConfigurationFormProps<Repository>): JSX.Element {
+    const { type, formikRef, readonly } = props
+    if (type === RepositoryConfigType.VIRTUAL) {
+      return <RepositoryConfigurationForm ref={formikRef} readonly={readonly} />
+    } else {
+      return <UpstreamProxyConfigurationForm ref={formikRef} readonly={readonly} />
+    }
   }
 
   renderActions(): JSX.Element {
     return <></>
   }
 
-  renderSetupClient(): JSX.Element {
-    return <></>
+  renderSetupClient(props: RepositoySetupClientProps): JSX.Element {
+    const { repoKey, onClose, artifactKey, versionKey } = props
+    return (
+      <SetupClientContent
+        repoKey={repoKey}
+        artifactKey={artifactKey}
+        versionKey={versionKey}
+        onClose={onClose}
+        packageType={RepositoryPackageType.GENERIC}
+      />
+    )
   }
 
-  renderRepositoryDetailsHeader(): JSX.Element {
-    return <></>
+  renderRepositoryDetailsHeader(props: RepositoryDetailsHeaderProps<Repository>): JSX.Element {
+    const { type } = props
+    if (type === RepositoryConfigType.VIRTUAL) {
+      return <RepositoryDetailsHeader data={props.data} />
+    } else {
+      return <UpstreamProxyDetailsHeader data={props.data} />
+    }
   }
 }

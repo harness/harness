@@ -25,7 +25,7 @@ export const Separator = ({
   bottomSeparation?: React.CSSProperties['minHeight']
 }): React.ReactElement => {
   return (
-    <div>
+    <div className={css.separatorContainer}>
       <div style={{ minHeight: topSeparation }}></div>
       <div className={css.separator}></div>
       <div style={{ minHeight: bottomSeparation }}></div>
