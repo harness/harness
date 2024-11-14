@@ -9,7 +9,7 @@ platform:
 
 steps:
 - name: test
-  image: golang:1.22.7
+  image: golang:1.14.15
   commands:
   - go test -race ./...
   - go build -o /dev/null github.com/drone/drone/cmd/drone-server
