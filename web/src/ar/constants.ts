@@ -22,7 +22,7 @@ export const DEFAULT_UPSTREAM_PROXY_LIST_TABLE_SORT = ['updatedAt', 'DESC']
 
 export const DEFAULT_DATE_FORMAT = 'MMM DD, YYYY'
 export const DEFAULT_TIME_FORMAT = 'hh:mm a'
-export const DEFAULT_DATE_TIME_FORMAT = `${DEFAULT_DATE_FORMAT}  ${DEFAULT_TIME_FORMAT}`
+export const DEFAULT_DATE_TIME_FORMAT = `${DEFAULT_DATE_FORMAT} ${DEFAULT_TIME_FORMAT}`
 
 export const REPO_KEY_REGEX = /^[a-z0-9]+(?:[._-][a-z0-9]+)*$/
 export const URL_REGEX =

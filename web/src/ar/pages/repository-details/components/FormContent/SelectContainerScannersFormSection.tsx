@@ -48,7 +48,7 @@ export default function SelectContainerScannersFormSection(
   if (!availableScannerOptions.length) return <></>
 
   return (
-    <Container>
+    <Container data-testid="security-scan-section">
       <Container className={css.marginTopLarge}>
         <Text className={css.cardHeading} font={{ variation: FontVariation.CARD_TITLE }}>
           {getString('repositoryDetails.repositoryForm.securityScan.title')}

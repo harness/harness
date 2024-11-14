@@ -40,7 +40,7 @@ function RepositoryUpstreamProxiesFormContent(
   const { packageType } = values
 
   return (
-    <Layout.Vertical flex={{ alignItems: 'flex-start' }} spacing="xsmall">
+    <Layout.Vertical data-testid="upstream-proxy-section" flex={{ alignItems: 'flex-start' }} spacing="xsmall">
       <Text font={{ variation: FontVariation.CARD_TITLE }}>
         {getString('repositoryDetails.repositoryForm.upstreamProxiesTitle')}
       </Text>

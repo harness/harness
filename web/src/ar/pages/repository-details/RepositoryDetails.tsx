@@ -27,7 +27,6 @@ import type { RepositoryConfigType, RepositoryPackageType } from '@ar/common/typ
 import RepositoryDetailsHeaderWidget from '@ar/frameworks/RepositoryStep/RepositoryDetailsHeaderWidget'
 import RepositoryConfigurationFormWidget from '@ar/frameworks/RepositoryStep/RepositoryConfigurationFormWidget'
 
-import type { Repository } from './types'
 import { RepositoryDetailsTab } from './constants'
 import { RepositoryProviderContext } from './context/RepositoryProvider'
 import RegistryArtifactListPage from '../artifact-list/RegistryArtifactListPage'
@@ -43,9 +42,6 @@ export default function RepositoryDetails(): JSX.Element | null {
   const stepRef = React.useRef<FormikProps<unknown> | null>(null)
 
   const { isDirty, data, isReadonly, isUpdating } = useContext(RepositoryProviderContext)
-
-  const { config } = data as Repository
-  const { type } = config
 
   const handleTabChange = useCallback(
     (nextTab: RepositoryDetailsTab): void => {
@@ -114,7 +110,7 @@ export default function RepositoryDetails(): JSX.Element | null {
             panel={
               <RepositoryConfigurationFormWidget
                 packageType={data.packageType as RepositoryPackageType}
-                type={type as RepositoryConfigType}
+                type={data.config.type as RepositoryConfigType}
                 ref={stepRef}
                 readonly={isReadonly}
               />

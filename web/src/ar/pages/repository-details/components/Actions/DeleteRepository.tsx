@@ -16,7 +16,6 @@
 
 import React from 'react'
 import { useHistory } from 'react-router-dom'
-import { defaultTo } from 'lodash-es'
 
 import { useStrings } from '@ar/frameworks/strings'
 import { useParentComponents, useRoutes } from '@ar/hooks'
@@ -55,7 +54,7 @@ export default function DeleteRepositoryMenuItem({ data, onClose }: RepositoryAc
       permission={{
         resource: {
           resourceType: ResourceType.ARTIFACT_REGISTRY,
-          resourceIdentifier: defaultTo(data?.identifier, '')
+          resourceIdentifier: data.identifier
         },
         permission: PermissionIdentifier.DELETE_ARTIFACT_REGISTRY
       }}

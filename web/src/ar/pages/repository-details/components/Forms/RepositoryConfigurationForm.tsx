@@ -16,7 +16,6 @@
 
 import React, { forwardRef, useContext } from 'react'
 import * as Yup from 'yup'
-import { useQueryClient } from '@tanstack/react-query'
 import { Formik, FormikForm, getErrorInfoFromErrorObject, useToaster } from '@harnessio/uicore'
 import { RegistryRequestRequestBody, useModifyRegistryMutation } from '@harnessio/react-har-service-client'
 
@@ -31,6 +30,7 @@ import {
 import { RepositoryProviderContext } from '@ar/pages/repository-details/context/RepositoryProvider'
 import RepositoryConfigurationFormContent from '@ar/pages/repository-details/components/FormContent/RepositoryConfigurationFormContent'
 
+import { queryClient } from '@ar/utils/queryClient'
 import type { FormikFowardRef } from '@ar/common/types'
 import type { VirtualRegistry, VirtualRegistryRequest } from '@ar/pages/repository-details/types'
 import type { RepositoryAbstractFactory } from '@ar/frameworks/RepositoryStep/RepositoryAbstractFactory'
@@ -48,7 +48,6 @@ function RepositoryConfigurationForm(props: RepositoryConfigurationFormProps, fo
   const { showSuccess, showError, clear } = useToaster()
   const { getString } = useStrings()
   const spaceRef = useGetSpaceRef()
-  const queryClient = useQueryClient()
 
   const { mutateAsync: modifyRepository } = useModifyRegistryMutation()
 

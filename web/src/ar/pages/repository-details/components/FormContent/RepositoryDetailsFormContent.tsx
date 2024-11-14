@@ -36,7 +36,7 @@ function RepositoryDetailsFormContent(
   const { values } = formik
   const { description, labels } = values
   return (
-    <Container>
+    <Container data-testid="registry-definition">
       <FormInput.Text
         name="identifier"
         inputGroup={{

@@ -66,11 +66,11 @@ export default function SetupClientContent(props: SetupClientContentProps): JSX.
     <Page.Body className={css.pageBody} loading={loading} error={error?.message} retryOnError={() => refetch()}>
       {responseData && (
         <Layout.Vertical>
-          <Layout.Horizontal className={css.titleContainer} spacing="medium">
+          <Layout.Horizontal data-testid="setup-client-header" className={css.titleContainer} spacing="medium">
             <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: 28 }} />
             <Text font={{ variation: FontVariation.H3 }}>{responseData.mainHeader}</Text>
           </Layout.Horizontal>
-          <Layout.Vertical className={css.contentContainer} spacing="medium">
+          <Layout.Vertical data-testid="setup-client-body" className={css.contentContainer} spacing="medium">
             <Text font={{ variation: FontVariation.SMALL }}>{responseData.secHeader}</Text>
             {responseData.sections.map((section, index) => (
               <Layout.Vertical spacing="medium" key={index}>
@@ -101,7 +101,10 @@ export default function SetupClientContent(props: SetupClientContentProps): JSX.
               </Layout.Vertical>
             ))}
           </Layout.Vertical>
-          <Layout.Horizontal padding="xxlarge" flex={{ justifyContent: 'flex-start' }}>
+          <Layout.Horizontal
+            data-testid="setup-client-footer"
+            padding="xxlarge"
+            flex={{ justifyContent: 'flex-start' }}>
             <Button
               variation={ButtonVariation.PRIMARY}
               text={getString('repositoryDetails.clientSetup.done')}

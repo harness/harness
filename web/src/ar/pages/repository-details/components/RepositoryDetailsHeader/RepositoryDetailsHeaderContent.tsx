@@ -49,11 +49,11 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
   })
   return (
     <Container>
-      <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }}>
+      <Layout.Horizontal data-testid="registry-header-container" spacing="medium" flex={{ alignItems: 'center' }}>
         <RepositoryIcon packageType={packageType as RepositoryPackageType} iconProps={{ size: iconSize }} />
         <Layout.Vertical spacing="small" className={css.nameContainer}>
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-            <HeaderTitle>{identifier}</HeaderTitle>
+            <HeaderTitle data-testid="registry-title">{identifier}</HeaderTitle>
             <RepositoryLocationBadge type={RepositoryConfigType.VIRTUAL} />
             {!isEmpty(labels) && (
               <LabelsPopover
@@ -67,14 +67,19 @@ export default function RepositoryDetailsHeaderContent(props: RepositoryDetailsH
               />
             )}
           </Layout.Horizontal>
-          <Text font={{ size: 'small' }} color={Color.GREY_500} width={800} lineClamp={1}>
+          <Text
+            data-testid="registry-description"
+            font={{ size: 'small' }}
+            color={Color.GREY_500}
+            width={800}
+            lineClamp={1}>
             {description || getString('noDescription')}
           </Text>
           <Layout.Horizontal spacing="small">
             <Text font={{ size: 'small', weight: 'semi-bold' }} color={Color.BLACK} margin={{ right: 'small' }}>
               {getString('lastUpdated')}:
             </Text>
-            <Text font={{ size: 'small' }}>
+            <Text data-testid="registry-last-modified-at" font={{ size: 'small' }}>
               {modifiedAt ? getReadableDateTime(Number(modifiedAt), DEFAULT_DATE_TIME_FORMAT) : getString('na')}
             </Text>
           </Layout.Horizontal>

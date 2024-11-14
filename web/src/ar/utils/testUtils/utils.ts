@@ -73,7 +73,7 @@ MockTestUtils.components = {
 MockTestUtils.utils = {
   getCustomHeaders,
   getApiBaseUrl,
-  generateToken: async () => ''
+  generateToken: jest.fn()
 }
 
 export const MockLicenseContext = createContext({

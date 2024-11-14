@@ -36,7 +36,10 @@ function RepositoryIncludeExcludePatternFormContent(
   const { formik, disabled, isEdit } = props
   const { getString } = useStrings()
   return (
-    <Layout.Vertical spacing="small" className={css.includeExcludeWrapper}>
+    <Layout.Vertical
+      data-testid="include-exclude-patterns-section"
+      spacing="small"
+      className={css.includeExcludeWrapper}>
       <Text font={{ variation: FontVariation.CARD_TITLE }}>
         {getString('repositoryDetails.repositoryForm.includeExcludePatternsTitle')}
       </Text>

@@ -161,7 +161,7 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
         minimal
         intent="primary"
         data-testid="add-patter"
-        onClick={() => showCreateUpstreamProxyModal()}
+        onClick={showCreateUpstreamProxyModal}
         text={getString('repositoryDetails.upstreamProxiesSelectList.newUpstreamProxyLabel')}
         disabled={disabled}
       />

@@ -43,7 +43,7 @@ function RepositoryCleanupPoliciesFormContent(
   }
 
   return (
-    <Layout.Vertical flex={{ alignItems: 'flex-start' }} spacing="xsmall">
+    <Layout.Vertical data-testid="cleanup-policy-section" flex={{ alignItems: 'flex-start' }} spacing="xsmall">
       <Text font={{ variation: FontVariation.CARD_TITLE }}>
         {getString('repositoryDetails.repositoryForm.cleanupPoliciesTitle')}
       </Text>

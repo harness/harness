@@ -15,7 +15,6 @@
  */
 
 import React from 'react'
-import { defaultTo } from 'lodash-es'
 
 import { useParentComponents } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
@@ -41,7 +40,7 @@ export default function SetupClientMenuItem({ data, onClose }: RepositoryActions
         permission={{
           resource: {
             resourceType: ResourceType.ARTIFACT_REGISTRY,
-            resourceIdentifier: defaultTo(data?.identifier, '')
+            resourceIdentifier: data.identifier
           },
           permission: PermissionIdentifier.VIEW_ARTIFACT_REGISTRY
         }}
