@@ -53,6 +53,7 @@ func ProvideService(
 	encrypter encrypt.Encrypter,
 	labelStore store.LabelStore,
 	webhookURLProvider URLProvider,
+	labelValueStore store.LabelValueStore,
 ) (*Service, error) {
 	return NewService(
 		ctx,
@@ -71,6 +72,7 @@ func ProvideService(
 		encrypter,
 		labelStore,
 		webhookURLProvider,
+		labelValueStore,
 	)
 }
 

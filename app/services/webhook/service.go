@@ -92,6 +92,7 @@ type Service struct {
 	git                   git.Interface
 	activityStore         store.PullReqActivityStore
 	labelStore            store.LabelStore
+	labelValueStore       store.LabelValueStore
 	encrypter             encrypt.Encrypter
 
 	secureHTTPClient   *http.Client
@@ -122,6 +123,7 @@ func NewService(
 	encrypter encrypt.Encrypter,
 	labelStore store.LabelStore,
 	webhookURLProvider URLProvider,
+	labelValueStore store.LabelValueStore,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
@@ -148,6 +150,7 @@ func NewService(
 		config: config,
 
 		labelStore:         labelStore,
+		labelValueStore:    labelValueStore,
 		webhookURLProvider: webhookURLProvider,
 	}
 
@@ -192,6 +195,7 @@ func NewService(
 			_ = r.RegisterBranchUpdated(service.handleEventPullReqBranchUpdated)
 			_ = r.RegisterClosed(service.handleEventPullReqClosed)
 			_ = r.RegisterCommentCreated(service.handleEventPullReqComment)
+			_ = r.RegisterCommentUpdated(service.handleEventPullReqCommentUpdated)
 			_ = r.RegisterMerged(service.handleEventPullReqMerged)
 			_ = r.RegisterUpdated(service.handleEventPullReqUpdated)
 			_ = r.RegisterLabelAssigned(service.handleEventPullReqLabelAssigned)

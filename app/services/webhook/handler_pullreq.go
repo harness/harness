@@ -360,10 +360,87 @@ func (s *Service) handleEventPullReqComment(
 						ID:       activity.ID,
 						ParentID: activity.ParentID,
 						Kind:     activity.Kind,
+						Created:  activity.Created,
+						Updated:  activity.Updated,
 					},
 				},
 			}, nil
 		})
+}
+
+// PullReqCommentUpdatedPayload describes the body of the pullreq comment create trigger.
+type PullReqCommentUpdatedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqCommentSegment
+}
+
+// handleEventPullReqCommentUpdated handles updated events for pull request comments.
+func (s *Service) handleEventPullReqCommentUpdated(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.CommentUpdatedPayload],
+) error {
+	return s.triggerForEventWithPullReq(
+		ctx,
+		enum.WebhookTriggerPullReqCommentUpdated,
+		event.ID,
+		event.Payload.PrincipalID,
+		event.Payload.PullReqID,
+		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
+			activity, err := s.activityStore.Find(ctx, event.Payload.ActivityID)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"failed to get activity by id for acitivity id %d: %w",
+					event.Payload.ActivityID,
+					err,
+				)
+			}
+			return &PullReqCommentUpdatedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqCommentUpdated,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				PullReqCommentSegment: PullReqCommentSegment{
+					CommentInfo: CommentInfo{
+						Text:     activity.Text,
+						ID:       activity.ID,
+						ParentID: activity.ParentID,
+						Created:  activity.Created,
+						Updated:  activity.Updated,
+					},
+					CodeCommentInfo: extractCodeCommentInfoIfAvailable(activity),
+				},
+			}, nil
+		})
+}
+
+func extractCodeCommentInfoIfAvailable(
+	activity *types.PullReqActivity,
+) *CodeCommentInfo {
+	if !activity.IsValidCodeComment() {
+		return nil
+	}
+	return (*CodeCommentInfo)(activity.CodeComment)
 }
 
 // PullReqLabelAssignedPayload describes the body of the pullreq label assignment trigger.
@@ -393,19 +470,19 @@ func (s *Service) handleEventPullReqLabelAssigned(
 				return nil, fmt.Errorf("failed to find label by id: %w", err)
 			}
 
-			var labelValueKey *string
+			var labelValue *string
 			if event.Payload.ValueID != nil {
-				value, err := s.labelStore.FindByID(ctx, *event.Payload.ValueID)
+				value, err := s.labelValueStore.FindByID(ctx, *event.Payload.ValueID)
 				if err != nil {
 					return nil, fmt.Errorf("failed to find label value by id: %d %w", *event.Payload.ValueID, err)
 				}
-				labelValueKey = &value.Key
+				labelValue = &value.Value
 			}
 
 			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
 			return &PullReqLabelAssignedPayload{
 				BaseSegment: BaseSegment{
-					Trigger:   enum.WebhookTriggerPullReqCommentCreated,
+					Trigger:   enum.WebhookTriggerPullReqLabelAssigned,
 					Repo:      targetRepoInfo,
 					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
@@ -417,7 +494,7 @@ func (s *Service) handleEventPullReqLabelAssigned(
 						ID:      event.Payload.LabelID,
 						Key:     label.Key,
 						ValueID: event.Payload.ValueID,
-						Value:   labelValueKey,
+						Value:   labelValue,
 					},
 				},
 			}, nil

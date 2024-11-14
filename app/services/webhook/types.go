@@ -78,6 +78,13 @@ type PullReqSegment struct {
 // PullReqCommentSegment contains details for all pull req comment related payloads for webhooks.
 type PullReqCommentSegment struct {
 	CommentInfo CommentInfo `json:"comment"`
+	*CodeCommentInfo
+}
+
+// PullReqCommentUpdatedSegment contains details for pullreq text comment edited payloads for webhooks.
+type PullReqCommentUpdatedSegment struct {
+	CommentInfo
+	*CodeCommentInfo
 }
 
 // PullReqLabelSegment contains details for all pull req label related payloads for webhooks.
@@ -302,6 +309,8 @@ type CommentInfo struct {
 	ID       int64                    `json:"id"`
 	ParentID *int64                   `json:"parent_id,omitempty"`
 	Text     string                   `json:"text"`
+	Created  int64                    `json:"created"`
+	Updated  int64                    `json:"updated"`
 	Kind     enum.PullReqActivityKind `json:"kind"`
 }
 
@@ -310,4 +319,15 @@ type LabelInfo struct {
 	Key     string  `json:"key"`
 	ValueID *int64  `json:"value_id,omitempty"`
 	Value   *string `json:"value,omitempty"`
+}
+
+type CodeCommentInfo struct {
+	Outdated     bool   `json:"outdated"`
+	MergeBaseSHA string `json:"merge_base_sha"`
+	SourceSHA    string `json:"source_sha"`
+	Path         string `json:"path"`
+	LineNew      int    `json:"line_new"`
+	SpanNew      int    `json:"span_new"`
+	LineOld      int    `json:"line_old"`
+	SpanOld      int    `json:"span_old"`
 }

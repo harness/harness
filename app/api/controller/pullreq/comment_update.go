@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -119,5 +120,27 @@ func (c *Controller) CommentUpdate(
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
 
+	c.reportCommentUpdated(ctx, pr, session.Principal.ID, act.ID, act.IsReply())
+
 	return act, nil
+}
+
+func (c *Controller) reportCommentUpdated(
+	ctx context.Context,
+	pr *types.PullReq,
+	principalID int64,
+	actID int64,
+	isReply bool,
+) {
+	c.eventReporter.CommentUpdated(ctx, &events.CommentUpdatedPayload{
+		Base: events.Base{
+			PullReqID:    pr.ID,
+			SourceRepoID: pr.SourceRepoID,
+			TargetRepoID: pr.TargetRepoID,
+			PrincipalID:  principalID,
+			Number:       pr.Number,
+		},
+		ActivityID: actID,
+		IsReply:    isReply,
+	})
 }
