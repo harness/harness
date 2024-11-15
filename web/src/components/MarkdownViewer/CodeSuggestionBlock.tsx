@@ -143,7 +143,9 @@ export const CodeSuggestionBlock: React.FC<CodeSuggestionBlockProps> = ({
 
   const states = useMemo(
     () => ({
-      addedToBatch: suggestions?.find(item => item.check_sum === checksum),
+      addedToBatch: suggestions?.find(
+        item => item.check_sum === checksum && item.comment_id === suggestionBlock?.commentId
+      ),
       otherAddedToBatch: suggestions?.find(
         item => item.check_sum !== checksum && item.comment_id === suggestionBlock?.commentId
       )
@@ -157,7 +159,11 @@ export const CodeSuggestionBlock: React.FC<CodeSuggestionBlockProps> = ({
         setSuggestions([...suggestions, { check_sum: checksum, comment_id: suggestionBlock?.commentId as number }])
       },
       removeFromBatch: () => {
-        setSuggestions(suggestions.filter(suggestion => suggestion.check_sum !== checksum))
+        setSuggestions(
+          suggestions.filter(
+            suggestion => !(suggestion.check_sum === checksum && suggestion.comment_id === suggestionBlock?.commentId)
+          )
+        )
       },
       commit: openCommitSuggestionsModal
     }),
