@@ -134,12 +134,12 @@ minuteUsage: Minute Usage
 renewsEveryMonth: Renews 1st of every month
 remainingOfTotal: remaining of <strong>{{total}}</strong>
 renewTooltip:
-  line1: The amount of minutes for which a gitspace can run in the account.
-  line2: The amount is reset after every 30 days
+  line1: With our beta plan, you receive 2,000 free minutes of Gitspace usage each month.
+  line2: These minutes automatically renew every 30 days, resetting on the 1st of each month.
   haveQuestion: Have questions ?
   contactUs: Contact Us
 changesTooltip:
-  description: A gitspace is meant to be used just like a user might use an IDE locally in their laptop. To check if a gitspace has any changes which a user might want to save/sync with the remote repo before deleting it, the user needs to start the gitspace and check.
+  description: You can monitor updates to your Gitspaces using this flag. If there are active changes, this status updates to “Has Changes”.
   learnMore: Learn more about Gitspace changes
 lastUsedTooltip: Timestamp indicating when the Gitspace was last used.
 lastStartedTooltip: Timestamp indicating when the Gitspace was most recently started.

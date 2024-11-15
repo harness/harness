@@ -45,16 +45,16 @@ export interface GitspaceStatusTypesListItem {
 
 export const GitspaceStatusTypes = (getString: any) => [
   {
-    label: getString('cde.gitspaceStatus.error'),
-    value: GitspaceStatus.ERROR
-  },
-  {
     label: getString('cde.gitspaceStatus.active'),
     value: GitspaceStatus.RUNNING
   },
   {
     label: getString('cde.gitspaceStatus.stopped'),
     value: GitspaceStatus.STOPPED
+  },
+  {
+    label: getString('cde.gitspaceStatus.error'),
+    value: GitspaceStatus.ERROR
   }
 ]
 

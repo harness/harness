@@ -176,9 +176,6 @@ export const DetailsCard = ({
                     <Text font="small" color={Color.WHITE}>
                       {getString('cde.changesTooltip.description')}
                     </Text>
-                    <Text color={Color.PRIMARY_7} font="small" style={{ cursor: 'pointer' }}>
-                      {getString('cde.changesTooltip.learnMore')}
-                    </Text>
                   </Layout.Vertical>
                 </Container>
               }
