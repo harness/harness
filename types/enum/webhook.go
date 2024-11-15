@@ -188,4 +188,5 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqCommentStatusUpdated,
 	WebhookTriggerPullReqMerged,
 	WebhookTriggerPullReqLabelAssigned,
+	WebhookTriggerPullReqReviewSubmitted,
 })
