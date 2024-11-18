@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
 	"github.com/harness/gitness/app/gitspace/scm"
+	"github.com/harness/gitness/app/gitspace/types"
 )
 
 var _ Service = (*ServiceImpl)(nil)
@@ -38,50 +39,52 @@ func NewGitServiceImpl() Service {
 	return &ServiceImpl{}
 }
 
-func (g *ServiceImpl) Install(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
+func (g *ServiceImpl) Install(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger types.GitspaceLogger,
+) error {
 	script, err := template.GenerateScriptFromTemplate(
 		templateGitInstallScript, &template.SetupGitInstallPayload{
 			OSInfoScript: common.GetOSInfoScript(),
 		})
 	if err != nil {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"failed to generate scipt to setup git install from template %s: %w", templateGitInstallScript, err)
 	}
-	output := "Setting up git inside container\n"
-	_, err = exec.ExecuteCommandInHomeDirectory(ctx, script, true, false)
+	gitspaceLogger.Info("Install git output...")
+	gitspaceLogger.Info("Setting up git inside container")
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to setup git: %w", err)
+		return fmt.Errorf("failed to setup git: %w", err)
 	}
+	gitspaceLogger.Info("Successfully setup git")
 
-	output += "Successfully setup git\n"
-
-	return []byte(output), nil
+	return nil
 }
 
 func (g *ServiceImpl) SetupCredentials(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	resolvedRepoDetails scm.ResolvedDetails,
-) ([]byte, error) {
+	gitspaceLogger types.GitspaceLogger,
+) error {
 	script, err := template.GenerateScriptFromTemplate(
 		templateSetupGitCredentials, &template.SetupGitCredentialsPayload{
 			CloneURLWithCreds: resolvedRepoDetails.CloneURL,
 		})
 	if err != nil {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"failed to generate scipt to setup git credentials from template %s: %w", templateSetupGitCredentials, err)
 	}
-
-	output := "Setting up git credentials inside container\n"
-
-	_, err = exec.ExecuteCommandInHomeDirectory(ctx, script, false, false)
+	gitspaceLogger.Info("Setting up git credentials output...")
+	gitspaceLogger.Info("Setting up git credentials inside container")
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, false, gitspaceLogger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to setup git credentials: %w", err)
+		return fmt.Errorf("failed to setup git credentials: %w", err)
 	}
-
-	output += "Successfully setup git credentials\n"
-
-	return []byte(output), nil
+	gitspaceLogger.Info("Successfully setup git credentials")
+	return nil
 }
 
 func (g *ServiceImpl) CloneCode(
@@ -89,10 +92,11 @@ func (g *ServiceImpl) CloneCode(
 	exec *devcontainer.Exec,
 	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
-) ([]byte, error) {
+	gitspaceLogger types.GitspaceLogger,
+) error {
 	cloneURL, err := url.Parse(resolvedRepoDetails.CloneURL)
 	if err != nil {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"failed to parse clone url %s: %w", resolvedRepoDetails.CloneURL, err)
 	}
 	cloneURL.User = nil
@@ -109,18 +113,16 @@ func (g *ServiceImpl) CloneCode(
 	script, err := template.GenerateScriptFromTemplate(
 		templateCloneCode, data)
 	if err != nil {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"failed to generate scipt to clone code from template %s: %w", templateCloneCode, err)
 	}
-
-	output := "Cloning code inside container\n"
-
-	_, err = exec.ExecuteCommandInHomeDirectory(ctx, script, false, false)
+	gitspaceLogger.Info("Clone output...")
+	gitspaceLogger.Info("Cloning code inside container")
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, false, gitspaceLogger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to clone code: %w", err)
+		return fmt.Errorf("failed to clone code: %w", err)
 	}
+	gitspaceLogger.Info("Successfully clone code")
 
-	output += "Successfully clone code\n"
-
-	return []byte(output), nil
+	return nil
 }

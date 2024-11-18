@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
+	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -47,7 +48,8 @@ func NewVsCodeService(config *VSCodeConfig) *VSCode {
 func (v *VSCode) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-) ([]byte, error) {
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
 	osInfoScript := common.GetOSInfoScript()
 	sshServerScript, err := template.GenerateScriptFromTemplate(
 		templateSetupSSHServer, &template.SetupSSHServerPayload{
@@ -56,43 +58,43 @@ func (v *VSCode) Setup(
 			OSInfoScript: osInfoScript,
 		})
 	if err != nil {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
 	}
 
-	output := "Installing ssh-server inside container\n"
-
-	_, err = exec.ExecuteCommandInHomeDirectory(ctx, sshServerScript, true, false)
+	gitspaceLogger.Info("Installing ssh-server inside container")
+	gitspaceLogger.Info("IDE setup output...")
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, sshServerScript, true, gitspaceLogger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to setup SSH serverr: %w", err)
+		return fmt.Errorf("failed to setup SSH serverr: %w", err)
 	}
-
-	output += "Successfully installed ssh-server\n"
-
-	return []byte(output), nil
+	gitspaceLogger.Info("Successfully installed ssh-server")
+	gitspaceLogger.Info("Successfully set up IDE inside container")
+	return nil
 }
 
 // Run runs the SSH server inside the container.
-func (v *VSCode) Run(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
-	var output = ""
-
+func (v *VSCode) Run(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
 	runSSHScript, err := template.GenerateScriptFromTemplate(
 		templateRunSSHServer, &template.RunSSHServerPayload{
 			Port: strconv.Itoa(v.config.Port),
 		})
 	if err != nil {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
 	}
-
-	execOutput, err := exec.ExecuteCommandInHomeDirectory(ctx, runSSHScript, true, false)
+	gitspaceLogger.Info("SSH server run output...")
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, runSSHScript, true, gitspaceLogger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to run SSH server: %w", err)
+		return fmt.Errorf("failed to run SSH server: %w", err)
 	}
+	gitspaceLogger.Info("Successfully run ssh-server")
 
-	output += "SSH server run output...\n" + string(execOutput) + "\nSuccessfully run ssh-server\n"
-
-	return []byte(output), nil
+	return nil
 }
 
 // Port returns the port on which the ssh-server is listening.

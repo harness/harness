@@ -27,6 +27,7 @@ import (
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
+	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -61,58 +62,75 @@ func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 }
 
 // Setup runs the installScript which downloads the required version of the code-server binary.
-func (v *VSCodeWeb) Setup(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
-	output := "Installing VSCode Web inside container.\n"
-
-	_, err := exec.ExecuteCommandInHomeDirectory(ctx, installScript, true, false)
+func (v *VSCodeWeb) Setup(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
+	gitspaceLogger.Info("Installing VSCode Web inside container.")
+	gitspaceLogger.Info("IDE setup output...")
+	outputCh := make(chan []byte)
+	err := exec.ExecuteCommandInHomeDirectory(ctx, installScript, true, false, outputCh)
 	if err != nil {
-		return nil, fmt.Errorf("failed to install VSCode Web: %w", err)
+		return fmt.Errorf("failed to install VSCode Web: %w", err)
+	}
+	for chunk := range outputCh {
+		_, err := io.Discard.Write(chunk)
+		if err != nil {
+			return err
+		}
 	}
 
-	findOutput, err := exec.ExecuteCommandInHomeDirectory(ctx, findPathScript, true, false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find VSCode Web install path: %w", err)
+	findCh := make(chan []byte)
+	err = exec.ExecuteCommandInHomeDirectory(ctx, findPathScript, true, false, findCh)
+	var findOutput []byte
+
+	for chunk := range findCh {
+		findOutput = append(findOutput, chunk...) // Concatenate each chunk of data
 	}
 
+	if err != nil {
+		return fmt.Errorf("failed to find VSCode Web install path: %w", err)
+	}
 	path := string(findOutput)
 	startIndex := strings.Index(path, startMarker)
 	endIndex := strings.Index(path, endMarker)
 	if startIndex == -1 || endIndex == -1 || startIndex >= endIndex {
-		return nil, fmt.Errorf("could not find media folder path from find output: %s", path)
+		return fmt.Errorf("could not find media folder path from find output: %s", path)
 	}
 
 	mediaFolderPath := path[startIndex+len(startMarker) : endIndex]
 	err = v.copyMediaToContainer(ctx, exec, mediaFolderPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to copy media folder to container at path %s: %w", mediaFolderPath, err)
+		return fmt.Errorf("failed to copy media folder to container at path %s: %w", mediaFolderPath, err)
 	}
-
-	output += "Successfully installed VSCode Web inside container.\n"
-
-	return []byte(output), nil
+	gitspaceLogger.Info("Successfully set up IDE inside container")
+	return nil
 }
 
 // Run runs the code-server binary.
-func (v *VSCodeWeb) Run(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
-	var output []byte
-
+func (v *VSCodeWeb) Run(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 	runScript, err := template.GenerateScriptFromTemplate(
 		templateRunVSCodeWeb, &template.RunVSCodeWebPayload{
 			Port: strconv.Itoa(v.config.Port),
 		})
 	if err != nil {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"failed to generate scipt to run VSCode Web from template %s: %w",
 			templateRunVSCodeWeb,
 			err,
 		)
 	}
-
-	_, err = exec.ExecuteCommandInHomeDirectory(ctx, runScript, false, true)
+	gitspaceLogger.Info("Starting IDE ...")
+	outputCh := make(chan []byte)
+	err = exec.ExecuteCommandInHomeDirectory(ctx, runScript, false, false, outputCh)
 	if err != nil {
-		return nil, fmt.Errorf("failed to run VSCode Web: %w", err)
+		return fmt.Errorf("failed to run VSCode Web: %w", err)
 	}
-	return output, nil
+	return nil
 }
 
 // PortAndProtocol returns the port on which the code-server is listening.

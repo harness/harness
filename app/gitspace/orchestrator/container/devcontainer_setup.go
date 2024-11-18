@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	orchestratorTypes "github.com/harness/gitness/app/gitspace/orchestrator/types"
+	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 
 	"github.com/docker/docker/api/types/container"
@@ -47,7 +47,7 @@ var containerStateMapping = map[string]State{
 }
 
 // Helper function to log messages and handle error wrapping.
-func logStreamWrapError(gitspaceLogger orchestratorTypes.GitspaceLogger, msg string, err error) error {
+func logStreamWrapError(gitspaceLogger gitspaceTypes.GitspaceLogger, msg string, err error) error {
 	gitspaceLogger.Error(msg, err)
 	return fmt.Errorf("%s: %w", msg, err)
 }
@@ -58,7 +58,7 @@ func ManageContainer(
 	action Action,
 	containerName string,
 	dockerClient *client.Client,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	var err error
 	switch action {
@@ -123,7 +123,7 @@ func CreateContainer(
 	dockerClient *client.Client,
 	imageName string,
 	containerName string,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	bindMountSource string,
 	bindMountTarget string,
 	mountType mount.Type,
@@ -225,7 +225,7 @@ func PullImage(
 	ctx context.Context,
 	imageName string,
 	dockerClient *client.Client,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Pulling image: " + imageName)
 

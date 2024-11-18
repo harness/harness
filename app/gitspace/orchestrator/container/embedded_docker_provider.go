@@ -23,9 +23,9 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
-	orchestratorTypes "github.com/harness/gitness/app/gitspace/orchestrator/types"
 	"github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/scm"
+	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 
@@ -41,7 +41,7 @@ const (
 )
 
 type EmbeddedDockerOrchestrator struct {
-	steps               []orchestratorTypes.Step // Steps registry
+	steps               []gitspaceTypes.Step // Steps registry
 	dockerClientFactory *infraprovider.DockerClientFactory
 	statefulLogger      *logutil.StatefulLogger
 	gitService          git.Service
@@ -51,10 +51,10 @@ type EmbeddedDockerOrchestrator struct {
 // RegisterStep registers a new setup step with an option to stop or continue on failure.
 func (e *EmbeddedDockerOrchestrator) RegisterStep(
 	name string,
-	execute func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error,
+	execute func(ctx context.Context, exec *devcontainer.Exec, logger gitspaceTypes.GitspaceLogger) error,
 	stopOnFailure bool,
 ) {
-	step := orchestratorTypes.Step{
+	step := gitspaceTypes.Step{
 		Name:          name,
 		Execute:       execute,
 		StopOnFailure: stopOnFailure,
@@ -66,7 +66,7 @@ func (e *EmbeddedDockerOrchestrator) RegisterStep(
 func (e *EmbeddedDockerOrchestrator) ExecuteSteps(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	for _, step := range e.steps {
 		// Execute the step
@@ -378,7 +378,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	infrastructure types.Infrastructure,
 	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
 	containerName := GetGitspaceContainerName(gitspaceConfig)
@@ -450,6 +450,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		gitspaceConfig,
 		resolvedRepoDetails,
 		defaultBaseImage,
+		environment,
 	); err != nil {
 		return err
 	}

@@ -82,6 +82,10 @@ type SupportedOSDistributionPayload struct {
 	OSInfoScript string
 }
 
+type SetEnvPayload struct {
+	EnvVariables string
+}
+
 func init() {
 	err := LoadTemplates()
 	if err != nil {

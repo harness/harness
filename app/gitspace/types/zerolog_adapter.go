@@ -14,7 +14,9 @@
 
 package types
 
-import "github.com/rs/zerolog"
+import (
+	"github.com/rs/zerolog"
+)
 
 // NewZerologAdapter creates a new adapter from a zerolog.Logger.
 func NewZerologAdapter(logger *zerolog.Logger) *ZerologAdapter {

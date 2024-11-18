@@ -23,9 +23,9 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
-	orchestratorTypes "github.com/harness/gitness/app/gitspace/orchestrator/types"
 	"github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/scm"
+	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -34,11 +34,12 @@ import (
 func (e *EmbeddedDockerOrchestrator) setupGitspaceAndIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	ideService ide.IDE,
 	gitspaceConfig types.GitspaceConfig,
 	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
+	environment []string,
 ) error {
 	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
 	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
@@ -47,45 +48,49 @@ func (e *EmbeddedDockerOrchestrator) setupGitspaceAndIDE(
 	// Register setup steps
 	e.RegisterStep("Validate Supported OS", ValidateSupportedOS, true)
 	e.RegisterStep("Manage User",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error {
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 			return ManageUser(ctx, exec, e.userService, gitspaceLogger)
 		}, true)
+	e.RegisterStep("Set environment",
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
+			return SetEnv(ctx, exec, gitspaceLogger, environment)
+		}, true)
 	e.RegisterStep("Install Tools",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error {
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 			return InstallTools(ctx, exec, gitspaceLogger, gitspaceConfig.IDE)
 		}, true)
 	e.RegisterStep("Setup IDE",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error {
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 			return SetupIDE(ctx, exec, ideService, gitspaceLogger)
 		}, true)
 	e.RegisterStep("Run IDE",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error {
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 			return RunIDE(ctx, exec, ideService, gitspaceLogger)
 		}, true)
 	e.RegisterStep("Install Git",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error {
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 			return InstallGit(ctx, exec, e.gitService, gitspaceLogger)
 		}, true)
 	e.RegisterStep("Setup Git Credentials",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error {
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 			if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
 				return SetupGitCredentials(ctx, exec, resolvedRepoDetails, e.gitService, gitspaceLogger)
 			}
 			return nil
 		}, true)
 	e.RegisterStep("Clone Code",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error {
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 			return CloneCode(ctx, exec, defaultBaseImage, resolvedRepoDetails, e.gitService, gitspaceLogger)
 		}, true)
 
 	// Register the Execute Command steps (PostCreate and PostStart)
 	e.RegisterStep("Execute PostCreate Command",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error {
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 			command := ExtractCommand(PostCreateAction, devcontainerConfig)
 			return ExecuteCommand(ctx, exec, codeRepoDir, gitspaceLogger, command, PostCreateAction)
 		}, false)
 	e.RegisterStep("Execute PostStart Command",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger orchestratorTypes.GitspaceLogger) error {
+		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
 			command := ExtractCommand(PostStartAction, devcontainerConfig)
 			return ExecuteCommand(ctx, exec, codeRepoDir, gitspaceLogger, command, PostStartAction)
 		}, false)
@@ -100,27 +105,25 @@ func (e *EmbeddedDockerOrchestrator) setupGitspaceAndIDE(
 func InstallTools(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	ideType enum.IDEType,
 ) error {
-	output, err := common.InstallTools(ctx, exec, ideType)
+	err := common.InstallTools(ctx, exec, ideType, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while installing tools inside container", err)
 	}
-	gitspaceLogger.Info("Tools installation output...\n" + string(output))
 	return nil
 }
 
 func ValidateSupportedOS(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	output, err := common.ValidateSupportedOS(ctx, exec)
+	err := common.ValidateSupportedOS(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while detecting OS inside container", err)
 	}
-	gitspaceLogger.Info("Validate supported OSes...\n" + string(output))
 	return nil
 }
 
@@ -128,7 +131,7 @@ func ExecuteCommand(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	codeRepoDir string,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	command string,
 	actionType PostAction,
 ) error {
@@ -137,12 +140,17 @@ func ExecuteCommand(
 		return nil
 	}
 	gitspaceLogger.Info(fmt.Sprintf("Executing %s command: %s", actionType, command))
-	output, err := exec.ExecuteCommand(ctx, command, true, false, codeRepoDir)
+	gitspaceLogger.Info(fmt.Sprintf("%s command execution output...", actionType))
+	// Create a channel to stream command output
+	outputCh := make(chan []byte)
+	err := exec.ExecuteCommand(ctx, command, true, false, codeRepoDir, outputCh)
 	if err != nil {
 		return logStreamWrapError(
 			gitspaceLogger, fmt.Sprintf("Error while executing %s command", actionType), err)
 	}
-	gitspaceLogger.Info(fmt.Sprintf("%s command execution output...\n %s", actionType, string(output)))
+	for output := range outputCh {
+		gitspaceLogger.Info(string(output))
+	}
 	gitspaceLogger.Info(fmt.Sprintf("Successfully executed %s command", actionType))
 	return nil
 }
@@ -153,13 +161,12 @@ func CloneCode(
 	defaultBaseImage string,
 	resolvedRepoDetails scm.ResolvedDetails,
 	gitService git.Service,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	output, err := gitService.CloneCode(ctx, exec, resolvedRepoDetails, defaultBaseImage)
+	err := gitService.CloneCode(ctx, exec, resolvedRepoDetails, defaultBaseImage, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while cloning code inside container", err)
 	}
-	gitspaceLogger.Info("Clone output...\n" + string(output))
 	return nil
 }
 
@@ -167,14 +174,12 @@ func InstallGit(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	gitService git.Service,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	output, err := gitService.Install(ctx, exec)
+	err := gitService.Install(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while installing git inside container", err)
 	}
-
-	gitspaceLogger.Info("Install git output...\n" + string(output))
 	return nil
 }
 
@@ -183,15 +188,13 @@ func SetupGitCredentials(
 	exec *devcontainer.Exec,
 	resolvedRepoDetails scm.ResolvedDetails,
 	gitService git.Service,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	output, err := gitService.SetupCredentials(ctx, exec, resolvedRepoDetails)
+	err := gitService.SetupCredentials(ctx, exec, resolvedRepoDetails, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(
 			gitspaceLogger, "Error while setting up git credentials inside container", err)
 	}
-
-	gitspaceLogger.Info("Setting up git credentials output...\n" + string(output))
 	return nil
 }
 
@@ -199,13 +202,12 @@ func ManageUser(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	userService user.Service,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	output, err := userService.Manage(ctx, exec)
+	err := userService.Manage(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while creating user inside container", err)
 	}
-	gitspaceLogger.Info("Managing user output...\n" + string(output))
 	return nil
 }
 
@@ -213,17 +215,13 @@ func SetupIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	ideService ide.IDE,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Setting up IDE inside container: " + string(ideService.Type()))
-
-	output, err := ideService.Setup(ctx, exec)
+	err := ideService.Setup(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while setting up IDE inside container", err)
 	}
-
-	gitspaceLogger.Info("IDE setup output...\n" + string(output))
-	gitspaceLogger.Info("Successfully set up IDE inside container")
 	return nil
 }
 
@@ -231,15 +229,27 @@ func RunIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	ideService ide.IDE,
-	gitspaceLogger orchestratorTypes.GitspaceLogger,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Running the IDE inside container: " + string(ideService.Type()))
-	output, err := ideService.Run(ctx, exec)
+	err := ideService.Run(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while running IDE inside container", err)
 	}
+	return nil
+}
 
-	gitspaceLogger.Info("IDE run output...\n" + string(output))
-	gitspaceLogger.Info("Successfully run the IDE inside container")
+func SetEnv(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+	environment []string,
+) error {
+	if len(environment) > 0 {
+		err := common.SetEnv(ctx, exec, gitspaceLogger, environment)
+		if err != nil {
+			return logStreamWrapError(gitspaceLogger, "Error while installing tools inside container", err)
+		}
+	}
 	return nil
 }

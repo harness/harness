@@ -18,9 +18,10 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
+	"github.com/harness/gitness/app/gitspace/types"
 )
 
 type Service interface {
 	// Manage manager the linux user in the container.
-	Manage(ctx context.Context, exec *devcontainer.Exec) ([]byte, error)
+	Manage(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger types.GitspaceLogger) error
 }

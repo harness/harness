@@ -19,18 +19,23 @@ import (
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/scm"
+	"github.com/harness/gitness/app/gitspace/types"
 )
 
 type Service interface {
 	// Install ensures git is installed in the container.
-	Install(ctx context.Context, exec *devcontainer.Exec) ([]byte, error)
+	Install(ctx context.Context,
+		exec *devcontainer.Exec,
+		gitspaceLogger types.GitspaceLogger,
+	) error
 
 	// SetupCredentials sets the user's git credentials inside the container.
 	SetupCredentials(
 		ctx context.Context,
 		exec *devcontainer.Exec,
 		resolvedRepoDetails scm.ResolvedDetails,
-	) ([]byte, error)
+		gitspaceLogger types.GitspaceLogger,
+	) error
 
 	// CloneCode clones the code and ensures devcontainer file is present.
 	CloneCode(
@@ -38,5 +43,6 @@ type Service interface {
 		exec *devcontainer.Exec,
 		resolvedRepoDetails scm.ResolvedDetails,
 		defaultBaseImage string,
-	) ([]byte, error)
+		gitspaceLogger types.GitspaceLogger,
+	) error
 }

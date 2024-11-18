@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
+	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 )
 
 var _ Service = (*ServiceImpl)(nil)
@@ -34,7 +35,11 @@ func NewUserServiceImpl() Service {
 	return &ServiceImpl{}
 }
 
-func (u *ServiceImpl) Manage(ctx context.Context, exec *devcontainer.Exec) ([]byte, error) {
+func (u *ServiceImpl) Manage(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
 	osInfoScript := common.GetOSInfoScript()
 	script, err := template.GenerateScriptFromTemplate(
 		templateManagerUser, &template.SetupUserPayload{
@@ -45,17 +50,18 @@ func (u *ServiceImpl) Manage(ctx context.Context, exec *devcontainer.Exec) ([]by
 			OSInfoScript: osInfoScript,
 		})
 	if err != nil {
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"failed to generate scipt to manager user from template %s: %w", templateManagerUser, err)
 	}
 
-	output := "Setting up user inside container\n"
-	_, err = exec.ExecuteCommandInHomeDirectory(ctx, script, true, false)
+	gitspaceLogger.Info("Setting up user inside container")
+	gitspaceLogger.Info("Managing user output...")
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to setup user: %w", err)
+		return fmt.Errorf("failed to setup user: %w", err)
 	}
 
-	output += "Successfully setup user\n"
+	gitspaceLogger.Info("Successfully setup user")
 
-	return []byte(output), nil
+	return nil
 }
