@@ -1,16 +1,15 @@
 #!/bin/sh
-VARIABLES={{ .EnvVariables }}
-# Check if the script is run as root, as modifying /etc/profile requires root privileges
-if [[ $EUID -ne 0 ]]; then
-  echo "This script must be run as root."
-  exit 1
-fi
-# Path to /etc/profile
 PROFILE_FILE="/etc/profile"
-# Process each line in the VARIABLES string
-echo "$VARIABLES" | while IFS= read -r line; do
-  # Skip empty lines
-  [[ -z "$line" ]] && continue
+echo "Processing variables:"
+# Environment variables to process
+env_variables="
+{{- range .EnvVariables }}
+{{ . }}
+{{- end }}
+"
+# Process each variable in the env_variables array
+echo "$env_variables" | while IFS= read -r line; do  # Skip empty lines
+  [ -z "$line" ] && continue
 
   # Extract the variable name and value
   var_name="${line%%=*}"  # Part before '='

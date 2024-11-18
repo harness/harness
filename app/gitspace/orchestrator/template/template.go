@@ -83,7 +83,7 @@ type SupportedOSDistributionPayload struct {
 }
 
 type SetEnvPayload struct {
-	EnvVariables string
+	EnvVariables []string
 }
 
 func init() {

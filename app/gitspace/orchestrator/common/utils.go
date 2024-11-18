@@ -17,7 +17,6 @@ package common
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
@@ -132,11 +131,9 @@ func SetEnv(
 	gitspaceLogger types.GitspaceLogger,
 	environment []string,
 ) error {
-	// Join the elements with a newline character
-	result := strings.Join(environment, "\n")
 	script, err := template.GenerateScriptFromTemplate(
 		templateSetEnv, &template.SetEnvPayload{
-			EnvVariables: result,
+			EnvVariables: environment,
 		})
 	if err != nil {
 		return fmt.Errorf("failed to generate scipt to set env from template %s: %w",
