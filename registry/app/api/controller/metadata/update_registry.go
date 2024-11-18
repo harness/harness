@@ -261,8 +261,8 @@ func (c *APIController) updateRegistryWithAudit(
 		audit.NewResource(audit.ResourceTypeRegistry, newRegistry.Name),
 		audit.ActionUpdated,
 		parentRef,
-		audit.WithOldObject(newRegistry),
-		audit.WithNewObject(oldRegistry),
+		audit.WithOldObject(oldRegistry),
+		audit.WithNewObject(newRegistry),
 	)
 	if auditErr != nil {
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update registry operation: %s", auditErr)
