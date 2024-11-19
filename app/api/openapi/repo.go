@@ -693,7 +693,7 @@ var QueryParameterInherited = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamInherited,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The result should inherit labels from parent parent spaces."),
+		Description: ptr.String("The result should inherit entities from parent spaces."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{

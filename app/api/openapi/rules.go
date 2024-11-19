@@ -25,26 +25,26 @@ import (
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
-// ruleType is a plugin for types.RuleType to allow using oneof.
-type ruleType string
+// RuleType is a plugin for types.RuleType to allow using oneof.
+type RuleType string
 
-func (ruleType) Enum() []interface{} {
+func (RuleType) Enum() []interface{} {
 	return []interface{}{protection.TypeBranch}
 }
 
-// ruleDefinition is a plugin for types.Rule Definition to allow using oneof.
-type ruleDefinition struct{}
+// RuleDefinition is a plugin for types.Rule Definition to allow using oneof.
+type RuleDefinition struct{}
 
-func (ruleDefinition) JSONSchemaOneOf() []interface{} {
+func (RuleDefinition) JSONSchemaOneOf() []interface{} {
 	return []interface{}{protection.Branch{}}
 }
 
-type rule struct {
+type Rule struct {
 	types.Rule
 
 	// overshadow Type and Definition to enable oneof.
-	Type       ruleType       `json:"type"`
-	Definition ruleDefinition `json:"definition"`
+	Type       RuleType       `json:"type"`
+	Definition RuleDefinition `json:"definition"`
 
 	// overshadow Pattern to correct the type
 	Pattern protection.Pattern `json:"pattern"`
@@ -59,10 +59,10 @@ func rulesOperations(reflector *openapi3.Reflector) {
 		rules.CreateInput
 
 		// overshadow "definition"
-		Type       ruleType       `json:"type"`
-		Definition ruleDefinition `json:"definition"`
+		Type       RuleType       `json:"type"`
+		Definition RuleDefinition `json:"definition"`
 	}{}, http.MethodPost)
-	_ = reflector.SetJSONResponse(&opSpaceRuleAdd, rule{}, http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opSpaceRuleAdd, Rule{}, http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opSpaceRuleAdd, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSpaceRuleAdd, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opSpaceRuleAdd, new(usererror.Error), http.StatusForbidden)
@@ -92,10 +92,10 @@ func rulesOperations(reflector *openapi3.Reflector) {
 		rules.UpdateInput
 
 		// overshadow Type and Definition to enable oneof.
-		Type       ruleType       `json:"type"`
-		Definition ruleDefinition `json:"definition"`
+		Type       RuleType       `json:"type"`
+		Definition RuleDefinition `json:"definition"`
 	}{}, http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opSpaceRuleUpdate, rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSpaceRuleUpdate, Rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSpaceRuleUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSpaceRuleUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opSpaceRuleUpdate, new(usererror.Error), http.StatusForbidden)
@@ -108,11 +108,11 @@ func rulesOperations(reflector *openapi3.Reflector) {
 	opSpaceRuleList.WithParameters(
 		queryParameterQueryRuleList,
 		queryParameterOrder, queryParameterSortRuleList,
-		QueryParameterPage, QueryParameterLimit)
+		QueryParameterPage, QueryParameterLimit, QueryParameterInherited)
 	_ = reflector.SetRequest(&opSpaceRuleList, &struct {
 		spaceRequest
 	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opSpaceRuleList, []rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSpaceRuleList, []Rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSpaceRuleList, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSpaceRuleList, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opSpaceRuleList, new(usererror.Error), http.StatusForbidden)
@@ -126,7 +126,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 		spaceRequest
 		Identifier string `path:"rule_identifier"`
 	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opSpaceRuleGet, rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSpaceRuleGet, Rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSpaceRuleGet, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSpaceRuleGet, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opSpaceRuleGet, new(usererror.Error), http.StatusForbidden)
@@ -141,10 +141,10 @@ func rulesOperations(reflector *openapi3.Reflector) {
 		rules.CreateInput
 
 		// overshadow "definition"
-		Type       ruleType       `json:"type"`
-		Definition ruleDefinition `json:"definition"`
+		Type       RuleType       `json:"type"`
+		Definition RuleDefinition `json:"definition"`
 	}{}, http.MethodPost)
-	_ = reflector.SetJSONResponse(&opRepoRuleAdd, rule{}, http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opRepoRuleAdd, Rule{}, http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opRepoRuleAdd, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRepoRuleAdd, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRepoRuleAdd, new(usererror.Error), http.StatusForbidden)
@@ -174,10 +174,10 @@ func rulesOperations(reflector *openapi3.Reflector) {
 		rules.UpdateInput
 
 		// overshadow Type and Definition to enable oneof.
-		Type       ruleType       `json:"type"`
-		Definition ruleDefinition `json:"definition"`
+		Type       RuleType       `json:"type"`
+		Definition RuleDefinition `json:"definition"`
 	}{}, http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opRepoRuleUpdate, rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRepoRuleUpdate, Rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepoRuleUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRepoRuleUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRepoRuleUpdate, new(usererror.Error), http.StatusForbidden)
@@ -190,11 +190,11 @@ func rulesOperations(reflector *openapi3.Reflector) {
 	opRepoRuleList.WithParameters(
 		queryParameterQueryRuleList,
 		queryParameterOrder, queryParameterSortRuleList,
-		QueryParameterPage, QueryParameterLimit)
+		QueryParameterPage, QueryParameterLimit, QueryParameterInherited)
 	_ = reflector.SetRequest(&opRepoRuleList, &struct {
 		repoRequest
 	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opRepoRuleList, []rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRepoRuleList, []Rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepoRuleList, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRepoRuleList, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRepoRuleList, new(usererror.Error), http.StatusForbidden)
@@ -208,7 +208,7 @@ func rulesOperations(reflector *openapi3.Reflector) {
 		repoRequest
 		Identifier string `path:"rule_identifier"`
 	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opRepoRuleGet, rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRepoRuleGet, Rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepoRuleGet, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRepoRuleGet, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRepoRuleGet, new(usererror.Error), http.StatusForbidden)
