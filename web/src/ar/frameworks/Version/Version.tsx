@@ -27,12 +27,14 @@ export interface VersionDetailsTabProps {
   tab: VersionDetailsTab
 }
 
+export type SortByType = [string, 'ASC' | 'DESC']
+
 export interface VersionListTableProps {
   data: ListArtifactVersion
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
-  setSortBy: (sortBy: string[]) => void
-  sortBy: string[]
+  setSortBy: (sortBy: SortByType) => void
+  sortBy: SortByType
   minimal?: boolean
 }
 

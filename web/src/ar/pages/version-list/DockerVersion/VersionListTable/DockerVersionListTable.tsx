@@ -35,6 +35,7 @@ import {
   VersionDigestsCell,
   VersionPublishedAtCell
 } from '@ar/pages/version-list/components/VersionListTable/VersionListCell'
+import type { SortByType } from '@ar/frameworks/Version/Version'
 import { DockerVersionNameCell } from './DockerVersionListCell'
 import css from './DockerVersionListTable.module.scss'
 
@@ -42,8 +43,8 @@ export interface DockerVersionListTableProps {
   data: ListArtifactVersion
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
-  setSortBy: (sortBy: string[]) => void
-  sortBy: string[]
+  setSortBy: (sortBy: SortByType) => void
+  sortBy: SortByType
   minimal?: boolean
 }
 
