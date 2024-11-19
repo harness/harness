@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleRuleFind handles API that returns a protection rule of a repository.
+// HandleRuleFind finds a protection rule of a repository.
 func HandleRuleFind(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

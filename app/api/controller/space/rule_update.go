@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package space
 
 import (
 	"context"
@@ -24,29 +24,30 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// RuleUpdate updates an existing protection rule for a repository.
+// RuleUpdate updates an existing protection rule for a space.
 func (c *Controller) RuleUpdate(ctx context.Context,
 	session *auth.Session,
-	repoRef string,
+	spaceRef string,
 	identifier string,
 	in *rules.UpdateInput,
 ) (*types.Rule, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
 	rule, err := c.rulesSvc.Update(
-		ctx, &session.Principal,
-		enum.RuleParentRepo,
-		repo.ID,
-		repo.Identifier,
-		repo.Path,
+		ctx,
+		&session.Principal,
+		enum.RuleParentSpace,
+		space.ID,
+		space.Identifier,
+		space.Path,
 		identifier,
 		in,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update repo-level protection rule by identifier: %w", err)
+		return nil, fmt.Errorf("failed to update space-level protection rule by identifier: %w", err)
 	}
 
 	return rule, nil

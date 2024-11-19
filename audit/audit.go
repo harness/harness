@@ -33,6 +33,7 @@ var (
 const (
 	ResourceName                    = "resourceName"
 	RepoName                        = "repoName"
+	SpaceName                       = "spaceName"
 	BypassedResourceType            = "bypassedResourceType"
 	BypassedResourceName            = "bypassedResourceName"
 	RepoPath                        = "repoPath"

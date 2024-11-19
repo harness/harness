@@ -12,42 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package rules
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-// RuleUpdate updates an existing protection rule for a repository.
-func (c *Controller) RuleUpdate(ctx context.Context,
-	session *auth.Session,
-	repoRef string,
+// Find returns the protection rule by identifier.
+func (s *Service) Find(ctx context.Context,
+	parentType enum.RuleParent,
+	parentID int64,
 	identifier string,
-	in *rules.UpdateInput,
 ) (*types.Rule, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	rule, err := s.ruleStore.FindByIdentifier(ctx, parentType, parentID, identifier)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find protection rule by identifier: %w", err)
 	}
 
-	rule, err := c.rulesSvc.Update(
-		ctx, &session.Principal,
-		enum.RuleParentRepo,
-		repo.ID,
-		repo.Identifier,
-		repo.Path,
-		identifier,
-		in,
-	)
+	userMap, userGroupMap, err := s.getRuleUserAndUserGroups(ctx, rule)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update repo-level protection rule by identifier: %w", err)
+		return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
 	}
+
+	rule.Users = userMap
+	rule.UserGroups = userGroupMap
 
 	return rule, nil
 }

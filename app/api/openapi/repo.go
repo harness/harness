@@ -21,7 +21,6 @@ import (
 	"github.com/harness/gitness/app/api/controller/reposettings"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
-	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/git"
 	gittypes "github.com/harness/gitness/git/api"
 	"github.com/harness/gitness/types"
@@ -173,31 +172,6 @@ type postRawDiffRequest struct {
 
 type codeOwnersValidate struct {
 	repoRequest
-}
-
-// ruleType is a plugin for types.RuleType to allow using oneof.
-type ruleType string
-
-func (ruleType) Enum() []interface{} {
-	return []interface{}{protection.TypeBranch}
-}
-
-// ruleDefinition is a plugin for types.Rule Definition to allow using oneof.
-type ruleDefinition struct{}
-
-func (ruleDefinition) JSONSchemaOneOf() []interface{} {
-	return []interface{}{protection.Branch{}}
-}
-
-type rule struct {
-	types.Rule
-
-	// overshadow Type and Definition to enable oneof.
-	Type       ruleType       `json:"type"`
-	Definition ruleDefinition `json:"definition"`
-
-	// overshadow Pattern to correct the type
-	Pattern protection.Pattern `json:"pattern"`
 }
 
 type restoreRequest struct {
@@ -1141,88 +1115,6 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/merge-check/{range}", opMergeCheck)
-
-	opRuleAdd := openapi3.Operation{}
-	opRuleAdd.WithTags("repository")
-	opRuleAdd.WithMapOfAnything(map[string]interface{}{"operationId": "ruleAdd"})
-	_ = reflector.SetRequest(&opRuleAdd, struct {
-		repoRequest
-		repo.RuleCreateInput
-
-		// overshadow "definition"
-		Type       ruleType       `json:"type"`
-		Definition ruleDefinition `json:"definition"`
-	}{}, http.MethodPost)
-	_ = reflector.SetJSONResponse(&opRuleAdd, rule{}, http.StatusCreated)
-	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/rules", opRuleAdd)
-
-	opRuleDelete := openapi3.Operation{}
-	opRuleDelete.WithTags("repository")
-	opRuleDelete.WithMapOfAnything(map[string]interface{}{"operationId": "ruleDelete"})
-	_ = reflector.SetRequest(&opRuleDelete, struct {
-		repoRequest
-		RuleIdentifier string `path:"rule_identifier"`
-	}{}, http.MethodDelete)
-	_ = reflector.SetJSONResponse(&opRuleDelete, nil, http.StatusNoContent)
-	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/rules/{rule_identifier}", opRuleDelete)
-
-	opRuleUpdate := openapi3.Operation{}
-	opRuleUpdate.WithTags("repository")
-	opRuleUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "ruleUpdate"})
-	_ = reflector.SetRequest(&opRuleUpdate, &struct {
-		repoRequest
-		Identifier string `path:"rule_identifier"`
-		repo.RuleUpdateInput
-
-		// overshadow Type and Definition to enable oneof.
-		Type       ruleType       `json:"type"`
-		Definition ruleDefinition `json:"definition"`
-	}{}, http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opRuleUpdate, rule{}, http.StatusOK)
-	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repo_ref}/rules/{rule_identifier}", opRuleUpdate)
-
-	opRuleList := openapi3.Operation{}
-	opRuleList.WithTags("repository")
-	opRuleList.WithMapOfAnything(map[string]interface{}{"operationId": "ruleList"})
-	opRuleList.WithParameters(
-		queryParameterQueryRuleList,
-		queryParameterOrder, queryParameterSortRuleList,
-		QueryParameterPage, QueryParameterLimit)
-	_ = reflector.SetRequest(&opRuleList, &struct {
-		repoRequest
-	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opRuleList, []rule{}, http.StatusOK)
-	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules", opRuleList)
-
-	opRuleGet := openapi3.Operation{}
-	opRuleGet.WithTags("repository")
-	opRuleGet.WithMapOfAnything(map[string]interface{}{"operationId": "ruleGet"})
-	_ = reflector.SetRequest(&opRuleGet, &struct {
-		repoRequest
-		Identifier string `path:"rule_identifier"`
-	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opRuleGet, rule{}, http.StatusOK)
-	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules/{rule_identifier}", opRuleGet)
 
 	opCodeOwnerValidate := openapi3.Operation{}
 	opCodeOwnerValidate.WithTags("repository")

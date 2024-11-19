@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleRuleList handles API that lists a protection rules of a repository.
+// HandleRuleList lists rotection rules of a repository.
 func HandleRuleList(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -36,7 +36,12 @@ func HandleRuleList(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		filter := request.ParseRuleFilter(r)
 
-		rules, rulesCount, err := repoCtrl.RuleList(ctx, session, repoRef, filter)
+		inherited, err := request.ParseInheritedFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+		}
+
+		rules, rulesCount, err := repoCtrl.RuleList(ctx, session, repoRef, inherited, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

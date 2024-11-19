@@ -12,25 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package space
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/services/rules"
 )
 
-// HandleRuleUpdate updates a protection rule of a repository.
-func HandleRuleUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
+// HandleRuleDelete deletes a protection rule of a space.
+func HandleRuleDelete(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		repoRef, err := request.GetRepoRefFromPath(r)
+		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
@@ -42,19 +40,12 @@ func HandleRuleUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		in := new(rules.UpdateInput)
-		err = json.NewDecoder(r.Body).Decode(in)
-		if err != nil {
-			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
-			return
-		}
-
-		rule, err := repoCtrl.RuleUpdate(ctx, session, repoRef, ruleIdentifier, in)
+		err = spaceCtrl.RuleDelete(ctx, session, spaceRef, ruleIdentifier)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, rule)
+		render.DeleteSuccessful(w)
 	}
 }

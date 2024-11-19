@@ -83,3 +83,21 @@ func ParseRuleSortAttr(s string) RuleSort {
 
 	return RuleSortIdentifier
 }
+
+// RuleParent defines different types of parents of a rule.
+type RuleParent string
+
+func (RuleParent) Enum() []interface{} { return toInterfaceSlice(RuleParents) }
+
+const (
+	// RuleParentRepo describes a repo as Rule owner.
+	RuleParentRepo RuleParent = "repo"
+
+	// RuleParentSpace describes a space as Rule owner.
+	RuleParentSpace RuleParent = "space"
+)
+
+var RuleParents = sortEnum([]RuleParent{
+	RuleParentRepo,
+	RuleParentSpace,
+})

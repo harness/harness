@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -28,6 +27,7 @@ import (
 func (c *Controller) RuleList(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
+	inherited bool,
 	filter *types.RuleFilter,
 ) ([]types.Rule, int64, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
@@ -35,36 +35,9 @@ func (c *Controller) RuleList(ctx context.Context,
 		return nil, 0, err
 	}
 
-	var list []types.Rule
-	var count int64
-
-	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
-		list, err = c.ruleStore.List(ctx, nil, &repo.ID, filter)
-		if err != nil {
-			return fmt.Errorf("failed to list repository-level protection rules: %w", err)
-		}
-
-		if filter.Page == 1 && len(list) < filter.Size {
-			count = int64(len(list))
-			return nil
-		}
-
-		count, err = c.ruleStore.Count(ctx, nil, &repo.ID, filter)
-		if err != nil {
-			return fmt.Errorf("failed to count repository-level protection rules: %w", err)
-		}
-
-		return nil
-	}, dbtx.TxDefaultReadOnly)
+	list, count, err := c.rulesSvc.List(ctx, repo.ID, enum.RuleParentRepo, inherited, filter)
 	if err != nil {
-		return nil, 0, err
-	}
-
-	for i := range list {
-		list[i].Users, list[i].UserGroups, err = c.getRuleUserAndUserGroups(ctx, &list[i])
-		if err != nil {
-			return nil, 0, err
-		}
+		return nil, 0, fmt.Errorf("failed to list repo-level protection rules: %w", err)
 	}
 
 	return list, count, nil

@@ -526,7 +526,12 @@ type (
 		Find(ctx context.Context, id int64) (*types.Rule, error)
 
 		// FindByIdentifier finds a protection rule by parent ID and identifier.
-		FindByIdentifier(ctx context.Context, spaceID, repoID *int64, identifier string) (*types.Rule, error)
+		FindByIdentifier(
+			ctx context.Context,
+			parentType enum.RuleParent,
+			parentID int64,
+			identifier string,
+		) (*types.Rule, error)
 
 		// Create inserts a new protection rule.
 		Create(ctx context.Context, rule *types.Rule) error
@@ -537,14 +542,19 @@ type (
 		// Delete removes a protection rule by its ID.
 		Delete(ctx context.Context, id int64) error
 
-		// DeleteByIdentifier removes a protection rule by its identifier.
-		DeleteByIdentifier(ctx context.Context, spaceID, repoID *int64, identifier string) error
+		// Count returns count of protection rules of a repository or a space.
+		Count(
+			ctx context.Context,
+			parents []types.RuleParentInfo,
+			filter *types.RuleFilter,
+		) (int64, error)
 
-		// Count returns count of protection rules matching the provided criteria.
-		Count(ctx context.Context, spaceID, repoID *int64, filter *types.RuleFilter) (int64, error)
-
-		// List returns a list of protection rules of a repository or a space that matches the provided criteria.
-		List(ctx context.Context, spaceID, repoID *int64, filter *types.RuleFilter) ([]types.Rule, error)
+		// List returns a list of protection rules of a repository or a space.
+		List(
+			ctx context.Context,
+			parents []types.RuleParentInfo,
+			filter *types.RuleFilter,
+		) ([]types.Rule, error)
 
 		// ListAllRepoRules returns a list of all protection rules that can be applied on a repository.
 		ListAllRepoRules(ctx context.Context, repoID int64) ([]types.RuleInfoInternal, error)

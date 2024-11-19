@@ -12,42 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package space
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-// RuleUpdate updates an existing protection rule for a repository.
-func (c *Controller) RuleUpdate(ctx context.Context,
+// RuleList returns protection rules for a repository.
+func (c *Controller) RuleList(ctx context.Context,
 	session *auth.Session,
-	repoRef string,
-	identifier string,
-	in *rules.UpdateInput,
-) (*types.Rule, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	spaceRef string,
+	inherited bool,
+	filter *types.RuleFilter,
+) ([]types.Rule, int64, error) {
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
-		return nil, err
+		return nil, 0, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	rule, err := c.rulesSvc.Update(
-		ctx, &session.Principal,
-		enum.RuleParentRepo,
-		repo.ID,
-		repo.Identifier,
-		repo.Path,
-		identifier,
-		in,
-	)
+	list, count, err := c.rulesSvc.List(ctx, space.ID, enum.RuleParentSpace, inherited, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update repo-level protection rule by identifier: %w", err)
+		return nil, 0, fmt.Errorf("failed to list space-level protection rules: %w", err)
 	}
 
-	return rule, nil
+	return list, count, nil
 }

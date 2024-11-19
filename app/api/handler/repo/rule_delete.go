@@ -22,7 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-// HandleRuleDelete handles API that deletes a protection rule.
+// HandleRuleDelete deletes a protection rule of a repository.
 func HandleRuleDelete(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

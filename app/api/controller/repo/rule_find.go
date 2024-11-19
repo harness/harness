@@ -34,18 +34,10 @@ func (c *Controller) RuleFind(ctx context.Context,
 		return nil, err
 	}
 
-	r, err := c.ruleStore.FindByIdentifier(ctx, nil, &repo.ID, identifier)
+	rule, err := c.rulesSvc.Find(ctx, enum.RuleParentRepo, repo.ID, identifier)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find repository-level protection rule by identifier: %w", err)
+		return nil, fmt.Errorf("failed to find repo-level protection rule by identifier: %w", err)
 	}
 
-	userMap, userGroupMap, err := c.getRuleUserAndUserGroups(ctx, r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get rule users and user groups: %w", err)
-	}
-
-	r.Users = userMap
-	r.UserGroups = userGroupMap
-
-	return r, nil
+	return rule, nil
 }

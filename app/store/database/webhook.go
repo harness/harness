@@ -352,9 +352,9 @@ func (s *WebhookStore) Count(
 		Select("count(*)").
 		From("webhooks")
 
-	err := selectParents(parents, &stmt)
+	err := selectWebhookParents(parents, &stmt)
 	if err != nil {
-		return 0, fmt.Errorf("failed to select parents: %w", err)
+		return 0, fmt.Errorf("failed to select webhook parents: %w", err)
 	}
 
 	stmt = applyWebhookFilter(opts, stmt)
@@ -384,9 +384,9 @@ func (s *WebhookStore) List(
 		Select(webhookColumns).
 		From("webhooks")
 
-	err := selectParents(parents, &stmt)
+	err := selectWebhookParents(parents, &stmt)
 	if err != nil {
-		return nil, fmt.Errorf("failed to select parents: %w", err)
+		return nil, fmt.Errorf("failed to select webhook parents: %w", err)
 	}
 
 	stmt = applyWebhookFilter(opts, stmt)
@@ -559,7 +559,7 @@ func applyWebhookFilter(
 	return stmt
 }
 
-func selectParents(
+func selectWebhookParents(
 	parents []types.WebhookParentInfo,
 	stmt *squirrel.SelectBuilder,
 ) error {

@@ -293,6 +293,7 @@ func setupSpaces(
 
 			SetupSpaceLabels(r, spaceCtrl)
 			SetupWebhookSpace(r, webhookCtrl)
+			SetupRulesSpace(r, spaceCtrl)
 		})
 	})
 }
@@ -337,6 +338,19 @@ func SetupWebhookSpace(r chi.Router, webhookCtrl *webhook.Controller) {
 					r.Post("/retrigger", handlerwebhook.HandleRetriggerExecutionSpace(webhookCtrl))
 				})
 			})
+		})
+	})
+}
+
+func SetupRulesSpace(r chi.Router, spaceCtrl *space.Controller) {
+	r.Route("/rules", func(r chi.Router) {
+		r.Post("/", handlerspace.HandleRuleCreate(spaceCtrl))
+		r.Get("/", handlerspace.HandleRuleList(spaceCtrl))
+
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamRuleIdentifier), func(r chi.Router) {
+			r.Patch("/", handlerspace.HandleRuleUpdate(spaceCtrl))
+			r.Delete("/", handlerspace.HandleRuleDelete(spaceCtrl))
+			r.Get("/", handlerspace.HandleRuleFind(spaceCtrl))
 		})
 	})
 }
@@ -460,7 +474,7 @@ func setupRepos(r chi.Router,
 
 			SetupUploads(r, uploadCtrl)
 
-			SetupRules(r, repoCtrl)
+			SetupRulesRepo(r, repoCtrl)
 
 			SetupRepoLabels(r, repoCtrl)
 		})
@@ -742,7 +756,7 @@ func SetupChecks(r chi.Router, checkCtrl *check.Controller) {
 	})
 }
 
-func SetupRules(r chi.Router, repoCtrl *repo.Controller) {
+func SetupRulesRepo(r chi.Router, repoCtrl *repo.Controller) {
 	r.Route("/rules", func(r chi.Router) {
 		r.Post("/", handlerrepo.HandleRuleCreate(repoCtrl))
 		r.Get("/", handlerrepo.HandleRuleList(repoCtrl))

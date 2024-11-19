@@ -12,42 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package space
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/app/services/rules"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-// RuleUpdate updates an existing protection rule for a repository.
-func (c *Controller) RuleUpdate(ctx context.Context,
+// RuleDelete deletes a protection rule by identifier.
+func (c *Controller) RuleDelete(ctx context.Context,
 	session *auth.Session,
-	repoRef string,
+	spaceRef string,
 	identifier string,
-	in *rules.UpdateInput,
-) (*types.Rule, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+) error {
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	rule, err := c.rulesSvc.Update(
-		ctx, &session.Principal,
-		enum.RuleParentRepo,
-		repo.ID,
-		repo.Identifier,
-		repo.Path,
+	err = c.rulesSvc.Delete(
+		ctx,
+		&session.Principal,
+		enum.RuleParentSpace,
+		space.ID,
+		space.Identifier,
+		space.Path,
 		identifier,
-		in,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to update repo-level protection rule by identifier: %w", err)
+		return fmt.Errorf("failed to delete space-level protection rule: %w", err)
 	}
 
-	return rule, nil
+	return nil
 }

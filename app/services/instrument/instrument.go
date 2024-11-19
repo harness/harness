@@ -42,6 +42,9 @@ const (
 	PropertyIsDefaultBranch           Property = "is_default_branch"
 	PropertyDecision                  Property = "decision"
 	PropertyRepositories              Property = "repositories"
+
+	PropertySpaceID   Property = "space_id"
+	PropertySpaceName Property = "space_name"
 )
 
 type EventType string

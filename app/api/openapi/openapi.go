@@ -61,6 +61,7 @@ func (*OpenAPI) Generate() *openapi3.Spec {
 	spaceOperations(&reflector)
 	pluginOperations(&reflector)
 	repoOperations(&reflector)
+	rulesOperations(&reflector)
 	pipelineOperations(&reflector)
 	connectorOperations(&reflector)
 	templateOperations(&reflector)

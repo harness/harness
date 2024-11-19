@@ -114,15 +114,23 @@ func (s *RuleStore) Find(ctx context.Context, id int64) (*types.Rule, error) {
 
 func (s *RuleStore) FindByIdentifier(
 	ctx context.Context,
-	spaceID *int64,
-	repoID *int64,
+	parentType enum.RuleParent,
+	parentID int64,
 	identifier string,
 ) (*types.Rule, error) {
 	stmt := database.Builder.
 		Select(ruleColumns).
 		From("rules").
 		Where("LOWER(rule_uid) = ?", strings.ToLower(identifier))
-	stmt = s.applyParentID(stmt, spaceID, repoID)
+
+	switch parentType {
+	case enum.RuleParentRepo:
+		stmt = stmt.Where("rule_repo_id = ?", parentID)
+	case enum.RuleParentSpace:
+		stmt = stmt.Where("rule_space_id = ?", parentID)
+	default:
+		return nil, fmt.Errorf("rule parent type '%s' is not supported", parentType)
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -252,40 +260,21 @@ func (s *RuleStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *RuleStore) DeleteByIdentifier(ctx context.Context, spaceID, repoID *int64, identifier string) error {
-	stmt := database.Builder.
-		Delete("rules").
-		Where("LOWER(rule_uid) = ?", strings.ToLower(identifier))
-
-	if spaceID != nil {
-		stmt = stmt.Where("rule_space_id = ?", *spaceID)
-	}
-
-	if repoID != nil {
-		stmt = stmt.Where("rule_repo_id = ?", *repoID)
-	}
-
-	sql, args, err := stmt.ToSql()
-	if err != nil {
-		return fmt.Errorf("failed to convert delete rule by identifier to sql: %w", err)
-	}
-
-	db := dbtx.GetAccessor(ctx, s.db)
-
-	if _, err = db.ExecContext(ctx, sql, args...); err != nil {
-		return database.ProcessSQLErrorf(ctx, err, "Failed executing delete rule by identifier query")
-	}
-
-	return nil
-}
-
 // Count returns count of protection rules matching the provided criteria.
-func (s *RuleStore) Count(ctx context.Context, spaceID, repoID *int64, filter *types.RuleFilter) (int64, error) {
+func (s *RuleStore) Count(
+	ctx context.Context,
+	parents []types.RuleParentInfo,
+	filter *types.RuleFilter,
+) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("rules")
 
-	stmt = s.applyParentID(stmt, spaceID, repoID)
+	err := selectRuleParents(parents, &stmt)
+	if err != nil {
+		return 0, fmt.Errorf("failed to select rule parents: %w", err)
+	}
+
 	stmt = s.applyFilter(stmt, filter)
 
 	sql, args, err := stmt.ToSql()
@@ -306,12 +295,20 @@ func (s *RuleStore) Count(ctx context.Context, spaceID, repoID *int64, filter *t
 }
 
 // List returns a list of protection rules of a repository or a space.
-func (s *RuleStore) List(ctx context.Context, spaceID, repoID *int64, filter *types.RuleFilter) ([]types.Rule, error) {
+func (s *RuleStore) List(
+	ctx context.Context,
+	parents []types.RuleParentInfo,
+	filter *types.RuleFilter,
+) ([]types.Rule, error) {
 	stmt := database.Builder.
 		Select(ruleColumns).
 		From("rules")
 
-	stmt = s.applyParentID(stmt, spaceID, repoID)
+	err := selectRuleParents(parents, &stmt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select rule parents: %w", err)
+	}
+
 	stmt = s.applyFilter(stmt, filter)
 
 	stmt = stmt.Limit(database.Limit(filter.Size))
@@ -427,21 +424,6 @@ func (s *RuleStore) ListAllRepoRules(ctx context.Context, repoID int64) ([]types
 	return s.mapToRuleInfos(result), nil
 }
 
-func (*RuleStore) applyParentID(
-	stmt squirrel.SelectBuilder,
-	spaceID, repoID *int64,
-) squirrel.SelectBuilder {
-	if spaceID != nil {
-		stmt = stmt.Where("rule_space_id = ?", *spaceID)
-	}
-
-	if repoID != nil {
-		stmt = stmt.Where("rule_repo_id = ?", *repoID)
-	}
-
-	return stmt
-}
-
 func (*RuleStore) applyFilter(
 	stmt squirrel.SelectBuilder,
 	filter *types.RuleFilter,
@@ -543,4 +525,29 @@ func (s *RuleStore) mapToRuleInfos(
 		res[i] = s.mapToRuleInfo(&ruleInfos[i])
 	}
 	return res
+}
+
+func selectRuleParents(
+	parents []types.RuleParentInfo,
+	stmt *squirrel.SelectBuilder,
+) error {
+	var parentSelector squirrel.Or
+	for _, parent := range parents {
+		switch parent.Type {
+		case enum.RuleParentRepo:
+			parentSelector = append(parentSelector, squirrel.Eq{
+				"rule_repo_id": parent.ID,
+			})
+		case enum.RuleParentSpace:
+			parentSelector = append(parentSelector, squirrel.Eq{
+				"rule_space_id": parent.ID,
+			})
+		default:
+			return fmt.Errorf("rule parent type '%s' is not supported", parent.Type)
+		}
+	}
+
+	*stmt = stmt.Where(parentSelector)
+
+	return nil
 }

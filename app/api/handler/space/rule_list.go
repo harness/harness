@@ -12,49 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repo
+package space
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
-	"github.com/harness/gitness/app/services/rules"
 )
 
-// HandleRuleUpdate updates a protection rule of a repository.
-func HandleRuleUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
+// HandleRuleList lists a protection rules of a space.
+func HandleRuleList(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		repoRef, err := request.GetRepoRefFromPath(r)
+		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		ruleIdentifier, err := request.GetRuleIdentifierFromPath(r)
+		filter := request.ParseRuleFilter(r)
+		inherited, err := request.ParseInheritedFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(ctx, w, err)
+		}
+
+		rules, rulesCount, err := spaceCtrl.RuleList(ctx, session, spaceRef, inherited, filter)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return
 		}
 
-		in := new(rules.UpdateInput)
-		err = json.NewDecoder(r.Body).Decode(in)
-		if err != nil {
-			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
-			return
-		}
-
-		rule, err := repoCtrl.RuleUpdate(ctx, session, repoRef, ruleIdentifier, in)
-		if err != nil {
-			render.TranslatedUserError(ctx, w, err)
-			return
-		}
-
-		render.JSON(w, http.StatusOK, rule)
+		render.Pagination(r, w, filter.Page, filter.Size, int(rulesCount))
+		render.JSON(w, http.StatusOK, rules)
 	}
 }

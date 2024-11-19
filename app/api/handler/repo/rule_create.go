@@ -21,9 +21,10 @@ import (
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/render"
 	"github.com/harness/gitness/app/api/request"
+	"github.com/harness/gitness/app/services/rules"
 )
 
-// HandleRuleCreate handles API that adds a new protection rule to a repository.
+// HandleRuleCreate adds a new protection rule to a repository.
 func HandleRuleCreate(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -35,7 +36,7 @@ func HandleRuleCreate(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		in := new(repo.RuleCreateInput)
+		in := new(rules.CreateInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)

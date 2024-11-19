@@ -15,6 +15,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -124,6 +125,12 @@ func (r Rule) Clone() Rule {
 	return r
 }
 
+func (r *Rule) IsEqual(rule *Rule) bool {
+	return r.Identifier == rule.Identifier && r.State == rule.State &&
+		r.Description == rule.Description && bytes.Equal(r.Pattern, rule.Pattern) &&
+		bytes.Equal(r.Definition, rule.Definition)
+}
+
 type RuleType string
 
 type RuleFilter struct {
@@ -210,4 +217,9 @@ type RulesViolations struct {
 type DryRunRulesOutput struct {
 	DryRunRules    bool             `json:"dry_run_rules,omitempty"`
 	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
+}
+
+type RuleParentInfo struct {
+	Type enum.RuleParent
+	ID   int64
 }

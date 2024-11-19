@@ -104,6 +104,7 @@ import (
 	"github.com/harness/gitness/app/services/publickey"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
 	reposervice "github.com/harness/gitness/app/services/repo"
+	"github.com/harness/gitness/app/services/rules"
 	secretservice "github.com/harness/gitness/app/services/secret"
 	"github.com/harness/gitness/app/services/settings"
 	systemsvc "github.com/harness/gitness/app/services/system"
@@ -243,6 +244,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitspaceevent.WireSet,
 		cliserver.ProvideKeywordSearchConfig,
 		keywordsearch.WireSet,
+		rules.WireSet,
 		controllerkeywordsearch.WireSet,
 		settings.WireSet,
 		systemsvc.WireSet,

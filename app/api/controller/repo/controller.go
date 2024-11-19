@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/store"
@@ -102,6 +103,7 @@ type Controller struct {
 	publicAccess       publicaccess.Service
 	labelSvc           *label.Service
 	instrumentation    instrument.Service
+	rulesSvc           *rules.Service
 }
 
 func NewController(
@@ -136,6 +138,7 @@ func NewController(
 	instrumentation instrument.Service,
 	userGroupStore store.UserGroupStore,
 	userGroupService usergroup.SearchService,
+	rulesSvc *rules.Service,
 ) *Controller {
 	return &Controller{
 		defaultBranch:      config.Git.DefaultBranch,
@@ -169,6 +172,7 @@ func NewController(
 		instrumentation:    instrumentation,
 		userGroupStore:     userGroupStore,
 		userGroupService:   userGroupService,
+		rulesSvc:           rulesSvc,
 	}
 }
 
@@ -248,77 +252,4 @@ func (c *Controller) fetchRules(
 	}
 
 	return protectionRules, isRepoOwner, nil
-}
-
-func (c *Controller) getRuleUserAndUserGroups(
-	ctx context.Context,
-	r *types.Rule,
-) (map[int64]*types.PrincipalInfo, map[int64]*types.UserGroupInfo, error) {
-	rule, err := c.parseRule(r)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse rule: %w", err)
-	}
-
-	userMap, err := c.getRuleUsers(ctx, rule)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get rule users: %w", err)
-	}
-	userGroupMap, err := c.getRuleUserGroups(ctx, rule)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get rule user groups: %w", err)
-	}
-
-	return userMap, userGroupMap, nil
-}
-
-func (c *Controller) getRuleUsers(
-	ctx context.Context,
-	rule protection.Protection,
-) (map[int64]*types.PrincipalInfo, error) {
-	userIDs, err := rule.UserIDs()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user ID from rule: %w", err)
-	}
-
-	userMap, err := c.principalInfoCache.Map(ctx, userIDs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get principal infos: %w", err)
-	}
-
-	return userMap, nil
-}
-
-func (c *Controller) getRuleUserGroups(
-	ctx context.Context,
-	rule protection.Protection,
-) (map[int64]*types.UserGroupInfo, error) {
-	groupIDs, err := rule.UserGroupIDs()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get group IDs from rule: %w", err)
-	}
-
-	userGroupInfoMap := make(map[int64]*types.UserGroupInfo)
-
-	if len(groupIDs) == 0 {
-		return userGroupInfoMap, nil
-	}
-
-	groupMap, err := c.userGroupStore.Map(ctx, groupIDs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get userGroup infos: %w", err)
-	}
-
-	for k, v := range groupMap {
-		userGroupInfoMap[k] = v.ToUserGroupInfo()
-	}
-	return userGroupInfoMap, nil
-}
-
-func (c *Controller) parseRule(r *types.Rule) (protection.Protection, error) {
-	rule, err := c.protectionManager.FromJSON(r.Type, r.Definition, false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse json rule definition: %w", err)
-	}
-
-	return rule, nil
 }
