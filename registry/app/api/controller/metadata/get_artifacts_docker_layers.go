@@ -33,6 +33,7 @@ import (
 
 	"github.com/distribution/distribution/v3/registry/api/errcode"
 	"github.com/opencontainers/go-digest"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -77,27 +78,27 @@ func (c *APIController) GetDockerArtifactLayers(
 
 	dgst, err := types.NewDigest(digest.Digest(manifestDigest))
 	if err != nil {
-		return getLayersErrorResponse(err)
+		return getLayersErrorResponse(ctx, err)
 	}
 	registry, err := c.RegistryRepository.GetByParentIDAndName(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
 	if err != nil {
-		return getLayersErrorResponse(err)
+		return getLayersErrorResponse(ctx, err)
 	}
 	if registry == nil {
-		return getLayersErrorResponse(fmt.Errorf("repository not found"))
+		return getLayersErrorResponse(ctx, fmt.Errorf("repository not found"))
 	}
 
 	m, err := c.ManifestStore.FindManifestByDigest(ctx, registry.ID, image, dgst)
 	if err != nil {
 		if errors.Is(err, store2.ErrResourceNotFound) {
-			return getLayersErrorResponse(fmt.Errorf("manifest not found"))
+			return getLayersErrorResponse(ctx, fmt.Errorf("manifest not found"))
 		}
-		return getLayersErrorResponse(err)
+		return getLayersErrorResponse(ctx, err)
 	}
 
 	mConfig, err := getManifestConfig(ctx, m.Configuration.Digest, regInfo.RootIdentifier, c.StorageDriver)
 	if err != nil {
-		return getLayersErrorResponse(err)
+		return getLayersErrorResponse(ctx, err)
 	}
 
 	layersSummary := &artifact.DockerLayersSummary{
@@ -110,11 +111,11 @@ func (c *APIController) GetDockerArtifactLayers(
 		var historyLayers []artifact.DockerLayerEntry
 		manifest, err := docker.DBManifestToManifest(m)
 		if err != nil {
-			return nil, err
+			return getLayersErrorResponse(ctx, fmt.Errorf("failed to convert DB manifest to manifest: %w", err))
 		}
 		layers, err := getManifestLayers(manifest)
 		if err != nil {
-			return nil, err
+			return getLayersErrorResponse(ctx, err)
 		}
 		layerIndex := 0
 
@@ -134,7 +135,7 @@ func (c *APIController) GetDockerArtifactLayers(
 		}
 		layersSummary.Layers = &historyLayers
 	} else {
-		return getLayersErrorResponse(fmt.Errorf("manifest config not found"))
+		return getLayersErrorResponse(ctx, fmt.Errorf("manifest config not found"))
 	}
 
 	return artifact.GetDockerArtifactLayers200JSONResponse{
@@ -145,7 +146,10 @@ func (c *APIController) GetDockerArtifactLayers(
 	}, nil
 }
 
-func getLayersErrorResponse(err error) (artifact.GetDockerArtifactLayersResponseObject, error) {
+func getLayersErrorResponse(ctx context.Context, err error) (artifact.GetDockerArtifactLayersResponseObject, error) {
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to get layers: %v", err)
+	}
 	return artifact.GetDockerArtifactLayers500JSONResponse{
 		InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
 			*GetErrorResponse(http.StatusInternalServerError, err.Error()),
@@ -159,18 +163,18 @@ func getManifestLayers(
 	switch manifest.(type) {
 	case *schema2.DeserializedManifest:
 		deserializedManifest := &schema2.DeserializedManifest{}
-		_, bytes, _ := manifest.Payload()
+		mediaType, bytes, _ := manifest.Payload()
 		err := deserializedManifest.UnmarshalJSON(bytes)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal %s manifest: %w", mediaType, err)
 		}
 		return deserializedManifest.Layers(), nil
 	case *ocischema.DeserializedManifest:
 		deserializedManifest := &ocischema.DeserializedManifest{}
-		_, bytes, _ := deserializedManifest.Payload()
+		mediaType, bytes, _ := deserializedManifest.Payload()
 		err := deserializedManifest.UnmarshalJSON(bytes)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal %s manifest: %w", mediaType, err)
 		}
 		return deserializedManifest.Layers(), nil
 	default:
