@@ -15,7 +15,7 @@
  */
 
 import React from 'react'
-import { FontVariation } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Card, Layout, Text } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
@@ -43,19 +43,19 @@ export default function SecurityTestsCard(props: SecurityTestsCardProps) {
         <Text font={{ variation: FontVariation.CARD_TITLE }}>
           {title ?? getString('versionDetails.cards.securityTests.title')}
         </Text>
-        <Layout.Horizontal className={css.container}>
-          <Layout.Vertical className={css.column}>
+        <Layout.Vertical className={css.container}>
+          <Layout.Horizontal spacing="small" flex={{ alignItems: 'flex-end', justifyContent: 'flex-start' }}>
             <Text font={{ variation: FontVariation.H2 }}>{totalCount}</Text>
-            <Text font={{ variation: FontVariation.SMALL }}>
-              {getString('versionDetails.cards.securityTests.totalCount')}
+            <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+              {getString('versionDetails.cards.securityTests.totalIssues')}
             </Text>
-          </Layout.Vertical>
-          <Layout.Vertical className={css.column} spacing="small">
+          </Layout.Horizontal>
+          <Layout.Horizontal spacing="small">
             {items.map(each => (
               <SecurityItem key={each.value} title={each.title} status={each.status} value={each.value} />
             ))}
-          </Layout.Vertical>
-        </Layout.Horizontal>
+          </Layout.Horizontal>
+        </Layout.Vertical>
       </Layout.Vertical>
     </Card>
   )

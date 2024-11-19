@@ -15,15 +15,7 @@
  */
 
 .container {
-  --layout-spacing: var(--spacing-medium) !important;
-  & .column:not(:first-child) {
-    margin-left: var(--spacing-medium) !important;
-    padding-left: var(--spacing-medium) !important;
-    border-left: 1px solid var(--grey-200);
-    &.primaryColumn {
-      border-left-color: var(--primary-700) !important;
-    }
-  }
+  --layout-spacing: var(--spacing-small) !important;
 }
 
 .downloadSlsaBtn {

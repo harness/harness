@@ -26,10 +26,12 @@ interface SecurityTestItemProps {
   title: string
   status: SecurityTestSatus
   value: number | string
+  toPrecision?: number
 }
 
 export default function SecurityItem(props: SecurityTestItemProps) {
-  const { title, value, status } = props
+  const { title, value, status, toPrecision = 0 } = props
+  const formattedValue = new Number(value).toFixed(toPrecision)
   return (
     <Layout.Horizontal spacing="small" flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
       <Text font={{ variation: FontVariation.SMALL }}>{title}</Text>
@@ -43,7 +45,7 @@ export default function SecurityItem(props: SecurityTestItemProps) {
           [css.green]: status === SecurityTestSatus.Green,
           [css.info]: status === SecurityTestSatus.Info
         })}>
-        {value}
+        {formattedValue}
       </Text>
     </Layout.Horizontal>
   )

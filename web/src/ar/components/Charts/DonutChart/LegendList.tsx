@@ -15,20 +15,11 @@
  */
 
 import React from 'react'
-import { Layout, Utils, Text } from '@harnessio/uicore'
-import { FontVariation, type Color } from '@harnessio/design-system'
+import { Layout } from '@harnessio/uicore'
+
+import { DonutChartTag } from '@ar/components/Tag/Tags'
 
 import type { PieChartItem } from '../types'
-import css from './DonutChart.module.scss'
-
-export const Legend = ({ label, color }: { label: React.ReactNode; color?: Color }) => {
-  return (
-    <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }}>
-      <div className={css.legendColor} style={{ background: Utils.getRealCSSColor(color || '') }}></div>
-      {label}
-    </Layout.Horizontal>
-  )
-}
 
 export const LegendList = ({ items }: { items: PieChartItem[] }) => {
   return (
@@ -37,8 +28,9 @@ export const LegendList = ({ items }: { items: PieChartItem[] }) => {
         {items.map(item => {
           return (
             <Layout.Horizontal spacing={'xsmall'} key={item.value}>
-              <Legend label={<Text font={{ variation: FontVariation.SMALL }}>{item.label}</Text>} color={item.color} />
-              <Text font={{ variation: FontVariation.SMALL }}>({item.value})</Text>
+              <DonutChartTag
+                color={item.color}
+                backgroundColor={item.backgroundColor}>{`${item.label} ${item.value}`}</DonutChartTag>
             </Layout.Horizontal>
           )
         })}

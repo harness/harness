@@ -15,14 +15,13 @@
  */
 
 import React from 'react'
-import classNames from 'classnames'
 import { Button, ButtonSize, ButtonVariation, Card, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 
 import { killEvent } from '@ar/common/utils'
 import { useStrings } from '@ar/frameworks/strings'
-import useDownloadSLSAProvenance from '@ar/pages/version-details/hooks/useDownloadSLSAProvenance'
 
+import useDownloadSBOM from '../../hooks/useDownloadSBOM'
 import SecurityItem from '../SecurityTestsCard/SecurityItem'
 import { SecurityTestSatus } from '../SecurityTestsCard/types'
 
@@ -35,15 +34,15 @@ interface SupplyChainCardProps {
   allowListCount: number
   denyListCount: number
   sbomScore: string | number
-  provenanceId: string
+  orchestrationId: string
   onClick?: () => void
 }
 
 export default function SupplyChainCard(props: SupplyChainCardProps) {
-  const { title, totalComponents, allowListCount, denyListCount, className, sbomScore, onClick, provenanceId } = props
+  const { title, totalComponents, className, sbomScore, onClick, orchestrationId } = props
   const { getString } = useStrings()
 
-  const { download, loading } = useDownloadSLSAProvenance()
+  const { download, loading } = useDownloadSBOM()
 
   return (
     <Card className={className} onClick={onClick}>
@@ -51,18 +50,19 @@ export default function SupplyChainCard(props: SupplyChainCardProps) {
         <Text font={{ variation: FontVariation.CARD_TITLE }}>
           {title ?? getString('versionDetails.cards.supplyChain.title')}
         </Text>
-        <Layout.Horizontal className={css.container}>
-          <Layout.Vertical className={css.column}>
+        <Layout.Vertical className={css.container}>
+          <Layout.Horizontal spacing="small" flex={{ alignItems: 'flex-end', justifyContent: 'flex-start' }}>
             <Text font={{ variation: FontVariation.H2 }}>{totalComponents}</Text>
-            <Text font={{ variation: FontVariation.SMALL }}>
+            <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
               {getString('versionDetails.cards.supplyChain.totalComponents')}
             </Text>
-          </Layout.Vertical>
-          <Layout.Vertical className={css.column} spacing="small">
+          </Layout.Horizontal>
+          <Layout.Horizontal spacing="small">
             <SecurityItem
               title={getString('versionDetails.cards.supplyChain.sbomScore')}
               value={sbomScore}
               status={SecurityTestSatus.Green}
+              toPrecision={2}
             />
             <Button
               className={css.downloadSlsaBtn}
@@ -70,31 +70,15 @@ export default function SupplyChainCard(props: SupplyChainCardProps) {
               rightIcon="download-manifests"
               variation={ButtonVariation.LINK}
               loading={loading}
-              disabled={!provenanceId}
+              disabled={!orchestrationId}
               onClick={evt => {
                 killEvent(evt)
-                download(provenanceId)
+                download(orchestrationId)
               }}>
-              {getString('versionDetails.cards.supplyChain.slsaProvenance')}
+              {getString('versionDetails.cards.supplyChain.downloadSbom')}
             </Button>
-          </Layout.Vertical>
-        </Layout.Horizontal>
-        <Layout.Horizontal className={css.container}>
-          <Text
-            className={css.column}
-            color={Color.PRIMARY_7}
-            font={{ variation: FontVariation.SMALL }}
-            icon="danger-icon"
-            iconProps={{ size: 18 }}>
-            {allowListCount} {getString('versionDetails.cards.supplyChain.allowList')}
-          </Text>
-          <Text
-            className={classNames(css.column, css.primaryColumn)}
-            color={Color.PRIMARY_7}
-            font={{ variation: FontVariation.SMALL }}>
-            {denyListCount} {getString('versionDetails.cards.supplyChain.denyListViolation')}
-          </Text>
-        </Layout.Horizontal>
+          </Layout.Horizontal>
+        </Layout.Vertical>
       </Layout.Vertical>
     </Card>
   )

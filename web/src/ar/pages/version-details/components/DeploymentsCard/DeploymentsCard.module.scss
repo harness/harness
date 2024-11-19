@@ -16,5 +16,12 @@
 
 .container {
   display: flex;
-  gap: 20px;
+  gap: var(--spacing-medium);
+}
+
+.buildDetailsContainer {
+  --layout-spacing: var(--spacing-none) !important;
+  flex-shrink: 1 !important;
+  border-left: 1px solid var(--grey-200);
+  padding-left: var(--spacing-medium) !important;
 }

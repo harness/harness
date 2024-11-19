@@ -62,39 +62,46 @@ export default function DeploymentsCard(props: DeploymentsCardProps) {
                 {
                   label: getString('prod'),
                   value: defaultTo(prodCount, 0),
-                  color: Color.PURPLE_900
+                  color: Color.BLUE_900,
+                  backgroundColor: Color.BLUE_50
                 },
                 {
                   label: getString('nonProd'),
                   value: defaultTo(nonProdCount, 0),
-                  color: Color.TEAL_800
+                  color: Color.TEAL_900,
+                  backgroundColor: Color.TEAL_50
                 }
               ]}
             />
           </Layout.Horizontal>
         </Layout.Vertical>
         {!hideBuildDetails && (
-          <Layout.Vertical spacing="medium" flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Layout.Vertical
+            className={css.buildDetailsContainer}
+            spacing="medium"
+            flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <Text font={{ variation: FontVariation.CARD_TITLE }}>
               {getString('versionDetails.cards.deploymentsCard.buildTitle')}
             </Text>
             {getRouteToPipelineExecutionView && pipelineName && executionId && pipelineId ? (
               <Layout.Vertical spacing="xsmall">
-                <Link
-                  to={getRouteToPipelineExecutionView({
-                    accountId: scope.accountId,
-                    orgIdentifier: scope.orgIdentifier,
-                    projectIdentifier: scope.projectIdentifier,
-                    pipelineIdentifier: pipelineId,
-                    executionIdentifier: executionId,
-                    module: 'ci'
-                  })}
-                  onClick={evt => {
-                    evt.stopPropagation()
-                  }}>
-                  {pipelineName}
-                </Link>
-                <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+                <Text lineClamp={1}>
+                  <Link
+                    to={getRouteToPipelineExecutionView({
+                      accountId: scope.accountId,
+                      orgIdentifier: scope.orgIdentifier,
+                      projectIdentifier: scope.projectIdentifier,
+                      pipelineIdentifier: pipelineId,
+                      executionIdentifier: executionId,
+                      module: 'ci'
+                    })}
+                    onClick={evt => {
+                      evt.stopPropagation()
+                    }}>
+                    {pipelineName}
+                  </Link>
+                </Text>
+                <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }} lineClamp={1}>
                   {getString('versionDetails.cards.deploymentsCard.executionId')}: {executionId}
                 </Text>
               </Layout.Vertical>

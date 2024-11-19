@@ -16,4 +16,5 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const buildDetailsContainer: string
 export declare const container: string

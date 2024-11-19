@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-import React, { PropsWithChildren, Suspense, useEffect, useMemo, useRef } from 'react'
+import React, { PropsWithChildren, Suspense, useEffect } from 'react'
 import { Page } from '@harnessio/uicore'
-import { HARServiceAPIClient } from '@harnessio/react-har-service-client'
-import { SSCAManagerAPIClient } from '@harnessio/react-ssca-manager-client'
 import { QueryClientProvider } from '@tanstack/react-query'
 
 import { StringsContextProvider } from '@ar/frameworks/strings/StringsContextProvider'
@@ -31,6 +29,8 @@ import strings from '@ar/strings/strings.en.yaml'
 import type { MFEAppProps } from '@ar/MFEAppTypes'
 import DefaultNavComponent from '@ar/__mocks__/components/DefaultNavComponent'
 import AppErrorBoundary from '@ar/components/AppErrorBoundary/AppErrorBoundary'
+
+import useOpenApiClient from './useOpenApiClient'
 
 // Start: Add all factory registractions here
 import '@ar/pages/version-details/VersionFactory'
@@ -60,33 +60,7 @@ export default function ChildApp(props: PropsWithChildren<MFEAppProps>): React.R
   const { ModalProvider } = customComponents
   const appStoreData = React.useContext(parentContextObj.appStoreContext)
 
-  const apiClientOptions = useMemo(
-    () => ({
-      responseInterceptor: (response: Response): Response => {
-        if (!response.ok && response.status === 401) {
-          on401()
-        }
-
-        return response
-      },
-      urlInterceptor: (url: string) => {
-        return customUtils.getApiBaseUrl(url)
-      },
-      requestInterceptor(request: Request) {
-        request.headers.delete('Authorization')
-        // add custom headers if available
-        const customHeader = customUtils.getCustomHeaders()
-        Object.entries(customHeader).map(([key, value]) => {
-          request.headers.set(key, value)
-        })
-        return request
-      }
-    }),
-    []
-  )
-
-  useRef<HARServiceAPIClient>(new HARServiceAPIClient(apiClientOptions))
-  useRef<SSCAManagerAPIClient>(new SSCAManagerAPIClient(apiClientOptions))
+  useOpenApiClient({ on401, customUtils })
 
   useEffect(
     () => () => {

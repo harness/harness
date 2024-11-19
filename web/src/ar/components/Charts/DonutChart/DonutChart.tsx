@@ -91,7 +91,7 @@ export default function DonutChart(props: DonutChartProps) {
 
   const parsedOptions = useMemo(() => getParsedOptions(defaultOptions, options), [defaultOptions, options])
   return (
-    <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }}>
+    <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }}>
       <HighchartsReact highcharts={Highcharts} options={parsedOptions}></HighchartsReact>
       <LegendList items={items} />
     </Layout.Horizontal>

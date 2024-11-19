@@ -18,7 +18,7 @@ import React from 'react'
 import classNames from 'classnames'
 import { defaultTo } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
-import { Layout, Page } from '@harnessio/uicore'
+import { Container, Page } from '@harnessio/uicore'
 import { useGetDockerArtifactIntegrationDetailsQuery } from '@harnessio/react-har-service-client'
 
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
@@ -81,9 +81,9 @@ export default function DockerVersionOverviewCards() {
       retryOnError={() => refetch()}
       error={typeof error === 'string' ? error : error?.message}>
       {responseData && (
-        <Layout.Horizontal width="100%" spacing="medium">
+        <Container className={css.cardsContainer} width="100%">
           <DeploymentsCard
-            className={classNames(css.card, css.deploymentsCard)}
+            className={classNames(css.card)}
             onClick={() => {
               handleRedirectToTab(VersionDetailsTab.DEPLOYMENTS)
             }}
@@ -100,15 +100,15 @@ export default function DockerVersionOverviewCards() {
                 artifactId: responseData.sbomDetails?.artifactId
               })
             }}
-            provenanceId={defaultTo(responseData.slsaDetails?.provenanceId, '')}
-            className={css.card}
+            orchestrationId={defaultTo(responseData.sbomDetails?.orchestrationId, '')}
+            className={classNames(css.card)}
             totalComponents={defaultTo(responseData.sbomDetails?.componentsCount, 0)}
             allowListCount={defaultTo(responseData.sbomDetails?.allowListViolations, 0)}
             denyListCount={defaultTo(responseData.sbomDetails?.denyListViolations, 0)}
             sbomScore={defaultTo(responseData.sbomDetails?.avgScore, 0)}
           />
           <SecurityTestsCard
-            className={classNames(css.card, css.securityTestsCard)}
+            className={classNames(css.card)}
             onClick={() => {
               handleRedirectToTab(VersionDetailsTab.SECURITY_TESTS, {
                 executionIdentifier: responseData?.stoDetails?.executionId,
@@ -139,7 +139,7 @@ export default function DockerVersionOverviewCards() {
               }
             ]}
           />
-        </Layout.Horizontal>
+        </Container>
       )}
     </Page.Body>
   )

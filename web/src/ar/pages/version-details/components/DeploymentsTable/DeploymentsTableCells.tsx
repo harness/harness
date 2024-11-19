@@ -44,10 +44,10 @@ export const EnvironmentNameCell: CellType = ({ row }) => {
   const { getString } = useStrings()
   return (
     <Layout.Vertical>
-      <Text color={Color.GREY_900} font={{ variation: FontVariation.BODY }}>
+      <Text lineClamp={1} color={Color.GREY_900} font={{ variation: FontVariation.BODY }}>
         {envName}
       </Text>
-      <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+      <Text lineClamp={1} color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
         {getString('id', { id: envIdentifier })}
       </Text>
     </Layout.Vertical>
@@ -73,20 +73,22 @@ export const ServiceListCell: CellType = ({ row }) => {
   const { getRouteToServiceDetailsView } = useParentUtils()
   if (getRouteToServiceDetailsView && serviceIdentifier) {
     return (
-      <Link
-        key={serviceIdentifier}
-        to={getRouteToServiceDetailsView({
-          accountId: scope.accountId,
-          orgIdentifier: scope.orgIdentifier,
-          projectIdentifier: scope.projectIdentifier,
-          serviceId: serviceIdentifier
-        })}>
-        {serviceName}
-      </Link>
+      <Text lineClamp={1}>
+        <Link
+          key={serviceIdentifier}
+          to={getRouteToServiceDetailsView({
+            accountId: scope.accountId,
+            orgIdentifier: scope.orgIdentifier,
+            projectIdentifier: scope.projectIdentifier,
+            serviceId: serviceIdentifier
+          })}>
+          {serviceName}
+        </Link>
+      </Text>
     )
   }
   return (
-    <Text key={serviceIdentifier} color={Color.GREY_900} font={{ variation: FontVariation.BODY }}>
+    <Text key={serviceIdentifier} lineClamp={1} color={Color.GREY_900} font={{ variation: FontVariation.BODY }}>
       {serviceName}
     </Text>
   )
@@ -101,23 +103,25 @@ export const DeploymentPipelineCell: CellType = ({ row }) => {
   return (
     <Layout.Vertical>
       {pipelineId && getRouteToPipelineExecutionView ? (
-        <Link
-          to={getRouteToPipelineExecutionView({
-            accountId: scope.accountId,
-            orgIdentifier: scope.orgIdentifier,
-            projectIdentifier: scope.projectIdentifier,
-            pipelineIdentifier: defaultTo(pipelineId, ''),
-            executionIdentifier: defaultTo(lastPipelineExecutionId, ''),
-            module: 'cd'
-          })}>
-          {lastPipelineExecutionName}
-        </Link>
+        <Text lineClamp={1}>
+          <Link
+            to={getRouteToPipelineExecutionView({
+              accountId: scope.accountId,
+              orgIdentifier: scope.orgIdentifier,
+              projectIdentifier: scope.projectIdentifier,
+              pipelineIdentifier: defaultTo(pipelineId, ''),
+              executionIdentifier: defaultTo(lastPipelineExecutionId, ''),
+              module: 'cd'
+            })}>
+            {lastPipelineExecutionName}
+          </Link>
+        </Text>
       ) : (
         <Text color={Color.GREY_900} font={{ variation: FontVariation.BODY }}>
           {lastPipelineExecutionName}
         </Text>
       )}
-      <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+      <Text lineClamp={1} color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
         {getString('id', { id: pipelineId })}
       </Text>
     </Layout.Vertical>

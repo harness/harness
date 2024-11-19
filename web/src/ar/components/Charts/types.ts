@@ -21,4 +21,5 @@ export interface PieChartItem {
   value: number
   formattedValue?: string | React.ReactElement
   color?: Color
+  backgroundColor?: Color
 }

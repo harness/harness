@@ -16,7 +16,6 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const column: string
 export declare const container: string
 export declare const critical: string
 export declare const green: string
@@ -24,5 +23,4 @@ export declare const high: string
 export declare const info: string
 export declare const low: string
 export declare const medium: string
-export declare const primaryColumn: string
 export declare const statusValue: string

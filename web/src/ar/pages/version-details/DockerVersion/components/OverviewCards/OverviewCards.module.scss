@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-.securityTestsCard {
-  flex: 1;
-}
-
 .container {
   height: auto;
-  min-height: 200px;
+  min-height: 160px;
   width: 100%;
+}
+
+.cardsContainer {
+  display: grid;
+  grid-template-columns: auto max-content max-content;
+  column-gap: var(--spacing-small);
 }
 
 .card {
@@ -29,9 +31,5 @@
   &:hover {
     border: 1px solid var(--primary-2);
     box-shadow: 0px 4px 8px 0px rgba(69, 71, 101, 0.16), 0px 0px 2px 0px rgba(40, 41, 61, 0.04);
-  }
-
-  &.deploymentsCard {
-    width: 40%;
   }
 }

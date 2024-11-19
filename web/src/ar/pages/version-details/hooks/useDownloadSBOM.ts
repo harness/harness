@@ -17,31 +17,31 @@
 import { useState } from 'react'
 import { defaultTo } from 'lodash-es'
 import { useToaster } from '@harnessio/uicore'
-import { getProvenance } from '@harnessio/react-ssca-manager-client'
+import { downloadSbom } from '@harnessio/react-ssca-manager-client'
 
 import { useAppStore } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 import { downloadRawFile } from '@ar/utils/downloadRawFile'
 
-export default function useDownloadSLSAProvenance() {
+export default function useDownloadSBOM() {
   const [loading, setLoading] = useState(false)
   const { scope } = useAppStore()
   const { showError } = useToaster()
   const { getString } = useStrings()
 
-  const download = async (provenanceId: string) => {
+  const download = async (orchestrationId: string) => {
     setLoading(true)
-    return getProvenance({
+    return downloadSbom({
       org: defaultTo(scope.orgIdentifier, ''),
       project: defaultTo(scope.projectIdentifier, ''),
-      provenance: provenanceId
+      'orchestration-id': orchestrationId
     })
       .then(data => {
-        const content = defaultTo(data.content.provenance, '')
+        const content = defaultTo(data.content.sbom, '')
         if (!content) {
-          throw new Error(getString('versionDetails.cards.slsaCard.provenanceDataNotAvailable'))
+          throw new Error(getString('versionDetails.cards.supplyChain.SBOMDataNotAvailable'))
         }
-        return downloadRawFile(content, `provenance_${provenanceId}.json`)
+        return downloadRawFile(content, `sbom_${orchestrationId}.json`)
       })
       .catch((err: Error) => {
         showError(defaultTo(err?.message, err))

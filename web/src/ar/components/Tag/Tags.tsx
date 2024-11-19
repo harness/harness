@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { PropsWithChildren } from 'react'
 import classNames from 'classnames'
 import { Tag } from '@blueprintjs/core'
+import { Utils } from '@harnessio/uicore'
 
 import { useStrings } from '@ar/frameworks/strings'
 
@@ -36,6 +37,25 @@ export function NonProdTag() {
   return (
     <Tag className={classNames(css.tag, css.nonProdTag)} round>
       {getString('nonProd')}
+    </Tag>
+  )
+}
+
+interface DonutChartTagProps {
+  color?: string
+  backgroundColor?: string
+}
+
+export function DonutChartTag(props: PropsWithChildren<DonutChartTagProps>) {
+  return (
+    <Tag
+      className={classNames(css.tag)}
+      style={{
+        backgroundColor: Utils.getRealCSSColor(props.backgroundColor as string),
+        color: Utils.getRealCSSColor(props.color as string)
+      }}
+      round>
+      {props.children}
     </Tag>
   )
 }

@@ -164,12 +164,16 @@ export interface StringsMap {
   'versionDetails.cards.securityTests.low': string
   'versionDetails.cards.securityTests.medium': string
   'versionDetails.cards.securityTests.title': string
-  'versionDetails.cards.securityTests.totalCount': string
+  'versionDetails.cards.securityTests.totalIssues': string
+  'versionDetails.cards.slsaCard.provenanceDataNotAvailable': string
+  'versionDetails.cards.slsaCard.slsaProvenance': string
+  'versionDetails.cards.slsaCard.slsaVerificationStatus': string
+  'versionDetails.cards.slsaCard.title': string
+  'versionDetails.cards.supplyChain.SBOMDataNotAvailable': string
   'versionDetails.cards.supplyChain.allowList': string
   'versionDetails.cards.supplyChain.denyListViolation': string
-  'versionDetails.cards.supplyChain.provenanceDataNotAvailable': string
+  'versionDetails.cards.supplyChain.downloadSbom': string
   'versionDetails.cards.supplyChain.sbomScore': string
-  'versionDetails.cards.supplyChain.slsaProvenance': string
   'versionDetails.cards.supplyChain.title': string
   'versionDetails.cards.supplyChain.totalComponents': string
   'versionDetails.deploymentsTable.columns.deploymentPipeline': string

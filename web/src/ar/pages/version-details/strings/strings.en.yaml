@@ -14,19 +14,24 @@ cards:
     executionId: Execution ID
   securityTests:
     title: Vulnerabilities
-    totalCount: Total Count
+    totalIssues: Total Issues
     critical: Critical
     high: High
     medium: Medium
     low: Low
     info: Info
     ignored: Ignored
+  slsaCard:
+    title: SLSA
+    slsaVerificationStatus: SLSA Verification
+    slsaProvenance: SLSA Provenance
+    provenanceDataNotAvailable: Provenance data is not available
   supplyChain:
     title: SBOM
     totalComponents: Total Dependencies
-    sbomScore: SBOM Score
-    slsaProvenance: SLSA Provenance
-    provenanceDataNotAvailable: Provenance data is not available
+    sbomScore: SBOM Quality Score
+    downloadSbom: Download SBOM
+    SBOMDataNotAvailable: SBOM data is not available
     allowList: Allow List
     denyListViolation: Deny List Violation
   container:
