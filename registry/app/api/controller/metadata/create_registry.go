@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
@@ -196,6 +197,9 @@ func (c *APIController) createRegistryWithAudit(
 ) (int64, error) {
 	id, err := c.RegistryRepository.Create(ctx, registry)
 	if err != nil {
+		if isDuplicateKeyError(err) {
+			return -1, c.handleDuplicateRegistryError(ctx, registry)
+		}
 		return id, err
 	}
 	auditErr := c.AuditService.Log(
@@ -334,4 +338,31 @@ func (c *APIController) getSecretID(ctx context.Context, secretSpacePath *string
 		return -1, fmt.Errorf("failed to get Space Path: %w", err)
 	}
 	return int(path.SpaceID), nil
+}
+
+func isDuplicateKeyError(err error) bool {
+	return strings.Contains(err.Error(), "resource is a duplicate")
+}
+
+func (c *APIController) handleDuplicateRegistryError(ctx context.Context, registry *registrytypes.Registry) error {
+	registryData, err := c.RegistryRepository.GetByRootParentIDAndName(ctx, registry.RootParentID, registry.Name)
+	if err != nil {
+		return fmt.Errorf("failed to fetch existing registry details: %w", err)
+	}
+
+	parentSpace, err := c.SpaceStore.Find(ctx, registryData.ParentID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch space details: %w", err)
+	}
+
+	if parentSpace == nil {
+		return fmt.Errorf("unexpected error: parent space not found")
+	}
+
+	return fmt.Errorf(
+		"registry '%s' is already defined under '%s'. "+
+			"Please choose a different name or check existing registries",
+		registry.Name,
+		parentSpace.Path,
+	)
 }
