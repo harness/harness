@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/request"
@@ -79,7 +80,18 @@ func (c *APIController) DeleteRegistry(
 	}
 
 	if string(repoEntity.Type) == string(artifact.RegistryTypeVIRTUAL) {
-		err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.ParentRef)
+		err = c.tx.WithTx(
+			ctx, func(ctx context.Context) error {
+				err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.ParentRef)
+
+				if err != nil {
+					log.Ctx(ctx).Error().Msgf("failed to delete registry: %s with error: %s",
+						regInfo.RegistryIdentifier, err)
+					return fmt.Errorf("failed to delete registry: %w", err)
+				}
+				return nil
+			},
+		)
 	} else {
 		err = c.tx.WithTx(
 			ctx, func(ctx context.Context) error {
@@ -88,12 +100,16 @@ func (c *APIController) DeleteRegistry(
 				)
 
 				if err != nil {
+					log.Ctx(ctx).Error().Msgf("failed to delete upstream proxies for registry: %s with error: %s",
+						regInfo.RegistryIdentifier, err)
 					return fmt.Errorf("failed to delete upstream proxy: %w", err)
 				}
 
 				err = c.deleteRegistryWithAudit(ctx, regInfo, repoEntity, session.Principal, regInfo.ParentRef)
 
 				if err != nil {
+					log.Ctx(ctx).Error().Msgf("failed to delete registry: %s with error: %s",
+						regInfo.RegistryIdentifier, err)
 					return fmt.Errorf("failed to delete registry: %w", err)
 				}
 
@@ -102,7 +118,8 @@ func (c *APIController) DeleteRegistry(
 		)
 	}
 	if err != nil {
-		return throwDeleteRegistry500Error(err), err
+		//nolint:nilerr
+		return throwDeleteRegistry500Error(err), nil
 	}
 	return artifact.DeleteRegistry200JSONResponse{
 		SuccessJSONResponse: artifact.SuccessJSONResponse(*GetSuccessResponse()),
@@ -113,7 +130,41 @@ func (c *APIController) deleteUpstreamProxyWithAudit(
 	ctx context.Context,
 	regInfo *RegistryRequestBaseInfo, principal types.Principal, parentRef string, registryName string,
 ) error {
-	err := c.UpstreamProxyStore.Delete(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	upstreamProxies, err := c.RegistryRepository.FetchUpstreamProxyIDs(ctx,
+		[]string{regInfo.RegistryIdentifier}, regInfo.parentID)
+	if err != nil {
+		log.Ctx(ctx).Error().Msgf("failed to fetch upstream proxy IDs: %s", err)
+		return fmt.Errorf("failed to fectch upstream proxy IDs :%w", err)
+	}
+	//nolint:nestif
+	if len(upstreamProxies) > 0 {
+		registryIDs, err := c.RegistryRepository.FetchRegistriesIDByUpstreamProxyID(
+			ctx, strconv.FormatInt(upstreamProxies[0], 10), regInfo.parentID)
+		if err != nil {
+			log.Ctx(ctx).Error().Msgf("failed to fetch registryIDs: %s", err)
+			return fmt.Errorf("failed to fetch registryIDs IDs :%w", err)
+		}
+		if len(registryIDs) > 0 {
+			log.Ctx(ctx).Info().Msgf("upstream proxy with id: %d is already being used in registryIDs: %d",
+				upstreamProxies[0], registryIDs)
+
+			registry, err := c.RegistryRepository.Get(ctx, registryIDs[0])
+			if err != nil {
+				log.Ctx(ctx).Error().Msgf("failed to fetch registry: %s", err)
+				return fmt.Errorf("failed to fetch registry :%w", err)
+			}
+			spaceDetails, err := c.SpaceStore.Find(ctx, registry.ParentID)
+			if err != nil {
+				return fmt.Errorf("failed to fetch space details: %w", err)
+			}
+			return fmt.Errorf(
+				"upstream Proxy : [%s] is being used inside Registry: [%s] which is created under scope: [%s]. ",
+				registryName, registry.Name, spaceDetails.Path,
+			)
+		}
+	}
+
+	err = c.UpstreamProxyStore.Delete(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return err
 	}
@@ -139,7 +190,22 @@ func (c *APIController) deleteRegistryWithAudit(
 	ctx context.Context, regInfo *RegistryRequestBaseInfo,
 	registry *registrytypes.Registry, principal types.Principal, parentRef string,
 ) error {
-	err := c.RegistryRepository.Delete(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
+	err := c.ImageStore.DeleteDownloadStatByRegistryID(ctx, regInfo.RegistryID)
+	if err != nil {
+		return err
+	}
+
+	err = c.ImageStore.DeleteBandwidthStatByRegistryID(ctx, regInfo.RegistryID)
+	if err != nil {
+		return err
+	}
+
+	err = c.ImageStore.DeleteByRegistryID(ctx, regInfo.RegistryID)
+	if err != nil {
+		return err
+	}
+
+	err = c.RegistryRepository.Delete(ctx, regInfo.parentID, regInfo.RegistryIdentifier)
 	if err != nil {
 		return err
 	}

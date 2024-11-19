@@ -484,6 +484,32 @@ func (r registryDao) FetchUpstreamProxyIDs(
 	return repoIDs, nil
 }
 
+func (r registryDao) FetchRegistriesIDByUpstreamProxyID(
+	ctx context.Context, upstreamProxyID string,
+	parentID int64,
+) (ids []int64, err error) {
+	var registryIDs []int64
+
+	stmt := databaseg.Builder.Select("registry_id").
+		From("registries").
+		Where("registry_parent_id = ?", parentID).
+		Where("registry_upstream_proxies LIKE ?", "%"+upstreamProxyID+"%").
+		Where("registry_type = ?", artifact.RegistryTypeVIRTUAL)
+
+	db := dbtx.GetAccessor(ctx, r.db)
+
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.SelectContext(ctx, &registryIDs, query, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to find registries")
+	}
+
+	return registryIDs, nil
+}
+
 func (r registryDao) mapToRegistries(ctx context.Context, dst []*registryDB) (*[]types.Registry, error) {
 	registries := make([]types.Registry, 0, len(dst))
 	for _, d := range dst {

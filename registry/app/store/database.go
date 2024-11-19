@@ -378,6 +378,11 @@ type RegistryRepository interface {
 		parentID int64,
 	) (ids []int64, err error)
 
+	FetchRegistriesIDByUpstreamProxyID(
+		ctx context.Context, upstreamProxyID string,
+		parentID int64,
+	) (ids []int64, err error)
+
 	FetchUpstreamProxyKeys(ctx context.Context, ids []int64) (repokeys []string, err error)
 	Count(ctx context.Context) (int64, error)
 }
@@ -423,6 +428,10 @@ type ImageRepository interface {
 	Update(ctx context.Context, artifact *types.Image) (err error)
 
 	UpdateStatus(ctx context.Context, artifact *types.Image) (err error)
+
+	DeleteByRegistryID(ctx context.Context, registryID int64) (err error)
+	DeleteBandwidthStatByRegistryID(ctx context.Context, registryID int64) (err error)
+	DeleteDownloadStatByRegistryID(ctx context.Context, registryID int64) (err error)
 }
 
 type ArtifactRepository interface {

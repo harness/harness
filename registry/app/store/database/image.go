@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"sort"
 	"time"
 
@@ -28,6 +29,7 @@ import (
 	databaseg "github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -75,6 +77,125 @@ func (i ImageDao) Get(ctx context.Context, id int64) (*types.Image, error) {
 		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed to get image")
 	}
 	return i.mapToImage(ctx, dst)
+}
+
+func (i ImageDao) DeleteBandwidthStatByRegistryID(ctx context.Context, registryID int64) (err error) {
+	var ids []int64
+	stmt := databaseg.Builder.Select("bandwidth_stat_id").
+		From("bandwidth_stats i").
+		Join("images i ON i.image_id = i.bandwidth_stat_image_id").
+		Join("registries r ON r.registry_id = i.image_registry_id").
+		Where("r.registry_id = ?", registryID)
+
+	db := dbtx.GetAccessor(ctx, i.db)
+
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.SelectContext(ctx, &ids, query, args...); err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to find downlad stat")
+	}
+
+	delStmt := databaseg.Builder.Delete("bandwidth_stats").
+		Where(sq.Eq{"bandwidth_stat_id": ids})
+
+	delQuery, delArgs, err := delStmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge query to sql: %w", err)
+	}
+
+	_, err = db.ExecContext(ctx, delQuery, delArgs...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
+}
+
+func (i ImageDao) DeleteByRegistryID(ctx context.Context, registryID int64) error {
+	var ids []int64
+	stmt := databaseg.Builder.Select("artifact_id").
+		From("artifacts a").
+		Join("images i ON i.image_id = a.artifact_image_id").
+		Join("registries r ON r.registry_id = i.image_registry_id").
+		Where("r.registry_id = ?", registryID)
+
+	db := dbtx.GetAccessor(ctx, i.db)
+
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.SelectContext(ctx, &ids, query, args...); err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to find downlad stat")
+	}
+
+	delStmt := databaseg.Builder.Delete("artifacts").
+		Where(sq.Eq{"artifact_id": ids})
+
+	delQuery, delArgs, err := delStmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge query to sql: %w", err)
+	}
+
+	_, err = db.ExecContext(ctx, delQuery, delArgs...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	delStmt = databaseg.Builder.Delete("images").
+		Where("image_registry_id = ?", registryID)
+
+	delQuery, delArgs, err = delStmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge query to sql: %w", err)
+	}
+
+	_, err = db.ExecContext(ctx, delQuery, delArgs...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
+}
+
+func (i ImageDao) DeleteDownloadStatByRegistryID(ctx context.Context, registryID int64) (err error) {
+	var ids []int64
+	stmt := databaseg.Builder.Select("download_stat_id").
+		From("download_stats i").
+		Join("artifacts a ON a.artifact_id = i.download_stat_artifact_id").
+		Join("images i ON i.image_id = a.artifact_image_id").
+		Join("registries r ON r.registry_id = i.image_registry_id").
+		Where("r.registry_id = ?", registryID)
+
+	db := dbtx.GetAccessor(ctx, i.db)
+
+	query, args, err := stmt.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.SelectContext(ctx, &ids, query, args...); err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "Failed to find downlad stat")
+	}
+
+	delStmt := databaseg.Builder.Delete("download_stats").
+		Where(sq.Eq{"download_stat_id": ids})
+
+	delQuery, delArgs, err := delStmt.ToSql()
+	if err != nil {
+		return fmt.Errorf("failed to convert purge query to sql: %w", err)
+	}
+
+	_, err = db.ExecContext(ctx, delQuery, delArgs...)
+	if err != nil {
+		return databaseg.ProcessSQLErrorf(ctx, err, "the delete query failed")
+	}
+
+	return nil
 }
 
 func (i ImageDao) GetByName(ctx context.Context, registryID int64, name string) (*types.Image, error) {
