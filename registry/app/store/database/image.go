@@ -82,8 +82,8 @@ func (i ImageDao) Get(ctx context.Context, id int64) (*types.Image, error) {
 func (i ImageDao) DeleteBandwidthStatByRegistryID(ctx context.Context, registryID int64) (err error) {
 	var ids []int64
 	stmt := databaseg.Builder.Select("bandwidth_stat_id").
-		From("bandwidth_stats i").
-		Join("images i ON i.image_id = i.bandwidth_stat_image_id").
+		From("bandwidth_stats bs").
+		Join("images i ON i.image_id = bs.bandwidth_stat_image_id").
 		Join("registries r ON r.registry_id = i.image_registry_id").
 		Where("r.registry_id = ?", registryID)
 
@@ -165,8 +165,8 @@ func (i ImageDao) DeleteByRegistryID(ctx context.Context, registryID int64) erro
 func (i ImageDao) DeleteDownloadStatByRegistryID(ctx context.Context, registryID int64) (err error) {
 	var ids []int64
 	stmt := databaseg.Builder.Select("download_stat_id").
-		From("download_stats i").
-		Join("artifacts a ON a.artifact_id = i.download_stat_artifact_id").
+		From("download_stats ds").
+		Join("artifacts a ON a.artifact_id = ds.download_stat_artifact_id").
 		Join("images i ON i.image_id = a.artifact_image_id").
 		Join("registries r ON r.registry_id = i.image_registry_id").
 		Where("r.registry_id = ?", registryID)
