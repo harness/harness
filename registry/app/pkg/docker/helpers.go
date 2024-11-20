@@ -25,6 +25,8 @@ import (
 	"github.com/harness/gitness/registry/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // GetRegistryCheckAccess fetches an active registry
@@ -62,7 +64,9 @@ func GetRegistryCheckAccess(
 	}
 
 	if err = apiauth.CheckRegistry(ctx, authorizer, session, permissionChecks...); err != nil {
-		return fmt.Errorf("access check failed: %w", err)
+		err = fmt.Errorf("registgry access check failed: %w", err)
+		log.Ctx(ctx).Error().Msgf("Error: %v", err)
+		return err
 	}
 
 	return nil

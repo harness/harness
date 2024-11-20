@@ -171,7 +171,7 @@ func getManifestLayers(
 		return deserializedManifest.Layers(), nil
 	case *ocischema.DeserializedManifest:
 		deserializedManifest := &ocischema.DeserializedManifest{}
-		mediaType, bytes, _ := deserializedManifest.Payload()
+		mediaType, bytes, _ := manifest.Payload()
 		err := deserializedManifest.UnmarshalJSON(bytes)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal %s manifest: %w", mediaType, err)
