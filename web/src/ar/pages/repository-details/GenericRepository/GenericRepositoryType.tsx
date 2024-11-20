@@ -16,17 +16,15 @@
 
 import React from 'react'
 import type { IconName } from '@harnessio/icons'
-import UpstreamProxyCreateFormContent from '@ar/pages/upstream-proxy-details/components/FormContent/UpstreamProxyCreateFormContent'
 import { RepositoryConfigType, RepositoryPackageType } from '@ar/common/types'
 import {
-  CreateRepositoryFormProps,
+  RepositoryActionsProps,
   RepositoryConfigurationFormProps,
   RepositoryDetailsHeaderProps,
   RepositoryStep,
   RepositoySetupClientProps
 } from '@ar/frameworks/RepositoryStep/Repository'
-import UpstreamProxyConfigurationForm from '@ar/pages/upstream-proxy-details/components/Forms/UpstreamProxyConfigurationForm'
-import UpstreamProxyDetailsHeader from '@ar/pages/upstream-proxy-details/components/UpstreamProxyDetailsHeader/UpstreamProxyDetailsHeader'
+import RepositoryActions from '../components/Actions/RepositoryActions'
 import type { Repository, VirtualRegistryRequest } from '../types'
 import RepositoryCreateFormContent from '../components/FormContent/RepositoryCreateFormContent'
 import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigurationForm'
@@ -52,26 +50,18 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
 
   protected defaultUpstreamProxyValues = null
 
-  renderCreateForm(props: CreateRepositoryFormProps): JSX.Element {
-    const { type } = props
-    if (type === RepositoryConfigType.VIRTUAL) {
-      return <RepositoryCreateFormContent isEdit={false} />
-    } else {
-      return <UpstreamProxyCreateFormContent isEdit={false} readonly={false} />
-    }
+  renderCreateForm(): JSX.Element {
+    return <RepositoryCreateFormContent isEdit={false} />
   }
 
   renderCofigurationForm(props: RepositoryConfigurationFormProps<Repository>): JSX.Element {
-    const { type, formikRef, readonly } = props
-    if (type === RepositoryConfigType.VIRTUAL) {
-      return <RepositoryConfigurationForm ref={formikRef} readonly={readonly} />
-    } else {
-      return <UpstreamProxyConfigurationForm ref={formikRef} readonly={readonly} />
-    }
+    const { formikRef, readonly } = props
+    return <RepositoryConfigurationForm ref={formikRef} readonly={readonly} />
   }
 
-  renderActions(): JSX.Element {
-    return <></>
+  renderActions(props: RepositoryActionsProps<Repository>): JSX.Element {
+    const { data, readonly } = props
+    return <RepositoryActions data={data} readonly={readonly} pageType={props.pageType} />
   }
 
   renderSetupClient(props: RepositoySetupClientProps): JSX.Element {
@@ -88,12 +78,8 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
   }
 
   renderRepositoryDetailsHeader(props: RepositoryDetailsHeaderProps<Repository>): JSX.Element {
-    const { type } = props
-    if (type === RepositoryConfigType.VIRTUAL) {
-      return <RepositoryDetailsHeader data={props.data} />
-    } else {
-      return <UpstreamProxyDetailsHeader data={props.data} />
-    }
+    const { data } = props
+    return <RepositoryDetailsHeader data={data} />
   }
 
   renderRedirectPage(): JSX.Element {
