@@ -114,7 +114,11 @@ func (c *APIController) GenerateClientSetupDetails(
 	if packageType == "HELM" {
 		header1 := "Login to Helm"
 		section1step1Header := "Run this Helm command in your terminal to authenticate the client."
-		section1step1Commands := []string{"helm registry login <LOGIN_HOSTNAME>"}
+		section1step1Commands := []string{
+			"helm registry login <LOGIN_HOSTNAME>",
+			"Username: <USERNAME>",
+			"Password: *see step 2*",
+		}
 		section1step1Type := artifact.ClientSetupStepTypeStatic
 		section1step2Header := "For the Password field above, generate an identity token"
 		section1step2Type := artifact.ClientSetupStepTypeGenerateToken
