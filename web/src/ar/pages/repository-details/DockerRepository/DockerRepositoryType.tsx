@@ -43,6 +43,7 @@ import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigura
 import SetupClientContent from '../components/SetupClientContent/SetupClientContent'
 import RepositoryCreateFormContent from '../components/FormContent/RepositoryCreateFormContent'
 import RepositoryDetailsHeader from '../components/RepositoryDetailsHeader/RepositoryDetailsHeader'
+import DockerRedirectPage from './DockerRedirectPage/DockerRedirectPage'
 
 export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected packageType = RepositoryPackageType.DOCKER
@@ -120,5 +121,9 @@ export class DockerRepositoryType extends RepositoryStep<VirtualRegistryRequest>
     } else {
       return <UpstreamProxyDetailsHeader data={props.data} />
     }
+  }
+
+  renderRedirectPage(): JSX.Element {
+    return <DockerRedirectPage />
   }
 }

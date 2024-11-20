@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import type { RepositoryPackageType } from '@ar/common/types'
 import type { RepositoryDetailsTab } from '@ar/pages/repository-details/constants'
+import type { VersionDetailsTab } from '@ar/pages/version-details/components/VersionDetailsTabs/constants'
 
 export interface RepositoryDetailsPathParams {
   repositoryIdentifier: string
@@ -35,4 +37,15 @@ export interface VersionDetailsTabPathParams extends VersionDetailsPathParams {
   executionIdentifier?: string
   artifactId?: string
   sourceId?: string
+}
+
+export interface RedirectPageQueryParams {
+  accountId?: string
+  orgIdentifier?: string
+  projectIdentifier?: string
+  packageType: RepositoryPackageType
+  registryId: string
+  artifactId?: string
+  versionId?: string
+  versionDetailsTab?: VersionDetailsTab
 }

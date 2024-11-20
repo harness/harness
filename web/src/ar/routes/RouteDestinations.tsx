@@ -19,6 +19,7 @@ import { Redirect, Switch } from 'react-router-dom'
 
 import { Parent } from '@ar/common/types'
 import { useAppStore, useRoutes } from '@ar/hooks'
+import RedirectPage from '@ar/pages/redirect-page/RedirectPage'
 import type {
   ArtifactDetailsPathParams,
   RepositoryDetailsPathParams,
@@ -72,6 +73,9 @@ const RouteDestinations = (): JSX.Element => {
     <Switch>
       <RouteProvider exact path={routes.toAR()}>
         <Redirect to={routes.toARRepositories()} />
+      </RouteProvider>
+      <RouteProvider exact path={routes.toARRedirect()}>
+        <RedirectPage />
       </RouteProvider>
       <RouteProvider exact path={routes.toARRepositories()}>
         <RepositoryListPage />

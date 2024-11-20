@@ -32,6 +32,7 @@ import RepositoryCreateFormContent from '../components/FormContent/RepositoryCre
 import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigurationForm'
 import RepositoryDetailsHeader from '../components/RepositoryDetailsHeader/RepositoryDetailsHeader'
 import SetupClientContent from '../components/SetupClientContent/SetupClientContent'
+import RedirectPageView from '../components/RedirectPageView/RedirectPageView'
 
 export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected packageType = RepositoryPackageType.GENERIC
@@ -93,5 +94,9 @@ export class GenericRepositoryType extends RepositoryStep<VirtualRegistryRequest
     } else {
       return <UpstreamProxyDetailsHeader data={props.data} />
     }
+  }
+
+  renderRedirectPage(): JSX.Element {
+    return <RedirectPageView />
   }
 }

@@ -54,16 +54,18 @@ export const ArtifactNameCell: Renderer<{
   const { original } = row
   const { onClickLabel } = column
   const routes = useRoutes()
-  const { name: value, version } = original
+  const { name: value, version, packageType, registryIdentifier } = original
+
   return (
     <Layout.Vertical>
       <TableCells.LinkCell
         prefix={<RepositoryIcon packageType={original.packageType as RepositoryPackageType} iconProps={{ size: 24 }} />}
-        linkTo={routes.toARVersionDetailsTab({
-          repositoryIdentifier: original.registryIdentifier,
-          artifactIdentifier: value,
-          versionIdentifier: defaultTo(version, ''),
-          versionTab: VersionDetailsTab.OVERVIEW
+        linkTo={routes.toARRedirect({
+          packageType: packageType as RepositoryPackageType,
+          registryId: registryIdentifier,
+          artifactId: value,
+          versionId: version,
+          versionDetailsTab: VersionDetailsTab.OVERVIEW
         })}
         label={value}
         subLabel={version}

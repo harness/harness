@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+export const MODULE_NAME = 'har'
+
 export const DEFAULT_PAGE_INDEX = 0
 export const DEFAULT_PAGE_SIZE = 50
 export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]

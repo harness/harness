@@ -121,4 +121,6 @@ export abstract class RepositoryStep<T, U = unknown> {
   abstract renderSetupClient(props: RepositoySetupClientProps): JSX.Element
 
   abstract renderRepositoryDetailsHeader(props: RepositoryDetailsHeaderProps<U>): JSX.Element
+
+  abstract renderRedirectPage(): JSX.Element
 }

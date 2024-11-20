@@ -111,6 +111,7 @@ export interface CustomUtils {
   getRouteDefinitions?: (routeParams: Record<string, string>) => ARRouteDefinitionsReturn
   getRouteToPipelineExecutionView?: (params: Scope & PipelineExecutionPathProps) => string
   getRouteToServiceDetailsView?: (params: Scope & ServiceDetailsPathProps) => string
+  routeToMode?: (params: Scope & { module: string }) => string
 }
 
 export interface MFEAppProps {

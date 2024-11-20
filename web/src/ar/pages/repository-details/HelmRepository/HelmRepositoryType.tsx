@@ -43,6 +43,7 @@ import SetupClientContent from '../components/SetupClientContent/SetupClientCont
 import RepositoryCreateFormContent from '../components/FormContent/RepositoryCreateFormContent'
 import RepositoryDetailsHeader from '../components/RepositoryDetailsHeader/RepositoryDetailsHeader'
 import RepositoryConfigurationForm from '../components/Forms/RepositoryConfigurationForm'
+import RedirectPageView from '../components/RedirectPageView/RedirectPageView'
 
 export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
   protected packageType = RepositoryPackageType.HELM
@@ -118,5 +119,9 @@ export class HelmRepositoryType extends RepositoryStep<VirtualRegistryRequest> {
     } else {
       return <UpstreamProxyDetailsHeader data={props.data} />
     }
+  }
+
+  renderRedirectPage(): JSX.Element {
+    return <RedirectPageView />
   }
 }

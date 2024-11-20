@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import { defaultTo, isEmpty } from 'lodash-es'
 import type {
   ArtifactDetailsPathParams,
+  RedirectPageQueryParams,
   RepositoryDetailsPathParams,
   VersionDetailsPathParams,
   VersionDetailsTabPathParams
@@ -23,6 +25,7 @@ import type {
 
 export interface ARRouteDefinitionsReturn {
   toAR: () => string
+  toARRedirect: (params?: RedirectPageQueryParams) => string
   toARRepositories: () => string
   toARRepositoryDetails: (params: RepositoryDetailsPathParams) => string
   toARArtifacts: () => string
@@ -33,6 +36,19 @@ export interface ARRouteDefinitionsReturn {
 
 export const routeDefinitions: ARRouteDefinitionsReturn = {
   toAR: () => '/',
+  toARRedirect: params => {
+    if (!isEmpty(params)) {
+      const queryParams = new URLSearchParams({
+        packageType: defaultTo(params?.packageType, ''),
+        registryId: defaultTo(params?.registryId, ''),
+        artifactId: defaultTo(params?.artifactId, ''),
+        versionId: defaultTo(params?.versionId, ''),
+        versionDetailsTab: defaultTo(params?.versionDetailsTab, '')
+      })
+      return `/redirect?${queryParams.toString()}`
+    }
+    return '/redirect'
+  },
   toARRepositories: () => '/registries',
   toARRepositoryDetails: params => {
     let url = `/registries/${params?.repositoryIdentifier}?`

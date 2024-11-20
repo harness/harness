@@ -20,6 +20,7 @@ export default function getARRouteDefinitions(routeParams: Record<string, string
   return {
     // anything random, as this route will not be used in gitness
     toAR: () => '/ar',
+    toARRedirect: () => '/ar', // currently not used for gitness
     toARRepositories: () => '/',
     toARRepositoryDetails: params => {
       let url = `/${params?.repositoryIdentifier}?`
