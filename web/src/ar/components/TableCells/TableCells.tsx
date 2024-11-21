@@ -240,11 +240,11 @@ interface DeploymentsCellProps {
 export const DeploymentsCell = ({ prodCount, nonProdCount }: DeploymentsCellProps) => {
   return (
     <Layout.Horizontal spacing="xsmall">
-      <Layout.Horizontal spacing="small">
+      <Layout.Horizontal data-testid="prodDeployments" spacing="small">
         <Text font={{ variation: FontVariation.BODY }}>{defaultTo(prodCount, 0)}</Text>
         <ProdTag />
       </Layout.Horizontal>
-      <Layout.Horizontal spacing="small">
+      <Layout.Horizontal data-testid="nonProdDeployments" spacing="small">
         <Text font={{ variation: FontVariation.BODY }}>{defaultTo(nonProdCount, 0)}</Text>
         <NonProdTag />
       </Layout.Horizontal>
