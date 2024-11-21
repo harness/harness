@@ -1049,6 +1049,7 @@ export type TypesGitspaceInstance = {
   access_key?: string | null
   access_type?: EnumGitspaceAccessType
   created?: number
+  error_message?: string | null
   identifier?: string
   last_used?: number
   machine_user?: string | null

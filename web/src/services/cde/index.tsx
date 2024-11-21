@@ -200,6 +200,7 @@ export type TypesGitspaceInstance = {
   active_time_ended?: number | null
   active_time_started?: number | null
   created?: number
+  error_message?: string | null
   has_git_changes?: boolean | null
   identifier?: string
   last_heartbeat?: number | null

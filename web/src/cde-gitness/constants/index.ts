@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+export const docLink = 'https://developer.harness.io/docs/cloud-development-environments'
+
 export enum IDEType {
   VSCODE = 'vs_code',
   VSCODEWEB = 'vs_code_web'

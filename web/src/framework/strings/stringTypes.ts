@@ -1257,6 +1257,12 @@ export interface StringsMap {
   'cde.details.wrongIdentifier': string
   'cde.disk': string
   'cde.editGitspace': string
+  'cde.errorCard.contactUs': string
+  'cde.errorCard.learnMore': string
+  'cde.errorCard.retryGitspace': string
+  'cde.errorCard.title': string
+  'cde.errorCard.unabletoResolve': string
+  'cde.errorCard.viewLog': string
   'cde.eventTimeline': string
   'cde.getStarted': string
   'cde.gitspaceDetail': string

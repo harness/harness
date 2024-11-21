@@ -57,6 +57,7 @@ import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useGitspacesLogs } from 'cde-gitness/hooks/useGitspaceLogs'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
+import { ErrorCard } from 'cde-gitness/components/ErrorCard/ErrorCard'
 import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
 import { useGetLogStream } from '../../hooks/useGetLogStream'
 import css from './GitspaceDetails.module.scss'
@@ -200,6 +201,7 @@ const GitspaceDetails = () => {
   const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
 
   const accordionRef = useRef<AccordionHandle | null>(null)
+  const myRef = useRef<any | null>(null)
 
   useEffect(() => {
     if (standalone ? formattedlogsdata.data : responseData) {
@@ -208,6 +210,24 @@ const GitspaceDetails = () => {
       accordionRef.current?.close('logsCard')
     }
   }, [standalone, responseData, formattedlogsdata.data])
+
+  const triggerGitspace = async () => {
+    try {
+      setStartPolling(GitspaceActionType.START)
+      await actionMutate({ action: GitspaceActionType.START })
+      await refetch()
+      setStartPolling(undefined)
+      updateQueryParams({ redirectFrom: undefined })
+    } catch (err) {
+      showError(getErrorMessage(err))
+      setStartPolling(undefined)
+    }
+  }
+
+  const viewLogs = () => {
+    myRef.current?.scrollIntoView()
+    accordionRef.current?.open('logsCard')
+  }
 
   return (
     <>
@@ -374,16 +394,7 @@ const GitspaceDetails = () => {
                   variation={ButtonVariation.PRIMARY}
                   intent="success"
                   onClick={async () => {
-                    try {
-                      setStartPolling(GitspaceActionType.START)
-                      await actionMutate({ action: GitspaceActionType.START })
-                      await refetch()
-                      setStartPolling(undefined)
-                      updateQueryParams({ redirectFrom: undefined })
-                    } catch (err) {
-                      showError(getErrorMessage(err))
-                      setStartPolling(undefined)
-                    }
+                    triggerGitspace()
                   }}>
                   {getString('cde.details.startGitspace')}
                 </Button>
@@ -402,6 +413,16 @@ const GitspaceDetails = () => {
         }}
         className={css.pageMain}>
         <Container>
+          {data?.instance?.error_message ? (
+            <ErrorCard
+              message={data?.instance?.error_message}
+              triggerGitspace={triggerGitspace}
+              loading={mutateLoading}
+              viewLogs={viewLogs}
+            />
+          ) : (
+            <></>
+          )}
           <Card className={css.cardContainer}>
             <Text font={{ variation: FontVariation.CARD_TITLE }}>{getString('cde.gitspaceDetail')}</Text>
             <DetailsCard data={data} loading={mutateLoading} />
@@ -411,29 +432,31 @@ const GitspaceDetails = () => {
           </Card>
 
           <Card className={css.cardContainer}>
-            <Accordion activeId={''} ref={accordionRef}>
-              <Accordion.Panel
-                className={css.accordionnCustomSummary}
-                summary={
-                  <Layout.Vertical spacing="small">
-                    <Text
-                      rightIcon={isStreamingLogs || logsLoading ? 'steps-spinner' : undefined}
-                      className={css.containerlogsTitle}
-                      font={{ variation: FontVariation.CARD_TITLE }}
-                      margin={{ left: 'large' }}>
-                      {getString('cde.details.containerLogs')}
-                    </Text>
-                    <Text margin={{ left: 'large' }}>{getString('cde.details.containerLogsSubText')} </Text>
-                  </Layout.Vertical>
-                }
-                id="logsCard"
-                details={
-                  <Container width="100%">
-                    <ContainerLogs data={standalone ? formattedlogsdata.data : responseData} />
-                  </Container>
-                }
-              />
-            </Accordion>
+            <Container ref={myRef}>
+              <Accordion activeId={''} ref={accordionRef}>
+                <Accordion.Panel
+                  className={css.accordionnCustomSummary}
+                  summary={
+                    <Layout.Vertical spacing="small">
+                      <Text
+                        rightIcon={isStreamingLogs || logsLoading ? 'steps-spinner' : undefined}
+                        className={css.containerlogsTitle}
+                        font={{ variation: FontVariation.CARD_TITLE }}
+                        margin={{ left: 'large' }}>
+                        {getString('cde.details.containerLogs')}
+                      </Text>
+                      <Text margin={{ left: 'large' }}>{getString('cde.details.containerLogsSubText')} </Text>
+                    </Layout.Vertical>
+                  }
+                  id="logsCard"
+                  details={
+                    <Container width="100%">
+                      <ContainerLogs data={standalone ? formattedlogsdata.data : responseData} />
+                    </Container>
+                  }
+                />
+              </Accordion>
+            </Container>
           </Card>
         </Container>
       </Page.Body>

@@ -154,3 +154,10 @@ gitspaceOwners:
   myGitspaces: My Gitspaces
 sortBy: Sort By
 total: Total
+errorCard:
+  title: There has been an error in running the Gitspace
+  viewLog: View Container Logs
+  retryGitspace: Retry starting Gitspace
+  learnMore: Learn more in Docs
+  unabletoResolve: Unable to resolve?
+  contactUs: Contact Us

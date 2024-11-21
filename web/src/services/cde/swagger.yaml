@@ -1275,6 +1275,9 @@ components:
           type: integer
         created:
           type: integer
+        error_message:
+          nullable: true
+          type: string
         has_git_changes:
           nullable: true
           type: boolean
