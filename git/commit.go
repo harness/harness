@@ -117,8 +117,14 @@ type ListCommitsParams struct {
 	// Committer allows to filter for commits based on the committer - Optional, ignored if string is empty.
 	Committer string
 
+	// Author allows to filter for commits based on the author - Optional, ignored if string is empty.
+	Author string
+
 	// IncludeStats allows to include information about inserted, deletions and status for changed files.
 	IncludeStats bool
+
+	// Regex allows to use regular expression in the Committer and Author fields
+	Regex bool
 }
 
 type RenameDetails struct {
@@ -162,6 +168,8 @@ func (s *Service) ListCommits(ctx context.Context, params *ListCommitsParams) (*
 			Since:     params.Since,
 			Until:     params.Until,
 			Committer: params.Committer,
+			Author:    params.Author,
+			Regex:     params.Regex,
 		},
 	)
 	if err != nil {

@@ -41,10 +41,14 @@ const (
 	QueryParamSince              = "since"
 	QueryParamUntil              = "until"
 	QueryParamCommitter          = "committer"
-	QueryParamIncludeStats       = "include_stats"
-	QueryParamInternal           = "internal"
-	QueryParamService            = "service"
-	QueryParamCommitSHA          = "commit_sha"
+	QueryParamCommitterID        = "committer_id"
+	QueryParamAuthor             = "author"
+	QueryParamAuthorID           = "author_id"
+
+	QueryParamIncludeStats = "include_stats"
+	QueryParamInternal     = "internal"
+	QueryParamService      = "service"
+	QueryParamCommitSHA    = "commit_sha"
 
 	QueryParamIncludeChecks   = "include_checks"
 	QueryParamIncludeRules    = "include_rules"
@@ -182,6 +186,16 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 		return nil, err
 	}
 
+	commiterIDs, err := QueryParamListAsPositiveInt64(r, QueryParamCommitterID)
+	if err != nil {
+		return nil, err
+	}
+
+	authorIDs, err := QueryParamListAsPositiveInt64(r, QueryParamAuthorID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &types.CommitFilter{
 		After: QueryParamOrDefault(r, QueryParamAfter, ""),
 		PaginationFilter: types.PaginationFilter{
@@ -192,6 +206,9 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 		Since:        since,
 		Until:        until,
 		Committer:    QueryParamOrDefault(r, QueryParamCommitter, ""),
+		CommitterIDs: commiterIDs,
+		Author:       QueryParamOrDefault(r, QueryParamAuthor, ""),
+		AuthorIDs:    authorIDs,
 		IncludeStats: includeStats,
 	}, nil
 }

@@ -32,12 +32,15 @@ type PaginationFilter struct {
 // CommitFilter stores commit query parameters.
 type CommitFilter struct {
 	PaginationFilter
-	After        string `json:"after"`
-	Path         string `json:"path"`
-	Since        int64  `json:"since"`
-	Until        int64  `json:"until"`
-	Committer    string `json:"committer"`
-	IncludeStats bool   `json:"include_stats"`
+	After        string  `json:"after"`
+	Path         string  `json:"path"`
+	Since        int64   `json:"since"`
+	Until        int64   `json:"until"`
+	Committer    string  `json:"committer"`
+	CommitterIDs []int64 `json:"committer_ids"`
+	Author       string  `json:"author"`
+	AuthorIDs    []int64 `json:"author_ids"`
+	IncludeStats bool    `json:"include_stats"`
 }
 
 type BranchMetadataOptions struct {

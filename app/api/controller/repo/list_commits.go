@@ -17,12 +17,16 @@ package repo
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"golang.org/x/exp/maps"
 )
 
 // ListCommits lists the commits of a repo.
@@ -42,6 +46,16 @@ func (c *Controller) ListCommits(ctx context.Context,
 		gitRef = repo.DefaultBranch
 	}
 
+	commiterRegex, err := c.contributorsRegex(ctx, filter.Committer, filter.CommitterIDs)
+	if err != nil {
+		return types.ListCommitResponse{}, fmt.Errorf("failed create commiter regex: %w", err)
+	}
+
+	authorRegex, err := c.contributorsRegex(ctx, filter.Author, filter.AuthorIDs)
+	if err != nil {
+		return types.ListCommitResponse{}, fmt.Errorf("failed create author regex: %w", err)
+	}
+
 	rpcOut, err := c.git.ListCommits(ctx, &git.ListCommitsParams{
 		ReadParams:   git.CreateReadParams(repo),
 		GitREF:       gitRef,
@@ -51,8 +65,10 @@ func (c *Controller) ListCommits(ctx context.Context,
 		Path:         filter.Path,
 		Since:        filter.Since,
 		Until:        filter.Until,
-		Committer:    filter.Committer,
+		Committer:    commiterRegex,
+		Author:       authorRegex,
 		IncludeStats: filter.IncludeStats,
+		Regex:        true,
 	})
 	if err != nil {
 		return types.ListCommitResponse{}, err
@@ -81,4 +97,43 @@ func (c *Controller) ListCommits(ctx context.Context,
 		RenameDetails: renameDetailList,
 		TotalCommits:  rpcOut.TotalCommits,
 	}, nil
+}
+
+func (c *Controller) contributorsRegex(
+	ctx context.Context,
+	identifier string,
+	ids []int64,
+) (string, error) {
+	if identifier == "" && len(ids) == 0 {
+		return "", nil
+	}
+
+	var emailRegex string
+	if len(ids) > 0 {
+		principals, err := c.principalInfoCache.Map(ctx, ids)
+		if err != nil {
+			return "", err
+		}
+		if len(principals) > 0 {
+			parts := make([]string, len(principals))
+
+			for i, principal := range maps.Values(principals) {
+				parts[i] = regexp.QuoteMeta(principal.Email)
+			}
+
+			emailRegex = "\\<(" + strings.Join(parts, "|") + ")\\>"
+		}
+	}
+
+	var regex string
+	switch {
+	case identifier != "" && emailRegex != "":
+		regex = regexp.QuoteMeta(identifier) + "|" + emailRegex
+	case identifier != "":
+		regex = regexp.QuoteMeta(identifier)
+	case emailRegex != "":
+		regex = emailRegex
+	}
+
+	return regex, nil
 }

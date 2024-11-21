@@ -71,6 +71,8 @@ type CommitFilter struct {
 	Since     int64
 	Until     int64
 	Committer string
+	Author    string
+	Regex     bool
 }
 
 // CommitDivergenceRequest contains the refs for which the converging commits should be counted.
@@ -175,8 +177,14 @@ func (g *Git) listCommitSHAs(
 	if filter.Until > 0 {
 		cmd.Add(command.WithFlag("--until", strconv.FormatInt(filter.Until, 10)))
 	}
+	if filter.Regex {
+		cmd.Add(command.WithFlag("-E"))
+	}
 	if filter.Committer != "" {
 		cmd.Add(command.WithFlag("--committer", filter.Committer))
+	}
+	if filter.Author != "" {
+		cmd.Add(command.WithFlag("--author", filter.Author))
 	}
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))

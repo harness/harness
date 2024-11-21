@@ -31,7 +31,6 @@ const (
 	PathParamSourceBranch     = "source_branch"
 	PathParamTargetBranch     = "target_branch"
 
-	QueryParamAuthorID           = "author_id"
 	QueryParamCommenterID        = "commenter_id"
 	QueryParamReviewerID         = "reviewer_id"
 	QueryParamReviewDecision     = "review_decision"
