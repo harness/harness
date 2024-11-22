@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	repoevents "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/githook"
-	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -86,6 +85,7 @@ func (c *Controller) PurgeNoAuth(
 			RepoID: repo.ID,
 		},
 	)
+
 	return nil
 }
 
@@ -106,6 +106,7 @@ func (c *Controller) DeleteGitRepository(
 	if err != nil {
 		return fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}
+
 	writeParams := git.WriteParams{
 		Actor: git.Identity{
 			Name:  session.Principal.DisplayName,
@@ -118,13 +119,9 @@ func (c *Controller) DeleteGitRepository(
 	err = c.git.DeleteRepository(ctx, &git.DeleteRepositoryParams{
 		WriteParams: writeParams,
 	})
-
-	// deletion should not fail if repo dir does not exist.
-	if errors.IsNotFound(err) {
-		log.Ctx(ctx).Warn().Str("repo.git_uid", gitUID).
-			Msg("git repository directory does not exist")
-	} else if err != nil {
+	if err != nil {
 		return fmt.Errorf("failed to remove git repository %s: %w", gitUID, err)
 	}
+
 	return nil
 }
