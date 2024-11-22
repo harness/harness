@@ -17,11 +17,15 @@ package notification
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/types"
 	gitnessenum "github.com/harness/gitness/types/enum"
+
+	"golang.org/x/exp/maps"
 )
 
 type CommentPayload struct {
@@ -126,9 +130,14 @@ func (s *Service) processCommentCreatedEvent(
 	seen[commenter.ID] = true
 
 	// process mentions
-	mentions, err = s.processMentions(ctx, activity.Metadata, seen)
+	mentionsMap, err := s.processMentions(ctx, activity.Metadata, seen)
 	if err != nil {
 		return nil, nil, nil, nil, err
+	}
+	for i, mention := range mentionsMap {
+		payload.Text = strings.ReplaceAll(
+			payload.Text, "@["+strconv.FormatInt(i, 10)+"]", mention.DisplayName,
+		)
 	}
 
 	// process participants
@@ -143,16 +152,16 @@ func (s *Service) processCommentCreatedEvent(
 		author = base.Author
 	}
 
-	return payload, mentions, participants, author, nil
+	return payload, maps.Values(mentionsMap), participants, author, nil
 }
 
 func (s *Service) processMentions(
 	ctx context.Context,
 	metadata *types.PullReqActivityMetadata,
 	seen map[int64]bool,
-) ([]*types.PrincipalInfo, error) {
+) (map[int64]*types.PrincipalInfo, error) {
 	if metadata == nil || metadata.Mentions == nil {
-		return []*types.PrincipalInfo{}, nil
+		return map[int64]*types.PrincipalInfo{}, nil
 	}
 
 	var ids []int64
@@ -163,10 +172,10 @@ func (s *Service) processMentions(
 		}
 	}
 	if len(ids) == 0 {
-		return []*types.PrincipalInfo{}, nil
+		return map[int64]*types.PrincipalInfo{}, nil
 	}
 
-	mentions, err := s.principalInfoView.FindMany(ctx, ids)
+	mentions, err := s.principalInfoCache.Map(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch thread mentions from principalInfoView: %w", err)
 	}
