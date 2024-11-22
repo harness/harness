@@ -146,8 +146,8 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				command := ExtractCommand(PostCreateAction, devcontainerConfig)
-				return ExecuteCommand(ctx, exec, codeRepoDir, gitspaceLogger, command, PostCreateAction)
+				command := ExtractLifecycleCommands(PostCreateAction, devcontainerConfig)
+				return ExecuteCommands(ctx, exec, codeRepoDir, gitspaceLogger, command, PostCreateAction)
 			},
 			StopOnFailure: false,
 		},
@@ -158,8 +158,8 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				command := ExtractCommand(PostStartAction, devcontainerConfig)
-				return ExecuteCommand(ctx, exec, codeRepoDir, gitspaceLogger, command, PostStartAction)
+				command := ExtractLifecycleCommands(PostStartAction, devcontainerConfig)
+				return ExecuteCommands(ctx, exec, codeRepoDir, gitspaceLogger, command, PostStartAction)
 			},
 			StopOnFailure: false,
 		},
@@ -223,34 +223,39 @@ func ValidateSupportedOS(
 	return nil
 }
 
-func ExecuteCommand(
+func ExecuteCommands(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	codeRepoDir string,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	command string,
+	commands []string,
 	actionType PostAction,
 ) error {
-	if command == "" {
-		gitspaceLogger.Info(fmt.Sprintf("No %s command provided, skipping execution", actionType))
+	if len(commands) == 0 {
+		gitspaceLogger.Info(fmt.Sprintf("No %s commands provided, skipping execution", actionType))
 		return nil
 	}
-	gitspaceLogger.Info(fmt.Sprintf("Executing %s command: %s", actionType, command))
-	gitspaceLogger.Info(fmt.Sprintf("%s command execution output...", actionType))
-	// Create a channel to stream command output
-	outputCh := make(chan []byte)
-	err := exec.ExecuteCommand(ctx, command, true, false, codeRepoDir, outputCh)
-	if err != nil {
-		return logStreamWrapError(
-			gitspaceLogger, fmt.Sprintf("Error while executing %s command", actionType), err)
+	for _, command := range commands {
+		gitspaceLogger.Info(fmt.Sprintf("Executing %s command: %s", actionType, command))
+		gitspaceLogger.Info(fmt.Sprintf("%s command execution output...", actionType))
+
+		// Create a channel to stream command output
+		outputCh := make(chan []byte)
+		err := exec.ExecuteCommand(ctx, command, true, false, codeRepoDir, outputCh)
+		if err != nil {
+			return logStreamWrapError(
+				gitspaceLogger, fmt.Sprintf("Error while executing %s command: %s", actionType, command), err)
+		}
+
+		for output := range outputCh {
+			gitspaceLogger.Info(string(output))
+		}
+
+		gitspaceLogger.Info(fmt.Sprintf("Successfully executed %s command: %s", actionType, command))
 	}
-	for output := range outputCh {
-		gitspaceLogger.Info(string(output))
-	}
-	gitspaceLogger.Info(fmt.Sprintf("Successfully executed %s command", actionType))
+
 	return nil
 }
-
 func CloneCode(
 	ctx context.Context,
 	exec *devcontainer.Exec,

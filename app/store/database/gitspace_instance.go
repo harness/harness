@@ -238,16 +238,33 @@ func (g gitspaceInstanceStore) Update(
 	stmt := database.Builder.
 		Update(gitspaceInstanceTable).
 		Set("gits_state", gitspaceInstance.State).
-		Set("gits_last_used", gitspaceInstance.LastUsed).
-		Set("gits_last_heartbeat", gitspaceInstance.LastHeartbeat).
-		Set("gits_url", gitspaceInstance.URL).
-		Set("gits_active_time_started", gitspaceInstance.ActiveTimeStarted).
-		Set("gits_active_time_ended", gitspaceInstance.ActiveTimeEnded).
 		Set("gits_total_time_used", gitspaceInstance.TotalTimeUsed).
-		Set("gits_has_git_changes", gitspaceInstance.HasGitChanges).
-		Set("gits_error_message", gitspaceInstance.ErrorMessage).
 		Set("gits_updated", gitspaceInstance.Updated).
 		Where("gits_id = ?", gitspaceInstance.ID)
+
+	// Conditionally set pointer fields
+	if gitspaceInstance.LastUsed != nil {
+		stmt = stmt.Set("gits_last_used", *gitspaceInstance.LastUsed)
+	}
+	if gitspaceInstance.LastHeartbeat != nil {
+		stmt = stmt.Set("gits_last_heartbeat", *gitspaceInstance.LastHeartbeat)
+	}
+	if gitspaceInstance.URL != nil {
+		stmt = stmt.Set("gits_url", *gitspaceInstance.URL)
+	}
+	if gitspaceInstance.ActiveTimeStarted != nil {
+		stmt = stmt.Set("gits_active_time_started", *gitspaceInstance.ActiveTimeStarted)
+	}
+	if gitspaceInstance.ActiveTimeEnded != nil {
+		stmt = stmt.Set("gits_active_time_ended", *gitspaceInstance.ActiveTimeEnded)
+	}
+	if gitspaceInstance.HasGitChanges != nil {
+		stmt = stmt.Set("gits_has_git_changes", *gitspaceInstance.HasGitChanges)
+	}
+	if gitspaceInstance.ErrorMessage != nil {
+		stmt = stmt.Set("gits_error_message", *gitspaceInstance.ErrorMessage)
+	}
+
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return errors.Wrap(err, "Failed to convert squirrel builder to sql")

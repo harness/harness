@@ -206,8 +206,8 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 
 	// Execute post-start command
 	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
-	command := ExtractCommand(PostStartAction, devcontainerConfig)
-	startErr = ExecuteCommand(ctx, exec, codeRepoDir, logStreamInstance, command, PostStartAction)
+	command := ExtractLifecycleCommands(PostStartAction, devcontainerConfig)
+	startErr = ExecuteCommands(ctx, exec, codeRepoDir, logStreamInstance, command, PostStartAction)
 	if startErr != nil {
 		log.Warn().Msgf("Error is post-start command, continuing : %s", startErr.Error())
 	}

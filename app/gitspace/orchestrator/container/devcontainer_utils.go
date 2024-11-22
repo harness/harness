@@ -43,13 +43,13 @@ func ExtractForwardPorts(devcontainerConfig types.DevcontainerConfig) []int {
 	return ports
 }
 
-func ExtractCommand(actionType PostAction, devcontainerConfig types.DevcontainerConfig) string {
+func ExtractLifecycleCommands(actionType PostAction, devcontainerConfig types.DevcontainerConfig) []string {
 	switch actionType {
 	case PostCreateAction:
-		return devcontainerConfig.PostCreateCommand
+		return devcontainerConfig.PostCreateCommand.ToCommandArray()
 	case PostStartAction:
-		return devcontainerConfig.PostStartCommand
+		return devcontainerConfig.PostStartCommand.ToCommandArray()
 	default:
-		return "" // Return empty string if actionType is not recognized
+		return []string{} // Return empty string if actionType is not recognized
 	}
 }
