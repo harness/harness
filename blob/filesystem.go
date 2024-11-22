@@ -16,8 +16,10 @@ package blob
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path"
 
@@ -45,7 +47,7 @@ func (c FileSystemStore) Upload(ctx context.Context,
 	fileDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, filePath)
 
 	dir, _ := path.Split(fileDiskPath)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
+	if _, err := os.Stat(dir); errors.Is(err, fs.ErrNotExist) {
 		err = os.MkdirAll(dir, os.ModeDir|os.ModePerm)
 		if err != nil {
 			return fmt.Errorf("failed to create parent directory for the file: %w", err)
@@ -87,7 +89,7 @@ func (c *FileSystemStore) Download(_ context.Context, filePath string) (io.ReadC
 	fileDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, filePath)
 
 	file, err := os.Open(fileDiskPath)
-	if os.IsNotExist(err) {
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil, ErrNotFound
 	}
 	if err != nil {

@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"time"
 
@@ -328,7 +329,7 @@ func catFileBatchCheckAllObjects(
 
 	// --batch-all-objects reports objects in the current repository and in all alternate directories.
 	// We want to report objects in the current repository only.
-	if err := os.Rename(gitObjDir+oldFilename, gitObjDir+newFilename); err != nil && !os.IsNotExist(err) {
+	if err := os.Rename(gitObjDir+oldFilename, gitObjDir+newFilename); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("failed to rename %s to %s: %w", oldFilename, newFilename, err)
 	}
 
@@ -354,7 +355,7 @@ func catFileBatchCheckAllObjects(
 		return nil, fmt.Errorf("failed to parse output of cat-file batch check all objects: %w", err)
 	}
 
-	if err := os.Rename(gitObjDir+newFilename, gitObjDir+oldFilename); err != nil && !os.IsNotExist(err) {
+	if err := os.Rename(gitObjDir+newFilename, gitObjDir+oldFilename); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("failed to rename %s to %s: %w", newFilename, oldFilename, err)
 	}
 

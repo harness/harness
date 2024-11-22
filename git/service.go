@@ -15,6 +15,7 @@
 package git
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -57,7 +58,7 @@ func New(
 	// create a temp dir for deleted repositories
 	// this dir should get cleaned up peridocally if it's not empty
 	reposGraveyard := filepath.Join(config.Root, ReposGraveyardSubdirName)
-	if _, errdir := os.Stat(reposGraveyard); os.IsNotExist(errdir) {
+	if _, errdir := os.Stat(reposGraveyard); errors.Is(errdir, fs.ErrNotExist) {
 		if errdir = os.MkdirAll(reposGraveyard, fileMode700); errdir != nil {
 			return nil, errdir
 		}

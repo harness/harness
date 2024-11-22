@@ -15,7 +15,9 @@
 package tempdir
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 )
 
@@ -35,7 +37,7 @@ func CreateTemporaryPath(reposTempPath, prefix string) (string, error) {
 
 // RemoveTemporaryPath removes the temporary path.
 func RemoveTemporaryPath(basePath string) error {
-	if _, err := os.Stat(basePath); !os.IsNotExist(err) {
+	if _, err := os.Stat(basePath); !errors.Is(err, fs.ErrNotExist) {
 		return os.RemoveAll(basePath)
 	}
 	return nil

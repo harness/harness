@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path"
 	"time"
@@ -181,7 +182,7 @@ func (d *driver) Reader(ctx context.Context, path string, offset int64) (io.Read
 	file, err := os.OpenFile(d.fullPath(path), os.O_RDONLY, 0o644)
 	log.Ctx(ctx).Info().Msgf("Opening file %s %s", d.fullPath(path), d.rootDirectory)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return nil, storagedriver.PathNotFoundError{Path: path}
 		}
 
@@ -239,7 +240,7 @@ func (d *driver) Stat(_ context.Context, subPath string) (storagedriver.FileInfo
 
 	fi, err := os.Stat(fullPath)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return nil, storagedriver.PathNotFoundError{Path: subPath}
 		}
 
@@ -259,7 +260,7 @@ func (d *driver) List(_ context.Context, subPath string) ([]string, error) {
 
 	dir, err := os.Open(fullPath)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return nil, storagedriver.PathNotFoundError{Path: subPath}
 		}
 		return nil, err
@@ -286,7 +287,7 @@ func (d *driver) Move(_ context.Context, sourcePath string, destPath string) err
 	source := d.fullPath(sourcePath)
 	dest := d.fullPath(destPath)
 
-	if _, err := os.Stat(source); os.IsNotExist(err) {
+	if _, err := os.Stat(source); errors.Is(err, fs.ErrNotExist) {
 		return storagedriver.PathNotFoundError{Path: sourcePath}
 	}
 
@@ -303,7 +304,7 @@ func (d *driver) Delete(_ context.Context, subPath string) error {
 	fullPath := d.fullPath(subPath)
 
 	_, err := os.Stat(fullPath)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	} else if err != nil {
 		return storagedriver.PathNotFoundError{Path: subPath}

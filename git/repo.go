@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path"
 	"runtime/debug"
@@ -219,7 +220,7 @@ func (s *Service) DeleteRepository(ctx context.Context, params *DeleteRepository
 	}
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
-	if _, err := os.Stat(repoPath); err != nil && os.IsNotExist(err) {
+	if _, err := os.Stat(repoPath); err != nil && errors.Is(err, fs.ErrNotExist) {
 		return errors.NotFound("repository path not found")
 	} else if err != nil {
 		return fmt.Errorf("failed to check the status of the repository %v: %w", repoPath, err)
@@ -233,7 +234,7 @@ func (s *Service) DeleteRepositoryBestEffort(ctx context.Context, repoUID string
 	tempPath := path.Join(s.reposGraveyard, repoUID)
 
 	// delete should not fail if repoGraveyard dir does not exist.
-	if _, err := os.Stat(s.reposGraveyard); os.IsNotExist(err) {
+	if _, err := os.Stat(s.reposGraveyard); errors.Is(err, fs.ErrNotExist) {
 		if errdir := os.MkdirAll(s.reposGraveyard, fileMode700); errdir != nil {
 			return fmt.Errorf("clean up dir '%s' doesn't exist and can't be created: %w", s.reposGraveyard, errdir)
 		}
@@ -241,7 +242,7 @@ func (s *Service) DeleteRepositoryBestEffort(ctx context.Context, repoUID string
 
 	// move current dir to a temp dir (prevent partial deletion)
 	err := os.Rename(repoPath, tempPath)
-	if os.IsNotExist(err) {
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil // repository directory doesn't exist - nothing to do
 	}
 	if err != nil {
@@ -267,11 +268,11 @@ func (s *Service) SyncRepository(
 
 	// create repo if requested
 	_, err := os.Stat(repoPath)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, errors.Internal(err, "failed to create repository")
 	}
 
-	if os.IsNotExist(err) {
+	if errors.Is(err, fs.ErrNotExist) {
 		if !params.CreateIfNotExists {
 			return nil, errors.NotFound("repository not found")
 		}
@@ -410,7 +411,7 @@ func (s *Service) createRepositoryInternal(
 ) error {
 	log := log.Ctx(ctx)
 	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUID)
-	if _, err := os.Stat(repoPath); !os.IsNotExist(err) {
+	if _, err := os.Stat(repoPath); !errors.Is(err, fs.ErrNotExist) {
 		return errors.Conflict("repository already exists at path %q", repoPath)
 	}
 

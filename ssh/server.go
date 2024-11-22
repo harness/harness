@@ -22,6 +22,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"io/fs"
 	"net"
 	"os"
 	"path/filepath"
@@ -359,7 +360,7 @@ func createKeyIfNotExists(path string) error {
 		// if the path already exists there's nothing we have to do
 		return nil
 	}
-	if !os.IsNotExist(err) {
+	if !errors.Is(err, fs.ErrNotExist) {
 		return fmt.Errorf("failed to check for for existence of key: %w", err)
 	}
 
