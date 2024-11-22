@@ -30,6 +30,142 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+// buildSetupSteps constructs the steps to be executed in the setup process.
+func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
+	_ context.Context,
+	ideService ide.IDE,
+	gitspaceConfig types.GitspaceConfig,
+	resolvedRepoDetails scm.ResolvedDetails,
+	defaultBaseImage string,
+	environment []string,
+	devcontainerConfig types.DevcontainerConfig,
+	codeRepoDir string,
+) []gitspaceTypes.Step {
+	return []gitspaceTypes.Step{
+		{
+			Name:          "Validate Supported OS",
+			Execute:       ValidateSupportedOS,
+			StopOnFailure: true,
+		},
+		{
+			Name: "Manage User",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return ManageUser(ctx, exec, e.userService, gitspaceLogger)
+			},
+			StopOnFailure: true,
+		},
+		{
+			Name: "Set environment",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return SetEnv(ctx, exec, gitspaceLogger, environment)
+			},
+			StopOnFailure: true,
+		},
+		{
+			Name: "Install Tools",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return InstallTools(ctx, exec, gitspaceLogger, gitspaceConfig.IDE)
+			},
+			StopOnFailure: true,
+		},
+		{
+			Name: "Setup IDE",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return SetupIDE(ctx, exec, ideService, gitspaceLogger)
+			},
+			StopOnFailure: true,
+		},
+		{
+			Name: "Run IDE",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return RunIDE(ctx, exec, ideService, gitspaceLogger)
+			},
+			StopOnFailure: true,
+		},
+		{
+			Name: "Install Git",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return InstallGit(ctx, exec, e.gitService, gitspaceLogger)
+			},
+			StopOnFailure: true,
+		},
+		{
+			Name: "Setup Git Credentials",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
+					return SetupGitCredentials(ctx, exec, resolvedRepoDetails, e.gitService, gitspaceLogger)
+				}
+				return nil
+			},
+			StopOnFailure: true,
+		},
+		{
+			Name: "Clone Code",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return CloneCode(ctx, exec, defaultBaseImage, resolvedRepoDetails, e.gitService, gitspaceLogger)
+			},
+			StopOnFailure: true,
+		},
+		// Post-create and Post-start steps
+		{
+			Name: "Execute PostCreate Command",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				command := ExtractCommand(PostCreateAction, devcontainerConfig)
+				return ExecuteCommand(ctx, exec, codeRepoDir, gitspaceLogger, command, PostCreateAction)
+			},
+			StopOnFailure: false,
+		},
+		{
+			Name: "Execute PostStart Command",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				command := ExtractCommand(PostStartAction, devcontainerConfig)
+				return ExecuteCommand(ctx, exec, codeRepoDir, gitspaceLogger, command, PostStartAction)
+			},
+			StopOnFailure: false,
+		},
+	}
+}
+
 // setupGitspaceAndIDE initializes Gitspace and IDE by registering and executing the setup steps.
 func (e *EmbeddedDockerOrchestrator) setupGitspaceAndIDE(
 	ctx context.Context,
@@ -45,58 +181,18 @@ func (e *EmbeddedDockerOrchestrator) setupGitspaceAndIDE(
 	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
 	codeRepoDir := filepath.Join(homeDir, resolvedRepoDetails.RepoName)
 
-	// Register setup steps
-	e.RegisterStep("Validate Supported OS", ValidateSupportedOS, true)
-	e.RegisterStep("Manage User",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			return ManageUser(ctx, exec, e.userService, gitspaceLogger)
-		}, true)
-	e.RegisterStep("Set environment",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			return SetEnv(ctx, exec, gitspaceLogger, environment)
-		}, true)
-	e.RegisterStep("Install Tools",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			return InstallTools(ctx, exec, gitspaceLogger, gitspaceConfig.IDE)
-		}, true)
-	e.RegisterStep("Setup IDE",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			return SetupIDE(ctx, exec, ideService, gitspaceLogger)
-		}, true)
-	e.RegisterStep("Run IDE",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			return RunIDE(ctx, exec, ideService, gitspaceLogger)
-		}, true)
-	e.RegisterStep("Install Git",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			return InstallGit(ctx, exec, e.gitService, gitspaceLogger)
-		}, true)
-	e.RegisterStep("Setup Git Credentials",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
-				return SetupGitCredentials(ctx, exec, resolvedRepoDetails, e.gitService, gitspaceLogger)
-			}
-			return nil
-		}, true)
-	e.RegisterStep("Clone Code",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			return CloneCode(ctx, exec, defaultBaseImage, resolvedRepoDetails, e.gitService, gitspaceLogger)
-		}, true)
-
-	// Register the Execute Command steps (PostCreate and PostStart)
-	e.RegisterStep("Execute PostCreate Command",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			command := ExtractCommand(PostCreateAction, devcontainerConfig)
-			return ExecuteCommand(ctx, exec, codeRepoDir, gitspaceLogger, command, PostCreateAction)
-		}, false)
-	e.RegisterStep("Execute PostStart Command",
-		func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-			command := ExtractCommand(PostStartAction, devcontainerConfig)
-			return ExecuteCommand(ctx, exec, codeRepoDir, gitspaceLogger, command, PostStartAction)
-		}, false)
+	steps := e.buildSetupSteps(
+		ctx,
+		ideService,
+		gitspaceConfig,
+		resolvedRepoDetails,
+		defaultBaseImage,
+		environment,
+		devcontainerConfig,
+		codeRepoDir)
 
 	// Execute the registered steps
-	if err := e.ExecuteSteps(ctx, exec, gitspaceLogger); err != nil {
+	if err := e.ExecuteSteps(ctx, exec, gitspaceLogger, steps); err != nil {
 		return err
 	}
 	return nil

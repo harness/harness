@@ -41,25 +41,10 @@ const (
 )
 
 type EmbeddedDockerOrchestrator struct {
-	steps               []gitspaceTypes.Step // Steps registry
 	dockerClientFactory *infraprovider.DockerClientFactory
 	statefulLogger      *logutil.StatefulLogger
 	gitService          git.Service
 	userService         user.Service
-}
-
-// RegisterStep registers a new setup step with an option to stop or continue on failure.
-func (e *EmbeddedDockerOrchestrator) RegisterStep(
-	name string,
-	execute func(ctx context.Context, exec *devcontainer.Exec, logger gitspaceTypes.GitspaceLogger) error,
-	stopOnFailure bool,
-) {
-	step := gitspaceTypes.Step{
-		Name:          name,
-		Execute:       execute,
-		StopOnFailure: stopOnFailure,
-	}
-	e.steps = append(e.steps, step)
 }
 
 // ExecuteSteps executes all registered steps in sequence, respecting stopOnFailure flag.
@@ -67,8 +52,9 @@ func (e *EmbeddedDockerOrchestrator) ExecuteSteps(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
+	steps []gitspaceTypes.Step,
 ) error {
-	for _, step := range e.steps {
+	for _, step := range steps {
 		// Execute the step
 		if err := step.Execute(ctx, exec, gitspaceLogger); err != nil {
 			// Log the error and decide whether to stop or continue based on stopOnFailure flag
