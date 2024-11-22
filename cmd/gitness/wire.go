@@ -67,6 +67,7 @@ import (
 	containerGit "github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	containerUser "github.com/harness/gitness/app/gitspace/orchestrator/user"
+	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	gitspacesecret "github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/pipeline/canceler"
@@ -256,6 +257,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		publickey.WireSet,
 		migrate.WireSet,
 		scm.WireSet,
+		platformconnector.WireSet,
 		gitspacesecret.WireSet,
 		orchestrator.WireSet,
 		containerorchestrator.WireSet,

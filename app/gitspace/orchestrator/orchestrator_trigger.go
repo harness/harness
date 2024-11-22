@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/store"
@@ -42,6 +43,7 @@ type Config struct {
 
 type orchestrator struct {
 	scm                        *scm.SCM
+	platformConnector          platformconnector.PlatformConnector
 	infraProviderResourceStore store.InfraProviderResourceStore
 	infraProvisioner           infrastructure.InfraProvisioner
 	containerOrchestrator      container.Orchestrator
@@ -56,6 +58,7 @@ var _ Orchestrator = (*orchestrator)(nil)
 
 func NewOrchestrator(
 	scm *scm.SCM,
+	platformConnector platformconnector.PlatformConnector,
 	infraProviderResourceStore store.InfraProviderResourceStore,
 	infraProvisioner infrastructure.InfraProvisioner,
 	containerOrchestrator container.Orchestrator,
@@ -67,6 +70,7 @@ func NewOrchestrator(
 ) Orchestrator {
 	return orchestrator{
 		scm:                        scm,
+		platformConnector:          platformConnector,
 		infraProviderResourceStore: infraProviderResourceStore,
 		infraProvisioner:           infraProvisioner,
 		containerOrchestrator:      containerOrchestrator,
@@ -96,6 +100,26 @@ func (o orchestrator) TriggerStartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerCompleted)
 
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsStart)
+	gitspaceSpecs := devcontainerConfig.Customizations.ExtractGitspaceSpec()
+	connectors, err := o.platformConnector.FetchConnectors(ctx, getConnectorIDs(gitspaceSpecs))
+	if err != nil {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsFailed)
+		log.Ctx(ctx).Err(err).Msgf("failed to fetch connectors for gitspace: %v",
+			getConnectorIDs(gitspaceSpecs),
+		)
+		return &types.GitspaceError{
+			Error: fmt.Errorf("failed to fetch connectors for gitspace: %v :%w",
+				getConnectorIDs(gitspaceSpecs),
+				err,
+			),
+			ErrorMessage: ptr.String(err.Error()),
+		}
+	}
+	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsCompleted)
+
+	gitspaceConfig.Connectors = connectors
+
 	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig, devcontainerConfig)
 	if err != nil {
 		err = fmt.Errorf("cannot get the ports required for gitspace during start: %w", err)
@@ -118,6 +142,19 @@ func (o orchestrator) TriggerStartGitspace(
 	}
 
 	return nil
+}
+
+func getConnectorIDs(specs *types.GitspaceCustomizationSpecs) []string {
+	if specs == nil {
+		return nil
+	}
+
+	var connectorIDs []string
+	for _, connector := range specs.Connectors {
+		connectorIDs = append(connectorIDs, connector.ID)
+	}
+
+	return connectorIDs
 }
 
 func (o orchestrator) TriggerStopGitspace(

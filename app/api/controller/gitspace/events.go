@@ -90,6 +90,10 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerCompleted] = "Fetched devcontainer config"
 	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerFailed] = "Fetching devcontainer config failed"
 
+	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsStart] = "Fetching connectors details..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsCompleted] = "Fetched connectors details"
+	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsFailed] = "Fetching connectors details failed"
+
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningStart] = "Provisioning infrastructure..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningCompleted] = "Provisioning infrastructure completed"
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningFailed] = "Provisioning infrastructure failed"

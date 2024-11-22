@@ -35,6 +35,7 @@ type GitspaceConfig struct {
 	InfraProviderResource InfraProviderResource  `json:"resource"`
 	CodeRepo
 	GitspaceUser
+	Connectors []PlatformConnector `json:"-"`
 }
 
 type CodeRepo struct {

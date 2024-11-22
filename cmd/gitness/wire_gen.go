@@ -56,6 +56,7 @@ import (
 	git2 "github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	user2 "github.com/harness/gitness/app/gitspace/orchestrator/user"
+	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/pipeline/canceler"
@@ -310,6 +311,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	genericSCM := scm.ProvideGenericSCM()
 	scmFactory := scm.ProvideFactory(gitnessSCM, genericSCM)
 	scmSCM := scm.ProvideSCM(scmFactory)
+	platformConnector := platformconnector.ProvideGitnessPlatformConnector()
 	infraProvisionedStore := database.ProvideInfraProvisionedStore(db)
 	infrastructureConfig := server.ProvideGitspaceInfraProvisionerConfig(config)
 	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory, infraProviderTemplateStore, infraProvisionedStore, infrastructureConfig)
@@ -324,7 +326,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	vsCodeWeb := ide.ProvideVSCodeWebService(vsCodeWebConfig)
 	passwordResolver := secret.ProvidePasswordResolver()
 	resolverFactory := secret.ProvideResolverFactory(passwordResolver)
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, infraProviderResourceStore, infraProvisioner, containerOrchestrator, eventsReporter, orchestratorConfig, vsCode, vsCodeWeb, resolverFactory)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, infraProviderResourceStore, infraProvisioner, containerOrchestrator, eventsReporter, orchestratorConfig, vsCode, vsCodeWeb, resolverFactory)
 	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, eventsReporter, gitspaceEventStore, spaceStore, infraproviderService, orchestratorOrchestrator, scmSCM, config)
 	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, listService, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService, instrumentService, executionStore, rulesService)
 	reporter3, err := events5.ProvideReporter(eventsSystem)

@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/infrastructure"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
 	"github.com/harness/gitness/app/store"
@@ -33,6 +34,7 @@ var WireSet = wire.NewSet(
 
 func ProvideOrchestrator(
 	scm *scm.SCM,
+	platformConnector platformconnector.PlatformConnector,
 	infraProviderResourceStore store.InfraProviderResourceStore,
 	infraProvisioner infrastructure.InfraProvisioner,
 	containerOrchestrator container.Orchestrator,
@@ -44,6 +46,7 @@ func ProvideOrchestrator(
 ) Orchestrator {
 	return NewOrchestrator(
 		scm,
+		platformConnector,
 		infraProviderResourceStore,
 		infraProvisioner,
 		containerOrchestrator,

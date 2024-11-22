@@ -85,6 +85,11 @@ const (
 	GitspaceEventTypeFetchDevcontainerCompleted GitspaceEventType = "fetch_devcontainer_completed"
 	GitspaceEventTypeFetchDevcontainerFailed    GitspaceEventType = "fetch_devcontainer_failed"
 
+	// Fetch artifact registry secret.
+	GitspaceEventTypeFetchConnectorsDetailsStart     GitspaceEventType = "fetch_connectors_details_start"
+	GitspaceEventTypeFetchConnectorsDetailsCompleted GitspaceEventType = "fetch_connectors_details_completed" //nolint
+	GitspaceEventTypeFetchConnectorsDetailsFailed    GitspaceEventType = "fetch_connectors_details_failed"
+
 	// Infra provisioning events.
 	GitspaceEventTypeInfraProvisioningStart     GitspaceEventType = "infra_provisioning_start"
 	GitspaceEventTypeInfraProvisioningCompleted GitspaceEventType = "infra_provisioning_completed"

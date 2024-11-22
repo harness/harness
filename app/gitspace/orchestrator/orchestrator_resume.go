@@ -135,6 +135,21 @@ func (o orchestrator) ResumeStartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeAgentGitspaceCreationStart)
 
+	// fetch connector information and send details to gitspace agent
+	gitspaceSpecs := scmResolvedDetails.DevcontainerConfig.Customizations.ExtractGitspaceSpec()
+	connectors, err := o.platformConnector.FetchConnectors(ctx, getConnectorIDs(gitspaceSpecs))
+	if err != nil {
+		fetchConnectorErr := fmt.Errorf("failed to fetch connectors for gitspace: %v :%w",
+			getConnectorIDs(gitspaceSpecs),
+			err,
+		)
+		return *gitspaceInstance, &types.GitspaceError{
+			Error:        fetchConnectorErr,
+			ErrorMessage: ptr.String(fetchConnectorErr.Error()),
+		}
+	}
+	gitspaceConfig.Connectors = connectors
+
 	// NOTE: Currently we use a static identifier as the Gitspace user.
 	gitspaceConfig.GitspaceUser.Identifier = harnessUser
 
