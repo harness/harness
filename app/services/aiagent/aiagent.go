@@ -80,12 +80,50 @@ func (s *HarnessIntelligence) Generate(
 
 	var yaml string
 	for _, value := range resp.Context {
-		out, ok := value.Payload.(*capabilities.DisplayPipelineYamlOutput)
+		out, ok := value.Payload.(*capabilities.DisplayYamlOutput)
 		if ok {
 			yaml = out.Yaml
 		}
 	}
 	return &types.PipelineGenerateResponse{
+		YAML: yaml,
+	}, nil
+}
+
+func (s *HarnessIntelligence) GenerateStep(
+	ctx context.Context,
+	req *types.PipelineStepGenerateRequest,
+	repo *types.Repository) (*types.PipelineStepGenerateResponse, error) {
+	if req.RepoRef == "" {
+		return nil, fmt.Errorf("no repo ref specified")
+	}
+
+	conversationID := uuid.New()
+	chatRequest := &genai.ChatRequest{
+		Prompt:          req.Prompt,
+		ConversationID:  conversationID.String(),
+		ConversationRaw: "",
+		Context: genai.GenerateAIContext(
+			genai.RepoRef{
+				Ref: repo.Path,
+			},
+		),
+		Capabilities: s.cr.Capabilities(),
+	}
+
+	resp, err := s.CapabilitiesLoop(ctx, chatRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	var yaml string
+	for _, value := range resp.Context {
+		out, ok := value.Payload.(*capabilities.DisplayYamlOutput)
+		if ok {
+			yaml = out.Yaml
+		}
+	}
+	return &types.PipelineStepGenerateResponse{
 		YAML: yaml,
 	}, nil
 }
@@ -158,7 +196,7 @@ func (s *HarnessIntelligence) Update(
 
 	var yaml string
 	for _, value := range resp.Context {
-		out, ok := value.Payload.(*capabilities.DisplayPipelineYamlOutput)
+		out, ok := value.Payload.(*capabilities.DisplayYamlOutput)
 		if ok {
 			yaml = out.Yaml
 		}

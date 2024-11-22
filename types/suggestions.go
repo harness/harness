@@ -30,6 +30,11 @@ type PipelineUpdateRequest struct {
 	Pipeline string
 }
 
+type PipelineStepGenerateRequest struct {
+	Prompt  string
+	RepoRef string
+}
+
 type PipelineGenerateResponse struct {
 	YAML string
 }
@@ -47,4 +52,8 @@ type Suggestion struct {
 
 type PipelineSuggestionsResponse struct {
 	Suggestions []Suggestion
+}
+
+type PipelineStepGenerateResponse struct {
+	YAML string
 }

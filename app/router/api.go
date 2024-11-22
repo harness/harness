@@ -566,6 +566,7 @@ func setupTemplates(
 
 func setupAiAgent(r chi.Router, aiagentCtrl *aiagent.Controller, capabilitiesCtrl *capabilities.Controller) {
 	r.Route("/harness-intelligence", func(r chi.Router) {
+		r.Post("/generate-pipeline-step", handleraiagent.HandleGeneratePipelineStep(aiagentCtrl))
 		r.Post("/generate-pipeline", handleraiagent.HandleGeneratePipeline(aiagentCtrl))
 		r.Post("/update-pipeline", handleraiagent.HandleUpdatePipeline(aiagentCtrl))
 		r.Post("/capabilities", handlercapabilities.HandleRunCapabilities(capabilitiesCtrl))
