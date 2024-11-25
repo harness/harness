@@ -31,6 +31,7 @@ func NewGitnessPlatformConnector() *GitnessPlatformConnector {
 func (g *GitnessPlatformConnector) FetchConnectors(
 	_ context.Context,
 	ids []string,
+	_ string,
 ) ([]types.PlatformConnector, error) {
 	result := make([]types.PlatformConnector, len(ids))
 	for i, id := range ids {

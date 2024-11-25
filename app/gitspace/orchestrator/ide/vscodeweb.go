@@ -112,24 +112,33 @@ func (v *VSCodeWeb) Setup(
 func (v *VSCodeWeb) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
+	args map[string]string,
 	gitspaceLogger gitspaceTypes.GitspaceLogger) error {
-	runScript, err := template.GenerateScriptFromTemplate(
-		templateRunVSCodeWeb, &template.RunVSCodeWebPayload{
-			Port: strconv.Itoa(v.config.Port),
-		})
+	payload := &template.RunVSCodeWebPayload{
+		Port: strconv.Itoa(v.config.Port),
+	}
+	if args != nil {
+		// Set ProxyURI only if present in the map
+		if proxyURI, ok := args["VSCODE_PROXY_URI"]; ok {
+			payload.ProxyURI = proxyURI
+		}
+	}
+	runScript, err := template.GenerateScriptFromTemplate(templateRunVSCodeWeb, payload)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to generate scipt to run VSCode Web from template %s: %w",
+			"failed to generate script to run VSCode Web from template %s: %w",
 			templateRunVSCodeWeb,
 			err,
 		)
 	}
 	gitspaceLogger.Info("Starting IDE ...")
 	outputCh := make(chan []byte)
+	// Execute the script in the home directory
 	err = exec.ExecuteCommandInHomeDirectory(ctx, runScript, false, false, outputCh)
 	if err != nil {
 		return fmt.Errorf("failed to run VSCode Web: %w", err)
 	}
+
 	return nil
 }
 

@@ -29,7 +29,12 @@ type IDE interface {
 	Setup(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error
 
 	// Run runs the IDE and supporting services.
-	Run(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error
+	Run(
+		ctx context.Context,
+		exec *devcontainer.Exec,
+		args map[string]string,
+		gitspaceLogger gitspaceTypes.GitspaceLogger,
+	) error
 
 	// Port provides the port which will be used by this IDE.
 	Port() *types.GitspacePort

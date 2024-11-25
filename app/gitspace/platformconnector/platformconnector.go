@@ -25,5 +25,6 @@ type PlatformConnector interface {
 	FetchConnectors(
 		ctx context.Context,
 		connectorIDs []string,
+		currentSpacePath string,
 	) ([]types.PlatformConnector, error)
 }

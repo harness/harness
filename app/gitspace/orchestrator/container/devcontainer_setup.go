@@ -16,6 +16,8 @@ package container
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	goruntime "runtime"
@@ -228,29 +230,44 @@ func PullImage(
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Pulling image: " + imageName)
-
 	pullResponse, err := dockerClient.ImagePull(ctx, imageName, image.PullOptions{})
-	defer func() {
-		if pullResponse == nil {
-			return
-		}
-		closingErr := pullResponse.Close()
-		if closingErr != nil {
-			log.Warn().Err(closingErr).Msg("failed to close image pull response")
-		}
-	}()
-
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while pulling image", err)
 	}
+	defer func() {
+		if pullResponse != nil {
+			if closingErr := pullResponse.Close(); closingErr != nil {
+				log.Warn().Err(closingErr).Msg("Failed to close image pull response")
+			}
+		}
+	}()
+	// Process JSON stream
+	decoder := json.NewDecoder(pullResponse)
+	layerStatus := make(map[string]string) // Track last status of each layer
 
-	// Ensure the image has been fully pulled by reading the response
-	output, err := io.ReadAll(pullResponse)
-	if err != nil {
-		return logStreamWrapError(gitspaceLogger, "Error while parsing image pull response", err)
+	for {
+		var pullEvent map[string]interface{}
+		if err := decoder.Decode(&pullEvent); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return logStreamWrapError(gitspaceLogger, "Error while decoding image pull response", err)
+		}
+		// Extract relevant fields from the JSON object
+		layerID, _ := pullEvent["id"].(string)    // Layer ID (if available)
+		status, _ := pullEvent["status"].(string) // Current status
+		// Update logs only when the status changes
+		if layerID != "" {
+			if lastStatus, exists := layerStatus[layerID]; !exists || lastStatus != status {
+				layerStatus[layerID] = status
+				gitspaceLogger.Info(fmt.Sprintf("Layer %s: %s", layerID, status))
+			}
+		} else if status != "" {
+			// Log non-layer-specific status
+			gitspaceLogger.Info(status)
+		}
 	}
-
-	gitspaceLogger.Info(string(output))
+	gitspaceLogger.Info("Image pull completed successfully")
 	return nil
 }
 

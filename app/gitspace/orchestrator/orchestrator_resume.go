@@ -137,18 +137,21 @@ func (o orchestrator) ResumeStartGitspace(
 
 	// fetch connector information and send details to gitspace agent
 	gitspaceSpecs := scmResolvedDetails.DevcontainerConfig.Customizations.ExtractGitspaceSpec()
-	connectors, err := o.platformConnector.FetchConnectors(ctx, getConnectorIDs(gitspaceSpecs))
-	if err != nil {
-		fetchConnectorErr := fmt.Errorf("failed to fetch connectors for gitspace: %v :%w",
-			getConnectorIDs(gitspaceSpecs),
-			err,
-		)
-		return *gitspaceInstance, &types.GitspaceError{
-			Error:        fetchConnectorErr,
-			ErrorMessage: ptr.String(fetchConnectorErr.Error()),
+	connectorRefs := getConnectorRefs(gitspaceSpecs)
+	if len(connectorRefs) > 0 {
+		connectors, err := o.platformConnector.FetchConnectors(ctx, connectorRefs, gitspaceConfig.SpacePath)
+		if err != nil {
+			fetchConnectorErr := fmt.Errorf("failed to fetch connectors for gitspace: %v :%w",
+				connectorRefs,
+				err,
+			)
+			return *gitspaceInstance, &types.GitspaceError{
+				Error:        fetchConnectorErr,
+				ErrorMessage: ptr.String(fetchConnectorErr.Error()),
+			}
 		}
+		gitspaceConfig.Connectors = connectors
 	}
-	gitspaceConfig.Connectors = connectors
 
 	// NOTE: Currently we use a static identifier as the Gitspace user.
 	gitspaceConfig.GitspaceUser.Identifier = harnessUser
@@ -346,4 +349,17 @@ func (o orchestrator) ResumeCleanupInstanceResources(
 	instanceState = enum.GitspaceInstanceStateCleaned
 
 	return instanceState, nil
+}
+
+func getConnectorRefs(specs *types.GitspaceCustomizationSpecs) []string {
+	if specs == nil {
+		return nil
+	}
+	log.Debug().Msgf("Customization connectors: %v", specs.Connectors)
+	var connectorRefs []string
+	for _, connector := range specs.Connectors {
+		connectorRefs = append(connectorRefs, connector.ID)
+	}
+
+	return connectorRefs
 }

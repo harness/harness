@@ -116,7 +116,6 @@ func (g *ServiceImpl) CloneCode(
 		return fmt.Errorf(
 			"failed to generate scipt to clone code from template %s: %w", templateCloneCode, err)
 	}
-	gitspaceLogger.Info("Clone output...")
 	gitspaceLogger.Info("Cloning code inside container")
 	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, false, gitspaceLogger)
 	if err != nil {

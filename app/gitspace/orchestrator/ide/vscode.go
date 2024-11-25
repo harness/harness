@@ -77,6 +77,7 @@ func (v *VSCode) Setup(
 func (v *VSCode) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
+	_ map[string]string,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	runSSHScript, err := template.GenerateScriptFromTemplate(

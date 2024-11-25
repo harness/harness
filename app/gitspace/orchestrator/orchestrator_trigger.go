@@ -97,28 +97,29 @@ func (o orchestrator) TriggerStartGitspace(
 		}
 	}
 	devcontainerConfig := scmResolvedDetails.DevcontainerConfig
-
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchDevcontainerCompleted)
-
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsStart)
 	gitspaceSpecs := devcontainerConfig.Customizations.ExtractGitspaceSpec()
-	connectors, err := o.platformConnector.FetchConnectors(ctx, getConnectorIDs(gitspaceSpecs))
-	if err != nil {
-		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsFailed)
-		log.Ctx(ctx).Err(err).Msgf("failed to fetch connectors for gitspace: %v",
-			getConnectorIDs(gitspaceSpecs),
-		)
-		return &types.GitspaceError{
-			Error: fmt.Errorf("failed to fetch connectors for gitspace: %v :%w",
-				getConnectorIDs(gitspaceSpecs),
-				err,
-			),
-			ErrorMessage: ptr.String(err.Error()),
+	connectorRefs := getConnectorRefs(gitspaceSpecs)
+	if len(connectorRefs) > 0 {
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsStart)
+		connectors, err := o.platformConnector.FetchConnectors(
+			ctx, connectorRefs, gitspaceConfig.SpacePath)
+		if err != nil {
+			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsFailed)
+			log.Ctx(ctx).Err(err).Msgf("failed to fetch connectors for gitspace: %v",
+				connectorRefs,
+			)
+			return &types.GitspaceError{
+				Error: fmt.Errorf("failed to fetch connectors for gitspace: %v :%w",
+					connectorRefs,
+					err,
+				),
+				ErrorMessage: ptr.String(err.Error()),
+			}
 		}
+		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsCompleted)
+		gitspaceConfig.Connectors = connectors
 	}
-	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeFetchConnectorsDetailsCompleted)
-
-	gitspaceConfig.Connectors = connectors
 
 	requiredGitspacePorts, err := o.getPortsRequiredForGitspace(gitspaceConfig, devcontainerConfig)
 	if err != nil {
@@ -142,19 +143,6 @@ func (o orchestrator) TriggerStartGitspace(
 	}
 
 	return nil
-}
-
-func getConnectorIDs(specs *types.GitspaceCustomizationSpecs) []string {
-	if specs == nil {
-		return nil
-	}
-
-	var connectorIDs []string
-	for _, connector := range specs.Connectors {
-		connectorIDs = append(connectorIDs, connector.ID)
-	}
-
-	return connectorIDs
 }
 
 func (o orchestrator) TriggerStopGitspace(

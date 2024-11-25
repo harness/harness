@@ -33,11 +33,19 @@ type DevcontainerConfig struct {
 type LifecycleCommand struct {
 	CommandString string
 	CommandArray  []string
-	CommandList   map[string]string // Map to store commands by tags
+	CommandMap    map[string]string // Map to store commands by tags
 }
 
 // UnmarshalJSON custom unmarshal method for LifecycleCommand.
 func (lc *LifecycleCommand) UnmarshalJSON(data []byte) error {
+	// Define a helper struct to match the object format
+	type Alias LifecycleCommand
+	var alias Alias
+	if err := json.Unmarshal(data, &alias); err == nil {
+		*lc = LifecycleCommand(alias)
+		return nil
+	}
+
 	// Try to unmarshal as a single string
 	var commandStr string
 	if err := json.Unmarshal(data, &commandStr); err == nil {
@@ -74,7 +82,7 @@ func (lc *LifecycleCommand) UnmarshalJSON(data []byte) error {
 				return errors.New("map values must be string or []string")
 			}
 		}
-		lc.CommandList = validatedCommands
+		lc.CommandMap = validatedCommands
 		return nil
 	}
 
@@ -88,9 +96,9 @@ func (lc *LifecycleCommand) ToCommandArray() []string {
 		return []string{lc.CommandString}
 	case lc.CommandArray != nil:
 		return []string{strings.Join(lc.CommandArray, " ")}
-	case lc.CommandList != nil:
+	case lc.CommandMap != nil:
 		var commands []string
-		for _, command := range lc.CommandList {
+		for _, command := range lc.CommandMap {
 			commands = append(commands, command)
 		}
 		return commands

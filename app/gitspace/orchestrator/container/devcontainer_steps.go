@@ -241,7 +241,7 @@ func ExecuteCommands(
 
 		// Create a channel to stream command output
 		outputCh := make(chan []byte)
-		err := exec.ExecuteCommand(ctx, command, true, false, codeRepoDir, outputCh)
+		err := exec.ExecuteCommand(ctx, command, false, false, codeRepoDir, outputCh)
 		if err != nil {
 			return logStreamWrapError(
 				gitspaceLogger, fmt.Sprintf("Error while executing %s command: %s", actionType, command), err)
@@ -251,7 +251,7 @@ func ExecuteCommands(
 			gitspaceLogger.Info(string(output))
 		}
 
-		gitspaceLogger.Info(fmt.Sprintf("Successfully executed %s command: %s", actionType, command))
+		gitspaceLogger.Info(fmt.Sprintf("Completed execution %s command: %s", actionType, command))
 	}
 
 	return nil
@@ -333,7 +333,22 @@ func RunIDE(
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Running the IDE inside container: " + string(ideService.Type()))
-	err := ideService.Run(ctx, exec, gitspaceLogger)
+	err := ideService.Run(ctx, exec, nil, gitspaceLogger)
+	if err != nil {
+		return logStreamWrapError(gitspaceLogger, "Error while running IDE inside container", err)
+	}
+	return nil
+}
+
+func RunIDEWithArgs(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	ideService ide.IDE,
+	args map[string]string,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
+	gitspaceLogger.Info("Running the IDE inside container: " + string(ideService.Type()))
+	err := ideService.Run(ctx, exec, args, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while running IDE inside container", err)
 	}

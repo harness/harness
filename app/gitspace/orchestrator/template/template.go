@@ -53,7 +53,9 @@ type SetupGitCredentialsPayload struct {
 }
 
 type RunVSCodeWebPayload struct {
-	Port string
+	Port      string
+	Arguments string
+	ProxyURI  string
 }
 
 type SetupUserPayload struct {
