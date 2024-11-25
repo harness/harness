@@ -29,7 +29,7 @@ func (c *Controller) RuleFind(ctx context.Context,
 	spaceRef string,
 	identifier string,
 ) (*types.Rule, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}

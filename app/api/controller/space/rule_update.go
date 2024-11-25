@@ -31,7 +31,7 @@ func (c *Controller) RuleUpdate(ctx context.Context,
 	identifier string,
 	in *rules.UpdateInput,
 ) (*types.Rule, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
