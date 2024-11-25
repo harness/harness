@@ -48,6 +48,9 @@ type Rule struct {
 
 	Users      map[int64]*PrincipalInfo `json:"users"`
 	UserGroups map[int64]*UserGroupInfo `json:"user_groups"`
+
+	// scope 0 indicates repo; scope > 0 indicates space depth level
+	Scope int64 `json:"scope"`
 }
 
 // TODO [CODE-1363]: remove after identifier migration.

@@ -32,6 +32,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const ruleScopeRepo = int64(0)
+
 type CreateInput struct {
 	Type  types.RuleType `json:"type"`
 	State enum.RuleState `json:"state"`
@@ -94,6 +96,14 @@ func (s *Service) Create(ctx context.Context,
 		return nil, usererror.BadRequestf("invalid rule definition: %s", err.Error())
 	}
 
+	scope := ruleScopeRepo
+	if parentType == enum.RuleParentSpace {
+		ids, err := s.spaceStore.GetAncestorIDs(ctx, parentID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get ancestor IDs: %w", err)
+		}
+		scope = int64(len(ids))
+	}
 	now := time.Now().UnixMilli()
 	rule := &types.Rule{
 		CreatedBy:     principal.ID,
@@ -105,6 +115,7 @@ func (s *Service) Create(ctx context.Context,
 		Description:   in.Description,
 		Pattern:       in.Pattern.JSON(),
 		Definition:    in.Definition,
+		Scope:         scope,
 		CreatedByInfo: types.PrincipalInfo{},
 	}
 

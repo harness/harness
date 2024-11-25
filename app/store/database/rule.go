@@ -72,6 +72,8 @@ type rule struct {
 
 	Pattern    string `db:"rule_pattern"`
 	Definition string `db:"rule_definition"`
+
+	Scope int64 `db:"rule_scope"`
 }
 
 const (
@@ -88,7 +90,8 @@ const (
 		,rule_type
 		,rule_state
 		,rule_pattern
-		,rule_definition`
+		,rule_definition
+		,rule_scope`
 
 	ruleSelectBase = `
 		SELECT` + ruleColumns + `
@@ -165,6 +168,7 @@ func (s *RuleStore) Create(ctx context.Context, rule *types.Rule) error {
 			,rule_state
 			,rule_pattern
 			,rule_definition
+			,rule_scope
 		) values (
 			 :rule_version
 			,:rule_created_by
@@ -178,6 +182,7 @@ func (s *RuleStore) Create(ctx context.Context, rule *types.Rule) error {
 			,:rule_state
 			,:rule_pattern
 			,:rule_definition
+			,:rule_scope
 		) RETURNING rule_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -459,6 +464,7 @@ func (s *RuleStore) mapToRule(
 		State:       in.State,
 		Pattern:     json.RawMessage(in.Pattern),
 		Definition:  json.RawMessage(in.Definition),
+		Scope:       in.Scope,
 	}
 
 	createdBy, err := s.pCache.Get(ctx, in.CreatedBy)
@@ -499,6 +505,7 @@ func mapToInternalRule(in *types.Rule) rule {
 		State:       in.State,
 		Pattern:     string(in.Pattern),
 		Definition:  string(in.Definition),
+		Scope:       in.Scope,
 	}
 }
 
