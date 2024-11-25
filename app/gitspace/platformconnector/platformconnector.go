@@ -24,7 +24,7 @@ type PlatformConnector interface {
 	// FetchConnectors fetches connector details from given list of  connector IDs
 	FetchConnectors(
 		ctx context.Context,
-		connectorIDs []string,
+		connectorRefs []string,
 		currentSpacePath string,
 	) ([]types.PlatformConnector, error)
 }

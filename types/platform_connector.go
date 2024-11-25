@@ -102,8 +102,7 @@ func (c PlatformConnectorSpec) ExtractRegistryURL() string {
 }
 
 func (c PlatformConnectorAuthSpec) ExtractUserName() string {
-	if c.AuthType == UserNamePasswordPlatformConnectorAuthType &&
-		c.UserNameRef == "" {
+	if c.AuthType == UserNamePasswordPlatformConnectorAuthType {
 		return c.UserName
 	}
 
@@ -111,8 +110,7 @@ func (c PlatformConnectorAuthSpec) ExtractUserName() string {
 }
 
 func (c PlatformConnectorAuthSpec) ExtractUserNameRef() string {
-	if c.AuthType == UserNamePasswordPlatformConnectorAuthType &&
-		c.UserName == "" {
+	if c.AuthType == UserNamePasswordPlatformConnectorAuthType {
 		return c.UserNameRef
 	}
 
