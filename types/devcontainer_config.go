@@ -21,20 +21,21 @@ import (
 )
 
 type DevcontainerConfig struct {
-	Image             string                           `json:"image"`
-	PostCreateCommand LifecycleCommand                 `json:"postCreateCommand"` //nolint:tagliatelle
-	PostStartCommand  LifecycleCommand                 `json:"postStartCommand"`  //nolint:tagliatelle
-	ForwardPorts      []json.Number                    `json:"forwardPorts"`      //nolint:tagliatelle
-	ContainerEnv      map[string]string                `json:"containerEnv"`      //nolint:tagliatelle
-	Customizations    DevContainerConfigCustomizations `json:"customizations"`
-	RunArgs           []string                         `json:"runArgs"` //nolint:tagliatelle
+	Image             string                           `json:"image,omitempty"`
+	PostCreateCommand LifecycleCommand                 `json:"postCreateCommand,omitempty"` //nolint:tagliatelle
+	PostStartCommand  LifecycleCommand                 `json:"postStartCommand,omitempty"`  //nolint:tagliatelle
+	ForwardPorts      []json.Number                    `json:"forwardPorts,omitempty"`      //nolint:tagliatelle
+	ContainerEnv      map[string]string                `json:"containerEnv,omitempty"`      //nolint:tagliatelle
+	Customizations    DevContainerConfigCustomizations `json:"customizations,omitempty"`
+	RunArgs           []string                         `json:"runArgs,omitempty"` //nolint:tagliatelle
 }
 
 // LifecycleCommand supports multiple formats for lifecycle commands.
 type LifecycleCommand struct {
-	CommandString string
-	CommandArray  []string
-	CommandMap    map[string]string // Map to store commands by tags
+	CommandString string   `json:"commandString,omitempty"` //nolint:tagliatelle
+	CommandArray  []string `json:"commandArray,omitempty"`  //nolint:tagliatelle
+	// Map to store commands by tags
+	CommandMap map[string]string `json:"commandMap,omitempty"` //nolint:tagliatelle
 }
 
 // UnmarshalJSON custom unmarshal method for LifecycleCommand.
