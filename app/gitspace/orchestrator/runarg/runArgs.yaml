@@ -1,0 +1,727 @@
+---
+- name: --add-host
+  short_hand:
+  supported: true
+  blocked_values: {}
+  allowed_values: {}
+  allow_multiple_occurrences: true
+
+- name: --annotation
+  short_hand:
+  supported: true
+  blocked_values: {}
+  allowed_values: {}
+  allow_multiple_occurrences: true
+
+- name: --attach
+  short_hand: -a
+  supported: false
+  blocked_values: {}
+  allowed_values: {}
+  allow_multiple_occurrences: true
+
+- name: --blkio-weight
+  short_hand:
+  supported: true
+  blocked_values: {}
+  allowed_values: {}
+  allow_multiple_occurrences: false
+
+- name: --blkio-weight-device
+  short_hand:
+  supported: false
+  blocked_values: {}
+  allowed_values: {}
+  allow_multiple_occurrences: true
+
+- name: --cap-add
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --cap-drop
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --cgroup-parent
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cgroupns
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cidfile
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --cpu-count
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cpu-percent
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cpu-period
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cpu-quota
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cpu-rt-period
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cpu-rt-runtime
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cpu-shares
+  short_hand: -c
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cpus
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cpuset-cpus
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --cpuset-mems
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --detach
+  short_hand: -d
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --detach-keys
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --device
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --device-cgroup-rule
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --device-read-bps
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --device-read-iops
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --device-write-bps
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --device-write-iops
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --disable-content-trust
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --dns
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --dns-option
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --dns-search
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --domainname
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --entrypoint
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --env
+  short_hand: -e
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --env-file
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --expose
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --gpus
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --group-add
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --health-cmd
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --health-interval
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --health-retries
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --health-start-interval
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --health-start-period
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --health-timeout
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --help
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --hostname
+  short_hand: -h
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --init
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --interactive
+  short_hand: -i
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --io-maxbandwidth
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --io-maxiops
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --ip
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --ip6
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --ipc
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --isolation
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --kernel-memory
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --label
+  short_hand: -l
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --label-file
+  short_hand:
+  supported: false
+  blocked_values: {}
+  allowed_values: {}
+  allow_multiple_occurrences: true
+
+- name: --link
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --link-local-ip
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --log-driver
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --log-opt
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --mac-address
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --memory
+  short_hand: -m
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --memory-reservation
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --memory-swap
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --memory-swappiness
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --mount
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --name
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --network
+  short_hand:
+  supported: true
+  blocked_values:
+    host: true
+    none: true
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --network-alias
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --no-healthcheck
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --oom-kill-disable
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --oom-score-adj
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --pid
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --pids-limit
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --platform
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --privileged
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --publish
+  short_hand: -p
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --publish-all
+  short_hand: -P
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --pull
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --quiet
+  short_hand: -q
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --read-only
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --restart
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --rm
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+
+- name: --runtime
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --security-opt
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --shm-size
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --sig-proxy
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --stop-signal
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --stop-timeout
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+- name: --storage-opt
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --sysctl
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --tmpfs
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --tty
+  short_hand: -t
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --ulimit
+  short_hand:
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+
+- name: --user
+  short_hand: -u
+  supported: true
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: false
+
+
+- name: --userns
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+
+- name: --uts
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --volume
+  short_hand: -v
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --volume-driver
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --volumes-from
+  short_hand:
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true
+
+- name: --workdir
+  short_hand: -w
+  supported: false
+  blocked_values: { }
+  allowed_values: { }
+  allow_multiple_occurrences: true

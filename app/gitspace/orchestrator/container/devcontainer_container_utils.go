@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 
@@ -31,6 +32,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/rs/zerolog/log"
@@ -131,22 +133,50 @@ func CreateContainer(
 	mountType mount.Type,
 	portMappings map[int]*types.PortMapping,
 	env []string,
+	runArgsMap map[types.RunArg]*types.RunArgValue,
 ) error {
 	exposedPorts, portBindings := applyPortMappings(portMappings)
 
 	gitspaceLogger.Info("Creating container: " + containerName)
 
-	hostConfig := prepareHostConfig(bindMountSource, bindMountTarget, mountType, portBindings)
+	hostConfig, err := prepareHostConfig(bindMountSource, bindMountTarget, mountType, portBindings, runArgsMap)
+	if err != nil {
+		return err
+	}
+	healthCheckConfig, err := getHealthCheckConfig(runArgsMap)
+	if err != nil {
+		return err
+	}
+	stopTimeout, err := getStopTimeout(runArgsMap)
+	if err != nil {
+		return err
+	}
+
+	entrypoint := getEntrypoint(runArgsMap)
+	var cmd strslice.StrSlice
+	if len(entrypoint) == 0 {
+		entrypoint = []string{"/bin/sh"}
+		cmd = []string{"-c", "trap 'exit 0' 15; sleep infinity & wait $!"}
+	}
 
 	// Create the container
 	containerConfig := &container.Config{
+		Hostname:     getHostname(runArgsMap),
+		Domainname:   getDomainname(runArgsMap),
 		Image:        imageName,
 		Env:          env,
-		Entrypoint:   []string{"/bin/sh"},
-		Cmd:          []string{"-c", "trap 'exit 0' 15; sleep infinity & wait $!"},
+		Entrypoint:   entrypoint,
+		Cmd:          cmd,
 		ExposedPorts: exposedPorts,
+		Labels:       getLabels(runArgsMap),
+		Healthcheck:  healthCheckConfig,
+		MacAddress:   getMACAddress(runArgsMap),
+		StopSignal:   getStopSignal(runArgsMap),
+		StopTimeout:  stopTimeout,
+		User:         getUser(runArgsMap),
 	}
-	_, err := dockerClient.ContainerCreate(ctx, containerConfig, hostConfig, nil, nil, containerName)
+
+	_, err = dockerClient.ContainerCreate(ctx, containerConfig, hostConfig, nil, nil, containerName)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while creating container", err)
 	}
@@ -178,7 +208,33 @@ func prepareHostConfig(
 	bindMountTarget string,
 	mountType mount.Type,
 	portBindings nat.PortMap,
-) *container.HostConfig {
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+) (*container.HostConfig, error) {
+	hostResources, err := getHostResources(runArgsMap)
+	if err != nil {
+		return nil, err
+	}
+
+	extraHosts := getExtraHosts(runArgsMap)
+	if goruntime.GOOS == "linux" {
+		extraHosts = append(extraHosts, "host.docker.internal:host-gateway")
+	}
+
+	restartPolicy, err := getRestartPolicy(runArgsMap)
+	if err != nil {
+		return nil, err
+	}
+
+	oomScoreAdj, err := getOomScoreAdj(runArgsMap)
+	if err != nil {
+		return nil, err
+	}
+
+	shmSize, err := getSHMSize(runArgsMap)
+	if err != nil {
+		return nil, err
+	}
+
 	hostConfig := &container.HostConfig{
 		PortBindings: portBindings,
 		Mounts: []mount.Mount{
@@ -188,14 +244,33 @@ func prepareHostConfig(
 				Target: bindMountTarget,
 			},
 		},
+		Resources:     hostResources,
+		Annotations:   getAnnotations(runArgsMap),
+		ExtraHosts:    extraHosts,
+		NetworkMode:   getNetworkMode(runArgsMap),
+		RestartPolicy: restartPolicy,
+		AutoRemove:    getAutoRemove(runArgsMap),
+		CapDrop:       getCapDrop(runArgsMap),
+		CgroupnsMode:  getCgroupNSMode(runArgsMap),
+		DNS:           getDNS(runArgsMap),
+		DNSOptions:    getDNSOptions(runArgsMap),
+		DNSSearch:     getDNSSearch(runArgsMap),
+		IpcMode:       getIPCMode(runArgsMap),
+		Isolation:     getIsolation(runArgsMap),
+		Init:          getInit(runArgsMap),
+		Links:         getLinks(runArgsMap),
+		OomScoreAdj:   oomScoreAdj,
+		PidMode:       getPIDMode(runArgsMap),
+		Runtime:       getRuntime(runArgsMap),
+		SecurityOpt:   getSecurityOpt(runArgsMap),
+		StorageOpt:    getStorageOpt(runArgsMap),
+		ShmSize:       shmSize,
+		Sysctls:       getSysctls(runArgsMap),
 	}
 
-	if goruntime.GOOS == "linux" {
-		hostConfig.ExtraHosts = []string{"host.docker.internal:host-gateway"}
-	}
-
-	return hostConfig
+	return hostConfig, nil
 }
+
 func GetContainerInfo(
 	ctx context.Context,
 	containerName string,
@@ -227,10 +302,46 @@ func PullImage(
 	ctx context.Context,
 	imageName string,
 	dockerClient *client.Client,
+	runArgsMap map[types.RunArg]*types.RunArgValue,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
+	imagePullRunArg := getImagePullPolicy(runArgsMap)
+	gitspaceLogger.Info("Image pull policy is: " + imagePullRunArg)
+	if imagePullRunArg == "never" {
+		return nil
+	}
+	if imagePullRunArg == "missing" {
+		gitspaceLogger.Info("Checking if image " + imageName + " is present locally")
+
+		filterArgs := filters.NewArgs()
+		filterArgs.Add("reference", imageName)
+
+		images, err := dockerClient.ImageList(ctx, image.ListOptions{Filters: filterArgs})
+		if err != nil {
+			gitspaceLogger.Error("Error listing images locally", err)
+			return err
+		}
+
+		if len(images) > 0 {
+			gitspaceLogger.Info("Image " + imageName + " is present locally")
+			return nil
+		}
+		gitspaceLogger.Info("Image " + imageName + " is not present locally")
+	}
+
 	gitspaceLogger.Info("Pulling image: " + imageName)
-	pullResponse, err := dockerClient.ImagePull(ctx, imageName, image.PullOptions{})
+
+	pullResponse, err := dockerClient.ImagePull(ctx, imageName, image.PullOptions{Platform: getPlatform(runArgsMap)})
+	defer func() {
+		if pullResponse == nil {
+			return
+		}
+		closingErr := pullResponse.Close()
+		if closingErr != nil {
+			log.Warn().Err(closingErr).Msg("failed to close image pull response")
+		}
+	}()
+
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while pulling image", err)
 	}
@@ -269,6 +380,28 @@ func PullImage(
 	}
 	gitspaceLogger.Info("Image pull completed successfully")
 	return nil
+}
+
+func ExtractRunArgsWithLogging(
+	ctx context.Context,
+	spaceID int64,
+	runArgProvider runarg.Provider,
+	runArgsRaw []string,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) (map[types.RunArg]*types.RunArgValue, error) {
+	gitspaceLogger.Info("Extracting runsArgs")
+	runArgsMap, err := ExtractRunArgs(ctx, spaceID, runArgProvider, runArgsRaw)
+	if err != nil {
+		return nil, logStreamWrapError(gitspaceLogger, "Error while extracting runArgs", err)
+	}
+	if len(runArgsMap) > 0 {
+		st := ""
+		for key, value := range runArgsMap {
+			st = fmt.Sprintf("%s%s: %s\n", st, key, value)
+		}
+		gitspaceLogger.Info(fmt.Sprintf("Extracted following runArgs\n%v", st))
+	}
+	return runArgsMap, nil
 }
 
 // getContainerResponse retrieves container information and prepares the start response.

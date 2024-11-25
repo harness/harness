@@ -12,4 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package container
+package runarg
+
+import (
+	"github.com/google/wire"
+)
+
+var WireSet = wire.NewSet(
+	ProvideStaticProvider,
+)
+
+func ProvideStaticProvider() (Provider, error) {
+	return NewStaticProvider()
+}

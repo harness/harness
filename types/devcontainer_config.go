@@ -27,6 +27,7 @@ type DevcontainerConfig struct {
 	ForwardPorts      []json.Number                    `json:"forwardPorts"`      //nolint:tagliatelle
 	ContainerEnv      map[string]string                `json:"containerEnv"`      //nolint:tagliatelle
 	Customizations    DevContainerConfigCustomizations `json:"customizations"`
+	RunArgs           []string                         `json:"runArgs"` //nolint:tagliatelle
 }
 
 // LifecycleCommand supports multiple formats for lifecycle commands.

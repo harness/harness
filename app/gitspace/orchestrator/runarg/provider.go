@@ -12,4 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package container
+package runarg
+
+import (
+	"context"
+
+	"github.com/harness/gitness/types"
+)
+
+type Provider interface {
+	// ProvideSupportedRunArgs returns a map of the run arg definitions for all the supported arg applicable for the
+	// given gitspace spaceID.
+	ProvideSupportedRunArgs(ctx context.Context, spaceID int64) (map[types.RunArg]types.RunArgDefinition, error)
+}

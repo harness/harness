@@ -55,6 +55,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	git2 "github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
+	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
 	user2 "github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
@@ -318,7 +319,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
 	gitService := git2.ProvideGitServiceImpl()
 	userService := user2.ProvideUserServiceImpl()
-	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger, gitService, userService)
+	runargProvider, err := runarg.ProvideStaticProvider()
+	if err != nil {
+		return nil, err
+	}
+	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger, gitService, userService, runargProvider)
 	orchestratorConfig := server.ProvideGitspaceOrchestratorConfig(config)
 	vsCodeConfig := server.ProvideIDEVSCodeConfig(config)
 	vsCode := ide.ProvideVSCodeService(vsCodeConfig)
