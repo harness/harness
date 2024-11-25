@@ -37,6 +37,8 @@ const (
 	QueryParamMentionedID        = "mentioned_id"
 	QueryParamExcludeDescription = "exclude_description"
 	QueryParamSourceRepoRef      = "source_repo_ref"
+	QueryParamSourceBranch       = "source_branch"
+	QueryParamTargetBranch       = "target_branch"
 )
 
 func GetPullReqNumberFromPath(r *http.Request) (int64, error) {
@@ -196,9 +198,9 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		Size:                   ParseLimit(r),
 		Query:                  ParseQuery(r),
 		CreatedBy:              createdBy,
-		SourceRepoRef:          r.URL.Query().Get("source_repo_ref"),
-		SourceBranch:           r.URL.Query().Get("source_branch"),
-		TargetBranch:           r.URL.Query().Get("target_branch"),
+		SourceRepoRef:          r.URL.Query().Get(QueryParamSourceRepoRef),
+		SourceBranch:           r.URL.Query().Get(QueryParamSourceBranch),
+		TargetBranch:           r.URL.Query().Get(QueryParamTargetBranch),
 		States:                 parsePullReqStates(r),
 		Sort:                   ParseSortPullReq(r),
 		Order:                  ParseOrder(r),

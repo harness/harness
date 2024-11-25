@@ -183,7 +183,7 @@ var queryParameterSourceRepoRefPullRequest = openapi3.ParameterOrRef{
 
 var queryParameterSourceBranchPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        "source_branch",
+		Name:        request.QueryParamSourceBranch,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Source branch of the pull requests."),
 		Required:    ptr.Bool(false),
@@ -197,7 +197,7 @@ var queryParameterSourceBranchPullRequest = openapi3.ParameterOrRef{
 
 var queryParameterTargetBranchPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        "target_branch",
+		Name:        request.QueryParamTargetBranch,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Target branch of the pull requests."),
 		Required:    ptr.Bool(false),
