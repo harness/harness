@@ -39,6 +39,7 @@ var registrySort = []string{
 	"registrySize",
 	"artifactsCount",
 	"downloadsCount",
+	"type",
 }
 
 const (
@@ -57,6 +58,7 @@ var RegistrySortMap = map[string]string{
 	"artifactsCount": "artifact_count",
 	"downloadsCount": "download_count",
 	"createdAt":      "created_at",
+	"type":           "type",
 }
 
 var artifactSort = []string{
