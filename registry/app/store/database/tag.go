@@ -512,13 +512,28 @@ func (t tagDao) GetLatestTagMetadata(
 		`r.registry_name as repo_name, 
 		r.registry_package_type as package_type, t.tag_image_name as name, 
 		t.tag_name as latest_version, t.tag_created_at as created_at, 
-		t.tag_updated_at as modified_at, ar.image_labels as labels`,
+		t.tag_updated_at as modified_at, ar.image_labels as labels,
+		COALESCE(t2.download_count, 0) as download_count`,
 	).
 		From("tags t").
 		Join("registries r ON t.tag_registry_id = r.registry_id"). // nolint:goconst
 		Join(
 			"images ar ON ar.image_registry_id = t.tag_registry_id "+
 				"AND ar.image_name = t.tag_image_name",
+		).
+		LeftJoin(
+			`LATERAL (SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count 
+              FROM 
+              (SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
+               FROM artifacts a 
+               JOIN download_stats d 
+               ON d.download_stat_artifact_id = a.artifact_id 
+               GROUP BY a.artifact_image_id) as t1 
+              JOIN images i 
+              ON i.image_id = t1.artifact_image_id 
+              WHERE i.image_registry_id = r.registry_id 
+              GROUP BY i.image_name) as t2 
+			ON t.tag_image_name = t2.image_name`,
 		).
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ?"+

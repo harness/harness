@@ -303,13 +303,12 @@ func GetHelmArtifactDetails(
 }
 
 func GetArtifactSummary(artifact types.ArtifactMetadata) *artifactapi.ArtifactSummaryResponseJSONResponse {
-	downloads := int64(0)
 	createdAt := GetTimeInMs(artifact.CreatedAt)
 	modifiedAt := GetTimeInMs(artifact.ModifiedAt)
 	artifactVersionSummary := &artifactapi.ArtifactSummary{
 		CreatedAt:      &createdAt,
 		ModifiedAt:     &modifiedAt,
-		DownloadsCount: &downloads,
+		DownloadsCount: &artifact.DownloadCount,
 		ImageName:      artifact.Name,
 		Labels:         &artifact.Labels,
 		PackageType:    artifact.PackageType,
