@@ -29,6 +29,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const webhookScopeRepo = int64(0)
+
 func (s *Service) sanitizeCreateInput(in *types.WebhookCreateInput, internal bool) error {
 	// TODO [CODE-1363]: remove after identifier migration.
 	if in.Identifier == "" {
@@ -88,6 +90,13 @@ func (s *Service) Create(
 		return nil, fmt.Errorf("failed to encrypt webhook secret: %w", err)
 	}
 
+	scope := webhookScopeRepo
+	if parentType == enum.WebhookParentSpace {
+		scope, err = s.spaceStore.GetTreeLevel(ctx, parentID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get parent tree level: %w", err)
+		}
+	}
 	now := time.Now().UnixMilli()
 
 	// create new webhook object
@@ -100,6 +109,7 @@ func (s *Service) Create(
 		ParentID:   parentID,
 		ParentType: parentType,
 		Internal:   internal,
+		Scope:      scope,
 
 		// user input
 		Identifier:            in.Identifier,

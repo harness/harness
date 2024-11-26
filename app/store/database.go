@@ -184,6 +184,9 @@ type (
 		// GetAncestorIDs returns a list of all space IDs along the recursive path to the root space.
 		GetAncestorIDs(ctx context.Context, spaceID int64) ([]int64, error)
 
+		// GetTreeLevel returns the level of a space in a space tree.
+		GetTreeLevel(ctx context.Context, spaceID int64) (int64, error)
+
 		// GetAncestors returns a list of all spaces along the recursive path to the root space.
 		GetAncestors(ctx context.Context, spaceID int64) ([]*types.Space, error)
 

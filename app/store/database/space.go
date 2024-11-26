@@ -287,6 +287,21 @@ func (s *SpaceStore) GetAncestorIDs(ctx context.Context, spaceID int64) ([]int64
 	return spaceIDs, nil
 }
 
+// GetTreeLevel returns the level of a space in a space tree.
+func (s *SpaceStore) GetTreeLevel(ctx context.Context, spaceID int64) (int64, error) {
+	query := spaceAncestorsQuery + `
+		SELECT COUNT(space_ancestor_id) FROM space_ancestors`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var level int64
+	if err := db.GetContext(ctx, &level, query, spaceID); err != nil {
+		return 0, database.ProcessSQLErrorf(ctx, err, "failed to get space ancestors IDs")
+	}
+
+	return level, nil
+}
+
 func (s *SpaceStore) GetAncestors(
 	ctx context.Context,
 	spaceID int64,

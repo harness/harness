@@ -32,6 +32,9 @@ type Webhook struct {
 	Updated    int64              `json:"updated"`
 	Internal   bool               `json:"-"`
 
+	// scope 0 indicates repo; scope > 0 indicates space depth level
+	Scope int64 `json:"scope"`
+
 	Identifier string `json:"identifier"`
 	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
 	DisplayName           string                       `json:"display_name"`

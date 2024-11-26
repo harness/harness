@@ -98,11 +98,10 @@ func (s *Service) Create(ctx context.Context,
 
 	scope := ruleScopeRepo
 	if parentType == enum.RuleParentSpace {
-		ids, err := s.spaceStore.GetAncestorIDs(ctx, parentID)
+		scope, err = s.spaceStore.GetTreeLevel(ctx, parentID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get ancestor IDs: %w", err)
+			return nil, fmt.Errorf("failed to get parent tree level: %w", err)
 		}
-		scope = int64(len(ids))
 	}
 	now := time.Now().UnixMilli()
 	rule := &types.Rule{

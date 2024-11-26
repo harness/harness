@@ -57,6 +57,7 @@ type webhook struct {
 	Created   int64    `db:"webhook_created"`
 	Updated   int64    `db:"webhook_updated"`
 	Internal  bool     `db:"webhook_internal"`
+	Scope     int64    `db:"webhook_scope"`
 
 	Identifier string `db:"webhook_uid"`
 	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
@@ -88,7 +89,8 @@ const (
 		,webhook_insecure
 		,webhook_triggers
 		,webhook_latest_execution_result
-		,webhook_internal`
+		,webhook_internal
+		,webhook_scope`
 
 	webhookSelectBase = `
 	SELECT` + webhookColumns + `
@@ -175,6 +177,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,webhook_triggers
 			,webhook_latest_execution_result
 			,webhook_internal
+			,webhook_scope
 		) values (
 			:webhook_repo_id
 			,:webhook_space_id
@@ -191,6 +194,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,:webhook_triggers
 			,:webhook_latest_execution_result
 			,:webhook_internal
+			,:webhook_scope
 		) RETURNING webhook_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -443,6 +447,7 @@ func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 		Created:    hook.Created,
 		Updated:    hook.Updated,
 		Identifier: hook.Identifier,
+		Scope:      hook.Scope,
 		// TODO [CODE-1364]: Remove once UID/Identifier migration is completed
 		DisplayName:           hook.DisplayName,
 		Description:           hook.Description,
@@ -479,6 +484,7 @@ func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 		Created:    hook.Created,
 		Updated:    hook.Updated,
 		Identifier: hook.Identifier,
+		Scope:      hook.Scope,
 		// TODO [CODE-1364]: Remove once UID/Identifier migration is completed
 		DisplayName:           hook.DisplayName,
 		Description:           hook.Description,

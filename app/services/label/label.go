@@ -25,19 +25,22 @@ import (
 	"github.com/harness/gitness/types"
 )
 
+const labelScopeRepo = int64(0)
+
 func (s *Service) Define(
 	ctx context.Context,
 	principalID int64,
 	spaceID, repoID *int64,
 	in *types.DefineLabelInput,
 ) (*types.Label, error) {
-	var scope int64
+	scope := labelScopeRepo
+
 	if spaceID != nil {
-		spaceIDs, err := s.spaceStore.GetAncestorIDs(ctx, *spaceID)
+		var err error
+		scope, err = s.spaceStore.GetTreeLevel(ctx, *spaceID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get space ids hierarchy: %w", err)
+			return nil, fmt.Errorf("failed to get space tree level: %w", err)
 		}
-		scope = int64(len(spaceIDs))
 	}
 
 	label := newLabel(principalID, spaceID, repoID, scope, in)
