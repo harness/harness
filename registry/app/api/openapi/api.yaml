@@ -180,6 +180,7 @@ paths:
         - $ref: "#/components/parameters/sortField"
         - $ref: "#/components/parameters/searchTerm"
         - $ref: "#/components/parameters/latestVersion"
+        - $ref: "#/components/parameters/packageTypeParam"
       responses:
         200:
           $ref: "#/components/responses/ListArtifactResponse"

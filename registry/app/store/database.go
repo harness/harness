@@ -188,13 +188,13 @@ type TagRepository interface {
 		ctx context.Context, parentID int64,
 		registryIDs *[]string, sortByField string,
 		sortByOrder string, limit int, offset int, search string,
-		latestVersion bool,
+		latestVersion bool, packageTypes []string,
 	) (*[]types.ArtifactMetadata, error)
 
 	CountAllArtifactsByParentID(
 		ctx context.Context, parentID int64,
 		registryIDs *[]string, search string,
-		latestVersion bool,
+		latestVersion bool, packageTypes []string,
 	) (int64, error)
 
 	GetAllArtifactsByRepo(

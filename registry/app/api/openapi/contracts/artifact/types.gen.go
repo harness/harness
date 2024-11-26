@@ -828,6 +828,9 @@ type GetAllArtifactsParams struct {
 
 	// LatestVersion Latest Version Filter.
 	LatestVersion *LatestVersion `form:"latest_version,omitempty" json:"latest_version,omitempty"`
+
+	// PackageType Registry Package Type
+	PackageType *PackageTypeParam `form:"package_type,omitempty" json:"package_type,omitempty"`
 }
 
 // GetAllRegistriesParams defines parameters for GetAllRegistries.

@@ -345,6 +345,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 	offset int,
 	search string,
 	latestVersion bool,
+	packageTypes []string,
 ) (*[]types.ArtifactMetadata, error) {
 	q := databaseg.Builder.Select(
 		`r.registry_name as repo_name, 
@@ -388,6 +389,10 @@ func (t tagDao) GetAllArtifactsByParentID(
 		q = q.Where(sq.Eq{"r.registry_name": registryIDs})
 	}
 
+	if len(packageTypes) > 0 {
+		q = q.Where(sq.Eq{"r.registry_package_type": packageTypes})
+	}
+
 	if search != "" {
 		q = q.Where("tag_image_name LIKE ?", sqlPartialMatch(search))
 	}
@@ -410,7 +415,7 @@ func (t tagDao) GetAllArtifactsByParentID(
 
 func (t tagDao) CountAllArtifactsByParentID(
 	ctx context.Context, parentID int64,
-	registryIDs *[]string, search string, latestVersion bool,
+	registryIDs *[]string, search string, latestVersion bool, packageTypes []string,
 ) (int64, error) {
 	// nolint:goconst
 	q := databaseg.Builder.Select("COUNT(*)").
@@ -437,6 +442,10 @@ func (t tagDao) CountAllArtifactsByParentID(
 
 	if search != "" {
 		q = q.Where("tag_image_name LIKE ?", sqlPartialMatch(search))
+	}
+
+	if len(packageTypes) > 0 {
+		q = q.Where(sq.Eq{"registry_package_type": packageTypes})
 	}
 
 	sql, args, err := q.ToSql()

@@ -29,7 +29,7 @@ func (c *APIController) GetAllArtifacts(
 	r artifact.GetAllArtifactsRequestObject,
 ) (artifact.GetAllArtifactsResponseObject, error) {
 	registryRequestParams := &RegistryRequestParams{
-		packageTypesParam: nil,
+		packageTypesParam: r.Params.PackageType,
 		page:              r.Params.Page,
 		size:              r.Params.Size,
 		search:            r.Params.SearchTerm,
@@ -76,10 +76,11 @@ func (c *APIController) GetAllArtifacts(
 	}
 	artifacts, err := c.TagStore.GetAllArtifactsByParentID(
 		ctx, regInfo.parentID, &regInfo.registryIDs,
-		regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm, latestVersion)
+		regInfo.sortByField, regInfo.sortByOrder, regInfo.limit, regInfo.offset, regInfo.searchTerm,
+		latestVersion, regInfo.packageTypes)
 	count, _ := c.TagStore.CountAllArtifactsByParentID(
 		ctx, regInfo.parentID, &regInfo.registryIDs,
-		regInfo.searchTerm, latestVersion)
+		regInfo.searchTerm, latestVersion, regInfo.packageTypes)
 	if err != nil {
 		return artifact.GetAllArtifacts500JSONResponse{
 			InternalServerErrorJSONResponse: artifact.InternalServerErrorJSONResponse(
