@@ -157,11 +157,17 @@ type ClientSetupSection struct {
 
 // ClientSetupStep Client Setup Step
 type ClientSetupStep struct {
-	Commands *[]string `json:"commands,omitempty"`
-	Header   *string   `json:"header,omitempty"`
+	Commands *[]ClientSetupStepCommand `json:"commands,omitempty"`
+	Header   *string                   `json:"header,omitempty"`
 
 	// Type ClientSetupStepType type
 	Type *ClientSetupStepType `json:"type,omitempty"`
+}
+
+// ClientSetupStepCommand Client Setup Step Command
+type ClientSetupStepCommand struct {
+	Label *string `json:"label,omitempty"`
+	Value *string `json:"value,omitempty"`
 }
 
 // ClientSetupStepType ClientSetupStepType type

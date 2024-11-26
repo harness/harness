@@ -109,15 +109,19 @@ func (c *APIController) GenerateClientSetupDetails(
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	session, _ := request.AuthSessionFrom(ctx)
 	username := session.Principal.Email
-
+	loginUsernameLabel := "Username: "
+	loginUsernameValue := "<USERNAME>"
+	loginPasswordLabel := "Password: *see step 2*"
+	blankString := ""
 	// Fixme: Use ENUMS
 	if packageType == "HELM" {
 		header1 := "Login to Helm"
 		section1step1Header := "Run this Helm command in your terminal to authenticate the client."
-		section1step1Commands := []string{
-			"helm registry login <LOGIN_HOSTNAME>",
-			"Username: <USERNAME>",
-			"Password: *see step 2*",
+		helmLoginValue := "helm registry login <LOGIN_HOSTNAME>"
+		section1step1Commands := []artifact.ClientSetupStepCommand{
+			{Label: &blankString, Value: &helmLoginValue},
+			{Label: &loginUsernameLabel, Value: &loginUsernameValue},
+			{Label: &loginPasswordLabel, Value: &blankString},
 		}
 		section1step1Type := artifact.ClientSetupStepTypeStatic
 		section1step2Header := "For the Password field above, generate an identity token"
@@ -137,7 +141,10 @@ func (c *APIController) GenerateClientSetupDetails(
 		header2 := "Push a version"
 		section2step1Header := "Run this Helm push command in your terminal to push a chart in OCI form." +
 			" Note: Make sure you add oci:// prefix to the repository URL."
-		section2step1Commands := []string{"helm push <CHART_TGZ_FILE> oci://<HOSTNAME>/<REGISTRY_NAME>"}
+		helmPushValue := "helm push <CHART_TGZ_FILE> oci://<HOSTNAME>/<REGISTRY_NAME>"
+		section2step1Commands := []artifact.ClientSetupStepCommand{
+			{Label: &blankString, Value: &helmPushValue},
+		}
 		section2step1Type := artifact.ClientSetupStepTypeStatic
 		section2 := []artifact.ClientSetupStep{
 			{
@@ -149,8 +156,9 @@ func (c *APIController) GenerateClientSetupDetails(
 
 		header3 := "Pull a version"
 		section3step1Header := "Run this Helm command in your terminal to pull a specific chart version."
-		section3step1Commands := []string{
-			"helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME> --version <TAG>",
+		helmPullValue := "helm pull oci://<HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME> --version <TAG>"
+		section3step1Commands := []artifact.ClientSetupStepCommand{
+			{Label: &blankString, Value: &helmPullValue},
 		}
 		section3step1Type := artifact.ClientSetupStepTypeStatic
 		section3 := []artifact.ClientSetupStep{
@@ -188,7 +196,12 @@ func (c *APIController) GenerateClientSetupDetails(
 	}
 	header1 := "Login to Docker"
 	section1step1Header := "Run this Docker command in your terminal to authenticate the client."
-	section1step1Commands := []string{"docker login <LOGIN_HOSTNAME>", "Username: <USERNAME>", "Password: *see step 2*"}
+	dockerLoginValue := "docker login <LOGIN_HOSTNAME>"
+	section1step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &dockerLoginValue},
+		{Label: &loginUsernameLabel, Value: &loginUsernameValue},
+		{Label: &loginPasswordLabel, Value: &blankString},
+	}
 	section1step1Type := artifact.ClientSetupStepTypeStatic
 	section1step2Header := "For the Password field above, generate an identity token"
 	section1step2Type := artifact.ClientSetupStepTypeGenerateToken
@@ -205,7 +218,10 @@ func (c *APIController) GenerateClientSetupDetails(
 	}
 	header2 := "Pull an image"
 	section2step1Header := "Run this Docker command in your terminal to pull image."
-	section2step1Commands := []string{"docker pull <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"}
+	dockerPullValue := "docker pull <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"
+	section2step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &dockerPullValue},
+	}
 	section2step1Type := artifact.ClientSetupStepTypeStatic
 	section2 := []artifact.ClientSetupStep{
 		{
@@ -216,12 +232,16 @@ func (c *APIController) GenerateClientSetupDetails(
 	}
 	header3 := "Retag and Push the image"
 	section3step1Header := "Run this Docker command in your terminal to tag the image."
-	section3step1Commands := []string{
-		"docker tag <IMAGE_NAME>:<TAG> <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>",
+	dockerTagValue := "docker tag <IMAGE_NAME>:<TAG> <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"
+	section3step1Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &dockerTagValue},
 	}
 	section3step1Type := artifact.ClientSetupStepTypeStatic
 	section3step2Header := "Run this Docker command in your terminal to push the image."
-	section3step2Commands := []string{"docker push <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"}
+	dockerPushValue := "docker push <HOSTNAME>/<REGISTRY_NAME>/<IMAGE_NAME>:<TAG>"
+	section3step2Commands := []artifact.ClientSetupStepCommand{
+		{Label: &blankString, Value: &dockerPushValue},
+	}
 	section3step2Type := artifact.ClientSetupStepTypeStatic
 	section3 := []artifact.ClientSetupStep{
 		{
@@ -299,27 +319,26 @@ func replaceText(
 	tag *artifact.VersionParam,
 ) {
 	if username != "" {
-		(*st.Commands)[i] = strings.ReplaceAll((*st.Commands)[i], "<USERNAME>", username)
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<USERNAME>", username))
 	}
 	if hostname != "" {
-		(*st.Commands)[i] = strings.ReplaceAll((*st.Commands)[i], "<HOSTNAME>", hostname)
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<HOSTNAME>", hostname))
 	}
 	if hostname != "" {
-		(*st.Commands)[i] = strings.ReplaceAll((*st.Commands)[i], "<LOGIN_HOSTNAME>", common.GetHost(hostname))
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value,
+			"<LOGIN_HOSTNAME>", common.GetHost(hostname)))
 	}
 	if repoName != "" {
-		(*st.Commands)[i] = strings.ReplaceAll(
-			(*st.Commands)[i],
-			"<REGISTRY_NAME>", repoName,
-		)
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<REGISTRY_NAME>", repoName))
 	}
 	if image != nil {
-		(*st.Commands)[i] = strings.ReplaceAll(
-			(*st.Commands)[i],
-			"<IMAGE_NAME>", string(*image),
-		)
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<IMAGE_NAME>", string(*image)))
 	}
 	if tag != nil {
-		(*st.Commands)[i] = strings.ReplaceAll((*st.Commands)[i], "<TAG>", string(*tag))
+		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<TAG>", string(*tag)))
 	}
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

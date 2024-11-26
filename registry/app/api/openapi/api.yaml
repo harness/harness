@@ -1143,7 +1143,7 @@ components:
         commands:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/ClientSetupStepCommand"
         type:
           $ref: "#/components/schemas/ClientSetupStepType"
     ArtifactMetadata:
@@ -1546,6 +1546,14 @@ components:
       enum:
         - Static
         - GenerateToken
+    ClientSetupStepCommand:
+      type: object
+      description: Client Setup Step Command
+      properties:
+        label:
+          type: string
+        value:
+          type: string
     Error:
       type: object
       properties:
