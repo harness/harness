@@ -81,10 +81,10 @@ type PlatformConnectorSpec struct {
 type PlatformConnectorAuthSpec struct {
 	AuthType PlatformConnectorAuthType
 	// userName can be empty when userName is encrypted.
-	UserName string
+	UserName *MaskSecret
 	// UserNameRef can be empty when userName is not encrypted
 	UserNameRef string
-	Password    string
+	Password    *MaskSecret
 	PasswordRef string
 }
 
@@ -103,7 +103,7 @@ func (c PlatformConnectorSpec) ExtractRegistryURL() string {
 
 func (c PlatformConnectorAuthSpec) ExtractUserName() string {
 	if c.AuthType == UserNamePasswordPlatformConnectorAuthType {
-		return c.UserName
+		return c.UserName.Value()
 	}
 
 	return ""
@@ -127,7 +127,7 @@ func (c PlatformConnectorAuthSpec) ExtractPasswordRef() string {
 
 func (c PlatformConnectorAuthSpec) ExtractPassword() string {
 	if c.AuthType == UserNamePasswordPlatformConnectorAuthType {
-		return c.Password
+		return c.Password.Value()
 	}
 
 	return ""

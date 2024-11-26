@@ -126,7 +126,7 @@ func (s *GenericSCM) ResolveCredentials(
 ) (*ResolvedCredentials, error) {
 	var resolvedCredentials = &ResolvedCredentials{
 		Branch:   gitspaceConfig.Branch,
-		CloneURL: gitspaceConfig.CodeRepo.URL,
+		CloneURL: types.NewMaskSecret(gitspaceConfig.CodeRepo.URL),
 	}
 	repoURL, err := url.Parse(gitspaceConfig.CodeRepo.URL)
 	if err != nil {

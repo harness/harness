@@ -71,7 +71,7 @@ func (g *ServiceImpl) SetupCredentials(
 ) error {
 	script, err := template.GenerateScriptFromTemplate(
 		templateSetupGitCredentials, &template.SetupGitCredentialsPayload{
-			CloneURLWithCreds: resolvedRepoDetails.CloneURL,
+			CloneURLWithCreds: resolvedRepoDetails.CloneURL.Value(),
 		})
 	if err != nil {
 		return fmt.Errorf(
@@ -94,7 +94,7 @@ func (g *ServiceImpl) CloneCode(
 	defaultBaseImage string,
 	gitspaceLogger types.GitspaceLogger,
 ) error {
-	cloneURL, err := url.Parse(resolvedRepoDetails.CloneURL)
+	cloneURL, err := url.Parse(resolvedRepoDetails.CloneURL.Value())
 	if err != nil {
 		return fmt.Errorf(
 			"failed to parse clone url %s: %w", resolvedRepoDetails.CloneURL, err)
@@ -108,7 +108,7 @@ func (g *ServiceImpl) CloneCode(
 	}
 	if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
 		data.Email = resolvedRepoDetails.Credentials.Email
-		data.Name = resolvedRepoDetails.Credentials.Name
+		data.Name = resolvedRepoDetails.Credentials.Name.Value()
 	}
 	script, err := template.GenerateScriptFromTemplate(
 		templateCloneCode, data)

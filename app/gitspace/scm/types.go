@@ -43,13 +43,14 @@ type (
 	// by an automated login process.
 	Credentials struct {
 		Email    string
-		Name     string
-		Password string
+		Name     *types.MaskSecret
+		Password *types.MaskSecret
 	}
 
 	ResolvedCredentials struct {
-		Branch      string
-		CloneURL    string
+		Branch string
+		// CloneURL contains credentials for private repositories in url prefix
+		CloneURL    *types.MaskSecret
 		Credentials *Credentials
 		RepoName    string
 	}

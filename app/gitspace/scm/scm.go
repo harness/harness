@@ -70,7 +70,7 @@ func (s *SCM) CheckValidCodeRepo(
 		return nil, fmt.Errorf("failed to resolve repo credentials and URL: %w", err)
 	}
 
-	if branch, err = s.detectBranch(ctx, resolvedCreds.CloneURL); err == nil {
+	if branch, err = s.detectBranch(ctx, resolvedCreds.CloneURL.Value()); err == nil {
 		codeRepositoryResponse.Branch = branch
 	}
 	return codeRepositoryResponse, nil

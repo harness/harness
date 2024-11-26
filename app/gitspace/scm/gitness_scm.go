@@ -196,11 +196,11 @@ func (s *GitnessSCM) ResolveCredentials(
 	}
 	userInfo := url.UserPassword("harness", jwtToken)
 	modifiedURL.User = userInfo
-	resolvedCredentails.CloneURL = modifiedURL.String()
+	resolvedCredentails.CloneURL = types.NewMaskSecret(modifiedURL.String())
 	credentials := &Credentials{
 		Email:    user.Email,
-		Name:     user.DisplayName,
-		Password: jwtToken,
+		Name:     types.NewMaskSecret(user.DisplayName),
+		Password: types.NewMaskSecret(jwtToken),
 	}
 	resolvedCredentails.Credentials = credentials
 	return resolvedCredentails, nil
