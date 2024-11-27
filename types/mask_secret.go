@@ -29,13 +29,13 @@ type MaskSecret struct {
 	hashedValue string
 }
 
-func NewMaskSecret(val string) *MaskSecret {
+func NewMaskSecret(val string) MaskSecret {
 	hash := sha256.New()
 	hash.Write([]byte(val))
 
 	hashedValueStr := fmt.Sprintf("%x", hash.Sum(nil))
 
-	return &MaskSecret{
+	return MaskSecret{
 		value:       val,
 		hashedValue: hashedValueStr[:maxTruncatedLen],
 	}
@@ -43,25 +43,28 @@ func NewMaskSecret(val string) *MaskSecret {
 
 // Value returns the unmasked value of the MaskSecret.
 // Use cautiously to avoid exposing sensitive data.
-func (s *MaskSecret) Value() string {
-	if s == nil {
-		return ""
-	}
+func (s MaskSecret) Value() string {
 	return s.value
 }
 
-func (s *MaskSecret) String() string {
-	if s == nil {
-		return ""
-	}
+func (s MaskSecret) String() string {
+	if s.hashedValue == "" && s.value != "" {
+		// this case can arise when MarkSecret is created by UnmarshalJSON func where we do not
+		// use NewMaskSecret constructor.
+		hash := sha256.New()
+		hash.Write([]byte(s.value))
 
+		hashedValueStr := fmt.Sprintf("%x", hash.Sum(nil))
+		s.hashedValue = hashedValueStr[:maxTruncatedLen]
+	}
 	return s.hashedValue
 }
 
-func (s *MaskSecret) MarshalJSON() ([]byte, error) {
+func (s MaskSecret) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.value)
 }
 
+// UnmarshalJSON needs pointer receiver as it modify the receiver.
 func (s *MaskSecret) UnmarshalJSON(data []byte) error {
 	var input string
 	if err := json.Unmarshal(data, &input); err != nil {
