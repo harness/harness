@@ -109,7 +109,7 @@ func (c *APIController) GenerateClientSetupDetails(
 ) *artifact.ClientSetupDetailsResponseJSONResponse {
 	session, _ := request.AuthSessionFrom(ctx)
 	username := session.Principal.Email
-	loginUsernameLabel := "Username: "
+	loginUsernameLabel := "Username: <USERNAME>"
 	loginUsernameValue := "<USERNAME>"
 	loginPasswordLabel := "Password: *see step 2*"
 	blankString := ""
@@ -320,6 +320,7 @@ func replaceText(
 ) {
 	if username != "" {
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<USERNAME>", username))
+		(*st.Commands)[i].Label = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Label, "<USERNAME>", username))
 	}
 	if hostname != "" {
 		(*st.Commands)[i].Value = stringPtr(strings.ReplaceAll(*(*st.Commands)[i].Value, "<HOSTNAME>", hostname))
