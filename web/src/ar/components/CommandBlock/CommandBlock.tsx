@@ -18,6 +18,7 @@ import React from 'react'
 import cx from 'classnames'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Layout, Text, Button, ButtonVariation } from '@harnessio/uicore'
+import type { ClientSetupStepCommand } from '@harnessio/react-har-service-client'
 
 import { useStrings } from '@ar/frameworks/strings/String'
 import CopyButton from '@ar/components/CopyButton/CopyButton'
@@ -30,12 +31,11 @@ interface DownloadFileProps {
 }
 
 interface CommandBlockProps {
-  commandSnippet: string
+  commandSnippet: string | ClientSetupStepCommand[]
   allowCopy?: boolean
   ignoreWhiteSpaces?: boolean
   allowDownload?: boolean
   downloadFileProps?: DownloadFileProps
-  copySnippet?: string
   copyButtonText?: string
   darkmode?: boolean
   onCopy?: (evt: React.MouseEvent<Element, MouseEvent>) => void
@@ -47,6 +47,27 @@ enum DownloadFile {
   DEFAULT_TYPE = 'txt'
 }
 
+const combineCommands = (list: ClientSetupStepCommand[]): string => {
+  return list
+    .map(cmd => {
+      return cmd.label || cmd.value
+    })
+    .join('\n')
+}
+
+const getCommands = (commandSnippet: string | ClientSetupStepCommand[]): ClientSetupStepCommand[] => {
+  if (typeof commandSnippet === 'string') {
+    return [
+      {
+        label: '',
+        value: commandSnippet
+      }
+    ]
+  } else {
+    return commandSnippet
+  }
+}
+
 const CommandBlock: React.FC<CommandBlockProps> = ({
   commandSnippet,
   allowCopy,
@@ -54,7 +75,6 @@ const CommandBlock: React.FC<CommandBlockProps> = ({
   noWrap = false,
   allowDownload = false,
   downloadFileProps,
-  copySnippet,
   copyButtonText,
   darkmode,
   lineClamp,
@@ -64,10 +84,11 @@ const CommandBlock: React.FC<CommandBlockProps> = ({
   const downloadeFileDefaultExtension =
     (downloadFileProps && downloadFileProps.downloadFileExtension) || DownloadFile.DEFAULT_TYPE
   const linkRef = React.useRef<HTMLAnchorElement>(null)
+  const commands = getCommands(commandSnippet).filter(cmd => cmd.label || cmd.value)
 
   const { getString } = useStrings()
   const onDownload = (): void => {
-    const content = new Blob([commandSnippet as BlobPart], { type: 'data:text/plain;charset=utf-8' })
+    const content = new Blob([combineCommands(commands) as BlobPart], { type: 'data:text/plain;charset=utf-8' })
     if (linkRef?.current) {
       linkRef.current.href = window.URL.createObjectURL(content)
       linkRef.current.download = `${downloadFileDefaultName}.${downloadeFileDefaultExtension}`
@@ -76,45 +97,60 @@ const CommandBlock: React.FC<CommandBlockProps> = ({
   }
   return (
     <Layout.Horizontal
-      flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}
+      flex={{ justifyContent: 'space-between', alignItems: 'center' }}
+      spacing="medium"
       className={cx(css.commandBlock, { [css.darkmode]: darkmode })}>
-      <Text
-        color={darkmode ? Color.WHITE : undefined}
-        className={cx({
-          [css.ignoreWhiteSpaces]: !ignoreWhiteSpaces,
-          [css.noWrap]: noWrap
+      <Layout.Vertical flex={{ alignItems: 'flex-start' }} className={css.commandGroup}>
+        {commands.map((command, i) => {
+          const { label: cmdLabel = '', value: cmdValue = '' } = command
+          return (
+            <Layout.Horizontal
+              key={i}
+              flex={{ justifyContent: 'space-between', alignItems: 'flex-start' }}
+              className={css.commandRow}>
+              <Text
+                color={darkmode ? Color.WHITE : undefined}
+                className={cx([
+                  css.commandText,
+                  {
+                    [css.ignoreWhiteSpaces]: !ignoreWhiteSpaces,
+                    [css.noWrap]: noWrap
+                  }
+                ])}
+                font={{ variation: FontVariation.YAML }}
+                lineClamp={lineClamp}>
+                {cmdLabel || cmdValue}
+              </Text>
+              {allowCopy && cmdValue && (
+                <CopyButton
+                  textToCopy={cmdValue}
+                  text={copyButtonText}
+                  onCopySuccess={evt => {
+                    onCopy?.(evt)
+                  }}
+                  primaryBtn={darkmode}
+                  className={cx({ [css.copyButtonHover]: darkmode })}
+                />
+              )}
+            </Layout.Horizontal>
+          )
         })}
-        font={{ variation: FontVariation.YAML }}
-        lineClamp={lineClamp}>
-        {commandSnippet}
-      </Text>
-      <Layout.Horizontal flex={{ justifyContent: 'center', alignItems: 'center' }} spacing="medium">
-        {(allowCopy || copySnippet) && (
-          <CopyButton
-            textToCopy={copySnippet || commandSnippet}
-            text={copyButtonText}
-            onCopySuccess={evt => {
-              onCopy?.(evt)
+      </Layout.Vertical>
+
+      {allowDownload && (
+        <>
+          <Button
+            className={css.downloadBtn}
+            variation={ButtonVariation.LINK}
+            text={getString('download')}
+            onClick={event => {
+              event.stopPropagation()
+              onDownload()
             }}
-            primaryBtn={darkmode}
-            className={cx({ [css.copyButtonHover]: darkmode })}
           />
-        )}
-        {allowDownload && (
-          <>
-            <Button
-              className={css.downloadBtn}
-              variation={ButtonVariation.LINK}
-              text={getString('download')}
-              onClick={event => {
-                event.stopPropagation()
-                onDownload()
-              }}
-            />
-            <a className="hide" ref={linkRef} target={'_blank'} />
-          </>
-        )}
-      </Layout.Horizontal>
+          <a className={css.downloadAnchor} ref={linkRef} target={'_blank'} />
+        </>
+      )}
     </Layout.Horizontal>
   )
 }

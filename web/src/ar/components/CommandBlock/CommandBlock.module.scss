@@ -32,8 +32,22 @@
       color: var(--primary-7) !important;
     }
   }
+  .commandRow {
+    max-width: 100%;
+  }
+
   .commandText {
-    flex: 80%;
+    align-self: center;
+    word-break: break-word;
+  }
+
+  .commandGroup {
+    flex-shrink: 1;
+    max-width: 100%;
+  }
+
+  .downloadAnchor {
+    display: none;
   }
 }
 .ignoreWhiteSpaces {

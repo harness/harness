@@ -38,10 +38,6 @@ interface SetupClientContentProps {
   packageType: PackageType
 }
 
-const combineCommands = (list: string[]): string => {
-  return list.join('\n')
-}
-
 export default function SetupClientContent(props: SetupClientContentProps): JSX.Element {
   const { onClose, packageType, repoKey } = props
   const { getString } = useStrings()
@@ -88,11 +84,7 @@ export default function SetupClientContent(props: SetupClientContentProps): JSX.
                       {step.commands && (
                         <>
                           <div />
-                          <CommandBlock
-                            ignoreWhiteSpaces={false}
-                            commandSnippet={combineCommands(step.commands)}
-                            allowCopy={true}
-                          />
+                          <CommandBlock ignoreWhiteSpaces={false} commandSnippet={step.commands} allowCopy={true} />
                         </>
                       )}
                     </Container>

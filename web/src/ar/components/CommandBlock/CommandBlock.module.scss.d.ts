@@ -17,9 +17,12 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const commandBlock: string
+export declare const commandGroup: string
+export declare const commandRow: string
 export declare const commandText: string
 export declare const copyButtonHover: string
 export declare const darkmode: string
+export declare const downloadAnchor: string
 export declare const downloadBtn: string
 export declare const ignoreWhiteSpaces: string
 export declare const noWrap: string
