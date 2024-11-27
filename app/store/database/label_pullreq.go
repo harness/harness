@@ -85,10 +85,10 @@ func (s *pullReqLabelStore) Assign(ctx context.Context, label *types.PullReqLabe
 				,:pullreq_label_created
 				,:pullreq_label_updated
 				,:pullreq_label_created_by
-				,:pullreq_label_updated_by			
+				,:pullreq_label_updated_by
 			)
-			ON CONFLICT (pullreq_label_pullreq_id, pullreq_label_label_id) 
-			DO UPDATE SET 
+			ON CONFLICT (pullreq_label_pullreq_id, pullreq_label_label_id)
+			DO UPDATE SET
 				pullreq_label_label_value_id = EXCLUDED.pullreq_label_label_value_id,
 				pullreq_label_updated = EXCLUDED.pullreq_label_updated,
 				pullreq_label_updated_by = EXCLUDED.pullreq_label_updated_by
@@ -147,7 +147,7 @@ func (s *pullReqLabelStore) ListAssigned(
 	pullreqID int64,
 ) (map[int64]*types.LabelAssignment, error) {
 	const sqlQuery = `
-		SELECT 
+		SELECT
 			label_id
 			,label_repo_id
 			,label_space_id
@@ -224,17 +224,18 @@ func (s *pullReqLabelStore) ListAssignedByPullreqIDs(
 
 func (s *pullReqLabelStore) FindValueByLabelID(
 	ctx context.Context,
+	pullreqID int64,
 	labelID int64,
 ) (*types.LabelValue, error) {
 	const sqlQuery = `SELECT label_value_id, ` + labelValueColumns + `
 		FROM pullreq_labels
 		JOIN label_values ON pullreq_label_label_value_id = label_value_id
-		WHERE pullreq_label_label_id = $1`
+		WHERE pullreq_label_pullreq_id = $1 AND pullreq_label_label_id = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var dst labelValue
-	if err := db.GetContext(ctx, &dst, sqlQuery, labelID); err != nil {
+	if err := db.GetContext(ctx, &dst, sqlQuery, pullreqID, labelID); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find label")
 	}
 

@@ -191,7 +191,7 @@ func (s *Service) UnassignFromPullReq(
 		return nil, nil, err
 	}
 
-	value, err := s.pullReqLabelAssignmentStore.FindValueByLabelID(ctx, labelID)
+	value, err := s.pullReqLabelAssignmentStore.FindValueByLabelID(ctx, pullreqID, labelID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return nil, nil, fmt.Errorf("failed to find label value: %w", err)
 	}
