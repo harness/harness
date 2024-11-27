@@ -5,6 +5,7 @@ echo "Running VSCode Web"
 # Default port comes from the Go templating variable {{ .Port }}
 port={{ .Port }}
 proxyuri="{{ .ProxyURI }}"
+extensions={{ range .Extensions }}"{{ . }}" {{ end }}
 
 # Ensure the configuration directory exists
 mkdir -p $HOME/.config/code-server
@@ -15,6 +16,14 @@ bind-addr: 0.0.0.0:$port
 auth: none
 cert: false
 EOF
+
+# Install extensions using code-server CLI and display errors if any
+for extension in $extensions; do
+  echo "Installing extension: $extension"
+  if ! code-server --install-extension "$extension"; then
+    echo "Error installing extension: $extension" >&2
+  fi
+done
 
 # Export the Proxy URI only if set
 if [ -n "$proxyuri" ]; then

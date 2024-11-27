@@ -77,16 +77,27 @@ func (v *VSCode) Setup(
 func (v *VSCode) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	_ map[string]string,
+	args map[string]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
+	payload := template.RunSSHServerPayload{
+		Port: strconv.Itoa(v.config.Port),
+	}
 	runSSHScript, err := template.GenerateScriptFromTemplate(
-		templateRunSSHServer, &template.RunSSHServerPayload{
-			Port: strconv.Itoa(v.config.Port),
-		})
+		templateRunSSHServer, &payload)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
+	}
+	if args != nil {
+		if customization, exists := args["customization"]; exists {
+			// Perform a type assertion to ensure customization is a VSCodeCustomizationSpecs
+			if vsCodeCustomizationSpecs, ok := customization.(types.VSCodeCustomizationSpecs); ok {
+				gitspaceLogger.Info(fmt.Sprintf("VSCode Customizations %v", vsCodeCustomizationSpecs))
+			} else {
+				return fmt.Errorf("customization is not of type VSCodeCustomizationSpecs")
+			}
+		}
 	}
 	gitspaceLogger.Info("SSH server run output...")
 	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, runSSHScript, true, gitspaceLogger)

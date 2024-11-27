@@ -36,9 +36,6 @@ import (
 
 var _ IDE = (*VSCodeWeb)(nil)
 
-//go:embed script/install_vscode_web.sh
-var installScript string
-
 //go:embed script/find_vscode_web_path.sh
 var findPathScript string
 
@@ -46,6 +43,7 @@ var findPathScript string
 var mediaFiles embed.FS
 
 const templateRunVSCodeWeb = "run_vscode_web.sh"
+const templateSetupVSCodeWeb = "install_vscode_web.sh"
 const startMarker = "START_MARKER"
 const endMarker = "END_MARKER"
 
@@ -69,8 +67,17 @@ func (v *VSCodeWeb) Setup(
 ) error {
 	gitspaceLogger.Info("Installing VSCode Web inside container.")
 	gitspaceLogger.Info("IDE setup output...")
+	payload := &template.SetupVSCodeWebPayload{}
+	setupScript, err := template.GenerateScriptFromTemplate(templateSetupVSCodeWeb, payload)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate script to setup VSCode Web from template %s: %w",
+			templateRunVSCodeWeb,
+			err,
+		)
+	}
 	outputCh := make(chan []byte)
-	err := exec.ExecuteCommandInHomeDirectory(ctx, installScript, true, false, outputCh)
+	err = exec.ExecuteCommandInHomeDirectory(ctx, setupScript, true, false, outputCh)
 	if err != nil {
 		return fmt.Errorf("failed to install VSCode Web: %w", err)
 	}
@@ -112,15 +119,17 @@ func (v *VSCodeWeb) Setup(
 func (v *VSCodeWeb) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[string]string,
-	gitspaceLogger gitspaceTypes.GitspaceLogger) error {
+	args map[string]interface{},
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
 	payload := &template.RunVSCodeWebPayload{
 		Port: strconv.Itoa(v.config.Port),
 	}
+
 	if args != nil {
-		// Set ProxyURI only if present in the map
-		if proxyURI, ok := args["VSCODE_PROXY_URI"]; ok {
-			payload.ProxyURI = proxyURI
+		err := updatePayloadFromArgs(args, payload, gitspaceLogger)
+		if err != nil {
+			return err
 		}
 	}
 	runScript, err := template.GenerateScriptFromTemplate(templateRunVSCodeWeb, payload)
@@ -133,12 +142,38 @@ func (v *VSCodeWeb) Run(
 	}
 	gitspaceLogger.Info("Starting IDE ...")
 	outputCh := make(chan []byte)
+
 	// Execute the script in the home directory
 	err = exec.ExecuteCommandInHomeDirectory(ctx, runScript, false, false, outputCh)
 	if err != nil {
 		return fmt.Errorf("failed to run VSCode Web: %w", err)
 	}
+	return nil
+}
 
+func updatePayloadFromArgs(
+	args map[string]interface{},
+	payload *template.RunVSCodeWebPayload,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
+	if proxyURI, exists := args["VSCODE_PROXY_URI"]; exists {
+		// Perform a type assertion to ensure proxyURI is a string
+		proxyURIStr, ok := proxyURI.(string)
+		if !ok {
+			return fmt.Errorf("VSCODE_PROXY_URI is not a string")
+		}
+		payload.ProxyURI = proxyURIStr
+	}
+
+	if customization, exists := args["customization"]; exists {
+		// Perform a type assertion to ensure customization is a VSCodeCustomizationSpecs
+		vsCodeCustomizationSpecs, ok := customization.(types.VSCodeCustomizationSpecs)
+		if !ok {
+			return fmt.Errorf("customization is not of type VSCodeCustomizationSpecs")
+		}
+		payload.Extensions = vsCodeCustomizationSpecs.Extensions
+		gitspaceLogger.Info(fmt.Sprintf("VSCode Customizations %v", vsCodeCustomizationSpecs))
+	}
 	return nil
 }
 

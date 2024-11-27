@@ -26,13 +26,17 @@ import (
 type IDE interface {
 	// Setup is responsible for doing all the operations for setting up the IDE in the container e.g. installation,
 	// copying settings and configurations.
-	Setup(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error
+	Setup(
+		ctx context.Context,
+		exec *devcontainer.Exec,
+		gitspaceLogger gitspaceTypes.GitspaceLogger,
+	) error
 
 	// Run runs the IDE and supporting services.
 	Run(
 		ctx context.Context,
 		exec *devcontainer.Exec,
-		args map[string]string,
+		args map[string]interface{},
 		gitspaceLogger gitspaceTypes.GitspaceLogger,
 	) error
 

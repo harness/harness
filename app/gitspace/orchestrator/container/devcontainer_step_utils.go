@@ -156,25 +156,11 @@ func SetupIDE(
 	return nil
 }
 
-func RunIDE(
-	ctx context.Context,
-	exec *devcontainer.Exec,
-	ideService ide.IDE,
-	gitspaceLogger gitspaceTypes.GitspaceLogger,
-) error {
-	gitspaceLogger.Info("Running the IDE inside container: " + string(ideService.Type()))
-	err := ideService.Run(ctx, exec, nil, gitspaceLogger)
-	if err != nil {
-		return logStreamWrapError(gitspaceLogger, "Error while running IDE inside container", err)
-	}
-	return nil
-}
-
 func RunIDEWithArgs(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	ideService ide.IDE,
-	args map[string]string,
+	args map[string]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Running the IDE inside container: " + string(ideService.Type()))

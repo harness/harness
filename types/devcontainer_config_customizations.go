@@ -14,10 +14,15 @@
 
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/rs/zerolog/log"
+)
 
 const (
 	GitspaceCustomizationsKey CustomizationsKey = "harnessGitspaces"
+	VSCodeCustomizationsKey   CustomizationsKey = "vscode"
 )
 
 type CustomizationsKey string
@@ -43,6 +48,45 @@ func (dcc DevContainerConfigCustomizations) ExtractGitspaceSpec() *GitspaceCusto
 		return nil
 	}
 	return &gitspaceSpecs
+}
+
+func (dcc DevContainerConfigCustomizations) ExtractVSCodeSpec() *VSCodeCustomizationSpecs {
+	val, ok := dcc[VSCodeCustomizationsKey.String()]
+	if !ok {
+		// Log that the key is missing, but return nil
+		log.Warn().Msgf("VSCode customization key %q not found, returning empty struct",
+			VSCodeCustomizationsKey.String())
+		return nil
+	}
+
+	data, ok := val.(map[string]interface{})
+	if !ok {
+		// Log the type mismatch and return nil
+		log.Warn().Msgf("Unexpected data type for key %q, expected map[string]interface{}, but got %T",
+			VSCodeCustomizationsKey.String(), val)
+		return nil
+	}
+
+	rawData, err := json.Marshal(data)
+	if err != nil {
+		// Log the error during marshalling and return nil
+		log.Printf("Failed to marshal data for key %q: %v", VSCodeCustomizationsKey.String(), err)
+		return nil
+	}
+
+	var vsCodeCustomizationSpecs VSCodeCustomizationSpecs
+	if err := json.Unmarshal(rawData, &vsCodeCustomizationSpecs); err != nil {
+		// Log the error during unmarshalling and return nil
+		log.Printf("Failed to unmarshal data for key %q: %v", VSCodeCustomizationsKey.String(), err)
+		return nil
+	}
+
+	return &vsCodeCustomizationSpecs
+}
+
+type VSCodeCustomizationSpecs struct {
+	Extensions []string               `json:"extensions"`
+	Settings   map[string]interface{} `json:"settings"`
 }
 
 type GitspaceCustomizationSpecs struct {
