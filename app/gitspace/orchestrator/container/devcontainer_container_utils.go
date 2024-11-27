@@ -16,6 +16,7 @@ package container
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,6 +33,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -304,6 +306,7 @@ func PullImage(
 	dockerClient *client.Client,
 	runArgsMap map[types.RunArg]*types.RunArgValue,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
+	dockerRegistryAuth gitspaceTypes.DockerRegistryAuth,
 ) error {
 	imagePullRunArg := getImagePullPolicy(runArgsMap)
 	gitspaceLogger.Info("Image pull policy is: " + imagePullRunArg)
@@ -312,26 +315,28 @@ func PullImage(
 	}
 	if imagePullRunArg == "missing" {
 		gitspaceLogger.Info("Checking if image " + imageName + " is present locally")
-
-		filterArgs := filters.NewArgs()
-		filterArgs.Add("reference", imageName)
-
-		images, err := dockerClient.ImageList(ctx, image.ListOptions{Filters: filterArgs})
+		ok, err := isImagePresentLocally(ctx, imageName, dockerClient)
 		if err != nil {
 			gitspaceLogger.Error("Error listing images locally", err)
 			return err
 		}
 
-		if len(images) > 0 {
+		if ok {
 			gitspaceLogger.Info("Image " + imageName + " is present locally")
 			return nil
 		}
+
 		gitspaceLogger.Info("Image " + imageName + " is not present locally")
 	}
 
 	gitspaceLogger.Info("Pulling image: " + imageName)
 
-	pullResponse, err := dockerClient.ImagePull(ctx, imageName, image.PullOptions{Platform: getPlatform(runArgsMap)})
+	pullOpts, err := buildImagePullOptions(getPlatform(runArgsMap), dockerRegistryAuth)
+	if err != nil {
+		return logStreamWrapError(gitspaceLogger, "Error building image pull options", err)
+	}
+
+	pullResponse, err := dockerClient.ImagePull(ctx, imageName, pullOpts)
 	defer func() {
 		if pullResponse == nil {
 			return
@@ -382,6 +387,40 @@ func PullImage(
 	return nil
 }
 
+func isImagePresentLocally(ctx context.Context, imageName string, dockerClient *client.Client) (bool, error) {
+	filterArgs := filters.NewArgs()
+	filterArgs.Add("reference", imageName)
+
+	images, err := dockerClient.ImageList(ctx, image.ListOptions{Filters: filterArgs})
+	if err != nil {
+		return false, err
+	}
+
+	return len(images) > 0, nil
+}
+
+func buildImagePullOptions(
+	platform string,
+	dockerRegistryAuth gitspaceTypes.DockerRegistryAuth,
+) (image.PullOptions, error) {
+	pullOpts := image.PullOptions{Platform: platform}
+	if dockerRegistryAuth.RegistryURL != "" {
+		authConfig := registry.AuthConfig{
+			Username:      dockerRegistryAuth.Username.Value(),
+			Password:      dockerRegistryAuth.Password.Value(),
+			ServerAddress: dockerRegistryAuth.RegistryURL,
+		}
+		auth, err := encodeAuthToBase64(authConfig)
+		if err != nil {
+			return image.PullOptions{}, fmt.Errorf("encoding auth for docker registry: %w", err)
+		}
+
+		pullOpts.RegistryAuth = auth
+	}
+
+	return pullOpts, nil
+}
+
 func ExtractRunArgsWithLogging(
 	ctx context.Context,
 	spaceID int64,
@@ -404,7 +443,7 @@ func ExtractRunArgsWithLogging(
 	return runArgsMap, nil
 }
 
-// getContainerResponse retrieves container information and prepares the start response.
+// GetContainerResponse retrieves container information and prepares the start response.
 func GetContainerResponse(
 	ctx context.Context,
 	dockerClient *client.Client,
@@ -422,4 +461,13 @@ func GetContainerResponse(
 		PublishedPorts:   ports,
 		AbsoluteRepoPath: codeRepoDir,
 	}, nil
+}
+
+// Helper function to encode the AuthConfig into a Base64 string.
+func encodeAuthToBase64(authConfig registry.AuthConfig) (string, error) {
+	authJSON, err := json.Marshal(authConfig)
+	if err != nil {
+		return "", fmt.Errorf("encoding auth config: %w", err)
+	}
+	return base64.URLEncoding.EncodeToString(authJSON), nil
 }

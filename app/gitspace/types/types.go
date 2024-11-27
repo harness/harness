@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
+	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog"
 )
@@ -37,4 +38,12 @@ type Step struct {
 
 type ZerologAdapter struct {
 	logger *zerolog.Logger
+}
+
+type DockerRegistryAuth struct {
+	// only host name is required
+	// eg: docker.io instead of https://docker.io
+	RegistryURL string
+	Username    *types.MaskSecret
+	Password    *types.MaskSecret
 }
