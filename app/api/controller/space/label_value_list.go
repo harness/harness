@@ -31,7 +31,7 @@ func (c *Controller) ListLabelValues(
 	key string,
 	filter *types.ListQueryFilter,
 ) ([]*types.LabelValue, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoView)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}

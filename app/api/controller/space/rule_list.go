@@ -30,7 +30,7 @@ func (c *Controller) RuleList(ctx context.Context,
 	inherited bool,
 	filter *types.RuleFilter,
 ) ([]types.Rule, int64, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoView)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to acquire access to space: %w", err)
 	}

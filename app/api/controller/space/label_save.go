@@ -30,7 +30,7 @@ func (c *Controller) SaveLabel(
 	spaceRef string,
 	in *types.SaveInput,
 ) (*types.LabelWithValues, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoEdit)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}

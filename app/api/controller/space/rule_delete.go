@@ -28,7 +28,7 @@ func (c *Controller) RuleDelete(ctx context.Context,
 	spaceRef string,
 	identifier string,
 ) error {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoEdit)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return fmt.Errorf("failed to acquire access to space: %w", err)
 	}

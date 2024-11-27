@@ -29,7 +29,7 @@ func (c *Controller) DeleteLabel(
 	spaceRef string,
 	key string,
 ) error {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoEdit)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return fmt.Errorf("failed to acquire access to space: %w", err)
 	}
