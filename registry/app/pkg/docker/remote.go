@@ -124,6 +124,16 @@ func defaultBlobURL(rootIdentifier string, regIdentifier string, name string, di
 	return fmt.Sprintf("/v2/%s/%s/library/%s/blobs/%s", rootIdentifier, regIdentifier, name, digest)
 }
 
+func ExtractRegistryIdentifierFromPath(path string) (registry string) {
+	registryIdentifier := ""
+	path = strings.Trim(path, "/")
+	segments := strings.Split(path, "/")
+	if len(segments) >= 2 {
+		registryIdentifier = segments[2]
+	}
+	return registryIdentifier
+}
+
 func proxyManifestHead(
 	ctx context.Context,
 	responseHeaders *commons.ResponseHeaders,
@@ -200,9 +210,10 @@ func (r *RemoteRegistry) ManifestExist(
 	}
 	registryInfo := artInfo
 	if isDefault {
+		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(artInfo.Path)
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.RootIdentifier, artInfo.RegIdentifier, artInfo.Image, registryInfo),
+			"Location": defaultManifestURL(artInfo.RootIdentifier, localRegistryIdentifier, artInfo.Image, registryInfo),
 		}
 		return responseHeaders, descriptor, manifestResult, errs
 	}
@@ -289,9 +300,10 @@ func (r *RemoteRegistry) PullManifest(
 	}
 	registryInfo := artInfo
 	if isDefault {
+		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(artInfo.Path)
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.RootIdentifier, artInfo.RegIdentifier, artInfo.Image, registryInfo),
+			"Location": defaultManifestURL(artInfo.RootIdentifier, localRegistryIdentifier, artInfo.Image, registryInfo),
 		}
 		return responseHeaders, descriptor, manifestResult, errs
 	}
@@ -407,9 +419,10 @@ func (r *RemoteRegistry) fetchBlobInternal(
 	}
 	registryInfo := info
 	if isDefault {
+		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(info.Path)
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultBlobURL(info.RootIdentifier, repoKey, info.Image, info.Digest),
+			"Location": defaultBlobURL(info.RootIdentifier, localRegistryIdentifier, info.Image, info.Digest),
 		}
 		return responseHeaders, fr, size, readCloser, redirectURL, errs
 	}
