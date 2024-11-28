@@ -15,8 +15,8 @@
  */
 
 .container {
-  height: auto;
-  min-height: 160px;
+  height: auto !important;
+  min-height: 160px !important;
   width: 100%;
 }
 
