@@ -16,10 +16,12 @@ package gitspace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -44,13 +46,16 @@ func (c *Controller) Delete(
 	}
 
 	gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, identifier)
-	gitspaceConfig.SpacePath = space.Path
 	if err != nil || gitspaceConfig == nil {
 		log.Err(err).Msg(gitspaceConfigNotFound + identifier)
 		return err
 	}
-
-	instance, _ := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
+	gitspaceConfig.SpacePath = space.Path
+	instance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, gitspaceConfig.ID)
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
+		log.Err(err).Msgf("Failed to find latest gitspace instance for config : %s", identifier)
+		return err
+	}
 	gitspaceConfig.GitspaceInstance = instance
 	if instance == nil || instance.State == enum.GitspaceInstanceStateUninitialized {
 		gitspaceConfig.IsMarkedForDeletion = true
