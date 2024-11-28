@@ -306,7 +306,7 @@ func PullImage(
 	dockerClient *client.Client,
 	runArgsMap map[types.RunArg]*types.RunArgValue,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	dockerRegistryAuth gitspaceTypes.DockerRegistryAuth,
+	imageAuthMap map[string]gitspaceTypes.DockerRegistryAuth,
 ) error {
 	imagePullRunArg := getImagePullPolicy(runArgsMap)
 	gitspaceLogger.Info("Image pull policy is: " + imagePullRunArg)
@@ -331,7 +331,7 @@ func PullImage(
 
 	gitspaceLogger.Info("Pulling image: " + imageName)
 
-	pullOpts, err := buildImagePullOptions(getPlatform(runArgsMap), dockerRegistryAuth)
+	pullOpts, err := buildImagePullOptions(imageName, getPlatform(runArgsMap), imageAuthMap)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error building image pull options", err)
 	}
@@ -400,15 +400,16 @@ func isImagePresentLocally(ctx context.Context, imageName string, dockerClient *
 }
 
 func buildImagePullOptions(
+	imageName,
 	platform string,
-	dockerRegistryAuth gitspaceTypes.DockerRegistryAuth,
+	imageAuthMap map[string]gitspaceTypes.DockerRegistryAuth,
 ) (image.PullOptions, error) {
 	pullOpts := image.PullOptions{Platform: platform}
-	if dockerRegistryAuth.RegistryURL != "" {
+	if imageAuth, ok := imageAuthMap[imageName]; ok {
 		authConfig := registry.AuthConfig{
-			Username:      dockerRegistryAuth.Username.Value(),
-			Password:      dockerRegistryAuth.Password.Value(),
-			ServerAddress: dockerRegistryAuth.RegistryURL,
+			Username:      imageAuth.Username.Value(),
+			Password:      imageAuth.Password.Value(),
+			ServerAddress: imageAuth.RegistryURL,
 		}
 		auth, err := encodeAuthToBase64(authConfig)
 		if err != nil {

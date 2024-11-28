@@ -116,7 +116,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 	defer e.closeDockerClient(dockerClient)
 
 	// todo : update the code when private repository integration is supported in gitness
-	dockerRegistryAuth := gitspaceTypes.DockerRegistryAuth{}
+	imagAuthMap := make(map[string]gitspaceTypes.DockerRegistryAuth)
 
 	// Step 3: Check the current state of the container
 	state, err := e.checkContainerState(ctx, dockerClient, containerName)
@@ -149,7 +149,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			infra,
 			defaultBaseImage,
 			ideService,
-			dockerRegistryAuth); err != nil {
+			imagAuthMap); err != nil {
 			return nil, err
 		}
 	case ContainerStatePaused, ContainerStateCreated, ContainerStateUnknown, ContainerStateDead:
@@ -375,7 +375,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	resolvedRepoDetails scm.ResolvedDetails,
 	defaultBaseImage string,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	dockerRegistryAuth gitspaceTypes.DockerRegistryAuth,
+	imageAuthMap map[string]gitspaceTypes.DockerRegistryAuth,
 ) error {
 	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
 	containerName := GetGitspaceContainerName(gitspaceConfig)
@@ -393,7 +393,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	}
 
 	// Pull the required image
-	if err := PullImage(ctx, imageName, dockerClient, runArgsMap, gitspaceLogger, dockerRegistryAuth); err != nil {
+	if err := PullImage(ctx, imageName, dockerClient, runArgsMap, gitspaceLogger, imageAuthMap); err != nil {
 		return err
 	}
 	portMappings := infrastructure.GitspacePortMappings
@@ -683,7 +683,7 @@ func (e *EmbeddedDockerOrchestrator) createAndStartNewGitspace(
 	infrastructure types.Infrastructure,
 	defaultBaseImage string,
 	ideService ide.IDE,
-	dockerRegistryAuth gitspaceTypes.DockerRegistryAuth,
+	imageAuthMap map[string]gitspaceTypes.DockerRegistryAuth,
 ) error {
 	logStreamInstance, err := e.statefulLogger.CreateLogStream(ctx, gitspaceConfig.ID)
 	if err != nil {
@@ -700,7 +700,7 @@ func (e *EmbeddedDockerOrchestrator) createAndStartNewGitspace(
 		resolvedRepoDetails,
 		defaultBaseImage,
 		logStreamInstance,
-		dockerRegistryAuth,
+		imageAuthMap,
 	)
 	if startErr != nil {
 		return fmt.Errorf("failed to start gitspace %s: %w", gitspaceConfig.Identifier, startErr)
