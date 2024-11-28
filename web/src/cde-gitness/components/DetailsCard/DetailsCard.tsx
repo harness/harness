@@ -36,7 +36,7 @@ export const DetailsCard = ({
   loading?: boolean
 }) => {
   const { getString } = useStrings()
-  const { branch, state, name, branch_url, code_repo_type, instance, resource } = data || {}
+  const { branch, state, name, branch_url, code_repo_url, code_repo_type, instance, resource } = data || {}
   const { has_git_changes } = instance || {}
   const gitChanges = getGitspaceChanges(has_git_changes, getString, '--')
   const color = getStatusColor(state)
@@ -83,7 +83,7 @@ export const DetailsCard = ({
               margin={{ left: 'small' }}
               style={{ cursor: 'pointer' }}
               font={{ align: 'left', size: 'normal' }}
-              onClick={() => window.open(branch_url, '_blank')}>
+              onClick={() => window.open(code_repo_url, '_blank')}>
               {name}
             </Text>
           </Layout.Horizontal>

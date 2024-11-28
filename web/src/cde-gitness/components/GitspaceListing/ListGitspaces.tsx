@@ -164,7 +164,7 @@ export const OwnerAndCreatedAt: Renderer<CellProps<TypesGitspaceConfig>> = ({ ro
 
 export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row }) => {
   const details = row.original
-  const { name, branch, branch_url, code_repo_type, instance } = details || {}
+  const { name, branch, branch_url, code_repo_type, code_repo_url, instance } = details || {}
   const { has_git_changes } = instance || {}
 
   const { getString } = useStrings()
@@ -172,18 +172,16 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
 
   return (
     <Layout.Vertical spacing="small">
-      <Layout.Horizontal
-        spacing={'small'}
-        flex={{ alignItems: 'center', justifyContent: 'start' }}
-        onClick={e => {
-          e.preventDefault()
-          e.stopPropagation()
-          window.open(branch_url, '_blank')
-        }}>
+      <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
         <Layout.Horizontal
           className={css.repositoryCell}
           spacing={'small'}
-          flex={{ alignItems: 'center', justifyContent: 'start' }}>
+          flex={{ alignItems: 'center', justifyContent: 'start' }}
+          onClick={e => {
+            e.preventDefault()
+            e.stopPropagation()
+            window.open(code_repo_url, '_blank')
+          }}>
           <Container height={24} width={24}>
             {getIconByRepoType({ repoType: code_repo_type, height: 24 })}
           </Container>
@@ -194,7 +192,12 @@ export const RenderRepository: Renderer<CellProps<TypesGitspaceConfig>> = ({ row
         <Layout.Horizontal
           className={css.branchCell}
           spacing={'small'}
-          flex={{ alignItems: 'center', justifyContent: 'start' }}>
+          flex={{ alignItems: 'center', justifyContent: 'start' }}
+          onClick={e => {
+            e.preventDefault()
+            e.stopPropagation()
+            window.open(branch_url, '_blank')
+          }}>
           <Text color={Color.PRIMARY_7}>:</Text>
           <Text
             lineClamp={1}

@@ -16,6 +16,10 @@
 
 /* eslint-disable */
 // This is an auto-generated file
+export declare const breadcrumbs: string
+export declare const linkButton: string
 export declare const main: string
+export declare const pageHeaderStyles: string
 export declare const sortOrder: string
+export declare const svgStyle: string
 export declare const totalItems: string

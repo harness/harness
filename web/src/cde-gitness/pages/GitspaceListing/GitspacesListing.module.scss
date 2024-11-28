@@ -27,3 +27,24 @@
   font-weight: bold !important;
   color: black !important;
 }
+
+.linkButton {
+  cursor: pointer;
+  font-size: var(--font-size-small) !important;
+  padding-top: var(--spacing-xsmall) !important;
+  font-family: var(--font-family) !important;
+  font-weight: 500 !important;
+  line-height: var(--font-size-medium) !important;
+}
+
+.svgStyle {
+  margin-right: var(--spacing-xsmall) !important;
+}
+
+.pageHeaderStyles {
+  height: 104px !important;
+}
+
+.breadcrumbs {
+  margin-bottom: var(--spacing-xsmall) !important;
+}

@@ -25,7 +25,7 @@ import {
   Layout,
   Text
 } from '@harnessio/uicore'
-import { FontVariation } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
@@ -40,11 +40,12 @@ import UsageMetrics from 'cde-gitness/components/UsageMetrics/UsageMetrics'
 
 import StatusDropdown from 'cde-gitness/components/StatusDropdown/StatusDropdown'
 import GitspaceOwnerDropdown from 'cde-gitness/components/GitspaceOwnerDropdown/GitspaceOwnerDropdown'
-import { GitspaceOwnerType, GitspaceStatus } from 'cde-gitness/constants'
+import { docLink, GitspaceOwnerType, GitspaceStatus, SortByType } from 'cde-gitness/constants'
 
 import SortByDropdown from 'cde-gitness/components/SortByDropdown/SortByDropdown'
 import type { EnumGitspaceSort } from 'services/cde'
 import { useLisitngApi } from '../../hooks/useLisitngApi'
+import GraduationHat from '../../../images/graduation-hat.svg?url'
 import zeroDayCss from 'cde-gitness/components/CDEHomePage/CDEHomePage.module.scss'
 import css from './GitspacesListing.module.scss'
 
@@ -91,10 +92,10 @@ const GitspaceListing = () => {
   }
   const [pageConfig, setPageConfig] = useState(pageInit)
   const [filter, setFilter] = useState(filterInit)
-
-  const sortInit: sortProps = { sort: (pageBrowser.sort as EnumGitspaceSort) ?? '', order: 'desc' }
-  const [sortConfig, setSortConfig] = useState(sortInit)
   const [hasFilter, setHasFilter] = useState(!!(pageBrowser.gitspace_states || pageBrowser.gitspace_owner))
+
+  const sortInit: sortProps = { sort: (pageBrowser.sort as EnumGitspaceSort) ?? SortByType.LAST_USED, order: 'desc' }
+  const [sortConfig, setSortConfig] = useState(sortInit)
 
   const {
     data = '',
@@ -151,14 +152,36 @@ const GitspaceListing = () => {
       {((data && data?.length !== 0) || hasFilter) && (
         <>
           <Page.Header
+            className={standalone ? '' : css.pageHeaderStyles}
             title={
-              <div className="ng-tooltip-native">
-                <h2> {getString('cde.manageGitspaces')}</h2>
-                <HarnessDocTooltip tooltipId="GitSpaceListPageHeading" useStandAlone={true} />
-              </div>
+              <Layout.Vertical spacing="none">
+                <div className="ng-tooltip-native">
+                  <h2> {getString('cde.manageGitspaces')}</h2>
+                  <HarnessDocTooltip tooltipId="GitSpaceListPageHeading" useStandAlone={true} />
+                </div>
+                {!standalone ? (
+                  <Text
+                    font="small"
+                    icon={<img src={GraduationHat} height={16} width={16} className={css.svgStyle} />}
+                    color={Color.PRIMARY_7}
+                    onClick={e => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      window.open(docLink, '_blank')
+                    }}
+                    className={css.linkButton}>
+                    {getString('cde.homePage.learnMoreAboutGitspaces')}
+                  </Text>
+                ) : (
+                  <></>
+                )}
+              </Layout.Vertical>
             }
             breadcrumbs={
-              <Breadcrumbs links={[{ url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') }]} />
+              <Breadcrumbs
+                className={standalone ? '' : css.breadcrumbs}
+                links={[{ url: routes.toCDEGitspaces({ space }), label: getString('cde.gitspaces') }]}
+              />
             }
             toolbar={
               standalone ? (
