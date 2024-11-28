@@ -422,7 +422,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	migrateWebhook := migrate.ProvideWebhookImporter(webhookConfig, transactor, webhookStore)
 	migrateLabel := migrate.ProvideLabelImporter(transactor, labelStore, labelValueStore, spaceStore)
 	migrateController := migrate2.ProvideController(authorizer, publicaccessService, gitInterface, provider, pullReq, rule, migrateWebhook, migrateLabel, resourceLimiter, auditService, repoIdentifier, transactor, spaceStore, repoStore)
-	registry, err := capabilities.ProvideCapabilities(repoStore, gitInterface)
+	registry, err := capabilities.ProvideCapabilities()
 	if err != nil {
 		return nil, err
 	}

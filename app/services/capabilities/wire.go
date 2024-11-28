@@ -15,9 +15,6 @@
 package capabilities
 
 import (
-	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/git"
-
 	"github.com/google/wire"
 )
 
@@ -31,10 +28,10 @@ func panicOnErr(err error) {
 	}
 }
 
-func ProvideCapabilities(repoStore store.RepoStore, git git.Interface) (*Registry, error) {
+func ProvideCapabilities() (*Registry, error) {
 	registry := NewRegistry()
-	panicOnErr(registry.RegisterListFilesCapability(ListFiles(repoStore, git)))
-	panicOnErr(registry.RegisterGetFileCapability(GetFile(repoStore, git)))
+	// panicOnErr(registry.RegisterListFilesCapability(ListFiles(repoStore, git)))
+	// panicOnErr(registry.RegisterGetFileCapability(GetFile(repoStore, git)))
 	panicOnErr(registry.RegisterDisplayYamlCapability(DisplayYaml()))
 	return registry, nil
 }

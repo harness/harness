@@ -92,23 +92,14 @@ func (s *HarnessIntelligence) Generate(
 
 func (s *HarnessIntelligence) GenerateStep(
 	ctx context.Context,
-	req *types.PipelineStepGenerateRequest,
-	repo *types.Repository) (*types.PipelineStepGenerateResponse, error) {
-	if req.RepoRef == "" {
-		return nil, fmt.Errorf("no repo ref specified")
-	}
-
+	req *types.PipelineStepGenerateRequest) (*types.PipelineStepGenerateResponse, error) {
 	conversationID := uuid.New()
 	chatRequest := &genai.ChatRequest{
 		Prompt:          req.Prompt,
 		ConversationID:  conversationID.String(),
 		ConversationRaw: "",
-		Context: genai.GenerateAIContext(
-			genai.RepoRef{
-				Ref: repo.Path,
-			},
-		),
-		Capabilities: s.cr.Capabilities(),
+		Context:         genai.GenerateAIContext(),
+		Capabilities:    s.cr.Capabilities(),
 	}
 
 	resp, err := s.CapabilitiesLoop(ctx, chatRequest)
