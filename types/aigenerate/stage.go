@@ -12,17 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aiagent
+package types
 
-import (
-	"context"
+type PipelineStageGenerateRequest struct {
+	Prompt  string
+	RepoRef string
+}
 
-	controllertypes "github.com/harness/gitness/app/api/controller/aiagent/types"
-)
+type PipelineStageGenerateResponse struct {
+	YAML string
+}
 
-func (c *Controller) UpdatePipeline(
-	_ context.Context,
-	_ *controllertypes.UpdatePipelineInput,
-) (*controllertypes.UpdatePipelineOutput, error) {
-	return &controllertypes.UpdatePipelineOutput{}, nil
+type PipelineStageUpdateRequest struct {
+	Prompt  string
+	RepoRef string
+	Stage   string
+}
+
+type PipelineStageUpdateResponse struct {
+	YAML string
 }

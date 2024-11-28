@@ -24,19 +24,19 @@ import (
 )
 
 type Controller struct {
-	authorizer          authz.Authorizer
-	intelligenceService *aiagent.HarnessIntelligence
-	repoStore           store.RepoStore
-	pipelineStore       store.PipelineStore
-	executionStore      store.ExecutionStore
-	git                 git.Interface
-	urlProvider         url.Provider
-	slackbot            *messaging.Slack
+	authorizer     authz.Authorizer
+	intelligence   aiagent.Intelligence
+	repoStore      store.RepoStore
+	pipelineStore  store.PipelineStore
+	executionStore store.ExecutionStore
+	git            git.Interface
+	urlProvider    url.Provider
+	slackbot       *messaging.Slack
 }
 
 func NewController(
 	authorizer authz.Authorizer,
-	pipeline *aiagent.HarnessIntelligence,
+	intelligence aiagent.Intelligence,
 	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
 	executionStore store.ExecutionStore,
@@ -45,13 +45,13 @@ func NewController(
 	slackbot *messaging.Slack,
 ) *Controller {
 	return &Controller{
-		authorizer:          authorizer,
-		intelligenceService: pipeline,
-		repoStore:           repoStore,
-		pipelineStore:       pipelineStore,
-		executionStore:      executionStore,
-		git:                 git,
-		urlProvider:         urlProvider,
-		slackbot:            slackbot,
+		authorizer:     authorizer,
+		intelligence:   intelligence,
+		repoStore:      repoStore,
+		pipelineStore:  pipelineStore,
+		executionStore: executionStore,
+		git:            git,
+		urlProvider:    urlProvider,
+		slackbot:       slackbot,
 	}
 }

@@ -18,45 +18,26 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/types"
+	controllertypes "github.com/harness/gitness/app/api/controller/aiagent/types"
+	aitypes "github.com/harness/gitness/types/aigenerate"
 )
-
-type GeneratePipelineInput struct {
-	Prompt  string `json:"prompt"`
-	RepoRef string `json:"repo_ref"`
-}
-
-type PipelineData struct {
-	YamlPipeline string `json:"yaml_pipeline"`
-}
-
-type GeneratePipelineOutput struct {
-	Status string       `json:"status"`
-	Data   PipelineData `json:"data"`
-}
 
 func (c *Controller) GeneratePipeline(
 	ctx context.Context,
-	in *GeneratePipelineInput,
-) (*GeneratePipelineOutput, error) {
-	generateRequest := &types.PipelineGenerateRequest{
+	in *controllertypes.GeneratePipelineInput,
+) (*controllertypes.GeneratePipelineOutput, error) {
+	generateRequest := &aitypes.PipelineGenerateRequest{
 		Prompt:  in.Prompt,
 		RepoRef: in.RepoRef,
 	}
 
-	// do permission check on repo here?
-	repo, err := c.repoStore.FindByRef(ctx, in.RepoRef)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
-	}
-
-	output, err := c.intelligenceService.Generate(ctx, generateRequest, repo)
+	output, err := c.intelligence.GeneratePipeline(ctx, generateRequest)
 	if err != nil {
 		return nil, fmt.Errorf("generate pipeline: %w", err)
 	}
-	return &GeneratePipelineOutput{
+	return &controllertypes.GeneratePipelineOutput{
 		Status: "SUCCESS",
-		Data: PipelineData{
+		Data: controllertypes.PipelineData{
 			YamlPipeline: output.YAML,
 		},
 	}, nil

@@ -32,7 +32,7 @@ var WireSet = wire.NewSet(
 
 func ProvideController(
 	authorizer authz.Authorizer,
-	aiagentPipeline *aiagent.HarnessIntelligence,
+	intelligence aiagent.Intelligence,
 	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
 	executionStore store.ExecutionStore,
@@ -42,7 +42,7 @@ func ProvideController(
 ) *Controller {
 	return NewController(
 		authorizer,
-		aiagentPipeline,
+		intelligence,
 		repoStore,
 		pipelineStore,
 		executionStore,

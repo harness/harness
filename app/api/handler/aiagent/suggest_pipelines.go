@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/aiagent"
+	controllertypes "github.com/harness/gitness/app/api/controller/aiagent/types"
 	"github.com/harness/gitness/app/api/render"
 )
 
@@ -26,7 +27,7 @@ func HandleSuggestPipelines(aiagentCtrl *aiagent.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		in := new(aiagent.SuggestPipelineInput)
+		in := new(controllertypes.SuggestPipelineInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)

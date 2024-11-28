@@ -14,23 +14,7 @@
 
 package types
 
-type PipelineSuggestionsRequest struct {
-	RepoRef  string
-	Pipeline string
-}
-
 type PipelineGenerateRequest struct {
-	Prompt  string
-	RepoRef string
-}
-
-type PipelineUpdateRequest struct {
-	Prompt   string
-	RepoRef  string
-	Pipeline string
-}
-
-type PipelineStepGenerateRequest struct {
 	Prompt  string
 	RepoRef string
 }
@@ -39,21 +23,21 @@ type PipelineGenerateResponse struct {
 	YAML string
 }
 
+type PipelineUpdateRequest struct {
+	Prompt   string
+	RepoRef  string
+	Pipeline string
+}
+
 type PipelineUpdateResponse struct {
 	YAML string
 }
 
-type Suggestion struct {
-	ID             string
-	Prompt         string
-	UserSuggestion string
-	Suggestion     string
+type PipelineSuggestionsRequest struct {
+	RepoRef  string
+	Pipeline string
 }
 
 type PipelineSuggestionsResponse struct {
 	Suggestions []Suggestion
-}
-
-type PipelineStepGenerateResponse struct {
-	YAML string
 }

@@ -18,39 +18,26 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/types"
+	controllertypes "github.com/harness/gitness/app/api/controller/aiagent/types"
+	aitypes "github.com/harness/gitness/types/aigenerate"
 )
-
-type GeneratePipelineStepInput struct {
-	Prompt  string `json:"prompt"`
-	RepoRef string `json:"repo_ref"`
-}
-
-type PipelineStepData struct {
-	StepYaml string `json:"yaml_step"`
-}
-
-type GeneratePipelineStepOutput struct {
-	Status string           `json:"status"`
-	Data   PipelineStepData `json:"data"`
-}
 
 func (c *Controller) GeneratePipelineStep(
 	ctx context.Context,
-	in *GeneratePipelineInput,
-) (*GeneratePipelineStepOutput, error) {
-	generateRequest := &types.PipelineStepGenerateRequest{
+	in *controllertypes.GeneratePipelineInput,
+) (*controllertypes.GeneratePipelineStepOutput, error) {
+	generateRequest := &aitypes.PipelineStepGenerateRequest{
 		Prompt:  in.Prompt,
 		RepoRef: in.RepoRef,
 	}
 
-	output, err := c.intelligenceService.GenerateStep(ctx, generateRequest)
+	output, err := c.intelligence.GeneratePipelineStep(ctx, generateRequest)
 	if err != nil {
 		return nil, fmt.Errorf("generate pipeline: %w", err)
 	}
-	return &GeneratePipelineStepOutput{
+	return &controllertypes.GeneratePipelineStepOutput{
 		Status: "SUCCESS",
-		Data: PipelineStepData{
+		Data: controllertypes.PipelineStepData{
 			StepYaml: output.YAML,
 		},
 	}, nil

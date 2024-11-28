@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/aiagent"
+	controllertypes "github.com/harness/gitness/app/api/controller/aiagent/types"
 	"github.com/harness/gitness/app/api/render"
 )
 
@@ -27,7 +28,7 @@ func HandleUpdatePipeline(aiagentCtrl *aiagent.Controller) http.HandlerFunc {
 		ctx := r.Context()
 
 		// TODO Question: how come we decode body here vs putting that logic in the request package?
-		in := new(aiagent.UpdatePipelineInput)
+		in := new(controllertypes.UpdatePipelineInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)

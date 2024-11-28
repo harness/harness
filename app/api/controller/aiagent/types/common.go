@@ -12,17 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aiagent
+package types
 
-import (
-	"context"
-
-	controllertypes "github.com/harness/gitness/app/api/controller/aiagent/types"
-)
-
-func (c *Controller) UpdatePipeline(
-	_ context.Context,
-	_ *controllertypes.UpdatePipelineInput,
-) (*controllertypes.UpdatePipelineOutput, error) {
-	return &controllertypes.UpdatePipelineOutput{}, nil
+type Suggestion struct {
+	ID             string
+	Prompt         string
+	UserSuggestion string
+	Suggestion     string
 }
+
+// Additional common structs can be defined here as needed.

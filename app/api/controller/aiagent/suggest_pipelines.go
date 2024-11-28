@@ -16,28 +16,13 @@ package aiagent
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/harness/gitness/types"
+	controllertypes "github.com/harness/gitness/app/api/controller/aiagent/types"
 )
 
-type SuggestPipelineInput struct {
-	RepoRef  string `json:"repo_ref"`
-	Pipeline string `json:"pipeline"`
-}
-
 func (c *Controller) SuggestPipeline(
-	ctx context.Context,
-	in *SuggestPipelineInput,
-) (*types.PipelineSuggestionsResponse, error) {
-	suggestionRequest := &types.PipelineSuggestionsRequest{
-		RepoRef:  in.RepoRef,
-		Pipeline: in.Pipeline,
-	}
-
-	output, err := c.intelligenceService.Suggest(ctx, suggestionRequest)
-	if err != nil {
-		return nil, fmt.Errorf("suggest pipeline: %w", err)
-	}
-	return output, nil
+	_ context.Context,
+	_ *controllertypes.SuggestPipelineInput,
+) (*controllertypes.SuggestPipelineOutput, error) {
+	return &controllertypes.SuggestPipelineOutput{}, nil
 }
