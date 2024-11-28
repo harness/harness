@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/git/sha"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/rs/zerolog/log"
 )
 
 func NewInMemoryLastCommitCache(
@@ -36,6 +37,10 @@ func NewInMemoryLastCommitCache(
 	return cache.New[CommitEntryKey, *Commit](
 		commitEntryGetter{},
 		cacheDuration)
+}
+
+func logCacheErrFn(ctx context.Context, err error) {
+	log.Ctx(ctx).Warn().Msgf("failed to use cache: %s", err.Error())
 }
 
 func NewRedisLastCommitCache(
@@ -55,7 +60,9 @@ func NewRedisLastCommitCache(
 			return "last_commit:" + hex.EncodeToString(h.Sum(nil))
 		},
 		commitValueCodec{},
-		cacheDuration), nil
+		cacheDuration,
+		logCacheErrFn,
+	), nil
 }
 
 func NoLastCommitCache() cache.Cache[CommitEntryKey, *Commit] {

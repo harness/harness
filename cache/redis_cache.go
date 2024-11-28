@@ -23,6 +23,8 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+type LogErrFn func(context.Context, error)
+
 type Redis[K any, V any] struct {
 	client     redis.UniversalClient
 	duration   time.Duration
@@ -31,6 +33,7 @@ type Redis[K any, V any] struct {
 	codec      Codec[V]
 	countHit   int64
 	countMiss  int64
+	logErrFn   LogErrFn
 }
 
 type Encoder[V any] interface {
@@ -52,6 +55,7 @@ func NewRedis[K any, V any](
 	keyEncoder func(K) string,
 	codec Codec[V],
 	duration time.Duration,
+	logErrFn LogErrFn,
 ) *Redis[K, V] {
 	return &Redis[K, V]{
 		client:     client,
@@ -61,6 +65,7 @@ func NewRedis[K any, V any](
 		codec:      codec,
 		countHit:   0,
 		countMiss:  0,
+		logErrFn:   logErrFn,
 	}
 }
 
@@ -82,8 +87,8 @@ func (c *Redis[K, V]) Get(ctx context.Context, key K) (V, error) {
 			c.countHit++
 			return value, nil
 		}
-	} else if !errors.Is(err, redis.Nil) {
-		return nothing, err
+	} else if !errors.Is(err, redis.Nil) && c.logErrFn != nil {
+		c.logErrFn(ctx, err)
 	}
 
 	c.countMiss++
@@ -94,8 +99,8 @@ func (c *Redis[K, V]) Get(ctx context.Context, key K) (V, error) {
 	}
 
 	err = c.client.Set(ctx, strKey, c.codec.Encode(item), c.duration).Err()
-	if err != nil {
-		return nothing, err
+	if err != nil && c.logErrFn != nil {
+		c.logErrFn(ctx, err)
 	}
 
 	return item, nil
