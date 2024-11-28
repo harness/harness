@@ -58,9 +58,9 @@ func CheckURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool, inter
 	// basic validation for loopback / private network addresses (only sanitary to give user an early error)
 	// IMPORTANT: during webook execution loopback / private network addresses are blocked (handles DNS resolution)
 
-	// if host == "localhost" {
-	// 	return check.NewValidationError("localhost is not allowed.")
-	// }
+	if host == "localhost" {
+		return check.NewValidationError("localhost is not allowed.")
+	}
 
 	if ip := net.ParseIP(host); ip != nil {
 		if !allowLoopback && ip.IsLoopback() {
