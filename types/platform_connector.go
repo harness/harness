@@ -15,9 +15,10 @@
 package types
 
 const (
-	UnknownPlatformConnectorType        PlatformConnectorType = "unknown"
+	UnknownPlatformConnectorType        PlatformConnectorType = "Unknown"
 	ArtifactoryPlatformConnectorType    PlatformConnectorType = "Artifactory"
 	DockerRegistryPlatformConnectorType PlatformConnectorType = "DockerRegistry"
+	NexusPlatformConnectorType          PlatformConnectorType = "Nexus"
 
 	UnknownPlatformConnectorAuthType          PlatformConnectorAuthType = "unknown"
 	UserNamePasswordPlatformConnectorAuthType PlatformConnectorAuthType = "UsernamePassword"
@@ -28,6 +29,7 @@ var (
 	platformConnectorTypeMapping = map[string]PlatformConnectorType{
 		ArtifactoryPlatformConnectorType.String():    ArtifactoryPlatformConnectorType,
 		DockerRegistryPlatformConnectorType.String(): DockerRegistryPlatformConnectorType,
+		NexusPlatformConnectorType.String():          NexusPlatformConnectorType,
 	}
 
 	platformConnectorAuthTypeMapping = map[string]PlatformConnectorAuthType{
@@ -72,8 +74,10 @@ type PlatformConnectorSpec struct {
 	ArtifactoryURL string
 	// DockerRegistryURL is for DockerRegistryPlatformConnectorType
 	DockerRegistryURL string
-	AuthSpec          PlatformConnectorAuthSpec
-	EnabledProxy      bool
+	// NexusRegistryURL is for NexusPlatformConnectorType
+	NexusRegistryURL string
+	AuthSpec         PlatformConnectorAuthSpec
+	EnabledProxy     bool
 }
 
 // PlatformConnectorAuthSpec provide auth details.
@@ -94,6 +98,8 @@ func (c PlatformConnectorSpec) ExtractRegistryURL() string {
 		return c.DockerRegistryURL
 	case ArtifactoryPlatformConnectorType:
 		return c.ArtifactoryURL
+	case NexusPlatformConnectorType:
+		return c.NexusRegistryURL
 	case UnknownPlatformConnectorType:
 		return ""
 	default:
