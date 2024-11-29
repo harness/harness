@@ -92,7 +92,6 @@ const GitspaceListing = () => {
   }
   const [pageConfig, setPageConfig] = useState(pageInit)
   const [filter, setFilter] = useState(filterInit)
-  const [hasFilter, setHasFilter] = useState(!!(pageBrowser.gitspace_states || pageBrowser.gitspace_owner))
 
   const sortInit: sortProps = { sort: (pageBrowser.sort as EnumGitspaceSort) ?? SortByType.LAST_USED, order: 'desc' }
   const [sortConfig, setSortConfig] = useState(sortInit)
@@ -108,10 +107,14 @@ const GitspaceListing = () => {
   function useParsePaginationInfo(responseData: Nullable<Response>) {
     const totalData = useMemo(() => parseInt(responseData?.headers?.get('x-total') || '0'), [responseData])
     const totalPages = useMemo(() => parseInt(responseData?.headers?.get('x-total-pages') || '0'), [responseData])
+    const gitspaceExists = useMemo(
+      () => !!parseInt(responseData?.headers?.get('x-total-no-filters') || '0'),
+      [responseData]
+    )
 
-    return { totalItems: totalData, totalPages }
+    return { totalItems: totalData, totalPages, gitspaceExists }
   }
-  const { totalItems, totalPages } = useParsePaginationInfo(response)
+  const { totalItems, totalPages, gitspaceExists } = useParsePaginationInfo(response)
 
   const handleFilterChange = (key: string, value: any) => {
     const payload: any = { ...filter }
@@ -121,9 +124,6 @@ const GitspaceListing = () => {
       updateQueryParams({ [key]: value })
     } else if (Array.isArray(value)) {
       updateQueryParams({ [key]: value?.toString() })
-    }
-    if (payload.gitspace_states?.length || payload.gitspace_owner) {
-      setHasFilter(true)
     }
   }
 
@@ -149,7 +149,7 @@ const GitspaceListing = () => {
 
   return (
     <>
-      {((data && data?.length !== 0) || hasFilter) && (
+      {((data && data?.length !== 0) || gitspaceExists) && (
         <>
           <Page.Header
             className={standalone ? '' : css.pageHeaderStyles}
@@ -228,9 +228,9 @@ const GitspaceListing = () => {
           )}
         </>
       )}
-      <Container className={data?.length === 0 && !hasFilter ? zeroDayCss.background : css.main}>
+      <Container className={data?.length === 0 && !gitspaceExists ? zeroDayCss.background : css.main}>
         <Layout.Vertical spacing={'large'}>
-          {data && data?.length === 0 && !hasFilter ? (
+          {data && data?.length === 0 && !gitspaceExists ? (
             <CDEHomePage />
           ) : (
             <Page.Body
@@ -248,18 +248,18 @@ const GitspaceListing = () => {
                 ) : null
               }
               noData={{
-                when: () => data?.length === 0 && !hasFilter,
+                when: () => data?.length === 0 && !gitspaceExists,
                 image: noSpace,
                 message: getString('cde.noGitspaces')
               }}>
-              {(data?.length || hasFilter) && (
+              {(data?.length || gitspaceExists) && (
                 <>
                   <Text className={css.totalItems}>
                     {getString('cde.total')}: {totalItems}
                   </Text>
                   <ListGitspaces
                     data={(data as Unknown) || []}
-                    hasFilter={hasFilter}
+                    hasFilter={gitspaceExists}
                     refreshList={refetch}
                     gotoPage={(pageNumber: number) => handlePagination('page', pageNumber + 1)}
                     onPageSizeChange={(newSize: number) => handlePagination('limit', newSize)}
