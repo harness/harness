@@ -19,8 +19,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
+	types2 "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -164,4 +167,17 @@ func ExtractLifecycleCommands(actionType PostAction, devcontainerConfig types.De
 	default:
 		return []string{} // Return empty string if actionType is not recognized
 	}
+}
+
+func ExtractIDECustomizations(
+	ideService ide.IDE,
+	devcontainerConfig types.DevcontainerConfig,
+) map[string]interface{} {
+	var args = make(map[string]interface{})
+	if ideService.Type() == enum.IDETypeVSCodeWeb || ideService.Type() == enum.IDETypeVSCode {
+		if devcontainerConfig.Customizations.ExtractVSCodeSpec() != nil {
+			args[types2.VSCodeCustomization] = *devcontainerConfig.Customizations.ExtractVSCodeSpec()
+		}
+	}
+	return args
 }

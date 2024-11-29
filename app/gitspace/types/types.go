@@ -23,6 +23,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const VSCodeCustomization = "vscode_customization"
+const VSCodeProxyURI = "VSCODE_PROXY_URI"
+
 type GitspaceLogger interface {
 	Info(msg string)
 	Debug(msg string)

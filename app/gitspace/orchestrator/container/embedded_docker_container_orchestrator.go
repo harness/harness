@@ -29,7 +29,6 @@ import (
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
@@ -209,7 +208,7 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 	}
 
 	// Run IDE setup
-	args := ExtractIDEArgs(ideService, resolvedRepoDetails.DevcontainerConfig)
+	args := ExtractIDECustomizations(ideService, resolvedRepoDetails.DevcontainerConfig)
 	if err := RunIDEWithArgs(ctx, exec, ideService, args, logStreamInstance); err != nil {
 		return err
 	}
@@ -530,7 +529,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				args := ExtractIDEArgs(ideService, devcontainerConfig)
+				args := ExtractIDECustomizations(ideService, devcontainerConfig)
 				return RunIDEWithArgs(ctx, exec, ideService, args, gitspaceLogger)
 			},
 			StopOnFailure: true,
@@ -597,16 +596,6 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 			StopOnFailure: false,
 		},
 	}
-}
-
-func ExtractIDEArgs(ideService ide.IDE, devcontainerConfig types.DevcontainerConfig) map[string]interface{} {
-	var args = make(map[string]interface{})
-	if ideService.Type() == enum.IDETypeVSCodeWeb || ideService.Type() == enum.IDETypeVSCode {
-		if devcontainerConfig.Customizations.ExtractVSCodeSpec() != nil {
-			args["customization"] = *devcontainerConfig.Customizations.ExtractVSCodeSpec()
-		}
-	}
-	return args
 }
 
 // setupGitspaceAndIDE initializes Gitspace and IDE by registering and executing the setup steps.

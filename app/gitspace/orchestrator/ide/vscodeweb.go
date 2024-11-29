@@ -156,16 +156,16 @@ func updatePayloadFromArgs(
 	payload *template.RunVSCodeWebPayload,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	if proxyURI, exists := args["VSCODE_PROXY_URI"]; exists {
+	if proxyURI, exists := args[gitspaceTypes.VSCodeProxyURI]; exists {
 		// Perform a type assertion to ensure proxyURI is a string
 		proxyURIStr, ok := proxyURI.(string)
 		if !ok {
-			return fmt.Errorf("VSCODE_PROXY_URI is not a string")
+			return fmt.Errorf("%s is not a string", gitspaceTypes.VSCodeProxyURI)
 		}
 		payload.ProxyURI = proxyURIStr
 	}
 
-	if customization, exists := args["customization"]; exists {
+	if customization, exists := args[gitspaceTypes.VSCodeCustomization]; exists {
 		// Perform a type assertion to ensure customization is a VSCodeCustomizationSpecs
 		vsCodeCustomizationSpecs, ok := customization.(types.VSCodeCustomizationSpecs)
 		if !ok {
