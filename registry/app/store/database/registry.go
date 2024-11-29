@@ -272,48 +272,7 @@ func (r registryDao) GetAll(
 		GROUP BY 1
 	`
 
-	cte := `
-	WITH RECURSIVE registry_hierarchy AS (
-		-- Base case: Start with nodes having registry_parent_id = $1
-		SELECT
-			r.registry_id,
-			r.registry_parent_id,
-			r.registry_root_parent_id,
-			s.space_parent_id AS registry_parent_parent_id,
-			r.registry_name,
-			1::integer AS recursion_level, -- Initialize recursion level
-			ARRAY[r.registry_id] AS path -- Track visited nodes
-		FROM
-			registries r
-		LEFT JOIN
-			spaces s ON r.registry_parent_id = s.space_id -- Fetch registry_parent_parent_id from spaces
-		WHERE
-			r.registry_parent_id = %d
-		UNION 
-		-- Recursive step: Traverse the hierarchy upward to the root
-		SELECT 
-			r.registry_id,
-			r.registry_parent_id,
-			r.registry_root_parent_id,
-			s.space_parent_id AS registry_parent_parent_id,
-			r.registry_name,
-			rh.recursion_level + 1 AS recursion_level, -- Increment recursion level
-			rh.path || r.registry_id -- Append current node to the path
-		FROM
-			registries r
-		LEFT JOIN
-			spaces s ON r.registry_parent_id = s.space_id -- Fetch registry_parent_parent_id
-		INNER JOIN
-			registry_hierarchy rh ON rh.registry_parent_parent_id = r.registry_parent_id -- Match parent to child
-		WHERE
-			NOT r.registry_id = ANY(rh.path) -- Avoid revisiting nodes
-			AND rh.registry_parent_parent_id IS NOT NULL
-			AND rh.recursion_level < 10 -- Limit recursion depth
-	),
-	registry_hierarchy_u AS (
-		SELECT DISTINCT registry_id FROM registry_hierarchy)
-`
-	cte = fmt.Sprintf(cte, parentID)
+	cte := buildCTE(parentID)
 
 	var query sq.SelectBuilder
 	if recursive {
@@ -371,7 +330,10 @@ func (r registryDao) GetAll(
 		return nil, errors.Wrap(err, "Failed to convert query to SQL")
 	}
 
-	sql = cte + sql // add CTE to the query
+	if recursive {
+		// Add CTE to the query
+		sql = cte + sql
+	}
 	// Log the final query
 	finalQuery := util.ConstructQuery(sql, args)
 	log.Ctx(ctx).Debug().
@@ -387,6 +349,80 @@ func (r registryDao) GetAll(
 
 	// Map results to response type
 	return r.mapToRegistryMetadataList(ctx, dst)
+}
+
+// Helper function to construct the Common Table Expression (CTE)
+// This CTE, named `registry_hierarchy`, is designed to recursively traverse
+// a hierarchy of registries starting from a given parent ID (`parentID`).
+// The goal is to create a structure that includes all registries related
+// to the specified parent registry, along with their relationships and levels in the hierarchy.
+//
+// Logic:
+// 1. **Base Case**:
+//    - The query starts by selecting registries whose `registry_parent_id` matches the given `parentID`.
+//    - It initializes the recursion level (`recursion_level`) to `1` and creates a path array (`path`) to track
+//    -	visited nodes.
+//
+// 2. **Recursive Step**:
+//    - For each registry from the base case, the query looks for child registries by joining
+//      the `registry_parent_parent_id` of the current node with the `registry_parent_id` of the next node.
+//    - It increments the recursion level and appends the current registry ID to the path.
+//    - This process repeats for up to 10 levels (`recursion_level < 10`), preventing infinite recursion.
+//
+// 3. **Cycle Prevention**:
+//    - To prevent cycles in the hierarchy, the query ensures that a node is not revisited
+//      by checking that its ID is not already in the `path` array.
+//
+// 4. **Final Distinct Set**:
+//    - After completing the recursive traversal, the resulting CTE (`registry_hierarchy_u`)
+//      selects a distinct list of all registry IDs found in the hierarchy.
+//      This is used to build the final query for fetching data from related tables.
+//
+
+func buildCTE(parentID int64) string {
+	cte := `
+	WITH RECURSIVE registry_hierarchy AS (
+		-- Base case: Start with nodes having registry_parent_id = $1
+		SELECT
+			r.registry_id,
+			r.registry_parent_id,
+			r.registry_root_parent_id,
+			s.space_parent_id AS registry_parent_parent_id,
+			r.registry_name,
+			1::integer AS recursion_level, -- Initialize recursion level
+			ARRAY[r.registry_id] AS path -- Track visited nodes
+		FROM
+			registries r
+		LEFT JOIN
+			spaces s ON r.registry_parent_id = s.space_id -- Fetch registry_parent_parent_id from spaces
+		WHERE
+			r.registry_parent_id = %d
+		UNION 
+		-- Recursive step: Traverse the hierarchy upward to the root
+		SELECT 
+			r.registry_id,
+			r.registry_parent_id,
+			r.registry_root_parent_id,
+			s.space_parent_id AS registry_parent_parent_id,
+			r.registry_name,
+			rh.recursion_level + 1 AS recursion_level, -- Increment recursion level
+			rh.path || r.registry_id -- Append current node to the path
+		FROM
+			registries r
+		LEFT JOIN
+			spaces s ON r.registry_parent_id = s.space_id -- Fetch registry_parent_parent_id
+		INNER JOIN
+			registry_hierarchy rh ON rh.registry_parent_parent_id = r.registry_parent_id -- Match parent to child
+		WHERE
+			NOT r.registry_id = ANY(rh.path) -- Avoid revisiting nodes
+			AND rh.registry_parent_parent_id IS NOT NULL
+			AND rh.recursion_level < 10 -- Limit recursion depth
+	),
+	registry_hierarchy_u AS (
+		SELECT DISTINCT registry_id FROM registry_hierarchy)
+`
+	cte = fmt.Sprintf(cte, parentID)
+	return cte
 }
 
 func (r registryDao) CountAll(
