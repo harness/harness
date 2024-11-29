@@ -61,7 +61,8 @@ function UpstreamProxiesSelect(props: UpstreamProxiesSelectProps): JSX.Element {
         page: 0,
         size: 100,
         package_type: [packageType],
-        type: RepositoryConfigType.UPSTREAM
+        type: RepositoryConfigType.UPSTREAM,
+        recursive: true
       },
       stringifyQueryParamsOptions: {
         arrayFormat: 'comma'
