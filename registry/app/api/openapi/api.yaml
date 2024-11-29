@@ -38,6 +38,7 @@ paths:
         - $ref: "#/components/parameters/sortOrder"
         - $ref: "#/components/parameters/sortField"
         - $ref: "#/components/parameters/searchTerm"
+        - $ref: "#/components/parameters/recursiveParam"
       responses:
         200:
           $ref: "#/components/responses/ListRegistryResponse"
@@ -1661,6 +1662,14 @@ components:
         type: array
         items:
           type: string
+    recursiveParam:
+      name: recursive
+      in: query
+      description: Whether to list registries recursively.
+      required: false
+      schema:
+        type: boolean
+        default: false
     spaceRefPathParam:
       name: space_ref
       in: path

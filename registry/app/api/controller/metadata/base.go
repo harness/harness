@@ -27,7 +27,7 @@ import (
 	"github.com/harness/gitness/registry/app/storage"
 	"github.com/harness/gitness/registry/types"
 
-	"github.com/opencontainers/go-digest"
+	digest "github.com/opencontainers/go-digest"
 	"github.com/rs/zerolog/log"
 )
 
@@ -58,6 +58,7 @@ type RegistryRequestInfo struct {
 	searchTerm   string
 	labels       []string
 	registryIDs  []string
+	recursive    bool
 }
 
 type RegistryRequestParams struct {
@@ -72,6 +73,7 @@ type RegistryRequestParams struct {
 	sortOrder         *api.SortOrder
 	sortField         *api.SortField
 	registryIDsParam  *api.RegistryIdentifierParam
+	recursive         bool
 }
 
 // GetRegistryRequestBaseInfo returns the base info for the registry request
@@ -186,6 +188,7 @@ func (c *APIController) GetRegistryRequestInfo(
 		searchTerm:              searchTerm,
 		labels:                  labels,
 		registryIDs:             registryIDs,
+		recursive:               registryRequestParams.recursive,
 	}, nil
 }
 

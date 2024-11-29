@@ -16,6 +16,8 @@ package util
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/harness/gitness/registry/app/pkg/commons"
 )
@@ -32,4 +34,57 @@ func GetEmptySQLInt32(i int) sql.NullInt32 {
 		return sql.NullInt32{Int32: int32(i), Valid: false}
 	}
 	return sql.NullInt32{Int32: int32(i), Valid: true}
+}
+
+func ConstructQuery(query string, args []interface{}) string {
+	var builder strings.Builder
+	argIndex := 0
+
+	for i := 0; i < len(query); i++ {
+		if query[i] == '?' && argIndex < len(args) {
+			arg := args[argIndex]
+			argIndex++
+
+			// Convert the argument to a SQL-safe string
+			var argStr string
+			switch v := arg.(type) {
+			case string:
+				argStr = fmt.Sprintf("'%s'", strings.ReplaceAll(v, "'", "''")) // Escape single quotes in strings
+			case int, int64, float64:
+				argStr = fmt.Sprintf("%v", v)
+			case bool:
+				argStr = fmt.Sprintf("%t", v)
+			default:
+				argStr = fmt.Sprintf("'%v'", v)
+			}
+
+			builder.WriteString(argStr)
+		} else {
+			builder.WriteByte(query[i])
+		}
+	}
+
+	return builder.String()
+}
+
+// FormatQuery is a helper function to interpolate parameters into the query.
+func FormatQuery(query string, params []interface{}) string {
+	for i, param := range params {
+		placeholder := fmt.Sprintf("$%d", i+1)
+		var value string
+		switch v := param.(type) {
+		case string:
+			value = fmt.Sprintf("'%s'", strings.ReplaceAll(v, "'", "''"))
+		case []string:
+			quotedValues := make([]string, len(v))
+			for i, s := range v {
+				quotedValues[i] = fmt.Sprintf("'%s'", strings.ReplaceAll(s, "'", "''"))
+			}
+			value = fmt.Sprintf("ARRAY[%s]", strings.Join(quotedValues, ", "))
+		default:
+			value = fmt.Sprintf("%v", v)
+		}
+		query = strings.Replace(query, placeholder, value, 1)
+	}
+	return query
 }

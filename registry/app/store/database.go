@@ -366,6 +366,7 @@ type RegistryRepository interface {
 		offset int,
 		search string,
 		repoType string,
+		recursive bool,
 	) (repos *[]RegistryMetadata, err error)
 
 	CountAll(

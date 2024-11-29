@@ -45,6 +45,7 @@ func (c *APIController) GetAllRegistries(
 		sortOrder:         r.Params.SortOrder,
 		sortField:         r.Params.SortField,
 		registryIDsParam:  nil,
+		recursive:         r.Params.Recursive != nil && bool(*r.Params.Recursive), // default is false
 	}
 	regInfo, _ := c.GetRegistryRequestInfo(ctx, *registryRequestParams)
 
@@ -97,6 +98,7 @@ func (c *APIController) GetAllRegistries(
 		regInfo.offset,
 		regInfo.searchTerm,
 		repoType,
+		regInfo.recursive,
 	)
 	count, _ = c.RegistryRepository.CountAll(
 		ctx,

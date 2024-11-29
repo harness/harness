@@ -33,6 +33,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 type registryDao struct {
@@ -231,66 +232,160 @@ func (r registryDao) GetAll(
 	offset int,
 	search string,
 	repoType string,
+	recursive bool,
 ) (repos *[]store.RegistryMetadata, err error) {
-	q := databaseg.Builder.Select(
-		"r.registry_name as reg_identifier,"+
-			" r.registry_description as description , "+
-			"r.registry_package_type as package_type, r.registry_type as type, r.registry_updated_at as last_modified,"+
-			" u.upstream_proxy_config_url as url, COALESCE(t2.artifact_count,0) as artifact_count, "+
-			"COALESCE(t3.size,0) as size , r.registry_labels, COALESCE(t4.download_count,0) as download_count ",
-	).
-		From("registries r").
-		LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
-		LeftJoin(
-			"(SELECT r.registry_id, count(a.image_id) as artifact_count FROM"+
-				" registries r LEFT JOIN images a ON r.registry_id = a.image_registry_id"+
-				" WHERE r.registry_parent_id = ? AND a.image_enabled = true GROUP BY r.registry_id ) as t2"+
-				" ON r.registry_id = t2.registry_id ", parentID,
-		).
-		LeftJoin(
-			"(SELECT r.registry_id , COALESCE(sum(b.blob_size),0) as size FROM "+
-				"registries r LEFT JOIN registry_blobs rb ON r.registry_id = rblob_registry_id "+
-				"LEFT JOIN blobs b ON rblob_blob_id = b.blob_id WHERE r.registry_parent_id = ? "+
-				"GROUP BY r.registry_id) as t3 ON r.registry_id = t3.registry_id ", parentID,
-		).
-		LeftJoin(
-			"(SELECT i.image_registry_id, COUNT(d.download_stat_id) as download_count "+
-				"FROM artifacts a "+
-				" JOIN images i on i.image_id = a.artifact_image_id"+
-				" JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id"+
-				" WHERE i.image_enabled = true GROUP BY i.image_registry_id ) as t4 "+
-				" ON r.registry_id = t4.image_registry_id").
-		Where("r.registry_parent_id = ?", parentID)
+	// Select only required fields
+	selectFields := `
+		r.registry_name AS reg_identifier,
+		COALESCE(r.registry_description, '') AS description, 
+		r.registry_package_type AS package_type,
+		r.registry_type AS type,
+		r.registry_updated_at AS last_modified, 
+		COALESCE(u.upstream_proxy_config_url, '') AS url, 
+		COALESCE(artifact_count.count, 0) AS artifact_count,
+		COALESCE(blob_sizes.total_size, 0) AS size,
+		r.registry_labels,
+		COALESCE(download_stats.download_count, 0) AS download_count
+	`
 
-	if search != "" {
-		q = q.Where("r.registry_name LIKE ?", "%"+search+"%")
-	}
+	// Subqueries with optimizations for reduced joins and grouping
+	artifactCountSubquery := `
+		SELECT image_registry_id, COUNT(image_id) AS count
+		FROM images
+		WHERE image_enabled = TRUE
+		GROUP BY 1
+	`
 
-	if len(packageTypes) > 0 {
-		q = q.Where(sq.Eq{"r.registry_package_type": packageTypes})
-	}
-	if repoType != "" {
-		q = q.Where("r.registry_type = ?", repoType)
-	}
+	blobSizesSubquery := `
+		SELECT rblob_registry_id AS rblob_registry_id, SUM(b.blob_size) AS total_size
+		FROM registry_blobs rb
+		JOIN blobs b ON rb.rblob_blob_id = b.blob_id
+		GROUP BY 1
+	`
 
-	if sortByField == "artifact_count" || sortByField == "size" || sortByField == "download_count" {
-		q = q.OrderBy(sortByField + " " + sortByOrder).Limit(uint64(limit)).Offset(uint64(offset))
+	downloadStatsSubquery := `
+		SELECT i.image_registry_id AS registry_id, COUNT(d.download_stat_id) AS download_count
+		FROM download_stats d
+		JOIN artifacts a ON d.download_stat_artifact_id = a.artifact_id
+		JOIN images i ON a.artifact_image_id = i.image_id
+		WHERE i.image_enabled = TRUE
+		GROUP BY 1
+	`
+
+	cte := `
+	WITH RECURSIVE registry_hierarchy AS (
+		-- Base case: Start with nodes having registry_parent_id = $1
+		SELECT
+			r.registry_id,
+			r.registry_parent_id,
+			r.registry_root_parent_id,
+			s.space_parent_id AS registry_parent_parent_id,
+			r.registry_name,
+			1::integer AS recursion_level, -- Initialize recursion level
+			ARRAY[r.registry_id] AS path -- Track visited nodes
+		FROM
+			registries r
+		LEFT JOIN
+			spaces s ON r.registry_parent_id = s.space_id -- Fetch registry_parent_parent_id from spaces
+		WHERE
+			r.registry_parent_id = %d
+		UNION 
+		-- Recursive step: Traverse the hierarchy upward to the root
+		SELECT 
+			r.registry_id,
+			r.registry_parent_id,
+			r.registry_root_parent_id,
+			s.space_parent_id AS registry_parent_parent_id,
+			r.registry_name,
+			rh.recursion_level + 1 AS recursion_level, -- Increment recursion level
+			rh.path || r.registry_id -- Append current node to the path
+		FROM
+			registries r
+		LEFT JOIN
+			spaces s ON r.registry_parent_id = s.space_id -- Fetch registry_parent_parent_id
+		INNER JOIN
+			registry_hierarchy rh ON rh.registry_parent_parent_id = r.registry_parent_id -- Match parent to child
+		WHERE
+			NOT r.registry_id = ANY(rh.path) -- Avoid revisiting nodes
+			AND rh.registry_parent_parent_id IS NOT NULL
+			AND rh.recursion_level < 10 -- Limit recursion depth
+	),
+	registry_hierarchy_u AS (
+		SELECT DISTINCT registry_id FROM registry_hierarchy)
+`
+	cte = fmt.Sprintf(cte, parentID)
+
+	var query sq.SelectBuilder
+	if recursive {
+		query = databaseg.Builder.
+			Select(selectFields).
+			From("registry_hierarchy_u rh").
+			InnerJoin("registries r ON rh.registry_id = r.registry_id").
+			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
+			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
+				artifactCountSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id", blobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id", downloadStatsSubquery))
 	} else {
-		q = q.OrderBy("r.registry_" + sortByField + " " + sortByOrder).
-			Limit(uint64(limit)).Offset(uint64(offset))
+		query = databaseg.Builder.
+			Select(selectFields).
+			From("registries r").
+			LeftJoin("upstream_proxy_configs u ON r.registry_id = u.upstream_proxy_config_registry_id").
+			LeftJoin(fmt.Sprintf("(%s) AS artifact_count ON r.registry_id = artifact_count.image_registry_id",
+				artifactCountSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS blob_sizes ON r.registry_id = blob_sizes.rblob_registry_id", blobSizesSubquery)).
+			LeftJoin(fmt.Sprintf("(%s) AS download_stats ON r.registry_id = download_stats.registry_id", downloadStatsSubquery)).
+			Where("r.registry_parent_id = ?", parentID)
 	}
-	sql, args, err := q.ToSql()
+	// Apply search filter
+	if search != "" {
+		query = query.Where("r.registry_name LIKE ?", "%"+search+"%")
+	}
+
+	// Apply package types filter
+	if len(packageTypes) > 0 {
+		query = query.Where(sq.Eq{"r.registry_package_type": packageTypes})
+	}
+
+	// Apply repository type filter
+	if repoType != "" {
+		query = query.Where("r.registry_type = ?", repoType)
+	}
+
+	// Sorting and pagination
+	validSortFields := map[string]bool{
+		"artifact_count": true,
+		"size":           true,
+		"download_count": true,
+	}
+	if validSortFields[sortByField] {
+		query = query.OrderBy(fmt.Sprintf("%s %s", sortByField, sortByOrder))
+	} else {
+		query = query.OrderBy(fmt.Sprintf("r.registry_%s %s", sortByField, sortByOrder))
+	}
+	query = query.Limit(uint64(limit)).Offset(uint64(offset))
+
+	// Convert query to SQL
+	sql, args, err := query.ToSql()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
+		return nil, errors.Wrap(err, "Failed to convert query to SQL")
 	}
 
+	sql = cte + sql // add CTE to the query
+	// Log the final query
+	finalQuery := util.ConstructQuery(sql, args)
+	log.Ctx(ctx).Debug().
+		Str("sql", finalQuery).
+		Msg("Executing query")
+
+	// Execute query
 	db := dbtx.GetAccessor(ctx, r.db)
-
 	dst := []*RegistryMetadataDB{}
-	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, databaseg.ProcessSQLErrorf(ctx, err, "Failed executing query")
 	}
 
+	// Map results to response type
 	return r.mapToRegistryMetadataList(ctx, dst)
 }
 
