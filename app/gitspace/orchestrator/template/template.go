@@ -63,11 +63,10 @@ type SetupVSCodeWebPayload struct {
 }
 
 type SetupUserPayload struct {
-	Username     string
-	AccessKey    string
-	AccessType   enum.GitspaceAccessType
-	HomeDir      string
-	OSInfoScript string
+	Username   string
+	AccessKey  string
+	AccessType enum.GitspaceAccessType
+	HomeDir    string
 }
 
 type SetupSSHServerPayload struct {

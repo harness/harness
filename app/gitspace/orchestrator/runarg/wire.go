@@ -20,8 +20,12 @@ import (
 
 var WireSet = wire.NewSet(
 	ProvideStaticProvider,
+	ProvideResolver,
 )
 
-func ProvideStaticProvider() (Provider, error) {
-	return NewStaticProvider()
+func ProvideStaticProvider(resolver *Resolver) (Provider, error) {
+	return NewStaticProvider(resolver)
+}
+func ProvideResolver() (*Resolver, error) {
+	return NewResolver()
 }

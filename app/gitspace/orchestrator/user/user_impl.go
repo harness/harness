@@ -40,28 +40,25 @@ func (u *ServiceImpl) Manage(
 	exec *devcontainer.Exec,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	osInfoScript := common.GetOSInfoScript()
 	script, err := template.GenerateScriptFromTemplate(
 		templateManagerUser, &template.SetupUserPayload{
-			Username:     exec.UserIdentifier,
-			AccessKey:    exec.AccessKey,
-			AccessType:   exec.AccessType,
-			HomeDir:      exec.HomeDir,
-			OSInfoScript: osInfoScript,
+			Username:   exec.RemoteUser,
+			AccessKey:  exec.AccessKey,
+			AccessType: exec.AccessType,
+			HomeDir:    exec.HomeDir,
 		})
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate scipt to manager user from template %s: %w", templateManagerUser, err)
 	}
 
-	gitspaceLogger.Info("Setting up user inside container")
-	gitspaceLogger.Info("Managing user output...")
+	gitspaceLogger.Info("Configuring user directory and credentials inside container")
 	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger)
 	if err != nil {
 		return fmt.Errorf("failed to setup user: %w", err)
 	}
 
-	gitspaceLogger.Info("Successfully setup user")
+	gitspaceLogger.Info("Successfully configured the user directory and credentials.")
 
 	return nil
 }

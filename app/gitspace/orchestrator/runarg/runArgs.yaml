@@ -2,36 +2,36 @@
 - name: --add-host
   short_hand:
   supported: true
-  blocked_values: {}
-  allowed_values: {}
+  blocked_values: { }
+  allowed_values: { }
   allow_multiple_occurrences: true
 
 - name: --annotation
   short_hand:
   supported: true
-  blocked_values: {}
-  allowed_values: {}
+  blocked_values: { }
+  allowed_values: { }
   allow_multiple_occurrences: true
 
 - name: --attach
   short_hand: -a
   supported: false
-  blocked_values: {}
-  allowed_values: {}
+  blocked_values: { }
+  allowed_values: { }
   allow_multiple_occurrences: true
 
 - name: --blkio-weight
   short_hand:
   supported: true
-  blocked_values: {}
-  allowed_values: {}
+  blocked_values: { }
+  allowed_values: { }
   allow_multiple_occurrences: false
 
 - name: --blkio-weight-device
   short_hand:
   supported: false
-  blocked_values: {}
-  allowed_values: {}
+  blocked_values: { }
+  allowed_values: { }
   allow_multiple_occurrences: true
 
 - name: --cap-add
@@ -394,15 +394,16 @@
 - name: --label
   short_hand: -l
   supported: true
-  blocked_values: { }
+  blocked_values:
+    ^gitspace\.remote\.user=: true
   allowed_values: { }
   allow_multiple_occurrences: true
 
 - name: --label-file
   short_hand:
   supported: false
-  blocked_values: {}
-  allowed_values: {}
+  blocked_values: { }
+  allowed_values: { }
   allow_multiple_occurrences: true
 
 - name: --link
@@ -486,8 +487,8 @@
   short_hand:
   supported: true
   blocked_values:
-    host: true
-    none: true
+    ^host$: true
+    ^none$: true
   allowed_values: { }
   allow_multiple_occurrences: false
 

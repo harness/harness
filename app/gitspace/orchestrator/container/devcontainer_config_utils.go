@@ -17,11 +17,12 @@ package container
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
-	types2 "github.com/harness/gitness/app/gitspace/types"
+	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -40,11 +41,11 @@ func ExtractRunArgs(
 	}
 
 	var runArgsMap = make(map[types.RunArg]*types.RunArgValue)
-	primaryLoopCounter := 0
-	for primaryLoopCounter < len(runArgsRaw) {
-		currentArg := runArgsRaw[primaryLoopCounter]
+	argLoopCounter := 0
+	for argLoopCounter < len(runArgsRaw) {
+		currentArg := runArgsRaw[argLoopCounter]
 		if currentArg == "" || !isArg(currentArg) {
-			primaryLoopCounter++
+			argLoopCounter++
 			continue
 		}
 
@@ -53,13 +54,13 @@ func ExtractRunArgs(
 
 		currentRunArgDefinition, isSupportedArg := supportedRunArgsMap[types.RunArg(argKey)]
 		if !isSupportedArg {
-			primaryLoopCounter++
+			argLoopCounter++
 			continue
 		}
-		updatedPrimaryLoopCounter, allowedValues, isAnyValueBlocked := getValues(runArgsRaw, argParts,
-			primaryLoopCounter, currentRunArgDefinition)
+		updatedArgLoopCounter, allowedValues, isAnyValueBlocked := getValues(runArgsRaw, argParts, argLoopCounter,
+			currentRunArgDefinition)
 
-		primaryLoopCounter = updatedPrimaryLoopCounter
+		argLoopCounter = updatedArgLoopCounter
 
 		if isAnyValueBlocked && len(allowedValues) == 0 {
 			continue
@@ -84,45 +85,69 @@ func ExtractRunArgs(
 func getValues(
 	runArgs []string,
 	argParts []string,
-	primaryLoopCounter int,
+	argLoopCounter int,
 	currentRunArgDefinition types.RunArgDefinition,
 ) (int, []string, bool) {
 	values := make([]string, 0)
 	if len(argParts) > 1 {
-		values = append(values, argParts[1])
-		primaryLoopCounter++
+		values = append(values, strings.TrimSpace(argParts[1]))
+		argLoopCounter++
 	} else {
-		var secondaryLoopCounter = primaryLoopCounter + 1
-		for secondaryLoopCounter < len(runArgs) {
-			currentValue := runArgs[secondaryLoopCounter]
+		var valueLoopCounter = argLoopCounter + 1
+		for valueLoopCounter < len(runArgs) {
+			currentValue := runArgs[valueLoopCounter]
 			if isArg(currentValue) {
 				break
 			}
-			values = append(values, currentValue)
-			secondaryLoopCounter++
+			values = append(values, strings.TrimSpace(currentValue))
+			valueLoopCounter++
 		}
-		primaryLoopCounter = secondaryLoopCounter
+		argLoopCounter = valueLoopCounter
 	}
 	allowedValues, isAnyValueBlocked := filterAllowedValues(values, currentRunArgDefinition)
-	return primaryLoopCounter, allowedValues, isAnyValueBlocked
+	return argLoopCounter, allowedValues, isAnyValueBlocked
 }
 
-func filterAllowedValues(values []string, currentRunArgDefinition types.RunArgDefinition) ([]string, bool) {
+func filterAllowedValues(
+	values []string,
+	currentRunArgDefinition types.RunArgDefinition,
+) ([]string, bool) {
 	isAnyValueBlocked := false
 	allowedValues := make([]string, 0)
 	for _, v := range values {
 		switch {
 		case len(currentRunArgDefinition.AllowedValues) > 0:
-			if _, ok := currentRunArgDefinition.AllowedValues[v]; ok {
-				allowedValues = append(allowedValues, v)
-			} else {
-				isAnyValueBlocked = true
+			for allowedValue := range currentRunArgDefinition.AllowedValues {
+				matches, err := regexp.MatchString(allowedValue, v)
+				if err != nil {
+					log.Warn().Err(err).Msgf("error checking allowed values for RunArg %s value %s",
+						currentRunArgDefinition.Name, v)
+					continue
+				}
+				if matches {
+					allowedValues = append(allowedValues, v)
+				} else {
+					log.Warn().Msgf("Value %s for runArg %s not allowed", v, currentRunArgDefinition.Name)
+					isAnyValueBlocked = true
+				}
 			}
 		case len(currentRunArgDefinition.BlockedValues) > 0:
-			if _, ok := currentRunArgDefinition.BlockedValues[v]; !ok {
+			var isValueBlocked = false
+			for blockedValue := range currentRunArgDefinition.BlockedValues {
+				matches, err := regexp.MatchString(blockedValue, v)
+				if err != nil {
+					log.Warn().Err(err).Msgf("error checking blocked values for RunArg %s value %s",
+						currentRunArgDefinition.Name, v)
+					continue
+				}
+				if matches {
+					log.Warn().Msgf("Value %s for runArg %s not allowed", v, currentRunArgDefinition.Name)
+					isValueBlocked = true
+					isAnyValueBlocked = true
+				}
+			}
+			if !isValueBlocked {
 				allowedValues = append(allowedValues, v)
-			} else {
-				isAnyValueBlocked = true
 			}
 		default:
 			allowedValues = append(allowedValues, v)
@@ -176,7 +201,7 @@ func ExtractIDECustomizations(
 	var args = make(map[string]interface{})
 	if ideService.Type() == enum.IDETypeVSCodeWeb || ideService.Type() == enum.IDETypeVSCode {
 		if devcontainerConfig.Customizations.ExtractVSCodeSpec() != nil {
-			args[types2.VSCodeCustomization] = *devcontainerConfig.Customizations.ExtractVSCodeSpec()
+			args[gitspaceTypes.VSCodeCustomization] = *devcontainerConfig.Customizations.ExtractVSCodeSpec()
 		}
 	}
 	return args

@@ -19,6 +19,7 @@ type StartResponse struct {
 	ContainerName    string
 	PublishedPorts   map[int]string
 	AbsoluteRepoPath string
+	RemoteUser       string
 }
 
 type PostAction string

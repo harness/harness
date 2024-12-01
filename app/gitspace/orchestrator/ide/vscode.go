@@ -53,7 +53,7 @@ func (v *VSCode) Setup(
 	osInfoScript := common.GetOSInfoScript()
 	sshServerScript, err := template.GenerateScriptFromTemplate(
 		templateSetupSSHServer, &template.SetupSSHServerPayload{
-			Username:     exec.UserIdentifier,
+			Username:     exec.RemoteUser,
 			AccessType:   exec.AccessType,
 			OSInfoScript: osInfoScript,
 		})

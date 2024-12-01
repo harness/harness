@@ -220,7 +220,7 @@ func generateIDEURL(
 			Host:   "", // Empty since we include the host and port in the path
 			Path: fmt.Sprintf(
 				"ssh-remote+%s@%s:%s",
-				gitspaceConfig.GitspaceUser.Identifier,
+				startResponse.RemoteUser,
 				host,
 				filepath.Join(forwardedPort, relativeRepoPath),
 			),

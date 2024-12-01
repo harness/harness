@@ -47,8 +47,8 @@ config_file='/etc/ssh/sshd_config'
 
 grep -q "^AllowUsers" $config_file
 if [ $? -eq 0 ]; then
-    # If AllowUsers exists, add the user to it
-    sed -i "/^AllowUsers/ s/$/ $username/" $config_file
+   # If AllowUsers exists, overwrite all existing users with new user
+    sed -i "s/^AllowUsers.*/AllowUsers $username/" $config_file
 else
     # Otherwise, add a new AllowUsers line
     echo "AllowUsers $username" >> $config_file
@@ -67,9 +67,14 @@ echo "AuthorizedKeysFile	.ssh/authorized_keys" >> $config_file
 echo "PubkeyAuthentication yes" >> $config_file
 else
 # Ensure password authentication is enabled
-sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' $config_file
 if ! grep -q "^PasswordAuthentication yes" $config_file; then
     echo "PasswordAuthentication yes" >> $config_file
+fi
+if ! grep -q "^PermitEmptyPasswords yes" $config_file; then
+    echo "PermitEmptyPasswords yes" >> $config_file
+fi
+if ! grep -q "^PermitRootLogin yes" $config_file; then
+    echo "PermitRootLogin yes" >> $config_file
 fi
 fi
 

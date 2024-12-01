@@ -124,6 +124,10 @@ func (l *LogStreamInstance) Debug(msg string) {
 	l.Write("DEBUG: " + msg) //nolint:errcheck
 }
 
+func (l *LogStreamInstance) Warn(msg string) {
+	l.Write("WARN: " + msg) //nolint:errcheck
+}
+
 func (l *LogStreamInstance) Error(msg string, err error) {
 	l.Write("ERROR: " + msg + ": " + err.Error()) //nolint:errcheck
 }

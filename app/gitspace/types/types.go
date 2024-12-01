@@ -29,6 +29,7 @@ const VSCodeProxyURI = "VSCODE_PROXY_URI"
 type GitspaceLogger interface {
 	Info(msg string)
 	Debug(msg string)
+	Warn(msg string)
 	Error(msg string, err error)
 }
 

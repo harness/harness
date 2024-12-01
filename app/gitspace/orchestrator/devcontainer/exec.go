@@ -34,12 +34,12 @@ const RootUser = "root"
 const ErrMsgTCP = "unable to upgrade to tcp, received 200"
 
 type Exec struct {
-	ContainerName  string
-	DockerClient   *client.Client
-	HomeDir        string
-	UserIdentifier string
-	AccessKey      string
-	AccessType     enum.GitspaceAccessType
+	ContainerName string
+	DockerClient  *client.Client
+	HomeDir       string
+	RemoteUser    string
+	AccessKey     string
+	AccessType    enum.GitspaceAccessType
 }
 
 type execResult struct {
@@ -56,7 +56,7 @@ func (e *Exec) ExecuteCommand(
 	workingDir string,
 	outputCh chan []byte, // channel to stream output as []byte
 ) error {
-	user := e.UserIdentifier
+	user := e.RemoteUser
 	if root {
 		user = RootUser
 	}

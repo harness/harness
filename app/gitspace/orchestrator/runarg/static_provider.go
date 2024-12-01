@@ -16,40 +16,18 @@ package runarg
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/types"
-
-	"gopkg.in/yaml.v3"
-
-	_ "embed"
 )
 
 var _ Provider = (*StaticProvider)(nil)
-
-//go:embed runArgs.yaml
-var supportedRunArgsRaw []byte
 
 type StaticProvider struct {
 	supportedRunArgsMap map[types.RunArg]types.RunArgDefinition
 }
 
-func NewStaticProvider() (Provider, error) {
-	allRunArgs := make([]types.RunArgDefinition, 0)
-	err := yaml.Unmarshal(supportedRunArgsRaw, &allRunArgs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal runArgs.yaml: %w", err)
-	}
-	argsMap := make(map[types.RunArg]types.RunArgDefinition)
-	for _, arg := range allRunArgs {
-		if arg.Supported {
-			argsMap[arg.Name] = arg
-			if arg.ShortHand != "" {
-				argsMap[arg.ShortHand] = arg
-			}
-		}
-	}
-	return &StaticProvider{supportedRunArgsMap: argsMap}, nil
+func NewStaticProvider(resolver *Resolver) (Provider, error) {
+	return &StaticProvider{supportedRunArgsMap: resolver.ResolveSupportedRunArgs()}, nil
 }
 
 // ProvideSupportedRunArgs provides a static map of supported run args.

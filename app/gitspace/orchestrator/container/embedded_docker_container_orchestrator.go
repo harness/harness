@@ -159,11 +159,8 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 		return nil, fmt.Errorf("gitspace %s is in a bad state: %s", containerName, state)
 	}
 
-	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
-	codeRepoDir := filepath.Join(homeDir, resolvedRepoDetails.RepoName)
-
 	// Step 5: Retrieve container information and return response
-	return GetContainerResponse(ctx, dockerClient, containerName, infra.GitspacePortMappings, codeRepoDir)
+	return GetContainerResponse(ctx, dockerClient, containerName, infra.GitspacePortMappings, resolvedRepoDetails.RepoName)
 }
 
 // startStoppedGitspace starts the Gitspace container if it was stopped.
@@ -179,25 +176,33 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 	containerName := GetGitspaceContainerName(gitspaceConfig)
 
 	if err != nil {
-		return fmt.Errorf("error getting log stream for gitspace ID %d: %w", gitspaceConfig.ID, err)
+		return fmt.Errorf("error getting log stream for gitspace instance %s: %w",
+			gitspaceConfig.GitspaceInstance.Identifier, err)
 	}
 	defer e.flushLogStream(logStreamInstance, gitspaceConfig.ID)
+
+	remoteUser, err := GetRemoteUserFromContainerLabel(ctx, containerName, dockerClient)
+	if err != nil {
+		return fmt.Errorf("error getting remote user for gitspace instance %s: %w",
+			gitspaceConfig.GitspaceInstance.Identifier, err)
+	}
+
+	homeDir := GetUserHomeDir(remoteUser)
 
 	startErr := ManageContainer(ctx, ContainerActionStart, containerName, dockerClient, logStreamInstance)
 	if startErr != nil {
 		return startErr
 	}
 
-	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
 	codeRepoDir := filepath.Join(homeDir, resolvedRepoDetails.RepoName)
 
 	exec := &devcontainer.Exec{
-		ContainerName:  containerName,
-		DockerClient:   dockerClient,
-		HomeDir:        homeDir,
-		UserIdentifier: gitspaceConfig.GitspaceUser.Identifier,
-		AccessKey:      accessKey,
-		AccessType:     gitspaceConfig.GitspaceInstance.AccessType,
+		ContainerName: containerName,
+		DockerClient:  dockerClient,
+		HomeDir:       homeDir,
+		RemoteUser:    remoteUser,
+		AccessKey:     accessKey,
+		AccessType:    gitspaceConfig.GitspaceInstance.AccessType,
 	}
 
 	// Set up git credentials if needed
@@ -376,14 +381,10 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	imageAuthMap map[string]gitspaceTypes.DockerRegistryAuth,
 ) error {
-	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
 	containerName := GetGitspaceContainerName(gitspaceConfig)
 
 	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
-	imageName := devcontainerConfig.Image
-	if imageName == "" {
-		imageName = defaultBaseImage
-	}
+	imageName := GetImage(devcontainerConfig, defaultBaseImage)
 
 	runArgsMap, err := ExtractRunArgsWithLogging(ctx, gitspaceConfig.SpaceID, e.runArgProvider,
 		devcontainerConfig.RunArgs, gitspaceLogger)
@@ -395,6 +396,12 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	if err := PullImage(ctx, imageName, dockerClient, runArgsMap, gitspaceLogger, imageAuthMap); err != nil {
 		return err
 	}
+
+	metadataFromImage, err := ExtractMetadataFromImage(ctx, imageName, dockerClient)
+	if err != nil {
+		return err
+	}
+
 	portMappings := infrastructure.GitspacePortMappings
 	forwardPorts := ExtractForwardPorts(devcontainerConfig)
 	if len(forwardPorts) > 0 {
@@ -412,6 +419,15 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	if len(environment) > 0 {
 		gitspaceLogger.Info(fmt.Sprintf("Setting Environment : %v", environment))
 	}
+
+	containerUser := GetContainerUser(runArgsMap, devcontainerConfig, metadataFromImage)
+	remoteUser := GetRemoteUser(devcontainerConfig, metadataFromImage, containerUser)
+
+	homeDir := GetUserHomeDir(remoteUser)
+
+	gitspaceLogger.Info(fmt.Sprintf("Container user: %s", containerUser))
+	gitspaceLogger.Info(fmt.Sprintf("Remote user: %s", remoteUser))
+
 	// Create the container
 	err = CreateContainer(
 		ctx,
@@ -425,6 +441,8 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		portMappings,
 		environment,
 		runArgsMap,
+		containerUser,
+		remoteUser,
 	)
 	if err != nil {
 		return err
@@ -437,12 +455,12 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 
 	// Setup and run commands
 	exec := &devcontainer.Exec{
-		ContainerName:  containerName,
-		DockerClient:   dockerClient,
-		HomeDir:        homeDir,
-		UserIdentifier: gitspaceConfig.GitspaceUser.Identifier,
-		AccessKey:      *gitspaceConfig.GitspaceInstance.AccessKey,
-		AccessType:     gitspaceConfig.GitspaceInstance.AccessType,
+		ContainerName: containerName,
+		DockerClient:  dockerClient,
+		HomeDir:       homeDir,
+		RemoteUser:    remoteUser,
+		AccessKey:     *gitspaceConfig.GitspaceInstance.AccessKey,
+		AccessType:    gitspaceConfig.GitspaceInstance.AccessType,
 	}
 
 	if err := e.setupGitspaceAndIDE(

@@ -18,10 +18,14 @@ import (
 	"path/filepath"
 
 	"github.com/harness/gitness/types"
+
+	types2 "github.com/docker/docker/api/types"
 )
 
 const (
-	linuxHome = "/home"
+	linuxHome               = "/home"
+	deprecatedRemoteUser    = "harness"
+	gitspaceRemoteUserLabel = "gitspace.remote.user"
 )
 
 func GetGitspaceContainerName(config types.GitspaceConfig) string {
@@ -29,5 +33,56 @@ func GetGitspaceContainerName(config types.GitspaceConfig) string {
 }
 
 func GetUserHomeDir(userIdentifier string) string {
+	if userIdentifier == "root" {
+		return "/root"
+	}
 	return filepath.Join(linuxHome, userIdentifier)
+}
+
+func GetImage(devcontainerConfig types.DevcontainerConfig, defaultBaseImage string) string {
+	imageName := devcontainerConfig.Image
+	if imageName == "" {
+		imageName = defaultBaseImage
+	}
+	return imageName
+}
+
+func GetContainerUser(
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+	devcontainerConfig types.DevcontainerConfig,
+	metadataFromImage map[string]any,
+) string {
+	if containerUser := getUser(runArgsMap); containerUser != "" {
+		return containerUser
+	}
+	if devcontainerConfig.ContainerUser != "" {
+		return devcontainerConfig.ContainerUser
+	}
+	if containerUser, ok := metadataFromImage["containerUser"].(string); ok {
+		return containerUser
+	}
+	return ""
+}
+
+func ExtractRemoteUserFromLabels(inspectResp types2.ContainerJSON) string {
+	remoteUser := deprecatedRemoteUser
+
+	if remoteUserValue, ok := inspectResp.Config.Labels[gitspaceRemoteUserLabel]; ok {
+		remoteUser = remoteUserValue
+	}
+	return remoteUser
+}
+
+func GetRemoteUser(
+	devcontainerConfig types.DevcontainerConfig,
+	metadataFromImage map[string]any,
+	containerUser string,
+) string {
+	if devcontainerConfig.RemoteUser != "" {
+		return devcontainerConfig.RemoteUser
+	}
+	if remoteUser, ok := metadataFromImage["remoteUser"].(string); ok {
+		return remoteUser
+	}
+	return containerUser
 }

@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path/filepath"
 	goruntime "runtime"
 	"strconv"
 	"strings"
@@ -136,6 +137,8 @@ func CreateContainer(
 	portMappings map[int]*types.PortMapping,
 	env []string,
 	runArgsMap map[types.RunArg]*types.RunArgValue,
+	containerUser string,
+	remoteUser string,
 ) error {
 	exposedPorts, portBindings := applyPortMappings(portMappings)
 
@@ -161,6 +164,10 @@ func CreateContainer(
 		cmd = []string{"-c", "trap 'exit 0' 15; sleep infinity & wait $!"}
 	}
 
+	labels := getLabels(runArgsMap)
+	// Setting the following so that it can be read later to form gitspace URL.
+	labels[gitspaceRemoteUserLabel] = remoteUser
+
 	// Create the container
 	containerConfig := &container.Config{
 		Hostname:     getHostname(runArgsMap),
@@ -170,12 +177,12 @@ func CreateContainer(
 		Entrypoint:   entrypoint,
 		Cmd:          cmd,
 		ExposedPorts: exposedPorts,
-		Labels:       getLabels(runArgsMap),
+		Labels:       labels,
 		Healthcheck:  healthCheckConfig,
 		MacAddress:   getMACAddress(runArgsMap),
 		StopSignal:   getStopSignal(runArgsMap),
 		StopTimeout:  stopTimeout,
-		User:         getUser(runArgsMap),
+		User:         containerUser,
 	}
 
 	_, err = dockerClient.ContainerCreate(ctx, containerConfig, hostConfig, nil, nil, containerName)
@@ -278,10 +285,10 @@ func GetContainerInfo(
 	containerName string,
 	dockerClient *client.Client,
 	portMappings map[int]*types.PortMapping,
-) (string, map[int]string, error) {
+) (string, map[int]string, string, error) {
 	inspectResp, err := dockerClient.ContainerInspect(ctx, containerName)
 	if err != nil {
-		return "", nil, fmt.Errorf("could not inspect container %s: %w", containerName, err)
+		return "", nil, "", fmt.Errorf("could not inspect container %s: %w", containerName, err)
 	}
 
 	usedPorts := make(map[int]string)
@@ -289,7 +296,7 @@ func GetContainerInfo(
 		portRaw := strings.Split(string(portAndProtocol), "/")[0]
 		port, conversionErr := strconv.Atoi(portRaw)
 		if conversionErr != nil {
-			return "", nil, fmt.Errorf("could not convert port %s to int: %w", portRaw, conversionErr)
+			return "", nil, "", fmt.Errorf("could not convert port %s to int: %w", portRaw, conversionErr)
 		}
 
 		if portMappings[port] != nil {
@@ -297,7 +304,34 @@ func GetContainerInfo(
 		}
 	}
 
-	return inspectResp.ID, usedPorts, nil
+	remoteUser := ExtractRemoteUserFromLabels(inspectResp)
+
+	return inspectResp.ID, usedPorts, remoteUser, nil
+}
+
+func ExtractMetadataFromImage(
+	ctx context.Context,
+	imageName string,
+	dockerClient *client.Client,
+) (map[string]any, error) {
+	imageInspect, _, err := dockerClient.ImageInspectWithRaw(ctx, imageName)
+	if err != nil {
+		return nil, fmt.Errorf("error while inspecting image: %w", err)
+	}
+	metadataMap := map[string]any{}
+	if metadata, ok := imageInspect.Config.Labels["devcontainer.metadata"]; ok {
+		dst := []map[string]any{}
+		unmarshalErr := json.Unmarshal([]byte(metadata), &dst)
+		if unmarshalErr != nil {
+			return nil, fmt.Errorf("error while unmarshalling metadata: %w", err)
+		}
+		for _, values := range dst {
+			for k, v := range values {
+				metadataMap[k] = v
+			}
+		}
+	}
+	return metadataMap, nil
 }
 
 func PullImage(
@@ -429,7 +463,6 @@ func ExtractRunArgsWithLogging(
 	runArgsRaw []string,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) (map[types.RunArg]*types.RunArgValue, error) {
-	gitspaceLogger.Info("Extracting runsArgs")
 	runArgsMap, err := ExtractRunArgs(ctx, spaceID, runArgProvider, runArgsRaw)
 	if err != nil {
 		return nil, logStreamWrapError(gitspaceLogger, "Error while extracting runArgs", err)
@@ -439,7 +472,9 @@ func ExtractRunArgsWithLogging(
 		for key, value := range runArgsMap {
 			st = fmt.Sprintf("%s%s: %s\n", st, key, value)
 		}
-		gitspaceLogger.Info(fmt.Sprintf("Extracted following runArgs\n%v", st))
+		gitspaceLogger.Info(fmt.Sprintf("Using the following runArgs\n%v", st))
+	} else {
+		gitspaceLogger.Info("No runArgs found")
 	}
 	return runArgsMap, nil
 }
@@ -450,18 +485,36 @@ func GetContainerResponse(
 	dockerClient *client.Client,
 	containerName string,
 	portMappings map[int]*types.PortMapping,
-	codeRepoDir string,
+	repoName string,
 ) (*StartResponse, error) {
-	id, ports, err := GetContainerInfo(ctx, containerName, dockerClient, portMappings)
+	id, ports, remoteUser, err := GetContainerInfo(ctx, containerName, dockerClient, portMappings)
 	if err != nil {
 		return nil, err
 	}
+
+	homeDir := GetUserHomeDir(remoteUser)
+	codeRepoDir := filepath.Join(homeDir, repoName)
+
 	return &StartResponse{
 		ContainerID:      id,
 		ContainerName:    containerName,
 		PublishedPorts:   ports,
 		AbsoluteRepoPath: codeRepoDir,
+		RemoteUser:       remoteUser,
 	}, nil
+}
+
+func GetRemoteUserFromContainerLabel(
+	ctx context.Context,
+	containerName string,
+	dockerClient *client.Client,
+) (string, error) {
+	inspectResp, err := dockerClient.ContainerInspect(ctx, containerName)
+	if err != nil {
+		return "", fmt.Errorf("could not inspect container %s: %w", containerName, err)
+	}
+
+	return ExtractRemoteUserFromLabels(inspectResp), nil
 }
 
 // Helper function to encode the AuthConfig into a Base64 string.

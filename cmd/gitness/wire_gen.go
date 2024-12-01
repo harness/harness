@@ -319,7 +319,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
 	gitService := git2.ProvideGitServiceImpl()
 	userService := user2.ProvideUserServiceImpl()
-	runargProvider, err := runarg.ProvideStaticProvider()
+	runargResolver, err := runarg.ProvideResolver()
+	if err != nil {
+		return nil, err
+	}
+	runargProvider, err := runarg.ProvideStaticProvider(runargResolver)
 	if err != nil {
 		return nil, err
 	}

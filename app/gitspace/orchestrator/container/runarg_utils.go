@@ -372,8 +372,8 @@ func getHealthCheckConfig(runArgsMap map[types.RunArg]*types.RunArgValue) (*cont
 }
 
 func getLabels(runArgsMap map[types.RunArg]*types.RunArgValue) map[string]string {
-	arg, ok := runArgsMap[types.RunArgLabel]
 	labelsMap := make(map[string]string)
+	arg, ok := runArgsMap[types.RunArgLabel]
 	if ok {
 		labels := arg.Values
 		for _, v := range labels {

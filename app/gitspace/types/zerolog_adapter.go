@@ -32,6 +32,10 @@ func (z *ZerologAdapter) Debug(msg string) {
 	z.logger.Debug().Msg("DEBUG: " + msg)
 }
 
+func (z *ZerologAdapter) Warn(msg string) {
+	z.logger.Warn().Msg("WARN: " + msg)
+}
+
 func (z *ZerologAdapter) Error(msg string, err error) {
 	z.logger.Err(err).Msg("ERROR: " + msg)
 }
