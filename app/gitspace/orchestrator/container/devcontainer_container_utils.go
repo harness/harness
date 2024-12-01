@@ -349,13 +349,13 @@ func PullImage(
 	}
 	if imagePullRunArg == "missing" {
 		gitspaceLogger.Info("Checking if image " + imageName + " is present locally")
-		ok, err := isImagePresentLocally(ctx, imageName, dockerClient)
+		imagePresentLocally, err := isImagePresentLocally(ctx, imageName, dockerClient)
 		if err != nil {
 			gitspaceLogger.Error("Error listing images locally", err)
 			return err
 		}
 
-		if ok {
+		if imagePresentLocally {
 			gitspaceLogger.Info("Image " + imageName + " is present locally")
 			return nil
 		}
@@ -391,69 +391,11 @@ func PullImage(
 			}
 		}
 	}()
-	// Process JSON stream
-	decoder := json.NewDecoder(pullResponse)
-	layerStatus := make(map[string]string) // Track last status of each layer
-
-	for {
-		var pullEvent map[string]interface{}
-		if err := decoder.Decode(&pullEvent); err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return logStreamWrapError(gitspaceLogger, "Error while decoding image pull response", err)
-		}
-		// Extract relevant fields from the JSON object
-		layerID, _ := pullEvent["id"].(string)    // Layer ID (if available)
-		status, _ := pullEvent["status"].(string) // Current status
-		// Update logs only when the status changes
-		if layerID != "" {
-			if lastStatus, exists := layerStatus[layerID]; !exists || lastStatus != status {
-				layerStatus[layerID] = status
-				gitspaceLogger.Info(fmt.Sprintf("Layer %s: %s", layerID, status))
-			}
-		} else if status != "" {
-			// Log non-layer-specific status
-			gitspaceLogger.Info(status)
-		}
+	if err = processImagePullResponse(pullResponse, gitspaceLogger); err != nil {
+		return err
 	}
 	gitspaceLogger.Info("Image pull completed successfully")
 	return nil
-}
-
-func isImagePresentLocally(ctx context.Context, imageName string, dockerClient *client.Client) (bool, error) {
-	filterArgs := filters.NewArgs()
-	filterArgs.Add("reference", imageName)
-
-	images, err := dockerClient.ImageList(ctx, image.ListOptions{Filters: filterArgs})
-	if err != nil {
-		return false, err
-	}
-
-	return len(images) > 0, nil
-}
-
-func buildImagePullOptions(
-	imageName,
-	platform string,
-	imageAuthMap map[string]gitspaceTypes.DockerRegistryAuth,
-) (image.PullOptions, error) {
-	pullOpts := image.PullOptions{Platform: platform}
-	if imageAuth, ok := imageAuthMap[imageName]; ok {
-		authConfig := registry.AuthConfig{
-			Username:      imageAuth.Username.Value(),
-			Password:      imageAuth.Password.Value(),
-			ServerAddress: imageAuth.RegistryURL,
-		}
-		auth, err := encodeAuthToBase64(authConfig)
-		if err != nil {
-			return image.PullOptions{}, fmt.Errorf("encoding auth for docker registry: %w", err)
-		}
-
-		pullOpts.RegistryAuth = auth
-	}
-
-	return pullOpts, nil
 }
 
 func ExtractRunArgsWithLogging(
@@ -524,4 +466,69 @@ func encodeAuthToBase64(authConfig registry.AuthConfig) (string, error) {
 		return "", fmt.Errorf("encoding auth config: %w", err)
 	}
 	return base64.URLEncoding.EncodeToString(authJSON), nil
+}
+
+func processImagePullResponse(pullResponse io.ReadCloser, gitspaceLogger gitspaceTypes.GitspaceLogger) error {
+	// Process JSON stream
+	decoder := json.NewDecoder(pullResponse)
+	layerStatus := make(map[string]string) // Track last status of each layer
+
+	for {
+		var pullEvent map[string]interface{}
+		if err := decoder.Decode(&pullEvent); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return logStreamWrapError(gitspaceLogger, "Error while decoding image pull response", err)
+		}
+		// Extract relevant fields from the JSON object
+		layerID, _ := pullEvent["id"].(string)    // Layer ID (if available)
+		status, _ := pullEvent["status"].(string) // Current status
+		// Update logs only when the status changes
+		if layerID != "" {
+			if lastStatus, exists := layerStatus[layerID]; !exists || lastStatus != status {
+				layerStatus[layerID] = status
+				gitspaceLogger.Info(fmt.Sprintf("Layer %s: %s", layerID, status))
+			}
+		} else if status != "" {
+			// Log non-layer-specific status
+			gitspaceLogger.Info(status)
+		}
+	}
+	return nil
+}
+
+func isImagePresentLocally(ctx context.Context, imageName string, dockerClient *client.Client) (bool, error) {
+	filterArgs := filters.NewArgs()
+	filterArgs.Add("reference", imageName)
+
+	images, err := dockerClient.ImageList(ctx, image.ListOptions{Filters: filterArgs})
+	if err != nil {
+		return false, err
+	}
+
+	return len(images) > 0, nil
+}
+
+func buildImagePullOptions(
+	imageName,
+	platform string,
+	imageAuthMap map[string]gitspaceTypes.DockerRegistryAuth,
+) (image.PullOptions, error) {
+	pullOpts := image.PullOptions{Platform: platform}
+	if imageAuth, ok := imageAuthMap[imageName]; ok {
+		authConfig := registry.AuthConfig{
+			Username:      imageAuth.Username.Value(),
+			Password:      imageAuth.Password.Value(),
+			ServerAddress: imageAuth.RegistryURL,
+		}
+		auth, err := encodeAuthToBase64(authConfig)
+		if err != nil {
+			return image.PullOptions{}, fmt.Errorf("encoding auth for docker registry: %w", err)
+		}
+
+		pullOpts.RegistryAuth = auth
+	}
+
+	return pullOpts, nil
 }

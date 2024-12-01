@@ -627,7 +627,7 @@ func (e *EmbeddedDockerOrchestrator) setupGitspaceAndIDE(
 	defaultBaseImage string,
 	environment []string,
 ) error {
-	homeDir := GetUserHomeDir(gitspaceConfig.GitspaceUser.Identifier)
+	homeDir := GetUserHomeDir(exec.RemoteUser)
 	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
 	codeRepoDir := filepath.Join(homeDir, resolvedRepoDetails.RepoName)
 

@@ -122,6 +122,7 @@ func (s gitspaceConfigStore) Count(ctx context.Context, filter *types.GitspaceFi
 		PlaceholderFormat(squirrel.Dollar)
 
 	countStmt = addGitspaceFilter(countStmt, filter)
+	countStmt = addGitspaceQueryFilter(countStmt, filter.QueryFilter)
 
 	sql, args, err := countStmt.ToSql()
 	if err != nil {
@@ -285,6 +286,7 @@ func (s gitspaceConfigStore) ListWithLatestInstance(
 		PlaceholderFormat(squirrel.Dollar)
 
 	stmt = addGitspaceFilter(stmt, filter)
+	stmt = addGitspaceQueryFilter(stmt, filter.QueryFilter)
 	stmt = addOrderBy(stmt, filter)
 	stmt = stmt.Limit(database.Limit(filter.QueryFilter.Size))
 	stmt = stmt.Offset(database.Offset(filter.QueryFilter.Page, filter.QueryFilter.Size))
@@ -503,4 +505,14 @@ func (s gitspaceConfigStore) ToGitspaceConfigs(
 		}
 	}
 	return res, nil
+}
+
+func addGitspaceQueryFilter(stmt squirrel.SelectBuilder, filter types.ListQueryFilter) squirrel.SelectBuilder {
+	if filter.Query != "" {
+		stmt = stmt.Where(squirrel.Or{
+			squirrel.Expr(PartialMatch("gconf_uid", filter.Query)),
+			squirrel.Expr(PartialMatch("gconf_display_name", filter.Query)),
+		})
+	}
+	return stmt
 }
