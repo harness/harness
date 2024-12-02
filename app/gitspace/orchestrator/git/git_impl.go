@@ -54,7 +54,7 @@ func (g *ServiceImpl) Install(
 	}
 	gitspaceLogger.Info("Install git output...")
 	gitspaceLogger.Info("Setting up git inside container")
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger)
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("failed to setup git: %w", err)
 	}
@@ -79,7 +79,7 @@ func (g *ServiceImpl) SetupCredentials(
 	}
 	gitspaceLogger.Info("Setting up git credentials output...")
 	gitspaceLogger.Info("Setting up git credentials inside container")
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, false, gitspaceLogger)
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, false, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to setup git credentials: %w", err)
 	}
@@ -117,7 +117,7 @@ func (g *ServiceImpl) CloneCode(
 			"failed to generate scipt to clone code from template %s: %w", templateCloneCode, err)
 	}
 	gitspaceLogger.Info("Cloning code inside container")
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, false, gitspaceLogger)
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, false, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to clone code: %w", err)
 	}

@@ -51,7 +51,7 @@ func NewVsCodeService(config *VSCodeConfig) *VSCode {
 func (v *VSCode) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[string]interface{},
+	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	osInfoScript := common.GetOSInfoScript()
@@ -72,7 +72,7 @@ func (v *VSCode) Setup(
 
 	gitspaceLogger.Info("Installing ssh-server inside container")
 	gitspaceLogger.Info("IDE setup output...")
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, sshServerScript, true, gitspaceLogger)
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, sshServerScript, true, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("failed to setup SSH serverr: %w", err)
 	}
@@ -85,7 +85,7 @@ func (v *VSCode) Setup(
 func (v *VSCode) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	_ map[string]interface{},
+	_ map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := template.RunSSHServerPayload{
@@ -98,7 +98,7 @@ func (v *VSCode) Run(
 			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
 	}
 	gitspaceLogger.Info("SSH server run output...")
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, runSSHScript, true, gitspaceLogger)
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, runSSHScript, true, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to run SSH server: %w", err)
 	}
@@ -120,7 +120,7 @@ func (v *VSCode) Type() enum.IDEType {
 }
 
 func (v *VSCode) updateVSCodeSetupPayload(
-	args map[string]interface{},
+	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	payload *template.SetupSSHServerPayload,
 ) error {
@@ -139,7 +139,7 @@ func (v *VSCode) updateVSCodeSetupPayload(
 }
 
 func (v *VSCode) handleVSCodeCustomization(
-	args map[string]interface{},
+	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	payload *template.SetupSSHServerPayload,
 ) error {
@@ -155,7 +155,8 @@ func (v *VSCode) handleVSCodeCustomization(
 	}
 
 	// Log customization details
-	gitspaceLogger.Info(fmt.Sprintf("VSCode Customizations %v", vsCodeCustomizationSpecs))
+	gitspaceLogger.Info(fmt.Sprintf(
+		"VSCode Customizations : Extensions %v", vsCodeCustomizationSpecs.Extensions))
 
 	// Marshal extensions and set payload
 	jsonData, err := json.Marshal(vsCodeCustomizationSpecs.Extensions)
@@ -169,7 +170,7 @@ func (v *VSCode) handleVSCodeCustomization(
 }
 
 func (v *VSCode) handleRepoName(
-	args map[string]interface{},
+	args map[gitspaceTypes.IDEArg]interface{},
 	payload *template.SetupSSHServerPayload,
 ) error {
 	repoName, exists := args[gitspaceTypes.IDERepoNameArg]

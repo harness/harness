@@ -17,6 +17,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
@@ -46,7 +47,7 @@ func ValidateSupportedOS(
 			templateSupportedOSDistribution, err)
 	}
 	gitspaceLogger.Info("Validate supported OSes...")
-	err = ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger)
+	err = ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("error while detecting os distribution: %w", err)
 	}
@@ -93,7 +94,7 @@ func InstallToolsForVsCodeWeb(
 
 	gitspaceLogger.Info("Installing tools for vs code web inside container")
 	gitspaceLogger.Info("Tools installation output...")
-	err = ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger)
+	err = ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("failed to install tools for vs code web: %w", err)
 	}
@@ -117,7 +118,7 @@ func InstallToolsForVsCode(
 	}
 
 	gitspaceLogger.Info("Installing tools for vs code in container")
-	err = ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger)
+	err = ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("failed to install tools for vs code: %w", err)
 	}
@@ -140,7 +141,7 @@ func SetEnv(
 			templateSetEnv, err)
 	}
 	gitspaceLogger.Info("Setting env...")
-	err = ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger)
+	err = ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("error while setting env vars: %w", err)
 	}
@@ -153,13 +154,17 @@ func ExecuteCommandInHomeDirAndLog(
 	script string,
 	root bool,
 	gitspaceLogger types.GitspaceLogger,
+	verbose bool,
 ) error {
 	outputCh := make(chan []byte)
 	err := exec.ExecuteCommandInHomeDirectory(ctx, script, root, false, outputCh)
 	for output := range outputCh {
+		msg := string(output)
 		// Log output from the command as a string
 		if len(output) > 0 {
-			gitspaceLogger.Info(string(output))
+			if verbose || strings.HasPrefix(msg, devcontainer.LoggerErrorPrefix) {
+				gitspaceLogger.Info(msg)
+			}
 		}
 	}
 	return err

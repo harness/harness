@@ -197,8 +197,8 @@ func ExtractLifecycleCommands(actionType PostAction, devcontainerConfig types.De
 func ExtractIDECustomizations(
 	ideService ide.IDE,
 	devcontainerConfig types.DevcontainerConfig,
-) map[string]interface{} {
-	var args = make(map[string]interface{})
+) map[gitspaceTypes.IDEArg]interface{} {
+	var args = make(map[gitspaceTypes.IDEArg]interface{})
 	if ideService.Type() == enum.IDETypeVSCodeWeb || ideService.Type() == enum.IDETypeVSCode {
 		if devcontainerConfig.Customizations.ExtractVSCodeSpec() != nil {
 			args[gitspaceTypes.VSCodeCustomizationArg] = *devcontainerConfig.Customizations.ExtractVSCodeSpec()

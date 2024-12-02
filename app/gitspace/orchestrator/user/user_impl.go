@@ -53,7 +53,7 @@ func (u *ServiceImpl) Manage(
 	}
 
 	gitspaceLogger.Info("Configuring user directory and credentials inside container")
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger)
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to setup user: %w", err)
 	}

@@ -32,6 +32,7 @@ import (
 
 const RootUser = "root"
 const ErrMsgTCP = "unable to upgrade to tcp, received 200"
+const LoggerErrorPrefix = "ERR>> "
 
 type Exec struct {
 	ContainerName string
@@ -185,7 +186,7 @@ func (e *Exec) streamStdErr(stderr io.Reader, outputCh chan []byte, wg *sync.Wai
 	defer wg.Done()
 	stderrReader := bufio.NewScanner(stderr)
 	for stderrReader.Scan() {
-		outputCh <- []byte("ERR> " + stderrReader.Text())
+		outputCh <- []byte(LoggerErrorPrefix + stderrReader.Text())
 	}
 	if err := stderrReader.Err(); err != nil {
 		log.Println("Error reading stderr:", err)

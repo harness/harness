@@ -63,7 +63,7 @@ func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 func (v *VSCodeWeb) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[string]interface{},
+	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Installing VSCode Web inside container...")
@@ -131,7 +131,7 @@ func (v *VSCodeWeb) updateMediaContent(ctx context.Context, exec *devcontainer.E
 func (v *VSCodeWeb) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[string]interface{},
+	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := &template.RunVSCodeWebPayload{
@@ -164,7 +164,7 @@ func (v *VSCodeWeb) Run(
 }
 
 func updateRunPayloadFromArgs(
-	args map[string]interface{},
+	args map[gitspaceTypes.IDEArg]interface{},
 	payload *template.RunVSCodeWebPayload,
 	_ gitspaceTypes.GitspaceLogger,
 ) error {
@@ -180,7 +180,7 @@ func updateRunPayloadFromArgs(
 }
 
 func updateSetupPayloadFromArgs(
-	args map[string]interface{},
+	args map[gitspaceTypes.IDEArg]interface{},
 	payload *template.SetupVSCodeWebPayload,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
@@ -191,7 +191,8 @@ func updateSetupPayloadFromArgs(
 			return fmt.Errorf("customization is not of type VSCodeCustomizationSpecs")
 		}
 		payload.Extensions = vsCodeCustomizationSpecs.Extensions
-		gitspaceLogger.Info(fmt.Sprintf("VSCode Customizations %v", vsCodeCustomizationSpecs))
+		gitspaceLogger.Info(fmt.Sprintf(
+			"VSCode Customizations: Extensions %v", vsCodeCustomizationSpecs.Extensions))
 	}
 	return nil
 }
