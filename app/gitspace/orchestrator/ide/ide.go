@@ -29,6 +29,7 @@ type IDE interface {
 	Setup(
 		ctx context.Context,
 		exec *devcontainer.Exec,
+		args map[string]interface{},
 		gitspaceLogger gitspaceTypes.GitspaceLogger,
 	) error
 

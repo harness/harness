@@ -213,8 +213,7 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 	}
 
 	// Run IDE setup
-	args := ExtractIDECustomizations(ideService, resolvedRepoDetails.DevcontainerConfig)
-	if err := RunIDEWithArgs(ctx, exec, ideService, args, logStreamInstance); err != nil {
+	if err := RunIDEWithArgs(ctx, exec, ideService, nil, logStreamInstance); err != nil {
 		return err
 	}
 
@@ -530,29 +529,6 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 			StopOnFailure: true,
 		},
 		{
-			Name: "Setup IDE",
-			Execute: func(
-				ctx context.Context,
-				exec *devcontainer.Exec,
-				gitspaceLogger gitspaceTypes.GitspaceLogger,
-			) error {
-				return SetupIDE(ctx, exec, ideService, gitspaceLogger)
-			},
-			StopOnFailure: true,
-		},
-		{
-			Name: "Run IDE",
-			Execute: func(
-				ctx context.Context,
-				exec *devcontainer.Exec,
-				gitspaceLogger gitspaceTypes.GitspaceLogger,
-			) error {
-				args := ExtractIDECustomizations(ideService, devcontainerConfig)
-				return RunIDEWithArgs(ctx, exec, ideService, args, gitspaceLogger)
-			},
-			StopOnFailure: true,
-		},
-		{
 			Name: "Install Git",
 			Execute: func(
 				ctx context.Context,
@@ -585,6 +561,31 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
 				return CloneCode(ctx, exec, defaultBaseImage, resolvedRepoDetails, e.gitService, gitspaceLogger)
+			},
+			StopOnFailure: true,
+		},
+		{
+			Name: "Setup IDE",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				// Run IDE setup
+				args := ExtractIDECustomizations(ideService, resolvedRepoDetails.DevcontainerConfig)
+				args[gitspaceTypes.IDERepoName] = resolvedRepoDetails.RepoName
+				return SetupIDE(ctx, exec, ideService, args, gitspaceLogger)
+			},
+			StopOnFailure: true,
+		},
+		{
+			Name: "Run IDE",
+			Execute: func(
+				ctx context.Context,
+				exec *devcontainer.Exec,
+				gitspaceLogger gitspaceTypes.GitspaceLogger,
+			) error {
+				return RunIDEWithArgs(ctx, exec, ideService, nil, gitspaceLogger)
 			},
 			StopOnFailure: true,
 		},

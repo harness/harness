@@ -25,6 +25,7 @@ import (
 
 const VSCodeCustomization = "vscode_customization"
 const VSCodeProxyURI = "VSCODE_PROXY_URI"
+const IDERepoName = "IDE_REPO_NAME"
 
 type GitspaceLogger interface {
 	Info(msg string)

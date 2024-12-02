@@ -63,11 +63,16 @@ func NewVsCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
 func (v *VSCodeWeb) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
+	args map[string]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	gitspaceLogger.Info("Installing VSCode Web inside container.")
-	gitspaceLogger.Info("IDE setup output...")
+	gitspaceLogger.Info("Installing VSCode Web inside container...")
 	payload := &template.SetupVSCodeWebPayload{}
+	if args != nil {
+		if err := updateSetupPayloadFromArgs(args, payload, gitspaceLogger); err != nil {
+			return err
+		}
+	}
 	setupScript, err := template.GenerateScriptFromTemplate(templateSetupVSCodeWeb, payload)
 	if err != nil {
 		return fmt.Errorf(
@@ -77,7 +82,7 @@ func (v *VSCodeWeb) Setup(
 		)
 	}
 	outputCh := make(chan []byte)
-	err = exec.ExecuteCommandInHomeDirectory(ctx, setupScript, true, false, outputCh)
+	err = exec.ExecuteCommandInHomeDirectory(ctx, setupScript, false, false, outputCh)
 	if err != nil {
 		return fmt.Errorf("failed to install VSCode Web: %w", err)
 	}
@@ -88,8 +93,16 @@ func (v *VSCodeWeb) Setup(
 		}
 	}
 
+	if err = v.updateMediaContent(ctx, exec); err != nil {
+		return err
+	}
+	gitspaceLogger.Info("Successfully set up IDE inside container")
+	return nil
+}
+
+func (v *VSCodeWeb) updateMediaContent(ctx context.Context, exec *devcontainer.Exec) error {
 	findCh := make(chan []byte)
-	err = exec.ExecuteCommandInHomeDirectory(ctx, findPathScript, true, false, findCh)
+	err := exec.ExecuteCommandInHomeDirectory(ctx, findPathScript, true, false, findCh)
 	var findOutput []byte
 
 	for chunk := range findCh {
@@ -111,7 +124,6 @@ func (v *VSCodeWeb) Setup(
 	if err != nil {
 		return fmt.Errorf("failed to copy media folder to container at path %s: %w", mediaFolderPath, err)
 	}
-	gitspaceLogger.Info("Successfully set up IDE inside container")
 	return nil
 }
 
@@ -127,7 +139,7 @@ func (v *VSCodeWeb) Run(
 	}
 
 	if args != nil {
-		err := updatePayloadFromArgs(args, payload, gitspaceLogger)
+		err := updateRunPayloadFromArgs(args, payload, gitspaceLogger)
 		if err != nil {
 			return err
 		}
@@ -151,10 +163,10 @@ func (v *VSCodeWeb) Run(
 	return nil
 }
 
-func updatePayloadFromArgs(
+func updateRunPayloadFromArgs(
 	args map[string]interface{},
 	payload *template.RunVSCodeWebPayload,
-	gitspaceLogger gitspaceTypes.GitspaceLogger,
+	_ gitspaceTypes.GitspaceLogger,
 ) error {
 	if proxyURI, exists := args[gitspaceTypes.VSCodeProxyURI]; exists {
 		// Perform a type assertion to ensure proxyURI is a string
@@ -164,7 +176,14 @@ func updatePayloadFromArgs(
 		}
 		payload.ProxyURI = proxyURIStr
 	}
+	return nil
+}
 
+func updateSetupPayloadFromArgs(
+	args map[string]interface{},
+	payload *template.SetupVSCodeWebPayload,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
 	if customization, exists := args[gitspaceTypes.VSCodeCustomization]; exists {
 		// Perform a type assertion to ensure customization is a VSCodeCustomizationSpecs
 		vsCodeCustomizationSpecs, ok := customization.(types.VSCodeCustomizationSpecs)

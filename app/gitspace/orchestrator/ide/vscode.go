@@ -16,6 +16,7 @@ package ide
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -25,6 +26,8 @@ import (
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 var _ IDE = (*VSCode)(nil)
@@ -48,15 +51,20 @@ func NewVsCodeService(config *VSCodeConfig) *VSCode {
 func (v *VSCode) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
+	args map[string]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	osInfoScript := common.GetOSInfoScript()
+	payload := template.SetupSSHServerPayload{
+		Username:     exec.RemoteUser,
+		AccessType:   exec.AccessType,
+		OSInfoScript: osInfoScript,
+	}
+	if err := v.updateVSCodeSetupPayload(args, gitspaceLogger, &payload); err != nil {
+		return err
+	}
 	sshServerScript, err := template.GenerateScriptFromTemplate(
-		templateSetupSSHServer, &template.SetupSSHServerPayload{
-			Username:     exec.RemoteUser,
-			AccessType:   exec.AccessType,
-			OSInfoScript: osInfoScript,
-		})
+		templateSetupSSHServer, &payload)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
@@ -77,7 +85,7 @@ func (v *VSCode) Setup(
 func (v *VSCode) Run(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	args map[string]interface{},
+	_ map[string]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := template.RunSSHServerPayload{
@@ -88,16 +96,6 @@ func (v *VSCode) Run(
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
-	}
-	if args != nil {
-		if customization, exists := args["customization"]; exists {
-			// Perform a type assertion to ensure customization is a VSCodeCustomizationSpecs
-			if vsCodeCustomizationSpecs, ok := customization.(types.VSCodeCustomizationSpecs); ok {
-				gitspaceLogger.Info(fmt.Sprintf("VSCode Customizations %v", vsCodeCustomizationSpecs))
-			} else {
-				return fmt.Errorf("customization is not of type VSCodeCustomizationSpecs")
-			}
-		}
 	}
 	gitspaceLogger.Info("SSH server run output...")
 	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, runSSHScript, true, gitspaceLogger)
@@ -119,4 +117,71 @@ func (v *VSCode) Port() *types.GitspacePort {
 
 func (v *VSCode) Type() enum.IDEType {
 	return enum.IDETypeVSCode
+}
+
+func (v *VSCode) updateVSCodeSetupPayload(
+	args map[string]interface{},
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+	payload *template.SetupSSHServerPayload,
+) error {
+	if args == nil {
+		return nil
+	}
+	// Handle VSCode Customization
+	if err := v.handleVSCodeCustomization(args, gitspaceLogger, payload); err != nil {
+		return err
+	}
+	// Handle Repository Name
+	if err := v.handleRepoName(args, payload); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (v *VSCode) handleVSCodeCustomization(
+	args map[string]interface{},
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+	payload *template.SetupSSHServerPayload,
+) error {
+	customization, exists := args[gitspaceTypes.VSCodeCustomization]
+	if !exists {
+		return nil // No customization found, nothing to do
+	}
+
+	// Perform type assertion to ensure it's the correct type
+	vsCodeCustomizationSpecs, ok := customization.(types.VSCodeCustomizationSpecs)
+	if !ok {
+		return fmt.Errorf("customization is not of type VSCodeCustomizationSpecs")
+	}
+
+	// Log customization details
+	gitspaceLogger.Info(fmt.Sprintf("VSCode Customizations %v", vsCodeCustomizationSpecs))
+
+	// Marshal extensions and set payload
+	jsonData, err := json.Marshal(vsCodeCustomizationSpecs.Extensions)
+	if err != nil {
+		log.Warn().Msg("Error marshalling JSON for VSCode extensions")
+		return err
+	}
+	payload.Extensions = string(jsonData)
+
+	return nil
+}
+
+func (v *VSCode) handleRepoName(
+	args map[string]interface{},
+	payload *template.SetupSSHServerPayload,
+) error {
+	repoName, exists := args[gitspaceTypes.IDERepoName]
+	if !exists {
+		return nil // No repo name found, nothing to do
+	}
+
+	repoNameStr, ok := repoName.(string)
+	if !ok {
+		return fmt.Errorf("repo name is not of type string")
+	}
+	payload.RepoName = repoNameStr
+
+	return nil
 }

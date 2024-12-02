@@ -53,13 +53,13 @@ type SetupGitCredentialsPayload struct {
 }
 
 type RunVSCodeWebPayload struct {
-	Port       string
-	Arguments  string
-	ProxyURI   string
-	Extensions []string
+	Port      string
+	Arguments string
+	ProxyURI  string
 }
 
 type SetupVSCodeWebPayload struct {
+	Extensions []string
 }
 
 type SetupUserPayload struct {
@@ -73,6 +73,8 @@ type SetupSSHServerPayload struct {
 	Username     string
 	AccessType   enum.GitspaceAccessType
 	OSInfoScript string
+	Extensions   string
+	RepoName     string
 }
 
 type RunSSHServerPayload struct {
