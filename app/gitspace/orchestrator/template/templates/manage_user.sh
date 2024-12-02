@@ -44,6 +44,7 @@ if [ "ssh_key" = "$accessType" ] ; then
     echo $accessKey > $homeDir/.ssh/authorized_keys
     chmod 600 $homeDir/.ssh/authorized_keys
     chown -R $username:$username $homeDir/.ssh
+    echo "$username:" | chpasswd -e
 elif [ "user_credentials" = "$accessType"  ] ; then
     echo "$username:$accessKey" | chpasswd
 else
