@@ -15,7 +15,13 @@
 package types
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/docker/go-units"
 )
 
 type InfraProviderConfig struct {
@@ -52,6 +58,88 @@ type InfraProviderResource struct {
 
 func (i *InfraProviderResource) Identifier() int64 {
 	return i.ID
+}
+
+func validateInfraProviderResource(a InfraProviderResource) error {
+	err := validateCPU(a.CPU)
+	if err != nil {
+		return err
+	}
+	err = validateBytes(a.Memory)
+	if err != nil {
+		return err
+	}
+	err = validateBytes(a.Disk)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateBytes(bytes *string) error {
+	if bytes == nil {
+		return fmt.Errorf("bytes is required")
+	}
+	intValue, err := units.RAMInBytes(withoutSpace(*bytes))
+	if err != nil {
+		return err
+	}
+	if intValue < 0 {
+		return fmt.Errorf("bytes must be positive")
+	}
+	return nil
+}
+
+func withoutSpace(str string) string {
+	return strings.ReplaceAll(str, " ", "")
+}
+
+func validateCPU(cpu *string) error {
+	if cpu == nil {
+		return fmt.Errorf("cpu is required")
+	}
+	intValue, err := strconv.Atoi(withoutSpace(*cpu))
+	if err != nil {
+		return err
+	}
+	if intValue < 0 {
+		return fmt.Errorf("cpu must be positive")
+	}
+	return nil
+}
+
+func CompareInfraProviderResource(a, b InfraProviderResource) int {
+	// If either is invalid, return 0 since we cant compare them
+	err := validateInfraProviderResource(a)
+	if err != nil {
+		return 0
+	}
+	err = validateInfraProviderResource(b)
+	if err != nil {
+		return 0
+	}
+	cpuA, _ := strconv.Atoi(withoutSpace(*a.CPU))
+	cpuB, _ := strconv.Atoi(withoutSpace(*b.CPU))
+	if cpuA != cpuB {
+		return cpuA - cpuB
+	}
+	memoryA, _ := units.RAMInBytes(withoutSpace(*a.Memory))
+	memoryB, _ := units.RAMInBytes(withoutSpace(*b.Memory))
+	if memoryA != memoryB {
+		return int(memoryA - memoryB)
+	}
+	diskA, _ := units.RAMInBytes(withoutSpace(*a.Disk))
+	diskB, _ := units.RAMInBytes(withoutSpace(*b.Disk))
+	if diskA != diskB {
+		return int(diskA - diskB)
+	}
+	if a.Region != b.Region {
+		if a.Region < b.Region {
+			return -1
+		}
+		return 1
+	}
+	return 0
 }
 
 type InfraProviderTemplate struct {

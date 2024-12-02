@@ -17,6 +17,7 @@ package infraprovider
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/infraprovider"
@@ -74,6 +75,7 @@ func (c *Service) Find(
 				providerResources[i].SpacePath = space.Path
 			}
 		}
+		slices.SortFunc(providerResources, types.CompareInfraProviderResource)
 		infraProviderConfig.Resources = providerResources
 	}
 	return infraProviderConfig, nil
