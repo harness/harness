@@ -108,7 +108,7 @@ const GitspaceListing = () => {
     const totalData = useMemo(() => parseInt(responseData?.headers?.get('x-total') || '0'), [responseData])
     const totalPages = useMemo(() => parseInt(responseData?.headers?.get('x-total-pages') || '0'), [responseData])
     const gitspaceExists = useMemo(
-      () => !!parseInt(responseData?.headers?.get('x-total-no-filters') || '0'),
+      () => !!parseInt(responseData?.headers?.get('x-total-no-filter') || '0'),
       [responseData]
     )
 

@@ -38,7 +38,6 @@ export default function SortByDropdown(props: SortByDropdownProps): JSX.Element 
         onChange(option.value as EnumGitspaceSort)
       }}
       placeholder={getString('cde.sortBy')}
-      addClearBtn
     />
   )
 }
