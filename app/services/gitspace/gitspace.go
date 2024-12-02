@@ -72,24 +72,36 @@ func (c *Service) ListGitspacesForSpace(
 	ctx context.Context,
 	space *types.Space,
 	filter types.GitspaceFilter,
-) ([]*types.GitspaceConfig, int64, error) {
+) ([]*types.GitspaceConfig, int64, int64, error) {
 	var gitspaceConfigs []*types.GitspaceConfig
-	var count int64
+	var filterCount, allGitspacesInSpaceCount int64
 	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		gitspaceConfigs, err = c.gitspaceConfigStore.ListWithLatestInstance(ctx, &filter)
 		if err != nil {
 			return fmt.Errorf("failed to list gitspace configs: %w", err)
 		}
 
-		count, err = c.gitspaceConfigStore.Count(ctx, &filter)
+		filterCount, err = c.gitspaceConfigStore.Count(ctx, &filter)
 		if err != nil {
-			return fmt.Errorf("failed to count gitspaces in space: %w", err)
+			return fmt.Errorf("failed to filterCount gitspaces in space: %w", err)
+		}
+		// Only filter from RBAC and Space is applied for this count, the user filter will be empty for admin users.
+		allGitspacesInSpaceCount, err = c.gitspaceConfigStore.Count(ctx, &types.GitspaceFilter{
+			Deleted:           filter.Deleted,
+			MarkedForDeletion: filter.MarkedForDeletion,
+			GitspaceInstanceFilter: types.GitspaceInstanceFilter{
+				UserIdentifier: filter.UserIdentifier,
+				SpaceIDs:       filter.SpaceIDs,
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to count all gitspace configs in space: %w", err)
 		}
 
 		return nil
 	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 
 	for _, gitspaceConfig := range gitspaceConfigs {
@@ -101,7 +113,7 @@ func (c *Service) ListGitspacesForSpace(
 		gitspaceConfig.BranchURL = c.GetBranchURL(ctx, gitspaceConfig)
 	}
 
-	return gitspaceConfigs, count, nil
+	return gitspaceConfigs, filterCount, allGitspacesInSpaceCount, nil
 }
 
 func (c *Service) GetBranchURL(ctx context.Context, config *types.GitspaceConfig) string {

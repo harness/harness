@@ -201,7 +201,7 @@ func ExtractIDECustomizations(
 	var args = make(map[string]interface{})
 	if ideService.Type() == enum.IDETypeVSCodeWeb || ideService.Type() == enum.IDETypeVSCode {
 		if devcontainerConfig.Customizations.ExtractVSCodeSpec() != nil {
-			args[gitspaceTypes.VSCodeCustomization] = *devcontainerConfig.Customizations.ExtractVSCodeSpec()
+			args[gitspaceTypes.VSCodeCustomizationArg] = *devcontainerConfig.Customizations.ExtractVSCodeSpec()
 		}
 	}
 	return args

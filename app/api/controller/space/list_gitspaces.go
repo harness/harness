@@ -29,14 +29,14 @@ func (c *Controller) ListGitspaces(
 	session *auth.Session,
 	spaceRef string,
 	filter types.GitspaceFilter,
-) ([]*types.GitspaceConfig, int64, error) {
+) ([]*types.GitspaceConfig, int64, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find space: %w", err)
+		return nil, 0, 0, fmt.Errorf("failed to find space: %w", err)
 	}
 	err = apiauth.CheckGitspace(ctx, c.authorizer, session, space.Path, "", enum.PermissionGitspaceView)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to authorize gitspace: %w", err)
+		return nil, 0, 0, fmt.Errorf("failed to authorize gitspace: %w", err)
 	}
 
 	filter.UserIdentifier = session.Principal.UID

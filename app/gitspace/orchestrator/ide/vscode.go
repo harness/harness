@@ -143,7 +143,7 @@ func (v *VSCode) handleVSCodeCustomization(
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	payload *template.SetupSSHServerPayload,
 ) error {
-	customization, exists := args[gitspaceTypes.VSCodeCustomization]
+	customization, exists := args[gitspaceTypes.VSCodeCustomizationArg]
 	if !exists {
 		return nil // No customization found, nothing to do
 	}
@@ -172,7 +172,7 @@ func (v *VSCode) handleRepoName(
 	args map[string]interface{},
 	payload *template.SetupSSHServerPayload,
 ) error {
-	repoName, exists := args[gitspaceTypes.IDERepoName]
+	repoName, exists := args[gitspaceTypes.IDERepoNameArg]
 	if !exists {
 		return nil // No repo name found, nothing to do
 	}

@@ -573,7 +573,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 			) error {
 				// Run IDE setup
 				args := ExtractIDECustomizations(ideService, resolvedRepoDetails.DevcontainerConfig)
-				args[gitspaceTypes.IDERepoName] = resolvedRepoDetails.RepoName
+				args[gitspaceTypes.IDERepoNameArg] = resolvedRepoDetails.RepoName
 				return SetupIDE(ctx, exec, ideService, args, gitspaceLogger)
 			},
 			StopOnFailure: true,
