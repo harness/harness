@@ -78,6 +78,8 @@ type Provider interface {
 	GetAPIProto(ctx context.Context) string
 
 	RegistryURL(ctx context.Context, params ...string) string
+
+	GetUIBaseURL(ctx context.Context) string
 }
 
 // Provider provides the URLs of the Harness system.
@@ -248,6 +250,10 @@ func (p *provider) RegistryURL(_ context.Context, params ...string) string {
 	fullPath := path.Join(segments...)
 	u.Path = fullPath
 	return strings.TrimRight(u.String(), "/")
+}
+
+func (p *provider) GetUIBaseURL(_ context.Context) string {
+	return p.uiURL.String()
 }
 
 func BuildGITCloneSSHURL(user string, sshURL *url.URL, repoPath string) string {

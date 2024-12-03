@@ -45,6 +45,18 @@ func GetHost(urlStr string) string {
 	return u.Host
 }
 
+func GetHostName(urlStr string) string {
+	if !strings.Contains(urlStr, "://") {
+		urlStr = "https://" + urlStr
+	}
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		log.Warn().Msgf("Failed to parse URL: %s", urlStr)
+		return ""
+	}
+	return u.Hostname()
+}
+
 func TrimURLScheme(urlStr string) string {
 	u, err := url.Parse(urlStr)
 	if err != nil {
