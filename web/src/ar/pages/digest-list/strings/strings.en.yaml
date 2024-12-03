@@ -7,5 +7,5 @@ table:
     osArch: OS/Arch
     size: Size
     uploadedBy: Uploaded At
-    downloads: Downloads/Last Download
+    downloads: Downloads
     scanStatus: Scan Status
