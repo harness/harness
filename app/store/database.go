@@ -196,6 +196,9 @@ type (
 		// GetDescendantsData returns a list of space parent data for spaces that are descendants of the space.
 		GetDescendantsData(ctx context.Context, spaceID int64) ([]types.SpaceParentData, error)
 
+		// GetDescendantsIDs returns a list of space ids for spaces that are descendants of the specified space.
+		GetDescendantsIDs(ctx context.Context, spaceID int64) ([]int64, error)
+
 		// Create creates a new space
 		Create(ctx context.Context, space *types.Space) error
 
@@ -646,7 +649,19 @@ type (
 		List(ctx context.Context, repoID int64, commitSHA string, opts types.CheckListOptions) ([]types.Check, error)
 
 		// ListRecent returns a list of recently executed status checks in a repository.
-		ListRecent(ctx context.Context, repoID int64, opts types.CheckRecentOptions) ([]string, error)
+		ListRecent(
+			ctx context.Context,
+			repoID int64,
+			opts types.CheckRecentOptions,
+		) ([]string, error)
+
+		// ListRecentSpace returns a list of recently executed status checks in
+		// repositories in spaces with specified space IDs.
+		ListRecentSpace(
+			ctx context.Context,
+			spaceIDs []int64,
+			opts types.CheckRecentOptions,
+		) ([]string, error)
 
 		// ListResults returns a list of status check results for a specific commit in a repo.
 		ListResults(ctx context.Context, repoID int64, commitSHA string) ([]types.CheckResult, error)

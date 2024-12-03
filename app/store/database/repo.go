@@ -562,15 +562,14 @@ func (s *RepoStore) countAll(
 	parentID int64,
 	filter *types.RepoFilter,
 ) (int64, error) {
-	query := spaceDescendantsQuery + `
-		SELECT space_descendant_id
-		FROM space_descendants`
-
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	var spaceIDs []int64
-	if err := db.SelectContext(ctx, &spaceIDs, query, parentID); err != nil {
-		return 0, database.ProcessSQLErrorf(ctx, err, "failed to retrieve spaces")
+	spaceIDs, err := getSpaceDescendantsIDs(ctx, db, parentID)
+	if err != nil {
+		return 0, fmt.Errorf(
+			"failed to get space descendants ids for %d: %w",
+			parentID, err,
+		)
 	}
 
 	stmt := database.Builder.
@@ -691,15 +690,14 @@ func (s *RepoStore) listAll(
 	parentID int64,
 	filter *types.RepoFilter,
 ) ([]*types.Repository, error) {
-	query := spaceDescendantsQuery + `
-		SELECT space_descendant_id
-		FROM space_descendants`
-
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	var spaceIDs []int64
-	if err := db.SelectContext(ctx, &spaceIDs, query, parentID); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "failed to retrieve spaces")
+	spaceIDs, err := getSpaceDescendantsIDs(ctx, db, parentID)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to get space descendants ids for %d: %w",
+			parentID, err,
+		)
 	}
 
 	stmt := database.Builder.

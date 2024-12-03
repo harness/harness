@@ -33,6 +33,7 @@ type Controller struct {
 	tx         dbtx.Transactor
 	authorizer authz.Authorizer
 	repoStore  store.RepoStore
+	spaceStore store.SpaceStore
 	checkStore store.CheckStore
 	git        git.Interface
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
@@ -42,6 +43,7 @@ func NewController(
 	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
+	spaceStore store.SpaceStore,
 	checkStore store.CheckStore,
 	git git.Interface,
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
@@ -50,6 +52,7 @@ func NewController(
 		tx:         tx,
 		authorizer: authorizer,
 		repoStore:  repoStore,
+		spaceStore: spaceStore,
 		checkStore: checkStore,
 		git:        git,
 		sanitizers: sanitizers,
@@ -73,4 +76,25 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	}
 
 	return repo, nil
+}
+
+func (c *Controller) getSpaceCheckAccess(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	permission enum.Permission,
+) (*types.Space, error) {
+	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return nil, fmt.Errorf("parent space not found: %w", err)
+	}
+
+	scope := &types.Scope{SpacePath: space.Path}
+	resource := &types.Resource{Type: enum.ResourceTypeRepo}
+	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, permission)
+	if err != nil {
+		return nil, fmt.Errorf("auth check failed: %w", err)
+	}
+
+	return space, nil
 }

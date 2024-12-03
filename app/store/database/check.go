@@ -248,16 +248,42 @@ func (s *CheckStore) List(ctx context.Context,
 }
 
 // ListRecent returns a list of recently executed status checks in a repository.
-func (s *CheckStore) ListRecent(ctx context.Context,
+func (s *CheckStore) ListRecent(
+	ctx context.Context,
 	repoID int64,
 	opts types.CheckRecentOptions,
 ) ([]string, error) {
 	stmt := database.Builder.
 		Select("distinct check_uid").
 		From("checks").
-		Where("check_repo_id = ?", repoID).
-		Where("check_created > ?", opts.Since)
+		Where("check_created > ?", opts.Since).
+		Where("check_repo_id = ?", repoID)
 
+	return s.listRecent(ctx, stmt, opts)
+}
+
+// ListRecentSpace returns a list of recently executed status checks in
+// repositories in spaces with specified space IDs.
+func (s *CheckStore) ListRecentSpace(
+	ctx context.Context,
+	spaceIDs []int64,
+	opts types.CheckRecentOptions,
+) ([]string, error) {
+	stmt := database.Builder.
+		Select("distinct check_uid").
+		From("checks").
+		Join("repositories ON checks.check_repo_id = repositories.repo_id").
+		Where("check_created > ?", opts.Since).
+		Where(squirrel.Eq{"repositories.repo_parent_id": spaceIDs})
+
+	return s.listRecent(ctx, stmt, opts)
+}
+
+func (s *CheckStore) listRecent(
+	ctx context.Context,
+	stmt squirrel.SelectBuilder,
+	opts types.CheckRecentOptions,
+) ([]string, error) {
 	stmt = s.applyOpts(stmt, opts.Query)
 
 	stmt = stmt.OrderBy("check_uid")
@@ -267,10 +293,9 @@ func (s *CheckStore) ListRecent(ctx context.Context,
 		return nil, fmt.Errorf("failed to convert list recent status checks query to sql: %w", err)
 	}
 
-	dst := make([]string, 0)
-
 	db := dbtx.GetAccessor(ctx, s.db)
 
+	dst := make([]string, 0)
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to execute list recent status checks query")
 	}

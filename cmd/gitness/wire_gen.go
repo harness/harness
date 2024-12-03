@@ -406,7 +406,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalController := principal.ProvideController(principalStore, authorizer)
 	usergroupController := usergroup2.ProvideController(userGroupStore, spaceStore, authorizer, searchService)
 	v := check2.ProvideCheckSanitizers()
-	checkController := check2.ProvideController(transactor, authorizer, repoStore, checkStore, gitInterface, v)
+	checkController := check2.ProvideController(transactor, authorizer, repoStore, spaceStore, checkStore, gitInterface, v)
 	systemController := system.NewController(principalStore, config)
 	blobConfig, err := server.ProvideBlobStoreConfig(config)
 	if err != nil {

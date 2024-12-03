@@ -222,7 +222,7 @@ func setupRoutesV1WithAuth(r chi.Router,
 	capabilitiesCtrl *capabilities.Controller,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
-	setupSpaces(r, appCtx, spaceCtrl, userGroupCtrl, webhookCtrl)
+	setupSpaces(r, appCtx, spaceCtrl, userGroupCtrl, webhookCtrl, checkCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
 		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl)
 	setupConnectors(r, connectorCtrl)
@@ -248,7 +248,7 @@ func setupSpaces(
 	spaceCtrl *space.Controller,
 	userGroupCtrl *usergroup.Controller,
 	webhookCtrl *webhook.Controller,
-
+	checkCtrl *check.Controller,
 ) {
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
@@ -294,6 +294,8 @@ func setupSpaces(
 			SetupSpaceLabels(r, spaceCtrl)
 			SetupWebhookSpace(r, webhookCtrl)
 			SetupRulesSpace(r, spaceCtrl)
+
+			r.Get("/checks", handlercheck.HandleCheckListRecentSpace(checkCtrl))
 		})
 	})
 }

@@ -336,6 +336,24 @@ func (s *SpaceStore) GetDescendantsData(ctx context.Context, spaceID int64) ([]t
 	return s.readParentsData(ctx, query, spaceID)
 }
 
+// GetDescendantsIDs returns a list of space ids for spaces that are descendants of the specified space.
+func (s *SpaceStore) GetDescendantsIDs(ctx context.Context, spaceID int64) ([]int64, error) {
+	return getSpaceDescendantsIDs(ctx, dbtx.GetAccessor(ctx, s.db), spaceID)
+}
+
+func getSpaceDescendantsIDs(ctx context.Context, db dbtx.Accessor, spaceID int64) ([]int64, error) {
+	query := spaceDescendantsQuery + `
+		SELECT space_descendant_id
+		FROM space_descendants`
+
+	var ids []int64
+	if err := db.SelectContext(ctx, &ids, query, spaceID); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "failed to retrieve spaces")
+	}
+
+	return ids, nil
+}
+
 func (s *SpaceStore) readParentsData(
 	ctx context.Context,
 	query string,
