@@ -15,6 +15,7 @@
 package repo
 
 import (
+	"cmp"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -57,6 +58,7 @@ type CommitFilesOptions struct {
 	Branch    string             `json:"branch"`
 	NewBranch string             `json:"new_branch"`
 	Actions   []CommitFileAction `json:"actions"`
+	Author    *git.Identity      `json:"author"`
 
 	DryRunRules bool `json:"dry_run_rules"`
 	BypassRules bool `json:"bypass_rules"`
@@ -166,7 +168,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		Actions:       actions,
 		Committer:     identityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
 		CommitterDate: &now,
-		Author:        identityFromPrincipal(session.Principal),
+		Author:        cmp.Or(in.Author, identityFromPrincipal(session.Principal)),
 		AuthorDate:    &now,
 	})
 	if err != nil {
