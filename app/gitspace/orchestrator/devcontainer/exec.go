@@ -16,47 +16,93 @@ package devcontainer
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 	"sync"
 
 	"github.com/harness/gitness/types/enum"
 
+	dockerTypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/rs/zerolog/log"
 )
 
 const RootUser = "root"
 const ErrMsgTCP = "unable to upgrade to tcp, received 200"
 const LoggerErrorPrefix = "ERR>> "
+const ChannelExitStatus = "DEVCONTAINER_EXIT_STATUS"
 
 type Exec struct {
-	ContainerName string
-	DockerClient  *client.Client
-	HomeDir       string
-	RemoteUser    string
-	AccessKey     string
-	AccessType    enum.GitspaceAccessType
+	ContainerName     string
+	DockerClient      *client.Client
+	DefaultWorkingDir string
+	RemoteUser        string
+	AccessKey         string
+	AccessType        enum.GitspaceAccessType
 }
 
 type execResult struct {
-	StdOut   io.Reader
-	StdErr   io.Reader
-	ExitCode int
+	ExecID string
+	StdOut io.Reader
+	StdErr io.Reader
 }
 
 func (e *Exec) ExecuteCommand(
 	ctx context.Context,
 	command string,
 	root bool,
-	detach bool,
 	workingDir string,
-	outputCh chan []byte, // channel to stream output as []byte
-) error {
+) (string, error) {
+	containerExecCreate, err := e.createExecution(ctx, command, root, workingDir, false)
+	if err != nil {
+		return "", err
+	}
+	// Attach and inspect exec session to get the output
+	inspectExec, err := e.attachAndInspectExec(ctx, containerExecCreate.ID, false)
+	if err != nil {
+		return "", fmt.Errorf("failed to start docker exec for container %s: %w", e.ContainerName, err)
+	}
+	var stdoutBuf bytes.Buffer
+	var stderrBuf bytes.Buffer
+
+	stdoutData, err := io.ReadAll(inspectExec.StdOut)
+	if err != nil {
+		return "", fmt.Errorf("error reading stdout: %w", err)
+	}
+	stdoutBuf.Write(stdoutData)
+	stderrData, err := io.ReadAll(inspectExec.StdErr)
+	if err != nil {
+		return "", fmt.Errorf("error reading stderr: %w", err)
+	}
+	stderrBuf.Write(stderrData)
+	inspect, err := e.DockerClient.ContainerExecInspect(ctx, containerExecCreate.ID)
+	if err != nil {
+		return "", fmt.Errorf("failed to inspect exec session: %w", err)
+	}
+
+	// If the exit code is non-zero, return both stdout and stderr
+	if inspect.ExitCode != 0 {
+		// Combine stdout and stderr
+		return fmt.Sprintf(
+				"STDOUT:\n%s\nSTDERR:\n%s", stdoutBuf.String(), stderrBuf.String()),
+			fmt.Errorf("command exited with non-zero status: %d", inspect.ExitCode)
+	}
+	// If the exit code is zero, only return stdout
+	return stdoutBuf.String(), nil
+}
+
+func (e *Exec) createExecution(
+	ctx context.Context,
+	command string,
+	root bool,
+	workingDir string,
+	detach bool,
+) (*dockerTypes.IDResponse, error) {
 	user := e.RemoteUser
 	if root {
 		user = RootUser
@@ -73,11 +119,26 @@ func (e *Exec) ExecuteCommand(
 	}
 
 	// Create exec instance for the container
+	log.Debug().Msgf("Creating execution for container %s", e.ContainerName)
 	containerExecCreate, err := e.DockerClient.ContainerExecCreate(ctx, e.ContainerName, execConfig)
 	if err != nil {
-		return fmt.Errorf("failed to create docker exec for container %s: %w", e.ContainerName, err)
+		return nil, fmt.Errorf("failed to create docker exec for container %s: %w", e.ContainerName, err)
 	}
+	return &containerExecCreate, nil
+}
 
+func (e *Exec) executeCmdAsyncStream(
+	ctx context.Context,
+	command string,
+	root bool,
+	detach bool,
+	workingDir string,
+	outputCh chan []byte, // channel to stream output as []byte
+) error {
+	containerExecCreate, err := e.createExecution(ctx, command, root, workingDir, detach)
+	if err != nil {
+		return err
+	}
 	// Attach and inspect exec session to get the output
 	inspectExec, err := e.attachAndInspectExec(ctx, containerExecCreate.ID, detach)
 	if err != nil && !strings.Contains(err.Error(), ErrMsgTCP) {
@@ -88,25 +149,18 @@ func (e *Exec) ExecuteCommand(
 		close(outputCh)
 		return nil
 	}
-
-	// Wait for the exit code after the command completes
-	if inspectExec != nil && inspectExec.ExitCode != 0 {
-		return fmt.Errorf("error during command execution in container %s. exit code %d",
-			e.ContainerName, inspectExec.ExitCode)
-	}
-
 	e.streamResponse(inspectExec, outputCh)
 	return nil
 }
 
-func (e *Exec) ExecuteCommandInHomeDirectory(
+func (e *Exec) ExecuteCmdInHomeDirectoryAsyncStream(
 	ctx context.Context,
 	command string,
 	root bool,
 	detach bool,
 	outputCh chan []byte, // channel to stream output as []byte
 ) error {
-	return e.ExecuteCommand(ctx, command, root, detach, e.HomeDir, outputCh)
+	return e.executeCmdAsyncStream(ctx, command, root, detach, e.DefaultWorkingDir, outputCh)
 }
 
 func (e *Exec) attachAndInspectExec(ctx context.Context, id string, detach bool) (*execResult, error) {
@@ -117,7 +171,6 @@ func (e *Exec) attachAndInspectExec(ctx context.Context, id string, detach bool)
 
 	// If in detach mode, we just need to close the connection, not process output
 	if detach {
-		// No need to process output in detach mode, so we simply close the connection
 		resp.Close()
 		return nil, nil //nolint:nilnil
 	}
@@ -130,6 +183,7 @@ func (e *Exec) attachAndInspectExec(ctx context.Context, id string, detach bool)
 
 	// Return the output streams and the response
 	return &execResult{
+		ExecID: id,
 		StdOut: stdoutPipe, // Pipe for stdout
 		StdErr: stderrPipe, // Pipe for stderr
 	}, nil
@@ -138,6 +192,7 @@ func (e *Exec) attachAndInspectExec(ctx context.Context, id string, detach bool)
 func (e *Exec) streamResponse(resp *execResult, outputCh chan []byte) {
 	// Stream the output asynchronously if not in detach mode
 	go func() {
+		defer close(outputCh)
 		if resp != nil {
 			var wg sync.WaitGroup
 
@@ -153,20 +208,31 @@ func (e *Exec) streamResponse(resp *execResult, outputCh chan []byte) {
 			}
 			// Wait for all readers to finish before closing the channel
 			wg.Wait()
-			// Close the output channel after all output has been processed
-			close(outputCh)
+
+			// Now that streaming is finished, inspect the exit status
+			log.Debug().Msgf("Inspecting container for status: %s", resp.ExecID)
+			inspect, err := e.DockerClient.ContainerExecInspect(context.Background(), resp.ExecID)
+			if err != nil {
+				log.Error().Err(err).Msgf("Failed to inspect exec session: %s", err.Error())
+				return
+			}
+
+			// Send the exit status as a final message
+			exitStatusMsg := fmt.Sprintf(ChannelExitStatus+"%d", inspect.ExitCode)
+			outputCh <- []byte(exitStatusMsg)
 		}
 	}()
 }
 
-// copyOutput copies the output from the exec response to the pipes, and is blocking.
 func (e *Exec) copyOutput(reader io.Reader, stdoutWriter, stderrWriter io.WriteCloser) {
+	defer func() {
+		stdoutWriter.Close()
+		stderrWriter.Close()
+	}()
 	_, err := stdcopy.StdCopy(stdoutWriter, stderrWriter, reader)
 	if err != nil {
-		log.Printf("Error copying output: %v", err)
+		log.Error().Err(err).Msg("Error in stdcopy.StdCopy " + err.Error())
 	}
-	stdoutWriter.Close()
-	stderrWriter.Close()
 }
 
 // streamStdOut reads from the stdout pipe and sends each line to the output channel.
@@ -174,10 +240,16 @@ func (e *Exec) streamStdOut(stdout io.Reader, outputCh chan []byte, wg *sync.Wai
 	defer wg.Done()
 	stdoutReader := bufio.NewScanner(stdout)
 	for stdoutReader.Scan() {
-		outputCh <- stdoutReader.Bytes()
+		select {
+		case <-context.Background().Done():
+			log.Info().Msg("Context canceled, stopping stdout streaming")
+			return
+		default:
+			outputCh <- stdoutReader.Bytes()
+		}
 	}
 	if err := stdoutReader.Err(); err != nil {
-		log.Println("Error reading stdout:", err)
+		log.Error().Err(err).Msg("Error reading stdout " + err.Error())
 	}
 }
 
@@ -186,9 +258,15 @@ func (e *Exec) streamStdErr(stderr io.Reader, outputCh chan []byte, wg *sync.Wai
 	defer wg.Done()
 	stderrReader := bufio.NewScanner(stderr)
 	for stderrReader.Scan() {
-		outputCh <- []byte(LoggerErrorPrefix + stderrReader.Text())
+		select {
+		case <-context.Background().Done():
+			log.Info().Msg("Context canceled, stopping stderr streaming")
+			return
+		default:
+			outputCh <- []byte(LoggerErrorPrefix + stderrReader.Text())
+		}
 	}
 	if err := stderrReader.Err(); err != nil {
-		log.Println("Error reading stderr:", err)
+		log.Error().Err(err).Msg("Error reading stderr " + err.Error())
 	}
 }

@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/template"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
@@ -81,18 +82,10 @@ func (v *VSCodeWeb) Setup(
 			err,
 		)
 	}
-	outputCh := make(chan []byte)
-	err = exec.ExecuteCommandInHomeDirectory(ctx, setupScript, false, false, outputCh)
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, setupScript, false, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("failed to install VSCode Web: %w", err)
 	}
-	for chunk := range outputCh {
-		_, err := io.Discard.Write(chunk)
-		if err != nil {
-			return err
-		}
-	}
-
 	if err = v.updateMediaContent(ctx, exec); err != nil {
 		return err
 	}
@@ -101,18 +94,11 @@ func (v *VSCodeWeb) Setup(
 }
 
 func (v *VSCodeWeb) updateMediaContent(ctx context.Context, exec *devcontainer.Exec) error {
-	findCh := make(chan []byte)
-	err := exec.ExecuteCommandInHomeDirectory(ctx, findPathScript, true, false, findCh)
-	var findOutput []byte
-
-	for chunk := range findCh {
-		findOutput = append(findOutput, chunk...) // Concatenate each chunk of data
-	}
-
+	findOutput, err := exec.ExecuteCommand(ctx, findPathScript, true, exec.DefaultWorkingDir)
 	if err != nil {
 		return fmt.Errorf("failed to find VSCode Web install path: %w", err)
 	}
-	path := string(findOutput)
+	path := findOutput
 	startIndex := strings.Index(path, startMarker)
 	endIndex := strings.Index(path, endMarker)
 	if startIndex == -1 || endIndex == -1 || startIndex >= endIndex {
@@ -153,10 +139,8 @@ func (v *VSCodeWeb) Run(
 		)
 	}
 	gitspaceLogger.Info("Starting IDE ...")
-	outputCh := make(chan []byte)
-
 	// Execute the script in the home directory
-	err = exec.ExecuteCommandInHomeDirectory(ctx, runScript, false, false, outputCh)
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, runScript, false, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to run VSCode Web: %w", err)
 	}

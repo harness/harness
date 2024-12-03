@@ -17,6 +17,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
@@ -156,16 +157,50 @@ func ExecuteCommandInHomeDirAndLog(
 	gitspaceLogger types.GitspaceLogger,
 	verbose bool,
 ) error {
-	outputCh := make(chan []byte)
-	err := exec.ExecuteCommandInHomeDirectory(ctx, script, root, false, outputCh)
-	for output := range outputCh {
-		msg := string(output)
-		// Log output from the command as a string
-		if len(output) > 0 {
-			if verbose || strings.HasPrefix(msg, devcontainer.LoggerErrorPrefix) {
-				gitspaceLogger.Info(msg)
+	// Buffer upto a thousand messages
+	outputCh := make(chan []byte, 1000)
+	err := exec.ExecuteCmdInHomeDirectoryAsyncStream(ctx, script, root, false, outputCh)
+	if err != nil {
+		return err
+	}
+	// Use select to wait for the output and exit status
+	for {
+		select {
+		case output := <-outputCh:
+			done, chErr := handleOutputChannel(output, verbose, gitspaceLogger)
+			if done {
+				return chErr
 			}
+		case <-ctx.Done():
+			// Handle context cancellation or timeout
+			return ctx.Err()
 		}
 	}
-	return err
+}
+
+func handleOutputChannel(output []byte, verbose bool, gitspaceLogger types.GitspaceLogger) (bool, error) {
+	// Handle the exit status first
+	if strings.HasPrefix(string(output), devcontainer.ChannelExitStatus) {
+		// Extract the exit code from the message
+		exitCodeStr := strings.TrimPrefix(string(output), devcontainer.ChannelExitStatus)
+		exitCode, err := strconv.Atoi(exitCodeStr)
+		if err != nil {
+			return true, fmt.Errorf("invalid exit status format: %w", err)
+		}
+		if exitCode != 0 {
+			gitspaceLogger.Info("Process Exited with status " + exitCodeStr)
+			return true, fmt.Errorf("command exited with non-zero status: %d", exitCode)
+		}
+		// If exit status is zero, just continue processing
+		return true, nil
+	}
+	// Handle regular command output
+	msg := string(output)
+	if len(output) > 0 {
+		// Log output if verbose or if it's an error
+		if verbose || strings.HasPrefix(msg, devcontainer.LoggerErrorPrefix) {
+			gitspaceLogger.Info(msg)
+		}
+	}
+	return false, nil
 }

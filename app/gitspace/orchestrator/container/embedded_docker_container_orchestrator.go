@@ -197,12 +197,12 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 	codeRepoDir := filepath.Join(homeDir, resolvedRepoDetails.RepoName)
 
 	exec := &devcontainer.Exec{
-		ContainerName: containerName,
-		DockerClient:  dockerClient,
-		HomeDir:       homeDir,
-		RemoteUser:    remoteUser,
-		AccessKey:     accessKey,
-		AccessType:    gitspaceConfig.GitspaceInstance.AccessType,
+		ContainerName:     containerName,
+		DockerClient:      dockerClient,
+		DefaultWorkingDir: homeDir,
+		RemoteUser:        remoteUser,
+		AccessKey:         accessKey,
+		AccessType:        gitspaceConfig.GitspaceInstance.AccessType,
 	}
 
 	// Set up git credentials if needed
@@ -220,7 +220,7 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 	// Execute post-start command
 	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
 	command := ExtractLifecycleCommands(PostStartAction, devcontainerConfig)
-	startErr = ExecuteCommands(ctx, exec, codeRepoDir, logStreamInstance, command, PostStartAction)
+	startErr = ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, logStreamInstance, command, PostStartAction)
 	if startErr != nil {
 		log.Warn().Msgf("Error is post-start command, continuing : %s", startErr.Error())
 	}
@@ -454,12 +454,12 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 
 	// Setup and run commands
 	exec := &devcontainer.Exec{
-		ContainerName: containerName,
-		DockerClient:  dockerClient,
-		HomeDir:       homeDir,
-		RemoteUser:    remoteUser,
-		AccessKey:     *gitspaceConfig.GitspaceInstance.AccessKey,
-		AccessType:    gitspaceConfig.GitspaceInstance.AccessType,
+		ContainerName:     containerName,
+		DockerClient:      dockerClient,
+		DefaultWorkingDir: homeDir,
+		RemoteUser:        remoteUser,
+		AccessKey:         *gitspaceConfig.GitspaceInstance.AccessKey,
+		AccessType:        gitspaceConfig.GitspaceInstance.AccessType,
 	}
 
 	if err := e.setupGitspaceAndIDE(
@@ -598,7 +598,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
 				command := ExtractLifecycleCommands(PostCreateAction, devcontainerConfig)
-				return ExecuteCommands(ctx, exec, codeRepoDir, gitspaceLogger, command, PostCreateAction)
+				return ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, gitspaceLogger, command, PostCreateAction)
 			},
 			StopOnFailure: false,
 		},
@@ -610,7 +610,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
 				command := ExtractLifecycleCommands(PostStartAction, devcontainerConfig)
-				return ExecuteCommands(ctx, exec, codeRepoDir, gitspaceLogger, command, PostStartAction)
+				return ExecuteLifecycleCommands(ctx, *exec, codeRepoDir, gitspaceLogger, command, PostStartAction)
 			},
 			StopOnFailure: false,
 		},

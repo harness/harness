@@ -45,7 +45,7 @@ func (u *ServiceImpl) Manage(
 			Username:   exec.RemoteUser,
 			AccessKey:  exec.AccessKey,
 			AccessType: exec.AccessType,
-			HomeDir:    exec.HomeDir,
+			HomeDir:    exec.DefaultWorkingDir,
 		})
 	if err != nil {
 		return fmt.Errorf(

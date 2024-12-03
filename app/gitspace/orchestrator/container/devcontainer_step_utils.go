@@ -53,9 +53,9 @@ func ValidateSupportedOS(
 	return nil
 }
 
-func ExecuteCommands(
+func ExecuteLifecycleCommands(
 	ctx context.Context,
-	exec *devcontainer.Exec,
+	exec devcontainer.Exec,
 	codeRepoDir string,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	commands []string,
@@ -69,18 +69,12 @@ func ExecuteCommands(
 		gitspaceLogger.Info(fmt.Sprintf("Executing %s command: %s", actionType, command))
 		gitspaceLogger.Info(fmt.Sprintf("%s command execution output...", actionType))
 
-		// Create a channel to stream command output
-		outputCh := make(chan []byte)
-		err := exec.ExecuteCommand(ctx, command, false, false, codeRepoDir, outputCh)
+		exec.DefaultWorkingDir = codeRepoDir
+		err := common.ExecuteCommandInHomeDirAndLog(ctx, &exec, command, false, gitspaceLogger, true)
 		if err != nil {
 			return logStreamWrapError(
 				gitspaceLogger, fmt.Sprintf("Error while executing %s command: %s", actionType, command), err)
 		}
-
-		for output := range outputCh {
-			gitspaceLogger.Info(string(output))
-		}
-
 		gitspaceLogger.Info(fmt.Sprintf("Completed execution %s command: %s", actionType, command))
 	}
 
