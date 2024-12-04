@@ -36,6 +36,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const SQLITE3 = "sqlite3"
+
 type registryDao struct {
 	db *sqlx.DB
 
@@ -272,8 +274,6 @@ func (r registryDao) GetAll(
 		GROUP BY 1
 	`
 
-	cte := buildCTE(parentID)
-
 	var query sq.SelectBuilder
 	if recursive {
 		query = databaseg.Builder.
@@ -331,6 +331,12 @@ func (r registryDao) GetAll(
 	}
 
 	if recursive {
+		var cte string
+		if r.db.DriverName() == SQLITE3 {
+			cte = buildCTESqlite(parentID)
+		} else {
+			cte = buildCTE(parentID)
+		}
 		// Add CTE to the query
 		sql = cte + sql
 	}
@@ -423,6 +429,53 @@ func buildCTE(parentID int64) string {
 `
 	cte = fmt.Sprintf(cte, parentID)
 	return cte
+}
+
+// buildCTESqlite is equivalent to buildCTE but for SQLite.
+func buildCTESqlite(parentID int64) string {
+	cte := `
+	WITH RECURSIVE registry_hierarchy AS (
+		-- Base case: Start with nodes having registry_parent_id = %d
+		SELECT
+			r.registry_id,
+			r.registry_parent_id,
+			r.registry_root_parent_id,
+			s.space_parent_id AS registry_parent_parent_id,
+			r.registry_name,
+			CAST(1 AS INTEGER) AS recursion_level, -- Initialize recursion level
+			json_array(r.registry_id) AS path -- Track visited nodes
+		FROM
+			registries r
+		LEFT JOIN
+			spaces s ON r.registry_parent_id = s.space_id -- Fetch registry_parent_parent_id from spaces
+		WHERE
+			r.registry_parent_id = %d
+		UNION 
+		-- Recursive step: Traverse the hierarchy upward to the root
+		SELECT 
+			r.registry_id,
+			r.registry_parent_id,
+			r.registry_root_parent_id,
+			s.space_parent_id AS registry_parent_parent_id,
+			r.registry_name,
+			rh.recursion_level + 1 AS recursion_level, -- Increment recursion level
+			json(rh.path || ',' || json(r.registry_id)) -- Append current node to the path
+		FROM
+			registries r
+		LEFT JOIN
+			spaces s ON r.registry_parent_id = s.space_id -- Fetch registry_parent_parent_id
+		INNER JOIN
+			registry_hierarchy rh ON rh.registry_parent_parent_id = r.registry_parent_id -- Match parent to child
+		WHERE
+			r.registry_id NOT IN (SELECT value FROM json_each(rh.path)) -- Avoid revisiting nodes
+			AND rh.registry_parent_parent_id IS NOT NULL
+			AND rh.recursion_level < 10 -- Limit recursion depth
+	),
+	registry_hierarchy_u AS (
+		SELECT DISTINCT registry_id FROM registry_hierarchy)
+	`
+	// Correctly format the string using parentID
+	return fmt.Sprintf(cte, parentID, parentID)
 }
 
 func (r registryDao) CountAll(
