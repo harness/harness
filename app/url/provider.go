@@ -78,6 +78,8 @@ type Provider interface {
 	GetAPIProto(ctx context.Context) string
 
 	RegistryURL(ctx context.Context, params ...string) string
+
+	GetUIBaseURL(ctx context.Context) string
 }
 
 // Provider provides the URLs of the Harness system.
