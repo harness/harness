@@ -466,7 +466,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       resource: {
         resourceType: 'CODE_REPOSITORY'
       },
-      permissions: ['code_repo_push']
+      permissions: ['code_repo_create']
     },
     [space]
   )
