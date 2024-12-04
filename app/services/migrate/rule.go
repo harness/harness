@@ -104,7 +104,7 @@ func (migrate Rule) Import(
 			RepoID:     &repo.ID,
 			SpaceID:    nil,
 			Type:       protection.TypeBranch,
-			State:      enum.RuleStateActive,
+			State:      enum.RuleState(extRule.State),
 			Identifier: extRule.Identifier,
 			Pattern:    pattern.JSON(),
 			Definition: json.RawMessage(definitionJSON),
