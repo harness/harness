@@ -396,7 +396,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		return err
 	}
 
-	metadataFromImage, err := ExtractMetadataFromImage(ctx, imageName, dockerClient)
+	metadataFromImage, imageUser, err := ExtractMetadataAndUserFromImage(ctx, imageName, dockerClient)
 	if err != nil {
 		return err
 	}
@@ -419,7 +419,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		gitspaceLogger.Info(fmt.Sprintf("Setting Environment : %v", environment))
 	}
 
-	containerUser := GetContainerUser(runArgsMap, devcontainerConfig, metadataFromImage)
+	containerUser := GetContainerUser(runArgsMap, devcontainerConfig, metadataFromImage, imageUser)
 	remoteUser := GetRemoteUser(devcontainerConfig, metadataFromImage, containerUser)
 
 	homeDir := GetUserHomeDir(remoteUser)

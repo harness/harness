@@ -51,6 +51,7 @@ func GetContainerUser(
 	runArgsMap map[types.RunArg]*types.RunArgValue,
 	devcontainerConfig types.DevcontainerConfig,
 	metadataFromImage map[string]any,
+	imageUser string,
 ) string {
 	if containerUser := getUser(runArgsMap); containerUser != "" {
 		return containerUser
@@ -61,7 +62,7 @@ func GetContainerUser(
 	if containerUser, ok := metadataFromImage["containerUser"].(string); ok {
 		return containerUser
 	}
-	return ""
+	return imageUser
 }
 
 func ExtractRemoteUserFromLabels(inspectResp types2.ContainerJSON) string {

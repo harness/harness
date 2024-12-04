@@ -309,21 +309,25 @@ func GetContainerInfo(
 	return inspectResp.ID, usedPorts, remoteUser, nil
 }
 
-func ExtractMetadataFromImage(
+func ExtractMetadataAndUserFromImage(
 	ctx context.Context,
 	imageName string,
 	dockerClient *client.Client,
-) (map[string]any, error) {
+) (map[string]any, string, error) {
 	imageInspect, _, err := dockerClient.ImageInspectWithRaw(ctx, imageName)
 	if err != nil {
-		return nil, fmt.Errorf("error while inspecting image: %w", err)
+		return nil, "", fmt.Errorf("error while inspecting image: %w", err)
+	}
+	imageUser := imageInspect.Config.User
+	if imageUser == "" {
+		imageUser = "root"
 	}
 	metadataMap := map[string]any{}
 	if metadata, ok := imageInspect.Config.Labels["devcontainer.metadata"]; ok {
 		dst := []map[string]any{}
 		unmarshalErr := json.Unmarshal([]byte(metadata), &dst)
 		if unmarshalErr != nil {
-			return nil, fmt.Errorf("error while unmarshalling metadata: %w", err)
+			return nil, imageUser, fmt.Errorf("error while unmarshalling metadata: %w", err)
 		}
 		for _, values := range dst {
 			for k, v := range values {
@@ -331,7 +335,7 @@ func ExtractMetadataFromImage(
 			}
 		}
 	}
-	return metadataMap, nil
+	return metadataMap, imageUser, nil
 }
 
 func PullImage(
