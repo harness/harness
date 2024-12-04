@@ -114,6 +114,7 @@ func GetTagMetadata(
 		isLatestVersion := latestTag == tag.Name
 		command := GetPullCommand(image, tag.Name, string(tag.PackageType), registryURL)
 		packageType, err := toPackageType(string(tag.PackageType))
+		downloadCount := tag.DownloadCount
 		if err != nil {
 			log.Ctx(ctx).Error().Err(err).Msgf("Error converting package type %s", tag.PackageType)
 			continue
@@ -126,6 +127,7 @@ func GetTagMetadata(
 			DigestCount:     &digestCount,
 			IslatestVersion: &isLatestVersion,
 			PullCommand:     &command,
+			DownloadsCount:  &downloadCount,
 		}
 		artifactVersionMetadataList = append(artifactVersionMetadataList, *artifactVersionMetadata)
 	}
@@ -261,6 +263,7 @@ func GetDockerArtifactDetails(
 		PullCommand:     &pullCommand,
 		Url:             GetTagURL(tag.ImageName, tag.Name, registryURL),
 		Size:            &size,
+		DownloadsCount:  &tag.DownloadCount,
 	}
 
 	response := &artifactapi.DockerArtifactDetailResponseJSONResponse{
@@ -282,6 +285,7 @@ func GetHelmArtifactDetails(
 	createdAt := GetTimeInMs(tag.CreatedAt)
 	modifiedAt := GetTimeInMs(tag.UpdatedAt)
 	size := GetSize(manifest.TotalSize)
+	downloadCount := tag.DownloadCount
 	artifactDetail := &artifactapi.HelmArtifactDetail{
 		Artifact:        &tag.ImageName,
 		Version:         tag.Name,
@@ -293,6 +297,7 @@ func GetHelmArtifactDetails(
 		PullCommand:     &pullCommand,
 		Url:             GetTagURL(tag.ImageName, tag.Name, registryURL),
 		Size:            &size,
+		DownloadsCount:  &downloadCount,
 	}
 
 	response := &artifactapi.HelmArtifactDetailResponseJSONResponse{

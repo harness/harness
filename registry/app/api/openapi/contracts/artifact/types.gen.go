@@ -210,10 +210,11 @@ type DockerLayersSummary struct {
 
 // DockerManifestDetails Harness Artifact Layers
 type DockerManifestDetails struct {
-	CreatedAt *string `json:"createdAt,omitempty"`
-	Digest    string  `json:"digest"`
-	OsArch    string  `json:"osArch"`
-	Size      *string `json:"size,omitempty"`
+	CreatedAt      *string `json:"createdAt,omitempty"`
+	Digest         string  `json:"digest"`
+	DownloadsCount *int64  `json:"downloadsCount,omitempty"`
+	OsArch         string  `json:"osArch"`
+	Size           *string `json:"size,omitempty"`
 }
 
 // DockerManifests Harness Manifests

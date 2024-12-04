@@ -91,15 +91,17 @@ type tagMetadataDB struct {
 	NonConformant   bool                 `db:"manifest_non_conformant"`
 	Payload         []byte               `db:"manifest_payload"`
 	MediaType       string               `db:"mt_media_type"`
+	DownloadCount   int64                `db:"download_count"`
 }
 
 type tagDetailDB struct {
-	ID        int64  `db:"id"`
-	Name      string `db:"name"`
-	ImageName string `db:"image_name"`
-	CreatedAt int64  `db:"created_at"`
-	UpdatedAt int64  `db:"updated_at"`
-	Size      string `db:"size"`
+	ID            int64  `db:"id"`
+	Name          string `db:"name"`
+	ImageName     string `db:"image_name"`
+	CreatedAt     int64  `db:"created_at"`
+	UpdatedAt     int64  `db:"updated_at"`
+	Size          string `db:"size"`
+	DownloadCount int64  `db:"download_count"`
 }
 
 func (t tagDao) CreateOrUpdate(ctx context.Context, tag *types.Tag) error {
@@ -466,15 +468,35 @@ func (t tagDao) GetTagDetail(
 	ctx context.Context, repoID int64, imageName string,
 	name string,
 ) (*types.TagDetail, error) {
-	q := databaseg.Builder.Select(
-		`tag_id as id, tag_name as name, 
-		tag_image_name as image_name, tag_created_at as created_at, 
-		tag_updated_at as updated_at, manifest_total_size as size`,
-	).
-		From("tags").
-		Join("manifests ON manifest_id = tag_manifest_id").
+	// Define subquery for download counts
+	downloadCountSubquery := `
+        SELECT 
+            a.artifact_image_id, 
+            COUNT(d.download_stat_id) AS download_count, 
+            i.image_name, 
+            i.image_registry_id
+        FROM artifacts a
+        JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id
+        JOIN images i ON i.image_id = a.artifact_image_id
+        GROUP BY a.artifact_image_id, i.image_name, i.image_registry_id
+    `
+	// Build main query
+	q := databaseg.Builder.
+		Select(`
+            t.tag_id AS id, 
+            t.tag_name AS name, 
+            t.tag_image_name AS image_name, 
+            t.tag_created_at AS created_at, 
+            t.tag_updated_at AS updated_at, 
+            m.manifest_total_size AS size, 
+            COALESCE(dc.download_count, 0) AS download_count
+        `).
+		From("tags AS t").
+		Join("manifests AS m ON m.manifest_id = t.tag_manifest_id").
+		LeftJoin(fmt.Sprintf("(%s) AS dc ON t.tag_image_name = dc.image_name "+
+			"AND t.tag_registry_id = dc.image_registry_id", downloadCountSubquery)).
 		Where(
-			"tag_registry_id = ? AND tag_image_name = ? AND tag_name = ?",
+			"t.tag_registry_id = ? AND t.tag_image_name = ? AND t.tag_name = ?",
 			repoID, imageName, name,
 		)
 
@@ -765,16 +787,38 @@ func (t tagDao) GetAllTagsByRepoAndImage(
 	image string, sortByField string, sortByOrder string, limit int, offset int,
 	search string,
 ) (*[]types.TagMetadata, error) {
-	q := databaseg.Builder.Select(
-		`t.tag_name as name, m.manifest_total_size as size, 
-		r.registry_package_type as package_type, t.tag_updated_at as modified_at, 
-		m.manifest_schema_version, m.manifest_non_conformant, m.manifest_payload, 
-		mt.mt_media_type `,
-	).
+	// Define download count subquery
+	downloadCountSubquery := `
+        SELECT 
+            a.artifact_image_id, 
+            COUNT(d.download_stat_id) AS download_count, 
+            i.image_name, 
+            i.image_registry_id
+        FROM artifacts a
+        JOIN download_stats d ON d.download_stat_artifact_id = a.artifact_id
+        JOIN images i ON i.image_id = a.artifact_image_id
+        GROUP BY a.artifact_image_id, i.image_name, i.image_registry_id
+    `
+
+	// Build the main query
+	q := databaseg.Builder.
+		Select(`
+            t.tag_name AS name, 
+            m.manifest_total_size AS size, 
+            r.registry_package_type AS package_type, 
+            t.tag_updated_at AS modified_at,
+            m.manifest_schema_version, 
+            m.manifest_non_conformant, 
+            m.manifest_payload, 
+            mt.mt_media_type, 
+            COALESCE(dc.download_count, 0) AS download_count
+        `).
 		From("tags t").
 		Join("registries r ON t.tag_registry_id = r.registry_id").
 		Join("manifests m ON t.tag_manifest_id = m.manifest_id").
 		Join("media_types mt ON mt.mt_id = m.manifest_media_type_id").
+		LeftJoin(fmt.Sprintf("(%s) AS dc ON t.tag_image_name = dc.image_name "+
+			"AND t.tag_registry_id = dc.image_registry_id", downloadCountSubquery)).
 		Where(
 			"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
 			parentID, repoKey, image,
@@ -977,6 +1021,7 @@ func (t tagDao) mapToTagMetadata(
 		NonConformant:   dst.NonConformant,
 		MediaType:       dst.MediaType,
 		Payload:         dst.Payload,
+		DownloadCount:   dst.DownloadCount,
 	}, nil
 }
 
@@ -985,11 +1030,12 @@ func (t tagDao) mapToTagDetail(
 	dst *tagDetailDB,
 ) (*types.TagDetail, error) {
 	return &types.TagDetail{
-		ID:        dst.ID,
-		Name:      dst.Name,
-		ImageName: dst.ImageName,
-		Size:      dst.Size,
-		CreatedAt: time.UnixMilli(dst.CreatedAt),
-		UpdatedAt: time.UnixMilli(dst.UpdatedAt),
+		ID:            dst.ID,
+		Name:          dst.Name,
+		ImageName:     dst.ImageName,
+		Size:          dst.Size,
+		CreatedAt:     time.UnixMilli(dst.CreatedAt),
+		UpdatedAt:     time.UnixMilli(dst.UpdatedAt),
+		DownloadCount: dst.DownloadCount,
 	}, nil
 }

@@ -1418,6 +1418,9 @@ components:
           type: string
         createdAt:
           type: string
+        downloadsCount:
+          type: integer
+          format: int64
       required:
         - digest
         - layers

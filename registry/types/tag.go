@@ -56,13 +56,15 @@ type TagMetadata struct {
 	NonConformant   bool
 	Payload         Payload
 	MediaType       string
+	DownloadCount   int64
 }
 
 type TagDetail struct {
-	ID        int64
-	Name      string
-	ImageName string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Size      string
+	ID            int64
+	Name          string
+	ImageName     string
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Size          string
+	DownloadCount int64
 }
