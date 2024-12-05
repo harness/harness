@@ -368,6 +368,7 @@ export interface ListGitspacesQueryParams {
   gitspace_states?: EnumGitspaceFilterState[]
   sort?: EnumGitspaceSort
   order?: 'asc' | 'desc'
+  query?: string
 }
 
 export interface ListGitspacesPathParams {

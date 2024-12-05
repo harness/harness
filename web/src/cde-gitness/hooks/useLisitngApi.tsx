@@ -71,7 +71,8 @@ export const useLisitngApi = ({
       gitspace_owner: filter.gitspace_owner || undefined,
       gitspace_states: filter.gitspace_states.length ? filter.gitspace_states : undefined,
       order: sortConfig.sort ? sortConfig.order : undefined,
-      sort: sortConfig.sort
+      sort: sortConfig.sort,
+      query: filter.query || undefined
     },
     queryParamStringifyOptions: {
       arrayFormat: 'repeat'
@@ -93,7 +94,8 @@ export const useLisitngApi = ({
         gitspace_owner: filter.gitspace_owner || undefined,
         gitspace_states: filter?.gitspace_states?.length ? filter.gitspace_states : undefined,
         order: sortConfig.sort ? sortConfig.order : undefined,
-        sort: sortConfig.sort
+        sort: sortConfig.sort,
+        query: filter.query || undefined
       }
       cde.refetch({
         queryParams,

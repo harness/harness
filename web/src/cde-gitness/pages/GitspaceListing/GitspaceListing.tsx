@@ -23,7 +23,8 @@ import {
   HarnessDocTooltip,
   Container,
   Layout,
-  Text
+  Text,
+  ExpandingSearchInput
 } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
@@ -56,11 +57,13 @@ interface pageCDEBrowser {
   gitspace_owner?: GitspaceOwnerType
   sort?: EnumGitspaceSort
   order?: 'asc' | 'desc'
+  query?: string
 }
 
 interface filterProps {
   gitspace_states: GitspaceStatus[]
   gitspace_owner: GitspaceOwnerType
+  query: string
 }
 
 interface sortProps {
@@ -84,16 +87,20 @@ const GitspaceListing = () => {
   const statesString: any = pageBrowser.gitspace_states
   const filterInit: filterProps = {
     gitspace_states: statesString?.split(',')?.map((state: string) => state.trim() as GitspaceStatus) ?? [],
-    gitspace_owner: pageBrowser.gitspace_owner ?? GitspaceOwnerType.SELF
+    gitspace_owner: pageBrowser.gitspace_owner ?? GitspaceOwnerType.SELF,
+    query: pageBrowser.query ?? ''
   }
+  const [filter, setFilter] = useState(filterInit)
+
   const pageInit: pageConfigProps = {
     page: pageBrowser.page ? parseInt(pageBrowser.page) : 1,
     limit: pageBrowser.limit ? parseInt(pageBrowser.limit) : LIST_FETCHING_LIMIT
   }
   const [pageConfig, setPageConfig] = useState(pageInit)
-  const [filter, setFilter] = useState(filterInit)
-
-  const sortInit: sortProps = { sort: (pageBrowser.sort as EnumGitspaceSort) ?? SortByType.LAST_USED, order: 'desc' }
+  const sortInit: sortProps = {
+    sort: (pageBrowser.sort as EnumGitspaceSort) ?? SortByType.LAST_ACTIVATED,
+    order: 'desc'
+  }
   const [sortConfig, setSortConfig] = useState(sortInit)
 
   const {
@@ -117,14 +124,14 @@ const GitspaceListing = () => {
   const { totalItems, totalPages, gitspaceExists } = useParsePaginationInfo(response)
 
   const handleFilterChange = (key: string, value: any) => {
-    const payload: any = { ...filter }
-    payload[key] = value
+    const payload = { ...filter, [key]: value }
+    setPageConfig(prevState => ({
+      page: 1,
+      limit: prevState.limit
+    }))
     setFilter(payload)
-    if (typeof value === 'string') {
-      updateQueryParams({ [key]: value })
-    } else if (Array.isArray(value)) {
-      updateQueryParams({ [key]: value?.toString() })
-    }
+    const params = typeof value === 'string' ? { [key]: value, page: 1 } : { [key]: value?.toString(), page: 1 }
+    updateQueryParams(params)
   }
 
   const handleSort = (key: string, value: string) => {
@@ -222,6 +229,15 @@ const GitspaceListing = () => {
                   withoutBoxShadow
                   onClick={() => handleSort('order', sortConfig.order === 'asc' ? 'desc' : 'asc')}
                   disabled={!sortConfig.sort}
+                />
+                <ExpandingSearchInput
+                  autoFocus={false}
+                  alwaysExpanded
+                  placeholder={getString('search')}
+                  onChange={text => {
+                    handleFilterChange('query', text)
+                  }}
+                  defaultValue={filter?.query ?? ''}
                 />
               </Layout.Horizontal>
             </Page.SubHeader>
