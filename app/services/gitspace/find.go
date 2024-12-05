@@ -66,7 +66,7 @@ func (c *Service) setInstance(
 	if instance != nil {
 		gitspaceConfig.GitspaceInstance = instance
 		instance.SpacePath = gitspaceConfig.SpacePath
-		gitspaceStateType, err := enum.GetGitspaceStateFromInstance(instance.State, instance.Updated)
+		gitspaceStateType, err := instance.GetGitspaceState()
 		if err != nil {
 			return err
 		}

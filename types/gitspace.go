@@ -15,6 +15,9 @@
 package types
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -101,4 +104,42 @@ type GitspaceInstanceFilter struct {
 	States              []enum.GitspaceInstanceStateType
 	SpaceIDs            []int64
 	Limit               int
+}
+
+func (g *GitspaceInstance) GetGitspaceState() (enum.GitspaceStateType, error) {
+	if g == nil {
+		return enum.GitspaceStateError, fmt.Errorf("GitspaceInstance is nil")
+	}
+	instanceState := g.State
+	switch instanceState {
+	case enum.GitspaceInstanceStateRunning:
+		return enum.GitspaceStateRunning, nil
+	case enum.GitspaceInstanceStateDeleted:
+		return enum.GitspaceStateStopped, nil
+	case enum.GitspaceInstanceStateUninitialized:
+		return enum.GitspaceStateUninitialized, nil
+	case enum.GitspaceInstanceStateError,
+		enum.GitspaceInstanceStateUnknown:
+		return enum.GitspaceStateError, nil
+	case enum.GitspaceInstanceStateStarting:
+		if g.LastUsed != nil && lastUpdateTimeExceeded(*g.LastUsed) {
+			return enum.GitspaceStateError, nil
+		}
+		return enum.GitspaceStateStarting, nil
+	case enum.GitspaceInstanceStateStopping,
+		enum.GitSpaceInstanceStateCleaning:
+		if g.ActiveTimeEnded != nil && lastUpdateTimeExceeded(*g.ActiveTimeEnded) {
+			return enum.GitspaceStateError, nil
+		}
+		return enum.GitspaceStateStopping, nil
+	case enum.GitspaceInstanceStateCleaned:
+		return enum.GitspaceStateStopped, nil
+	default:
+		return enum.GitspaceStateError, fmt.Errorf("unsupported gitspace instance state %s", string(instanceState))
+	}
+}
+
+func lastUpdateTimeExceeded(lastUpdateTime int64) bool {
+	duration := time.Minute * 10
+	return time.Since(time.UnixMilli(lastUpdateTime)) > duration
 }

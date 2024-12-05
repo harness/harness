@@ -461,10 +461,7 @@ func (s gitspaceConfigStore) ToGitspaceConfig(
 	}
 
 	if instance != nil {
-		gitspaceStateType, err2 := enum.GetGitspaceStateFromInstance(
-			instance.State,
-			instance.Updated,
-		)
+		gitspaceStateType, err2 := instance.GetGitspaceState()
 		if err2 != nil {
 			return nil, err2
 		}
