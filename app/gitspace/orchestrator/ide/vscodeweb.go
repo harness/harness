@@ -83,7 +83,7 @@ func (v *VSCodeWeb) Setup(ctx context.Context, exec *devcontainer.Exec) ([]byte,
 
 	mediaFolderPath := path[startIndex+len(startMarker) : endIndex]
 	if len(mediaFolderPath) == 0 {
-		return fmt.Errorf("media folder path should not be empty, VSCode web is not installed")
+		return nil, fmt.Errorf("media folder path should not be empty, VSCode web is not installed")
 	}
 
 	err = v.copyMediaToContainer(ctx, exec, mediaFolderPath)
