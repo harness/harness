@@ -423,7 +423,7 @@ type Config struct {
 
 		AgentPort int `envconfig:"GITNESS_GITSPACE_AGENT_PORT" default:"8083"`
 
-		ProvisionTimeoutInMins int `envconfig:"GITNESS_PROVISION_TIMEOUT_IN_MINS" default:"60"`
+		InfraTimeoutInMins int `envconfig:"GITNESS_INFRA_TIMEOUT_IN_MINS" default:"60"`
 
 		BusyActionInMins int `envconfig:"GITNESS_BUSY_ACTION_IN_MINS" default:"15"`
 

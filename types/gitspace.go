@@ -122,13 +122,13 @@ func (g *GitspaceInstance) GetGitspaceState() (enum.GitspaceStateType, error) {
 		enum.GitspaceInstanceStateUnknown:
 		return enum.GitspaceStateError, nil
 	case enum.GitspaceInstanceStateStarting:
-		if g.LastUsed != nil && lastUpdateTimeExceeded(*g.LastUsed) {
+		if g.LastUsed != nil && lastUpdateTimeExceeds10Mins(*g.LastUsed) {
 			return enum.GitspaceStateError, nil
 		}
 		return enum.GitspaceStateStarting, nil
 	case enum.GitspaceInstanceStateStopping,
 		enum.GitSpaceInstanceStateCleaning:
-		if g.ActiveTimeEnded != nil && lastUpdateTimeExceeded(*g.ActiveTimeEnded) {
+		if g.ActiveTimeEnded != nil && lastUpdateTimeExceeds10Mins(*g.ActiveTimeEnded) {
 			return enum.GitspaceStateError, nil
 		}
 		return enum.GitspaceStateStopping, nil
@@ -139,7 +139,7 @@ func (g *GitspaceInstance) GetGitspaceState() (enum.GitspaceStateType, error) {
 	}
 }
 
-func lastUpdateTimeExceeded(lastUpdateTime int64) bool {
+func lastUpdateTimeExceeds10Mins(lastUpdateTime int64) bool {
 	duration := time.Minute * 10
 	return time.Since(time.UnixMilli(lastUpdateTime)) > duration
 }

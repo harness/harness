@@ -25,7 +25,7 @@ import (
 
 func (c *Service) StopGitspaceAction(
 	ctx context.Context,
-	config *types.GitspaceConfig,
+	config types.GitspaceConfig,
 	now time.Time,
 ) error {
 	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID)
@@ -55,7 +55,7 @@ func (c *Service) StopGitspaceAction(
 
 func (c *Service) GitspaceAutostopAction(
 	ctx context.Context,
-	config *types.GitspaceConfig,
+	config types.GitspaceConfig,
 	now time.Time,
 ) error {
 	c.EmitGitspaceConfigEvent(ctx, config, enum.GitspaceEventTypeGitspaceAutoStop)

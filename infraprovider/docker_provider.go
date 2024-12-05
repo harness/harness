@@ -55,7 +55,7 @@ func (d DockerProvider) Provision(
 	spaceID int64,
 	spacePath string,
 	gitspaceConfigIdentifier string,
-	_ string,
+	gitspaceInstanceIdentifier string,
 	_ int,
 	requiredGitspacePorts []types.GitspacePort,
 	inputParameters []types.InfraProviderParameter,
@@ -83,6 +83,7 @@ func (d DockerProvider) Provision(
 	infrastructure.SpaceID = spaceID
 	infrastructure.SpacePath = spacePath
 	infrastructure.GitspaceConfigIdentifier = gitspaceConfigIdentifier
+	infrastructure.GitspaceInstanceIdentifier = gitspaceInstanceIdentifier
 
 	storageName, err := d.createNamedVolume(ctx, spacePath, gitspaceConfigIdentifier, dockerClient)
 	if err != nil {

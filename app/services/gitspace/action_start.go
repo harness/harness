@@ -26,7 +26,7 @@ import (
 
 func (c *Service) StartGitspaceAction(
 	ctx context.Context,
-	config *types.GitspaceConfig,
+	config types.GitspaceConfig,
 ) error {
 	savedGitspaceInstance, err := c.gitspaceInstanceStore.FindLatestByGitspaceConfigID(ctx, config.ID)
 	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {

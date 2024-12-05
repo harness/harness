@@ -39,7 +39,7 @@ const gitspaceInstanceCleaningTimedOutMins = 15
 
 func (c *Service) gitspaceBusyOperation(
 	ctx context.Context,
-	config *types.GitspaceConfig,
+	config types.GitspaceConfig,
 ) error {
 	if config.GitspaceInstance == nil || !config.GitspaceInstance.State.IsBusyStatus() {
 		return nil
@@ -50,30 +50,35 @@ func (c *Service) gitspaceBusyOperation(
 		return usererror.NewWithPayload(http.StatusForbidden, fmt.Sprintf(
 			"Last session for this gitspace is still %s", config.GitspaceInstance.State))
 	}
-
 	config.GitspaceInstance.State = enum.GitspaceInstanceStateError
 	if err := c.UpdateInstance(ctx, config.GitspaceInstance); err != nil {
 		return fmt.Errorf("failed to update gitspace config for %s: %w", config.Identifier, err)
 	}
-
 	return nil
 }
 
 func (c *Service) submitAsyncOps(
 	ctx context.Context,
-	config *types.GitspaceConfig,
+	config types.GitspaceConfig,
 	action enum.GitspaceActionType,
 ) {
+	switch action {
+	case enum.GitspaceActionTypeStart:
+		config.GitspaceInstance.State = enum.GitspaceInstanceStateStarting
+	case enum.GitspaceActionTypeStop:
+		config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
+	}
+	if updateErr := c.UpdateInstance(ctx, config.GitspaceInstance); updateErr != nil {
+		log.Err(updateErr).Msgf(
+			"failed to update gitspace instance during exec %s", config.GitspaceInstance.Identifier)
+	}
 	errChannel := make(chan *types.GitspaceError)
-
 	submitCtx := context.WithoutCancel(ctx)
-	gitspaceTimedOutInMins := time.Duration(c.config.Gitspace.ProvisionTimeoutInMins) * time.Minute
+	gitspaceTimedOutInMins := time.Duration(c.config.Gitspace.InfraTimeoutInMins) * time.Minute
 	ttlExecuteContext, cancel := context.WithTimeout(submitCtx, gitspaceTimedOutInMins)
 
-	go c.asyncOperation(ttlExecuteContext, *config, action, errChannel)
-
+	go c.triggerOrchestrator(ttlExecuteContext, config, action, errChannel)
 	var err *types.GitspaceError
-
 	go func() {
 		select {
 		case <-ttlExecuteContext.Done():
@@ -106,35 +111,21 @@ func (c *Service) submitAsyncOps(
 	}()
 }
 
-func (c *Service) asyncOperation(
+func (c *Service) triggerOrchestrator(
 	ctxWithTimedOut context.Context,
 	config types.GitspaceConfig,
 	action enum.GitspaceActionType,
 	errChannel chan *types.GitspaceError,
 ) {
 	defer close(errChannel)
-
 	var orchestrateErr *types.GitspaceError
 
 	switch action {
 	case enum.GitspaceActionTypeStart:
-		config.GitspaceInstance.State = enum.GitspaceInstanceStateStarting
-		err := c.UpdateInstance(ctxWithTimedOut, config.GitspaceInstance)
-		if err != nil {
-			log.Err(err).Msgf(
-				"failed to update gitspace instance during exec %s", config.GitspaceInstance.Identifier)
-		}
 		orchestrateErr = c.orchestrator.TriggerStartGitspace(ctxWithTimedOut, config)
 	case enum.GitspaceActionTypeStop:
-		config.GitspaceInstance.State = enum.GitspaceInstanceStateStopping
-		err := c.UpdateInstance(ctxWithTimedOut, config.GitspaceInstance)
-		if err != nil {
-			log.Err(err).Msgf(
-				"failed to update gitspace instance during exec %s", config.GitspaceInstance.Identifier)
-		}
 		orchestrateErr = c.orchestrator.TriggerStopGitspace(ctxWithTimedOut, config)
 	}
-
 	if orchestrateErr != nil {
 		orchestrateErr.Error =
 			fmt.Errorf("failed to start/stop gitspace: %s %w", config.Identifier, orchestrateErr.Error)
@@ -142,7 +133,7 @@ func (c *Service) asyncOperation(
 	}
 }
 
-func (c *Service) buildGitspaceInstance(config *types.GitspaceConfig) (*types.GitspaceInstance, error) {
+func (c *Service) buildGitspaceInstance(config types.GitspaceConfig) (*types.GitspaceInstance, error) {
 	gitspaceMachineUser := defaultMachineUser
 	now := time.Now().UnixMilli()
 	suffixUID, err := gonanoid.Generate(AllowedUIDAlphabet, 6)
@@ -177,7 +168,7 @@ func (c *Service) buildGitspaceInstance(config *types.GitspaceConfig) (*types.Gi
 
 func (c *Service) EmitGitspaceConfigEvent(
 	ctx context.Context,
-	config *types.GitspaceConfig,
+	config types.GitspaceConfig,
 	eventType enum.GitspaceEventType,
 ) {
 	c.eventReporter.EmitGitspaceEvent(ctx, events.GitspaceEvent, &events.GitspaceEventPayload{

@@ -65,7 +65,7 @@ func NewService(
 					stream.WithMaxRetries(config.MaxRetries),
 				))
 
-			_ = r.RegisterGitspaceInfraEvent(service.handleGitspaceInfraEvent)
+			_ = r.RegisterGitspaceInfraEvent(service.handleGitspaceInfraResumeEvent)
 
 			return nil
 		})

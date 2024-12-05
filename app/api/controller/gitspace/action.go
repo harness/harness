@@ -52,11 +52,12 @@ func (c *Controller) Action(
 	}
 
 	gitspaceConfig, err := c.gitspaceConfigStore.FindByIdentifier(ctx, space.ID, in.Identifier)
-	gitspaceConfig.SpacePath = space.Path
-	gitspaceConfig.SpaceID = space.ID
 	if err != nil {
 		return nil, fmt.Errorf("failed to find gitspace config: %w", err)
 	}
+
+	gitspaceConfig.SpacePath = space.Path
+	gitspaceConfig.SpaceID = space.ID
 
 	// check if it's an internal repo
 	if gitspaceConfig.CodeRepo.Type == enum.CodeRepoTypeGitness {
@@ -87,12 +88,12 @@ func (c *Controller) Action(
 			return nil, err
 		}
 
-		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStart)
-		err = c.gitspaceSvc.StartGitspaceAction(ctx, gitspaceConfig)
+		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, *gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStart)
+		err = c.gitspaceSvc.StartGitspaceAction(ctx, *gitspaceConfig)
 		return gitspaceConfig, err
 	case enum.GitspaceActionTypeStop:
-		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStop)
-		err = c.gitspaceSvc.StopGitspaceAction(ctx, gitspaceConfig, time.Now())
+		c.gitspaceSvc.EmitGitspaceConfigEvent(ctx, *gitspaceConfig, enum.GitspaceEventTypeGitspaceActionStop)
+		err = c.gitspaceSvc.StopGitspaceAction(ctx, *gitspaceConfig, time.Now())
 		return gitspaceConfig, err
 	default:
 		return nil, fmt.Errorf("unknown action %s on gitspace : %s", string(in.Action), gitspaceConfig.Identifier)
