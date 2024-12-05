@@ -156,7 +156,6 @@ func (c *Controller) CreateRepo(
 			Repository: *repo,
 			IsPublic:   isRepoPublic,
 		}),
-		audit.WithData("created by", "migrator"),
 	)
 	if err != nil {
 		log.Warn().Msgf("failed to insert audit log for import repository operation: %s", err)
