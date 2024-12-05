@@ -36,12 +36,12 @@ func (c *Controller) UpdateSpace(
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	allowModifyingInternal, err := c.preprocessor.PreprocessUpdateInput(session.Principal.Type, in)
+	typ, err := c.preprocessor.PreprocessUpdateInput(session.Principal.Type, in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to preprocess update input: %w", err)
 	}
 
 	return c.webhookService.Update(
-		ctx, space.ID, enum.WebhookParentSpace, webhookIdentifier, allowModifyingInternal, in,
+		ctx, space.ID, enum.WebhookParentSpace, webhookIdentifier, typ, in,
 	)
 }

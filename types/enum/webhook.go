@@ -121,6 +121,28 @@ var webhookExecutionResults = sortEnum([]WebhookExecutionResult{
 	WebhookExecutionResultFatalError,
 })
 
+// WebhookType defines different types of a webhook.
+type WebhookType int
+
+func (WebhookType) Enum() []interface{} { return toInterfaceSlice(webhookTypes) }
+
+const (
+	// WebhookTypeExternal describes a webhook url pointing to external source.
+	WebhookTypeExternal WebhookType = iota
+
+	// WebhookTypeInternal describes a webhook url pointing to internal url.
+	WebhookTypeInternal
+
+	// WebhookTypeJira describes a webhook url pointing to jira.
+	WebhookTypeJira
+)
+
+var webhookTypes = sortEnum([]WebhookType{
+	WebhookTypeExternal,
+	WebhookTypeInternal,
+	WebhookTypeJira,
+})
+
 // WebhookTrigger defines the different types of webhook triggers available.
 type WebhookTrigger string
 

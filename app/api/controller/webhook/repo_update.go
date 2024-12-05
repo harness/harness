@@ -36,12 +36,12 @@ func (c *Controller) UpdateRepo(
 		return nil, fmt.Errorf("failed to acquire access to the repo: %w", err)
 	}
 
-	allowModifyingInternal, err := c.preprocessor.PreprocessUpdateInput(session.Principal.Type, in)
+	typ, err := c.preprocessor.PreprocessUpdateInput(session.Principal.Type, in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to preprocess update input: %w", err)
 	}
 
 	return c.webhookService.Update(
-		ctx, repo.ID, enum.WebhookParentRepo, webhookIdentifier, allowModifyingInternal, in,
+		ctx, repo.ID, enum.WebhookParentRepo, webhookIdentifier, typ, in,
 	)
 }

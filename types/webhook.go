@@ -30,7 +30,7 @@ type Webhook struct {
 	CreatedBy  int64              `json:"created_by"`
 	Created    int64              `json:"created"`
 	Updated    int64              `json:"updated"`
-	Internal   bool               `json:"-"`
+	Type       enum.WebhookType   `json:"-"`
 
 	// scope 0 indicates repo; scope > 0 indicates space depth level
 	Scope int64 `json:"scope"`

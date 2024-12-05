@@ -77,10 +77,10 @@ func (s *Service) Create(
 	principalID int64,
 	parentID int64,
 	parentType enum.WebhookParent,
-	internal bool,
+	typ enum.WebhookType,
 	in *types.WebhookCreateInput,
 ) (*types.Webhook, error) {
-	err := s.sanitizeCreateInput(in, internal)
+	err := s.sanitizeCreateInput(in, typ == enum.WebhookTypeInternal)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (s *Service) Create(
 		Updated:    now,
 		ParentID:   parentID,
 		ParentType: parentType,
-		Internal:   internal,
+		Type:       typ,
 		Scope:      scope,
 
 		// user input
@@ -127,7 +127,7 @@ func (s *Service) Create(
 
 	// internal hooks are hidden from non-internal read requests - properly communicate their existence on duplicate.
 	// This is best effort, any error we just ignore and fallback to original duplicate error.
-	if errors.Is(err, store.ErrDuplicate) && !internal {
+	if errors.Is(err, store.ErrDuplicate) && !(typ == enum.WebhookTypeInternal) {
 		existingHook, derr := s.webhookStore.FindByIdentifier(
 			ctx, enum.WebhookParentRepo, parentID, hook.Identifier)
 		if derr != nil {
@@ -137,7 +137,7 @@ func (s *Service) Create(
 				hook.Identifier,
 			)
 		}
-		if derr == nil && existingHook.Internal {
+		if derr == nil && existingHook.Type == enum.WebhookTypeInternal {
 			return nil, errors.Conflict("The provided identifier is reserved for internal purposes.")
 		}
 	}

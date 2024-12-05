@@ -16,6 +16,7 @@ package webhook
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/types"
@@ -69,7 +70,7 @@ func (s *Service) Update(
 	parentID int64,
 	parentType enum.WebhookParent,
 	webhookIdentifier string,
-	allowModifyingInternal bool,
+	typ enum.WebhookType,
 	in *types.WebhookUpdateInput,
 ) (*types.Webhook, error) {
 	hook, err := s.GetWebhookVerifyOwnership(ctx, parentID, parentType, webhookIdentifier)
@@ -81,8 +82,8 @@ func (s *Service) Update(
 		return nil, err
 	}
 
-	if !allowModifyingInternal && hook.Internal {
-		return nil, ErrInternalWebhookOperationNotAllowed
+	if typ != hook.Type {
+		return nil, errors.New("changing type is not allowed")
 	}
 
 	// update webhook struct (only for values that are provided)

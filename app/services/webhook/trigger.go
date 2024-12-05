@@ -232,9 +232,9 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 	// Execute HTTP Request (insecure if requested)
 	var resp *http.Response
 	switch {
-	case webhook.Internal && webhook.Insecure:
+	case webhook.Type == enum.WebhookTypeInternal && webhook.Insecure:
 		resp, err = s.insecureHTTPClientInternal.Do(req)
-	case webhook.Internal:
+	case webhook.Type == enum.WebhookTypeInternal:
 		resp, err = s.secureHTTPClientInternal.Do(req)
 	case webhook.Insecure:
 		resp, err = s.insecureHTTPClient.Do(req)

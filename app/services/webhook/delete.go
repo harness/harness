@@ -33,7 +33,7 @@ func (s *Service) Delete(
 		return err
 	}
 
-	if hook.Internal && !allowDeletingInternal {
+	if hook.Type == enum.WebhookTypeInternal && !allowDeletingInternal {
 		return ErrInternalWebhookOperationNotAllowed
 	}
 

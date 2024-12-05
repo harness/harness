@@ -49,15 +49,15 @@ type WebhookStore struct {
 
 // webhook is an internal representation used to store webhook data in the database.
 type webhook struct {
-	ID        int64    `db:"webhook_id"`
-	Version   int64    `db:"webhook_version"`
-	RepoID    null.Int `db:"webhook_repo_id"`
-	SpaceID   null.Int `db:"webhook_space_id"`
-	CreatedBy int64    `db:"webhook_created_by"`
-	Created   int64    `db:"webhook_created"`
-	Updated   int64    `db:"webhook_updated"`
-	Internal  bool     `db:"webhook_internal"`
-	Scope     int64    `db:"webhook_scope"`
+	ID        int64            `db:"webhook_id"`
+	Version   int64            `db:"webhook_version"`
+	RepoID    null.Int         `db:"webhook_repo_id"`
+	SpaceID   null.Int         `db:"webhook_space_id"`
+	CreatedBy int64            `db:"webhook_created_by"`
+	Created   int64            `db:"webhook_created"`
+	Updated   int64            `db:"webhook_updated"`
+	Type      enum.WebhookType `db:"webhook_type"`
+	Scope     int64            `db:"webhook_scope"`
 
 	Identifier string `db:"webhook_uid"`
 	// TODO [CODE-1364]: Remove once UID/Identifier migration is completed.
@@ -89,7 +89,7 @@ const (
 		,webhook_insecure
 		,webhook_triggers
 		,webhook_latest_execution_result
-		,webhook_internal
+		,webhook_type
 		,webhook_scope`
 
 	webhookSelectBase = `
@@ -176,7 +176,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,webhook_insecure
 			,webhook_triggers
 			,webhook_latest_execution_result
-			,webhook_internal
+			,webhook_type
 			,webhook_scope
 		) values (
 			:webhook_repo_id
@@ -193,7 +193,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,:webhook_insecure
 			,:webhook_triggers
 			,:webhook_latest_execution_result
-			,:webhook_internal
+			,:webhook_type
 			,:webhook_scope
 		) RETURNING webhook_id`
 
@@ -457,7 +457,7 @@ func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 		Insecure:              hook.Insecure,
 		Triggers:              triggersFromString(hook.Triggers),
 		LatestExecutionResult: (*enum.WebhookExecutionResult)(hook.LatestExecutionResult.Ptr()),
-		Internal:              hook.Internal,
+		Type:                  hook.Type,
 	}
 
 	switch {
@@ -494,7 +494,7 @@ func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 		Insecure:              hook.Insecure,
 		Triggers:              triggersToString(hook.Triggers),
 		LatestExecutionResult: null.StringFromPtr((*string)(hook.LatestExecutionResult)),
-		Internal:              hook.Internal,
+		Type:                  hook.Type,
 	}
 
 	switch hook.ParentType {
@@ -559,7 +559,7 @@ func applyWebhookFilter(
 	}
 
 	if opts.SkipInternal {
-		stmt = stmt.Where("webhook_internal != ?", true)
+		stmt = stmt.Where("webhook_type == ?", enum.WebhookTypeExternal)
 	}
 
 	return stmt

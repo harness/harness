@@ -35,13 +35,13 @@ func (c *Controller) CreateRepo(
 		return nil, fmt.Errorf("failed to acquire access to the repo: %w", err)
 	}
 
-	internal, err := c.preprocessor.PreprocessCreateInput(session.Principal.Type, in)
+	typ, err := c.preprocessor.PreprocessCreateInput(session.Principal.Type, in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to preprocess create input: %w", err)
 	}
 
 	hook, err := c.webhookService.Create(
-		ctx, session.Principal.ID, repo.ID, enum.WebhookParentRepo, internal, in,
+		ctx, session.Principal.ID, repo.ID, enum.WebhookParentRepo, typ, in,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed create webhook: %w", err)
