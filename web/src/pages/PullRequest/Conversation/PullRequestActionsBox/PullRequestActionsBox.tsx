@@ -274,7 +274,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     }
     return {
       commitTitle: messageTitle,
-      commitMessage: mergeOption.method === MergeStrategy.SQUASH ? messageString : ''
+      commitMessage: mergeOption.method === MergeStrategy.SQUASH ? messageString.slice(0, 1000) : ''
     } // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pullReqCommits, mergeOption, pullReqMetadata])
 
