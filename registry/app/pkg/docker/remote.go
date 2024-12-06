@@ -213,7 +213,8 @@ func (r *RemoteRegistry) ManifestExist(
 		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(artInfo.Path)
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.RootIdentifier, localRegistryIdentifier, artInfo.Image, registryInfo),
+			"Location": defaultManifestURL(artInfo.RootIdentifier, localRegistryIdentifier, artInfo.Image,
+				registryInfo),
 		}
 		return responseHeaders, descriptor, manifestResult, errs
 	}
@@ -274,7 +275,7 @@ func (r *RemoteRegistry) ManifestExist(
 	if err != nil {
 		errs = append(errs, err)
 		log.Ctx(ctx).Warn().Msgf(
-			"Proxy to remote failed, fallback to local registry: %s",
+			"Proxy to remote failed, fallback to next registry: %s",
 			err.Error(),
 		)
 	}
@@ -303,7 +304,8 @@ func (r *RemoteRegistry) PullManifest(
 		localRegistryIdentifier := ExtractRegistryIdentifierFromPath(artInfo.Path)
 		responseHeaders.Code = http.StatusMovedPermanently
 		responseHeaders.Headers = map[string]string{
-			"Location": defaultManifestURL(artInfo.RootIdentifier, localRegistryIdentifier, artInfo.Image, registryInfo),
+			"Location": defaultManifestURL(artInfo.RootIdentifier, localRegistryIdentifier, artInfo.Image,
+				registryInfo),
 		}
 		return responseHeaders, descriptor, manifestResult, errs
 	}
@@ -367,7 +369,7 @@ func (r *RemoteRegistry) PullManifest(
 	)
 	if err != nil {
 		errs = append(errs, err)
-		log.Ctx(ctx).Warn().Msgf("Proxy to remote failed, fallback to local registry: %s", err.Error())
+		log.Ctx(ctx).Warn().Msgf("Proxy to remote failed, fallback to next registry: %s", err.Error())
 	}
 	return responseHeaders, descriptor, manifestResult, errs
 }

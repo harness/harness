@@ -24,6 +24,7 @@ import (
 
 type Response interface {
 	GetErrors() []error
+	SetError(error)
 }
 
 var _ Response = (*GetManifestResponse)(nil)
@@ -40,6 +41,10 @@ type GetManifestResponse struct {
 func (r *GetManifestResponse) GetErrors() []error {
 	return r.Errors
 }
+func (r *GetManifestResponse) SetError(err error) {
+	r.Errors = make([]error, 1)
+	r.Errors[0] = err
+}
 
 type PutManifestResponse struct {
 	Errors []error
@@ -48,6 +53,10 @@ type PutManifestResponse struct {
 func (r *PutManifestResponse) GetErrors() []error {
 	return r.Errors
 }
+func (r *PutManifestResponse) SetError(err error) {
+	r.Errors = make([]error, 1)
+	r.Errors[0] = err
+}
 
 type DeleteManifestResponse struct {
 	Errors []error
@@ -55,6 +64,10 @@ type DeleteManifestResponse struct {
 
 func (r *DeleteManifestResponse) GetErrors() []error {
 	return r.Errors
+}
+func (r *DeleteManifestResponse) SetError(err error) {
+	r.Errors = make([]error, 1)
+	r.Errors[0] = err
 }
 
 type GetBlobResponse struct {
@@ -68,4 +81,9 @@ type GetBlobResponse struct {
 
 func (r *GetBlobResponse) GetErrors() []error {
 	return r.Errors
+}
+
+func (r *GetBlobResponse) SetError(err error) {
+	r.Errors = make([]error, 1)
+	r.Errors[0] = err
 }
