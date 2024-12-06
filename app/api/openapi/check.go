@@ -54,6 +54,21 @@ var queryParameterStatusCheckSince = openapi3.ParameterOrRef{
 	},
 }
 
+var QueryParameterRecursive = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamRecursive,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should include entities from child spaces."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 func checkOperations(reflector *openapi3.Reflector) {
 	const tag = "status_checks"
 
@@ -106,4 +121,21 @@ func checkOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&listStatusCheckRecent, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/checks/recent",
 		listStatusCheckRecent)
+
+	listStatusCheckRecentSpace := openapi3.Operation{}
+	listStatusCheckRecentSpace.WithTags(tag)
+	listStatusCheckRecentSpace.WithParameters(
+		queryParameterStatusCheckQuery, queryParameterStatusCheckSince, QueryParameterRecursive)
+	listStatusCheckRecentSpace.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckRecentSpace"})
+	_ = reflector.SetRequest(&listStatusCheckRecentSpace, struct {
+		spaceRequest
+		Since int
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecentSpace, new([]string), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecentSpace, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecentSpace, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecentSpace, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecentSpace, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/checks/recent",
+		listStatusCheckRecentSpace)
 }

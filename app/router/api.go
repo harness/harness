@@ -295,7 +295,7 @@ func setupSpaces(
 			SetupWebhookSpace(r, webhookCtrl)
 			SetupRulesSpace(r, spaceCtrl)
 
-			r.Get("/checks", handlercheck.HandleCheckListRecentSpace(checkCtrl))
+			r.Get("/checks/recent", handlercheck.HandleCheckListRecentSpace(checkCtrl))
 		})
 	})
 }
