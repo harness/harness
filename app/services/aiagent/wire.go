@@ -30,7 +30,7 @@ func ProvideAiAgent(
 	authorizer authz.Authorizer,
 	cr *capabilities.Registry,
 	cc *capabilitiesctrl.Controller,
-) (*GitnessIntelligence, error) {
+) (Intelligence, error) {
 	return &GitnessIntelligence{
 		authorizer,
 		cr,

@@ -431,7 +431,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	capabilitiesController := capabilities2.ProvideController(registry)
-	harnessIntelligence, err := aiagent.ProvideAiAgent(authorizer, registry, capabilitiesController)
+	intelligence, err := aiagent.ProvideAiAgent(authorizer, registry, capabilitiesController)
 	if err != nil {
 		return nil, err
 	}
@@ -439,7 +439,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	aiagentController := aiagent2.ProvideController(authorizer, harnessIntelligence, repoStore, pipelineStore, executionStore, gitInterface, provider, slack)
+	aiagentController := aiagent2.ProvideController(authorizer, intelligence, repoStore, pipelineStore, executionStore, gitInterface, provider, slack)
 	openapiService := openapi.ProvideOpenAPIService()
 	storageDriver, err := api2.BlobStorageProvider(config)
 	if err != nil {
