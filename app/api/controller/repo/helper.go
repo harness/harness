@@ -78,6 +78,34 @@ func GetRepoCheckAccess(
 	return repo, nil
 }
 
+func GetSpaceCheckAuthRepoCreation(
+	ctx context.Context,
+	spaceStore store.SpaceStore,
+	authorizer authz.Authorizer,
+	session *auth.Session,
+	parentRef string,
+) (*types.Space, error) {
+	space, err := spaceStore.FindByRef(ctx, parentRef)
+	if err != nil {
+		return nil, fmt.Errorf("parent space not found: %w", err)
+	}
+
+	// create is a special case - check permission without specific resource
+	err = apiauth.CheckSpaceScope(
+		ctx,
+		authorizer,
+		session,
+		space,
+		enum.ResourceTypeRepo,
+		enum.PermissionRepoCreate,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("auth check failed: %w", err)
+	}
+
+	return space, nil
+}
+
 func GetRepoOutput(
 	ctx context.Context,
 	publicAccess publicaccess.Service,

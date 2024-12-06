@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types/enum"
@@ -33,15 +32,10 @@ func (c *Controller) UpdatePublicAccess(ctx context.Context,
 	spaceRef string,
 	in *UpdatePublicAccessInput,
 ) (*SpaceOutput, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
-
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit); err != nil {
-		return nil, err
-	}
-
 	parentPath, _, err := paths.DisectLeaf(space.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to disect path %q: %w", space.Path, err)

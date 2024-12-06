@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
@@ -173,40 +172,6 @@ func (c *Controller) createSpaceInnerInTX(
 	}
 
 	return space, nil
-}
-
-func (c *Controller) getSpaceCheckAuthSpaceCreation(
-	ctx context.Context,
-	session *auth.Session,
-	parentRef string,
-) (*types.Space, error) {
-	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
-	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
-		// TODO: Restrict top level space creation - should be move to authorizer?
-		if auth.IsAnonymousSession(session) {
-			return nil, fmt.Errorf("anonymous user not allowed to create top level spaces: %w", usererror.ErrUnauthorized)
-		}
-
-		return &types.Space{}, nil
-	}
-
-	parentSpace, err := c.spaceStore.FindByRef(ctx, parentRef)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get parent space: %w", err)
-	}
-
-	if err = apiauth.CheckSpaceScope(
-		ctx,
-		c.authorizer,
-		session,
-		parentSpace,
-		enum.ResourceTypeSpace,
-		enum.PermissionSpaceEdit,
-	); err != nil {
-		return nil, fmt.Errorf("authorization failed: %w", err)
-	}
-
-	return parentSpace, nil
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {

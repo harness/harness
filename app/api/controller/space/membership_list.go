@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -31,13 +30,9 @@ func (c *Controller) MembershipList(ctx context.Context,
 	spaceRef string,
 	filter types.MembershipUserFilter,
 ) ([]types.MembershipUser, int64, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
-		return nil, 0, err
-	}
-
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView); err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
 	var memberships []types.MembershipUser

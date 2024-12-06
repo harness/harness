@@ -16,8 +16,8 @@ package space
 
 import (
 	"context"
+	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types/enum"
 )
@@ -26,13 +26,9 @@ import (
 * Find finds a space.
  */
 func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string) (*SpaceOutput, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
 	return GetSpaceOutput(ctx, c.publicAccess, space)

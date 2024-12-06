@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/exporter"
@@ -36,13 +35,9 @@ type ExportInput struct {
 
 // Export creates a new empty repository in harness code and does git push to it.
 func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef string, in *ExportInput) error {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
-		return err
-	}
-
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit); err != nil {
-		return err
+		return fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
 	err = c.sanitizeExportInput(in)

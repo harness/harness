@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -187,32 +186,6 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	return repoOutput, nil
-}
-
-func (c *Controller) getSpaceCheckAuthRepoCreation(
-	ctx context.Context,
-	session *auth.Session,
-	parentRef string,
-) (*types.Space, error) {
-	space, err := c.spaceStore.FindByRef(ctx, parentRef)
-	if err != nil {
-		return nil, fmt.Errorf("parent space not found: %w", err)
-	}
-
-	// create is a special case - check permission without specific resource
-	err = apiauth.CheckSpaceScope(
-		ctx,
-		c.authorizer,
-		session,
-		space,
-		enum.ResourceTypeRepo,
-		enum.PermissionRepoCreate,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("auth check failed: %w", err)
-	}
-
-	return space, nil
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {

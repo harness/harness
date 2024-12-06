@@ -15,11 +15,17 @@
 package space
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/gitspace"
@@ -36,6 +42,7 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
+	"github.com/harness/gitness/types/enum"
 )
 
 var (
@@ -135,4 +142,66 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		executionStore:      executionStore,
 		rulesSvc:            rulesSvc,
 	}
+}
+
+// getSpaceCheckAuth checks whether the user has the requested permission on the provided space and returns the space.
+func (c *Controller) getSpaceCheckAuth(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	permission enum.Permission,
+) (*types.Space, error) {
+	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return nil, fmt.Errorf("parent space not found: %w", err)
+	}
+
+	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, permission)
+	if err != nil {
+		return nil, fmt.Errorf("auth check failed: %w", err)
+	}
+
+	return space, nil
+}
+
+func (c *Controller) getSpaceCheckAuthRepoCreation(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+) (*types.Space, error) {
+	return repo.GetSpaceCheckAuthRepoCreation(ctx, c.spaceStore, c.authorizer, session, parentRef)
+}
+
+func (c *Controller) getSpaceCheckAuthSpaceCreation(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+) (*types.Space, error) {
+	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
+	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
+		// TODO: Restrict top level space creation - should be move to authorizer?
+		if auth.IsAnonymousSession(session) {
+			return nil, fmt.Errorf("anonymous user not allowed to create top level spaces: %w", usererror.ErrUnauthorized)
+		}
+
+		return &types.Space{}, nil
+	}
+
+	parentSpace, err := c.spaceStore.FindByRef(ctx, parentRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get parent space: %w", err)
+	}
+
+	if err = apiauth.CheckSpaceScope(
+		ctx,
+		c.authorizer,
+		session,
+		parentSpace,
+		enum.ResourceTypeSpace,
+		enum.PermissionSpaceEdit,
+	); err != nil {
+		return nil, fmt.Errorf("authorization failed: %w", err)
+	}
+
+	return parentSpace, nil
 }

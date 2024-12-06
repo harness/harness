@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/types/enum"
@@ -29,13 +28,9 @@ func (c *Controller) Events(
 	session *auth.Session,
 	spaceRef string,
 ) (<-chan *sse.Event, <-chan error, func(context.Context) error, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to find space ref: %w", err)
-	}
-
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView); err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to authorize stream: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
 	chEvents, chErr, sseCancel := c.sseStreamer.Stream(ctx, space.ID)

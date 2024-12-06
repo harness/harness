@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -50,13 +49,9 @@ func (c *Controller) Move(
 	spaceRef string,
 	in *MoveInput,
 ) (*SpaceOutput, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
 	if err = c.sanitizeMoveInput(in, space.ParentID == 0); err != nil {

@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/exporter"
@@ -37,13 +36,9 @@ func (c *Controller) ExportProgress(ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
 ) (ExportProgressOutput, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
-		return ExportProgressOutput{}, err
-	}
-
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView); err != nil {
-		return ExportProgressOutput{}, err
+		return ExportProgressOutput{}, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
 	progress, err := c.exporter.GetProgressForSpace(ctx, space.ID)

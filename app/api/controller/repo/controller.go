@@ -227,6 +227,14 @@ func (c *Controller) getRepoCheckAccessForGit(
 	)
 }
 
+func (c *Controller) getSpaceCheckAuthRepoCreation(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+) (*types.Space, error) {
+	return GetSpaceCheckAuthRepoCreation(ctx, c.spaceStore, c.authorizer, session, parentRef)
+}
+
 func ValidateParentRef(parentRef string) error {
 	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
 	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(parentRef)) == 0) {

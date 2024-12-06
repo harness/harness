@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller/limiter"
 	repoctrl "github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/usererror"
@@ -31,7 +30,6 @@ import (
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -45,33 +43,6 @@ type ImportRepositoriesOutput struct {
 	DuplicateRepos []*repoctrl.RepositoryOutput `json:"duplicate_repos"` // repos which already exist in the space.
 }
 
-// getSpaceCheckAuth checks whether the user has repo permissions permission.
-func (c *Controller) getSpaceCheckAuth(
-	ctx context.Context,
-	session *auth.Session,
-	spaceRef string,
-	permission enum.Permission,
-) (*types.Space, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
-	if err != nil {
-		return nil, fmt.Errorf("parent space not found: %w", err)
-	}
-
-	// create is a special case - check permission without specific resource
-	scope := &types.Scope{SpacePath: space.Path}
-	resource := &types.Resource{
-		Type:       enum.ResourceTypeRepo,
-		Identifier: "",
-	}
-
-	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, permission)
-	if err != nil {
-		return nil, fmt.Errorf("auth check failed: %w", err)
-	}
-
-	return space, nil
-}
-
 // ImportRepositories imports repositories into an existing space. It ignores and continues on
 // repo naming conflicts.
 //
@@ -82,7 +53,7 @@ func (c *Controller) ImportRepositories(
 	spaceRef string,
 	in *ImportRepositoriesInput,
 ) (ImportRepositoriesOutput, error) {
-	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionRepoCreate)
+	space, err := c.getSpaceCheckAuthRepoCreation(ctx, session, spaceRef)
 	if err != nil {
 		return ImportRepositoriesOutput{}, err
 	}

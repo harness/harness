@@ -20,7 +20,6 @@ import (
 	"math"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -36,19 +35,9 @@ func (c *Controller) SoftDelete(
 	session *auth.Session,
 	spaceRef string,
 ) (*SoftDeleteResponse, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionSpaceDelete)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find space for soft delete: %w", err)
-	}
-
-	if err = apiauth.CheckSpace(
-		ctx,
-		c.authorizer,
-		session,
-		space,
-		enum.PermissionSpaceDelete,
-	); err != nil {
-		return nil, fmt.Errorf("failed to check access: %w", err)
+		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
 	return c.SoftDeleteNoAuth(ctx, session, space)
