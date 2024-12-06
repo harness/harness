@@ -24,7 +24,7 @@ import (
 
 func (c *Controller) GeneratePipelineStep(
 	ctx context.Context,
-	in *controllertypes.GeneratePipelineInput,
+	in *controllertypes.GeneratePipelineStepInput,
 ) (*controllertypes.GeneratePipelineStepOutput, error) {
 	generateRequest := &aitypes.PipelineStepGenerateRequest{
 		Prompt:  in.Prompt,

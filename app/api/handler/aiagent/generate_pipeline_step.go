@@ -27,7 +27,7 @@ func HandleGeneratePipelineStep(aiagentCtrl *aiagent.Controller) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		in := new(controllertypes.GeneratePipelineInput)
+		in := new(controllertypes.GeneratePipelineStepInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
