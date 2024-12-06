@@ -494,7 +494,9 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                 type="submit"
                                 onClick={handleSubmit}
                                 disabled={
-                                  isMerged || (mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible)
+                                  (loading && !internalFlags.current.dryRun) ||
+                                  isMerged ||
+                                  (mergeOption.method === MergeStrategy.FAST_FORWARD && rebasePossible)
                                 }
                                 variation={ButtonVariation.PRIMARY}
                                 text={getString('confirmStrat', { strat: mergeOption.title })}
