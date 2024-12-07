@@ -65,6 +65,10 @@ func (g *Git) InfoRefs(
 	return nil
 }
 
+type ServicePackConfig struct {
+	UploadPackHook string
+}
+
 type ServicePackOptions struct {
 	Service      enum.GitServiceType
 	Timeout      int // seconds
@@ -74,6 +78,7 @@ type ServicePackOptions struct {
 	Stderr       io.Writer
 	Env          []string
 	Protocol     string
+	Config       ServicePackConfig
 }
 
 func (g *Git) ServicePack(
@@ -92,6 +97,10 @@ func (g *Git) ServicePack(
 
 	if options.Protocol != "" && safeGitProtocolHeader.MatchString(options.Protocol) {
 		cmd.Add(command.WithEnv("GIT_PROTOCOL", options.Protocol))
+	}
+
+	if options.Config.UploadPackHook != "" {
+		cmd.Add(command.WithConfig("uploadpack.packObjectsHook", options.Config.UploadPackHook))
 	}
 
 	err := cmd.Run(ctx,

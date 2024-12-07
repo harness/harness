@@ -32,6 +32,10 @@ var (
 
 // Command contains options for running a git command.
 type Command struct {
+	// Globals is the number of optional flags to pass before command name.
+	// example: git --shallow-file pack-objects ...
+	Globals []string
+
 	// Name is the name of the Git command to run, e.g. "log", "cat-file" or "worktree".
 	Name string
 
@@ -79,6 +83,9 @@ func New(name string, options ...CmdOptionFunc) *Command {
 
 // Clone clones the command object.
 func (c *Command) Clone() *Command {
+	globals := make([]string, len(c.Globals))
+	copy(globals, c.Globals)
+
 	flags := make([]string, len(c.Flags))
 	copy(flags, c.Flags)
 
@@ -175,6 +182,11 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 
 func (c *Command) makeArgs() ([]string, error) {
 	var safeArgs []string
+
+	// add globals
+	if len(c.Globals) > 0 {
+		safeArgs = append(safeArgs, c.Globals...)
+	}
 
 	commandDescription, ok := descriptions[c.Name]
 	if !ok {

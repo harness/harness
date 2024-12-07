@@ -29,6 +29,7 @@ const (
 
 type builder struct {
 	flags                  uint
+	actions                map[string]uint
 	validatePositionalArgs func([]string) error
 }
 
@@ -196,6 +197,16 @@ var descriptions = map[string]builder{
 		// While git-remote(1)'s `add` subcommand does support `--end-of-options`,
 		// `remove` doesn't.
 		flags: NoEndOfOptions,
+		actions: map[string]uint{
+			"add":          0,
+			"rename":       0,
+			"remove":       0,
+			"set-head":     0,
+			"set-branches": 0,
+			"get-url":      0,
+			"set-url":      0,
+			"prune":        0,
+		},
 	},
 	"repack": {
 		flags: NoRefUpdates,
@@ -269,8 +280,12 @@ var descriptions = map[string]builder{
 }
 
 // args validates the given flags and arguments and, if valid, returns the complete command line.
-func (b builder) args(flags []string, args []string, postSepArgs []string) ([]string, error) {
-	var cmdArgs []string
+func (b builder) args(
+	flags []string,
+	args []string,
+	postSepArgs []string,
+) ([]string, error) {
+	cmdArgs := make([]string, 0, len(flags)+len(args)+len(postSepArgs))
 
 	cmdArgs = append(cmdArgs, flags...)
 

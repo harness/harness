@@ -23,6 +23,13 @@ import (
 
 type CmdOptionFunc func(c *Command)
 
+// WithGlobal set the global optional flag of the Git command.
+func WithGlobal(flags ...string) CmdOptionFunc {
+	return func(c *Command) {
+		c.Globals = append(c.Globals, flags...)
+	}
+}
+
 // WithAction set the action of the Git command, e.g. "set-url" in `git remote set-url`.
 func WithAction(action string) CmdOptionFunc {
 	return func(c *Command) {
