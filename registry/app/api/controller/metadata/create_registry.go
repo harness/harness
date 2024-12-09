@@ -91,7 +91,7 @@ func (c *APIController) CreateRegistry(
 			registryID, err = c.createRegistryWithAudit(ctx, registry, session.Principal, string(parentRef))
 
 			if err != nil {
-				return fmt.Errorf("failed to create registry: %w", err)
+				return fmt.Errorf("%w", err)
 			}
 
 			upstreamproxy.RegistryID = registryID
@@ -108,11 +108,11 @@ func (c *APIController) CreateRegistry(
 	)
 
 	if err != nil {
-		return throwCreateRegistry400Error(err), err
+		return throwCreateRegistry400Error(err), nil //nolint:nilerr
 	}
 	upstreamproxyEntity, err := c.UpstreamProxyStore.Get(ctx, registryID)
 	if err != nil {
-		return throwCreateRegistry400Error(err), err
+		return throwCreateRegistry400Error(err), nil //nolint:nilerr
 	}
 
 	return artifact.CreateRegistry201JSONResponse{
