@@ -126,7 +126,7 @@ func (c PlatformConnectorAuthSpec) ExtractPasswordRef() string {
 }
 
 func (c PlatformConnectorAuthSpec) ExtractPassword() string {
-	if c.AuthType == UserNamePasswordPlatformConnectorAuthType {
+	if c.AuthType == UserNamePasswordPlatformConnectorAuthType && c.Password != nil {
 		return c.Password.Value()
 	}
 

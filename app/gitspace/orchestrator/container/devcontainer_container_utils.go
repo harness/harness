@@ -15,12 +15,14 @@
 package container
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"os/exec"
 	"path/filepath"
 	goruntime "runtime"
 	"strconv"
@@ -42,7 +44,8 @@ import (
 )
 
 const (
-	catchAllIP = "0.0.0.0"
+	catchAllIP             = "0.0.0.0"
+	imagePullRunArgMissing = "missing"
 )
 
 var containerStateMapping = map[string]State{
@@ -338,6 +341,90 @@ func ExtractMetadataAndUserFromImage(
 	return metadataMap, imageUser, nil
 }
 
+func CopyImage(
+	ctx context.Context,
+	imageName string,
+	dockerClient *client.Client,
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+	imageAuthMap map[string]gitspaceTypes.DockerRegistryAuth,
+	httpProxyURL types.MaskSecret,
+	httpsProxyURL types.MaskSecret,
+) error {
+	gitspaceLogger.Info("Copying image " + imageName + " to local")
+	imagePullRunArg := getImagePullPolicy(runArgsMap)
+	if imagePullRunArg == "never" {
+		return nil
+	}
+	if imagePullRunArg == imagePullRunArgMissing {
+		imagePresentLocally, err := isImagePresentLocally(ctx, imageName, dockerClient)
+		if err != nil {
+			return err
+		}
+
+		if imagePresentLocally {
+			return nil
+		}
+	}
+
+	// Build skopeo command
+	platform := getPlatform(runArgsMap)
+	args := []string{"copy"}
+
+	if platform != "" {
+		args = append(args, "--override-os", platform)
+	}
+
+	// Add credentials if available
+	if auth, ok := imageAuthMap[imageName]; ok && auth.Password != nil {
+		gitspaceLogger.Info("Using credentials for registry: " + auth.RegistryURL)
+		args = append(args, "--src-creds", auth.Username.Value()+":"+auth.Password.Value())
+	} else {
+		gitspaceLogger.Warn("No credentials found for registry. Proceeding without authentication.")
+	}
+
+	// Source and destination
+	source := "docker://" + imageName
+	destination := "docker-daemon:" + imageName
+	args = append(args, source, destination)
+
+	cmd := exec.CommandContext(ctx, "skopeo", args...)
+
+	// Set proxy environment variables if provided
+	env := cmd.Env
+	if httpProxyURL.Value() != "" {
+		env = append(env, "HTTP_PROXY="+httpProxyURL.Value())
+		log.Info().Msg("HTTP_PROXY set in environment")
+	}
+	if httpsProxyURL.Value() != "" {
+		env = append(env, "HTTPS_PROXY="+httpsProxyURL.Value())
+		log.Info().Msg("HTTPS_PROXY set in environment")
+	}
+	cmd.Env = env
+
+	var outBuf, errBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
+
+	gitspaceLogger.Info("Executing image copy command: " + cmd.String())
+	err := cmd.Run()
+
+	// Log command output
+	if outBuf.Len() > 0 {
+		gitspaceLogger.Info("Image copy output: " + outBuf.String())
+	}
+	if errBuf.Len() > 0 {
+		gitspaceLogger.Error("Image copy error output: "+errBuf.String(), nil)
+	}
+
+	if err != nil {
+		return logStreamWrapError(gitspaceLogger, "Error while pulling image using skopeo", err)
+	}
+
+	gitspaceLogger.Info("Image copy completed successfully using skopeo")
+	return nil
+}
+
 func PullImage(
 	ctx context.Context,
 	imageName string,
@@ -351,7 +438,7 @@ func PullImage(
 	if imagePullRunArg == "never" {
 		return nil
 	}
-	if imagePullRunArg == "missing" {
+	if imagePullRunArg == imagePullRunArgMissing {
 		gitspaceLogger.Info("Checking if image " + imageName + " is present locally")
 		imagePresentLocally, err := isImagePresentLocally(ctx, imageName, dockerClient)
 		if err != nil {
