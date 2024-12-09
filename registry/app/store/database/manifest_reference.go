@@ -94,7 +94,7 @@ func (dao manifestReferenceDao) AssociateManifest(
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&manifestRef.ID); err != nil {
 		err = databaseg.ProcessSQLErrorf(ctx, err, "QueryRowContext failed")
-		if errors.Is(err, store2.ErrDuplicate) {
+		if errors.Is(err, store2.ErrResourceNotFound) {
 			return nil
 		}
 		if errors.Is(err, store2.ErrForeignKeyViolation) {
