@@ -34,6 +34,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -539,44 +540,76 @@ func (t tagDao) GetLatestTagMetadata(
 	repoKey string,
 	imageName string,
 ) (*types.ArtifactMetadata, error) {
-	q := databaseg.Builder.Select(
-		`r.registry_name as repo_name, 
-		r.registry_package_type as package_type, t.tag_image_name as name, 
-		t.tag_name as latest_version, t.tag_created_at as created_at, 
-		t.tag_updated_at as modified_at, ar.image_labels as labels,
-		COALESCE(t2.download_count, 0) as download_count`,
-	).
-		From("tags t").
-		Join("registries r ON t.tag_registry_id = r.registry_id"). // nolint:goconst
-		Join(
-			"images ar ON ar.image_registry_id = t.tag_registry_id "+
-				"AND ar.image_name = t.tag_image_name",
+	// Precomputed download count subquery
+	downloadCountSubquery := `
+		SELECT 
+			i.image_name, 
+			i.image_registry_id,
+			SUM(COALESCE(dc.download_count, 0)) AS download_count
+		FROM 
+			images i
+		LEFT JOIN (
+			SELECT 
+				a.artifact_image_id, 
+				COUNT(d.download_stat_id) AS download_count
+			FROM 
+				artifacts a
+			JOIN 
+				download_stats d ON d.download_stat_artifact_id = a.artifact_id
+			GROUP BY 
+				a.artifact_image_id
+		) AS dc ON i.image_id = dc.artifact_image_id
+		GROUP BY 
+			i.image_name, i.image_registry_id
+	`
+	var q sq.SelectBuilder
+	if t.db.DriverName() == SQLITE3 {
+		q = databaseg.Builder.Select(
+			`r.registry_name AS repo_name, r.registry_package_type AS package_type,
+     t.tag_image_name AS name, t.tag_name AS latest_version,
+     t.tag_created_at AS created_at, t.tag_updated_at AS modified_at,
+     ar.image_labels AS labels, COALESCE(dc_subquery.download_count, 0) AS download_count`,
 		).
-		LeftJoin(
-			`LATERAL (SELECT i.image_name, SUM(COALESCE(t1.download_count, 0)) as download_count 
-              FROM 
-              (SELECT a.artifact_image_id, COUNT(d.download_stat_id) as download_count 
-               FROM artifacts a 
-               JOIN download_stats d 
-               ON d.download_stat_artifact_id = a.artifact_id 
-               GROUP BY a.artifact_image_id) as t1 
-              JOIN images i 
-              ON i.image_id = t1.artifact_image_id 
-              WHERE i.image_registry_id = r.registry_id 
-              GROUP BY i.image_name) as t2 
-			ON t.tag_image_name = t2.image_name`,
+			From("tags t").
+			Join("registries r ON t.tag_registry_id = r.registry_id"). // nolint:goconst
+			Join("images ar ON ar.image_registry_id = t.tag_registry_id AND ar.image_name = t.tag_image_name").
+			LeftJoin(fmt.Sprintf("(%s) AS dc_subquery ON dc_subquery.image_name = t.tag_image_name "+
+				"AND dc_subquery.image_registry_id = r.registry_id", downloadCountSubquery)).
+			Where(
+				"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
+				parentID, repoKey, imageName,
+			).
+			OrderBy("t.tag_updated_at DESC").Limit(1)
+	} else {
+		q = databaseg.Builder.Select(
+			`r.registry_name AS repo_name,
+         r.registry_package_type AS package_type,
+         t.tag_image_name AS name,
+         t.tag_name AS latest_version,
+         t.tag_created_at AS created_at,
+         t.tag_updated_at AS modified_at,
+         ar.image_labels AS labels,
+         COALESCE(t2.download_count, 0) AS download_count`,
 		).
-		Where(
-			"r.registry_parent_id = ? AND r.registry_name = ?"+
-				" AND t.tag_image_name = ?", parentID, repoKey, imageName,
-		).
-		OrderBy("t.tag_updated_at DESC").Limit(1)
+			From("tags t").
+			Join("registries r ON t.tag_registry_id = r.registry_id"). // nolint:goconst
+			Join("images ar ON ar.image_registry_id = t.tag_registry_id AND ar.image_name = t.tag_image_name").
+			LeftJoin(fmt.Sprintf("LATERAL (%s) AS t2 ON t.tag_image_name = t2.image_name", downloadCountSubquery)).
+			Where(
+				"r.registry_parent_id = ? AND r.registry_name = ? AND t.tag_image_name = ?",
+				parentID, repoKey, imageName,
+			).
+			OrderBy("t.tag_updated_at DESC").Limit(1)
+	}
 
 	sql, args, err := q.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
-
+	// Log the final sql query
+	finalQuery := util.FormatQuery(sql, args)
+	log.Ctx(ctx).Debug().Str("sql", finalQuery).Msg("Executing GetLatestTagMetadata query")
+	// Execute query
 	db := dbtx.GetAccessor(ctx, t.db)
 
 	dst := new(artifactMetadataDB)
