@@ -369,7 +369,7 @@ func CopyImage(
 
 	// Build skopeo command
 	platform := getPlatform(runArgsMap)
-	args := []string{"copy"}
+	args := []string{"copy", "--debug"}
 
 	if platform != "" {
 		args = append(args, "--override-os", platform)
@@ -385,6 +385,7 @@ func CopyImage(
 
 	// Source and destination
 	source := "docker://" + imageName
+	// TODO: if imageName doesn't have tag, use latest in destination
 	destination := "docker-daemon:" + imageName
 	args = append(args, source, destination)
 
