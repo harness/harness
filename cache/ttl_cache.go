@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/exp/constraints"
@@ -34,8 +35,8 @@ type TTLCache[K comparable, V any] struct {
 	purgeStop chan struct{}
 	getter    Getter[K, V]
 	maxAge    time.Duration
-	countHit  int64
-	countMiss int64
+	countHit  atomic.Int64
+	countMiss atomic.Int64
 }
 
 // ExtendedTTLCache is an extended version of the TTLCache.
@@ -113,7 +114,7 @@ func (c *TTLCache[K, V]) Stop() {
 
 // Stats returns number of cache hits and misses and can be used to monitor the cache efficiency.
 func (c *TTLCache[K, V]) Stats() (int64, int64) {
-	return c.countHit, c.countMiss
+	return c.countHit.Load(), c.countMiss.Load()
 }
 
 func (c *TTLCache[K, V]) fetch(key K, now time.Time) (V, bool) {
@@ -122,12 +123,12 @@ func (c *TTLCache[K, V]) fetch(key K, now time.Time) (V, bool) {
 
 	item, ok := c.cache[key]
 	if !ok || now.Sub(item.added) > c.maxAge {
-		c.countMiss++
+		c.countMiss.Add(1)
 		var nothing V
 		return nothing, false
 	}
 
-	c.countHit++
+	c.countHit.Add(1)
 
 	// we deliberately don't update the `item.added` timestamp for `now` because
 	// we want to cache the items only for a short period.

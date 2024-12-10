@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -31,8 +32,8 @@ type Redis[K any, V any] struct {
 	getter     Getter[K, V]
 	keyEncoder func(K) string
 	codec      Codec[V]
-	countHit   int64
-	countMiss  int64
+	countHit   atomic.Int64
+	countMiss  atomic.Int64
 	logErrFn   LogErrFn
 }
 
@@ -63,15 +64,13 @@ func NewRedis[K any, V any](
 		getter:     getter,
 		keyEncoder: keyEncoder,
 		codec:      codec,
-		countHit:   0,
-		countMiss:  0,
 		logErrFn:   logErrFn,
 	}
 }
 
 // Stats returns number of cache hits and misses and can be used to monitor the cache efficiency.
 func (c *Redis[K, V]) Stats() (int64, int64) {
-	return c.countHit, c.countMiss
+	return c.countHit.Load(), c.countMiss.Load()
 }
 
 // Get implements the cache.Cache interface.
@@ -84,14 +83,14 @@ func (c *Redis[K, V]) Get(ctx context.Context, key K) (V, error) {
 	if err == nil {
 		value, decErr := c.codec.Decode(raw)
 		if decErr == nil {
-			c.countHit++
+			c.countHit.Add(1)
 			return value, nil
 		}
 	} else if !errors.Is(err, redis.Nil) && c.logErrFn != nil {
 		c.logErrFn(ctx, err)
 	}
 
-	c.countMiss++
+	c.countMiss.Add(1)
 
 	item, err := c.getter.Find(ctx, key)
 	if err != nil {
