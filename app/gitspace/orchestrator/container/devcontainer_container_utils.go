@@ -369,7 +369,7 @@ func CopyImage(
 
 	// Build skopeo command
 	platform := getPlatform(runArgsMap)
-	args := []string{"copy", "--debug", "--tls-verify=false"}
+	args := []string{"copy", "--debug", "--src-tls-verify=false"}
 
 	if platform != "" {
 		args = append(args, "--override-os", platform)
@@ -385,8 +385,8 @@ func CopyImage(
 
 	// Source and destination
 	source := "docker://" + imageName
-	// TODO: if imageName doesn't have tag, use latest in destination
-	destination := "docker-daemon:" + imageName
+	image, tag := splitImageName(imageName)
+	destination := "docker-daemon:" + image + ":" + tag
 	args = append(args, source, destination)
 
 	cmd := exec.CommandContext(ctx, "skopeo", args...)
@@ -627,4 +627,13 @@ func buildImagePullOptions(
 	}
 
 	return pullOpts, nil
+}
+
+func splitImageName(image string) (name, tag string) {
+	parts := strings.Split(image, ":")
+	if len(parts) == 1 {
+		// If there's no tag, default to "latest"
+		return parts[0], "latest"
+	}
+	return parts[0], parts[1]
 }
