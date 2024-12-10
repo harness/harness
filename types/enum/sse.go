@@ -29,5 +29,12 @@ const (
 
 	SSETypePullRequestUpdated SSEType = "pullreq_updated"
 
+	SSETypePullRequestReviewerAdded   SSEType = "pullreq_reviewer_added"
+	SSETypePullRequestReviewerRemoved SSEType = "pullreq_reviewer_removed"
+
 	SSETypeLogLineAppended SSEType = "log_line_appended"
+
+	SSETypeRuleCreated SSEType = "rule_created"
+	SSETypeRuleUpdated SSEType = "rule_updated"
+	SSETypeRuleDeleted SSEType = "rule_deleted"
 )

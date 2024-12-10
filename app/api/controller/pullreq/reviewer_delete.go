@@ -101,5 +101,13 @@ func (c *Controller) ReviewerDelete(
 		log.Ctx(ctx).Err(err).Msg("failed to write pull request activity after reviewer removal")
 	}
 
+	if err = c.sseStreamer.Publish(
+		ctx, repo.ParentID, enum.SSETypePullRequestReviewerAdded, pr,
+	); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf(
+			"failed to publish %s event", enum.SSETypePullRequestReviewerRemoved,
+		)
+	}
+
 	return nil
 }

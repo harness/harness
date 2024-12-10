@@ -163,5 +163,7 @@ func (s *Service) Update(ctx context.Context,
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for update branch rule operation: %s", err)
 	}
 
+	s.sendSSE(ctx, parentID, parentType, enum.SSETypeRuleUpdated, rule)
+
 	return rule, nil
 }

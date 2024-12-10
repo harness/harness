@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/usergroup"
+	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -41,6 +42,7 @@ func ProvideService(
 	principalInfoCache store.PrincipalInfoCache,
 	userGroupStore store.UserGroupStore,
 	userGroupService usergroup.SearchService,
+	sseStreamer sse.Streamer,
 ) *Service {
 	return NewService(
 		tx,
@@ -53,5 +55,6 @@ func ProvideService(
 		principalInfoCache,
 		userGroupStore,
 		userGroupService,
+		sseStreamer,
 	)
 }

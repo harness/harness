@@ -165,6 +165,8 @@ func (s *Service) Create(ctx context.Context,
 		log.Ctx(ctx).Warn().Msgf("failed to insert instrumentation record for create branch rule operation: %s", err)
 	}
 
+	s.sendSSE(ctx, parentID, parentType, enum.SSETypeRuleCreated, rule)
+
 	return rule, nil
 }
 

@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/services/instrument"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/usergroup"
+	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -36,6 +37,8 @@ type Service struct {
 	principalInfoCache store.PrincipalInfoCache
 	userGroupStore     store.UserGroupStore
 	userGroupService   usergroup.SearchService
+
+	sseStreamer sse.Streamer
 }
 
 func NewService(
@@ -49,7 +52,7 @@ func NewService(
 	principalInfoCache store.PrincipalInfoCache,
 	userGroupStore store.UserGroupStore,
 	userGroupService usergroup.SearchService,
-
+	sseStreamer sse.Streamer,
 ) *Service {
 	return &Service{
 		tx:                 tx,
@@ -62,5 +65,6 @@ func NewService(
 		principalInfoCache: principalInfoCache,
 		userGroupStore:     userGroupStore,
 		userGroupService:   userGroupService,
+		sseStreamer:        sseStreamer,
 	}
 }

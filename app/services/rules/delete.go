@@ -65,5 +65,7 @@ func (s *Service) Delete(ctx context.Context,
 		log.Ctx(ctx).Warn().Msgf("failed to insert audit log for delete branch rule operation: %s", err)
 	}
 
+	s.sendSSE(ctx, parentID, parentType, enum.SSETypeRuleDeleted, rule)
+
 	return nil
 }

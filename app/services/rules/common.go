@@ -20,6 +20,9 @@ import (
 
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 func (s *Service) getRuleUserAndUserGroups(
@@ -93,4 +96,24 @@ func (s *Service) parseRule(rule *types.Rule) (protection.Protection, error) {
 	}
 
 	return protection, nil
+}
+
+func (s *Service) sendSSE(
+	ctx context.Context,
+	parentID int64,
+	parentType enum.RuleParent,
+	sseType enum.SSEType,
+	rule *types.Rule,
+) {
+	spaceID := parentID
+	if parentType == enum.RuleParentRepo {
+		repo, err := s.repoStore.Find(ctx, parentID)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msg("failed to get repo")
+		}
+		spaceID = repo.ParentID
+	}
+	if err := s.sseStreamer.Publish(ctx, spaceID, sseType, rule); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to publish %s event", sseType)
+	}
 }
