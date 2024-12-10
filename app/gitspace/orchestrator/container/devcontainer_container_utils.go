@@ -385,7 +385,7 @@ func CopyImage(
 
 	// Source and destination
 	source := "docker://" + imageName
-	image, tag := splitImageName(imageName)
+	image, tag := getImageAndTag(imageName)
 	destination := "docker-daemon:" + image + ":" + tag
 	args = append(args, source, destination)
 
@@ -629,11 +629,37 @@ func buildImagePullOptions(
 	return pullOpts, nil
 }
 
-func splitImageName(image string) (name, tag string) {
-	parts := strings.Split(image, ":")
-	if len(parts) == 1 {
-		// If there's no tag, default to "latest"
-		return parts[0], "latest"
+// getImageAndTag separates the image name and tag correctly.
+func getImageAndTag(image string) (string, string) {
+	// Split the image on the last slash
+	lastSlashIndex := strings.LastIndex(image, "/")
+	var name, tag string
+
+	if lastSlashIndex != -1 { //nolint:nestif
+		// If there's a slash, the portion before the last slash is part of the registry/repository
+		// and the portion after the last slash will be considered for the tag handling.
+		// Now check if there is a colon in the string
+		lastColonIndex := strings.LastIndex(image, ":")
+		if lastColonIndex != -1 && lastColonIndex > lastSlashIndex {
+			// There is a tag after the last colon
+			name = image[:lastColonIndex]
+			tag = image[lastColonIndex+1:]
+		} else {
+			// No colon, treat it as the image and assume "latest" tag
+			name = image
+			tag = "latest"
+		}
+	} else {
+		// If no slash is present, split on the last colon for image and tag
+		lastColonIndex := strings.LastIndex(image, ":")
+		if lastColonIndex != -1 {
+			name = image[:lastColonIndex]
+			tag = image[lastColonIndex+1:]
+		} else {
+			name = image
+			tag = "latest"
+		}
 	}
-	return parts[0], parts[1]
+
+	return name, tag
 }
