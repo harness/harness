@@ -369,7 +369,7 @@ func CopyImage(
 
 	// Build skopeo command
 	platform := getPlatform(runArgsMap)
-	args := []string{"copy", "--debug", "--tls-verify", "false"}
+	args := []string{"copy", "--debug", "--tls-verify=false"}
 
 	if platform != "" {
 		args = append(args, "--override-os", platform)
