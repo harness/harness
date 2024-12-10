@@ -369,7 +369,7 @@ func CopyImage(
 
 	// Build skopeo command
 	platform := getPlatform(runArgsMap)
-	args := []string{"copy", "--debug"}
+	args := []string{"copy", "--debug", "--tls-verify", "false"}
 
 	if platform != "" {
 		args = append(args, "--override-os", platform)
@@ -409,18 +409,22 @@ func CopyImage(
 
 	gitspaceLogger.Info("Executing image copy command: " + cmd.String())
 	err := cmd.Run()
-
-	// Log command output
-	if outBuf.Len() > 0 {
-		gitspaceLogger.Info("Image copy output: " + outBuf.String())
-	}
-	if errBuf.Len() > 0 {
-		gitspaceLogger.Error("Image copy error output: "+errBuf.String(), nil)
-	}
-
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while pulling image using skopeo", err)
 	}
+
+	// Log command output
+	response, err := io.ReadAll(&outBuf)
+	if err != nil {
+		return logStreamWrapError(gitspaceLogger, "Error while reading image output", err)
+	}
+	gitspaceLogger.Info("Image copy output: " + string(response))
+
+	errResponse, err := io.ReadAll(&errBuf)
+	if err != nil {
+		return logStreamWrapError(gitspaceLogger, "Error while reading image output", err)
+	}
+	gitspaceLogger.Error("Image copy error output: "+string(errResponse), nil)
 
 	gitspaceLogger.Info("Image copy completed successfully using skopeo")
 	return nil
