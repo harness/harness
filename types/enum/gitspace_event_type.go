@@ -95,6 +95,11 @@ const (
 	GitspaceEventTypeInfraProvisioningCompleted GitspaceEventType = "infra_provisioning_completed"
 	GitspaceEventTypeInfraProvisioningFailed    GitspaceEventType = "infra_provisioning_failed"
 
+	// Gateway update events.
+	GitspaceEventTypeInfraGatewayRouteStart     GitspaceEventType = "infra_gateway_route_start"
+	GitspaceEventTypeInfraGatewayRouteCompleted GitspaceEventType = "infra_gateway_route_completed"
+	GitspaceEventTypeInfraGatewayRouteFailed    GitspaceEventType = "infra_gateway_route_failed"
+
 	// Infra stop events.
 	GitspaceEventTypeInfraStopStart     GitspaceEventType = "infra_stop_start"
 	GitspaceEventTypeInfraStopCompleted GitspaceEventType = "infra_stop_completed"

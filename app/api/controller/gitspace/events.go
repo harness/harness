@@ -90,13 +90,17 @@ func eventsMessageMapping() map[enum.GitspaceEventType]string {
 	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerCompleted] = "Fetched devcontainer config"
 	gitspaceConfigsMap[enum.GitspaceEventTypeFetchDevcontainerFailed] = "Fetching devcontainer config failed"
 
-	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsStart] = "Fetching connectors details..."
-	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsCompleted] = "Fetched connectors details"
-	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsFailed] = "Fetching connectors details failed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsStart] = "Fetching platform connectors details..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsCompleted] = "Fetched platform connectors details"
+	gitspaceConfigsMap[enum.GitspaceEventTypeFetchConnectorsDetailsFailed] = "Fetching platform connectors details failed" //nolint:lll
 
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningStart] = "Provisioning infrastructure..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningCompleted] = "Provisioning infrastructure completed"
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraProvisioningFailed] = "Provisioning infrastructure failed"
+
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraGatewayRouteStart] = "Updating gateway routing..."
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraGatewayRouteCompleted] = "Updating gateway routing completed"
+	gitspaceConfigsMap[enum.GitspaceEventTypeInfraGatewayRouteFailed] = "Updating gateway routing failed"
 
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopStart] = "Stopping infrastructure..."
 	gitspaceConfigsMap[enum.GitspaceEventTypeInfraStopCompleted] = "Stopping infrastructure completed"
