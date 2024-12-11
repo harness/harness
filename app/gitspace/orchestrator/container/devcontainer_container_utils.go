@@ -410,18 +410,17 @@ func CopyImage(
 	gitspaceLogger.Info("Executing image copy command: " + cmd.String())
 	cmdErr := cmd.Run()
 
-	// Log command output
 	response, err := io.ReadAll(&outBuf)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while reading image output", err)
 	}
 	gitspaceLogger.Info("Image copy output: " + string(response))
-
 	errResponse, err := io.ReadAll(&errBuf)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while reading image output", err)
 	}
-	gitspaceLogger.Error("Image copy error output: "+string(errResponse), nil)
+	combinedOutput := string(response) + "\n" + string(errResponse)
+	gitspaceLogger.Info("Image copy combined output: " + combinedOutput)
 
 	if cmdErr != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while pulling image using skopeo", cmdErr)
