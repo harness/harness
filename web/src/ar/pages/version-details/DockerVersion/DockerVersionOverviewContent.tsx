@@ -92,13 +92,8 @@ export default function DockerVersionOverviewContent(): JSX.Element {
                   {getString('packageTypes.dockerPackage')}
                 </Text>
                 <LabelValueContent
-                  label={getString('versionDetails.overview.generalInformation.repositoryPath')}
-                  value={response.registryPath}
-                  withCopyText
-                />
-                <LabelValueContent
-                  label={getString('versionDetails.overview.generalInformation.url')}
-                  value={response.url}
+                  label={getString('versionDetails.overview.generalInformation.digest')}
+                  value={digest}
                   withCopyText
                 />
                 <LabelValueContent
@@ -112,10 +107,6 @@ export default function DockerVersionOverviewContent(): JSX.Element {
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.uploadedBy')}
                   value={getReadableDateTime(Number(response.modifiedAt), DEFAULT_DATE_TIME_FORMAT)}
-                />
-                <LabelValueContent
-                  label={getString('versionDetails.overview.generalInformation.createdAndLastModifiedAt')}
-                  value={getReadableDateTime(Number(response.createdAt), DEFAULT_DATE_TIME_FORMAT)}
                 />
                 <LabelValueContent
                   label={getString('versionDetails.overview.generalInformation.pullCommand')}

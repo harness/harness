@@ -44,6 +44,7 @@ overview:
     version: Version/Tag
     packageType: Package type
     repositoryPath: Registry path
+    digest: Digest
     url: URL to file
     size: '{{ $.digestList.table.columns.size }}'
     downloads: '{{ $.repositoryList.table.columns.downloads }}'

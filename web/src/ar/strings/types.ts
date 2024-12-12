@@ -186,6 +186,7 @@ export interface StringsMap {
   'versionDetails.deploymentsTable.noDeploymentsTitle': string
   'versionDetails.overview.generalInformation.createdAndLastModifiedAt': string
   'versionDetails.overview.generalInformation.description': string
+  'versionDetails.overview.generalInformation.digest': string
   'versionDetails.overview.generalInformation.downloads': string
   'versionDetails.overview.generalInformation.name': string
   'versionDetails.overview.generalInformation.packageType': string
