@@ -17,9 +17,6 @@ package webhook
 import (
 	"bytes"
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,6 +25,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/harness/gitness/crypto"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -354,7 +352,7 @@ func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.Webho
 			return nil, fmt.Errorf("failed to decrypt webhook secret: %w", err)
 		}
 		var hmac string
-		hmac, err = generateHMACSHA256(bBuff.Bytes(), []byte(decryptedSecret))
+		hmac, err = crypto.GenerateHMACSHA256(bBuff.Bytes(), []byte(decryptedSecret))
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate SHA256 based HMAC: %w", err)
 		}
@@ -474,21 +472,4 @@ func handleWebhookResponse(execution *types.WebhookExecution, resp *http.Respons
 		execution.Result = enum.WebhookExecutionResultFatalError
 		return fmt.Errorf("received response with unsupported status code %d", code)
 	}
-}
-
-// generateHMACSHA256 generates a new HMAC using SHA256 as hash function.
-func generateHMACSHA256(data []byte, key []byte) (string, error) {
-	h := hmac.New(sha256.New, key)
-
-	// write all data into hash
-	_, err := h.Write(data)
-	if err != nil {
-		return "", fmt.Errorf("failed to write data into hash: %w", err)
-	}
-
-	// sum hash to final value
-	macBytes := h.Sum(nil)
-
-	// encode MAC as hexadecimal
-	return hex.EncodeToString(macBytes), nil
 }

@@ -29,20 +29,19 @@ func (c *Controller) CreateSpace(
 	session *auth.Session,
 	spaceRef string,
 	in *types.WebhookCreateInput,
+	signatureData *types.WebhookSignatureMetadata,
 ) (*types.Webhook, error) {
 	space, err := c.getSpaceCheckAccess(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	internal, err := c.preprocessor.PreprocessCreateInput(session.Principal.Type, in)
+	internal, err := c.preprocessor.PreprocessCreateInput(session.Principal.Type, in, signatureData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to preprocess create input: %w", err)
 	}
 
-	hook, err := c.webhookService.Create(
-		ctx, session.Principal.ID, space.ID, enum.WebhookParentSpace, internal, in,
-	)
+	hook, err := c.webhookService.Create(ctx, session.Principal.ID, space.ID, enum.WebhookParentSpace, internal, in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create webhook: %w", err)
 	}

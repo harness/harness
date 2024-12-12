@@ -83,6 +83,11 @@ type WebhookCreateInput struct {
 	Triggers    []enum.WebhookTrigger `json:"triggers"`
 }
 
+type WebhookSignatureMetadata struct {
+	Signature string
+	BodyBytes []byte
+}
+
 type WebhookUpdateInput struct {
 	// TODO [CODE-1363]: remove after identifier migration.
 	UID        *string `json:"uid" deprecated:"true"`

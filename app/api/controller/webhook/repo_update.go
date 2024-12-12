@@ -30,18 +30,17 @@ func (c *Controller) UpdateRepo(
 	repoRef string,
 	webhookIdentifier string,
 	in *types.WebhookUpdateInput,
+	signatureData *types.WebhookSignatureMetadata,
 ) (*types.Webhook, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to the repo: %w", err)
 	}
 
-	typ, err := c.preprocessor.PreprocessUpdateInput(session.Principal.Type, in)
+	typ, err := c.preprocessor.PreprocessUpdateInput(session.Principal.Type, in, signatureData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to preprocess update input: %w", err)
 	}
 
-	return c.webhookService.Update(
-		ctx, repo.ID, enum.WebhookParentRepo, webhookIdentifier, typ, in,
-	)
+	return c.webhookService.Update(ctx, repo.ID, enum.WebhookParentRepo, webhookIdentifier, typ, in)
 }

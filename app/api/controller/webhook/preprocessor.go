@@ -20,8 +20,16 @@ import (
 )
 
 type Preprocessor interface {
-	PreprocessCreateInput(enum.PrincipalType, *types.WebhookCreateInput) (enum.WebhookType, error)
-	PreprocessUpdateInput(enum.PrincipalType, *types.WebhookUpdateInput) (enum.WebhookType, error)
+	PreprocessCreateInput(
+		enum.PrincipalType,
+		*types.WebhookCreateInput,
+		*types.WebhookSignatureMetadata,
+	) (enum.WebhookType, error)
+	PreprocessUpdateInput(
+		enum.PrincipalType,
+		*types.WebhookUpdateInput,
+		*types.WebhookSignatureMetadata,
+	) (enum.WebhookType, error)
 	PreprocessFilter(enum.PrincipalType, *types.WebhookFilter)
 	IsInternalCall(enum.PrincipalType) bool
 }
@@ -33,6 +41,7 @@ type NoopPreprocessor struct {
 func (p NoopPreprocessor) PreprocessCreateInput(
 	enum.PrincipalType,
 	*types.WebhookCreateInput,
+	*types.WebhookSignatureMetadata,
 ) (enum.WebhookType, error) {
 	return enum.WebhookTypeExternal, nil
 }
@@ -41,6 +50,7 @@ func (p NoopPreprocessor) PreprocessCreateInput(
 func (p NoopPreprocessor) PreprocessUpdateInput(
 	enum.PrincipalType,
 	*types.WebhookUpdateInput,
+	*types.WebhookSignatureMetadata,
 ) (enum.WebhookType, error) {
 	return enum.WebhookTypeExternal, nil
 }

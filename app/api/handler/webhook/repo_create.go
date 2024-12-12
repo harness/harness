@@ -15,7 +15,9 @@
 package webhook
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/webhook"
@@ -29,6 +31,11 @@ func HandleCreateRepo(webhookCtrl *webhook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
+			return
+		}
 
 		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
@@ -37,13 +44,22 @@ func HandleCreateRepo(webhookCtrl *webhook.Controller) http.HandlerFunc {
 		}
 
 		in := new(types.WebhookCreateInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		readerCloser := io.NopCloser(bytes.NewReader(bodyBytes))
+		err = json.NewDecoder(readerCloser).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		hook, err := webhookCtrl.CreateRepo(ctx, session, repoRef, in)
+		var signatureData *types.WebhookSignatureMetadata
+		signature := request.GetSignatureFromHeaderOrDefault(r, "")
+		if signature != "" {
+			signatureData = new(types.WebhookSignatureMetadata)
+			signatureData.Signature = signature
+			signatureData.BodyBytes = bodyBytes
+		}
+
+		hook, err := webhookCtrl.CreateRepo(ctx, session, repoRef, in, signatureData)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

@@ -29,13 +29,14 @@ func (c *Controller) CreateRepo(
 	session *auth.Session,
 	repoRef string,
 	in *types.WebhookCreateInput,
+	signatureData *types.WebhookSignatureMetadata,
 ) (*types.Webhook, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to the repo: %w", err)
 	}
 
-	typ, err := c.preprocessor.PreprocessCreateInput(session.Principal.Type, in)
+	typ, err := c.preprocessor.PreprocessCreateInput(session.Principal.Type, in, signatureData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to preprocess create input: %w", err)
 	}

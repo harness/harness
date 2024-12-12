@@ -15,7 +15,9 @@
 package webhook
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/webhook"
@@ -29,6 +31,11 @@ func HandleUpdateSpace(webhookCtrl *webhook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
+			return
+		}
 
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
@@ -43,13 +50,22 @@ func HandleUpdateSpace(webhookCtrl *webhook.Controller) http.HandlerFunc {
 		}
 
 		in := new(types.WebhookUpdateInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		readerCloser := io.NopCloser(bytes.NewReader(bodyBytes))
+		err = json.NewDecoder(readerCloser).Decode(in)
 		if err != nil {
 			render.BadRequestf(ctx, w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		hook, err := webhookCtrl.UpdateSpace(ctx, session, spaceRef, webhookIdentifier, in)
+		var signatureData *types.WebhookSignatureMetadata
+		signature := request.GetSignatureFromHeaderOrDefault(r, "")
+		if signature != "" {
+			signatureData = new(types.WebhookSignatureMetadata)
+			signatureData.Signature = signature
+			signatureData.BodyBytes = bodyBytes
+		}
+
+		hook, err := webhookCtrl.UpdateSpace(ctx, session, spaceRef, webhookIdentifier, in, signatureData)
 		if err != nil {
 			render.TranslatedUserError(ctx, w, err)
 			return

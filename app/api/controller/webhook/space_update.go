@@ -30,13 +30,14 @@ func (c *Controller) UpdateSpace(
 	spaceRef string,
 	webhookIdentifier string,
 	in *types.WebhookUpdateInput,
+	signatureData *types.WebhookSignatureMetadata,
 ) (*types.Webhook, error) {
 	space, err := c.getSpaceCheckAccess(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
-	typ, err := c.preprocessor.PreprocessUpdateInput(session.Principal.Type, in)
+	typ, err := c.preprocessor.PreprocessUpdateInput(session.Principal.Type, in, signatureData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to preprocess update input: %w", err)
 	}

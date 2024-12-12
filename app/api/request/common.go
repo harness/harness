@@ -67,6 +67,8 @@ const (
 
 	HeaderIfNoneMatch = "If-None-Match"
 	HeaderETag        = "ETag"
+
+	HeaderSignature = "Signature"
 )
 
 // GetOptionalRemainderFromPath returns the remainder ("*") from the path or an empty string if it doesn't exist.
@@ -238,4 +240,8 @@ func GetDeletedAtFromQuery(r *http.Request) (int64, bool, error) {
 
 func GetIfNoneMatchFromHeader(r *http.Request) (string, bool) {
 	return GetHeader(r, HeaderIfNoneMatch)
+}
+
+func GetSignatureFromHeaderOrDefault(r *http.Request, dflt string) string {
+	return GetHeaderOrDefault(r, HeaderSignature, dflt)
 }
