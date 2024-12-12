@@ -22,7 +22,7 @@ Drone is a continuous delivery system built on container technology. Drone uses 
 </br>
 [Harness Community Forum](https://community.harness.io/) - Ask questions, find answers, and help other users.
 </br>
-[Report A Bug](https://community.harness.io/c/bugs/17) - Find a bug? Please report in our forum under Drone Bugs. Please provide screenshots and steps to reproduce. 
+[Report A Bug]([https://community.harness.io/c/bugs/17](https://github.com/harness/harness/issues/new)) - Found a bug? Please file it under Issues. Ensure to include detailed steps to reproduce and relevant screenshots for better clarity.
 </br>
 [Events](https://www.meetup.com/harness/) - Keep up to date with Drone events and check out previous events [here](https://www.youtube.com/watch?v=Oq34ImUGcHA&list=PLXsYHFsLmqf3zwelQDAKoVNmLeqcVsD9o).
 
