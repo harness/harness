@@ -14,25 +14,38 @@
 
 package types
 
+import "fmt"
+
 const (
+	ecrDockerRegistryFormat = "%s.dkr.ecr.%s.amazonaws.com"
+
 	UnknownPlatformConnectorType        PlatformConnectorType = "Unknown"
 	ArtifactoryPlatformConnectorType    PlatformConnectorType = "Artifactory"
 	DockerRegistryPlatformConnectorType PlatformConnectorType = "DockerRegistry"
+	AWSPlatformConnectorType            PlatformConnectorType = "Aws"
 
 	UnknownPlatformConnectorAuthType          PlatformConnectorAuthType = "unknown"
 	UserNamePasswordPlatformConnectorAuthType PlatformConnectorAuthType = "UsernamePassword"
 	AnonymousPlatformConnectorAuthType        PlatformConnectorAuthType = "Anonymous"
+
+	UnknownAWSCredentialsType      AwsCredentialsType = "unknown"
+	ManualConfigAWSCredentialsType AwsCredentialsType = "ManualConfig"
 )
 
 var (
 	platformConnectorTypeMapping = map[string]PlatformConnectorType{
 		ArtifactoryPlatformConnectorType.String():    ArtifactoryPlatformConnectorType,
 		DockerRegistryPlatformConnectorType.String(): DockerRegistryPlatformConnectorType,
+		AWSPlatformConnectorType.String():            AWSPlatformConnectorType,
 	}
 
 	platformConnectorAuthTypeMapping = map[string]PlatformConnectorAuthType{
 		UserNamePasswordPlatformConnectorAuthType.String(): UserNamePasswordPlatformConnectorAuthType,
 		AnonymousPlatformConnectorAuthType.String():        AnonymousPlatformConnectorAuthType,
+	}
+
+	awsCredentialsTypeMapping = map[string]AwsCredentialsType{
+		ManualConfigAWSCredentialsType.String(): ManualConfigAWSCredentialsType,
 	}
 )
 
@@ -60,6 +73,18 @@ func ToPlatformConnectorAuthType(s string) PlatformConnectorAuthType {
 	return UnknownPlatformConnectorAuthType
 }
 
+type AwsCredentialsType string
+
+func (t AwsCredentialsType) String() string { return string(t) }
+
+func ToAwsCredentialsType(s string) AwsCredentialsType {
+	if val, ok := awsCredentialsTypeMapping[s]; ok {
+		return val
+	}
+
+	return UnknownAWSCredentialsType
+}
+
 type PlatformConnector struct {
 	ID            string
 	Name          string
@@ -72,8 +97,23 @@ type PlatformConnectorSpec struct {
 	ArtifactoryURL string
 	// DockerRegistryURL is for DockerRegistryPlatformConnectorType
 	DockerRegistryURL string
-	AuthSpec          PlatformConnectorAuthSpec
-	EnabledProxy      bool
+	// AwsCredentials is for AWSPlatformConnectorType
+	AwsCredentials AwsCredentials
+	// AuthSpec is for ArtifactoryPlatformConnectorType and DockerRegistryPlatformConnectorType
+	AuthSpec     PlatformConnectorAuthSpec
+	EnabledProxy bool
+}
+
+type AwsCredentials struct {
+	Type            AwsCredentialsType
+	Region          string
+	AccountID       string
+	AccessKey       MaskSecret
+	AccessKeyRef    string
+	SecretKeyRef    string
+	SecretKey       MaskSecret
+	SessionTokenRef string
+	SessionToken    MaskSecret
 }
 
 // PlatformConnectorAuthSpec provide auth details.
@@ -94,6 +134,8 @@ func (c PlatformConnectorSpec) ExtractRegistryURL() string {
 		return c.DockerRegistryURL
 	case ArtifactoryPlatformConnectorType:
 		return c.ArtifactoryURL
+	case AWSPlatformConnectorType:
+		return fmt.Sprintf(ecrDockerRegistryFormat, c.AwsCredentials.AccountID, c.AwsCredentials.Region)
 	case UnknownPlatformConnectorType:
 		return ""
 	default:
