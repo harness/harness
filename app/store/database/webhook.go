@@ -232,7 +232,6 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 			,webhook_insecure = :webhook_insecure
 			,webhook_triggers = :webhook_triggers
 			,webhook_latest_execution_result = :webhook_latest_execution_result
-			,webhook_internal = :webhook_internal
 		WHERE webhook_id = :webhook_id and webhook_version = :webhook_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
