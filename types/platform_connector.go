@@ -14,10 +14,8 @@
 
 package types
 
-import "fmt"
-
 const (
-	ecrDockerRegistryFormat = "%s.dkr.ecr.%s.amazonaws.com"
+	ecrRegistryUserName = "AWS"
 
 	UnknownPlatformConnectorType        PlatformConnectorType = "Unknown"
 	ArtifactoryPlatformConnectorType    PlatformConnectorType = "Artifactory"
@@ -97,6 +95,8 @@ type PlatformConnectorSpec struct {
 	ArtifactoryURL string
 	// DockerRegistryURL is for DockerRegistryPlatformConnectorType
 	DockerRegistryURL string
+	// AwsECRRegistryURL is for AWSPlatformConnectorType
+	AwsECRRegistryURL string
 	// AwsCredentials is for AWSPlatformConnectorType
 	AwsCredentials AwsCredentials
 	// AuthSpec is for ArtifactoryPlatformConnectorType and DockerRegistryPlatformConnectorType
@@ -107,7 +107,7 @@ type PlatformConnectorSpec struct {
 type AwsCredentials struct {
 	Type            AwsCredentialsType
 	Region          string
-	AccountID       string
+	AccessToken     MaskSecret
 	AccessKey       MaskSecret
 	AccessKeyRef    string
 	SecretKeyRef    string
@@ -135,7 +135,7 @@ func (c PlatformConnectorSpec) ExtractRegistryURL() string {
 	case ArtifactoryPlatformConnectorType:
 		return c.ArtifactoryURL
 	case AWSPlatformConnectorType:
-		return fmt.Sprintf(ecrDockerRegistryFormat, c.AwsCredentials.AccountID, c.AwsCredentials.Region)
+		return c.AwsECRRegistryURL
 	case UnknownPlatformConnectorType:
 		return ""
 	default:
@@ -143,9 +143,12 @@ func (c PlatformConnectorSpec) ExtractRegistryURL() string {
 	}
 }
 
-func (c PlatformConnectorAuthSpec) ExtractUserName() string {
-	if c.AuthType == UserNamePasswordPlatformConnectorAuthType {
-		return c.UserName.Value()
+func (c PlatformConnectorSpec) ExtractRegistryUserName() string {
+	if (c.Type == DockerRegistryPlatformConnectorType || c.Type == ArtifactoryPlatformConnectorType) &&
+		c.AuthSpec.AuthType == UserNamePasswordPlatformConnectorAuthType {
+		return c.AuthSpec.UserName.Value()
+	} else if c.Type == AWSPlatformConnectorType {
+		return ecrRegistryUserName
 	}
 
 	return ""
@@ -167,10 +170,13 @@ func (c PlatformConnectorAuthSpec) ExtractPasswordRef() string {
 	return ""
 }
 
-func (c PlatformConnectorAuthSpec) ExtractPassword() string {
-	if c.AuthType == UserNamePasswordPlatformConnectorAuthType && c.Password != nil {
-		return c.Password.Value()
+func (c PlatformConnectorSpec) ExtractRegistryAuth() string {
+	if (c.Type == DockerRegistryPlatformConnectorType || c.Type == ArtifactoryPlatformConnectorType) &&
+		c.AuthSpec.AuthType == UserNamePasswordPlatformConnectorAuthType &&
+		c.AuthSpec.Password != nil {
+		return c.AuthSpec.Password.Value()
+	} else if c.Type == AWSPlatformConnectorType && c.AwsCredentials.AccessToken.Value() != "" {
+		return c.AwsCredentials.AccessToken.Value()
 	}
-
 	return ""
 }
