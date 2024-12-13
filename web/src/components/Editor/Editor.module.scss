@@ -78,5 +78,28 @@
         outline: none;
       }
     }
+
+    .cm-tooltip-autocomplete {
+      background-color: var(--grey-0) !important;
+      border: 1px solid var(--grey-200);
+      border-radius: var(--spacing-3);
+      overflow: hidden;
+      z-index: 3000 !important;
+    }
+
+    .cm-tooltip-autocomplete ul li {
+      border-bottom: 1px solid var(--grey-200);
+      padding: 5px 0 !important;
+    }
+
+    .cm-completionDetail {
+      font-size: var(--spacing-4);
+      font-style: normal;
+      color: var(--grey-500);
+    }
+
+    .cm-tooltip-autocomplete ul li[aria-selected] .cm-completionDetail {
+      color: var(--grey-0) !important;
+    }
   }
 }

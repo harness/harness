@@ -30,7 +30,8 @@ import type {
   TypesLabel,
   TypesLabelValue,
   TypesPullReq,
-  TypesOwnerEvaluation
+  TypesOwnerEvaluation,
+  TypesPrincipalInfo
 } from 'services/code'
 import { PullReqReviewDecision } from 'pages/PullRequest/PullRequestUtils'
 
@@ -988,3 +989,17 @@ export function createRuleFieldsMap(ruleDefinition: Rule): RuleFieldsMap {
 
   return ruleFieldsMap
 }
+
+export const replaceMentionIdWithEmail = (
+  input: string,
+  mentionsMap: {
+    [key: string]: TypesPrincipalInfo
+  }
+) => input.replace(/@\[(\d+)\]/g, (match, id) => (mentionsMap[id] ? `@[${mentionsMap[id].email}]` : match))
+
+export const replaceMentionEmailWithId = (
+  input: string,
+  emailMap: {
+    [x: string]: TypesPrincipalInfo
+  }
+) => input.replace(/@\[(\S+@\S+\.\S+)\]/g, (match, email) => (emailMap[email] ? `@[${emailMap[email].id}]` : match))

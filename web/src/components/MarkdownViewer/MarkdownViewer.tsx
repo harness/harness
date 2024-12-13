@@ -24,19 +24,24 @@ import { getCodeString } from 'rehype-rewrite'
 import MarkdownPreview from '@uiw/react-markdown-preview'
 import rehypeVideo from 'rehype-video'
 import rehypeExternalLinks from 'rehype-external-links'
+import type { Plugin } from 'unified'
+import { visit } from 'unist-util-visit'
+import type { TypesPrincipalInfo } from 'services/code'
 import { INITIAL_ZOOM_LEVEL } from 'utils/Utils'
 import ImageCarousel from 'components/ImageCarousel/ImageCarousel'
 import type { SuggestionBlock } from 'components/SuggestionBlock/SuggestionBlock'
 import { CodeSuggestionBlock } from './CodeSuggestionBlock'
 import css from './MarkdownViewer.module.scss'
-
 interface MarkdownViewerProps {
   source: string
   className?: string
-  maxHeight?: string | number
+  maxHeight?: number
   darkMode?: boolean
   suggestionBlock?: SuggestionBlock
   suggestionCheckSums?: string[]
+  mentions?: {
+    [key: string]: TypesPrincipalInfo
+  }
 }
 
 export function MarkdownViewer({
@@ -45,7 +50,8 @@ export function MarkdownViewer({
   maxHeight,
   darkMode,
   suggestionBlock,
-  suggestionCheckSums
+  suggestionCheckSums,
+  mentions
 }: MarkdownViewerProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const history = useHistory()
@@ -53,6 +59,87 @@ export function MarkdownViewer({
   const [imgEvent, setImageEvent] = useState<string[]>([])
   const refRootHref = useMemo(() => document.getElementById('repository-ref-root')?.getAttribute('href'), [])
   const ref = useRef<HTMLDivElement>()
+  const emailsMap: { [key: string]: TypesPrincipalInfo } = {}
+
+  if (mentions && typeof mentions === 'object' && mentions !== null)
+    Object.keys(mentions).forEach(id => {
+      const mention = mentions[id]
+      if (mention && typeof mention.email === 'string' && typeof mention.display_name === 'string') {
+        emailsMap[mention.email] = mention
+      }
+    })
+
+  // AST - iterating over all the nodes of the tree to identify the nodes with mention pattern and replace the emails with display names
+  // Mention pattern is as is for 3 child nodes:
+  // 1. Looking for a text node that ends with `@[`.
+  // 2. Followed by an <a> element with an href starting with `mailto:`.
+  // 3. And the next text node that starts with `]`.
+
+  // Extracting and Replacing to show display name with the link intact:
+  // 1. Replace `@[` in the first text node with `@displayName` (e.g., @User).
+  // 2. Extract the email (e.g., user@example.com) from the <a> node's href.
+  // 3. Remove the closing bracket `]` from the third text node.
+
+  const rehypeReplaceMentions: Plugin = () => {
+    return tree => {
+      visit(tree, 'element', (node: Element) => {
+        if (node.tagName === 'p' && Array.isArray(node.children)) {
+          const children = node.children
+
+          // Iterate through all children to handle multiple mentions in the same paragraph with the pattern as specified above
+          for (let i = 0; i < children.length - MENTION_PATTERN_OFFSET; i++) {
+            const firstChild = children[i]
+            const secondChild = children[i + 1]
+            const thirdChild = children[i + 2]
+            if (
+              firstChild?.type === 'text' &&
+              firstChild?.value.endsWith('@[') &&
+              secondChild?.type === 'element' &&
+              secondChild?.tagName === 'a' &&
+              secondChild?.properties?.href?.startsWith('mailto:') &&
+              thirdChild?.type === 'text' &&
+              thirdChild?.value.startsWith(']')
+            ) {
+              const email = secondChild.properties.href.replace('mailto:', '')
+              const displayName = emailsMap?.[email]?.display_name || email
+
+              if (email && displayName) {
+                // Escape the display name to avoid XSS
+                const safeDisplayName = displayName.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+                // adding the title property to show the email id on hover
+                secondChild.properties = {
+                  ...secondChild.properties,
+                  title: email
+                }
+
+                // Update the first child (e.g., @[9])
+                firstChild.value = firstChild.value.slice(0, firstChild.value.length - 2)
+
+                // Update the second child to display the name but keep the href
+                secondChild.children = [
+                  {
+                    type: 'element',
+                    tagName: 'span',
+                    properties: { style: 'font-weight: 500;' },
+                    children: [
+                      {
+                        type: 'text',
+                        value: `@${safeDisplayName}`
+                      }
+                    ]
+                  }
+                ]
+
+                // Remove the `]` from the third child
+                thirdChild.value = thirdChild.value.slice(1) // Remove the closing bracket
+              }
+            }
+          }
+        }
+      })
+    }
+  }
 
   const interceptClickEventOnViewerContainer = useCallback(
     event => {
@@ -154,7 +241,8 @@ export function MarkdownViewer({
         rehypePlugins={[
           [rehypeSanitize],
           [rehypeVideo, { test: /\/(.*)(.mp4|.mov|.webm|.mkv|.flv)$/, details: null }],
-          [rehypeExternalLinks, { rel: ['nofollow noreferrer noopener'], target: '_blank' }]
+          [rehypeExternalLinks, { rel: ['nofollow noreferrer noopener'], target: '_blank' }],
+          [rehypeReplaceMentions]
         ]}
         components={{
           // Rewriting the code component to support code suggestions
@@ -193,3 +281,5 @@ export function MarkdownViewer({
     </Container>
   )
 }
+
+const MENTION_PATTERN_OFFSET = 2

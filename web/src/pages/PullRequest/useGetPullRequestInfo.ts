@@ -23,7 +23,7 @@ import type { TypesListCommitResponse, TypesPullReq, TypesPullReqActivity, Types
 import { usePRChecksDecision } from 'hooks/usePRChecksDecision'
 import useSpaceSSE, { SSEEvents } from 'hooks/useSpaceSSE'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { PullRequestSection } from 'utils/Utils'
+import { PullRequestSection, replaceMentionIdWithEmail } from 'utils/Utils'
 import { normalizeGitRef } from 'utils/GitUtils'
 
 /**
@@ -112,7 +112,16 @@ export function useGetPullRequestInfo() {
 
   useEffect(() => {
     if (activities) {
-      setPullReqActivities(oldActivities => (isEqual(oldActivities, activities) ? oldActivities : activities))
+      setPullReqActivities(oldActivities =>
+        isEqual(oldActivities, activities)
+          ? oldActivities
+          : activities.map(act => {
+              if (act.mentions && act.text) {
+                act.text = replaceMentionIdWithEmail(act.text, act.mentions)
+              }
+              return act
+            })
+      )
     }
   }, [activities, setPullReqActivities])
 

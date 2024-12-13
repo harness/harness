@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Container, useToaster } from '@harnessio/uicore'
 import { LanguageDescription } from '@codemirror/language'
 import { indentWithTab } from '@codemirror/commands'
@@ -26,13 +26,17 @@ import { markdown } from '@codemirror/lang-markdown'
 import { java } from '@codemirror/lang-java'
 import { EditorView, keymap, placeholder as placeholderExtension } from '@codemirror/view'
 import { Compartment, EditorState, Extension } from '@codemirror/state'
+import { autocompletion, CompletionContext, Completion } from '@codemirror/autocomplete'
 import { color } from '@uiw/codemirror-extensions-color'
 import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
 import { githubLight, githubDark } from '@uiw/codemirror-themes-all'
-import type { RepoRepositoryOutput } from 'services/code'
+import { debounce } from 'lodash-es'
+import type { RepoRepositoryOutput, TypesPrincipalInfo } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { handleUpload } from 'utils/GitUtils'
 import { handleFileDrop, handlePaste } from 'utils/Utils'
+import { getConfig, getUsingFetch } from 'services/config'
+import { useAppContext } from 'AppContext'
 import css from './Editor.module.scss'
 
 export interface EditorProps {
@@ -54,6 +58,8 @@ export interface EditorProps {
   inGitBlame?: boolean
   standalone: boolean
   routingId?: string
+  setFetchedUsers?: React.Dispatch<React.SetStateAction<TypesPrincipalInfo[]>>
+  fetchedUsers?: TypesPrincipalInfo[]
 }
 
 export const Editor = React.memo(function CodeMirrorReactEditor({
@@ -74,14 +80,16 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   repoMetadata,
   inGitBlame = false,
   standalone,
-  routingId
+  routingId,
+  setFetchedUsers,
+  fetchedUsers
 }: EditorProps) {
   const { showError } = useToaster()
   const { getString } = useStrings()
   const view = useRef<EditorView>()
   const ref = useRef<HTMLDivElement>()
   const [fileData, setFile] = useState<File>()
-
+  const { hooks } = useAppContext()
   const languageConfig = useMemo(() => new Compartment(), [])
   const [markdownContent, setMarkdownContent] = useState('')
   const markdownLanguageSupport = useMemo(() => markdown({ codeLanguages: languages }), [])
@@ -103,8 +111,9 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   }, [markdownContent]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateContentWithoutStateChange = () => {
+    if (!markdownContent || inGitBlame) return
     setUploading(true)
-    if (view.current && markdownContent && !inGitBlame) {
+    if (view.current && markdownContent && !markdownContent.startsWith('@') && !inGitBlame) {
       const markdownInsert = fileData?.type.startsWith('image/') ? `![image](${markdownContent})` : `${markdownContent}`
       const range = view.current.state.selection.main
       const cursorPos = range.from
@@ -125,12 +134,98 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
 
   const [uploading, setUploading] = useState(false)
 
+  const bearerToken = hooks?.useGetToken?.() || ''
+  const fetchUsers = useCallback(
+    debounce(async (query: string) => {
+      try {
+        const updatedAuthorsList: TypesPrincipalInfo[] = await getUsingFetch(
+          getConfig('code/api/v1'),
+          `/principals`,
+          bearerToken,
+          {
+            queryParams: {
+              query: query.trim(),
+              type: 'user',
+              limit: 50,
+              accountIdentifier: routingId
+            }
+          }
+        )
+
+        setFetchedUsers?.(updatedAuthorsList || [])
+
+        return updatedAuthorsList
+      } catch (error) {
+        showError('Failed to fetch users.')
+      }
+    }, 500),
+    [bearerToken, routingId]
+  )
+
+  const applyUserMention = (user: TypesPrincipalInfo, viewState: EditorView) => {
+    const replacementText = `@[${user.email}]`
+    const { from, to } = viewState.state.selection.main
+
+    // Locate the position of `@` and calculate the range to replace
+    const wordStart = viewState.state.doc.sliceString(0, from).lastIndexOf('@')
+    const wordEnd = to // End of the currently typed text
+
+    viewState.dispatch({
+      changes: { from: wordStart, to: wordEnd, insert: replacementText },
+      selection: { anchor: wordStart + replacementText.length } // Position cursor after replacement
+    })
+  }
+
+  // Abstract function to map fetched users to completion options
+  const mapFetchedUsersToOptions = useCallback(
+    (users: TypesPrincipalInfo[] = []) =>
+      users.map((user: TypesPrincipalInfo) => ({
+        label: `@${user.display_name}`,
+        detail: `(${user.email})`,
+        apply: (viewObj: EditorView) => applyUserMention(user, viewObj)
+      })),
+    [fetchedUsers]
+  )
+
+  const initialUsers = useMemo(() => mapFetchedUsersToOptions(fetchedUsers || []), [])
+
+  // Mentions extension
+  const mentions = (data: Completion[]): Extension =>
+    autocompletion({
+      override: [
+        async (context: CompletionContext) => {
+          const word = context.matchBefore(/@\w*/)
+          if (!word) return null
+          if (word && word.from === word.to && !context.explicit) return null
+
+          const query = word.text.substring(1) // Extract text after '@'
+          const usersList = await fetchUsers(query)
+          setFetchedUsers?.(usersList || [])
+
+          return {
+            from: word.from,
+            options: mapFetchedUsersToOptions(usersList) || data
+          }
+        }
+      ]
+    })
+
+  useEffect(() => {
+    fetchUsers('')
+  }, [])
+
+  useEffect(() => {
+    if (fetchedUsers && fetchUsers.length > 0) {
+      view.current?.dispatch({ effects: [] })
+    }
+  }, [fetchedUsers])
+
   useEffect(() => {
     const editorView = new EditorView({
       doc: content,
       extensions: [
         extensions,
-
+        mentions(initialUsers),
         color,
         hyperLink,
         darkTheme ? githubDark : githubLight,

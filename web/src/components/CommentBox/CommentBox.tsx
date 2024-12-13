@@ -26,11 +26,11 @@ import { useStrings } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { useAppContext } from 'AppContext'
-import type { RepoRepositoryOutput } from 'services/code'
+import type { RepoRepositoryOutput, TypesPrincipalInfo, TypesPullReqActivity } from 'services/code'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
-import { ButtonRoleProps, CodeCommentState } from 'utils/Utils'
+import { ButtonRoleProps, CodeCommentState, replaceMentionEmailWithId, replaceMentionIdWithEmail } from 'utils/Utils'
 import { useResizeObserver } from 'hooks/useResizeObserver'
 import { PR_COMMENT_STATUS_CHANGED_EVENT } from 'hooks/useEmitCodeCommentStatus'
 import { useCustomEventListener } from 'hooks/useEventListener'
@@ -141,7 +141,7 @@ const CommentBoxInternal = <T = unknown,>({
   const [dirties, setDirties] = useState<Record<string, boolean>>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const isMounted = useIsMounted()
-
+  const [mentionsMap, setMentionsMap] = useState<{ [key: string]: TypesPrincipalInfo }>({})
   const clearMemorizedState = useCallback(() => {
     if (memorizedState) {
       delete memorizedState.showReplyPlaceHolder
@@ -271,6 +271,8 @@ const CommentBoxInternal = <T = unknown,>({
           <CommentsThread<T>
             repoMetadata={repoMetadata}
             commentItems={comments}
+            setMentionsMap={setMentionsMap}
+            mentionsMap={mentionsMap}
             onQuote={onQuote}
             handleAction={async (action, content, atCommentItem) => {
               const [result, updatedItem] = await handleAction(action, content, atCommentItem)
@@ -319,6 +321,8 @@ const CommentBoxInternal = <T = unknown,>({
                   repoMetadata={repoMetadata}
                   className={editorClassName}
                   viewRef={viewRef}
+                  setMentionsMap={setMentionsMap}
+                  mentionsMap={mentionsMap}
                   noBorder
                   i18n={{
                     placeHolder: getString(comments.length ? 'replyHere' : 'leaveAComment'),
@@ -335,7 +339,7 @@ const CommentBoxInternal = <T = unknown,>({
                     if (handleAction) {
                       const [result, updatedItem] = await handleAction(
                         comments.length ? CommentAction.REPLY : CommentAction.NEW,
-                        value,
+                        replaceMentionEmailWithId(value, mentionsMap),
                         comments[0]
                       )
 
@@ -357,6 +361,16 @@ const CommentBoxInternal = <T = unknown,>({
                             }
                           })
                         } else {
+                          if (
+                            updatedItem?.content &&
+                            (updatedItem as CommentItem<TypesPullReqActivity>)?.payload?.mentions
+                          ) {
+                            updatedItem.content = replaceMentionIdWithEmail(
+                              updatedItem?.content,
+                              (updatedItem as CommentItem<TypesPullReqActivity>)?.payload?.mentions ?? {}
+                            )
+                          }
+
                           setComments([...comments, updatedItem as CommentItem<T>])
                         }
                       }
@@ -399,6 +413,14 @@ interface CommentsThreadProps<T>
   onQuote: (content: string) => void
   setDirty: (index: number, dirty: boolean) => void
   repoMetadata: RepoRepositoryOutput | undefined
+  setMentionsMap?: React.Dispatch<
+    React.SetStateAction<{
+      [key: string]: TypesPrincipalInfo
+    }>
+  >
+  mentionsMap?: {
+    [key: string]: TypesPrincipalInfo
+  }
 }
 
 const CommentsThread = <T = unknown,>({
@@ -411,7 +433,9 @@ const CommentsThread = <T = unknown,>({
   copyLinkToComment,
   suggestionBlock,
   memorizedState,
-  commentsVisibilityAtLineNumber
+  commentsVisibilityAtLineNumber,
+  setMentionsMap,
+  mentionsMap
 }: CommentsThreadProps<T>) => {
   const { getString } = useStrings()
   const { standalone, routingId } = useAppContext()
@@ -685,8 +709,16 @@ const CommentsThread = <T = unknown,>({
                         repoMetadata={repoMetadata}
                         value={commentItem?.content}
                         viewRef={viewRefs.current[commentItem.id]}
+                        setMentionsMap={setMentionsMap}
+                        mentionsMap={mentionsMap}
                         onSave={async value => {
-                          if (await handleAction(CommentAction.UPDATE, value, commentItem)) {
+                          if (
+                            await handleAction(
+                              CommentAction.UPDATE,
+                              mentionsMap ? replaceMentionEmailWithId(value, mentionsMap) : value,
+                              commentItem
+                            )
+                          ) {
                             commentItem.content = value
                             resetStateAtIndex(index, commentItem)
                           }
@@ -721,6 +753,7 @@ const CommentsThread = <T = unknown,>({
                       <Else>
                         <MarkdownViewer
                           source={commentItem?.content}
+                          mentions={(commentItem as CommentItem<TypesPullReqActivity>)?.payload?.mentions}
                           suggestionBlock={Object.assign(
                             {
                               commentId: commentItem.id,
