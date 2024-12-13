@@ -30,3 +30,4 @@ node_modules
 /registry/logs/*
 /distribution-spec
 /registry/distribution-spec
+/app/store/database/test.db

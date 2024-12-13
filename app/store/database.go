@@ -1273,4 +1273,14 @@ type (
 		Delete(ctx context.Context, id int64) error
 		Update(ctx context.Context, infraProvisioned *types.InfraProvisioned) error
 	}
+
+	UsageMetricStore interface {
+		Upsert(ctx context.Context, in *types.UsageMetric) error
+		GetMetrics(
+			ctx context.Context,
+			rootSpaceID int64,
+			startDate int64,
+			endDate int64,
+		) (*types.UsageMetric, error)
+	}
 )

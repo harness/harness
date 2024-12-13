@@ -17,6 +17,7 @@ package database_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 
@@ -49,11 +50,15 @@ func New(dsn string) (*sqlx.DB, error) {
 
 func setupDB(t *testing.T) (*sqlx.DB, func()) {
 	t.Helper()
-	db, err := New(":memory:")
+	// must use file as db because in memory have only basic features
+	// file is anyway removed on every test. SQLite is fast
+	// so it will not affect too much performance.
+	_ = os.Remove("test.db")
+	db, err := New("test.db")
 	if err != nil {
 		t.Fatalf("Error opening db, err: %v", err)
 	}
-
+	_, _ = db.Exec("PRAGMA busy_timeout = 5000;")
 	if err = migrate.Migrate(context.Background(), db); err != nil {
 		t.Fatalf("Error migrating db, err: %v", err)
 	}
