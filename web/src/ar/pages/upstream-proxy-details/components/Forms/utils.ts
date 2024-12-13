@@ -16,6 +16,7 @@
 
 import produce from 'immer'
 import { compact, defaultTo, get, set } from 'lodash-es'
+import type { UserPassword } from '@harnessio/react-har-service-client'
 
 import { Parent } from '@ar/common/types'
 import type { Scope } from '@ar/MFEAppTypes'
@@ -54,7 +55,8 @@ export function getFormattedFormDataForAuthType(
     if (draft.config.authType === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD) {
       set(draft, 'config.auth.authType', draft.config.authType)
       if (parent === Parent.Enterprise) {
-        const password = draft.config.auth?.secretIdentifier
+        const auth = draft.config.auth as UserPassword
+        const password = auth?.secretIdentifier
         set(draft, 'config.auth.secretSpacePath', getSecretSpacePath(get(password, 'referenceString', ''), scope))
         set(draft, 'config.auth.secretIdentifier', get(password, 'identifier'))
       }
@@ -81,8 +83,9 @@ export function getFormattedInitialValuesForAuthType(values: UpstreamRegistryReq
   return produce(values, (draft: UpstreamRegistryRequest) => {
     if (draft.config.authType === UpstreamProxyAuthenticationMode.USER_NAME_AND_PASSWORD) {
       if (parent === Parent.Enterprise) {
-        const secretIdentifier = defaultTo(draft.config.auth?.secretIdentifier, '')
-        const secretSpacePath = defaultTo(draft.config.auth?.secretSpacePath, '')
+        const auth = draft.config.auth as UserPassword
+        const secretIdentifier = defaultTo(auth?.secretIdentifier, '')
+        const secretSpacePath = defaultTo(auth?.secretSpacePath, '')
         set(draft, 'config.auth.secretIdentifier', getSecretScopeDetailsByIdentifier(secretIdentifier, secretSpacePath))
       }
     }

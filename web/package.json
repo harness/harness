@@ -51,7 +51,7 @@
     "@codemirror/view": "^6.9.6",
     "@harnessio/design-system": "^2.1.1",
     "@harnessio/icons": "^2.1.9",
-    "@harnessio/react-har-service-client": "^0.1.0",
+    "@harnessio/react-har-service-client": "^0.2.0",
     "@harnessio/react-ssca-manager-client": "^0.65.0",
     "@harnessio/uicore": "^4.1.2",
     "@tanstack/react-query": "4.20.4",
