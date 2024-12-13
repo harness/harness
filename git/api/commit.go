@@ -188,8 +188,10 @@ func (g *Git) listCommitSHAs(
 	}
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
-	if err != nil {
-		// TODO: handle error in case they don't have a common merge base!
+	if cErr := command.AsError(err); cErr != nil {
+		if cErr.IsExitCode(128) && cErr.IsAmbiguousArgErr() {
+			return nil, errors.NotFound("reference %q is ambiguous", ref)
+		}
 		return nil, processGitErrorf(err, "failed to trigger rev-list command")
 	}
 
@@ -563,7 +565,7 @@ func (g *Git) GetFullCommitID(
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
-		if strings.Contains(err.Error(), "exit status 128") {
+		if command.AsError(err).IsExitCode(128) {
 			return sha.None, errors.NotFound("commit not found %s", shortID)
 		}
 		return sha.None, err

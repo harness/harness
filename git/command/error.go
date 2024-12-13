@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 var (
@@ -50,6 +51,14 @@ func (e *Error) ExitCode() int {
 
 func (e *Error) IsExitCode(code int) bool {
 	return e.ExitCode() == code
+}
+
+func (e *Error) IsAmbiguousArgErr() bool {
+	return strings.Contains(e.Error(), "ambiguous argument")
+}
+
+func (e *Error) IsInvalidRefErr() bool {
+	return strings.Contains(e.Error(), "not a valid ref")
 }
 
 func (e *Error) Error() string {

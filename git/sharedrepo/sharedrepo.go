@@ -241,7 +241,7 @@ func (r *SharedRepo) GetTreeSHA(
 		command.WithStdout(stdout),
 	)
 	if err != nil {
-		if strings.Contains(err.Error(), "ambiguous argument") {
+		if command.AsError(err).IsAmbiguousArgErr() {
 			return sha.None, errors.NotFound("could not resolve git revision %q", rev)
 		}
 		return sha.None, fmt.Errorf("failed to get tree sha: %w", err)

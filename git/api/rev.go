@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/git/command"
@@ -33,7 +32,7 @@ func (g *Git) ResolveRev(ctx context.Context,
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
-		if strings.Contains(err.Error(), "ambiguous argument") {
+		if command.AsError(err).IsAmbiguousArgErr() {
 			return sha.None, errors.InvalidArgument("could not resolve git revision: %s", rev)
 		}
 		return sha.None, fmt.Errorf("failed to resolve git revision: %w", err)

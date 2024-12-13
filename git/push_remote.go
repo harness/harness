@@ -48,14 +48,15 @@ func (s *Service) PushRemote(ctx context.Context, params *PushRemoteParams) erro
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	if ok, err := s.git.HasBranches(ctx, repoPath); ok {
-		if err != nil {
-			return errors.Internal(err, "push to repo failed")
-		}
+	isEmpty, err := s.git.HasBranches(ctx, repoPath)
+	if err != nil {
+		return errors.Internal(err, "push to repo failed")
+	}
+	if isEmpty {
 		return errors.InvalidArgument("cannot push empty repo")
 	}
 
-	err := s.git.Push(ctx, repoPath, api.PushOptions{
+	err = s.git.Push(ctx, repoPath, api.PushOptions{
 		Remote: params.RemoteURL,
 		Force:  false,
 		Env:    nil,
