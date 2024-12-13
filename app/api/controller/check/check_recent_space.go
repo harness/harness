@@ -32,7 +32,7 @@ func (c *Controller) ListRecentChecksSpace(
 	recursive bool,
 	opts types.CheckRecentOptions,
 ) ([]string, error) {
-	space, err := c.getSpaceCheckAccess(ctx, session, spaceRef, enum.PermissionSpaceEdit)
+	space, err := c.getSpaceCheckAccess(ctx, session, spaceRef, enum.PermissionSpaceView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
