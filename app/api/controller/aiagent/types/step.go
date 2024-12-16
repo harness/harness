@@ -14,16 +14,27 @@
 
 package types
 
-type GeneratePipelineStepInput struct {
-	Prompt  string `json:"prompt"`
-	RepoRef string `json:"repo_ref"`
+type PipelineStepData struct {
+	Yaml string `json:"yaml"`
 }
 
-type PipelineStepData struct {
-	StepYaml string `json:"yaml_step"`
+// create.
+type GeneratePipelineStepInput struct {
+	Prompt string `json:"prompt"`
 }
 
 type GeneratePipelineStepOutput struct {
-	Status string           `json:"status"`
+	Error string           `json:"error"`
+	Data  PipelineStepData `json:"data"`
+}
+
+// update.
+type UpdatePipelineStepInput struct {
+	Prompt string           `json:"prompt"`
 	Data   PipelineStepData `json:"data"`
+}
+
+type UpdatePipelineStepOutput struct {
+	Error string           `json:"error"`
+	Data  PipelineStepData `json:"data"`
 }

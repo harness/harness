@@ -22,21 +22,22 @@ import (
 	aitypes "github.com/harness/gitness/types/aigenerate"
 )
 
-func (c *Controller) GeneratePipeline(
+func (c *Controller) UpdatePipelineStep(
 	ctx context.Context,
-	in *controllertypes.GeneratePipelineInput,
-) (*controllertypes.GeneratePipelineOutput, error) {
-	generateRequest := &aitypes.PipelineGenerateRequest{
+	in *controllertypes.UpdatePipelineStepInput,
+) (*controllertypes.UpdatePipelineStepOutput, error) {
+	generateRequest := &aitypes.PipelineStepUpdateRequest{
 		Prompt: in.Prompt,
+		Step:   in.Data.Yaml,
 	}
 
-	output, err := c.intelligence.GeneratePipeline(ctx, generateRequest)
+	output, err := c.intelligence.UpdatePipelineStep(ctx, generateRequest)
 	if err != nil {
-		return nil, fmt.Errorf("generate pipeline: %w", err)
+		return nil, fmt.Errorf("update pipeline: %w", err)
 	}
-	return &controllertypes.GeneratePipelineOutput{
-		Data: controllertypes.PipelineData{
-			YamlPipeline: output.YAML,
+	return &controllertypes.UpdatePipelineStepOutput{
+		Data: controllertypes.PipelineStepData{
+			Yaml: output.Yaml,
 		},
 	}, nil
 }

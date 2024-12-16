@@ -24,6 +24,6 @@ type PipelineStageData struct {
 }
 
 type GeneratePipelineStageOutput struct {
-	Status string            `json:"status"`
-	Data   PipelineStageData `json:"data"`
+	Error string            `json:"error"`
+	Data  PipelineStageData `json:"data"`
 }

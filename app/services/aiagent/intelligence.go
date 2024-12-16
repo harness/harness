@@ -27,21 +27,63 @@ var _ Intelligence = GitnessIntelligence{}
 
 // This interface serves are the single interface to provide AI use cases.
 type Intelligence interface {
-	GeneratePipeline(
-		ctx context.Context,
-		req *aitypes.PipelineGenerateRequest) (*aitypes.PipelineGenerateResponse, error)
-	GeneratePipelineStage(
-		ctx context.Context,
-		req *aitypes.PipelineStageGenerateRequest) (*aitypes.PipelineStageGenerateResponse, error)
+	StepIntelligence
+	StageIntelligence
+	PipelineIntelligence
+}
+
+type StepIntelligence interface {
 	GeneratePipelineStep(
 		ctx context.Context,
 		req *aitypes.PipelineStepGenerateRequest) (*aitypes.PipelineStepGenerateResponse, error)
+	UpdatePipelineStep(
+		ctx context.Context,
+		req *aitypes.PipelineStepUpdateRequest) (*aitypes.PipelineStepUpdateResponse, error)
+}
+
+type StageIntelligence interface {
+	GeneratePipelineStage(
+		ctx context.Context,
+		req *aitypes.PipelineStageGenerateRequest) (*aitypes.PipelineStageGenerateResponse, error)
+	UpdatePipelineStage(
+		ctx context.Context,
+		req *aitypes.PipelineStageUpdateRequest) (*aitypes.PipelineStageUpdateResponse, error)
+}
+
+type PipelineIntelligence interface {
+	GeneratePipeline(
+		ctx context.Context,
+		req *aitypes.PipelineGenerateRequest) (*aitypes.PipelineGenerateResponse, error)
+	UpdatePipeline(
+		ctx context.Context,
+		req *aitypes.PipelineUpdateResponse) (*aitypes.PipelineUpdateResponse, error)
 }
 
 type GitnessIntelligence struct {
 	authorizer authz.Authorizer
 	cr         *capabilities.Registry
 	cc         *capabilitiesctrl.Controller
+}
+
+// UpdatePipeline implements Intelligence.
+func (h GitnessIntelligence) UpdatePipeline(
+	_ context.Context,
+	_ *aitypes.PipelineUpdateResponse) (*aitypes.PipelineUpdateResponse, error) {
+	panic("unimplemented")
+}
+
+// UpdatePipelineStage implements Intelligence.
+func (h GitnessIntelligence) UpdatePipelineStage(
+	_ context.Context,
+	_ *aitypes.PipelineStageUpdateRequest) (*aitypes.PipelineStageUpdateResponse, error) {
+	panic("unimplemented")
+}
+
+// UpdatePipelineStep implements Intelligence.
+func (h GitnessIntelligence) UpdatePipelineStep(
+	_ context.Context,
+	_ *aitypes.PipelineStepUpdateRequest) (*aitypes.PipelineStepUpdateResponse, error) {
+	panic("unimplemented")
 }
 
 // GeneratePipeline implements Intelligence.

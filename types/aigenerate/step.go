@@ -15,20 +15,18 @@
 package types
 
 type PipelineStepGenerateRequest struct {
-	Prompt  string
-	RepoRef string
+	Prompt string
 }
 
 type PipelineStepGenerateResponse struct {
-	YAML string
+	Yaml string
 }
 
 type PipelineStepUpdateRequest struct {
-	Prompt  string
-	RepoRef string
-	Step    string
+	Prompt string
+	Step   string
 }
 
 type PipelineStepUpdateResponse struct {
-	YAML string
+	Yaml string
 }

@@ -27,8 +27,7 @@ func (c *Controller) GeneratePipelineStep(
 	in *controllertypes.GeneratePipelineStepInput,
 ) (*controllertypes.GeneratePipelineStepOutput, error) {
 	generateRequest := &aitypes.PipelineStepGenerateRequest{
-		Prompt:  in.Prompt,
-		RepoRef: in.RepoRef,
+		Prompt: in.Prompt,
 	}
 
 	output, err := c.intelligence.GeneratePipelineStep(ctx, generateRequest)
@@ -36,9 +35,8 @@ func (c *Controller) GeneratePipelineStep(
 		return nil, fmt.Errorf("generate pipeline: %w", err)
 	}
 	return &controllertypes.GeneratePipelineStepOutput{
-		Status: "SUCCESS",
 		Data: controllertypes.PipelineStepData{
-			StepYaml: output.YAML,
+			Yaml: output.Yaml,
 		},
 	}, nil
 }

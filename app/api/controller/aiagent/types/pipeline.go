@@ -14,22 +14,22 @@
 
 package types
 
-type GeneratePipelineInput struct {
-	Prompt  string `json:"prompt"`
-	RepoRef string `json:"repo_ref"`
-}
-
 type PipelineData struct {
 	YamlPipeline string `json:"yaml_pipeline"`
 }
 
-type GeneratePipelineOutput struct {
-	Status string       `json:"status"`
-	Data   PipelineData `json:"data"`
+// create.
+type GeneratePipelineInput struct {
+	Prompt string `json:"prompt"`
 }
 
+type GeneratePipelineOutput struct {
+	Error string       `json:"error"`
+	Data  PipelineData `json:"data"`
+}
+
+// suggest.
 type SuggestPipelineInput struct {
-	RepoRef  string `json:"repo_ref"`
 	Pipeline string `json:"pipeline"`
 }
 
@@ -37,13 +37,13 @@ type SuggestPipelineOutput struct {
 	Suggestions []Suggestion
 }
 
-type UpdatePipelineOutput struct {
-	Status string       `json:"status"`
-	Data   PipelineData `json:"data"`
-}
-
+// update.
 type UpdatePipelineInput struct {
 	Prompt   string `json:"prompt"`
-	RepoRef  string `json:"repo_ref"`
 	Pipeline string `json:"pipeline"`
+}
+
+type UpdatePipelineOutput struct {
+	Error string       `json:"error"`
+	Data  PipelineData `json:"data"`
 }

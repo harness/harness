@@ -15,16 +15,6 @@
 package genai
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"io"
-	"net/http"
-	"os"
-
-	capabilitiesctrl "github.com/harness/gitness/app/api/controller/capabilities"
-	capabilitieshandler "github.com/harness/gitness/app/api/handler/capabilities"
-	"github.com/harness/gitness/app/services/capabilities"
 	capabilities2 "github.com/harness/gitness/types/capabilities"
 )
 
@@ -44,6 +34,10 @@ func GenerateAIContext(payloads ...capabilities2.AIContextPayload) []capabilitie
 	return out
 }
 
+var _ capabilities2.AIContextPayload = (*PipelineContext)(nil)
+var _ capabilities2.AIContextPayload = (*StepContext)(nil)
+var _ capabilities2.AIContextPayload = (*RepoRef)(nil)
+
 type PipelineContext struct {
 	Yaml string `json:"pipeline_yaml"`
 }
@@ -58,6 +52,20 @@ func (PipelineContext) GetType() capabilities2.AIContextPayloadType {
 	return AIContextPayloadTypePipelineContext
 }
 
+const AIContextPayloadTypeStepContext capabilities2.AIContextPayloadType = "other"
+
+type StepContext struct {
+	Yaml string `json:"step_yaml"`
+}
+
+func (StepContext) GetName() string {
+	return "step_context"
+}
+
+func (StepContext) GetType() capabilities2.AIContextPayloadType {
+	return AIContextPayloadTypeStepContext
+}
+
 type RepoRef struct {
 	Ref string `json:"ref"`
 }
@@ -70,45 +78,4 @@ const AIContextPayloadTypeRepoRef capabilities2.AIContextPayloadType = "other"
 
 func (RepoRef) GetType() capabilities2.AIContextPayloadType {
 	return AIContextPayloadTypeRepoRef
-}
-
-type ChatRequest struct {
-	Prompt          string                              `json:"prompt"`
-	ConversationID  string                              `json:"conversation_id"`
-	ConversationRaw string                              `json:"conversation_raw"`
-	Context         []capabilities2.AIContext           `json:"context"`
-	Capabilities    []capabilities2.CapabilityReference `json:"capabilities"`
-}
-
-func CallAIFoundation(ctx context.Context, cr *capabilities.Registry,
-	req *ChatRequest) (*capabilitiesctrl.RunCapabilitiesRequest, error) {
-	url := "http://localhost:8000/chat/platform"
-
-	jsonData, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
-	newReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, err
-	}
-	newReq.Header.Add("Authorization", "Bearer "+os.Getenv(AIFoundationServiceToken))
-
-	client := http.DefaultClient
-	resp, err := client.Do(newReq)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	in, err := capabilitieshandler.UnmarshalRunCapabilitiesRequest(cr, data)
-	if err != nil {
-		return nil, err
-	}
-
-	return in, nil
 }
