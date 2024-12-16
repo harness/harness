@@ -58,6 +58,7 @@ import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useGitspacesLogs } from 'cde-gitness/hooks/useGitspaceLogs'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
 import { ErrorCard } from 'cde-gitness/components/ErrorCard/ErrorCard'
+import CopyButton from 'cde-gitness/components/CopyButton/CopyButton'
 import ContainerLogs from '../../components/ContainerLogs/ContainerLogs'
 import { useGetLogStream } from '../../hooks/useGetLogStream'
 import css from './GitspaceDetails.module.scss'
@@ -245,12 +246,25 @@ const GitspaceDetails = () => {
       <Page.SubHeader className={css.customSubheader}>
         <Layout.Horizontal width="100%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>
           <Container>
-            <Layout.Horizontal spacing="small">
-              {data && (
-                <img src={data?.ide === IDEType.VSCODEWEB ? vsCodeWebIcon : vscodeIcon} height={32} width={32} />
-              )}
-              <Text font={{ variation: FontVariation.H3 }}>{data?.name}</Text>
-            </Layout.Horizontal>
+            {data && (
+              <Layout.Horizontal spacing="small">
+                <img
+                  src={data?.ide === IDEType.VSCODEWEB ? vsCodeWebIcon : vscodeIcon}
+                  className={css.gitspaceIcon}
+                  height={32}
+                  width={32}
+                />
+                <Layout.Vertical spacing="none" className={css.gitspaceIdContainer}>
+                  <Text font={{ variation: FontVariation.H3 }}>{data?.name}</Text>
+                  <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
+                    <Text font={{ size: 'small' }}>
+                      {getString('cde.id')}: {data?.identifier}
+                    </Text>
+                    <CopyButton value={data?.identifier} className={css.copyBtn} />
+                  </Layout.Horizontal>
+                </Layout.Vertical>
+              </Layout.Horizontal>
+            )}
           </Container>
 
           <Container>

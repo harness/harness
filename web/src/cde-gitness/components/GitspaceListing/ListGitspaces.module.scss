@@ -38,7 +38,7 @@
   div[class*='TableV2--cells'],
   div[class*='TableV2--header'] {
     display: grid !important;
-    grid-template-columns: 1.5fr 1.5fr 0.5fr 0.75fr 1fr 50px;
+    grid-template-columns: 1.2fr 1fr 1.5fr 0.75fr 0.75fr 1fr 50px;
   }
 }
 
@@ -65,12 +65,34 @@
   text-overflow: ellipsis;
 }
 
+.copyBtn {
+  padding: 0 !important;
+}
+
+.gitspaceIdContainer [class*='Layout--horizontal'] {
+  margin-top: 0 !important;
+}
+
+.gitspaceIdContainer [class*='bp3-popover-wrapper'] {
+  margin-left: 0 !important;
+}
+
+.copyBtn:hover {
+  box-shadow: none !important;
+}
+
 .repositoryCell {
   max-width: 70%;
 }
 
 .branchCell {
   max-width: 30%;
+}
+
+.gitspaceId {
+  .bp3-icon > svg {
+    cursor: pointer !important;
+  }
 }
 
 .stopModal {

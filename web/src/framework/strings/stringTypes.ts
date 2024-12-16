@@ -1212,6 +1212,7 @@ export interface StringsMap {
   'cde.changesTooltip.description': string
   'cde.changesTooltip.learnMore': string
   'cde.cloudDeveloperExperience': string
+  'cde.copied': string
   'cde.cpu': string
   'cde.create.branchPlaceholder': string
   'cde.create.gitnessRepositories': string
@@ -1281,6 +1282,7 @@ export interface StringsMap {
   'cde.homePage.noteTwo': string
   'cde.homePage.start': string
   'cde.hours': string
+  'cde.id': string
   'cde.ide.browser': string
   'cde.ide.desktop': string
   'cde.ide.openBrowser': string
@@ -1319,6 +1321,7 @@ export interface StringsMap {
   'cde.or': string
   'cde.owners': string
   'cde.region': string
+  'cde.regionAndMachineSize': string
   'cde.regionMachineType': string
   'cde.regionSelectWarning': string
   'cde.regionValidationMessage': string

@@ -52,6 +52,9 @@ importInto: Import Repository into Gitness
 status: Status
 getStarted: Get started with Gitspaces by
 createImport: creating or importing repositories
+regionAndMachineSize: Region & Machine Size
+copied: Copied
+id: ID
 sshSelect:
   30days: 30 Days
   90days: 90 Days

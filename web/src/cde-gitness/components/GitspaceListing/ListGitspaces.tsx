@@ -53,6 +53,7 @@ import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserU
 import { getGitspaceChanges, getIconByRepoType } from 'cde-gitness/utils/SelectRepository.utils'
 import { usePaginationProps } from 'cde-gitness/hooks/usePaginationProps'
 import ResourceDetails from '../ResourceDetails/ResourceDetails'
+import CopyButton from '../CopyButton/CopyButton'
 import css from './ListGitspaces.module.scss'
 
 export const getStatusColor = (status?: EnumGitspaceStateType) => {
@@ -113,9 +114,11 @@ const getUsageTemplate = (
 export const RenderGitspaceName: Renderer<
   CellProps<TypesGitspaceConfig & { resource?: TypesInfraProviderResource }>
 > = ({ row }) => {
+  const { getString } = useStrings()
   const details = row.original
-  const { name, ide, resource } = details
+  const { name, ide, identifier } = details
   const { standalone } = useAppContext()
+
   return standalone ? (
     <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
       <img src={ide === IDEType.VSCODE ? VSCode : vsCodeWebIcon} height={20} width={20} />
@@ -128,7 +131,7 @@ export const RenderGitspaceName: Renderer<
       </Text>
     </Layout.Horizontal>
   ) : (
-    <Layout.Vertical spacing={'medium'}>
+    <Layout.Vertical spacing={'medium'} className={css.gitspaceIdContainer}>
       <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
         <img src={ide === IDEType.VSCODE ? VSCode : vsCodeWebIcon} height={20} width={20} />
         <Text
@@ -140,6 +143,23 @@ export const RenderGitspaceName: Renderer<
           {name}
         </Text>
       </Layout.Horizontal>
+      <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
+        <Text font={{ size: 'small' }}>
+          {getString('cde.id')}: {identifier}
+        </Text>
+        <CopyButton value={identifier} className={css.copyBtn} />
+      </Layout.Horizontal>
+    </Layout.Vertical>
+  )
+}
+
+export const RenderRegionAndMachine: Renderer<
+  CellProps<TypesGitspaceConfig & { resource?: TypesInfraProviderResource }>
+> = ({ row }) => {
+  const details = row.original
+  const { resource } = details
+  return (
+    <Layout.Vertical spacing={'medium'}>
       <ResourceDetails resource={resource} />
     </Layout.Vertical>
   )
@@ -718,6 +738,16 @@ export const ListGitspaces = ({
         }
       ]
 
+  const regionColumn = standalone
+    ? []
+    : [
+        {
+          id: 'gitsapceId',
+          Header: getString('cde.regionAndMachineSize'),
+          Cell: RenderRegionAndMachine
+        }
+      ]
+
   const { refetchToken, setSelectedRowUrl } = useOpenVSCodeBrowserURL()
   const { page, pageSize, totalItems, totalPages } = pageConfig
 
@@ -777,6 +807,7 @@ export const ListGitspaces = ({
               Header: getString('cde.gitspaces'),
               Cell: RenderGitspaceName
             },
+            ...regionColumn,
             {
               id: 'repository',
               Header: getString('cde.repositoryAndBranch'),
