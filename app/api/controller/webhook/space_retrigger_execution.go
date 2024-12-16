@@ -31,7 +31,7 @@ func (c *Controller) RetriggerExecutionSpace(
 	webhookIdentifier string,
 	webhookExecutionID int64,
 ) (*types.WebhookExecution, error) {
-	space, err := c.getSpaceCheckAccess(ctx, session, spaceRef, enum.PermissionSpaceView)
+	space, err := c.getSpaceCheckAccess(ctx, session, spaceRef, enum.PermissionSpaceEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to space: %w", err)
 	}

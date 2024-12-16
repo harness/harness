@@ -31,7 +31,7 @@ func (c *Controller) RetriggerExecutionRepo(
 	webhookIdentifier string,
 	webhookExecutionID int64,
 ) (*types.WebhookExecution, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to the repo: %w", err)
 	}

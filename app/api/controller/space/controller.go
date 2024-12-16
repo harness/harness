@@ -151,17 +151,7 @@ func (c *Controller) getSpaceCheckAuth(
 	spaceRef string,
 	permission enum.Permission,
 ) (*types.Space, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
-	if err != nil {
-		return nil, fmt.Errorf("parent space not found: %w", err)
-	}
-
-	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, permission)
-	if err != nil {
-		return nil, fmt.Errorf("auth check failed: %w", err)
-	}
-
-	return space, nil
+	return GetSpaceCheckAuth(ctx, c.spaceStore, c.authorizer, session, spaceRef, permission)
 }
 
 func (c *Controller) getSpaceCheckAuthRepoCreation(

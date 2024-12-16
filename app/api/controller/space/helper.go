@@ -18,10 +18,36 @@ import (
 	"context"
 	"fmt"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
+
+// GetSpaceCheckAuth checks whether the user has the requested permission on the provided space and returns the space.
+func GetSpaceCheckAuth(
+	ctx context.Context,
+	spaceStore store.SpaceStore,
+	authorizer authz.Authorizer,
+	session *auth.Session,
+	spaceRef string,
+	permission enum.Permission,
+) (*types.Space, error) {
+	space, err := spaceStore.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return nil, fmt.Errorf("space not found: %w", err)
+	}
+
+	err = apiauth.CheckSpace(ctx, authorizer, session, space, permission)
+	if err != nil {
+		return nil, fmt.Errorf("auth check failed: %w", err)
+	}
+
+	return space, nil
+}
 
 func GetSpaceOutput(
 	ctx context.Context,

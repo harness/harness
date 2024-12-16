@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
@@ -84,17 +85,5 @@ func (c *Controller) getSpaceCheckAccess(
 	spaceRef string,
 	permission enum.Permission,
 ) (*types.Space, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
-	if err != nil {
-		return nil, fmt.Errorf("parent space not found: %w", err)
-	}
-
-	scope := &types.Scope{SpacePath: space.Path}
-	resource := &types.Resource{Type: enum.ResourceTypeRepo}
-	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, permission)
-	if err != nil {
-		return nil, fmt.Errorf("auth check failed: %w", err)
-	}
-
-	return space, nil
+	return space.GetSpaceCheckAuth(ctx, c.spaceStore, c.authorizer, session, spaceRef, permission)
 }
