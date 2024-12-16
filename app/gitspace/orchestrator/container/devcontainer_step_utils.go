@@ -17,6 +17,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
@@ -53,6 +54,7 @@ func ValidateSupportedOS(
 	return nil
 }
 
+// ExecuteLifecycleCommands executes commands in parallel, logs with numbers, and prefixes all logs.
 func ExecuteLifecycleCommands(
 	ctx context.Context,
 	exec devcontainer.Exec,
@@ -65,21 +67,48 @@ func ExecuteLifecycleCommands(
 		gitspaceLogger.Info(fmt.Sprintf("No %s commands provided, skipping execution", actionType))
 		return nil
 	}
-	for _, command := range commands {
-		gitspaceLogger.Info(fmt.Sprintf("Executing %s command: %s", actionType, command))
-		gitspaceLogger.Info(fmt.Sprintf("%s command execution output...", actionType))
+	gitspaceLogger.Info(fmt.Sprintf("Executing %s commands: %v", actionType, commands))
 
-		exec.DefaultWorkingDir = codeRepoDir
-		err := common.ExecuteCommandInHomeDirAndLog(ctx, &exec, command, false, gitspaceLogger, true)
-		if err != nil {
-			return logStreamWrapError(
-				gitspaceLogger, fmt.Sprintf("Error while executing %s command: %s", actionType, command), err)
-		}
-		gitspaceLogger.Info(fmt.Sprintf("Completed execution %s command: %s", actionType, command))
+	// Create a WaitGroup to wait for all goroutines to finish.
+	var wg sync.WaitGroup
+
+	// Iterate over commands and execute them in parallel using goroutines.
+	for index, command := range commands {
+		// Increment the WaitGroup counter.
+		wg.Add(1)
+
+		// Execute each command in a new goroutine.
+		go func(index int, command string) {
+			// Decrement the WaitGroup counter when the goroutine finishes.
+			defer wg.Done()
+
+			// Number the command in the logs and prefix all logs.
+			commandNumber := index + 1 // Starting from 1 for numbering
+			logPrefix := fmt.Sprintf("Command #%d - ", commandNumber)
+
+			// Log command execution details.
+			gitspaceLogger.Info(fmt.Sprintf("%sExecuting %s command: %s", logPrefix, actionType, command))
+			exec.DefaultWorkingDir = codeRepoDir
+			err := common.ExecuteCommandInHomeDirAndLog(ctx, &exec, command, false, gitspaceLogger, true)
+			if err != nil {
+				// Log the error if there is any issue with executing the command.
+				_ = logStreamWrapError(gitspaceLogger, fmt.Sprintf("%sError while executing %s command: %s",
+					logPrefix, actionType, command), err)
+				return
+			}
+
+			// Log completion of the command execution.
+			gitspaceLogger.Info(fmt.Sprintf(
+				"%sCompleted execution %s command: %s", logPrefix, actionType, command))
+		}(index, command)
 	}
+
+	// Wait for all goroutines to finish.
+	wg.Wait()
 
 	return nil
 }
+
 func CloneCode(
 	ctx context.Context,
 	exec *devcontainer.Exec,

@@ -20,77 +20,82 @@ import (
 	"strings"
 )
 
+//nolint:tagliatelle
 type DevcontainerConfig struct {
 	Image             string                           `json:"image,omitempty"`
-	PostCreateCommand LifecycleCommand                 `json:"postCreateCommand,omitempty"` //nolint:tagliatelle
-	PostStartCommand  LifecycleCommand                 `json:"postStartCommand,omitempty"`  //nolint:tagliatelle
-	ForwardPorts      []json.Number                    `json:"forwardPorts,omitempty"`      //nolint:tagliatelle
-	ContainerEnv      map[string]string                `json:"containerEnv,omitempty"`      //nolint:tagliatelle
+	PostCreateCommand LifecycleCommand                 `json:"postCreateCommand,omitempty"`
+	PostStartCommand  LifecycleCommand                 `json:"postStartCommand,omitempty"`
+	ForwardPorts      []json.Number                    `json:"forwardPorts,omitempty"`
+	ContainerEnv      map[string]string                `json:"containerEnv,omitempty"`
 	Customizations    DevContainerConfigCustomizations `json:"customizations,omitempty"`
-	RunArgs           []string                         `json:"runArgs,omitempty"`       //nolint:tagliatelle
-	ContainerUser     string                           `json:"containerUser,omitempty"` //nolint:tagliatelle
-	RemoteUser        string                           `json:"remoteUser,omitempty"`    //nolint:tagliatelle
+	RunArgs           []string                         `json:"runArgs,omitempty"`
+	ContainerUser     string                           `json:"containerUser,omitempty"`
+	RemoteUser        string                           `json:"remoteUser,omitempty"`
 }
 
-// LifecycleCommand supports multiple formats for lifecycle commands.
+//nolint:tagliatelle
 type LifecycleCommand struct {
-	CommandString string   `json:"commandString,omitempty"` //nolint:tagliatelle
-	CommandArray  []string `json:"commandArray,omitempty"`  //nolint:tagliatelle
+	CommandString string   `json:"commandString,omitempty"`
+	CommandArray  []string `json:"commandArray,omitempty"`
 	// Map to store commands by tags
-	CommandMap map[string]string `json:"commandMap,omitempty"` //nolint:tagliatelle
+	CommandMap      map[string]string   `json:"commandMap,omitempty"`
+	CommandMapArray map[string][]string `json:"commandMapArray,omitempty"`
+	Discriminator   string              `json:"-"` // Tracks the original type for proper re-marshaling
 }
 
-// UnmarshalJSON custom unmarshal method for LifecycleCommand.
-func (lc *LifecycleCommand) UnmarshalJSON(data []byte) error {
-	// Define a helper struct to match the object format
-	type Alias LifecycleCommand
-	var alias Alias
-	if err := json.Unmarshal(data, &alias); err == nil {
-		*lc = LifecycleCommand(alias)
-		return nil
-	}
+// Constants for discriminator values.
+const (
+	TypeString           = "string"
+	TypeArray            = "array"
+	TypeCommandMapString = "commandMap"
+	TypeCommandMapArray  = "commandMapArray"
+)
 
+func (lc *LifecycleCommand) UnmarshalJSON(data []byte) error {
 	// Try to unmarshal as a single string
 	var commandStr string
 	if err := json.Unmarshal(data, &commandStr); err == nil {
 		lc.CommandString = commandStr
+		lc.Discriminator = TypeString
 		return nil
 	}
-
 	// Try to unmarshal as an array of strings
 	var commandArr []string
 	if err := json.Unmarshal(data, &commandArr); err == nil {
 		lc.CommandArray = commandArr
+		lc.Discriminator = TypeArray
 		return nil
 	}
-
 	// Try to unmarshal as a map of commands (tags to commands)
-	var commandMap map[string]interface{}
+	var commandMap map[string]string
 	if err := json.Unmarshal(data, &commandMap); err == nil {
-		validatedCommands := make(map[string]string)
-		for tag, value := range commandMap {
-			switch v := value.(type) {
-			case string:
-				validatedCommands[tag] = v
-			case []interface{}:
-				var strArray []string
-				for _, item := range v {
-					if str, ok := item.(string); ok {
-						strArray = append(strArray, str)
-					} else {
-						return errors.New("invalid array type in command map")
-					}
-				}
-				validatedCommands[tag] = strings.Join(strArray, " ")
-			default:
-				return errors.New("map values must be string or []string")
-			}
-		}
-		lc.CommandMap = validatedCommands
+		lc.CommandMap = commandMap
+		lc.Discriminator = TypeCommandMapString
 		return nil
 	}
+	// Try to unmarshal as a CommandMapArray
+	var commandMapArray map[string][]string
+	if err := json.Unmarshal(data, &commandMapArray); err == nil {
+		lc.CommandMapArray = commandMapArray
+		lc.Discriminator = TypeCommandMapArray
+		return nil
+	}
+	return errors.New("invalid format: must be string, []string, map[string]string, or map[string][]string")
+}
 
-	return errors.New("invalid format: must be string, []string, or map[string]string | map[string][]string")
+func (lc *LifecycleCommand) MarshalJSON() ([]byte, error) {
+	switch lc.Discriminator {
+	case TypeString:
+		return json.Marshal(lc.CommandString)
+	case TypeArray:
+		return json.Marshal(lc.CommandArray)
+	case TypeCommandMapString:
+		return json.Marshal(lc.CommandMap)
+	case TypeCommandMapArray:
+		return json.Marshal(lc.CommandMapArray)
+	default:
+		return nil, errors.New("unknown type for LifecycleCommand")
+	}
 }
 
 // ToCommandArray converts the LifecycleCommand into a slice of full commands.
@@ -104,6 +109,12 @@ func (lc *LifecycleCommand) ToCommandArray() []string {
 		var commands []string
 		for _, command := range lc.CommandMap {
 			commands = append(commands, command)
+		}
+		return commands
+	case lc.CommandMapArray != nil:
+		var commands []string
+		for _, commandArray := range lc.CommandMapArray {
+			commands = append(commands, strings.Join(commandArray, " "))
 		}
 		return commands
 	default:
