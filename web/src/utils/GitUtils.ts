@@ -610,8 +610,11 @@ export enum WebhookIndividualEvent {
   PR_BRANCH_UPDATED = 'pullreq_branch_updated',
   PR_CLOSED = 'pullreq_closed',
   PR_COMMENT_CREATED = 'pullreq_comment_created',
+  PR_COMMENT_STATUS_UPDATED = 'pullreq_comment_status_updated',
+  PR_COMMENT_UPDATED = 'pullreq_comment_updated',
   PR_MERGED = 'pullreq_merged',
-  PR_LABEL_ASSIGNED = 'pullreq_label_assigned'
+  PR_LABEL_ASSIGNED = 'pullreq_label_assigned',
+  PR_REVIEW_SUBMITTED = 'pullreq_review_submitted'
 }
 
 export enum WebhookEventMap {
@@ -627,8 +630,11 @@ export enum WebhookEventMap {
   PR_BRANCH_UPDATED = 'PR branch updated',
   PR_CLOSED = 'PR closed',
   PR_COMMENT_CREATED = 'PR comment created',
+  PR_COMMENT_STATUS_UPDATED = 'PR comment status updated',
+  PR_COMMENT_UPDATED = 'PR comment updated',
   PR_MERGED = 'PR merged',
-  PR_LABEL_ASSIGNED = 'PR label assigned'
+  PR_LABEL_ASSIGNED = 'PR label assigned',
+  PR_REVIEW_SUBMITTED = 'PR review submitted'
 }
 
 export const eventMapping: Record<WebhookIndividualEvent, WebhookEventMap> = {
@@ -644,8 +650,11 @@ export const eventMapping: Record<WebhookIndividualEvent, WebhookEventMap> = {
   [WebhookIndividualEvent.PR_BRANCH_UPDATED]: WebhookEventMap.PR_BRANCH_UPDATED,
   [WebhookIndividualEvent.PR_CLOSED]: WebhookEventMap.PR_CLOSED,
   [WebhookIndividualEvent.PR_COMMENT_CREATED]: WebhookEventMap.PR_COMMENT_CREATED,
+  [WebhookIndividualEvent.PR_COMMENT_STATUS_UPDATED]: WebhookEventMap.PR_COMMENT_STATUS_UPDATED,
+  [WebhookIndividualEvent.PR_COMMENT_UPDATED]: WebhookEventMap.PR_COMMENT_UPDATED,
   [WebhookIndividualEvent.PR_MERGED]: WebhookEventMap.PR_MERGED,
-  [WebhookIndividualEvent.PR_LABEL_ASSIGNED]: WebhookEventMap.PR_LABEL_ASSIGNED
+  [WebhookIndividualEvent.PR_LABEL_ASSIGNED]: WebhookEventMap.PR_LABEL_ASSIGNED,
+  [WebhookIndividualEvent.PR_REVIEW_SUBMITTED]: WebhookEventMap.PR_REVIEW_SUBMITTED
 }
 
 export function getEventDescription(event: WebhookIndividualEvent): string {

@@ -1184,10 +1184,13 @@ export interface StringsMap {
   webhookPRBranchUpdated: string
   webhookPRClosed: string
   webhookPRCommentCreated: string
+  webhookPRCommentStatusUpdated: string
+  webhookPRCommentUpdated: string
   webhookPRCreated: string
   webhookPRLabelAssigned: string
   webhookPRMerged: string
   webhookPRReopened: string
+  webhookPRReviewSubmitted: string
   webhookPRUpdated: string
   webhookPage: string
   webhookSelectAllEvents: string

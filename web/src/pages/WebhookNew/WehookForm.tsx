@@ -64,6 +64,9 @@ interface FormData {
   prCommentCreated: boolean
   prMerged: boolean
   prLabelAssigned: boolean
+  prCommentStatusUpdated: boolean
+  prCommentUpdated: boolean
+  prReviewSubmitted: boolean
 }
 
 interface WebHookFormProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -117,6 +120,10 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             prCommentCreated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_COMMENT_CREATED) || false,
             prMerged: webhook?.triggers?.includes(WebhookIndividualEvent.PR_MERGED) || false,
             prLabelAssigned: webhook?.triggers?.includes(WebhookIndividualEvent.PR_LABEL_ASSIGNED) || false,
+            prCommentStatusUpdated:
+              webhook?.triggers?.includes(WebhookIndividualEvent.PR_COMMENT_STATUS_UPDATED) || false,
+            prCommentUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_COMMENT_UPDATED) || false,
+            prReviewSubmitted: webhook?.triggers?.includes(WebhookIndividualEvent.PR_REVIEW_SUBMITTED) || false,
             events: (webhook?.triggers?.length || 0) > 0 ? WebhookEventType.INDIVIDUAL : WebhookEventType.ALL
           }}
           formName="create-webhook-form"
@@ -168,6 +175,16 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
               }
               if (formData.prCommentCreated) {
                 triggers.push(WebhookIndividualEvent.PR_COMMENT_CREATED)
+              }
+
+              if (formData.prCommentStatusUpdated) {
+                triggers.push(WebhookIndividualEvent.PR_COMMENT_STATUS_UPDATED)
+              }
+              if (formData.prCommentUpdated) {
+                triggers.push(WebhookIndividualEvent.PR_COMMENT_UPDATED)
+              }
+              if (formData.prReviewSubmitted) {
+                triggers.push(WebhookIndividualEvent.PR_REVIEW_SUBMITTED)
               }
               if (formData.prMerged) {
                 triggers.push(WebhookIndividualEvent.PR_MERGED)
@@ -252,7 +269,14 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                   />
                   {values.events === WebhookEventType.INDIVIDUAL ? (
                     <article
-                      style={{ display: 'flex', gap: '6rem', flexWrap: 'wrap', marginLeft: '30px', marginTop: '10px' }}>
+                      style={{
+                        display: 'flex',
+                        gap: '4rem',
+                        flexWrap: 'wrap',
+                        marginLeft: '30px',
+                        marginTop: '10px',
+                        marginBottom: '20px'
+                      }}>
                       <section>
                         <FormInput.CheckBox
                           label={getString('webhookBranchCreated')}
@@ -269,8 +293,6 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                           name="branchDeleted"
                           className={css.checkbox}
                         />
-                      </section>
-                      <section>
                         <FormInput.CheckBox
                           label={getString('webhookTagCreated')}
                           name="tagCreated"
@@ -304,13 +326,20 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                           className={css.checkbox}
                         />
                         <FormInput.CheckBox
-                          label={getString('webhookPRBranchUpdated')}
-                          name="prBranchUpdated"
+                          label={getString('webhookPRClosed')}
+                          name="prClosed"
                           className={css.checkbox}
                         />
                         <FormInput.CheckBox
-                          label={getString('webhookPRClosed')}
-                          name="prClosed"
+                          label={getString('webhookPRMerged')}
+                          name="prMerged"
+                          className={css.checkbox}
+                        />
+                      </section>
+                      <section>
+                        <FormInput.CheckBox
+                          label={getString('webhookPRBranchUpdated')}
+                          name="prBranchUpdated"
                           className={css.checkbox}
                         />
                         <FormInput.CheckBox
@@ -319,8 +348,18 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                           className={css.checkbox}
                         />
                         <FormInput.CheckBox
-                          label={getString('webhookPRMerged')}
-                          name="prMerged"
+                          label={getString('webhookPRCommentStatusUpdated')}
+                          name="prCommentStatusUpdated"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookPRCommentUpdated')}
+                          name="prCommentUpdated"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookPRReviewSubmitted')}
+                          name="prReviewSubmitted"
                           className={css.checkbox}
                         />
                         <FormInput.CheckBox

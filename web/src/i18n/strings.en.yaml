@@ -431,8 +431,11 @@ webhookPRUpdated: PR updated
 webhookPRReopened: PR reopened
 webhookPRClosed: PR closed
 webhookPRCommentCreated: PR comment created
+webhookPRCommentStatusUpdated: PR comment status updated
+webhookPRCommentUpdated: PR comment updated
 webhookPRMerged: PR merged
 webhookPRLabelAssigned: PR label assigned
+webhookPRReviewSubmitted: PR review submitted
 nameYourWebhook: Name your webhook
 noExecutionsFound: No Executions found
 noExecutionsFoundForWebhook: No executions found for the given webhook
