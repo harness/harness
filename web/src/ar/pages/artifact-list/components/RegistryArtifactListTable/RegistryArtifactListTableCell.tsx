@@ -127,7 +127,7 @@ export const RegistryArtifactLatestUpdatedCell: CellType = ({ row }) => {
   }
   return (
     <Layout.Vertical spacing="small">
-      <Text color={Color.PRIMARY_7} font={{ size: 'small' }}>
+      <Text lineClamp={1} color={Color.PRIMARY_7} font={{ size: 'small' }}>
         {latestVersion}
       </Text>
       <TableCells.LastModifiedCell value={defaultTo(lastModified, 0)} />
