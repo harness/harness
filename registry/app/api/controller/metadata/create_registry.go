@@ -108,8 +108,14 @@ func (c *APIController) CreateRegistry(
 	)
 
 	if err != nil {
+		if isDuplicateKeyError(err) {
+			if err2 := c.handleDuplicateRegistryError(ctx, registry); err2 != nil {
+				return throwCreateRegistry400Error(err2), nil //nolint:nilerr
+			}
+		}
 		return throwCreateRegistry400Error(err), nil //nolint:nilerr
 	}
+
 	upstreamproxyEntity, err := c.UpstreamProxyStore.Get(ctx, registryID)
 	if err != nil {
 		return throwCreateRegistry400Error(err), nil //nolint:nilerr
@@ -134,6 +140,11 @@ func (c *APIController) createVirtualRegistry(
 	}
 	id, err := c.createRegistryWithAudit(ctx, registry, session.Principal, string(parentRef))
 	if err != nil {
+		if isDuplicateKeyError(err) {
+			if err2 := c.handleDuplicateRegistryError(ctx, registry); err2 != nil {
+				return throwCreateRegistry400Error(err2), nil //nolint:nilerr
+			}
+		}
 		return throwCreateRegistry400Error(err), nil
 	}
 	repoEntity, err := c.RegistryRepository.Get(ctx, id)
@@ -197,9 +208,6 @@ func (c *APIController) createRegistryWithAudit(
 ) (int64, error) {
 	id, err := c.RegistryRepository.Create(ctx, registry)
 	if err != nil {
-		if isDuplicateKeyError(err) {
-			return -1, c.handleDuplicateRegistryError(ctx, registry)
-		}
 		return id, err
 	}
 	auditErr := c.AuditService.Log(
