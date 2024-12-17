@@ -16,7 +16,7 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -33,23 +33,20 @@ type DevcontainerConfig struct {
 	RemoteUser        string                           `json:"remoteUser,omitempty"`
 }
 
-//nolint:tagliatelle
-type LifecycleCommand struct {
-	CommandString string   `json:"commandString,omitempty"`
-	CommandArray  []string `json:"commandArray,omitempty"`
-	// Map to store commands by tags
-	CommandMap      map[string]string   `json:"commandMap,omitempty"`
-	CommandMapArray map[string][]string `json:"commandMapArray,omitempty"`
-	Discriminator   string              `json:"-"` // Tracks the original type for proper re-marshaling
-}
-
 // Constants for discriminator values.
 const (
-	TypeString           = "string"
-	TypeArray            = "array"
-	TypeCommandMapString = "commandMap"
-	TypeCommandMapArray  = "commandMapArray"
+	TypeString     = "string"
+	TypeArray      = "array"
+	TypeCommandMap = "commandMap"
 )
+
+//nolint:tagliatelle
+type LifecycleCommand struct {
+	CommandString string         `json:"commandString,omitempty"`
+	CommandArray  []string       `json:"commandArray,omitempty"`
+	CommandMap    map[string]any `json:"commandMap,omitempty"`
+	Discriminator string         `json:"-"` // Tracks the original type for proper re-marshaling
+}
 
 func (lc *LifecycleCommand) UnmarshalJSON(data []byte) error {
 	// Try to unmarshal as a single string
@@ -59,6 +56,7 @@ func (lc *LifecycleCommand) UnmarshalJSON(data []byte) error {
 		lc.Discriminator = TypeString
 		return nil
 	}
+
 	// Try to unmarshal as an array of strings
 	var commandArr []string
 	if err := json.Unmarshal(data, &commandArr); err == nil {
@@ -66,21 +64,35 @@ func (lc *LifecycleCommand) UnmarshalJSON(data []byte) error {
 		lc.Discriminator = TypeArray
 		return nil
 	}
-	// Try to unmarshal as a map of commands (tags to commands)
-	var commandMap map[string]string
-	if err := json.Unmarshal(data, &commandMap); err == nil {
-		lc.CommandMap = commandMap
-		lc.Discriminator = TypeCommandMapString
+
+	// Try to unmarshal as a map with mixed types
+	var rawMap map[string]any
+	if err := json.Unmarshal(data, &rawMap); err == nil {
+		for key, value := range rawMap {
+			switch v := value.(type) {
+			case string:
+				// Valid string value
+			case []interface{}:
+				// Convert []interface{} to []string
+				var strArray []string
+				for _, item := range v {
+					if str, ok := item.(string); ok {
+						strArray = append(strArray, str)
+					} else {
+						return fmt.Errorf("invalid format: array contains non-string value")
+					}
+				}
+				rawMap[key] = strArray
+			default:
+				return fmt.Errorf("invalid format: map contains unsupported type")
+			}
+		}
+		lc.CommandMap = rawMap
+		lc.Discriminator = TypeCommandMap
 		return nil
 	}
-	// Try to unmarshal as a CommandMapArray
-	var commandMapArray map[string][]string
-	if err := json.Unmarshal(data, &commandMapArray); err == nil {
-		lc.CommandMapArray = commandMapArray
-		lc.Discriminator = TypeCommandMapArray
-		return nil
-	}
-	return errors.New("invalid format: must be string, []string, map[string]string, or map[string][]string")
+
+	return fmt.Errorf("invalid format: must be string, []string, or map[string]any")
 }
 
 func (lc *LifecycleCommand) MarshalJSON() ([]byte, error) {
@@ -89,32 +101,29 @@ func (lc *LifecycleCommand) MarshalJSON() ([]byte, error) {
 		return json.Marshal(lc.CommandString)
 	case TypeArray:
 		return json.Marshal(lc.CommandArray)
-	case TypeCommandMapString:
+	case TypeCommandMap:
 		return json.Marshal(lc.CommandMap)
-	case TypeCommandMapArray:
-		return json.Marshal(lc.CommandMapArray)
 	default:
-		return nil, errors.New("unknown type for LifecycleCommand")
+		return nil, fmt.Errorf("unknown type for LifecycleCommand")
 	}
 }
 
 // ToCommandArray converts the LifecycleCommand into a slice of full commands.
 func (lc *LifecycleCommand) ToCommandArray() []string {
-	switch {
-	case lc.CommandString != "":
+	switch lc.Discriminator {
+	case TypeString:
 		return []string{lc.CommandString}
-	case lc.CommandArray != nil:
+	case TypeArray:
 		return []string{strings.Join(lc.CommandArray, " ")}
-	case lc.CommandMap != nil:
+	case TypeCommandMap:
 		var commands []string
-		for _, command := range lc.CommandMap {
-			commands = append(commands, command)
-		}
-		return commands
-	case lc.CommandMapArray != nil:
-		var commands []string
-		for _, commandArray := range lc.CommandMapArray {
-			commands = append(commands, strings.Join(commandArray, " "))
+		for _, value := range lc.CommandMap {
+			switch v := value.(type) {
+			case string:
+				commands = append(commands, v)
+			case []string:
+				commands = append(commands, strings.Join(v, " "))
+			}
 		}
 		return commands
 	default:
