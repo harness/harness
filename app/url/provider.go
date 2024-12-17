@@ -246,6 +246,9 @@ func (p *provider) RegistryURL(_ context.Context, params ...string) string {
 	}
 
 	segments := []string{u.Path}
+	if len(params) > 0 {
+		params[0] = strings.ToLower(params[0])
+	}
 	segments = append(segments, params...)
 	fullPath := path.Join(segments...)
 	u.Path = fullPath
