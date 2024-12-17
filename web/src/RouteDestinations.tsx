@@ -55,7 +55,7 @@ import PipelineSettings from 'components/PipelineSettings/PipelineSettings'
 import GitspaceDetails from 'cde-gitness/pages/GitspaceDetails/GitspaceDetails'
 import GitspaceListing from 'cde-gitness/pages/GitspaceListing/GitspaceListing'
 import GitspaceCreate from 'cde-gitness/pages/GitspaceCreate/GitspaceCreate'
-import ManageLabels from 'pages/ManageSpace/ManageLabels/ManageLabels'
+import ManageRepositories from 'pages/ManageSpace/ManageRepositories/ManageRepositories'
 
 const ArApp = lazy(() => import('@ar/gitness/ArApp'))
 
@@ -87,6 +87,17 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
 
         <Route
           path={[
+            routes.toCODESpaceSettings({
+              space: pathProps.space,
+              settingSection: pathProps.settingSection,
+              settingSectionMode: pathProps.settingSectionMode,
+              ruleId: pathProps.ruleId
+            }),
+            routes.toCODESpaceSettings({
+              space: pathProps.space,
+              settingSection: pathProps.settingSection,
+              settingSectionMode: pathProps.settingSectionMode
+            }),
             routes.toCODESpaceSettings({ space: pathProps.space, settingSection: pathProps.settingSection }),
             routes.toCODESpaceSettings({ space: pathProps.space })
           ]}
@@ -394,9 +405,26 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </LayoutWithSideNav>
         </Route>
 
-        <Route path={routes.toCODESpaceLabels({ space: pathProps.space })} exact>
-          <LayoutWithSideNav title={getString('labels.labels')}>
-            <ManageLabels />
+        <Route
+          path={[
+            routes.toCODEManageRepositories({
+              space: pathProps.space,
+              settingSection: pathProps.settingSection,
+              settingSectionMode: pathProps.settingSectionMode,
+              ruleId: pathProps.ruleId
+            }),
+            routes.toCODEManageRepositories({
+              space: pathProps.space,
+              settingSection: pathProps.settingSection,
+              settingSectionMode: pathProps.settingSectionMode
+            }),
+
+            routes.toCODEManageRepositories({ space: pathProps.space, settingSection: pathProps.settingSection }),
+            routes.toCODEManageRepositories({ space: pathProps.space })
+          ]}
+          exact>
+          <LayoutWithSideNav title={getString('pageTitle.repositorySettings')}>
+            <ManageRepositories />
           </LayoutWithSideNav>
         </Route>
 

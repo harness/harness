@@ -38,9 +38,12 @@ import { useGet, useMutate } from 'restful-react'
 import { BranchTargetType, MergeStrategy, SettingTypeMode, SettingsTab, branchTargetOptions } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import {
+  LabelsPageScope,
   REGEX_VALID_REPO_NAME,
   RulesFormPayload,
+  getEditPermissionRequestFromScope,
   getErrorMessage,
+  getScopeData,
   permissionProps,
   rulesFormInitialPayload
 } from 'utils/Utils'
@@ -55,6 +58,7 @@ import type {
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { getConfig } from 'services/config'
 import ProtectionRulesForm from './ProtectionRulesForm/ProtectionRulesForm'
 import Include from '../../../icons/Include.svg?url'
 import Exclude from '../../../icons/Exclude.svg?url'
@@ -62,33 +66,50 @@ import BypassList from './BypassList'
 import css from './BranchProtectionForm.module.scss'
 
 const BranchProtectionForm = (props: {
-  ruleUid: string
+  currentRule?: OpenapiRule
   editMode: boolean
   repoMetadata?: RepoRepositoryOutput | undefined
   refetchRules: () => void
   settingSectionMode: SettingTypeMode
+  currentPageScope: LabelsPageScope
 }) => {
   const { routes, routingId, standalone, hooks } = useAppContext()
 
   const { ruleId } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
-  const { editMode = false, repoMetadata, ruleUid, refetchRules, settingSectionMode } = props
+  const space = useGetSpaceParam()
+  const { editMode = false, repoMetadata, currentRule, refetchRules, settingSectionMode, currentPageScope } = props
   const { getString } = useStrings()
-  const { data: rule } = useGet<OpenapiRule>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/rules/${ruleId}`,
-    lazy: !repoMetadata && !ruleId
-  })
   const [searchTerm, setSearchTerm] = useState('')
   const [searchStatusTerm, setSearchStatusTerm] = useState('')
+  const { scopeRef } = currentRule?.scope ? getScopeData(space, currentRule?.scope, standalone) : { scopeRef: space }
+
+  const getUpdateRulePath = () =>
+    currentRule?.scope === 0 && repoMetadata
+      ? `/repos/${repoMetadata?.path}/+/rules/${encodeURIComponent(ruleId)}`
+      : `/spaces/${scopeRef}/+/rules/${encodeURIComponent(ruleId)}`
+
+  const getCreateRulePath = () =>
+    currentPageScope === LabelsPageScope.REPOSITORY
+      ? `/repos/${repoMetadata?.path}/+/rules`
+      : `/spaces/${space}/+/rules`
+
+  const { data: rule } = useGet<OpenapiRule>({
+    base: getConfig('code/api/v1'),
+    path: getUpdateRulePath(),
+    lazy: !ruleId
+  })
 
   const { mutate } = useMutate({
     verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata?.path}/+/rules/`
+    base: getConfig('code/api/v1'),
+    path: getCreateRulePath()
   })
 
   const { mutate: updateRule } = useMutate({
     verb: 'PATCH',
-    path: `/api/v1/repos/${repoMetadata?.path}/+/rules/${ruleId}`
+    base: getConfig('code/api/v1'),
+    path: getUpdateRulePath()
   })
   const { data: users } = useGet<TypesPrincipalInfo[]>({
     path: `/api/v1/principals`,
@@ -111,10 +132,19 @@ const BranchProtectionForm = (props: {
   const usersArrayCurr = transformUserArray?.map(user => `${user.id} ${user.display_name}`)
   const [userArrayState, setUserArrayState] = useState<string[]>(usersArrayCurr)
 
+  const getUpdateChecksPath = () =>
+    currentRule?.scope === 0 && repoMetadata
+      ? `/repos/${repoMetadata?.path}/+/checks/recent`
+      : `/spaces/${scopeRef}/+/checks/recent`
+
   const { data: statuses } = useGet<string[]>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/checks/recent`,
+    base: getConfig('code/api/v1'),
+    path: getUpdateChecksPath(),
     queryParams: {
-      query: searchStatusTerm
+      query: searchStatusTerm,
+      ...(!repoMetadata && {
+        recursive: true
+      })
     },
     debounce: 500
   })
@@ -141,10 +171,20 @@ const BranchProtectionForm = (props: {
       showSuccess(successMessage)
       resetForm()
       history.push(
-        routes.toCODESettings({
-          repoPath: repoMetadata?.path as string,
-          settingSection: SettingsTab.branchProtection
-        })
+        repoMetadata
+          ? routes.toCODESettings({
+              repoPath: repoMetadata?.path as string,
+              settingSection: SettingsTab.branchProtection
+            })
+          : standalone
+          ? routes.toCODESpaceSettings({
+              space,
+              settingSection: SettingsTab.branchProtection
+            })
+          : routes.toCODEManageRepositories({
+              space,
+              settingSection: SettingsTab.branchProtection
+            })
       )
       refetchRules?.()
     } catch (exception) {
@@ -223,17 +263,11 @@ const BranchProtectionForm = (props: {
     }
 
     return rulesFormInitialPayload // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editMode, rule, ruleUid, users])
-  const space = useGetSpaceParam()
-  const permPushResult = hooks?.usePermissionTranslate?.(
-    {
-      resource: {
-        resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.identifier as string
-      },
-      permissions: ['code_repo_edit']
-    },
-    [space]
+  }, [editMode, rule, currentRule, users])
+
+  const permPushResult = hooks?.usePermissionTranslate(
+    getEditPermissionRequestFromScope(space, currentRule?.scope ?? 0, repoMetadata),
+    [space, currentRule?.scope, repoMetadata]
   )
   return (
     <Formik<RulesFormPayload>
@@ -392,7 +426,7 @@ const BranchProtectionForm = (props: {
                     flex={{ align: 'center-center' }}
                     padding={{ top: 'xxlarge', left: 'small' }}>
                     <SplitButton
-                      //   className={css.buttonContainer}
+                      className={css.buttonContainer}
                       variation={ButtonVariation.TERTIARY}
                       text={
                         <Container flex={{ alignItems: 'center' }}>

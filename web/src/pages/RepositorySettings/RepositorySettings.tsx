@@ -66,16 +66,6 @@ export default function RepositorySettings() {
         </Container>
       )
     },
-    {
-      id: SettingsTab.branchProtection,
-      title: getString('branchProtection.title'),
-      panel: <BranchProtectionListing activeTab={activeTab} />
-    },
-    {
-      id: SettingsTab.security,
-      title: getString('security'),
-      panel: <SecurityScanSettings repoMetadata={repoMetadata} activeTab={activeTab} />
-    },
     ...(isLabelEnabled || standalone
       ? [
           {
@@ -91,8 +81,23 @@ export default function RepositorySettings() {
             )
           }
         ]
-      : [])
-
+      : []),
+    {
+      id: SettingsTab.branchProtection,
+      title: getString('branchProtection.title'),
+      panel: (
+        <BranchProtectionListing
+          repoMetadata={repoMetadata}
+          activeTab={activeTab}
+          currentPageScope={LabelsPageScope.REPOSITORY}
+        />
+      )
+    },
+    {
+      id: SettingsTab.security,
+      title: getString('security'),
+      panel: <SecurityScanSettings repoMetadata={repoMetadata} activeTab={activeTab} />
+    }
     // {
     //   id: SettingsTab.webhooks,
     //   title: getString('webhooks'),

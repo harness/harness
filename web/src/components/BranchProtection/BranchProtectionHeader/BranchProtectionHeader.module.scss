@@ -59,3 +59,10 @@
 .cancelButton {
   margin-left: var(--spacing-small) !important;
 }
+
+.scopeCheckbox {
+  display: flex;
+  align-items: center;
+  padding-right: var(--spacing-3) !important;
+  padding-left: var(--spacing-3) !important;
+}

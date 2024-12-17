@@ -71,7 +71,12 @@ export interface CODERoutes extends CDERoutes, ARRoutes {
   toCODEHome: () => string
 
   toCODESpaceAccessControl: (args: Required<Pick<CODEProps, 'space'>>) => string
-  toCODESpaceSettings: (args: RequiredField<Pick<CODEProps, 'space' | 'settingSection'>, 'space'>) => string
+  toCODESpaceSettings: (
+    args: RequiredField<Pick<CODEProps, 'space' | 'settingSection' | 'ruleId' | 'settingSectionMode'>, 'space'>
+  ) => string
+  toCODEManageRepositories: (
+    args: RequiredField<Pick<CODEProps, 'space' | 'settingSection' | 'ruleId' | 'settingSectionMode'>, 'space'>
+  ) => string
   toCODEPipelines: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEPipelineEdit: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
   toCODEPipelineSettings: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
@@ -104,7 +109,6 @@ export interface CODERoutes extends CDERoutes, ARRoutes {
     args: RequiredField<Pick<CODEProps, 'repoPath' | 'settingSection' | 'ruleId' | 'settingSectionMode'>, 'repoPath'>
   ) => string
   toCODESpaceSearch: (args: Required<Pick<CODEProps, 'space'>>) => string
-  toCODESpaceLabels: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODERepositorySearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODESemanticSearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEExecutions: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
@@ -128,8 +132,14 @@ export const routes: CODERoutes = {
   toCODEHome: () => `/`,
 
   toCODESpaceAccessControl: ({ space }) => `/access-control/${space}`,
-  toCODESpaceSettings: ({ space, settingSection }) =>
-    `/settings/${space}/project${settingSection ? '/' + settingSection : ''}`,
+  toCODESpaceSettings: ({ space, settingSection, ruleId, settingSectionMode }) =>
+    `/settings/${space}/project${settingSection ? '/' + settingSection : ''}${ruleId ? '/' + ruleId : ''}${
+      settingSectionMode ? '/' + settingSectionMode : ''
+    }`,
+  toCODEManageRepositories: ({ space, settingSection, ruleId, settingSectionMode }) =>
+    `/${space}/manage-repositories${settingSection ? '/' + settingSection : ''}${ruleId ? '/' + ruleId : ''}${
+      settingSectionMode ? '/' + settingSectionMode : ''
+    }`,
   toCODEPipelines: ({ repoPath }) => `/${repoPath}/pipelines`,
   toCODEPipelineEdit: ({ repoPath, pipeline }) => `/${repoPath}/pipelines/${pipeline}/edit`,
   toCODEPipelineSettings: ({ repoPath, pipeline }) => `/${repoPath}/pipelines/${pipeline}/triggers`,
@@ -160,7 +170,6 @@ export const routes: CODERoutes = {
   toCODECompare: ({ repoPath, diffRefs }) => `/${repoPath}/pulls/compare/${diffRefs}`,
   toCODEBranches: ({ repoPath }) => `/${repoPath}/branches`,
   toCODETags: ({ repoPath }) => `/${repoPath}/tags`,
-  toCODESpaceLabels: ({ space }) => `/${space}/labels`,
   toCODESettings: ({ repoPath, settingSection, ruleId, settingSectionMode }) =>
     `/${repoPath}/settings${settingSection ? '/' + settingSection : ''}${ruleId ? '/' + ruleId : ''}${
       settingSectionMode ? '/' + settingSectionMode : ''

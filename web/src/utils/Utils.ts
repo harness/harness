@@ -40,6 +40,35 @@ export enum ACCESS_MODES {
   EDIT
 }
 
+export enum ResourceType {
+  ACCOUNT = 'ACCOUNT',
+  ORGANIZATION = 'ORGANIZATION',
+  PROJECT = 'PROJECT',
+  CODE_REPOSITORY = 'CODE_REPOSITORY',
+  SPACE = 'SPACE'
+}
+
+export enum PermissionIdentifier {
+  CREATE_PROJECT = 'core_project_create',
+  UPDATE_PROJECT = 'core_project_edit',
+  DELETE_PROJECT = 'core_project_delete',
+  VIEW_PROJECT = 'core_project_view',
+  CREATE_ORG = 'core_organization_create',
+  UPDATE_ORG = 'core_organization_edit',
+  DELETE_ORG = 'core_organization_delete',
+  VIEW_ORG = 'core_organization_view',
+  CREATE_ACCOUNT = 'core_account_create',
+  UPDATE_ACCOUNT = 'core_account_edit',
+  DELETE_ACCOUNT = 'core_account_delete',
+  VIEW_ACCOUNT = 'core_account_view',
+  CODE_REPO_EDIT = 'code_repo_edit',
+  CODE_REPO_PUSH = 'code_repo_push',
+  CODE_REPO_VIEW = 'code_repo_view',
+  CODE_REPO_REVIEW = 'code_repo_review',
+  SPACE_VIEW = 'space_view',
+  SPACE_EDIT = 'space_edit'
+}
+
 export enum PullRequestSection {
   CONVERSATION = 'conversation',
   COMMITS = 'commits',
@@ -899,6 +928,88 @@ export const getScopeData = (space: string, scope: number, standalone: boolean) 
     default:
       return { scopeRef: space, scopeIcon: 'nav-project' as IconName, scopeId: scope }
   }
+}
+
+export const getEditPermissionRequestFromScope = (
+  space: string,
+  scope: number,
+  repoMetadata?: RepoRepositoryOutput
+) => {
+  const [accountIdentifier, orgIdentifier, projectIdentifier] = space.split('/')
+
+  if (scope === 0 && repoMetadata) {
+    return {
+      resource: {
+        resourceType: ResourceType.CODE_REPOSITORY,
+        resourceIdentifier: repoMetadata?.identifier as string
+      },
+      permissions: [PermissionIdentifier.CODE_REPO_EDIT]
+    }
+  } else {
+    switch (scope) {
+      case 1:
+        return {
+          resource: {
+            resourceType: ResourceType.ACCOUNT,
+            resourceIdentifier: accountIdentifier as string
+          },
+          permissions: [PermissionIdentifier.UPDATE_ACCOUNT]
+        }
+      case 2:
+        return {
+          resource: {
+            resourceType: ResourceType.ORGANIZATION,
+            resourceIdentifier: orgIdentifier as string
+          },
+          permissions: [PermissionIdentifier.UPDATE_ORG]
+        }
+      case 3:
+        return {
+          resource: {
+            resourceType: ResourceType.PROJECT,
+            resourceIdentifier: projectIdentifier as string
+          },
+          permissions: [PermissionIdentifier.UPDATE_PROJECT]
+        }
+    }
+  }
+}
+
+export const getEditPermissionRequestFromIdentifier = (space: string, repoMetadata?: RepoRepositoryOutput) => {
+  const [accountIdentifier, orgIdentifier, projectIdentifier] = space.split('/')
+
+  if (repoMetadata)
+    return {
+      resource: {
+        resourceType: ResourceType.CODE_REPOSITORY,
+        resourceIdentifier: repoMetadata?.identifier as string
+      },
+      permissions: [PermissionIdentifier.CODE_REPO_EDIT]
+    }
+  else if (projectIdentifier) {
+    return {
+      resource: {
+        resourceType: ResourceType.PROJECT,
+        resourceIdentifier: projectIdentifier as string
+      },
+      permissions: [PermissionIdentifier.UPDATE_PROJECT]
+    }
+  } else if (orgIdentifier) {
+    return {
+      resource: {
+        resourceType: ResourceType.ORGANIZATION,
+        resourceIdentifier: orgIdentifier as string
+      },
+      permissions: [PermissionIdentifier.UPDATE_ORG]
+    }
+  } else
+    return {
+      resource: {
+        resourceType: ResourceType.ACCOUNT,
+        resourceIdentifier: accountIdentifier as string
+      },
+      permissions: [PermissionIdentifier.UPDATE_ACCOUNT]
+    }
 }
 
 export enum RuleFields {

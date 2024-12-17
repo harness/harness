@@ -26,6 +26,7 @@ import { SettingsTab, SpaceSettingsTab } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import LabelsListing from 'pages/Labels/LabelsListing'
 import { LabelsPageScope } from 'utils/Utils'
+import BranchProtectionListing from 'components/BranchProtection/BranchProtectionListing'
 import GeneralSpaceSettings from './GeneralSettings/GeneralSpaceSettings'
 import css from './SpaceSettings.module.scss'
 
@@ -51,6 +52,11 @@ export default function SpaceSettings() {
       id: SettingsTab.labels,
       title: getString('labels.labels'),
       panel: <LabelsListing activeTab={activeTab} space={space} currentPageScope={LabelsPageScope.SPACE} />
+    },
+    {
+      id: SettingsTab.branchProtection,
+      title: getString('branchProtection.title'),
+      panel: <BranchProtectionListing activeTab={activeTab} currentPageScope={LabelsPageScope.SPACE} />
     }
   ]
   return (

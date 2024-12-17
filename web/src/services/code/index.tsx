@@ -610,6 +610,7 @@ export interface OpenapiRule {
   description?: string
   identifier?: string
   pattern?: ProtectionPattern
+  scope?: number
   state?: EnumRuleState
   type?: OpenapiRuleType
   updated?: number

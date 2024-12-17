@@ -129,6 +129,7 @@ export interface StringsMap {
   'branchProtection.ruleEmpty': string
   'branchProtection.ruleUpdated': string
   'branchProtection.saveRule': string
+  'branchProtection.showRulesScope': string
   'branchProtection.statusCheck': string
   'branchProtection.targetBranches': string
   'branchProtection.targetPatternHint': string
@@ -592,6 +593,7 @@ export interface StringsMap {
   makeRequired: string
   manageApiToken: string
   manageCredText: string
+  manageRepositories: string
   manageRepository: string
   markAsDraft: string
   matchPassword: string

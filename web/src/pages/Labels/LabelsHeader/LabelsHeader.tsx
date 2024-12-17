@@ -37,7 +37,7 @@ const LabelsHeader = ({
   //ToDo: check space permissions as well in case of spaces
 
   return (
-    <Container className={css.main} padding={{ top: 'medium', right: 'xlarge', left: 'xlarge', bottom: 'medium' }}>
+    <Container className={css.main} padding={{ top: 'xlarge', right: 'xlarge', left: 'xlarge', bottom: 'medium' }}>
       <Layout.Horizontal spacing="medium">
         <Button
           variation={ButtonVariation.PRIMARY}

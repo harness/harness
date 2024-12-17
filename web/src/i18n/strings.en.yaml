@@ -31,6 +31,7 @@ commitChanges: Commit changes
 pullRequests: Pull Requests
 settings: Settings
 manageRepository: Manage Repository
+manageRepositories: Manage Repositories
 newFile: New File
 editFile: Edit File
 prev: Prev
@@ -990,7 +991,7 @@ branchProtection:
   targetPatternHint: Match branches using globstar patterns (e.g. "golden", "feature-*", "releases/**")
   defaultBranch: Default branch
   bypassList: Bypass List
-  newRule: New branch rule
+  newRule: New Branch Rule
   allRepoOwners: Allow users with edit permission on the repository to bypass
   protectionSelectAll: 'Rules: Select all that apply'
   requireMinReviewersTitle: Require a minimum number of reviewers
@@ -1025,6 +1026,7 @@ branchProtection:
   deleteRule: Delete Rule
   ruleDeleted: Rule Deleted
   ruleEmpty: There are no rules in your repo. Click the button below to create a rule.
+  showRulesScope: Show rules from parent scopes
   createRule: Create rule
   deleteProtectionRule: Delete protection rule
   deleteText: "Are you sure to delete the rule, '{{rule}}'?"

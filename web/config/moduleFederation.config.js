@@ -52,7 +52,7 @@ module.exports = {
     './Webhooks': './src/pages/Webhooks/Webhooks.tsx',
     './WebhookNew': './src/pages/WebhookNew/WebhookNew.tsx',
     './Search': './src/pages/Search/CodeSearchPage.tsx',
-    './Labels': './src/pages/ManageSpace/ManageLabels/ManageLabels.tsx',
+    './Labels': './src/pages/ManageSpace/ManageRepositories/ManageRepositories.tsx',
     './WebhookDetails': './src/pages/WebhookDetails/WebhookDetails.tsx',
     './NewRepoModalButton': './src/components/NewRepoModalButton/NewRepoModalButton.tsx',
     './HAREnterpriseApp': './src/ar/app/EnterpriseApp.tsx',

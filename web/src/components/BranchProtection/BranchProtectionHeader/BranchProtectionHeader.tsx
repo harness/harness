@@ -15,19 +15,23 @@
  */
 import { useHistory } from 'react-router-dom'
 import React, { useState } from 'react'
-import { Container, Layout, FlexExpander, ButtonVariation, Button } from '@harnessio/uicore'
+import { Container, Layout, FlexExpander, ButtonVariation, Button, Checkbox } from '@harnessio/uicore'
+import { Render } from 'react-jsx-match'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, SettingTypeMode } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { permissionProps } from 'utils/Utils'
+import { getEditPermissionRequestFromIdentifier, permissionProps } from 'utils/Utils'
 import css from './BranchProtectionHeader.module.scss'
 const BranchProtectionHeader = ({
   repoMetadata,
   loading,
   onSearchTermChanged,
-  activeTab
+  activeTab,
+  showParentScopeFilter,
+  inheritRules,
+  setInheritRules
 }: BranchProtectionHeaderProps) => {
   const history = useHistory()
   const [searchTerm, setSearchTerm] = useState('')
@@ -37,17 +41,10 @@ const BranchProtectionHeader = ({
 
   const space = useGetSpaceParam()
 
-  const permPushResult = hooks?.usePermissionTranslate?.(
-    {
-      resource: {
-        resourceType: 'CODE_REPOSITORY',
-        resourceIdentifier: repoMetadata?.identifier as string
-      },
-      permissions: ['code_repo_edit']
-    },
-    [space]
-  )
-
+  const permPushResult = hooks?.usePermissionTranslate(getEditPermissionRequestFromIdentifier(space, repoMetadata), [
+    space,
+    repoMetadata
+  ])
   return (
     <Container className={css.main} padding="xlarge">
       <Layout.Horizontal spacing="medium">
@@ -56,16 +53,42 @@ const BranchProtectionHeader = ({
           text={getString('branchProtection.newRule')}
           icon={CodeIcon.Add}
           onClick={() =>
-            history.push(
-              routes.toCODESettings({
-                repoPath: repoMetadata?.path as string,
-                settingSection: activeTab,
-                settingSectionMode: SettingTypeMode.NEW
-              })
-            )
+            repoMetadata
+              ? history.push(
+                  routes.toCODESettings({
+                    repoPath: repoMetadata?.path as string,
+                    settingSection: activeTab,
+                    settingSectionMode: SettingTypeMode.NEW
+                  })
+                )
+              : standalone
+              ? history.push(
+                  routes.toCODESpaceSettings({
+                    space,
+                    settingSection: activeTab,
+                    settingSectionMode: SettingTypeMode.NEW
+                  })
+                )
+              : history.push(
+                  routes.toCODEManageRepositories({
+                    space,
+                    settingSection: activeTab,
+                    settingSectionMode: SettingTypeMode.NEW
+                  })
+                )
           }
           {...permissionProps(permPushResult, standalone)}
         />
+        <Render when={showParentScopeFilter}>
+          <Checkbox
+            className={css.scopeCheckbox}
+            label={getString('branchProtection.showRulesScope')}
+            checked={inheritRules}
+            onChange={event => {
+              setInheritRules(event.currentTarget.checked)
+            }}
+          />
+        </Render>
         <FlexExpander />
         <SearchInputWithSpinner
           spinnerPosition="right"
@@ -83,8 +106,11 @@ const BranchProtectionHeader = ({
 
 export default BranchProtectionHeader
 
-interface BranchProtectionHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
+interface BranchProtectionHeaderProps extends Partial<Pick<GitInfoProps, 'repoMetadata'>> {
   loading?: boolean
   activeTab?: string
+  showParentScopeFilter: boolean
+  inheritRules: boolean
+  setInheritRules: (value: boolean) => void
   onSearchTermChanged: (searchTerm: string) => void
 }

@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-.main {
-  min-height: calc(var(--page-height) - 160px);
-  background-color: var(--primary-bg) !important;
-  width: 100%;
-  margin: var(--spacing-small);
-}
+/* eslint-disable */
+// This is an auto-generated file
+export declare const main: string
+export declare const tabsContainer: string
+export declare const tabTitle: string
