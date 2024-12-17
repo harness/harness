@@ -65,6 +65,7 @@ cleanupPolicy:
 packageTypes:
   dockerPackage: Docker Package
   helmPackage: Helm Package
+  genericPackage: Generic
 repositoryTypes:
   docker: Docker
   helm: Helm

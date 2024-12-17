@@ -27,7 +27,8 @@ import { getReadableDateTime } from '@ar/common/dateUtils'
 import { useDecodedParams, useGetSpaceRef, useParentHooks } from '@ar/hooks'
 
 import type { DockerVersionDetailsQueryParams } from './types'
-import DockerVersionOverviewCards from './components/OverviewCards/OverviewCards'
+import { VersionOverviewCard } from '../components/OverviewCards/types'
+import VersionOverviewCards from '../components/OverviewCards/OverviewCards'
 import { LabelValueContent } from '../components/LabelValueContent/LabelValueContent'
 
 import css from './DockerVersion.module.scss'
@@ -68,7 +69,15 @@ export default function DockerVersionOverviewContent(): JSX.Element {
       retryOnError={() => refetch()}>
       {response && (
         <Layout.Vertical className={css.cardContainer} spacing="medium" flex={{ alignItems: 'flex-start' }}>
-          <DockerVersionOverviewCards />
+          <VersionOverviewCards
+            cards={[
+              VersionOverviewCard.DEPLOYMENT,
+              VersionOverviewCard.BUILD,
+              VersionOverviewCard.SECURITY_TESTS,
+              VersionOverviewCard.SUPPLY_CHAIN
+            ]}
+            digest={digest}
+          />
           <Card title={getString('versionDetails.overview.generalInformation.title')} className={css.card}>
             <Layout.Vertical spacing="medium">
               <Text font={{ variation: FontVariation.CARD_TITLE }}>

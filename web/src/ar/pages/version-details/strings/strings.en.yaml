@@ -41,7 +41,7 @@ overview:
   generalInformation:
     title: General Information
     name: '{{ $.artifactList.table.columns.name }}'
-    version: Version/Tag
+    version: Version
     packageType: Package type
     repositoryPath: Registry path
     digest: Digest

@@ -25,7 +25,7 @@ import { useAppStore, useParentHooks } from '@ar/hooks'
 import type { SortByType } from '@ar/frameworks/Version/Version'
 import {
   VersionDeploymentsCell,
-  VersionDigestsCell,
+  VersionFileCountCell,
   VersionNameCell,
   VersionPublishedAtCell
 } from '../../components/VersionListTable/VersionListCell'
@@ -90,10 +90,10 @@ function GenericVersionListTable({
         hidden: parent === Parent.OSS
       },
       {
-        Header: getString('versionList.table.columns.digests'),
-        accessor: 'digestCount',
-        Cell: VersionDigestsCell,
-        serverSortProps: getServerSortProps('digestCount')
+        Header: getString('versionList.table.columns.fileCount'),
+        accessor: 'fileCount',
+        Cell: VersionFileCountCell,
+        serverSortProps: getServerSortProps('fileCount')
       },
       {
         Header: getString('versionList.table.columns.publishedByAt'),

@@ -104,6 +104,10 @@ export const VersionDigestsCell: CellType = ({ value }) => {
   return <TableCells.CountCell value={value} />
 }
 
+export const VersionFileCountCell: CellType = ({ value }) => {
+  return <TableCells.CountCell value={value} />
+}
+
 export const PullCommandCell: CellType = ({ value }) => {
   const { getString } = useStrings()
   if (!value) return <>{getString('na')}</>

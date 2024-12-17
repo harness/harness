@@ -16,13 +16,15 @@
 
 import React from 'react'
 import type { ArtifactVersionSummary } from '@harnessio/react-har-service-client'
-import { type VersionDetailsTabProps, VersionStep } from '@ar/frameworks/Version/Version'
+import { VersionDetailsHeaderProps, type VersionDetailsTabProps, VersionStep } from '@ar/frameworks/Version/Version'
 import { RepositoryPackageType } from '@ar/common/types'
 import GenericVersionListTable, {
   type IGenericVersionListTableProps
 } from '@ar/pages/version-list/GenericVersion/VersionListTable/GenericVersionListTable'
 import { String } from '@ar/frameworks/strings'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
+import GenericVersionHeader from './GenericVersionHeader'
+import GenericOverviewPage from './pages/overview/OverviewPage'
 
 export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.GENERIC
@@ -37,14 +39,14 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
     return <GenericVersionListTable {...props} />
   }
 
-  renderVersionDetailsHeader(): JSX.Element {
-    return <></>
+  renderVersionDetailsHeader(props: VersionDetailsHeaderProps<ArtifactVersionSummary>): JSX.Element {
+    return <GenericVersionHeader data={props.data} />
   }
 
   renderVersionDetailsTab(props: VersionDetailsTabProps): JSX.Element {
     switch (props.tab) {
       case VersionDetailsTab.OVERVIEW:
-        return <></>
+        return <GenericOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
         return <></>
       case VersionDetailsTab.DEPLOYMENTS:

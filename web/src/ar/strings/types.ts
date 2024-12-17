@@ -212,6 +212,7 @@ export interface StringsMap {
   'versionList.table.columns.deployments': string
   'versionList.table.columns.digests': string
   'versionList.table.columns.downloads': string
+  'versionList.table.columns.fileCount': string
   'versionList.table.columns.publishedByAt': string
   'versionList.table.columns.pullCommand': string
   'versionList.table.columns.size': string
@@ -269,6 +270,7 @@ export interface StringsMap {
   nonProdCount: string
   optionalField: string
   'packageTypes.dockerPackage': string
+  'packageTypes.genericPackage': string
   'packageTypes.helmPackage': string
   plusNewName: string
   prod: string
