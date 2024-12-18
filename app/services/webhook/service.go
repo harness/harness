@@ -200,6 +200,7 @@ func NewService(
 			_ = r.RegisterUpdated(service.handleEventPullReqUpdated)
 			_ = r.RegisterLabelAssigned(service.handleEventPullReqLabelAssigned)
 			_ = r.RegisterReviewSubmitted(service.handleEventPullReqReviewSubmitted)
+			_ = r.RegisterCommentStatusUpdated(service.handleEventPullReqCommentStatusUpdated)
 
 			return nil
 		})

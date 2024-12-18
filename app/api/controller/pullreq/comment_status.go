@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -128,6 +129,17 @@ func (c *Controller) CommentStatus(
 	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
 		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
 	}
+
+	c.eventReporter.CommentStatusUpdated(ctx, &events.CommentStatusUpdatedPayload{
+		Base: events.Base{
+			PullReqID:    pr.ID,
+			SourceRepoID: pr.SourceRepoID,
+			TargetRepoID: pr.TargetRepoID,
+			PrincipalID:  session.Principal.ID,
+			Number:       pr.Number,
+		},
+		ActivityID: act.ID,
+	})
 
 	return act, nil
 }

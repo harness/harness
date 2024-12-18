@@ -363,18 +363,10 @@ func (s *Service) handleEventPullReqComment(
 						Created:  activity.Created,
 						Updated:  activity.Updated,
 					},
+					CodeCommentInfo: extractCodeCommentInfoIfAvailable(activity),
 				},
 			}, nil
 		})
-}
-
-// PullReqCommentUpdatedPayload describes the body of the pullreq comment create trigger.
-type PullReqCommentUpdatedPayload struct {
-	BaseSegment
-	PullReqSegment
-	PullReqTargetReferenceSegment
-	ReferenceSegment
-	PullReqCommentSegment
 }
 
 // handleEventPullReqCommentUpdated handles updated events for pull request comments.
@@ -399,7 +391,7 @@ func (s *Service) handleEventPullReqCommentUpdated(
 					err,
 				)
 			}
-			return &PullReqCommentUpdatedPayload{
+			return &PullReqCommentPayload{
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerPullReqCommentUpdated,
 					Repo:      targetRepoInfo,
@@ -427,6 +419,7 @@ func (s *Service) handleEventPullReqCommentUpdated(
 						ParentID: activity.ParentID,
 						Created:  activity.Created,
 						Updated:  activity.Updated,
+						Kind:     activity.Kind,
 					},
 					CodeCommentInfo: extractCodeCommentInfoIfAvailable(activity),
 				},
@@ -550,6 +543,83 @@ func (s *Service) handleEventPullReqUpdated(
 					DescriptionChanged: event.Payload.DescriptionChanged,
 					DescriptionOld:     event.Payload.DescriptionOld,
 					DescriptionNew:     event.Payload.DescriptionNew,
+				},
+			}, nil
+		})
+}
+
+// PullReqActivityStatusUpdatedPayload describes the body of the pullreq comment updated trigger.
+type PullReqActivityStatusUpdatedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqCommentSegment
+	PullReqCommentStatusUpdatedSegment
+}
+
+// handleEventPullReqCommentUpdated handles status updated events for pull request comments.
+func (s *Service) handleEventPullReqCommentStatusUpdated(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.CommentStatusUpdatedPayload],
+) error {
+	return s.triggerForEventWithPullReq(
+		ctx,
+		enum.WebhookTriggerPullReqCommentStatusUpdated,
+		event.ID,
+		event.Payload.PrincipalID,
+		event.Payload.PullReqID,
+		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
+			targetRepoInfo := repositoryInfoFrom(ctx, targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(ctx, sourceRepo, s.urlProvider)
+			activity, err := s.activityStore.Find(ctx, event.Payload.ActivityID)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"failed to get activity by id for acitivity id %d: %w",
+					event.Payload.ActivityID,
+					err,
+				)
+			}
+
+			status := enum.PullReqCommentStatusActive
+			if activity.Resolved != nil {
+				status = enum.PullReqCommentStatusResolved
+			}
+
+			return &PullReqActivityStatusUpdatedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqCommentStatusUpdated,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(ctx, pr, targetRepo, s.urlProvider),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				PullReqCommentSegment: PullReqCommentSegment{
+					CommentInfo: CommentInfo{
+						ID:       activity.ID,
+						Text:     activity.Text,
+						Kind:     activity.Kind,
+						ParentID: activity.ParentID,
+						Created:  activity.Created,
+						Updated:  activity.Updated,
+					},
+					CodeCommentInfo: extractCodeCommentInfoIfAvailable(activity),
+				},
+				PullReqCommentStatusUpdatedSegment: PullReqCommentStatusUpdatedSegment{
+					Status: status,
 				},
 			}, nil
 		})

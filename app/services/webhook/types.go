@@ -81,10 +81,8 @@ type PullReqCommentSegment struct {
 	*CodeCommentInfo
 }
 
-// PullReqCommentUpdatedSegment contains details for pullreq text comment edited payloads for webhooks.
-type PullReqCommentUpdatedSegment struct {
-	CommentInfo
-	*CodeCommentInfo
+type PullReqCommentStatusUpdatedSegment struct {
+	Status enum.PullReqCommentStatus `json:"status"`
 }
 
 // PullReqLabelSegment contains details for all pull req label related payloads for webhooks.
