@@ -26,6 +26,7 @@ import (
 	eventsrepo "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/errors"
@@ -52,6 +53,7 @@ type Controller struct {
 	preReceiveExtender  PreReceiveExtender
 	updateExtender      UpdateExtender
 	postReceiveExtender PostReceiveExtender
+	sseStreamer         sse.Streamer
 }
 
 func NewController(
@@ -69,6 +71,7 @@ func NewController(
 	preReceiveExtender PreReceiveExtender,
 	updateExtender UpdateExtender,
 	postReceiveExtender PostReceiveExtender,
+	sseStreamer sse.Streamer,
 ) *Controller {
 	return &Controller{
 		authorizer:          authorizer,
@@ -85,6 +88,7 @@ func NewController(
 		preReceiveExtender:  preReceiveExtender,
 		updateExtender:      updateExtender,
 		postReceiveExtender: postReceiveExtender,
+		sseStreamer:         sseStreamer,
 	}
 }
 

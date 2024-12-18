@@ -150,14 +150,7 @@ func (c *Controller) ReviewerAdd(
 
 	c.reportReviewerAddition(ctx, session, pr, reviewer)
 
-	if err = c.sseStreamer.Publish(
-		ctx, repo.ParentID, enum.SSETypePullRequestReviewerAdded, pr,
-	); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msgf(
-			"failed to publish %s event", enum.SSETypePullRequestReviewerAdded,
-		)
-	}
-
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqReviewerAdded, pr)
 	return reviewer, nil
 }
 

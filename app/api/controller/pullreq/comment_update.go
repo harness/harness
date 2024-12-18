@@ -24,8 +24,6 @@ import (
 	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 type CommentUpdateInput struct {
@@ -116,9 +114,7 @@ func (c *Controller) CommentUpdate(
 	// Populate activity mentions (used only for response purposes).
 	act.Mentions = principalInfos
 
-	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-	}
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	c.reportCommentUpdated(ctx, pr, session.Principal.ID, act.ID, act.IsReply())
 

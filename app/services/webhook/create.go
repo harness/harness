@@ -146,5 +146,7 @@ func (s *Service) Create(
 		return nil, fmt.Errorf("failed to store webhook: %w", err)
 	}
 
+	s.sendSSE(ctx, parentID, parentType, enum.SSETypeWebhookCreated, hook)
+
 	return hook, nil
 }

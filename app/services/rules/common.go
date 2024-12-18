@@ -109,11 +109,10 @@ func (s *Service) sendSSE(
 	if parentType == enum.RuleParentRepo {
 		repo, err := s.repoStore.Find(ctx, parentID)
 		if err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msg("failed to get repo")
+			log.Ctx(ctx).Warn().Err(err).Msg("failed to find repo")
+			return
 		}
 		spaceID = repo.ParentID
 	}
-	if err := s.sseStreamer.Publish(ctx, spaceID, sseType, rule); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msgf("failed to publish %s event", sseType)
-	}
+	s.sseStreamer.Publish(ctx, spaceID, sseType, rule)
 }

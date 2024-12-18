@@ -109,19 +109,29 @@ func (c *Controller) reportBranchEvent(
 ) {
 	switch {
 	case branchUpdate.Old.IsNil():
-		c.gitReporter.BranchCreated(ctx, &events.BranchCreatedPayload{
+		payload := &events.BranchCreatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
 			SHA:         branchUpdate.New.String(),
-		})
+		}
+
+		c.gitReporter.BranchCreated(ctx, payload)
+
+		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeBranchCreated, payload)
+
 	case branchUpdate.New.IsNil():
-		c.gitReporter.BranchDeleted(ctx, &events.BranchDeletedPayload{
+		payload := &events.BranchDeletedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
 			SHA:         branchUpdate.Old.String(),
-		})
+		}
+
+		c.gitReporter.BranchDeleted(ctx, payload)
+
+		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeBranchDeleted, payload)
+
 	default:
 		// A force update event might trigger some additional operations that aren't required
 		// for ordinary updates (force pushes alter the commit history of a branch).
@@ -135,14 +145,18 @@ func (c *Controller) reportBranchEvent(
 				Msg("failed to check ancestor")
 		}
 
-		c.gitReporter.BranchUpdated(ctx, &events.BranchUpdatedPayload{
+		payload := &events.BranchUpdatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         branchUpdate.Ref,
 			OldSHA:      branchUpdate.Old.String(),
 			NewSHA:      branchUpdate.New.String(),
 			Forced:      forced,
-		})
+		}
+
+		c.gitReporter.BranchUpdated(ctx, payload)
+
+		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeBranchUpdated, payload)
 	}
 }
 
@@ -154,21 +168,31 @@ func (c *Controller) reportTagEvent(
 ) {
 	switch {
 	case tagUpdate.Old.IsNil():
-		c.gitReporter.TagCreated(ctx, &events.TagCreatedPayload{
+		payload := &events.TagCreatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
 			SHA:         tagUpdate.New.String(),
-		})
+		}
+
+		c.gitReporter.TagCreated(ctx, payload)
+
+		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeTagCreated, payload)
+
 	case tagUpdate.New.IsNil():
-		c.gitReporter.TagDeleted(ctx, &events.TagDeletedPayload{
+		payload := &events.TagDeletedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
 			SHA:         tagUpdate.Old.String(),
-		})
+		}
+
+		c.gitReporter.TagDeleted(ctx, payload)
+
+		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeTagDeleted, payload)
+
 	default:
-		c.gitReporter.TagUpdated(ctx, &events.TagUpdatedPayload{
+		payload := &events.TagUpdatedPayload{
 			RepoID:      repo.ID,
 			PrincipalID: principalID,
 			Ref:         tagUpdate.Ref,
@@ -176,7 +200,11 @@ func (c *Controller) reportTagEvent(
 			NewSHA:      tagUpdate.New.String(),
 			// tags can only be force updated!
 			Forced: true,
-		})
+		}
+
+		c.gitReporter.TagUpdated(ctx, payload)
+
+		c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeTagUpdated, payload)
 	}
 }
 

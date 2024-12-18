@@ -170,11 +170,8 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 	}
 
 	execution.Stages = stages
-	err = t.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionCompleted, execution)
-	if err != nil {
-		log.Warn().Err(err).
-			Msg("manager: could not publish execution completed event")
-	}
+
+	t.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionCompleted, execution)
 
 	// send pipeline execution status
 	t.reportExecutionCompleted(ctx, execution)

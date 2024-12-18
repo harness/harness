@@ -38,6 +38,7 @@ import (
 	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/usergroup"
+	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
@@ -104,6 +105,7 @@ type Controller struct {
 	labelSvc           *label.Service
 	instrumentation    instrument.Service
 	rulesSvc           *rules.Service
+	sseStreamer        sse.Streamer
 }
 
 func NewController(
@@ -139,6 +141,7 @@ func NewController(
 	userGroupStore store.UserGroupStore,
 	userGroupService usergroup.SearchService,
 	rulesSvc *rules.Service,
+	sseStreamer sse.Streamer,
 ) *Controller {
 	return &Controller{
 		defaultBranch:      config.Git.DefaultBranch,
@@ -173,6 +176,7 @@ func NewController(
 		userGroupStore:     userGroupStore,
 		userGroupService:   userGroupService,
 		rulesSvc:           rulesSvc,
+		sseStreamer:        sseStreamer,
 	}
 }
 

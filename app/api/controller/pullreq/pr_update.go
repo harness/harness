@@ -132,9 +132,7 @@ func (c *Controller) Update(ctx context.Context,
 
 	c.eventReporter.Updated(ctx, updateEvent)
 
-	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-	}
+	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	return pr, nil
 }

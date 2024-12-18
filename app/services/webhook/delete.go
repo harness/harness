@@ -37,5 +37,11 @@ func (s *Service) Delete(
 		return ErrInternalWebhookOperationNotAllowed
 	}
 
-	return s.webhookStore.Delete(ctx, hook.ID)
+	if err := s.webhookStore.Delete(ctx, hook.ID); err != nil {
+		return err
+	}
+
+	s.sendSSE(ctx, parentID, parentType, enum.SSETypeWebhookDeleted, hook)
+
+	return nil
 }

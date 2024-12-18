@@ -72,12 +72,9 @@ func (u *updater) do(ctx context.Context, step *types.Step) error {
 		log.Error().Err(err).Msg("manager: cannot find stages")
 		return nil
 	}
-
 	execution.Stages = stages
-	err = u.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionUpdated, execution)
-	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot publish execution updated event")
-	}
+
+	u.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionUpdated, execution)
 
 	return nil
 }

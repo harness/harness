@@ -108,10 +108,8 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 		return err
 	}
 	execution.Stages = stages
-	err = s.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionRunning, execution)
-	if err != nil {
-		log.Warn().Err(err).Msg("manager: could not publish execution event")
-	}
+
+	s.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionRunning, execution)
 
 	return nil
 }

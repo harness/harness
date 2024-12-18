@@ -182,6 +182,8 @@ func (c *Controller) Report(
 		return nil, fmt.Errorf("failed to upsert status check result for repo=%s: %w", repo.Identifier, err)
 	}
 
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeStatusCheckReportUpdated, statusCheckReport)
+
 	return statusCheckReport, nil
 }
 

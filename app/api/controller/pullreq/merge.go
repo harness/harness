@@ -328,9 +328,7 @@ func (c *Controller) Merge(
 				// non-critical error
 				log.Ctx(ctx).Warn().Err(err).Msg("failed to update unchecked pull request")
 			} else {
-				if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-					log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-				}
+				c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 			}
 		}
 
@@ -470,9 +468,7 @@ func (c *Controller) Merge(
 			// non-critical error
 			log.Ctx(ctx).Warn().Err(err).Msg("failed to update pull request with conflict files")
 		} else {
-			if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-				log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-			}
+			c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 		}
 
 		log.Ctx(ctx).Info().Msg("aborting pull request merge because of conflicts")
@@ -573,9 +569,7 @@ func (c *Controller) Merge(
 		}
 	}
 
-	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-	}
+	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	if protection.IsBypassed(violations) {
 		err = c.auditService.Log(ctx,

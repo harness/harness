@@ -23,8 +23,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 // CommentDelete deletes a pull request comment.
@@ -85,9 +83,7 @@ func (c *Controller) CommentDelete(
 		return err
 	}
 
-	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-	}
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	return nil
 }

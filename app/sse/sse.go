@@ -17,11 +17,12 @@ package sse
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Event is a server sent event.
@@ -32,7 +33,7 @@ type Event struct {
 
 type Streamer interface {
 	// Publish publishes an event to a given space ID.
-	Publish(ctx context.Context, spaceID int64, eventType enum.SSEType, data any) error
+	Publish(ctx context.Context, spaceID int64, eventType enum.SSEType, data any)
 
 	// Stream streams the events on a space ID.
 	Stream(ctx context.Context, spaceID int64) (<-chan *Event, <-chan error, func(context.Context) error)
@@ -50,10 +51,15 @@ func NewStreamer(pubsub pubsub.PubSub, namespace string) Streamer {
 	}
 }
 
-func (e *pubsubStreamer) Publish(ctx context.Context, spaceID int64, eventType enum.SSEType, data any) error {
+func (e *pubsubStreamer) Publish(
+	ctx context.Context,
+	spaceID int64,
+	eventType enum.SSEType,
+	data any,
+) {
 	dataSerialized, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("failed to serialize data: %w", err)
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to serialize data: %v", err.Error())
 	}
 	event := Event{
 		Type: eventType,
@@ -61,16 +67,14 @@ func (e *pubsubStreamer) Publish(ctx context.Context, spaceID int64, eventType e
 	}
 	serializedEvent, err := json.Marshal(event)
 	if err != nil {
-		return fmt.Errorf("failed to serialize event: %w", err)
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to serialize event: %v", err.Error())
 	}
 	namespaceOption := pubsub.WithPublishNamespace(e.namespace)
 	topic := getSpaceTopic(spaceID)
 	err = e.pubsub.Publish(ctx, topic, serializedEvent, namespaceOption)
 	if err != nil {
-		return fmt.Errorf("failed to publish event on pubsub: %w", err)
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to publish %s event", eventType)
 	}
-
-	return nil
 }
 
 func (e *pubsubStreamer) Stream(

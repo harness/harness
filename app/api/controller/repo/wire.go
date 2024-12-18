@@ -29,6 +29,7 @@ import (
 	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/usergroup"
+	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
@@ -79,6 +80,7 @@ func ProvideController(
 	userGroupStore store.UserGroupStore,
 	userGroupService usergroup.SearchService,
 	rulesSvc *rules.Service,
+	sseStreamer sse.Streamer,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		authorizer,
@@ -87,7 +89,7 @@ func ProvideController(
 		principalInfoCache, protectionManager, rpcClient, importer,
 		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
-		rulesSvc,
+		rulesSvc, sseStreamer,
 	)
 }
 

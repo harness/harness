@@ -19,6 +19,7 @@ import (
 
 	gitevents "github.com/harness/gitness/app/events/git"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
@@ -54,6 +55,7 @@ func ProvideService(
 	labelStore store.LabelStore,
 	webhookURLProvider URLProvider,
 	labelValueStore store.LabelValueStore,
+	sseStreamer sse.Streamer,
 ) (*Service, error) {
 	return NewService(
 		ctx,
@@ -73,6 +75,7 @@ func ProvideService(
 		labelStore,
 		webhookURLProvider,
 		labelValueStore,
+		sseStreamer,
 	)
 }
 

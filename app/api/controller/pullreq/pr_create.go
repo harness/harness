@@ -151,9 +151,7 @@ func (c *Controller) Create(
 		SourceSHA:    sourceSHA.String(),
 	})
 
-	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-	}
+	c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	err = c.instrumentation.Track(ctx, instrument.Event{
 		Type:      instrument.EventTypeCreatePullRequest,

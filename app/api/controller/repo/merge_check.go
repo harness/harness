@@ -75,6 +75,8 @@ func (c *Controller) MergeCheck(
 		}, nil
 	}
 
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeBranchMergableUpdated, mergeOutput)
+
 	return MergeCheck{
 		Mergeable: true,
 	}, nil

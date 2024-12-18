@@ -21,6 +21,7 @@ import (
 	eventsrepo "github.com/harness/gitness/app/events/repo"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/settings"
+	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
@@ -56,6 +57,7 @@ func ProvideController(
 	preReceiveExtender PreReceiveExtender,
 	updateExtender UpdateExtender,
 	postReceiveExtender PostReceiveExtender,
+	sseStreamer sse.Streamer,
 ) *Controller {
 	ctrl := NewController(
 		authorizer,
@@ -72,6 +74,7 @@ func ProvideController(
 		preReceiveExtender,
 		updateExtender,
 		postReceiveExtender,
+		sseStreamer,
 	)
 
 	// TODO: improve wiring if possible

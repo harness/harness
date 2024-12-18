@@ -356,9 +356,7 @@ func (c *Controller) CommentApplySuggestions(
 			fmt.Errorf("failed to update pull request's unresolved comment count: %w", err)
 	}
 
-	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-	}
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	err = c.instrumentation.Track(ctx, instrument.Event{
 		Type:      instrument.EventTypePRSuggestionApplied,

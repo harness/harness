@@ -146,12 +146,7 @@ func (s *service) Cancel(ctx context.Context, repo *types.Repository, execution 
 	execution.Stages = stages
 	log.Info().Msg("canceler: successfully cancelled build")
 
-	// trigger a SSE to notify subscribers that
-	// the execution was cancelled.
-	err = s.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeExecutionCanceled, execution)
-	if err != nil {
-		log.Debug().Err(err).Msg("canceler: failed to publish server-sent event")
-	}
+	s.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeExecutionCanceled, execution)
 
 	return nil
 }

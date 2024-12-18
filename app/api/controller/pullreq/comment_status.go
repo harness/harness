@@ -25,8 +25,6 @@ import (
 	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 type CommentStatusInput struct {
@@ -126,9 +124,7 @@ func (c *Controller) CommentStatus(
 		return nil, err
 	}
 
-	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-	}
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	c.eventReporter.CommentStatusUpdated(ctx, &events.CommentStatusUpdatedPayload{
 		Base: events.Base{

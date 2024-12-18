@@ -120,5 +120,7 @@ func (s *Service) Update(
 		return nil, err
 	}
 
+	s.sendSSE(ctx, parentID, parentType, enum.SSETypeWebhookUpdated, hook)
+
 	return hook, nil
 }

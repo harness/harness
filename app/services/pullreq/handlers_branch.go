@@ -165,9 +165,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			Forced:          event.Payload.Forced,
 		})
 
-		if err = s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-		}
+		s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 		return nil
 	})
@@ -246,9 +244,7 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 			SourceSHA: pr.SourceSHA,
 		})
 
-		if err = s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-		}
+		s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 		return nil
 	})

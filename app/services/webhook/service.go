@@ -23,6 +23,7 @@ import (
 
 	gitevents "github.com/harness/gitness/app/events/git"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/encrypt"
@@ -103,6 +104,8 @@ type Service struct {
 
 	config             Config
 	webhookURLProvider URLProvider
+
+	sseStreamer sse.Streamer
 }
 
 func NewService(
@@ -124,6 +127,7 @@ func NewService(
 	labelStore store.LabelStore,
 	webhookURLProvider URLProvider,
 	labelValueStore store.LabelValueStore,
+	sseStreamer sse.Streamer,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
@@ -152,6 +156,8 @@ func NewService(
 		labelStore:         labelStore,
 		labelValueStore:    labelValueStore,
 		webhookURLProvider: webhookURLProvider,
+
+		sseStreamer: sseStreamer,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,

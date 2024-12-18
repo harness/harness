@@ -15,12 +15,16 @@
 package webhook
 
 import (
+	"context"
 	"net"
 	"net/url"
 
 	"github.com/harness/gitness/errors"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -126,4 +130,23 @@ func ConvertTriggers(vals []string) []enum.WebhookTrigger {
 		res[i] = enum.WebhookTrigger(vals[i])
 	}
 	return res
+}
+
+func (s *Service) sendSSE(
+	ctx context.Context,
+	parentID int64,
+	parentType enum.WebhookParent,
+	sseType enum.SSEType,
+	webhook *types.Webhook,
+) {
+	spaceID := parentID
+	if parentType == enum.WebhookParentRepo {
+		repo, err := s.repoStore.Find(ctx, parentID)
+		if err != nil {
+			log.Ctx(ctx).Warn().Err(err).Msg("failed to find repo")
+			return
+		}
+		spaceID = repo.ParentID
+	}
+	s.sseStreamer.Publish(ctx, spaceID, sseType, webhook)
 }

@@ -216,9 +216,7 @@ func (c *Controller) CommentCreate(
 		c.migrateCodeComment(ctx, repo, pr, in, act.AsCodeComment(), cut)
 	}
 
-	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-	}
+	c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullReqUpdated, pr)
 
 	// publish event for all comments
 	if act.Type == enum.PullReqActivityTypeComment || act.Type == enum.PullReqActivityTypeCodeComment {

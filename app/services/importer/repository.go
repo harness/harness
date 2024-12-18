@@ -362,10 +362,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", fmt.Errorf("failed to import repository: %w", err)
 	}
 
-	err = r.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeRepositoryImportCompleted, repo)
-	if err != nil {
-		log.Warn().Err(err).Msg("failed to publish import completion SSE")
-	}
+	r.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeRepositoryImportCompleted, repo)
 
 	err = r.indexer.Index(ctx, repo)
 	if err != nil {
