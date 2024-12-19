@@ -152,6 +152,11 @@ export interface StringsMap {
   'versionDetails.artifactDetails.layers.size': string
   'versionDetails.artifactDetails.tabs.layers': string
   'versionDetails.artifactDetails.tabs.manifest': string
+  'versionDetails.artifactFiles.table.columns.checksum': string
+  'versionDetails.artifactFiles.table.columns.created': string
+  'versionDetails.artifactFiles.table.columns.downloadCommand': string
+  'versionDetails.artifactFiles.table.columns.name': string
+  'versionDetails.artifactFiles.table.columns.size': string
   'versionDetails.cards.container.title': string
   'versionDetails.cards.container.versionDigest': string
   'versionDetails.cards.deploymentsCard.buildTitle': string

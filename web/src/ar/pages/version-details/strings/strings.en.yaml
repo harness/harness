@@ -73,3 +73,11 @@ deploymentsTable:
     triggeredBy: Triggered At
     infra: Infrastructure
     instanceCount: Instance Count
+artifactFiles:
+  table:
+    columns:
+      name: Name
+      size: Size
+      checksum: Checksum
+      downloadCommand: Download Command
+      created: Created

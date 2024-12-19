@@ -25,6 +25,7 @@ import { String } from '@ar/frameworks/strings'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import GenericVersionHeader from './GenericVersionHeader'
 import GenericOverviewPage from './pages/overview/OverviewPage'
+import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
 
 export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.GENERIC
@@ -48,7 +49,7 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
       case VersionDetailsTab.OVERVIEW:
         return <GenericOverviewPage />
       case VersionDetailsTab.ARTIFACT_DETAILS:
-        return <></>
+        return <GenericArtifactDetailsPage />
       case VersionDetailsTab.DEPLOYMENTS:
         return <></>
       case VersionDetailsTab.OSS:
