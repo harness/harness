@@ -558,7 +558,7 @@ func applyWebhookFilter(
 	}
 
 	if opts.SkipInternal {
-		stmt = stmt.Where("webhook_type == ?", enum.WebhookTypeExternal)
+		stmt = stmt.Where("webhook_type = ?", enum.WebhookTypeExternal)
 	}
 
 	return stmt
