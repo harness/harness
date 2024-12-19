@@ -4,9 +4,10 @@ osInfoScript={{ .OSInfoScript }}
 
 eval "$osInfoScript"
 
-case "$(distro)" in
+distro=$(distro)
+case $distro in
   debian|fedora|opensuse)
-    echo "Detected $(distro) distribution"
+    echo "Detected $distro distribution"
     ;;
   *)
     echo "Unsupported distribution: $distro." >&2
