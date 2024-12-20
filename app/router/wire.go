@@ -47,6 +47,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/openapi"
 	"github.com/harness/gitness/app/auth/authn"
+	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/registry/app/api"
@@ -112,6 +113,7 @@ func ProvideRouter(
 	urlProvider url.Provider,
 	openapi openapi.Service,
 	registryRouter router.AppRouter,
+	usageSender usage.Sender,
 ) *Router {
 	routers := make([]Interface, 4)
 
@@ -121,6 +123,7 @@ func ProvideRouter(
 		urlProvider,
 		authenticator,
 		repoCtrl,
+		usageSender,
 	)
 	routers[0] = NewGitRouter(gitHandler, gitRoutingHost)
 	routers[1] = router.NewRegistryRouter(registryRouter)
@@ -130,7 +133,7 @@ func ProvideRouter(
 		authenticator, repoCtrl, repoSettingsCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
 		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
 		githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, sysCtrl, blobCtrl, searchCtrl,
-		infraProviderCtrl, migrateCtrl, gitspaceCtrl, aiagentCtrl, capabilitiesCtrl)
+		infraProviderCtrl, migrateCtrl, gitspaceCtrl, aiagentCtrl, capabilitiesCtrl, usageSender)
 	routers[2] = NewAPIRouter(apiHandler)
 
 	webHandler := NewWebHandler(config, authenticator, openapi)

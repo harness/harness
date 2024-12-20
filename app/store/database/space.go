@@ -93,6 +93,28 @@ func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 	return s.find(ctx, id, nil)
 }
 
+// FindByIDs finds all spaces by ids.
+func (s *SpaceStore) FindByIDs(ctx context.Context, ids ...int64) ([]*types.Space, error) {
+	stmt := database.Builder.
+		Select(spaceColumns).
+		From("spaces").
+		Where(squirrel.Eq{"space_id": ids})
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var dst []*space
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed executing custom list query")
+	}
+
+	return s.mapToSpaces(ctx, s.db, dst)
+}
+
 func (s *SpaceStore) find(ctx context.Context, id int64, deletedAt *int64) (*types.Space, error) {
 	stmt := database.Builder.
 		Select(spaceColumns).

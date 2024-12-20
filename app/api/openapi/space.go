@@ -679,4 +679,14 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{repo_ref}/pullreq", listPullReq)
+
+	opGetUsageMetrics := openapi3.Operation{}
+	opGetUsageMetrics.WithTags("space")
+	opGetUsageMetrics.WithMapOfAnything(map[string]interface{}{"operationId": "getSpaceUsageMetric"})
+	_ = reflector.SetRequest(&opGetUsageMetrics, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opGetUsageMetrics, new(types.UsageMetric), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opGetUsageMetrics, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opGetUsageMetrics, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opGetUsageMetrics, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/usage/metric", opGetUsageMetrics)
 }

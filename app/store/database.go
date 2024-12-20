@@ -169,6 +169,9 @@ type (
 		// Find the space by id.
 		Find(ctx context.Context, id int64) (*types.Space, error)
 
+		// FindByIDs finds all spaces with specified ids.
+		FindByIDs(ctx context.Context, ids ...int64) ([]*types.Space, error)
+
 		// FindByRef finds the space using the spaceRef as either the id or the space path.
 		FindByRef(ctx context.Context, spaceRef string) (*types.Space, error)
 
@@ -1276,11 +1279,17 @@ type (
 
 	UsageMetricStore interface {
 		Upsert(ctx context.Context, in *types.UsageMetric) error
+		UpsertOptimistic(ctx context.Context, in *types.UsageMetric) error
 		GetMetrics(
 			ctx context.Context,
 			rootSpaceID int64,
 			startDate int64,
 			endDate int64,
 		) (*types.UsageMetric, error)
+		List(
+			ctx context.Context,
+			start int64,
+			end int64,
+		) ([]types.UsageMetric, error)
 	}
 )

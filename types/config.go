@@ -502,4 +502,9 @@ type Config struct {
 		Enable bool   `envconfig:"GITNESS_INSTRUMENTATION_ENABLE" default:"false"`
 		Cron   string `envconfig:"GITNESS_INSTRUMENTATION_CRON" default:"0 0 * * *"`
 	}
+
+	UsageMetrics struct {
+		ChunkSize  string `envconfig:"GITNESS_USAGE_METRICS_CHUNK_SIZE" default:"10MiB"`
+		MaxWorkers int    `envconfig:"GITNESS_USAGE_METRICS_MAX_WORKERS" default:"50"`
+	}
 }

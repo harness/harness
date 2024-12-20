@@ -52,7 +52,7 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 	exporter *exporter.Repository, limiter limiter.ResourceLimiter, publicAccess publicaccess.Service,
 	auditService audit.Service, gitspaceService *gitspace.Service,
 	labelSvc *label.Service, instrumentation instrument.Service, executionStore store.ExecutionStore,
-	rulesSvc *rules.Service,
+	rulesSvc *rules.Service, usageMetricStore store.UsageMetricStore,
 ) *Controller {
 	return NewController(config, tx, urlProvider,
 		sseStreamer, identifierCheck, authorizer,
@@ -63,6 +63,6 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 		exporter, limiter, publicAccess,
 		auditService, gitspaceService,
 		labelSvc, instrumentation, executionStore,
-		rulesSvc,
+		rulesSvc, usageMetricStore,
 	)
 }

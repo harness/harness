@@ -27,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/api/middleware/logging"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authn"
+	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -43,6 +44,7 @@ func NewGitHandler(
 	urlProvider url.Provider,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
+	usageSender usage.Sender,
 ) http.Handler {
 	// maxRepoDepth depends on config
 	maxRepoDepth := check.MaxRepoPathDepth
@@ -79,7 +81,9 @@ func NewGitHandler(
 			r.Use(middlewareauthz.BlockSessionToken)
 
 			// smart protocol
-			r.Post("/git-upload-pack", handlerrepo.HandleGitServicePack(
+			r.With(
+				usage.Middleware(usageSender, false),
+			).Post("/git-upload-pack", handlerrepo.HandleGitServicePack(
 				enum.GitServiceTypeUploadPack, repoCtrl, urlProvider))
 			r.Post("/git-receive-pack", handlerrepo.HandleGitServicePack(
 				enum.GitServiceTypeReceivePack, repoCtrl, urlProvider))

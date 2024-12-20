@@ -31,3 +31,6 @@ node_modules
 /distribution-spec
 /registry/distribution-spec
 /app/store/database/test.db
+
+# adding support for .http files
+http-client.private.env.json

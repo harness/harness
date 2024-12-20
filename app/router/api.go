@@ -85,6 +85,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authn"
 	"github.com/harness/gitness/app/githook"
+	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
@@ -136,6 +137,7 @@ func NewAPIHandler(
 	gitspaceCtrl *gitspace.Controller,
 	aiagentCtrl *aiagent.Controller,
 	capabilitiesCtrl *capabilities.Controller,
+	usageSender usage.Sender,
 ) http.Handler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
@@ -168,7 +170,7 @@ func NewAPIHandler(
 			setupRoutesV1WithAuth(r, appCtx, config, repoCtrl, repoSettingsCtrl, executionCtrl, triggerCtrl, logCtrl,
 				pipelineCtrl, connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 				webhookCtrl, githookCtrl, git, saCtrl, userCtrl, principalCtrl, userGroupCtrl, checkCtrl, uploadCtrl,
-				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, aiagentCtrl, capabilitiesCtrl)
+				searchCtrl, gitspaceCtrl, infraProviderCtrl, migrateCtrl, aiagentCtrl, capabilitiesCtrl, usageSender)
 		})
 	})
 
@@ -220,11 +222,12 @@ func setupRoutesV1WithAuth(r chi.Router,
 	migrateCtrl *migrate.Controller,
 	aiagentCtrl *aiagent.Controller,
 	capabilitiesCtrl *capabilities.Controller,
+	usageSender usage.Sender,
 ) {
 	setupAccountWithAuth(r, userCtrl, config)
 	setupSpaces(r, appCtx, spaceCtrl, userGroupCtrl, webhookCtrl, checkCtrl)
 	setupRepos(r, repoCtrl, repoSettingsCtrl, pipelineCtrl, executionCtrl, triggerCtrl,
-		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl)
+		logCtrl, pullreqCtrl, webhookCtrl, checkCtrl, uploadCtrl, usageSender)
 	setupConnectors(r, connectorCtrl)
 	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
@@ -296,6 +299,9 @@ func setupSpaces(
 			SetupRulesSpace(r, spaceCtrl)
 
 			r.Get("/checks/recent", handlercheck.HandleCheckListRecentSpace(checkCtrl))
+			r.Route("/usage", func(r chi.Router) {
+				r.Get("/metric", handlerspace.HandleUsageMetric(spaceCtrl))
+			})
 		})
 	})
 }
@@ -368,6 +374,7 @@ func setupRepos(r chi.Router,
 	webhookCtrl *webhook.Controller,
 	checkCtrl *check.Controller,
 	uploadCtrl *upload.Controller,
+	usageSender usage.Sender,
 ) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
@@ -413,7 +420,9 @@ func setupRepos(r chi.Router,
 			})
 
 			r.Route("/raw", func(r chi.Router) {
-				r.Get("/*", handlerrepo.HandleRaw(repoCtrl))
+				r.With(
+					usage.Middleware(usageSender, false),
+				).Get("/*", handlerrepo.HandleRaw(repoCtrl))
 			})
 
 			// commit operations
@@ -464,7 +473,9 @@ func setupRepos(r chi.Router,
 
 			r.Get("/codeowners/validate", handlerrepo.HandleCodeOwnersValidate(repoCtrl))
 
-			r.Get(fmt.Sprintf("/archive/%s", request.PathParamArchiveGitRef), handlerrepo.HandleArchive(repoCtrl))
+			r.With(
+				usage.Middleware(usageSender, false),
+			).Get(fmt.Sprintf("/archive/%s", request.PathParamArchiveGitRef), handlerrepo.HandleArchive(repoCtrl))
 
 			SetupPullReq(r, pullreqCtrl)
 

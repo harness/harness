@@ -111,6 +111,7 @@ import (
 	"github.com/harness/gitness/app/services/settings"
 	systemsvc "github.com/harness/gitness/app/services/system"
 	"github.com/harness/gitness/app/services/trigger"
+	"github.com/harness/gitness/app/services/usage"
 	usergroupservice "github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/sse"
@@ -283,6 +284,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		containerUser.WireSet,
 		messagingservice.WireSet,
 		runarg.WireSet,
+		usage.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

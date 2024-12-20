@@ -102,6 +102,7 @@ import (
 	"github.com/harness/gitness/app/services/settings"
 	system2 "github.com/harness/gitness/app/services/system"
 	trigger2 "github.com/harness/gitness/app/services/trigger"
+	"github.com/harness/gitness/app/services/usage"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/app/sse"
@@ -338,7 +339,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	resolverFactory := secret.ProvideResolverFactory(passwordResolver)
 	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, infraProviderResourceStore, infraProvisioner, containerOrchestrator, eventsReporter, orchestratorConfig, ideFactory, resolverFactory)
 	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, eventsReporter, gitspaceEventStore, spaceStore, infraproviderService, orchestratorOrchestrator, scmSCM, config)
-	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, listService, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService, instrumentService, executionStore, rulesService)
+	usageMetricStore := database.ProvideUsageMetricStore(db)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, listService, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService, instrumentService, executionStore, rulesService, usageMetricStore)
 	reporter3, err := events5.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -478,7 +480,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	cleanupPolicyRepository := database2.ProvideCleanupPolicyDao(db, transactor)
 	apiHandler := router.APIHandlerProvider(registryRepository, upstreamProxyConfigRepository, tagRepository, manifestRepository, cleanupPolicyRepository, imageRepository, storageDriver, spaceStore, transactor, authenticator, provider, authorizer, auditService, spacePathStore)
 	appRouter := router.AppRouterProvider(registryOCIHandler, apiHandler)
-	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, aiagentController, capabilitiesController, provider, openapiService, appRouter)
+	sender := usage.ProvideMediator(ctx, config, spaceStore, usageMetricStore)
+	routerRouter := router2.ProvideRouter(ctx, config, authenticator, repoController, reposettingsController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, gitInterface, serviceaccountController, controller, principalController, usergroupController, checkController, systemController, uploadController, keywordsearchController, infraproviderController, gitspaceController, migrateController, aiagentController, capabilitiesController, provider, openapiService, appRouter, sender)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	publickeyService := publickey.ProvidePublicKey(publicKeyStore, principalInfoCache)
 	sshServer := ssh.ProvideServer(config, publickeyService, repoController)
