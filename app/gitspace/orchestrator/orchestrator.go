@@ -21,6 +21,11 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+const (
+	vscodeURLScheme   = "vscode-remote"
+	intellijURLScheme = "jetbrains-gateway"
+)
+
 type Orchestrator interface {
 	// TriggerStartGitspace fetches the infra resources configured for the gitspace and triggers the infra provisioning.
 	TriggerStartGitspace(ctx context.Context, gitspaceConfig types.GitspaceConfig) *types.GitspaceError

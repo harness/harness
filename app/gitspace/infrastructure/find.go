@@ -117,17 +117,13 @@ func (i infraProvisioner) paramsForProvisioningTypeExisting(
 func (i infraProvisioner) getGitspaceScheme(ideType enum.IDEType, gitspaceSchemeFromMetadata string) (string, error) {
 	switch ideType {
 	case enum.IDETypeVSCodeWeb:
-		{
-			return gitspaceSchemeFromMetadata, nil
-		}
+		return gitspaceSchemeFromMetadata, nil
 	case enum.IDETypeVSCode:
-		{
-			return "ssh", nil
-		}
+		return "ssh", nil
+	case enum.IDETypeIntellij:
+		return gitspaceSchemeFromMetadata, nil
 	default:
-		{
-			return "", fmt.Errorf("unknown ideType %s", ideType)
-		}
+		return "", fmt.Errorf("unknown ideType %s", ideType)
 	}
 }
 

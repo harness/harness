@@ -32,8 +32,11 @@ import (
 
 var _ IDE = (*VSCode)(nil)
 
-const templateSetupSSHServer string = "setup_ssh_server.sh"
-const templateRunSSHServer string = "run_ssh_server.sh"
+const (
+	templateSetupSSHServer        string = "setup_ssh_server.sh"
+	templateRunSSHServer          string = "run_ssh_server.sh"
+	templateSetupVSCodeExtensions string = "setup_vscode_extensions.sh"
+)
 
 type VSCodeConfig struct {
 	Port int
@@ -54,14 +57,35 @@ func (v *VSCode) Setup(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
+	gitspaceLogger.Info("Installing ssh-server inside container")
+	err := v.setupSSHServer(ctx, exec, gitspaceLogger)
+	if err != nil {
+		return fmt.Errorf("failed to setup SSH server: %w", err)
+	}
+	gitspaceLogger.Info("Successfully installed ssh-server")
+
+	gitspaceLogger.Info("Installing vs-code extensions inside container")
+	gitspaceLogger.Info("IDE setup output...")
+	err = v.setupVSCodeExtensions(ctx, exec, args, gitspaceLogger)
+	if err != nil {
+		return fmt.Errorf("failed to setup vs code extensions: %w", err)
+	}
+	gitspaceLogger.Info("Successfully installed vs-code extensions")
+	gitspaceLogger.Info("Successfully set up IDE inside container")
+
+	return nil
+}
+
+func (v *VSCode) setupSSHServer(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
 	osInfoScript := common.GetOSInfoScript()
 	payload := template.SetupSSHServerPayload{
 		Username:     exec.RemoteUser,
 		AccessType:   exec.AccessType,
 		OSInfoScript: osInfoScript,
-	}
-	if err := v.updateVSCodeSetupPayload(args, gitspaceLogger, &payload); err != nil {
-		return err
 	}
 	sshServerScript, err := template.GenerateScriptFromTemplate(
 		templateSetupSSHServer, &payload)
@@ -69,15 +93,43 @@ func (v *VSCode) Setup(
 		return fmt.Errorf(
 			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
 	}
-
-	gitspaceLogger.Info("Installing ssh-server inside container")
-	gitspaceLogger.Info("IDE setup output...")
 	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, sshServerScript, true, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("failed to setup SSH serverr: %w", err)
 	}
-	gitspaceLogger.Info("Successfully installed ssh-server")
-	gitspaceLogger.Info("Successfully set up IDE inside container")
+
+	return nil
+}
+
+func (v *VSCode) setupVSCodeExtensions(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	args map[gitspaceTypes.IDEArg]interface{},
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
+	payload := template.SetupVSCodeExtensionsPayload{
+		Username: exec.RemoteUser,
+	}
+	if err := v.updateVSCodeSetupPayload(args, gitspaceLogger, &payload); err != nil {
+		return err
+	}
+
+	vscodeExtensionsScript, err := template.GenerateScriptFromTemplate(
+		templateSetupVSCodeExtensions, &payload)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate scipt to setup vscode extensions from template %s: %w",
+			templateSetupVSCodeExtensions,
+			err,
+		)
+	}
+
+	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, vscodeExtensionsScript,
+		true, gitspaceLogger, false)
+	if err != nil {
+		return fmt.Errorf("failed to setup vs-code extensions: %w", err)
+	}
+
 	return nil
 }
 
@@ -122,7 +174,7 @@ func (v *VSCode) Type() enum.IDEType {
 func (v *VSCode) updateVSCodeSetupPayload(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	payload *template.SetupSSHServerPayload,
+	payload *template.SetupVSCodeExtensionsPayload,
 ) error {
 	if args == nil {
 		return nil
@@ -141,7 +193,7 @@ func (v *VSCode) updateVSCodeSetupPayload(
 func (v *VSCode) handleVSCodeCustomization(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	payload *template.SetupSSHServerPayload,
+	payload *template.SetupVSCodeExtensionsPayload,
 ) error {
 	customization, exists := args[gitspaceTypes.VSCodeCustomizationArg]
 	if !exists {
@@ -171,7 +223,7 @@ func (v *VSCode) handleVSCodeCustomization(
 
 func (v *VSCode) handleRepoName(
 	args map[gitspaceTypes.IDEArg]interface{},
-	payload *template.SetupSSHServerPayload,
+	payload *template.SetupVSCodeExtensionsPayload,
 ) error {
 	repoName, exists := args[gitspaceTypes.IDERepoNameArg]
 	if !exists {

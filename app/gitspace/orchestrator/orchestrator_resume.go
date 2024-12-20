@@ -74,7 +74,7 @@ func (o orchestrator) ResumeStartGitspace(
 	}
 	gitspaceInstance.AccessKey = &resolvedSecret.SecretValue
 
-	ideSvc, err := o.getIDEService(gitspaceConfig)
+	ideSvc, err := o.ideFactory.GetIDE(gitspaceConfig.IDE)
 	if err != nil {
 		return *gitspaceInstance, &types.GitspaceError{
 			Error:        err,
@@ -207,16 +207,17 @@ func generateIDEURL(
 
 	relativeRepoPath := strings.TrimPrefix(startResponse.AbsoluteRepoPath, "/")
 
-	if gitspaceConfig.IDE == enum.IDETypeVSCodeWeb {
+	switch gitspaceConfig.IDE {
+	case enum.IDETypeVSCodeWeb:
 		ideURL = url.URL{
 			Scheme:   scheme,
 			Host:     host + ":" + forwardedPort,
 			RawQuery: filepath.Join("folder=", relativeRepoPath),
 		}
-	} else if gitspaceConfig.IDE == enum.IDETypeVSCode {
+	case enum.IDETypeVSCode:
 		// TODO: the following userID is hard coded and should be changed.
 		ideURL = url.URL{
-			Scheme: "vscode-remote",
+			Scheme: vscodeURLScheme,
 			Host:   "", // Empty since we include the host and port in the path
 			Path: fmt.Sprintf(
 				"ssh-remote+%s@%s:%s",
@@ -225,7 +226,24 @@ func generateIDEURL(
 				filepath.Join(forwardedPort, relativeRepoPath),
 			),
 		}
+	case enum.IDETypeIntellij:
+		idePath := relativeRepoPath + "/.cache"
+		ideURL = url.URL{
+			Scheme: intellijURLScheme,
+			Host:   "", // Empty since we include the host and port in the path
+			Path:   "connect",
+			Fragment: fmt.Sprintf("idePath=%s&projectPath=%s&host=%s&port=%s&user=%s&type=%s&deploy=%s",
+				idePath,
+				relativeRepoPath,
+				host,
+				forwardedPort,
+				startResponse.RemoteUser,
+				"ssh",
+				"false",
+			),
+		}
 	}
+
 	ideURLString := ideURL.String()
 	return ideURLString
 }

@@ -40,8 +40,7 @@ func ProvideOrchestrator(
 	containerOrchestrator container.Orchestrator,
 	reporter *events.Reporter,
 	config *Config,
-	vsCodeService *ide.VSCode,
-	vsCodeWebService *ide.VSCodeWeb,
+	ideFactory ide.Factory,
 	secretResolverFactory *secret.ResolverFactory,
 ) Orchestrator {
 	return NewOrchestrator(
@@ -52,8 +51,7 @@ func ProvideOrchestrator(
 		containerOrchestrator,
 		reporter,
 		config,
-		vsCodeService,
-		vsCodeWebService,
+		ideFactory,
 		secretResolverFactory,
 	)
 }

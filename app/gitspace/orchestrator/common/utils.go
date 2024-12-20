@@ -74,6 +74,9 @@ func InstallTools(
 			return err
 		}
 		return nil
+	case enum.IDETypeIntellij:
+		// not installing any tools for intellij
+		return nil
 	}
 	return nil
 }

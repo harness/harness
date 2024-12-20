@@ -411,6 +411,11 @@ type Config struct {
 			// Port is the port on which the SSH server for VSCode will be accessible.
 			Port int `envconfig:"GITNESS_IDE_VSCODE_PORT" default:"8088"`
 		}
+
+		Intellij struct {
+			// Port is the port on which the SSH server for Intellij will be accessible.
+			Port int `envconfig:"GITNESS_IDE_INTELLIJ_PORT" default:"8090"`
+		}
 	}
 
 	Gitspace struct {

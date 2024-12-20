@@ -49,8 +49,7 @@ type orchestrator struct {
 	containerOrchestrator      container.Orchestrator
 	eventReporter              *events.Reporter
 	config                     *Config
-	vsCodeService              *ide.VSCode
-	vsCodeWebService           *ide.VSCodeWeb
+	ideFactory                 ide.Factory
 	secretResolverFactory      *secret.ResolverFactory
 }
 
@@ -64,8 +63,7 @@ func NewOrchestrator(
 	containerOrchestrator container.Orchestrator,
 	eventReporter *events.Reporter,
 	config *Config,
-	vsCodeService *ide.VSCode,
-	vsCodeWebService *ide.VSCodeWeb,
+	ideFactory ide.Factory,
 	secretResolverFactory *secret.ResolverFactory,
 ) Orchestrator {
 	return orchestrator{
@@ -76,8 +74,7 @@ func NewOrchestrator(
 		containerOrchestrator:      containerOrchestrator,
 		eventReporter:              eventReporter,
 		config:                     config,
-		vsCodeService:              vsCodeService,
-		vsCodeWebService:           vsCodeWebService,
+		ideFactory:                 ideFactory,
 		secretResolverFactory:      secretResolverFactory,
 	}
 }
@@ -344,27 +341,12 @@ func (o orchestrator) emitGitspaceEvent(
 		})
 }
 
-func (o orchestrator) getIDEService(gitspaceConfig types.GitspaceConfig) (ide.IDE, error) {
-	var ideService ide.IDE
-
-	switch gitspaceConfig.IDE {
-	case enum.IDETypeVSCode:
-		ideService = o.vsCodeService
-	case enum.IDETypeVSCodeWeb:
-		ideService = o.vsCodeWebService
-	default:
-		return nil, fmt.Errorf("unsupported IDE: %s", gitspaceConfig.IDE)
-	}
-
-	return ideService, nil
-}
-
 func (o orchestrator) getPortsRequiredForGitspace(
 	gitspaceConfig types.GitspaceConfig,
 	devcontainerConfig types.DevcontainerConfig,
 ) ([]types.GitspacePort, error) {
 	// TODO: What if the required ports in the config have deviated from when the last instance was created?
-	resolvedIDE, err := o.getIDEService(gitspaceConfig)
+	resolvedIDE, err := o.ideFactory.GetIDE(gitspaceConfig.IDE)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get IDE service while checking required Gitspace ports: %w", err)
 	}

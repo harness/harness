@@ -73,8 +73,12 @@ type SetupSSHServerPayload struct {
 	Username     string
 	AccessType   enum.GitspaceAccessType
 	OSInfoScript string
-	Extensions   string
-	RepoName     string
+}
+
+type SetupVSCodeExtensionsPayload struct {
+	Username   string
+	Extensions string
+	RepoName   string
 }
 
 type RunSSHServerPayload struct {

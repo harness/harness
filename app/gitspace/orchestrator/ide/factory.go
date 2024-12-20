@@ -15,23 +15,31 @@
 package ide
 
 import (
-	"github.com/google/wire"
+	"fmt"
+
+	"github.com/harness/gitness/types/enum"
 )
 
-var WireSet = wire.NewSet(
-	ProvideVSCodeWebService,
-	ProvideVSCodeService,
-	ProvideIDEFactory,
-)
-
-func ProvideVSCodeWebService(config *VSCodeWebConfig) *VSCodeWeb {
-	return NewVsCodeWebService(config)
+type Factory struct {
+	ides map[enum.IDEType]IDE
 }
 
-func ProvideVSCodeService(config *VSCodeConfig) *VSCode {
-	return NewVsCodeService(config)
+func NewFactory(vscode *VSCode, vscodeWeb *VSCodeWeb) Factory {
+	ides := make(map[enum.IDEType]IDE)
+	ides[enum.IDETypeVSCode] = vscode
+	ides[enum.IDETypeVSCodeWeb] = vscodeWeb
+	return Factory{ides: ides}
 }
 
-func ProvideIDEFactory(vscode *VSCode, vscodeWeb *VSCodeWeb) Factory {
-	return NewFactory(vscode, vscodeWeb)
+func NewFactoryWithIDEs(ides map[enum.IDEType]IDE) Factory {
+	return Factory{ides: ides}
+}
+
+func (f *Factory) GetIDE(ideType enum.IDEType) (IDE, error) {
+	val, exist := f.ides[ideType]
+	if !exist {
+		return nil, fmt.Errorf("unsupported IDE type: %s", ideType)
+	}
+
+	return val, nil
 }
