@@ -33,8 +33,8 @@ import (
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog/hlog"
 )
 

@@ -28,7 +28,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.4
 	github.com/getkin/kin-openapi v0.123.0
 	github.com/gliderlabs/ssh v0.3.7
-	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
 	github.com/go-redis/redis/v8 v8.11.5
@@ -184,7 +183,7 @@ require (
 	cloud.google.com/go/profiler v0.3.1
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
+	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect

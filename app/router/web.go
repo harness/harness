@@ -24,7 +24,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/web"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 	"github.com/swaggest/swgui"
 	"github.com/swaggest/swgui/v5emb"

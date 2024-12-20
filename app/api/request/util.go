@@ -23,7 +23,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 // GetCookie tries to retrieve the cookie from the request or returns false if it doesn't exist.
