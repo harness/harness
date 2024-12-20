@@ -51,7 +51,7 @@ func (s *UsageMetricsStore) getVersion(
 		SELECT 
 		    usage_metric_version 
 		FROM usage_metrics 
-		WHERE usage_metric_space_id = ? AND usage_metric_date = ?
+		WHERE usage_metric_space_id = $1 AND usage_metric_date = $2
 	`
 	var version int64
 	err := s.db.QueryRowContext(ctx, sqlQuery, rootSpaceID, date).Scan(&version)
@@ -85,9 +85,9 @@ func (s *UsageMetricsStore) Upsert(ctx context.Context, in *types.UsageMetric) e
 			SET
 			    usage_metric_version = EXCLUDED.usage_metric_version
 		        ,usage_metric_updated = EXCLUDED.usage_metric_updated
-		        ,usage_metric_bandwidth = usage_metric_bandwidth + EXCLUDED.usage_metric_bandwidth
-		        ,usage_metric_storage = usage_metric_storage + EXCLUDED.usage_metric_storage
-			WHERE usage_metric_version = EXCLUDED.usage_metric_version - 1`
+		        ,usage_metric_bandwidth = usage_metrics.usage_metric_bandwidth + EXCLUDED.usage_metric_bandwidth
+		        ,usage_metric_storage = usage_metrics.usage_metric_storage + EXCLUDED.usage_metric_storage
+			WHERE usage_metrics.usage_metric_version = EXCLUDED.usage_metric_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 	today := s.Date(time.Now())
@@ -146,8 +146,8 @@ func (s *UsageMetricsStore) GetMetrics(
 		COALESCE(SUM(usage_metric_storage), 0) AS usage_metric_storage
 	FROM usage_metrics
 	WHERE 
-	    usage_metric_space_id = ? AND
-	    usage_metric_date BETWEEN ? AND ?`
+	    usage_metric_space_id = $1 AND
+	    usage_metric_date BETWEEN $2 AND $3`
 
 	result := &types.UsageMetric{
 		RootSpaceID: rootSpaceID,
@@ -185,7 +185,7 @@ func (s *UsageMetricsStore) List(
 		COALESCE(SUM(usage_metric_storage), 0) AS usage_metric_storage
 	FROM usage_metrics
 	WHERE 
-	    usage_metric_date BETWEEN ? AND ?
+	    usage_metric_date BETWEEN $1 AND $2
 	GROUP BY usage_metric_space_id
 	ORDER BY usage_metric_bandwidth DESC, usage_metric_storage DESC`
 

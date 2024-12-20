@@ -39,7 +39,7 @@ type SpaceStore interface {
 	FindByIDs(ctx context.Context, spaceIDs ...int64) ([]*types.Space, error)
 }
 
-type Store interface {
+type MetricStore interface {
 	UpsertOptimistic(ctx context.Context, in *types.UsageMetric) error
 	GetMetrics(
 		ctx context.Context,
@@ -66,8 +66,8 @@ type Mediator struct {
 	spaces  map[string]Size
 	workers []*worker
 
-	spaceStore        SpaceStore
-	usageMetricsStore Store
+	spaceStore   SpaceStore
+	metricsStore MetricStore
 
 	wg sync.WaitGroup
 
@@ -77,17 +77,17 @@ type Mediator struct {
 func NewMediator(
 	ctx context.Context,
 	spaceStore SpaceStore,
-	usageMetricsStore Store,
+	usageMetricsStore MetricStore,
 	config Config,
 ) *Mediator {
 	m := &Mediator{
-		queue:             newQueue(),
-		chunks:            make(map[string]Size),
-		spaces:            make(map[string]Size),
-		spaceStore:        spaceStore,
-		usageMetricsStore: usageMetricsStore,
-		workers:           make([]*worker, config.MaxWorkers),
-		config:            config,
+		queue:        newQueue(),
+		chunks:       make(map[string]Size),
+		spaces:       make(map[string]Size),
+		spaceStore:   spaceStore,
+		metricsStore: usageMetricsStore,
+		workers:      make([]*worker, config.MaxWorkers),
+		config:       config,
 	}
 
 	m.initialize(ctx)
@@ -133,7 +133,7 @@ func (m *Mediator) initialize(ctx context.Context) {
 
 	now := time.Now()
 
-	metrics, err := m.usageMetricsStore.List(ctx, now.Add(-m.days30()).UnixMilli(), now.UnixMilli())
+	metrics, err := m.metricsStore.List(ctx, now.Add(-m.days30()).UnixMilli(), now.UnixMilli())
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to list usage metrics")
 		return
@@ -187,7 +187,7 @@ func (m *Mediator) process(ctx context.Context, payload *Metric) {
 		return
 	}
 
-	if err = m.usageMetricsStore.UpsertOptimistic(ctx, &types.UsageMetric{
+	if err = m.metricsStore.UpsertOptimistic(ctx, &types.UsageMetric{
 		RootSpaceID: space.ID,
 		Bandwidth:   newSize.Bandwidth,
 		Storage:     newSize.Storage,
@@ -202,7 +202,7 @@ func (m *Mediator) process(ctx context.Context, payload *Metric) {
 
 	now := time.Now()
 
-	metric, err := m.usageMetricsStore.GetMetrics(ctx, space.ID, now.Add(-m.days30()).UnixMilli(), now.UnixMilli())
+	metric, err := m.metricsStore.GetMetrics(ctx, space.ID, now.Add(-m.days30()).UnixMilli(), now.UnixMilli())
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("failed to get usage metrics")
 		return
