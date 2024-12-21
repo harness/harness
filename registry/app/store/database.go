@@ -320,6 +320,7 @@ type UpstreamProxyConfigRepository interface {
 }
 
 type RegistryMetadata struct {
+	RegID         string
 	RegIdentifier string
 	Description   string
 	PackageType   artifact.PackageType

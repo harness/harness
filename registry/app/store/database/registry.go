@@ -212,6 +212,7 @@ func (r registryDao) GetByIDIn(ctx context.Context, parentID int64, ids []int64)
 }
 
 type RegistryMetadataDB struct {
+	RegID         string                `db:"registry_id"`
 	RegIdentifier string                `db:"reg_identifier"`
 	Description   sql.NullString        `db:"description"`
 	PackageType   artifact.PackageType  `db:"package_type"`
@@ -238,6 +239,7 @@ func (r registryDao) GetAll(
 ) (repos *[]store.RegistryMetadata, err error) {
 	// Select only required fields
 	selectFields := `
+		r.registry_id AS registry_id,
 		r.registry_name AS reg_identifier,
 		COALESCE(r.registry_description, '') AS description, 
 		r.registry_package_type AS package_type,
@@ -740,6 +742,7 @@ func (r registryDao) mapToRegistryMetadataList(
 
 func (r registryDao) mapToRegistryMetadata(_ context.Context, dst *RegistryMetadataDB) *store.RegistryMetadata {
 	return &store.RegistryMetadata{
+		RegID:         dst.RegID,
 		RegIdentifier: dst.RegIdentifier,
 		Description:   dst.Description.String,
 		PackageType:   dst.PackageType,

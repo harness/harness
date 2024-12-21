@@ -18,6 +18,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/app/paths"
@@ -233,14 +235,38 @@ func (c *APIController) setUpstreamProxyIDs(
 		return nil
 	}
 
-	upstreamProxies, err := c.RegistryRepository.FetchUpstreamProxyIDs(
+	repos, err := c.RegistryRepository.GetAll(
 		ctx,
-		*virtualConfig.UpstreamProxies,
 		parentID,
+		[]string{string(registry.PackageType)},
+		"id",
+		"",
+		math.MaxInt,
+		0,
+		"",
+		string(api.RegistryTypeUPSTREAM),
+		true,
 	)
-	if err != nil {
-		return fmt.Errorf("failed to fectch upstream proxy IDs :%w", err)
+
+	if repos == nil || err != nil {
+		err := fmt.Errorf("no repositories found for parentID: %d", parentID)
+		log.Ctx(ctx).Debug().Err(err).Msg("Failed to fetch repositories")
+		return err
 	}
+
+	var upstreamProxies []int64
+	for _, repo := range *repos {
+		for _, proxy := range *virtualConfig.UpstreamProxies {
+			if repo.RegIdentifier == proxy {
+				regID, err := strconv.ParseInt(repo.RegID, 10, 64)
+				if err != nil {
+					continue
+				}
+				upstreamProxies = append(upstreamProxies, regID)
+			}
+		}
+	}
+
 	registry.UpstreamProxies = upstreamProxies
 	return nil
 }
