@@ -79,7 +79,7 @@ type Provider interface {
 
 	RegistryURL(ctx context.Context, params ...string) string
 
-	GetUIBaseURL(ctx context.Context) string
+	GetUIBaseURL(ctx context.Context, params ...string) string
 }
 
 // Provider provides the URLs of the Harness system.
@@ -255,7 +255,7 @@ func (p *provider) RegistryURL(_ context.Context, params ...string) string {
 	return strings.TrimRight(u.String(), "/")
 }
 
-func (p *provider) GetUIBaseURL(_ context.Context) string {
+func (p *provider) GetUIBaseURL(_ context.Context, _ ...string) string {
 	return p.uiURL.String()
 }
 
