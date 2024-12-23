@@ -20,6 +20,7 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/paths"
+	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -32,7 +33,13 @@ func (c *Controller) GetUsageMetrics(
 	startDate int64,
 	endDate int64,
 ) (*types.UsageMetric, error) {
-	rootSpaceRef, _, err := paths.DisectRoot(spaceRef)
+	rootSpaceRef, sub, err := paths.DisectRoot(spaceRef)
+	if sub != "" {
+		return nil, errors.InvalidArgument(
+			"metric api can be used only within %q space: please remove %q part",
+			rootSpaceRef, sub,
+		)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("could not find root space: %w", err)
 	}

@@ -37,16 +37,19 @@ func HandleUsageMetric(spaceCtrl *space.Controller) http.HandlerFunc {
 		now := time.Now()
 		start := now.Add(-30 * 24 * time.Hour).UnixMilli()
 
-		startDate, ok, _ := request.QueryParamAsPositiveInt64(r, "start_date")
-		if !ok {
-			startDate = start
-		}
-		endDate, ok, _ := request.QueryParamAsPositiveInt64(r, "start_date")
-		if !ok {
-			endDate = now.UnixMilli()
-		}
+		startDate := request.QueryParamAsUnixMillisOrDefault(
+			r,
+			request.QueryParamStartTime,
+			start,
+		)
 
-		rule, err := spaceCtrl.GetUsageMetrics(
+		endDate := request.QueryParamAsUnixMillisOrDefault(
+			r,
+			request.QueryParamEndTime,
+			now.UnixMilli(),
+		)
+
+		metric, err := spaceCtrl.GetUsageMetrics(
 			ctx,
 			session,
 			spaceRef,
@@ -58,6 +61,6 @@ func HandleUsageMetric(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, rule)
+		render.JSON(w, http.StatusOK, metric)
 	}
 }
