@@ -35,7 +35,7 @@ export const TimeAgoPopover: React.FC<TimeAgoPopoverProps> = props => {
     <Popover
       interactionKind={PopoverInteractionKind.HOVER}
       position={Position.TOP}
-      className={Classes.DARK}
+      popoverClassName={Classes.DARK}
       modifiers={{ preventOverflow: { escapeWithReference: true } }}
       {...popoverProps}>
       <Text inline {...textProps} icon={icon} className={className}>

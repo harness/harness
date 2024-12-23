@@ -37,6 +37,7 @@ import '@ar/pages/version-details/VersionFactory'
 import '@ar/pages/repository-details/RepositoryFactory'
 
 import css from '@ar/app/app.module.scss'
+import './themes.scss'
 
 const RouteDestinations = React.lazy(() => import('@ar/routes/RouteDestinations'))
 

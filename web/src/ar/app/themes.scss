@@ -1,0 +1,284 @@
+/*
+ * Copyright 2024 Harness, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.dark {
+  --primary-1: #1a1a1a;
+  --primary-2: #1b2e49;
+  --primary-3: #0a3364;
+  --primary-4: #004ba4;
+  --primary-5: #007bff;
+  --primary-6: #33a4ff;
+  --primary-7: #3399ff;
+  --primary-8: #31b7e8;
+  --primary-9-dark: #73d2ff;
+  --primary-9: #9fdff8;
+  --primary-10: #effbff;
+
+  --grey-0: #000000;
+  --grey-50: #1a1a1a;
+  --grey-100: #1e1e1e;
+  --grey-200: #2e2e2e;
+  --grey-250: #2e2e2e;
+  --grey-300: #383946;
+  --grey-350: #383946;
+  --grey-400: #888888;
+  --grey-450: #888888;
+  --grey-500: #999999;
+  --grey-600: #999999;
+  --grey-700: #b5b5b5;
+  --grey-800: #d1d1d1;
+  --grey-900: #ededed;
+  --grey-1000: #ededed;
+
+  --green-50: #0a2d0b;
+  --green-100: #0a4010;
+  --green-200: #146518;
+  --green-300: #247d27;
+  --green-350: var(--green-400);
+  --green-400: #2e8a31;
+  --green-450: var(--green-500);
+  --green-500: #59b15f;
+  --green-600: #75c677;
+  --green-700: #90d88e;
+  --green-800: #aceba9;
+  --green-900: #c1f2c0;
+
+  --yellow-50: #2a2600;
+  --yellow-100: #554c00;
+  --yellow-200: #7f7200;
+  --yellow-300: #a99900;
+  --yellow-400: #d3bf00;
+  --yellow-450: var(--yellow-500);
+  --yellow-500: #f6e100;
+  --yellow-600: #f7e633;
+  --yellow-700: #f9ea66;
+  --yellow-800: #faee99;
+  --yellow-900: #fcf2cc;
+
+  --red-50: #330a0a;
+  --red-100: #4d0f0f;
+  --red-200: #661414;
+  --red-300: #801818;
+  --red-400: #991d1d;
+  --red-450: var(--red-500);
+  --red-500: #b22222;
+  --red-600: #cc2828;
+  --red-700: #e63333;
+  --red-800: #ff3f3f;
+  --red-900: #ff6666;
+
+  --ai-purple-50: #2f0e8d;
+  --ai-purple-100: #3a19a4;
+  --ai-purple-200: #4422b5;
+  --ai-purple-300: #4f2cc7;
+  --ai-purple-400: #6a4ee0;
+  --ai-purple-500: #7a61e6;
+  --ai-purple-600: #8b74ec;
+  --ai-purple-700: #9b87f2;
+  --ai-purple-800: #ac9af7;
+  --ai-purple-900: #bfaeff;
+
+  --blue-50: #1c1b59;
+  --blue-100: #23226d;
+  --blue-200: #2b2a80;
+  --blue-300: #333293;
+  --blue-350: var(--blue-400);
+  --blue-400: #3b3aa7;
+  --blue-450: var(--blue-500);
+  --blue-500: #4a4bbe;
+  --blue-600: #5a5bd4;
+  --blue-700: #6b6be9;
+  --blue-800: #8b8bff;
+  --blue-900: #aaaaff;
+
+  --teal-50: #004d4d;
+  --teal-100: #006666;
+  --teal-200: #007f7f;
+  --teal-300: #009999;
+  --teal-400: #00b3b3;
+  --teal-500: #33cccc;
+  --teal-600: #66e0e0;
+  --teal-700: #99f2f2;
+  --teal-800: #ccfbfb;
+  --teal-900: #e6fdfd;
+
+  --orange-50: #33200a;
+  --orange-100: #4d2d0e;
+  --orange-200: #663913;
+  --orange-300: #804518;
+  --orange-400: #99411d;
+  --orange-500: #b24e22;
+  --orange-600: #cc5b28;
+  --orange-700: #e6672d;
+  --orange-800: #ff7433;
+  --orange-900: #ff8047;
+
+  --magenta-50: #660033;
+  --magenta-100: #800040;
+  --magenta-200: #99004d;
+  --magenta-300: #b30059;
+  --magenta-400: #cc0066;
+  --magenta-500: #d63380;
+  --magenta-600: #e06699;
+  --magenta-700: #f299cc;
+  --magenta-800: #f5cce0;
+  --magenta-900: #fce6f2;
+
+  --lime-50: #3d6600;
+  --lime-100: #4d8000;
+  --lime-200: #5e9900;
+  --lime-300: #6fb300;
+  --lime-400: #80cc00;
+  --lime-500: #99e066;
+  --lime-600: #b3e699;
+  --lime-700: #cce6cc;
+  --lime-800: #e5f2e5;
+  --lime-900: #f2fbf2;
+
+  --purple-50: #290066;
+  --purple-100: #330080;
+  --purple-200: #3d0099;
+  --purple-300: #4700b3;
+  --purple-400: #5100cc;
+  --purple-500: #7333d6;
+  --purple-600: #9966e0;
+  --purple-700: #b399f2;
+  --purple-800: #d6ccfb;
+  --purple-900: #f2e6fc;
+
+  --black: var(--grey-900);
+  --white: var(--grey-50);
+
+  --primary-bg: #121212;
+  --primary-light-hover: var(--grey-100);
+  --form-bg: var(--primary-1);
+  --form-field-border: var(--grey-200);
+
+  * {
+    box-shadow: none !important;
+  }
+
+  a {
+    color: var(--primary-7);
+  }
+
+  .bp3-dark {
+    --grey-1000: #000000; // --grey-0
+    --grey-900: #1a1a1a; // --grey-50
+    --grey-800: #1e1e1e; // --grey-100
+    --grey-700: #2e2e2e; // --grey-200
+    --grey-600: #2e2e2e; // --grey-250
+    --grey-500: #383946; // --grey-300
+    --grey-450: #383946; // --grey-350
+    --grey-400: #888888; // --grey-400
+    --grey-350: #888888; // --grey-450
+    --grey-300: #999999; // --grey-500
+    --grey-250: #999999; // --grey-600
+    --grey-200: #b5b5b5; // --grey-700
+    --grey-100: #d1d1d1; // --grey-800
+    --grey-50: #ededed; // --grey-900
+    --grey-0: #ededed; // --grey-1000
+
+    --black: #000;
+    --white: #fff;
+
+    --primary-9-dark: var(--primary-bg); /* tooltip background */
+
+    &.bp3-popover {
+      border: 1px solid var(--grey-800);
+      background: var(--primary-9-dark);
+      color: var(--white);
+    }
+
+    .bp3-button:not([class*='bp3-intent-']) {
+      background-image: none;
+    }
+
+    .bp3-menu-item {
+      color: var(--white);
+
+      &:hover {
+        background-color: var(--grey-700);
+      }
+    }
+  }
+
+  .bp3-card,
+  .bp3-input {
+    background-color: var(--grey-100) !important;
+    border: 1px solid var(--grey-200);
+    color: var(--black);
+  }
+
+  .bp3-html-select select {
+    color: var(--grey-400);
+  }
+
+  .bp3-heading,
+  .bp3-input-ghost,
+  .bp3-tag.bp3-minimal:not([class*='bp3-intent-']) {
+    color: var(--black);
+    --intent-color: var(--black);
+  }
+
+  .bp3-popover {
+    border: 1px solid var(--grey-200);
+    color: var(--black);
+  }
+
+  .bp3-card.Card--interactive:hover {
+    border: 1px solid var(--primary-7);
+  }
+
+  .bp3-popover-content,
+  .bp3-popover .bp3-menu,
+  .bp3-menu,
+  .DropDown--popover.bp3-popover,
+  .bp3-datepicker {
+    background-color: var(--primary-bg) !important;
+  }
+
+  .DropDown--main .DropDown--dropdownButton.DropDown--withBorder,
+  .MultiSelectDropDown--main .MultiSelectDropDown--dropdownButton.MultiSelectDropDown--withBorder {
+    background-color: var(--grey-100) !important;
+
+    &:hover {
+      background-color: var(--grey-200) !important;
+    }
+  }
+
+  .DropDown--main.DropDown--disabled {
+    background-color: var(--grey-100) !important;
+
+    .DropDown--labelWrapper .DropDown--label {
+      color: var(--grey-300) !important;
+    }
+  }
+
+  [class*='TableV2--card--'],
+  [class*='TableV2--rowSubComponent--'] [class*='TableV2--row--'] {
+    background-color: var(--grey-50);
+    border: 1px solid var(--grey-200);
+
+    &[class*='TableV2--clickable']:hover {
+      background-color: var(--grey-100);
+    }
+  }
+
+  [class*='Button--variation--'][class*='Button--variation-icon'] {
+    --text-color: var(--grey-400) !important;
+  }
+}
