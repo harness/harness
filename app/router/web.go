@@ -89,7 +89,8 @@ func NewWebHandler(
 			// Available settings can be found here:
 			// https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
 			SettingsUI: map[string]string{
-				"queryConfigEnabled": "false", // block code injection vulnerability
+				"queryConfigEnabled":       "false", // block code injection vulnerability
+				"defaultModelsExpandDepth": "1",
 			},
 		})
 
