@@ -26,6 +26,7 @@ import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import GenericVersionHeader from './GenericVersionHeader'
 import GenericOverviewPage from './pages/overview/OverviewPage'
 import GenericArtifactDetailsPage from './pages/artifact-details/GenericArtifactDetailsPage'
+import GenericArtifactDeploymentsPage from './pages/deployments/GenericArtifactDeploymentsPage'
 
 export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.GENERIC
@@ -51,7 +52,7 @@ export class GenericVersionType extends VersionStep<ArtifactVersionSummary> {
       case VersionDetailsTab.ARTIFACT_DETAILS:
         return <GenericArtifactDetailsPage />
       case VersionDetailsTab.DEPLOYMENTS:
-        return <></>
+        return <GenericArtifactDeploymentsPage />
       case VersionDetailsTab.OSS:
         return <></>
       default:

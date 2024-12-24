@@ -27,7 +27,7 @@ export const LegendList = ({ items }: { items: PieChartItem[] }) => {
       <Layout.Vertical>
         {items.map(item => {
           return (
-            <Layout.Horizontal spacing={'xsmall'} key={item.value}>
+            <Layout.Horizontal spacing={'xsmall'} key={item.label}>
               <DonutChartTag
                 color={item.color}
                 backgroundColor={item.backgroundColor}>{`${item.label} ${item.value}`}</DonutChartTag>

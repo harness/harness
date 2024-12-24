@@ -34,7 +34,7 @@ import DockerArtifactDetailsContent from './DockerArtifactDetailsContent'
 import { VersionDetailsTab } from '../components/VersionDetailsTabs/constants'
 import DockerArtifactSecurityTestsContent from './DockerArtifactSecurityTestsContent'
 import DockerVersionOSSContent from './DockerVersionOSSContent/DockerVersionOSSContent'
-import DockerDeploymentsContent from './DockerDeploymentsContent'
+import DockerDeploymentsContent from './DockerDeploymentsContent/DockerDeploymentsContent'
 
 export class DockerVersionType extends VersionStep<ArtifactVersionSummary> {
   protected packageType = RepositoryPackageType.DOCKER

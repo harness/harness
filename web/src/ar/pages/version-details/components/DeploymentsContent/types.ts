@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-.containerDetailsCard {
-  min-width: 250px;
+export interface DeploymentsListSortBy {
+  sort: 'environmentName' | 'environmentType' | 'services' | 'deploymentPipeline' | 'lastModified'
 }

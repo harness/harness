@@ -16,9 +16,8 @@
 
 import React, { useMemo, useRef } from 'react'
 import { Expander } from '@blueprintjs/core'
-import { defaultTo } from 'lodash-es'
 import { flushSync } from 'react-dom'
-import { useGetArtifactDeploymentsQuery, useGetDockerArtifactManifestsQuery } from '@harnessio/react-har-service-client'
+import { useGetArtifactDeploymentsQuery } from '@harnessio/react-har-service-client'
 import {
   Button,
   ButtonVariation,
@@ -34,17 +33,21 @@ import { useStrings } from '@ar/frameworks/strings'
 import { encodeRef } from '@ar/hooks/useGetSpaceRef'
 import type { VersionDetailsPathParams } from '@ar/routes/types'
 import EnvironmentTypeSelector from '@ar/components/EnvironmentTypeSelector/EnvironmentTypeSelector'
-import DockerVersionDeploymentsTable from '@ar/pages/version-details/components/DeploymentsTable/DeploymentsTable'
 
-import DeploymentOverviewCards from './components/DeploymentOverviewCards/DeploymentOverviewCards'
+import DeploymentsTable from './DeploymentsTable/DeploymentsTable'
+import DeploymentOverviewCards from './DeploymentOverviewCards/DeploymentOverviewCards'
 import {
-  useArtifactVersionDeploymentsTableQueryParamOptions,
-  type ArtifactVersionDeploymentsTableQueryParams
-} from '../components/DeploymentsTable/utils'
+  ArtifactVersionDeploymentsTableQueryParams,
+  useArtifactVersionDeploymentsTableQueryParamOptions
+} from './utils'
 
-import css from './DockerVersion.module.scss'
+import css from './DeploymentsContent.module.scss'
 
-export default function DockerDeploymentsContent() {
+interface DeploymentsContentProps {
+  prefixCard?: React.ReactNode
+}
+
+export default function DeploymentsContent(props: DeploymentsContentProps) {
   const { useQueryParams, useUpdateQueryParams, usePreferenceStore } = useParentHooks()
   const { updateQueryParams } = useUpdateQueryParams<Partial<ArtifactVersionDeploymentsTableQueryParams>>()
   const queryParamOptions = useArtifactVersionDeploymentsTableQueryParamOptions()
@@ -74,12 +77,6 @@ export default function DockerDeploymentsContent() {
     }
   })
 
-  const { data: manifestsData } = useGetDockerArtifactManifestsQuery({
-    registry_ref: registryRef,
-    artifact: encodeRef(params.artifactIdentifier),
-    version: params.versionIdentifier
-  })
-
   const handleClearFilters = (): void => {
     flushSync(searchRef.current.clear)
     updateQueryParams({
@@ -94,16 +91,7 @@ export default function DockerDeploymentsContent() {
 
   return (
     <Layout.Vertical padding="large" spacing="medium">
-      {responseData && (
-        <DeploymentOverviewCards
-          artifactDetails={{
-            artifactName: params.artifactIdentifier,
-            version: params.versionIdentifier,
-            digests: defaultTo(manifestsData?.content.data.manifests, [])
-          }}
-          deploymentStats={responseData?.deploymentsStats}
-        />
-      )}
+      <DeploymentOverviewCards prefixCards={props.prefixCard} deploymentStats={responseData?.deploymentsStats} />
       <div className={css.subHeaderItems}>
         <EnvironmentTypeSelector
           value={environmentTypes}
@@ -131,7 +119,6 @@ export default function DockerDeploymentsContent() {
         noData={{
           when: () => !responseData?.deployments.itemCount,
           icon: 'thinner-code-repos',
-          // image: getEmptyStateIllustration(hasFilter, module),
           messageTitle: hasFilter
             ? getString('noResultsFound')
             : getString('versionDetails.deploymentsTable.noDeploymentsTitle'),
@@ -142,7 +129,7 @@ export default function DockerDeploymentsContent() {
           )
         }}>
         {responseData && (
-          <DockerVersionDeploymentsTable
+          <DeploymentsTable
             data={responseData}
             gotoPage={pageNumber => updateQueryParams({ page: pageNumber })}
             onPageSizeChange={newSize => updateQueryParams({ size: newSize, page: DEFAULT_PAGE_INDEX })}

@@ -1,11 +1,11 @@
 /*
- * Copyright 2023 Harness, Inc.
+ * Copyright 2024 Harness, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-/* eslint-disable */
-// This is an auto-generated file
-export declare const card: string
-export declare const cardContainer: string
-export declare const containerDetailsCard: string
-export declare const gridContainer: string
-export declare const manifestContainer: string
-export declare const margin0: string
-export declare const pageBody: string
-export declare const setupClientBtn: string
+import React from 'react'
+import DeploymentsContent from '@ar/pages/version-details/components/DeploymentsContent/DeploymentsContent'
+import DockerDeploymentsCard from './DockerDeploymentsCards'
+
+export default function DockerDeploymentsContent() {
+  return <DeploymentsContent prefixCard={<DockerDeploymentsCard />} />
+}

@@ -62,16 +62,8 @@
   margin: 0px;
 }
 
-.deploymentTablePageBody {
-  --page-header-height: 350px;
-}
-
-.subHeaderItems {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--spacing-medium);
-  width: 100%;
+.containerDetailsCard {
+  min-width: 250px;
 }
 
 .setupClientBtn {

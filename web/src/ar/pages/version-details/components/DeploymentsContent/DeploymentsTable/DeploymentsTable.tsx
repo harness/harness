@@ -24,7 +24,6 @@ import type { ArtifactDeploymentsDetail, ArtifactDeploymentsDetails } from '@har
 import { useParentHooks } from '@ar/hooks'
 import { useStrings } from '@ar/frameworks/strings'
 
-import type { DockerVersionDeploymentsListSortBy } from './types'
 import {
   DeploymentPipelineCell,
   EnvironmentNameCell,
@@ -34,10 +33,11 @@ import {
   LastModifiedCell,
   ServiceListCell
 } from './DeploymentsTableCells'
+import type { DeploymentsListSortBy } from '../types'
 
 import css from './DeploymentsTable.module.scss'
 
-interface DockerVersionDeploymentsTableProps {
+interface DeploymentsTableProps {
   data: ArtifactDeploymentsDetails
   gotoPage: (pageNumber: number) => void
   onPageSizeChange?: PaginationProps['onPageSizeChange']
@@ -45,7 +45,7 @@ interface DockerVersionDeploymentsTableProps {
   sortBy: string[]
 }
 
-export default function DockerVersionDeploymentsTable(props: DockerVersionDeploymentsTableProps) {
+export default function DeploymentsTable(props: DeploymentsTableProps) {
   const { data, gotoPage, onPageSizeChange, setSortBy, sortBy } = props
   const { useDefaultPaginationProps } = useParentHooks()
   const { getString } = useStrings()
@@ -67,7 +67,7 @@ export default function DockerVersionDeploymentsTable(props: DockerVersionDeploy
         enableServerSort: true,
         isServerSorted: currentSort === id,
         isServerSortedDesc: currentOrder === 'DESC',
-        getSortedColumn: ({ sort }: DockerVersionDeploymentsListSortBy) => {
+        getSortedColumn: ({ sort }: DeploymentsListSortBy) => {
           if (!sort) return
           setSortBy([sort, currentOrder === 'DESC' ? 'ASC' : 'DESC'])
         }
