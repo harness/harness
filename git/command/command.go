@@ -22,6 +22,7 @@ import (
 	"io"
 	"os/exec"
 	"regexp"
+	"sync"
 )
 
 var (
@@ -65,6 +66,8 @@ type Command struct {
 	// internal counter for GIT_CONFIG_COUNT environment variable.
 	// more info: [link](https://git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIGCOUNT)
 	configEnvCounter int
+
+	mux sync.RWMutex
 }
 
 // New creates new command for interacting with the git process.
@@ -74,15 +77,16 @@ func New(name string, options ...CmdOptionFunc) *Command {
 		Envs: make(Envs),
 	}
 
-	for _, opt := range options {
-		opt(c)
-	}
+	c.Add(options...)
 
 	return c
 }
 
 // Clone clones the command object.
 func (c *Command) Clone() *Command {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
 	globals := make([]string, len(c.Globals))
 	copy(globals, c.Globals)
 
@@ -113,6 +117,9 @@ func (c *Command) Clone() *Command {
 
 // Add appends given options to the command.
 func (c *Command) Add(options ...CmdOptionFunc) *Command {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	for _, opt := range options {
 		opt(c)
 	}
@@ -181,6 +188,9 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 }
 
 func (c *Command) makeArgs() ([]string, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
 	var safeArgs []string
 
 	// add globals

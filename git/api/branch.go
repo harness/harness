@@ -131,25 +131,29 @@ func (g *Git) GetBranchCount(
 		command.WithFlag("--format=%(refname:short)"),
 	)
 
-	var err error
 	go func() {
-		defer pipeIn.Close()
-		err = cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(pipeIn))
+		err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(pipeIn))
+		if err != nil {
+			_ = pipeIn.CloseWithError(
+				processGitErrorf(err, "failed to trigger branch command"),
+			)
+			return
+		}
+		_ = pipeIn.Close()
 	}()
-	if err != nil {
-		return 0, processGitErrorf(err, "failed to trigger branch command")
-	}
 
-	return countLines(pipeOut), nil
+	return countLines(pipeOut)
 }
 
-func countLines(pipe io.Reader) int {
+func countLines(pipe io.Reader) (int, error) {
 	scanner := bufio.NewScanner(pipe)
 	count := 0
 
 	for scanner.Scan() {
 		count++
 	}
-
-	return count
+	if err := scanner.Err(); err != nil {
+		return 0, err
+	}
+	return count, nil
 }
