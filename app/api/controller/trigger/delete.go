@@ -30,10 +30,11 @@ func (c *Controller) Delete(
 	pipelineIdentifier string,
 	triggerIdentifier string,
 ) error {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return fmt.Errorf("failed to find repo by ref: %w", err)
 	}
+
 	// Trigger permissions are associated with pipeline permissions. If a user has permissions
 	// to edit the pipeline, they will have permissions to remove a trigger as well.
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineEdit)

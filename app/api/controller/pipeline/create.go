@@ -57,7 +57,7 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}

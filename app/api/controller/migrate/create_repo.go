@@ -172,7 +172,7 @@ func (c *Controller) spaceCheckAuth(
 	session *auth.Session,
 	parentRef string,
 ) (*types.Space, error) {
-	space, err := c.spaceStore.FindByRef(ctx, parentRef)
+	space, err := c.spaceCache.Get(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)
 	}

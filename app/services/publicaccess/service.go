@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/enum"
@@ -31,22 +32,22 @@ var _ Service = (*service)(nil)
 type service struct {
 	publicResourceCreationEnabled bool
 	publicAccessStore             store.PublicAccessStore
-	repoStore                     store.RepoStore
-	spaceStore                    store.SpaceStore
+	spaceCache                    refcache.SpaceCache
+	repoFinder                    refcache.RepoFinder
 }
 
 func NewService(
 	publicResourceCreationEnabled bool,
 	publicAccessStore store.PublicAccessStore,
-	repoStore store.RepoStore,
-	spaceStore store.SpaceStore,
+	spaceCache refcache.SpaceCache,
+	repoFinder refcache.RepoFinder,
 ) Service {
 	return &service{
 		publicResourceCreationEnabled: publicResourceCreationEnabled,
 
 		publicAccessStore: publicAccessStore,
-		repoStore:         repoStore,
-		spaceStore:        spaceStore,
+		spaceCache:        spaceCache,
+		repoFinder:        repoFinder,
 	}
 }
 

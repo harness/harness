@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/triggerer"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 )
@@ -31,9 +32,9 @@ type Controller struct {
 	canceler       canceler.Canceler
 	commitService  commit.Service
 	triggerer      triggerer.Triggerer
-	repoStore      store.RepoStore
 	stageStore     store.StageStore
 	pipelineStore  store.PipelineStore
+	repoFinder     refcache.RepoFinder
 }
 
 func NewController(
@@ -44,9 +45,9 @@ func NewController(
 	canceler canceler.Canceler,
 	commitService commit.Service,
 	triggerer triggerer.Triggerer,
-	repoStore store.RepoStore,
 	stageStore store.StageStore,
 	pipelineStore store.PipelineStore,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return &Controller{
 		tx:             tx,
@@ -56,8 +57,8 @@ func NewController(
 		canceler:       canceler,
 		commitService:  commitService,
 		triggerer:      triggerer,
-		repoStore:      repoStore,
 		stageStore:     stageStore,
 		pipelineStore:  pipelineStore,
+		repoFinder:     repoFinder,
 	}
 }

@@ -37,7 +37,7 @@ func (c *Controller) GetAnalysis(
 	pipelineIdentifier string,
 	executionNum int64,
 ) (*types.AnalyseExecutionOutput, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, usererror.BadRequestf("failed to find repo %s", repoRef)
 	}

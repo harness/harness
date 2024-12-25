@@ -12,25 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package upload
+package refcache
 
 import (
-	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/services/refcache"
-	"github.com/harness/gitness/blob"
+	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideController,
+	ProvideSpaceCache,
+	ProvideRepoFinder,
 )
 
-func ProvideController(
-	authorizer authz.Authorizer,
-	repoFinder refcache.RepoFinder,
-	blobStore blob.Store,
-) *Controller {
-	return NewController(authorizer, repoFinder, blobStore)
+// ProvideSpaceCache provides a cache for Space objects fetched by space reference.
+func ProvideSpaceCache(
+	spacePathCache store.SpacePathStore,
+	spaceStore store.SpaceStore,
+	pathTransform store.SpacePathTransformation,
+) SpaceCache {
+	return NewSpaceCache(spacePathCache, spaceStore, pathTransform)
+}
+
+// ProvideRepoFinder provides a repository finder that finds repositories by their path.
+func ProvideRepoFinder(
+	repoStore store.RepoStore,
+	spaceCache SpaceCache,
+) RepoFinder {
+	return NewRepoFinder(repoStore, spaceCache)
 }

@@ -16,6 +16,7 @@ package trigger
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -30,7 +31,7 @@ func ProvideController(
 	authorizer authz.Authorizer,
 	triggerStore store.TriggerStore,
 	pipelineStore store.PipelineStore,
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
-	return NewController(authorizer, triggerStore, pipelineStore, repoStore)
+	return NewController(authorizer, triggerStore, pipelineStore, repoFinder)
 }

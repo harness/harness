@@ -41,7 +41,7 @@ func (c *Controller) SoftDelete(
 	repoRef string,
 ) (*SoftDeleteResponse, error) {
 	// note: can't use c.getRepoCheckAccess because import job for repositories being imported must be cancelled.
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find the repo for soft delete: %w", err)
 	}

@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -57,7 +58,9 @@ func ProvideController(
 	fileViewStore store.PullReqFileViewStore,
 	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
-	rpcClient git.Interface, eventReporter *pullreqevents.Reporter, codeCommentMigrator *codecomments.Migrator,
+	rpcClient git.Interface,
+	repoFinder refcache.RepoFinder,
+	eventReporter *pullreqevents.Reporter, codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service, pullreqListService *pullreq.ListService,
 	ruleManager *protection.Manager, sseStreamer sse.Streamer,
 	codeOwners *codeowners.Service, locker *locker.Locker, importer *migrate.PullReq,
@@ -83,6 +86,7 @@ func ProvideController(
 		membershipStore,
 		checkStore,
 		rpcClient,
+		repoFinder,
 		eventReporter,
 		codeCommentMigrator,
 		pullreqService,

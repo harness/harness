@@ -16,6 +16,7 @@ package logs
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/livelog"
 
@@ -30,13 +31,13 @@ var WireSet = wire.NewSet(
 func ProvideController(
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
-	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
-	return NewController(authorizer, executionStore, repoStore,
-		pipelineStore, stageStore, stepStore, logStore, logStream)
+	return NewController(authorizer, executionStore,
+		pipelineStore, stageStore, stepStore, logStore, logStream, repoFinder)
 }

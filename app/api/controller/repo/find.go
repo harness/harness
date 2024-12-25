@@ -25,7 +25,7 @@ import (
 // Find finds a repo.
 func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef string) (*RepositoryOutput, error) {
 	// note: can't use c.getRepoCheckAccess because even repositories that are currently being imported can be fetched.
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}

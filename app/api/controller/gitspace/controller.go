@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/infraprovider"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 )
@@ -35,9 +36,9 @@ type Controller struct {
 	tx                    dbtx.Transactor
 	statefulLogger        *logutil.StatefulLogger
 	scm                   *scm.SCM
-	repoStore             store.RepoStore
 	gitspaceSvc           *gitspace.Service
 	gitspaceLimiter       limiter.Gitspace
+	repoFinder            refcache.RepoFinder
 }
 
 func NewController(
@@ -50,9 +51,9 @@ func NewController(
 	gitspaceEventStore store.GitspaceEventStore,
 	statefulLogger *logutil.StatefulLogger,
 	scm *scm.SCM,
-	repoStore store.RepoStore,
 	gitspaceSvc *gitspace.Service,
 	gitspaceLimiter limiter.Gitspace,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return &Controller{
 		tx:                    tx,
@@ -64,8 +65,8 @@ func NewController(
 		gitspaceEventStore:    gitspaceEventStore,
 		statefulLogger:        statefulLogger,
 		scm:                   scm,
-		repoStore:             repoStore,
 		gitspaceSvc:           gitspaceSvc,
 		gitspaceLimiter:       gitspaceLimiter,
+		repoFinder:            repoFinder,
 	}
 }

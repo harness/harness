@@ -23,7 +23,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/publicaccess"
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -35,7 +35,7 @@ var ActiveRepoStates = []enum.RepoState{enum.RepoStateActive}
 // GetRepo fetches an repository.
 func GetRepo(
 	ctx context.Context,
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	repoRef string,
 	allowedStates []enum.RepoState,
 ) (*types.Repository, error) {
@@ -43,7 +43,7 @@ func GetRepo(
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
 
-	repo, err := repoStore.FindByRef(ctx, repoRef)
+	repo, err := repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
@@ -59,14 +59,14 @@ func GetRepo(
 // and checks if the current user has permission to access it.
 func GetRepoCheckAccess(
 	ctx context.Context,
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	authorizer authz.Authorizer,
 	session *auth.Session,
 	repoRef string,
 	reqPermission enum.Permission,
 	allowedStates []enum.RepoState,
 ) (*types.Repository, error) {
-	repo, err := GetRepo(ctx, repoStore, repoRef, allowedStates)
+	repo, err := GetRepo(ctx, repoFinder, repoRef, allowedStates)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
@@ -80,12 +80,12 @@ func GetRepoCheckAccess(
 
 func GetSpaceCheckAuthRepoCreation(
 	ctx context.Context,
-	spaceStore store.SpaceStore,
+	spaceCache refcache.SpaceCache,
 	authorizer authz.Authorizer,
 	session *auth.Session,
 	parentRef string,
 ) (*types.Space, error) {
-	space, err := spaceStore.FindByRef(ctx, parentRef)
+	space, err := spaceCache.Get(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)
 	}

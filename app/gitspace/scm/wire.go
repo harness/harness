@@ -15,6 +15,7 @@
 package scm
 
 import (
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	urlprovider "github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
@@ -27,13 +28,15 @@ var WireSet = wire.NewSet(
 	ProvideGitnessSCM, ProvideGenericSCM, ProvideFactory, ProvideSCM,
 )
 
-func ProvideGitnessSCM(repoStore store.RepoStore,
+func ProvideGitnessSCM(
+	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	rpcClient git.Interface,
 	tokenStore store.TokenStore,
 	principalStore store.PrincipalStore,
 	urlProvider urlprovider.Provider,
 ) *GitnessSCM {
-	return NewGitnessSCM(repoStore, rpcClient, tokenStore, principalStore, urlProvider)
+	return NewGitnessSCM(repoStore, repoFinder, rpcClient, tokenStore, principalStore, urlProvider)
 }
 
 func ProvideGenericSCM() *GenericSCM {

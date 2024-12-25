@@ -31,7 +31,7 @@ func (c *Controller) ListSpaces(ctx context.Context,
 	spaceRef string,
 	filter *types.SpaceFilter,
 ) ([]*SpaceOutput, int64, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.spaceCache.Get(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
 	}

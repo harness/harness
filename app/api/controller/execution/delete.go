@@ -30,10 +30,11 @@ func (c *Controller) Delete(
 	pipelineIdentifier string,
 	executionNum int64,
 ) error {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return fmt.Errorf("failed to find repo by ref: %w", err)
 	}
+
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineDelete)
 	if err != nil {
 		return fmt.Errorf("failed to authorize: %w", err)
@@ -43,9 +44,11 @@ func (c *Controller) Delete(
 	if err != nil {
 		return fmt.Errorf("failed to find pipeline: %w", err)
 	}
+
 	err = c.executionStore.Delete(ctx, pipeline.ID, executionNum)
 	if err != nil {
 		return fmt.Errorf("could not delete execution: %w", err)
 	}
+
 	return nil
 }

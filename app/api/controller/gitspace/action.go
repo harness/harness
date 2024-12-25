@@ -64,7 +64,7 @@ func (c *Controller) Action(
 		if gitspaceConfig.CodeRepo.Ref == nil {
 			return nil, fmt.Errorf("couldn't fetch repo for the user, no ref found: %w", err)
 		}
-		repo, err := c.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
+		repo, err := c.repoFinder.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't fetch repo for the user: %w", err)
 		}

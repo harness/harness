@@ -35,6 +35,7 @@ import (
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/usergroup"
@@ -91,6 +92,8 @@ type Controller struct {
 	userGroupService   usergroup.SearchService
 	protectionManager  *protection.Manager
 	git                git.Interface
+	spaceCache         refcache.SpaceCache
+	repoFinder         refcache.RepoFinder
 	importer           *importer.Repository
 	codeOwners         *codeowners.Service
 	eventReporter      *repoevents.Reporter
@@ -125,6 +128,8 @@ func NewController(
 	principalInfoCache store.PrincipalInfoCache,
 	protectionManager *protection.Manager,
 	git git.Interface,
+	spaceCache refcache.SpaceCache,
+	repoFinder refcache.RepoFinder,
 	importer *importer.Repository,
 	codeOwners *codeowners.Service,
 	eventReporter *repoevents.Reporter,
@@ -160,6 +165,8 @@ func NewController(
 		principalInfoCache: principalInfoCache,
 		protectionManager:  protectionManager,
 		git:                git,
+		spaceCache:         spaceCache,
+		repoFinder:         repoFinder,
 		importer:           importer,
 		codeOwners:         codeOwners,
 		eventReporter:      eventReporter,
@@ -187,7 +194,7 @@ func (c *Controller) getRepo(
 ) (*types.Repository, error) {
 	return GetRepo(
 		ctx,
-		c.repoStore,
+		c.repoFinder,
 		repoRef,
 		ActiveRepoStates,
 	)
@@ -203,7 +210,7 @@ func (c *Controller) getRepoCheckAccess(
 ) (*types.Repository, error) {
 	return GetRepoCheckAccess(
 		ctx,
-		c.repoStore,
+		c.repoFinder,
 		c.authorizer,
 		session,
 		repoRef,
@@ -222,7 +229,7 @@ func (c *Controller) getRepoCheckAccessForGit(
 ) (*types.Repository, error) {
 	return GetRepoCheckAccess(
 		ctx,
-		c.repoStore,
+		c.repoFinder,
 		c.authorizer,
 		session,
 		repoRef,
@@ -236,7 +243,7 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 	session *auth.Session,
 	parentRef string,
 ) (*types.Space, error) {
-	return GetSpaceCheckAuthRepoCreation(ctx, c.spaceStore, c.authorizer, session, parentRef)
+	return GetSpaceCheckAuthRepoCreation(ctx, c.spaceCache, c.authorizer, session, parentRef)
 }
 
 func ValidateParentRef(parentRef string) error {

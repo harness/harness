@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/services/locker"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/app/services/settings"
 	"github.com/harness/gitness/app/services/usergroup"
@@ -64,9 +65,11 @@ func ProvideController(
 	principalInfoCache store.PrincipalInfoCache,
 	protectionManager *protection.Manager,
 	rpcClient git.Interface,
+	spaceCache refcache.SpaceCache,
+	repoFinder refcache.RepoFinder,
 	importer *importer.Repository,
 	codeOwners *codeowners.Service,
-	reporeporter *repoevents.Reporter,
+	repoReporter *repoevents.Reporter,
 	indexer keywordsearch.Indexer,
 	limiter limiter.ResourceLimiter,
 	locker *locker.Locker,
@@ -86,8 +89,8 @@ func ProvideController(
 		authorizer,
 		repoStore, spaceStore, pipelineStore, executionStore,
 		principalStore, ruleStore, checkStore, pullReqStore, settings,
-		principalInfoCache, protectionManager, rpcClient, importer,
-		codeOwners, reporeporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
+		principalInfoCache, protectionManager, rpcClient, spaceCache, repoFinder, importer,
+		codeOwners, repoReporter, indexer, limiter, locker, auditService, mtxManager, identifierCheck,
 		repoChecks, publicAccess, labelSvc, instrumentation, userGroupStore, userGroupService,
 		rulesSvc, sseStreamer,
 	)

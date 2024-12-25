@@ -33,7 +33,7 @@ func (c *Controller) ImportProgress(ctx context.Context,
 	repoRef string,
 ) (job.Progress, error) {
 	// note: can't use c.getRepoCheckAccess because this needs to fetch a repo being imported.
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return job.Progress{}, err
 	}

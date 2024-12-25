@@ -17,27 +17,28 @@ package pipeline
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	events "github.com/harness/gitness/app/events/pipeline"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 )
 
 type Controller struct {
 	defaultBranch string
-	repoStore     store.RepoStore
 	triggerStore  store.TriggerStore
 	authorizer    authz.Authorizer
 	pipelineStore store.PipelineStore
 	reporter      events.Reporter
+	repoFinder    refcache.RepoFinder
 }
 
 func NewController(
 	authorizer authz.Authorizer,
-	repoStore store.RepoStore,
 	triggerStore store.TriggerStore,
 	pipelineStore store.PipelineStore,
 	reporter events.Reporter,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return &Controller{
-		repoStore:     repoStore,
+		repoFinder:    repoFinder,
 		triggerStore:  triggerStore,
 		authorizer:    authorizer,
 		pipelineStore: pipelineStore,

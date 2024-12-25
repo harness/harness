@@ -20,8 +20,8 @@ import (
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/audit"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -29,20 +29,20 @@ import (
 
 type Controller struct {
 	authorizer   authz.Authorizer
-	repoStore    store.RepoStore
+	repoFinder   refcache.RepoFinder
 	settings     *settings.Service
 	auditService audit.Service
 }
 
 func NewController(
 	authorizer authz.Authorizer,
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	settings *settings.Service,
 	auditService audit.Service,
 ) *Controller {
 	return &Controller{
 		authorizer:   authorizer,
-		repoStore:    repoStore,
+		repoFinder:   repoFinder,
 		settings:     settings,
 		auditService: auditService,
 	}
@@ -59,7 +59,7 @@ func (c *Controller) getRepoCheckAccess(
 	// migrating repositories need to adjust the repo settings during the import, hence expanding the allowedstates.
 	return repo.GetRepoCheckAccess(
 		ctx,
-		c.repoStore,
+		c.repoFinder,
 		c.authorizer,
 		session,
 		repoRef,

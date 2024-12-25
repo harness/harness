@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/aiagent"
 	"github.com/harness/gitness/app/services/messaging"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
@@ -33,7 +34,7 @@ var WireSet = wire.NewSet(
 func ProvideController(
 	authorizer authz.Authorizer,
 	intelligence aiagent.Intelligence,
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	pipelineStore store.PipelineStore,
 	executionStore store.ExecutionStore,
 	git git.Interface,
@@ -43,7 +44,7 @@ func ProvideController(
 	return NewController(
 		authorizer,
 		intelligence,
-		repoStore,
+		repoFinder,
 		pipelineStore,
 		executionStore,
 		git,

@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/aiagent"
 	"github.com/harness/gitness/app/services/messaging"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/git"
@@ -26,7 +27,7 @@ import (
 type Controller struct {
 	authorizer     authz.Authorizer
 	intelligence   aiagent.Intelligence
-	repoStore      store.RepoStore
+	repoFinder     refcache.RepoFinder
 	pipelineStore  store.PipelineStore
 	executionStore store.ExecutionStore
 	git            git.Interface
@@ -37,7 +38,7 @@ type Controller struct {
 func NewController(
 	authorizer authz.Authorizer,
 	intelligence aiagent.Intelligence,
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	pipelineStore store.PipelineStore,
 	executionStore store.ExecutionStore,
 	git git.Interface,
@@ -47,7 +48,7 @@ func NewController(
 	return &Controller{
 		authorizer:     authorizer,
 		intelligence:   intelligence,
-		repoStore:      repoStore,
+		repoFinder:     repoFinder,
 		pipelineStore:  pipelineStore,
 		executionStore: executionStore,
 		git:            git,

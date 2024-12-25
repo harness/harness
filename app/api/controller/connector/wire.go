@@ -17,6 +17,7 @@ package connector
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/connector"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
@@ -31,7 +32,7 @@ func ProvideController(
 	connectorStore store.ConnectorStore,
 	connectorService *connector.Service,
 	authorizer authz.Authorizer,
-	spaceStore store.SpaceStore,
+	spaceCache refcache.SpaceCache,
 ) *Controller {
-	return NewController(authorizer, connectorStore, connectorService, spaceStore)
+	return NewController(authorizer, connectorStore, connectorService, spaceCache)
 }

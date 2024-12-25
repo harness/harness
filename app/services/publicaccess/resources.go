@@ -48,7 +48,7 @@ func (s *service) getResourceRepo(
 	ctx context.Context,
 	path string,
 ) (int64, error) {
-	repo, err := s.repoStore.FindByRef(ctx, path)
+	repo, err := s.repoFinder.FindByRef(ctx, path)
 	if err != nil {
 		return 0, fmt.Errorf("failed to find repo: %w", err)
 	}
@@ -60,7 +60,7 @@ func (s *service) getResourceSpace(
 	ctx context.Context,
 	path string,
 ) (int64, error) {
-	space, err := s.spaceStore.FindByRef(ctx, path)
+	space, err := s.spaceCache.Get(ctx, path)
 	if err != nil {
 		return 0, fmt.Errorf("failed to find space: %w", err)
 	}

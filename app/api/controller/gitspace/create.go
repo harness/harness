@@ -89,7 +89,7 @@ func (c *Controller) Create(
 
 	// check if it's an internal repo
 	if in.CodeRepoType == enum.CodeRepoTypeGitness && *in.CodeRepoRef != "" {
-		repo, err := c.repoStore.FindByRef(ctx, *in.CodeRepoRef)
+		repo, err := c.repoFinder.FindByRef(ctx, *in.CodeRepoRef)
 		if err != nil {
 			return nil, fmt.Errorf("couldn't fetch repo for the user: %w", err)
 		}

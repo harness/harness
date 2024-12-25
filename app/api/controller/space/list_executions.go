@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -32,12 +31,9 @@ func (c *Controller) ListExecutions(
 	spaceRef string,
 	filter types.ListExecutionsFilter,
 ) ([]*types.Execution, int64, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.getSpaceCheckAuth(ctx, session, spaceRef, enum.PermissionPipelineView)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find space: %w", err)
-	}
-	if err := apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionPipelineView); err != nil {
-		return nil, 0, fmt.Errorf("access check failed: %w", err)
+		return nil, 0, fmt.Errorf("failed to acquire access to space: %w", err)
 	}
 
 	var count int64

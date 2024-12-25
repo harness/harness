@@ -32,7 +32,7 @@ func (c *Controller) List(
 	pipelineIdentifier string,
 	pagination types.Pagination,
 ) ([]*types.Execution, int64, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find repo by ref: %w", err)
 	}

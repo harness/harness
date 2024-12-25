@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
@@ -50,6 +51,8 @@ type Controller struct {
 	tx              dbtx.Transactor
 	spaceStore      store.SpaceStore
 	repoStore       store.RepoStore
+	spaceCache      refcache.SpaceCache
+	repoFinder      refcache.RepoFinder
 }
 
 func NewController(
@@ -67,6 +70,8 @@ func NewController(
 	tx dbtx.Transactor,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
+	spaceCache refcache.SpaceCache,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return &Controller{
 		authorizer:      authorizer,
@@ -83,16 +88,22 @@ func NewController(
 		tx:              tx,
 		spaceStore:      spaceStore,
 		repoStore:       repoStore,
+		spaceCache:      spaceCache,
+		repoFinder:      repoFinder,
 	}
 }
 
-func (c *Controller) getRepoCheckAccess(ctx context.Context,
-	session *auth.Session, repoRef string, reqPermission enum.Permission) (*types.Repository, error) {
+func (c *Controller) getRepoCheckAccess(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	reqPermission enum.Permission,
+) (*types.Repository, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
 
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
@@ -110,7 +121,7 @@ func (c *Controller) getSpaceCheckAccess(
 	parentRef string,
 	reqPermission enum.Permission,
 ) (*types.Space, error) {
-	space, err := c.spaceStore.FindByRef(ctx, parentRef)
+	space, err := c.spaceCache.Get(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)
 	}

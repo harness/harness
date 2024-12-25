@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/git"
@@ -34,9 +35,10 @@ import (
 type Controller struct {
 	tx          dbtx.Transactor
 	authorizer  authz.Authorizer
-	repoStore   store.RepoStore
 	spaceStore  store.SpaceStore
 	checkStore  store.CheckStore
+	spaceCache  refcache.SpaceCache
+	repoFinder  refcache.RepoFinder
 	git         git.Interface
 	sanitizers  map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error
 	sseStreamer sse.Streamer
@@ -45,9 +47,10 @@ type Controller struct {
 func NewController(
 	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
-	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
 	checkStore store.CheckStore,
+	spaceCache refcache.SpaceCache,
+	repoFinder refcache.RepoFinder,
 	git git.Interface,
 	sanitizers map[enum.CheckPayloadKind]func(in *ReportInput, s *auth.Session) error,
 	sseStreamer sse.Streamer,
@@ -55,9 +58,10 @@ func NewController(
 	return &Controller{
 		tx:          tx,
 		authorizer:  authorizer,
-		repoStore:   repoStore,
 		spaceStore:  spaceStore,
 		checkStore:  checkStore,
+		spaceCache:  spaceCache,
+		repoFinder:  repoFinder,
 		git:         git,
 		sanitizers:  sanitizers,
 		sseStreamer: sseStreamer,
@@ -71,7 +75,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
 
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
@@ -89,5 +93,5 @@ func (c *Controller) getSpaceCheckAccess(
 	spaceRef string,
 	permission enum.Permission,
 ) (*types.Space, error) {
-	return space.GetSpaceCheckAuth(ctx, c.spaceStore, c.authorizer, session, spaceRef, permission)
+	return space.GetSpaceCheckAuth(ctx, c.spaceCache, c.authorizer, session, spaceRef, permission)
 }

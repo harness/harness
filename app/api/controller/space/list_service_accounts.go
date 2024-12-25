@@ -23,12 +23,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
-* ListServiceAccounts lists the service accounts of a space.
- */
-func (c *Controller) ListServiceAccounts(ctx context.Context, session *auth.Session,
-	spaceRef string) ([]*types.ServiceAccount, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+// ListServiceAccounts lists the service accounts of a space.
+func (c *Controller) ListServiceAccounts(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+) ([]*types.ServiceAccount, error) {
+	space, err := c.spaceCache.Get(ctx, spaceRef)
 	if err != nil {
 		return nil, err
 	}

@@ -48,10 +48,11 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
+
 	// Trigger permissions are associated with pipeline permissions. If a user has permissions
 	// to edit the pipeline, they will have permissions to create a trigger as well.
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineEdit)

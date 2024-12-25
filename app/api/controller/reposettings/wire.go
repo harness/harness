@@ -16,8 +16,8 @@ package reposettings
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/settings"
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/audit"
 
 	"github.com/google/wire"
@@ -30,9 +30,9 @@ var WireSet = wire.NewSet(
 
 func ProvideController(
 	authorizer authz.Authorizer,
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	settings *settings.Service,
 	auditService audit.Service,
 ) *Controller {
-	return NewController(authorizer, repoStore, settings, auditService)
+	return NewController(authorizer, repoFinder, settings, auditService)
 }

@@ -41,7 +41,7 @@ func (c *Controller) Restore(
 	deletedAt int64,
 	in *RestoreInput,
 ) (*RepositoryOutput, error) {
-	repo, err := c.repoStore.FindByRefAndDeletedAt(ctx, repoRef, deletedAt)
+	repo, err := c.repoFinder.FindDeletedByRef(ctx, repoRef, deletedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}

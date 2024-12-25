@@ -33,14 +33,16 @@ func (c *Controller) Tail(
 	stageNum int,
 	stepNum int,
 ) (<-chan *livelog.Line, <-chan error, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
+
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineView)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
+
 	pipeline, err := c.pipelineStore.FindByIdentifier(ctx, repo.ID, pipelineIdentifier)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to find pipeline: %w", err)

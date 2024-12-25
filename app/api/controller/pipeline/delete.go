@@ -29,7 +29,7 @@ func (c *Controller) Delete(
 	repoRef string,
 	identifier string,
 ) error {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return fmt.Errorf("failed to find repo by ref: %w", err)
 	}

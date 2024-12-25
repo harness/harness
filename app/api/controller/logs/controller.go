@@ -16,6 +16,7 @@ package logs
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/livelog"
 )
@@ -23,32 +24,32 @@ import (
 type Controller struct {
 	authorizer     authz.Authorizer
 	executionStore store.ExecutionStore
-	repoStore      store.RepoStore
 	pipelineStore  store.PipelineStore
 	stageStore     store.StageStore
 	stepStore      store.StepStore
 	logStore       store.LogStore
 	logStream      livelog.LogStream
+	repoFinder     refcache.RepoFinder
 }
 
 func NewController(
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
-	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return &Controller{
 		authorizer:     authorizer,
 		executionStore: executionStore,
-		repoStore:      repoStore,
 		pipelineStore:  pipelineStore,
 		stageStore:     stageStore,
 		stepStore:      stepStore,
 		logStore:       logStore,
 		logStream:      logStream,
+		repoFinder:     repoFinder,
 	}
 }

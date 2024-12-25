@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/pipeline/canceler"
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/triggerer"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -38,10 +39,10 @@ func ProvideController(
 	canceler canceler.Canceler,
 	commitService commit.Service,
 	triggerer triggerer.Triggerer,
-	repoStore store.RepoStore,
 	stageStore store.StageStore,
 	pipelineStore store.PipelineStore,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return NewController(tx, authorizer, executionStore, checkStore,
-		canceler, commitService, triggerer, repoStore, stageStore, pipelineStore)
+		canceler, commitService, triggerer, stageStore, pipelineStore, repoFinder)
 }

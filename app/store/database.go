@@ -241,11 +241,11 @@ type (
 		// Find the repo by id.
 		Find(ctx context.Context, id int64) (*types.Repository, error)
 
-		// FindByRefAndDeletedAt finds the repo using the repoRef and deleted timestamp.
-		FindByRefAndDeletedAt(ctx context.Context, repoRef string, deletedAt int64) (*types.Repository, error)
+		// FindActiveByUID finds a non-deleted repo by UID.
+		FindActiveByUID(ctx context.Context, parentSpaceID int64, uid string) (*types.Repository, error)
 
-		// FindByRef finds the repo using the repoRef as either the id or the repo path.
-		FindByRef(ctx context.Context, repoRef string) (*types.Repository, error)
+		// FindDeletedByUID finds a deleted repo by UID.
+		FindDeletedByUID(ctx context.Context, parentSpaceID int64, uid string, deletedAt int64) (*types.Repository, error)
 
 		// Create a new repo.
 		Create(ctx context.Context, repo *types.Repository) error

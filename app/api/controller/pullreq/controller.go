@@ -32,6 +32,7 @@ import (
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/usergroup"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -65,6 +66,7 @@ type Controller struct {
 	membershipStore        store.MembershipStore
 	checkStore             store.CheckStore
 	git                    git.Interface
+	repoFinder             refcache.RepoFinder
 	eventReporter          *pullreqevents.Reporter
 	codeCommentMigrator    *codecomments.Migrator
 	pullreqService         *pullreq.Service
@@ -98,6 +100,7 @@ func NewController(
 	membershipStore store.MembershipStore,
 	checkStore store.CheckStore,
 	git git.Interface,
+	repoFinder refcache.RepoFinder,
 	eventReporter *pullreqevents.Reporter,
 	codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service,
@@ -130,6 +133,7 @@ func NewController(
 		membershipStore:        membershipStore,
 		checkStore:             checkStore,
 		git:                    git,
+		repoFinder:             repoFinder,
 		codeCommentMigrator:    codeCommentMigrator,
 		eventReporter:          eventReporter,
 		pullreqService:         pullreqService,
@@ -176,7 +180,7 @@ func (c *Controller) getRepo(ctx context.Context, repoRef string) (*types.Reposi
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
 
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}

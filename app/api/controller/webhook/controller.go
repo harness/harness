@@ -22,8 +22,8 @@ import (
 	"github.com/harness/gitness/app/api/controller/space"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/webhook"
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/errors"
 	"github.com/harness/gitness/types"
@@ -32,8 +32,8 @@ import (
 
 type Controller struct {
 	authorizer     authz.Authorizer
-	spaceStore     store.SpaceStore
-	repoStore      store.RepoStore
+	spaceCache     refcache.SpaceCache
+	repoFinder     refcache.RepoFinder
 	webhookService *webhook.Service
 	encrypter      encrypt.Encrypter
 	preprocessor   Preprocessor
@@ -41,16 +41,16 @@ type Controller struct {
 
 func NewController(
 	authorizer authz.Authorizer,
-	spaceStore store.SpaceStore,
-	repoStore store.RepoStore,
+	spaceCache refcache.SpaceCache,
+	repoFinder refcache.RepoFinder,
 	webhookService *webhook.Service,
 	encrypter encrypt.Encrypter,
 	preprocessor Preprocessor,
 ) *Controller {
 	return &Controller{
 		authorizer:     authorizer,
-		spaceStore:     spaceStore,
-		repoStore:      repoStore,
+		spaceCache:     spaceCache,
+		repoFinder:     repoFinder,
 		webhookService: webhookService,
 		encrypter:      encrypter,
 		preprocessor:   preprocessor,
@@ -63,7 +63,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, errors.InvalidArgument("A valid repository reference must be provided.")
 	}
 
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
@@ -81,5 +81,5 @@ func (c *Controller) getSpaceCheckAccess(
 	spaceRef string,
 	permission enum.Permission,
 ) (*types.Space, error) {
-	return space.GetSpaceCheckAuth(ctx, c.spaceStore, c.authorizer, session, spaceRef, permission)
+	return space.GetSpaceCheckAuth(ctx, c.spaceCache, c.authorizer, session, spaceRef, permission)
 }

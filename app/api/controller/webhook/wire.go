@@ -16,8 +16,8 @@ package webhook
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/webhook"
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/encrypt"
 
 	"github.com/google/wire"
@@ -29,12 +29,12 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(authorizer authz.Authorizer,
-	spaceStore store.SpaceStore, repoStore store.RepoStore,
+	spaceCache refcache.SpaceCache, repoFinder refcache.RepoFinder,
 	webhookService *webhook.Service, encrypter encrypt.Encrypter,
 	preprocessor Preprocessor,
 ) *Controller {
 	return NewController(
-		authorizer, spaceStore, repoStore, webhookService, encrypter, preprocessor)
+		authorizer, spaceCache, repoFinder, webhookService, encrypter, preprocessor)
 }
 
 func ProvidePreprocessor() Preprocessor {

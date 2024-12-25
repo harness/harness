@@ -33,14 +33,16 @@ func (c *Controller) Test(
 	spaceRef string,
 	identifier string,
 ) (types.ConnectorTestResponse, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.spaceCache.Get(ctx, spaceRef)
 	if err != nil {
 		return types.ConnectorTestResponse{}, fmt.Errorf("failed to find space: %w", err)
 	}
+
 	err = apiauth.CheckConnector(ctx, c.authorizer, session, space.Path, identifier, enum.PermissionConnectorAccess)
 	if err != nil {
 		return types.ConnectorTestResponse{}, fmt.Errorf("failed to authorize: %w", err)
 	}
+
 	connector, err := c.connectorStore.FindByIdentifier(ctx, space.ID, identifier)
 	if err != nil {
 		return types.ConnectorTestResponse{}, fmt.Errorf("failed to find connector: %w", err)

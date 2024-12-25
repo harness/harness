@@ -105,6 +105,7 @@ import (
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/publickey"
 	pullreqservice "github.com/harness/gitness/app/services/pullreq"
+	"github.com/harness/gitness/app/services/refcache"
 	reposervice "github.com/harness/gitness/app/services/repo"
 	"github.com/harness/gitness/app/services/rules"
 	secretservice "github.com/harness/gitness/app/services/secret"
@@ -155,6 +156,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		blob.WireSet,
 		dbtx.WireSet,
 		cache.WireSet,
+		refcache.WireSet,
 		router.WireSet,
 		pullreqservice.WireSet,
 		services.WireSet,

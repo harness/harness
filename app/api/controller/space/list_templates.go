@@ -31,7 +31,7 @@ func (c *Controller) ListTemplates(
 	spaceRef string,
 	filter types.ListQueryFilter,
 ) ([]*types.Template, int64, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	space, err := c.spaceCache.Get(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
 	}

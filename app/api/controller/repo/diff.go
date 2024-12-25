@@ -99,7 +99,7 @@ func (c *Controller) DiffStats(
 	repoRef string,
 	path string,
 ) (types.DiffStats, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return types.DiffStats{}, err
 	}
@@ -134,7 +134,7 @@ func (c *Controller) Diff(
 	includePatch bool,
 	files ...gittypes.FileDiffRequest,
 ) (types.Stream[*git.FileDiff], error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}

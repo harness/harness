@@ -18,8 +18,6 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/paths"
@@ -150,22 +148,18 @@ func (s *RepoStore) find(ctx context.Context, id int64, deletedAt *int64) (*type
 	return s.mapToRepo(ctx, dst)
 }
 
-func (s *RepoStore) findByIdentifier(
+// FindActiveByUID finds the repo by UID.
+func (s *RepoStore) FindActiveByUID(
 	ctx context.Context,
-	spaceID int64,
-	identifier string,
-	deletedAt *int64,
+	parentID int64,
+	uid string,
 ) (*types.Repository, error) {
 	stmt := database.Builder.
 		Select(repoColumnsForJoin).
 		From("repositories").
-		Where("repo_parent_id = ? AND LOWER(repo_uid) = ?", spaceID, strings.ToLower(identifier))
-
-	if deletedAt != nil {
-		stmt = stmt.Where("repo_deleted = ?", *deletedAt)
-	} else {
-		stmt = stmt.Where("repo_deleted IS NULL")
-	}
+		Where("repo_parent_id = ?", parentID).
+		Where("LOWER(repo_uid) = LOWER(?)", uid).
+		Where("repo_deleted IS NULL")
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -176,42 +170,39 @@ func (s *RepoStore) findByIdentifier(
 	}
 
 	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find repo")
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find repo by UID")
 	}
 
 	return s.mapToRepo(ctx, dst)
 }
 
-func (s *RepoStore) findByRef(ctx context.Context, repoRef string, deletedAt *int64) (*types.Repository, error) {
-	// ASSUMPTION: digits only is not a valid repo path
-	id, err := strconv.ParseInt(repoRef, 10, 64)
-	if err != nil {
-		spacePath, repoIdentifier, err := paths.DisectLeaf(repoRef)
-		if err != nil {
-			return nil, fmt.Errorf("failed to disect leaf for path '%s': %w", repoRef, err)
-		}
-		pathObject, err := s.spacePathCache.Get(ctx, spacePath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get space path: %w", err)
-		}
-
-		return s.findByIdentifier(ctx, pathObject.SpaceID, repoIdentifier, deletedAt)
-	}
-	return s.find(ctx, id, deletedAt)
-}
-
-// FindByRef finds the repo using the repoRef as either the id or the repo path.
-func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repository, error) {
-	return s.findByRef(ctx, repoRef, nil)
-}
-
-// FindByRefAndDeletedAt finds the repo using the repoRef and deleted timestamp.
-func (s *RepoStore) FindByRefAndDeletedAt(
+// FindDeletedByUID finds the repo by UID.
+func (s *RepoStore) FindDeletedByUID(
 	ctx context.Context,
-	repoRef string,
+	parentID int64,
+	uid string,
 	deletedAt int64,
 ) (*types.Repository, error) {
-	return s.findByRef(ctx, repoRef, &deletedAt)
+	stmt := database.Builder.
+		Select(repoColumnsForJoin).
+		From("repositories").
+		Where("repo_parent_id = ?", parentID).
+		Where("LOWER(repo_uid) = LOWER(?)", uid).
+		Where("repo_deleted = ?", deletedAt)
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(repository)
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	if err = db.GetContext(ctx, dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err, "Failed to find repo by UID")
+	}
+
+	return s.mapToRepo(ctx, dst)
 }
 
 // Create creates a new repository.

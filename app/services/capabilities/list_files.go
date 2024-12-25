@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/capabilities"
@@ -68,7 +68,7 @@ func (r *Registry) RegisterListFilesCapability(
 }
 
 func ListFiles(
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	gitI git.Interface) func(
 	ctx context.Context,
 	input *ListFilesInput) (*ListFilesOutput, error) {
@@ -77,7 +77,7 @@ func ListFiles(
 			return nil, check.NewValidationError("repo_ref is required")
 		}
 
-		repo, err := repoStore.FindByRef(ctx, input.RepoREF)
+		repo, err := repoFinder.FindByRef(ctx, input.RepoREF)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find repo %q: %w", input.RepoREF, err)
 		}

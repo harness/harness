@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/services/gitspace"
 	"github.com/harness/gitness/app/services/infraprovider"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database/dbtx"
 
@@ -42,9 +43,9 @@ func ProvideController(
 	eventStore store.GitspaceEventStore,
 	statefulLogger *logutil.StatefulLogger,
 	scm *scm.SCM,
-	repoStore store.RepoStore,
 	gitspaceSvc *gitspace.Service,
 	gitspaceLimiter limiter.Gitspace,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return NewController(
 		tx,
@@ -56,8 +57,8 @@ func ProvideController(
 		eventStore,
 		statefulLogger,
 		scm,
-		repoStore,
 		gitspaceSvc,
 		gitspaceLimiter,
+		repoFinder,
 	)
 }

@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/app/services/label"
 	"github.com/harness/gitness/app/services/publicaccess"
 	"github.com/harness/gitness/app/services/pullreq"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/services/rules"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -89,6 +90,7 @@ type Controller struct {
 	repoCtrl         *repo.Controller
 	membershipStore  store.MembershipStore
 	prListService    *pullreq.ListService
+	spaceCache       refcache.SpaceCache
 	importer         *importer.Repository
 	exporter         *exporter.Repository
 	resourceLimiter  limiter.ResourceLimiter
@@ -108,6 +110,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
 	membershipStore store.MembershipStore, prListService *pullreq.ListService,
+	spaceCache refcache.SpaceCache,
 	importer *importer.Repository, exporter *exporter.Repository,
 	limiter limiter.ResourceLimiter, publicAccess publicaccess.Service, auditService audit.Service,
 	gitspaceSvc *gitspace.Service, labelSvc *label.Service,
@@ -132,6 +135,7 @@ func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Pro
 		repoCtrl:            repoCtrl,
 		membershipStore:     membershipStore,
 		prListService:       prListService,
+		spaceCache:          spaceCache,
 		importer:            importer,
 		exporter:            exporter,
 		resourceLimiter:     limiter,
@@ -153,7 +157,7 @@ func (c *Controller) getSpaceCheckAuth(
 	spaceRef string,
 	permission enum.Permission,
 ) (*types.Space, error) {
-	return GetSpaceCheckAuth(ctx, c.spaceStore, c.authorizer, session, spaceRef, permission)
+	return GetSpaceCheckAuth(ctx, c.spaceCache, c.authorizer, session, spaceRef, permission)
 }
 
 func (c *Controller) getSpaceCheckAuthRepoCreation(
@@ -161,7 +165,7 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 	session *auth.Session,
 	parentRef string,
 ) (*types.Space, error) {
-	return repo.GetSpaceCheckAuthRepoCreation(ctx, c.spaceStore, c.authorizer, session, parentRef)
+	return repo.GetSpaceCheckAuthRepoCreation(ctx, c.spaceCache, c.authorizer, session, parentRef)
 }
 
 func (c *Controller) getSpaceCheckAuthSpaceCreation(
@@ -179,7 +183,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 		return &types.Space{}, nil
 	}
 
-	parentSpace, err := c.spaceStore.FindByRef(ctx, parentRef)
+	parentSpace, err := c.spaceCache.Get(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get parent space: %w", err)
 	}

@@ -17,27 +17,27 @@ package connector
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/connector"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 )
 
 type Controller struct {
 	connectorStore   store.ConnectorStore
 	connectorService *connector.Service
-
-	authorizer authz.Authorizer
-	spaceStore store.SpaceStore
+	spaceCache       refcache.SpaceCache
+	authorizer       authz.Authorizer
 }
 
 func NewController(
 	authorizer authz.Authorizer,
 	connectorStore store.ConnectorStore,
 	connectorService *connector.Service,
-	spaceStore store.SpaceStore,
+	spaceCache refcache.SpaceCache,
 ) *Controller {
 	return &Controller{
 		connectorStore:   connectorStore,
 		connectorService: connectorService,
+		spaceCache:       spaceCache,
 		authorizer:       authorizer,
-		spaceStore:       spaceStore,
 	}
 }

@@ -26,7 +26,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -47,17 +47,17 @@ var supportedFileTypes = map[string]struct{}{
 
 type Controller struct {
 	authorizer authz.Authorizer
-	repoStore  store.RepoStore
+	repoFinder refcache.RepoFinder
 	blobStore  blob.Store
 }
 
 func NewController(authorizer authz.Authorizer,
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	blobStore blob.Store,
 ) *Controller {
 	return &Controller{
 		authorizer: authorizer,
-		repoStore:  repoStore,
+		repoFinder: repoFinder,
 		blobStore:  blobStore,
 	}
 }
@@ -70,7 +70,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
 
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}

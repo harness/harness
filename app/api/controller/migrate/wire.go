@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/services/migrate"
 	"github.com/harness/gitness/app/services/publicaccess"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/audit"
@@ -49,6 +50,8 @@ func ProvideController(
 	tx dbtx.Transactor,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
+	spaceCache refcache.SpaceCache,
+	repoFinder refcache.RepoFinder,
 ) *Controller {
 	return NewController(
 		authorizer,
@@ -65,5 +68,7 @@ func ProvideController(
 		tx,
 		spaceStore,
 		repoStore,
+		spaceCache,
+		repoFinder,
 	)
 }

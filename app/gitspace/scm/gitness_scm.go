@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/jwt"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/token"
 	urlprovider "github.com/harness/gitness/app/url"
@@ -43,6 +44,7 @@ const defaultGitspacePATIdentifier = "Gitspace_Default"
 type GitnessSCM struct {
 	git            git.Interface
 	repoStore      store.RepoStore
+	repoFinder     refcache.RepoFinder
 	tokenStore     store.TokenStore
 	principalStore store.PrincipalStore
 	urlProvider    urlprovider.Provider
@@ -54,7 +56,7 @@ func (s *GitnessSCM) ListBranches(
 	filter *BranchFilter,
 	_ *ResolvedCredentials,
 ) ([]Branch, error) {
-	repo, err := s.repoStore.FindByRef(ctx, filter.Repository)
+	repo, err := s.repoFinder.FindByRef(ctx, filter.Repository)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}
@@ -130,13 +132,16 @@ func mapRepository(repo *types.Repository) (Repository, error) {
 }
 
 func NewGitnessSCM(
-	repoStore store.RepoStore, git git.Interface,
+	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
+	git git.Interface,
 	tokenStore store.TokenStore,
 	principalStore store.PrincipalStore,
 	urlProvider urlprovider.Provider,
 ) *GitnessSCM {
 	return &GitnessSCM{
 		repoStore:      repoStore,
+		repoFinder:     repoFinder,
 		git:            git,
 		tokenStore:     tokenStore,
 		principalStore: principalStore,
@@ -153,7 +158,7 @@ func (s *GitnessSCM) ResolveCredentials(
 		return nil, fmt.Errorf("failed to parse repository URL %s: %w", gitspaceConfig.CodeRepo.URL, err)
 	}
 	repoName := strings.TrimSuffix(path.Base(repoURL.Path), ".git")
-	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
+	repo, err := s.repoFinder.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
@@ -212,7 +217,7 @@ func (s *GitnessSCM) GetFileContent(
 	filePath string,
 	_ *ResolvedCredentials,
 ) ([]byte, error) {
-	repo, err := s.repoStore.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
+	repo, err := s.repoFinder.FindByRef(ctx, *gitspaceConfig.CodeRepo.Ref)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}

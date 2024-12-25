@@ -37,7 +37,7 @@ func (c *Controller) Purge(
 	repoRef string,
 	deletedAt int64,
 ) error {
-	repo, err := c.repoStore.FindByRefAndDeletedAt(ctx, repoRef, deletedAt)
+	repo, err := c.repoFinder.FindDeletedByRef(ctx, repoRef, deletedAt)
 	if err != nil {
 		return fmt.Errorf("failed to find the repo (deleted at %d): %w", deletedAt, err)
 	}

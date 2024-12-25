@@ -21,7 +21,7 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/app/services/refcache"
 	"github.com/harness/gitness/git"
 	"github.com/harness/gitness/types/capabilities"
 	"github.com/harness/gitness/types/check"
@@ -75,7 +75,7 @@ func (r *Registry) RegisterGetFileCapability(
 }
 
 func GetFile(
-	repoStore store.RepoStore,
+	repoFinder refcache.RepoFinder,
 	gitI git.Interface) func(ctx context.Context, input *GetFileInput) (*GetFileOutput, error) {
 	return func(ctx context.Context, input *GetFileInput) (*GetFileOutput, error) {
 		if input.RepoREF == "" {
@@ -85,7 +85,7 @@ func GetFile(
 			return nil, check.NewValidationError("path is required")
 		}
 
-		repo, err := repoStore.FindByRef(ctx, input.RepoREF)
+		repo, err := repoFinder.FindByRef(ctx, input.RepoREF)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find repo %q: %w", input.RepoREF, err)
 		}

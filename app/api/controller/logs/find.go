@@ -35,10 +35,11 @@ func (c *Controller) Find(
 	stageNum int,
 	stepNum int,
 ) ([]*livelog.Line, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.repoFinder.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
+
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineIdentifier, enum.PermissionPipelineView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
