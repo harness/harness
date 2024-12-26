@@ -72,18 +72,20 @@ func SetEnv(
 	gitspaceLogger types.GitspaceLogger,
 	environment []string,
 ) error {
-	script, err := GenerateScriptFromTemplate(
-		templateSetEnv, &types.SetEnvPayload{
-			EnvVariables: environment,
-		})
-	if err != nil {
-		return fmt.Errorf("failed to generate scipt to set env from template %s: %w",
-			templateSetEnv, err)
-	}
-	gitspaceLogger.Info("Setting env...")
-	err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, true, gitspaceLogger, true)
-	if err != nil {
-		return fmt.Errorf("error while setting env vars: %w", err)
+	if len(environment) > 0 {
+		script, err := GenerateScriptFromTemplate(
+			templateSetEnv, &types.SetEnvPayload{
+				EnvVariables: environment,
+			})
+		if err != nil {
+			return fmt.Errorf("failed to generate scipt to set env from template %s: %w",
+				templateSetEnv, err)
+		}
+		gitspaceLogger.Info("Setting env...")
+		err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, true, gitspaceLogger, true)
+		if err != nil {
+			return fmt.Errorf("error while setting env vars: %w", err)
+		}
 	}
 	return nil
 }

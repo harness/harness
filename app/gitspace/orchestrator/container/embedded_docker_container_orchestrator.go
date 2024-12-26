@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
+	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	"github.com/harness/gitness/app/gitspace/scm"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/infraprovider"
@@ -128,7 +129,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 		logger.Debug().Msg("gitspace is already running")
 
 	case ContainerStateStopped:
-		if err := e.startStoppedGitspace(
+		if err = e.startStoppedGitspace(
 			ctx,
 			gitspaceConfig,
 			dockerClient,
@@ -139,7 +140,7 @@ func (e *EmbeddedDockerOrchestrator) CreateAndStartGitspace(
 			return nil, err
 		}
 	case ContainerStateRemoved:
-		if err := e.createAndStartNewGitspace(
+		if err = e.createAndStartNewGitspace(
 			ctx,
 			gitspaceConfig,
 			dockerClient,
@@ -206,13 +207,13 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 
 	// Set up git credentials if needed
 	if resolvedRepoDetails.Credentials != nil {
-		if err := SetupGitCredentials(ctx, exec, resolvedRepoDetails, logStreamInstance); err != nil {
+		if err = utils.SetupGitCredentials(ctx, exec, resolvedRepoDetails, logStreamInstance); err != nil {
 			return err
 		}
 	}
 
 	// Run IDE setup
-	if err := RunIDEWithArgs(ctx, exec, ideService, nil, logStreamInstance); err != nil {
+	if err = ideService.Run(ctx, exec, nil, logStreamInstance); err != nil {
 		return err
 	}
 
@@ -259,7 +260,7 @@ func (e *EmbeddedDockerOrchestrator) StopGitspace(
 
 	case ContainerStateRunning:
 		logger.Debug().Msg("stopping gitspace")
-		if err := e.stopRunningGitspace(ctx, gitspaceConfig, containerName, dockerClient); err != nil {
+		if err = e.stopRunningGitspace(ctx, gitspaceConfig, containerName, dockerClient); err != nil {
 			return err
 		}
 	case ContainerStatePaused, ContainerStateCreated, ContainerStateUnknown, ContainerStateDead:
@@ -335,7 +336,7 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 	// Step 5: Stop the container if it's not already stopped
 	if state != ContainerStateStopped {
 		logger.Debug().Msg("stopping gitspace")
-		if err := ManageContainer(
+		if err = ManageContainer(
 			ctx, ContainerActionStop, containerName, dockerClient, logStreamInstance); err != nil {
 			return fmt.Errorf("failed to stop gitspace %s: %w", containerName, err)
 		}
@@ -344,7 +345,7 @@ func (e *EmbeddedDockerOrchestrator) StopAndRemoveGitspace(
 
 	// Step 6: Remove the container
 	logger.Debug().Msg("removing gitspace")
-	if err := ManageContainer(
+	if err = ManageContainer(
 		ctx, ContainerActionRemove, containerName, dockerClient, logStreamInstance); err != nil {
 		return fmt.Errorf("failed to remove gitspace %s: %w", containerName, err)
 	}
@@ -382,7 +383,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	containerName := GetGitspaceContainerName(gitspaceConfig)
 
 	devcontainerConfig := resolvedRepoDetails.DevcontainerConfig
-	imageName := GetImage(devcontainerConfig, defaultBaseImage)
+	imageName := getImage(devcontainerConfig, defaultBaseImage)
 
 	runArgsMap, err := ExtractRunArgsWithLogging(ctx, gitspaceConfig.SpaceID, e.runArgProvider,
 		devcontainerConfig.RunArgs, gitspaceLogger)
@@ -391,7 +392,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	}
 
 	// Pull the required image
-	if err := PullImage(ctx, imageName, dockerClient, runArgsMap, gitspaceLogger, imageAuthMap); err != nil {
+	if err = PullImage(ctx, imageName, dockerClient, runArgsMap, gitspaceLogger, imageAuthMap); err != nil {
 		return err
 	}
 
@@ -418,8 +419,8 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		gitspaceLogger.Info(fmt.Sprintf("Setting Environment : %v", environment))
 	}
 
-	containerUser := GetContainerUser(runArgsMap, devcontainerConfig, metadataFromImage, imageUser)
-	remoteUser := GetRemoteUser(devcontainerConfig, metadataFromImage, containerUser)
+	containerUser := getContainerUser(runArgsMap, devcontainerConfig, metadataFromImage, imageUser)
+	remoteUser := getRemoteUser(devcontainerConfig, metadataFromImage, containerUser)
 
 	homeDir := GetUserHomeDir(remoteUser)
 
@@ -447,7 +448,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 	}
 
 	// Start the container
-	if err := ManageContainer(ctx, ContainerActionStart, containerName, dockerClient, gitspaceLogger); err != nil {
+	if err = ManageContainer(ctx, ContainerActionStart, containerName, dockerClient, gitspaceLogger); err != nil {
 		return err
 	}
 
@@ -461,7 +462,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		AccessType:        gitspaceConfig.GitspaceInstance.AccessType,
 	}
 
-	if err := e.setupGitspaceAndIDE(
+	if err = e.setupGitspaceAndIDE(
 		ctx,
 		exec,
 		gitspaceLogger,
@@ -471,7 +472,7 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		defaultBaseImage,
 		environment,
 	); err != nil {
-		return err
+		return logStreamWrapError(gitspaceLogger, "Error while setting up gitspace", err)
 	}
 
 	return nil
@@ -491,12 +492,12 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 	return []step{
 		{
 			Name:          "Validate Supported OS",
-			Execute:       ValidateSupportedOS,
+			Execute:       utils.ValidateSupportedOS,
 			StopOnFailure: true,
 		},
 		{
 			Name:          "Manage User",
-			Execute:       ManageUser,
+			Execute:       utils.ManageUser,
 			StopOnFailure: true,
 		},
 		{
@@ -506,7 +507,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				return SetEnv(ctx, exec, gitspaceLogger, environment)
+				return utils.SetEnv(ctx, exec, gitspaceLogger, environment)
 			},
 			StopOnFailure: true,
 		},
@@ -517,13 +518,13 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				return InstallTools(ctx, exec, gitspaceLogger, gitspaceConfig.IDE)
+				return utils.InstallTools(ctx, exec, gitspaceConfig.IDE, gitspaceLogger)
 			},
 			StopOnFailure: true,
 		},
 		{
 			Name:          "Install Git",
-			Execute:       InstallGit,
+			Execute:       utils.InstallGit,
 			StopOnFailure: true,
 		},
 		{
@@ -534,7 +535,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
 				if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
-					return SetupGitCredentials(ctx, exec, resolvedRepoDetails, gitspaceLogger)
+					return utils.SetupGitCredentials(ctx, exec, resolvedRepoDetails, gitspaceLogger)
 				}
 				return nil
 			},
@@ -547,7 +548,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				return CloneCode(ctx, exec, defaultBaseImage, resolvedRepoDetails, gitspaceLogger)
+				return utils.CloneCode(ctx, exec, resolvedRepoDetails, defaultBaseImage, gitspaceLogger)
 			},
 			StopOnFailure: true,
 		},
@@ -561,7 +562,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				// Run IDE setup
 				args := ExtractIDECustomizations(ideService, resolvedRepoDetails.DevcontainerConfig)
 				args[gitspaceTypes.IDERepoNameArg] = resolvedRepoDetails.RepoName
-				return SetupIDE(ctx, exec, ideService, args, gitspaceLogger)
+				return ideService.Setup(ctx, exec, args, gitspaceLogger)
 			},
 			StopOnFailure: true,
 		},
@@ -572,7 +573,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				return RunIDEWithArgs(ctx, exec, ideService, nil, gitspaceLogger)
+				return ideService.Run(ctx, exec, nil, gitspaceLogger)
 			},
 			StopOnFailure: true,
 		},
@@ -719,4 +720,44 @@ func (e *EmbeddedDockerOrchestrator) flushLogStream(logStreamInstance *logutil.L
 	if err := logStreamInstance.Flush(); err != nil {
 		log.Warn().Err(err).Msgf("failed to flush log stream for gitspace ID %d", gitspaceID)
 	}
+}
+
+func getRemoteUser(
+	devcontainerConfig types.DevcontainerConfig,
+	metadataFromImage map[string]any,
+	containerUser string,
+) string {
+	if devcontainerConfig.RemoteUser != "" {
+		return devcontainerConfig.RemoteUser
+	}
+	if remoteUser, ok := metadataFromImage["remoteUser"].(string); ok {
+		return remoteUser
+	}
+	return containerUser
+}
+
+func getContainerUser(
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+	devcontainerConfig types.DevcontainerConfig,
+	metadataFromImage map[string]any,
+	imageUser string,
+) string {
+	if containerUser := getUser(runArgsMap); containerUser != "" {
+		return containerUser
+	}
+	if devcontainerConfig.ContainerUser != "" {
+		return devcontainerConfig.ContainerUser
+	}
+	if containerUser, ok := metadataFromImage["containerUser"].(string); ok {
+		return containerUser
+	}
+	return imageUser
+}
+
+func getImage(devcontainerConfig types.DevcontainerConfig, defaultBaseImage string) string {
+	imageName := devcontainerConfig.Image
+	if imageName == "" {
+		imageName = defaultBaseImage
+	}
+	return imageName
 }
