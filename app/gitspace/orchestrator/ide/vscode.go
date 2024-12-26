@@ -20,9 +20,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
-	"github.com/harness/gitness/app/gitspace/orchestrator/template"
+	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -81,19 +80,19 @@ func (v *VSCode) setupSSHServer(
 	exec *devcontainer.Exec,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	osInfoScript := common.GetOSInfoScript()
-	payload := template.SetupSSHServerPayload{
+	osInfoScript := utils.GetOSInfoScript()
+	payload := gitspaceTypes.SetupSSHServerPayload{
 		Username:     exec.RemoteUser,
 		AccessType:   exec.AccessType,
 		OSInfoScript: osInfoScript,
 	}
-	sshServerScript, err := template.GenerateScriptFromTemplate(
+	sshServerScript, err := utils.GenerateScriptFromTemplate(
 		templateSetupSSHServer, &payload)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate scipt to setup ssh server from template %s: %w", templateSetupSSHServer, err)
 	}
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, sshServerScript, true, gitspaceLogger, false)
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, sshServerScript, true, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("failed to setup SSH serverr: %w", err)
 	}
@@ -107,14 +106,14 @@ func (v *VSCode) setupVSCodeExtensions(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	payload := template.SetupVSCodeExtensionsPayload{
+	payload := gitspaceTypes.SetupVSCodeExtensionsPayload{
 		Username: exec.RemoteUser,
 	}
 	if err := v.updateVSCodeSetupPayload(args, gitspaceLogger, &payload); err != nil {
 		return err
 	}
 
-	vscodeExtensionsScript, err := template.GenerateScriptFromTemplate(
+	vscodeExtensionsScript, err := utils.GenerateScriptFromTemplate(
 		templateSetupVSCodeExtensions, &payload)
 	if err != nil {
 		return fmt.Errorf(
@@ -124,7 +123,7 @@ func (v *VSCode) setupVSCodeExtensions(
 		)
 	}
 
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, vscodeExtensionsScript,
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, vscodeExtensionsScript,
 		true, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("failed to setup vs-code extensions: %w", err)
@@ -140,17 +139,17 @@ func (v *VSCode) Run(
 	_ map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	payload := template.RunSSHServerPayload{
+	payload := gitspaceTypes.RunSSHServerPayload{
 		Port: strconv.Itoa(v.config.Port),
 	}
-	runSSHScript, err := template.GenerateScriptFromTemplate(
+	runSSHScript, err := utils.GenerateScriptFromTemplate(
 		templateRunSSHServer, &payload)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
 	}
 	gitspaceLogger.Info("SSH server run output...")
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, runSSHScript, true, gitspaceLogger, true)
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runSSHScript, true, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to run SSH server: %w", err)
 	}
@@ -174,7 +173,7 @@ func (v *VSCode) Type() enum.IDEType {
 func (v *VSCode) updateVSCodeSetupPayload(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	payload *template.SetupVSCodeExtensionsPayload,
+	payload *gitspaceTypes.SetupVSCodeExtensionsPayload,
 ) error {
 	if args == nil {
 		return nil
@@ -184,16 +183,22 @@ func (v *VSCode) updateVSCodeSetupPayload(
 		return err
 	}
 	// Handle Repository Name
-	if err := v.handleRepoName(args, payload); err != nil {
-		return err
+	repoName, exists := args[gitspaceTypes.IDERepoNameArg]
+	if !exists {
+		return nil // No repo name found, nothing to do
 	}
+	repoNameStr, ok := repoName.(string)
+	if !ok {
+		return fmt.Errorf("repo name is not of type string")
+	}
+	payload.RepoName = repoNameStr
 	return nil
 }
 
 func (v *VSCode) handleVSCodeCustomization(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	payload *template.SetupVSCodeExtensionsPayload,
+	payload *gitspaceTypes.SetupVSCodeExtensionsPayload,
 ) error {
 	customization, exists := args[gitspaceTypes.VSCodeCustomizationArg]
 	if !exists {
@@ -217,24 +222,6 @@ func (v *VSCode) handleVSCodeCustomization(
 		return err
 	}
 	payload.Extensions = string(jsonData)
-
-	return nil
-}
-
-func (v *VSCode) handleRepoName(
-	args map[gitspaceTypes.IDEArg]interface{},
-	payload *template.SetupVSCodeExtensionsPayload,
-) error {
-	repoName, exists := args[gitspaceTypes.IDERepoNameArg]
-	if !exists {
-		return nil // No repo name found, nothing to do
-	}
-
-	repoNameStr, ok := repoName.(string)
-	if !ok {
-		return fmt.Errorf("repo name is not of type string")
-	}
-	payload.RepoName = repoNameStr
 
 	return nil
 }

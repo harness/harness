@@ -15,9 +15,6 @@
 package types
 
 import (
-	"context"
-
-	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
 	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog"
@@ -29,6 +26,8 @@ const (
 	VSCodeCustomizationArg IDEArg = "VSCODE_CUSTOMIZATION"
 	VSCodeProxyURIArg      IDEArg = "VSCODE_PROXY_URI"
 	IDERepoNameArg         IDEArg = "IDE_REPO_NAME"
+	VSCodeURLScheme               = "vscode-remote"
+	IntellijURLScheme             = "jetbrains-gateway"
 )
 
 type GitspaceLogger interface {
@@ -36,13 +35,6 @@ type GitspaceLogger interface {
 	Debug(msg string)
 	Warn(msg string)
 	Error(msg string, err error)
-}
-
-// Step represents a single setup action.
-type Step struct {
-	Name          string
-	Execute       func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger GitspaceLogger) error
-	StopOnFailure bool // Flag to control whether execution should stop on failure
 }
 
 type ZerologAdapter struct {

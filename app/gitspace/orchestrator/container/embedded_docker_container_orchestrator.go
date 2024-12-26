@@ -21,10 +21,8 @@ import (
 
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
-	"github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
-	"github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/scm"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/infraprovider"
@@ -44,9 +42,14 @@ const (
 type EmbeddedDockerOrchestrator struct {
 	dockerClientFactory *infraprovider.DockerClientFactory
 	statefulLogger      *logutil.StatefulLogger
-	gitService          git.Service
-	userService         user.Service
 	runArgProvider      runarg.Provider
+}
+
+// Step represents a single setup action.
+type step struct {
+	Name          string
+	Execute       func(ctx context.Context, exec *devcontainer.Exec, gitspaceLogger gitspaceTypes.GitspaceLogger) error
+	StopOnFailure bool // Flag to control whether execution should stop on failure
 }
 
 // ExecuteSteps executes all registered steps in sequence, respecting stopOnFailure flag.
@@ -54,7 +57,7 @@ func (e *EmbeddedDockerOrchestrator) ExecuteSteps(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	steps []gitspaceTypes.Step,
+	steps []step,
 ) error {
 	for _, step := range steps {
 		// Execute the step
@@ -73,15 +76,11 @@ func (e *EmbeddedDockerOrchestrator) ExecuteSteps(
 func NewEmbeddedDockerOrchestrator(
 	dockerClientFactory *infraprovider.DockerClientFactory,
 	statefulLogger *logutil.StatefulLogger,
-	gitService git.Service,
-	userService user.Service,
 	runArgProvider runarg.Provider,
 ) Orchestrator {
 	return &EmbeddedDockerOrchestrator{
 		dockerClientFactory: dockerClientFactory,
 		statefulLogger:      statefulLogger,
-		gitService:          gitService,
-		userService:         userService,
 		runArgProvider:      runArgProvider,
 	}
 }
@@ -207,7 +206,7 @@ func (e *EmbeddedDockerOrchestrator) startStoppedGitspace(
 
 	// Set up git credentials if needed
 	if resolvedRepoDetails.Credentials != nil {
-		if err := SetupGitCredentials(ctx, exec, resolvedRepoDetails, e.gitService, logStreamInstance); err != nil {
+		if err := SetupGitCredentials(ctx, exec, resolvedRepoDetails, logStreamInstance); err != nil {
 			return err
 		}
 	}
@@ -488,22 +487,16 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 	environment []string,
 	devcontainerConfig types.DevcontainerConfig,
 	codeRepoDir string,
-) []gitspaceTypes.Step {
-	return []gitspaceTypes.Step{
+) []step {
+	return []step{
 		{
 			Name:          "Validate Supported OS",
 			Execute:       ValidateSupportedOS,
 			StopOnFailure: true,
 		},
 		{
-			Name: "Manage User",
-			Execute: func(
-				ctx context.Context,
-				exec *devcontainer.Exec,
-				gitspaceLogger gitspaceTypes.GitspaceLogger,
-			) error {
-				return ManageUser(ctx, exec, e.userService, gitspaceLogger)
-			},
+			Name:          "Manage User",
+			Execute:       ManageUser,
 			StopOnFailure: true,
 		},
 		{
@@ -529,14 +522,8 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 			StopOnFailure: true,
 		},
 		{
-			Name: "Install Git",
-			Execute: func(
-				ctx context.Context,
-				exec *devcontainer.Exec,
-				gitspaceLogger gitspaceTypes.GitspaceLogger,
-			) error {
-				return InstallGit(ctx, exec, e.gitService, gitspaceLogger)
-			},
+			Name:          "Install Git",
+			Execute:       InstallGit,
 			StopOnFailure: true,
 		},
 		{
@@ -547,7 +534,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
 				if resolvedRepoDetails.ResolvedCredentials.Credentials != nil {
-					return SetupGitCredentials(ctx, exec, resolvedRepoDetails, e.gitService, gitspaceLogger)
+					return SetupGitCredentials(ctx, exec, resolvedRepoDetails, gitspaceLogger)
 				}
 				return nil
 			},
@@ -560,7 +547,7 @@ func (e *EmbeddedDockerOrchestrator) buildSetupSteps(
 				exec *devcontainer.Exec,
 				gitspaceLogger gitspaceTypes.GitspaceLogger,
 			) error {
-				return CloneCode(ctx, exec, defaultBaseImage, resolvedRepoDetails, e.gitService, gitspaceLogger)
+				return CloneCode(ctx, exec, defaultBaseImage, resolvedRepoDetails, gitspaceLogger)
 			},
 			StopOnFailure: true,
 		},

@@ -19,11 +19,9 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
-	"github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
-	"github.com/harness/gitness/app/gitspace/orchestrator/user"
+	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	"github.com/harness/gitness/app/gitspace/scm"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types/enum"
@@ -35,7 +33,7 @@ func InstallTools(
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 	ideType enum.IDEType,
 ) error {
-	err := common.InstallTools(ctx, exec, ideType, gitspaceLogger)
+	err := utils.InstallTools(ctx, exec, ideType, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while installing tools inside container", err)
 	}
@@ -47,7 +45,7 @@ func ValidateSupportedOS(
 	exec *devcontainer.Exec,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	err := common.ValidateSupportedOS(ctx, exec, gitspaceLogger)
+	err := utils.ValidateSupportedOS(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while detecting OS inside container", err)
 	}
@@ -89,7 +87,7 @@ func ExecuteLifecycleCommands(
 			// Log command execution details.
 			gitspaceLogger.Info(fmt.Sprintf("%sExecuting %s command: %s", logPrefix, actionType, command))
 			exec.DefaultWorkingDir = codeRepoDir
-			err := common.ExecuteCommandInHomeDirAndLog(ctx, &exec, command, false, gitspaceLogger, true)
+			err := exec.ExecuteCommandInHomeDirAndLog(ctx, command, false, gitspaceLogger, true)
 			if err != nil {
 				// Log the error if there is any issue with executing the command.
 				_ = logStreamWrapError(gitspaceLogger, fmt.Sprintf("%sError while executing %s command: %s",
@@ -114,10 +112,9 @@ func CloneCode(
 	exec *devcontainer.Exec,
 	defaultBaseImage string,
 	resolvedRepoDetails scm.ResolvedDetails,
-	gitService git.Service,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	err := gitService.CloneCode(ctx, exec, resolvedRepoDetails, defaultBaseImage, gitspaceLogger)
+	err := utils.CloneCode(ctx, exec, resolvedRepoDetails, defaultBaseImage, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while cloning code inside container", err)
 	}
@@ -127,10 +124,9 @@ func CloneCode(
 func InstallGit(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	gitService git.Service,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	err := gitService.Install(ctx, exec, gitspaceLogger)
+	err := utils.InstallGit(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while installing git inside container", err)
 	}
@@ -141,10 +137,9 @@ func SetupGitCredentials(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	resolvedRepoDetails scm.ResolvedDetails,
-	gitService git.Service,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	err := gitService.SetupCredentials(ctx, exec, resolvedRepoDetails, gitspaceLogger)
+	err := utils.SetupGitCredentials(ctx, exec, resolvedRepoDetails, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(
 			gitspaceLogger, "Error while setting up git credentials inside container", err)
@@ -155,10 +150,9 @@ func SetupGitCredentials(
 func ManageUser(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	userService user.Service,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	err := userService.Manage(ctx, exec, gitspaceLogger)
+	err := utils.ManageUser(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return logStreamWrapError(gitspaceLogger, "Error while creating user inside container", err)
 	}
@@ -202,7 +196,7 @@ func SetEnv(
 	environment []string,
 ) error {
 	if len(environment) > 0 {
-		err := common.SetEnv(ctx, exec, gitspaceLogger, environment)
+		err := utils.SetEnv(ctx, exec, gitspaceLogger, environment)
 		if err != nil {
 			return logStreamWrapError(gitspaceLogger, "Error while installing tools inside container", err)
 		}

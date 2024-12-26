@@ -20,9 +20,11 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types/enum"
 
 	dockerTypes "github.com/docker/docker/api/types"
@@ -91,6 +93,34 @@ func (e *Exec) ExecuteCommand(
 	return stdoutBuf.String(), nil
 }
 
+func (e *Exec) ExecuteCommandInHomeDirAndLog(
+	ctx context.Context,
+	script string,
+	root bool,
+	gitspaceLogger types.GitspaceLogger,
+	verbose bool,
+) error {
+	// Buffer upto a thousand messages
+	outputCh := make(chan []byte, 1000)
+	err := e.executeCmdInHomeDirectoryAsyncStream(ctx, script, root, false, outputCh)
+	if err != nil {
+		return err
+	}
+	// Use select to wait for the output and exit status
+	for {
+		select {
+		case output := <-outputCh:
+			done, chErr := handleOutputChannel(output, verbose, gitspaceLogger)
+			if done {
+				return chErr
+			}
+		case <-ctx.Done():
+			// Handle context cancellation or timeout
+			return ctx.Err()
+		}
+	}
+}
+
 func (e *Exec) createExecution(
 	ctx context.Context,
 	command string,
@@ -148,7 +178,7 @@ func (e *Exec) executeCmdAsyncStream(
 	return nil
 }
 
-func (e *Exec) ExecuteCmdInHomeDirectoryAsyncStream(
+func (e *Exec) executeCmdInHomeDirectoryAsyncStream(
 	ctx context.Context,
 	command string,
 	root bool,
@@ -269,4 +299,31 @@ func (e *Exec) streamStdErr(stderr io.Reader, outputCh chan []byte, wg *sync.Wai
 	if err := stderrReader.Err(); err != nil {
 		log.Error().Err(err).Msg("Error reading stderr " + err.Error())
 	}
+}
+
+func handleOutputChannel(output []byte, verbose bool, gitspaceLogger types.GitspaceLogger) (bool, error) {
+	// Handle the exit status first
+	if strings.HasPrefix(string(output), ChannelExitStatus) {
+		// Extract the exit code from the message
+		exitCodeStr := strings.TrimPrefix(string(output), ChannelExitStatus)
+		exitCode, err := strconv.Atoi(exitCodeStr)
+		if err != nil {
+			return true, fmt.Errorf("invalid exit status format: %w", err)
+		}
+		if exitCode != 0 {
+			gitspaceLogger.Info("Process Exited with status " + exitCodeStr)
+			return true, fmt.Errorf("command exited with non-zero status: %d", exitCode)
+		}
+		// If exit status is zero, just continue processing
+		return true, nil
+	}
+	// Handle regular command output
+	msg := string(output)
+	if len(output) > 0 {
+		// Log output if verbose or if it's an error
+		if verbose || strings.HasPrefix(msg, LoggerErrorPrefix) {
+			gitspaceLogger.Info(msg)
+		}
+	}
+	return false, nil
 }

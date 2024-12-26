@@ -12,28 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package template
+package types
 
-import (
-	"bytes"
-	"embed"
-	"fmt"
-	"io/fs"
-	"path"
-	"text/template"
-
-	"github.com/harness/gitness/types/enum"
-)
-
-const (
-	templatesDir = "templates"
-)
-
-var (
-	//go:embed  templates/*
-	files           embed.FS
-	scriptTemplates map[string]*template.Template
-)
+import "github.com/harness/gitness/types/enum"
 
 type CloneCodePayload struct {
 	RepoURL  string
@@ -95,49 +76,4 @@ type SupportedOSDistributionPayload struct {
 
 type SetEnvPayload struct {
 	EnvVariables []string
-}
-
-func init() {
-	err := LoadTemplates()
-	if err != nil {
-		panic(fmt.Sprintf("error loading script templates: %v", err))
-	}
-}
-
-func LoadTemplates() error {
-	scriptTemplates = make(map[string]*template.Template)
-
-	tmplFiles, err := fs.ReadDir(files, templatesDir)
-	if err != nil {
-		return fmt.Errorf("error reading script templates: %w", err)
-	}
-
-	for _, tmpl := range tmplFiles {
-		if tmpl.IsDir() {
-			continue
-		}
-
-		textTemplate, parsingErr := template.ParseFS(files, path.Join(templatesDir, tmpl.Name()))
-		if parsingErr != nil {
-			return fmt.Errorf("error parsing template %s: %w", tmpl.Name(), parsingErr)
-		}
-
-		scriptTemplates[tmpl.Name()] = textTemplate
-	}
-
-	return nil
-}
-
-func GenerateScriptFromTemplate(name string, data interface{}) (string, error) {
-	if scriptTemplates[name] == nil {
-		return "", fmt.Errorf("no script template found for %s", name)
-	}
-
-	tmplOutput := bytes.Buffer{}
-	err := scriptTemplates[name].Execute(&tmplOutput, data)
-	if err != nil {
-		return "", fmt.Errorf("error executing template %s with data %+v: %w", name, data, err)
-	}
-
-	return tmplOutput.String(), nil
 }

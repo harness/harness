@@ -53,10 +53,8 @@ import (
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
-	git2 "github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
-	user2 "github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
@@ -321,8 +319,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	infrastructureConfig := server.ProvideGitspaceInfraProvisionerConfig(config)
 	infraProvisioner := infrastructure.ProvideInfraProvisionerService(infraProviderConfigStore, infraProviderResourceStore, factory, infraProviderTemplateStore, infraProvisionedStore, infrastructureConfig)
 	statefulLogger := logutil.ProvideStatefulLogger(logStream)
-	gitService := git2.ProvideGitServiceImpl()
-	userService := user2.ProvideUserServiceImpl()
 	runargResolver, err := runarg.ProvideResolver()
 	if err != nil {
 		return nil, err
@@ -331,7 +327,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger, gitService, userService, runargProvider)
+	containerOrchestrator := container.ProvideEmbeddedDockerOrchestrator(dockerClientFactory, statefulLogger, runargProvider)
 	orchestratorConfig := server.ProvideGitspaceOrchestratorConfig(config)
 	vsCodeConfig := server.ProvideIDEVSCodeConfig(config)
 	vsCode := ide.ProvideVSCodeService(vsCodeConfig)
@@ -340,7 +336,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	ideFactory := ide.ProvideIDEFactory(vsCode, vsCodeWeb)
 	passwordResolver := secret.ProvidePasswordResolver()
 	resolverFactory := secret.ProvideResolverFactory(passwordResolver)
-	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, infraProviderResourceStore, infraProvisioner, containerOrchestrator, eventsReporter, orchestratorConfig, ideFactory, resolverFactory)
+	orchestratorOrchestrator := orchestrator.ProvideOrchestrator(scmSCM, platformConnector, infraProvisioner, containerOrchestrator, eventsReporter, orchestratorConfig, ideFactory, resolverFactory)
 	gitspaceService := gitspace.ProvideGitspace(transactor, gitspaceConfigStore, gitspaceInstanceStore, eventsReporter, gitspaceEventStore, spaceStore, infraproviderService, orchestratorOrchestrator, scmSCM, config)
 	usageMetricStore := database.ProvideUsageMetricStore(db)
 	spaceController := space.ProvideController(config, transactor, provider, streamer, spaceIdentifier, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, listService, spaceCache, repository, exporterRepository, resourceLimiter, publicaccessService, auditService, gitspaceService, labelService, instrumentService, executionStore, rulesService, usageMetricStore)

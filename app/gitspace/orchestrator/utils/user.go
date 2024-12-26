@@ -12,36 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package user
+package utils
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
-	"github.com/harness/gitness/app/gitspace/orchestrator/template"
-	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
+	"github.com/harness/gitness/app/gitspace/types"
 )
 
-var _ Service = (*ServiceImpl)(nil)
-
-const templateManagerUser = "manage_user.sh"
-
-type ServiceImpl struct {
-}
-
-func NewUserServiceImpl() Service {
-	return &ServiceImpl{}
-}
-
-func (u *ServiceImpl) Manage(
+func ManageUser(
 	ctx context.Context,
 	exec *devcontainer.Exec,
-	gitspaceLogger gitspaceTypes.GitspaceLogger,
+	gitspaceLogger types.GitspaceLogger,
 ) error {
-	script, err := template.GenerateScriptFromTemplate(
-		templateManagerUser, &template.SetupUserPayload{
+	script, err := GenerateScriptFromTemplate(
+		templateManagerUser, &types.SetupUserPayload{
 			Username:   exec.RemoteUser,
 			AccessKey:  exec.AccessKey,
 			AccessType: exec.AccessType,
@@ -53,7 +40,7 @@ func (u *ServiceImpl) Manage(
 	}
 
 	gitspaceLogger.Info("Configuring user directory and credentials inside container")
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, script, true, gitspaceLogger, true)
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, true, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to setup user: %w", err)
 	}

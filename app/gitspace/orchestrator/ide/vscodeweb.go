@@ -25,9 +25,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/harness/gitness/app/gitspace/orchestrator/common"
 	"github.com/harness/gitness/app/gitspace/orchestrator/devcontainer"
-	"github.com/harness/gitness/app/gitspace/orchestrator/template"
+	"github.com/harness/gitness/app/gitspace/orchestrator/utils"
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -68,13 +67,13 @@ func (v *VSCodeWeb) Setup(
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Installing VSCode Web inside container...")
-	payload := &template.SetupVSCodeWebPayload{}
+	payload := &gitspaceTypes.SetupVSCodeWebPayload{}
 	if args != nil {
 		if err := updateSetupPayloadFromArgs(args, payload, gitspaceLogger); err != nil {
 			return err
 		}
 	}
-	setupScript, err := template.GenerateScriptFromTemplate(templateSetupVSCodeWeb, payload)
+	setupScript, err := utils.GenerateScriptFromTemplate(templateSetupVSCodeWeb, payload)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate script to setup VSCode Web from template %s: %w",
@@ -82,7 +81,7 @@ func (v *VSCodeWeb) Setup(
 			err,
 		)
 	}
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, setupScript, false, gitspaceLogger, false)
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, setupScript, false, gitspaceLogger, false)
 	if err != nil {
 		return fmt.Errorf("failed to install VSCode Web: %w", err)
 	}
@@ -124,17 +123,21 @@ func (v *VSCodeWeb) Run(
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	payload := &template.RunVSCodeWebPayload{
+	payload := gitspaceTypes.RunVSCodeWebPayload{
 		Port: strconv.Itoa(v.config.Port),
 	}
 
 	if args != nil {
-		err := updateRunPayloadFromArgs(args, payload, gitspaceLogger)
-		if err != nil {
-			return err
+		if proxyURI, exists := args[gitspaceTypes.VSCodeProxyURIArg]; exists {
+			// Perform a type assertion to ensure proxyURI is a string
+			proxyURIStr, ok := proxyURI.(string)
+			if !ok {
+				return fmt.Errorf("%s is not a string", gitspaceTypes.VSCodeProxyURIArg)
+			}
+			payload.ProxyURI = proxyURIStr
 		}
 	}
-	runScript, err := template.GenerateScriptFromTemplate(templateRunVSCodeWeb, payload)
+	runScript, err := utils.GenerateScriptFromTemplate(templateRunVSCodeWeb, payload)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to generate script to run VSCode Web from template %s: %w",
@@ -144,32 +147,16 @@ func (v *VSCodeWeb) Run(
 	}
 	gitspaceLogger.Info("Starting IDE ...")
 	// Execute the script in the home directory
-	err = common.ExecuteCommandInHomeDirAndLog(ctx, exec, runScript, false, gitspaceLogger, true)
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runScript, false, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to run VSCode Web: %w", err)
 	}
 	return nil
 }
 
-func updateRunPayloadFromArgs(
-	args map[gitspaceTypes.IDEArg]interface{},
-	payload *template.RunVSCodeWebPayload,
-	_ gitspaceTypes.GitspaceLogger,
-) error {
-	if proxyURI, exists := args[gitspaceTypes.VSCodeProxyURIArg]; exists {
-		// Perform a type assertion to ensure proxyURI is a string
-		proxyURIStr, ok := proxyURI.(string)
-		if !ok {
-			return fmt.Errorf("%s is not a string", gitspaceTypes.VSCodeProxyURIArg)
-		}
-		payload.ProxyURI = proxyURIStr
-	}
-	return nil
-}
-
 func updateSetupPayloadFromArgs(
 	args map[gitspaceTypes.IDEArg]interface{},
-	payload *template.SetupVSCodeWebPayload,
+	payload *gitspaceTypes.SetupVSCodeWebPayload,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	if customization, exists := args[gitspaceTypes.VSCodeCustomizationArg]; exists {

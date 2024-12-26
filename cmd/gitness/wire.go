@@ -64,10 +64,8 @@ import (
 	"github.com/harness/gitness/app/gitspace/logutil"
 	"github.com/harness/gitness/app/gitspace/orchestrator"
 	containerorchestrator "github.com/harness/gitness/app/gitspace/orchestrator/container"
-	containerGit "github.com/harness/gitness/app/gitspace/orchestrator/git"
 	"github.com/harness/gitness/app/gitspace/orchestrator/ide"
 	"github.com/harness/gitness/app/gitspace/orchestrator/runarg"
-	containerUser "github.com/harness/gitness/app/gitspace/orchestrator/user"
 	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	gitspacesecret "github.com/harness/gitness/app/gitspace/secret"
@@ -282,8 +280,6 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		capabilitiesservice.WireSet,
 		docker.ProvideReporter,
 		secretservice.WireSet,
-		containerGit.WireSet,
-		containerUser.WireSet,
 		messagingservice.WireSet,
 		runarg.WireSet,
 		usage.WireSet,

@@ -26,7 +26,6 @@ import (
 	"github.com/harness/gitness/app/gitspace/platformconnector"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/app/gitspace/secret"
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -41,24 +40,20 @@ type Config struct {
 	DefaultBaseImage string
 }
 
-type orchestrator struct {
-	scm                        *scm.SCM
-	platformConnector          platformconnector.PlatformConnector
-	infraProviderResourceStore store.InfraProviderResourceStore
-	infraProvisioner           infrastructure.InfraProvisioner
-	containerOrchestrator      container.Orchestrator
-	eventReporter              *events.Reporter
-	config                     *Config
-	ideFactory                 ide.Factory
-	secretResolverFactory      *secret.ResolverFactory
+type Orchestrator struct {
+	scm                   *scm.SCM
+	platformConnector     platformconnector.PlatformConnector
+	infraProvisioner      infrastructure.InfraProvisioner
+	containerOrchestrator container.Orchestrator
+	eventReporter         *events.Reporter
+	config                *Config
+	ideFactory            ide.Factory
+	secretResolverFactory *secret.ResolverFactory
 }
-
-var _ Orchestrator = (*orchestrator)(nil)
 
 func NewOrchestrator(
 	scm *scm.SCM,
 	platformConnector platformconnector.PlatformConnector,
-	infraProviderResourceStore store.InfraProviderResourceStore,
 	infraProvisioner infrastructure.InfraProvisioner,
 	containerOrchestrator container.Orchestrator,
 	eventReporter *events.Reporter,
@@ -66,20 +61,20 @@ func NewOrchestrator(
 	ideFactory ide.Factory,
 	secretResolverFactory *secret.ResolverFactory,
 ) Orchestrator {
-	return orchestrator{
-		scm:                        scm,
-		platformConnector:          platformConnector,
-		infraProviderResourceStore: infraProviderResourceStore,
-		infraProvisioner:           infraProvisioner,
-		containerOrchestrator:      containerOrchestrator,
-		eventReporter:              eventReporter,
-		config:                     config,
-		ideFactory:                 ideFactory,
-		secretResolverFactory:      secretResolverFactory,
+	return Orchestrator{
+		scm:                   scm,
+		platformConnector:     platformConnector,
+		infraProvisioner:      infraProvisioner,
+		containerOrchestrator: containerOrchestrator,
+		eventReporter:         eventReporter,
+		config:                config,
+		ideFactory:            ideFactory,
+		secretResolverFactory: secretResolverFactory,
 	}
 }
 
-func (o orchestrator) TriggerStartGitspace(
+// TriggerStartGitspace fetches the infra resources configured for the gitspace and triggers the infra provisioning.
+func (o Orchestrator) TriggerStartGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) *types.GitspaceError {
@@ -142,7 +137,9 @@ func (o orchestrator) TriggerStartGitspace(
 	return nil
 }
 
-func (o orchestrator) TriggerStopGitspace(
+// TriggerStopGitspace stops the Gitspace container and triggers infra deprovisioning to deprovision
+// all the infra resources which are not required to restart the Gitspace.
+func (o Orchestrator) TriggerStopGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) *types.GitspaceError {
@@ -183,7 +180,7 @@ func (o orchestrator) TriggerStopGitspace(
 	return nil
 }
 
-func (o orchestrator) stopGitspaceContainer(
+func (o Orchestrator) stopGitspaceContainer(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
@@ -215,7 +212,7 @@ func (o orchestrator) stopGitspaceContainer(
 	return nil
 }
 
-func (o orchestrator) stopAndRemoveGitspaceContainer(
+func (o Orchestrator) stopAndRemoveGitspaceContainer(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	infra types.Infrastructure,
@@ -246,7 +243,8 @@ func (o orchestrator) stopAndRemoveGitspaceContainer(
 	return nil
 }
 
-func (o orchestrator) TriggerCleanupInstanceResources(ctx context.Context, gitspaceConfig types.GitspaceConfig) error {
+// TriggerCleanupInstanceResources cleans up all the resources exclusive to gitspace instance.
+func (o Orchestrator) TriggerCleanupInstanceResources(ctx context.Context, gitspaceConfig types.GitspaceConfig) error {
 	infra, err := o.getProvisionedInfra(ctx, gitspaceConfig,
 		[]enum.InfraStatus{
 			enum.InfraStatusProvisioned,
@@ -281,7 +279,11 @@ func (o orchestrator) TriggerCleanupInstanceResources(ctx context.Context, gitsp
 	return nil
 }
 
-func (o orchestrator) TriggerDeleteGitspace(
+// TriggerDeleteGitspace removes the Gitspace container and triggers infra deprovisioning to deprovision
+// the infra resources.
+// canDeleteUserData = false -> trigger deprovision of all resources except storage associated to user data.
+// canDeleteUserData = true -> trigger deprovision of all resources.
+func (o Orchestrator) TriggerDeleteGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	canDeleteUserData bool,
@@ -324,7 +326,7 @@ func (o orchestrator) TriggerDeleteGitspace(
 	return nil
 }
 
-func (o orchestrator) emitGitspaceEvent(
+func (o Orchestrator) emitGitspaceEvent(
 	ctx context.Context,
 	config types.GitspaceConfig,
 	eventType enum.GitspaceEventType,
@@ -341,7 +343,7 @@ func (o orchestrator) emitGitspaceEvent(
 		})
 }
 
-func (o orchestrator) getPortsRequiredForGitspace(
+func (o Orchestrator) getPortsRequiredForGitspace(
 	gitspaceConfig types.GitspaceConfig,
 	devcontainerConfig types.DevcontainerConfig,
 ) ([]types.GitspacePort, error) {
@@ -363,7 +365,8 @@ func (o orchestrator) getPortsRequiredForGitspace(
 	return gitspacePorts, nil
 }
 
-func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig) (string, error) {
+// GetGitspaceLogs fetches gitspace's start/stop logs.
+func (o Orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.GitspaceConfig) (string, error) {
 	if gitspaceConfig.GitspaceInstance == nil {
 		return "", fmt.Errorf("gitspace %s is not setup yet, please try later", gitspaceConfig.Identifier)
 	}
@@ -384,7 +387,7 @@ func (o orchestrator) GetGitspaceLogs(ctx context.Context, gitspaceConfig types.
 	return logs, nil
 }
 
-func (o orchestrator) getProvisionedInfra(
+func (o Orchestrator) getProvisionedInfra(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	expectedStatus []enum.InfraStatus,

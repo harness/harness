@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/gitspace/orchestrator/container"
 	"github.com/harness/gitness/app/gitspace/secret"
 	secretenum "github.com/harness/gitness/app/gitspace/secret/enum"
+	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -34,7 +35,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (o orchestrator) ResumeStartGitspace(
+// ResumeStartGitspace saves the provisioned infra, resolves the code repo details & creates the Gitspace container.
+func (o Orchestrator) ResumeStartGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	provisionedInfra types.Infrastructure,
@@ -217,7 +219,7 @@ func generateIDEURL(
 	case enum.IDETypeVSCode:
 		// TODO: the following userID is hard coded and should be changed.
 		ideURL = url.URL{
-			Scheme: vscodeURLScheme,
+			Scheme: gitspaceTypes.VSCodeURLScheme,
 			Host:   "", // Empty since we include the host and port in the path
 			Path: fmt.Sprintf(
 				"ssh-remote+%s@%s:%s",
@@ -229,7 +231,7 @@ func generateIDEURL(
 	case enum.IDETypeIntellij:
 		idePath := relativeRepoPath + "/.cache"
 		ideURL = url.URL{
-			Scheme: intellijURLScheme,
+			Scheme: gitspaceTypes.IntellijURLScheme,
 			Host:   "", // Empty since we include the host and port in the path
 			Path:   "connect",
 			Fragment: fmt.Sprintf("idePath=%s&projectPath=%s&host=%s&port=%s&user=%s&type=%s&deploy=%s",
@@ -248,7 +250,7 @@ func generateIDEURL(
 	return ideURLString
 }
 
-func (o orchestrator) getSecretResolver(accessType enum.GitspaceAccessType) (secret.Resolver, error) {
+func (o Orchestrator) getSecretResolver(accessType enum.GitspaceAccessType) (secret.Resolver, error) {
 	secretType := secretenum.PasswordSecretType
 	switch accessType {
 	case enum.GitspaceAccessTypeUserCredentials:
@@ -261,7 +263,8 @@ func (o orchestrator) getSecretResolver(accessType enum.GitspaceAccessType) (sec
 	return o.secretResolverFactory.GetSecretResolver(secretType)
 }
 
-func (o orchestrator) ResumeStopGitspace(
+// ResumeStopGitspace saves the deprovisioned infra details.
+func (o Orchestrator) ResumeStopGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	stoppedInfra types.Infrastructure,
@@ -302,7 +305,8 @@ func (o orchestrator) ResumeStopGitspace(
 	return instanceState, nil
 }
 
-func (o orchestrator) ResumeDeleteGitspace(
+// ResumeDeleteGitspace saves the deprovisioned infra details.
+func (o Orchestrator) ResumeDeleteGitspace(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	deprovisionedInfra types.Infrastructure,
@@ -334,7 +338,8 @@ func (o orchestrator) ResumeDeleteGitspace(
 	return instanceState, nil
 }
 
-func (o orchestrator) ResumeCleanupInstanceResources(
+// ResumeCleanupInstanceResources saves the cleaned up infra details.
+func (o Orchestrator) ResumeCleanupInstanceResources(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	cleanedUpInfra types.Infrastructure,
