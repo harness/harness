@@ -21,7 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 
+	"github.com/harness/gitness/registry/app/driver"
 	"github.com/harness/gitness/registry/app/manifest"
 
 	"github.com/distribution/reference"
@@ -158,4 +160,17 @@ type OciBlobStore interface {
 	Resume(ctx context.Context, id string) (BlobWriter, error)
 
 	Path() string
+}
+
+// GenericBlobStore represent the entire suite of Generic blob related operations. Such an
+// implementation can access, read, write, delete and serve blobs.
+type GenericBlobStore interface {
+
+	// Create allocates a new blob writer to add a blob to this service. The
+	// returned handle can be written to and later resumed using an opaque
+	// identifier. With this approach, one can Close and Resume a BlobWriter
+	// multiple times until the BlobWriter is committed or cancelled.
+	Create(ctx context.Context) (driver.FileWriter, error)
+
+	Write(w driver.FileWriter, file multipart.File) (int, error)
 }
