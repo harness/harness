@@ -1,3 +1,0 @@
-DROP TABLE IF EXISTS nodes;
-DROP TABLE IF EXISTS generic_blob;
-DROP TABLE IF EXISTS file_nodes;

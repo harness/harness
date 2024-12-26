@@ -485,37 +485,3 @@ type GCManifestTaskRepository interface {
 	Delete(ctx context.Context, b *types.GCManifestTask) error
 	DeleteManifest(ctx context.Context, registryID, id int64) (*digest.Digest, error)
 }
-
-type NodesRepository interface {
-	// Get a node specified by ID
-	Get(ctx context.Context, id int64) (*types.Node, error)
-	// Get a node specified by node Name and registry id
-	GetByNameAndRegistryId(
-		ctx context.Context, registryID int64,
-		name string,
-	) (*types.Node, error)
-	// Create a node
-	Create(ctx context.Context, node *types.Node) error
-	// delete a node
-	deleteById(ctx context.Context, id int64) (err error)
-}
-
-type FileNodeRepository interface {
-	// Get a file node specified by ID
-	Get(ctx context.Context, id int64) (*types.FileNode, error)
-
-	// Create a file node
-	Create(ctx context.Context, fn *types.FileNode) error
-	// delete a node
-	deleteById(ctx context.Context, id int64) (err error)
-}
-
-type GenericBlobRepository interface {
-	FindByID(ctx context.Context, id int64) (*types.GenericBlob, error)
-	FindBySha256AndRootParentID(
-		ctx context.Context, sha256 string,
-		rootParentID int64,
-	) (*types.GenericBlob, error)
-	Create(ctx context.Context, gb *types.GenericBlob) (*types.GenericBlob, error)
-	DeleteByID(ctx context.Context, id int64) error
-}
