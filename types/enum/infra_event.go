@@ -21,7 +21,7 @@ func (InfraEvent) Enum() []interface{} {
 }
 
 var infraEvents = []InfraEvent{
-	InfraEventProvision, InfraEventStop, InfraEventDeprovision,
+	InfraEventProvision, InfraEventStop, InfraEventDeprovision, InfraEventCleanup,
 }
 
 const (

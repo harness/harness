@@ -153,14 +153,12 @@ func (i infraProvisionedStore) FindAllLatestByGateway(
 
 func (i infraProvisionedStore) FindLatestByGitspaceInstanceID(
 	ctx context.Context,
-	spaceID int64,
 	gitspaceInstanceID int64,
 ) (*types.InfraProvisioned, error) {
 	stmt := database.Builder.
 		Select(infraProvisionedSelectColumns).
 		From(infraProvisionedTable).
 		Where("iprov_gitspace_id = ?", gitspaceInstanceID).
-		Where("iprov_space_id = ?", spaceID).
 		OrderBy("iprov_created DESC")
 
 	sql, args, err := stmt.ToSql()

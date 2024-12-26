@@ -1262,11 +1262,7 @@ type (
 	InfraProvisionedStore interface {
 		Find(ctx context.Context, id int64) (*types.InfraProvisioned, error)
 		FindAllLatestByGateway(ctx context.Context, gatewayHost string) ([]*types.InfraProvisionedGatewayView, error)
-		FindLatestByGitspaceInstanceID(
-			ctx context.Context,
-			spaceID int64,
-			gitspaceInstanceID int64,
-		) (*types.InfraProvisioned, error)
+		FindLatestByGitspaceInstanceID(ctx context.Context, gitspaceInstanceID int64) (*types.InfraProvisioned, error)
 		FindLatestByGitspaceInstanceIdentifier(
 			ctx context.Context,
 			spaceID int64,

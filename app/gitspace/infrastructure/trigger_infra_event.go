@@ -16,10 +16,11 @@ package infrastructure
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
+	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/infraprovider"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -27,10 +28,66 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (i infraProvisioner) TriggerProvision(
+type Config struct {
+	AgentPort int
+}
+
+type InfraEventOpts struct {
+	RequiredGitspacePorts []types.GitspacePort
+	CanDeleteUserData     bool
+}
+
+type InfraProvisioner struct {
+	infraProviderConfigStore   store.InfraProviderConfigStore
+	infraProviderResourceStore store.InfraProviderResourceStore
+	providerFactory            infraprovider.Factory
+	infraProviderTemplateStore store.InfraProviderTemplateStore
+	infraProvisionedStore      store.InfraProvisionedStore
+	config                     *Config
+}
+
+func NewInfraProvisionerService(
+	infraProviderConfigStore store.InfraProviderConfigStore,
+	infraProviderResourceStore store.InfraProviderResourceStore,
+	providerFactory infraprovider.Factory,
+	infraProviderTemplateStore store.InfraProviderTemplateStore,
+	infraProvisionedStore store.InfraProvisionedStore,
+	config *Config,
+) InfraProvisioner {
+	return InfraProvisioner{
+		infraProviderConfigStore:   infraProviderConfigStore,
+		infraProviderResourceStore: infraProviderResourceStore,
+		providerFactory:            providerFactory,
+		infraProviderTemplateStore: infraProviderTemplateStore,
+		infraProvisionedStore:      infraProvisionedStore,
+		config:                     config,
+	}
+}
+
+// TriggerInfraEvent an interaction with the infrastructure, and once completed emits event in an asynchronous manner.
+func (i InfraProvisioner) TriggerInfraEvent(
 	ctx context.Context,
+	eventType enum.InfraEvent,
 	gitspaceConfig types.GitspaceConfig,
-	requiredGitspacePorts []types.GitspacePort,
+	infra *types.Infrastructure,
+) error {
+	opts := InfraEventOpts{CanDeleteUserData: false}
+	return i.TriggerInfraEventWithOpts(ctx, eventType, gitspaceConfig, infra, opts)
+}
+
+// TriggerInfraEventWithOpts triggers the provisionining of infra resources using the
+// infraProviderResource with different infra providers.
+// Stop event deprovisions those resources which can be stopped without losing the Gitspace data.
+// CleanupInstance event cleans up resources exclusive for a gitspace instance
+// Deprovision triggers deprovisioning of resources created for a Gitspace.
+// canDeleteUserData = true -> deprovision of all resources
+// canDeleteUserData = false -> deprovision of all resources except storage associated to user data.
+func (i InfraProvisioner) TriggerInfraEventWithOpts(
+	ctx context.Context,
+	eventType enum.InfraEvent,
+	gitspaceConfig types.GitspaceConfig,
+	infra *types.Infrastructure,
+	opts InfraEventOpts,
 ) error {
 	infraProviderEntity, err := i.getConfigFromResource(ctx, gitspaceConfig.InfraProviderResource)
 	if err != nil {
@@ -42,23 +99,41 @@ func (i infraProvisioner) TriggerProvision(
 		return err
 	}
 
-	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
-		return i.triggerProvisionForNewProvisioning(
-			ctx, infraProvider, infraProviderEntity.Type, gitspaceConfig, requiredGitspacePorts)
+	switch eventType {
+	case enum.InfraEventProvision:
+		if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
+			return i.provisionNewInfrastructure(ctx, infraProvider, infraProviderEntity.Type,
+				gitspaceConfig, opts.RequiredGitspacePorts)
+		}
+		return i.provisionExistingInfrastructure(ctx, infraProvider, gitspaceConfig, opts.RequiredGitspacePorts)
+
+	case enum.InfraEventDeprovision:
+		if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
+			return i.deprovisionNewInfrastructure(ctx, infraProvider, gitspaceConfig, *infra, opts.CanDeleteUserData)
+		}
+		return infraProvider.Deprovision(ctx, *infra, opts.CanDeleteUserData)
+
+	case enum.InfraEventCleanup:
+		return infraProvider.CleanupInstanceResources(ctx, *infra)
+
+	case enum.InfraEventStop:
+		return infraProvider.Stop(ctx, *infra)
+
+	default:
+		return fmt.Errorf("unsupported event type: %s", eventType)
 	}
-	return i.triggerProvisionForExistingProvisioning(
-		ctx, infraProvider, gitspaceConfig, requiredGitspacePorts)
 }
 
-func (i infraProvisioner) triggerProvisionForNewProvisioning(
+func (i InfraProvisioner) provisionNewInfrastructure(
 	ctx context.Context,
 	infraProvider infraprovider.InfraProvider,
 	infraProviderType enum.InfraProviderType,
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
 ) error {
+	// Logic for new provisioning...
 	infraProvisionedLatest, _ := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
-		ctx, gitspaceConfig.SpaceID, gitspaceConfig.GitspaceInstance.ID)
+		ctx, gitspaceConfig.GitspaceInstance.ID)
 
 	if infraProvisionedLatest != nil &&
 		infraProvisionedLatest.InfraStatus == enum.InfraStatusPending &&
@@ -119,9 +194,9 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 	if err != nil {
 		infraProvisioned.InfraStatus = enum.InfraStatusUnknown
 		infraProvisioned.Updated = time.Now().UnixMilli()
-		err2 := i.infraProvisionedStore.Update(ctx, infraProvisioned)
-		if err2 != nil {
-			log.Err(err2).Msgf("unable to update infraProvisioned Entry for %d", infraProvisioned.ID)
+		updateErr := i.infraProvisionedStore.Update(ctx, infraProvisioned)
+		if updateErr != nil {
+			log.Err(updateErr).Msgf("unable to update infraProvisioned Entry for %d", infraProvisioned.ID)
 		}
 
 		return fmt.Errorf(
@@ -134,7 +209,7 @@ func (i infraProvisioner) triggerProvisionForNewProvisioning(
 	return nil
 }
 
-func (i infraProvisioner) triggerProvisionForExistingProvisioning(
+func (i InfraProvisioner) provisionExistingInfrastructure(
 	ctx context.Context,
 	infraProvider infraprovider.InfraProvider,
 	gitspaceConfig types.GitspaceConfig,
@@ -171,53 +246,37 @@ func (i infraProvisioner) triggerProvisionForExistingProvisioning(
 	return nil
 }
 
-func (i infraProvisioner) ResumeProvision(
+func (i InfraProvisioner) deprovisionNewInfrastructure(
 	ctx context.Context,
+	infraProvider infraprovider.InfraProvider,
 	gitspaceConfig types.GitspaceConfig,
-	provisionedInfra types.Infrastructure,
-) error {
-	infraProvider, err := i.getInfraProvider(provisionedInfra.ProviderType)
-	if err != nil {
-		return err
-	}
-
-	if infraProvider.ProvisioningType() == enum.InfraProvisioningTypeNew {
-		return i.resumeProvisionForNewProvisioning(ctx, gitspaceConfig, provisionedInfra)
-	}
-
-	return nil
-}
-
-func (i infraProvisioner) resumeProvisionForNewProvisioning(
-	ctx context.Context,
-	gitspaceConfig types.GitspaceConfig,
-	provisionedInfra types.Infrastructure,
+	infra types.Infrastructure,
+	canDeleteUserData bool,
 ) error {
 	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
-		ctx, gitspaceConfig.SpaceID, gitspaceConfig.GitspaceInstance.ID)
+		ctx, gitspaceConfig.GitspaceInstance.ID)
 	if err != nil {
 		return fmt.Errorf(
 			"could not find latest infra provisioned entity for instance %d: %w",
 			gitspaceConfig.GitspaceInstance.ID, err)
 	}
 
-	responseMetadata, err := i.responseMetadata(provisionedInfra)
-	if err != nil {
-		return err
+	if infraProvisionedLatest.InfraStatus == enum.InfraStatusDestroyed {
+		return nil
 	}
 
-	infraProvisionedLatest.InfraStatus = provisionedInfra.Status
-	infraProvisionedLatest.ServerHostIP = provisionedInfra.AgentHost
-	infraProvisionedLatest.ServerHostPort = strconv.Itoa(provisionedInfra.AgentPort)
-	infraProvisionedLatest.ProxyHost = provisionedInfra.ProxyAgentHost
-	infraProvisionedLatest.ProxyPort = int32(provisionedInfra.ProxyAgentPort)
-	infraProvisionedLatest.ResponseMetadata = &responseMetadata
-	infraProvisionedLatest.Updated = time.Now().UnixMilli()
-
-	err = i.infraProvisionedStore.Update(ctx, infraProvisionedLatest)
+	err = infraProvider.Deprovision(ctx, infra, canDeleteUserData)
 	if err != nil {
-		return fmt.Errorf("unable to update infraProvisioned Entry %d", infraProvisionedLatest.ID)
+		return fmt.Errorf("unable to trigger deprovision infra %+v: %w", infra, err)
 	}
 
-	return nil
+	return err
+}
+
+func serializeInfraProviderParams(in []types.InfraProviderParameter) (string, error) {
+	output, err := json.Marshal(in)
+	if err != nil {
+		return "", fmt.Errorf("unable to marshal infra provider params: %w", err)
+	}
+	return string(output), nil
 }

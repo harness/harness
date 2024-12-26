@@ -86,7 +86,7 @@ func (o Orchestrator) ResumeStartGitspace(
 
 	idePort := ideSvc.Port()
 
-	err = o.infraProvisioner.ResumeProvision(ctx, gitspaceConfig, provisionedInfra)
+	err = o.infraProvisioner.PostInfraEventComplete(ctx, gitspaceConfig, provisionedInfra, enum.InfraEventProvision)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 
@@ -271,7 +271,7 @@ func (o Orchestrator) ResumeStopGitspace(
 ) (enum.GitspaceInstanceStateType, *types.GitspaceError) {
 	instanceState := enum.GitspaceInstanceStateError
 
-	err := o.infraProvisioner.ResumeStop(ctx, gitspaceConfig, stoppedInfra)
+	err := o.infraProvisioner.PostInfraEventComplete(ctx, gitspaceConfig, stoppedInfra, enum.InfraEventStop)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
 		infraStopErr := fmt.Errorf("cannot stop provisioned infrastructure with ID %s: %w",
@@ -313,7 +313,7 @@ func (o Orchestrator) ResumeDeleteGitspace(
 ) (enum.GitspaceInstanceStateType, error) {
 	instanceState := enum.GitspaceInstanceStateError
 
-	err := o.infraProvisioner.ResumeDeprovision(ctx, gitspaceConfig, deprovisionedInfra)
+	err := o.infraProvisioner.PostInfraEventComplete(ctx, gitspaceConfig, deprovisionedInfra, enum.InfraEventDeprovision)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
 		return instanceState, fmt.Errorf(
@@ -346,7 +346,7 @@ func (o Orchestrator) ResumeCleanupInstanceResources(
 ) (enum.GitspaceInstanceStateType, error) {
 	instanceState := enum.GitspaceInstanceStateError
 
-	err := o.infraProvisioner.ResumeCleanupInstance(ctx, gitspaceConfig, cleanedUpInfra)
+	err := o.infraProvisioner.PostInfraEventComplete(ctx, gitspaceConfig, cleanedUpInfra, enum.InfraEventCleanup)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraCleanupFailed)
 

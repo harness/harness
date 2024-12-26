@@ -24,11 +24,11 @@ import (
 )
 
 const (
-	templatesDir = "templates"
+	ScriptTemplatesDir = "script_templates"
 )
 
 var (
-	//go:embed  templates/*
+	//go:embed  script_templates/*
 	files           embed.FS
 	scriptTemplates map[string]*template.Template
 )
@@ -43,7 +43,7 @@ func init() {
 func LoadTemplates() error {
 	scriptTemplates = make(map[string]*template.Template)
 
-	tmplFiles, err := fs.ReadDir(files, templatesDir)
+	tmplFiles, err := fs.ReadDir(files, ScriptTemplatesDir)
 	if err != nil {
 		return fmt.Errorf("error reading script templates: %w", err)
 	}
@@ -53,7 +53,7 @@ func LoadTemplates() error {
 			continue
 		}
 
-		textTemplate, parsingErr := template.ParseFS(files, path.Join(templatesDir, tmpl.Name()))
+		textTemplate, parsingErr := template.ParseFS(files, path.Join(ScriptTemplatesDir, tmpl.Name()))
 		if parsingErr != nil {
 			return fmt.Errorf("error parsing template %s: %w", tmpl.Name(), parsingErr)
 		}

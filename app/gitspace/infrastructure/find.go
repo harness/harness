@@ -24,7 +24,8 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (i infraProvisioner) Find(
+// Find finds the provisioned infra resources for the gitspace instance.
+func (i InfraProvisioner) Find(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 	requiredGitspacePorts []types.GitspacePort,
@@ -71,7 +72,7 @@ func (i infraProvisioner) Find(
 		}
 	}
 
-	gitspaceScheme, err := i.getGitspaceScheme(gitspaceConfig.IDE, infraProviderResource.Metadata["gitspace_scheme"])
+	gitspaceScheme, err := getGitspaceScheme(gitspaceConfig.IDE, infraProviderResource.Metadata["gitspace_scheme"])
 	if err != nil {
 		return nil, fmt.Errorf("failed to get gitspace_scheme: %w", err)
 	}
@@ -79,12 +80,12 @@ func (i infraProvisioner) Find(
 	return infra, nil
 }
 
-func (i infraProvisioner) paramsForProvisioningTypeNew(
+func (i InfraProvisioner) paramsForProvisioningTypeNew(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) ([]types.InfraProviderParameter, error) {
 	infraProvisionedLatest, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
-		ctx, gitspaceConfig.SpaceID, gitspaceConfig.GitspaceInstance.ID)
+		ctx, gitspaceConfig.GitspaceInstance.ID)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"could not find latest infra provisioned entity for instance %d: %w",
@@ -101,7 +102,16 @@ func (i infraProvisioner) paramsForProvisioningTypeNew(
 	return allParams, nil
 }
 
-func (i infraProvisioner) paramsForProvisioningTypeExisting(
+func deserializeInfraProviderParams(in string) ([]types.InfraProviderParameter, error) {
+	var parameters []types.InfraProviderParameter
+	err := json.Unmarshal([]byte(in), &parameters)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal infra provider params %+v: %w", in, err)
+	}
+	return parameters, nil
+}
+
+func (i InfraProvisioner) paramsForProvisioningTypeExisting(
 	ctx context.Context,
 	infraProviderResource types.InfraProviderResource,
 	infraProvider infraprovider.InfraProvider,
@@ -114,7 +124,7 @@ func (i infraProvisioner) paramsForProvisioningTypeExisting(
 	return allParams, nil
 }
 
-func (i infraProvisioner) getGitspaceScheme(ideType enum.IDEType, gitspaceSchemeFromMetadata string) (string, error) {
+func getGitspaceScheme(ideType enum.IDEType, gitspaceSchemeFromMetadata string) (string, error) {
 	switch ideType {
 	case enum.IDETypeVSCodeWeb:
 		return gitspaceSchemeFromMetadata, nil
@@ -127,13 +137,12 @@ func (i infraProvisioner) getGitspaceScheme(ideType enum.IDEType, gitspaceScheme
 	}
 }
 
-func (i infraProvisioner) getInfraFromStoredInfo(
+func (i InfraProvisioner) getInfraFromStoredInfo(
 	ctx context.Context,
 	gitspaceConfig types.GitspaceConfig,
 ) (*types.Infrastructure, error) {
 	infraProvisioned, err := i.infraProvisionedStore.FindLatestByGitspaceInstanceID(
 		ctx,
-		gitspaceConfig.SpaceID,
 		gitspaceConfig.GitspaceInstance.ID,
 	)
 	if err != nil {
@@ -145,4 +154,104 @@ func (i infraProvisioner) getInfraFromStoredInfo(
 		return nil, fmt.Errorf("failed to unmarshal response metadata: %w", err)
 	}
 	return &infra, nil
+}
+
+// Methods to find infra provider resources.
+func (i InfraProvisioner) getConfigFromResource(
+	ctx context.Context,
+	infraProviderResource types.InfraProviderResource,
+) (*types.InfraProviderConfig, error) {
+	config, err := i.infraProviderConfigStore.Find(ctx, infraProviderResource.InfraProviderConfigID)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"unable to get infra provider details for ID %d: %w",
+			infraProviderResource.InfraProviderConfigID, err)
+	}
+	return config, nil
+}
+
+func (i InfraProvisioner) getInfraProvider(
+	infraProviderType enum.InfraProviderType,
+) (infraprovider.InfraProvider, error) {
+	infraProvider, err := i.providerFactory.GetInfraProvider(infraProviderType)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get infra provider of type %v: %w", infraProviderType, err)
+	}
+	return infraProvider, nil
+}
+
+func (i InfraProvisioner) getAllParamsFromDB(
+	ctx context.Context,
+	infraProviderResource types.InfraProviderResource,
+	infraProvider infraprovider.InfraProvider,
+) ([]types.InfraProviderParameter, error) {
+	var allParams []types.InfraProviderParameter
+
+	templateParams, err := i.getTemplateParams(ctx, infraProvider, infraProviderResource)
+	if err != nil {
+		return nil, err
+	}
+
+	allParams = append(allParams, templateParams...)
+
+	params := i.paramsFromResource(infraProviderResource, infraProvider)
+
+	allParams = append(allParams, params...)
+
+	return allParams, nil
+}
+
+func (i InfraProvisioner) getTemplateParams(
+	ctx context.Context,
+	infraProvider infraprovider.InfraProvider,
+	infraProviderResource types.InfraProviderResource,
+) ([]types.InfraProviderParameter, error) {
+	var params []types.InfraProviderParameter
+	templateParams := infraProvider.TemplateParams()
+
+	for _, param := range templateParams {
+		key := param.Name
+		if infraProviderResource.Metadata[key] != "" {
+			templateIdentifier := infraProviderResource.Metadata[key]
+
+			template, err := i.infraProviderTemplateStore.FindByIdentifier(
+				ctx, infraProviderResource.SpaceID, templateIdentifier)
+			if err != nil {
+				return nil, fmt.Errorf("unable to get template params for ID %s: %w",
+					infraProviderResource.Metadata[key], err)
+			}
+
+			params = append(params, types.InfraProviderParameter{
+				Name:  key,
+				Value: template.Data,
+			})
+		}
+	}
+
+	return params, nil
+}
+
+func (i InfraProvisioner) paramsFromResource(
+	infraProviderResource types.InfraProviderResource,
+	infraProvider infraprovider.InfraProvider,
+) []types.InfraProviderParameter {
+	// NOTE: templateParamsMap is required to filter out template params since their values have already been fetched
+	// and we dont need the template identifiers, which are the values for template params in the resource Metadata.
+	templateParamsMap := make(map[string]bool)
+	for _, templateParam := range infraProvider.TemplateParams() {
+		templateParamsMap[templateParam.Name] = true
+	}
+
+	params := make([]types.InfraProviderParameter, 0)
+
+	for key, value := range infraProviderResource.Metadata {
+		if key == "" || value == "" || templateParamsMap[key] {
+			continue
+		}
+		params = append(params, types.InfraProviderParameter{
+			Name:  key,
+			Value: value,
+		})
+	}
+	return params
 }

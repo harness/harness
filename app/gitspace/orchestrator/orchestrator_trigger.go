@@ -124,7 +124,8 @@ func (o Orchestrator) TriggerStartGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningStart)
 
-	err = o.infraProvisioner.TriggerProvision(ctx, gitspaceConfig, requiredGitspacePorts)
+	opts := infrastructure.InfraEventOpts{RequiredGitspacePorts: requiredGitspacePorts}
+	err = o.infraProvisioner.TriggerInfraEventWithOpts(ctx, enum.InfraEventProvision, gitspaceConfig, nil, opts)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraProvisioningFailed)
 		return &types.GitspaceError{
@@ -166,7 +167,7 @@ func (o Orchestrator) TriggerStopGitspace(
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopStart)
 
-	err = o.infraProvisioner.TriggerStop(ctx, gitspaceConfig.InfraProviderResource, *infra)
+	err = o.infraProvisioner.TriggerInfraEvent(ctx, enum.InfraEventStop, gitspaceConfig, infra)
 	if err != nil {
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraStopFailed)
 		infraStopErr := fmt.Errorf("cannot trigger stop infrastructure with ID %s: %w",
@@ -268,7 +269,7 @@ func (o Orchestrator) TriggerCleanupInstanceResources(ctx context.Context, gitsp
 
 	o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraCleanupStart)
 
-	err = o.infraProvisioner.TriggerCleanupInstance(ctx, gitspaceConfig, *infra)
+	err = o.infraProvisioner.TriggerInfraEvent(ctx, enum.InfraEventCleanup, gitspaceConfig, infra)
 	if err != nil {
 		return fmt.Errorf("cannot trigger cleanup infrastructure with ID %s: %w",
 			gitspaceConfig.InfraProviderResource.UID,
@@ -312,7 +313,8 @@ func (o Orchestrator) TriggerDeleteGitspace(
 		o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraResetStart)
 	}
 
-	err = o.infraProvisioner.TriggerDeprovision(ctx, gitspaceConfig, *infra, canDeleteUserData)
+	opts := infrastructure.InfraEventOpts{CanDeleteUserData: canDeleteUserData}
+	err = o.infraProvisioner.TriggerInfraEventWithOpts(ctx, enum.InfraEventDeprovision, gitspaceConfig, infra, opts)
 	if err != nil {
 		if canDeleteUserData {
 			o.emitGitspaceEvent(ctx, gitspaceConfig, enum.GitspaceEventTypeInfraDeprovisioningFailed)
