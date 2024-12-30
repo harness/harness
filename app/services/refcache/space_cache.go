@@ -90,5 +90,7 @@ func (g pathToSpaceCacheGetter) Find(ctx context.Context, spaceRef string) (*typ
 		return nil, fmt.Errorf("failed to find space by id: %w", err)
 	}
 
+	space.Version = -1 // destroy the space version so that it can't be used for update
+
 	return space, nil
 }

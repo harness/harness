@@ -241,6 +241,9 @@ type (
 		// Find the repo by id.
 		Find(ctx context.Context, id int64) (*types.Repository, error)
 
+		// FindDeleted the deleted repo by id.
+		FindDeleted(ctx context.Context, id int64, deleted *int64) (*types.Repository, error)
+
 		// FindActiveByUID finds a non-deleted repo by UID.
 		FindActiveByUID(ctx context.Context, parentSpaceID int64, uid string) (*types.Repository, error)
 

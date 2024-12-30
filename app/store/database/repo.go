@@ -117,11 +117,11 @@ const (
 
 // Find finds the repo by id.
 func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, error) {
-	return s.find(ctx, id, nil)
+	return s.FindDeleted(ctx, id, nil)
 }
 
-// find is a wrapper to find a repo by id w/o deleted timestamp.
-func (s *RepoStore) find(ctx context.Context, id int64, deletedAt *int64) (*types.Repository, error) {
+// FindDeleted finds a repo by id and deleted timestamp.
+func (s *RepoStore) FindDeleted(ctx context.Context, id int64, deletedAt *int64) (*types.Repository, error) {
 	stmt := database.Builder.
 		Select(repoColumnsForJoin).
 		From("repositories").
@@ -437,7 +437,7 @@ func (s *RepoStore) updateOptLock(
 			return nil, err
 		}
 
-		repo, err = s.find(ctx, repo.ID, repo.Deleted)
+		repo, err = s.FindDeleted(ctx, repo.ID, repo.Deleted)
 		if err != nil {
 			return nil, err
 		}

@@ -17,6 +17,7 @@ package refcache
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/harness/gitness/app/paths"
 	"github.com/harness/gitness/app/store"
@@ -39,6 +40,15 @@ func NewRepoFinder(
 }
 
 func (r RepoFinder) FindByRef(ctx context.Context, repoRef string) (*types.Repository, error) {
+	if id, err := strconv.ParseInt(repoRef, 10, 64); err == nil && id > 0 {
+		repo, err := r.repoStore.Find(ctx, id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get repository by ID: %w", err)
+		}
+
+		return repo, nil
+	}
+
 	spacePath, repoIdentifier, err := paths.DisectLeaf(repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to disect extract repo idenfifier from path: %w", err)
@@ -54,10 +64,21 @@ func (r RepoFinder) FindByRef(ctx context.Context, repoRef string) (*types.Repos
 		return nil, fmt.Errorf("failed to get repository by parent space ID and UID: %w", err)
 	}
 
+	repo.Version = -1 // destroy the repo version so that it can't be used for update
+
 	return repo, nil
 }
 
 func (r RepoFinder) FindDeletedByRef(ctx context.Context, repoRef string, deleted int64) (*types.Repository, error) {
+	if id, err := strconv.ParseInt(repoRef, 10, 64); err == nil && id > 0 {
+		repo, err := r.repoStore.FindDeleted(ctx, id, &deleted)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get repository by ID: %w", err)
+		}
+
+		return repo, nil
+	}
+
 	spacePath, repoIdentifier, err := paths.DisectLeaf(repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to disect extract repo idenfifier from path: %w", err)
@@ -72,6 +93,8 @@ func (r RepoFinder) FindDeletedByRef(ctx context.Context, repoRef string, delete
 	if err != nil {
 		return nil, fmt.Errorf("failed to get deleted repository by parent space ID and UID: %w", err)
 	}
+
+	repo.Version = -1 // destroy the repo version so that it can't be used for update
 
 	return repo, nil
 }
