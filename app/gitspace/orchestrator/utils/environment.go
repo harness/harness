@@ -25,14 +25,15 @@ import (
 )
 
 const (
-	templateSupportedOSDistribution           = "supported_os_distribution.sh"
-	templateVsCodeWebToolsInstallation        = "install_tools_vs_code_web.sh"
-	templateVsCodeToolsInstallation           = "install_tools_vs_code.sh"
-	templateSetEnv                            = "set_env.sh"
-	templateGitInstallScript           string = "install_git.sh"
-	templateSetupGitCredentials               = "setup_git_credentials.sh" // nolint:gosec
-	templateCloneCode                         = "clone_code.sh"
-	templateManagerUser                       = "manage_user.sh"
+	templateSupportedOSDistribution    = "supported_os_distribution.sh"
+	templateVsCodeWebToolsInstallation = "install_tools_vs_code_web.sh"
+	templateVsCodeToolsInstallation    = "install_tools_vs_code.sh"
+	templateIntellijToolsInstallation  = "install_tools_intellij.sh"
+	templateSetEnv                     = "set_env.sh"
+	templateGitInstallScript           = "install_git.sh"
+	templateSetupGitCredentials        = "setup_git_credentials.sh" // nolint:gosec
+	templateCloneCode                  = "clone_code.sh"
+	templateManagerUser                = "manage_user.sh"
 )
 
 //go:embed script/os_info.sh

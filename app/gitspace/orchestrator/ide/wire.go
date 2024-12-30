@@ -21,6 +21,7 @@ import (
 var WireSet = wire.NewSet(
 	ProvideVSCodeWebService,
 	ProvideVSCodeService,
+	ProvideIntellijService,
 	ProvideIDEFactory,
 )
 
@@ -32,6 +33,14 @@ func ProvideVSCodeService(config *VSCodeConfig) *VSCode {
 	return NewVsCodeService(config)
 }
 
-func ProvideIDEFactory(vscode *VSCode, vscodeWeb *VSCodeWeb) Factory {
-	return NewFactory(vscode, vscodeWeb)
+func ProvideIntellijService(config *IntellijConfig) *Intellij {
+	return NewIntellijService(config)
+}
+
+func ProvideIDEFactory(
+	vscode *VSCode,
+	vscodeWeb *VSCodeWeb,
+	intellij *Intellij,
+) Factory {
+	return NewFactory(vscode, vscodeWeb, intellij)
 }

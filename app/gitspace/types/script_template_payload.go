@@ -77,3 +77,17 @@ type SupportedOSDistributionPayload struct {
 type SetEnvPayload struct {
 	EnvVariables []string
 }
+
+type SetupIntellijIDEPayload struct {
+	Username            string
+	IdeDownloadURLArm64 string
+	IdeDownloadURLAmd64 string
+	IdeDirName          string
+}
+
+type RunIntellijIDEPayload struct {
+	Username       string
+	RepoName       string
+	IdeDownloadURL string
+	IdeDirName     string
+}

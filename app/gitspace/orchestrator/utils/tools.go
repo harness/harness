@@ -43,7 +43,10 @@ func InstallTools(
 		}
 		return nil
 	case enum.IDETypeIntellij:
-		// not installing any tools for intellij
+		err := InstallToolsForIntellij(ctx, exec, gitspaceLogger)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 	return nil
@@ -95,5 +98,29 @@ func InstallToolsForVsCode(
 		return fmt.Errorf("failed to install tools for vs code: %w", err)
 	}
 	gitspaceLogger.Info("Successfully installed tools for vs code")
+	return nil
+}
+
+func InstallToolsForIntellij(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	gitspaceLogger types.GitspaceLogger,
+) error {
+	script, err := GenerateScriptFromTemplate(
+		templateIntellijToolsInstallation, &types.InstallToolsPayload{
+			OSInfoScript: osDetectScript,
+		})
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate scipt to install tools for intellij from template %s: %w",
+			templateIntellijToolsInstallation, err)
+	}
+
+	gitspaceLogger.Info("Installing tools for intellij in container")
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, script, true, gitspaceLogger, false)
+	if err != nil {
+		return fmt.Errorf("failed to install tools for intellij: %w", err)
+	}
+	gitspaceLogger.Info("Successfully installed tools for intellij")
 	return nil
 }

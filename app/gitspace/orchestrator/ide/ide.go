@@ -23,6 +23,11 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+const (
+	templateSetupSSHServer string = "setup_ssh_server.sh"
+	templateRunSSHServer   string = "run_ssh_server.sh"
+)
+
 type IDE interface {
 	// Setup is responsible for doing all the operations for setting up the IDE in the container e.g. installation,
 	// copying settings and configurations.

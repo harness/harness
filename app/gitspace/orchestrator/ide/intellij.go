@@ -16,7 +16,6 @@ package ide
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -25,55 +24,54 @@ import (
 	gitspaceTypes "github.com/harness/gitness/app/gitspace/types"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
-var _ IDE = (*VSCode)(nil)
+var _ IDE = (*Intellij)(nil)
 
 const (
-	templateSetupVSCodeExtensions string = "setup_vscode_extensions.sh"
+	templateSetupIntellij        string = "setup_intellij.sh"
+	templateRunRemoteIDEIntellij string = "run_intellij.sh"
 )
 
-type VSCodeConfig struct {
+type IntellijConfig struct {
 	Port int
 }
 
-type VSCode struct {
-	config *VSCodeConfig
+type Intellij struct {
+	config IntellijConfig
 }
 
-func NewVsCodeService(config *VSCodeConfig) *VSCode {
-	return &VSCode{config: config}
+func NewIntellijService(config *IntellijConfig) *Intellij {
+	return &Intellij{config: *config}
 }
 
 // Setup installs the SSH server inside the container.
-func (v *VSCode) Setup(
+func (ij *Intellij) Setup(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	gitspaceLogger.Info("Installing ssh-server inside container")
-	err := v.setupSSHServer(ctx, exec, gitspaceLogger)
+	err := ij.setupSSHServer(ctx, exec, gitspaceLogger)
 	if err != nil {
 		return fmt.Errorf("failed to setup SSH server: %w", err)
 	}
 	gitspaceLogger.Info("Successfully installed ssh-server")
 
-	gitspaceLogger.Info("Installing vs-code extensions inside container")
+	gitspaceLogger.Info("Installing intelliJ IDE inside container")
 	gitspaceLogger.Info("IDE setup output...")
-	err = v.setupVSCodeExtensions(ctx, exec, args, gitspaceLogger)
+	err = ij.setupIntellijIDE(ctx, exec, args, gitspaceLogger)
 	if err != nil {
-		return fmt.Errorf("failed to setup vs code extensions: %w", err)
+		return fmt.Errorf("failed to setup IntelliJ IDE: %w", err)
 	}
-	gitspaceLogger.Info("Successfully installed vs-code extensions")
+	gitspaceLogger.Info("Successfully installed IntelliJ IDE")
 	gitspaceLogger.Info("Successfully set up IDE inside container")
 
 	return nil
 }
 
-func (v *VSCode) setupSSHServer(
+func (ij *Intellij) setupSSHServer(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
@@ -98,47 +96,81 @@ func (v *VSCode) setupSSHServer(
 	return nil
 }
 
-func (v *VSCode) setupVSCodeExtensions(
+func (ij *Intellij) setupIntellijIDE(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	args map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
-	payload := gitspaceTypes.SetupVSCodeExtensionsPayload{
+	payload := gitspaceTypes.SetupIntellijIDEPayload{
 		Username: exec.RemoteUser,
 	}
-	if err := v.updateVSCodeSetupPayload(args, gitspaceLogger, &payload); err != nil {
+
+	// get Download URL
+	downloadURL, err := getIDEDownloadURL(args)
+	if err != nil {
 		return err
 	}
+	payload.IdeDownloadURLArm64 = downloadURL.Arm64
+	payload.IdeDownloadURLAmd64 = downloadURL.Amd64
 
-	vscodeExtensionsScript, err := utils.GenerateScriptFromTemplate(
-		templateSetupVSCodeExtensions, &payload)
+	// get DIR name
+	dirName, err := getIDEDirName(args)
+	if err != nil {
+		return err
+	}
+	payload.IdeDirName = dirName
+
+	intellijIDEScript, err := utils.GenerateScriptFromTemplate(
+		templateSetupIntellij, &payload)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to generate scipt to setup vscode extensions from template %s: %w",
-			templateSetupVSCodeExtensions,
+			"failed to generate scipt to setup intellij idea from template %s: %w",
+			templateSetupIntellij,
 			err,
 		)
 	}
 
-	err = exec.ExecuteCommandInHomeDirAndLog(ctx, vscodeExtensionsScript,
-		true, gitspaceLogger, false)
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, intellijIDEScript,
+		true, gitspaceLogger, true)
 	if err != nil {
-		return fmt.Errorf("failed to setup vs-code extensions: %w", err)
+		return fmt.Errorf("failed to setup intellij IDE: %w", err)
 	}
 
 	return nil
 }
 
 // Run runs the SSH server inside the container.
-func (v *VSCode) Run(
+func (ij *Intellij) Run(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	args map[gitspaceTypes.IDEArg]interface{},
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
+	gitspaceLogger.Info("SSH server run output...")
+	err := ij.runSSHServer(ctx, exec, args, gitspaceLogger)
+	if err != nil {
+		return err
+	}
+	gitspaceLogger.Info("Successfully run ssh-server")
+	gitspaceLogger.Info("Run Remote IntelliJ IDE...")
+	err = ij.runRemoteIDE(ctx, exec, args, gitspaceLogger)
+	if err != nil {
+		return err
+	}
+	gitspaceLogger.Info("Successfully Run Remote IntelliJ IDE")
+
+	return nil
+}
+
+func (ij *Intellij) runSSHServer(
 	ctx context.Context,
 	exec *devcontainer.Exec,
 	_ map[gitspaceTypes.IDEArg]interface{},
 	gitspaceLogger gitspaceTypes.GitspaceLogger,
 ) error {
 	payload := gitspaceTypes.RunSSHServerPayload{
-		Port: strconv.Itoa(v.config.Port),
+		Port: strconv.Itoa(ij.config.Port),
 	}
 	runSSHScript, err := utils.GenerateScriptFromTemplate(
 		templateRunSSHServer, &payload)
@@ -146,7 +178,7 @@ func (v *VSCode) Run(
 		return fmt.Errorf(
 			"failed to generate scipt to run ssh server from template %s: %w", templateRunSSHServer, err)
 	}
-	gitspaceLogger.Info("SSH server run output...")
+
 	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runSSHScript, true, gitspaceLogger, true)
 	if err != nil {
 		return fmt.Errorf("failed to run SSH server: %w", err)
@@ -156,70 +188,52 @@ func (v *VSCode) Run(
 	return nil
 }
 
+func (ij *Intellij) runRemoteIDE(
+	ctx context.Context,
+	exec *devcontainer.Exec,
+	args map[gitspaceTypes.IDEArg]interface{},
+	gitspaceLogger gitspaceTypes.GitspaceLogger,
+) error {
+	payload := gitspaceTypes.RunIntellijIDEPayload{
+		Username: exec.RemoteUser,
+	}
+	// get Repository Name
+	repoName, err := getRepoName(args)
+	if err != nil {
+		return err
+	}
+	payload.RepoName = repoName
+
+	// get DIR name
+	dirName, err := getIDEDirName(args)
+	if err != nil {
+		return err
+	}
+	payload.IdeDirName = dirName
+
+	runSSHScript, err := utils.GenerateScriptFromTemplate(
+		templateRunRemoteIDEIntellij, &payload)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate scipt to run intelliJ IDE from template %s: %w", templateRunSSHServer, err)
+	}
+
+	err = exec.ExecuteCommandInHomeDirAndLog(ctx, runSSHScript, true, gitspaceLogger, true)
+	if err != nil {
+		return fmt.Errorf("failed to run intelliJ IDE: %w", err)
+	}
+
+	return nil
+}
+
 // Port returns the port on which the ssh-server is listening.
-func (v *VSCode) Port() *types.GitspacePort {
+func (ij *Intellij) Port() *types.GitspacePort {
 	return &types.GitspacePort{
-		Port:     v.config.Port,
+		Port:     ij.config.Port,
 		Protocol: enum.CommunicationProtocolSSH,
 	}
 }
 
-func (v *VSCode) Type() enum.IDEType {
-	return enum.IDETypeVSCode
-}
-
-func (v *VSCode) updateVSCodeSetupPayload(
-	args map[gitspaceTypes.IDEArg]interface{},
-	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	payload *gitspaceTypes.SetupVSCodeExtensionsPayload,
-) error {
-	if args == nil {
-		return nil
-	}
-	// Handle VSCode Customization
-	if err := v.handleVSCodeCustomization(args, gitspaceLogger, payload); err != nil {
-		return err
-	}
-	// Handle Repository Name
-	repoName, exists := args[gitspaceTypes.IDERepoNameArg]
-	if !exists {
-		return nil // No repo name found, nothing to do
-	}
-	repoNameStr, ok := repoName.(string)
-	if !ok {
-		return fmt.Errorf("repo name is not of type string")
-	}
-	payload.RepoName = repoNameStr
-	return nil
-}
-
-func (v *VSCode) handleVSCodeCustomization(
-	args map[gitspaceTypes.IDEArg]interface{},
-	gitspaceLogger gitspaceTypes.GitspaceLogger,
-	payload *gitspaceTypes.SetupVSCodeExtensionsPayload,
-) error {
-	customization, exists := args[gitspaceTypes.VSCodeCustomizationArg]
-	if !exists {
-		return nil // No customization found, nothing to do
-	}
-
-	// Perform type assertion to ensure it's the correct type
-	vsCodeCustomizationSpecs, ok := customization.(types.VSCodeCustomizationSpecs)
-	if !ok {
-		return fmt.Errorf("customization is not of type VSCodeCustomizationSpecs")
-	}
-
-	// Log customization details
-	gitspaceLogger.Info(fmt.Sprintf(
-		"VSCode Customizations : Extensions %v", vsCodeCustomizationSpecs.Extensions))
-
-	// Marshal extensions and set payload
-	jsonData, err := json.Marshal(vsCodeCustomizationSpecs.Extensions)
-	if err != nil {
-		log.Warn().Msg("Error marshalling JSON for VSCode extensions")
-		return err
-	}
-	payload.Extensions = string(jsonData)
-
-	return nil
+func (ij *Intellij) Type() enum.IDEType {
+	return enum.IDETypeIntellij
 }

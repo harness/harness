@@ -26,8 +26,11 @@ const (
 	VSCodeCustomizationArg IDEArg = "VSCODE_CUSTOMIZATION"
 	VSCodeProxyURIArg      IDEArg = "VSCODE_PROXY_URI"
 	IDERepoNameArg         IDEArg = "IDE_REPO_NAME"
-	VSCodeURLScheme               = "vscode-remote"
-	IntellijURLScheme             = "jetbrains-gateway"
+	IDEDownloadURLArg      IDEArg = "IDE_DOWNLOAD_URL"
+	IDEDIRNameArg          IDEArg = "IDE_DIR_NAME"
+
+	VSCodeURLScheme   string = "vscode-remote"
+	IntellijURLScheme string = "jetbrains-gateway"
 )
 
 type GitspaceLogger interface {

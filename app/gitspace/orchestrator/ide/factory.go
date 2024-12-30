@@ -24,10 +24,11 @@ type Factory struct {
 	ides map[enum.IDEType]IDE
 }
 
-func NewFactory(vscode *VSCode, vscodeWeb *VSCodeWeb) Factory {
+func NewFactory(vscode *VSCode, vscodeWeb *VSCodeWeb, intellij *Intellij) Factory {
 	ides := make(map[enum.IDEType]IDE)
 	ides[enum.IDETypeVSCode] = vscode
 	ides[enum.IDETypeVSCodeWeb] = vscodeWeb
+	ides[enum.IDETypeIntellij] = intellij
 	return Factory{ides: ides}
 }
 

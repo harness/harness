@@ -442,6 +442,13 @@ func ProvideIDEVSCodeConfig(config *types.Config) *ide.VSCodeConfig {
 	}
 }
 
+// ProvideIDEIntellijConfig loads the Intellij IDE config from the main config.
+func ProvideIDEIntellijConfig(config *types.Config) *ide.IntellijConfig {
+	return &ide.IntellijConfig{
+		Port: config.IDE.Intellij.Port,
+	}
+}
+
 // ProvideGitspaceOrchestratorConfig loads the Gitspace orchestrator config from the main config.
 func ProvideGitspaceOrchestratorConfig(config *types.Config) *orchestrator.Config {
 	return &orchestrator.Config{

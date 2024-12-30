@@ -17,6 +17,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"path"
 	"regexp"
 	"strings"
 
@@ -197,12 +198,38 @@ func ExtractLifecycleCommands(actionType PostAction, devcontainerConfig types.De
 func ExtractIDECustomizations(
 	ideService ide.IDE,
 	devcontainerConfig types.DevcontainerConfig,
+	args map[gitspaceTypes.IDEArg]interface{},
 ) map[gitspaceTypes.IDEArg]interface{} {
-	var args = make(map[gitspaceTypes.IDEArg]interface{})
 	if ideService.Type() == enum.IDETypeVSCodeWeb || ideService.Type() == enum.IDETypeVSCode {
 		if devcontainerConfig.Customizations.ExtractVSCodeSpec() != nil {
 			args[gitspaceTypes.VSCodeCustomizationArg] = *devcontainerConfig.Customizations.ExtractVSCodeSpec()
 		}
 	}
+	return args
+}
+
+func ExtractIDEDownloadURL(
+	ideService ide.IDE,
+	args map[gitspaceTypes.IDEArg]interface{},
+) map[gitspaceTypes.IDEArg]interface{} {
+	if ideService.Type() == enum.IDETypeIntellij {
+		args[gitspaceTypes.IDEDownloadURLArg] = types.IntellijDownloadURL{
+			Arm64: fmt.Sprintf(enum.IDEIntellijDownloadURLArm64Template, enum.IDEIntellijVer),
+			Amd64: fmt.Sprintf(enum.IDEIntellijDownloadURLAmd64Template, enum.IDEIntellijVer),
+		}
+	}
+
+	return args
+}
+
+func ExtractIDEDirName(
+	ideService ide.IDE,
+	args map[gitspaceTypes.IDEArg]interface{},
+) map[gitspaceTypes.IDEArg]interface{} {
+	if ideService.Type() == enum.IDETypeIntellij {
+		dirname := path.Join(".cache", "JetBrains", "RemoteDev", "dist", "intellij")
+		args[gitspaceTypes.IDEDIRNameArg] = dirname
+	}
+
 	return args
 }

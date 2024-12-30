@@ -37,7 +37,7 @@ import (
 const defaultResourceIdentifier = "default"
 
 var (
-	// errSecretRequiresParent if the user tries to create a secret without a parent space.
+	// ErrGitspaceRequiresParent if the user tries to create a secret without a parent space.
 	ErrGitspaceRequiresParent = usererror.BadRequest(
 		"Parent space required - standalone gitspace are not supported.")
 )

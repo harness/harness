@@ -29,7 +29,7 @@ if ! command -v curl >/dev/null 2>&1; then
       pkg install -y curl
       ;;
     *)
-      echo "Unsupported distribution: $distro."
+      echo "Unsupported distribution: $(distro)."
       exit 1
       ;;
   esac
@@ -50,7 +50,7 @@ if ! command -v npm >/dev/null 2>&1; then
       pkg install -y node
       ;;
     *)
-      echo "Distribution: $distro. npm installation not required"
+      echo "Distribution: $(distro). npm installation not required"
       ;;
   esac
   echo "npm installation completed."

@@ -273,6 +273,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitspaceservice.WireSet,
 		cliserver.ProvideGitspaceInfraProvisionerConfig,
 		cliserver.ProvideIDEVSCodeConfig,
+		cliserver.ProvideIDEIntellijConfig,
 		instrument.WireSet,
 		aiagentservice.WireSet,
 		aiagent.WireSet,

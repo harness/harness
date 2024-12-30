@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -229,14 +230,15 @@ func generateIDEURL(
 			),
 		}
 	case enum.IDETypeIntellij:
-		idePath := relativeRepoPath + "/.cache"
+		homePath := getHomePath(startResponse.AbsoluteRepoPath)
+		idePath := path.Join(homePath, ".cache", "JetBrains", "RemoteDev", "dist", "intellij")
 		ideURL = url.URL{
 			Scheme: gitspaceTypes.IntellijURLScheme,
 			Host:   "", // Empty since we include the host and port in the path
 			Path:   "connect",
 			Fragment: fmt.Sprintf("idePath=%s&projectPath=%s&host=%s&port=%s&user=%s&type=%s&deploy=%s",
 				idePath,
-				relativeRepoPath,
+				startResponse.AbsoluteRepoPath,
 				host,
 				forwardedPort,
 				startResponse.RemoteUser,
@@ -248,6 +250,11 @@ func generateIDEURL(
 
 	ideURLString := ideURL.String()
 	return ideURLString
+}
+
+func getHomePath(absoluteRepoPath string) string {
+	pathList := strings.Split(absoluteRepoPath, "/")
+	return strings.Join(pathList[:len(pathList)-1], "/")
 }
 
 func (o Orchestrator) getSecretResolver(accessType enum.GitspaceAccessType) (secret.Resolver, error) {
