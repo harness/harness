@@ -139,3 +139,40 @@ func Test_Concatenate(t *testing.T) {
 		assert.Equal(t, tt.want, got, "path isn't matching for %v", tt.in)
 	}
 }
+
+func Test_Depth(t *testing.T) {
+	type testCase struct {
+		in   string
+		want int
+	}
+	tests := []testCase{
+		{
+			in:   "",
+			want: 0,
+		},
+		{
+			in:   "/",
+			want: 0,
+		},
+		{
+			in:   "a",
+			want: 1,
+		},
+		{
+			in:   "/a/",
+			want: 1,
+		},
+		{
+			in:   "a/b",
+			want: 2,
+		},
+		{
+			in:   "/a/b/c/d/e/f/",
+			want: 6,
+		},
+	}
+	for _, tt := range tests {
+		got := Depth(tt.in)
+		assert.Equal(t, tt.want, got, "depth isn't matching for %q", tt.in)
+	}
+}

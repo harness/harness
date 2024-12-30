@@ -105,10 +105,21 @@ func Concatenate(paths ...string) string {
 }
 
 // Segments returns all segments of the path
-// e.g. /space1/space2/space3 -> [space1, space2, space3].
+// e.g. space1/space2/space3 -> [space1, space2, space3].
 func Segments(path string) []string {
 	path = strings.Trim(path, types.PathSeparatorAsString)
 	return strings.Split(path, types.PathSeparatorAsString)
+}
+
+// Depth returns the depth of the path.
+// e.g. space1/space2 -> 2.
+func Depth(path string) int {
+	path = strings.Trim(path, types.PathSeparatorAsString)
+	if len(path) == 0 {
+		return 0
+	}
+
+	return strings.Count(path, types.PathSeparatorAsString) + 1
 }
 
 // IsAncesterOf returns true iff 'path' is an ancestor of 'other' or they are the same.
