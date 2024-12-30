@@ -419,8 +419,8 @@ func (e *EmbeddedDockerOrchestrator) runGitspaceSetupSteps(
 		gitspaceLogger.Info(fmt.Sprintf("Setting Environment : %v", environment))
 	}
 
-	containerUser := getContainerUser(runArgsMap, devcontainerConfig, metadataFromImage, imageUser)
-	remoteUser := getRemoteUser(devcontainerConfig, metadataFromImage, containerUser)
+	containerUser := GetContainerUser(runArgsMap, devcontainerConfig, metadataFromImage, imageUser)
+	remoteUser := GetRemoteUser(devcontainerConfig, metadataFromImage, containerUser)
 
 	homeDir := GetUserHomeDir(remoteUser)
 
@@ -720,38 +720,6 @@ func (e *EmbeddedDockerOrchestrator) flushLogStream(logStreamInstance *logutil.L
 	if err := logStreamInstance.Flush(); err != nil {
 		log.Warn().Err(err).Msgf("failed to flush log stream for gitspace ID %d", gitspaceID)
 	}
-}
-
-func getRemoteUser(
-	devcontainerConfig types.DevcontainerConfig,
-	metadataFromImage map[string]any,
-	containerUser string,
-) string {
-	if devcontainerConfig.RemoteUser != "" {
-		return devcontainerConfig.RemoteUser
-	}
-	if remoteUser, ok := metadataFromImage["remoteUser"].(string); ok {
-		return remoteUser
-	}
-	return containerUser
-}
-
-func getContainerUser(
-	runArgsMap map[types.RunArg]*types.RunArgValue,
-	devcontainerConfig types.DevcontainerConfig,
-	metadataFromImage map[string]any,
-	imageUser string,
-) string {
-	if containerUser := getUser(runArgsMap); containerUser != "" {
-		return containerUser
-	}
-	if devcontainerConfig.ContainerUser != "" {
-		return devcontainerConfig.ContainerUser
-	}
-	if containerUser, ok := metadataFromImage["containerUser"].(string); ok {
-		return containerUser
-	}
-	return imageUser
 }
 
 func getImage(devcontainerConfig types.DevcontainerConfig, defaultBaseImage string) string {

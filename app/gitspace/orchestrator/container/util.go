@@ -44,6 +44,38 @@ func GetUserHomeDir(userIdentifier string) string {
 	return filepath.Join(linuxHome, userIdentifier)
 }
 
+func GetContainerUser(
+	runArgsMap map[types.RunArg]*types.RunArgValue,
+	devcontainerConfig types.DevcontainerConfig,
+	metadataFromImage map[string]any,
+	imageUser string,
+) string {
+	if containerUser := getUser(runArgsMap); containerUser != "" {
+		return containerUser
+	}
+	if devcontainerConfig.ContainerUser != "" {
+		return devcontainerConfig.ContainerUser
+	}
+	if containerUser, ok := metadataFromImage["containerUser"].(string); ok {
+		return containerUser
+	}
+	return imageUser
+}
+
+func GetRemoteUser(
+	devcontainerConfig types.DevcontainerConfig,
+	metadataFromImage map[string]any,
+	containerUser string,
+) string {
+	if devcontainerConfig.RemoteUser != "" {
+		return devcontainerConfig.RemoteUser
+	}
+	if remoteUser, ok := metadataFromImage["remoteUser"].(string); ok {
+		return remoteUser
+	}
+	return containerUser
+}
+
 func ExtractRemoteUserFromLabels(inspectResp dockerTypes.ContainerJSON) string {
 	remoteUser := deprecatedRemoteUser
 
