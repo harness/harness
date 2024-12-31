@@ -18,12 +18,14 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/gitspace"
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/gitspace/scm"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
@@ -67,6 +69,20 @@ type gitspaceEventsListRequest struct {
 }
 
 type gitspacesListAllRequest struct {
+}
+
+var QueryParameterQueryGitspace = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter the gitspaces by their name or idenitifer."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
 }
 
 func gitspaceOperations(reflector *openapi3.Reflector) {
@@ -125,6 +141,7 @@ func gitspaceOperations(reflector *openapi3.Reflector) {
 	opList.WithTags("gitspaces")
 	opList.WithSummary("List gitspaces")
 	opList.WithMapOfAnything(map[string]interface{}{"operationId": "listGitspaces"})
+	opList.WithParameters(QueryParameterQueryGitspace)
 	_ = reflector.SetRequest(&opList, new(gitspacesListRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opList, new([]*types.GitspaceConfig), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusBadRequest)
