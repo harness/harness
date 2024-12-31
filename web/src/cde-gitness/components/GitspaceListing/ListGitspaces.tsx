@@ -584,7 +584,7 @@ export const RenderActions = ({ row, refreshList }: RenderActionsProps) => {
   const handleDelete = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     confirmDelete({
       intent: 'danger',
-      title: getString('cde.deleteGitspaceTitle', { name: name }),
+      title: `${getString('cde.deleteGitspace')} '${name}'`,
       message: getString('cde.deleteGitspaceText'),
       confirmText: getString('delete'),
       action: async () => {

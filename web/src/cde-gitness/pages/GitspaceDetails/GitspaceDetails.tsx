@@ -178,7 +178,7 @@ const GitspaceDetails = () => {
   const handleDelete = async (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     confirmDelete({
       intent: 'danger',
-      title: getString('cde.deleteGitspaceTitle', { name: data?.name }),
+      title: `${getString('cde.deleteGitspace')} '${data?.name}'`,
       message: getString('cde.deleteGitspaceText'),
       confirmText: getString('delete'),
       action: async () => {
