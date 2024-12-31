@@ -13,13 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
+import vsCodeIcon from 'cde-gitness/assests/VSCode.svg?url'
+import intellijIcon from 'cde-gitness/assests/intellij.svg?url'
+import type { StringsMap } from 'framework/strings/stringTypes'
 
 export const docLink = 'https://developer.harness.io/docs/cloud-development-environments'
 
 export enum IDEType {
   VSCODE = 'vs_code',
-  VSCODEWEB = 'vs_code_web'
+  VSCODEWEB = 'vs_code_web',
+  INTELLIJ = 'intellij'
 }
+
+export interface ideType {
+  label: keyof StringsMap
+  value: string
+  icon: any
+}
+
+export const getIDETypeOptions = (getString: any) => [
+  {
+    label: getString('cde.ide.desktop'),
+    value: IDEType.VSCODE,
+    icon: vsCodeIcon
+  },
+  {
+    label: getString('cde.ide.browser'),
+    value: IDEType.VSCODEWEB,
+    icon: vsCodeWebIcon
+  },
+  {
+    label: getString('cde.ide.intellij'),
+    value: IDEType.INTELLIJ,
+    icon: intellijIcon
+  }
+]
 
 export enum EnumGitspaceCodeRepoType {
   GITHUB = 'github',
@@ -59,6 +88,14 @@ export const GitspaceStatusTypes = (getString: any) => [
     value: GitspaceStatus.ERROR
   }
 ]
+
+export const getIDEOption: any = (type = '', getString = null) => {
+  let ideItem = null
+  if (type && getString) {
+    ideItem = getIDETypeOptions(getString).find((ide: ideType) => ide?.value === type)
+  }
+  return ideItem
+}
 
 export enum GitspaceOwnerType {
   SELF = 'self',

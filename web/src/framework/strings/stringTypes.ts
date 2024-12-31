@@ -1256,6 +1256,7 @@ export interface StringsMap {
   'cde.details.noLogsFound': string
   'cde.details.openBrowser': string
   'cde.details.openEditor': string
+  'cde.details.openIntellij': string
   'cde.details.provisioningGitspace': string
   'cde.details.startGitspace': string
   'cde.details.stopGitspace': string
@@ -1290,6 +1291,7 @@ export interface StringsMap {
   'cde.id': string
   'cde.ide.browser': string
   'cde.ide.desktop': string
+  'cde.ide.intellij': string
   'cde.ide.openBrowser': string
   'cde.ide.openVSCode': string
   'cde.ide.selectIDE': string

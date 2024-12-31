@@ -89,6 +89,13 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - description: The substring which is used to filter the gitspaces by their
+            name or idenitifer.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
         - in: query
           name: gitspace_owner
           schema:
@@ -1030,12 +1037,14 @@ components:
       enum:
         - vs_code
         - vs_code_web
+        - intellij
       type: string
     EnumInfraProviderType:
       enum:
         - docker
         - harness_gcp
         - harness_cloud
+        - hybrid_vm_gcp
       type: string
     InfraproviderResourceInput:
       properties:

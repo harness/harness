@@ -27,7 +27,7 @@ export const validateGitnessForm = (getString: UseStringsReturn['getString'], is
     resource_identifier: yup.string().trim().required(getString('cde.machineValidationMessage')),
     name: yup.string().trim().required(),
     ssh_token_identifier: yup.string().when('ide', {
-      is: ide => ide === IDEType.VSCODE && isCDE,
+      is: ide => (ide === IDEType.VSCODE || ide === IDEType.INTELLIJ) && isCDE,
       then: yup.string().required(getString('cde.sshValidationMessage'))
     })
   })

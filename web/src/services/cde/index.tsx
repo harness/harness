@@ -67,9 +67,9 @@ export type EnumGitspaceSort = 'created' | 'last_activated' | 'last_used'
 
 export type EnumGitspaceStateType = 'running' | 'stopped' | 'error' | 'uninitialized' | 'starting' | 'stopping'
 
-export type EnumIDEType = 'vs_code' | 'vs_code_web'
+export type EnumIDEType = 'vs_code' | 'vs_code_web' | 'intellij'
 
-export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud'
+export type EnumInfraProviderType = 'docker' | 'harness_gcp' | 'harness_cloud' | 'hybrid_vm_gcp'
 
 export interface InfraproviderResourceInput {
   cpu?: string | null
@@ -364,11 +364,14 @@ export interface ListGitspacesQueryParams {
    * The maximum number of results to return.
    */
   limit?: number
+  /**
+   * The substring which is used to filter the gitspaces by their name or idenitifer.
+   */
+  query?: string
   gitspace_owner?: EnumGitspaceOwner
   gitspace_states?: EnumGitspaceFilterState[]
   sort?: EnumGitspaceSort
   order?: 'asc' | 'desc'
-  query?: string
 }
 
 export interface ListGitspacesPathParams {

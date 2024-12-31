@@ -38,15 +38,13 @@ import { UseStringsReturn, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import VSCode from 'cde-gitness/assests/VSCode.svg?url'
-import { GitspaceActionType, GitspaceStatus, IDEType } from 'cde-gitness/constants'
+import { getIDEOption, GitspaceActionType, GitspaceStatus, IDEType } from 'cde-gitness/constants'
 import type { EnumGitspaceStateType, EnumIDEType, TypesGitspaceConfig, TypesInfraProviderResource } from 'services/cde'
 import gitspaceIcon from 'cde-gitness/assests/gitspace.svg?url'
 import { useModalHook } from 'hooks/useModalHook'
 import pause from 'cde-gitness/assests/pause.svg?url'
 import web from 'cde-gitness/assests/web.svg?url'
 import deleteIcon from 'cde-gitness/assests/delete.svg?url'
-import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import { useGitspaceActions } from 'cde-gitness/hooks/useGitspaceActions'
 import { useDeleteGitspaces } from 'cde-gitness/hooks/useDeleteGitspaces'
 import { useOpenVSCodeBrowserURL } from 'cde-gitness/hooks/useOpenVSCodeBrowserURL'
@@ -118,10 +116,10 @@ export const RenderGitspaceName: Renderer<
   const details = row.original
   const { name, ide, identifier } = details
   const { standalone } = useAppContext()
-
+  const ideItem = getIDEOption(ide, getString)
   return standalone ? (
     <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-      <img src={ide === IDEType.VSCODE ? VSCode : vsCodeWebIcon} height={20} width={20} />
+      <img src={ideItem?.icon} height={20} width={20} />
       <Text
         lineClamp={1}
         color={Color.BLACK}
@@ -133,7 +131,7 @@ export const RenderGitspaceName: Renderer<
   ) : (
     <Layout.Vertical spacing={'medium'} className={css.gitspaceIdContainer}>
       <Layout.Horizontal spacing={'small'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
-        <img src={ide === IDEType.VSCODE ? VSCode : vsCodeWebIcon} height={20} width={20} />
+        <img src={ideItem?.icon} height={20} width={20} />
         <Text
           width="90%"
           lineClamp={1}

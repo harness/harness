@@ -258,7 +258,11 @@ export const CDECreateGitspace = () => {
               </Container>
               <Container className={css.formOuterContainer}>
                 <CDEIDESelect onChange={formik.setFieldValue} selectedIde={formik.values.ide} />
-                {formik.values.ide === IDEType.VSCODE && <CDESSHSelect />}
+                {formik?.values?.ide === IDEType.VSCODE || formik?.values?.ide === IDEType.INTELLIJ ? (
+                  <CDESSHSelect />
+                ) : (
+                  <></>
+                )}
                 <SelectInfraProvider />
                 <Button width={'100%'} variation={ButtonVariation.PRIMARY} height={50} type="submit">
                   {getString('cde.createGitspace')}

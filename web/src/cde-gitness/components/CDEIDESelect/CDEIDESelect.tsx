@@ -18,12 +18,9 @@ import React from 'react'
 import { Layout, Text } from '@harnessio/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { Code } from 'iconoir-react'
-import { IDEType } from 'cde-gitness/constants'
-import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
-import vscodeIcon from 'cde-gitness/assests/VSCode.svg?url'
+import { getIDETypeOptions } from 'cde-gitness/constants'
 import { useStrings } from 'framework/strings'
 import { CDECustomDropdown } from '../CDECustomDropdown/CDECustomDropdown'
-import css from './CDEIDESelect.module.scss'
 
 export const CDEIDESelect = ({
   onChange,
@@ -33,21 +30,9 @@ export const CDEIDESelect = ({
   selectedIde?: string
 }) => {
   const { getString } = useStrings()
+  const ideOptions = getIDETypeOptions(getString) ?? []
 
-  const ideOptions = [
-    {
-      label: getString('cde.ide.desktop'),
-      value: IDEType.VSCODE,
-      img: vscodeIcon
-    },
-    {
-      label: getString('cde.ide.browser'),
-      value: IDEType.VSCODEWEB,
-      img: vsCodeWebIcon
-    }
-  ]
-
-  const { label, img } = ideOptions.find(item => item.value === selectedIde) || {}
+  const { label, icon }: any = ideOptions.find(item => item.value === selectedIde) || {}
 
   return (
     <CDECustomDropdown
@@ -61,8 +46,8 @@ export const CDEIDESelect = ({
         </Layout.Horizontal>
       }
       label={
-        <Layout.Horizontal width="100%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>
-          <img height={16} width={16} src={img} className={css.buttonIcon} />
+        <Layout.Horizontal width="100%" spacing="medium" flex={{ alignItems: 'center', justifyContent: 'start' }}>
+          <img height={16} width={16} src={icon} />
           <Text>{label}</Text>
         </Layout.Horizontal>
       }
@@ -73,8 +58,11 @@ export const CDEIDESelect = ({
               <MenuItem
                 key={item.value}
                 text={
-                  <Layout.Horizontal width="90%" flex={{ alignItems: 'center', justifyContent: 'space-between' }}>
-                    <img height={16} width={16} src={item.img} />
+                  <Layout.Horizontal
+                    width="90%"
+                    spacing="medium"
+                    flex={{ alignItems: 'center', justifyContent: 'start' }}>
+                    <img height={16} width={16} src={item.icon} />
                     <Text>{item.label}</Text>
                   </Layout.Horizontal>
                 }

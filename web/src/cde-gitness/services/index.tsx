@@ -83,7 +83,7 @@ export type EnumGitspaceInstanceStateType =
 
 export type EnumGitspaceStateType = 'running' | 'stopped' | 'error' | 'uninitialized' | 'starting' | 'stopping'
 
-export type EnumIDEType = 'vs_code' | 'vs_code_web'
+export type EnumIDEType = 'vs_code' | 'vs_code_web' | 'intellij'
 
 export type EnumInfraProviderType = 'docker' | 'harness_gcp'
 

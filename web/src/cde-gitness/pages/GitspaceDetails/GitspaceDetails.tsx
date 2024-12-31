@@ -39,14 +39,12 @@ import { useStrings } from 'framework/strings'
 import EventTimelineAccordion from 'cde-gitness/components/EventTimelineAccordion/EventTimelineAccordion'
 import { DetailsCard } from 'cde-gitness/components/DetailsCard/DetailsCard'
 import type { EnumGitspaceStateType, TypesGitspaceEventResponse } from 'cde-gitness/services'
-import { GitspaceActionType, GitspaceStatus } from 'cde-gitness/constants'
+import { getIDEOption, GitspaceActionType, GitspaceStatus } from 'cde-gitness/constants'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { getErrorMessage } from 'utils/Utils'
 import { usePolling } from 'cde-gitness/hooks/usePolling'
 import deleteIcon from 'cde-gitness/assests/delete.svg?url'
-import vscodeIcon from 'cde-gitness/assests/VSCode.svg?url'
-import vsCodeWebIcon from 'cde-gitness/assests/vsCodeWeb.svg?url'
 import pauseIcon from 'cde-gitness/assests/pause.svg?url'
 import { IDEType } from 'cde-gitness/constants'
 import homeIcon from 'cde-gitness/assests/home.svg?url'
@@ -203,6 +201,7 @@ const GitspaceDetails = () => {
 
   const accordionRef = useRef<AccordionHandle | null>(null)
   const myRef = useRef<any | null>(null)
+  const ideItem = getIDEOption(data?.ide, getString)
 
   useEffect(() => {
     if (standalone ? formattedlogsdata.data : responseData) {
@@ -248,12 +247,7 @@ const GitspaceDetails = () => {
           <Container>
             {data && (
               <Layout.Horizontal spacing="small">
-                <img
-                  src={data?.ide === IDEType.VSCODEWEB ? vsCodeWebIcon : vscodeIcon}
-                  className={css.gitspaceIcon}
-                  height={32}
-                  width={32}
-                />
+                <img src={ideItem?.icon} className={css.gitspaceIcon} height={32} width={32} />
                 <Layout.Vertical spacing="none" className={css.gitspaceIdContainer}>
                   <Text font={{ variation: FontVariation.H3 }}>{data?.name}</Text>
                   <Layout.Horizontal spacing={'xsmall'} flex={{ alignItems: 'center', justifyContent: 'start' }}>
@@ -399,6 +393,7 @@ const GitspaceDetails = () => {
                   }}>
                   {data?.ide === IDEType.VSCODE && getString('cde.details.openEditor')}
                   {data?.ide === IDEType.VSCODEWEB && getString('cde.details.openBrowser')}
+                  {data?.ide === IDEType.INTELLIJ && getString('cde.details.openIntellij')}
                 </Button>
               ) : (
                 <Button
